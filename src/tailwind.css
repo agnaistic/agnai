@@ -1,3 +1,13 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.visibly-focusable {
+  @apply focus:outline-none focus:outline-purple-400/50 transition-all duration-100;
+  @apply text-white/50 hover:text-white focus:text-white;
+}
+
+.visibly-focusable-with-bg {
+  @apply visibly-focusable;
+  @apply bg-white/5 hover:bg-white/[0.075] active:bg-white/20;
+}
