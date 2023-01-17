@@ -9,6 +9,7 @@
     "style:fix": "prettier src --write",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix",
+    "typecheck": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
