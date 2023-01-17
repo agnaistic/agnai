@@ -14,6 +14,8 @@ const RadioGroup: Component<{ options: RadioOption[] }> = (props) => (
         {(option) => (
           <div class="form-check">
             <input
+              // TODO(11b): The radio doesn't render properly on Safari for some
+              // reason. Possibly come back here and investigate at some point.
               class="form-check-input appearance-none rounded-full h-4 w-4 border border-gray-300 bg-white checked:bg-purple-600 checked:border-purple-600 focus:outline-none transition duration-200 mt-1 align-top bg-no-repeat bg-center bg-contain float-left mr-2 cursor-pointer"
               type="radio"
               name={option.name}
