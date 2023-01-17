@@ -37,7 +37,7 @@ const visibilityOptions: RadioOption[] = [
 ];
 
 const CharacterSettings: Component = () => (
-  <div>
+  <>
     <h1 class="text-4xl">Character Settings</h1>
     <p class="text-white/50">Configure BOT's character.</p>
     <div class="my-4 border-b border-white/5" />
@@ -93,7 +93,7 @@ const CharacterSettings: Component = () => (
         </Button>
       </div>
     </div>
-  </div>
+  </>
 );
 
 export default CharacterSettings;
