@@ -2,12 +2,53 @@
 @tailwind components;
 @tailwind utilities;
 
-.visibly-focusable {
-  @apply focus:outline-none focus:outline-purple-400/50 transition-all duration-100;
-  @apply text-white/50 hover:text-white focus:text-white;
+/** Global focus style override. */
+*:focus {
+  @apply outline-none outline-purple-400/50;
 }
 
-.visibly-focusable-with-bg {
-  @apply visibly-focusable;
-  @apply bg-white/5 hover:bg-white/[0.075] active:bg-white/20;
+@layer base {
+  /**
+   * Focus/accessibility-related utilities.
+   */
+  ._focusable-base {
+    @apply transition-all duration-100;
+  }
+
+  .focusable-field {
+    @apply _focusable-base;
+    @apply bg-white/5 hover:bg-white/[0.075] active:bg-white/20;
+    @apply placeholder:text-white/25;
+  }
+
+  .focusable-icon-button {
+    @apply _focusable-base;
+    @apply text-white/50 hover:text-white focus:text-white;
+  }
+
+  /**
+   * Buttons.
+   */
+  .btn-base {
+    @apply flex gap-1;
+    @apply transition-colors duration-100;
+    @apply px-3 py-2 rounded-md;
+  }
+
+  .btn-primary {
+    @apply btn-base;
+    @apply bg-purple-600 hover:bg-purple-500 active:bg-purple-400;
+  }
+
+  .btn-secondary {
+    @apply btn-base;
+    @apply bg-stone-600 hover:bg-stone-500 active:bg-stone-400;
+  }
+
+  /**
+   * Other form stuff.
+   */
+  .form-check-input:checked[type="radio"] {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-4 -4 8 8%22%3E%3Ccircle r=%222%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+  }
 }

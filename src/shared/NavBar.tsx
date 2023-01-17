@@ -2,7 +2,7 @@ import { Component, JSX } from "solid-js";
 import { ChevronLeft, Menu } from "lucide-solid";
 
 const IconButton: Component<{ children: JSX.Element }> = (props) => (
-  <button type="button" class="visibly-focusable p-1 rounded">
+  <button type="button" class="focusable-icon-button p-1 rounded">
     {props.children}
   </button>
 );
