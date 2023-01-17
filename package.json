@@ -20,6 +20,7 @@
   },
   "license": "AGPL-3.0",
   "dependencies": {
+    "@solidjs/router": "^0.6.0",
     "lucide-solid": "0.105.0-alpha.9",
     "showdown": "^2.1.0",
     "solid-js": "^1.6.9"

@@ -26,6 +26,11 @@
     @apply text-white/50 hover:text-white focus:text-white;
   }
 
+  /** Integrates with solid-router - highlights current selection. */
+  .focusable-icon-button.active {
+    @apply text-white;
+  }
+
   /**
    * Buttons.
    */
