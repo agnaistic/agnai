@@ -13,10 +13,10 @@ const Message: Component<MessageProps> = (props) => (
   <span class="flex gap-4">
     <img
       src={props.speaker.avatarUrl}
-      class="h-12 w-12 mt-1 rounded-full bg-white"
+      class="mt-1 h-12 w-12 rounded-full bg-white"
     />
 
-    <div class="flex flex-col select-text">
+    <div class="flex select-text flex-col">
       <span>
         <b class="text-white">{props.speaker.name}</b>
         <span
@@ -34,7 +34,7 @@ const Message: Component<MessageProps> = (props) => (
         innerHTML={showdownConverter.makeHtml(props.utterance)}
       />
       <Show when={!props.speaker.isHuman}>
-        <div class="text-sm text-white/25 flex gap-2 mt-3">
+        <div class="mt-3 flex gap-2 text-sm text-white/25">
           <ThumbsUp size={16} class="-mt-[0.15rem]" />
           <ThumbsDown size={16} />
         </div>

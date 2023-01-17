@@ -5,7 +5,7 @@ import { Component, JSX } from "solid-js";
 const IconButton: Component<{ children: JSX.Element }> = (props) => (
   <button
     type="button"
-    class="focusable-icon-button focusable-field py-3 px-1 border-2 border-transparent"
+    class="focusable-icon-button focusable-field border-2 border-transparent py-3 px-1"
   >
     {props.children}
   </button>
@@ -13,11 +13,11 @@ const IconButton: Component<{ children: JSX.Element }> = (props) => (
 
 /** Bar containing the message text input and some attached buttons. */
 const InputBar = () => (
-  <div class="flex justify-center max-sm:pb-0 pb-4">
+  <div class="flex justify-center pb-4 max-sm:pb-0">
     <input
       type="text"
       placeholder="Send a message..."
-      class="w-full px-4 py-2 rounded-l-xl focusable-field"
+      class="focusable-field w-full rounded-l-xl px-4 py-2"
     />
     <IconButton>
       <Sliders size={20} />
@@ -25,7 +25,7 @@ const InputBar = () => (
     <IconButton>
       <Send size={20} />
     </IconButton>
-    <div class="rounded-r-xl pr-2 bg-white/5" />
+    <div class="rounded-r-xl bg-white/5 pr-2" />
   </div>
 );
 

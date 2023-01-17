@@ -40,7 +40,7 @@ const CharacterSettings: Component = () => (
   <div>
     <h1 class="text-4xl">Character Settings</h1>
     <p class="text-white/50">Configure BOT's character.</p>
-    <div class="border-b border-white/5 my-4" />
+    <div class="my-4 border-b border-white/5" />
 
     <div class="flex flex-col gap-8">
       <TextInput
@@ -74,7 +74,7 @@ const CharacterSettings: Component = () => (
       <div>
         <label for="Visibility">
           Visibility
-          <p class="text-sm text-white/50 mt-[-0.125rem] pb-2">
+          <p class="mt-[-0.125rem] pb-2 text-sm text-white/50">
             Configure who can see and talk to this character.
           </p>
         </label>

@@ -16,7 +16,7 @@ const TextInput: Component<{
       <label for={props.fieldName}>
         {props.label}
         <Show when={!!props.helperText}>
-          <p class="text-sm text-white/50 mt-[-0.125rem] pb-2">
+          <p class="mt-[-0.125rem] pb-2 text-sm text-white/50">
             {props.helperText}
           </p>
         </Show>
@@ -29,7 +29,7 @@ const TextInput: Component<{
             name={props.fieldName}
             type="text"
             placeholder={placeholder()}
-            class="w-full px-4 py-2 rounded-xl focusable-field"
+            class="focusable-field w-full rounded-xl px-4 py-2"
           />
         }
       >
@@ -39,7 +39,7 @@ const TextInput: Component<{
           id={props.label}
           name={props.fieldName}
           placeholder={placeholder()}
-          class="!text-white w-full px-4 py-2 rounded-xl focusable-field"
+          class="focusable-field w-full rounded-xl px-4 py-2 !text-white"
         />
       </Show>
     </div>

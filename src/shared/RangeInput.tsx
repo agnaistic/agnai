@@ -9,12 +9,12 @@ const RangeInput: Component = () => (
       type="range"
       class="
       form-range
-      appearance-none
-      w-full
       h-6
-      p-0
+      w-full
+      appearance-none
       bg-transparent
-      focus:outline-none focus:ring-0 focus:shadow-none
+      p-0
+      focus:shadow-none focus:outline-none focus:ring-0
     "
       min="0"
       max="5"

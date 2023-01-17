@@ -12,7 +12,7 @@ const ChatPage = () => (
     // justify elements to flex-end, vertical scrolling doesn't work. To work
     // around that, we build this layout using a reverse column flex direction
     // lol
-    class="flex flex-col-reverse h-full"
+    class="flex h-full flex-col-reverse"
   >
     <InputBar />
     <div class="flex flex-col-reverse overflow-y-scroll">
