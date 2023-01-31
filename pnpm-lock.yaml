@@ -13,6 +13,7 @@ specifiers:
   eslint-config-prettier: ^8.6.0
   eslint-plugin-import: ^2.27.4
   eslint-plugin-solid: ^0.9.3
+  eslint-plugin-tailwindcss: ^3.8.0
   lucide-solid: 0.105.0-alpha.9
   parcel: ^2.8.2
   postcss: ^8.4.21
@@ -42,6 +43,7 @@ devDependencies:
   eslint-config-prettier: 8.6.0_eslint@8.32.0
   eslint-plugin-import: 2.27.4_d7sd2krenkbelnt3n7nqqoxduu
   eslint-plugin-solid: 0.9.3_7uibuqfxkfaozanbtbziikiqje
+  eslint-plugin-tailwindcss: 3.8.0
   parcel: 2.8.2_postcss@8.4.21
   postcss: 8.4.21
   prettier: 2.8.3
@@ -2030,6 +2032,17 @@ packages:
     transitivePeerDependencies:
       - supports-color
       - typescript
+    dev: true
+
+  /eslint-plugin-tailwindcss/3.8.0:
+    resolution: {integrity: sha512-Lsyncgp/eXZriAEUK9zfGHOH+9iQplygHiOuGY8SFFHKIeT0BYjyST/ownHF8UPa1TEh+jJPkdE2vlV3778C3w==}
+    engines: {node: '>=12.13.0'}
+    dependencies:
+      fast-glob: 3.2.12
+      postcss: 8.4.21
+      tailwindcss: 3.2.4
+    transitivePeerDependencies:
+      - ts-node
     dev: true
 
   /eslint-scope/5.1.1:

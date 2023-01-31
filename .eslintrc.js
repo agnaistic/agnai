@@ -3,11 +3,12 @@ module.exports = {
     browser: true,
     es2021: true,
   },
-  plugins: ["solid"],
+  plugins: ["solid", "tailwindcss"],
   extends: [
     "airbnb-base",
     "airbnb-typescript/base",
     "plugin:solid/typescript",
+	"plugin:tailwindcss/recommended",
     "prettier",
   ],
   overrides: [],
@@ -17,5 +18,6 @@ module.exports = {
   },
   rules: {
     "import/extensions": ["error", "never"],
+	"tailwindcss/no-custom-classname": "off",
   },
 };
