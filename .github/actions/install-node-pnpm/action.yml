@@ -1,7 +1,8 @@
-# note - we cannot include checkout here, since it needs the code checked out already to access the 'actions' folder
+# NOTE: We cannot include checkout here, since it needs the code checked out
+# already to access the 'actions' folder
 
-name: 'Install Dependencies'
-description: 'Checkout Repo / Install Node & PNPM'
+name: "Install dependencies"
+description: "Checks out the repository, then installs Node & PNPM"
 inputs:
   node-version:
     required: true
@@ -10,7 +11,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install Performant Node Package Manager (NPM)
+    - name: Install PNPM
       uses: pnpm/action-setup@v2
       with:
         version: ${{  inputs.pnpm-version  }}

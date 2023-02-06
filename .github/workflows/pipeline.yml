@@ -1,99 +1,99 @@
-name: Pygmalion UI Front End - Build / Quality Control
+name: Automated checks
 
 permissions:
   # This is required for actions/checkout
-  contents: read 
+  contents: read
 
 on:
   # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:   
+  workflow_dispatch:
 
 env:
-  node-version: '18.4.0'
+  node-version: "18.4.0"
   pnpm-version: 7.2.1
 
 jobs:
   dependencies:
-    name: Install Dependencies
+    name: Install dependencies
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
+      - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies - Composite Action
+      - name: Install Node and PNPM
         uses: ./.github/actions/install-node-pnpm
         with:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
 
-      - name: Get Previously Cache Dependencies
+      - name: Get cached dependencies
         # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
         id: cache-step
         uses: actions/cache@v3
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
 
-      - name: Install Dependencies (unless restored from cache)
+      - name: Install project dependencies
         if: steps.cache-step.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
-        
+
   lint:
     name: Lint
     needs: dependencies
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repo
+      - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies - Composite Action
+      - name: Install Node and PNPM
         uses: ./.github/actions/install-node-pnpm
         with:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
 
-      - name: Restore Cache - Composite Action
+      - name: Restore cached dependencies
         uses: ./.github/actions/restore-pnpm-cache
 
-      - name: Quality Control - Lint
+      - name: Run ESLint
         run: pnpm run lint
-        
+
   style:
-    name: Style
+    name: Code style
     needs: dependencies
     runs-on: ubuntu-latest
-    steps:    
-      - name: Checkout Repo
+    steps:
+      - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies - Composite Action
+      - name: Install Node and PNPM
         uses: ./.github/actions/install-node-pnpm
         with:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
 
-      - name: Restore Cache - Composite Action
+      - name: Restore cached dependencies
         uses: ./.github/actions/restore-pnpm-cache
-          
-      - name: Quality Control - Style
+
+      - name: Run Prettier
         run: pnpm run style
-          
+
   typecheck:
-    name: TypeCheck
+    name: Typecheck
     needs: dependencies
     runs-on: ubuntu-latest
-    steps: 
-      - name: Checkout Repo
+    steps:
+      - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install Dependencies - Composite Action
+      - name: Install Node and PNPM
         uses: ./.github/actions/install-node-pnpm
         with:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
 
-      - name: Restore Cache - Composite Action
+      - name: Restore cached dependencies
         uses: ./.github/actions/restore-pnpm-cache
-          
-      - name: Quality Control - TypeCheck
+
+      - name: Run Typescript compiler
         run: pnpm run typecheck

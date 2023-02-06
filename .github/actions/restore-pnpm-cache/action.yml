@@ -1,11 +1,11 @@
-  name: 'Restore PNPM Cache'
-  description: 'Restores the PNPM cache - This will have been to be saved already by actions/cache@v3'
-  runs:
-    using: "composite"
-    steps:
-      - name: Restore Cache
-        uses: actions/cache/restore@v3
-        with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
-          fail-on-cache-miss: true
+name: "Restore PNPM cache"
+description: "Restores the PNPM cache"
+runs:
+  using: "composite"
+  steps:
+    - name: Restore cache
+      uses: actions/cache/restore@v3
+      with:
+        path: "**/node_modules"
+        key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+        fail-on-cache-miss: true
