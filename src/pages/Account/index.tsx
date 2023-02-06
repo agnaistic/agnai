@@ -1,9 +1,8 @@
-
 import Login from "./Login";
 
-const Account = () => {
-    // TODO: Account Page
-    return <Login />
-}
+const Account = () => 
+  // TODO: Account Page
+   <Login />
+;
 
-export default Account
+export default Account;

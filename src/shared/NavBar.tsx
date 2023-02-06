@@ -7,7 +7,7 @@ import {
   MessageCircle,
   Settings,
   Users,
-  User
+  User,
 } from "lucide-solid";
 
 const NavBar: Component = () => (

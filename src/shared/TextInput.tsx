@@ -6,8 +6,8 @@ const TextInput: Component<{
   helperText?: string;
   placeholder?: string;
   isMultiline?: boolean;
-  class?: string
-  type?: string
+  class?: string;
+  type?: string;
 }> = (props) => {
   const placeholder = createMemo(
     () => props.placeholder || "Type something here..."
@@ -16,14 +16,14 @@ const TextInput: Component<{
   return (
     <div class={props.class}>
       <Show when={!!props.label}>
-      <label for={props.fieldName}>
-        {props.label}
-        <Show when={!!props.helperText}>
-          <p class="mt-[-0.125rem] pb-2 text-sm text-white/50">
-            {props.helperText}
-          </p>
-        </Show>
-      </label>
+        <label for={props.fieldName}>
+          {props.label}
+          <Show when={!!props.helperText}>
+            <p class="mt-[-0.125rem] pb-2 text-sm text-white/50">
+              {props.helperText}
+            </p>
+          </Show>
+        </label>
       </Show>
       <Show
         when={props.isMultiline}
@@ -31,7 +31,7 @@ const TextInput: Component<{
           <input
             id={props.fieldName}
             name={props.fieldName}
-            type={props.type || 'text'}
+            type={props.type || "text"}
             placeholder={placeholder()}
             class="focusable-field w-full rounded-xl px-4 py-2"
           />
@@ -45,9 +45,9 @@ const TextInput: Component<{
           placeholder={placeholder()}
           class="focusable-field w-full rounded-xl px-4 py-2 !text-white"
           onInput={(e) => {
-              const ele = e.target as HTMLTextAreaElement
-              ele.style.height = "";
-              ele.style.height = (ele.scrollHeight) + "px";
+            const ele = e.target as HTMLTextAreaElement;
+            ele.style.height = "";
+            ele.style.height = `${ele.scrollHeight  }px`;
           }}
         />
       </Show>

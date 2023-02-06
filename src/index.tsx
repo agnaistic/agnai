@@ -15,7 +15,7 @@ const App: Component = () => (
   <Router>
     <div class="flex h-[100vh] flex-col justify-between">
       <NavBar />
-      <div class="w-full flex-grow overflow-y-scroll px-8 pt-8 max-sm:px-3">
+      <div class="w-full grow overflow-y-scroll px-8 pt-8 max-sm:px-3">
         <div class="mx-auto h-full max-w-4xl">
           <Routes>
             <Route path="/chat" component={ChatPage} />
