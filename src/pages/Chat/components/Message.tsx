@@ -1,14 +1,12 @@
 import { Component, Show } from "solid-js";
 import { ThumbsUp, ThumbsDown } from "lucide-solid";
-import showdown from "showdown";
-
 import MessageProps from "../../../models/Message";
-
+import showdown from "showdown";
 import "./Message.css";
-
 const showdownConverter = new showdown.Converter();
 
 /** An individual message. */
+
 const Message: Component<MessageProps> = (props) => (
   <span class="flex gap-4">
     <img
@@ -18,21 +16,18 @@ const Message: Component<MessageProps> = (props) => (
 
     <div class="flex select-text flex-col">
       <span>
-        <b class="text-white">{props.speaker.name}</b>
-        <span
-          class="ml-2 text-sm text-white/25"
-          // TODO(11b): Use datefns here to convert the Date object coming in
-          // from the props into a proper time string.
-        >
-          8:07 PM
+        <b class="text-white mr-2">{props.speaker.name}</b>
+        <span class="text-sm text-white/25">
+          {new Intl.DateTimeFormat('en-US', {dateStyle: 'short', timeStyle: 'short'}).format(props.timestamp)}
         </span>
       </span>
-      <div
-        class="message-text"
-        // TODO(11b): Figure out whether Showdown emits only safe HTML.
-        // eslint-disable-next-line solid/no-innerhtml
-        innerHTML={showdownConverter.makeHtml(props.utterance)}
-      />
+      <div class="message-text">
+        <div
+          // eslint-disable-next-line solid/no-innerhtml
+          innerHTML={showdownConverter.makeHtml(props.utterance)}
+          />
+
+      </div>
       <Show when={!props.speaker.isHuman}>
         <div class="mt-3 flex gap-2 text-sm text-white/25">
           <ThumbsUp size={16} class="-mt-[0.15rem]" />

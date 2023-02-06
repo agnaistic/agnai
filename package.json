@@ -4,6 +4,7 @@
   "description": "The official Pygmalion front-end.",
   "scripts": {
     "start": "NODE_ENV=dev parcel src/index.html",
+    "start:win": "set NODE_ENV=dev && parcel src/index.html",
     "build": "NODE_ENV=production parcel build src/index.html",
     "style": "prettier src --check",
     "style:fix": "prettier src --write",

@@ -7,8 +7,9 @@ import NavBar from "./shared/NavBar";
 
 const ChatPage = lazy(() => import("./pages/Chat"));
 const CharacterSettings = lazy(() => import("./pages/CharacterSettings"));
-
-const Home: Component = () => <h1>haven't made a homepage</h1>;
+const Home = lazy(() => import("./pages/Home"));
+const Account = lazy(() => import("./pages/Account"));
+const Register = lazy(() => import("./pages/Account/Register"));
 
 const App: Component = () => (
   <Router>
@@ -20,6 +21,8 @@ const App: Component = () => (
             <Route path="/chat" component={ChatPage} />
             <Route path="/character" component={CharacterSettings} />
             <Route path="/" component={Home} />
+            <Route path="/account" component={Account} />
+            <Route path="/account/register" component={Register} />
           </Routes>
         </div>
       </div>

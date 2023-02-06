@@ -7,6 +7,7 @@ import {
   MessageCircle,
   Settings,
   Users,
+  User
 } from "lucide-solid";
 
 const NavBar: Component = () => (
@@ -17,6 +18,14 @@ const NavBar: Component = () => (
       </A>
     </span>
     <span class="flex gap-4">
+      <A
+        aria-label="Character Settings"
+        class="focusable-icon-button rounded p-1"
+        href="/account"
+      >
+        <User />
+      </A>
+
       <A
         aria-label="Character Settings"
         class="focusable-icon-button rounded p-1"

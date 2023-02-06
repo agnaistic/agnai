@@ -1,18 +1,21 @@
 import { Component, Show, createMemo } from "solid-js";
 
 const TextInput: Component<{
-  label: string;
+  label?: string;
   fieldName: string;
   helperText?: string;
   placeholder?: string;
   isMultiline?: boolean;
+  class?: string
+  type?: string
 }> = (props) => {
   const placeholder = createMemo(
     () => props.placeholder || "Type something here..."
   );
 
   return (
-    <div>
+    <div class={props.class}>
+      <Show when={!!props.label}>
       <label for={props.fieldName}>
         {props.label}
         <Show when={!!props.helperText}>
@@ -21,13 +24,14 @@ const TextInput: Component<{
           </p>
         </Show>
       </label>
+      </Show>
       <Show
         when={props.isMultiline}
         fallback={
           <input
             id={props.fieldName}
             name={props.fieldName}
-            type="text"
+            type={props.type || 'text'}
             placeholder={placeholder()}
             class="focusable-field w-full rounded-xl px-4 py-2"
           />
@@ -40,6 +44,11 @@ const TextInput: Component<{
           name={props.fieldName}
           placeholder={placeholder()}
           class="focusable-field w-full rounded-xl px-4 py-2 !text-white"
+          onInput={(e) => {
+              const ele = e.target as HTMLTextAreaElement
+              ele.style.height = "";
+              ele.style.height = (ele.scrollHeight) + "px";
+          }}
         />
       </Show>
     </div>
