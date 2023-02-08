@@ -9,7 +9,7 @@ const ChatPage = lazy(() => import("./pages/Chat"));
 const CharacterSettings = lazy(() => import("./pages/CharacterSettings"));
 const Home = lazy(() => import("./pages/Home"));
 const Account = lazy(() => import("./pages/Account"));
-const Register = lazy(() => import("./pages/Account/Register"));
+const Register = lazy(() => import("./pages/Account/register"));
 
 const App: Component = () => (
   <Router>

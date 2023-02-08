@@ -3,7 +3,7 @@ import { For } from "solid-js";
 import Header from "./components/Header";
 import InputBar from "./components/InputBar";
 import Message from "./components/Message";
-import mockMessages from "./mocks";
+import { mockMessages } from "./mocks";
 
 const ChatPage = () => (
   <div
