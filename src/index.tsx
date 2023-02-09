@@ -1,33 +1,22 @@
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { Component } from "solid-js";
 import { render } from "solid-js/web";
-import { Component, lazy } from "solid-js";
-import { Router, Routes, Route } from "@solidjs/router";
 
-import NavBar from "./shared/NavBar";
+import { Router } from "@solidjs/router";
+import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 
-const ChatPage = lazy(() => import("./pages/Chat"));
-const CharacterSettings = lazy(() => import("./pages/CharacterSettings"));
-const Home = lazy(() => import("./pages/Home"));
-const Account = lazy(() => import("./pages/Account"));
-const Register = lazy(() => import("./pages/Account/register"));
+import App from "./App";
+import { AppStoreProvider } from "./providers/AppStoreProvider";
 
-const App: Component = () => (
+const queryClient = new QueryClient();
+
+const AppContainer: Component = () => (
   <Router>
-    <div class="flex h-[100vh] flex-col justify-between">
-      <NavBar />
-      <div class="w-full grow overflow-y-scroll px-8 pt-8 max-sm:px-3">
-        <div class="mx-auto h-full max-w-4xl">
-          <Routes>
-            <Route path="/chat" component={ChatPage} />
-            <Route path="/character" component={CharacterSettings} />
-            <Route path="/" component={Home} />
-            <Route path="/account" component={Account} />
-            <Route path="/account/register" component={Register} />
-          </Routes>
-        </div>
-      </div>
-    </div>
+    <AppStoreProvider>
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    </AppStoreProvider>
   </Router>
 );
 
-render(() => <App />, document.getElementById("root") as HTMLElement);
+render(() => <AppContainer />, document.getElementById("root") as HTMLElement);
