@@ -5,6 +5,7 @@ specifiers:
   '@solidjs/router': ^0.6.0
   '@tanstack/solid-query': ^4.24.4
   '@types/js-cookie': ^3.0.2
+  '@types/lodash': ^4.14.191
   '@types/showdown': ^2.0.0
   '@typescript-eslint/eslint-plugin': ^5.48.1
   '@typescript-eslint/parser': ^5.48.1
@@ -17,6 +18,7 @@ specifiers:
   eslint-plugin-solid: ^0.9.3
   eslint-plugin-tailwindcss: ^3.8.0
   js-cookie: ^3.0.1
+  lodash: ^4.17.21
   lucide-solid: 0.105.0-alpha.9
   parcel: ^2.8.2
   postcss: ^8.4.21
@@ -32,6 +34,7 @@ dependencies:
   '@solidjs/router': 0.6.0_solid-js@1.6.9
   '@tanstack/solid-query': 4.24.4_solid-js@1.6.9
   js-cookie: 3.0.1
+  lodash: 4.17.21
   lucide-solid: 0.105.0-alpha.9_solid-js@1.6.9
   showdown: 2.1.0
   solid-js: 1.6.9
@@ -39,6 +42,7 @@ dependencies:
 devDependencies:
   '@babel/core': 7.20.12
   '@types/js-cookie': 3.0.2
+  '@types/lodash': 4.14.191
   '@types/showdown': 2.0.0
   '@typescript-eslint/eslint-plugin': 5.48.1_oomjohfipuyaxs2zyomcx4f5by
   '@typescript-eslint/parser': 5.48.1_7uibuqfxkfaozanbtbziikiqje
@@ -1207,6 +1211,10 @@ packages:
 
   /@types/json5/0.0.29:
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
+    dev: true
+
+  /@types/lodash/4.14.191:
+    resolution: {integrity: sha512-BdZ5BCCvho3EIXw6wUCXHe7rS53AIDPLE+JzwgT+OsJk53oBfbSmZZ7CX4VaRoN78N+TJpFi9QPlfIVNmJYWxQ==}
     dev: true
 
   /@types/parse-json/4.0.0:
@@ -2866,6 +2874,10 @@ packages:
   /lodash.merge/4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
     dev: true
+
+  /lodash/4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+    dev: false
 
   /lru-cache/5.1.1:
     resolution: {integrity: sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w==}

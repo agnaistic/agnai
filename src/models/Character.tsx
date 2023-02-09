@@ -1,11 +1,13 @@
 interface Character {
+  id: string;
+
   name: string;
-  avatarUrl?: string;
   description: string;
-  greeting: string;
-  persona: string;
-  exampleConversations: string;
-  visibility: "public" | "unlisted" | "private";
+  avatarId?: string;
+  visibility: "public" | "private" | "unlisted";
+
+  createdAt: string;
+  updatedAt: string;
 }
 
 export default Character;

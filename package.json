@@ -24,6 +24,7 @@
     "@solidjs/router": "^0.6.0",
     "@tanstack/solid-query": "^4.24.4",
     "js-cookie": "^3.0.1",
+    "lodash": "^4.17.21",
     "lucide-solid": "0.105.0-alpha.9",
     "showdown": "^2.1.0",
     "solid-js": "^1.6.9"
@@ -31,6 +32,7 @@
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@types/js-cookie": "^3.0.2",
+    "@types/lodash": "^4.14.191",
     "@types/showdown": "^2.0.0",
     "@typescript-eslint/eslint-plugin": "^5.48.1",
     "@typescript-eslint/parser": "^5.48.1",

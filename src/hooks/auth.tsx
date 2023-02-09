@@ -5,6 +5,7 @@ import { useAppStore } from "../providers/AppStoreProvider";
 /** Hook to interact with authentication data within the global app store. */
 const useAuth = (): {
   isAuthenticated: () => boolean;
+  jwt: () => string | undefined;
   login: (jwt: string) => void;
   logout: (jwt: string) => void;
 } => {
@@ -46,7 +47,9 @@ const useAuth = (): {
     return true;
   };
 
-  return { isAuthenticated, login, logout };
+  const jwt = () => appStore.auth.jwt;
+
+  return { isAuthenticated, jwt, login, logout };
 };
 
 export default useAuth;
