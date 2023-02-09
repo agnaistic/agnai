@@ -10,9 +10,6 @@ const useAuth = (): {
 } => {
   const [appStore, updateAppStore] = useAppStore();
 
-  /** Returns whether the user is currently authenticated. */
-  const isAuthenticated = () => appStore.auth.jwt !== undefined;
-
   /**
    * Logs the user in by saving the JWT to the store and cookie jar, and saves a
    * decoded version of the JWT for use elsewhere.
@@ -32,6 +29,21 @@ const useAuth = (): {
   const logout = () => {
     updateAppStore("auth", { jwt: undefined, user: undefined });
     Cookies.remove("jwt");
+  };
+
+  /** Returns whether the user is currently authenticated. */
+  const isAuthenticated = () => {
+    if (appStore.auth.jwt) {
+      return true;
+    }
+
+    const jwt = Cookies.get("jwt");
+    if (!jwt) {
+      return false;
+    }
+
+    login(jwt);
+    return true;
   };
 
   return { isAuthenticated, login, logout };
