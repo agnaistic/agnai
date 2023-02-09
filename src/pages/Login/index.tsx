@@ -1,6 +1,6 @@
 import { Component, createEffect, createMemo, Show } from "solid-js";
 
-import { useNavigate } from "@solidjs/router";
+import { useLocation, useNavigate } from "@solidjs/router";
 import { createMutation } from "@tanstack/solid-query";
 
 import { performLogin } from "../../api/users/login";
@@ -12,6 +12,7 @@ import LoginForm from "./LoginForm";
 
 const LoginPage: Component = () => {
   const { login } = useAuth();
+  const { state } = useLocation();
   const navigate = useNavigate();
   const mutation = createMutation(performLogin);
 
@@ -53,7 +54,12 @@ const LoginPage: Component = () => {
     if (!mutation.data || !("jwt" in mutation.data)) return;
 
     login(mutation.data.jwt);
-    navigate("/", { replace: true });
+
+    let redirectTo = "/";
+    if (state && "redirectTo" in state) {
+      redirectTo = state.redirectTo as string;
+    }
+    navigate(redirectTo, { replace: true });
   });
 
   return (
