@@ -1,6 +1,7 @@
-import { createSignal, For, onMount } from "solid-js";
+import { createSignal, For } from "solid-js";
+
+import Character from "../../models/Character";
 import CharacterCard from "../../shared/CharacterCard";
-import CreateNewCard from "./components/CreateNewCard";
 
 const HomePage = () => {
   const testTemplate = [
@@ -31,13 +32,10 @@ const HomePage = () => {
     },
   ] as Character[];
 
-  const [recentlyChatedCharacters, setRecentlyChatedCharacters] =
-    createSignal(testTemplate);
-  const [recommendedCharacters, setRecommendedCharacters] =
-    createSignal(testTemplate);
-  const [popularCharacters, setPopularCharacters] = createSignal(testTemplate);
-  const [recentlyCreatedCharacters, setRecentlyCreatedCharacters] =
-    createSignal(testTemplate);
+  const [recentlyChatedCharacters] = createSignal(testTemplate);
+  const [recommendedCharacters] = createSignal(testTemplate);
+  const [popularCharacters] = createSignal(testTemplate);
+  const [recentlyCreatedCharacters] = createSignal(testTemplate);
 
   return (
     <>
@@ -47,8 +45,8 @@ const HomePage = () => {
       <div class="flex flex-wrap justify-center gap-4">
         <For each={recentlyChatedCharacters()}>
           {(e: Character) => (
-              <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-            )}
+            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
+          )}
         </For>
       </div>
 
@@ -58,8 +56,8 @@ const HomePage = () => {
       <div class="flex flex-wrap justify-center gap-4">
         <For each={recommendedCharacters()}>
           {(e: Character) => (
-              <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-            )}
+            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
+          )}
         </For>
       </div>
 
@@ -69,8 +67,8 @@ const HomePage = () => {
       <div class="flex flex-wrap justify-center gap-4">
         <For each={popularCharacters()}>
           {(e: Character) => (
-              <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-            )}
+            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
+          )}
         </For>
       </div>
 
@@ -80,8 +78,8 @@ const HomePage = () => {
       <div class="flex flex-wrap justify-center gap-4">
         <For each={recentlyCreatedCharacters()}>
           {(e: Character) => (
-              <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-            )}
+            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
+          )}
         </For>
       </div>
     </>

@@ -7,3 +7,5 @@ interface Character {
   exampleConversations: string;
   visibility: "public" | "unlisted" | "private";
 }
+
+export default Character;
