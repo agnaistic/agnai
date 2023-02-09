@@ -3,7 +3,11 @@ import { parseJWT } from "../api";
 import { useAppStore } from "../providers/AppStoreProvider";
 
 /** Hook to interact with authentication data within the global app store. */
-const useAuth = () => {
+const useAuth = (): {
+  isAuthenticated: () => boolean;
+  login: (jwt: string) => void;
+  logout: (jwt: string) => void;
+} => {
   const [appStore, updateAppStore] = useAppStore();
 
   /** Returns whether the user is currently authenticated. */

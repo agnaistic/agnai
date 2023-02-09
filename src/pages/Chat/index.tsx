@@ -1,11 +1,11 @@
-import { For } from "solid-js";
+import { Component, For } from "solid-js";
 
 import Header from "./components/Header";
 import InputBar from "./components/InputBar";
 import Message from "./components/Message";
 import { mockMessages } from "./mocks";
 
-const ChatPage = () => (
+const ChatPage: Component = () => (
   <div
     // Apparently there's a well-known, wontfix browser bug where if you
     // justify elements to flex-end, vertical scrolling doesn't work. To work

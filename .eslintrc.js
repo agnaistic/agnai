@@ -8,7 +8,7 @@ module.exports = {
     "airbnb-base",
     "airbnb-typescript/base",
     "plugin:solid/typescript",
-	"plugin:tailwindcss/recommended",
+    "plugin:tailwindcss/recommended",
     "prettier",
   ],
   overrides: [],
@@ -17,7 +17,8 @@ module.exports = {
     project: "./tsconfig.json",
   },
   rules: {
+    "@typescript-eslint/explicit-module-boundary-types": "error",
     "import/extensions": ["error", "never"],
-	"tailwindcss/no-custom-classname": "off",
+    "tailwindcss/no-custom-classname": "off",
   },
 };

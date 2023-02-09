@@ -1,9 +1,9 @@
-import { createSignal, For } from "solid-js";
+import { Component, createSignal, For } from "solid-js";
 
 import Character from "../../models/Character";
 import CharacterCard from "../../shared/CharacterCard";
 
-const HomePage = () => {
+const HomePage: Component = () => {
   const testTemplate = [
     {
       name: "Ibuki-chan",

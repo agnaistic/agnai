@@ -1,4 +1,4 @@
-import { createContext, JSX, useContext } from "solid-js";
+import { Component, createContext, JSX, useContext } from "solid-js";
 import { createStore, SetStoreFunction } from "solid-js/store";
 
 import User from "../models/User";
@@ -15,10 +15,13 @@ const defaultStore = {
   },
 };
 
-const AppStoreContext = createContext<[AppStore, SetStoreFunction<AppStore>]>();
+const AppStoreContext = createContext<AppStoreContextValue>();
+type AppStoreContextValue = [AppStore, SetStoreFunction<AppStore>];
 
 /** Provides a SolidJS store for storing global data. */
-export const AppStoreProvider = (props: { children: JSX.Element }) => {
+export const AppStoreProvider: Component<{
+  children: JSX.Element;
+}> = (props) => {
   const [appStore, updateAppStore] = createStore<AppStore>(defaultStore);
 
   return (
@@ -28,4 +31,5 @@ export const AppStoreProvider = (props: { children: JSX.Element }) => {
   );
 };
 
-export const useAppStore = () => useContext(AppStoreContext)!;
+export const useAppStore = (): AppStoreContextValue =>
+  useContext(AppStoreContext)!;
