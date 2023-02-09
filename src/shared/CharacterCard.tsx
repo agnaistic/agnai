@@ -1,17 +1,25 @@
 import { Component } from "solid-js";
 
-const CharacterCard: Component<{ displayName: string; avatarUrl?: string }> = (
+import { A } from "@solidjs/router";
+
+import Character from "../models/Character";
+
+const CharacterCard: Component<{ character: Character; href: string }> = (
   props
 ) => (
-  <div
-    style={{ "background-image": `url("${props.avatarUrl}")` }}
-    class="relative h-40 w-40 rounded-lg bg-white bg-cover drop-shadow-[0_1px_2px_rgba(255,255,255,0.1)] transition hover:-translate-y-1 hover:scale-105"
-  >
-    <div class="h-full w-full rounded-lg bg-gradient-to-t from-gray-700" />
-    <span class="text-shadow absolute bottom-2 left-3">
-      {props.displayName}
-    </span>
-  </div>
+  <A href={props.href} class="focusable-card group flex flex-col gap-1">
+    <div
+      style={{ "background-image": `url(${props.character.avatarId})` }}
+      class="h-40 w-40 rounded-t-md bg-zinc-200 bg-cover"
+    >
+      <div class="_focusable-base h-full w-full bg-white/0 group-hover:bg-white/5 group-active:bg-white/10" />
+    </div>
+
+    <div class="p-3">
+      <b class="truncate">{props.character.name}</b>
+      <p class="text-sm text-white/75">{props.character.description}</p>
+    </div>
+  </A>
 );
 
 export default CharacterCard;

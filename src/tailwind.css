@@ -52,6 +52,16 @@
   }
 
   /**
+   * Cards.
+   */
+  .focusable-card {
+    @apply _focusable-base;
+    @apply max-h-96 max-w-[10rem];
+    @apply rounded-md shadow-md;
+    @apply bg-background-lighter hover:bg-zinc-900 active:bg-zinc-800;
+  }
+
+  /**
    * Other form stuff.
    */
   .form-check-input:checked[type="radio"] {

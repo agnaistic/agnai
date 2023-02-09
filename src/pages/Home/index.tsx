@@ -1,88 +1,52 @@
-import { Component, createSignal, For } from "solid-js";
+import { Component, For, Suspense } from "solid-js";
 
+import { createQuery } from "@tanstack/solid-query";
+
+import { fetchCharacters } from "../../api/characters/list";
 import Character from "../../models/Character";
 import CharacterCard from "../../shared/CharacterCard";
+import PageHeader from "../../shared/PageHeader";
+import useAuth from "../../hooks/auth";
+import RequiresAuth from "../../shared/RequiresAuth";
+
+const CharacterGroup: Component<{
+  title: string;
+  description: string;
+  characters: Character[];
+}> = (props) => (
+  <>
+    <PageHeader title={props.title} subtitle={props.description} />
+
+    <div class="flex flex-wrap gap-3 max-sm:gap-2">
+      <For each={props.characters}>
+        {(character: Character) => (
+          <CharacterCard
+            character={character}
+            href={`/characters/${character.id}`}
+          />
+        )}
+      </For>
+    </div>
+  </>
+);
 
 const HomePage: Component = () => {
-  const testTemplate = [
-    {
-      name: "Ibuki-chan",
-      avatarUrl: "",
-      description: "",
-    },
-    {
-      name: "Ibuki-chan",
-      avatarUrl: "",
-      description: "",
-    },
-    {
-      name: "Ibuki-chan",
-      avatarUrl: "",
-      description: "",
-    },
-    {
-      name: "Ibuki-chan",
-      avatarUrl: "",
-      description: "",
-    },
-    {
-      name: "Ibuki-chan",
-      avatarUrl: "",
-      description: "",
-    },
-  ] as Character[];
-
-  const [recentlyChatedCharacters] = createSignal(testTemplate);
-  const [recommendedCharacters] = createSignal(testTemplate);
-  const [popularCharacters] = createSignal(testTemplate);
-  const [recentlyCreatedCharacters] = createSignal(testTemplate);
+  const { jwt } = useAuth();
+  const query = createQuery(
+    () => ["characters"],
+    () => fetchCharacters(jwt()!)
+  );
 
   return (
-    <>
-      <h1 class="mt-10 text-3xl">Recently Chatted Characters</h1>
-      <p class="text-white/50">Characters that you recently chatted.</p>
-      <div class="my-4 border-b border-white/5" />
-      <div class="flex flex-wrap justify-center gap-4">
-        <For each={recentlyChatedCharacters()}>
-          {(e: Character) => (
-            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-          )}
-        </For>
-      </div>
-
-      <h1 class="mt-10 text-3xl">Recommended Characters</h1>
-      <p class="text-white/50">Characters that are recommended for you</p>
-      <div class="my-4 border-b border-white/5" />
-      <div class="flex flex-wrap justify-center gap-4">
-        <For each={recommendedCharacters()}>
-          {(e: Character) => (
-            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-          )}
-        </For>
-      </div>
-
-      <h1 class="mt-10 text-3xl">Popular characters</h1>
-      <p class="text-white/50">Characters that are popular in the community.</p>
-      <div class="my-4 border-b border-white/5" />
-      <div class="flex flex-wrap justify-center gap-4">
-        <For each={popularCharacters()}>
-          {(e: Character) => (
-            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-          )}
-        </For>
-      </div>
-
-      <h1 class="mt-10 text-3xl">Recently Created Characters</h1>
-      <p class="text-white/50">Characters that are made recently.</p>
-      <div class="my-4 border-b border-white/5" />
-      <div class="flex flex-wrap justify-center gap-4">
-        <For each={recentlyCreatedCharacters()}>
-          {(e: Character) => (
-            <CharacterCard displayName={e.name} avatarUrl={e.avatarUrl} />
-          )}
-        </For>
-      </div>
-    </>
+    <RequiresAuth>
+      <Suspense fallback="Loading">
+        <CharacterGroup
+          title="New Characters"
+          description="Recent creations from the community."
+          characters={query.data}
+        />
+      </Suspense>
+    </RequiresAuth>
   );
 };
 export default HomePage;
