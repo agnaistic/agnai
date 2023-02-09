@@ -1,6 +1,7 @@
-// TODO(11b): This needs to come from some environment variable that Parcel will
-// expose to us.
-export const BASE_API_URL = "http://localhost:3001/api/v1";
+const CORE_API_SERVER = process.env.API_SERVER || "http://localhost:3000";
+
+/** Base path to the v1 core API. */
+export const BASE_CORE_API_URL = `${CORE_API_SERVER}/api/v1`;
 
 /** Minimal JWT decoder. Does not validate signature. */
 export const parseJWT = (jwt: string): unknown => {
