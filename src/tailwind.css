@@ -42,7 +42,8 @@
 
   .btn-primary {
     @apply btn-base;
-    @apply bg-purple-600 hover:bg-purple-500 active:bg-purple-400;
+    @apply bg-purple-600 enabled:hover:bg-purple-500 enabled:active:bg-purple-400;
+    @apply disabled:cursor-not-allowed disabled:bg-purple-900 disabled:text-white/25;
   }
 
   .btn-secondary {
