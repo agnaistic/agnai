@@ -9,6 +9,23 @@
 
 @layer base {
   /**
+   * Scrollbar
+   */
+
+  ::-webkit-scrollbar {
+    @apply h-1 w-1;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-white/10;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-purple-600;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-purple-500;
+  }
+
+  /**
    * Focus/accessibility-related utilities.
    */
   ._focusable-base {
