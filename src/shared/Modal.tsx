@@ -1,24 +1,24 @@
-import { createSignal, Component, Show } from "solid-js";
+import { createSignal, Component, Show } from 'solid-js'
 // Component Properties
 interface Props {
-  messageHeader: string;
-  message: string;
-  confirmText: string;
-  declineText: string;
-  onConfirm: () => void;
+  messageHeader: string
+  message: string
+  confirmText: string
+  declineText: string
+  onConfirm: () => void
 }
 
 const Modal: Component<Props> = (props) => {
-  const [show, setShow] = createSignal(true);
+  const [show, setShow] = createSignal(true)
 
   const handleClose = () => {
-    setShow(false);
-  };
+    setShow(false)
+  }
   // Make sure you set an onConfirm function on the page or it will simply close the modal without performing a task!!
   const handleConfirm = () => {
-    props.onConfirm();
-    setShow(false);
-  };
+    props.onConfirm()
+    setShow(false)
+  }
 
   return (
     <Show when={show()}>
@@ -28,15 +28,10 @@ const Modal: Component<Props> = (props) => {
         </div>
         <div class="overflow-hidden rounded-lg bg-black px-4 pt-5 pb-4 shadow-xl transition-all sm:w-full sm:max-w-lg">
           <div>
-            <div class="black mb-4 text-lg font-bold">
-              {props.messageHeader}
-            </div>
+            <div class="black mb-4 text-lg font-bold">{props.messageHeader}</div>
             <div class="black mb-4 text-lg">{props.message}</div>
             <div class="flex items-center justify-end">
-              <button
-                class="text-red-500 hover:text-red-700"
-                onClick={handleClose}
-              >
+              <button class="text-red-500 hover:text-red-700" onClick={handleClose}>
                 {props.declineText}
               </button>
               <button
@@ -50,7 +45,7 @@ const Modal: Component<Props> = (props) => {
         </div>
       </div>
     </Show>
-  );
-};
+  )
+}
 
-export default Modal;
+export default Modal
