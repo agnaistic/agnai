@@ -1,7 +1,7 @@
-import { MessageCircle, Settings, User, Users } from "lucide-solid";
-import { Component } from "solid-js";
+import { MessageCircle, Settings, User, Users } from 'lucide-solid'
+import { Component } from 'solid-js'
 
-import { A } from "@solidjs/router";
+import { A } from '@solidjs/router'
 
 const NavBar: Component = () => (
   <span class="flex justify-between gap-4 bg-background-lighter px-8 py-5 shadow-xl max-sm:p-3">
@@ -11,11 +11,7 @@ const NavBar: Component = () => (
       </A>
     </span>
     <span class="flex gap-4">
-      <A
-        aria-label="Character Settings"
-        class="focusable-icon-button rounded p-1"
-        href="/account"
-      >
+      <A aria-label="Character Settings" class="focusable-icon-button rounded p-1" href="/account">
         <User />
       </A>
 
@@ -27,11 +23,7 @@ const NavBar: Component = () => (
         <Users />
       </A>
 
-      <A
-        aria-label="Chat"
-        class="focusable-icon-button rounded p-1"
-        href="/chat"
-      >
+      <A aria-label="Chat" class="focusable-icon-button rounded p-1" href="/chat">
         <MessageCircle />
       </A>
 
@@ -44,6 +36,6 @@ const NavBar: Component = () => (
       </A>
     </span>
   </span>
-);
+)
 
-export default NavBar;
+export default NavBar

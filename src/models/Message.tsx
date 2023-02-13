@@ -1,15 +1,15 @@
-import Speaker from "./Speaker";
+import Speaker from './Speaker'
 
 /** Represents an individual message. */
 interface Message {
   /** Who sent this message. */
-  speaker: Speaker;
+  speaker: Speaker
 
   /** Contents of the message. */
-  utterance: string;
+  utterance: string
 
   /** When the message was sent. */
-  timestamp: Date;
+  timestamp: Date
 }
 
-export default Message;
+export default Message

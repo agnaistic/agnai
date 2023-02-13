@@ -1,28 +1,25 @@
-import { ThumbsDown, ThumbsUp } from "lucide-solid";
-import showdown from "showdown";
-import { Component, Show } from "solid-js";
+import { ThumbsDown, ThumbsUp } from 'lucide-solid'
+import showdown from 'showdown'
+import { Component, Show } from 'solid-js'
 
-import MessageProps from "../../../models/Message";
+import MessageProps from '../../../models/Message'
 
-import "./Message.css";
+import './Message.css'
 
-const showdownConverter = new showdown.Converter();
+const showdownConverter = new showdown.Converter()
 
 /** An individual message. */
 const Message: Component<MessageProps> = (props) => (
   <span class="flex gap-4">
-    <img
-      src={props.speaker.avatarUrl}
-      class="mt-1 h-12 w-12 rounded-full bg-white"
-    />
+    <img src={props.speaker.avatarUrl} class="mt-1 h-12 w-12 rounded-full bg-white" />
 
     <div class="flex select-text flex-col">
       <span>
         <b class="mr-2 text-white">{props.speaker.name}</b>
         <span class="text-sm text-white/25">
-          {new Intl.DateTimeFormat("en-US", {
-            dateStyle: "short",
-            timeStyle: "short",
+          {new Intl.DateTimeFormat('en-US', {
+            dateStyle: 'short',
+            timeStyle: 'short',
           }).format(props.timestamp)}
         </span>
       </span>
@@ -41,6 +38,6 @@ const Message: Component<MessageProps> = (props) => (
       </Show>
     </div>
   </span>
-);
+)
 
-export default Message;
+export default Message

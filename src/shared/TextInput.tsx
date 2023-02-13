@@ -1,29 +1,25 @@
-import { Component, Show, createMemo } from "solid-js";
+import { Component, Show, createMemo } from 'solid-js'
 
 const TextInput: Component<{
-  fieldName: string;
-  label?: string;
-  helperText?: string;
-  placeholder?: string;
-  isMultiline?: boolean;
-  type?: string;
-  required?: boolean;
+  fieldName: string
+  label?: string
+  helperText?: string
+  placeholder?: string
+  isMultiline?: boolean
+  type?: string
+  required?: boolean
 }> = (props) => {
   const placeholder = createMemo(() =>
-    props.placeholder !== undefined
-      ? props.placeholder
-      : "Type something here..."
-  );
+    props.placeholder !== undefined ? props.placeholder : 'Type something here...'
+  )
 
   return (
     <div>
       <Show when={!!props.label}>
         <label for={props.fieldName}>
-          <div class={props.helperText ? "" : "pb-1"}>{props.label}</div>
+          <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
           <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-1 text-sm text-white/50">
-              {props.helperText}
-            </p>
+            <p class="mt-[-0.125rem] pb-1 text-sm text-white/50">{props.helperText}</p>
           </Show>
         </label>
       </Show>
@@ -33,7 +29,7 @@ const TextInput: Component<{
           <input
             id={props.fieldName}
             name={props.fieldName}
-            type={props.type || "text"}
+            type={props.type || 'text'}
             required={props.required}
             placeholder={placeholder()}
             class="focusable-field w-full rounded-xl px-4 py-2"
@@ -49,14 +45,14 @@ const TextInput: Component<{
           placeholder={placeholder()}
           class="focusable-field w-full rounded-xl px-4 py-2 !text-white"
           onInput={(e) => {
-            const ele = e.target as HTMLTextAreaElement;
-            ele.style.height = "";
-            ele.style.height = `${ele.scrollHeight}px`;
+            const ele = e.target as HTMLTextAreaElement
+            ele.style.height = ''
+            ele.style.height = `${ele.scrollHeight}px`
           }}
         />
       </Show>
     </div>
-  );
-};
+  )
+}
 
-export default TextInput;
+export default TextInput

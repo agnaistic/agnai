@@ -1,10 +1,10 @@
-import { Component, For, JSX } from "solid-js";
+import { Component, For, JSX } from 'solid-js'
 
 export interface RadioOption {
-  name: string;
-  id: string;
-  label: JSX.Element;
-  isChecked?: boolean;
+  name: string
+  id: string
+  label: JSX.Element
+  isChecked?: boolean
 }
 
 const RadioGroup: Component<{ options: RadioOption[] }> = (props) => (
@@ -22,10 +22,7 @@ const RadioGroup: Component<{ options: RadioOption[] }> = (props) => (
               id={option.id}
               checked={option.isChecked}
             />
-            <label
-              class="form-check-label inline-block cursor-pointer"
-              for={option.id}
-            >
+            <label class="form-check-label inline-block cursor-pointer" for={option.id}>
               {option.label}
             </label>
           </div>
@@ -33,6 +30,6 @@ const RadioGroup: Component<{ options: RadioOption[] }> = (props) => (
       </For>
     </div>
   </div>
-);
+)
 
-export default RadioGroup;
+export default RadioGroup

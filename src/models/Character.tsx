@@ -1,13 +1,13 @@
 interface Character {
-  id: string;
+  id: string
 
-  name: string;
-  description: string;
-  avatarId?: string;
-  visibility: "public" | "private" | "unlisted";
+  name: string
+  description: string
+  avatarId?: string
+  visibility: 'public' | 'private' | 'unlisted'
 
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string
+  updatedAt: string
 }
 
-export default Character;
+export default Character

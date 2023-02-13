@@ -1,13 +1,13 @@
 /** Representation of a speaker for front-end components. */
 interface Speaker {
   /** User-friendly name. */
-  name: string;
+  name: string
 
   /** URL to the speaker's avatar. */
-  avatarUrl?: string;
+  avatarUrl?: string
 
   /** Whether this is a human speaker. */
-  isHuman?: boolean;
+  isHuman?: boolean
 }
 
-export default Speaker;
+export default Speaker

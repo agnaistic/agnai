@@ -1,6 +1,6 @@
-import { Component, Show } from "solid-js";
+import { Component, Show } from 'solid-js'
 
-import Divider from "./Divider";
+import Divider from './Divider'
 
 const PageHeader: Component<{ title: string; subtitle?: string }> = (props) => (
   <>
@@ -10,6 +10,6 @@ const PageHeader: Component<{ title: string; subtitle?: string }> = (props) => (
     </Show>
     <Divider />
   </>
-);
+)
 
-export default PageHeader;
+export default PageHeader

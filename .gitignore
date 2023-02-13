@@ -2,3 +2,7 @@
 /dist
 /node_modules
 .pnpm-debug.log
+.env
+config.json
+.config.json
+log.txt

@@ -1,15 +1,15 @@
-import { Component } from "solid-js";
-import { Save, X } from "lucide-solid";
+import { Component } from 'solid-js'
+import { Save, X } from 'lucide-solid'
 
-import Button from "../../shared/Button";
-import TextInput from "../../shared/TextInput";
-import RadioGroup, { RadioOption } from "../../shared/RadioGroup";
-import PageHeader from "../../shared/PageHeader";
+import Button from '../../shared/Button'
+import TextInput from '../../shared/TextInput'
+import RadioGroup, { RadioOption } from '../../shared/RadioGroup'
+import PageHeader from '../../shared/PageHeader'
 
 const visibilityOptions: RadioOption[] = [
   {
-    id: "public",
-    name: "visibility-radio",
+    id: 'public',
+    name: 'visibility-radio',
     label: (
       <>
         Public <span class="text-white/50"> - Everyone</span>
@@ -18,8 +18,8 @@ const visibilityOptions: RadioOption[] = [
     isChecked: true,
   },
   {
-    id: "unlisted",
-    name: "visibility-radio",
+    id: 'unlisted',
+    name: 'visibility-radio',
     label: (
       <>
         Unlisted <span class="text-white/50"> - Only people with a link</span>
@@ -27,29 +27,22 @@ const visibilityOptions: RadioOption[] = [
     ),
   },
   {
-    id: "private",
-    name: "visibility-radio",
+    id: 'private',
+    name: 'visibility-radio',
     label: (
       <>
         Private <span class="text-white/50"> - Only you</span>
       </>
     ),
   },
-];
+]
 
 const CharacterSettings: Component = () => (
   <>
-    <PageHeader
-      title="Character Settings"
-      subtitle="Configure BOT's character."
-    />
+    <PageHeader title="Character Settings" subtitle="Configure BOT's character." />
 
     <div class="flex flex-col gap-8">
-      <TextInput
-        fieldName="name"
-        label="Name"
-        helperText="What is this character's name?"
-      />
+      <TextInput fieldName="name" label="Name" helperText="What is this character's name?" />
       <TextInput
         fieldName="description"
         label="Description"
@@ -96,6 +89,6 @@ const CharacterSettings: Component = () => (
       </div>
     </div>
   </>
-);
+)
 
-export default CharacterSettings;
+export default CharacterSettings

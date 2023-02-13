@@ -1,5 +1,5 @@
-import { Sliders, Send } from "lucide-solid";
-import { Component, JSX } from "solid-js";
+import { Sliders, Send } from 'lucide-solid'
+import { Component, JSX } from 'solid-js'
 
 /** Meant to be used exclusively within the InputBar. */
 const IconButton: Component<{ children: JSX.Element }> = (props) => (
@@ -9,7 +9,7 @@ const IconButton: Component<{ children: JSX.Element }> = (props) => (
   >
     {props.children}
   </button>
-);
+)
 
 /** Bar containing the message text input and some attached buttons. */
 const InputBar: Component = () => (
@@ -27,6 +27,6 @@ const InputBar: Component = () => (
     </IconButton>
     <div class="rounded-r-xl bg-white/5 pr-2" />
   </div>
-);
+)
 
-export default InputBar;
+export default InputBar

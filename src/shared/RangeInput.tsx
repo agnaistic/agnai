@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component } from 'solid-js'
 
 const RangeInput: Component = () => (
   <div class="relative pt-1">
@@ -21,6 +21,6 @@ const RangeInput: Component = () => (
       id="customRange2"
     />
   </div>
-);
+)
 
-export default RangeInput;
+export default RangeInput

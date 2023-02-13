@@ -1,6 +1,6 @@
-import { A } from "@solidjs/router";
-import { Plus } from "lucide-solid";
-import { Component } from "solid-js";
+import { A } from '@solidjs/router'
+import { Plus } from 'lucide-solid'
+import { Component } from 'solid-js'
 
 const CreateNewCard: Component = () => (
   <A href="/character">
@@ -8,6 +8,6 @@ const CreateNewCard: Component = () => (
       <Plus size={48} />
     </div>
   </A>
-);
+)
 
-export default CreateNewCard;
+export default CreateNewCard
