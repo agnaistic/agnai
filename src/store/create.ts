@@ -111,10 +111,10 @@ export function createStore<State extends {}>(name: string, init: State) {
     }
 
     const useStore = () => {
-      const [solid, setSolid] = createSolidStore<State>(init)
+      const [solid, setSolid] = createSolidStore<State>(store.getState())
 
-      const unsub = store.subscribe(() => {
-        setSolid(reconcile(store.getState()))
+      const unsub = store.subscribe((next) => {
+        setSolid(reconcile(next))
       })
 
       onCleanup(unsub)
@@ -123,10 +123,7 @@ export function createStore<State extends {}>(name: string, init: State) {
 
     type PatchedStore = typeof useStore & Wrapped & typeof store
     const patchedStore = useStore as PatchedStore
-    patchedStore.getState = store.getState
-    patchedStore.setState = store.setState
-    patchedStore.destroy = store.destroy
-    patchedStore.subscribe = store.subscribe
+    Object.assign(patchedStore, store)
 
     for (const key of Object.keys(wrapped) as Array<keyof Handler>) {
       patchedStore[key] = wrapped[key] as any
