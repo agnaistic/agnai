@@ -81,19 +81,27 @@
   /**
    * Other form stuff.
    */
-  .form-check-input:checked[type="radio"] {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-4 -4 8 8%22%3E%3Ccircle r=%222%22 fill=%22%23fff%22/%3E%3C/svg%3E");
+  .form-check-input:checked[type='radio'] {
+    background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-4 -4 8 8%22%3E%3Ccircle r=%222%22 fill=%22%23fff%22/%3E%3C/svg%3E');
   }
 
-  /**
-   * Dropdowns.
-   */
-
-  .dropdown-menu {
-    @apply flex flex-col rounded-md  bg-stone-600 drop-shadow-md;
+  input[type='range'] {
+    background: rgb(255 255 255 / 0.05);
+    background-image: linear-gradient(rgb(152 64 160), rgb(152 64 160));
+    background-repeat: no-repeat;
   }
 
-  .dropdown-item {
-    @apply px-5 py-3 hover:bg-stone-500;
+  input[type='range']::-webkit-slider-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: rgb(152 64 160);
+    box-shadow: 0 0 2px 0 #555;
+  }
+
+  input[type='range']::-webkit-slider-runnable-track {
+    box-shadow: none;
+    border: none;
+    background: transparent;
   }
 }
