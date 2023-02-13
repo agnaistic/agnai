@@ -5,9 +5,11 @@ import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
 import LoginForm from './LoginForm'
 import { userStore } from '../../store'
+import { getForm } from '../../shared/util'
 
 const LoginPage: Component = () => {
-  const { user, loading, error } = userStore.getState()
+  const { user, loading, error } = userStore()
+
   const { state } = useLocation()
   const navigate = useNavigate()
 
@@ -21,20 +23,19 @@ const LoginPage: Component = () => {
     return 'Something went wrong.'
   })
 
-  /** Form submission callback to handle POSTing to the back-end. */
   const onSubmit = (evt: Event) => {
     evt.preventDefault()
     if (!evt.target) return
 
-    const form = new FormData(evt.target as HTMLFormElement)
-    const username = form.get('email')?.toString()
-    const password = form.get('password')?.toString()
-    if (!username || !password) return
-    userStore.login(username, password)
+    const { email, password } = getForm(evt.target, { email: 'string', password: 'string' })
+
+    if (!email || !password) return
+    userStore.login(email, password)
   }
 
   /** Side-effect to take care of a successful login. */
   createEffect(() => {
+    console.log('exec')
     if (!user) return
 
     let redirectTo = '/'
@@ -42,7 +43,7 @@ const LoginPage: Component = () => {
       redirectTo = state.redirectTo as string
     }
     navigate(redirectTo, { replace: true })
-  })
+  }, user)
 
   return (
     <div class="flex w-full justify-center">

@@ -12,6 +12,7 @@ const App: Component = () => (
           <Route path="/character" component={lazy(() => import('./pages/CharacterSettings'))} />
           <Route path="/" component={lazy(() => import('./pages/Home'))} />
           <Route path="/account/login" component={lazy(() => import('./pages/Login'))} />
+          <Route path="/generation-settings" component={lazy(() => import('./pages/Settings'))} />
         </Routes>
       </div>
     </div>

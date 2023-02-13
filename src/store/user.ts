@@ -19,6 +19,11 @@ export const userStore = createStore<State>(
   return {
     async *login(_, username: string, password: string) {
       yield { loading: true }
+      yield {
+        loading: false,
+        user: { displayName: username, email: username, id: username },
+        jwt: 'token',
+      }
     },
     clearAuth() {
       Cookies.remove('auth')
