@@ -9,6 +9,7 @@ const schemaNameToClass: Record<ButtonSchema, string> = {
 
 const Button: Component<{
   children: JSX.Element
+  onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent>
   schema?: ButtonSchema
   type?: 'submit' | 'reset' | 'button'
   disabled?: boolean
@@ -17,6 +18,7 @@ const Button: Component<{
     type={props.type || 'button'}
     class={`${schemaNameToClass[props.schema || 'primary']} justify-center`}
     disabled={props.disabled}
+    onClick={props.onClick}
   >
     {props.children}
   </button>
