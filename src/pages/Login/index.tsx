@@ -23,10 +23,7 @@ const LoginPage: Component = () => {
   })
 
   const onSubmit = (evt: Event) => {
-    evt.preventDefault()
-    if (!evt.target) return
-
-    const { email, password } = getForm(evt.target, { email: 'string', password: 'string' })
+    const { email, password } = getForm(evt, { email: 'string', password: 'string' })
 
     if (!email || !password) return
     userStore.login(email, password)

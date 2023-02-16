@@ -1,6 +1,7 @@
 import { Component, lazy } from 'solid-js'
 import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
+import Toasts from './Toasts'
 
 const App: Component = () => (
   <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-purple-900 flex h-screen flex-col justify-between">
@@ -20,6 +21,7 @@ const App: Component = () => (
         </Routes>
       </div>
     </div>
+    <Toasts />
   </div>
 )
 

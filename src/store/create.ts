@@ -79,7 +79,8 @@ export function createStore<State extends {}>(name: string, init: State) {
         if (!result) return
 
         if (isPromise<State>(result)) {
-          const nextState = await result
+          const nextState = await result.catch(() => null)
+          if (!nextState) return
           const next = { ...prev, ...nextState }
           send(`[OUT] ${name}`, { type: key, args }, next)
           setter(next)

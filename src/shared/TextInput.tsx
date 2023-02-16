@@ -7,11 +7,14 @@ const TextInput: Component<{
   placeholder?: string
   isMultiline?: boolean
   type?: string
+  value?: number | string
   required?: boolean
 }> = (props) => {
   const placeholder = createMemo(() =>
     props.placeholder !== undefined ? props.placeholder : 'Type something here...'
   )
+
+  const value = createMemo(() => (props.value !== undefined ? props.value : null))
 
   return (
     <div>
@@ -32,6 +35,7 @@ const TextInput: Component<{
             type={props.type || 'text'}
             required={props.required}
             placeholder={placeholder()}
+            value={value()}
             class="focusable-field w-full rounded-xl px-4 py-2"
           />
         }

@@ -47,13 +47,14 @@ export function logMiddleware() {
 
     req.log = log
 
-    req.log.info('start request')
+    const isOptions = req.method === 'OPTIONS'
+    if (!isOptions) req.log.info('start request')
 
     const start = Date.now()
 
     res.on('finish', () => {
       const duration = Date.now() - start
-      req.log.info({ duration, statusCode: res.statusCode }, 'end request')
+      if (!isOptions) req.log.info({ duration, statusCode: res.statusCode }, 'end request')
     })
 
     next()

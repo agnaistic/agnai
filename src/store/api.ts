@@ -1,3 +1,4 @@
+import { toastStore } from './toasts'
 import { userStore } from './user'
 
 const baseUrl = `http://${location.hostname}:3001`
@@ -32,7 +33,6 @@ async function callApi<T = any>(
 ): Promise<{ result: T | undefined; status: number; error?: string }> {
   const prefix = path.startsWith('/') ? '/api' : '/api'
   const res = await fetch(`${baseUrl}${prefix}${path}`, {
-    credentials: 'include',
     ...opts,
     ...headers(),
   })
@@ -61,4 +61,19 @@ function headers() {
   }
 
   return { headers }
+}
+
+function toastError(err: any) {
+  if (!err) {
+    toastStore.error(`Unexpected error occurred`)
+    throw err
+  }
+
+  if (err.message) {
+    toastStore.error(err.message)
+    throw err
+  }
+
+  toastStore.error(err)
+  throw err
 }
