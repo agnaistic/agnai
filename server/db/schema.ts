@@ -2,6 +2,8 @@ export namespace AppSchema {
   export interface Settings {
     kind: 'settings'
     koboldUrl: string
+    novelApiKey: string
+    chaiUrl: string
   }
 
   export interface Chat {

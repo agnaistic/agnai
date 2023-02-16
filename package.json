@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "description": "The official Pygmalion front-end.",
   "scripts": {
-    "start": "NODE_ENV=dev concurrently \"parcel src/index.html\" \"node -r @swc-node/register server/index.ts\"",
+    "start": "NODE_ENV=dev concurrently -c auto -n web,api \"parcel src/index.html\" \"npm run server:watch\"",
     "server": "node -r @swc-node/register server/index.ts",
+    "server:watch": "nodemon -e ts --watch server --exec \"node -r @swc-node/register server/index.ts\"",
     "start:win": "set NODE_ENV=dev && parcel src/index.html",
     "build": "NODE_ENV=production parcel build src/index.html",
     "style": "prettier src --check",
@@ -62,6 +63,7 @@
     "eslint-plugin-import": "^2.27.4",
     "eslint-plugin-solid": "^0.9.3",
     "eslint-plugin-tailwindcss": "^3.8.0",
+    "nodemon": "^2.0.20",
     "parcel": "^2.8.2",
     "postcss": "^8.4.21",
     "prettier": "^2.8.3",

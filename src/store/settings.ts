@@ -13,7 +13,9 @@ type SettingStore = {
 const init: SettingStore = {
   init: false,
   settings: {
+    novelApiKey: '',
     koboldUrl: '',
+    chaiUrl: '',
   },
 }
 
@@ -26,10 +28,12 @@ export const settingStore = createStore<SettingStore>(
     if (res.error) toastStore.error(`Failed to load settings`)
     return { settings: res.result }
   }
-  const save = async (_, settings: Partial<Settings>) => {
+  const save = async ({ settings: prev }, settings: Partial<Settings>) => {
     const res = await api.post('/settings', settings)
     if (res.error) toastStore.error(`Failed to update settings: ${res.error}`)
     else toastStore.success('Successfully updated settings')
+
+    return { settings: { ...prev, ...settings } }
   }
 
   return {

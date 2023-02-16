@@ -16,7 +16,7 @@ const Settings: Component = () => {
   })
 
   const onSubmit = (evt: Event) => {
-    const body = getForm(evt, { koboldUrl: 'string' })
+    const body = getForm(evt, { koboldUrl: 'string', novelApiKey: 'string' })
     settingStore.save(body)
   }
 
@@ -31,6 +31,20 @@ const Settings: Component = () => {
             helperText="Fully qualified URL for Kobold"
             placeholder={'http://localhost:5000'}
             value={state.settings.koboldUrl}
+          />
+          <TextInput
+            fieldName="novelApiKey"
+            label="Novel API Key"
+            helperText="The token from the NovelAI request authorization headers"
+            placeholder="..."
+            value={state.settings.novelApiKey}
+          />
+          <TextInput
+            fieldName="chaiUrl"
+            label="Chai URL"
+            helperText="The ChaiAI GPTJ Url"
+            placeholder="..."
+            value={state.settings.chaiUrl}
           />
         </div>
         <div class="flex justify-end gap-2 pt-4">
