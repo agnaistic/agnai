@@ -2,7 +2,7 @@ import { createStore as create, StoreApi } from 'zustand/vanilla'
 import { createStore as createSolidStore, reconcile } from 'solid-js/store'
 import { onCleanup } from 'solid-js'
 
-type ReducerReturn<S> =
+type HandlerReturn<S> =
   | MaybeState<S>
   | Promise<MaybeState<S>>
   | AsyncGenerator<MaybeState<S>, MaybeState<S>>
@@ -12,7 +12,7 @@ type MaybeState<S> = Partial<S> | void
 
 export type Dispatcher<A extends { type: string }> = (action: A) => void
 
-type SetterFunction<S> = (state: S, ...args: any[]) => ReducerReturn<S>
+type SetterFunction<S> = (state: S, ...args: any[]) => HandlerReturn<S>
 
 const win: any = window
 const devTools = win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.() || {

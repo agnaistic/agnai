@@ -14,7 +14,9 @@ const TextInput: Component<{
     props.placeholder !== undefined ? props.placeholder : 'Type something here...'
   )
 
-  const value = createMemo(() => (props.value !== undefined ? props.value : null))
+  const value = createMemo(() =>
+    props.value !== undefined ? props.value : (null as unknown as undefined)
+  )
 
   return (
     <div>

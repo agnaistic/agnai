@@ -30,7 +30,6 @@ specifiers:
   express: ^4.18.2
   frisker: ^1.5.0
   js-cookie: ^3.0.1
-  lodash: ^4.17.21
   lucide-solid: 0.105.0-alpha.9
   nodemon: ^2.0.20
   parcel: ^2.8.2
@@ -62,7 +61,6 @@ dependencies:
   express: 4.18.2
   frisker: 1.5.0
   js-cookie: 3.0.1
-  lodash: 4.17.21
   lucide-solid: 0.105.0-alpha.9_solid-js@1.6.9
   pino: 8.10.0
   pino-pretty: 9.2.0
@@ -4066,6 +4064,7 @@ packages:
 
   /lodash/4.17.21:
     resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==}
+    dev: true
 
   /lowercase-keys/2.0.0:
     resolution: {integrity: sha512-tqNXrS78oMOE73NMxK4EMLQsQowWf8jKooH9g7xPavRT706R6bkQJ6DY2Te7QukaZsulxa30wQ7bk0pm4XiHmA==}

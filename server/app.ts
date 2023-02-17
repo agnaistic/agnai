@@ -13,9 +13,9 @@ app.use('/api', api)
 app.use((_, __, next) => {
   next(new StatusError('Not found', 404))
 })
-app.use((err, req, res, next) => {
+app.use((err: any, _: any, res: express.Response, _next: any) => {
   if (err.status > 0) {
-    res.status(res.status)
+    res.status(err.status)
   }
 
   res.json({ message: err?.message || err || 'Internal server error' })

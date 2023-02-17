@@ -1,13 +1,11 @@
-import Message from '../../models/Message'
+import { AppSchema } from '../../../server/db/schema'
 
-export const mockMessages: Message[] = [
+export const mockMessages: AppSchema.ChatMessage[] = [
   {
-    speaker: {
-      name: 'John',
-      avatarUrl: '#',
-      isHuman: true,
-    },
-    utterance: 'Hi Robot',
-    timestamp: new Date(),
+    kind: 'chat-message',
+    _id: '1',
+    msg: 'Hi Robot',
+    sent: new Date().toISOString(),
+    charId: '#',
   },
 ]

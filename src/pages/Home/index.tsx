@@ -1,5 +1,5 @@
 import { Component, For, Suspense } from 'solid-js'
-import Character from '../../models/Character'
+import { AppSchema } from '../../../server/db/schema'
 import CharacterCard from '../../shared/CharacterCard'
 import PageHeader from '../../shared/PageHeader'
 import { userStore } from '../../store'
@@ -7,15 +7,15 @@ import { userStore } from '../../store'
 const CharacterGroup: Component<{
   title: string
   description: string
-  characters: Character[]
+  characters: AppSchema.Character[]
 }> = (props) => (
   <>
     <PageHeader title={props.title} subtitle={props.description} />
 
     <div class="flex flex-wrap gap-3 max-sm:gap-2">
       <For each={props.characters}>
-        {(character: Character) => (
-          <CharacterCard character={character} href={`/characters/${character.id}`} />
+        {(character) => (
+          <CharacterCard character={character} href={`/characters/${character._id}`} />
         )}
       </For>
     </div>

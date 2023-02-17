@@ -17,7 +17,7 @@ router.get(
   '/:id',
   handle(async ({ params }) => {
     const id = params.id
-    const chat = await store.chats.one(id)
+    const chat = await store.chats.getMessages(id)
     return chat
   })
 )
@@ -30,8 +30,8 @@ router.post('/:id', async ({ params, body }) => {
 })
 
 router.post('/', async ({ body }) => {
-  assertValid({ name: 'string' }, body)
-  const chat = await store.chats.create(body.name)
+  assertValid({ characterId: 'string', name: 'string?' }, body)
+  const chat = await store.chats.create(body.characterId, body.name)
   return chat
 })
 

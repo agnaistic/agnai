@@ -5,12 +5,12 @@ import { toastStore } from './toasts'
 
 type Settings = Omit<AppSchema.Settings, 'kind'>
 
-type SettingStore = {
+type SettingState = {
   init: boolean
   settings: Settings
 }
 
-const init: SettingStore = {
+const init: SettingState = {
   init: false,
   settings: {
     novelApiKey: '',
@@ -19,7 +19,7 @@ const init: SettingStore = {
   },
 }
 
-export const settingStore = createStore<SettingStore>(
+export const settingStore = createStore<SettingState>(
   'settings',
   init
 )((get, set) => {
@@ -28,7 +28,7 @@ export const settingStore = createStore<SettingStore>(
     if (res.error) toastStore.error(`Failed to load settings`)
     return { settings: res.result }
   }
-  const save = async ({ settings: prev }, settings: Partial<Settings>) => {
+  const save = async ({ settings: prev }: SettingState, settings: Partial<Settings>) => {
     const res = await api.post('/settings', settings)
     if (res.error) toastStore.error(`Failed to update settings: ${res.error}`)
     else toastStore.success('Successfully updated settings')

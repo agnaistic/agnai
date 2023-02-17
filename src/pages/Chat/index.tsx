@@ -15,7 +15,7 @@ const ChatPage: Component = () => (
     <InputBar />
     <div class="flex flex-col-reverse overflow-y-scroll">
       <div class="flex flex-col gap-6 pt-4 pb-8">
-        <For each={mockMessages}>{(message) => <Message {...message} />}</For>
+        <For each={mockMessages}>{(msg) => <Message msg={msg} />}</For>
       </div>
       <Header participants={['2B', 'Yuzuki Choco']} />
     </div>

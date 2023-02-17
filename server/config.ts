@@ -9,12 +9,12 @@ export const config = {
   },
 }
 
-function env(key: string, fallback?: string) {
-  const value = process.env[key]
+function env(key: string, fallback?: string): string {
+  const value = process.env[key] || fallback || ''
 
-  if (!value && !fallback) {
+  if (!value) {
     throw new Error(`Required environment variable not set: "${key}"`)
   }
 
-  return value || fallback
+  return value
 }
