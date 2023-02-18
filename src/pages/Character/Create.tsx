@@ -70,6 +70,10 @@ const JsonSchema: Component<{ show: boolean }> = (props) => {
 
   return (
     <Show when={props.show}>
+      <FormLabel
+        label="Persona Attributes"
+        helperText="The attributes of your persona. See https://rentry.org/pygtips#character-creation-tips for more information."
+      />
       <div>
         <Button onClick={add}>
           <Plus />
