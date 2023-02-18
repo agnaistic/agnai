@@ -65,7 +65,7 @@
     "eslint-plugin-solid": "^0.9.3",
     "eslint-plugin-tailwindcss": "^3.8.0",
     "nodemon": "^2.0.20",
-    "parcel": "^2.8.2",
+    "parcel": "^2.8.3",
     "postcss": "^8.4.21",
     "prettier": "^2.8.3",
     "prettier-plugin-tailwindcss": "^0.2.1",

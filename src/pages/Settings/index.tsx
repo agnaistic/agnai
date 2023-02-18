@@ -4,7 +4,7 @@ import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { settingStore } from '../../store/settings'
-import { getForm } from '../../shared/util'
+import { getStrictForm } from '../../shared/util'
 
 const Settings: Component = () => {
   const state = settingStore()
@@ -16,7 +16,7 @@ const Settings: Component = () => {
   })
 
   const onSubmit = (evt: Event) => {
-    const body = getForm(evt, { koboldUrl: 'string', novelApiKey: 'string' })
+    const body = getStrictForm(evt, { koboldUrl: 'string', novelApiKey: 'string' })
     settingStore.save(body)
   }
 

@@ -5,7 +5,7 @@ import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
 import LoginForm from './LoginForm'
 import { userStore } from '../../store'
-import { getForm } from '../../shared/util'
+import { getStrictForm } from '../../shared/util'
 
 const LoginPage: Component = () => {
   const store = userStore()
@@ -23,7 +23,7 @@ const LoginPage: Component = () => {
   })
 
   const onSubmit = (evt: Event) => {
-    const { email, password } = getForm(evt, { email: 'string', password: 'string' })
+    const { email, password } = getStrictForm(evt, { email: 'string', password: 'string' })
     if (!email || !password) return
 
     userStore.login(email, password)

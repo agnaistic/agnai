@@ -9,6 +9,8 @@ const TextInput: Component<{
   type?: string
   value?: number | string
   required?: boolean
+  onKeyUp?: (key: string) => void
+  onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 }> = (props) => {
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
 
@@ -37,6 +39,8 @@ const TextInput: Component<{
             placeholder={placeholder()}
             value={value()}
             class="focusable-field w-full rounded-xl px-4 py-2"
+            onkeyup={(ev) => props.onKeyUp?.(ev.key)}
+            onchange={(ev) => props.onChange?.(ev)}
           />
         }
       >

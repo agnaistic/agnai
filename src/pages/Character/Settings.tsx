@@ -8,7 +8,6 @@ import PageHeader from '../../shared/PageHeader'
 const visibilityOptions: RadioOption[] = [
   {
     id: 'public',
-    name: 'visibility-radio',
     label: (
       <>
         Public <span class="text-white/50"> - Everyone</span>
@@ -18,7 +17,6 @@ const visibilityOptions: RadioOption[] = [
   },
   {
     id: 'unlisted',
-    name: 'visibility-radio',
     label: (
       <>
         Unlisted <span class="text-white/50"> - Only people with a link</span>
@@ -27,7 +25,6 @@ const visibilityOptions: RadioOption[] = [
   },
   {
     id: 'private',
-    name: 'visibility-radio',
     label: (
       <>
         Private <span class="text-white/50"> - Only you</span>
@@ -73,7 +70,7 @@ const CharacterSettings: Component = () => (
             Configure who can see and talk to this character.
           </p>
         </label>
-        <RadioGroup options={visibilityOptions} />
+        <RadioGroup name="visibility-radio" options={visibilityOptions} />
       </div>
 
       <div class="flex justify-end gap-2">
