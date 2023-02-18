@@ -6,18 +6,25 @@ import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getFormEntries, getStrictForm } from '../../shared/util'
+import { AppSchema } from '../../../server/db/schema'
 
 const options = [
-  { id: 'text', label: 'Plain text', isChecked: true },
+  { id: 'wpp', label: 'W++', isChecked: true },
+  { id: 'sbf', label: 'SBF' },
   { id: 'json', label: 'JSON' },
-  { id: 'wpp', label: 'W++' },
+  { id: 'text', label: 'Plain text' },
 ]
 
 const CreateCharacter: Component = () => {
   const onSubmit = (ev: Event) => {
-    const body = getStrictForm(ev, { name: 'string', greeting: 'string', schema: 'string' })
+    const body = getStrictForm(ev, { name: 'string', greeting: 'string', kind: 'string' })
     const attributes = getAttributeMap(getFormEntries(ev))
+    const persona = {
+      ...body,
+      attributes,
+    } as any as AppSchema.CharacterPersona
     console.log({ ...body, attributes })
+    console.log(formatCharacter(persona))
   }
 
   return (
@@ -42,7 +49,7 @@ const CreateCharacter: Component = () => {
 
         <div>
           <FormLabel label="Persona Schema" helperText="Format to use for the character's format" />
-          <RadioGroup name="schema" horizontal options={options} />
+          <RadioGroup name="kind" horizontal options={options} />
         </div>
 
         <JsonSchema show={true} />
@@ -129,6 +136,51 @@ function getAttributeMap(entries: Array<[string, string]>) {
     }
   }
 
-  const values = Object.values(map) as Array<{ key: string; values: string[] }>
+  const values = Object.values(map).reduce<Record<string, string[]>>((prev: any, curr: any) => {
+    prev[curr.key] = curr.values
+    return prev
+  }, {})
   return values
+}
+
+/**
+ * @TODO Move to backend
+ * To be used by the adapters just before a request
+ */
+function formatCharacter(persona: AppSchema.CharacterPersona) {
+  if (persona.kind === 'text') return persona.text
+
+  switch (persona.kind) {
+    case 'wpp': {
+      const attrs = Object.entries(persona.attributes)
+        .map(([key, values]) => `  ${key}(${values.map(quote).join(' + ')})`)
+        .join('\n')
+
+      return [`[character("${persona.name}") {`, attrs, '}]'].join('\n')
+    }
+
+    case 'json': {
+      return JSON.stringify(
+        {
+          type: 'character',
+          name: persona.name,
+          properties: persona.attributes,
+        },
+        null,
+        2
+      )
+    }
+
+    case 'sbf': {
+      const attrs = Object.entries(persona.attributes).map(
+        ([key, values]) => `${key}: ${values.map(quote).join(', ')}`
+      )
+
+      return `[ character: "${persona.name}"; ${attrs.join('; ')} ]`
+    }
+  }
+}
+
+function quote(str: string) {
+  return `"${str}"`
 }

@@ -29,7 +29,12 @@ export namespace AppSchema {
 
   export type CharacterPersona =
     | { kind: 'text'; text: string }
-    | { kind: 'json'; type: string; name: string; properties: { [key: string]: string[] } }
+    | {
+        kind: 'json' | 'wpp' | 'sbf'
+        type: string
+        name: string
+        attributes: { [key: string]: string[] }
+      }
 
   export interface Character {
     _id: string
