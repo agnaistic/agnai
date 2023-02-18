@@ -7,8 +7,8 @@ export namespace AppSchema {
   }
 
   export interface Chat {
-    kind: 'chat'
     _id: string
+    kind: 'chat'
     name: string
     characterId: string
     adapter?: ChatAdapter
@@ -18,8 +18,8 @@ export namespace AppSchema {
   }
 
   export interface ChatMessage {
-    kind: 'chat-message'
     _id: string
+    kind: 'chat-message'
     charId?: string
     msg: string
     sent: string
@@ -32,8 +32,8 @@ export namespace AppSchema {
     | { kind: 'json'; type: string; name: string; properties: { [key: string]: string[] } }
 
   export interface Character {
-    kind: 'character'
     _id: string
+    kind: 'character'
 
     name: string
     persona: CharacterPersona

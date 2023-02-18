@@ -10,9 +10,7 @@ const TextInput: Component<{
   value?: number | string
   required?: boolean
 }> = (props) => {
-  const placeholder = createMemo(() =>
-    props.placeholder !== undefined ? props.placeholder : 'Type something here...'
-  )
+  const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
 
   const value = createMemo(() =>
     props.value !== undefined ? props.value : (null as unknown as undefined)

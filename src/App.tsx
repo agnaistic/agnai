@@ -1,7 +1,13 @@
-import { Component, lazy } from 'solid-js'
+import { Component } from 'solid-js'
 import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
+import CharacterRoutes from './pages/Character'
+import LoginPage from './pages/Login'
+import HomePage from './pages/Home'
+import GenerationSettings from './pages/GenerationSettings'
+import ChatPage from './pages/Chat'
+import Settings from './pages/Settings'
 
 const App: Component = () => (
   <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-purple-900 flex h-screen flex-col justify-between">
@@ -9,15 +15,12 @@ const App: Component = () => (
     <div class="w-full grow overflow-y-scroll px-8 pt-8 max-sm:px-3">
       <div class="mx-auto h-full max-w-4xl">
         <Routes>
-          <Route path="/chat" component={lazy(() => import('./pages/Chat'))} />
-          <Route path="/character" component={lazy(() => import('./pages/CharacterSettings'))} />
-          <Route path="/" component={lazy(() => import('./pages/Home'))} />
-          <Route path="/account/login" component={lazy(() => import('./pages/Login'))} />
-          <Route
-            path="/generation-settings"
-            component={lazy(() => import('./pages/GenerationSettings'))}
-          />
-          <Route path="/settings" component={lazy(() => import('./pages/Settings'))} />
+          <Route path="/chat" component={ChatPage} />
+          <CharacterRoutes />
+          <Route path="/account/login" component={LoginPage} />
+          <Route path="/" component={HomePage} />
+          <Route path="/generation-settings" component={GenerationSettings} />
+          <Route path="/settings" component={Settings} />
         </Routes>
       </div>
     </div>

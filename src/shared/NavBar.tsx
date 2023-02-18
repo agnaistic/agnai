@@ -1,4 +1,4 @@
-import { MessageCircle, Settings, User, Users } from 'lucide-solid'
+import { MessageCircle, Settings, User, Users, Zap } from 'lucide-solid'
 import { Component } from 'solid-js'
 
 import { A } from '@solidjs/router'
@@ -18,7 +18,7 @@ const NavBar: Component = () => (
       <A
         aria-label="Character Settings"
         class="focusable-icon-button rounded p-1"
-        href="/character"
+        href="/character/list"
       >
         <Users />
       </A>
@@ -32,6 +32,10 @@ const NavBar: Component = () => (
         class="focusable-icon-button rounded p-1"
         href="/generation-settings"
       >
+        <Zap />
+      </A>
+
+      <A aria-label="Settings" class="focusable-icon-button rounded p-1" href="/settings">
         <Settings />
       </A>
     </span>

@@ -1,5 +1,4 @@
 import { Component, Show } from 'solid-js'
-
 import Divider from './Divider'
 
 const PageHeader: Component<{ title: string; subtitle?: string }> = (props) => (
