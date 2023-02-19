@@ -36,7 +36,7 @@ router.get(
   '/',
   handle(async () => {
     const chars = await store.characters.getCharacters()
-    return chars
+    return { characters: chars }
   })
 )
 

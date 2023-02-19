@@ -6,10 +6,11 @@ import { handle } from './handle'
 const router = Router()
 
 router.get(
-  '/',
-  handle(async () => {
-    const list = await store.chats.list()
-    return list
+  '/:id/chats',
+  handle(async (req) => {
+    const character = await store.characters.getCharacter(req.params.id)
+    const list = await store.chats.listByCharacter(req.params.id)
+    return { character, chats: list }
   })
 )
 

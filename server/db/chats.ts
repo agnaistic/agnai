@@ -1,7 +1,6 @@
 import { v4 } from 'uuid'
 import { getCharacter } from './characters'
 import { db } from './client'
-import { AppSchema } from './schema'
 import { now } from './util'
 
 const chats = db('chat')
@@ -22,11 +21,20 @@ export async function getMessages(chatId: string, opts?: { limit: number; prior:
 
 export async function list() {
   const { docs } = await chats.find({
-    fields: ['name', 'actors', 'createdAt', 'updatedAt'],
     selector: {
       kind: 'chat',
     },
-    sort: [{ updatedAt: 'desc' }],
+  })
+
+  return docs
+}
+
+export async function listByCharacter(characterId: string) {
+  const { docs } = await chats.find({
+    selector: {
+      kind: 'chat',
+      characterId,
+    },
   })
 
   return docs

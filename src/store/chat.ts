@@ -7,29 +7,42 @@ type ChatState = {
   activeChat?: AppSchema.Chat
   msgs: AppSchema.ChatMessage[]
   characters: AppSchema.Character[]
-  chats: AppSchema.Chat[]
+  chats?: {
+    character: AppSchema.Character
+    list: AppSchema.Chat[]
+  }
 }
 
 export const chatStore = createStore<ChatState>('chat', {
   msgs: [],
   characters: [],
-  chats: [],
 })((get, set) => {
   return {
     getCharacters: async () => {
       const res = await api.get('/character')
       if (res.error) toastStore.error('Failed to retrieve characters')
       else {
-        return res.result
+        return { characters: res.result.characters }
       }
     },
-    getChats: async () => {
-      const res = await api.get<{ chats: AppSchema.Chat[] }>('/chat')
+    getChats: async ({ chats }, characterId: string) => {
+      if (!chats) {
+      }
+      const res = await api.get<{ character: AppSchema.Character; chats: AppSchema.Chat[] }>(
+        `/chat/${characterId}/chats`
+      )
       if (res.error) toastStore.error('Failed to retrieve conversations')
-      else return { chats: res.result?.chats }
+      if (res.result) {
+        return {
+          chats: {
+            character: res.result.character,
+            list: res.result.chats,
+          },
+        }
+      }
     },
     getMessages: async ({ chats }, chatId: string) => {
-      const chat = chats.find((ch) => ch._id === chatId)
+      const chat = chats?.list.find((ch) => ch._id === chatId)
       if (!chat) {
         toastStore.warn('Cannot retrieve conversation: Chat does not exist')
         return
@@ -49,12 +62,10 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         return {
           activeChat: res.result,
-          chats: [res.result, ...chats],
         }
       }
     },
     createCharacter: async (_, char: NewCharacter) => {
-      console.log({ char })
       const res = await api.post<any>('/character', char)
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       else {

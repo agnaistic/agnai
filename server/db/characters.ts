@@ -52,5 +52,5 @@ export async function getCharacters() {
     },
   })
 
-  return { characters: list.docs }
+  return list.docs
 }

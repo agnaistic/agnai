@@ -5,6 +5,7 @@ import { Edit, Plus, Trash } from 'lucide-solid'
 import { AppSchema } from '../../../server/db/schema'
 import { chatStore } from '../../store'
 import { A } from '@solidjs/router'
+import AvatarIcon from '../../shared/AvatarIcon'
 
 const CharacterList: Component = () => {
   const chars = chatStore()
@@ -62,13 +63,5 @@ const NoCharacters: Component = () => (
     &nbsp;to get started!
   </div>
 )
-
-const AvatarIcon: Component<{ avatarUrl?: string }> = ({ avatarUrl }) => {
-  if (avatarUrl) {
-    return <img class="mx-2 h-8 w-8 rounded-full" src={avatarUrl} />
-  }
-
-  return <div class="w- mx-2 h-8 rounded-full bg-slate-700"></div>
-}
 
 export default CharacterList

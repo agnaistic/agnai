@@ -115,7 +115,7 @@ export function createStore<State extends {}>(name: string, init: State) {
       const [solid, setSolid] = createSolidStore<State>(store.getState())
 
       const unsub = store.subscribe((next) => {
-        setSolid(reconcile(next))
+        setSolid({ ...next })
       })
 
       onCleanup(unsub)

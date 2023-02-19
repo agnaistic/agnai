@@ -1,7 +1,8 @@
 import { Route } from '@solidjs/router'
 import { Component } from 'solid-js'
+import CharacterChatList from './ChatList'
 import CreateCharacter from './Create'
-import CharacterList from './List'
+import CharacterList from './CharacterList'
 import CharacterSettings from './Settings'
 
 const CharacterRoutes: Component = () => (
@@ -9,6 +10,7 @@ const CharacterRoutes: Component = () => (
     <Route path="/create" component={CreateCharacter} />
     <Route path="/settings" component={CharacterSettings} />
     <Route path="/list" component={CharacterList} />
+    <Route path="/detail/:id" component={CharacterChatList} />
   </Route>
 )
 
