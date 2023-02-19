@@ -9,6 +9,7 @@ const TextInput: Component<{
   type?: string
   value?: number | string
   required?: boolean
+  class?: string
   onKeyUp?: (key: string) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 }> = (props) => {
@@ -38,7 +39,7 @@ const TextInput: Component<{
             required={props.required}
             placeholder={placeholder()}
             value={value()}
-            class="focusable-field w-full rounded-xl px-4 py-2"
+            class={'focusable-field w-full rounded-xl px-4 py-2 ' + props.class}
             onkeyup={(ev) => props.onKeyUp?.(ev.key)}
             onchange={(ev) => props.onChange?.(ev)}
           />
@@ -51,7 +52,8 @@ const TextInput: Component<{
           name={props.fieldName}
           required={props.required}
           placeholder={placeholder()}
-          class="focusable-field w-full rounded-xl px-4 py-2 !text-white"
+          value={value()}
+          class={'focusable-field w-full rounded-xl px-4 py-2 !text-white ' + props.class}
           onInput={(e) => {
             const ele = e.target as HTMLTextAreaElement
             ele.style.height = ''
