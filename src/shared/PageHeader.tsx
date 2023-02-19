@@ -1,7 +1,7 @@
-import { Component, Show } from 'solid-js'
+import { Component, JSX, Show } from 'solid-js'
 import Divider from './Divider'
 
-const PageHeader: Component<{ title: string; subtitle?: string }> = (props) => (
+const PageHeader: Component<{ title: string; subtitle?: string | JSX.Element }> = (props) => (
   <>
     <h1 class="text-4xl">{props.title}</h1>
     <Show when={!!props.subtitle}>

@@ -1,5 +1,8 @@
 import { v4 } from 'uuid'
+import { getCharacter } from './characters'
 import { db } from './client'
+import { AppSchema } from './schema'
+import { now } from './util'
 
 const chats = db('chat')
 const msgs = db('chat-message')
@@ -35,7 +38,7 @@ export async function update(id: string, name: string) {
   await chats.put({
     ...prev,
     name,
-    updated: now(),
+    updatedAt: now(),
   })
 
   return chats.get(id)
@@ -43,18 +46,18 @@ export async function update(id: string, name: string) {
 
 export async function create(characterId: string, name = 'Untitled') {
   const id = `chat-${v4()}`
+  const char = await getCharacter(characterId)
   await chats.put({
     _id: id,
     kind: 'chat',
     name,
     characterId,
+    sampleChat: char.sampleChat,
+    overrides: char.persona,
+    scenario: char.scenario,
     createdAt: now(),
     updatedAt: now(),
   })
 
   return chats.get(id)
-}
-
-function now() {
-  return new Date().toISOString()
 }

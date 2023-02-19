@@ -16,6 +16,13 @@ export const chatStore = createStore<ChatState>('chat', {
   chats: [],
 })((get, set) => {
   return {
+    getCharacters: async () => {
+      const res = await api.get('/character')
+      if (res.error) toastStore.error('Failed to retrieve characters')
+      else {
+        return res.result
+      }
+    },
     getChats: async () => {
       const res = await api.get<{ chats: AppSchema.Chat[] }>('/chat')
       if (res.error) toastStore.error('Failed to retrieve conversations')
@@ -46,6 +53,24 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
+    createCharacter: async (_, char: NewCharacter) => {
+      console.log({ char })
+      const res = await api.post<any>('/character', char)
+      if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
+      else {
+        toastStore.success(`Successfully created character`)
+        console.log(res.result)
+      }
+    },
     send: async (_, name: string, content: string) => {},
   }
 })
+
+type NewCharacter = {
+  name: string
+  greeting: string
+  scenario: string
+  sampleChat: string
+  avatar?: string
+  persona: AppSchema.CharacterPersona
+}

@@ -7,6 +7,8 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getFormEntries, getStrictForm } from '../../shared/util'
 import { AppSchema } from '../../../server/db/schema'
+import FileInput, { FileInputResult } from '../../shared/FileInput'
+import { chatStore } from '../../store'
 
 const options = [
   { id: 'wpp', label: 'W++', isChecked: true },
@@ -16,20 +18,53 @@ const options = [
 ]
 
 const CreateCharacter: Component = () => {
+  const [avatar, setAvatar] = createSignal<string | undefined>(undefined)
+
+  const updateFile = (files: FileInputResult[]) => {
+    if (!files.length) setAvatar()
+    else setAvatar(files[0].content)
+  }
+
   const onSubmit = (ev: Event) => {
-    const body = getStrictForm(ev, { name: 'string', greeting: 'string', kind: 'string' })
+    const body = getStrictForm(ev, {
+      kind: 'string',
+      name: 'string',
+      greeting: 'string',
+      scenario: 'string',
+      sampleChat: 'string',
+    })
     const attributes = getAttributeMap(getFormEntries(ev))
     const persona = {
-      ...body,
+      kind: body.kind,
       attributes,
     } as any as AppSchema.CharacterPersona
-    console.log({ ...body, attributes })
-    console.log(formatCharacter(persona))
+    chatStore.createCharacter({
+      name: body.name,
+      scenario: body.scenario,
+      avatar: avatar(),
+      greeting: body.greeting,
+      sampleChat: body.sampleChat,
+      persona,
+    })
   }
 
   return (
     <div>
-      <PageHeader title="Create a Character" />
+      <PageHeader
+        title="Create a Character"
+        subtitle={
+          <span>
+            For character information tips and information visit{' '}
+            <a
+              class="text-purple-500"
+              href="https://rentry.org/pygtips#character-creation-tips"
+              target="_blank"
+            >
+              https://rentry.org/pygtips#character-creation-tips
+            </a>
+          </span>
+        }
+      />
 
       <form class="flex flex-col gap-4" onSubmit={onSubmit}>
         <TextInput
@@ -40,9 +75,21 @@ const CreateCharacter: Component = () => {
           placeholder=""
         />
 
+        <FileInput
+          fieldName="avatar"
+          label="Avatar"
+          accept="image/png,image/jpeg"
+          onUpdate={updateFile}
+        />
+
+        <TextInput
+          fieldName="scenario"
+          label="Scenario"
+          helperText="The current circumstances and context of the conversation and the characters."
+        />
+
         <TextInput
           fieldName="greeting"
-          required
           label="Greeting"
           helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
         />
@@ -52,7 +99,20 @@ const CreateCharacter: Component = () => {
           <RadioGroup name="kind" horizontal options={options} />
         </div>
 
-        <JsonSchema show={true} />
+        <PersonaAttributes show={true} />
+
+        <TextInput
+          isMultiline
+          fieldName="sampleChat"
+          label="Sample Conversation"
+          helperText={
+            <span>
+              Example chat between you and the character. This section is very important for
+              informing the model how your character should speak.
+            </span>
+          }
+          placeholder="You: Hello\n{{char}}: *smiles* Hello!"
+        />
 
         <div class="flex justify-end">
           <Button type="submit">
@@ -68,7 +128,7 @@ const CreateCharacter: Component = () => {
 type Attr = { id: number; key: string; values: string }
 
 let attrId = 0
-const JsonSchema: Component<{ show: boolean }> = (props) => {
+const PersonaAttributes: Component<{ show: boolean }> = (props) => {
   const [attrs, setAttrs] = createSignal<Attr[]>([
     { id: ++attrId, key: 'species', values: 'human' },
   ])
@@ -79,7 +139,15 @@ const JsonSchema: Component<{ show: boolean }> = (props) => {
     <Show when={props.show}>
       <FormLabel
         label="Persona Attributes"
-        helperText="The attributes of your persona. See https://rentry.org/pygtips#character-creation-tips for more information."
+        helperText={
+          <span>
+            The attributes of your persona. See the link at the top of the page for more
+            information.
+            <br />
+            It is highly recommended to always include the attributes <b>mind</b> and{' '}
+            <b>personality</b>.
+          </span>
+        }
       />
       <div>
         <Button onClick={add}>
@@ -137,6 +205,7 @@ function getAttributeMap(entries: Array<[string, string]>) {
   }
 
   const values = Object.values(map).reduce<Record<string, string[]>>((prev: any, curr: any) => {
+    if (!curr.values || !curr.values.length) return prev
     prev[curr.key] = curr.values
     return prev
   }, {})
@@ -147,7 +216,7 @@ function getAttributeMap(entries: Array<[string, string]>) {
  * @TODO Move to backend
  * To be used by the adapters just before a request
  */
-function formatCharacter(persona: AppSchema.CharacterPersona) {
+function formatCharacter(name: string, persona: AppSchema.CharacterPersona) {
   if (persona.kind === 'text') return persona.text
 
   switch (persona.kind) {
@@ -156,14 +225,14 @@ function formatCharacter(persona: AppSchema.CharacterPersona) {
         .map(([key, values]) => `  ${key}(${values.map(quote).join(' + ')})`)
         .join('\n')
 
-      return [`[character("${persona.name}") {`, attrs, '}]'].join('\n')
+      return [`[character("${name}") {`, attrs, '}]'].join('\n')
     }
 
     case 'json': {
       return JSON.stringify(
         {
           type: 'character',
-          name: persona.name,
+          name,
           properties: persona.attributes,
         },
         null,
@@ -176,7 +245,31 @@ function formatCharacter(persona: AppSchema.CharacterPersona) {
         ([key, values]) => `${key}: ${values.map(quote).join(', ')}`
       )
 
-      return `[ character: "${persona.name}"; ${attrs.join('; ')} ]`
+      return `[ character: "${name}"; ${attrs.join('; ')} ]`
+    }
+  }
+}
+
+function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'ooba') {
+  switch (target) {
+    case 'tavern': {
+      return {
+        name: char.name,
+        first_mes: char.greeting,
+        scenario: char.scenario,
+        description: formatCharacter(char.name, char.persona),
+        mes_example: char.sampleChat,
+      }
+    }
+
+    case 'ooba': {
+      return {
+        char_name: char.name,
+        char_greeting: char.greeting,
+        world_scenario: char.scenario,
+        char_persona: formatCharacter(char.name, char.persona),
+        example_dialogue: char.sampleChat,
+      }
     }
   }
 }

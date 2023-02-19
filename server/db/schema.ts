@@ -13,6 +13,10 @@ export namespace AppSchema {
     characterId: string
     adapter?: ChatAdapter
 
+    scenario: string
+    sampleChat: string
+    overrides: CharacterPersona
+
     createdAt: string
     updatedAt: string
   }
@@ -20,19 +24,19 @@ export namespace AppSchema {
   export interface ChatMessage {
     _id: string
     kind: 'chat-message'
-    charId?: string
+    chatId: string
     msg: string
     sent: string
   }
 
-  export type ChatAdapter = 'kobold' | 'chai' | 'novel'
+  export type ChatAdapter = 'kobold' | 'chai' | 'novel' | 'default'
 
+  /** Description of the character */
   export type CharacterPersona =
     | { kind: 'text'; text: string }
     | {
         kind: 'json' | 'wpp' | 'sbf'
         type: string
-        name: string
         attributes: { [key: string]: string[] }
       }
 
@@ -43,9 +47,10 @@ export namespace AppSchema {
     name: string
     persona: CharacterPersona
     greeting: string
-    exampleChat: string
+    scenario: string
+    sampleChat: string
 
-    avatarUrl?: string
+    avatar?: string
     adapter: ChatAdapter
 
     createdAt: string

@@ -14,6 +14,7 @@ export function handle(handler: Handler) {
         res.json(result)
       }
     } catch (ex) {
+      req.log.error({ err: ex }, 'Error occurred handling request')
       next(ex)
     }
   }

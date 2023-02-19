@@ -1,9 +1,9 @@
-import { Component, Show, createMemo } from 'solid-js'
+import { Component, Show, createMemo, JSX } from 'solid-js'
 
 const TextInput: Component<{
   fieldName: string
   label?: string
-  helperText?: string
+  helperText?: string | JSX.Element
   placeholder?: string
   isMultiline?: boolean
   type?: string
