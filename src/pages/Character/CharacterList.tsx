@@ -11,7 +11,7 @@ const CharacterList: Component = () => {
   const chars = chatStore()
 
   createEffect(() => {
-    if (!chars.characters.length) {
+    if (!chars.characters.loaded) {
       chatStore.getCharacters()
     }
   })
@@ -29,9 +29,9 @@ const CharacterList: Component = () => {
             </Button>
           </A>
         </div>
-        <For each={chars.characters}>{(char) => <Character character={char} />}</For>
+        <For each={chars.characters.list}>{(char) => <Character character={char} />}</For>
       </div>
-      {chars.characters.length === 0 ? <NoCharacters /> : null}
+      {chars.characters.list.length === 0 ? <NoCharacters /> : null}
     </>
   )
 }

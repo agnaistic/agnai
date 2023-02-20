@@ -1,6 +1,5 @@
 import { MessageCircle, Settings, User, Users, Zap } from 'lucide-solid'
 import { Component } from 'solid-js'
-
 import { A } from '@solidjs/router'
 
 const NavBar: Component = () => (

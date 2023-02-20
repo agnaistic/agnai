@@ -26,7 +26,7 @@ export const settingStore = createStore<SettingState>(
   const load = async () => {
     const res = await api.get('/settings')
     if (res.error) toastStore.error(`Failed to load settings`)
-    return { settings: res.result }
+    return { init: true, settings: res.result }
   }
   const save = async ({ settings: prev }: SettingState, settings: Partial<Settings>) => {
     const res = await api.post('/settings', settings)

@@ -35,7 +35,7 @@ export namespace AppSchema {
   export type CharacterPersona =
     | { kind: 'text'; text: string }
     | {
-        kind: 'json' | 'wpp' | 'sbf'
+        kind: 'json' | 'wpp' | 'sbf' | 'boostyle'
         type: string
         attributes: { [key: string]: string[] }
       }

@@ -13,7 +13,7 @@ const Message: Component<{ msg: AppSchema.ChatMessage; char?: AppSchema.Characte
   char,
 }) => (
   <span class="flex gap-4">
-    <img src={char?.avatarUrl} class="mt-1 h-12 w-12 rounded-full bg-white" />
+    <img src={char?.avatar} class="mt-1 h-12 w-12 rounded-full bg-white" />
 
     <div class="flex select-text flex-col">
       <span>

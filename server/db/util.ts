@@ -35,6 +35,17 @@ export function formatCharacter(name: string, persona: AppSchema.CharacterPerson
 
       return `[ character: "${name}"; ${attrs.join('; ')} ]`
     }
+
+    case 'boostyle': {
+      const attrs = Object.values(persona.attributes).reduce(
+        (prev, curr) => {
+          prev.push(...curr)
+          return prev
+        },
+        [name]
+      )
+      return attrs.join(' + ')
+    }
   }
 }
 

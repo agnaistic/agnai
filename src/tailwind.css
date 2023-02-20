@@ -4,7 +4,7 @@
 
 /** Global focus style override. */
 *:focus {
-  @apply outline-none outline-purple-400/50;
+  @apply outline-none;
 }
 
 @layer base {
@@ -76,6 +76,24 @@
     @apply max-h-96 max-w-[10rem];
     @apply rounded-md shadow-md;
     @apply bg-background-lighter hover:bg-zinc-900 active:bg-zinc-800;
+  }
+
+  /**
+   * Tooltips
+   */
+  .tooltip {
+    position: relative;
+    display: inline-block;
+  }
+
+  .tooltip .tooltip-text {
+    visibility: hidden;
+    position: absolute;
+    z-index: 1;
+  }
+
+  .tooltip:hover .tooltip-text {
+    visibility: visible;
   }
 
   /**

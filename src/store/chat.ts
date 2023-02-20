@@ -6,8 +6,12 @@ import { toastStore } from './toasts'
 type ChatState = {
   activeChat?: AppSchema.Chat
   msgs: AppSchema.ChatMessage[]
-  characters: AppSchema.Character[]
+  characters: {
+    loaded: boolean
+    list: AppSchema.Character[]
+  }
   chats?: {
+    loaded: boolean
     character: AppSchema.Character
     list: AppSchema.Chat[]
   }
@@ -15,14 +19,14 @@ type ChatState = {
 
 export const chatStore = createStore<ChatState>('chat', {
   msgs: [],
-  characters: [],
+  characters: { loaded: false, list: [] },
 })((get, set) => {
   return {
     getCharacters: async () => {
       const res = await api.get('/character')
       if (res.error) toastStore.error('Failed to retrieve characters')
       else {
-        return { characters: res.result.characters }
+        return { characters: { list: res.result.characters, loaded: true } }
       }
     },
     getChats: async ({ chats }, characterId: string) => {
@@ -35,6 +39,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         return {
           chats: {
+            loaded: true,
             character: res.result.character,
             list: res.result.chats,
           },

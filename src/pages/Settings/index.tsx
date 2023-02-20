@@ -10,9 +10,8 @@ const Settings: Component = () => {
   const state = settingStore()
 
   createEffect(() => {
-    if (!state.init) {
-      settingStore.load()
-    }
+    // Always reload settings when entering this page
+    settingStore.load()
   })
 
   const onSubmit = (evt: Event) => {
