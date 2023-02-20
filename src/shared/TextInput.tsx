@@ -46,8 +46,6 @@ const TextInput: Component<{
         }
       >
         <textarea
-          // TODO(11b): It'd be nice if this auto-resized based on its contents.
-          // https://stackoverflow.com/questions/454202/creating-a-textarea-with-auto-resize?noredirect=1
           id={props.fieldName}
           name={props.fieldName}
           required={props.required}

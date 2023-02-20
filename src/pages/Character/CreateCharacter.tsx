@@ -89,6 +89,7 @@ const CreateCharacter: Component = () => {
         />
 
         <TextInput
+          isMultiline
           fieldName="greeting"
           label="Greeting"
           helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
@@ -145,7 +146,8 @@ const PersonaAttributes: Component<{ show: boolean }> = (props) => {
             information.
             <br />
             It is highly recommended to always include the attributes <b>mind</b> and{' '}
-            <b>personality</b>.
+            <b>personality</b>.<br />
+            Example attributes: mind, personality, gender, appearance, likes, dislikes.
           </span>
         }
       />
@@ -164,18 +166,18 @@ const PersonaAttributes: Component<{ show: boolean }> = (props) => {
 
 const Attribute: Component<{ attr: Attr }> = (props) => {
   return (
-    <div class="flex flex-row gap-2">
-      <div class="w-48">
+    <div class="flex w-full gap-2">
+      <div class="w-3/12">
         <TextInput
           fieldName={`attr-key.${props.attr.id}`}
-          placeholder="Attribute name"
+          placeholder="Name. E.g. appearance"
           value={props.attr.key}
         />
       </div>
-      <div class="w-full">
+      <div class="w-9/12">
         <TextInput
           fieldName={`attr-value.${props.attr.id}`}
-          placeholder="Comma separate attributues. E.g: tall, brunette, slender"
+          placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
           value={props.attr.values}
         />
       </div>
