@@ -13,6 +13,7 @@ export namespace AppSchema {
     characterId: string
     adapter?: ChatAdapter
 
+    greeting: string
     scenario: string
     sampleChat: string
     overrides: CharacterPersona

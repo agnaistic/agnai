@@ -1,7 +1,6 @@
 import { Component } from 'solid-js'
 
 const AvatarIcon: Component<{ avatarUrl?: string }> = (props) => {
-  console.log({ props })
   if (props.avatarUrl) {
     return <img class="mx-2 h-8 w-8 rounded-full" src={props.avatarUrl} />
   }

@@ -1,6 +1,7 @@
 import { v4 } from 'uuid'
 import { getCharacter } from './characters'
 import { db } from './client'
+import { AppSchema } from './schema'
 import { now } from './util'
 
 const chats = db('chat')
@@ -52,17 +53,21 @@ export async function update(id: string, name: string) {
   return chats.get(id)
 }
 
-export async function create(characterId: string, name = 'Untitled') {
+export async function create(
+  characterId: string,
+  props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat'>
+) {
   const id = `chat-${v4()}`
   const char = await getCharacter(characterId)
   await chats.put({
     _id: id,
     kind: 'chat',
-    name,
     characterId,
-    sampleChat: char.sampleChat,
+    name: props.name,
+    greeting: props.greeting,
+    sampleChat: props.greeting,
+    scenario: props.scenario,
     overrides: char.persona,
-    scenario: char.scenario,
     createdAt: now(),
     updatedAt: now(),
   })

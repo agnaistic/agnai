@@ -28,6 +28,21 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
       title={`Create Conversation with ${state.chats?.character.name}`}
       footer={Footer}
     >
+      <div class="mb-4 text-sm">
+        Optionally modify some of the conversation context. You can override other aspects of the
+        character's persona from the conversation after it is created.
+      </div>
+      <TextInput
+        class="text-sm"
+        fieldName="name"
+        label="Conversation Name"
+        helperText={
+          <span>
+            A name for the conversation. This is purely for labelling. <i>(Optional)</i>
+          </span>
+        }
+        placeholder="Optional"
+      />
       <TextInput
         isMultiline
         fieldName="greeting"

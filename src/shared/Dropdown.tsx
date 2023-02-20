@@ -1,38 +1,38 @@
 import { Component, JSX, Show, createSignal, For } from 'solid-js'
-import { ChevronDown } from 'lucide-solid'
-import Button from './Button'
+import { FormLabel } from './FormLabel'
 
 export type DropdownItem = {
   label: string
   value: string
 }
 
-const Dropdown: Component<{ label: string; items: DropdownItem[] }> = (props) => {
-  const [open, setOpen] = createSignal(false)
-
+const Dropdown: Component<{
+  multiple?: boolean
+  fieldName: string
+  label?: string
+  helperText?: string | JSX.Element
+  items: DropdownItem[]
+  class?: string
+}> = (props) => {
   return (
-    <div class="relative">
-      <Button onClick={() => setOpen(!open())}>
-        <ChevronDown />
-        {props.label}
-      </Button>
-      <Show when={open()}>
-        <div class="absolute z-10 mt-2 bg-stone-700">
-          <For each={props.items}>{(item) => <Item {...item} />}</For>
-        </div>
-      </Show>
+    <div>
+      <FormLabel label={props.label} helperText={props.helperText} />
+      <div class={`overflow-hidden bg-transparent ${props.class}`}>
+        <select
+          name={props.fieldName}
+          class="rounded-xl  bg-purple-600 py-2 px-3 shadow-none"
+          multiple={props.multiple}
+        >
+          <For each={props.items}>
+            {(item) => (
+              <option class="border-0 border-none bg-zinc-900" value={item.value}>
+                {item.label}
+              </option>
+            )}
+          </For>
+        </select>
+      </div>
     </div>
-  )
-}
-
-const Item: Component<DropdownItem> = ({ label, value }) => {
-  return (
-    <a
-      class="flex cursor-pointer items-center justify-center p-2 text-sm hover:bg-stone-600"
-      href="#"
-    >
-      {label}
-    </a>
   )
 }
 

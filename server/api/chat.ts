@@ -31,8 +31,17 @@ router.post('/:id', async ({ params, body }) => {
 })
 
 router.post('/', async ({ body }) => {
-  assertValid({ characterId: 'string', name: 'string?' }, body)
-  const chat = await store.chats.create(body.characterId, body.name)
+  assertValid(
+    {
+      characterId: 'string',
+      name: 'string',
+      greeting: 'string',
+      scenario: 'string',
+      sampleChat: 'string',
+    },
+    body
+  )
+  const chat = await store.chats.create(body.characterId, body)
   return chat
 })
 

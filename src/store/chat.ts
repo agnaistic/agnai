@@ -17,6 +17,22 @@ type ChatState = {
   }
 }
 
+export type NewChat = {
+  name: string
+  greeting: string
+  scenario: string
+  sampleChat: string
+}
+
+export type NewCharacter = {
+  name: string
+  greeting: string
+  scenario: string
+  sampleChat: string
+  avatar?: string
+  persona: AppSchema.CharacterPersona
+}
+
 export const chatStore = createStore<ChatState>('chat', {
   msgs: [],
   characters: { loaded: false, list: [] },
@@ -61,7 +77,7 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       } else return { activeChat: res.result }
     },
-    createChat: async ({ chats }, characterId: string, name?: string) => {
+    createChat: async ({ chats }, characterId: string, props: NewChat) => {
       const res = await api.post<AppSchema.Chat>('/chat', { characterId, name })
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
@@ -75,18 +91,8 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       else {
         toastStore.success(`Successfully created character`)
-        console.log(res.result)
       }
     },
     send: async (_, name: string, content: string) => {},
   }
 })
-
-type NewCharacter = {
-  name: string
-  greeting: string
-  scenario: string
-  sampleChat: string
-  avatar?: string
-  persona: AppSchema.CharacterPersona
-}
