@@ -10,14 +10,12 @@ const RangeInput: Component<{
   step: number
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
+  let input: HTMLInputElement | undefined
 
   function updateRangeSliders() {
-    Array.from(document.getElementsByTagName('input')).forEach((input) => {
-      input.style.backgroundSize =
-        ((Number(input.value) - Number(input.min)) * 100) /
-          (Number(input.max) - Number(input.min)) +
-        '% 100%'
-    })
+    if (!input) return
+    const nextSize = ((+input.value - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
+    input.style.backgroundSize = nextSize
   }
 
   const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
@@ -32,7 +30,7 @@ const RangeInput: Component<{
       <ul class="w-full">
         <label class="form-label block-block">{props.label}</label>
         <input
-          class="focusable-field float-right inline-block rounded-lg border border-white/5 bg-transparent hover:border-white/20"
+          class="focusable-field float-right inline-block rounded-lg border border-white/5 bg-transparent p-1 hover:border-white/20"
           value={value()}
           type="number"
           min={props.min}
@@ -45,6 +43,7 @@ const RangeInput: Component<{
         <p class="mt-[-0.125rem] pb-2 text-sm text-white/50">{props.helperText}</p>
       </Show>
       <input
+        ref={input}
         type="range"
         class="
         form-range
