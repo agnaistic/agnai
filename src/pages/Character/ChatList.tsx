@@ -9,7 +9,7 @@ import { Plus } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 
 const CharacterChatList: Component = () => {
-  const [modal, setModal] = createSignal(true)
+  const [modal, setModal] = createSignal(false)
   const [char, setChar] = createSignal<AppSchema.Character>()
   const state = chatStore()
   const { id } = useParams()

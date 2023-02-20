@@ -12,6 +12,7 @@ const ChatDetail: Component = () => {
   const { id } = useParams()
 
   createEffect(() => {
+    if (!id && state.chat) return
     if (!state.chat || state.chat._id !== id) {
       chatStore.getChat(id)
     }

@@ -6,7 +6,6 @@ import CharacterRoutes from './pages/Character'
 import LoginPage from './pages/Login'
 import HomePage from './pages/Home'
 import GenerationSettings from './pages/GenerationSettings'
-import ChatPage from './pages/Chat'
 import Settings from './pages/Settings'
 import { settingStore } from './store/settings'
 import ChatDetail from './pages/Chat/ChatDetail'
@@ -23,7 +22,7 @@ const App: Component = () => {
       <div class="w-full grow overflow-y-scroll px-8 pt-8 max-sm:px-3">
         <div class="mx-auto h-full max-w-4xl">
           <Routes>
-            <Route path="/chat" component={ChatPage} />
+            <Route path="/chat" component={ChatDetail} />
             <Route path="/chat/:id" component={ChatDetail} />
             <CharacterRoutes />
             <Route path="/account/login" component={LoginPage} />
