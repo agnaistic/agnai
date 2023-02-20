@@ -28,6 +28,9 @@ export namespace AppSchema {
     chatId: string
     msg: string
     sent: string
+
+    createdAt: string
+    updatedAt: string
   }
 
   export type ChatAdapter = 'kobold' | 'chai' | 'novel' | 'default'

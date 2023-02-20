@@ -18,31 +18,39 @@ router.get(
   '/:id',
   handle(async ({ params }) => {
     const id = params.id
-    const chat = await store.chats.getMessages(id)
+    const chat = await store.chats.getChat(id)
+    const character = await store.characters.getCharacter(chat.characterId)
+    const messages = await store.chats.getMessages(id)
+    return { chat, messages, character }
+  })
+)
+
+router.post(
+  '/:id',
+  handle(async ({ params, body }) => {
+    assertValid({ name: 'string' }, body)
+    const id = params.id
+    const chat = await store.chats.update(id, body.name)
     return chat
   })
 )
 
-router.post('/:id', async ({ params, body }) => {
-  assertValid({ name: 'string' }, body)
-  const id = params.id
-  const chat = await store.chats.update(id, body.name)
-  return chat
-})
-
-router.post('/', async ({ body }) => {
-  assertValid(
-    {
-      characterId: 'string',
-      name: 'string',
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-    },
-    body
-  )
-  const chat = await store.chats.create(body.characterId, body)
-  return chat
-})
+router.post(
+  '/',
+  handle(async ({ body }) => {
+    assertValid(
+      {
+        characterId: 'string',
+        name: 'string',
+        greeting: 'string',
+        scenario: 'string',
+        sampleChat: 'string',
+      },
+      body
+    )
+    const chat = await store.chats.create(body.characterId, body)
+    return chat
+  })
+)
 
 export default router

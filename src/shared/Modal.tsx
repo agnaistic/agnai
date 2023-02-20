@@ -1,10 +1,9 @@
-import { createSignal, Component, Show, JSX } from 'solid-js'
-// Component Properties
+import { Component, Show, JSX } from 'solid-js'
+
 interface Props {
   title?: string | JSX.Element
   show: boolean
   children: JSX.Element
-  footer: JSX.Element
 }
 
 const Modal: Component<Props> = (props) => {
@@ -18,12 +17,15 @@ const Modal: Component<Props> = (props) => {
           <div>
             <div class="black mb-4 text-lg font-bold">{props.title}</div>
             <div class="black mb-4 text-lg">{props.children}</div>
-            <div class="flex w-full flex-row justify-end gap-2">{props.footer}</div>
           </div>
         </div>
       </div>
     </Show>
   )
 }
+
+export const ModalFooter: Component<{ children: JSX.Element }> = (props) => (
+  <div class="flex w-full flex-row justify-end gap-2">{props.children}</div>
+)
 
 export default Modal

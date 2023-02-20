@@ -4,7 +4,10 @@ import { createStore } from './create'
 import { toastStore } from './toasts'
 
 type ChatState = {
-  activeChat?: AppSchema.Chat
+  activeChat?: {
+    chat: AppSchema.Chat
+    character: AppSchema.Character
+  }
   msgs: AppSchema.ChatMessage[]
   characters: {
     loaded: boolean
@@ -45,9 +48,24 @@ export const chatStore = createStore<ChatState>('chat', {
         return { characters: { list: res.result.characters, loaded: true } }
       }
     },
-    getChats: async ({ chats }, characterId: string) => {
-      if (!chats) {
+    async getChat(_, id: string) {
+      const res = await api.get<{
+        chat: AppSchema.Chat
+        messages: AppSchema.ChatMessage[]
+        character: AppSchema.Character
+      }>(`/chat/${id}`)
+      if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
+      if (res.result) {
+        return {
+          activeChat: {
+            chat: res.result.chat,
+            character: res.result.character,
+          },
+          msgs: res.result.messages,
+        }
       }
+    },
+    getChats: async (_, characterId: string) => {
       const res = await api.get<{ character: AppSchema.Character; chats: AppSchema.Chat[] }>(
         `/chat/${characterId}/chats`
       )
@@ -62,28 +80,36 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    getMessages: async ({ chats }, chatId: string) => {
-      const chat = chats?.list.find((ch) => ch._id === chatId)
-      if (!chat) {
-        toastStore.warn('Cannot retrieve conversation: Chat does not exist')
-        return
-      }
-      const res = await api.get<{ messages: AppSchema.ChatMessage[] }>(`/chat/${chatId}`)
-      if (res.error) toastStore.error(`Failed to retrieve conversation`)
-      if (res.result) {
-        return {
-          activeChat: chat,
-          msgs: res.result.messages,
-        }
-      } else return { activeChat: res.result }
-    },
-    createChat: async ({ chats }, characterId: string, props: NewChat) => {
-      const res = await api.post<AppSchema.Chat>('/chat', { characterId, name })
+    // getMessages: async ({ chats }, chatId: string) => {
+    //   const chat = chats?.list.find((ch) => ch._id === chatId)
+    //   if (!chat) {
+    //     toastStore.warn('Cannot retrieve conversation: Chat does not exist')
+    //     return
+    //   }
+    //   const res = await api.get<{ messages: AppSchema.ChatMessage[] }>(`/chat/${chatId}`)
+    //   if (res.error) toastStore.error(`Failed to retrieve conversation`)
+    //   if (res.result) {
+    //     return {
+    //       activeChat: chat,
+    //       msgs: res.result.messages,
+    //     }
+    //   } else return { activeChat: res.result }
+    // },
+    async *createChat(
+      state,
+      characterId: string,
+      props: NewChat,
+      onSuccess?: (id: string) => void
+    ) {
+      const res = await api.post<AppSchema.Chat>('/chat', { characterId, ...props })
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
-        return {
-          activeChat: res.result,
+        const character = state.chats?.character!
+        yield {
+          activeChat: { character, chat: res.result },
         }
+
+        onSuccess?.(res.result._id)
       }
     },
     createCharacter: async (_, char: NewCharacter) => {

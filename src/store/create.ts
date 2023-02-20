@@ -111,11 +111,13 @@ export function createStore<State extends {}>(name: string, init: State) {
       [key in keyof Handler]: (...args: HandlerArgs<Handler[key]>) => void
     }
 
-    const useStore = () => {
-      const [solid, setSolid] = createSolidStore<State>(store.getState())
+    const useStore = <T = State>(selector?: (state: State) => T) => {
+      const init = selector ? selector(store.getState()) : store.getState()
+      const [solid, setSolid] = createSolidStore<T>(init as any)
 
       const unsub = store.subscribe((next) => {
-        setSolid({ ...next })
+        const nextState = selector ? selector(next) : next
+        setSolid(nextState as any)
       })
 
       onCleanup(unsub)

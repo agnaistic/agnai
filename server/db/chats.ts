@@ -1,4 +1,5 @@
 import { v4 } from 'uuid'
+import { logger } from '../logger'
 import { getCharacter } from './characters'
 import { db } from './client'
 import { AppSchema } from './schema'
@@ -7,17 +8,16 @@ import { now } from './util'
 const chats = db('chat')
 const msgs = db('chat-message')
 
-export async function getMessages(chatId: string, opts?: { limit: number; prior: string }) {
-  const paging = opts ? { updatedAt: { $lt: opts.prior } } : {}
+export async function getMessages(chatId: string) {
   const { docs } = await msgs.find({
     selector: {
       chatId,
-      ...paging,
     },
-    sort: [{ updatedAt: 'desc' }],
-    limit: opts?.limit,
   })
-  return { messages: docs }
+  const sorted = docs.sort((l, r) =>
+    l.updatedAt > r.updatedAt ? -1 : l.updatedAt === r.updatedAt ? 0 : 1
+  )
+  return { messages: sorted }
 }
 
 export async function list() {
@@ -28,6 +28,11 @@ export async function list() {
   })
 
   return docs
+}
+
+export async function getChat(id: string) {
+  const chat = await chats.get(id)
+  return chat
 }
 
 export async function listByCharacter(characterId: string) {
@@ -57,9 +62,9 @@ export async function create(
   characterId: string,
   props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat'>
 ) {
-  const id = `chat-${v4()}`
+  const id = `${v4()}`
   const char = await getCharacter(characterId)
-  await chats.put({
+  const doc: AppSchema.Chat = {
     _id: id,
     kind: 'chat',
     characterId,
@@ -70,7 +75,32 @@ export async function create(
     overrides: char.persona,
     createdAt: now(),
     updatedAt: now(),
+  }
+
+  await chats.put(doc)
+  return doc
+}
+
+export async function deleteChat(chatId: string) {
+  const doc = await chats.get(chatId)
+  const res = await chats.remove(doc)
+
+  if (!res.ok) {
+    throw new Error(`Failed to delete document`)
+  }
+}
+
+export async function deleteAllChats(characterId?: string) {
+  const selector: any = { kind: 'chat' }
+  if (characterId) {
+    selector.characterId = characterId
+  }
+
+  const { docs } = await chats.find({
+    selector,
   })
 
-  return chats.get(id)
+  logger.info({ docs }, 'Deleting')
+  const results = await Promise.all(docs.map((doc) => chats.remove(doc)))
+  logger.info({ results }, 'Results')
 }

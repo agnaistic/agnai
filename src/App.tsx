@@ -9,6 +9,7 @@ import GenerationSettings from './pages/GenerationSettings'
 import ChatPage from './pages/Chat'
 import Settings from './pages/Settings'
 import { settingStore } from './store/settings'
+import ChatDetail from './pages/Chat/ChatDetail'
 
 const App: Component = () => {
   const state = settingStore()
@@ -23,6 +24,7 @@ const App: Component = () => {
         <div class="mx-auto h-full max-w-4xl">
           <Routes>
             <Route path="/chat" component={ChatPage} />
+            <Route path="/chat/:id" component={ChatDetail} />
             <CharacterRoutes />
             <Route path="/account/login" component={LoginPage} />
             <Route path="/" component={HomePage} />
