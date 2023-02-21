@@ -1,4 +1,4 @@
-import { AppSchema } from '../../server/db/schema'
+import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'

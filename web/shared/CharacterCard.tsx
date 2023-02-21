@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 import { A } from '@solidjs/router'
-import { AppSchema } from '../../server/db/schema'
+import { AppSchema } from '../../srv/db/schema'
 
 const CharacterCard: Component<{ character: AppSchema.Character; href: string }> = (props) => (
   <A href={props.href} class="focusable-card group flex flex-col gap-1">

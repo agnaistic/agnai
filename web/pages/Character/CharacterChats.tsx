@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { AppSchema } from '../../../server/db/schema'
+import { AppSchema } from '../../../srv/db/schema'
 import { chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'

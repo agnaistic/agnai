@@ -1,4 +1,4 @@
-import { AppSchema } from '../../../server/db/schema'
+import { AppSchema } from '../../../srv/db/schema'
 
 export const mockMessages: AppSchema.ChatMessage[] = [
   {

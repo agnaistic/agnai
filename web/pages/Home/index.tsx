@@ -1,5 +1,5 @@
 import { Component, For, Suspense } from 'solid-js'
-import { AppSchema } from '../../../server/db/schema'
+import { AppSchema } from '../../../srv/db/schema'
 import CharacterCard from '../../shared/CharacterCard'
 import PageHeader from '../../shared/PageHeader'
 import { userStore } from '../../store'

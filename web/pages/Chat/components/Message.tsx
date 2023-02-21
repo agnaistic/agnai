@@ -1,7 +1,7 @@
 import { ThumbsDown, ThumbsUp } from 'lucide-solid'
 import showdown from 'showdown'
 import { Component, Show } from 'solid-js'
-import { AppSchema } from '../../../../server/db/schema'
+import { AppSchema } from '../../../../srv/db/schema'
 
 import './Message.css'
 
