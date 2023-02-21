@@ -1,11 +1,12 @@
 import { Component, JSX } from 'solid-js'
 
-type ButtonSchema = 'primary' | 'secondary'
+type ButtonSchema = keyof typeof kinds
 
-const schemaNameToClass: Record<ButtonSchema, string> = {
+const kinds = {
   primary: 'btn-primary',
   secondary: 'btn-secondary',
-}
+  clear: 'btn-clear',
+} satisfies { [key: string]: string }
 
 const Button: Component<{
   children: JSX.Element
@@ -16,7 +17,7 @@ const Button: Component<{
 }> = (props) => (
   <button
     type={props.type || 'button'}
-    class={`${schemaNameToClass[props.schema || 'primary']} justify-center`}
+    class={`${kinds[props.schema || 'primary']} justify-center`}
     disabled={props.disabled}
     onClick={props.onClick}
   >

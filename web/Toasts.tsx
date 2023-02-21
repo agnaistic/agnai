@@ -1,4 +1,4 @@
-import { Component, createEffect, For } from 'solid-js'
+import { Component, For } from 'solid-js'
 import { Toast, toastStore } from './store'
 
 const bgColor = {
@@ -18,14 +18,14 @@ const Toasts: Component = () => {
   )
 }
 
-const Single: Component<{ toast: Toast }> = ({ toast: { id, message, type } }) => {
-  const bg = bgColor[type]
-  const onClick = () => toastStore.remove(id)
+const Single: Component<{ toast: Toast }> = (props) => {
+  const bg = bgColor[props.toast.type]
+  const onClick = () => toastStore.remove(props.toast.id)
   return (
     <div class="flex flex-row">
       <div class={`${bg} w-4 rounded-l-lg p-2`}></div>
       <div class={`rounded-r-lg bg-gray-700 p-2`} onClick={onClick}>
-        {message}
+        {props.toast.message}
       </div>
     </div>
   )

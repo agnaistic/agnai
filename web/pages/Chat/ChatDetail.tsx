@@ -8,7 +8,6 @@ import InputBar from './components/InputBar'
 import Message from './components/Message'
 
 const ChatDetail: Component = () => {
-  const [loading, setLoading] = createSignal(true)
   const state = chatStore((s) => ({
     chat: s.activeChat?.chat,
     character: s.activeChat?.character,
@@ -16,18 +15,20 @@ const ChatDetail: Component = () => {
     msgs: s.msgs,
     partial: s.partial,
   }))
+
   const { id } = useParams()
   const nav = useNavigate()
 
   createEffect(() => {
-    if (!id && state.lastId) {
-      nav(`/chat/${state.lastId}`)
+    if (!id) {
+      if (!state.lastId) {
+        return nav('/character/list')
+      }
+
+      return nav(`/chat/${state.lastId}`)
     }
 
-    if (!id) return
-    if (!state.chat || state.chat._id !== id) {
-      chatStore.getChat(id)
-    }
+    chatStore.getChat(id)
   })
 
   return (
@@ -47,12 +48,14 @@ const ChatDetail: Component = () => {
               <Show when={state.partial}>
                 <Message
                   char={state.character}
-                  msg={emptyMsg(state.character?._id, state.partial?.message)}
+                  msg={emptyMsg(state.character?._id!, state.partial!)}
                 />
               </Show>
-              <div class="flex justify-center">
-                <div class="dot-flashing bg-purple-700"></div>
-              </div>
+              <Show when={state.partial !== undefined}>
+                <div class="flex justify-center">
+                  <div class="dot-flashing bg-purple-700"></div>
+                </div>
+              </Show>
             </div>
             <Header participants={['You', state.character?.name!]} />
           </div>
@@ -64,13 +67,13 @@ const ChatDetail: Component = () => {
 
 export default ChatDetail
 
-function emptyMsg(characterId?: string, message?: string): AppSchema.ChatMessage {
+function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
   return {
     kind: 'chat-message',
     _id: '',
     chatId: '',
     characterId,
-    msg: message || '',
+    msg: message,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

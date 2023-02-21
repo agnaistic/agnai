@@ -41,15 +41,15 @@ const CharacterList: Component = () => {
   )
 }
 
-const Character: Component<{ character: AppSchema.Character }> = ({ character }) => {
+const Character: Component<{ character: AppSchema.Character }> = (props) => {
   return (
     <div class="flex h-16 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
       <A
         class="ml-4 flex h-3/4 w-10/12 cursor-pointer items-center rounded-xl bg-gray-800"
-        href={`/character/${character._id}/chats`}
+        href={`/character/${props.character._id}/chats`}
       >
-        <AvatarIcon avatarUrl={character.avatar} />
-        <div class="">{character.name}</div>
+        <AvatarIcon avatarUrl={props.character.avatar} />
+        <div class="">{props.character.name}</div>
       </A>
       <div class="flex w-2/12 flex-row justify-center gap-2">
         <Edit class="cursor-pointer" />

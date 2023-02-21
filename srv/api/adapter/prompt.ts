@@ -24,13 +24,13 @@ export function createPrompt({ chat, char, history, message }: PromptOpts) {
     ...chat.sampleChat.split('\n'),
     ...history.slice(-8).map((chat) => prefix(chat, char.name, username) + chat.msg),
     `${username}: ${message}`,
-    `${char.name}: `
+    `${char.name}:`
   )
 
   const prompt = lines
     .filter(removeEmpty)
     .join('\n')
-    .replace(BOT_REPLACE, chat.name)
+    .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, username)
 
   return prompt

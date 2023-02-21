@@ -33,7 +33,7 @@ const InputBar: Component = () => {
         type="text"
         placeholder="Send a message..."
         class="focusable-field w-full rounded-l-xl px-4 py-2"
-        disabled={!!state.partial}
+        onKeyUp={(ev) => ev.key === 'Enter' && send()}
       />
       <IconButton>
         <Sliders size={20} />

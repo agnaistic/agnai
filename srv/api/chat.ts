@@ -86,6 +86,7 @@ router.post('/:id/message', async ({ body, params }, res) => {
     generated += msg
     res.write(msg)
     res.write('\n\n')
+    await wait(1.5)
   }
 
   const msg = await store.chats.createChatMessage(id, generated, chat.characterId)
@@ -112,3 +113,7 @@ router.put(
 )
 
 export default router
+
+function wait(secs = 1) {
+  return new Promise((resolve) => setTimeout(resolve, secs * 1000))
+}

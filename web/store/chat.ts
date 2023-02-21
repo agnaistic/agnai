@@ -20,9 +20,7 @@ type ChatState = {
     character: AppSchema.Character
     list: AppSchema.Chat[]
   }
-  partial?: {
-    message: string
-  }
+  partial?: string
 }
 
 export type NewChat = {
@@ -117,8 +115,10 @@ export const chatStore = createStore<ChatState>('chat', {
     },
     async *send({ activeChat, msgs }, message: string) {
       const chatId = activeChat?.chat._id
+      yield { partial: '' }
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
+        yield { partial: undefined }
         return
       }
 
@@ -132,7 +132,7 @@ export const chatStore = createStore<ChatState>('chat', {
       for await (const message of stream) {
         if (typeof message === 'string') {
           current += message
-          yield { partial: { message: current } }
+          yield { partial: current }
         } else {
           const { msgs } = get()
           yield { msgs: [...msgs, message] }

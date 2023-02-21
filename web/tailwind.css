@@ -68,6 +68,11 @@
     @apply bg-stone-600 hover:bg-stone-500 active:bg-stone-400;
   }
 
+  .btn-clear {
+    @apply btn-base;
+    @apply bg-transparent;
+  }
+
   /**
    * Cards.
    */

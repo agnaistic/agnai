@@ -43,9 +43,6 @@ export const handleKobold: ModelAdapter = async function* (chat, char, history, 
     return { error: 'Kobold URL not set' }
   }
 
-  /** @TODO This should be configurable in the Chat */
-  const username = 'You'
-
   const body = {
     ...base,
     prompt: createPrompt({ chat, char, history, message }),
@@ -56,6 +53,7 @@ export const handleKobold: ModelAdapter = async function* (chat, char, history, 
   let attempts = 0
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
 
+  const username = 'You'
   const endTokens = [`\n${username}:`, `\n${char.name}:`]
 
   while (attempts < maxAttempts) {
@@ -67,6 +65,7 @@ export const handleKobold: ModelAdapter = async function* (chat, char, history, 
 
     const text = response.body.results?.[0]?.text as string
     if (text) {
+      logger.warn(`Tokens: ${text}`)
       for (const endToken of endTokens) {
         if (text.includes(endToken)) {
           const [first] = text.split(endToken)
