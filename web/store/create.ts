@@ -111,7 +111,7 @@ export function createStore<State extends {}>(name: string, init: State) {
       [key in keyof Handler]: (...args: HandlerArgs<Handler[key]>) => void
     }
 
-    const useStore = <T = State>(selector?: (state: State) => T) => {
+    const useStore = <T extends object = State>(selector?: (state: State) => T) => {
       const init = selector ? selector(store.getState()) : store.getState()
       const [solid, setSolid] = createSolidStore<T>(init as any)
 

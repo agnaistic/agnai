@@ -1,8 +1,7 @@
 import needle from 'needle'
 import { store } from '../../db'
-import { AppSchema } from '../../db/schema'
-import { formatCharacter } from '../../db/util'
 import { logger } from '../../logger'
+import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
 type KoboldRequest = {
@@ -38,9 +37,6 @@ const base = {
   rep_pen: 1.05,
 }
 
-const BOT_REPLACE = /\{\{char\}\}/g
-const SELF_REPLACE = /\{\{user\}\}/g
-
 export const handleKobold: ModelAdapter = async function* (chat, char, history, message: string) {
   const settings = await store.settings.get()
   if (!settings.koboldUrl) {
@@ -50,34 +46,14 @@ export const handleKobold: ModelAdapter = async function* (chat, char, history, 
   /** @TODO This should be configurable in the Chat */
   const username = 'You'
 
-  const persona = formatCharacter(char.name, char.persona)
-  const lastChats = history
-    .slice(-8)
-    .map((chat) => prefix(chat, char.name, username) + replaceNames(chat.msg, char.name, username))
-  const scenario = replaceNames(chat.scenario, char.name, username)
-  const sampleChat = replaceNames(chat.sampleChat, char.name, username).split('\n')
-
   const body = {
     ...base,
-    prompt: [
-      `${char.name}'s Persona: ${persona}`,
-      `Scenario: ${scenario}`,
-      `<START>`,
-      ...sampleChat,
-      ...lastChats,
-      `${username}: ${message}`,
-      `${char.name}:`,
-    ]
-      .filter(removeEmpty)
-      .join('\n')
-      .replace(BOT_REPLACE, chat.name)
-      .replace(SELF_REPLACE, username),
+    prompt: createPrompt({ chat, char, history, message }),
   }
 
   logger.warn(body.prompt)
 
   let attempts = 0
-
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
 
   const endTokens = [`\n${username}:`, `\n${char.name}:`]
@@ -101,18 +77,10 @@ export const handleKobold: ModelAdapter = async function* (chat, char, history, 
 
       body.prompt += text
       yield text
+    } else {
+      logger.error({ err: response.body }, 'Failed to generate text using Kobold adapter')
+      yield { error: response.body }
+      return
     }
   }
-}
-
-function prefix(chat: AppSchema.ChatMessage, bot: string, user: string) {
-  return chat.characterId ? `${bot}: ` : `${user}: `
-}
-
-function replaceNames(msg: string, bot: string, user: string) {
-  return msg.replace(BOT_REPLACE, bot).replace(SELF_REPLACE, user)
-}
-
-function removeEmpty(value?: string) {
-  return !!value
 }

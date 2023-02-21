@@ -76,12 +76,19 @@ router.post('/:id/message', async ({ body, params }, res) => {
   let generated = ''
 
   for await (const msg of stream) {
+    if (typeof msg !== 'string') {
+      res.status(500)
+      res.write(JSON.stringify(msg))
+      res.send()
+      return
+    }
+
     generated += msg
     res.write(msg)
+    res.write('\n\n')
   }
 
   const msg = await store.chats.createChatMessage(id, generated, chat.characterId)
-  res.write('\n\n')
   res.write(JSON.stringify(msg))
   res.end()
 })

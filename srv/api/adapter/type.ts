@@ -5,4 +5,4 @@ export type ModelAdapter = (
   character: AppSchema.Character,
   history: AppSchema.ChatMessage[],
   message: string
-) => AsyncGenerator<string>
+) => AsyncGenerator<string | { error: any }>
