@@ -28,7 +28,7 @@ export namespace AppSchema {
     kind: 'chat-message'
     chatId: string
     msg: string
-    sent: string
+    characterId?: string
 
     createdAt: string
     updatedAt: string
