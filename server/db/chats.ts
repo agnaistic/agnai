@@ -75,6 +75,7 @@ export async function create(
     overrides: char.persona,
     createdAt: now(),
     updatedAt: now(),
+    messageCount: 0,
   }
 
   await chats.put(doc)

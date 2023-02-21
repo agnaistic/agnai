@@ -9,6 +9,7 @@ import { getFormEntries, getStrictForm } from '../../shared/util'
 import { AppSchema } from '../../../server/db/schema'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import { chatStore } from '../../store'
+import { useNavigate } from '@solidjs/router'
 
 const options = [
   { id: 'wpp', label: 'W++', isChecked: true },
@@ -20,6 +21,7 @@ const options = [
 
 const CreateCharacter: Component = () => {
   const [avatar, setAvatar] = createSignal<string | undefined>(undefined)
+  const nav = useNavigate()
 
   const updateFile = (files: FileInputResult[]) => {
     if (!files.length) setAvatar()
@@ -39,14 +41,17 @@ const CreateCharacter: Component = () => {
       kind: body.kind,
       attributes,
     } as any as AppSchema.CharacterPersona
-    chatStore.createCharacter({
-      name: body.name,
-      scenario: body.scenario,
-      avatar: avatar(),
-      greeting: body.greeting,
-      sampleChat: body.sampleChat,
-      persona,
-    })
+    chatStore.createCharacter(
+      {
+        name: body.name,
+        scenario: body.scenario,
+        avatar: avatar(),
+        greeting: body.greeting,
+        sampleChat: body.sampleChat,
+        persona,
+      },
+      () => nav('/character/list')
+    )
   }
 
   return (

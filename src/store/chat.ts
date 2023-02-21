@@ -4,6 +4,7 @@ import { createStore } from './create'
 import { toastStore } from './toasts'
 
 type ChatState = {
+  lastChatId: string | null
   activeChat?: {
     chat: AppSchema.Chat
     character: AppSchema.Character
@@ -37,6 +38,7 @@ export type NewCharacter = {
 }
 
 export const chatStore = createStore<ChatState>('chat', {
+  lastChatId: localStorage.getItem('lastChatId'),
   msgs: [],
   characters: { loaded: false, list: [] },
 })((get, set) => {
@@ -56,7 +58,9 @@ export const chatStore = createStore<ChatState>('chat', {
       }>(`/chat/${id}`)
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
+        localStorage.setItem('lastChatId', id)
         return {
+          lastChatId: id,
           activeChat: {
             chat: res.result.chat,
             character: res.result.character,
@@ -80,21 +84,6 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    // getMessages: async ({ chats }, chatId: string) => {
-    //   const chat = chats?.list.find((ch) => ch._id === chatId)
-    //   if (!chat) {
-    //     toastStore.warn('Cannot retrieve conversation: Chat does not exist')
-    //     return
-    //   }
-    //   const res = await api.get<{ messages: AppSchema.ChatMessage[] }>(`/chat/${chatId}`)
-    //   if (res.error) toastStore.error(`Failed to retrieve conversation`)
-    //   if (res.result) {
-    //     return {
-    //       activeChat: chat,
-    //       msgs: res.result.messages,
-    //     }
-    //   } else return { activeChat: res.result }
-    // },
     async *createChat(
       state,
       characterId: string,
@@ -112,11 +101,13 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.(res.result._id)
       }
     },
-    createCharacter: async (_, char: NewCharacter) => {
-      const res = await api.post<any>('/character', char)
+    createCharacter: async ({ characters }, char: NewCharacter, onSuccess?: () => void) => {
+      const res = await api.post<AppSchema.Character>('/character', char)
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
-      else {
+      if (res.result) {
         toastStore.success(`Successfully created character`)
+        chatStore.getCharacters()
+        onSuccess?.()
       }
     },
     send: async (_, name: string, content: string) => {},

@@ -11,6 +11,7 @@ export namespace AppSchema {
     kind: 'chat'
     name: string
     characterId: string
+    messageCount: number
     adapter?: ChatAdapter
 
     greeting: string

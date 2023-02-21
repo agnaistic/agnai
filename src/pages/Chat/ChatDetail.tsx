@@ -1,4 +1,4 @@
-import { useParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { chatStore } from '../../store'
@@ -8,11 +8,22 @@ import Message from './components/Message'
 import { mockMessages } from './mocks'
 
 const ChatDetail: Component = () => {
-  const state = chatStore((s) => ({ chat: s.activeChat?.chat, character: s.activeChat?.character }))
+  const state = chatStore((s) => ({
+    chat: s.activeChat?.chat,
+    character: s.activeChat?.character,
+    lastId: s.lastChatId,
+  }))
   const { id } = useParams()
+  const nav = useNavigate()
 
   createEffect(() => {
-    if (!id && state.chat) return
+    if (!id && state.lastId) {
+      nav(`/chat/${state.lastId}`)
+    }
+  })
+
+  createEffect(() => {
+    if (!id) return
     if (!state.chat || state.chat._id !== id) {
       chatStore.getChat(id)
     }

@@ -1,4 +1,4 @@
-import { Component, createEffect, For } from 'solid-js'
+import { Component, createEffect, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Plus, Trash } from 'lucide-solid'
@@ -20,18 +20,23 @@ const CharacterList: Component = () => {
     <>
       <PageHeader title="Characters" subtitle="" />
 
-      <div class="flex w-full flex-col gap-2">
-        <div class="flex w-full justify-end">
-          <A href="/character/create">
-            <Button>
-              <Plus />
-              Character
-            </Button>
-          </A>
+      <Show when={!chars.characters.loaded}>
+        <div>Loading...</div>
+      </Show>
+      <Show when={chars.characters.loaded}>
+        <div class="flex w-full flex-col gap-2">
+          <div class="flex w-full justify-end">
+            <A href="/character/create">
+              <Button>
+                <Plus />
+                Character
+              </Button>
+            </A>
+          </div>
+          <For each={chars.characters.list}>{(char) => <Character character={char} />}</For>
         </div>
-        <For each={chars.characters.list}>{(char) => <Character character={char} />}</For>
-      </div>
-      {chars.characters.list.length === 0 ? <NoCharacters /> : null}
+        {chars.characters.list.length === 0 ? <NoCharacters /> : null}
+      </Show>
     </>
   )
 }
@@ -41,7 +46,7 @@ const Character: Component<{ character: AppSchema.Character }> = ({ character })
     <div class="flex h-16 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
       <A
         class="ml-4 flex h-3/4 w-10/12 cursor-pointer items-center rounded-xl bg-gray-800"
-        href={`/character/detail/${character._id}`}
+        href={`/character/${character._id}/chats`}
       >
         <AvatarIcon avatarUrl={character.avatar} />
         <div class="">{character.name}</div>
