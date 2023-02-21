@@ -78,18 +78,19 @@ export async function create(
     messageCount: 0,
   }
 
-  const msg: AppSchema.ChatMessage = {
-    kind: 'chat-message',
-    _id: v4(),
-    chatId: id,
-    msg: props.greeting,
-    characterId: char._id,
-    createdAt: now(),
-    updatedAt: now(),
-  }
-
   await chats.put(doc)
-  await msgs.put(msg)
+  if (props.greeting) {
+    const msg: AppSchema.ChatMessage = {
+      kind: 'chat-message',
+      _id: v4(),
+      chatId: id,
+      msg: props.greeting,
+      characterId: char._id,
+      createdAt: now(),
+      updatedAt: now(),
+    }
+    await msgs.put(msg)
+  }
   return doc
 }
 
