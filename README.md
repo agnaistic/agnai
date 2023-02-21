@@ -1,12 +1,19 @@
-# galatea-ui
+# agn-ai (working name)
 
-The official UI for interacting with the Pygmalion models.
+AI Agnostic Chat
 
-Very early work in progress.
+Based upon the early work of https://github.com/PygmalionAI/galatea-ui. Very early work in progress.
 
-## Contributing
+## Design Goals
 
-If you wish to contribute, this section has some relevant information.
+This project quickly deviated from the upstream project. This project is not intended to be a SaaS nor be centered around the Pygmalion model.  
+Ultimately the design goals for this project are my own
+
+- High quality codebase
+- Adapters: Transparently use a variety of AI models and services to converse with
+  - Initial adapters: Kobold, Kobold Horde, and Novel
+- Implementing adapters should be low friction
+- Lightweight to self-host
 
 ### Tech stack
 
@@ -27,8 +34,6 @@ $ pnpm install
 # start the dev server
 $ pnpm start
 ```
-
-By default, it expects the back-end to be running locally at `http://localhost:3000`. If that's not the case, you can override this with the `CORE_API_SERVER` environment variable.
 
 ### Code quality checks
 
