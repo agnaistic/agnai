@@ -7,13 +7,14 @@ import './Message.css'
 
 const showdownConverter = new showdown.Converter()
 
-/** An individual message. */
 const Message: Component<{ msg: AppSchema.ChatMessage; char?: AppSchema.Character }> = ({
   msg,
   char,
 }) => (
   <span class="flex gap-4">
-    <img src={char?.avatar} class="mt-1 h-12 w-12 rounded-full bg-white" />
+    <Show when={char && !!msg.characterId}>
+      <img src={char?.avatar} class="mt-1 h-12 w-12 rounded-full" />
+    </Show>
 
     <div class="flex select-text flex-col">
       <span>
@@ -22,17 +23,17 @@ const Message: Component<{ msg: AppSchema.ChatMessage; char?: AppSchema.Characte
           {new Intl.DateTimeFormat('en-US', {
             dateStyle: 'short',
             timeStyle: 'short',
-          }).format(new Date(msg.sent))}
+          }).format(new Date(msg.createdAt))}
         </span>
       </span>
-      <div class="message-text">
+      <div class="opacity-50">
         <div
           // TODO(11b): Figure out whether Showdown emits only safe HTML.
           // eslint-disable-next-line solid/no-innerhtml
           innerHTML={showdownConverter.makeHtml(msg.msg)}
         />
       </div>
-      <Show when={!char}>
+      <Show when={!msg.characterId}>
         <div class="mt-3 flex gap-2 text-sm text-white/25">
           <ThumbsUp size={16} class="mt-[-0.15rem]" />
           <ThumbsDown size={16} />

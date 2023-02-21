@@ -5,13 +5,13 @@ import { chatStore } from '../../store'
 import Header from './components/Header'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
-import { mockMessages } from './mocks'
 
 const ChatDetail: Component = () => {
   const state = chatStore((s) => ({
     chat: s.activeChat?.chat,
     character: s.activeChat?.character,
     lastId: s.lastChatId,
+    msgs: s.msgs,
   }))
   const { id } = useParams()
   const nav = useNavigate()
@@ -42,7 +42,7 @@ const ChatDetail: Component = () => {
           <InputBar />
           <div class="flex flex-col-reverse overflow-y-scroll">
             <div class="flex flex-col gap-6 pt-4 pb-8">
-              <For each={mockMessages}>{(msg) => <Message msg={msg} />}</For>
+              <For each={state.msgs}>{(msg) => <Message msg={msg} char={state.character} />}</For>
             </div>
             <Header participants={['You', state.character?.name!]} />
           </div>

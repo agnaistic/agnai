@@ -17,7 +17,7 @@ export async function getMessages(chatId: string) {
   const sorted = docs.sort((l, r) =>
     l.updatedAt > r.updatedAt ? -1 : l.updatedAt === r.updatedAt ? 0 : 1
   )
-  return { messages: sorted }
+  return sorted
 }
 
 export async function list() {
