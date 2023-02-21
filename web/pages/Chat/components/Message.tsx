@@ -3,8 +3,6 @@ import showdown from 'showdown'
 import { Component, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 
-import './Message.css'
-
 const showdownConverter = new showdown.Converter()
 
 const Message: Component<{ msg: AppSchema.ChatMessage; char?: AppSchema.Character }> = ({
@@ -15,10 +13,13 @@ const Message: Component<{ msg: AppSchema.ChatMessage; char?: AppSchema.Characte
     <Show when={char && !!msg.characterId}>
       <img src={char?.avatar} class="mt-1 h-12 w-12 rounded-full" />
     </Show>
+    <Show when={!msg.characterId}>
+      <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-500">YOU</div>
+    </Show>
 
     <div class="flex select-text flex-col">
       <span>
-        <b class="mr-2 text-white">{char?.name || 'You'}</b>
+        <b class="mr-2 text-white">{msg.characterId ? char?.name : 'You'}</b>
         <span class="text-sm text-white/25">
           {new Intl.DateTimeFormat('en-US', {
             dateStyle: 'short',
@@ -33,12 +34,12 @@ const Message: Component<{ msg: AppSchema.ChatMessage; char?: AppSchema.Characte
           innerHTML={showdownConverter.makeHtml(msg.msg)}
         />
       </div>
-      <Show when={!msg.characterId}>
+      {/* <Show when={msg.characterId}>
         <div class="mt-3 flex gap-2 text-sm text-white/25">
           <ThumbsUp size={16} class="mt-[-0.15rem]" />
           <ThumbsDown size={16} />
         </div>
-      </Show>
+      </Show> */}
     </div>
   </span>
 )

@@ -4,6 +4,7 @@ export namespace AppSchema {
     koboldUrl: string
     novelApiKey: string
     chaiUrl: string
+    defaultAdapter?: ChatAdapter
   }
 
   export interface Chat {
@@ -29,12 +30,13 @@ export namespace AppSchema {
     chatId: string
     msg: string
     characterId?: string
+    rating?: 'y' | 'n' | 'none'
 
     createdAt: string
     updatedAt: string
   }
 
-  export type ChatAdapter = 'kobold' | 'chai' | 'novel' | 'default'
+  export type ChatAdapter = 'kobold' | 'chai' | 'novel' | 'default' | 'none'
 
   /** Description of the character */
   export type CharacterPersona =

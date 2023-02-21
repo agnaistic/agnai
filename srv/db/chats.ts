@@ -15,7 +15,7 @@ export async function getMessages(chatId: string) {
     },
   })
   const sorted = docs.sort((l, r) =>
-    l.updatedAt > r.updatedAt ? -1 : l.updatedAt === r.updatedAt ? 0 : 1
+    l.updatedAt > r.updatedAt ? 1 : l.updatedAt === r.updatedAt ? 0 : -1
   )
   return sorted
 }
@@ -70,12 +70,12 @@ export async function create(
     characterId,
     name: props.name,
     greeting: props.greeting,
-    sampleChat: props.greeting,
+    sampleChat: props.sampleChat,
     scenario: props.scenario,
     overrides: char.persona,
     createdAt: now(),
     updatedAt: now(),
-    messageCount: 0,
+    messageCount: props.greeting ? 1 : 0,
   }
 
   await chats.put(doc)
@@ -92,6 +92,38 @@ export async function create(
     await msgs.put(msg)
   }
   return doc
+}
+
+export async function createChatMessage(chatId: string, message: string, characterId?: string) {
+  const doc: AppSchema.ChatMessage = {
+    _id: v4(),
+    kind: 'chat-message',
+    rating: 'none',
+    characterId,
+    chatId,
+    msg: message,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  // await msgs.put(doc)
+  return doc
+}
+
+export async function editMessage(id: string, content: string) {
+  const doc = await msgs.get(id)
+  const next: AppSchema.ChatMessage = {
+    ...doc,
+    msg: content,
+  }
+
+  await msgs.put(next)
+  return next
+}
+
+export async function deleteMessage(messageId: string) {
+  const doc = await msgs.get(messageId)
+  await chats.remove(doc)
 }
 
 export async function deleteChat(chatId: string) {

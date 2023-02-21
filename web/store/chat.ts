@@ -9,6 +9,7 @@ type ChatState = {
     chat: AppSchema.Chat
     character: AppSchema.Character
   }
+  responding: boolean
   msgs: AppSchema.ChatMessage[]
   characters: {
     loaded: boolean
@@ -18,6 +19,9 @@ type ChatState = {
     loaded: boolean
     character: AppSchema.Character
     list: AppSchema.Chat[]
+  }
+  partial?: {
+    message: string
   }
 }
 
@@ -38,6 +42,7 @@ export type NewCharacter = {
 }
 
 export const chatStore = createStore<ChatState>('chat', {
+  responding: false,
   lastChatId: localStorage.getItem('lastChatId'),
   msgs: [],
   characters: { loaded: false, list: [] },
@@ -110,6 +115,30 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
       }
     },
-    send: async (_, name: string, content: string) => {},
+    async *send({ activeChat, msgs }, message: string) {
+      const chatId = activeChat?.chat._id
+      if (!chatId) {
+        toastStore.error('Could not send message: No active chat')
+        return
+      }
+
+      let current = ''
+      yield { responding: true }
+      const stream = await api.streamPost<string | AppSchema.ChatMessage>(
+        `/chat/${chatId}/message`,
+        { message, history: msgs.slice(-10) }
+      )
+
+      for await (const message of stream) {
+        if (typeof message === 'string') {
+          current += message
+          yield { partial: { message: current } }
+        } else {
+          const { msgs } = get()
+          yield { msgs: [...msgs, message] }
+        }
+      }
+      yield { responding: false, partial: undefined }
+    },
   }
 })

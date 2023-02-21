@@ -6,6 +6,8 @@ const baseUrl = `http://${location.hostname}:3001`
 export const api = {
   get,
   post,
+  streamGet,
+  streamPost,
 }
 
 type Query = { [key: string]: string | number }
@@ -27,6 +29,21 @@ async function post<T = any>(path: string, body = {}) {
   })
 }
 
+async function streamGet<T = any>(path: string, query: Query) {
+  const params = Object.keys(query)
+    .map((key) => `${key}=${query[key]}`)
+    .join('&')
+
+  return callApiStream<T>(`${path}?${params}`, { method: 'get' })
+}
+
+async function streamPost<T = any>(path: string, body: any) {
+  return callApiStream<T>(path, {
+    method: 'post',
+    body: JSON.stringify(body),
+  })
+}
+
 async function callApi<T = any>(
   path: string,
   opts: RequestInit
@@ -36,6 +53,7 @@ async function callApi<T = any>(
     ...opts,
     ...headers(),
   })
+
   const json = await res.json()
 
   if (res.status === 401) {
@@ -76,4 +94,40 @@ function toastError(err: any) {
 
   toastStore.error(err)
   throw err
+}
+
+async function* callApiStream<T = any>(path: string, opts: RequestInit) {
+  const prefix = path.startsWith('/') ? '/api' : '/api'
+  const stream = await fetch(`${baseUrl}${prefix}${path}`, {
+    ...opts,
+    ...headers(),
+  }).then((res) => res.body)
+
+  if (!stream) {
+    return
+  }
+
+  const reader = stream.getReader()
+  let done = false
+  do {
+    const result = await reader.read()
+    let done = result.done
+    if (done) return
+    if (!result.value) {
+      yield
+      continue
+    }
+
+    const buffer = Buffer.from(result.value)
+    const str = buffer.toString()
+    const responses = str.split('\n\n')
+    for (const value of responses) {
+      try {
+        const json = JSON.parse(value)
+        yield json
+      } catch (ex) {
+        yield value
+      }
+    }
+  } while (!done)
 }

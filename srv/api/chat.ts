@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
 import { store } from '../db'
+import { generateResponse } from './adapter'
 import { handle } from './handle'
 
 const router = Router()
@@ -25,7 +26,7 @@ router.get(
   })
 )
 
-router.post(
+router.put(
   '/:id',
   handle(async ({ params, body }) => {
     assertValid({ name: 'string' }, body)
@@ -50,6 +51,56 @@ router.post(
     )
     const chat = await store.chats.create(body.characterId, body)
     return chat
+  })
+)
+
+router.post('/:id/message', async ({ body, params }, res) => {
+  const id = params.id
+  assertValid({ message: 'string', history: 'any' }, body)
+
+  const chat = await store.chats.getChat(id)
+  const char = await store.characters.getCharacter(chat.characterId)
+
+  const userMsg = await store.chats.createChatMessage(id, body.message)
+  res.write(JSON.stringify(userMsg))
+
+  const stream = await generateResponse('kobold', chat, char, body.message, body.history).catch(
+    (err: Error) => err
+  )
+
+  if (stream instanceof Error) {
+    res.status(500).send({ message: stream.message })
+    return
+  }
+
+  let generated = ''
+
+  for await (const msg of stream) {
+    generated += msg
+    res.write(msg)
+  }
+
+  const msg = await store.chats.createChatMessage(id, generated, chat.characterId)
+  res.write('\n\n')
+  res.write(JSON.stringify(msg))
+  res.end()
+})
+
+router.delete(
+  '/:id/message',
+  handle(async (req) => {
+    const id = req.params.id
+    await store.chats.deleteMessage(id)
+    return { success: true }
+  })
+)
+
+router.put(
+  '/:id/message',
+  handle(async ({ body, params }) => {
+    assertValid({ message: 'string' }, body)
+    const message = await store.chats.editMessage(params.id, body.message)
+    return message
   })
 )
 

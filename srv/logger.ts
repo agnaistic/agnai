@@ -37,7 +37,7 @@ function parentLogger(name: string) {
 }
 
 export function logMiddleware() {
-  const toRedact = new Set<string>(['password', 'token'])
+  const toRedact = new Set<string>(['password', 'token', 'history'])
   const middleware = (req: any, res: Response, next: NextFunction) => {
     const body: any = { ...req.body }
 
@@ -68,7 +68,7 @@ function redact(toRedact: Set<string>, body: any) {
   if (typeof body !== 'object') return
 
   for (const key in body) {
-    if (toRedact.has(key) && typeof body[key] === 'string') {
+    if (toRedact.has(key)) {
       body[key] = '[REDACTED]'
       continue
     }
