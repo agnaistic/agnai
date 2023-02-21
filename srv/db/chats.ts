@@ -106,7 +106,7 @@ export async function createChatMessage(chatId: string, message: string, charact
     updatedAt: new Date().toISOString(),
   }
 
-  // await msgs.put(doc)
+  await msgs.put(doc)
   return doc
 }
 
