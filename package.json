@@ -1,7 +1,8 @@
 {
-  "name": "galatea-ui",
+  "name": "agn-ai",
+  "private": true,
   "version": "0.1.0",
-  "description": "The official Pygmalion front-end.",
+  "description": "Agnostic AI Chat",
   "scripts": {
     "start": "NODE_ENV=dev concurrently -c auto -n web,api \"parcel web/index.html --no-cache\" \"npm run server:watch\"",
     "server": "node --inspect -r @swc-node/register srv/start.ts",

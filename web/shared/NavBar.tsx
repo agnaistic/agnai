@@ -6,7 +6,7 @@ const NavBar: Component = () => (
   <span class="flex justify-between gap-4 bg-background-lighter px-8 py-5 shadow-xl max-sm:p-3">
     <span class="flex items-center gap-2 font-semibold">
       <A href="/">
-        Pygmalion<span class="text-purple-400">AI</span>
+        Agn<span class="text-purple-400">AI</span>
       </A>
     </span>
     <span class="flex gap-4">
