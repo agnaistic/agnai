@@ -113,6 +113,18 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
       }
     },
+    async *retry({ activeChat, msgs }) {
+      if (msgs.length < 3) {
+        toastStore.error(`Cannot retry: Not enough messages`)
+        return
+      }
+
+      const history = msgs.slice(-12, -2)
+
+      yield { msgs: history }
+      const [message, _] = msgs.slice(-2)
+      chatStore.send(message.msg)
+    },
     async *send({ activeChat, msgs }, message: string) {
       const chatId = activeChat?.chat._id
       yield { partial: '' }

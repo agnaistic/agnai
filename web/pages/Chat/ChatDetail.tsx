@@ -1,4 +1,5 @@
-import { useNavigate, useParams } from '@solidjs/router'
+import { A, useNavigate, useParams } from '@solidjs/router'
+import { ChevronLeft } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import PageHeader from '../../shared/PageHeader'
@@ -39,12 +40,27 @@ const ChatDetail: Component = () => {
           <div>Loading...</div>
         </div>
       </Show>
+      <div class="flex h-6 items-center">
+        <A href={`/character/${state.character?._id}/chats`}>
+          <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
+            <ChevronLeft size={16} class="mt-0.5" /> Conversations
+          </div>
+        </A>
+      </div>
       <Show when={state.chat}>
-        <div class="flex h-full flex-col-reverse">
+        <div class="flex h-[calc(100%-24px)] flex-col-reverse">
           <InputBar />
           <div class="flex flex-col-reverse overflow-y-scroll">
-            <div class="flex flex-col gap-6 pt-4 pb-8">
-              <For each={state.msgs}>{(msg) => <Message msg={msg} char={state.character} />}</For>
+            <div class="flex flex-col gap-4 pt-4 pb-4">
+              <For each={state.msgs}>
+                {(msg, i) => (
+                  <Message
+                    msg={msg}
+                    char={state.character}
+                    last={i() >= 2 && i() === state.msgs.length - 1}
+                  />
+                )}
+              </For>
               <Show when={state.partial}>
                 <Message
                   char={state.character}

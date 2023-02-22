@@ -3,22 +3,7 @@ import { Component, JSX } from 'solid-js'
 import { chatStore } from '../../../store'
 import './Message.css'
 
-/** Meant to be used exclusively within the InputBar. */
-const IconButton: Component<{ children: JSX.Element; onClick?: (ev: MouseEvent) => void }> = (
-  props
-) => (
-  <button
-    type="button"
-    class="focusable-icon-button focusable-field border-2 border-transparent py-3 px-1"
-    onClick={(ev) => props.onClick?.(ev)}
-  >
-    {props.children}
-  </button>
-)
-
-/** Bar containing the message text input and some attached buttons. */
 const InputBar: Component = () => {
-  const state = chatStore((state) => ({ partial: state.partial }))
   let ref: HTMLInputElement | undefined
   const send = () => {
     if (!ref) return
@@ -45,5 +30,17 @@ const InputBar: Component = () => {
     </div>
   )
 }
+
+const IconButton: Component<{ children: JSX.Element; onClick?: (ev: MouseEvent) => void }> = (
+  props
+) => (
+  <button
+    type="button"
+    class="focusable-icon-button focusable-field border-2 border-transparent py-3 px-1"
+    onClick={(ev) => props.onClick?.(ev)}
+  >
+    {props.children}
+  </button>
+)
 
 export default InputBar

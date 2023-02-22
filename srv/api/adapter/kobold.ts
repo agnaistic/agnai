@@ -37,18 +37,17 @@ const base = {
   rep_pen: 1.05,
 }
 
-export const handleKobold: ModelAdapter = async function* (chat, char, history, message: string) {
+export const handleKobold: ModelAdapter = async function* ({ chat, char, history, message }) {
   const settings = await store.settings.get()
   if (!settings.koboldUrl) {
-    return { error: 'Kobold URL not set' }
+    yield { error: 'Kobold URL not set' }
+    return
   }
 
   const body = {
     ...base,
     prompt: createPrompt({ chat, char, history, message }),
   }
-
-  logger.warn(body.prompt)
 
   let attempts = 0
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4

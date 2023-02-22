@@ -1,8 +1,9 @@
 import { AppSchema } from '../../db/schema'
 
-export type ModelAdapter = (
-  chat: AppSchema.Chat,
-  character: AppSchema.Character,
-  history: AppSchema.ChatMessage[],
+export type ModelAdapter = (opts: {
+  chat: AppSchema.Chat
+  char: AppSchema.Character
+  history: AppSchema.ChatMessage[]
   message: string
-) => AsyncGenerator<string | { error: any }>
+  settings: AppSchema.Settings
+}) => AsyncGenerator<string | { error: any }>

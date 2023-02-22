@@ -64,9 +64,13 @@ router.post('/:id/message', async ({ body, params }, res) => {
   const userMsg = await store.chats.createChatMessage(id, body.message)
   res.write(JSON.stringify(userMsg))
 
-  const stream = await generateResponse('kobold', chat, char, body.message, body.history).catch(
-    (err: Error) => err
-  )
+  const stream = await generateResponse({
+    adapter: 'kobold',
+    chat,
+    char,
+    message: body.message,
+    history: body.history,
+  }).catch((err: Error) => err)
 
   if (stream instanceof Error) {
     res.status(500).send({ message: stream.message })
@@ -83,10 +87,9 @@ router.post('/:id/message', async ({ body, params }, res) => {
       return
     }
 
-    generated += msg
+    generated += msg.trim()
     res.write(msg)
     res.write('\n\n')
-    await wait(1.5)
   }
 
   const msg = await store.chats.createChatMessage(id, generated, chat.characterId)
