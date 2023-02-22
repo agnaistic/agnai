@@ -8,7 +8,7 @@ import RadioGroup from '../../shared/RadioGroup'
 import { getFormEntries, getStrictForm } from '../../shared/util'
 import { AppSchema } from '../../../srv/db/schema'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { chatStore } from '../../store'
+import { characterStore } from '../../store'
 import { useNavigate } from '@solidjs/router'
 
 const options = [
@@ -41,7 +41,7 @@ const CreateCharacter: Component = () => {
       kind: body.kind,
       attributes,
     } as any as AppSchema.CharacterPersona
-    chatStore.createCharacter(
+    characterStore.createCharacter(
       {
         name: body.name,
         scenario: body.scenario,

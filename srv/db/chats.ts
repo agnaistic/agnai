@@ -9,11 +9,7 @@ const chats = db('chat')
 const msgs = db('chat-message')
 
 export async function getMessages(chatId: string) {
-  const { docs } = await msgs.find({
-    selector: {
-      chatId,
-    },
-  })
+  const docs = await msgs.find({ chatId }).sort({ updatedAt: 1 })
   const sorted = docs.sort((l, r) =>
     l.updatedAt > r.updatedAt ? 1 : l.updatedAt === r.updatedAt ? 0 : -1
   )
@@ -21,41 +17,27 @@ export async function getMessages(chatId: string) {
 }
 
 export async function list() {
-  const { docs } = await chats.find({
-    selector: {
-      kind: 'chat',
-    },
-  })
-
+  const docs = await chats.find({ kind: 'chat' })
   return docs
 }
 
 export async function getChat(id: string) {
-  const chat = await chats.get(id)
+  const chat = await chats.findOne({ _id: id })
   return chat
 }
 
 export async function listByCharacter(characterId: string) {
-  const { docs } = await chats.find({
-    selector: {
-      kind: 'chat',
-      characterId,
-    },
+  const docs = await chats.find({
+    kind: 'chat',
+    characterId,
   })
 
   return docs
 }
 
 export async function update(id: string, name: string) {
-  const prev = await chats.get(id)
-
-  await chats.put({
-    ...prev,
-    name,
-    updatedAt: now(),
-  })
-
-  return chats.get(id)
+  await chats.updateOne({ _id: id }, { name, updatedAt: now() })
+  return getChat(id)
 }
 
 export async function create(
@@ -64,6 +46,10 @@ export async function create(
 ) {
   const id = `${v4()}`
   const char = await getCharacter(characterId)
+  if (!char) {
+    throw new Error(`Unable to create chat: Character not found`)
+  }
+
   const doc: AppSchema.Chat = {
     _id: id,
     kind: 'chat',
@@ -78,7 +64,8 @@ export async function create(
     messageCount: props.greeting ? 1 : 0,
   }
 
-  await chats.put(doc)
+  await chats.insertOne(doc)
+
   if (props.greeting) {
     const msg: AppSchema.ChatMessage = {
       kind: 'chat-message',
@@ -89,7 +76,7 @@ export async function create(
       createdAt: now(),
       updatedAt: now(),
     }
-    await msgs.put(msg)
+    await msgs.insertOne(msg)
   }
   return doc
 }
@@ -106,46 +93,36 @@ export async function createChatMessage(chatId: string, message: string, charact
     updatedAt: new Date().toISOString(),
   }
 
-  await msgs.put(doc)
+  await msgs.insertOne(doc)
   return doc
 }
 
 export async function editMessage(id: string, content: string) {
-  const doc = await msgs.get(id)
-  const next: AppSchema.ChatMessage = {
-    ...doc,
-    msg: content,
-  }
-
-  await msgs.put(next)
-  return next
+  await msgs.updateOne({ _id: id }, { msg: content, updatedAt: now() })
+  return msgs.findOne({ _id: id })
 }
 
 export async function deleteMessage(messageId: string) {
-  const doc = await msgs.get(messageId)
-  await chats.remove(doc)
+  await chats.remove({ _id: messageId }, {})
 }
 
 export async function deleteChat(chatId: string) {
-  const doc = await chats.get(chatId)
-  const res = await chats.remove(doc)
-
-  if (!res.ok) {
-    throw new Error(`Failed to delete document`)
-  }
+  await chats.remove({ _id: chatId }, {})
+  await msgs.remove({ kind: 'chat-message', chatId }, { multi: true })
 }
 
 export async function deleteAllChats(characterId?: string) {
-  const selector: any = { kind: 'chat' }
+  const chatQuery: any = { kind: 'chat' }
+
   if (characterId) {
-    selector.characterId = characterId
+    chatQuery.characterId = characterId
   }
 
-  const { docs } = await chats.find({
-    selector,
-  })
+  const chatIds = await chats.find(chatQuery).then((chats) => chats.map((ch) => ch._id))
 
-  logger.info({ docs }, 'Deleting')
-  const results = await Promise.all(docs.map((doc) => chats.remove(doc)))
-  logger.info({ results }, 'Results')
+  const chatsDeleted = await chats.remove(chatQuery, { multi: true })
+  logger.info({ deleted: chatsDeleted }, 'Deleting')
+
+  const msgsDeleted = msgs.remove({ chatId: { $in: chatIds } }, { multi: true })
+  logger.info({ deleted: msgsDeleted }, 'Messages deleted')
 }

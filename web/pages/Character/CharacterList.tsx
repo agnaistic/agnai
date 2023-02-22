@@ -6,24 +6,23 @@ import { AppSchema } from '../../../srv/db/schema'
 import { chatStore } from '../../store'
 import { A } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
+import { characterStore } from '../../store'
 
 const CharacterList: Component = () => {
-  const chars = chatStore()
+  const chars = characterStore((s) => s.characters)
 
   createEffect(() => {
-    if (!chars.characters.loaded) {
-      chatStore.getCharacters()
-    }
+    characterStore.getCharacters()
   })
 
   return (
     <>
       <PageHeader title="Characters" subtitle="" />
 
-      <Show when={!chars.characters.loaded}>
+      <Show when={!chars.loaded}>
         <div>Loading...</div>
       </Show>
-      <Show when={chars.characters.loaded}>
+      <Show when={chars.loaded}>
         <div class="flex w-full flex-col gap-2">
           <div class="flex w-full justify-end">
             <A href="/character/create">
@@ -33,9 +32,9 @@ const CharacterList: Component = () => {
               </Button>
             </A>
           </div>
-          <For each={chars.characters.list}>{(char) => <Character character={char} />}</For>
+          <For each={chars.list}>{(char) => <Character character={char} />}</For>
         </div>
-        {chars.characters.list.length === 0 ? <NoCharacters /> : null}
+        {chars.list.length === 0 ? <NoCharacters /> : null}
       </Show>
     </>
   )

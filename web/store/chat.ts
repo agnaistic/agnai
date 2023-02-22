@@ -11,10 +11,6 @@ type ChatState = {
   }
   responding: boolean
   msgs: AppSchema.ChatMessage[]
-  characters: {
-    loaded: boolean
-    list: AppSchema.Character[]
-  }
   chats?: {
     loaded: boolean
     character: AppSchema.Character
@@ -30,29 +26,12 @@ export type NewChat = {
   sampleChat: string
 }
 
-export type NewCharacter = {
-  name: string
-  greeting: string
-  scenario: string
-  sampleChat: string
-  avatar?: string
-  persona: AppSchema.CharacterPersona
-}
-
 export const chatStore = createStore<ChatState>('chat', {
   responding: false,
   lastChatId: localStorage.getItem('lastChatId'),
   msgs: [],
-  characters: { loaded: false, list: [] },
 })((get, set) => {
   return {
-    getCharacters: async () => {
-      const res = await api.get('/character')
-      if (res.error) toastStore.error('Failed to retrieve characters')
-      else {
-        return { characters: { list: res.result.characters, loaded: true } }
-      }
-    },
     async getChat(_, id: string) {
       const res = await api.get<{
         chat: AppSchema.Chat
@@ -104,25 +83,15 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.(res.result._id)
       }
     },
-    createCharacter: async ({ characters }, char: NewCharacter, onSuccess?: () => void) => {
-      const res = await api.post<AppSchema.Character>('/character', char)
-      if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
-      if (res.result) {
-        toastStore.success(`Successfully created character`)
-        chatStore.getCharacters()
-        onSuccess?.()
-      }
-    },
+
     async *retry({ activeChat, msgs }) {
       if (msgs.length < 3) {
         toastStore.error(`Cannot retry: Not enough messages`)
         return
       }
 
-      const history = msgs.slice(-12, -2)
-
-      yield { msgs: history }
       const [message, _] = msgs.slice(-2)
+      yield { msgs: msgs.slice(0, -2) }
       chatStore.send(message.msg)
     },
     async *send({ activeChat, msgs }, message: string) {
@@ -152,5 +121,6 @@ export const chatStore = createStore<ChatState>('chat', {
       }
       yield { responding: false, partial: undefined }
     },
+    async deleteChats(_, ids: AppSchema.ChatMessage[]) {},
   }
 })

@@ -20,7 +20,7 @@ export async function createCharacter(
     ...char,
   }
 
-  await chars.put(newChar)
+  await chars.insertOne(newChar)
   return newChar
 }
 
@@ -31,26 +31,16 @@ export async function updateCharacter(
     'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario'
   >
 ) {
-  const prev = await getCharacter(id)
-  await chars.put({
-    ...prev,
-    ...char,
-    updatedAt: now(),
-  })
+  await chars.updateOne({ _id: id }, { ...char, updatedAt: now() })
   return getCharacter(id)
 }
 
 export async function getCharacter(id: string) {
-  const char = await chars.get(id)
+  const char = await chars.findOne({ _id: id })
   return char
 }
 
 export async function getCharacters() {
-  const list = await chars.find({
-    selector: {
-      kind: 'character',
-    },
-  })
-
-  return list.docs
+  const list = await chars.find({ kind: 'character' })
+  return list
 }

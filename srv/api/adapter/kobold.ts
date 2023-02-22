@@ -53,7 +53,7 @@ export const handleKobold: ModelAdapter = async function* ({ chat, char, history
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
 
   const username = 'You'
-  const endTokens = [`\n${username}:`, `\n${char.name}:`]
+  const endTokens = [`${username}:`, `${char.name}:`, 'END_OF_DIALOG']
 
   while (attempts < maxAttempts) {
     attempts++

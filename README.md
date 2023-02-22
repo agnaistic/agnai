@@ -1,4 +1,4 @@
-# agn-ai (working name)
+# AgnAIstic (working name)
 
 AI Agnostic Chat
 

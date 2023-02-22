@@ -2,6 +2,8 @@ import { logger } from '../logger'
 import { catchErr, db } from './client'
 import { AppSchema, Doc } from './schema'
 
+const sts = db('settings')
+
 const defaults: AppSchema.Settings = {
   kind: 'settings',
   novelApiKey: '',
@@ -10,10 +12,10 @@ const defaults: AppSchema.Settings = {
 }
 
 export async function get(): Promise<Doc<'settings'>> {
-  const doc = await db('settings').get('settings').catch(catchErr)
+  const doc = await sts.findOne({ _id: 'settings' }).catch(catchErr)
   if (!doc) {
     const settings = { _id: 'settings', ...defaults } as const
-    await db().put(settings)
+    await db().insertOne(settings)
     logger.info('Database initialised')
     return get()
   }
@@ -22,8 +24,6 @@ export async function get(): Promise<Doc<'settings'>> {
 }
 
 export async function save(update: Partial<Doc<'settings'>>) {
-  const doc = await get()
-  const next = { ...doc, ...update }
-  await db().put(next)
+  await db().updateOne({ _id: 'settings' }, update)
   return get()
 }

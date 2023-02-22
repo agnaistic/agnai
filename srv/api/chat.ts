@@ -1,8 +1,9 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
+import { P } from 'pino'
 import { store } from '../db'
 import { generateResponse } from './adapter'
-import { handle } from './handle'
+import { handle, StatusError } from './handle'
 
 const router = Router()
 
@@ -20,6 +21,11 @@ router.get(
   handle(async ({ params }) => {
     const id = params.id
     const chat = await store.chats.getChat(id)
+
+    if (!chat) {
+      throw new StatusError('Chat not found', 404)
+    }
+
     const character = await store.characters.getCharacter(chat.characterId)
     const messages = await store.chats.getMessages(id)
     return { chat, messages, character }
@@ -59,7 +65,14 @@ router.post('/:id/message', async ({ body, params }, res) => {
   assertValid({ message: 'string', history: 'any' }, body)
 
   const chat = await store.chats.getChat(id)
+  if (!chat) {
+    throw new StatusError('Chat not found', 404)
+  }
+
   const char = await store.characters.getCharacter(chat.characterId)
+  if (!char) {
+    throw new StatusError('Character not found', 404)
+  }
 
   const userMsg = await store.chats.createChatMessage(id, body.message)
   res.write(JSON.stringify(userMsg))
