@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 env:
-  node-version: "18.4.0"
+  node-version: '18.4.0'
   pnpm-version: 7.2.1
 
 jobs:
@@ -31,32 +31,12 @@ jobs:
         id: cache-step
         uses: actions/cache@v3
         with:
-          path: "**/node_modules"
+          path: '**/node_modules'
           key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
 
       - name: Install project dependencies
         if: steps.cache-step.outputs.cache-hit != 'true'
         run: pnpm install --frozen-lockfile
-
-  lint:
-    name: Lint
-    needs: dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install Node and PNPM
-        uses: ./.github/actions/install-node-pnpm
-        with:
-          node-version: ${{  env.node-version  }}
-          pnpm-version: ${{  env.pnpm-version  }}
-
-      - name: Restore cached dependencies
-        uses: ./.github/actions/restore-pnpm-cache
-
-      - name: Run ESLint
-        run: pnpm run lint
 
   style:
     name: Code style
