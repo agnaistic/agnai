@@ -24,6 +24,6 @@ export async function get(): Promise<Doc<'settings'>> {
 }
 
 export async function save(update: Partial<Doc<'settings'>>) {
-  await db().updateOne({ _id: 'settings' }, update)
+  await db().updateOne({ _id: 'settings' }, { $set: { ...update } })
   return get()
 }

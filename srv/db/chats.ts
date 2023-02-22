@@ -9,11 +9,8 @@ const chats = db('chat')
 const msgs = db('chat-message')
 
 export async function getMessages(chatId: string) {
-  const docs = await msgs.find({ chatId }).sort({ updatedAt: 1 })
-  const sorted = docs.sort((l, r) =>
-    l.updatedAt > r.updatedAt ? 1 : l.updatedAt === r.updatedAt ? 0 : -1
-  )
-  return sorted
+  const docs = await msgs.find({ chatId }).sort({ createdAt: 1 })
+  return docs
 }
 
 export async function list() {
@@ -36,7 +33,7 @@ export async function listByCharacter(characterId: string) {
 }
 
 export async function update(id: string, name: string) {
-  await chats.updateOne({ _id: id }, { name, updatedAt: now() })
+  await chats.updateOne({ _id: id }, { $set: { name, updatedAt: now() } })
   return getChat(id)
 }
 
@@ -98,12 +95,17 @@ export async function createChatMessage(chatId: string, message: string, charact
 }
 
 export async function editMessage(id: string, content: string) {
-  await msgs.updateOne({ _id: id }, { msg: content, updatedAt: now() })
-  return msgs.findOne({ _id: id })
+  const doc = await msgs.update(
+    { _id: id },
+    { $set: { msg: content, updatedAt: now() } },
+    { returnUpdatedDocs: true }
+  )
+
+  return doc
 }
 
-export async function deleteMessage(messageId: string) {
-  await chats.remove({ _id: messageId }, {})
+export async function deleteMessages(messageIds: string[]) {
+  await chats.remove({ _id: { $in: messageIds } }, { multi: true })
 }
 
 export async function deleteChat(chatId: string) {

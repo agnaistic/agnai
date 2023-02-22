@@ -6,11 +6,19 @@ const baseUrl = `http://${location.hostname}:3001`
 export const api = {
   get,
   post,
+  method,
   streamGet,
   streamPost,
 }
 
 type Query = { [key: string]: string | number }
+
+async function method<T = any>(method: 'get' | 'post' | 'delete' | 'put', path: string, body = {}) {
+  return callApi<T>(path, {
+    method,
+    body: JSON.stringify(body),
+  })
+}
 
 async function get<T = any>(path: string, query: Query = {}) {
   const params = Object.keys(query)

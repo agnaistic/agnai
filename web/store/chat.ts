@@ -9,7 +9,6 @@ type ChatState = {
     chat: AppSchema.Chat
     character: AppSchema.Character
   }
-  responding: boolean
   msgs: AppSchema.ChatMessage[]
   chats?: {
     loaded: boolean
@@ -27,7 +26,6 @@ export type NewChat = {
 }
 
 export const chatStore = createStore<ChatState>('chat', {
-  responding: false,
   lastChatId: localStorage.getItem('lastChatId'),
   msgs: [],
 })((get, set) => {
@@ -84,27 +82,68 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async editMessage({ msgs }, msgId: string, msg: string) {
+      const res = await api.method('put', `/chat/${msgId}/message`, { message: msg })
+      if (res.error) {
+        toastStore.error(`Failed to update message: ${res.error}`)
+      }
+      if (res.result) {
+        return { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg } : m)) }
+      }
+    },
+
     async *retry({ activeChat, msgs }) {
       if (msgs.length < 3) {
         toastStore.error(`Cannot retry: Not enough messages`)
         return
       }
 
-      const [message, _] = msgs.slice(-2)
-      yield { msgs: msgs.slice(0, -2) }
-      chatStore.send(message.msg)
-    },
-    async *send({ activeChat, msgs }, message: string) {
       const chatId = activeChat?.chat._id
-      yield { partial: '' }
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
         return
       }
 
+      yield { partial: '' }
+
+      const [message, replace] = msgs.slice(-2)
+      yield { msgs: msgs.slice(0, -1) }
+
+      const stream = await api.streamPost<string | AppSchema.ChatMessage>(
+        `/chat/${chatId}/retry/${replace._id}`,
+        { message: message.msg, history: msgs.slice(-10) }
+      )
+
       let current = ''
-      yield { responding: true }
+      for await (const message of stream) {
+        if (typeof message === 'string') {
+          current += message
+          yield { partial: current }
+        } else if ('error' in message) {
+          toastStore.error(`Failed to generate message`)
+          yield { partial: undefined }
+          return
+        }
+      }
+
+      current = sanitise(current)
+
+      yield { msgs: get().msgs.concat({ ...replace, msg: current }), partial: undefined }
+      console.log('Message: ', current)
+    },
+    async *send({ activeChat, msgs }, message: string) {
+      const chatId = activeChat?.chat._id
+      if (!chatId) {
+        toastStore.error('Could not send message: No active chat')
+        yield { partial: undefined }
+        return
+      }
+
+      yield { partial: '' }
+
+      let current = ''
+
       const stream = await api.streamPost<string | AppSchema.ChatMessage>(
         `/chat/${chatId}/message`,
         { message, history: msgs.slice(-10) }
@@ -115,12 +154,35 @@ export const chatStore = createStore<ChatState>('chat', {
           current += message
           yield { partial: current }
         } else {
+          if ('error' in message) {
+            toastStore.error(`Failed to generate message`)
+            yield { partial: undefined }
+            return
+          }
           const { msgs } = get()
           yield { msgs: [...msgs, message] }
         }
       }
-      yield { responding: false, partial: undefined }
+
+      yield { partial: undefined }
     },
-    async deleteChats(_, ids: AppSchema.ChatMessage[]) {},
+    async deleteMessages({ msgs }, fromId: string) {
+      const index = msgs.findIndex((m) => m._id === fromId)
+      if (index === -1) {
+        return toastStore.error(`Cannot delete message: Message not found`)
+      }
+
+      const deleteIds = msgs.slice(index).map((m) => m._id)
+      const res = await api.method('delete', `/chat/messages`, { ids: deleteIds })
+
+      if (res.error) {
+        return toastStore.error(`Failed to delete messages: ${res.error}`)
+      }
+      return { msgs: msgs.slice(0, index) }
+    },
   }
 })
+
+function sanitise(generated: string) {
+  return generated.replace(/\s+/g, ' ').trim()
+}

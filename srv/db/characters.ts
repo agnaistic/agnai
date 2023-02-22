@@ -31,7 +31,7 @@ export async function updateCharacter(
     'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario'
   >
 ) {
-  await chars.updateOne({ _id: id }, { ...char, updatedAt: now() })
+  await chars.updateOne({ _id: id }, { $set: { ...char, updatedAt: now() } })
   return getCharacter(id)
 }
 

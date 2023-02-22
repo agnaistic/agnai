@@ -7,6 +7,7 @@ import { chatStore } from '../../store'
 import Header from './components/Header'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
+import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
   const state = chatStore((s) => ({
@@ -17,6 +18,7 @@ const ChatDetail: Component = () => {
     partial: s.partial,
   }))
 
+  const [removeId, setRemoveId] = createSignal('')
   const { id } = useParams()
   const nav = useNavigate()
 
@@ -31,6 +33,8 @@ const ChatDetail: Component = () => {
 
     chatStore.getChat(id)
   })
+
+  const deleteMsg = (messageId: string) => {}
 
   return (
     <>
@@ -58,6 +62,7 @@ const ChatDetail: Component = () => {
                     msg={msg}
                     char={state.character}
                     last={i() >= 2 && i() === state.msgs.length - 1}
+                    onRemove={() => setRemoveId(msg._id)}
                   />
                 )}
               </For>
@@ -65,6 +70,7 @@ const ChatDetail: Component = () => {
                 <Message
                   char={state.character}
                   msg={emptyMsg(state.character?._id!, state.partial!)}
+                  onRemove={() => {}}
                 />
               </Show>
               <Show when={state.partial !== undefined}>
@@ -77,6 +83,7 @@ const ChatDetail: Component = () => {
           </div>
         </div>
       </Show>
+      <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
     </>
   )
 }

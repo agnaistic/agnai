@@ -1,5 +1,4 @@
 import needle from 'needle'
-import { store } from '../../db'
 import { logger } from '../../logger'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
@@ -22,28 +21,32 @@ const base = {
   use_memory: false,
   use_authors_note: false,
   use_world_info: false,
-  max_context_length: 768, // Tuneable by user?
+  max_context_length: 1400, // Tuneable by user?
   /**
    * We deliberately use a low 'max length' to aid with streaming and the lack of support of 'stop tokens' in Kobold.
-   *
    */
   max_length: 32,
 
   // Generation settings -- Can be overriden by the user
-  temperature: 0.5,
+  temperature: 0.65,
+  top_a: 0.0,
   top_p: 0.9,
   top_k: 0,
   typical: 1,
-  rep_pen: 1.05,
+  rep_pen: 1.08,
+  rep_pen_slope: 0.9,
+  rep_pen_range: 1024,
+  tfs: 0.9,
+  sampler_order: [6, 0, 1, 2, 3, 4, 5],
 }
 
-export const handleKobold: ModelAdapter = async function* ({ chat, char, history, message }) {
-  const settings = await store.settings.get()
-  if (!settings.koboldUrl) {
-    yield { error: 'Kobold URL not set' }
-    return
-  }
-
+export const handleKobold: ModelAdapter = async function* ({
+  chat,
+  char,
+  history,
+  message,
+  settings,
+}) {
   const body = {
     ...base,
     prompt: createPrompt({ chat, char, history, message }),

@@ -10,6 +10,8 @@ See the [roadmap here](https://github.com/users/sceuick/projects/1).
 
 ## Quick Start for Users
 
+> CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
+
 If you're only looking to run AgnAI without contributing:
 
 1. Install [Node.js](https://nodejs.org/en/download/)
@@ -36,6 +38,7 @@ Ultimately the design goals for this project are my own.
 
 The important parts of the stack are:
 
+- [NeDB](https://npmjs.org/package/@seald-io/nedb) for persistence
 - [SolidJS](https://www.solidjs.com/) for interactivity
 - [TailwindCSS](https://tailwindcss.com/) for styling
 - [pnpm](https://pnpm.io/) for dependency management

@@ -1,4 +1,4 @@
-import { Check, Pencil, RefreshCw, ThumbsDown, ThumbsUp, X } from 'lucide-solid'
+import { Check, Pencil, RefreshCw, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
 import showdown from 'showdown'
 import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
@@ -10,23 +10,25 @@ const Message: Component<{
   msg: AppSchema.ChatMessage
   char?: AppSchema.Character
   last?: boolean
+  onRemove: () => void
 }> = (props) => {
   const [edit, setEdit] = createSignal(false)
-  const [editmsg, setEditmsg] = createSignal('')
-
   const cancelEdit = () => {
     setEdit(false)
-    setEditmsg('')
   }
 
   const saveEdit = () => {
+    if (!ref) return
     setEdit(false)
-    // TODO: Invoke store
+    chatStore.editMessage(props.msg._id, ref.innerText)
   }
 
   const startEdit = () => {
+    if (ref) {
+      ref.innerText = props.msg.msg
+    }
+
     setEdit(true)
-    setEditmsg(props.msg.msg)
     ref?.focus()
   }
 
@@ -35,7 +37,9 @@ const Message: Component<{
   return (
     <div class="flex w-full gap-4 rounded-l-md p-1 hover:bg-slate-800">
       <Show when={props.char && !!props.msg.characterId}>
-        <img src={props.char?.avatar} class="mt-1 h-12 w-12 rounded-md" />
+        <div class="flex items-center justify-center">
+          <img src={props.char?.avatar} class="max-h-12 w-12 rounded-md" />
+        </div>
       </Show>
       <Show when={!props.msg.characterId}>
         <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-500">YOU</div>
@@ -53,17 +57,26 @@ const Message: Component<{
             </span>
             <Show when={props.msg.characterId}>
               <div class="ml-2 flex flex-row items-center gap-2 text-white/10">
-                <ThumbsUp size={14} class="mt-[-0.15rem] cursor-pointer" />
-                <ThumbsDown size={14} class="cursor-pointer" />
+                <ThumbsUp size={14} class="mt-[-0.15rem] cursor-pointer hover:text-white" />
+                <ThumbsDown size={14} class="cursor-pointer hover:text-white" />
               </div>
             </Show>
           </div>
           <Show when={!edit()}>
             <div class="mr-4 flex items-center gap-2 text-sm text-white/5">
               <Show when={props.last && props.msg.characterId}>
-                <RefreshCw size={16} class="cursor-pointer" onClick={() => chatStore.retry()} />
+                <RefreshCw size={16} class="cursor-pointer" onClick={chatStore.retry} />
               </Show>
-              <Pencil size={16} class="cursor-pointer text-white/5" onClick={startEdit} />
+              <Pencil
+                size={16}
+                class="cursor-pointer text-white/5 hover:text-white"
+                onClick={startEdit}
+              />
+              <Trash
+                size={16}
+                class="cursor-pointer text-white/5 hover:text-white"
+                onClick={props.onRemove}
+              />
             </div>
           </Show>
           <Show when={edit()}>

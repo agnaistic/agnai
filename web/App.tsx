@@ -3,7 +3,6 @@ import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
-import LoginPage from './pages/Login'
 import HomePage from './pages/Home'
 import GenerationSettings from './pages/GenerationSettings'
 import Settings from './pages/Settings'
@@ -25,7 +24,6 @@ const App: Component = () => {
             <Route path="/chat" component={ChatDetail} />
             <Route path="/chat/:id" component={ChatDetail} />
             <CharacterRoutes />
-            <Route path="/account/login" component={LoginPage} />
             <Route path="/" component={HomePage} />
             <Route path="/generation-settings" component={GenerationSettings} />
             <Route path="/settings" component={Settings} />
