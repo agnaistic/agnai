@@ -56,7 +56,14 @@ export const handleKobold: ModelAdapter = async function* ({
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
 
   const username = 'You'
-  const endTokens = [`${username}:`, `${char.name}:`, 'END_OF_DIALOG']
+  const endTokens = [
+    `${username}:`,
+    `${char.name}:`,
+    `${username} :`,
+    `${char.name} :`,
+    'END_OF_DIALOG',
+  ]
+  const parts: string[] = []
 
   while (attempts < maxAttempts) {
     attempts++
@@ -67,21 +74,32 @@ export const handleKobold: ModelAdapter = async function* ({
 
     const text = response.body.results?.[0]?.text as string
     if (text) {
-      logger.warn(`Tokens: ${text}`)
+      parts.push(text)
+      const combined = joinParts(parts)
+
       for (const endToken of endTokens) {
-        if (text.includes(endToken)) {
-          const [first] = text.split(endToken)
+        if (combined.includes(endToken)) {
+          const [first] = combined.split(endToken)
+          logger.info({ endToken, combined, first }, 'Detected')
           yield first
           return
         }
       }
 
       body.prompt += text
-      yield text
+      yield joinParts(parts)
     } else {
       logger.error({ err: response.body }, 'Failed to generate text using Kobold adapter')
       yield { error: response.body }
       return
     }
   }
+}
+
+function sanitise(generated: string) {
+  return generated.replace(/\s+/g, ' ').trim()
+}
+
+function joinParts(parts: string[]) {
+  return parts.map(sanitise).join(' ')
 }

@@ -116,21 +116,20 @@ export const chatStore = createStore<ChatState>('chat', {
       )
 
       let current = ''
-      for await (const message of stream) {
-        if (typeof message === 'string') {
-          current += message
+      for await (const part of stream) {
+        if (typeof part === 'string') {
+          if (part.length === 0) continue
+          current = part
           yield { partial: current }
-        } else if ('error' in message) {
+          continue
+        } else if (typeof part === 'object' && 'error' in part) {
           toastStore.error(`Failed to generate message`)
           yield { partial: undefined }
           return
         }
       }
 
-      current = sanitise(current)
-
       yield { msgs: get().msgs.concat({ ...replace, msg: current }), partial: undefined }
-      console.log('Message: ', current)
     },
     async *send({ activeChat, msgs }, message: string) {
       const chatId = activeChat?.chat._id
@@ -142,26 +141,26 @@ export const chatStore = createStore<ChatState>('chat', {
 
       yield { partial: '' }
 
-      let current = ''
-
       const stream = await api.streamPost<string | AppSchema.ChatMessage>(
         `/chat/${chatId}/message`,
         { message, history: msgs.slice(-10) }
       )
 
-      for await (const message of stream) {
-        if (typeof message === 'string') {
-          current += message
+      let current = ''
+      for await (const part of stream) {
+        if (typeof part === 'string') {
+          if (part.length === 0) continue
+          current = part
           yield { partial: current }
-        } else {
-          if ('error' in message) {
-            toastStore.error(`Failed to generate message`)
-            yield { partial: undefined }
-            return
-          }
-          const { msgs } = get()
-          yield { msgs: [...msgs, message] }
+          continue
         }
+        if (typeof part === 'object' && 'error' in part) {
+          toastStore.error(`Failed to generate message`)
+          yield { partial: undefined }
+          return
+        }
+        const { msgs } = get()
+        yield { msgs: [...msgs, part] }
       }
 
       yield { partial: undefined }
@@ -182,7 +181,3 @@ export const chatStore = createStore<ChatState>('chat', {
     },
   }
 })
-
-function sanitise(generated: string) {
-  return generated.replace(/\s+/g, ' ').trim()
-}

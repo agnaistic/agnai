@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { logger } from '../../logger'
 import { GenerateOptions, generateResponse } from '../adapter/generate'
 
 export async function streamMessage(opts: GenerateOptions, res: Response) {
@@ -19,10 +20,10 @@ export async function streamMessage(opts: GenerateOptions, res: Response) {
       return
     }
 
-    generated += msg.trim()
-    res.write(msg)
+    generated = msg
+    res.write(generated)
     res.write('\n\n')
   }
 
-  return generated.replace(/\s+/g, ' ').trim()
+  return generated
 }
