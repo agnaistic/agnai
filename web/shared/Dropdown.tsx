@@ -12,6 +12,7 @@ const Dropdown: Component<{
   label?: string
   helperText?: string | JSX.Element
   items: DropdownItem[]
+  value?: string
   class?: string
 }> = (props) => {
   return (
@@ -25,7 +26,11 @@ const Dropdown: Component<{
         >
           <For each={props.items}>
             {(item) => (
-              <option class="border-0 border-none bg-zinc-900" value={item.value}>
+              <option
+                class="border-0 border-none bg-zinc-900"
+                value={item.value}
+                selected={props.value === item.value}
+              >
                 {item.label}
               </option>
             )}

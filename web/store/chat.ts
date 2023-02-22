@@ -112,7 +112,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
       const stream = await api.streamPost<string | AppSchema.ChatMessage>(
         `/chat/${chatId}/retry/${replace._id}`,
-        { message: message.msg, history: msgs.slice(-10) }
+        { message: message.msg, history: msgs.slice(-12, -2) }
       )
 
       let current = ''

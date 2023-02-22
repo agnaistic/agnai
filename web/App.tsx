@@ -8,6 +8,7 @@ import GenerationSettings from './pages/GenerationSettings'
 import Settings from './pages/Settings'
 import { settingStore } from './store/settings'
 import ChatDetail from './pages/Chat/ChatDetail'
+import CharacterList from './pages/Character/CharacterList'
 
 const App: Component = () => {
   const state = settingStore()
@@ -24,7 +25,7 @@ const App: Component = () => {
             <Route path="/chat" component={ChatDetail} />
             <Route path="/chat/:id" component={ChatDetail} />
             <CharacterRoutes />
-            <Route path="/" component={HomePage} />
+            <Route path="/" component={CharacterList} />
             <Route path="/generation-settings" component={GenerationSettings} />
             <Route path="/settings" component={Settings} />
           </Routes>

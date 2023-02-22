@@ -6,6 +6,7 @@ const sts = db('settings')
 
 const defaults: AppSchema.Settings = {
   kind: 'settings',
+  defaultAdapter: 'kobold',
   novelApiKey: '',
   koboldUrl: 'http://localhost:5000',
   chaiUrl: 'https://model-api-shdxwd54ta-nw.a.run.app/generate/gptj',

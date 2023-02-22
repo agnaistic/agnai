@@ -13,6 +13,7 @@ type SettingState = {
 const init: SettingState = {
   init: false,
   settings: {
+    defaultAdapter: 'kobold',
     novelApiKey: '',
     koboldUrl: '',
     chaiUrl: '',

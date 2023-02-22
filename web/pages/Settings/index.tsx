@@ -5,6 +5,8 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { settingStore } from '../../store/settings'
 import { getStrictForm } from '../../shared/util'
+import Dropdown from '../../shared/Dropdown'
+import { AppSchema } from '../../../srv/db/schema'
 
 const Settings: Component = () => {
   const state = settingStore()
@@ -15,7 +17,12 @@ const Settings: Component = () => {
   })
 
   const onSubmit = (evt: Event) => {
-    const body = getStrictForm(evt, { koboldUrl: 'string', novelApiKey: 'string' })
+    const body = getStrictForm(evt, {
+      koboldUrl: 'string',
+      novelApiKey: 'string',
+      chaiUrl: 'string',
+      defaultAdapter: ['kobold', 'chai', 'novel'],
+    } as const)
     settingStore.save(body)
   }
 
@@ -24,6 +31,13 @@ const Settings: Component = () => {
       <PageHeader title="Settings" subtitle="Configuration" />
       <form onSubmit={onSubmit}>
         <div class="flex flex-col gap-8">
+          <Dropdown
+            fieldName="defaultAdapter"
+            label="Default AI Adapter"
+            items={adapters}
+            helperText="The default adapter conversations will use unless otherwise configured"
+            value={state.settings.defaultAdapter}
+          />
           <TextInput
             fieldName="koboldUrl"
             label="Kobold URL"
@@ -56,5 +70,10 @@ const Settings: Component = () => {
     </>
   )
 }
+
+const adapters = [
+  { label: 'KoboldAI', value: 'kobold' },
+  { label: 'NovelAI', value: 'novel' },
+] satisfies Array<{ label: string; value: AppSchema.ChatAdapter }>
 
 export default Settings

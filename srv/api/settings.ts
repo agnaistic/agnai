@@ -16,7 +16,16 @@ router.get(
 router.post(
   '/',
   handle(async ({ body }) => {
-    assertValid({ koboldUrl: 'string?' }, body)
+    assertValid(
+      {
+        koboldUrl: 'string',
+        novelApiKey: 'string',
+        defaultAdapter: ['kobold', 'chai', 'novel'],
+        chaiUrl: 'string',
+      },
+      body
+    )
+
     const next = await store.settings.save(body)
     return next
   })

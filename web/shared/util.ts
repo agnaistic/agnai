@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from 'frisker'
 
-type FormRef = { [key: string]: 'string' | 'string?' }
+type FormRef = { [key: string]: 'string' | 'string?' | readonly string[] }
 
 export function getForm<T = {}>(evt: Event): T {
   evt.preventDefault()
