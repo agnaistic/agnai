@@ -1,17 +1,15 @@
-import { Component, createEffect, createSignal } from 'solid-js'
+import { Component } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ModalFooter } from '../../shared/Modal'
-import { chatStore } from '../../store'
+import { msgStore } from '../../store/message'
 
 const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
   props
 ) => {
-  const state = chatStore((s) => ({
-    msgs: s.msgs,
-  }))
+  const state = msgStore()
 
   const confirm = () => {
-    chatStore.deleteMessages(props.messageId)
+    msgStore.deleteMessages(props.messageId)
     props.close()
   }
 

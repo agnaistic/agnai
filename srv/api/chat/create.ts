@@ -1,8 +1,7 @@
-import { RequestHandler } from 'express'
 import { assertValid } from 'frisker'
 import { store } from '../../db'
+import { streamResponse } from '../adapter/generate'
 import { handle, StatusError } from '../handle'
-import { streamMessage } from './common'
 
 export const createChat = handle(async ({ body }) => {
   assertValid(
@@ -26,33 +25,26 @@ export const generateMessage = handle(async ({ params, body }, res) => {
     body
   )
 
-  const chat = await store.chats.getChat(id)
-  if (!chat) {
-    throw new StatusError('Chat not found', 404)
-  }
-
-  const char = await store.characters.getCharacter(chat.characterId)
-  if (!char) {
-    throw new StatusError('Character not found', 404)
-  }
-
   const userMsg = await store.chats.createChatMessage(id, body.message)
   res.write(JSON.stringify(userMsg))
 
-  const generated = await streamMessage(
+  const response = await streamResponse(
     {
-      adapter: body.adapater as any,
-      chat,
-      char,
+      chatId: id,
       message: body.message,
       history: body.history,
     },
     res
   )
 
-  if (!generated) return
+  if (!response) return
 
-  const msg = await store.chats.createChatMessage(id, generated, chat.characterId)
+  const msg = await store.chats.createChatMessage(
+    id,
+    response.generated,
+    response.chat.characterId,
+    body.ephemeral
+  )
   res.write(JSON.stringify(msg))
   res.end()
 })

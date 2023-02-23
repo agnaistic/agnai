@@ -4,6 +4,7 @@ import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import PageHeader from '../../shared/PageHeader'
 import { chatStore } from '../../store'
+import { msgStore } from '../../store/message'
 import ChatSettingsModal from './ChatSettings'
 import Header from './components/Header'
 import InputBar from './components/InputBar'
@@ -11,10 +12,13 @@ import Message from './components/Message'
 import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
-  const state = chatStore((s) => ({
-    chat: s.activeChat?.chat,
-    character: s.activeChat?.character,
+  const chats = chatStore((s) => ({
+    chat: s.active,
+    character: s.character,
     lastId: s.lastChatId,
+  }))
+
+  const msgs = msgStore((s) => ({
     msgs: s.msgs,
     partial: s.partial,
   }))
@@ -26,8 +30,8 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     if (!id) {
-      if (!state.lastId) return nav('/character/list')
-      return nav(`/chat/${state.lastId}`)
+      if (!chats.lastId) return nav('/character/list')
+      return nav(`/chat/${chats.lastId}`)
     }
 
     chatStore.getChat(id)
@@ -35,47 +39,47 @@ const ChatDetail: Component = () => {
 
   return (
     <>
-      <Show when={!state.chat}>
+      <Show when={!chats.chat}>
         <div>
           <div>Loading conversation...</div>
         </div>
       </Show>
       <div class="flex h-6 items-center">
-        <A href={`/character/${state.character?._id}/chats`}>
+        <A href={`/character/${chats.character?._id}/chats`}>
           <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
             <ChevronLeft size={16} class="mt-0.5" /> Conversations
           </div>
         </A>
       </div>
-      <Show when={state.chat}>
+      <Show when={chats.chat}>
         <div class="flex h-[calc(100%-24px)] flex-col-reverse">
-          <InputBar openConfig={() => setShowConfig(true)} />
+          <InputBar chatId={chats.chat!._id} openConfig={() => setShowConfig(true)} />
           <div class="flex flex-col-reverse overflow-y-scroll">
             <div class="flex flex-col gap-4 pt-4 pb-4">
-              <For each={state.msgs}>
+              <For each={msgs.msgs}>
                 {(msg, i) => (
                   <Message
                     msg={msg}
-                    char={state.character}
-                    last={i() >= 2 && i() === state.msgs.length - 1}
+                    char={chats.character}
+                    last={i() >= 2 && i() === msgs.msgs.length - 1}
                     onRemove={() => setRemoveId(msg._id)}
                   />
                 )}
               </For>
-              <Show when={state.partial}>
+              <Show when={msgs.partial}>
                 <Message
-                  char={state.character}
-                  msg={emptyMsg(state.character?._id!, state.partial!)}
+                  char={chats.character}
+                  msg={emptyMsg(chats.character?._id!, msgs.partial!)}
                   onRemove={() => {}}
                 />
               </Show>
-              <Show when={state.partial !== undefined}>
+              <Show when={msgs.partial !== undefined}>
                 <div class="flex justify-center">
                   <div class="dot-flashing bg-purple-700"></div>
                 </div>
               </Show>
             </div>
-            <Header participants={[state.character?.name!]} />
+            <Header participants={[chats.character?.name!]} />
           </div>
         </div>
       </Show>

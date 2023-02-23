@@ -3,6 +3,7 @@ export namespace AppSchema {
     kind: 'settings'
     koboldUrl: string
     novelApiKey: string
+    novelModel: string
     chaiUrl: string
     defaultAdapter?: ChatAdapter
   }

@@ -13,6 +13,7 @@ type SettingState = {
 const init: SettingState = {
   init: false,
   settings: {
+    novelModel: 'euterpe-v2',
     defaultAdapter: 'kobold',
     novelApiKey: '',
     koboldUrl: '',

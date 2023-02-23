@@ -8,9 +8,9 @@ export const config = {
     name: env('DB_NAME', 'pyg'),
   },
   kobold: {
-    maxLength: +env('KOBOLD_MAX_LENGTH', '32'),
+    maxLength: +env('KOBOLD_MAX_LENGTH', '64'),
   },
-  noRequestLogs: !!env('DISABLE_REQUEST_LOGGING', ''),
+  noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'true') === 'true',
 }
 
 function env(key: string, fallback?: string): string {

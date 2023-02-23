@@ -1,6 +1,8 @@
 import needle from 'needle'
 import { store } from '../../db'
 import { logger } from '../../logger'
+import { trimResponse } from '../chat/common'
+import { badWordIds } from './novel-bad-words'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
@@ -13,22 +15,26 @@ const statuses: Record<number, string> = {
 }
 
 const base = {
-  model: 'euterpe-v2',
-  max_length: 100,
-  min_length: 8,
-  order: [2, 1, 3, 0],
-  prefix: 'vanilla',
-  repetition_penalty: 1.148125,
-  repetition_penalty_frequency: 0,
-  repetition_penalty_presence: 0,
-  repetition_penalty_sloe: 0.09,
-  stop_sequences: [[25]],
-  tail_free_sampling: 0.975,
-  temperature: 0.63,
-  top_k: 0,
-  top_p: 0.975,
-  use_cache: false,
-  use_string: true,
+  model: 'krake-v2',
+  parameters: {
+    generate_until_sentence: true,
+    max_length: 100,
+    min_length: 8,
+    order: [0, 1, 2, 3],
+    prefix: 'vanilla',
+    repetition_penalty: 1.148125,
+    repetition_penalty_frequency: 0,
+    repetition_penalty_presence: 0,
+    repetition_penalty_sloe: 0.09,
+    stop_sequences: [[25], [27]],
+    tail_free_sampling: 0.975,
+    temperature: 0.63,
+    top_k: 0,
+    top_p: 0.975,
+    use_cache: false,
+    use_string: true,
+    bad_word_ids: badWordIds,
+  },
 }
 
 export const handleNovel: ModelAdapter = async function* ({ chat, char, history, message }) {
@@ -43,6 +49,16 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
     input: createPrompt({ chat, char, history, message }),
   }
 
+  const username = 'You'
+  const endTokens = [
+    `${username}:`,
+    `${char.name}:`,
+    `${username} :`,
+    `${char.name} :`,
+    'END_OF_DIALOG',
+    '***',
+  ]
+
   const response = await needle('post', novelUrl, body, {
     json: true,
     headers: { Authorization: `Bearer ${settings.novelApiKey}` },
@@ -55,6 +71,7 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
     return
   }
 
+  const trimmed = trimResponse(response.body.output, endTokens)
   yield response.body.output
 
   if (status >= 400) {

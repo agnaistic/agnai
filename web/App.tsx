@@ -20,7 +20,7 @@ const App: Component = () => {
     <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-purple-900 flex h-screen flex-col justify-between">
       <NavBar />
       <div class="w-full grow overflow-y-scroll px-8 pt-8 max-sm:px-3">
-        <div class="mx-auto h-full max-w-4xl">
+        <div class="mx-auto h-full max-w-5xl">
           <Routes>
             <Route path="/chat" component={ChatDetail} />
             <Route path="/chat/:id" component={ChatDetail} />

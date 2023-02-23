@@ -1,6 +1,5 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { AppSchema } from '../../../srv/db/schema'
 import { chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
@@ -10,7 +9,7 @@ import { toDuration } from '../../shared/util'
 
 const CharacterChats: Component = () => {
   const [modal, setModal] = createSignal(false)
-  const state = chatStore((s) => ({ char: { ...s.chats?.character }, chats: s.chats?.list || [] }))
+  const state = chatStore((s) => ({ char: { ...s.character }, chats: s.list || [] }))
   const { id } = useParams()
 
   createEffect(() => {
@@ -52,7 +51,7 @@ const Chats: Component = () => {
         <div class="flex w-2/12 justify-center">Messages</div>
         <div class="flex w-4/12 justify-center">Last Updated</div>
       </div>
-      <For each={state.chats?.list || []}>
+      <For each={state.list}>
         {(chat) => (
           <div
             class="flex h-12 cursor-pointer flex-row items-center gap-2 rounded-xl bg-gray-800"

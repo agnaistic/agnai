@@ -65,6 +65,7 @@ export const handleKobold: ModelAdapter = async function* ({
     `${char.name} :`,
     'END_OF_DIALOG',
   ]
+
   const parts: string[] = []
 
   while (attempts < maxAttempts) {

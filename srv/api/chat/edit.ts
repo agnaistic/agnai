@@ -1,12 +1,21 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
+import { streamResponse } from '../adapter/generate'
 import { handle, StatusError } from '../handle'
-import { streamMessage } from './common'
 
 export const updateChat = handle(async ({ params, body }) => {
-  assertValid({ name: 'string' }, body)
+  assertValid(
+    {
+      name: 'string',
+      adapter: ['default', 'novel', 'kobold'],
+      greeting: 'string',
+      scenario: 'string',
+      sampleChat: 'string',
+    },
+    body
+  )
   const id = params.id
-  const chat = await store.chats.update(id, body.name)
+  const chat = await store.chats.update(id, body)
   return chat
 })
 
@@ -27,23 +36,13 @@ export const retryMessage = handle(async ({ body, params }, res) => {
     },
     body
   )
-  const chat = await store.chats.getChat(params.id)
-  if (!chat) {
-    throw new StatusError('Chat not found', 404)
-  }
-
-  const char = await store.characters.getCharacter(chat?.characterId)
-  if (!char) {
-    throw new StatusError('Character not found', 404)
-  }
-
-  const generated = await streamMessage(
-    { adapter: body.adapter as any, char, chat, history: body.history, message: body.message },
+  const response = await streamResponse(
+    { chatId: params.id, history: body.history, message: body.message },
     res
   )
 
-  if (generated) {
-    await store.chats.editMessage(messageId, generated)
+  if (!body.emphemeral && response) {
+    await store.chats.editMessage(messageId, response.generated)
   }
 
   res.end()

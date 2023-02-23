@@ -2,9 +2,10 @@ import { UnwrapBody, assertValid } from 'frisker'
 
 type FormRef = { [key: string]: 'string' | 'string?' | readonly string[] }
 
-export function getForm<T = {}>(evt: Event): T {
-  evt.preventDefault()
-  const form = new FormData(evt.target as HTMLFormElement)
+export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
+  evt.preventDefault?.()
+  const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
+  const form = new FormData(target as HTMLFormElement)
   const body = Array.from(form.entries()).reduce((prev, [key, value]) => {
     Object.assign(prev, { [key]: value })
     return prev
@@ -14,8 +15,8 @@ export function getForm<T = {}>(evt: Event): T {
 }
 
 export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
-  evt.preventDefault()
-  const target = evt.target
+  evt.preventDefault?.()
+  const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
   const form = new FormData(target as HTMLFormElement)
 
   const values = Object.keys(body).reduce((prev, curr) => {
@@ -29,8 +30,9 @@ export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
 }
 
 export function getFormEntries(evt: Event): Array<[string, string]> {
-  evt.preventDefault()
-  const form = new FormData(evt.target as HTMLFormElement)
+  evt.preventDefault?.()
+  const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
+  const form = new FormData(target as HTMLFormElement)
   return Array.from(form.entries()).map(([key, value]) => [key, value.toString()])
 }
 

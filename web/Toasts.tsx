@@ -23,7 +23,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
   const onClick = () => toastStore.remove(props.toast.id)
   return (
     <div class="flex flex-row">
-      <div class={`${bg} w-4 rounded-l-lg p-2`}></div>
+      <div class={`${bg} w-2 rounded-l-lg p-2`}></div>
       <div class={`rounded-r-lg bg-gray-700 p-2`} onClick={onClick}>
         {props.toast.message}
       </div>

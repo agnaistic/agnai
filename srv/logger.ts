@@ -82,7 +82,7 @@ function redact(toRedact: Set<string>, body: any) {
 export const logger = parentLogger('app')
 
 function getLogLevel() {
-  const level = process.env.LOG_LEVEL || 'info'
+  const level = process.env.LOG_LEVEL || 'debug'
   switch (level) {
     case '60':
     case 'fatal':

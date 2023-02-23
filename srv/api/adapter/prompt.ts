@@ -1,4 +1,5 @@
 import { AppSchema } from '../../db/schema'
+import { logger } from '../../logger'
 
 type PromptOpts = {
   chat: AppSchema.Chat
@@ -18,6 +19,8 @@ export function createPrompt({ chat, char, history, message }: PromptOpts) {
   if (chat.scenario) {
     lines.push(`Scenario: ${chat.scenario}`)
   }
+
+  logger.debug({ chat }, 'Prompting')
 
   lines.push(
     `<START>`,

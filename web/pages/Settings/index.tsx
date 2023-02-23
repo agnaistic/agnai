@@ -20,6 +20,7 @@ const Settings: Component = () => {
     const body = getStrictForm(evt, {
       koboldUrl: 'string',
       novelApiKey: 'string',
+      novelModel: 'string',
       chaiUrl: 'string',
       defaultAdapter: ['kobold', 'chai', 'novel'],
     } as const)
@@ -51,6 +52,15 @@ const Settings: Component = () => {
             helperText="The token from the NovelAI request authorization headers"
             placeholder="..."
             value={state.settings.novelApiKey}
+          />
+          <Dropdown
+            fieldName="novelModel"
+            label="NovelAI Model"
+            items={[
+              { label: 'Euterpe', value: 'euterpe-v2' },
+              { label: 'Krake', value: 'krake-v2' },
+            ]}
+            value={state.settings.novelModel}
           />
           <TextInput
             fieldName="chaiUrl"

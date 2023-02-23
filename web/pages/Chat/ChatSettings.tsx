@@ -9,56 +9,77 @@ import { getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
 
 const ChatSettings: Component = () => {
-  const state = chatStore((s) => ({ chat: s.activeChat?.chat, char: s.activeChat?.character }))
+  const state = chatStore()
 
   return (
     <div>
       <PageHeader title="Chat Settings" />
       <div>
-        <A href={`/chat/${state.chat?._id}`}>Back to Conversation</A>
+        <A href={`/chat/${state.active?._id}`}>Back to Conversation</A>
       </div>
     </div>
   )
 }
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = chatStore((s) => ({ chat: s.activeChat?.chat, char: s.activeChat?.character }))
+  const state = chatStore()
   let ref: any
 
-  const onSave = (ev: Event) => {
-    console.log(ref)
-    const body = getStrictForm(ev, { name: 'string' })
-    console.log(body)
+  const onSave = () => {
+    const body = getStrictForm(ref, {
+      name: 'string',
+      adapter: ['kobold', 'default', 'novel'],
+      greeting: 'string',
+      sampleChat: 'string',
+      scenario: 'string',
+    } as const)
+
+    chatStore.editChat(state.active?._id!, body, () => {
+      props.close()
+    })
   }
 
   return (
     <Modal show={props.show} title="Chat Settings">
-      <form ref={ref} onSubmit={onSave}>
+      <form ref={ref}>
         <Dropdown
           class="mb-2"
           fieldName="adapter"
           label="AI Adapater"
-          value={state.chat?.adapter}
+          value={state.active?.adapter}
           items={[
             { label: 'Default', value: 'default' },
             { label: 'Kobold', value: 'kobold' },
             { label: 'Novel', value: 'novel' },
           ]}
         />
-        <TextInput fieldName="name" value={state.chat?.name} label="Chat name" />
-        <TextInput fieldName="greeting" isMultiline value={state.chat?.greeting} label="Greeting" />
-        <TextInput fieldName="scenario" isMultiline value={state.chat?.scenario} label="Scenario" />
+        <TextInput fieldName="name" class="text-sm" value={state.active?.name} label="Chat name" />
+        <TextInput
+          fieldName="greeting"
+          class="text-sm"
+          isMultiline
+          value={state.active?.greeting}
+          label="Greeting"
+        />
+        <TextInput
+          fieldName="scenario"
+          class="text-sm"
+          isMultiline
+          value={state.active?.scenario}
+          label="Scenario"
+        />
         <TextInput
           fieldName="sampleChat"
+          class="text-sm"
           isMultiline
-          value={state.chat?.sampleChat}
+          value={state.active?.sampleChat}
           label="Sample Chat"
         />
         <ModalFooter>
           <Button schema="secondary" onClick={props.close}>
             Cancel
           </Button>
-          <Button type="submit">Save</Button>
+          <Button onClick={onSave}>Save</Button>
         </ModalFooter>
       </form>
     </Modal>

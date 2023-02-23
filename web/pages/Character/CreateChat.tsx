@@ -12,7 +12,7 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
   const nav = useNavigate()
 
   const onCreate = (ev: Event) => {
-    if (!state.chats) return
+    if (!state.character) return
     const body = getStrictForm(ev, {
       name: 'string',
       greeting: 'string',
@@ -20,12 +20,12 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
       sampleChat: 'string',
     })
 
-    const characterId = state.chats.character._id
+    const characterId = state.character._id
     chatStore.createChat(characterId, body, (id) => nav(`/chat/${id}`))
   }
 
   return (
-    <Modal show={props.show} title={`Create Conversation with ${state.chats?.character.name}`}>
+    <Modal show={props.show} title={`Create Conversation with ${state.character?.name}`}>
       <form onSubmit={onCreate}>
         <div class="mb-4 text-sm">
           Optionally modify some of the conversation context. You can override other aspects of the
@@ -46,7 +46,7 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
           isMultiline
           fieldName="greeting"
           label="Greeting"
-          value={state.chats?.character.greeting}
+          value={state.character?.greeting}
           class="text-xs"
         ></TextInput>
 
@@ -54,7 +54,7 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
           isMultiline
           fieldName="scenario"
           label="Scenario"
-          value={state.chats?.character.scenario}
+          value={state.character?.scenario}
           class="text-xs"
         ></TextInput>
 
@@ -62,7 +62,7 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
           isMultiline
           fieldName="sampleChat"
           label="Sample Chat"
-          value={state.chats?.character.sampleChat}
+          value={state.character?.sampleChat}
           class="text-xs"
         ></TextInput>
 

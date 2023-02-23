@@ -3,6 +3,7 @@ import showdown from 'showdown'
 import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import { chatStore } from '../../../store'
+import { msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
 
@@ -20,7 +21,7 @@ const Message: Component<{
   const saveEdit = () => {
     if (!ref) return
     setEdit(false)
-    chatStore.editMessage(props.msg._id, ref.innerText)
+    msgStore.editMessage(props.msg._id, ref.innerText)
   }
 
   const startEdit = () => {
@@ -65,7 +66,11 @@ const Message: Component<{
           <Show when={!edit()}>
             <div class="mr-4 flex items-center gap-2 text-sm text-white/20 hover:text-white">
               <Show when={props.last && props.msg.characterId}>
-                <RefreshCw size={16} class="cursor-pointer" onClick={chatStore.retry} />
+                <RefreshCw
+                  size={16}
+                  class="cursor-pointer"
+                  onClick={() => msgStore.retry(props.msg.chatId)}
+                />
               </Show>
               <Pencil
                 size={16}

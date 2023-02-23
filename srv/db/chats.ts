@@ -19,7 +19,7 @@ export async function list() {
 }
 
 export async function getChat(id: string) {
-  const chat = await chats.findOne({ _id: id })
+  const chat = await chats.findOne({ _id: id, kind: 'chat' })
   return chat
 }
 
@@ -32,8 +32,8 @@ export async function listByCharacter(characterId: string) {
   return docs
 }
 
-export async function update(id: string, name: string) {
-  await chats.updateOne({ _id: id }, { $set: { name, updatedAt: now() } })
+export async function update(id: string, props: Partial<AppSchema.Chat>) {
+  await chats.updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
   return getChat(id)
 }
 
@@ -78,7 +78,12 @@ export async function create(
   return doc
 }
 
-export async function createChatMessage(chatId: string, message: string, characterId?: string) {
+export async function createChatMessage(
+  chatId: string,
+  message: string,
+  characterId?: string,
+  ephemeral?: boolean
+) {
   const doc: AppSchema.ChatMessage = {
     _id: v4(),
     kind: 'chat-message',
@@ -90,7 +95,7 @@ export async function createChatMessage(chatId: string, message: string, charact
     updatedAt: new Date().toISOString(),
   }
 
-  await msgs.insertOne(doc)
+  if (!ephemeral) await msgs.insertOne(doc)
   return doc
 }
 

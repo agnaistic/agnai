@@ -1,14 +1,14 @@
 import { Sliders, Send } from 'lucide-solid'
 import { Component, JSX } from 'solid-js'
-import { chatStore } from '../../../store'
+import { msgStore } from '../../../store/message'
 import './Message.css'
 
-const InputBar: Component<{ openConfig: () => void }> = (props) => {
+const InputBar: Component<{ chatId: string; openConfig: () => void }> = (props) => {
   let ref: HTMLInputElement | undefined
   const send = () => {
     if (!ref) return
     if (!ref.value) return
-    chatStore.send(ref.value)
+    msgStore.send(props.chatId, ref.value)
     ref.value = ''
   }
   return (
@@ -20,8 +20,8 @@ const InputBar: Component<{ openConfig: () => void }> = (props) => {
         class="focusable-field w-full rounded-l-xl px-4 py-2"
         onKeyUp={(ev) => ev.key === 'Enter' && send()}
       />
-      <IconButton>
-        <Sliders size={20} onClick={props.openConfig} />
+      <IconButton onClick={props.openConfig}>
+        <Sliders size={20} />
       </IconButton>
       <IconButton onClick={send}>
         <Send size={20} />
