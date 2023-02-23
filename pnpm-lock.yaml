@@ -25,6 +25,7 @@ specifiers:
   dotenv: ^16.0.3
   express: ^4.18.2
   frisker: ^1.6.0
+  gpt-3-encoder: ^1.1.4
   js-cookie: ^3.0.1
   lucide-solid: 0.105.0-alpha.9
   multiparty: ^4.2.3
@@ -62,6 +63,7 @@ dependencies:
   dotenv: 16.0.3
   express: 4.18.2
   frisker: 1.6.0
+  gpt-3-encoder: 1.1.4
   js-cookie: 3.0.1
   lucide-solid: 0.105.0-alpha.9_solid-js@1.6.9
   multiparty: 4.2.3
@@ -2729,6 +2731,10 @@ packages:
       lowercase-keys: 2.0.0
       p-cancelable: 2.1.1
       responselike: 2.0.1
+    dev: false
+
+  /gpt-3-encoder/1.1.4:
+    resolution: {integrity: sha512-fSQRePV+HUAhCn7+7HL7lNIXNm6eaFWFbNLOOGtmSJ0qJycyQvj60OvRlH7mee8xAMjBDNRdMXlMwjAbMTDjkg==}
     dev: false
 
   /has-flag/3.0.0:

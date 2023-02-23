@@ -80,7 +80,7 @@ export const handleKobold: ModelAdapter = async function* ({
       for (const endToken of endTokens) {
         if (combined.includes(endToken)) {
           const [first] = combined.split(endToken)
-          logger.info({ endToken, combined, first }, 'Detected')
+          logger.info({ all: joinParts(parts), reply: first }, 'Kobold response')
           yield first
           return
         }

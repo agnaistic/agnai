@@ -63,18 +63,18 @@ const Message: Component<{
             </Show>
           </div>
           <Show when={!edit()}>
-            <div class="mr-4 flex items-center gap-2 text-sm text-white/5">
+            <div class="mr-4 flex items-center gap-2 text-sm text-white/20 hover:text-white">
               <Show when={props.last && props.msg.characterId}>
                 <RefreshCw size={16} class="cursor-pointer" onClick={chatStore.retry} />
               </Show>
               <Pencil
                 size={16}
-                class="cursor-pointer text-white/5 hover:text-white"
+                class="cursor-pointer text-white/20 hover:text-white"
                 onClick={startEdit}
               />
               <Trash
                 size={16}
-                class="cursor-pointer text-white/5 hover:text-white"
+                class="cursor-pointer text-white/20 hover:text-white"
                 onClick={props.onRemove}
               />
             </div>

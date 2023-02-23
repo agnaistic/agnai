@@ -38,10 +38,9 @@ const ChatDetail: Component = () => {
 
   return (
     <>
-      <Show when={!state.chat}>
+      <Show when={state.chat}>
         <div>
-          <PageHeader title="Conversation" />
-          <div>Loading...</div>
+          <div>Loading conversation...</div>
         </div>
       </Show>
       <div class="flex h-6 items-center">
@@ -79,7 +78,7 @@ const ChatDetail: Component = () => {
                 </div>
               </Show>
             </div>
-            <Header participants={['You', state.character?.name!]} />
+            <Header participants={[state.character?.name!]} />
           </div>
         </div>
       </Show>
