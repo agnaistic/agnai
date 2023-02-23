@@ -66,10 +66,15 @@ export namespace AppSchema {
   }
 
   export interface GenSettings {
-    temperature: number
+    name: string
+    temp: number
     maxTokens: number
-    repetitionPenalty: number
+    repPenalty: number
+    repPenaltySlope: number
+    repPenaltyRange: number
     typicalP: number
+    topP: number
+    topK: number
   }
 }
 
@@ -80,3 +85,5 @@ export type AllDoc =
   | AppSchema.Settings
   | AppSchema.ChatMessage
   | AppSchema.Character
+
+export const defaultGenPresets: AppSchema.GenSettings[] = []

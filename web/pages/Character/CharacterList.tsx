@@ -1,7 +1,7 @@
 import { Component, createEffect, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { Edit, Plus, Trash } from 'lucide-solid'
+import { Download, Edit, Import, Plus, Trash } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
 import { chatStore } from '../../store'
 import { A } from '@solidjs/router'
@@ -24,7 +24,11 @@ const CharacterList: Component = () => {
       </Show>
       <Show when={chars.loaded}>
         <div class="flex w-full flex-col gap-2">
-          <div class="flex w-full justify-end">
+          <div class="flex w-full justify-end gap-2">
+            <Button>
+              <Import />
+              Import
+            </Button>
             <A href="/character/create">
               <Button>
                 <Plus />
@@ -51,8 +55,17 @@ const Character: Component<{ character: AppSchema.Character }> = (props) => {
         <div class="">{props.character.name}</div>
       </A>
       <div class="flex w-2/12 flex-row justify-center gap-2">
-        <Edit class="cursor-pointer" />
-        <Trash class="cursor-pointer" />
+        <a
+          href={`data:text/json:charset=utf-8,${encodeURIComponent(
+            JSON.stringify(props.character)
+          )}`}
+          download={`${props.character.name}.json`}
+        >
+          <Download class="cursor-pointer text-white/25 hover:text-white" />
+        </a>
+        <Edit class="cursor-pointer text-white/25 hover:text-white" />
+
+        <Trash class="cursor-pointer text-white/25 hover:text-white" />
       </div>
     </div>
   )

@@ -15,8 +15,6 @@ const options = [
   { id: 'wpp', label: 'W++', isChecked: true },
   { id: 'boostyle', label: 'Boostyle' },
   { id: 'sbf', label: 'SBF' },
-  { id: 'json', label: 'JSON' },
-  { id: 'text', label: 'Plain text' },
 ]
 
 const CreateCharacter: Component = () => {

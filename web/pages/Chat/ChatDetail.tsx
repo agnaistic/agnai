@@ -44,42 +44,45 @@ const ChatDetail: Component = () => {
           <div>Loading conversation...</div>
         </div>
       </Show>
-      <div class="flex h-6 items-center">
-        <A href={`/character/${chats.character?._id}/chats`}>
-          <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
-            <ChevronLeft size={16} class="mt-0.5" /> Conversations
-          </div>
-        </A>
-      </div>
       <Show when={chats.chat}>
-        <div class="flex h-[calc(100%-24px)] flex-col-reverse">
-          <InputBar chatId={chats.chat!._id} openConfig={() => setShowConfig(true)} />
-          <div class="flex flex-col-reverse overflow-y-scroll">
-            <div class="flex flex-col gap-4 pt-4 pb-4">
-              <For each={msgs.msgs}>
-                {(msg, i) => (
+        <div class="flex h-full flex-col justify-between">
+          <div class="mb-4 flex items-center justify-between">
+            <A href={`/character/${chats.character?._id}/chats`}>
+              <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
+                <ChevronLeft size={16} class="mt-0.5" /> Conversations
+              </div>
+            </A>
+            <div></div>
+          </div>
+          <div class="flex h-full flex-col-reverse">
+            <InputBar chatId={chats.chat!._id} openConfig={() => setShowConfig(true)} />
+            <div class="flex flex-col-reverse overflow-y-scroll">
+              <div class="flex flex-col gap-4 pt-4 pb-4">
+                <For each={msgs.msgs}>
+                  {(msg, i) => (
+                    <Message
+                      msg={msg}
+                      char={chats.character}
+                      last={i() >= 2 && i() === msgs.msgs.length - 1}
+                      onRemove={() => setRemoveId(msg._id)}
+                    />
+                  )}
+                </For>
+                <Show when={msgs.partial}>
                   <Message
-                    msg={msg}
                     char={chats.character}
-                    last={i() >= 2 && i() === msgs.msgs.length - 1}
-                    onRemove={() => setRemoveId(msg._id)}
+                    msg={emptyMsg(chats.character?._id!, msgs.partial!)}
+                    onRemove={() => {}}
                   />
-                )}
-              </For>
-              <Show when={msgs.partial}>
-                <Message
-                  char={chats.character}
-                  msg={emptyMsg(chats.character?._id!, msgs.partial!)}
-                  onRemove={() => {}}
-                />
-              </Show>
-              <Show when={msgs.partial !== undefined}>
-                <div class="flex justify-center">
-                  <div class="dot-flashing bg-purple-700"></div>
-                </div>
-              </Show>
+                </Show>
+                <Show when={msgs.partial !== undefined}>
+                  <div class="flex justify-center">
+                    <div class="dot-flashing bg-purple-700"></div>
+                  </div>
+                </Show>
+              </div>
+              <Header participants={[chats.character?.name!]} />
             </div>
-            <Header participants={[chats.character?.name!]} />
           </div>
         </div>
       </Show>
