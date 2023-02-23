@@ -7,6 +7,9 @@ export const config = {
   db: {
     name: env('DB_NAME', 'pyg'),
   },
+  kobold: {
+    maxLength: +env('KOBOLD_MAX_LENGTH', '32'),
+  },
 }
 
 function env(key: string, fallback?: string): string {

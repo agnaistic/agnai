@@ -34,8 +34,6 @@ const ChatDetail: Component = () => {
     chatStore.getChat(id)
   })
 
-  const deleteMsg = (messageId: string) => {}
-
   return (
     <>
       <Show when={state.chat}>

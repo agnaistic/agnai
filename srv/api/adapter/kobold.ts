@@ -1,5 +1,7 @@
 import needle from 'needle'
+import { config } from '../../config'
 import { logger } from '../../logger'
+import { joinParts, trimResponse } from '../chat/common'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
@@ -25,7 +27,7 @@ const base = {
   /**
    * We deliberately use a low 'max length' to aid with streaming and the lack of support of 'stop tokens' in Kobold.
    */
-  max_length: 32,
+  max_length: config.kobold.maxLength || 32,
 
   // Generation settings -- Can be overriden by the user
   temperature: 0.65,
@@ -76,30 +78,19 @@ export const handleKobold: ModelAdapter = async function* ({
     if (text) {
       parts.push(text)
       const combined = joinParts(parts)
-
-      for (const endToken of endTokens) {
-        if (combined.includes(endToken)) {
-          const [first] = combined.split(endToken)
-          logger.info({ all: joinParts(parts), reply: first }, 'Kobold response')
-          yield first
-          return
-        }
+      const trimmed = trimResponse(combined, endTokens)
+      if (trimmed) {
+        logger.info({ all: parts, ...trimmed }, 'Kobold response')
+        yield trimmed.response
+        return
       }
 
       body.prompt += text
-      yield joinParts(parts)
+      yield combined
     } else {
       logger.error({ err: response.body }, 'Failed to generate text using Kobold adapter')
       yield { error: response.body }
       return
     }
   }
-}
-
-function sanitise(generated: string) {
-  return generated.replace(/\s+/g, ' ').trim()
-}
-
-function joinParts(parts: string[]) {
-  return parts.map(sanitise).join(' ')
 }
