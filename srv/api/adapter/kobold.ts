@@ -5,17 +5,6 @@ import { joinParts, trimResponse } from '../chat/common'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
-type KoboldRequest = {
-  prompt: string
-  temperature: number
-
-  /** typical p */
-  typical: number
-
-  /** repetition penalty */
-  rep_pen: number
-}
-
 const MAX_NEW_TOKENS = 196
 
 const base = {

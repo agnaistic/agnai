@@ -84,6 +84,7 @@ const Settings: Component = () => {
 const adapters = [
   { label: 'KoboldAI', value: 'kobold' },
   { label: 'NovelAI', value: 'novel' },
+  { label: 'Chai', value: 'chai' },
 ] satisfies Array<{ label: string; value: AppSchema.ChatAdapter }>
 
 export default Settings

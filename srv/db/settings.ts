@@ -10,7 +10,7 @@ const defaults: AppSchema.Settings = {
   novelApiKey: '',
   novelModel: 'euterpe-v2',
   koboldUrl: 'http://localhost:5000',
-  chaiUrl: 'https://model-api-shdxwd54ta-nw.a.run.app/generate/gptj',
+  chaiUrl: 'https://model-api-shdxwd54ta-nw.a.run.app',
 }
 
 export async function get(): Promise<Doc<'settings'>> {

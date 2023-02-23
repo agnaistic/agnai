@@ -2,6 +2,7 @@ import { Response } from 'express'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { StatusError } from '../handle'
+import { handleChai } from './chai'
 import { handleKobold } from './kobold'
 import { handleNovel } from './novel'
 
@@ -18,6 +19,9 @@ export async function generateResponse(
   const adapter = opts.chat.adapter || settings.defaultAdapter || 'kobold'
 
   switch (adapter) {
+    case 'chai':
+      return handleChai({ ...opts, settings })
+
     case 'novel':
       return handleNovel({ ...opts, settings })
 

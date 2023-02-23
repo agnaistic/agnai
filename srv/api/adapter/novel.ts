@@ -71,11 +71,11 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
     return
   }
 
-  const trimmed = trimResponse(response.body.output, endTokens)
-  yield response.body.output
-
   if (status >= 400) {
     yield { error: response.statusMessage! }
     return
   }
+
+  const trimmed = trimResponse(response.body.output, endTokens)
+  yield trimmed ? trimmed.response : response.body.output
 }

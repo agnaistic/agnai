@@ -20,8 +20,6 @@ export function createPrompt({ chat, char, history, message }: PromptOpts) {
     lines.push(`Scenario: ${chat.scenario}`)
   }
 
-  logger.debug({ chat }, 'Prompting')
-
   lines.push(
     `<START>`,
     ...chat.sampleChat.split('\n'),

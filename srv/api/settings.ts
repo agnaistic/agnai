@@ -20,7 +20,7 @@ router.post(
       {
         koboldUrl: 'string',
         novelApiKey: 'string',
-        defaultAdapter: ['kobold', 'chai', 'novel'],
+        defaultAdapter: ['kobold', 'chai', 'novel', 'default'],
         chaiUrl: 'string',
       },
       body
@@ -30,4 +30,5 @@ router.post(
     return next
   })
 )
+
 export default router
