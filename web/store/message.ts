@@ -53,7 +53,7 @@ export const msgStore = createStore<MsgStore>('messages', {
           continue
         } else if (typeof part === 'object' && 'error' in part) {
           toastStore.error(`Failed to generate message`)
-          yield { partial: undefined }
+          yield { partial: undefined, msgs: msgs.concat(replace) }
           return
         }
       }

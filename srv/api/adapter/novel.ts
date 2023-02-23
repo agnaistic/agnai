@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { store } from '../../db'
 import { logger } from '../../logger'
-import { trimResponse } from '../chat/common'
+import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
@@ -77,6 +77,7 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
     return
   }
 
-  const trimmed = trimResponse(response.body.output, endTokens)
-  yield trimmed ? trimmed.response : response.body.output
+  const parsed = sanitise(response.body.output)
+  const trimmed = trimResponse(parsed, endTokens)
+  yield trimmed ? trimmed.response : parsed
 }

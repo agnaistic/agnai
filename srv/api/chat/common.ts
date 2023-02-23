@@ -23,6 +23,6 @@ export function joinParts(parts: string[]) {
   return parts.map(sanitise).join(' ')
 }
 
-function sanitise(generated: string) {
+export function sanitise(generated: string) {
   return generated.replace(/\s+/g, ' ').trim()
 }
