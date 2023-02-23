@@ -3,7 +3,7 @@ import { Component, JSX } from 'solid-js'
 import { chatStore } from '../../../store'
 import './Message.css'
 
-const InputBar: Component = () => {
+const InputBar: Component<{ openConfig: () => void }> = (props) => {
   let ref: HTMLInputElement | undefined
   const send = () => {
     if (!ref) return
@@ -21,7 +21,7 @@ const InputBar: Component = () => {
         onKeyUp={(ev) => ev.key === 'Enter' && send()}
       />
       <IconButton>
-        <Sliders size={20} />
+        <Sliders size={20} onClick={props.openConfig} />
       </IconButton>
       <IconButton onClick={send}>
         <Send size={20} />

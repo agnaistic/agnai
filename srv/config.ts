@@ -10,6 +10,7 @@ export const config = {
   kobold: {
     maxLength: +env('KOBOLD_MAX_LENGTH', '32'),
   },
+  noRequestLogs: !!env('DISABLE_REQUEST_LOGGING', ''),
 }
 
 function env(key: string, fallback?: string): string {

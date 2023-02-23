@@ -4,6 +4,7 @@ import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import PageHeader from '../../shared/PageHeader'
 import { chatStore } from '../../store'
+import ChatSettingsModal from './ChatSettings'
 import Header from './components/Header'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
@@ -19,15 +20,13 @@ const ChatDetail: Component = () => {
   }))
 
   const [removeId, setRemoveId] = createSignal('')
+  const [showConfig, setShowConfig] = createSignal(false)
   const { id } = useParams()
   const nav = useNavigate()
 
   createEffect(() => {
     if (!id) {
-      if (!state.lastId) {
-        return nav('/character/list')
-      }
-
+      if (!state.lastId) return nav('/character/list')
       return nav(`/chat/${state.lastId}`)
     }
 
@@ -36,7 +35,7 @@ const ChatDetail: Component = () => {
 
   return (
     <>
-      <Show when={state.chat}>
+      <Show when={!state.chat}>
         <div>
           <div>Loading conversation...</div>
         </div>
@@ -50,7 +49,7 @@ const ChatDetail: Component = () => {
       </div>
       <Show when={state.chat}>
         <div class="flex h-[calc(100%-24px)] flex-col-reverse">
-          <InputBar />
+          <InputBar openConfig={() => setShowConfig(true)} />
           <div class="flex flex-col-reverse overflow-y-scroll">
             <div class="flex flex-col gap-4 pt-4 pb-4">
               <For each={state.msgs}>
@@ -81,6 +80,7 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
+      <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
     </>
   )
 }

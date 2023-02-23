@@ -1,6 +1,7 @@
 import * as uuid from 'uuid'
 import pino from 'pino'
 import { NextFunction, Response } from 'express'
+import { config } from './config'
 
 const transport =
   process.env.NODE_ENV !== 'production'
@@ -48,13 +49,14 @@ export function logMiddleware() {
     req.log = log
 
     const isOptions = req.method === 'OPTIONS'
-    if (!isOptions) req.log.info('start request')
+    if (!isOptions && !config.noRequestLogs) req.log.info('start request')
 
     const start = Date.now()
 
     res.on('finish', () => {
       const duration = Date.now() - start
-      if (!isOptions) req.log.info({ duration, statusCode: res.statusCode }, 'end request')
+      if (!isOptions && !config.noRequestLogs)
+        req.log.info({ duration, statusCode: res.statusCode }, 'end request')
     })
 
     next()

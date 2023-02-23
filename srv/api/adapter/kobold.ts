@@ -85,7 +85,7 @@ export const handleKobold: ModelAdapter = async function* ({
         return
       }
 
-      body.prompt += text
+      body.prompt = combined
       yield combined
     } else {
       logger.error({ err: response.body }, 'Failed to generate text using Kobold adapter')
