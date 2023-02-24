@@ -6,3 +6,4 @@
 config.json
 .config.json
 log.txt
+__pycache__

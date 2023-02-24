@@ -4,9 +4,11 @@
   "version": "0.1.0",
   "description": "Agnostic AI Chat",
   "scripts": {
-    "start": "NODE_ENV=dev concurrently -c auto -n web,api \"parcel web/index.html --no-cache\" \"npm run server:watch\"",
+    "start": "NODE_ENV=dev concurrently -c auto -n web,api,mod \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\"",
     "server": "node --inspect -r @swc-node/register srv/start.ts",
     "server:watch": "nodemon -e ts --watch srv --exec \"node -r @swc-node/register --inspect srv/start.ts\"",
+    "model": "python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
+    "model:watch": "nodemon -e py --watch model --exec \"python -m flask --app model/app.py run --host 0.0.0.0 -p 5001\"",
     "start:win": "set NODE_ENV=dev && parcel src/index.html",
     "build": "NODE_ENV=production parcel build src/index.html",
     "style": "prettier web --check && prettier srv --check",

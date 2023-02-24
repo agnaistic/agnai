@@ -16,6 +16,7 @@ export const config = {
     uid: env('CHAI_UID', 'empty'),
     key: env('CHAI_KEY', 'empty'),
   },
+  classifyUrl: env('CLASSIFY_URL', 'http://localhost:5001'),
 }
 
 function env(key: string, fallback?: string): string {
