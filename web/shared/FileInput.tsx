@@ -4,6 +4,7 @@ import { FormLabel } from './FormLabel'
 export type FileInputResult = { file: File; content: string }
 
 const FileInput: Component<{
+  ref?: any
   fieldName: string
   required?: boolean
   label?: string
@@ -25,6 +26,7 @@ const FileInput: Component<{
     <div>
       <FormLabel fieldName={props.fieldName} label={props.label} helperText={props.helperText} />
       <input
+        ref={props.ref}
         id={props.fieldName}
         name={props.fieldName}
         type="file"

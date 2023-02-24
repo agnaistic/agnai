@@ -1,5 +1,5 @@
 import { Component, createSignal, For, Show } from 'solid-js'
-import { Plus, Save } from 'lucide-solid'
+import { Plus, Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -119,7 +119,11 @@ const CreateCharacter: Component = () => {
           placeholder="You: Hello\n{{char}}: *smiles* Hello!"
         />
 
-        <div class="flex justify-end">
+        <div class="flex justify-end gap-2">
+          <Button onClick={() => nav('/character/list')} schema="secondary">
+            <X />
+            Cancel
+          </Button>
           <Button type="submit">
             <Save />
             Create

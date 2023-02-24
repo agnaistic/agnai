@@ -45,7 +45,6 @@ export namespace AppSchema {
     | { kind: 'text'; text: string }
     | {
         kind: 'json' | 'wpp' | 'sbf' | 'boostyle'
-        type: string
         attributes: { [key: string]: string[] }
       }
 

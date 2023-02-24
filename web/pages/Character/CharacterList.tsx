@@ -1,4 +1,4 @@
-import { Component, createEffect, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { Download, Edit, Import, Plus, Trash } from 'lucide-solid'
@@ -7,9 +7,11 @@ import { chatStore } from '../../store'
 import { A } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { characterStore } from '../../store'
+import ImportCharacterModal from './ImportCharacter'
 
 const CharacterList: Component = () => {
   const chars = characterStore((s) => s.characters)
+  const [showImport, setImport] = createSignal(false)
 
   createEffect(() => {
     characterStore.getCharacters()
@@ -25,7 +27,7 @@ const CharacterList: Component = () => {
       <Show when={chars.loaded}>
         <div class="flex w-full flex-col gap-2">
           <div class="flex w-full justify-end gap-2">
-            <Button>
+            <Button onClick={() => setImport(true)}>
               <Import />
               Import
             </Button>
@@ -40,6 +42,7 @@ const CharacterList: Component = () => {
         </div>
         {chars.list.length === 0 ? <NoCharacters /> : null}
       </Show>
+      <ImportCharacterModal show={showImport()} close={() => setImport(false)} />
     </>
   )
 }
@@ -57,7 +60,7 @@ const Character: Component<{ character: AppSchema.Character }> = (props) => {
       <div class="flex w-2/12 flex-row justify-center gap-2">
         <a
           href={`data:text/json:charset=utf-8,${encodeURIComponent(
-            JSON.stringify(props.character)
+            JSON.stringify({ ...props.character, avatar: undefined }, null, 2)
           )}`}
           download={`${props.character.name}.json`}
         >

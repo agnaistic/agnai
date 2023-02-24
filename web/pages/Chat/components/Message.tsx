@@ -2,7 +2,6 @@ import { Check, Pencil, RefreshCw, ThumbsDown, ThumbsUp, Trash, X } from 'lucide
 import showdown from 'showdown'
 import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
-import { chatStore } from '../../../store'
 import { msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
