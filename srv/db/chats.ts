@@ -39,7 +39,7 @@ export async function update(id: string, props: Partial<AppSchema.Chat>) {
 
 export async function create(
   characterId: string,
-  props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat'>
+  props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat' | 'username'>
 ) {
   const id = `${v4()}`
   const char = await getCharacter(characterId)
@@ -51,6 +51,7 @@ export async function create(
     _id: id,
     kind: 'chat',
     characterId,
+    username: props.username,
     name: props.name,
     greeting: props.greeting,
     sampleChat: props.sampleChat,

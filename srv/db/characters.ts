@@ -44,3 +44,7 @@ export async function getCharacters() {
   const list = await chars.find({ kind: 'character' })
   return list
 }
+
+export async function deleteCharacter(charId: string) {
+  await chars.removeOne({ _id: charId }, {})
+}

@@ -52,9 +52,16 @@ const getCharacter = handle(async ({ params }) => {
   return char
 })
 
+const deleteCharacter = handle(async ({ params }) => {
+  const id = params.id
+  await store.characters.deleteCharacter(id)
+  return { success: true }
+})
+
 router.post('/', createCharacter)
 router.get('/', getCharacters)
 router.post('/:id', editCharacter)
 router.get('/:id', getCharacter)
+router.delete('/:id', deleteCharacter)
 
 export default router

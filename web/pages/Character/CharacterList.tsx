@@ -8,10 +8,12 @@ import { A } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { characterStore } from '../../store'
 import ImportCharacterModal from './ImportCharacter'
+import DeleteCharacterModal from './DeleteCharacter'
 
 const CharacterList: Component = () => {
   const chars = characterStore((s) => s.characters)
   const [showImport, setImport] = createSignal(false)
+  const [showDelete, setDelete] = createSignal<AppSchema.Character>()
 
   createEffect(() => {
     characterStore.getCharacters()
@@ -38,16 +40,23 @@ const CharacterList: Component = () => {
               </Button>
             </A>
           </div>
-          <For each={chars.list}>{(char) => <Character character={char} />}</For>
+          <For each={chars.list}>
+            {(char) => <Character character={char} delete={() => setDelete(char)} />}
+          </For>
         </div>
         {chars.list.length === 0 ? <NoCharacters /> : null}
       </Show>
       <ImportCharacterModal show={showImport()} close={() => setImport(false)} />
+      <DeleteCharacterModal
+        char={showDelete()}
+        show={!!showDelete()}
+        close={() => setDelete(undefined)}
+      />
     </>
   )
 }
 
-const Character: Component<{ character: AppSchema.Character }> = (props) => {
+const Character: Component<{ character: AppSchema.Character; delete: () => void }> = (props) => {
   return (
     <div class="flex h-16 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
       <A
@@ -68,7 +77,7 @@ const Character: Component<{ character: AppSchema.Character }> = (props) => {
         </a>
         <Edit class="cursor-pointer text-white/25 hover:text-white" />
 
-        <Trash class="cursor-pointer text-white/25 hover:text-white" />
+        <Trash class="cursor-pointer text-white/25 hover:text-white" onClick={props.delete} />
       </div>
     </div>
   )

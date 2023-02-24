@@ -69,6 +69,6 @@ export const handleChai: ModelAdapter = async function* ({
     'END_OF_DIALOG',
   ]
 
-  const trimmed = trimResponse(response.body.data, endTokens)
+  const trimmed = trimResponse(response.body.data, chat, char, endTokens)
   yield trimmed ? trimmed.response : response.body.data
 }

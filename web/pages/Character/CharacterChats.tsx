@@ -8,7 +8,7 @@ import CreateChatModal from './CreateChat'
 import { toDuration } from '../../shared/util'
 
 const CharacterChats: Component = () => {
-  const [modal, setModal] = createSignal(false)
+  const [showCreate, setCreate] = createSignal(false)
   const state = chatStore((s) => ({ char: { ...s.character }, chats: s.list || [] }))
   const { id } = useParams()
 
@@ -26,7 +26,7 @@ const CharacterChats: Component = () => {
       />
 
       <div class="flex w-full justify-end gap-2">
-        <Button onClick={() => setModal(true)}>
+        <Button onClick={() => setCreate(true)}>
           <Plus />
           Conversation
         </Button>
@@ -35,7 +35,7 @@ const CharacterChats: Component = () => {
       <Show when={state.chats.length}>
         <Chats />
       </Show>
-      <CreateChatModal show={modal()} onClose={() => setModal(false)} />
+      <CreateChatModal show={showCreate()} onClose={() => setCreate(false)} />
     </div>
   )
 }

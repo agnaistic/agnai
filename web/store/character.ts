@@ -39,11 +39,13 @@ export const characterStore = createStore<CharacterState>('character', {
         onSuccess?.()
       }
     },
-    deleteCharacter: async ({ characters: { list } }, charId: string) => {
-      const res = await api.method('delete', `/char/${charId}`)
+    deleteCharacter: async ({ characters: { list } }, charId: string, onSuccess?: () => void) => {
+      const res = await api.method('delete', `/character/${charId}`)
       if (res.error) return toastStore.error(`Failed to delete character`)
       if (res.result) {
         const next = list.filter((char) => char._id !== charId)
+        toastStore.success('Successfully deleted character')
+        onSuccess?.()
         return {
           characters: { loaded: true, list: next },
         }
