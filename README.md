@@ -1,4 +1,4 @@
-# AgnAIstic (working name)
+# AgnAIstic (working title)
 
 AI Agnostic Chat
 
