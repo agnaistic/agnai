@@ -7,6 +7,11 @@ import { settingStore } from '../../store/settings'
 import { getStrictForm } from '../../shared/util'
 import Dropdown from '../../shared/Dropdown'
 import { AppSchema } from '../../../srv/db/schema'
+import { ADAPTERS, ChatAdapter } from '../../../common/adapters'
+
+type DefaultAdapter = Exclude<ChatAdapter, 'default'>
+
+const adapterOptions = ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
 
 const Settings: Component = () => {
   const state = settingStore()
@@ -22,7 +27,7 @@ const Settings: Component = () => {
       novelApiKey: 'string',
       novelModel: 'string',
       chaiUrl: 'string',
-      defaultAdapter: ['kobold', 'chai', 'novel'],
+      defaultAdapter: adapterOptions,
     } as const)
     settingStore.save(body)
   }

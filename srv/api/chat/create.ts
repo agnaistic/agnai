@@ -20,10 +20,7 @@ export const createChat = handle(async ({ body }) => {
 
 export const generateMessage = handle(async ({ params, body }, res) => {
   const id = params.id
-  assertValid(
-    { message: 'string', history: 'any', adapater: 'string?', ephemeral: 'boolean?' },
-    body
-  )
+  assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?' }, body)
 
   const userMsg = await store.chats.createChatMessage(id, body.message)
   res.write(JSON.stringify(userMsg))

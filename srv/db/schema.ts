@@ -1,3 +1,5 @@
+import { ChatAdapter } from '../../common/adapters'
+
 export namespace AppSchema {
   export interface Settings {
     kind: 'settings'
@@ -36,8 +38,6 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
   }
-
-  export type ChatAdapter = 'kobold' | 'chai' | 'novel' | 'default' | 'none'
 
   /** Description of the character */
   export type CharacterPersona =

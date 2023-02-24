@@ -1,4 +1,5 @@
 import { assertValid } from 'frisker'
+import { ADAPTERS } from '../../../common/adapters'
 import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
 import { handle, StatusError } from '../handle'
@@ -7,7 +8,7 @@ export const updateChat = handle(async ({ params, body }) => {
   assertValid(
     {
       name: 'string',
-      adapter: ['default', 'novel', 'kobold', 'chai'],
+      adapter: ADAPTERS,
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
@@ -31,7 +32,6 @@ export const retryMessage = handle(async ({ body, params }, res) => {
     {
       history: 'any',
       message: 'string',
-      adapter: 'string?',
       emphemeral: 'boolean?',
     },
     body

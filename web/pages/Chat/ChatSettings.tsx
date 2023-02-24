@@ -1,5 +1,6 @@
 import { A } from '@solidjs/router'
 import { Component, Show } from 'solid-js'
+import { ADAPTERS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
 import Modal, { ModalFooter } from '../../shared/Modal'
@@ -28,7 +29,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const onSave = () => {
     const body = getStrictForm(ref, {
       name: 'string',
-      adapter: ['kobold', 'default', 'novel', 'chai'],
+      adapter: ADAPTERS,
       greeting: 'string',
       sampleChat: 'string',
       scenario: 'string',

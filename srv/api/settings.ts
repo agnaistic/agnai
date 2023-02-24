@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { store } from '../db'
 import { handle } from './handle'
 import { assertValid } from 'frisker'
+import { ADAPTERS } from '../../common/adapters'
 
 const router = Router()
 
@@ -20,7 +21,7 @@ router.post(
       {
         koboldUrl: 'string',
         novelApiKey: 'string',
-        defaultAdapter: ['kobold', 'chai', 'novel', 'default'],
+        defaultAdapter: ADAPTERS,
         chaiUrl: 'string',
       },
       body
