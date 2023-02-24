@@ -13,6 +13,7 @@ export namespace AppSchema {
   export interface Chat {
     _id: string
     kind: 'chat'
+    username: string
     name: string
     characterId: string
     messageCount: number

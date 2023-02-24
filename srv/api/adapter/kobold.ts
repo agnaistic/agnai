@@ -46,14 +46,7 @@ export const handleKobold: ModelAdapter = async function* ({
   let attempts = 0
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
 
-  const username = 'You'
-  const endTokens = [
-    `${username}:`,
-    `${char.name}:`,
-    `${username} :`,
-    `${char.name} :`,
-    'END_OF_DIALOG',
-  ]
+  const endTokens = ['END_OF_DIALOG']
 
   const parts: string[] = []
 
@@ -68,7 +61,7 @@ export const handleKobold: ModelAdapter = async function* ({
     if (text) {
       parts.push(text)
       const combined = joinParts(parts)
-      const trimmed = trimResponse(combined, endTokens)
+      const trimmed = trimResponse(combined, chat, char, endTokens)
       if (trimmed) {
         logger.info({ all: parts, ...trimmed }, 'Kobold response')
         yield trimmed.response

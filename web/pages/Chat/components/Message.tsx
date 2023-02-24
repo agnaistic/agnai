@@ -9,6 +9,7 @@ const showdownConverter = new showdown.Converter()
 
 const Message: Component<{
   msg: AppSchema.ChatMessage
+  chat?: AppSchema.Chat
   char?: AppSchema.Character
   last?: boolean
   onRemove: () => void
@@ -49,7 +50,9 @@ const Message: Component<{
       <div class="flex w-full select-text flex-col">
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-row">
-            <b class="mr-2 text-white">{props.msg.characterId ? props.char?.name : 'You'}</b>
+            <b class="mr-2 text-white">
+              {props.msg.characterId ? props.char?.name : props.chat?.username || 'You'}
+            </b>
             <span class="text-sm text-white/25">
               {new Intl.DateTimeFormat('en-US', {
                 dateStyle: 'short',

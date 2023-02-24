@@ -15,6 +15,7 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
     if (!state.character) return
     const body = getStrictForm(ev, {
       name: 'string',
+      username: 'string',
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
@@ -40,7 +41,14 @@ const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (prop
               A name for the conversation. This is purely for labelling. <i>(Optional)</i>
             </span>
           }
-          placeholder="Optional"
+          placeholder="Untitled"
+        />
+        <TextInput
+          fieldName="username"
+          class="text-sm"
+          value={state.active?.username}
+          label="Your name"
+          placeholder="You"
         />
         <TextInput
           isMultiline

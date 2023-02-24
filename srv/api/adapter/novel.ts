@@ -50,15 +50,7 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
     input: createPrompt({ chat, char, history, message }),
   }
 
-  const username = 'You'
-  const endTokens = [
-    `${username}:`,
-    `${char.name}:`,
-    `${username} :`,
-    `${char.name} :`,
-    'END_OF_DIALOG',
-    '***',
-  ]
+  const endTokens = ['***']
 
   const response = await needle('post', novelUrl, body, {
     json: true,
@@ -78,6 +70,6 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
   }
 
   const parsed = sanitise(response.body.output)
-  const trimmed = trimResponse(parsed, endTokens)
+  const trimmed = trimResponse(parsed, chat, char, endTokens)
   yield trimmed ? trimmed.response : parsed
 }

@@ -62,6 +62,7 @@ const ChatDetail: Component = () => {
                   {(msg, i) => (
                     <Message
                       msg={msg}
+                      chat={chats.chat}
                       char={chats.character}
                       last={i() >= 2 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
@@ -70,8 +71,9 @@ const ChatDetail: Component = () => {
                 </For>
                 <Show when={msgs.partial}>
                   <Message
-                    char={chats.character}
                     msg={emptyMsg(chats.character?._id!, msgs.partial!)}
+                    char={chats.character}
+                    chat={chats.chat}
                     onRemove={() => {}}
                   />
                 </Show>

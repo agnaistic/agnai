@@ -1,10 +1,25 @@
+import { AppSchema } from '../../db/schema'
+
 /**
  * A single response can contain multiple end tokens
  *
  * Find the first occurrence of an end token then return the text preceding it
  */
-export function trimResponse(generated: string, endTokens: string[]) {
-  const trimmed = endTokens.reduce(
+export function trimResponse(
+  generated: string,
+  chat: AppSchema.Chat,
+  char: AppSchema.Character,
+  endTokens: string[]
+) {
+  const username = chat.username || 'You'
+  const baseEndTokens = [
+    `${username}:`,
+    `${char.name}:`,
+    `${username} :`,
+    `${char.name} :`,
+    'END_OF_DIALOG',
+  ]
+  const trimmed = baseEndTokens.concat(...endTokens).reduce(
     (prev, curr) => {
       const index = generated.indexOf(curr)
       if (index === -1) return prev

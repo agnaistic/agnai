@@ -11,6 +11,7 @@ export const createChat = handle(async ({ body }) => {
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
+      username: 'string',
     },
     body
   )

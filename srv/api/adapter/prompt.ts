@@ -12,7 +12,7 @@ const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
 export function createPrompt({ chat, char, history, message }: PromptOpts) {
-  const username = 'You'
+  const username = chat.username || 'You'
 
   const lines: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, char.persona)}`]
 
