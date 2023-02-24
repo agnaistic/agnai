@@ -38,7 +38,12 @@ const FileInput: Component<{
   )
 }
 
-function getBuffer(file: File): Promise<{ file: File; content: string }> {
+export async function getFileAsString(result: FileInputResult) {
+  const buffer = await result.file.arrayBuffer().then((b) => Buffer.from(b))
+  return buffer.toString()
+}
+
+function getBuffer(file: File): Promise<FileInputResult> {
   return new Promise((resolve) => {
     let content: any
     const reader = new FileReader()

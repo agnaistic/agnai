@@ -1,50 +1,54 @@
 import { Import, X } from 'lucide-solid'
 import { Component, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
-import FileInput, { FileInputResult } from '../../shared/FileInput'
+import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { ModalFooter } from '../../shared/Modal'
 import { characterStore, toastStore } from '../../store'
 
 const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  let ref: HTMLInputElement | undefined
+  const [json, setJson] = createSignal<any>(undefined)
   const [avatar, setAvatar] = createSignal<string | undefined>(undefined)
 
-  const updateFile = (files: FileInputResult[]) => {
+  const updateJson = async (files: FileInputResult[]) => {
+    if (!files.length) return setJson()
+    try {
+      const content = await getFileAsString(files[0])
+      const json = JSON.parse(content)
+      setJson(json)
+      console.log(json)
+    } catch (ex) {
+      console.log(files[0].content)
+      toastStore.warn('Invalid file format: Must be exported from Agnaistic')
+    }
+  }
+
+  const updateAvatar = (files: FileInputResult[]) => {
     if (!files.length) setAvatar()
     else setAvatar(files[0].content)
   }
 
   const onImport = async () => {
-    if (!ref || !ref.files) return
-    const [file] = Array.from(ref.files)
-    if (!file) return
-
-    const buffer = await file.arrayBuffer().then((ab) => Buffer.from(ab))
-    try {
-      const json = JSON.parse(buffer.toString())
-      characterStore.createCharacter({ ...json, avatar }, props.close)
-    } catch (ex) {
-      toastStore.warn('Invalid file format')
-    }
+    if (!json()) return
+    characterStore.createCharacter({ ...json(), avatar }, props.close)
   }
 
   return (
     <Modal show={props.show} title="Import Character">
       <div class="flex flex-col gap-2">
         <FileInput
-          ref={ref}
           label="JSON File"
           fieldName="json"
           accept="text/json"
           helperText="Currently only JSON files exported from Agnaistic are supported"
           required
+          onUpdate={updateJson}
         />
 
         <FileInput
           fieldName="avatar"
           label="Avatar"
           accept="image/png,image/jpeg"
-          onUpdate={updateFile}
+          onUpdate={updateAvatar}
         />
 
         <ModalFooter>
