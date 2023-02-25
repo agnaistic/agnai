@@ -38,23 +38,36 @@ const base = {
   },
 }
 
-export const handleNovel: ModelAdapter = async function* ({ chat, char, history, message }) {
-  const settings = await store.settings.get()
-  if (!settings.novelApiKey) {
+export const handleNovel: ModelAdapter = async function* ({
+  chat,
+  char,
+  history,
+  sender,
+  message,
+  members,
+  user,
+}) {
+  if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
     return
   }
 
   const body = {
     ...base,
-    input: createPrompt({ chat, char, history, message }),
+    input: createPrompt({
+      chat,
+      char,
+      history,
+      message,
+      sender,
+    }),
   }
 
   const endTokens = ['***']
 
   const response = await needle('post', novelUrl, body, {
     json: true,
-    headers: { Authorization: `Bearer ${settings.novelApiKey}` },
+    headers: { Authorization: `Bearer ${user.novelApiKey}` },
   })
 
   logger.warn(response.body, 'Novel response')
@@ -70,6 +83,6 @@ export const handleNovel: ModelAdapter = async function* ({ chat, char, history,
   }
 
   const parsed = sanitise(response.body.output)
-  const trimmed = trimResponse(parsed, chat, char, endTokens)
+  const trimmed = trimResponse(parsed, char, members, endTokens)
   yield trimmed ? trimmed.response : parsed
 }

@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
 import { store } from '../db'
+import { loggedIn } from './auth'
 import { handle, StatusError } from './handle'
 import { handleUpload } from './upload'
 
@@ -27,7 +28,7 @@ const createCharacter = handle(async (req) => {
   const [file] = body.attachments
   const avatar = file ? file.filename : undefined
 
-  const char = await store.characters.createCharacter({
+  const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
     persona,
     sampleChat: body.sampleChat,
@@ -39,8 +40,8 @@ const createCharacter = handle(async (req) => {
   return char
 })
 
-const getCharacters = handle(async () => {
-  const chars = await store.characters.getCharacters()
+const getCharacters = handle(async ({ userId }) => {
+  const chars = await store.characters.getCharacters(userId!)
   return { characters: chars }
 })
 
@@ -54,7 +55,7 @@ const editCharacter = handle(async (req) => {
   const [file] = body.attachments
   const avatar = file ? file.filename : undefined
 
-  const char = await store.characters.updateCharacter(id, {
+  const char = await store.characters.updateCharacter(id, req.userId!, {
     name: body.name,
     persona,
     avatar,
@@ -66,20 +67,21 @@ const editCharacter = handle(async (req) => {
   return char
 })
 
-const getCharacter = handle(async ({ params }) => {
-  const char = await store.characters.getCharacter(params.id)
+const getCharacter = handle(async ({ userId, params }) => {
+  const char = await store.characters.getCharacter(userId!, params.id)
   if (!char) {
     throw new StatusError('Character not found', 404)
   }
   return char
 })
 
-const deleteCharacter = handle(async ({ params }) => {
+const deleteCharacter = handle(async ({ userId, params }) => {
   const id = params.id
-  await store.characters.deleteCharacter(id)
+  await store.characters.deleteCharacter(userId!, id)
   return { success: true }
 })
 
+router.use(loggedIn)
 router.post('/', createCharacter)
 router.get('/', getCharacters)
 router.post('/:id', editCharacter)

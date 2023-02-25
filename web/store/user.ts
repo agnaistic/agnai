@@ -1,15 +1,16 @@
 import Cookies from 'js-cookie'
+import { AppSchema } from '../../srv/db/schema'
+import { api, getAuth, setAuth } from './api'
 import { createStore } from './create'
+import { toastStore } from './toasts'
 
 type State = {
   loading: boolean
   error?: string
+  loggedIn: boolean
   jwt: string
-  user?: {
-    id: string
-    email: string
-    displayName: string
-  }
+  profile?: AppSchema.Profile
+  user?: AppSchema.User
 }
 
 export const userStore = createStore<State>(
@@ -17,51 +18,100 @@ export const userStore = createStore<State>(
   init()
 )((get, set) => {
   return {
-    async *login(_, username: string, password: string) {
+    async *login(_, username: string, password: string, onSuccess?: () => void) {
       yield { loading: true }
+
+      const res = await api.post('/user/login', { username, password })
+      yield { loading: false }
+      if (res.error) {
+        return toastStore.error(`Failed to authenticated`)
+      }
+
       yield {
         loading: false,
-        user: { displayName: username, email: username, id: username },
-        jwt: 'token',
+        loggedIn: true,
+        user: res.result.user,
+        profile: res.result.profile,
+        jwt: res.result.token,
+      }
+
+      onSuccess?.()
+      setAuth(res.result.token)
+    },
+    async *register(_, username: string, password: string, onSuccess?: () => void) {
+      yield { loading: true }
+
+      const res = await api.post('/user/login', { username, password })
+      yield { loading: false }
+      if (res.error) {
+        return toastStore.error(`Failed to register`)
+      }
+
+      yield {
+        loading: false,
+        loggedIn: true,
+        user: res.result.user,
+        profile: res.result.profile,
+        jwt: res.result.token,
+      }
+
+      setAuth(res.result.token)
+      onSuccess?.()
+    },
+    async getProfile() {
+      const res = await api.get('/user')
+      if (res.error) return toastStore.error(`Failed to get profile`)
+      if (res.result) {
+        return { profile: res.result }
       }
     },
-    clearAuth() {
-      Cookies.remove('auth')
-      return { jwt: '', user: undefined }
+    async getConfig() {
+      const res = await api.get('/user/config')
+      if (res.error) return toastStore.error(`Failed to get user config`)
+      if (res.result) {
+        return { user: res.result }
+      }
     },
-    setAuth(_, jwt) {
-      Cookies.set('auth', jwt, { sameSite: 'strict', expires: 7 })
-      const user = parseJWT(jwt)
-      return { jwt, user }
+
+    async updateProfile(_, profile: { handle: string; avatar?: File }) {
+      const form = new FormData()
+      form.append('handle', profile.handle)
+      if (profile.avatar) {
+        form.append('avatar', profile.avatar)
+      }
+
+      const res = await api.upload('/user/profile', form)
+      if (res.error) toastStore.error(`Failed to update profile`)
+      if (res.result) {
+        toastStore.success(`Updated settings`)
+        return { profile: res.result }
+      }
+    },
+
+    async updateConfig(
+      _,
+      config: Pick<AppSchema.User, 'koboldUrl' | 'novelApiKey' | 'novelModel' | 'defaultAdapter'>
+    ) {
+      const res = await api.post('/user/config', config)
+      if (res.error) toastStore.error(`Failed to update config`)
+      if (res.result) {
+        toastStore.success(`Updated settings`)
+        return { user: res.result }
+      }
     },
   }
 })
 
-function parseJWT<T = any>(jwt: string): T {
-  const base64Url = jwt.split('.')[1]
-  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-  const jsonPayload = decodeURIComponent(
-    window
-      .atob(base64)
-      .split('')
-      .map((c) => `%${`00${c.charCodeAt(0).toString(16)}`.slice(-2)}`)
-      .join('')
-  )
-
-  return JSON.parse(jsonPayload)
-}
-
 function init(): State {
-  const existing = Cookies.get('auth')
+  const existing = getAuth()
 
   if (!existing) {
-    return { loading: false, jwt: '' }
+    return { loading: false, jwt: '', loggedIn: false }
   }
 
-  const user = parseJWT(existing)
   return {
+    loggedIn: true,
     loading: false,
     jwt: existing,
-    user,
   }
 }

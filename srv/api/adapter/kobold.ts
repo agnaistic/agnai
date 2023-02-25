@@ -36,11 +36,13 @@ export const handleKobold: ModelAdapter = async function* ({
   char,
   history,
   message,
-  settings,
+  sender,
+  members,
+  user,
 }) {
   const body = {
     ...base,
-    prompt: createPrompt({ chat, char, history, message }),
+    prompt: createPrompt({ chat, char, history, message, sender }),
   }
 
   let attempts = 0
@@ -53,7 +55,7 @@ export const handleKobold: ModelAdapter = async function* ({
   while (attempts < maxAttempts) {
     attempts++
 
-    const response = await needle('post', `${settings.koboldUrl}/api/v1/generate`, body, {
+    const response = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
       json: true,
     })
 
@@ -61,7 +63,7 @@ export const handleKobold: ModelAdapter = async function* ({
     if (text) {
       parts.push(text)
       const combined = joinParts(parts)
-      const trimmed = trimResponse(combined, chat, char, endTokens)
+      const trimmed = trimResponse(combined, char, members, endTokens)
       if (trimmed) {
         logger.info({ all: parts, ...trimmed }, 'Kobold response')
         yield trimmed.response

@@ -2,6 +2,7 @@ import { Check, Pencil, RefreshCw, ThumbsDown, ThumbsUp, Trash, X } from 'lucide
 import showdown from 'showdown'
 import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
+import { chatStore } from '../../../store'
 import { msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
@@ -17,6 +18,8 @@ const Message: Component<{
   const cancelEdit = () => {
     setEdit(false)
   }
+
+  const state = chatStore((s) => ({ members: s.memberIds }))
 
   const saveEdit = () => {
     if (!ref) return
@@ -50,7 +53,7 @@ const Message: Component<{
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-row">
             <b class="mr-2 text-white">
-              {props.msg.characterId ? props.char?.name : props.chat?.username || 'You'}
+              {props.msg.characterId ? props.char?.name! : state.members[props.msg.userId!]?.handle}
             </b>
             <span class="text-sm text-white/25">
               {new Intl.DateTimeFormat('en-US', {

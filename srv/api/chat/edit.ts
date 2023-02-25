@@ -2,9 +2,9 @@ import { assertValid } from 'frisker'
 import { ADAPTERS } from '../../../common/adapters'
 import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
-import { handle, StatusError } from '../handle'
+import { errors, handle } from '../handle'
 
-export const updateChat = handle(async ({ params, body }) => {
+export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
       name: 'string',
@@ -16,17 +16,25 @@ export const updateChat = handle(async ({ params, body }) => {
     body
   )
   const id = params.id
+  const prev = await store.chats.getChat(id)
+  if (prev?.userId !== user?.userId) throw errors.Forbidden
+
   const chat = await store.chats.update(id, body)
   return chat
 })
 
-export const updateMessage = handle(async ({ body, params }) => {
+export const updateMessage = handle(async ({ body, params, userId }) => {
   assertValid({ message: 'string' }, body)
+  const prev = await store.chats.getMessageAndChat(params.id)
+
+  if (!prev) throw errors.NotFound
+  if (prev.chat?.userId !== userId) throw errors.Forbidden
+
   const message = await store.chats.editMessage(params.id, body.message)
   return message
 })
 
-export const retryMessage = handle(async ({ body, params }, res) => {
+export const retryMessage = handle(async ({ body, params, userId }, res) => {
   const { id, messageId } = params
   assertValid(
     {
@@ -36,8 +44,12 @@ export const retryMessage = handle(async ({ body, params }, res) => {
     },
     body
   )
+  const prev = await store.chats.getMessageAndChat(messageId)
+  if (!prev) throw errors.NotFound
+  if (prev.chat?.userId !== userId) throw errors.Forbidden
+
   const response = await streamResponse(
-    { chatId: params.id, history: body.history, message: body.message },
+    { chatId: params.id, history: body.history, message: body.message, senderId: userId! },
     res
   )
 

@@ -3,22 +3,21 @@ import { Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { settingStore } from '../../store/settings'
 import { getStrictForm } from '../../shared/util'
 import Dropdown from '../../shared/Dropdown'
-import { AppSchema } from '../../../srv/db/schema'
 import { ADAPTERS, ChatAdapter } from '../../../common/adapters'
+import { userStore } from '../../store'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
 const adapterOptions = ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
 
 const Settings: Component = () => {
-  const state = settingStore()
+  const state = userStore()
 
   createEffect(() => {
     // Always reload settings when entering this page
-    settingStore.load()
+    userStore.getConfig()
   })
 
   const onSubmit = (evt: Event) => {
@@ -26,10 +25,9 @@ const Settings: Component = () => {
       koboldUrl: 'string',
       novelApiKey: 'string',
       novelModel: 'string',
-      chaiUrl: 'string',
       defaultAdapter: adapterOptions,
     } as const)
-    settingStore.save(body)
+    userStore.updateConfig(body)
   }
 
   return (
@@ -42,21 +40,21 @@ const Settings: Component = () => {
             label="Default AI Adapter"
             items={adapters}
             helperText="The default adapter conversations will use unless otherwise configured"
-            value={state.settings.defaultAdapter}
+            value={state.user?.defaultAdapter}
           />
           <TextInput
             fieldName="koboldUrl"
             label="Kobold URL"
             helperText="Fully qualified URL for Kobold"
             placeholder={'http://localhost:5000'}
-            value={state.settings.koboldUrl}
+            value={state.user?.koboldUrl}
           />
           <TextInput
             fieldName="novelApiKey"
             label="Novel API Key"
             helperText="The token from the NovelAI request authorization headers"
             placeholder="..."
-            value={state.settings.novelApiKey}
+            value={state.user?.novelApiKey}
           />
           <Dropdown
             fieldName="novelModel"
@@ -65,14 +63,7 @@ const Settings: Component = () => {
               { label: 'Euterpe', value: 'euterpe-v2' },
               { label: 'Krake', value: 'krake-v2' },
             ]}
-            value={state.settings.novelModel}
-          />
-          <TextInput
-            fieldName="chaiUrl"
-            label="Chai URL"
-            helperText="The ChaiAI GPTJ Url"
-            placeholder="..."
-            value={state.settings.chaiUrl}
+            value={state.user?.novelModel}
           />
         </div>
         <div class="flex justify-end gap-2 pt-4">

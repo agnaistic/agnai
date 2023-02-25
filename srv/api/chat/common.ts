@@ -7,18 +7,16 @@ import { AppSchema } from '../../db/schema'
  */
 export function trimResponse(
   generated: string,
-  chat: AppSchema.Chat,
   char: AppSchema.Character,
+  members: AppSchema.Profile[],
   endTokens: string[]
 ) {
-  const username = chat.username || 'You'
-  const baseEndTokens = [
-    `${username}:`,
-    `${char.name}:`,
-    `${username} :`,
-    `${char.name} :`,
-    'END_OF_DIALOG',
-  ]
+  const baseEndTokens = [`${char.name}:`, `${char.name} :`, 'END_OF_DIALOG']
+
+  for (const member of members) {
+    baseEndTokens.push(`${member.handle}:`, `${member.handle} :`)
+  }
+
   const trimmed = baseEndTokens.concat(...endTokens).reduce(
     (prev, curr) => {
       const index = generated.indexOf(curr)

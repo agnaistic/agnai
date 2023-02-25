@@ -23,31 +23,28 @@ const LoginPage: Component = () => {
   })
 
   const onSubmit = (evt: Event) => {
-    const { email, password } = getStrictForm(evt, { email: 'string', password: 'string' })
-    if (!email || !password) return
+    const { username, password } = getStrictForm(evt, { username: 'string', password: 'string' })
+    if (!username || !password) return
 
-    userStore.login(email, password)
+    userStore.login(username, password, () => navigate('/character/list'))
   }
 
   /** Side-effect to take care of a successful login. */
-  createEffect(() => {
-    if (!store.user) return
+  // createEffect(() => {
+  //   if (!store.user) return
 
-    let redirectTo = '/'
-    if (state && 'redirectTo' in state) {
-      redirectTo = state.redirectTo as string
-    }
-    navigate(redirectTo, { replace: true })
-  }, store)
+  //   let redirectTo = '/'
+  //   if (state && 'redirectTo' in state) {
+  //     redirectTo = state.redirectTo as string
+  //   }
+  //   navigate(redirectTo, { replace: true })
+  // }, store)
 
   return (
     <div class="flex w-full justify-center">
       <div class="my-4 border-b border-white/5" />
       <div class="w-full max-w-sm">
-        <PageHeader
-          title={`Welcome. ${store.user?.displayName}`}
-          subtitle="Please log in to your account."
-        />
+        <PageHeader title={`Welcome. `} subtitle="Please log in to your account." />
 
         <LoginForm onSubmit={onSubmit} isLoading={store.loading} />
 

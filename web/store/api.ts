@@ -1,5 +1,5 @@
+import Cookies from 'js-cookie'
 import { toastStore } from './toasts'
-import { userStore } from './user'
 
 const baseUrl = `http://${location.hostname}:3001`
 
@@ -49,11 +49,14 @@ async function post<T = any>(path: string, body = {}) {
 }
 
 async function upload<T = any>(path: string, form: FormData) {
-  return callApi<T>(path, {
+  const result = await callApi<T>(path, {
     method: 'post',
     body: form,
-    headers: undefined,
+    headers: {
+      Authorization: `Bearer ${getAuth()}`,
+    },
   })
+  return result
 }
 
 async function streamGet<T = any>(path: string, query: Query) {
@@ -95,7 +98,7 @@ async function callApi<T = any>(
 }
 
 function headers() {
-  const { jwt } = userStore.getState()
+  const jwt = getAuth()
   const headers: any = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
@@ -157,4 +160,16 @@ async function* callApiStream<T = any>(path: string, opts: RequestInit) {
       }
     }
   } while (!done)
+}
+
+export function setAuth(jwt: string) {
+  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 7 })
+}
+
+export function getAuth() {
+  return Cookies.get('auth')
+}
+
+export function clearAuth() {
+  Cookies.get('auth')
 }

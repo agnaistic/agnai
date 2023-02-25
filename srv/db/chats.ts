@@ -32,6 +32,14 @@ export async function listByCharacter(characterId: string) {
   return docs
 }
 
+export async function getMessageAndChat(msgId: string) {
+  const msg = await msgs.findOne({ _id: msgId })
+  if (!msg) return
+
+  const chat = await getChat(msg.chatId)
+  return { msg, chat }
+}
+
 export async function update(id: string, props: Partial<AppSchema.Chat>) {
   await chats.updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
   return getChat(id)
@@ -39,10 +47,10 @@ export async function update(id: string, props: Partial<AppSchema.Chat>) {
 
 export async function create(
   characterId: string,
-  props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat' | 'username'>
+  props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId'>
 ) {
   const id = `${v4()}`
-  const char = await getCharacter(characterId)
+  const char = await getCharacter(props.userId, characterId)
   if (!char) {
     throw new Error(`Unable to create chat: Character not found`)
   }
@@ -51,7 +59,8 @@ export async function create(
     _id: id,
     kind: 'chat',
     characterId,
-    username: props.username,
+    userId: props.userId,
+    memberIds: [],
     name: props.name,
     greeting: props.greeting,
     sampleChat: props.sampleChat,
@@ -133,4 +142,8 @@ export async function deleteAllChats(characterId?: string) {
 
   const msgsDeleted = msgs.remove({ chatId: { $in: chatIds } }, { multi: true })
   logger.info({ deleted: msgsDeleted }, 'Messages deleted')
+}
+
+export function canViewChat(senderId: string, chat: AppSchema.Chat) {
+  return chat.userId === senderId || chat.memberIds.includes(senderId)
 }

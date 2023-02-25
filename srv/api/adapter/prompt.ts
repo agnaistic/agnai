@@ -2,6 +2,7 @@ import { AppSchema } from '../../db/schema'
 import { logger } from '../../logger'
 
 type PromptOpts = {
+  sender: AppSchema.Profile
   chat: AppSchema.Chat
   char: AppSchema.Character
   history: AppSchema.ChatMessage[]
@@ -11,8 +12,8 @@ type PromptOpts = {
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export function createPrompt({ chat, char, history, message }: PromptOpts) {
-  const username = chat.username || 'You'
+export function createPrompt({ sender, chat, char, history, message }: PromptOpts) {
+  const username = sender.handle || 'You'
 
   const lines: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, char.persona)}`]
 

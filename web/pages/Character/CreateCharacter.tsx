@@ -72,7 +72,7 @@ const CreateCharacter: Component = () => {
   return (
     <div>
       <PageHeader
-        title="Create a Character"
+        title={`${editId ? 'Edit' : duplicateId ? 'Copy' : 'Create'} a Character`}
         subtitle={
           <span>
             For character information tips and information visit{' '}

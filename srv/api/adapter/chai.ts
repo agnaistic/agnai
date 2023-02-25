@@ -18,9 +18,10 @@ export const handleChai: ModelAdapter = async function* ({
   char,
   history,
   message,
-  settings,
+  sender,
+  members,
 }) {
-  if (!settings.chaiUrl) {
+  if (!config.chai.url) {
     yield { error: 'Chai URL not set' }
     return
   }
@@ -32,10 +33,10 @@ export const handleChai: ModelAdapter = async function* ({
 
   const body = {
     ...base,
-    text: createPrompt({ chat, char, history, message }),
+    text: createPrompt({ sender, chat, char, history, message }),
   }
 
-  const response = await needle('post', `${settings.chaiUrl}/generate/gptj`, body, {
+  const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
     json: true,
     headers: {
       'user-agent':
@@ -69,6 +70,6 @@ export const handleChai: ModelAdapter = async function* ({
     'END_OF_DIALOG',
   ]
 
-  const trimmed = trimResponse(response.body.data, chat, char, endTokens)
+  const trimmed = trimResponse(response.body.data, char, members, endTokens)
   yield trimmed ? trimmed.response : response.body.data
 }

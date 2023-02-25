@@ -10,6 +10,8 @@ type ChatState = {
   list: AppSchema.Chat[]
   character?: AppSchema.Character
   active?: AppSchema.Chat
+  activeMembers: AppSchema.Profile[]
+  memberIds: { [userId: string]: AppSchema.Profile }
 }
 
 export type NewChat = {
@@ -23,6 +25,8 @@ export const chatStore = createStore<ChatState>('chat', {
   lastChatId: localStorage.getItem('lastChatId'),
   loaded: false,
   list: [],
+  activeMembers: [],
+  memberIds: {},
 })((get, set) => {
   return {
     async getChat(_, id: string) {
@@ -30,6 +34,7 @@ export const chatStore = createStore<ChatState>('chat', {
         chat: AppSchema.Chat
         messages: AppSchema.ChatMessage[]
         character: AppSchema.Character
+        members: AppSchema.Profile[]
       }>(`/chat/${id}`)
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
@@ -40,6 +45,8 @@ export const chatStore = createStore<ChatState>('chat', {
         return {
           lastChatId: id,
           active: res.result.chat,
+          activeMembers: res.result.members,
+          memberIds: res.result.members.reduce(toMemberKeys, {}),
           character: res.result.character,
         }
       }
@@ -89,3 +96,8 @@ export const chatStore = createStore<ChatState>('chat', {
     },
   }
 })
+
+function toMemberKeys(prev: Record<string, AppSchema.Profile>, curr: AppSchema.Profile) {
+  prev[curr.userId] = curr
+  return prev
+}

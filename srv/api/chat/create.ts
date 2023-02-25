@@ -3,7 +3,7 @@ import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
 import { handle } from '../handle'
 
-export const createChat = handle(async ({ body }) => {
+export const createChat = handle(async ({ body, user }) => {
   assertValid(
     {
       characterId: 'string',
@@ -15,11 +15,11 @@ export const createChat = handle(async ({ body }) => {
     },
     body
   )
-  const chat = await store.chats.create(body.characterId, body)
+  const chat = await store.chats.create(body.characterId, { ...body, userId: user?.userId! })
   return chat
 })
 
-export const generateMessage = handle(async ({ params, body }, res) => {
+export const generateMessage = handle(async ({ userId, params, body }, res) => {
   const id = params.id
   assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?', retry: 'boolean?' }, body)
 
@@ -30,6 +30,7 @@ export const generateMessage = handle(async ({ params, body }, res) => {
 
   const response = await streamResponse(
     {
+      senderId: userId!,
       chatId: id,
       message: body.message,
       history: body.history,

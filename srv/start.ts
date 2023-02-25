@@ -9,8 +9,8 @@ app.listen(config.port, '0.0.0.0', async () => {
   await createIndexes()
 
   // Initialise settings if empty
-  await store.settings.get()
+  await store.users.ensureInitialUser()
 
-  // await deleteAllChats()
+  await deleteAllChats()
   logger.info({ port: config.port }, 'Server started')
 })

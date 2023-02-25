@@ -8,7 +8,7 @@ const LoginForm: Component<{
 }> = (props) => (
   <form onSubmit={(evt) => props.onSubmit(evt)} class="flex flex-col gap-6">
     <div class="flex flex-col gap-2">
-      <TextInput fieldName="email" placeholder="Email" type="email" required />
+      <TextInput fieldName="username" placeholder="Email" required />
       <TextInput fieldName="password" placeholder="Password" type="password" required />
     </div>
 

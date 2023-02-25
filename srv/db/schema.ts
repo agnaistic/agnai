@@ -1,19 +1,41 @@
 import { ChatAdapter } from '../../common/adapters'
 
 export namespace AppSchema {
-  export interface Settings {
-    kind: 'settings'
-    koboldUrl: string
+  export interface Token {
+    userId: string
+    username: string
+    admin: boolean
+    iat: number
+    exp: number
+  }
+
+  export interface Profile {
+    _id: string
+    kind: 'profile'
+    userId: string
+    handle: string
+    avatar?: string
+  }
+
+  export interface User {
+    _id: string
+    kind: 'user'
+    username: string
+    hash: string
+
+    admin: boolean
     novelApiKey: string
     novelModel: string
-    chaiUrl: string
-    defaultAdapter?: ChatAdapter
+    koboldUrl: string
+    defaultAdapter: ChatAdapter
   }
 
   export interface Chat {
     _id: string
     kind: 'chat'
-    username: string
+    userId: string
+    memberIds: string[]
+
     name: string
     characterId: string
     messageCount: number
@@ -28,12 +50,21 @@ export namespace AppSchema {
     updatedAt: string
   }
 
+  export interface ChatMember {
+    chatId: string
+    userId: string
+    createdAt: string
+  }
+
   export interface ChatMessage {
     _id: string
     kind: 'chat-message'
     chatId: string
     msg: string
     characterId?: string
+    userId?: string
+
+    // Only chat owners can rate messages for now
     rating?: 'y' | 'n' | 'none'
 
     createdAt: string
@@ -49,6 +80,7 @@ export namespace AppSchema {
   export interface Character {
     _id: string
     kind: 'character'
+    userId: string
 
     name: string
     persona: CharacterPersona
@@ -80,8 +112,9 @@ export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { k
 
 export type AllDoc =
   | AppSchema.Chat
-  | AppSchema.Settings
   | AppSchema.ChatMessage
   | AppSchema.Character
+  | AppSchema.User
+  | AppSchema.Profile
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []

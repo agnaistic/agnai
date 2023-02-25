@@ -29,7 +29,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const onSave = () => {
     const body = getStrictForm(ref, {
       name: 'string',
-      username: 'string',
       adapter: ADAPTERS,
       greeting: 'string',
       sampleChat: 'string',
@@ -57,13 +56,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           ]}
         />
         <TextInput fieldName="name" class="text-sm" value={state.active?.name} label="Chat name" />
-        <TextInput
-          fieldName="username"
-          class="text-sm"
-          value={state.active?.username}
-          label="Your name"
-          placeholder="You"
-        />
         <TextInput
           fieldName="greeting"
           class="text-sm"

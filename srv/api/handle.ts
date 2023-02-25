@@ -1,7 +1,9 @@
 import * as express from 'express'
+import { Logger } from 'pino'
+import { AppSchema } from '../db/schema'
 
 export function handle(handler: Handler) {
-  const wrapped: express.RequestHandler = async (req, res, next) => {
+  const wrapped = async (req: AppRequest, res: express.Response, next: express.NextFunction) => {
     let nextCalled = false
     const wrappedNext = (err?: any) => {
       nextCalled = true
@@ -29,8 +31,16 @@ export class StatusError extends Error {
   }
 }
 
-export type Handler = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => any
+export type Handler = (req: AppRequest, res: express.Response, next: express.NextFunction) => any
+
+export type AppRequest = express.Request & {
+  user?: AppSchema.Token
+  userId?: string
+  log: Logger
+}
+
+export const errors = {
+  NotFound: new StatusError('Resource not found', 404),
+  Unauthorized: new StatusError('Unauthorized', 401),
+  Forbidden: new StatusError('Forbidden', 403),
+}
