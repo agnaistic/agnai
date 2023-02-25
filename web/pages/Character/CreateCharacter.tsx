@@ -1,15 +1,15 @@
-import { Component, createSignal, For, Show } from 'solid-js'
-import { Plus, Save, X } from 'lucide-solid'
+import { Component, createEffect, createSignal } from 'solid-js'
+import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getFormEntries, getStrictForm } from '../../shared/util'
-import { AppSchema } from '../../../srv/db/schema'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import { characterStore } from '../../store'
-import { useNavigate } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
+import PersonaAttributes, { getAttributeMap } from './PersonaAttributes'
 
 const options = [
   { id: 'wpp', label: 'W++', isChecked: true },
@@ -18,6 +18,18 @@ const options = [
 ]
 
 const CreateCharacter: Component = () => {
+  const { editId, duplicateId } = useParams()
+  const state = characterStore((s) => ({
+    edit:
+      editId || duplicateId
+        ? s.characters.list.find((ch) => ch._id === (editId || duplicateId))
+        : undefined,
+  }))
+
+  createEffect(() => {
+    characterStore.getCharacters()
+  })
+
   const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
   const nav = useNavigate()
 
@@ -29,28 +41,32 @@ const CreateCharacter: Component = () => {
 
   const onSubmit = (ev: Event) => {
     const body = getStrictForm(ev, {
-      kind: 'string',
+      kind: ['wpp', 'boostyle', 'sbf'],
       name: 'string',
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
-    })
+    } as const)
     const attributes = getAttributeMap(getFormEntries(ev))
     const persona = {
       kind: body.kind,
       attributes,
-    } as any as AppSchema.CharacterPersona
-    characterStore.createCharacter(
-      {
-        name: body.name,
-        scenario: body.scenario,
-        avatar: avatar(),
-        greeting: body.greeting,
-        sampleChat: body.sampleChat,
-        persona,
-      },
-      () => nav('/character/list')
-    )
+    }
+
+    const payload = {
+      name: body.name,
+      scenario: body.scenario,
+      avatar: avatar(),
+      greeting: body.greeting,
+      sampleChat: body.sampleChat,
+      persona,
+    }
+
+    if (editId) {
+      characterStore.editCharacter(editId, payload, () => nav('/character/list'))
+    } else {
+      characterStore.createCharacter(payload, () => nav('/character/list'))
+    }
   }
 
   return (
@@ -78,6 +94,7 @@ const CreateCharacter: Component = () => {
           label="Character Name"
           helperText="The name of your character."
           placeholder=""
+          value={state.edit?.name}
         />
 
         <FileInput
@@ -91,6 +108,7 @@ const CreateCharacter: Component = () => {
           fieldName="scenario"
           label="Scenario"
           helperText="The current circumstances and context of the conversation and the characters."
+          value={state.edit?.scenario}
         />
 
         <TextInput
@@ -98,14 +116,15 @@ const CreateCharacter: Component = () => {
           fieldName="greeting"
           label="Greeting"
           helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
+          value={state.edit?.greeting}
         />
 
         <div>
           <FormLabel label="Persona Schema" helperText="Format to use for the character's format" />
-          <RadioGroup name="kind" horizontal options={options} />
+          <RadioGroup name="kind" horizontal options={options} value={state.edit?.persona.kind} />
         </div>
 
-        <PersonaAttributes show={true} />
+        <PersonaAttributes value={state.edit?.persona.attributes} />
 
         <TextInput
           isMultiline
@@ -118,6 +137,7 @@ const CreateCharacter: Component = () => {
             </span>
           }
           placeholder="You: Hello\n{{char}}: *smiles* Hello!"
+          value={state.edit?.sampleChat}
         />
 
         <div class="flex justify-end gap-2">
@@ -127,7 +147,7 @@ const CreateCharacter: Component = () => {
           </Button>
           <Button type="submit">
             <Save />
-            Create
+            {editId ? 'Update' : 'Create'}
           </Button>
         </div>
       </form>
@@ -135,90 +155,4 @@ const CreateCharacter: Component = () => {
   )
 }
 
-type Attr = { id: number; key: string; values: string }
-
-let attrId = 0
-const PersonaAttributes: Component<{ show: boolean }> = (props) => {
-  const [attrs, setAttrs] = createSignal<Attr[]>([
-    { id: ++attrId, key: 'species', values: 'human' },
-  ])
-
-  const add = () => setAttrs((prev) => [...prev, { id: ++attrId, key: '', values: '' }])
-
-  return (
-    <Show when={props.show}>
-      <FormLabel
-        label="Persona Attributes"
-        helperText={
-          <span>
-            The attributes of your persona. See the link at the top of the page for more
-            information.
-            <br />
-            It is highly recommended to always include the attributes <b>mind</b> and{' '}
-            <b>personality</b>.<br />
-            Example attributes: mind, personality, gender, appearance, likes, dislikes.
-          </span>
-        }
-      />
-      <div>
-        <Button onClick={add}>
-          <Plus />
-          Add Attribute
-        </Button>
-      </div>
-      <div class="flex w-full flex-col gap-2">
-        <For each={attrs()}>{(attr) => <Attribute attr={attr} />}</For>
-      </div>
-    </Show>
-  )
-}
-
-const Attribute: Component<{ attr: Attr }> = (props) => {
-  return (
-    <div class="flex w-full gap-2">
-      <div class="w-3/12">
-        <TextInput
-          fieldName={`attr-key.${props.attr.id}`}
-          placeholder="Name. E.g. appearance"
-          value={props.attr.key}
-        />
-      </div>
-      <div class="w-9/12">
-        <TextInput
-          fieldName={`attr-value.${props.attr.id}`}
-          placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
-          value={props.attr.values}
-        />
-      </div>
-    </div>
-  )
-}
-
 export default CreateCharacter
-
-function getAttributeMap(entries: Array<[string, string]>) {
-  const map: any = {}
-  for (const [key, value] of entries) {
-    if (key.startsWith('attr-key')) {
-      const id = key.replace('attr-key.', '')
-      if (!map[id]) map[id] = {}
-      map[id].key = value
-    }
-
-    if (key.startsWith('attr-value')) {
-      const id = key.replace('attr-value.', '')
-      if (!map[id]) map[id] = {}
-      map[id].values = value
-        .split(',')
-        .map((i) => i.trim())
-        .filter((i) => !!i)
-    }
-  }
-
-  const values = Object.values(map).reduce<Record<string, string[]>>((prev: any, curr: any) => {
-    if (!curr.values || !curr.values.length) return prev
-    prev[curr.key] = curr.values
-    return prev
-  }, {})
-  return values
-}

@@ -1,7 +1,7 @@
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { Download, Edit, Import, Plus, Trash } from 'lucide-solid'
+import { Copy, Download, Edit, Import, Plus, Trash } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
 import { chatStore } from '../../store'
 import { A } from '@solidjs/router'
@@ -73,7 +73,13 @@ const Character: Component<{ character: AppSchema.Character; delete: () => void 
         >
           <Download class="cursor-pointer text-white/25 hover:text-white" />
         </a>
-        <Edit class="cursor-pointer text-white/25 hover:text-white" />
+        <A href={`/character/${props.character._id}/edit`}>
+          <Edit class="cursor-pointer text-white/25 hover:text-white" />
+        </A>
+
+        <A href={`/character/create/${props.character._id}`}>
+          <Copy class="cursor-pointer text-white/25 hover:text-white" />
+        </A>
 
         <Trash class="cursor-pointer text-white/25 hover:text-white" onClick={props.delete} />
       </div>

@@ -31,7 +31,11 @@ export async function updateCharacter(
     'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario'
   >
 ) {
-  await chars.updateOne({ _id: id }, { $set: { ...char, updatedAt: now() } })
+  const edit = { ...char }
+  if (edit.avatar === undefined) {
+    delete edit.avatar
+  }
+  await chars.updateOne({ _id: id }, { $set: { ...edit, updatedAt: now() } })
   return getCharacter(id)
 }
 

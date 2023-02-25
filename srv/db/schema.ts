@@ -41,12 +41,10 @@ export namespace AppSchema {
   }
 
   /** Description of the character */
-  export type CharacterPersona =
-    | { kind: 'text'; text: string }
-    | {
-        kind: 'json' | 'wpp' | 'sbf' | 'boostyle'
-        attributes: { [key: string]: string[] }
-      }
+  export type CharacterPersona = {
+    kind: 'json' | 'wpp' | 'sbf' | 'boostyle'
+    attributes: { [key: string]: string[] }
+  }
 
   export interface Character {
     _id: string

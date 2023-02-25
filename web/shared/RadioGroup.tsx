@@ -8,9 +8,12 @@ export interface RadioOption {
   isChecked?: boolean
 }
 
-const RadioGroup: Component<{ name: string; options: RadioOption[]; horizontal?: boolean }> = (
-  props
-) => (
+const RadioGroup: Component<{
+  name: string
+  options: RadioOption[]
+  horizontal?: boolean
+  value?: string
+}> = (props) => (
   <div class={`flex ${props.horizontal ? 'flex-row gap-4' : 'flex-col'}`}>
     <For each={props.options}>
       {(option) => (
@@ -22,7 +25,7 @@ const RadioGroup: Component<{ name: string; options: RadioOption[]; horizontal?:
             type="radio"
             name={props.name}
             id={option.id}
-            checked={option.isChecked}
+            checked={option.isChecked || props.value === option.id}
             value={option.id}
           />
           <label class="form-check-label inline-block cursor-pointer" for={option.id}>

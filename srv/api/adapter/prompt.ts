@@ -38,8 +38,6 @@ export function createPrompt({ chat, char, history, message }: PromptOpts) {
 }
 
 export function formatCharacter(name: string, persona: AppSchema.CharacterPersona) {
-  if (persona.kind === 'text') return persona.text
-
   switch (persona.kind) {
     case 'wpp': {
       const attrs = Object.entries(persona.attributes)
