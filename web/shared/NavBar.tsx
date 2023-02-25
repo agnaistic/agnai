@@ -26,13 +26,13 @@ const NavBar: Component = () => (
         <MessageCircle />
       </A>
 
-      <A
+      {/* <A
         aria-label="Generation Settings"
         class="focusable-icon-button rounded p-1"
         href="/generation-settings"
       >
         <Sliders />
-      </A>
+      </A> */}
 
       <A aria-label="Settings" class="focusable-icon-button rounded p-1" href="/settings">
         <Settings />

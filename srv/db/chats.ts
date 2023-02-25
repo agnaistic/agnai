@@ -88,18 +88,24 @@ export async function create(
   return doc
 }
 
+export type NewMessage = {
+  chatId: string
+  message: string
+  characterId?: string
+  senderId?: string
+}
+
 export async function createChatMessage(
-  chatId: string,
-  message: string,
-  characterId?: string,
+  { chatId, message, characterId, senderId }: NewMessage,
   ephemeral?: boolean
 ) {
   const doc: AppSchema.ChatMessage = {
     _id: v4(),
     kind: 'chat-message',
     rating: 'none',
-    characterId,
     chatId,
+    characterId,
+    userId: senderId,
     msg: message,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

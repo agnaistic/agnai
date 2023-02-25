@@ -23,7 +23,11 @@ export const generateMessage = handle(async ({ userId, params, body }, res) => {
   assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?', retry: 'boolean?' }, body)
 
   if (!body.retry) {
-    const userMsg = await store.chats.createChatMessage(id, body.message)
+    const userMsg = await store.chats.createChatMessage({
+      chatId: id,
+      message: body.message,
+      senderId: userId!,
+    })
     res.write(JSON.stringify(userMsg))
   }
 
@@ -40,9 +44,7 @@ export const generateMessage = handle(async ({ userId, params, body }, res) => {
   if (!response) return
 
   const msg = await store.chats.createChatMessage(
-    id,
-    response.generated,
-    response.chat.characterId,
+    { chatId: id, message: response.generated, characterId: response.chat.characterId },
     body.ephemeral
   )
   res.write(JSON.stringify(msg))
