@@ -58,7 +58,7 @@ const Chats: Component = () => {
             onClick={() => nav(`/chat/${chat._id}`)}
           >
             <div class="w-6/12 px-4">{chat.name || 'Untitled'}</div>
-            <div class="flex w-2/12 justify-center">{chat.messageCount || 0}</div>
+            <div class="flex w-2/12 justify-center"></div>
             <div class="flex w-4/12 justify-center">{toDuration(new Date(chat.updatedAt))} ago</div>
           </div>
         )}

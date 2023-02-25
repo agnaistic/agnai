@@ -1,7 +1,7 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
-import { handle, StatusError } from '../handle'
+import { handle } from '../handle'
 
 export const createChat = handle(async ({ body }) => {
   assertValid(
@@ -21,10 +21,12 @@ export const createChat = handle(async ({ body }) => {
 
 export const generateMessage = handle(async ({ params, body }, res) => {
   const id = params.id
-  assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?' }, body)
+  assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?', retry: 'boolean?' }, body)
 
-  const userMsg = await store.chats.createChatMessage(id, body.message)
-  res.write(JSON.stringify(userMsg))
+  if (!body.retry) {
+    const userMsg = await store.chats.createChatMessage(id, body.message)
+    res.write(JSON.stringify(userMsg))
+  }
 
   const response = await streamResponse(
     {

@@ -60,7 +60,17 @@ export const msgStore = createStore<MsgStore>('messages', {
 
       yield { msgs: get().msgs.concat({ ...replace, msg: current }), partial: undefined }
     },
-    async *send({ msgs }, chatId: string, message: string) {
+    async *resend({ msgs }, chatId: string, msgId: string) {
+      const msgIndex = msgs.findIndex((m) => m._id === msgId)
+      const msg = msgs[msgIndex]
+
+      if (msgIndex === -1) {
+        return toastStore.error('Cannot resend message: Message not found')
+      }
+
+      msgStore.send(chatId, msg.msg, true)
+    },
+    async *send({ msgs }, chatId: string, message: string, retry?: boolean) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -71,7 +81,7 @@ export const msgStore = createStore<MsgStore>('messages', {
 
       const stream = await api.streamPost<string | AppSchema.ChatMessage>(
         `/chat/${chatId}/message`,
-        { message, history: msgs.slice(-20) }
+        { message, history: msgs.slice(-20), retry }
       )
 
       let current = ''

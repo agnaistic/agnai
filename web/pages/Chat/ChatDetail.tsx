@@ -64,7 +64,7 @@ const ChatDetail: Component = () => {
                       msg={msg}
                       chat={chats.chat}
                       char={chats.character}
-                      last={i() >= 2 && i() === msgs.msgs.length - 1}
+                      last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                     />
                   )}

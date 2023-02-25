@@ -74,6 +74,13 @@ const Message: Component<{
                   onClick={() => msgStore.retry(props.msg.chatId)}
                 />
               </Show>
+              <Show when={props.last && !props.msg.characterId}>
+                <RefreshCw
+                  size={16}
+                  class="cursor-pointer"
+                  onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
+                />
+              </Show>
               <Pencil
                 size={16}
                 class="cursor-pointer text-white/20 hover:text-white"
