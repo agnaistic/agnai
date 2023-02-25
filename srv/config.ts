@@ -12,7 +12,7 @@ export const config = {
   kobold: {
     maxLength: +env('KOBOLD_MAX_LENGTH', '64'),
   },
-  noRequestLogs: !!env('DISABLE_REQUEST_LOGGING', '1'),
+  noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
   chai: {
     url: env('CHAI_URL', ''),
     uid: env('CHAI_UID', 'empty'),

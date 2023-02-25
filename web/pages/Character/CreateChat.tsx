@@ -1,13 +1,18 @@
 import { useNavigate } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
 import { Component } from 'solid-js'
+import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Modal, { ModalFooter } from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
 
-const CreateChatModal: Component<{ show: boolean; onClose: () => void }> = (props) => {
+const CreateChatModal: Component<{
+  show: boolean
+  onClose: () => void
+  char?: AppSchema.Character
+}> = (props) => {
   const state = chatStore()
   const nav = useNavigate()
 

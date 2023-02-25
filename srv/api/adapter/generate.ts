@@ -22,7 +22,7 @@ export async function generateResponse(
   }
 
   const members = await store.users.getProfiles(opts.chat.userId, opts.chat.memberIds)
-  const sender = members.find((mem) => mem._id === opts.senderId)
+  const sender = members.find((mem) => mem.userId === opts.senderId)
   if (!sender) {
     throw new StatusError('Sender not found in chat members', 400)
   }

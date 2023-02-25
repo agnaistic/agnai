@@ -52,7 +52,7 @@ const Settings: Component = () => {
           <TextInput
             fieldName="novelApiKey"
             label="Novel API Key"
-            helperText="The token from the NovelAI request authorization headers"
+            helperText="NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization headers"
             placeholder="..."
             value={state.user?.novelApiKey}
           />

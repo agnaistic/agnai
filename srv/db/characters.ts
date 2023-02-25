@@ -42,7 +42,7 @@ export async function updateCharacter(
   return getCharacter(id, userId)
 }
 
-export async function getCharacter(id: string, userId: string) {
+export async function getCharacter(userId: string, id: string) {
   const char = await chars.findOne({ _id: id, userId })
   return char
 }
