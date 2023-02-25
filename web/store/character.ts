@@ -15,7 +15,7 @@ export type NewCharacter = {
   greeting: string
   scenario: string
   sampleChat: string
-  avatar?: string
+  avatar?: File
   persona: AppSchema.CharacterPersona
 }
 
@@ -30,8 +30,19 @@ export const characterStore = createStore<CharacterState>('character', {
         return { characters: { list: res.result.characters, loaded: true } }
       }
     },
-    createCharacter: async ({ characters }, char: NewCharacter, onSuccess?: () => void) => {
-      const res = await api.post<AppSchema.Character>('/character', char)
+    createCharacter: async (_, char: NewCharacter, onSuccess?: () => void) => {
+      const form = new FormData()
+      form.append('name', char.name)
+      form.append('greeting', char.greeting)
+      form.append('scenario', char.scenario)
+      form.append('persona', JSON.stringify(char.persona))
+      form.append('sampleChat', char.sampleChat)
+      if (char.avatar) {
+        form.append('avatar', char.avatar)
+      }
+
+      const res = await api.upload(`/character`, form)
+
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
         toastStore.success(`Successfully created character`)

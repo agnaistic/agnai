@@ -6,7 +6,7 @@ import { StatusError } from './api/handle'
 
 const app = express()
 
-app.use(express.json({ limit: '100mb' }))
+app.use(express.json({ limit: '2mb' }), express.urlencoded({ extended: true }))
 app.use(cors())
 app.use(logMiddleware())
 app.use('/api', api)

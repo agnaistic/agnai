@@ -1,7 +1,10 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
+import { v4 } from 'uuid'
 import { store } from '../db'
+import { logger } from '../logger'
 import { handle, StatusError } from './handle'
+import { handleUpload } from './upload'
 
 const router = Router()
 
@@ -17,15 +20,21 @@ const valid = {
   },
 } as const
 
-const createCharacter = handle(async ({ body }) => {
-  assertValid(valid, body)
+const createCharacter = handle(async (req) => {
+  const body = await handleUpload(req, { ...valid, persona: 'string' })
+  const persona = JSON.parse(body.persona)
+  logger.warn({ body, persona }, 'Creating')
+  assertValid(valid.persona, persona)
+
+  const [file] = body.attachments
+  const avatar = file ? file.filename : undefined
 
   const char = await store.characters.createCharacter({
     name: body.name,
-    persona: body.persona,
+    persona,
     sampleChat: body.sampleChat,
     scenario: body.scenario,
-    avatar: body.avatar,
+    avatar,
     greeting: body.greeting,
   })
 

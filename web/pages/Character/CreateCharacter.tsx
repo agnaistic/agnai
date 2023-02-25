@@ -18,12 +18,13 @@ const options = [
 ]
 
 const CreateCharacter: Component = () => {
-  const [avatar, setAvatar] = createSignal<string | undefined>(undefined)
+  const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
   const nav = useNavigate()
 
   const updateFile = (files: FileInputResult[]) => {
-    if (!files.length) setAvatar()
-    else setAvatar(files[0].content)
+    if (!files.length) return setAvatar()
+    const file = files[0].file
+    setAvatar(() => file)
   }
 
   const onSubmit = (ev: Event) => {

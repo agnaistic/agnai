@@ -4,6 +4,8 @@ import { writeFile } from 'fs/promises'
 import { extname, resolve } from 'path'
 import { createReadStream, mkdirSync, readdirSync } from 'fs'
 import { v4 } from 'uuid'
+import { assertValid, Validator } from 'frisker'
+import { logger } from '../logger'
 
 export type Attachment = {
   field: string
@@ -12,7 +14,7 @@ export type Attachment = {
   type: string
 }
 
-export function handleUpload<T = {}>(req: Request) {
+export function handleUpload<T extends Validator>(req: Request, type: T) {
   const form = new mp.Form()
 
   const obj: any = {}
@@ -45,7 +47,12 @@ export function handleUpload<T = {}>(req: Request) {
         const data = Buffer.concat(chunks)
         const id = `${new Date().toISOString()}_${v4().slice(0, 7)}.${ext}`.split(':').join('-')
 
-        attachments.push({ field: part.name, filename: id, type, original: filename })
+        attachments.push({
+          field: part.name,
+          filename: `/assets/${id}`,
+          type,
+          original: filename,
+        })
         jobs.push(saveFile(id, data))
         part.resume()
       })
@@ -54,7 +61,12 @@ export function handleUpload<T = {}>(req: Request) {
     form.on('close', async () => {
       try {
         await Promise.all(jobs)
-        resolve({ ...obj, attachments })
+        try {
+          assertValid(type, obj)
+        } catch (ex) {
+          return reject(ex)
+        }
+        resolve({ ...obj, attachments } as any)
       } catch (ex) {
         reject(ex)
       }

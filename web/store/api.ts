@@ -7,15 +7,26 @@ export const api = {
   get,
   post,
   method,
+  upload,
   streamGet,
   streamPost,
 }
 
 type Query = { [key: string]: string | number }
 
-async function method<T = any>(method: 'get' | 'post' | 'delete' | 'put', path: string, body = {}) {
+async function method<T = any>(
+  method: 'get' | 'post' | 'delete' | 'put',
+  path: string,
+  body = {},
+  opts?: RequestInit
+) {
+  if (method === 'get') {
+    return get<T>(path, body)
+  }
+
   return callApi<T>(path, {
     method,
+    ...opts,
     body: JSON.stringify(body),
   })
 }
@@ -34,6 +45,14 @@ async function post<T = any>(path: string, body = {}) {
   return callApi<T>(path, {
     method: 'post',
     body: JSON.stringify(body),
+  })
+}
+
+async function upload<T = any>(path: string, form: FormData) {
+  return callApi<T>(path, {
+    method: 'post',
+    body: form,
+    headers: undefined,
   })
 }
 
@@ -58,8 +77,8 @@ async function callApi<T = any>(
 ): Promise<{ result: T | undefined; status: number; error?: string }> {
   const prefix = path.startsWith('/') ? '/api' : '/api'
   const res = await fetch(`${baseUrl}${prefix}${path}`, {
-    ...opts,
     ...headers(),
+    ...opts,
   })
 
   const json = await res.json()

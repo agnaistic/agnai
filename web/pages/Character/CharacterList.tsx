@@ -68,9 +68,7 @@ const Character: Component<{ character: AppSchema.Character; delete: () => void 
       </A>
       <div class="flex w-2/12 flex-row justify-center gap-2">
         <a
-          href={`data:text/json:charset=utf-8,${encodeURIComponent(
-            JSON.stringify({ ...props.character, avatar: undefined }, null, 2)
-          )}`}
+          href={`data:text/json:charset=utf-8,${encodeURIComponent(charToJson(props.character))}`}
           download={`${props.character.name}.json`}
         >
           <Download class="cursor-pointer text-white/25 hover:text-white" />
@@ -81,6 +79,11 @@ const Character: Component<{ character: AppSchema.Character; delete: () => void 
       </div>
     </div>
   )
+}
+
+function charToJson(char: AppSchema.Character) {
+  const { _id, updatedAt, createdAt, kind, avatar, ...json } = char
+  return JSON.stringify(json, null, 2)
 }
 
 const NoCharacters: Component = () => (
