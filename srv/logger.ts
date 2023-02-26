@@ -48,15 +48,14 @@ export function logMiddleware() {
 
     req.log = log
 
-    const isOptions = req.method === 'OPTIONS'
-    if (!isOptions && !config.noRequestLogs) req.log.info('start request')
+    const canLog = req.method !== 'OPTIONS' && req.url.startsWith('/api') && !config.noRequestLogs
+    if (canLog) req.log.info('start request')
 
     const start = Date.now()
 
     res.on('finish', () => {
       const duration = Date.now() - start
-      if (!isOptions && !config.noRequestLogs)
-        req.log.info({ duration, statusCode: res.statusCode }, 'end request')
+      if (canLog) req.log.info({ duration, statusCode: res.statusCode }, 'end request')
     })
 
     next()

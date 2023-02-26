@@ -19,6 +19,8 @@ If you're only looking to run AgnAI without contributing:
 3. From inside the project folder in your terminal/console:
    - `npm install`
    - `npm start`
+4. If you wish to run a public facing version:
+   - `npm run start:public`
 
 ## Design Goals
 
@@ -53,6 +55,9 @@ If you have Node and `pnpm` installed and working, you can start the development
 
 # Start the frontend, backend, and python service
 > pnpm start
+
+# Start the public facing version:
+> pnpm start:public
 ```
 
 ### Format and Type Checking

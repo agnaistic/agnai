@@ -5,6 +5,9 @@
   "description": "Agnostic AI Chat",
   "scripts": {
     "start": "NODE_ENV=dev concurrently -c auto -n web,api,mod \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\"",
+    "start:public": "NODE_ENV=dev concurrently -c auto -n web,api,mod \"parcel watch web/index.html --no-cache\" \"npm run public:watch\" \"npm run model:watch\"",
+    "public": "node -r @swc-node/register public.ts",
+    "public:watch": "nodemon -e ts --watch public.ts --watch srv --exec \"node -r @swc-node/register public.ts\"",
     "server": "node --inspect -r @swc-node/register srv/start.ts",
     "server:watch": "nodemon -e ts --watch srv --exec \"node -r @swc-node/register --inspect srv/start.ts\"",
     "model": "python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
@@ -40,6 +43,7 @@
     "gpt-3-encoder": "^1.1.4",
     "js-cookie": "^3.0.1",
     "jsonwebtoken": "^9.0.0",
+    "localtunnel": "^2.0.2",
     "lucide-solid": "0.105.0-alpha.9",
     "multiparty": "^4.2.3",
     "nedb-promises": "^6.2.1",

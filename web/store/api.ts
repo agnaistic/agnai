@@ -1,7 +1,9 @@
 import Cookies from 'js-cookie'
-import { toastStore } from './toasts'
 
-const baseUrl = `http://${location.hostname}:3001`
+const baseUrl =
+  location.port === '1234' || location.port === '3001'
+    ? `http://${location.hostname}:3001`
+    : location.origin
 
 export const api = {
   get,
