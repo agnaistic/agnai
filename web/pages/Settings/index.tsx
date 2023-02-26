@@ -1,4 +1,4 @@
-import { Component, createEffect } from 'solid-js'
+import { Component, createEffect, createSignal } from 'solid-js'
 import { Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -7,6 +7,7 @@ import { getStrictForm } from '../../shared/util'
 import Dropdown from '../../shared/Dropdown'
 import { ADAPTERS, ChatAdapter } from '../../../common/adapters'
 import { userStore } from '../../store'
+import Divider from '../../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
@@ -14,6 +15,7 @@ const adapterOptions = ADAPTERS.filter((adp) => adp !== 'default') as DefaultAda
 
 const Settings: Component = () => {
   const state = userStore()
+  const [novel, setNovel] = createSignal(false)
 
   createEffect(() => {
     // Always reload settings when entering this page
@@ -34,7 +36,7 @@ const Settings: Component = () => {
     <>
       <PageHeader title="Settings" subtitle="Configuration" />
       <form onSubmit={onSubmit}>
-        <div class="flex flex-col gap-8">
+        <div class="flex flex-col gap-4">
           <Dropdown
             fieldName="defaultAdapter"
             label="Default AI Adapter"
@@ -46,17 +48,11 @@ const Settings: Component = () => {
             fieldName="koboldUrl"
             label="Kobold URL"
             helperText="Fully qualified URL for Kobold"
-            placeholder={'http://localhost:5000'}
+            placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
             value={state.user?.koboldUrl}
           />
-          <TextInput
-            fieldName="novelApiKey"
-            label="Novel API Key"
-            type="password"
-            helperText="NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization headers"
-            placeholder="..."
-            value={state.user?.novelApiKey}
-          />
+          <Divider />
+          <h3 class="text-xl">NovelAI settings</h3>
           <Dropdown
             fieldName="novelModel"
             label="NovelAI Model"
@@ -65,6 +61,27 @@ const Settings: Component = () => {
               { label: 'Krake', value: 'krake-v2' },
             ]}
             value={state.user?.novelModel}
+          />
+          <TextInput
+            fieldName="novelApiKey"
+            label="Novel API Key"
+            type="password"
+            helperText={
+              <>
+                NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization
+                headers.{' '}
+                <a
+                  class="text-purple-500"
+                  target="_blank"
+                  href="https://github.com/sceuick/agn-ai/blob/dev/instructions/novel.md"
+                >
+                  Instructions
+                </a>
+                .
+              </>
+            }
+            placeholder="..."
+            value={state.user?.novelApiKey}
           />
         </div>
         <div class="flex justify-end gap-2 pt-4">

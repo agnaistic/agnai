@@ -5,7 +5,7 @@
   "description": "Agnostic AI Chat",
   "scripts": {
     "start": "NODE_ENV=dev concurrently -c auto -n web,api,mod \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\"",
-    "start:public": "NODE_ENV=dev concurrently -c auto -n web,api,mod,lt \"parcel watch web/index.html --no-cache\" \"npm run public:watch\" \"npm run model:watch\" \"npx lt --port 3001\"",
+    "start:public": "NODE_ENV=dev concurrently -c auto -n web,api,mod,lt \"parcel watch web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\" \"npx lt --port 3001\"",
     "public": "node -r @swc-node/register public.ts",
     "public:watch": "nodemon -e ts --watch public.ts --watch srv --exec \"node -r @swc-node/register public.ts\"",
     "server": "node --inspect -r @swc-node/register srv/start.ts",
