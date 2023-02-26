@@ -2,8 +2,10 @@ import { Router } from 'express'
 import { assertValid } from 'frisker'
 import { ADAPTERS } from '../../common/adapters'
 import { store } from '../db'
+import { AppSchema } from '../db/schema'
 import { loggedIn } from './auth'
 import { handle, StatusError } from './handle'
+import { handleUpload } from './upload'
 
 const router = Router()
 
@@ -55,14 +57,16 @@ const updateConfig = handle(async ({ userId, body }) => {
   return user
 })
 
-const updateProfile = handle(async ({ userId, body }) => {
-  assertValid({ handle: 'string', avatar: 'string?' }, body)
+const updateProfile = handle(async (req) => {
+  const form = await handleUpload(req, { handle: 'string' })
+  const [file] = form.attachments
 
-  const profile = await store.users.updateProfile(userId!, {
-    avatar: body.avatar,
-    handle: body.handle,
-  })
+  const update: Partial<AppSchema.Profile> = { handle: form.handle }
+  if (file) {
+    update.avatar = file.filename
+  }
 
+  const profile = await store.users.updateProfile(req.userId!, update)
   return profile
 })
 

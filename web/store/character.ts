@@ -23,6 +23,9 @@ export const characterStore = createStore<CharacterState>('character', {
   characters: { loaded: false, list: [] },
 })((get, set) => {
   return {
+    logout() {
+      return { characters: { loaded: false, list: [] } }
+    },
     getCharacters: async () => {
       const res = await api.get('/character')
       if (res.error) toastStore.error('Failed to retrieve characters')

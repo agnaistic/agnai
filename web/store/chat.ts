@@ -29,6 +29,17 @@ export const chatStore = createStore<ChatState>('chat', {
   memberIds: {},
 })((get, set) => {
   return {
+    logout() {
+      return {
+        lastChatId: null,
+        loaded: false,
+        list: [],
+        character: undefined,
+        active: undefined,
+        activeMembers: [],
+        memberIds: {},
+      }
+    },
     async getChat(_, id: string) {
       const res = await api.get<{
         chat: AppSchema.Chat

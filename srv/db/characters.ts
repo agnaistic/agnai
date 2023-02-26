@@ -38,12 +38,15 @@ export async function updateCharacter(
   if (edit.avatar === undefined) {
     delete edit.avatar
   }
-  await chars.updateOne({ _id: id, userId }, { $set: { ...edit, updatedAt: now() } })
+  await chars.updateOne(
+    { _id: id, userId, kind: 'character' },
+    { $set: { ...edit, updatedAt: now() } }
+  )
   return getCharacter(id, userId)
 }
 
 export async function getCharacter(userId: string, id: string) {
-  const char = await chars.findOne({ _id: id, userId })
+  const char = await chars.findOne({ kind: 'character', _id: id, userId })
   return char
 }
 
@@ -53,5 +56,5 @@ export async function getCharacters(userId: string) {
 }
 
 export async function deleteCharacter(charId: string, userId: string) {
-  await chars.removeOne({ _id: charId, userId }, {})
+  await chars.removeOne({ _id: charId, userId, kind: 'character' }, {})
 }

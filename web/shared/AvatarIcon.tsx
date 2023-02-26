@@ -1,11 +1,16 @@
-import { Component } from 'solid-js'
+import { Component, Show } from 'solid-js'
 
-const AvatarIcon: Component<{ avatarUrl?: string }> = (props) => {
-  if (props.avatarUrl) {
-    return <img class="mx-2 h-8 w-8 rounded-full" src={props.avatarUrl} />
-  }
-
-  return <div class="w- mx-2 h-8 w-8 rounded-full bg-slate-700"></div>
+const AvatarIcon: Component<{ avatarUrl?: string; class?: string }> = (props) => {
+  return (
+    <>
+      <Show when={props.avatarUrl}>
+        <img class={`mx-2 h-8 w-8 rounded-full ${props.class || ''}`} src={props.avatarUrl} />
+      </Show>
+      <Show when={!props.avatarUrl}>
+        <div class={`w- mx-2 h-8 w-8 rounded-full bg-slate-700 ${props.class || ''}`}></div>
+      </Show>
+    </>
+  )
 }
 
 export default AvatarIcon

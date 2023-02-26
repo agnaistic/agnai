@@ -1,11 +1,13 @@
 import { LogOut, MessageCircle, Settings, Sliders, User, Users, Zap } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import { userStore } from '../store'
+import { characterStore, chatStore, userStore } from '../store'
 
 const NavBar: Component = () => {
   const logout = () => {
     userStore.logout()
+    chatStore.logout()
+    characterStore.logout()
   }
 
   return (

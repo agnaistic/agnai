@@ -60,6 +60,14 @@ If you have Node and `pnpm` installed and working, you can start the development
 > pnpm start:public
 ```
 
+### Developer Tooling
+
+- Redux Dev Tools
+  - The front-end application state is wired up to the Redux Dev Tools chrome extension.
+- NodeJS debugger
+  - The `start` script launchs the NodeJS API using the `--inspect` flag
+  - Go to the url `chrome://inspect` to use the debugger
+
 ### Format and Type Checking
 
 The project uses ESLint for linting, Prettier for enforcing code style and TypeScript to check for type errors. When opening a PR, please make sure you're not introducing any new errors in any of these checks by running:

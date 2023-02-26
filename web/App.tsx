@@ -3,13 +3,13 @@ import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
-import HomePage from './pages/Home'
 import GenerationSettings from './pages/GenerationSettings'
 import Settings from './pages/Settings'
 import ChatDetail from './pages/Chat/ChatDetail'
 import CharacterList from './pages/Character/CharacterList'
 import { userStore } from './store'
 import LoginPage from './pages/Login'
+import ProfilePage from './pages/Profile'
 
 const App: Component = () => {
   const state = userStore()
@@ -33,6 +33,7 @@ const App: Component = () => {
               <CharacterRoutes />
               <Route path="/" component={CharacterList} />
               <Route path="/generation-settings" component={GenerationSettings} />
+              <Route path="/profile" component={ProfilePage} />
               <Route path="/settings" component={Settings} />
             </Show>
           </Routes>

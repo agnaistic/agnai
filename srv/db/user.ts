@@ -19,7 +19,7 @@ export type NewUser = {
 }
 
 export async function ensureInitialUser() {
-  const user = await users.findOne({ username: config.init.username })
+  const user = await users.findOne({ kind: 'user', username: config.init.username })
   if (user) return
 
   await createUser(
@@ -35,33 +35,33 @@ export async function ensureInitialUser() {
 }
 
 export async function getProfile(userId: string) {
-  const profile = await profiles.findOne({ userId })
+  const profile = await profiles.findOne({ kind: 'profile', userId })
   return profile
 }
 
 export async function getUser(userId: string) {
-  const user = await users.findOne({ _id: userId }, { hash: 0 })
+  const user = await users.findOne({ _id: userId, kind: 'user' }, { hash: 0 })
   return user
 }
 
 export async function updateUser(userId: string, props: Partial<AppSchema.User>) {
-  await users.updateOne({ _id: userId }, { $set: props })
+  await users.updateOne({ _id: userId, kind: 'user' }, { $set: props })
   return getUser(userId)
 }
 
 export async function updateProfile(userId: string, props: Partial<AppSchema.Profile>) {
-  await users.updateOne({ userId }, { $set: props })
+  await users.updateOne({ kind: 'profile', userId }, { $set: props })
   return getProfile(userId)
 }
 
 export async function authenticate(username: string, password: string) {
-  const user = await users.findOne({ username: username.toLowerCase() })
+  const user = await users.findOne({ kind: 'user', username: username.toLowerCase() })
   if (!user) return
 
   const match = await bcrypt.compare(password, user.hash)
   if (!match) return
 
-  const profile = await profiles.findOne({ userId: user._id })
+  const profile = await profiles.findOne({ kind: 'profile', userId: user._id })
   if (!profile) return
 
   const token = await createAccessToken(username, user)
