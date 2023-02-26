@@ -2,8 +2,8 @@ import express from 'express'
 import cors from 'cors'
 import { logMiddleware } from './logger'
 import api from './api'
-import { AppRequest, errors, StatusError } from './api/handle'
-import { extname, resolve } from 'path'
+import { AppRequest, errors } from './api/handle'
+import { resolve } from 'path'
 
 const app = express()
 const index = resolve(process.cwd(), 'dist', 'index.html')
