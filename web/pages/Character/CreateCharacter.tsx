@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -10,6 +10,7 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import { characterStore } from '../../store'
 import { useNavigate, useParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from './PersonaAttributes'
+import AvatarIcon from '../../shared/AvatarIcon'
 
 const options = [
   { id: 'wpp', label: 'W++', isChecked: true },
@@ -97,12 +98,20 @@ const CreateCharacter: Component = () => {
           value={state.edit?.name}
         />
 
-        <FileInput
-          fieldName="avatar"
-          label="Avatar"
-          accept="image/png,image/jpeg"
-          onUpdate={updateFile}
-        />
+        <div class="flex w-full">
+          <Show when={state.edit}>
+            <div class="flex items-center">
+              <AvatarIcon avatarUrl={state.edit?.avatar} />
+            </div>
+          </Show>
+          <FileInput
+            class="w-full"
+            fieldName="avatar"
+            label="Avatar"
+            accept="image/png,image/jpeg"
+            onUpdate={updateFile}
+          />
+        </div>
 
         <TextInput
           fieldName="scenario"

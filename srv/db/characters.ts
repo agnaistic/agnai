@@ -34,15 +34,12 @@ export async function updateCharacter(
     'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario'
   >
 ) {
-  const edit = { ...char }
+  const edit = { ...char, updatedAt: now() }
   if (edit.avatar === undefined) {
     delete edit.avatar
   }
-  await chars.updateOne(
-    { _id: id, userId, kind: 'character' },
-    { $set: { ...edit, updatedAt: now() } }
-  )
-  return getCharacter(id, userId)
+  await chars.updateOne({ _id: id, userId, kind: 'character' }, { $set: edit })
+  return getCharacter(userId, id)
 }
 
 export async function getCharacter(userId: string, id: string) {

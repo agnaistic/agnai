@@ -5,6 +5,7 @@ export type FileInputResult = { file: File; content: string }
 
 const FileInput: Component<{
   ref?: any
+  class?: string
   fieldName: string
   required?: boolean
   label?: string
@@ -23,7 +24,7 @@ const FileInput: Component<{
   }
 
   return (
-    <div>
+    <div class="w-full">
       <FormLabel fieldName={props.fieldName} label={props.label} helperText={props.helperText} />
       <input
         ref={props.ref}
@@ -31,7 +32,7 @@ const FileInput: Component<{
         name={props.fieldName}
         type="file"
         accept={props.accept}
-        class="w-full rounded-xl bg-white/5"
+        class={`w-full rounded-xl bg-white/5 ${props.class}`}
         onChange={(ev) => onFile(ev.currentTarget.files)}
       />
     </div>

@@ -21,7 +21,7 @@ const TextInput: Component<{
   )
 
   return (
-    <div>
+    <div class="w-full">
       <Show when={!!props.label}>
         <label for={props.fieldName}>
           <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>

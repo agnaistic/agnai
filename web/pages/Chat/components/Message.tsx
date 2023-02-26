@@ -16,6 +16,7 @@ const Message: Component<{
   onRemove: () => void
 }> = (props) => {
   const [edit, setEdit] = createSignal(false)
+  const members = chatStore((s) => s.memberIds)
   const cancelEdit = () => {
     setEdit(false)
   }
@@ -47,7 +48,7 @@ const Message: Component<{
         </div>
       </Show>
       <Show when={!props.msg.characterId}>
-        <div class="flex h-12 w-12 items-center justify-center rounded-full bg-gray-500">YOU</div>
+        <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} class="h-12 w-12" />
       </Show>
 
       <div class="flex w-full select-text flex-col">

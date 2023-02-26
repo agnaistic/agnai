@@ -30,6 +30,7 @@ export const chatStore = createStore<ChatState>('chat', {
 })((get, set) => {
   return {
     logout() {
+      localStorage.removeItem('lastChildId')
       return {
         lastChatId: null,
         loaded: false,
