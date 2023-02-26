@@ -1,26 +1,19 @@
-import { A } from '@solidjs/router'
-import { Component, Show } from 'solid-js'
+import { Component } from 'solid-js'
 import { ADAPTERS } from '../../../common/adapters'
+import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
 import Modal, { ModalFooter } from '../../shared/Modal'
-import PageHeader from '../../shared/PageHeader'
+import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
+import { getFormEntries, getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
 
-const ChatSettings: Component = () => {
-  const state = chatStore()
-
-  return (
-    <div>
-      <PageHeader title="Chat Settings" />
-      <div>
-        <A href={`/chat/${state.active?._id}`}>Back to Conversation</A>
-      </div>
-    </div>
-  )
-}
+const options = [
+  { value: 'wpp', label: 'W++' },
+  { value: 'boostyle', label: 'Boostyle' },
+  { value: 'sbf', label: 'SBF' },
+]
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
   const state = chatStore()
@@ -33,9 +26,17 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       greeting: 'string',
       sampleChat: 'string',
       scenario: 'string',
+      schema: ['wpp', 'boostyle', 'sbf'],
     } as const)
 
-    chatStore.editChat(state.active?._id!, body, () => {
+    const attributes = getAttributeMap(getFormEntries(ref))
+
+    const overrides: AppSchema.CharacterPersona = {
+      kind: body.schema,
+      attributes,
+    }
+
+    chatStore.editChat(state.active?._id!, { ...body, overrides }, () => {
       props.close()
     })
   }
@@ -77,6 +78,17 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           value={state.active?.sampleChat}
           label="Sample Chat"
         />
+
+        <Dropdown
+          fieldName="schema"
+          label="Persona Schema Format"
+          items={options}
+          value={state.active?.overrides.kind}
+        />
+        <div class="mt-4 flex flex-col gap-2">
+          <PersonaAttributes value={state.active?.overrides.attributes} hideLabel />
+        </div>
+
         <ModalFooter>
           <Button schema="secondary" onClick={props.close}>
             Cancel

@@ -1,8 +1,8 @@
 import { Plus } from 'lucide-solid'
 import { Component, createSignal, For, Show } from 'solid-js'
-import Button from '../../shared/Button'
-import { FormLabel } from '../../shared/FormLabel'
-import TextInput from '../../shared/TextInput'
+import Button from './Button'
+import { FormLabel } from './FormLabel'
+import TextInput from './TextInput'
 
 type Attr = { key: string; values: string }
 
@@ -12,12 +12,13 @@ const defaultAttrs = [
   { key: 'personality', values: '' },
 ]
 
-const PersonaAttributes: Component<{ value?: Record<string, string[]> }> = (props) => {
+const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel?: boolean }> = (
+  props
+) => {
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
 
   createSignal(() => {
     if (props.value) {
-      console.log(props.value)
       setAttrs(toAttrs(props.value))
     }
   }, props.value)
@@ -26,19 +27,21 @@ const PersonaAttributes: Component<{ value?: Record<string, string[]> }> = (prop
 
   return (
     <>
-      <FormLabel
-        label="Persona Attributes"
-        helperText={
-          <span>
-            The attributes of your persona. See the link at the top of the page for more
-            information.
-            <br />
-            It is highly recommended to always include the attributes <b>mind</b> and{' '}
-            <b>personality</b>.<br />
-            Example attributes: mind, personality, gender, appearance, likes, dislikes.
-          </span>
-        }
-      />
+      <Show when={!props.hideLabel}>
+        <FormLabel
+          label="Persona Attributes"
+          helperText={
+            <span>
+              The attributes of your persona. See the link at the top of the page for more
+              information.
+              <br />
+              It is highly recommended to always include the attributes <b>mind</b> and{' '}
+              <b>personality</b>.<br />
+              Example attributes: mind, personality, gender, appearance, likes, dislikes.
+            </span>
+          }
+        />
+      </Show>
       <div>
         <Button onClick={add}>
           <Plus />

@@ -73,7 +73,7 @@ export namespace AppSchema {
 
   /** Description of the character */
   export type CharacterPersona = {
-    kind: 'json' | 'wpp' | 'sbf' | 'boostyle'
+    kind: 'wpp' | 'sbf' | 'boostyle'
     attributes: { [key: string]: string[] }
   }
 

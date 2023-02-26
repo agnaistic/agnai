@@ -18,6 +18,7 @@ specifiers:
   '@types/node': ^18.13.0
   '@types/showdown': ^2.0.0
   '@types/uuid': ^9.0.0
+  '@types/ws': ^8.5.4
   '@typescript-eslint/eslint-plugin': ^5.48.1
   '@typescript-eslint/parser': ^5.48.1
   babel-preset-solid: ^1.6.9
@@ -50,6 +51,7 @@ specifiers:
   tailwindcss: ^3.2.4
   typescript: ^4.9.4
   uuid: ^9.0.0
+  ws: ^8.12.1
   zustand: ^4.3.3
 
 dependencies:
@@ -66,6 +68,7 @@ dependencies:
   '@types/nedb': 1.8.12
   '@types/needle': 3.2.0
   '@types/uuid': 9.0.0
+  '@types/ws': 8.5.4
   bcryptjs: 2.4.3
   cors: 2.8.5
   dotenv: 16.0.3
@@ -84,6 +87,7 @@ dependencies:
   showdown: 2.1.0
   solid-js: 1.6.9
   uuid: 9.0.0
+  ws: 8.12.1
   zustand: 4.3.3
 
 devDependencies:
@@ -1541,6 +1545,12 @@ packages:
 
   /@types/uuid/9.0.0:
     resolution: {integrity: sha512-kr90f+ERiQtKWMz5rP32ltJ/BtULDI5RVO0uavn1HQUOwjx0R1h0rnDYNL0CepF1zL5bSY6FISAfd9tOdDhU5Q==}
+    dev: false
+
+  /@types/ws/8.5.4:
+    resolution: {integrity: sha512-zdQDHKUgcX/zBc4GrwsE/7dVdAD8JR4EuiAXiiUhhfyIJXXb2+PrGshFyeXWQPMmmZ2XxgaqclgpIC7eTXc1mg==}
+    dependencies:
+      '@types/node': 18.13.0
     dev: false
 
   /@typescript-eslint/eslint-plugin/5.48.1_3a384ef49c2501493a837c5485de7ec0:
@@ -4620,6 +4630,19 @@ packages:
 
   /wrappy/1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
+    dev: false
+
+  /ws/8.12.1:
+    resolution: {integrity: sha512-1qo+M9Ba+xNhPB+YTWUlK6M17brTut5EXbcBaMRN5pH5dFrXz7lzz1ChFSUq3bOUl8yEvSenhHmYUNJxFzdJew==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
     dev: false
 
   /xtend/4.0.2:

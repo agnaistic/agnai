@@ -48,18 +48,6 @@ export function formatCharacter(name: string, persona: AppSchema.CharacterPerson
       return [`[character("${name}") {`, attrs, '}]'].join('\n')
     }
 
-    case 'json': {
-      return JSON.stringify(
-        {
-          type: 'character',
-          name,
-          properties: persona.attributes,
-        },
-        null,
-        2
-      )
-    }
-
     case 'sbf': {
       const attrs = Object.entries(persona.attributes).map(
         ([key, values]) => `${key}: ${values.map(quote).join(', ')}`

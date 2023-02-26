@@ -12,6 +12,10 @@ export const updateChat = handle(async ({ params, body, user }) => {
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
+      overrides: {
+        kind: ['wpp', 'sbf', 'boostyle'],
+        attributes: 'any',
+      },
     },
     body
   )

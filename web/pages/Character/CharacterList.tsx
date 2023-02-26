@@ -63,7 +63,7 @@ const Character: Component<{ character: AppSchema.Character; delete: () => void 
         class="ml-4 flex h-3/4 w-10/12 cursor-pointer items-center rounded-xl bg-gray-800"
         href={`/character/${props.character._id}/chats`}
       >
-        <AvatarIcon avatarUrl={props.character.avatar} />
+        <AvatarIcon avatarUrl={props.character.avatar} class="mx-4" />
         <div class="">{props.character.name}</div>
       </A>
       <div class="flex w-2/12 flex-row justify-center gap-2">

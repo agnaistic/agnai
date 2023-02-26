@@ -14,7 +14,7 @@ const valid = {
   greeting: 'string',
   sampleChat: 'string',
   persona: {
-    kind: ['wpp', 'sbf', 'json', 'boostyle'],
+    kind: ['wpp', 'sbf', 'boostyle'],
     attributes: 'any',
   },
 } as const

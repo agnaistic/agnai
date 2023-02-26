@@ -1,11 +1,12 @@
-import { app } from './app'
+import { setupSockets } from './api/ws'
+import { server } from './app'
 import { config } from './config'
 import { store } from './db'
 import { deleteAllChats } from './db/chats'
 import { createIndexes } from './db/client'
 import { logger } from './logger'
 
-app.listen(config.port, '0.0.0.0', async () => {
+server.listen(config.port, '0.0.0.0', async () => {
   await createIndexes()
 
   // Initialise settings if empty
@@ -13,4 +14,5 @@ app.listen(config.port, '0.0.0.0', async () => {
 
   // await deleteAllChats()
   logger.info({ port: config.port }, 'Server started')
+  setupSockets(server)
 })

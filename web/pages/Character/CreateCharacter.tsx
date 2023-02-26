@@ -9,11 +9,11 @@ import { getFormEntries, getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import { characterStore } from '../../store'
 import { useNavigate, useParams } from '@solidjs/router'
-import PersonaAttributes, { getAttributeMap } from './PersonaAttributes'
+import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 
 const options = [
-  { id: 'wpp', label: 'W++', isChecked: true },
+  { id: 'wpp', label: 'W++' },
   { id: 'boostyle', label: 'Boostyle' },
   { id: 'sbf', label: 'SBF' },
 ]

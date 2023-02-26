@@ -4,8 +4,11 @@ import { logMiddleware } from './logger'
 import api from './api'
 import { AppRequest, errors } from './api/handle'
 import { resolve } from 'path'
+import { Server } from 'http'
 
 const app = express()
+const server = new Server(app)
+
 const index = resolve(process.cwd(), 'dist', 'index.html')
 
 app.use(express.json({ limit: '2mb' }), express.urlencoded({ extended: true }))
@@ -30,4 +33,4 @@ app.use((err: any, req: AppRequest, res: express.Response, _next: any) => {
   res.json({ message: err?.message || err || 'Internal server error' })
 })
 
-export { app }
+export { app, server }
