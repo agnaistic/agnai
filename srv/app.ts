@@ -18,10 +18,7 @@ app.use((req, res, next) => {
     return next(errors.NotFound)
   }
 
-  const ext = extname(req.url)
-  if (!ext) return res.sendFile(index)
-
-  req.log.warn(`"${req.url}" "${ext}"`)
+  return res.sendFile(index)
 })
 app.use((err: any, req: AppRequest, res: express.Response, _next: any) => {
   if (err.status > 0) {
