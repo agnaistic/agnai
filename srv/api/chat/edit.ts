@@ -65,7 +65,7 @@ export const retryMessage = handle(async ({ body, params, userId }, res) => {
 
   await verifyLock({ chatId: id, lockId })
 
-  const { chat, char, stream } = await createResponseStream({
+  const { stream } = await createResponseStream({
     chatId: params.id,
     history: body.history,
     message: body.message,

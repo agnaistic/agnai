@@ -8,10 +8,12 @@ type MsgStore = {
   msgs: AppSchema.ChatMessage[]
   partial?: string
   retrying?: AppSchema.ChatMessage
+  waiting: boolean
 }
 
 export const msgStore = createStore<MsgStore>('messages', {
   msgs: [],
+  waiting: false,
 })((get) => {
   return {
     async editMessage({ msgs }, msgId: string, msg: string) {
@@ -36,7 +38,7 @@ export const msgStore = createStore<MsgStore>('messages', {
         return
       }
 
-      yield { partial: '' }
+      yield { partial: '', waiting: true }
 
       const [message, replace] = msgs.slice(-2)
       yield { msgs: msgs.slice(0, -1), retrying: replace, partial: '' }
@@ -63,7 +65,7 @@ export const msgStore = createStore<MsgStore>('messages', {
         return
       }
 
-      yield { partial: '' }
+      yield { partial: '', waiting: true }
 
       await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
         message,
@@ -99,11 +101,18 @@ subscribe('message-retry', { messageId: 'string', chatId: 'string', message: 'st
   msgStore.setState({
     partial: undefined,
     retrying: undefined,
+    waiting: false,
     msgs: msgs.concat({ ...retrying, msg: body.message }),
   })
 })
 
 subscribe('message-created', { msg: 'any' }, (body) => {
   const { msgs } = msgStore.getState()
-  msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined })
+
+  // If the message is from a user don't clear the "waiting for response" flags
+  if (body.msg.userId) {
+    msgStore.setState({ msgs: msgs.concat(body.msg) })
+  } else {
+    msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined, waiting: false })
+  }
 })

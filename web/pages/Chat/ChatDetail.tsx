@@ -21,6 +21,7 @@ const ChatDetail: Component = () => {
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
     partial: s.partial,
+    waiting: s.waiting,
   }))
 
   const [removeId, setRemoveId] = createSignal('')
@@ -77,7 +78,7 @@ const ChatDetail: Component = () => {
                     onRemove={() => {}}
                   />
                 </Show>
-                <Show when={msgs.partial !== undefined}>
+                <Show when={msgs.waiting}>
                   <div class="flex justify-center">
                     <div class="dot-flashing bg-purple-700"></div>
                   </div>
