@@ -4,6 +4,7 @@ import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
 import { errors, handle } from '../handle'
 import { publishMany } from '../ws/message'
+import { obtainLock, releaseLock, verifyLock } from './lock'
 
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
@@ -49,16 +50,21 @@ export const retryMessage = handle(async ({ body, params, userId }, res) => {
     },
     body
   )
+
+  const lockId = await obtainLock(id)
+
   const prev = await store.chats.getMessageAndChat(messageId)
   if (!prev) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
+  await verifyLock({ chatId: id, lockId })
   const response = await streamResponse(
     { chatId: params.id, history: body.history, message: body.message, senderId: userId! },
     res
   )
 
   if (!body.emphemeral && response) {
+    await verifyLock({ chatId: id, lockId })
     await store.chats.editMessage(messageId, response.generated)
     publishMany(response.chat.memberIds.concat(userId!), {
       type: 'message-retry',
@@ -67,6 +73,8 @@ export const retryMessage = handle(async ({ body, params, userId }, res) => {
       message: response.generated,
     })
   }
+
+  await releaseLock(id)
 
   res.end()
 })

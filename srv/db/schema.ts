@@ -95,6 +95,22 @@ export namespace AppSchema {
     updatedAt: string
   }
 
+  export interface ChatLock {
+    kind: 'chat-lock'
+
+    /** Chat ID, Unique */
+    chatLock: string
+
+    /** Time to live in seconds. Locks older than this are invalid */
+    ttl: number
+
+    /** ISO string - We will ignore locks of a particular age */
+    obtained: string
+
+    /** We return this top the caller requesting a lock. It is used to ensure the lock is valid during a transaction. */
+    lockId: string
+  }
+
   export interface GenSettings {
     name: string
     temp: number
@@ -116,5 +132,6 @@ export type AllDoc =
   | AppSchema.Character
   | AppSchema.User
   | AppSchema.Profile
+  | AppSchema.ChatLock
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []

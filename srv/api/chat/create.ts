@@ -3,6 +3,7 @@ import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
 import { handle } from '../handle'
 import { publishMany } from '../ws/message'
+import { obtainLock, releaseLock, verifyLock } from './lock'
 
 export const createChat = handle(async ({ body, user }) => {
   assertValid(
@@ -22,6 +23,8 @@ export const createChat = handle(async ({ body, user }) => {
 export const generateMessage = handle(async ({ userId, params, body }, res) => {
   const id = params.id
   assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?', retry: 'boolean?' }, body)
+
+  const lockId = await obtainLock(id)
 
   if (!body.retry) {
     const userMsg = await store.chats.createChatMessage({
@@ -47,10 +50,15 @@ export const generateMessage = handle(async ({ userId, params, body }, res) => {
     return
   }
 
+  await verifyLock({ chatId: id, lockId })
+
   const msg = await store.chats.createChatMessage(
     { chatId: id, message: response.generated, characterId: response.chat.characterId },
     body.ephemeral
   )
+
+  await releaseLock(id)
+
   publishMany(response.chat.memberIds.concat(userId!), { type: 'message-created', msg })
   res.write(JSON.stringify(msg))
   res.end()

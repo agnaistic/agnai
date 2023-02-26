@@ -12,6 +12,8 @@ export function catchErr(_err?: any): null {
 }
 
 export async function createIndexes() {
+  await client.ensureIndex({ fieldName: 'chatLock', sparse: true, unique: true })
+
   await client.ensureIndex({ fieldName: 'username' })
 
   await client.ensureIndex({ fieldName: 'kind' })
