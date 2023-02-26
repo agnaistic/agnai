@@ -11,8 +11,8 @@
     "model:watch": "nodemon -e py --watch model --exec \"python -m flask --app model/app.py run --host 0.0.0.0 -p 5001\"",
     "start:win": "set NODE_ENV=dev && parcel src/index.html",
     "build": "NODE_ENV=production parcel build src/index.html",
-    "style": "prettier web --check && prettier srv --check",
-    "style:fix": "prettier web --write && prettier srv --write",
+    "format": "prettier web --check && prettier srv --check",
+    "format:fix": "prettier web --write && prettier srv --write",
     "typecheck": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

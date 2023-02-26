@@ -1,7 +1,28 @@
 import dotenv from 'dotenv'
+import { readFileSync, writeFileSync } from 'fs'
 import { v4 } from 'uuid'
 
 dotenv.config({ path: '.env' })
+
+/**
+ * We always want to use a relatively safe JWT signing secret
+ * If the user has not provided one:
+ * - Create one
+ * - Save it to a file
+ * - Apply it to the environment variables
+ *
+ * When the application restarts we will try to retrieve the previously saved secret
+ */
+if (!process.env.JWT_SECRET) {
+  try {
+    const secret = readFileSync('.token_secret', { encoding: 'utf8' })
+    process.env.JWT_SECRET = secret
+  } catch (ex) {
+    const secret = v4()
+    writeFileSync('.token_secret', secret)
+    process.env.JWT_SECRET = secret
+  }
+}
 
 export const config = {
   jwtSecret: env('JWT_SECRET'),

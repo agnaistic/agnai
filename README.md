@@ -48,11 +48,11 @@ The important parts of the stack are:
 If you have Node and `pnpm` installed and working, you can start the development server with:
 
 ```bash
-# install dependencies
-$ pnpm install --lockfile
+# Install dependencies
+> pnpm install --lockfile
 
-# start the bundler and api
-$ pnpm start
+# Start the frontend, backend, and python service
+> pnpm start
 ```
 
 ### Format and Type Checking
@@ -61,7 +61,7 @@ The project uses ESLint for linting, Prettier for enforcing code style and TypeS
 
 ```bash
 # auto-fixes any style problems
-$ pnpm run style:fix
+$ pnpm run format:fix
 
 # runs the TypeScript compiler so any type errors will be shown
 $ pnpm run typecheck
