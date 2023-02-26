@@ -111,21 +111,6 @@ function headers() {
   return { headers }
 }
 
-function toastError(err: any) {
-  if (!err) {
-    toastStore.error(`Unexpected error occurred`)
-    throw err
-  }
-
-  if (err.message) {
-    toastStore.error(err.message)
-    throw err
-  }
-
-  toastStore.error(err)
-  throw err
-}
-
 async function* callApiStream<T = any>(path: string, opts: RequestInit) {
   const prefix = path.startsWith('/') ? '/api' : '/api'
   const stream = await fetch(`${baseUrl}${prefix}${path}`, {
@@ -171,5 +156,5 @@ export function getAuth() {
 }
 
 export function clearAuth() {
-  Cookies.get('auth')
+  Cookies.remove('auth')
 }

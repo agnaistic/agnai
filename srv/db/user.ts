@@ -6,6 +6,7 @@ import { AppSchema } from './schema'
 import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../logger'
+import { errors } from '../api/handle'
 
 const users = db('user')
 const profiles = db('profile')
@@ -23,9 +24,9 @@ export async function ensureInitialUser() {
 
   await createUser(
     {
-      handle: config.init.username,
+      handle: 'Admin',
       password: config.init.password,
-      username: config.init.username,
+      username: config.init.username.toLowerCase(),
     },
     true
   )
@@ -54,7 +55,7 @@ export async function updateProfile(userId: string, props: Partial<AppSchema.Pro
 }
 
 export async function authenticate(username: string, password: string) {
-  const user = await users.findOne({ username })
+  const user = await users.findOne({ username: username.toLowerCase() })
   if (!user) return
 
   const match = await bcrypt.compare(password, user.hash)
@@ -69,13 +70,21 @@ export async function authenticate(username: string, password: string) {
 }
 
 export async function createUser(newUser: NewUser, admin?: boolean) {
+  const username = newUser.username.toLowerCase()
+  const existing = await users.findOne({ username })
+
+  logger.info({ existing }, 'Exists')
+  if (existing) {
+    throw errors.BadRequest
+  }
+
   const salt = await bcrypt.genSalt()
   const hash = await bcrypt.hash(newUser.password, salt)
 
   const user: AppSchema.User = {
     _id: v4(),
     kind: 'user',
-    username: newUser.username,
+    username,
     hash,
     admin: !!admin,
     novelApiKey: '',

@@ -43,4 +43,5 @@ export const errors = {
   NotFound: new StatusError('Resource not found', 404),
   Unauthorized: new StatusError('Unauthorized', 401),
   Forbidden: new StatusError('Forbidden', 403),
+  BadRequest: new StatusError('Bad request', 400),
 }

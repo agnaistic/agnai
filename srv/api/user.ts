@@ -18,7 +18,7 @@ const getConfig = handle(async ({ userId }) => {
 })
 
 const register = handle(async (req) => {
-  assertValid({ username: 'string', handle: 'string', password: 'string' }, req.body)
+  assertValid({ handle: 'string', username: 'string', password: 'string' }, req.body)
   const { profile, token, user } = await store.users.createUser(req.body)
   return { profile, token, user }
 })

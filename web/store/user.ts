@@ -1,6 +1,5 @@
-import Cookies from 'js-cookie'
 import { AppSchema } from '../../srv/db/schema'
-import { api, getAuth, setAuth } from './api'
+import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
 
@@ -38,25 +37,34 @@ export const userStore = createStore<State>(
       onSuccess?.()
       setAuth(res.result.token)
     },
-    async *register(_, username: string, password: string, onSuccess?: () => void) {
+    async *register(
+      _,
+      newUser: { handle: string; username: string; password: string },
+      onSuccess?: () => void
+    ) {
       yield { loading: true }
 
-      const res = await api.post('/user/login', { username, password })
+      const res = await api.post('/user/register', newUser)
       yield { loading: false }
       if (res.error) {
         return toastStore.error(`Failed to register`)
       }
 
+      setAuth(res.result.token)
+
       yield {
-        loading: false,
         loggedIn: true,
         user: res.result.user,
         profile: res.result.profile,
         jwt: res.result.token,
       }
 
-      setAuth(res.result.token)
+      toastStore.success('Welcome to Agnaistic')
       onSuccess?.()
+    },
+    logout() {
+      clearAuth()
+      return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
     async getProfile() {
       const res = await api.get('/user')

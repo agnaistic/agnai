@@ -1,6 +1,11 @@
-import { Component } from 'solid-js'
+import { Component, JSX } from 'solid-js'
 
-const Tabs: Component = () => {
+type Tab = {
+  title: string
+  selected: boolean
+}
+
+const Tabs: Component<{ tabs: Tab[] }> = (props) => {
   return <div></div>
 }
 
