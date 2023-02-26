@@ -17,7 +17,8 @@
     "format": "prettier web --check && prettier srv --check",
     "format:fix": "prettier web --write && prettier srv --write",
     "typecheck": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "up": "docker-compose up -d"
   },
   "keywords": [],
   "license": "AGPL-3.0",

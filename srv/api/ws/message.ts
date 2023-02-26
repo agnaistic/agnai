@@ -2,6 +2,7 @@ import jwt from 'jsonwebtoken'
 import { assertValid } from 'frisker'
 import { AppSocket } from './types'
 import { config } from '../../config'
+import { logger } from '../../logger'
 
 const users = new Map<string, AppSocket[]>()
 
@@ -9,24 +10,37 @@ type Handler = (client: AppSocket, data: any) => void
 
 const handlers: Record<string, Handler> = {
   login,
+  logout,
 }
 
 export function handleMessage(client: AppSocket) {
   client.on('message', (data) => {
     const payload = parse(data)
     if (!payload) return
-    if (typeof data !== 'object') return
+    if (typeof payload !== 'object') return
     if ('type' in payload === false) return
 
     const handler = handlers[payload.type]
     if (!handler) return
 
-    handler(client, data)
+    handler(client, payload)
   })
 
   client.dispatch = (data) => {
     client.send(JSON.stringify(data))
   }
+
+  client.on('close', () => {
+    logout(client)
+  })
+
+  client.on('error', () => {
+    logout(client)
+  })
+
+  client.on('ping', () => {
+    client.send('pong')
+  })
 }
 
 function parse(data: any) {
@@ -65,4 +79,21 @@ function logout(client: AppSocket) {
   const next = sockets.filter((s) => s !== client)
   users.set(userId, next)
   client.dispatch({ type: 'logout', success: true })
+}
+
+export function publishMany<T extends { type: string }>(userIds: string[], data: T) {
+  const unique = Array.from(new Set(userIds))
+  for (const userId of unique) {
+    publishOne(userId, data)
+  }
+}
+
+export function publishOne<T extends { type: string }>(userId: string, data: T) {
+  const sockets = users.get(userId)
+  logger.info({ count: sockets?.length, type: data.type }, 'Publishing')
+  if (!sockets) return
+
+  for (const socket of sockets) {
+    socket.send(JSON.stringify(data))
+  }
 }

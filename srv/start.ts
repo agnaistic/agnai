@@ -1,5 +1,4 @@
-import { setupSockets } from './api/ws'
-import { server } from './app'
+import { app, server } from './app'
 import { config } from './config'
 import { store } from './db'
 import { deleteAllChats } from './db/chats'
@@ -14,5 +13,4 @@ server.listen(config.port, '0.0.0.0', async () => {
 
   // await deleteAllChats()
   logger.info({ port: config.port }, 'Server started')
-  setupSockets(server)
 })

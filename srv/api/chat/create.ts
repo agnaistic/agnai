@@ -2,6 +2,7 @@ import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
 import { handle } from '../handle'
+import { publishMany } from '../ws/message'
 
 export const createChat = handle(async ({ body, user }) => {
   assertValid(
@@ -41,12 +42,16 @@ export const generateMessage = handle(async ({ userId, params, body }, res) => {
     res
   )
 
-  if (!response) return
+  if (!response) {
+    res.end()
+    return
+  }
 
   const msg = await store.chats.createChatMessage(
     { chatId: id, message: response.generated, characterId: response.chat.characterId },
     body.ephemeral
   )
+  publishMany(response.chat.memberIds.concat(userId!), { type: 'message-created', msg })
   res.write(JSON.stringify(msg))
   res.end()
 })

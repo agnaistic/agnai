@@ -1,6 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
+import { publish } from './socket'
 import { toastStore } from './toasts'
 
 type State = {
@@ -36,6 +37,7 @@ export const userStore = createStore<State>(
 
       onSuccess?.()
       setAuth(res.result.token)
+      publish({ type: 'login', token: res.result.token })
     },
     async *register(
       _,
@@ -61,9 +63,11 @@ export const userStore = createStore<State>(
 
       toastStore.success('Welcome to Agnaistic')
       onSuccess?.()
+      publish({ type: 'login', token: res.result.token })
     },
     logout() {
       clearAuth()
+      publish({ type: 'logout' })
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
     async getProfile() {

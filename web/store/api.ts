@@ -1,6 +1,6 @@
 import Cookies from 'js-cookie'
 
-const baseUrl =
+export const baseUrl =
   location.port === '1234' || location.port === '3001'
     ? `http://${location.hostname}:3001`
     : location.origin

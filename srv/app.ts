@@ -5,9 +5,12 @@ import api from './api'
 import { AppRequest, errors } from './api/handle'
 import { resolve } from 'path'
 import { Server } from 'http'
+import { setupSockets } from './api/ws'
 
 const app = express()
 const server = new Server(app)
+
+setupSockets(server)
 
 const index = resolve(process.cwd(), 'dist', 'index.html')
 

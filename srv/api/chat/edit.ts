@@ -3,6 +3,7 @@ import { ADAPTERS } from '../../../common/adapters'
 import { store } from '../../db'
 import { streamResponse } from '../adapter/generate'
 import { errors, handle } from '../handle'
+import { publishMany } from '../ws/message'
 
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
@@ -59,6 +60,12 @@ export const retryMessage = handle(async ({ body, params, userId }, res) => {
 
   if (!body.emphemeral && response) {
     await store.chats.editMessage(messageId, response.generated)
+    publishMany(response.chat.memberIds.concat(userId!), {
+      type: 'message-retry',
+      messageId,
+      chatId: response.chat._id,
+      message: response.generated,
+    })
   }
 
   res.end()

@@ -11,7 +11,7 @@ export function trimResponse(
   members: AppSchema.Profile[],
   endTokens: string[]
 ) {
-  const baseEndTokens = [`${char.name}:`, `${char.name} :`, 'END_OF_DIALOG']
+  const baseEndTokens = [`${char.name}:`, `${char.name} :`, 'END_OF_DIALOG', '<END>']
 
   for (const member of members) {
     baseEndTokens.push(`${member.handle}:`, `${member.handle} :`)
