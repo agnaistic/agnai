@@ -12,7 +12,7 @@ const InputBar: Component<{ chatId: string; openConfig: () => void }> = (props) 
     ref.value = ''
   }
   return (
-    <div class="mb-2 flex justify-center pb-4 max-sm:pb-0">
+    <div class="flex justify-center max-sm:pb-0">
       <input
         ref={ref}
         type="text"

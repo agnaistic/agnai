@@ -46,15 +46,7 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <div class="flex h-full flex-col justify-between">
-          <div class="mb-4 flex items-center justify-between">
-            <A href={`/character/${chats.character?._id}/chats`}>
-              <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
-                <ChevronLeft size={16} class="mt-0.5" /> Conversations
-              </div>
-            </A>
-            <div></div>
-          </div>
+        <div class="mb-4 flex h-full flex-col justify-between pb-4">
           <div class="flex h-full flex-col-reverse">
             <InputBar chatId={chats.chat!._id} openConfig={() => setShowConfig(true)} />
             <div class="flex flex-col-reverse overflow-y-scroll">
@@ -85,6 +77,13 @@ const ChatDetail: Component = () => {
                 </Show>
               </div>
               <Header participants={[chats.character?.name!]} />
+            </div>
+            <div class="flex items-center justify-between">
+              <A href={`/character/${chats.character?._id}/chats`}>
+                <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
+                  <ChevronLeft size={16} class="mt-0.5" /> Conversations
+                </div>
+              </A>
             </div>
           </div>
         </div>
