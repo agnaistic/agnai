@@ -1,11 +1,13 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
 type MsgStore = {
   msgs: AppSchema.ChatMessage[]
   partial?: string
+  retrying?: AppSchema.ChatMessage
 }
 
 export const msgStore = createStore<MsgStore>('messages', {
@@ -37,30 +39,14 @@ export const msgStore = createStore<MsgStore>('messages', {
       yield { partial: '' }
 
       const [message, replace] = msgs.slice(-2)
-      yield { msgs: msgs.slice(0, -1) }
+      yield { msgs: msgs.slice(0, -1), retrying: replace, partial: '' }
 
-      const stream = await api.streamPost<string | AppSchema.ChatMessage>(
-        `/chat/${chatId}/retry/${replace._id}`,
-        { message: message.msg, history: msgs.slice(-22, -2) }
-      )
-
-      let current = ''
-      for await (const part of stream) {
-        if (typeof part === 'string') {
-          if (part.length === 0) continue
-          current = part
-          yield { partial: current }
-          continue
-        } else if (typeof part === 'object' && 'error' in part) {
-          toastStore.error(`Failed to generate message`)
-          yield { partial: undefined, msgs: msgs.concat(replace) }
-          return
-        }
-      }
-
-      yield { msgs: get().msgs.concat({ ...replace, msg: current }), partial: undefined }
+      await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
+        message: message.msg,
+        history: msgs.slice(-22, -2),
+      })
     },
-    async *resend({ msgs }, chatId: string, msgId: string) {
+    async resend({ msgs }, chatId: string, msgId: string) {
       const msgIndex = msgs.findIndex((m) => m._id === msgId)
       const msg = msgs[msgIndex]
 
@@ -79,29 +65,11 @@ export const msgStore = createStore<MsgStore>('messages', {
 
       yield { partial: '' }
 
-      const stream = await api.streamPost<string | AppSchema.ChatMessage>(
-        `/chat/${chatId}/message`,
-        { message, history: msgs.slice(-20), retry }
-      )
-
-      let current = ''
-      for await (const part of stream) {
-        if (typeof part === 'string') {
-          if (part.length === 0) continue
-          current = part
-          yield { partial: current }
-          continue
-        }
-        if (typeof part === 'object' && 'error' in part) {
-          toastStore.error(`Failed to generate message`)
-          yield { partial: undefined }
-          return
-        }
-        const { msgs } = get()
-        yield { msgs: [...msgs, part] }
-      }
-
-      yield { partial: undefined }
+      await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
+        message,
+        history: msgs.slice(-20),
+        retry,
+      })
     },
     async deleteMessages({ msgs }, fromId: string) {
       const index = msgs.findIndex((m) => m._id === fromId)
@@ -118,4 +86,24 @@ export const msgStore = createStore<MsgStore>('messages', {
       return { msgs: msgs.slice(0, index) }
     },
   }
+})
+
+subscribe('message-partial', { partial: 'string' }, (body) => {
+  msgStore.setState({ partial: body.partial })
+})
+
+subscribe('message-retry', { messageId: 'string', chatId: 'string', message: 'string' }, (body) => {
+  const { retrying, msgs } = msgStore.getState()
+  if (!retrying) return
+
+  msgStore.setState({
+    partial: undefined,
+    retrying: undefined,
+    msgs: msgs.concat({ ...retrying, msg: body.message }),
+  })
+})
+
+subscribe('message-created', { msg: 'any' }, (body) => {
+  const { msgs } = msgStore.getState()
+  msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined })
 })

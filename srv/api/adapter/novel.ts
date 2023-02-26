@@ -63,7 +63,7 @@ export const handleNovel: ModelAdapter = async function* ({
     }),
   }
 
-  const endTokens = ['***']
+  const endTokens = ['***', 'Scenario:', '----']
 
   const response = await needle('post', novelUrl, body, {
     json: true,

@@ -32,10 +32,10 @@ export function publish<T extends { type: string }>(payload: T) {
   socket.send(JSON.stringify(payload))
 }
 
-export function subscribe<T extends Validator>(
+export function subscribe<T extends string, U extends Validator>(
   type: string,
-  validator: T,
-  handler: (body: UnwrapBody<T>) => void
+  validator: U,
+  handler: (body: UnwrapBody<U> & { type: T }) => void
 ) {
   const handlers = listeners.get(type) || []
   handlers.push({ validator, fn: handler })

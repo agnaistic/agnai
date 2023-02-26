@@ -45,7 +45,7 @@ export async function generateResponse(
   }
 }
 
-export async function streamResponse(opts: GenerateOptions, res: Response) {
+export async function createResponseStream(opts: GenerateOptions) {
   const chat = await store.chats.getChat(opts.chatId)
   if (!chat) {
     throw new StatusError('Chat not found', 404)
@@ -62,6 +62,15 @@ export async function streamResponse(opts: GenerateOptions, res: Response) {
   }
 
   const stream = await generateResponse({ ...opts, chat, char }).catch((err: Error) => err)
+  if (stream instanceof Error) {
+    throw stream
+  }
+
+  return { chat, char, stream }
+}
+
+export async function streamResponse(opts: GenerateOptions, res: Response) {
+  const { chat, char, stream } = await createResponseStream(opts)
 
   if (stream instanceof Error) {
     res.status(500).send({ message: stream.message })
@@ -69,7 +78,6 @@ export async function streamResponse(opts: GenerateOptions, res: Response) {
   }
 
   let generated = ''
-
   for await (const msg of stream) {
     if (typeof msg !== 'string') {
       res.status(500)

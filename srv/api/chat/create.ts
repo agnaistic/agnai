@@ -1,7 +1,8 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { streamResponse } from '../adapter/generate'
-import { handle } from '../handle'
+import { logger } from '../../logger'
+import { createResponseStream, streamResponse } from '../adapter/generate'
+import { errors, handle } from '../handle'
 import { publishMany } from '../ws/message'
 import { obtainLock, releaseLock, verifyLock } from './lock'
 
@@ -26,40 +27,59 @@ export const generateMessage = handle(async ({ userId, params, body }, res) => {
 
   const lockId = await obtainLock(id)
 
+  const chat = await store.chats.getChat(id)
+  if (!chat) {
+    throw errors.NotFound
+  }
+
+  const members = chat.memberIds.concat(chat.userId)
+  if (!members.includes(userId!)) {
+    throw errors.Forbidden
+  }
+
+  const lockProps = { chatId: id, lockId }
+
+  res.json({ success: true, message: 'Generating message' })
+  await verifyLock(lockProps)
+
   if (!body.retry) {
     const userMsg = await store.chats.createChatMessage({
       chatId: id,
       message: body.message,
       senderId: userId!,
     })
-    res.write(JSON.stringify(userMsg))
+    publishMany(members, { type: 'message-created', msg: userMsg })
   }
 
-  const response = await streamResponse(
-    {
-      senderId: userId!,
-      chatId: id,
-      message: body.message,
-      history: body.history,
-    },
-    res
-  )
+  const { stream } = await createResponseStream({
+    senderId: userId!,
+    chatId: id,
+    message: body.message,
+    history: body.history,
+  })
 
-  if (!response) {
-    res.end()
-    return
+  let generated = ''
+
+  for await (const gen of stream) {
+    logger.debug(gen, 'Generated')
+    if (typeof gen === 'string') {
+      generated = gen
+      publishMany(members, { type: 'message-partial', partial: gen, chatId: id })
+      continue
+    }
+
+    if (gen.error) {
+      publishMany(members, { type: 'message-error', error: gen.error, chatId: id })
+      continue
+    }
   }
 
-  await verifyLock({ chatId: id, lockId })
-
+  await verifyLock(lockProps)
   const msg = await store.chats.createChatMessage(
-    { chatId: id, message: response.generated, characterId: response.chat.characterId },
+    { chatId: id, message: generated, characterId: chat.characterId },
     body.ephemeral
   )
 
+  publishMany(members, { type: 'message-created', msg })
   await releaseLock(id)
-
-  publishMany(response.chat.memberIds.concat(userId!), { type: 'message-created', msg })
-  res.write(JSON.stringify(msg))
-  res.end()
 })
