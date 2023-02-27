@@ -1,6 +1,6 @@
 import * as express from 'express'
-import { Logger } from 'pino'
 import { AppSchema } from '../db/schema'
+import { AppLog } from '../logger'
 
 export function handle(handler: Handler) {
   const wrapped = async (req: AppRequest, res: express.Response, next: express.NextFunction) => {
@@ -33,10 +33,10 @@ export class StatusError extends Error {
 
 export type Handler = (req: AppRequest, res: express.Response, next: express.NextFunction) => any
 
-export type AppRequest = express.Request & {
+export type AppRequest = Omit<express.Request, 'log'> & {
   user?: AppSchema.Token
   userId?: string
-  log: Logger
+  log: AppLog
 }
 
 export const errors = {

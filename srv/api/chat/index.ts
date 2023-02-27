@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
-import { createChat, generateMessage } from './create'
-import { retryMessage, updateChat, updateMessage } from './edit'
+import { createChat } from './create'
+import { updateChat, updateMessage } from './edit'
+
 import { getCharacterChats, getChatDetail } from './get'
+import { generateMessage, retryMessage } from './message'
 import { deleteMessages } from './remove'
 
 const router = Router()

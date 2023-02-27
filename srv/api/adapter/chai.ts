@@ -27,7 +27,7 @@ export const handleChai: ModelAdapter = async function* ({
   }
 
   if (config.chai.uid === 'empty' || config.chai.key === 'empty') {
-    yield { error: 'Chai headers not set' }
+    yield { error: 'Chai is not configured' }
     return
   }
 

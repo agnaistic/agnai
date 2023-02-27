@@ -116,3 +116,8 @@ subscribe('message-created', { msg: 'any' }, (body) => {
     msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined, waiting: false })
   }
 })
+
+subscribe('message-error', { error: 'any', chatId: 'string', messageId: 'string' }, (body) => {
+  toastStore.error(`Failed to generate response: ${body.error}`)
+  msgStore.setState({ partial: undefined, waiting: undefined })
+})

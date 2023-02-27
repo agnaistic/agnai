@@ -55,11 +55,21 @@ export const handleKobold: ModelAdapter = async function* ({
   while (attempts < maxAttempts) {
     attempts++
 
-    const response = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
+    const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
       json: true,
-    })
+    }).catch((err) => ({ error: err }))
 
-    const text = response.body.results?.[0]?.text as string
+    if ('error' in resp) {
+      yield { error: `Kobold request failed: ${resp.error?.message || resp.error}` }
+      return
+    }
+
+    if (resp.statusCode && resp.statusCode >= 400) {
+      yield { error: `Kobold request failed: ${resp.statusMessage}` }
+      return
+    }
+
+    const text = resp.body.results?.[0]?.text as string
     if (text) {
       parts.push(text)
       const combined = joinParts(parts)
@@ -73,8 +83,8 @@ export const handleKobold: ModelAdapter = async function* ({
       body.prompt = combined
       yield combined
     } else {
-      logger.error({ err: response.body }, 'Failed to generate text using Kobold adapter')
-      yield { error: response.body }
+      logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
+      yield { error: resp.body }
       return
     }
   }
