@@ -17,6 +17,15 @@ export const msgStore = createStore<MsgStore>('messages', {
   msgs: [],
 })((get) => {
   return {
+    logout() {
+      return {
+        activeChatId: '',
+        msgs: [],
+        partial: undefined,
+        retrying: undefined,
+        waiting: undefined,
+      }
+    },
     async editMessage({ msgs }, msgId: string, msg: string) {
       const res = await api.method('put', `/chat/${msgId}/message`, { message: msg })
       if (res.error) {
