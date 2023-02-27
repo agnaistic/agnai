@@ -73,7 +73,6 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
   const username = newUser.username.toLowerCase()
   const existing = await users.findOne({ username })
 
-  logger.info({ existing }, 'Exists')
   if (existing) {
     throw errors.BadRequest
   }

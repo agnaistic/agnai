@@ -43,9 +43,7 @@ const Message: Component<{
   return (
     <div class="flex w-full gap-4 rounded-l-md p-1 hover:bg-slate-800">
       <Show when={props.char && !!props.msg.characterId}>
-        <div class="flex items-center justify-center">
-          <img src={props.char?.avatar} class="max-h-12 w-12 rounded-md" />
-        </div>
+        <AvatarIcon avatarUrl={props.char?.avatar} class="h-12 w-12" />
       </Show>
       <Show when={!props.msg.characterId}>
         <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} class="h-12 w-12" />
