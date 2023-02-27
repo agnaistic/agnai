@@ -1,9 +1,10 @@
-import { LogOut, MessageCircle, Settings, Sliders, User, Users, Zap } from 'lucide-solid'
+import { LogOut, MessageCircle, Settings, User, Users } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
 import { characterStore, chatStore, userStore } from '../store'
 
 const NavBar: Component = () => {
+  const state = userStore()
   const logout = () => {
     userStore.logout()
     chatStore.logout()
@@ -18,9 +19,12 @@ const NavBar: Component = () => {
         </A>
       </span>
       <span class="flex gap-4">
-        <A aria-label="User Profile" class="focusable-icon-button rounded p-1" href="/profile">
-          <User />
-        </A>
+        <Show when={state.profile}>
+          <div class="flex flex-row items-center">{state.profile?.handle}</div>
+          <A aria-label="User Profile" class="focusable-icon-button rounded p-1" href="/profile">
+            <User />
+          </A>
+        </Show>
 
         <A
           aria-label="Character Settings"

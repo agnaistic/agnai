@@ -1,5 +1,4 @@
 import needle from 'needle'
-import { store } from '../../db'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'

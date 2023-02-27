@@ -4,7 +4,7 @@ import { AppSocket } from './types'
 import { config } from '../../config'
 import { logger } from '../../logger'
 
-const users = new Map<string, AppSocket[]>()
+const userSockets = new Map<string, AppSocket[]>()
 
 type Handler = (client: AppSocket, data: any) => void
 
@@ -55,13 +55,17 @@ function parse(data: any) {
 function login(client: AppSocket, data: any) {
   assertValid({ token: 'string' }, data)
   try {
+    if (client.userId) {
+      logout(client)
+    }
+
     const payload = jwt.verify(data.token, config.jwtSecret) as any
     client.token = data.token
     client.userId = payload.userId
 
-    const sockets = users.get(client.userId) || []
+    const sockets = userSockets.get(client.userId) || []
     sockets.push(client)
-    users.set(client.userId, sockets)
+    userSockets.set(client.userId, sockets)
     client.dispatch({ type: 'login', success: true })
   } catch (ex) {
     client.dispatch({ type: 'login', success: false })
@@ -71,13 +75,13 @@ function login(client: AppSocket, data: any) {
 function logout(client: AppSocket) {
   if (!client.userId) return
   const userId = client.userId
-  const sockets = users.get(userId) || []
+  const sockets = userSockets.get(userId) || []
 
   client.userId = ''
   client.token = ''
 
-  const next = sockets.filter((s) => s !== client)
-  users.set(userId, next)
+  const next = sockets.filter((s) => s.uid !== client.uid)
+  userSockets.set(userId, next)
   client.dispatch({ type: 'logout', success: true })
 }
 
@@ -89,7 +93,7 @@ export function publishMany<T extends { type: string }>(userIds: string[], data:
 }
 
 export function publishOne<T extends { type: string }>(userId: string, data: T) {
-  const sockets = users.get(userId)
+  const sockets = userSockets.get(userId)
   logger.info({ count: sockets?.length, type: data.type }, 'Publishing')
   if (!sockets) return
 

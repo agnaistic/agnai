@@ -51,7 +51,6 @@ function onMessage(msg: MessageEvent<any>) {
     if (!payload) continue
 
     if (!payload.type) continue
-    console.log(blob)
     const handlers = listeners.get(payload.type)
     if (!handlers || !handlers.length) continue
 

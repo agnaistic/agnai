@@ -3,17 +3,18 @@ import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { Copy, Download, Edit, Import, Plus, Trash } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
-import { chatStore } from '../../store'
 import { A } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { characterStore } from '../../store'
 import ImportCharacterModal from './ImportCharacter'
 import DeleteCharacterModal from './DeleteCharacter'
+import Tabs from '../../shared/Tabs'
 
 const CharacterList: Component = () => {
   const chars = characterStore((s) => s.characters)
   const [showImport, setImport] = createSignal(false)
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
+  const [tab, setTab] = createSignal(0)
 
   createEffect(() => {
     characterStore.getCharacters()
@@ -22,6 +23,12 @@ const CharacterList: Component = () => {
   return (
     <>
       <PageHeader title="Characters" subtitle="" />
+      <Tabs
+        class="mb-4"
+        select={setTab}
+        selected={tab}
+        tabs={['Characters', 'Group Conversations', 'Invitations']}
+      />
 
       <Show when={!chars.loaded}>
         <div>Loading...</div>

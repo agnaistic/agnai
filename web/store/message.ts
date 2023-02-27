@@ -5,15 +5,16 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
 type MsgStore = {
+  activeChatId: string
   msgs: AppSchema.ChatMessage[]
   partial?: string
   retrying?: AppSchema.ChatMessage
-  waiting: boolean
+  waiting?: string
 }
 
 export const msgStore = createStore<MsgStore>('messages', {
+  activeChatId: '',
   msgs: [],
-  waiting: false,
 })((get) => {
   return {
     async editMessage({ msgs }, msgId: string, msg: string) {
@@ -38,7 +39,7 @@ export const msgStore = createStore<MsgStore>('messages', {
         return
       }
 
-      yield { partial: '', waiting: true }
+      yield { partial: '', waiting: chatId }
 
       const [message, replace] = msgs.slice(-2)
       yield { msgs: msgs.slice(0, -1), retrying: replace, partial: '' }
@@ -65,7 +66,7 @@ export const msgStore = createStore<MsgStore>('messages', {
         return
       }
 
-      yield { partial: '', waiting: true }
+      yield { partial: '', waiting: chatId }
 
       await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
         message,
@@ -90,30 +91,37 @@ export const msgStore = createStore<MsgStore>('messages', {
   }
 })
 
-subscribe('message-partial', { partial: 'string' }, (body) => {
+subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
+  const { activeChatId } = msgStore.getState()
+  if (body.chatId !== activeChatId) return
+
   msgStore.setState({ partial: body.partial })
 })
 
 subscribe('message-retry', { messageId: 'string', chatId: 'string', message: 'string' }, (body) => {
-  const { retrying, msgs } = msgStore.getState()
+  const { retrying, msgs, activeChatId } = msgStore.getState()
   if (!retrying) return
+  if (activeChatId !== body.chatId) return
 
   msgStore.setState({
     partial: undefined,
     retrying: undefined,
-    waiting: false,
-    msgs: msgs.concat({ ...retrying, msg: body.message }),
+    waiting: undefined,
+    msgs: msgs
+      .filter((msg) => msg._id !== body.messageId)
+      .concat({ ...retrying, msg: body.message }),
   })
 })
 
-subscribe('message-created', { msg: 'any' }, (body) => {
-  const { msgs } = msgStore.getState()
+subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
+  const { msgs, activeChatId } = msgStore.getState()
+  if (activeChatId !== body.chatId) return
 
   // If the message is from a user don't clear the "waiting for response" flags
   if (body.msg.userId) {
     msgStore.setState({ msgs: msgs.concat(body.msg) })
   } else {
-    msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined, waiting: false })
+    msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined, waiting: undefined })
   }
 })
 

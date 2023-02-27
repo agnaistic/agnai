@@ -52,7 +52,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         localStorage.setItem('lastChatId', id)
 
-        msgStore.setState({ msgs: res.result.messages })
+        msgStore.setState({ msgs: res.result.messages, activeChatId: id })
 
         return {
           lastChatId: id,

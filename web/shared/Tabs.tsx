@@ -1,12 +1,29 @@
-import { Component, JSX } from 'solid-js'
+import { Component, For, JSX } from 'solid-js'
 
-type Tab = {
-  title: string
-  selected: boolean
-}
-
-const Tabs: Component<{ tabs: Tab[] }> = (props) => {
-  return <div></div>
+const Tabs: Component<{
+  tabs: string[]
+  selected: () => number
+  select: (idx: number) => void
+  class?: string
+}> = (props) => {
+  return (
+    <div class={'flex h-10 w-full flex-1 flex-row ' + props.class || ''}>
+      <For each={props.tabs}>
+        {(tab, i) => (
+          <div
+            onClick={() => props.select(i())}
+            class={`flex w-full cursor-pointer items-center justify-center border-b-2 ${border(
+              props.selected() === i()
+            )} px-4 text-xl hover:border-slate-500 `}
+          >
+            {tab}
+          </div>
+        )}
+      </For>
+    </div>
+  )
 }
 
 export default Tabs
+
+const border = (selected: boolean) => (selected ? `border-purple-500` : `border-slate-800`)

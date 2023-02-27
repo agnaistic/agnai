@@ -1,7 +1,8 @@
 import ws from 'ws'
 import { Server } from 'http'
 import { AppSocket } from './types'
-import { handleMessage } from './message'
+import { handleMessage } from './handle'
+import { v4 } from 'uuid'
 
 /**
  * @TODO - Set up optional message bus
@@ -25,6 +26,7 @@ export function setupSockets(srv: Server) {
   })
 
   sockets.on('connection', (client: AppSocket) => {
+    client.uid = v4()
     client.userId = ''
     client.token = ''
     client.isAlive = true

@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import { ADAPTERS } from '../../../common/adapters'
+import { CHAT_ADAPTERS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
@@ -22,7 +22,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const onSave = () => {
     const body = getStrictForm(ref, {
       name: 'string',
-      adapter: ADAPTERS,
+      adapter: CHAT_ADAPTERS,
       greeting: 'string',
       sampleChat: 'string',
       scenario: 'string',

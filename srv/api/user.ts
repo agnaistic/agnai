@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
-import { ADAPTERS } from '../../common/adapters'
+import { CHAT_ADAPTERS, MULTI_TENANT_ADAPTERS } from '../../common/adapters'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { loggedIn } from './auth'
@@ -42,7 +42,7 @@ const updateConfig = handle(async ({ userId, body }) => {
       novelApiKey: 'string',
       novelModel: 'string',
       koboldUrl: 'string',
-      defaultAdapter: ADAPTERS,
+      defaultAdapter: MULTI_TENANT_ADAPTERS,
     },
     body
   )

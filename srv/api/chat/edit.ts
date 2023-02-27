@@ -1,5 +1,5 @@
 import { assertValid } from 'frisker'
-import { ADAPTERS } from '../../../common/adapters'
+import { CHAT_ADAPTERS } from '../../../common/adapters'
 import { store } from '../../db'
 import { errors, handle } from '../handle'
 
@@ -7,7 +7,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
       name: 'string',
-      adapter: ADAPTERS,
+      adapter: CHAT_ADAPTERS,
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',

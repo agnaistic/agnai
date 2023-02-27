@@ -1,6 +1,7 @@
 import { Response } from 'express'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
+import { AppLog } from '../../logger'
 import { errors, StatusError } from '../handle'
 import { handleChai } from './chai'
 import { handleKobold } from './kobold'
@@ -11,6 +12,7 @@ export type GenerateOptions = {
   chatId: string
   history: AppSchema.ChatMessage[]
   message: string
+  log: AppLog
 }
 
 export async function generateResponse(
@@ -27,8 +29,12 @@ export async function generateResponse(
     throw new StatusError('Sender not found in chat members', 400)
   }
 
-  const adapter = opts.chat.adapter || user.defaultAdapter || 'chai'
+  const adapter =
+    (opts.chat.adapter === 'default' ? user.defaultAdapter : opts.chat.adapter) ||
+    user.defaultAdapter
   const adapterOpts = { ...opts, members, user, sender }
+
+  opts.log.debug({ adapter, message: opts.message.slice(0, 10) + '...' }, 'Generating')
 
   switch (adapter) {
     case 'chai':
@@ -38,10 +44,7 @@ export async function generateResponse(
       return handleNovel(adapterOpts)
 
     case 'kobold':
-    case 'default':
-    default: {
       return handleKobold(adapterOpts)
-    }
   }
 }
 

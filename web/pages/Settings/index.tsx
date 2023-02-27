@@ -5,17 +5,16 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
 import Dropdown from '../../shared/Dropdown'
-import { ADAPTERS, ChatAdapter } from '../../../common/adapters'
+import { CHAT_ADAPTERS, ChatAdapter } from '../../../common/adapters'
 import { userStore } from '../../store'
 import Divider from '../../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
-const adapterOptions = ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
+const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
 
 const Settings: Component = () => {
   const state = userStore()
-  const [novel, setNovel] = createSignal(false)
 
   createEffect(() => {
     // Always reload settings when entering this page

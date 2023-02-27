@@ -27,6 +27,8 @@ export const userStore = createStore<State>(
         return toastStore.error(`Failed to authenticated`)
       }
 
+      setAuth(res.result.token)
+
       yield {
         loading: false,
         loggedIn: true,
@@ -36,7 +38,6 @@ export const userStore = createStore<State>(
       }
 
       onSuccess?.()
-      setAuth(res.result.token)
       publish({ type: 'login', token: res.result.token })
     },
     async *register(

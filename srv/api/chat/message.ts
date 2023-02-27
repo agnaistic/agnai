@@ -1,9 +1,8 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { logger } from '../../logger'
 import { createResponseStream } from '../adapter/generate'
 import { errors, handle } from '../handle'
-import { publishMany } from '../ws/message'
+import { publishMany } from '../ws/handle'
 import { obtainLock, releaseLock, verifyLock } from './lock'
 
 export const generateMessage = handle(async ({ userId, params, body, log }, res) => {
@@ -33,7 +32,8 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
       message: body.message,
       senderId: userId!,
     })
-    publishMany(members, { type: 'message-created', msg: userMsg })
+    await store.chats.update(id, {})
+    publishMany(members, { type: 'message-created', msg: userMsg, chatId: id })
   }
 
   const { stream } = await createResponseStream({
@@ -41,12 +41,12 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
     chatId: id,
     message: body.message,
     history: body.history,
+    log,
   })
 
   let generated = ''
 
   for await (const gen of stream) {
-    log.debug(gen, 'Generated')
     if (typeof gen === 'string') {
       generated = gen
       publishMany(members, { type: 'message-partial', partial: gen, chatId: id })
@@ -64,12 +64,12 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
     { chatId: id, message: generated, characterId: chat.characterId },
     body.ephemeral
   )
-
-  publishMany(members, { type: 'message-created', msg })
+  await store.chats.update(id, {})
+  publishMany(members, { type: 'message-created', msg, chatId: id })
   await releaseLock(id)
 })
 
-export const retryMessage = handle(async ({ body, params, userId }, res) => {
+export const retryMessage = handle(async ({ body, params, userId, log }, res) => {
   const { id, messageId } = params
 
   assertValid(
@@ -98,13 +98,13 @@ export const retryMessage = handle(async ({ body, params, userId }, res) => {
     history: body.history,
     message: body.message,
     senderId: userId!,
+    log,
   })
 
   const props = { chatId: id, messageId }
   let generated = ''
 
   for await (const gen of stream) {
-    logger.debug(gen, 'Generated')
     if (typeof gen === 'string') {
       generated = gen
       publishMany(members, { type: 'message-partial', partial: gen, ...props })
@@ -119,6 +119,7 @@ export const retryMessage = handle(async ({ body, params, userId }, res) => {
   if (!body.ephemeral) {
     await verifyLock({ chatId: id, lockId })
     await store.chats.editMessage(messageId, generated)
+    await store.chats.update(id, {})
   }
 
   publishMany(members, {
