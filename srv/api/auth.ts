@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { RequestHandler } from 'express'
-import { AppRequest, StatusError } from './wrap'
+import { AppRequest, errors, StatusError } from './wrap'
 import { config } from '../config'
 
 export const authMiddleware: RequestHandler = (req: AppRequest, res, next) => {
@@ -10,7 +10,7 @@ export const authMiddleware: RequestHandler = (req: AppRequest, res, next) => {
   }
 
   if (!header.startsWith('Bearer ')) {
-    return next(AuthError)
+    return next(errors.Unauthorized)
   }
 
   const token = header.replace('Bearer ', '')
@@ -21,13 +21,15 @@ export const authMiddleware: RequestHandler = (req: AppRequest, res, next) => {
     return next()
   } catch (ex) {
     req.user = {} as any
-    return next(AuthError)
+    return next(errors.Unauthorized)
   }
 }
 
 export const loggedIn: RequestHandler = (req: AppRequest, _, next) => {
-  if (!req.user?.userId) return next(AuthError)
+  if (!req.user?.userId) return next(errors.Unauthorized)
   next()
 }
 
-const AuthError = new StatusError('Authorized', 401)
+export const isAdmin: RequestHandler = (req: AppRequest, _, next) => {
+  if (!req.user?.admin) return next(errors.Forbidden)
+}

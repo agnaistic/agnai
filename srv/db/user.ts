@@ -7,6 +7,7 @@ import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../logger'
 import { errors } from '../api/wrap'
+import { encrypt } from './util'
 
 const users = db('user')
 const profiles = db('profile')
@@ -77,8 +78,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     throw errors.BadRequest
   }
 
-  const salt = await bcrypt.genSalt()
-  const hash = await bcrypt.hash(newUser.password, salt)
+  const hash = await encrypt(newUser.password)
 
   const user: AppSchema.User = {
     _id: v4(),

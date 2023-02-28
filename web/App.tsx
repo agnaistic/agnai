@@ -12,6 +12,7 @@ import LoginPage from './pages/Login'
 import ProfilePage from './pages/Profile'
 import Drawer from './pages/Drawer'
 import ChatList from './pages/Chat/ChatList'
+import UsersPage from './pages/Admin/UsersPage'
 
 const App: Component = () => {
   const state = userStore()
@@ -40,6 +41,9 @@ const App: Component = () => {
                 <Route path="/generation-settings" component={GenerationSettings} />
                 <Route path="/profile" component={ProfilePage} />
                 <Route path="/settings" component={Settings} />
+                <Show when={state.user?.admin}>
+                  <Route path="/admin/users" component={UsersPage} />
+                </Show>
               </Show>
             </Routes>
           </div>

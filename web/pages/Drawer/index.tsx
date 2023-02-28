@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { Bot, LogOut, Settings, User, Users } from 'lucide-solid'
+import { Bot, Eye, LogOut, Settings, User, Users } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { userStore } from '../../store'
@@ -27,6 +27,12 @@ const Drawer: Component = () => {
           <Item href="/settings">
             <Settings /> Settings
           </Item>
+
+          <Show when={state.user?.admin}>
+            <Item href="/admin/users">
+              <Eye /> Users
+            </Item>
+          </Show>
         </div>
         <div class="flex h-16 w-full items-center justify-between border-t-2 border-slate-800 px-4 ">
           <div class="flex items-center gap-4">
