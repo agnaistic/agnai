@@ -8,13 +8,11 @@ import AvatarIcon from '../../shared/AvatarIcon'
 import { characterStore } from '../../store'
 import ImportCharacterModal from './ImportCharacter'
 import DeleteCharacterModal from './DeleteCharacter'
-import Tabs from '../../shared/Tabs'
 
 const CharacterList: Component = () => {
   const chars = characterStore((s) => s.characters)
   const [showImport, setImport] = createSignal(false)
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
-  const [tab, setTab] = createSignal(0)
 
   createEffect(() => {
     characterStore.getCharacters()
@@ -23,12 +21,6 @@ const CharacterList: Component = () => {
   return (
     <>
       <PageHeader title="Characters" subtitle="" />
-      <Tabs
-        class="mb-4"
-        select={setTab}
-        selected={tab}
-        tabs={['Characters', 'Group Conversations', 'Invitations']}
-      />
 
       <Show when={!chars.loaded}>
         <div>Loading...</div>
@@ -67,13 +59,13 @@ const Character: Component<{ character: AppSchema.Character; delete: () => void 
   return (
     <div class="flex h-16 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
       <A
-        class="ml-4 flex h-3/4 w-10/12 cursor-pointer items-center rounded-xl bg-gray-800"
+        class="ml-4 flex h-3/4 w-6/12 cursor-pointer items-center rounded-xl bg-gray-800 sm:w-9/12"
         href={`/character/${props.character._id}/chats`}
       >
         <AvatarIcon avatarUrl={props.character.avatar} class="mx-4" />
         <div class="">{props.character.name}</div>
       </A>
-      <div class="flex w-2/12 flex-row justify-center gap-2">
+      <div class="flex w-6/12 flex-row justify-center gap-2 sm:w-3/12">
         <a
           href={`data:text/json:charset=utf-8,${encodeURIComponent(charToJson(props.character))}`}
           download={`${props.character.name}.json`}
@@ -110,3 +102,11 @@ const NoCharacters: Component = () => (
 )
 
 export default CharacterList
+
+function repeat<T>(list: T[], times = 20) {
+  const next: any[] = []
+  for (let i = 0; i < times; i++) {
+    next.push(...list)
+  }
+  return next
+}

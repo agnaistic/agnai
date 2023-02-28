@@ -1,6 +1,6 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { handle } from '../handle'
+import { handle } from '../wrap'
 
 export const createChat = handle(async ({ body, user }) => {
   assertValid(

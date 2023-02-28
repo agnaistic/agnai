@@ -4,6 +4,7 @@ import { createChat } from './create'
 import { updateChat, updateMessage } from './edit'
 
 import { getCharacterChats, getChatDetail } from './get'
+import { createInvite, acceptInvite, rejectInvite } from './invite'
 import { generateMessage, retryMessage } from './message'
 import { deleteMessages } from './remove'
 
@@ -13,6 +14,10 @@ router.use(loggedIn)
 router.post('/', createChat)
 router.get('/:id', getChatDetail)
 router.put('/:id', updateChat)
+
+router.post('/:id/invite', createInvite)
+router.post('/:inviteId/accept', acceptInvite)
+router.post('/:inviteId/reject', rejectInvite)
 
 router.get('/:id/chats', getCharacterChats)
 

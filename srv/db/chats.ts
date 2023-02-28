@@ -116,7 +116,7 @@ export async function createChatMessage(
 }
 
 export async function editMessage(id: string, content: string) {
-  const doc = await msgs.update(
+  const doc = await msgs.updateOne(
     { _id: id },
     { $set: { msg: content, updatedAt: now() } },
     { returnUpdatedDocs: true }
@@ -126,12 +126,12 @@ export async function editMessage(id: string, content: string) {
 }
 
 export async function deleteMessages(messageIds: string[]) {
-  await chats.remove({ _id: { $in: messageIds } }, { multi: true })
+  await chats.deleteMany({ _id: { $in: messageIds } }, { multi: true })
 }
 
 export async function deleteChat(chatId: string) {
-  await chats.remove({ _id: chatId }, {})
-  await msgs.remove({ kind: 'chat-message', chatId }, { multi: true })
+  await chats.deleteMany({ _id: chatId }, {})
+  await msgs.deleteMany({ kind: 'chat-message', chatId }, { multi: true })
 }
 
 export async function deleteAllChats(characterId?: string) {
@@ -141,6 +141,7 @@ export async function deleteAllChats(characterId?: string) {
     chatQuery.characterId = characterId
   }
 
+  chats.find({ })
   const chatIds = await chats.find(chatQuery).then((chats) => chats.map((ch) => ch._id))
 
   const chatsDeleted = await chats.remove(chatQuery, { multi: true })

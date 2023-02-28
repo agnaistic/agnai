@@ -38,7 +38,15 @@ const ProfilePage: Component = () => {
 
           <TextInput
             label="Username"
-            helperText="Your username. This cannot be changed."
+            helperText="Your user ID. This is used by others to send you chat invitations."
+            fieldName="userid"
+            value={state.user?._id}
+            disabled
+          />
+
+          <TextInput
+            label="Username"
+            helperText="Your username. This cannot be changed. You never need to share your username."
             fieldName="username"
             value={state.user?.username}
             disabled

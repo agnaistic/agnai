@@ -48,8 +48,8 @@ const Chats: Component = () => {
     <div class="flex flex-col gap-2">
       <div class="flex items-center">
         <div class="w-6/12 px-4">Name</div>
-        <div class="flex w-2/12 justify-center">Messages</div>
-        <div class="flex w-4/12 justify-center">Last Updated</div>
+        <div class="flex w-2/12 justify-center"></div>
+        <div class="flex w-4/12 justify-center">Updated</div>
       </div>
       <For each={state.list}>
         {(chat) => (

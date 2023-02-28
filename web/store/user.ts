@@ -7,6 +7,7 @@ import { publish } from './socket'
 import { toastStore } from './toasts'
 
 type State = {
+  showMenu: boolean
   loading: boolean
   error?: string
   loggedIn: boolean
@@ -20,6 +21,9 @@ export const userStore = createStore<State>(
   init()
 )((get, set) => {
   return {
+    menu({ showMenu }) {
+      return { showMenu: !showMenu }
+    },
     async *login(_, username: string, password: string, onSuccess?: () => void) {
       yield { loading: true }
 
@@ -123,10 +127,11 @@ function init(): State {
   const existing = getAuth()
 
   if (!existing) {
-    return { loading: false, jwt: '', loggedIn: false }
+    return { loading: false, jwt: '', loggedIn: false, showMenu: false }
   }
 
   return {
+    showMenu: false,
     loggedIn: true,
     loading: false,
     jwt: existing,

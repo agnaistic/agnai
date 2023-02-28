@@ -41,13 +41,15 @@ const Message: Component<{
   let ref: HTMLDivElement | undefined
 
   return (
-    <div class="flex w-full gap-4 rounded-l-md p-1 hover:bg-slate-800">
-      <Show when={props.char && !!props.msg.characterId}>
-        <AvatarIcon avatarUrl={props.char?.avatar} class="h-12 w-12" />
-      </Show>
-      <Show when={!props.msg.characterId}>
-        <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} class="h-12 w-12" />
-      </Show>
+    <div class="flex w-full gap-4 rounded-l-md hover:bg-slate-800">
+      <div class="flex w-12 items-center justify-center">
+        <Show when={props.char && !!props.msg.characterId}>
+          <AvatarIcon avatarUrl={props.char?.avatar} />
+        </Show>
+        <Show when={!props.msg.characterId}>
+          <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} />
+        </Show>
+      </div>
 
       <div class="flex w-full select-text flex-col">
         <div class="flex w-full flex-row justify-between">

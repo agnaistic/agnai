@@ -4,7 +4,7 @@ import { CHAT_ADAPTERS, MULTI_TENANT_ADAPTERS } from '../../common/adapters'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { loggedIn } from './auth'
-import { handle, StatusError } from './handle'
+import { handle, StatusError } from './wrap'
 import { handleUpload } from './upload'
 
 const router = Router()

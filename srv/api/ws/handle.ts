@@ -87,17 +87,23 @@ function logout(client: AppSocket) {
 
 export function publishMany<T extends { type: string }>(userIds: string[], data: T) {
   const unique = Array.from(new Set(userIds))
+  let count = 0
   for (const userId of unique) {
-    publishOne(userId, data)
+    count += publishOne(userId, data)
   }
+
+  logger.debug({ count }, 'Messages sent')
 }
 
 export function publishOne<T extends { type: string }>(userId: string, data: T) {
+  let count = 0
   const sockets = userSockets.get(userId)
   logger.info({ count: sockets?.length, type: data.type }, 'Publishing')
-  if (!sockets) return
+  if (!sockets) return count
 
   for (const socket of sockets) {
     socket.send(JSON.stringify(data))
+    count++
   }
+  return count
 }

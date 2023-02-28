@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { Router } from 'express'
 import { config } from '../../config'
-import { handle } from '../handle'
+import { handle } from '../wrap'
 
 const router = Router()
 

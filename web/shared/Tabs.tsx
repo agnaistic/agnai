@@ -12,9 +12,9 @@ const Tabs: Component<{
         {(tab, i) => (
           <div
             onClick={() => props.select(i())}
-            class={`flex w-full cursor-pointer items-center justify-center border-b-2 ${border(
+            class={`flex w-full cursor-pointer items-center justify-center border-b-2 text-sm sm:text-4xl ${border(
               props.selected() === i()
-            )} px-4 text-xl hover:border-slate-500 `}
+            )} px-4 text-xl hover:border-slate-700 `}
           >
             {tab}
           </div>

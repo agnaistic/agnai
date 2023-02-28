@@ -116,6 +116,10 @@
     transition: 1s;
   }
 
+  input[type='text']:disabled {
+    @apply bg-slate-800 text-gray-500;
+  }
+
   input[type='range'] {
     background: rgb(255 255 255 / 0.05);
     background-image: linear-gradient(rgb(152 64 160), rgb(152 64 160));
@@ -134,5 +138,11 @@
     box-shadow: none;
     border: none;
     background: transparent;
+  }
+
+  .side-drawer {
+    @apply bg-background-lighter;
+    width: calc(100vw-32px);
+    height: calc(100vh-72);
   }
 }

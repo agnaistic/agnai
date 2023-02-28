@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { assertValid } from 'frisker'
 import { store } from '../db'
 import { loggedIn } from './auth'
-import { handle, StatusError } from './handle'
+import { handle, StatusError } from './wrap'
 import { handleUpload } from './upload'
 
 const router = Router()

@@ -1,7 +1,7 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { createResponseStream } from '../adapter/generate'
-import { errors, handle } from '../handle'
+import { errors, handle } from '../wrap'
 import { publishMany } from '../ws/handle'
 import { obtainLock, releaseLock, verifyLock } from './lock'
 

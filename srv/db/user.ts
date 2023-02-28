@@ -6,7 +6,7 @@ import { AppSchema } from './schema'
 import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../logger'
-import { errors } from '../api/handle'
+import { errors } from '../api/wrap'
 
 const users = db('user')
 const profiles = db('profile')

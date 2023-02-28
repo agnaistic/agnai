@@ -9,7 +9,7 @@ interface Props {
 const Modal: Component<Props> = (props) => {
   return (
     <Show when={props.show}>
-      <div class="fixed inset-x-0 bottom-0 px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
+      <div class="fixed inset-x-0 top-2 px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>

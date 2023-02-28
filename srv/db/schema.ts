@@ -51,6 +51,8 @@ export namespace AppSchema {
   }
 
   export interface ChatMember {
+    _id: string
+    kind: 'chat-member'
     chatId: string
     userId: string
     createdAt: string
@@ -95,6 +97,16 @@ export namespace AppSchema {
     updatedAt: string
   }
 
+  export interface ChatInvite {
+    _id: string
+    kind: 'chat-invite'
+    byUserId: string
+    invitedId: string
+    chatId: string
+    createdAt: string
+    state: 'pending' | 'rejected' | 'accepted'
+  }
+
   export interface ChatLock {
     kind: 'chat-lock'
 
@@ -133,5 +145,7 @@ export type AllDoc =
   | AppSchema.User
   | AppSchema.Profile
   | AppSchema.ChatLock
+  | AppSchema.ChatMember
+  | AppSchema.ChatInvite
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []

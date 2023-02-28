@@ -1,5 +1,5 @@
 import { store } from '../../db'
-import { errors, handle } from '../handle'
+import { errors, handle } from '../wrap'
 
 export const getCharacterChats = handle(async (req) => {
   const character = await store.characters.getCharacter(req.userId!, req.params.id)

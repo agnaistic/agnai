@@ -29,6 +29,8 @@ export const config = {
   port: +env('PORT', '3001'),
   db: {
     name: env('DB_NAME', 'pyg'),
+    host: env('DB_HOST', ''),
+    port: +env('DB_PORT', '27017'),
   },
   kobold: {
     maxLength: +env('KOBOLD_MAX_LENGTH', '64'),
