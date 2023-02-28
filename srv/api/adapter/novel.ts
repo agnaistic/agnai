@@ -66,8 +66,15 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const response = await needle('post', novelUrl, body, {
     json: true,
+    timeout: 2000,
+    response_timeout: 8000,
     headers: { Authorization: `Bearer ${user.novelApiKey}` },
-  })
+  }).catch((err) => ({ err }))
+
+  if ('err' in response) {
+    yield { error: response.err.message }
+    return
+  }
 
   logger.warn(response.body, 'Novel response')
   const status = response.statusCode || 0

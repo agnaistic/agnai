@@ -1,6 +1,5 @@
 import { v4 } from 'uuid'
 import { db } from '../../db'
-import { logger } from '../../logger'
 
 const locks = db('chat-lock')
 
@@ -20,7 +19,6 @@ export async function obtainLock(chatId: string, ttl = 20) {
 
     // If the expiry time is in the future, we cannot obtain a lock
     if (expires.valueOf() > Date.now()) {
-      logger.debug({ existing, chatId }, 'Lock already exists')
       throw new Error(`Unable to obtain lock: Lock already exists`)
     }
   }
@@ -40,13 +38,11 @@ export async function obtainLock(chatId: string, ttl = 20) {
     { upsert: true }
   )
 
-  logger.debug({ lockId, chatId }, 'Lock obtained')
   return lockId
 }
 
 export async function releaseLock(chatId: string) {
   await locks.deleteMany({ chatLock: chatId }, {})
-  logger.debug({ chatId }, 'Lock released')
 }
 
 export async function verifyLock(opts: { chatId: string; lockId: string }) {
@@ -58,6 +54,4 @@ export async function verifyLock(opts: { chatId: string; lockId: string }) {
   if (lock.lockId !== opts.lockId) {
     throw new Error(`Lock is not valid: Lock IDs do not much`)
   }
-
-  logger.debug(opts, 'Lock verified')
 }

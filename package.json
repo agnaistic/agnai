@@ -63,8 +63,6 @@
     "@types/js-cookie": "^3.0.2",
     "@types/node": "^18.13.0",
     "@types/showdown": "^2.0.0",
-    "@typescript-eslint/eslint-plugin": "^5.48.1",
-    "@typescript-eslint/parser": "^5.48.1",
     "babel-preset-solid": "^1.6.9",
     "buffer": "^5.5.0",
     "concurrently": "^7.6.0",

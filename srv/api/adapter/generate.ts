@@ -1,4 +1,5 @@
 import { Response } from 'express'
+import { ChatAdapter } from '../../../common/adapters'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { AppLog } from '../../logger'
@@ -6,6 +7,7 @@ import { errors, StatusError } from '../wrap'
 import { handleChai } from './chai'
 import { handleKobold } from './kobold'
 import { handleNovel } from './novel'
+import { ModelAdapter } from './type'
 
 export type GenerateOptions = {
   senderId: string
@@ -13,6 +15,13 @@ export type GenerateOptions = {
   history: AppSchema.ChatMessage[]
   message: string
   log: AppLog
+}
+
+const handlers: { [key in ChatAdapter]: ModelAdapter } = {
+  chai: handleChai,
+  default: handleChai,
+  novel: handleNovel,
+  kobold: handleKobold,
 }
 
 export async function generateResponse(
@@ -34,18 +43,8 @@ export async function generateResponse(
     user.defaultAdapter
   const adapterOpts = { ...opts, members, user, sender }
 
-  opts.log.debug({ adapter, message: opts.message.slice(0, 10) + '...' }, 'Generating')
-
-  switch (adapter) {
-    case 'chai':
-      return handleChai(adapterOpts)
-
-    case 'novel':
-      return handleNovel(adapterOpts)
-
-    case 'kobold':
-      return handleKobold(adapterOpts)
-  }
+  const handler = handlers[adapter]
+  return handler(adapterOpts)
 }
 
 export async function createResponseStream(opts: GenerateOptions) {

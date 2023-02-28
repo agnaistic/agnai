@@ -48,7 +48,7 @@ const CreateCharacter: Component = () => {
       scenario: 'string',
       sampleChat: 'string',
     } as const)
-    const attributes = getAttributeMap(getFormEntries(ev))
+    const attributes = getAttributeMap(ev)
     const persona = {
       kind: body.kind,
       attributes,

@@ -3,6 +3,7 @@ import { Component, createSignal, For, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
+import { getFormEntries } from './util'
 
 type Attr = { key: string; values: string }
 
@@ -25,6 +26,12 @@ const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel
 
   const add = () => setAttrs((prev) => [...prev, { key: '', values: '' }])
 
+  const onKey = (key: string, index: number) => {
+    if (key !== 'Enter') return
+    if (index + 1 !== attrs().length) return
+    add()
+  }
+
   return (
     <>
       <Show when={!props.hideLabel}>
@@ -44,18 +51,22 @@ const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel
       </Show>
       <div>
         <Button onClick={add}>
-          <Plus />
+          <Plus size={16} />
           Add Attribute
         </Button>
       </div>
-      <div class="flex w-full flex-col gap-2">
-        <For each={attrs()}>{(attr, i) => <Attribute attr={attr} index={i()} />}</For>
+      <div class="mt-2 flex w-full flex-col gap-2">
+        <For each={attrs()}>{(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} />}</For>
       </div>
     </>
   )
 }
 
-const Attribute: Component<{ attr: Attr; index: number }> = (props) => {
+const Attribute: Component<{
+  attr: Attr
+  index: number
+  onKey: (key: string, i: number) => void
+}> = (props) => {
   return (
     <div class="flex w-full gap-2">
       <div class="w-3/12">
@@ -70,6 +81,7 @@ const Attribute: Component<{ attr: Attr; index: number }> = (props) => {
           fieldName={`attr-value.${props.index}`}
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
           value={props.attr.values}
+          onKeyUp={(ev) => props.onKey(ev, props.index)}
         />
       </div>
     </div>
@@ -78,7 +90,8 @@ const Attribute: Component<{ attr: Attr; index: number }> = (props) => {
 
 export default PersonaAttributes
 
-export function getAttributeMap(entries: Array<[string, string]>) {
+export function getAttributeMap(event: Event | HTMLFormElement) {
+  const entries = getFormEntries(event)
   const map: any = {}
   for (const [key, value] of entries) {
     if (key.startsWith('attr-key')) {

@@ -38,6 +38,8 @@ export const handleChai: ModelAdapter = async function* ({
 
   const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
     json: true,
+    timeout: 3000,
+    response_timeout: 8000,
     headers: {
       'user-agent':
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',
@@ -45,7 +47,13 @@ export const handleChai: ModelAdapter = async function* ({
       developer_uid: config.chai.uid,
       developer_key: config.chai.key,
     },
-  })
+  }).catch((err) => ({ err }))
+
+  if ('err' in response) {
+    yield { error: response.err.message }
+    return
+  }
+
   logger.warn(response.body, 'Chai response')
 
   const status = response.statusCode || 0

@@ -47,7 +47,10 @@ export async function update(id: string, props: Partial<AppSchema.Chat>) {
 
 export async function create(
   characterId: string,
-  props: Pick<AppSchema.Chat, 'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId'>
+  props: Pick<
+    AppSchema.Chat,
+    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides'
+  >
 ) {
   const id = `${v4()}`
   const char = await getCharacter(props.userId, characterId)
@@ -65,7 +68,7 @@ export async function create(
     greeting: props.greeting,
     sampleChat: props.sampleChat,
     scenario: props.scenario,
-    overrides: char.persona,
+    overrides: props.overrides || char.persona,
     createdAt: now(),
     updatedAt: now(),
     messageCount: props.greeting ? 1 : 0,
@@ -141,7 +144,7 @@ export async function deleteAllChats(characterId?: string) {
     chatQuery.characterId = characterId
   }
 
-  chats.find({ })
+  chats.find({})
   const chatIds = await chats.find(chatQuery).then((chats) => chats.map((ch) => ch._id))
 
   const chatsDeleted = await chats.remove(chatQuery, { multi: true })

@@ -29,7 +29,7 @@ export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
   return values
 }
 
-export function getFormEntries(evt: Event): Array<[string, string]> {
+export function getFormEntries(evt: Event | HTMLFormElement): Array<[string, string]> {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
   const form = new FormData(target as HTMLFormElement)

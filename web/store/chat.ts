@@ -19,6 +19,7 @@ export type NewChat = {
   greeting: string
   scenario: string
   sampleChat: string
+  overrides: AppSchema.Chat['overrides']
 }
 
 export const chatStore = createStore<ChatState>('chat', {

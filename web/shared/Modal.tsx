@@ -13,10 +13,10 @@ const Modal: Component<Props> = (props) => {
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="overflow-hidden rounded-lg bg-gray-900 p-4 shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
+        <div class="max-h-screen overflow-hidden rounded-lg bg-gray-900 p-4 shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
           <div>
             <div class="black mb-4 text-lg font-bold">{props.title}</div>
-            <div class="black text-lg">{props.children}</div>
+            <div class="black overflow-y-auto text-lg">{props.children}</div>
           </div>
         </div>
       </div>

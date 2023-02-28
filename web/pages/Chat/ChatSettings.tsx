@@ -6,7 +6,7 @@ import Dropdown from '../../shared/Dropdown'
 import Modal, { ModalFooter } from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { getFormEntries, getStrictForm } from '../../shared/util'
+import { getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
 
 const options = [
@@ -19,8 +19,8 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const state = chatStore()
   let ref: any
 
-  const onSave = () => {
-    const body = getStrictForm(ref, {
+  const onSave = (ev: Event) => {
+    const body = getStrictForm(ev, {
       name: 'string',
       adapter: CHAT_ADAPTERS,
       greeting: 'string',
@@ -29,7 +29,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       schema: ['wpp', 'boostyle', 'sbf'],
     } as const)
 
-    const attributes = getAttributeMap(getFormEntries(ref))
+    const attributes = getAttributeMap(ev)
 
     const overrides: AppSchema.CharacterPersona = {
       kind: body.schema,
@@ -43,7 +43,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
   return (
     <Modal show={props.show} title="Chat Settings">
-      <form ref={ref}>
+      <form ref={ref} onSubmit={onSave}>
         <Dropdown
           class="mb-2"
           fieldName="adapter"
@@ -81,11 +81,11 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
         <Dropdown
           fieldName="schema"
-          label="Persona Schema Format"
+          label="Persona"
           items={options}
-          value={state.active?.overrides.kind}
+          value={state.active?.overrides.kind || state.character?.persona.kind}
         />
-        <div class="mt-4 flex flex-col gap-2">
+        <div class="mt-4 flex flex-col gap-2 text-sm">
           <PersonaAttributes value={state.active?.overrides.attributes} hideLabel />
         </div>
 
@@ -93,7 +93,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           <Button schema="secondary" onClick={props.close}>
             Cancel
           </Button>
-          <Button onClick={onSave}>Save</Button>
+          <Button type="submit">Save</Button>
         </ModalFooter>
       </form>
     </Modal>

@@ -1,4 +1,5 @@
 import { AppSchema } from '../../db/schema'
+import gpt from 'gpt-3-encoder'
 import { logger } from '../../logger'
 
 type PromptOpts = {
@@ -15,7 +16,7 @@ const SELF_REPLACE = /\{\{user\}\}/g
 export function createPrompt({ sender, chat, char, history, message }: PromptOpts) {
   const username = sender.handle || 'You'
 
-  const lines: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, char.persona)}`]
+  const lines: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
   if (chat.scenario) {
     lines.push(`Scenario: ${chat.scenario}`)
@@ -34,6 +35,9 @@ export function createPrompt({ sender, chat, char, history, message }: PromptOpt
     .join('\n')
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, username)
+
+  const tokens = gpt.encode(prompt).length
+  logger.debug({ tokens }, 'Tokens')
 
   return prompt
 }

@@ -1,4 +1,5 @@
 import { assertValid } from 'frisker'
+import { PERSONA_FORMATS } from '../../../common/adapters'
 import { store } from '../../db'
 import { handle } from '../wrap'
 
@@ -10,6 +11,10 @@ export const createChat = handle(async ({ body, user }) => {
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
+      overrides: {
+        kind: PERSONA_FORMATS,
+        attributes: 'any',
+      },
     },
     body
   )

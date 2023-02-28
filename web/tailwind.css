@@ -54,7 +54,7 @@
   .btn-base {
     @apply flex gap-1;
     @apply transition-colors duration-100;
-    @apply rounded-md px-3 py-2;
+    @apply rounded-md px-3;
   }
 
   .btn-primary {

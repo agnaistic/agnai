@@ -17,7 +17,7 @@ export function handle(handler: Handler) {
       }
     } catch (ex) {
       req.log.error({ err: ex }, 'Error occurred handling request')
-      next(ex)
+      if (!res.headersSent) next(ex)
     }
   }
   return wrapped
