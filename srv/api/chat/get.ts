@@ -22,3 +22,10 @@ export const getChatDetail = handle(async ({ userId, params }) => {
 
   return { chat, messages, character, members }
 })
+
+export const getAllChats = handle(async (req) => {
+  const chats = await store.chats.getAllChats(req.userId!)
+  const charIds = new Set(chats.map((ch) => ch.characterId))
+  const characters = await store.characters.getCharacterList(Array.from(charIds))
+  return { chats, characters }
+})

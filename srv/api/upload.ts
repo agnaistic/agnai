@@ -1,7 +1,7 @@
 import mp from 'multiparty'
 import { Request } from 'express'
-import { writeFile } from 'fs/promises'
-import { extname, resolve } from 'path'
+import { rename, writeFile } from 'fs/promises'
+import { basename, dirname, extname, resolve } from 'path'
 import { createReadStream, mkdirSync, readdirSync } from 'fs'
 import { v4 } from 'uuid'
 import { assertValid, Validator } from 'frisker'
@@ -76,6 +76,14 @@ export function handleUpload<T extends Validator>(req: Request, type: T) {
 
     form.parse(req)
   })
+}
+
+export async function renameFile(attach: Attachment, filename: string) {
+  const base = basename(attach.filename)
+  const folder = dirname(attach.filename)
+  const ext = extname(attach.filename)
+
+  await rename(resolve(assetFolders, base), resolve(assetFolders, filename + ext))
 }
 
 const assetFolders = resolve(process.cwd(), 'dist', 'assets')

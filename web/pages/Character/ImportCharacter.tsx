@@ -15,9 +15,7 @@ const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (p
       const content = await getFileAsString(files[0])
       const json = JSON.parse(content)
       setJson(json)
-      console.log(json)
     } catch (ex) {
-      console.log(files[0].content)
       toastStore.warn('Invalid file format: Must be exported from Agnaistic')
     }
   }
@@ -33,7 +31,7 @@ const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (p
   }
 
   return (
-    <Modal show={props.show} title="Import Character">
+    <Modal show={props.show} title="Import Character" close={props.close}>
       <div class="flex flex-col gap-2">
         <FileInput
           label="JSON File"

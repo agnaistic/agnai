@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
-import { CHAT_ADAPTERS, MULTI_TENANT_ADAPTERS } from '../../common/adapters'
+import { MULTI_TENANT_ADAPTERS } from '../../common/adapters'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { loggedIn } from './auth'
@@ -22,6 +22,7 @@ const getConfig = handle(async ({ userId }) => {
 const register = handle(async (req) => {
   assertValid({ handle: 'string', username: 'string', password: 'string' }, req.body)
   const { profile, token, user } = await store.users.createUser(req.body)
+  req.log.info({ user: user.username, id: user._id }, 'User registered')
   return { profile, token, user }
 })
 

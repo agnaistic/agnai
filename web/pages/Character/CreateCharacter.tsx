@@ -13,8 +13,8 @@ import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttribut
 import AvatarIcon from '../../shared/AvatarIcon'
 
 const options = [
-  { id: 'wpp', label: 'W++' },
   { id: 'boostyle', label: 'Boostyle' },
+  { id: 'wpp', label: 'W++' },
   { id: 'sbf', label: 'SBF' },
 ]
 
@@ -130,7 +130,12 @@ const CreateCharacter: Component = () => {
 
         <div>
           <FormLabel label="Persona Schema" helperText="Format to use for the character's format" />
-          <RadioGroup name="kind" horizontal options={options} value={state.edit?.persona.kind} />
+          <RadioGroup
+            name="kind"
+            horizontal
+            options={options}
+            value={state.edit?.persona.kind || 'boostyle'}
+          />
         </div>
 
         <PersonaAttributes value={state.edit?.persona.attributes} />

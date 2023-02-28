@@ -14,7 +14,7 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
   }
 
   return (
-    <Modal title="Confirm Delete" show={props.show}>
+    <Modal title="Confirm Delete" show={props.show} close={props.close}>
       Are you sure wish to delete the last{' '}
       {state.msgs.length - state.msgs.findIndex(byId(props.messageId))} messages?
       <ModalFooter>

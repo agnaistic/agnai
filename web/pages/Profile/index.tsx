@@ -37,7 +37,7 @@ const ProfilePage: Component = () => {
           </div>
 
           <TextInput
-            label="Username"
+            label="ID"
             helperText="Your user ID. This is used by others to send you chat invitations."
             fieldName="userid"
             value={state.user?._id}

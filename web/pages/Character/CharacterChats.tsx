@@ -9,21 +9,16 @@ import { toDuration } from '../../shared/util'
 
 const CharacterChats: Component = () => {
   const [showCreate, setCreate] = createSignal(false)
-  const state = chatStore((s) => ({ char: { ...s.character }, chats: s.list || [] }))
+  const state = chatStore()
   const { id } = useParams()
 
   createEffect(() => {
-    chatStore.getChats(id)
+    chatStore.getBotChats(id)
   })
 
   return (
     <div class="flex flex-col gap-2">
-      <PageHeader
-        title="Conversations"
-        subtitle={
-          <span class="flex flex-row items-center">Chats with {state.char.name || '...'}</span>
-        }
-      />
+      <PageHeader title={`Conversations with ${state.char?.char.name || '...'}`} />
 
       <div class="flex w-full justify-end gap-2">
         <Button onClick={() => setCreate(true)}>
@@ -31,8 +26,8 @@ const CharacterChats: Component = () => {
           Conversation
         </Button>
       </div>
-      {state.chats.length === 0 && <NoChats />}
-      <Show when={state.chats.length}>
+      {state.char?.chats.length === 0 && <NoChats />}
+      <Show when={state.char?.chats.length}>
         <Chats />
       </Show>
       <CreateChatModal show={showCreate()} onClose={() => setCreate(false)} />
@@ -51,7 +46,7 @@ const Chats: Component = () => {
         <div class="flex w-2/12 justify-center"></div>
         <div class="flex w-4/12 justify-center">Updated</div>
       </div>
-      <For each={state.list}>
+      <For each={state.char?.chats}>
         {(chat) => (
           <div
             class="flex h-12 cursor-pointer flex-row items-center gap-2 rounded-xl bg-gray-800"

@@ -3,7 +3,7 @@ import { loggedIn } from '../auth'
 import { createChat } from './create'
 import { updateChat, updateMessage } from './edit'
 
-import { getCharacterChats, getChatDetail } from './get'
+import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { createInvite, acceptInvite, rejectInvite } from './invite'
 import { generateMessage, retryMessage } from './message'
 import { deleteMessages } from './remove'
@@ -11,6 +11,7 @@ import { deleteMessages } from './remove'
 const router = Router()
 
 router.use(loggedIn)
+router.get('/', getAllChats)
 router.post('/', createChat)
 router.get('/:id', getChatDetail)
 router.put('/:id', updateChat)

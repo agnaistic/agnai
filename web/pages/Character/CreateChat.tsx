@@ -26,7 +26,7 @@ const CreateChatModal: Component<{
   const nav = useNavigate()
 
   const onCreate = (ev: Event) => {
-    if (!state.character) return
+    if (!state.char) return
     const body = getStrictForm(ref, {
       name: 'string',
       greeting: 'string',
@@ -37,7 +37,7 @@ const CreateChatModal: Component<{
 
     const attributes = getAttributeMap(ref)
 
-    const characterId = state.character._id
+    const characterId = state.char.char._id
     chatStore.createChat(
       characterId,
       { ...body, overrides: { kind: body.schema, attributes } },
@@ -46,7 +46,11 @@ const CreateChatModal: Component<{
   }
 
   return (
-    <Modal show={props.show} title={`Create Conversation with ${state.character?.name}`}>
+    <Modal
+      show={props.show}
+      close={props.onClose}
+      title={`Create Conversation with ${state.char?.char.name}`}
+    >
       <form ref={ref}>
         <div class="mb-2 text-sm">
           Optionally modify some of the conversation context. You can override other aspects of the
@@ -70,7 +74,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="greeting"
           label="Greeting"
-          value={state.character?.greeting}
+          value={state.char?.char.greeting}
           class="text-xs"
         ></TextInput>
 
@@ -78,7 +82,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="scenario"
           label="Scenario"
-          value={state.character?.scenario}
+          value={state.char?.char.scenario}
           class="text-xs"
         ></TextInput>
 
@@ -86,7 +90,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="sampleChat"
           label="Sample Chat"
-          value={state.character?.sampleChat}
+          value={state.char?.char.sampleChat}
           class="text-xs"
         ></TextInput>
 
@@ -95,11 +99,11 @@ const CreateChatModal: Component<{
           fieldName="schema"
           label="Persona"
           items={options}
-          value={state.active?.overrides.kind}
+          value={state.active?.chat.overrides.kind}
         />
 
         <div class="w-full text-sm">
-          <PersonaAttributes value={state.character?.persona.attributes} hideLabel />
+          <PersonaAttributes value={state.char?.char.persona.attributes} hideLabel />
         </div>
 
         <ModalFooter>

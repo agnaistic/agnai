@@ -1,8 +1,10 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ChevronLeft } from 'lucide-solid'
+import { ChevronLeft, MailPlus } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
+import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
+import Tooltip from '../../shared/Tooltip'
 import { chatStore } from '../../store'
 import { msgStore } from '../../store/message'
 import ChatSettingsModal from './ChatSettings'
@@ -13,8 +15,8 @@ import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
   const chats = chatStore((s) => ({
-    chat: s.active,
-    character: s.character,
+    chat: s.active?.chat,
+    character: s.active?.char,
     lastId: s.lastChatId,
   }))
 
@@ -80,10 +82,15 @@ const ChatDetail: Component = () => {
             </div>
             <div class="flex items-center justify-between">
               <A href={`/character/${chats.character?._id}/chats`}>
-                <div class="flex cursor-pointer flex-row items-center text-sm text-white/50">
+                <div class="flex h-8 cursor-pointer flex-row items-center justify-between text-sm text-white/50">
                   <ChevronLeft size={16} class="mt-0.5" /> Conversations
                 </div>
               </A>
+              <div class="focusable-icon-button">
+                <Tooltip tip="Invite user" position="bottom">
+                  <MailPlus />
+                </Tooltip>
+              </div>
             </div>
           </div>
         </div>

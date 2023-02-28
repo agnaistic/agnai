@@ -157,3 +157,16 @@ export async function deleteAllChats(characterId?: string) {
 export function canViewChat(senderId: string, chat: AppSchema.Chat) {
   return chat.userId === senderId || chat.memberIds.includes(senderId)
 }
+
+export async function getAllChats(userId: string) {
+  const list = await chats
+    .find({
+      $or: [
+        { kind: 'chat', userId },
+        { kind: 'chat', memberIds: userId },
+      ],
+    })
+    .sort({ updatedAt: -1 })
+
+  return list
+}

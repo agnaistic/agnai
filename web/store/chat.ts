@@ -1,5 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
+import { characterStore } from './character'
 import { createStore } from './create'
 import { msgStore } from './message'
 import { toastStore } from './toasts'
@@ -7,9 +8,18 @@ import { toastStore } from './toasts'
 type ChatState = {
   lastChatId: string | null
   loaded: boolean
-  list: AppSchema.Chat[]
-  character?: AppSchema.Character
-  active?: AppSchema.Chat
+  all?: {
+    chats: AppSchema.Chat[]
+    chars: { [charId: string]: AppSchema.Character }
+  }
+  char?: {
+    chats: AppSchema.Chat[]
+    char: AppSchema.Character
+  }
+  active?: {
+    chat: AppSchema.Chat
+    char: AppSchema.Character
+  }
   activeMembers: AppSchema.Profile[]
   memberIds: { [userId: string]: AppSchema.Profile }
 }
@@ -25,7 +35,6 @@ export type NewChat = {
 export const chatStore = createStore<ChatState>('chat', {
   lastChatId: localStorage.getItem('lastChatId'),
   loaded: false,
-  list: [],
   activeMembers: [],
   memberIds: {},
 })((get, set) => {
@@ -35,8 +44,8 @@ export const chatStore = createStore<ChatState>('chat', {
       return {
         lastChatId: null,
         loaded: false,
-        list: [],
-        character: undefined,
+        all: undefined,
+        char: undefined,
         active: undefined,
         activeMembers: [],
         memberIds: {},
@@ -57,14 +66,21 @@ export const chatStore = createStore<ChatState>('chat', {
 
         return {
           lastChatId: id,
-          active: res.result.chat,
+          active: {
+            chat: res.result.chat,
+            char: res.result.character,
+          },
           activeMembers: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
-          character: res.result.character,
         }
       }
     },
-    async editChat({ list }, id: string, update: Partial<AppSchema.Chat>, onSuccess?: () => void) {
+    async *editChat(
+      { char, all, active },
+      id: string,
+      update: Partial<AppSchema.Chat>,
+      onSuccess?: () => void
+    ) {
       const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
       if (res.error) {
         toastStore.error(`Failed to update chat: ${res.error}`)
@@ -74,13 +90,48 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         onSuccess?.()
         toastStore.success('Updated chat settings')
-        return {
-          list: list.map((l) => (l._id === id ? res.result! : l)),
-          active: res.result,
+
+        if (all) {
+          yield {
+            all: {
+              chars: all.chars,
+              chats: all.chats.map((ch) => (ch._id === id ? res.result! : ch)),
+            },
+          }
+        }
+
+        if (char) {
+          yield {
+            char: {
+              char: char.char,
+              chats: char.chats.map((ch) => (ch._id === id ? res.result! : ch)),
+            },
+          }
+        }
+
+        if (active && active.chat._id === id) {
+          yield { active: { chat: res.result!, char: active.char } }
         }
       }
     },
-    getChats: async (_, characterId: string) => {
+    async *getAllChats({ all }) {
+      const res = await api.get<{ chats: AppSchema.Chat[]; characters: AppSchema.Character[] }>(
+        '/chat'
+      )
+
+      if (res.error) {
+        toastStore.error(`Could not retrieve chats`)
+        return { all }
+      }
+      if (res.result) {
+        const chars = res.result.characters.reduce<any>((prev, curr) => {
+          prev[curr._id] = curr
+          return prev
+        }, {})
+        return { all: { chats: res.result.chats, chars } }
+      }
+    },
+    getBotChats: async (_, characterId: string) => {
       const res = await api.get<{ character: AppSchema.Character; chats: AppSchema.Chat[] }>(
         `/chat/${characterId}/chats`
       )
@@ -88,8 +139,10 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         return {
           loaded: true,
-          character: res.result.character,
-          list: res.result.chats,
+          char: {
+            char: res.result.character,
+            chats: res.result.chats,
+          },
         }
       }
     },
@@ -102,7 +155,9 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await api.post<AppSchema.Chat>('/chat', { characterId, ...props })
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
-        yield { active: res.result }
+        const { characters } = characterStore.getState()
+        const character = characters.list.find((ch) => ch._id === characterId)
+        yield { active: { chat: res.result, char: character! } }
 
         onSuccess?.(res.result._id)
       }

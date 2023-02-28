@@ -16,7 +16,7 @@ const DeleteCharacterModal: Component<{
     characterStore.deleteCharacter(props.char._id, props.close)
   }
   return (
-    <Modal show={props.show && !!props.char} title="Confirm Deletion">
+    <Modal show={props.show && !!props.char} title="Confirm Deletion" close={props.close}>
       <div class="flex flex-col items-center gap-4">
         <div>Are you sure you wish to delete this character?</div>
         <div class="flex justify-center">

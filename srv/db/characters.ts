@@ -55,3 +55,8 @@ export async function getCharacters(userId: string) {
 export async function deleteCharacter(charId: string, userId: string) {
   await chars.removeOne({ _id: charId, userId, kind: 'character' }, {})
 }
+
+export async function getCharacterList(charIds: string[]) {
+  const list = await chars.find({ _id: { $in: charIds }, kind: 'character' })
+  return list
+}

@@ -16,7 +16,7 @@ const options = [
 ]
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = chatStore()
+  const state = chatStore((s) => ({ active: s.active?.chat, char: s.active?.char }))
   let ref: any
 
   const onSave = (ev: Event) => {
@@ -42,7 +42,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   }
 
   return (
-    <Modal show={props.show} title="Chat Settings">
+    <Modal show={props.show} title="Chat Settings" close={props.close}>
       <form ref={ref} onSubmit={onSave}>
         <Dropdown
           class="mb-2"
@@ -83,7 +83,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           fieldName="schema"
           label="Persona"
           items={options}
-          value={state.active?.overrides.kind || state.character?.persona.kind}
+          value={state.active?.overrides.kind || state.char?.persona.kind}
         />
         <div class="mt-4 flex flex-col gap-2 text-sm">
           <PersonaAttributes value={state.active?.overrides.attributes} hideLabel />

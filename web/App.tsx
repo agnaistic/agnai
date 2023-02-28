@@ -11,6 +11,7 @@ import { userStore } from './store'
 import LoginPage from './pages/Login'
 import ProfilePage from './pages/Profile'
 import Drawer from './pages/Drawer'
+import ChatList from './pages/Chat/ChatList'
 
 const App: Component = () => {
   const state = userStore()
@@ -31,6 +32,7 @@ const App: Component = () => {
             </Show>
             <Routes>
               <Show when={state.loggedIn}>
+                <Route path="/chats" component={ChatList} />
                 <Route path="/chat" component={ChatDetail} />
                 <Route path="/chat/:id" component={ChatDetail} />
                 <CharacterRoutes />

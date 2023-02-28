@@ -11,7 +11,7 @@ const Tooltip: Component<{
     <div class="tooltip">
       {props.children}
       <div
-        class="tooltip-text rounded-xl bg-slate-600 px-2 py-1"
+        class="tooltip-text flex w-[128px] justify-center rounded-xl bg-slate-800 px-2 py-1 text-sm"
         style={getPosition(props.position)}
       >
         {props.tip}
@@ -23,17 +23,17 @@ const Tooltip: Component<{
 function getPosition(pos?: Position) {
   switch (pos) {
     case 'left':
-      return { top: '-5px', right: '105%' }
+      return { top: '-5px', right: '110%' }
 
     case 'right':
-      return { top: '-5px', left: '105%' }
+      return { top: '-5px', left: '110%' }
 
     case 'top':
-      return { width: '128px', bottom: '100%', left: '50%', marginLeft: '-64px' }
+      return { width: '128px', bottom: '100%', left: '50%' }
 
     case 'bottom':
     default:
-      return { width: '128px', top: '200%', right: '50%', marginLeft: '-64px' }
+      return { width: '128px', top: '120%', right: '50%' }
   }
 }
 
