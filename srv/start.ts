@@ -1,4 +1,4 @@
-import { app, server } from './app'
+import { server } from './app'
 import { config } from './config'
 import { store } from './db'
 import { deleteAllChats } from './db/chats'

@@ -71,7 +71,7 @@ export async function authenticate(username: string, password: string) {
 
 export async function createUser(newUser: NewUser, admin?: boolean) {
   const username = newUser.username.toLowerCase()
-  const existing = await users.findOne({ username })
+  const existing = await users.findOne({ kind: 'user', username })
 
   if (existing) {
     throw errors.BadRequest
