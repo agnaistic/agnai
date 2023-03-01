@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { Bot, Eye, LogOut, Settings, User, Users } from 'lucide-solid'
+import { Bot, Eye, LogOut, MailPlus, Settings, User, Users } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { userStore } from '../../store'
@@ -22,6 +22,10 @@ const Drawer: Component = () => {
 
           <Item href="/chats">
             <Users /> Chats
+          </Item>
+
+          <Item href="/invites">
+            <MailPlus /> Invites
           </Item>
 
           <Item href="/settings">

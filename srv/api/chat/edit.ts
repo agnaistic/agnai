@@ -2,6 +2,7 @@ import { assertValid } from 'frisker'
 import { CHAT_ADAPTERS } from '../../../common/adapters'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
+import { publishMany } from '../ws/handle'
 
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
@@ -30,9 +31,16 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   assertValid({ message: 'string' }, body)
   const prev = await store.chats.getMessageAndChat(params.id)
 
-  if (!prev) throw errors.NotFound
+  if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
   const message = await store.chats.editMessage(params.id, body.message)
+
+  publishMany(prev.chat?.memberIds.concat(prev.chat.userId), {
+    type: 'message-edited',
+    messageId: params.id,
+    message: body.message,
+  })
+
   return message
 })

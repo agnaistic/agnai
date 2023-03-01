@@ -1,10 +1,13 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ChevronLeft, MailPlus } from 'lucide-solid'
+import { ChevronLeft, MailPlus, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
+import Modal, { ModalFooter } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
+import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
+import { getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
 import { msgStore } from '../../store/message'
 import ChatSettingsModal from './ChatSettings'
@@ -28,6 +31,7 @@ const ChatDetail: Component = () => {
 
   const [removeId, setRemoveId] = createSignal('')
   const [showConfig, setShowConfig] = createSignal(false)
+  const [showInvite, setShowInvite] = createSignal(false)
   const { id } = useParams()
   const nav = useNavigate()
 
@@ -86,7 +90,7 @@ const ChatDetail: Component = () => {
                   <ChevronLeft size={16} class="mt-0.5" /> Conversations
                 </div>
               </A>
-              <div class="focusable-icon-button">
+              <div class="focusable-icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
                 <Tooltip tip="Invite user" position="bottom">
                   <MailPlus />
                 </Tooltip>
@@ -97,11 +101,47 @@ const ChatDetail: Component = () => {
       </Show>
       <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
       <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
+      <InviteModal
+        show={showInvite()}
+        close={() => setShowInvite(false)}
+        chatId={chats.chat?._id!}
+      />
     </>
   )
 }
 
 export default ChatDetail
+
+const InviteModal: Component<{ chatId: string; show: boolean; close: () => void }> = (props) => {
+  let ref: any
+
+  const save = () => {
+    const body = getStrictForm(ref, { userId: 'string' })
+    chatStore.inviteUser(props.chatId, body.userId, props.close)
+  }
+
+  return (
+    <Modal show={props.show} close={props.close} title="Invite User to Conversation">
+      <form ref={ref} class="flex flex-col gap-2">
+        <TextInput
+          fieldName="userId"
+          label="User ID"
+          helperText="The ID of the user to invite. The user should provide this to you"
+        />
+      </form>
+
+      <ModalFooter>
+        <Button size="sm" schema="secondary" onClick={props.close}>
+          <X /> Cancel
+        </Button>
+
+        <Button size="sm" onClick={save}>
+          <MailPlus /> Invite
+        </Button>
+      </ModalFooter>
+    </Modal>
+  )
+}
 
 function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
   return {

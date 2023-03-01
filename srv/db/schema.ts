@@ -104,6 +104,7 @@ export namespace AppSchema {
     invitedId: string
     chatId: string
     createdAt: string
+    characterId: string
     state: 'pending' | 'rejected' | 'accepted'
   }
 

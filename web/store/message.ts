@@ -83,14 +83,14 @@ export const msgStore = createStore<MsgStore>('messages', {
         retry,
       })
     },
-    async deleteMessages({ msgs }, fromId: string) {
+    async deleteMessages({ msgs, activeChatId }, fromId: string) {
       const index = msgs.findIndex((m) => m._id === fromId)
       if (index === -1) {
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
       const deleteIds = msgs.slice(index).map((m) => m._id)
-      const res = await api.method('delete', `/chat/messages`, { ids: deleteIds })
+      const res = await api.method('delete', `/chat/${activeChatId}/messages`, { ids: deleteIds })
 
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)
@@ -137,4 +137,41 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
 subscribe('message-error', { error: 'any', chatId: 'string', messageId: 'string' }, (body) => {
   toastStore.error(`Failed to generate response: ${body.error}`)
   msgStore.setState({ partial: undefined, waiting: undefined })
+})
+
+subscribe('messages-deleted', { ids: ['string'] }, (body) => {
+  const ids = new Set(body.ids)
+  const { msgs } = msgStore.getState()
+  msgStore.setState({ msgs: msgs.filter((msg) => !ids.has(msg._id)) })
+})
+
+subscribe('message-edited', { messageId: 'string', message: 'string' }, (body) => {
+  const { msgs } = msgStore.getState()
+  msgStore.setState({
+    msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
+  })
+})
+
+subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
+  const { msgs, activeChatId, retrying } = msgStore.getState()
+
+  const [message, replace] = msgs.slice(-2)
+
+  if (activeChatId !== body.chatId) return
+  if (retrying) return
+  if (replace._id !== body.messageId) return
+
+  msgStore.setState({
+    msgs: msgs.slice(0, -1),
+    partial: '',
+    retrying: replace,
+    waiting: body.chatId,
+  })
+})
+
+subscribe('message-creating', { chatId: 'string' }, (body) => {
+  const { waiting, activeChatId } = msgStore.getState()
+  if (body.chatId !== activeChatId) return
+
+  msgStore.setState({ waiting: activeChatId, partial: '' })
 })

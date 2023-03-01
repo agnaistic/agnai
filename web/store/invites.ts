@@ -5,15 +5,28 @@ import { toastStore } from './toasts'
 
 type InviteState = {
   invites: AppSchema.ChatInvite[]
+  chars: Record<string, AppSchema.Character>
+  profiles: Record<string, AppSchema.Profile>
+  chats: Record<string, AppSchema.Chat>
 }
 
-export const inviteStore = createStore<InviteState>('invite', { invites: [] })((_) => {
+export const inviteStore = createStore<InviteState>('invite', {
+  invites: [],
+  chars: {},
+  profiles: {},
+  chats: {},
+})((_) => {
   return {
     async getInvites() {
-      const res = await api.get<{ invites: AppSchema.ChatInvite[] }>('/chat/invites')
+      const res = await api.get('/chat/invites')
       if (res.error) return toastStore.error('Failed to retrieve invites')
       if (res.result) {
-        return { invites: res.result.invites }
+        return {
+          invites: res.result.invites,
+          chars: res.result.chars,
+          chats: res.result.chats,
+          profiles: res.result.profiles,
+        }
       }
     },
     async create(_, chatId: string, userId: string) {

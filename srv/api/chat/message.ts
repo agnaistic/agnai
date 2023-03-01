@@ -24,6 +24,7 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
   const lockProps = { chatId: id, lockId }
 
   res.json({ success: true, message: 'Generating message' })
+  publishMany(members, { type: 'message-creating', chatId: chat._id })
   await verifyLock(lockProps)
 
   if (!body.retry) {
@@ -91,6 +92,9 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
 
   res.json({ success: true, message: 'Re-generating message' })
 
+  const props = { chatId: id, messageId }
+  publishMany(members, { type: 'message-retrying', ...props })
+
   await verifyLock({ chatId: id, lockId })
 
   const { stream } = await createResponseStream({
@@ -101,7 +105,6 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
     log,
   })
 
-  const props = { chatId: id, messageId }
   let generated = ''
 
   for await (const gen of stream) {

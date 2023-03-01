@@ -42,7 +42,7 @@ export const handleKobold: ModelAdapter = async function* ({
 }) {
   const body = {
     ...base,
-    prompt: createPrompt({ chat, char, history, message, sender }),
+    prompt: createPrompt({ chat, char, history, message, sender, members }),
   }
 
   let attempts = 0

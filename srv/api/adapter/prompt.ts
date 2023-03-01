@@ -8,12 +8,13 @@ type PromptOpts = {
   char: AppSchema.Character
   history: AppSchema.ChatMessage[]
   message: string
+  members: AppSchema.Profile[]
 }
 
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export function createPrompt({ sender, chat, char, history, message }: PromptOpts) {
+export function createPrompt({ sender, chat, char, history, message, members }: PromptOpts) {
   const username = sender.handle || 'You'
 
   const lines: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
@@ -25,7 +26,7 @@ export function createPrompt({ sender, chat, char, history, message }: PromptOpt
   lines.push(
     `<START>`,
     ...chat.sampleChat.split('\n'),
-    ...history.map((chat) => prefix(chat, char.name, username) + chat.msg),
+    ...history.map((chat) => prefix(chat, char.name, members) + chat.msg),
     `${username}: ${message}`,
     `${char.name}:`
   )
@@ -37,7 +38,7 @@ export function createPrompt({ sender, chat, char, history, message }: PromptOpt
     .replace(SELF_REPLACE, username)
 
   const tokens = gpt.encode(prompt).length
-  logger.debug({ tokens }, 'Tokens')
+  logger.debug({ tokens, prompt }, 'Tokens')
 
   return prompt
 }
@@ -101,8 +102,10 @@ function quote(str: string) {
   return `"${str}"`
 }
 
-function prefix(chat: AppSchema.ChatMessage, bot: string, user: string) {
-  return chat.characterId ? `${bot}: ` : `${user}: `
+function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Profile[]) {
+  const member = members.find((mem) => chat.userId === mem.userId)
+
+  return chat.characterId ? `${bot}: ` : `${member?.handle}: `
 }
 
 function removeEmpty(value?: string) {

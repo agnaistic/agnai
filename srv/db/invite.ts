@@ -15,6 +15,7 @@ import { AppSchema } from './schema'
 const invs = db('chat-invite')
 const members = db('chat-member')
 const chats = db('chat')
+const profiles = db('profile')
 
 export type NewInvite = {
   chatId: string
@@ -24,13 +25,35 @@ export type NewInvite = {
 
 export async function list(userId: string) {
   const invites = await invs.find({ kind: 'chat-invite', invitedId: userId })
-  return invites
+
+  const ids = invites.reduce<string[]>((prev, curr) => {
+    return prev.concat(curr.invitedId, curr.byUserId, curr.chatId)
+  }, [])
+
+  const relations = await db().find({
+    $or: [{ _id: { $in: ids } }, { kind: 'profile', userId: { $in: ids } }],
+  })
+  return {
+    invites,
+    relations: relations.filter(
+      (r) => r.kind === 'profile' || r.kind === 'chat' || r.kind === 'character'
+    ),
+  }
 }
 
 export async function create(invite: NewInvite) {
   const chat = await getChat(invite.chatId)
   if (chat?.userId !== invite.byUserId) {
     throw errors.Forbidden
+  }
+
+  if (invite.byUserId === invite.invitedId) {
+    throw new StatusError(`Cannot invite yourself`, 400)
+  }
+
+  const user = await profiles.findOne({ kind: 'profile', userId: invite.invitedId })
+  if (!user) {
+    throw new StatusError(`User does not exist`, 400)
   }
 
   const membership = await members.findOne({ chatId: invite.chatId, userId: invite.invitedId })
@@ -51,6 +74,7 @@ export async function create(invite: NewInvite) {
     createdAt: new Date().toISOString(),
     invitedId: invite.invitedId,
     kind: 'chat-invite',
+    characterId: chat.characterId,
     state: 'pending',
   }
 
@@ -59,7 +83,7 @@ export async function create(invite: NewInvite) {
 }
 
 export async function answer(userId: string, inviteId: string, accept: boolean) {
-  const prev = await invs.findOne({ _id: inviteId, kind: 'chat-invite', inviteId: userId })
+  const prev = await invs.findOne({ _id: inviteId, kind: 'chat-invite', invitedId: userId })
   if (!prev) {
     throw errors.NotFound
   }

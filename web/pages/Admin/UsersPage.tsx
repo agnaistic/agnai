@@ -23,9 +23,9 @@ const UsersPage: Component = () => {
         <For each={state.users}>
           {(user) => (
             <div class="flex h-12 flex-row items-center gap-2 rounded-xl bg-slate-900">
-              <div class="w-2/12 px-4">{user._id.slice(0, 8)}</div>
+              <div class="w-4/12 px-4 text-xs">{user._id}</div>
               <div class="w-2/12 px-4">{user.username}</div>
-              <div class="flex w-8/12 justify-end pr-2">
+              <div class="flex w-6/12 justify-end pr-2">
                 <Button size="sm" onClick={() => setPw(user.username)}>
                   Set Password
                 </Button>

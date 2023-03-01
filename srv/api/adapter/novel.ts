@@ -59,6 +59,7 @@ export const handleNovel: ModelAdapter = async function* ({
       history,
       message,
       sender,
+      members,
     }),
   }
 

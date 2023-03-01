@@ -162,6 +162,14 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.(res.result._id)
       }
     },
+    async inviteUser(_, chatId: string, userId: string, onSuccess?: () => void) {
+      const res = await api.post(`/chat/${chatId}/invite`, { userId })
+      if (res.error) return toastStore.error(`Failed to invite user: ${res.error}`)
+      if (res.result) {
+        toastStore.success(`Invitation sent`)
+        onSuccess?.()
+      }
+    },
   }
 })
 

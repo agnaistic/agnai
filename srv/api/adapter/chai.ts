@@ -33,7 +33,7 @@ export const handleChai: ModelAdapter = async function* ({
 
   const body = {
     ...base,
-    text: createPrompt({ sender, chat, char, history, message }),
+    text: createPrompt({ sender, chat, char, history, message, members }),
   }
 
   const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
