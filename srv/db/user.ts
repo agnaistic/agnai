@@ -90,6 +90,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     defaultAdapter: 'chai',
     koboldUrl: '',
     novelModel: NOVEL_MODELS.euterpe,
+    oobaUrl: '',
   }
 
   await users.insertOne(user)

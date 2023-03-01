@@ -11,7 +11,7 @@ const base = {
   use_memory: false,
   use_authors_note: false,
   use_world_info: false,
-  max_context_length: 1400, // Tuneable by user?
+  max_context_length: 2048, // Tuneable by user?
   /**
    * We deliberately use a low 'max length' to aid with streaming and the lack of support of 'stop tokens' in Kobold.
    */
@@ -24,8 +24,8 @@ const base = {
   top_k: 0,
   typical: 1,
   rep_pen: 1.08,
-  rep_pen_slope: 0.9,
-  rep_pen_range: 1024,
+  // rep_pen_slope: 0.9,
+  // rep_pen_range: 1024,
   tfs: 0.9,
   sampler_order: [6, 0, 1, 2, 3, 4, 5],
 }

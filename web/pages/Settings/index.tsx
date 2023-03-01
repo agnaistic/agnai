@@ -98,6 +98,7 @@ const adapters = [
   { label: 'KoboldAI', value: 'kobold' },
   { label: 'NovelAI', value: 'novel' },
   { label: 'Chai', value: 'chai' },
+  // { label: 'Text Generation WebUI', value: 'ooba' },
 ] satisfies Array<{ label: string; value: ChatAdapter }>
 
 export default Settings

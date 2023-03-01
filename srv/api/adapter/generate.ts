@@ -7,6 +7,7 @@ import { errors, StatusError } from '../wrap'
 import { handleChai } from './chai'
 import { handleKobold } from './kobold'
 import { handleNovel } from './novel'
+import { handleOoba } from './ooba'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
@@ -23,6 +24,7 @@ const handlers: { [key in ChatAdapter]: ModelAdapter } = {
   default: handleChai,
   novel: handleNovel,
   kobold: handleKobold,
+  ooba: handleOoba,
 }
 
 export async function generateResponse(

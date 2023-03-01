@@ -9,7 +9,7 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   sbf: 'SBF',
 }
 
-export const CHAT_ADAPTERS = ['default', 'kobold', 'novel', 'chai'] as const
+export const CHAT_ADAPTERS = ['default', 'kobold', 'novel', 'chai', 'ooba'] as const
 
 export const MULTI_TENANT_ADAPTERS = ['novel', 'chai', 'kobold'] as const
 

@@ -54,6 +54,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             { label: 'Kobold', value: 'kobold' },
             { label: 'Novel', value: 'novel' },
             { label: 'Chai', value: 'chai' },
+            // { label: 'Text Generation WebUI', value: 'ooba' },
           ]}
         />
         <TextInput fieldName="name" class="text-sm" value={state.active?.name} label="Chat name" />

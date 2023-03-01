@@ -27,6 +27,7 @@ export namespace AppSchema {
     novelApiKey: string
     novelModel: string
     koboldUrl: string
+    oobaUrl: string
     defaultAdapter: Exclude<ChatAdapter, 'default'>
   }
 

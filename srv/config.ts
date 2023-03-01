@@ -33,7 +33,7 @@ export const config = {
     port: +env('DB_PORT', '27017'),
   },
   kobold: {
-    maxLength: +env('KOBOLD_MAX_LENGTH', '64'),
+    maxLength: +env('KOBOLD_MAX_LENGTH', '200'),
   },
   noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
   chai: {
