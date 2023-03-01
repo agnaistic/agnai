@@ -32,4 +32,5 @@ export const loggedIn: RequestHandler = (req: AppRequest, _, next) => {
 
 export const isAdmin: RequestHandler = (req: AppRequest, _, next) => {
   if (!req.user?.admin) return next(errors.Forbidden)
+  next()
 }

@@ -94,6 +94,15 @@ export const userStore = createStore<State>(
       }
     },
 
+    async changePassword(_, password: string, onSuccess?: Function) {
+      const res = await api.post('/user/password', { password })
+      if (res.error) return toastStore.error('Failed to change password')
+      if (res.result) {
+        toastStore.success(`Successfully changed password`)
+        onSuccess?.()
+      }
+    },
+
     async updateProfile(_, profile: { handle: string; avatar?: File }) {
       const form = new FormData()
       form.append('handle', profile.handle)

@@ -37,6 +37,12 @@ const login = handle(async (req) => {
   return result
 })
 
+const changePassword = handle(async (req) => {
+  assertValid({ password: 'string' }, req.body)
+  await store.admin.changePassword({ username: req.user?.username!, password: req.body.password })
+  return { success: true }
+})
+
 const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {
@@ -74,6 +80,7 @@ const updateProfile = handle(async (req) => {
 router.get('/', loggedIn, getProfile)
 router.get('/config', loggedIn, getConfig)
 router.post('/register', register)
+router.post('/password', loggedIn, changePassword)
 router.post('/login', login)
 router.post('/config', loggedIn, updateConfig)
 router.post('/profile', loggedIn, updateProfile)

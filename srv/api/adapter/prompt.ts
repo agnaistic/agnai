@@ -25,7 +25,7 @@ export function createPrompt({ sender, chat, char, history, message }: PromptOpt
   lines.push(
     `<START>`,
     ...chat.sampleChat.split('\n'),
-    ...history.slice(-8).map((chat) => prefix(chat, char.name, username) + chat.msg),
+    ...history.map((chat) => prefix(chat, char.name, username) + chat.msg),
     `${username}: ${message}`,
     `${char.name}:`
   )

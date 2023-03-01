@@ -1,15 +1,17 @@
-import { Save } from 'lucide-solid'
+import { Save, X } from 'lucide-solid'
 import { Component, createSignal } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
+import Modal, { ModalFooter } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { userStore } from '../../store'
+import { toastStore, userStore } from '../../store'
 
 const ProfilePage: Component = () => {
   const state = userStore()
+  const [pass, setPass] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
   const onAvatar = (files: FileInputResult[]) => {
     const [file] = files
@@ -67,6 +69,10 @@ const ProfilePage: Component = () => {
             onUpdate={onAvatar}
           />
 
+          <div>
+            <Button onClick={() => setPass(true)}>Change Password</Button>
+          </div>
+
           <div class="mt-4 flex w-full justify-end">
             <Button type="submit">
               <Save />
@@ -75,8 +81,42 @@ const ProfilePage: Component = () => {
           </div>
         </div>
       </form>
+      <PasswordModal show={pass()} close={() => setPass(false)} />
     </>
   )
 }
 
 export default ProfilePage
+
+const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  let ref: any
+  const save = () => {
+    const body = getStrictForm(ref, { newPassword: 'string', confirmPassword: 'string' })
+    if (body.newPassword !== body.confirmPassword) {
+      toastStore.warn(`Your passwords do not match`)
+      return
+    }
+
+    userStore.changePassword(body.newPassword, props.close)
+  }
+
+  return (
+    <Modal show={props.show} close={props.close} title="Change Password">
+      <div>
+        <form ref={ref} class="flex flex-col gap-2">
+          <div class="w-full justify-center">Update your password</div>
+          <TextInput type="password" fieldName="newPassword" required />
+          <TextInput type="password" fieldName="confirmPassword" required />
+          <ModalFooter>
+            <Button schema="secondary" onClick={props.close}>
+              <X /> Cancel
+            </Button>
+            <Button onClick={save}>
+              <Save /> Update
+            </Button>
+          </ModalFooter>
+        </form>
+      </div>
+    </Modal>
+  )
+}
