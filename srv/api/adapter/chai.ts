@@ -2,6 +2,7 @@ import needle from 'needle'
 import { config } from '../../config'
 import { logger } from '../../logger'
 import { trimResponse } from '../chat/common'
+import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
 const base = {
@@ -24,7 +25,7 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
   }
 
   const body = {
-    ...base,
+    ...getGenSettings('basic', 'chai'),
     text: prompt,
   }
 

@@ -91,6 +91,10 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     koboldUrl: '',
     novelModel: NOVEL_MODELS.euterpe,
     oobaUrl: '',
+    horde: {
+      model: '',
+      key: '',
+    },
   }
 
   await users.insertOne(user)

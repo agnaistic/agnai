@@ -82,7 +82,6 @@ async function appendHistory(
     .replace(SELF_REPLACE, owner.handle)
 
   const prompt = [preamble, middle, postamble].join('\n')
-  logger.info({ tokens, prompt }, 'Tokens used')
   return prompt
 }
 

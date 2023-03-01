@@ -3,6 +3,7 @@ import { config } from '../../config'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
+import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
 const novelUrl = `https://api.novelai.net/ai/generate`
@@ -14,28 +15,26 @@ const statuses: Record<number, string> = {
 }
 
 const base = {
-  model: 'krake-v2',
-  parameters: {
-    generate_until_sentence: true,
-    max_length: config.kobold.maxLength,
-    min_length: 8,
-    order: [0, 1, 2, 3],
-    prefix: 'vanilla',
-    repetition_penalty: 1.08,
-    // repetition_penalty_frequency: 0,
-    // repetition_penalty_presence: 0,
-    // repetition_penalty_slope: 3.33,
-    // repetition_penalty_range: 2048,
-    // tail_free_sampling: 0.879,
-    stop_sequences: [[25], [27]],
-    temperature: 0.63,
-    top_k: 0,
-    top_a: 0.0,
-    top_p: 0.9,
-    use_cache: false,
-    use_string: true,
-    bad_word_ids: badWordIds,
-  },
+  generate_until_sentence: true,
+  min_length: 8,
+  order: [0, 1, 2, 3],
+  prefix: 'vanilla',
+  bad_word_ids: badWordIds,
+  stop_sequences: [[25], [27]],
+  use_cache: false,
+  use_string: true,
+  repetition_penalty_frequency: 0,
+  repetition_penalty_presence: 0,
+  // top_a: 0.0,
+
+  // max_length: config.kobold.maxLength,
+  // repetition_penalty: 1.08,
+  // repetition_penalty_slope: 3.33,
+  // repetition_penalty_range: 2048,
+  // tail_free_sampling: 0.879,
+  // temperature: 0.63,
+  // top_k: 0,
+  // top_p: 0.9,
 }
 
 export const handleNovel: ModelAdapter = async function* ({ char, members, user, prompt }) {
@@ -44,7 +43,11 @@ export const handleNovel: ModelAdapter = async function* ({ char, members, user,
     return
   }
 
-  const body = { ...base, input: prompt }
+  const body = {
+    model: user.novelModel,
+    input: prompt,
+    parameters: { ...base, ...getGenSettings('basic', 'novel') },
+  }
 
   const endTokens = ['***', 'Scenario:', '----']
 
@@ -68,6 +71,7 @@ export const handleNovel: ModelAdapter = async function* ({ char, members, user,
   }
 
   if (status >= 400) {
+    logger.error({})
     yield { error: response.statusMessage! }
     return
   }

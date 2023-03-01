@@ -28,6 +28,12 @@ export namespace AppSchema {
     novelModel: string
     koboldUrl: string
     oobaUrl: string
+
+    horde: {
+      key: string
+      model: string
+    }
+
     defaultAdapter: Exclude<ChatAdapter, 'default'>
   }
 
@@ -129,12 +135,13 @@ export namespace AppSchema {
     name: string
     temp: number
     maxTokens: number
-    repPenalty: number
-    repPenaltySlope: number
-    repPenaltyRange: number
+    repetitionPenalty: number
+    repetitionPenaltyRange: number
+    repetitionPenaltySlope: number
     typicalP: number
     topP: number
     topK: number
+    tailFreeSampling: number
   }
 }
 
