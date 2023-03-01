@@ -5,7 +5,7 @@ export type ModelAdapter = (opts: {
   char: AppSchema.Character
   user: AppSchema.User
   members: AppSchema.Profile[]
-  history: AppSchema.ChatMessage[]
   message: string
   sender: AppSchema.Profile
+  prompt: string
 }) => AsyncGenerator<string | { error: any }>

@@ -1,0 +1,5 @@
+db/
+.parcel-cache
+node_modules
+.env
+.token_secret

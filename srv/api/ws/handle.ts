@@ -91,14 +91,12 @@ export function publishMany<T extends { type: string }>(userIds: string[], data:
   for (const userId of unique) {
     count += publishOne(userId, data)
   }
-
-  logger.debug({ count }, 'Messages sent')
 }
 
 export function publishOne<T extends { type: string }>(userId: string, data: T) {
   let count = 0
   const sockets = userSockets.get(userId)
-  logger.info({ count: sockets?.length, type: data.type }, 'Publishing')
+
   if (!sockets) return count
 
   for (const socket of sockets) {

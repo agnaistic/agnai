@@ -2,7 +2,6 @@ import needle from 'needle'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
-import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
 const novelUrl = `https://api.novelai.net/ai/generate`
@@ -37,38 +36,20 @@ const base = {
   },
 }
 
-export const handleNovel: ModelAdapter = async function* ({
-  chat,
-  char,
-  history,
-  sender,
-  message,
-  members,
-  user,
-}) {
+export const handleNovel: ModelAdapter = async function* ({ char, members, user, prompt }) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
     return
   }
 
-  const body = {
-    ...base,
-    input: createPrompt({
-      chat,
-      char,
-      history,
-      message,
-      sender,
-      members,
-    }),
-  }
+  const body = { ...base, input: prompt }
 
   const endTokens = ['***', 'Scenario:', '----']
 
   const response = await needle('post', novelUrl, body, {
     json: true,
     timeout: 2000,
-    response_timeout: 8000,
+    response_timeout: 10000,
     headers: { Authorization: `Bearer ${user.novelApiKey}` },
   }).catch((err) => ({ err }))
 

@@ -7,14 +7,15 @@ import { errors, StatusError } from '../wrap'
 import { handleChai } from './chai'
 import { handleKobold } from './kobold'
 import { handleNovel } from './novel'
+import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
 export type GenerateOptions = {
   senderId: string
   chatId: string
-  history: AppSchema.ChatMessage[]
   message: string
   log: AppLog
+  retry?: AppSchema.ChatMessage
 }
 
 const handlers: { [key in ChatAdapter]: ModelAdapter } = {
@@ -41,7 +42,8 @@ export async function generateResponse(
   const adapter =
     (opts.chat.adapter === 'default' ? user.defaultAdapter : opts.chat.adapter) ||
     user.defaultAdapter
-  const adapterOpts = { ...opts, members, user, sender }
+  const prompt = await createPrompt({ ...opts, members, sender })
+  const adapterOpts = { ...opts, members, user, sender, prompt }
 
   const handler = handlers[adapter]
   return handler(adapterOpts)

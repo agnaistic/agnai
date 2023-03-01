@@ -55,7 +55,6 @@ export const msgStore = createStore<MsgStore>('messages', {
 
       await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
         message: message.msg,
-        history: msgs.slice(-22, -2),
       })
     },
     async resend({ msgs }, chatId: string, msgId: string) {
@@ -79,7 +78,6 @@ export const msgStore = createStore<MsgStore>('messages', {
 
       await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
         message,
-        history: msgs.slice(-20),
         retry,
       })
     },

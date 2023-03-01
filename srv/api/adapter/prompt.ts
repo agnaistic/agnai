@@ -1,45 +1,88 @@
 import { AppSchema } from '../../db/schema'
 import gpt from 'gpt-3-encoder'
 import { logger } from '../../logger'
+import { store } from '../../db'
 
 type PromptOpts = {
   sender: AppSchema.Profile
   chat: AppSchema.Chat
   char: AppSchema.Character
-  history: AppSchema.ChatMessage[]
   message: string
   members: AppSchema.Profile[]
+  retry?: AppSchema.ChatMessage
 }
 
+const MAX_TOKENS = 2048
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export function createPrompt({ sender, chat, char, history, message, members }: PromptOpts) {
+export async function createPrompt({ sender, chat, char, message, members }: PromptOpts) {
   const username = sender.handle || 'You'
 
-  const lines: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
+  const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
   if (chat.scenario) {
-    lines.push(`Scenario: ${chat.scenario}`)
+    pre.push(`Scenario: ${chat.scenario}`)
   }
 
-  lines.push(
-    `<START>`,
-    ...chat.sampleChat.split('\n'),
-    ...history.map((chat) => prefix(chat, char.name, members) + chat.msg),
-    `${username}: ${message}`,
-    `${char.name}:`
-  )
+  pre.push(`<START>`, ...chat.sampleChat.split('\n'))
+  const post = [`${username}: ${message}`, `${char.name}:`]
 
-  const prompt = lines
+  const prompt = await appendHistory(chat, members, char, pre, post)
+  return prompt
+}
+
+async function appendHistory(
+  chat: AppSchema.Chat,
+  members: AppSchema.Profile[],
+  char: AppSchema.Character,
+  pre: string[],
+  post: string[],
+  retry?: AppSchema.ChatMessage
+) {
+  const owner = members.find((mem) => mem.userId === chat.userId)
+  if (!owner) {
+    throw new Error(`Cannot produce prompt: Owner profile not found`)
+  }
+
+  // We need to do this early for accurate token counts
+  const preamble = pre
     .filter(removeEmpty)
     .join('\n')
     .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, username)
+    .replace(SELF_REPLACE, owner.handle)
+  const postamble = post
+    .filter(removeEmpty)
+    .join('\n')
+    .replace(BOT_REPLACE, char.name)
+    .replace(SELF_REPLACE, owner.handle)
 
-  const tokens = gpt.encode(prompt).length
-  logger.debug({ tokens, prompt }, 'Tokens')
+  let tokens = gpt.encode(preamble + '\n' + postamble).length
+  const lines: string[] = []
+  let before = retry?.updatedAt
 
+  do {
+    const messages = await store.chats.getRecentMessages(chat._id, before)
+    const history = messages.map((chat) => prefix(chat, char.name, members) + chat.msg)
+
+    for (const hist of history) {
+      const nextTokens = gpt.encode(hist).length
+      if (nextTokens + tokens > MAX_TOKENS) break
+      tokens += nextTokens
+      lines.unshift(hist)
+    }
+
+    if (tokens >= MAX_TOKENS || messages.length < 50) break
+    before = messages.slice(-1)[0].createdAt
+  } while (true)
+
+  const middle = lines
+    .join('\n')
+    .replace(BOT_REPLACE, char.name)
+    .replace(SELF_REPLACE, owner.handle)
+
+  const prompt = [preamble, middle, postamble].join('\n')
+  logger.info({ tokens, prompt }, 'Tokens used')
   return prompt
 }
 

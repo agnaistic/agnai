@@ -7,7 +7,7 @@ import { obtainLock, releaseLock, verifyLock } from './lock'
 
 export const generateMessage = handle(async ({ userId, params, body, log }, res) => {
   const id = params.id
-  assertValid({ message: 'string', history: 'any', ephemeral: 'boolean?', retry: 'boolean?' }, body)
+  assertValid({ message: 'string', ephemeral: 'boolean?', retry: 'boolean?' }, body)
 
   const lockId = await obtainLock(id)
 
@@ -41,7 +41,6 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
     senderId: userId!,
     chatId: id,
     message: body.message,
-    history: body.history,
     log,
   })
 
@@ -73,19 +72,12 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
 export const retryMessage = handle(async ({ body, params, userId, log }, res) => {
   const { id, messageId } = params
 
-  assertValid(
-    {
-      history: 'any',
-      message: 'string',
-      ephemeral: 'boolean?',
-    },
-    body
-  )
+  assertValid({ message: 'string', ephemeral: 'boolean?' }, body)
 
   const lockId = await obtainLock(id)
 
   const prev = await store.chats.getMessageAndChat(messageId)
-  if (!prev || !prev.chat) throw errors.NotFound
+  if (!prev || !prev.chat || !prev.msg) throw errors.NotFound
 
   const members = prev.chat.memberIds.concat(prev.chat.userId)
   if (!members.includes(userId!)) throw errors.Forbidden
@@ -99,10 +91,10 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
 
   const { stream } = await createResponseStream({
     chatId: params.id,
-    history: body.history,
     message: body.message,
     senderId: userId!,
     log,
+    retry: prev.msg,
   })
 
   let generated = ''

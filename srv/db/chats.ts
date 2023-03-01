@@ -128,6 +128,11 @@ export async function editMessage(id: string, content: string) {
   return doc
 }
 
+export async function getMessage(messageId: string) {
+  const msg = await msgs.findOne({ _id: messageId, kind: 'chat-message' })
+  return msg
+}
+
 export async function deleteMessages(messageIds: string[]) {
   await chats.deleteMany({ _id: { $in: messageIds } }, { multi: true })
 }
@@ -169,4 +174,19 @@ export async function getAllChats(userId: string) {
     .sort({ updatedAt: -1 })
 
   return list
+}
+
+/**
+ *
+ * @param chatId
+ * @param before Date ISO string
+ */
+export async function getRecentMessages(chatId: string, before?: string) {
+  const query: any = { kind: 'chat-message', chatId }
+  if (before) {
+    query.createdAt = { $lt: before }
+  }
+
+  const messages = await msgs.find(query).sort({ createdAt: -1 }).limit(50)
+  return messages
 }

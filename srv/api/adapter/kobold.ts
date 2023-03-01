@@ -2,7 +2,6 @@ import needle from 'needle'
 import { config } from '../../config'
 import { logger } from '../../logger'
 import { joinParts, trimResponse } from '../chat/common'
-import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
 const MAX_NEW_TOKENS = 196
@@ -31,19 +30,8 @@ const base = {
   sampler_order: [6, 0, 1, 2, 3, 4, 5],
 }
 
-export const handleKobold: ModelAdapter = async function* ({
-  chat,
-  char,
-  history,
-  message,
-  sender,
-  members,
-  user,
-}) {
-  const body = {
-    ...base,
-    prompt: createPrompt({ chat, char, history, message, sender, members }),
-  }
+export const handleKobold: ModelAdapter = async function* ({ char, members, user, prompt }) {
+  const body = { ...base, prompt }
 
   let attempts = 0
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
