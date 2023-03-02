@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { ChatAdapter } from '../../../common/adapters'
+import { AIAdapter } from '../../../common/adapters'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { AppLog } from '../../logger'
@@ -19,12 +19,12 @@ export type GenerateOptions = {
   retry?: AppSchema.ChatMessage
 }
 
-const handlers: { [key in ChatAdapter]: ModelAdapter } = {
+const handlers: { [key in AIAdapter]: ModelAdapter } = {
   chai: handleChai,
-  default: handleChai,
   novel: handleNovel,
   kobold: handleKobold,
   ooba: handleOoba,
+  horde: handleKobold,
 }
 
 export async function generateResponse(

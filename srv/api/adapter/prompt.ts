@@ -1,6 +1,5 @@
 import { AppSchema } from '../../db/schema'
 import gpt from 'gpt-3-encoder'
-import { logger } from '../../logger'
 import { store } from '../../db'
 
 type PromptOpts = {
@@ -16,9 +15,7 @@ const MAX_TOKENS = 2048
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export async function createPrompt({ sender, chat, char, message, members }: PromptOpts) {
-  const username = sender.handle || 'You'
-
+export async function createPrompt({ sender, chat, char, message, members, retry }: PromptOpts) {
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
   if (chat.scenario) {
@@ -26,9 +23,10 @@ export async function createPrompt({ sender, chat, char, message, members }: Pro
   }
 
   pre.push(`<START>`, ...chat.sampleChat.split('\n'))
-  const post = [`${username}: ${message}`, `${char.name}:`]
 
-  const prompt = await appendHistory(chat, members, char, pre, post)
+  const post = [`${char.name}:`]
+
+  const prompt = await appendHistory(chat, members, char, pre, post, retry)
   return prompt
 }
 
@@ -59,7 +57,7 @@ async function appendHistory(
 
   let tokens = gpt.encode(preamble + '\n' + postamble).length
   const lines: string[] = []
-  let before = retry?.updatedAt
+  let before = retry?.createdAt
 
   do {
     const messages = await store.chats.getRecentMessages(chat._id, before)

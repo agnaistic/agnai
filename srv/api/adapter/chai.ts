@@ -24,15 +24,12 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
     return
   }
 
-  const body = {
-    ...getGenSettings('basic', 'chai'),
-    text: prompt,
-  }
+  const body = { ...getGenSettings('basic', 'chai'), text: prompt }
 
   const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
     json: true,
     timeout: 3000,
-    response_timeout: 8000,
+    response_timeout: 10000,
     headers: {
       'user-agent':
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36',

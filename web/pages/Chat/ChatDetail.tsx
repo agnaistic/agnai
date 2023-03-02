@@ -54,7 +54,7 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class="mb-4 flex h-full flex-col justify-between pb-4">
           <div class="flex h-full flex-col-reverse">
-            <InputBar chatId={chats.chat!._id} openConfig={() => setShowConfig(true)} />
+            <InputBar chat={chats.chat!} openConfig={() => setShowConfig(true)} />
             <div class="flex flex-col-reverse overflow-y-scroll">
               <div class="flex flex-col gap-4 pt-4 pb-4">
                 <For each={msgs.msgs}>

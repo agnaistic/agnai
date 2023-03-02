@@ -1,4 +1,4 @@
-import { ChatAdapter } from '../../common/adapters'
+import { AIAdapter, ChatAdapter } from '../../common/adapters'
 
 export namespace AppSchema {
   export interface Token {
@@ -34,7 +34,7 @@ export namespace AppSchema {
       model: string
     }
 
-    defaultAdapter: Exclude<ChatAdapter, 'default'>
+    defaultAdapter: AIAdapter
   }
 
   export interface Chat {
@@ -141,7 +141,9 @@ export namespace AppSchema {
     typicalP: number
     topP: number
     topK: number
+    topA: number
     tailFreeSampling: number
+    order?: number[]
   }
 }
 

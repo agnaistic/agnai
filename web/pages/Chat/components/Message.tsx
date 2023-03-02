@@ -71,11 +71,11 @@ const Message: Component<{
             </Show>
           </div>
           <Show when={!edit()}>
-            <div class="mr-4 flex items-center gap-2 text-sm text-white/20 hover:text-white">
+            <div class="mr-4 flex items-center gap-2 text-sm">
               <Show when={props.last && props.msg.characterId}>
                 <RefreshCw
                   size={16}
-                  class="cursor-pointer"
+                  class="cursor-pointer text-white/20 hover:text-white"
                   onClick={() => msgStore.retry(props.msg.chatId)}
                 />
               </Show>
@@ -105,7 +105,7 @@ const Message: Component<{
             </div>
           </Show>
         </div>
-        <div class="w-full opacity-50">
+        <div class="break-words opacity-50">
           <Show when={!edit()}>
             <div innerHTML={showdownConverter.makeHtml(props.msg.msg)} />
           </Show>

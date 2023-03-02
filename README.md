@@ -1,8 +1,23 @@
-# AgnAIstic (working title)
+# AgnAIstic
+
+> Agnai: AI Agnostic, Self-hosted or Multi-tenant
 
 AI Agnostic Chat
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
+
+## Features
+
+- Multiple AI adapters: Support for Kobold, Novel, Kobold Horde, Chai
+- Group Conversations: Multiple users with one character/bot
+- Multiple persona schema formats (W++, Square bracket format, Boostyle)
+- Multi-tenancy:
+  - User authentication
+  - Individual user settings: Which adapter to use and their own adapter configuration
+  - Individual user generation settings
+- Chat overrides:
+  - Change the AI adapter for a specific chat
+  - Change the character for a specific chat
 
 ## Roadmap
 

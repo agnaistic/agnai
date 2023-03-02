@@ -4,7 +4,7 @@ import { Component, createEffect, For, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import PageHeader from '../../shared/PageHeader'
 import { toDuration } from '../../shared/util'
-import { chatStore } from '../../store'
+import { chatStore, userStore } from '../../store'
 
 const ChatList: Component = () => {
   const state = chatStore()
@@ -35,25 +35,35 @@ const ChatList: Component = () => {
 
 const Chats: Component = () => {
   const state = chatStore()
+  const users = userStore()
   const nav = useNavigate()
 
   return (
     <div class="flex flex-col gap-2">
       <For each={state.all?.chats}>
-        {(chat) => (
-          <div
-            class="flex h-12 cursor-pointer flex-row items-center gap-2 rounded-xl bg-gray-900"
-            onClick={() => nav(`/chat/${chat._id}`)}
-          >
-            <div class="flex w-6/12 items-center gap-4 px-4">
-              <AvatarIcon avatarUrl={state.all?.chars[chat.characterId]?.avatar} />
-              <b>{state.all?.chars[chat.characterId]?.name}</b>
-              {chat.name || 'Untitled'}
+        {(chat) => {
+          const owner = chat.userId === users.user?._id ? `border-slate-700` : 'border-slate-800'
+
+          return (
+            <div
+              class={
+                'flex h-12 cursor-pointer flex-row items-center gap-2 rounded-xl border-2 bg-gray-900 ' +
+                owner
+              }
+              onClick={() => nav(`/chat/${chat._id}`)}
+            >
+              <div class="flex w-6/12 items-center gap-4 px-4">
+                <AvatarIcon avatarUrl={state.all?.chars[chat.characterId]?.avatar} />
+                <b>{state.all?.chars[chat.characterId]?.name}</b>
+                {chat.name || 'Untitled'}
+              </div>
+              <div class="flex w-2/12 justify-center"></div>
+              <div class="flex w-4/12 justify-center">
+                {toDuration(new Date(chat.updatedAt))} ago
+              </div>
             </div>
-            <div class="flex w-2/12 justify-center"></div>
-            <div class="flex w-4/12 justify-center">{toDuration(new Date(chat.updatedAt))} ago</div>
-          </div>
-        )}
+          )
+        }}
       </For>
     </div>
   )

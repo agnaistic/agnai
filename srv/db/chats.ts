@@ -33,7 +33,7 @@ export async function listByCharacter(characterId: string) {
 }
 
 export async function getMessageAndChat(msgId: string) {
-  const msg = await msgs.findOne({ _id: msgId })
+  const msg = await msgs.findOne({ _id: msgId, kind: 'chat-message' })
   if (!msg) return
 
   const chat = await getChat(msg.chatId)
