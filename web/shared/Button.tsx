@@ -21,12 +21,15 @@ const Button: Component<{
   type?: 'submit' | 'reset' | 'button'
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
+  class?: string
 }> = (props) => (
   <button
     type={props.type || 'button'}
-    class={`${kinds[props.schema || 'primary']} items-center justify-center ${
-      sizes[props.size || 'md']
-    }`}
+    class={
+      `${kinds[props.schema || 'primary']} items-center justify-center ${
+        sizes[props.size || 'md']
+      } ` + props.class
+    }
     disabled={props.disabled}
     onClick={props.onClick}
   >

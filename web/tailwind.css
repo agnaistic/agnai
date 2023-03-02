@@ -38,13 +38,15 @@
     @apply placeholder:text-white/25;
   }
 
-  .focusable-icon-button {
+  .focusable-icon-button,
+  .icon-button {
     @apply _focusable-base cursor-pointer;
     @apply text-white/50 hover:text-white focus:text-white;
   }
 
   /** Integrates with solid-router - highlights current selection. */
-  .focusable-icon-button.active {
+  .focusable-icon-button.active,
+  .icon-button.active {
     @apply text-white;
   }
 

@@ -6,7 +6,7 @@ import { updateChat, updateMessage } from './edit'
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { createInvite, acceptInvite, rejectInvite, getInvites } from './invite'
 import { generateMessage, retryMessage } from './message'
-import { deleteMessages } from './remove'
+import { deleteChat, deleteMessages } from './remove'
 
 const router = Router()
 
@@ -27,5 +27,6 @@ router.post('/:id/retry/:messageId', retryMessage)
 router.post('/:id/message', generateMessage)
 router.put('/:id/message', updateMessage)
 router.delete('/:id/messages', deleteMessages)
+router.delete('/:id', deleteChat)
 
 export default router

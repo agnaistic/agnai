@@ -56,6 +56,6 @@ export const inviteStore = createStore<InviteState>('invite', {
   }
 })
 
-subscribe('invite-created', { invite: 'any' }, (body) => {
+subscribe('invite-created', { invite: 'any' }, () => {
   inviteStore.getInvites()
 })

@@ -57,15 +57,17 @@ const CharacterList: Component = () => {
 
 const Character: Component<{ character: AppSchema.Character; delete: () => void }> = (props) => {
   return (
-    <div class="flex h-16 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
-      <A
-        class="ml-4 flex h-3/4 w-6/12 cursor-pointer items-center rounded-xl bg-gray-800 sm:w-9/12"
-        href={`/character/${props.character._id}/chats`}
-      >
-        <AvatarIcon avatarUrl={props.character.avatar} class="mx-4" />
-        <div class="">{props.character.name}</div>
-      </A>
-      <div class="flex w-6/12 flex-row justify-center gap-2 sm:w-3/12">
+    <div class="flex w-full gap-2">
+      <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
+        <A
+          class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl  sm:w-9/12"
+          href={`/character/${props.character._id}/chats`}
+        >
+          <AvatarIcon avatarUrl={props.character.avatar} class="mx-4 h-10 w-10 rounded-md" />
+          <div class="text-lg font-bold">{props.character.name}</div>
+        </A>
+      </div>
+      <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
         <a
           href={`data:text/json:charset=utf-8,${encodeURIComponent(charToJson(props.character))}`}
           download={`${props.character.name}.json`}

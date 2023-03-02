@@ -147,12 +147,7 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *createChat(
-      state,
-      characterId: string,
-      props: NewChat,
-      onSuccess?: (id: string) => void
-    ) {
+    async *createChat(_, characterId: string, props: NewChat, onSuccess?: (id: string) => void) {
       const res = await api.post<AppSchema.Chat>('/chat', { characterId, ...props })
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
@@ -168,6 +163,22 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.error) return toastStore.error(`Failed to invite user: ${res.error}`)
       if (res.result) {
         toastStore.success(`Invitation sent`)
+        onSuccess?.()
+      }
+    },
+    async *deleteChat({ active, all }, chatId: string, onSuccess?: Function) {
+      const res = await api.method('delete', `/chat/${chatId}`)
+      if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
+      if (res.result) {
+        toastStore.success('Successfully deleted chat')
+        if (active?.chat._id === chatId) {
+          yield { active: undefined }
+        }
+
+        if (all?.chats) {
+          yield { all: { ...all, chats: all.chats.filter((ch) => ch._id !== chatId) } }
+        }
+
         onSuccess?.()
       }
     },
@@ -195,4 +206,16 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
     activeMembers: nextMembers,
     memberIds: { ...memberIds, [body.userId]: next },
   })
+})
+
+subscribe('chat-deleted', { chatId: 'string' }, (body) => {
+  const { all, active } = chatStore()
+  if (active?.chat._id === body.chatId) {
+    chatStore.setState({ active: undefined })
+  }
+
+  if (all?.chats) {
+    const next = all.chats.filter((ch) => ch._id !== body.chatId)
+    chatStore.setState({ all: { ...all, chats: next } })
+  }
 })

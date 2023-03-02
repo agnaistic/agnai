@@ -1,5 +1,6 @@
-import { X } from 'lucide-solid'
+import { Check, X } from 'lucide-solid'
 import { Component, Show, JSX } from 'solid-js'
+import Button from './Button'
 
 interface Props {
   title?: string | JSX.Element
@@ -38,3 +39,26 @@ export const ModalFooter: Component<{ children: JSX.Element }> = (props) => (
 )
 
 export default Modal
+
+export const ConfirmModel: Component<{
+  show: boolean
+  close: () => void
+  confirm: () => void
+  message: string
+}> = (props) => {
+  return (
+    <Modal show={props.show} close={props.close} title="Confirmation">
+      <div class="mb-8 flex justify-center">{props.message}</div>
+
+      <ModalFooter>
+        <Button schema="secondary" onClick={props.close}>
+          <X /> Cancel
+        </Button>
+
+        <Button onClick={props.confirm}>
+          <Check /> Confirm
+        </Button>
+      </ModalFooter>
+    </Modal>
+  )
+}

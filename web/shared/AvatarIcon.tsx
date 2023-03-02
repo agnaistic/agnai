@@ -5,7 +5,10 @@ const AvatarIcon: Component<{ avatarUrl?: string; class?: string; bot?: boolean 
   return (
     <>
       <Show when={props.avatarUrl}>
-        <img class={`h-8 w-8 rounded-full ${props.class || ''}`} src={props.avatarUrl} />
+        <img
+          class={`h-8 w-8 rounded-full bg-black object-scale-down ${props.class || ''}`}
+          src={props.avatarUrl}
+        />
       </Show>
       <Show when={!props.avatarUrl}>
         <div

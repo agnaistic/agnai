@@ -138,7 +138,9 @@ export async function deleteMessages(messageIds: string[]) {
 }
 
 export async function deleteChat(chatId: string) {
-  await chats.deleteMany({ _id: chatId }, {})
+  await chats.deleteMany({ _id: chatId, kind: 'chat' }, {})
+  await chats.deleteMany({ kind: 'chat-member', chatId }, {})
+  await chats.deleteMany({ kind: 'chat-invite', chatId }, {})
   await msgs.deleteMany({ kind: 'chat-message', chatId }, { multi: true })
 }
 
