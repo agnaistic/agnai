@@ -39,7 +39,7 @@
   }
 
   .focusable-icon-button {
-    @apply _focusable-base;
+    @apply _focusable-base cursor-pointer;
     @apply text-white/50 hover:text-white focus:text-white;
   }
 

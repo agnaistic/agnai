@@ -42,7 +42,7 @@ const Chats: Component = () => {
     <div class="flex flex-col gap-2">
       <For each={state.all?.chats}>
         {(chat) => {
-          const owner = chat.userId === users.user?._id ? `border-slate-700` : 'border-slate-800'
+          const owner = chat.userId === users.user?._id ? `border-slate-700` : 'border-slate-900'
 
           return (
             <div

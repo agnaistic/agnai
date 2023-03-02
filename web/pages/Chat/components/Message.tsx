@@ -3,7 +3,7 @@ import showdown from 'showdown'
 import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
-import { chatStore } from '../../../store'
+import { chatStore, userStore } from '../../../store'
 import { msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
@@ -15,6 +15,7 @@ const Message: Component<{
   last?: boolean
   onRemove: () => void
 }> = (props) => {
+  const user = userStore()
   const [edit, setEdit] = createSignal(false)
   const members = chatStore((s) => s.memberIds)
   const cancelEdit = () => {
@@ -63,14 +64,14 @@ const Message: Component<{
                 timeStyle: 'short',
               }).format(new Date(props.msg.createdAt))}
             </span>
-            <Show when={props.msg.characterId}>
+            <Show when={props.msg.characterId && user.user?._id === props.chat?.userId}>
               <div class="ml-2 flex flex-row items-center gap-2 text-white/10">
                 <ThumbsUp size={14} class="mt-[-0.15rem] cursor-pointer hover:text-white" />
                 <ThumbsDown size={14} class="cursor-pointer hover:text-white" />
               </div>
             </Show>
           </div>
-          <Show when={!edit()}>
+          <Show when={!edit() && user.user?._id === props.chat?.userId}>
             <div class="mr-4 flex items-center gap-2 text-sm">
               <Show when={props.last && props.msg.characterId}>
                 <RefreshCw

@@ -126,9 +126,6 @@ export async function createAccessToken(username: string, user: AppSchema.User) 
 }
 
 export async function getProfiles(ownerId: string, userIds: string[]) {
-  const list = await profiles.find(
-    { kind: 'profile', userId: { $in: userIds.concat(ownerId) } },
-    { _id: 0, admin: 0 }
-  )
+  const list = await profiles.find({ kind: 'profile', userId: { $in: userIds.concat(ownerId) } })
   return list
 }

@@ -2,7 +2,7 @@ import { A } from '@solidjs/router'
 import { Bot, Eye, LogOut, MailPlus, Settings, User, Users } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
-import { userStore } from '../../store'
+import { inviteStore, userStore } from '../../store'
 import './drawer.css'
 
 const Drawer: Component = () => {
@@ -25,7 +25,7 @@ const Drawer: Component = () => {
           </Item>
 
           <Item href="/invites">
-            <MailPlus /> Invites
+            <MailPlus /> Invites <InviteBadge />
           </Item>
 
           <Item href="/settings">
@@ -60,6 +60,20 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
     >
       {props.children}
     </A>
+  )
+}
+
+const InviteBadge: Component = () => {
+  const inv = inviteStore()
+
+  return (
+    <>
+      <Show when={inv.invites.length}>
+        <div class="flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs">
+          {inv.invites.length}
+        </div>
+      </Show>
+    </>
   )
 }
 

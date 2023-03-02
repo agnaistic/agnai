@@ -79,6 +79,11 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
   const prev = await store.chats.getMessageAndChat(messageId)
   if (!prev || !prev.chat || !prev.msg) throw errors.NotFound
 
+  // Only the chat owner can retry messages
+  if (userId !== prev.chat.userId) {
+    throw errors.Forbidden
+  }
+
   const members = prev.chat.memberIds.concat(prev.chat.userId)
   if (!members.includes(userId!)) throw errors.Forbidden
 

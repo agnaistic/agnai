@@ -42,6 +42,8 @@ export const createInvite = handle(async (req) => {
     invitedId: req.body.userId,
   })
 
+  if (!invite) return { success: false }
+
   publishOne(req.body.userId, { type: 'invite-created', invite })
   return invite
 })
@@ -56,6 +58,6 @@ export const acceptInvite = handle(async (req) => {
 export const rejectInvite = handle(async (req) => {
   const inviteId = req.params.inviteId
 
-  const member = await store.invites.answer(req.userId!, inviteId, false)
-  return member
+  await store.invites.answer(req.userId!, inviteId, false)
+  return { success: true }
 })

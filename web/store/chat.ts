@@ -3,6 +3,7 @@ import { api } from './api'
 import { characterStore } from './character'
 import { createStore } from './create'
 import { msgStore } from './message'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
 type ChatState = {
@@ -177,3 +178,21 @@ function toMemberKeys(prev: Record<string, AppSchema.Profile>, curr: AppSchema.P
   prev[curr.userId] = curr
   return prev
 }
+
+subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (body) => {
+  const { activeMembers, memberIds } = chatStore()
+  if (!memberIds[body.userId]) return
+
+  const nextMembers = activeMembers.map((am) =>
+    am.userId === body.userId ? { ...am, handle: body.handle } : am
+  )
+
+  const next = { ...memberIds[body.userId], handle: body.handle }
+
+  memberIds[body.userId] = { ...memberIds[body.userId], handle: body.handle }
+
+  chatStore.setState({
+    activeMembers: nextMembers,
+    memberIds: { ...memberIds, [body.userId]: next },
+  })
+})

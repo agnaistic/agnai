@@ -4,8 +4,9 @@ import { MULTI_TENANT_ADAPTERS } from '../../common/adapters'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { loggedIn } from './auth'
-import { handle, StatusError } from './wrap'
+import { errors, handle, StatusError } from './wrap'
 import { handleUpload } from './upload'
+import { publishAll } from './ws/handle'
 
 const router = Router()
 
@@ -68,12 +69,21 @@ const updateProfile = handle(async (req) => {
   const form = await handleUpload(req, { handle: 'string' })
   const [file] = form.attachments
 
+  const previous = await store.users.getProfile(req.userId!)
+  if (!previous) {
+    throw errors.Forbidden
+  }
+
   const update: Partial<AppSchema.Profile> = { handle: form.handle }
   if (file) {
     update.avatar = file.filename
   }
 
   const profile = await store.users.updateProfile(req.userId!, update)
+
+  if (previous.handle !== form.handle) {
+    publishAll({ type: 'profile-handle-changed', userId: req.userId!, handle: form.handle })
+  }
   return profile
 })
 

@@ -1,6 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
 type InviteState = {
@@ -45,7 +46,7 @@ export const inviteStore = createStore<InviteState>('invite', {
       }
     },
     async reject({ invites }, inviteId: string) {
-      const res = await api.post(`/chat/${inviteId}/accept`)
+      const res = await api.post(`/chat/${inviteId}/reject`)
       if (res.error) return toastStore.error(`Failed to accept invite: ${res.error}`)
       if (res.result) {
         toastStore.normal(`Invitation rejected`)
@@ -53,4 +54,8 @@ export const inviteStore = createStore<InviteState>('invite', {
       }
     },
   }
+})
+
+subscribe('invite-created', { invite: 'any' }, (body) => {
+  inviteStore.getInvites()
 })

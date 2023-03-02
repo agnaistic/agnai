@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-solid'
+import { Minus, MinusCircle, Plus } from 'lucide-solid'
 import { Component, createSignal, For, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
@@ -32,6 +32,13 @@ const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel
     add()
   }
 
+  const remove = (i: number) => {
+    const next = attrs()
+      .slice(0, i)
+      .concat(attrs().slice(i + 1))
+    setAttrs(next)
+  }
+
   return (
     <>
       <Show when={!props.hideLabel}>
@@ -56,7 +63,9 @@ const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel
         </Button>
       </div>
       <div class="mt-2 flex w-full flex-col gap-2">
-        <For each={attrs()}>{(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} />}</For>
+        <For each={attrs()}>
+          {(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} remove={remove} />}
+        </For>
       </div>
     </>
   )
@@ -66,6 +75,7 @@ const Attribute: Component<{
   attr: Attr
   index: number
   onKey: (key: string, i: number) => void
+  remove: (i: number) => void
 }> = (props) => {
   return (
     <div class="flex w-full gap-2">
@@ -76,13 +86,16 @@ const Attribute: Component<{
           value={props.attr.key}
         />
       </div>
-      <div class="w-9/12">
+      <div class="w-8/12">
         <TextInput
           fieldName={`attr-value.${props.index}`}
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
           value={props.attr.values}
           onKeyUp={(ev) => props.onKey(ev, props.index)}
         />
+      </div>
+      <div class="1/12 flex items-center" onClick={() => props.remove(props.index)}>
+        <MinusCircle size={16} class="focusable-icon-button" />
       </div>
     </div>
   )

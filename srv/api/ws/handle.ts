@@ -105,3 +105,11 @@ export function publishOne<T extends { type: string }>(userId: string, data: T) 
   }
   return count
 }
+
+export function publishAll<T extends { type: string }>(data: T) {
+  for (const [, sockets] of userSockets.entries()) {
+    for (const socket of sockets) {
+      socket.send(JSON.stringify(data))
+    }
+  }
+}

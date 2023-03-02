@@ -27,7 +27,7 @@ export async function list(userId: string) {
   const invites = await invs.find({ kind: 'chat-invite', invitedId: userId })
 
   const ids = invites.reduce<string[]>((prev, curr) => {
-    return prev.concat(curr.invitedId, curr.byUserId, curr.chatId)
+    return prev.concat(curr.invitedId, curr.byUserId, curr.chatId, curr.characterId)
   }, [])
 
   const relations = await db().find({
@@ -56,8 +56,15 @@ export async function create(invite: NewInvite) {
     throw new StatusError(`User does not exist`, 400)
   }
 
-  const membership = await members.findOne({ chatId: invite.chatId, userId: invite.invitedId })
-  if (membership) return membership
+  const membership = await members.findOne({
+    kind: 'chat-member',
+    chatId: invite.chatId,
+    userId: invite.invitedId,
+  })
+
+  if (membership) {
+    throw new StatusError(`User is already a member of this conversation`, 400)
+  }
 
   const prev = await invs.findOne({
     kind: 'chat-invite',

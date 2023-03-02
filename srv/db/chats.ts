@@ -9,7 +9,7 @@ const chats = db('chat')
 const msgs = db('chat-message')
 
 export async function getMessages(chatId: string) {
-  const docs = await msgs.find({ chatId }).sort({ createdAt: 1 })
+  const docs = await msgs.find({ kind: 'chat-message', chatId }).sort({ createdAt: 1 })
   return docs
 }
 
