@@ -7,6 +7,7 @@ import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'
 import { handleUpload } from './upload'
 import { publishAll } from './ws/handle'
+import { findUser, HORDE_GUEST_KEY } from './horde'
 
 const router = Router()
 
@@ -50,16 +51,44 @@ const updateConfig = handle(async ({ userId, body }) => {
       novelApiKey: 'string',
       novelModel: 'string',
       koboldUrl: 'string',
+      hordeApiKey: 'string',
+      hordeModel: 'string',
       defaultAdapter: MULTI_TENANT_ADAPTERS,
     },
     body
   )
+
+  const prevUser = await store.users.getUser(userId!)
+  if (!prevUser) {
+    throw errors.Forbidden
+  }
+
+  const prevKey = prevUser.horde?.key
+
+  let type: 'horde' | 'kobold' = 'horde'
+
+  const isNewKey =
+    body.hordeApiKey !== '' && body.hordeApiKey !== HORDE_GUEST_KEY && body.hordeApiKey !== prevKey
+
+  if (isNewKey) {
+    const user = await findUser(body.hordeApiKey).catch(() => null)
+    if (!user) {
+      throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
+    }
+
+    type = user.type
+  }
 
   const user = await store.users.updateUser(userId!, {
     defaultAdapter: body.defaultAdapter,
     koboldUrl: body.koboldUrl,
     novelApiKey: body.novelApiKey,
     novelModel: body.novelModel,
+    horde: {
+      key: body.hordeApiKey,
+      model: body.hordeModel,
+      type,
+    },
   })
 
   return user

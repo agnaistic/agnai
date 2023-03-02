@@ -5,6 +5,7 @@ import classify from './classify'
 import { authMiddleware } from './auth'
 import user from './user'
 import admin from './admin'
+import horde from './horde'
 
 const router = Router()
 
@@ -14,5 +15,6 @@ router.use('/chat', chat)
 router.use('/character', character)
 router.use('/classify', classify)
 router.use('/admin', admin)
+router.use('/horde', horde)
 
 export default router

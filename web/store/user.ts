@@ -14,6 +14,7 @@ type State = {
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
+  hordeModels: string[]
 }
 
 export const userStore = createStore<State>(
@@ -21,6 +22,13 @@ export const userStore = createStore<State>(
   init()
 )((get, set) => {
   return {
+    async getHordeModels() {
+      const res = await api.get<{ models: Array<{ name: string }> }>('/horde/models')
+      if (res.error) toastStore.error(`Failed to get Horde model names`)
+      if (res.result) {
+        return { hordeModels: res.result.models.map((m) => m.name) }
+      }
+    },
     menu({ showMenu }) {
       return { showMenu: !showMenu }
     },
@@ -136,7 +144,7 @@ function init(): State {
   const existing = getAuth()
 
   if (!existing) {
-    return { loading: false, jwt: '', loggedIn: false, showMenu: false }
+    return { loading: false, jwt: '', loggedIn: false, showMenu: false, hordeModels: [] }
   }
 
   return {
@@ -144,5 +152,6 @@ function init(): State {
     loggedIn: true,
     loading: false,
     jwt: existing,
+    hordeModels: [],
   }
 }

@@ -19,6 +19,7 @@ const Settings: Component = () => {
   createEffect(() => {
     // Always reload settings when entering this page
     userStore.getConfig()
+    userStore.getHordeModels()
   })
 
   const onSubmit = (evt: Event) => {
@@ -26,10 +27,26 @@ const Settings: Component = () => {
       koboldUrl: 'string',
       novelApiKey: 'string',
       novelModel: 'string',
+      hordeApiKey: 'string',
+      hordeModel: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
     userStore.updateConfig(body)
   }
+
+  const HordeHelpText = (
+    <span>
+      Leave blank to use guest account. Visit{' '}
+      <a class="text-purple-500" href="https://koboldai.net" target="_blank">
+        koboldai.net
+      </a>{' '}
+      or{' '}
+      <a class="text-purple-500" href="https://stablehorde.net" target="_blank">
+        stablehorde.net
+      </a>{' '}
+      to register.
+    </span>
+  )
 
   return (
     <>
@@ -43,6 +60,25 @@ const Settings: Component = () => {
             helperText="The default adapter conversations will use unless otherwise configured"
             value={state.user?.defaultAdapter}
           />
+
+          <Divider />
+          <TextInput
+            fieldName="hordeApiKey"
+            label="Horde API Key"
+            helperText={HordeHelpText}
+            value={state.user?.horde?.key}
+            placeholder="0000000000"
+            type="password"
+          />
+          <Dropdown
+            fieldName="hordeModel"
+            label="Horde"
+            value={state.user?.horde?.model}
+            items={[{ label: 'None', value: '' }].concat(
+              ...state.hordeModels.map((value) => ({ label: value, value }))
+            )}
+          />
+
           <TextInput
             fieldName="koboldUrl"
             label="Kobold URL"
