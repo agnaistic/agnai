@@ -6,6 +6,10 @@ AI Agnostic Chat
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
+<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/chat.png?raw=true" height="150px">
+<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/persona.png?raw=true" height="150px">
+<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/settings.png?raw=true" height="150px">
+
 ## Features
 
 - Multiple AI adapters: Support for Kobold, Novel, Kobold Horde, Chai
