@@ -20,7 +20,7 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 - Multi-tenancy:
   - User authentication
   - Individual user settings: Which adapter to use and their own adapter configuration
-  - Individual user generation settings
+  - Individual user generation settings (_In progress_)
 - Chat overrides:
   - Change the AI adapter for a specific chat
   - Change the character for a specific chat
