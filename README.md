@@ -6,9 +6,11 @@ AI Agnostic Chat
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
-<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/chat.png?raw=true" height="150px">
-<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/persona.png?raw=true" height="150px">
-<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/settings.png?raw=true" height="150px">
+<div style="display: flex; flex-direction: row; gap: 0.5rem;" >
+<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/chat.png?raw=true" height="150">
+<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/persona.png?raw=true" height="150">
+<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/settings.png?raw=true" height="150">
+</div>
 
 ## Features
 
