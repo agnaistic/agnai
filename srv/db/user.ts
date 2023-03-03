@@ -87,7 +87,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     hash,
     admin: !!admin,
     novelApiKey: '',
-    defaultAdapter: 'chai',
+    defaultAdapter: 'horde',
     koboldUrl: '',
     novelModel: NOVEL_MODELS.euterpe,
     oobaUrl: '',
