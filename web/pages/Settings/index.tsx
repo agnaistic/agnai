@@ -5,7 +5,7 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
 import Dropdown from '../../shared/Dropdown'
-import { CHAT_ADAPTERS, ChatAdapter } from '../../../common/adapters'
+import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../../common/adapters'
 import { userStore } from '../../store'
 import Divider from '../../shared/Divider'
 
@@ -37,10 +37,6 @@ const Settings: Component = () => {
   const HordeHelpText = (
     <span>
       Leave blank to use guest account. Visit{' '}
-      <a class="text-purple-500" href="https://koboldai.net" target="_blank">
-        koboldai.net
-      </a>{' '}
-      or{' '}
       <a class="text-purple-500" href="https://stablehorde.net" target="_blank">
         stablehorde.net
       </a>{' '}
@@ -62,6 +58,7 @@ const Settings: Component = () => {
           />
 
           <Divider />
+          <h3 class="text-xl">Stable Horde settings</h3>
           <TextInput
             fieldName="hordeApiKey"
             label="Horde API Key"
@@ -72,11 +69,10 @@ const Settings: Component = () => {
           />
           <Dropdown
             fieldName="hordeModel"
-            label="Horde"
+            helperText={<span>Currently set to: {state.user?.horde?.model || 'None'}</span>}
+            label="Horde Model"
             value={state.user?.horde?.model}
-            items={[{ label: 'None', value: '' }].concat(
-              ...state.hordeModels.map((value) => ({ label: value, value }))
-            )}
+            items={[{ label: 'None', value: '' }].concat(...state.hordeModels.map(toItem))}
           />
 
           <TextInput
@@ -131,6 +127,7 @@ const Settings: Component = () => {
 }
 
 const adapters = [
+  { label: 'Horde', value: 'horde' },
   { label: 'KoboldAI', value: 'kobold' },
   { label: 'NovelAI', value: 'novel' },
   { label: 'Chai', value: 'chai' },
@@ -138,3 +135,10 @@ const adapters = [
 ] satisfies Array<{ label: string; value: ChatAdapter }>
 
 export default Settings
+
+function toItem(model: HordeModel) {
+  return {
+    label: `${model.name} - (queue: ${model.queued}, eta: ${model.eta}, count: ${model.count})`,
+    value: model.name,
+  }
+}

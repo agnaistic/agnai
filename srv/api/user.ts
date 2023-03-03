@@ -65,8 +65,6 @@ const updateConfig = handle(async ({ userId, body }) => {
 
   const prevKey = prevUser.horde?.key
 
-  let type: 'horde' | 'kobold' = 'horde'
-
   const isNewKey =
     body.hordeApiKey !== '' && body.hordeApiKey !== HORDE_GUEST_KEY && body.hordeApiKey !== prevKey
 
@@ -75,8 +73,6 @@ const updateConfig = handle(async ({ userId, body }) => {
     if (!user) {
       throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
     }
-
-    type = user.type
   }
 
   const user = await store.users.updateUser(userId!, {
@@ -87,7 +83,6 @@ const updateConfig = handle(async ({ userId, body }) => {
     horde: {
       key: body.hordeApiKey,
       model: body.hordeModel,
-      type,
     },
   })
 

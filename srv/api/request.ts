@@ -1,9 +1,6 @@
 import needle from 'needle'
 
-type ApiType = 'horde' | 'kobold'
-
 type PostReq = {
-  type: ApiType
   url: string
   apikey?: string
   body: any
@@ -11,13 +8,9 @@ type PostReq = {
 
 const DEFAULT_API_KEY = '0000000000'
 
-const urls = {
-  horde: `https://stablehorde.net/api/v2`,
-  kobold: `https://koboldai.net/api/v2`,
-}
+const baseUrl = `https://stablehorde.net/api/v2`
 
-export async function post<T = any>({ type, url, apikey, body }: PostReq) {
-  const baseUrl = urls[type]
+export async function post<T = any>({ url, apikey, body }: PostReq) {
   const headers: any = {}
   if (apikey) {
     headers.apikey = apikey
@@ -32,8 +25,7 @@ export async function post<T = any>({ type, url, apikey, body }: PostReq) {
   return res.body as T
 }
 
-export async function get<T = any>({ type, url, apikey }: Omit<PostReq, 'body'>) {
-  const baseUrl = urls[type]
+export async function get<T = any>({ url, apikey }: Omit<PostReq, 'body'>) {
   const headers: any = {}
   if (apikey) {
     headers.apikey = apikey

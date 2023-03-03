@@ -1,43 +1,41 @@
 import needle from 'needle'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
+import { HORDE_GUEST_KEY } from '../horde'
+import { publishOne } from '../ws/handle'
 import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
-const baseUrl = 'https://horde.koboldai.net/api/v2/generate'
+const baseUrl = 'https://stablehorde.net/api/v2'
 
-const base = { n: 1 }
-const defaultKey = '0000000000'
+const base = { n: 1, max_context_length: 1024 }
 const defaultModel = 'PygmalionAI/pygmalion-6b'
 
-export const handleHorde: ModelAdapter = async function* ({
-  char,
-  chat,
-  members,
-  message,
-  sender,
-  prompt,
-  user,
-}) {
-  if (!user.horde || !user.horde.key || !user.horde.model) {
+export const handleHorde: ModelAdapter = async function* ({ char, members, prompt, user, sender }) {
+  if (!user.horde || !user.horde.model) {
     yield { error: `Horde request failed: Not configured` }
     return
   }
 
   const settings = getGenSettings('basic', 'kobold')
   const body = {
-    params: { ...base, ...settings },
     models: [user.horde?.model || defaultModel],
     prompt,
     workers: [],
   }
 
-  const headers = { apikey: user.horde?.key || defaultKey }
+  const params = { ...base, ...settings }
+  const headers = { apikey: user.horde?.key || HORDE_GUEST_KEY, 'Client-Agent': 'KoboldAiLite:11' }
 
-  const init = await needle('post', `${baseUrl}/async`, body, {
-    json: true,
-    headers,
-  }).catch((err) => ({ error: err }))
+  const init = await needle(
+    'post',
+    `${baseUrl}/generate/text/async`,
+    { ...body, params },
+    {
+      json: true,
+      headers,
+    }
+  ).catch((err) => ({ error: err }))
 
   if ('error' in init) {
     yield { error: `Horde request failed: ${init.error.message || init.error}` }
@@ -59,17 +57,21 @@ export const handleHorde: ModelAdapter = async function* ({
   const started = Date.now()
   await wait()
 
+  logger.info({ id }, 'Horde async request started')
+
   let text = ''
+  let checks = 0
 
   while (true) {
     const diff = Date.now() - started
-    if (diff > 60000) {
+    if (diff > 120000) {
       yield { error: `Horde request failed: Timed out` }
       return
     }
-    const check = await needle('get', `${baseUrl}/check/${id}`, { json: true }).catch((error) => ({
-      error,
-    }))
+
+    const check = await needle('get', `${baseUrl}/generate/text/status/${id}`, {
+      json: true,
+    }).catch((error) => ({ error }))
 
     if ('error' in check) {
       yield { error: `Horde request failed: ${check.error}` }
@@ -79,9 +81,14 @@ export const handleHorde: ModelAdapter = async function* ({
     if (check.statusCode && check.statusCode >= 400) {
       logger.error({ error: check.body }, `Horde request failed`)
       yield { error: `Horde request failed: ${check.statusMessage}` }
+      return
     }
 
     if (!check.body.done) {
+      checks++
+      if (checks === 1) {
+        publishOne(sender.userId, { type: 'message-horde-eta', eta: check.body.wait_time })
+      }
       await wait()
       continue
     }

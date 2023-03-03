@@ -30,7 +30,6 @@ export namespace AppSchema {
     oobaUrl: string
 
     horde: {
-      type: 'kobold' | 'horde'
       key: string
       model: string
     }

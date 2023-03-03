@@ -45,7 +45,7 @@ const Message: Component<{
     <div class="flex w-full gap-4 rounded-l-md hover:bg-slate-800">
       <div class="flex w-12 items-center justify-center">
         <Show when={props.char && !!props.msg.characterId}>
-          <AvatarIcon avatarUrl={props.char?.avatar} />
+          <AvatarIcon avatarUrl={props.char?.avatar} bot />
         </Show>
         <Show when={!props.msg.characterId}>
           <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} />

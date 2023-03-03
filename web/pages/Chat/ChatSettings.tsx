@@ -51,6 +51,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           value={state.active?.adapter}
           items={[
             { label: 'Default', value: 'default' },
+            { label: 'Horde', value: 'horde' },
             { label: 'Kobold', value: 'kobold' },
             { label: 'Novel', value: 'novel' },
             { label: 'Chai', value: 'chai' },

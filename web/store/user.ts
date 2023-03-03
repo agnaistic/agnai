@@ -1,3 +1,4 @@
+import { HordeModel } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { chatStore } from './chat'
@@ -14,7 +15,7 @@ type State = {
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
-  hordeModels: string[]
+  hordeModels: HordeModel[]
 }
 
 export const userStore = createStore<State>(
@@ -23,10 +24,10 @@ export const userStore = createStore<State>(
 )((get, set) => {
   return {
     async getHordeModels() {
-      const res = await api.get<{ models: Array<{ name: string }> }>('/horde/models')
+      const res = await api.get<{ models: HordeModel[] }>('/horde/models')
       if (res.error) toastStore.error(`Failed to get Horde model names`)
       if (res.result) {
-        return { hordeModels: res.result.models.map((m) => m.name) }
+        return { hordeModels: res.result.models }
       }
     },
     menu({ showMenu }) {

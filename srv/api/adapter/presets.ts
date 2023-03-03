@@ -7,7 +7,7 @@ export const presets = {
   basic: {
     adapters: AI_ADAPTERS.slice(),
     name: 'Simple',
-    maxTokens: 200,
+    maxTokens: 80,
     repetitionPenalty: 1.08,
     repetitionPenaltySlope: 0.9,
     repetitionPenaltyRange: 1024,
@@ -20,7 +20,7 @@ export const presets = {
   novel_20BC: {
     adapters: ['novel'],
     name: 'Novel 20BC+',
-    maxTokens: 160,
+    maxTokens: 80,
     repetitionPenalty: 1.055,
     repetitionPenaltyRange: 2048,
     repetitionPenaltySlope: 3.33,
@@ -33,7 +33,7 @@ export const presets = {
   novel_blueLighter: {
     adapters: ['novel'],
     name: 'Novel Blue Lighter',
-    maxTokens: 160,
+    maxTokens: 80,
     repetitionPenalty: 1.05,
     repetitionPenaltyRange: 560,
     repetitionPenaltySlope: 0,

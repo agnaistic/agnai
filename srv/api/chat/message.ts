@@ -45,7 +45,7 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
   })
 
   let generated = ''
-
+  let error = false
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
@@ -54,18 +54,23 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
     }
 
     if (gen.error) {
+      error = true
       publishMany(members, { type: 'message-error', error: gen.error, chatId: id })
       continue
     }
   }
 
   await verifyLock(lockProps)
-  const msg = await store.chats.createChatMessage(
-    { chatId: id, message: generated, characterId: chat.characterId },
-    body.ephemeral
-  )
+
+  if (!error && generated) {
+    const msg = await store.chats.createChatMessage(
+      { chatId: id, message: generated, characterId: chat.characterId },
+      body.ephemeral
+    )
+    publishMany(members, { type: 'message-created', msg, chatId: id })
+  }
+
   await store.chats.update(id, {})
-  publishMany(members, { type: 'message-created', msg, chatId: id })
   await releaseLock(id)
 })
 
@@ -103,6 +108,7 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
   })
 
   let generated = ''
+  let error = false
 
   for await (const gen of stream) {
     if (typeof gen === 'string') {
@@ -112,13 +118,19 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
     }
 
     if (gen.error) {
+      error = true
       publishMany(members, { type: 'message-error', error: gen.error, ...props })
+      continue
     }
   }
 
   if (!body.ephemeral) {
     await verifyLock({ chatId: id, lockId })
-    await store.chats.editMessage(messageId, generated)
+
+    if (!error && generated) {
+      await store.chats.editMessage(messageId, generated)
+    }
+
     await store.chats.update(id, {})
   }
 

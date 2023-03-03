@@ -5,6 +5,7 @@ import { AppSchema } from '../../db/schema'
 import { AppLog } from '../../logger'
 import { errors, StatusError } from '../wrap'
 import { handleChai } from './chai'
+import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
@@ -24,7 +25,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   novel: handleNovel,
   kobold: handleKobold,
   ooba: handleOoba,
-  horde: handleKobold,
+  horde: handleHorde,
 }
 
 export async function generateResponse(
@@ -73,29 +74,4 @@ export async function createResponseStream(opts: GenerateOptions) {
   }
 
   return { chat, char, stream }
-}
-
-export async function streamResponse(opts: GenerateOptions, res: Response) {
-  const { chat, char, stream } = await createResponseStream(opts)
-
-  if (stream instanceof Error) {
-    res.status(500).send({ message: stream.message })
-    return
-  }
-
-  let generated = ''
-  for await (const msg of stream) {
-    if (typeof msg !== 'string') {
-      res.status(500)
-      res.write(JSON.stringify(msg))
-      res.send()
-      return
-    }
-
-    generated = msg
-    res.write(generated)
-    res.write('\n\n')
-  }
-
-  return { chat, char, generated }
 }

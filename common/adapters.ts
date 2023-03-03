@@ -21,3 +21,12 @@ export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',
   krake: 'krake-v2',
 } satisfies { [key: string]: string }
+
+export type HordeModel = {
+  name: string
+  count: number
+  performance: number
+  queued: number
+  eta: number
+  type?: string
+}

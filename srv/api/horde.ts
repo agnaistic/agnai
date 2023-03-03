@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { HordeModel } from '../../common/adapters'
 import { get } from './request'
 import { handle } from './wrap'
 
@@ -9,8 +10,8 @@ const router = Router()
 const CACHE_TTL_MS = 120000
 let LAST_CACHED = 0
 
-let TEXT_CACHE: Model[] = []
-let IMAGE_CACHE: Model[] = []
+let TEXT_CACHE: HordeModel[] = []
+let IMAGE_CACHE: HordeModel[] = []
 
 export const getModels = handle(async (req) => {
   const diff = Date.now() - LAST_CACHED
@@ -20,15 +21,13 @@ export const getModels = handle(async (req) => {
     return { models: TEXT_CACHE }
   }
 
-  const url = `/status/models`
+  const url = `/status/models?type=text`
 
-  const [kobold, horde] = await Promise.all([
-    get<Model[]>({ type: 'kobold', url }),
-    get<Model[]>({ type: 'horde', url }),
-  ])
+  const models = await get<HordeModel[]>({ url })
 
-  TEXT_CACHE = horde.concat(kobold).filter((model) => model.type !== 'image')
-  IMAGE_CACHE = horde.concat(kobold).filter((model) => model.type === 'image')
+  TEXT_CACHE = models.filter((model) => model.type !== 'image')
+
+  req.log.warn({ models })
 
   return { models: TEXT_CACHE }
 })
@@ -37,30 +36,9 @@ router.get('/models', getModels)
 
 export default router
 
-type Model = {
-  name: string
-  count: number
-  performance: number
-  queued: number
-  eta: number
-  type?: string
-}
-
 export async function findUser(apikey: string) {
-  const [horde, kobold] = await Promise.allSettled([
-    get<FindUserResponse>({ url: `/find_user`, type: 'horde', apikey }),
-    get<FindUserResponse>({ url: `/find_user`, type: 'kobold', apikey }),
-  ])
-
-  if (horde.status === 'fulfilled') {
-    return { ...horde.value, type: 'horde' as const }
-  }
-
-  if (kobold.status === 'fulfilled') {
-    return { ...kobold.value, type: 'kobold' as const }
-  }
-
-  throw new Error(`User not found`)
+  const user = get<FindUserResponse>({ url: `/find_user`, apikey })
+  return user
 }
 
 export type FindUserResponse = {
