@@ -79,10 +79,11 @@ const Settings: Component = () => {
           </Show>
 
           <Show when={cfg.config.adapters.includes('kobold')}>
+            <Divider />
             <TextInput
               fieldName="koboldUrl"
               label="Kobold URL"
-              helperText="Fully qualified URL for Kobold"
+              helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
               placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
               value={state.user?.koboldUrl}
             />

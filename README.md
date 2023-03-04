@@ -14,7 +14,7 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
 ## Features
 
-- Multiple AI adapters: Support for Kobold, Novel, Kobold Horde, Chai
+- Multiple AI adapters: Support for Kobold, Novel, AI Horde, Chai
 - Group Conversations: Multiple users with one character/bot
 - Multiple persona schema formats (W++, Square bracket format, Boostyle)
 - Multi-tenancy:
@@ -36,12 +36,13 @@ See the [roadmap here](https://github.com/users/sceuick/projects/1).
 If you're only looking to run AgnAI without contributing:
 
 1. Install [Node.js](https://nodejs.org/en/download/)
-2. Clone the project: `git clone https://github.com/sceuick/agn-ai` or [download it](https://github.com/sceuick/agn-ai/archive/refs/heads/dev.zip)
-3. From inside the project folder in your terminal/console:
+2. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/)
+3. Clone the project: `git clone https://github.com/sceuick/agn-ai` or [download it](https://github.com/sceuick/agn-ai/archive/refs/heads/dev.zip)
+4. From inside the project folder in your terminal/console:
    - `npm install`
    - `npm build:all`
    - `npm start`
-4. If you wish to run a public facing version:
+5. If you wish to run a public facing version:
    - `npm run start:public`
 
 ## Design Goals
@@ -62,7 +63,7 @@ Ultimately the design goals for this project are my own.
 
 The important parts of the stack are:
 
-- [NeDB](https://npmjs.org/package/@seald-io/nedb) for persistence
+- [MongoDB](https://www.mongodb.com/docs/manual/installation/) for persistence
 - [SolidJS](https://www.solidjs.com/) for interactivity
 - [TailwindCSS](https://tailwindcss.com/) for styling
 - [pnpm](https://pnpm.io/) for dependency management
@@ -77,6 +78,9 @@ If you have Node and `pnpm` installed and working, you can start the development
 
 # Start the frontend, backend, and python service
 > pnpm start
+
+# Run MongoDB using Docker
+> pnpm run up
 
 # Start the public facing version:
 > pnpm start:public

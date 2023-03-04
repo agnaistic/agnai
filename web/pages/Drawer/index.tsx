@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { Bot, Eye, LogOut, MailPlus, Settings, User, Users } from 'lucide-solid'
+import { Bot, Eye, Github, LogOut, MailPlus, Settings, User, Users } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { inviteStore, settingStore, userStore } from '../../store'
@@ -38,6 +38,15 @@ const Drawer: Component = () => {
               <Eye /> Users
             </Item>
           </Show>
+
+          <a
+            class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-slate-700"
+            href="https://github.com/sceuick/agn-ai"
+            target="_blank"
+          >
+            <Github />
+            GitHub
+          </a>
         </div>
         <div class="flex h-16 w-full items-center justify-between border-t-2 border-slate-800 px-4 ">
           <div class="flex items-center gap-4">

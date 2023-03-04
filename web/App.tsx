@@ -14,6 +14,7 @@ import Drawer from './pages/Drawer'
 import ChatList from './pages/Chat/ChatList'
 import UsersPage from './pages/Admin/UsersPage'
 import { InvitesPage } from './pages/Invite/InvitesPage'
+import HomePage from './pages/Home'
 
 const App: Component = () => {
   const state = userStore()
@@ -39,7 +40,7 @@ const App: Component = () => {
                 <Route path="/chat" component={ChatDetail} />
                 <Route path="/chat/:id" component={ChatDetail} />
                 <CharacterRoutes />
-                <Route path="/" component={CharacterList} />
+                <Route path="/" component={HomePage} />
                 <Route path="/generation-settings" component={GenerationSettings} />
                 <Route path="/profile" component={ProfilePage} />
                 <Route path="/settings" component={Settings} />
