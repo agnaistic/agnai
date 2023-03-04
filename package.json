@@ -53,12 +53,12 @@
     "@types/multiparty": "^0.0.33",
     "@types/nedb": "^1.8.12",
     "@types/needle": "^3.2.0",
-    "@types/uuid": "^9.0.0",
-    "@types/ws": "^8.5.4",
-    "bcryptjs": "^2.4.3",
     "@types/node": "^18.13.0",
     "@types/showdown": "^2.0.0",
+    "@types/uuid": "^9.0.0",
+    "@types/ws": "^8.5.4",
     "babel-preset-solid": "^1.6.9",
+    "bcryptjs": "^2.4.3",
     "buffer": "^5.5.0",
     "concurrently": "^7.6.0",
     "js-cookie": "^3.0.1",
@@ -73,7 +73,7 @@
     "solid-js": "^1.6.9",
     "solid-refresh": "^0.4.2",
     "tailwindcss": "^3.2.4",
-    "typescript": "^4.9.4",
+    "typescript": "^4.9.5",
     "zustand": "^4.3.3"
   }
 }

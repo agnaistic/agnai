@@ -41,4 +41,4 @@ jobs:
 
       - name: Update Service
         run: |
-          sh scripts/deploy.sh ${{ secrets.SSH_SERVER }}
+          sh .github/deploy.sh ${{ secrets.SSH_SERVER }}
