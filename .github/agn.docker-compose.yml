@@ -10,7 +10,7 @@ services:
     deploy:
       replicas: 1
     ports: 
-      - '3000:3000'
+      - '3001:3001'
     environment:
       - DB_NAME=agnai
       - NODE_ENV=production
