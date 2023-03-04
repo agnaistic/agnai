@@ -2,7 +2,7 @@ import * as express from 'express'
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 
-export function handle(handler: Handler) {
+export function handle(handler: Handler): express.RequestHandler {
   const wrapped = async (req: AppRequest, res: express.Response, next: express.NextFunction) => {
     let nextCalled = false
     const wrappedNext = (err?: any) => {

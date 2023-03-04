@@ -11,9 +11,13 @@ services:
       replicas: 1
     ports: 
       - '3001:3001'
+    volumes:
+      - agn-data:/app/db
     environment:
       - DB_NAME=agnai
       - NODE_ENV=production
+    secrets:
+      - jwt_secret
 
 networks:
   storage_swarm:

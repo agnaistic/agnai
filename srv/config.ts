@@ -15,19 +15,16 @@ dotenv.config({ path: '.env' })
  * When the application restarts we will try to retrieve the previously saved secret
  */
 if (!process.env.JWT_SECRET) {
-  try {
-    const secret = readFileSync('.token_secret', { encoding: 'utf8' })
-    process.env.JWT_SECRET = secret
-  } catch (ex) {
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error(
-        `JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`
-      )
-    }
-    const secret = v4()
-    writeFileSync('.token_secret', secret)
-    process.env.JWT_SECRET = secret
+  const secret = readSecret()
+  if (!secret && process.env.NODE_ENV === 'production') {
+    throw new Error(
+      `JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`
+    )
   }
+
+  const newSecret = v4()
+  writeFileSync('.token_secret', newSecret)
+  process.env.JWT_SECRET = secret
 }
 
 export const config = {
@@ -65,4 +62,15 @@ function env(key: string, fallback?: string): string {
   }
 
   return value
+}
+
+function readSecret() {
+  const locations = ['.token_secret', '/run/secrets/jwt_secret']
+
+  for (const loc of locations) {
+    try {
+      const secret = readFileSync(loc, { encoding: 'utf8' })
+      return secret
+    } catch (ex) {}
+  }
 }

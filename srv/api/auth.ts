@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { RequestHandler } from 'express'
-import { AppRequest, errors, StatusError } from './wrap'
+import { AppRequest, errors } from './wrap'
 import { config } from '../config'
 
 export const authMiddleware: RequestHandler = (req: AppRequest, res, next) => {
