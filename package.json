@@ -6,7 +6,7 @@
   "keywords": [],
   "license": "AGPL-3.0",
   "scripts": {
-    "build": "NODE_ENV=production parcel build web/index.html",
+    "build": "NODE_ENV=production parcel build web/index.html --no-optimize --detailed-report",
     "build:all": "npm run build && npm run build:server",
     "build:server": "tsc -p srv.tsconfig.json",
     "build:server:watch": "tsc -p srv.tsconfig.json -w",
