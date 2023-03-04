@@ -89,7 +89,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     novelModel: NOVEL_MODELS.euterpe,
     oobaUrl: '',
     horde: {
-      model: '',
+      model: 'PygmalionAI/pygmalion-6b',
       key: '',
     },
   }
