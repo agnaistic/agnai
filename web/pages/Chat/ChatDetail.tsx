@@ -42,7 +42,6 @@ const ChatDetail: Component = () => {
     }
 
     chatStore.getChat(id)
-    chatStore.getChatSummary(id)
   })
 
   return (
