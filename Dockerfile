@@ -15,7 +15,7 @@ ADD web/ ./web
 
 RUN pnpm run build:server && pnpm run build
 
-ENV ADAPTERS=horde \
+ENV ADAPTERS=horde,novel,kobold \
   LOG_LEVEL=info \
   INITIAL_USER=administrator \
   DB_NAME=agnai
