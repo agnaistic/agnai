@@ -182,6 +182,10 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
       }
     },
+    async getChatSummary(_, chatId: string) {
+      const res = await api.get(`/chat/${chatId}/summary`)
+      console.log(res.result, res.error)
+    },
   }
 })
 
@@ -209,7 +213,7 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
 })
 
 subscribe('chat-deleted', { chatId: 'string' }, (body) => {
-  const { all, active } = chatStore()
+  const { all, active, char } = chatStore()
   if (active?.chat._id === body.chatId) {
     chatStore.setState({ active: undefined })
   }
@@ -217,5 +221,10 @@ subscribe('chat-deleted', { chatId: 'string' }, (body) => {
   if (all?.chats) {
     const next = all.chats.filter((ch) => ch._id !== body.chatId)
     chatStore.setState({ all: { ...all, chats: next } })
+  }
+
+  if (char?.chats) {
+    const next = char.chats.filter((ch) => ch._id !== body.chatId)
+    chatStore.setState({ char: { ...char, chats: next } })
   }
 })

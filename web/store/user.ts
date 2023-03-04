@@ -8,14 +8,12 @@ import { publish } from './socket'
 import { toastStore } from './toasts'
 
 type State = {
-  showMenu: boolean
   loading: boolean
   error?: string
   loggedIn: boolean
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
-  hordeModels: HordeModel[]
 }
 
 export const userStore = createStore<State>(
@@ -23,16 +21,6 @@ export const userStore = createStore<State>(
   init()
 )((get, set) => {
   return {
-    async getHordeModels() {
-      const res = await api.get<{ models: HordeModel[] }>('/horde/models')
-      if (res.error) toastStore.error(`Failed to get Horde model names`)
-      if (res.result) {
-        return { hordeModels: res.result.models }
-      }
-    },
-    menu({ showMenu }) {
-      return { showMenu: !showMenu }
-    },
     async *login(_, username: string, password: string, onSuccess?: () => void) {
       yield { loading: true }
 
@@ -127,10 +115,7 @@ export const userStore = createStore<State>(
       }
     },
 
-    async updateConfig(
-      _,
-      config: Pick<AppSchema.User, 'koboldUrl' | 'novelApiKey' | 'novelModel' | 'defaultAdapter'>
-    ) {
+    async updateConfig(_, config: Partial<AppSchema.User>) {
       const res = await api.post('/user/config', config)
       if (res.error) toastStore.error(`Failed to update config`)
       if (res.result) {
@@ -145,14 +130,12 @@ function init(): State {
   const existing = getAuth()
 
   if (!existing) {
-    return { loading: false, jwt: '', loggedIn: false, showMenu: false, hordeModels: [] }
+    return { loading: false, jwt: '', loggedIn: false }
   }
 
   return {
-    showMenu: false,
     loggedIn: true,
     loading: false,
     jwt: existing,
-    hordeModels: [],
   }
 }

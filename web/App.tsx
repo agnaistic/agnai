@@ -7,7 +7,7 @@ import GenerationSettings from './pages/GenerationSettings'
 import Settings from './pages/Settings'
 import ChatDetail from './pages/Chat/ChatDetail'
 import CharacterList from './pages/Character/CharacterList'
-import { userStore } from './store'
+import { settingStore, userStore } from './store'
 import LoginPage from './pages/Login'
 import ProfilePage from './pages/Profile'
 import Drawer from './pages/Drawer'
@@ -20,6 +20,7 @@ const App: Component = () => {
   if (state.loggedIn) {
     userStore.getProfile()
     userStore.getConfig()
+    settingStore.getConfig()
   }
 
   return (

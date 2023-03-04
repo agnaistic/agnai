@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  app:
+    image: ghcr.io/sceuick/agnaistic:latest
+    networks:
+      storage_swarm:
+        aliases:
+          - agnaistic
+    deploy:
+      replicas: 1
+    ports: 
+      - '3000:3000'
+    environment:
+      - DB_NAME=agnai
+      - NODE_ENV=production
+
+networks:
+  storage_swarm:
+    external: true

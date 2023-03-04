@@ -1,6 +1,7 @@
 import dotenv from 'dotenv'
 import { readFileSync, writeFileSync } from 'fs'
 import { v4 } from 'uuid'
+import { AIAdapter } from '../common/adapters'
 
 dotenv.config({ path: '.env' })
 
@@ -18,6 +19,11 @@ if (!process.env.JWT_SECRET) {
     const secret = readFileSync('.token_secret', { encoding: 'utf8' })
     process.env.JWT_SECRET = secret
   } catch (ex) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        `JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`
+      )
+    }
     const secret = v4()
     writeFileSync('.token_secret', secret)
     process.env.JWT_SECRET = secret
@@ -46,6 +52,9 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
+  adapters: env('ADAPTERS', 'novel,horde,kobold,chai')
+    .split(',')
+    .filter((i) => !!i) as AIAdapter[],
 }
 
 function env(key: string, fallback?: string): string {

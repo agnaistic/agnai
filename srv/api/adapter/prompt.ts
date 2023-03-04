@@ -3,10 +3,8 @@ import gpt from 'gpt-3-encoder'
 import { store } from '../../db'
 
 type PromptOpts = {
-  sender: AppSchema.Profile
   chat: AppSchema.Chat
   char: AppSchema.Character
-  message: string
   members: AppSchema.Profile[]
   retry?: AppSchema.ChatMessage
 }
@@ -15,7 +13,7 @@ const MAX_TOKENS = 2048
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export async function createPrompt({ sender, chat, char, message, members, retry }: PromptOpts) {
+export async function createPrompt({ chat, char, members, retry }: PromptOpts) {
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
   if (chat.scenario) {

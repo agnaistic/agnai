@@ -1,7 +1,7 @@
 import { LogOut, Menu, MessageCircle, Settings, User, Users } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import { A } from '@solidjs/router'
-import { characterStore, chatStore, userStore } from '../store'
+import { characterStore, chatStore, settingStore, userStore } from '../store'
 
 const NavBar: Component = () => {
   const state = userStore()
@@ -14,7 +14,7 @@ const NavBar: Component = () => {
   return (
     <span class="flex justify-between gap-4 border-b-2 border-slate-800 bg-background-lighter px-4 py-5 shadow-xl max-lg:p-3">
       <span class="flex items-center gap-2 font-semibold">
-        <div class="lg:hidden" onClick={userStore.menu}>
+        <div class="lg:hidden" onClick={settingStore.menu}>
           <Menu class="focusable-icon-button mr-2 cursor-pointer" size={32} />
         </div>
         <A href="/">

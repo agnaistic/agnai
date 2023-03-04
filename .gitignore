@@ -8,3 +8,6 @@ config.json
 log.txt
 __pycache__
 .token_secret
+__pycache__
+runtime
+bin

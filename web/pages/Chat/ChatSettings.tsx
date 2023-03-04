@@ -6,8 +6,8 @@ import Dropdown from '../../shared/Dropdown'
 import Modal, { ModalFooter } from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
-import { chatStore } from '../../store'
+import { adaptersToOptions, getStrictForm } from '../../shared/util'
+import { chatStore, settingStore } from '../../store'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -17,6 +17,8 @@ const options = [
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
   const state = chatStore((s) => ({ active: s.active?.chat, char: s.active?.char }))
+  const cfg = settingStore()
+
   let ref: any
 
   const onSave = (ev: Event) => {
@@ -51,11 +53,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           value={state.active?.adapter}
           items={[
             { label: 'Default', value: 'default' },
-            { label: 'Horde', value: 'horde' },
-            { label: 'Kobold', value: 'kobold' },
-            { label: 'Novel', value: 'novel' },
-            { label: 'Chai', value: 'chai' },
-            // { label: 'Text Generation WebUI', value: 'ooba' },
+            ...adaptersToOptions(cfg.config.adapters),
           ]}
         />
         <TextInput fieldName="name" class="text-sm" value={state.active?.name} label="Chat name" />

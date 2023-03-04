@@ -1,4 +1,4 @@
-FROM node:18-alpine
+FROM node:18-stretch-slim
 
 WORKDIR /app
 VOLUME [ "/app/db" ]
@@ -13,8 +13,15 @@ ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
 
+RUN pnpm run build
+
+ENV ADAPTERS=horde \
+  LOG_LEVEL=info \
+  INITIAL_USER=administrator \
+  DB_NAME=agnai
 
 EXPOSE 3001
 EXPOSE 5001
 
-CMD ["pnpm", "start"]
+ENTRYPOINT [ "pnpm" ]
+CMD ["run", "server"]

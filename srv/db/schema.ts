@@ -145,6 +145,10 @@ export namespace AppSchema {
     tailFreeSampling: number
     order?: number[]
   }
+
+  export interface AppConfig {
+    adapters: AIAdapter[]
+  }
 }
 
 export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { kind: T }>

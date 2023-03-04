@@ -1,5 +1,5 @@
 import { assertValid } from 'frisker'
-import { CHAT_ADAPTERS } from '../../../common/adapters'
+import { config } from '../../config'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { publishMany } from '../ws/handle'
@@ -8,7 +8,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
       name: 'string',
-      adapter: CHAT_ADAPTERS,
+      adapter: ['default', ...config.adapters] as const,
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',

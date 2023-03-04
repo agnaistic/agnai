@@ -2,14 +2,15 @@ import { A } from '@solidjs/router'
 import { Bot, Eye, LogOut, MailPlus, Settings, User, Users } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
-import { inviteStore, userStore } from '../../store'
+import { inviteStore, settingStore, userStore } from '../../store'
 import './drawer.css'
 
 const Drawer: Component = () => {
-  const state = userStore()
+  const state = settingStore()
+  const user = userStore()
 
   return (
-    <Show when={state.loggedIn}>
+    <Show when={user.loggedIn}>
       <div class={`drawer flex flex-col gap-4 pt-4 ${state.showMenu ? '' : 'drawer--hide'}`}>
         <div class="drawer__content flex flex-col gap-2 px-4">
           <Item href="/profile">
@@ -32,7 +33,7 @@ const Drawer: Component = () => {
             <Settings /> Settings
           </Item>
 
-          <Show when={state.user?.admin}>
+          <Show when={user.user?.admin}>
             <Item href="/admin/users">
               <Eye /> Users
             </Item>
@@ -40,8 +41,8 @@ const Drawer: Component = () => {
         </div>
         <div class="flex h-16 w-full items-center justify-between border-t-2 border-slate-800 px-4 ">
           <div class="flex items-center gap-4">
-            <AvatarIcon avatarUrl={state.profile?.avatar} />
-            <div>{state.profile?.handle}</div>
+            <AvatarIcon avatarUrl={user.profile?.avatar} />
+            <div>{user.profile?.handle}</div>
           </div>
           <div onClick={userStore.logout}>
             <LogOut class="cursor-pointer text-white/50 hover:text-white" />

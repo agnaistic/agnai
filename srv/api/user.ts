@@ -8,6 +8,7 @@ import { errors, handle, StatusError } from './wrap'
 import { handleUpload } from './upload'
 import { publishAll } from './ws/handle'
 import { findUser, HORDE_GUEST_KEY } from './horde'
+import { config } from '../config'
 
 const router = Router()
 
@@ -48,12 +49,12 @@ const changePassword = handle(async (req) => {
 const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {
-      novelApiKey: 'string',
-      novelModel: 'string',
-      koboldUrl: 'string',
-      hordeApiKey: 'string',
-      hordeModel: 'string',
-      defaultAdapter: MULTI_TENANT_ADAPTERS,
+      novelApiKey: 'string?',
+      novelModel: 'string?',
+      koboldUrl: 'string?',
+      hordeApiKey: 'string?',
+      hordeModel: 'string?',
+      defaultAdapter: config.adapters,
     },
     body
   )
@@ -63,29 +64,39 @@ const updateConfig = handle(async ({ userId, body }) => {
     throw errors.Forbidden
   }
 
-  const prevKey = prevUser.horde?.key
+  if (body.hordeApiKey) {
+    const prevKey = prevUser.horde?.key
+    const isNewKey =
+      body.hordeApiKey !== '' &&
+      body.hordeApiKey !== HORDE_GUEST_KEY &&
+      body.hordeApiKey !== prevKey
 
-  const isNewKey =
-    body.hordeApiKey !== '' && body.hordeApiKey !== HORDE_GUEST_KEY && body.hordeApiKey !== prevKey
-
-  if (isNewKey) {
-    const user = await findUser(body.hordeApiKey).catch(() => null)
-    if (!user) {
-      throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
+    if (isNewKey) {
+      const user = await findUser(body.hordeApiKey).catch(() => null)
+      if (!user) {
+        throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
+      }
     }
   }
 
-  const user = await store.users.updateUser(userId!, {
+  const update: Partial<AppSchema.User> = {
     defaultAdapter: body.defaultAdapter,
-    koboldUrl: body.koboldUrl,
-    novelApiKey: body.novelApiKey,
-    novelModel: body.novelModel,
-    horde: {
-      key: body.hordeApiKey,
-      model: body.hordeModel,
-    },
-  })
+  }
 
+  if (body.koboldUrl !== undefined) update.koboldUrl = body.koboldUrl
+  if (body.hordeModel) {
+    update.horde = {
+      key: body.hordeApiKey!,
+      model: body.hordeModel!,
+    }
+  }
+
+  if (body.novelModel) {
+    update.novelModel = body.novelModel
+    update.novelApiKey = body.novelApiKey!
+  }
+
+  const user = await store.users.updateUser(userId!, update)
   return user
 })
 

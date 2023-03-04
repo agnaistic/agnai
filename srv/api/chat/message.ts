@@ -1,6 +1,8 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { createResponseStream } from '../adapter/generate'
+import { createResponseStream, getResponseEntities } from '../adapter/generate'
+import { createPrompt } from '../adapter/prompt'
+import { post, PY_URL } from '../request'
 import { errors, handle } from '../wrap'
 import { publishMany } from '../ws/handle'
 import { obtainLock, releaseLock, verifyLock } from './lock'
@@ -143,4 +145,13 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
   await releaseLock(id)
 
   res.end()
+})
+
+export const summarizeChat = handle(async (req) => {
+  const chatId = req.params.id
+  const entities = await getResponseEntities(chatId, req.userId!)
+  const prompt = await createPrompt(entities)
+
+  const summary = await post({ url: '/summarize', body: { prompt }, baseUrl: PY_URL })
+  return { summary }
 })

@@ -1,12 +1,12 @@
-import { Component, createEffect, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
+import { adaptersToOptions, getStrictForm } from '../../shared/util'
 import Dropdown from '../../shared/Dropdown'
 import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../../common/adapters'
-import { userStore } from '../../store'
+import { settingStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
@@ -15,19 +15,20 @@ const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as Defau
 
 const Settings: Component = () => {
   const state = userStore()
+  const cfg = settingStore()
 
   createEffect(() => {
     // Always reload settings when entering this page
     userStore.getConfig()
-    userStore.getHordeModels()
+    settingStore.getHordeModels()
   })
 
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {
       koboldUrl: 'string',
-      novelApiKey: 'string',
-      novelModel: 'string',
-      hordeApiKey: 'string',
+      novelApiKey: 'string?',
+      novelModel: 'string?',
+      hordeApiKey: 'string?',
       hordeModel: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
@@ -52,68 +53,75 @@ const Settings: Component = () => {
           <Dropdown
             fieldName="defaultAdapter"
             label="Default AI Adapter"
-            items={adapters}
+            items={adaptersToOptions(cfg.config.adapters)}
             helperText="The default adapter conversations will use unless otherwise configured"
             value={state.user?.defaultAdapter}
           />
 
-          <Divider />
-          <h3 class="text-xl">Stable Horde settings</h3>
-          <TextInput
-            fieldName="hordeApiKey"
-            label="Horde API Key"
-            helperText={HordeHelpText}
-            value={state.user?.horde?.key}
-            placeholder="0000000000"
-            type="password"
-          />
-          <Dropdown
-            fieldName="hordeModel"
-            helperText={<span>Currently set to: {state.user?.horde?.model || 'None'}</span>}
-            label="Horde Model"
-            value={state.user?.horde?.model}
-            items={[{ label: 'None', value: '' }].concat(...state.hordeModels.map(toItem))}
-          />
+          <Show when={cfg.config.adapters.includes('horde')}>
+            <Divider />
+            <h3 class="text-xl">Stable Horde settings</h3>
+            <TextInput
+              fieldName="hordeApiKey"
+              label="Horde API Key"
+              helperText={HordeHelpText}
+              value={state.user?.horde?.key}
+              placeholder="0000000000"
+              type="password"
+            />
+            <Dropdown
+              fieldName="hordeModel"
+              helperText={<span>Currently set to: {state.user?.horde?.model || 'None'}</span>}
+              label="Horde Model"
+              value={state.user?.horde?.model}
+              items={[{ label: 'None', value: '' }].concat(...cfg.models.map(toItem))}
+            />
+          </Show>
 
-          <TextInput
-            fieldName="koboldUrl"
-            label="Kobold URL"
-            helperText="Fully qualified URL for Kobold"
-            placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-            value={state.user?.koboldUrl}
-          />
-          <Divider />
-          <h3 class="text-xl">NovelAI settings</h3>
-          <Dropdown
-            fieldName="novelModel"
-            label="NovelAI Model"
-            items={[
-              { label: 'Euterpe', value: 'euterpe-v2' },
-              { label: 'Krake', value: 'krake-v2' },
-            ]}
-            value={state.user?.novelModel}
-          />
-          <TextInput
-            fieldName="novelApiKey"
-            label="Novel API Key"
-            type="password"
-            helperText={
-              <>
-                NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization
-                headers.{' '}
-                <a
-                  class="text-purple-500"
-                  target="_blank"
-                  href="https://github.com/sceuick/agn-ai/blob/dev/instructions/novel.md"
-                >
-                  Instructions
-                </a>
-                .
-              </>
-            }
-            placeholder="..."
-            value={state.user?.novelApiKey}
-          />
+          <Show when={cfg.config.adapters.includes('kobold')}>
+            <TextInput
+              fieldName="koboldUrl"
+              label="Kobold URL"
+              helperText="Fully qualified URL for Kobold"
+              placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+              value={state.user?.koboldUrl}
+            />
+          </Show>
+
+          <Show when={cfg.config.adapters.includes('novel')}>
+            <Divider />
+            <h3 class="text-xl">NovelAI settings</h3>
+            <Dropdown
+              fieldName="novelModel"
+              label="NovelAI Model"
+              items={[
+                { label: 'Euterpe', value: 'euterpe-v2' },
+                { label: 'Krake', value: 'krake-v2' },
+              ]}
+              value={state.user?.novelModel}
+            />
+            <TextInput
+              fieldName="novelApiKey"
+              label="Novel API Key"
+              type="password"
+              helperText={
+                <>
+                  NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization
+                  headers.{' '}
+                  <a
+                    class="text-purple-500"
+                    target="_blank"
+                    href="https://github.com/sceuick/agn-ai/blob/dev/instructions/novel.md"
+                  >
+                    Instructions
+                  </a>
+                  .
+                </>
+              }
+              placeholder="..."
+              value={state.user?.novelApiKey}
+            />
+          </Show>
         </div>
         <div class="flex justify-end gap-2 pt-4">
           <Button type="submit">
@@ -125,14 +133,6 @@ const Settings: Component = () => {
     </>
   )
 }
-
-const adapters = [
-  { label: 'Horde', value: 'horde' },
-  { label: 'KoboldAI', value: 'kobold' },
-  { label: 'NovelAI', value: 'novel' },
-  { label: 'Chai', value: 'chai' },
-  // { label: 'Text Generation WebUI', value: 'ooba' },
-] satisfies Array<{ label: string; value: ChatAdapter }>
 
 export default Settings
 

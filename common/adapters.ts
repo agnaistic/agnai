@@ -30,3 +30,11 @@ export type HordeModel = {
   eta: number
   type?: string
 }
+
+export const ADAPTER_LABELS: Record<AIAdapter, string> = {
+  chai: 'Chai',
+  horde: 'Horde',
+  kobold: 'Kobold',
+  novel: 'NovelAI',
+  ooba: 'Text-Generation-WebUI',
+}

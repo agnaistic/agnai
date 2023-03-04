@@ -6,6 +6,7 @@ import { authMiddleware } from './auth'
 import user from './user'
 import admin from './admin'
 import horde from './horde'
+import settings from './settings'
 
 const router = Router()
 
@@ -16,5 +17,6 @@ router.use('/character', character)
 router.use('/classify', classify)
 router.use('/admin', admin)
 router.use('/horde', horde)
+router.use('/settings', settings)
 
 export default router

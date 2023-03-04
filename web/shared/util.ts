@@ -1,4 +1,6 @@
 import { UnwrapBody, assertValid } from 'frisker'
+import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
+import { DropdownItem } from './Dropdown'
 
 type FormRef = { [key: string]: 'string' | 'string?' | readonly string[] }
 
@@ -103,4 +105,8 @@ function toRawDuration(valueSecs: number) {
     seconds: valueSecs,
     text: valueSecs <= 0 ? 'now' : `${days}d:${hours}h:${mins}m:${secs}s`.replace('0d:', ''),
   }
+}
+
+export function adaptersToOptions(adapters: AIAdapter[]): DropdownItem[] {
+  return adapters.map((adp) => ({ label: ADAPTER_LABELS[adp], value: adp }))
 }

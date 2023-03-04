@@ -28,38 +28,44 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   horde: handleHorde,
 }
 
-export async function generateResponse(
-  opts: GenerateOptions & { chat: AppSchema.Chat; char: AppSchema.Character }
-) {
-  const user = await store.users.getUser(opts.chat.userId)
-  if (!user) {
+export async function createResponseStream(opts: GenerateOptions) {
+  const { chat, char, user, members } = await getResponseEntities(opts.chatId, opts.senderId)
+
+  const isOwnerOrMember = opts.senderId === chat.userId || chat.memberIds.includes(opts.senderId)
+  if (!isOwnerOrMember) {
     throw errors.Forbidden
   }
 
-  const members = await store.users.getProfiles(opts.chat.userId, opts.chat.memberIds)
   const sender = members.find((mem) => mem.userId === opts.senderId)
   if (!sender) {
     throw new StatusError('Sender not found in chat members', 400)
   }
 
-  const adapter =
-    (opts.chat.adapter === 'default' ? user.defaultAdapter : opts.chat.adapter) ||
-    user.defaultAdapter
-  const prompt = await createPrompt({ ...opts, members, sender })
-  const adapterOpts = { ...opts, members, user, sender, prompt }
+  const adapter = getAdapater(chat, user)
+
+  const prompt = await createPrompt({ char, chat, members, retry: opts.retry })
+
+  const adapterOpts = { ...opts, chat, char, members, user, sender, prompt }
 
   const handler = handlers[adapter]
-  return handler(adapterOpts)
+  const stream = handler(adapterOpts)
+
+  return { chat, char, stream }
 }
 
-export async function createResponseStream(opts: GenerateOptions) {
-  const chat = await store.chats.getChat(opts.chatId)
+export async function getResponseEntities(chatId: string, senderId: string) {
+  const chat = await store.chats.getChat(chatId)
   if (!chat) {
     throw new StatusError('Chat not found', 404)
   }
 
-  const isOwnerOrMember = opts.senderId === chat.userId || chat.memberIds.includes(opts.senderId)
+  const isOwnerOrMember = senderId === chat.userId || chat.memberIds.includes(senderId)
   if (!isOwnerOrMember) {
+    throw errors.Forbidden
+  }
+
+  const user = await store.users.getUser(chat.userId)
+  if (!user) {
     throw errors.Forbidden
   }
 
@@ -68,10 +74,13 @@ export async function createResponseStream(opts: GenerateOptions) {
     throw new StatusError('Character not found', 404)
   }
 
-  const stream = await generateResponse({ ...opts, chat, char }).catch((err: Error) => err)
-  if (stream instanceof Error) {
-    throw stream
-  }
+  const members = await store.users.getProfiles(chat.userId, chat.memberIds)
 
-  return { chat, char, stream }
+  return { chat, char, user, members }
+}
+
+function getAdapater(chat: AppSchema.Chat, user: AppSchema.User) {
+  if (chat.adapter && chat.adapter !== 'default') return chat.adapter
+
+  return user.defaultAdapter
 }
