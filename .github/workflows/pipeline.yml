@@ -4,9 +4,7 @@ permissions:
   # This is required for actions/checkout
   contents: read
 
-on:
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+on: [push]
 
 env:
   node-version: '18.4.0'
