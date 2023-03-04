@@ -64,7 +64,7 @@ const base = {
   // top_p: 0.9,
 }
 
-export const handleNovel: ModelAdapter = async function* ({ char, members, user, prompt,  }) {
+export const handleNovel: ModelAdapter = async function* ({ char, members, user, prompt }) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
     return
