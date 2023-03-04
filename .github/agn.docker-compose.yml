@@ -14,11 +14,19 @@ services:
     volumes:
       - agn-data:/app/db
     environment:
-      - DB_NAME=agnai
-      - NODE_ENV=production
+      DB_NAME: agnai
+      NODE_ENV: production
+      JWT_SECRET: /run/secrets/jwt_secret
     secrets:
       - jwt_secret
 
 networks:
   storage_swarm:
     external: true
+
+secrets:
+  jwt_secret:
+    external: true
+
+volumes:
+  agn-data:

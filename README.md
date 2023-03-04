@@ -39,6 +39,7 @@ If you're only looking to run AgnAI without contributing:
 2. Clone the project: `git clone https://github.com/sceuick/agn-ai` or [download it](https://github.com/sceuick/agn-ai/archive/refs/heads/dev.zip)
 3. From inside the project folder in your terminal/console:
    - `npm install`
+   - `npm build:all`
    - `npm start`
 4. If you wish to run a public facing version:
    - `npm run start:public`
