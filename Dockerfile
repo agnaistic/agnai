@@ -13,7 +13,7 @@ ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
 
-RUN pnpm run build:server && pnpm run build
+RUN pnpm run build:server && pnpm run build -- --no-optimize --detailed-report
 
 ENV ADAPTERS=horde \
   LOG_LEVEL=info \

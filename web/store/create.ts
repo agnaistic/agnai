@@ -1,4 +1,4 @@
-import { createStore as create, StoreApi } from 'zustand/vanilla'
+import create, { StoreApi } from 'zustand/vanilla'
 import { createStore as createSolidStore, reconcile } from 'solid-js/store'
 import { onCleanup } from 'solid-js'
 
