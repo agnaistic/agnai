@@ -26,7 +26,7 @@ app.use((req, res, next) => {
 
   return res.sendFile(index)
 })
-app.use((err: any, req: AppRequest, res: express.Response, _next: any) => {
+app.use((err: any, _req: any, res: express.Response, _next: any) => {
   if (err.status > 0) {
     res.status(err.status)
   } else {

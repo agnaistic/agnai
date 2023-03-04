@@ -20,7 +20,7 @@ export function handle(handler: Handler): express.RequestHandler {
       if (!res.headersSent) next(ex)
     }
   }
-  return wrapped
+  return wrapped as any as express.RequestHandler
 }
 
 export const wrap = handle

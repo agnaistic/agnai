@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken'
-import { RequestHandler } from 'express'
+import { NextFunction, Response } from 'express'
 import { AppRequest, errors } from './wrap'
 import { config } from '../config'
 
-export const authMiddleware: RequestHandler = (req: AppRequest, res, next) => {
+export const authMiddleware: any = (req: AppRequest, _res: Response, next: NextFunction) => {
   const header = req.get('authorization')
   if (!header) {
     return next()
@@ -25,12 +25,12 @@ export const authMiddleware: RequestHandler = (req: AppRequest, res, next) => {
   }
 }
 
-export const loggedIn: RequestHandler = (req: AppRequest, _, next) => {
+export const loggedIn: any = (req: AppRequest, _: any, next: NextFunction) => {
   if (!req.user?.userId) return next(errors.Unauthorized)
   next()
 }
 
-export const isAdmin: RequestHandler = (req: AppRequest, _, next) => {
+export const isAdmin: any = (req: AppRequest, _: any, next: NextFunction) => {
   if (!req.user?.admin) return next(errors.Forbidden)
   next()
 }
