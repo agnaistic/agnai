@@ -20,7 +20,7 @@ ENV ADAPTERS=horde,novel,kobold \
   LOG_LEVEL=info \
   INITIAL_USER=administrator \
   DB_NAME=agnai \
-  ASSET_FOLDER=/app/assets
+  ASSET_FOLDER=/app/dist/assets
 
 EXPOSE 3001
 EXPOSE 5001

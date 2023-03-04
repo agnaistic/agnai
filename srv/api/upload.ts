@@ -1,4 +1,5 @@
 import mp from 'multiparty'
+import { mkdirpSync } from 'mkdirp'
 import { Request } from 'express'
 import { rename, writeFile } from 'fs/promises'
 import { basename, dirname, extname, resolve } from 'path'
@@ -100,7 +101,7 @@ function createAssetFolder() {
   try {
     readdirSync(config.assetFolder)
   } catch (ex) {
-    mkdirSync(config.assetFolder)
+    mkdirpSync(config.assetFolder)
   }
 }
 

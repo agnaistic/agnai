@@ -13,7 +13,7 @@ services:
       - '3001:3001'
     volumes:
       - agn-data:/app/db
-      - agn-assets:/app/assets
+      - agn-assets:/app/dist/assets
     environment:
       DB_NAME: agnai
       DB_HOST: mongodb

@@ -25,7 +25,6 @@
   },
   "dependencies": {
     "@babel/core": "^7.20.12",
-    "@seald-io/nedb": "^4.0.1",
     "@solidjs/router": "^0.6.0",
     "@types/bcryptjs": "^2.4.2",
     "@types/cors": "^2.8.13",
@@ -53,9 +52,9 @@
     "jsonwebtoken": "^9.0.0",
     "localtunnel": "^2.0.2",
     "lucide-solid": "0.105.0-alpha.9",
+    "mkdirp": "^2.1.4",
     "mongodb": "^5.1.0",
     "multiparty": "^4.2.3",
-    "nedb-promises": "^6.2.1",
     "needle": "^3.2.0",
     "nodemon": "^2.0.20",
     "parcel": "^2.8.3",
