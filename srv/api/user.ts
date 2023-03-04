@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
-import { MULTI_TENANT_ADAPTERS } from '../../common/adapters'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { loggedIn } from './auth'

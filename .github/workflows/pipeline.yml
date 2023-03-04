@@ -56,7 +56,7 @@ jobs:
         uses: ./.github/actions/restore-pnpm-cache
 
       - name: Run Prettier
-        run: pnpm run style
+        run: pnpm run format
 
   typecheck:
     name: Typecheck
