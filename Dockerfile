@@ -1,4 +1,4 @@
-FROM node:18-stretch-slim
+FROM node:18-bullseye-slim
 
 WORKDIR /app
 VOLUME [ "/app/db" ]
