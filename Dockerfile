@@ -8,7 +8,7 @@ RUN npm install pnpm -g
 ADD package.json pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
 
-ADD public.ts requirements.txt tailwind.config.js tsconfig.json .babelrc .postcssrc .prettierrc ./
+ADD public.ts requirements.txt tailwind.config.js tsconfig.json .babelrc .postcssrc .prettierrc srv.tsconfig.json ./
 ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
