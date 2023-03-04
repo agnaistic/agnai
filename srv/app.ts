@@ -19,6 +19,7 @@ app.use(cors())
 app.use(logMiddleware())
 app.use('/api', api)
 app.use('/', express.static('dist'))
+app.use('/', express.static('assets'))
 app.use((req, res, next) => {
   if (req.url.startsWith('/url')) {
     return next(errors.NotFound)
