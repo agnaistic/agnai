@@ -13,6 +13,7 @@ services:
       - '3001:3001'
     volumes:
       - agn-data:/app/db
+      - agn-assets:/app/dist/assets
     environment:
       DB_NAME: agnai
       NODE_ENV: production
@@ -30,3 +31,4 @@ secrets:
 
 volumes:
   agn-data:
+  agn-assets:

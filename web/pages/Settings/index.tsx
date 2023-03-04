@@ -25,7 +25,7 @@ const Settings: Component = () => {
 
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {
-      koboldUrl: 'string',
+      koboldUrl: 'string?',
       novelApiKey: 'string?',
       novelModel: 'string?',
       hordeApiKey: 'string?',
