@@ -16,6 +16,8 @@ services:
       - agn-assets:/app/assets
     environment:
       DB_NAME: agnai
+      DB_HOST: mongodb
+      DB_PORT: 27017
       NODE_ENV: production
       JWT_SECRET: /run/secrets/jwt_secret
     secrets:

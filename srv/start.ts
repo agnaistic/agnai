@@ -1,11 +1,11 @@
 import { server } from './app'
 import { config } from './config'
 import { store } from './db'
-import { deleteAllChats } from './db/chats'
-import { createIndexes } from './db/client'
+import { connect, createIndexes } from './db/client'
 import { logger } from './logger'
 
 server.listen(config.port, '0.0.0.0', async () => {
+  await connect()
   await createIndexes()
 
   // Initialise settings if empty

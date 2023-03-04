@@ -12,11 +12,6 @@ import { getChat } from './chats'
 import { db } from './client'
 import { AppSchema } from './schema'
 
-const invs = db('chat-invite')
-const members = db('chat-member')
-const chats = db('chat')
-const profiles = db('profile')
-
 export type NewInvite = {
   chatId: string
   byUserId: string
@@ -24,20 +19,25 @@ export type NewInvite = {
 }
 
 export async function list(userId: string) {
-  const invites = await invs.find({ kind: 'chat-invite', invitedId: userId })
+  const invites = await db('chat-invite').find({ kind: 'chat-invite', invitedId: userId }).toArray()
 
   const ids = invites.reduce<string[]>((prev, curr) => {
     return prev.concat(curr.invitedId, curr.byUserId, curr.chatId, curr.characterId)
   }, [])
 
-  const relations = await db().find({
-    $or: [{ _id: { $in: ids } }, { kind: 'profile', userId: { $in: ids } }],
-  })
+  const [profiles, chats, characters] = await Promise.all([
+    db('profile')
+      .find({ userId: { $in: ids } })
+      .toArray(),
+    db('chat').find({ userId }).toArray(),
+    db('character').find({ userId }).toArray(),
+  ])
+
   return {
     invites,
-    relations: relations.filter(
-      (r) => r.kind === 'profile' || r.kind === 'chat' || r.kind === 'character'
-    ),
+    profiles,
+    chats,
+    characters,
   }
 }
 
@@ -51,12 +51,12 @@ export async function create(invite: NewInvite) {
     throw new StatusError(`Cannot invite yourself`, 400)
   }
 
-  const user = await profiles.findOne({ kind: 'profile', userId: invite.invitedId })
+  const user = await db('profile').findOne({ kind: 'profile', userId: invite.invitedId })
   if (!user) {
     throw new StatusError(`User does not exist`, 400)
   }
 
-  const membership = await members.findOne({
+  const membership = await db('chat-member').findOne({
     kind: 'chat-member',
     chatId: invite.chatId,
     userId: invite.invitedId,
@@ -66,7 +66,7 @@ export async function create(invite: NewInvite) {
     throw new StatusError(`User is already a member of this conversation`, 400)
   }
 
-  const prev = await invs.findOne({
+  const prev = await db('chat-invite').findOne({
     kind: 'chat-invite',
     chatId: invite.chatId,
     inviteId: invite.invitedId,
@@ -85,12 +85,16 @@ export async function create(invite: NewInvite) {
     state: 'pending',
   }
 
-  await invs.insertOne(inv)
+  await db('chat-invite').insertOne(inv)
   return inv
 }
 
 export async function answer(userId: string, inviteId: string, accept: boolean) {
-  const prev = await invs.findOne({ _id: inviteId, kind: 'chat-invite', invitedId: userId })
+  const prev = await db('chat-invite').findOne({
+    _id: inviteId,
+    kind: 'chat-invite',
+    invitedId: userId,
+  })
   if (!prev) {
     throw errors.NotFound
   }
@@ -100,9 +104,9 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
     throw new StatusError('Invitation already actioned', 400)
   }
 
-  const chat = await chats.findOne({ _id: prev.chatId })
+  const chat = await db('chat').findOne({ _id: prev.chatId })
   if (!chat) {
-    await invs.deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
+    await db('chat-invite').deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
     throw new StatusError('Chat no longer exists', 400)
   }
 
@@ -115,14 +119,14 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
   }
 
   if (accept) {
-    await members.insertOne(member)
-    await chats.updateOne(
+    await db('chat-member').insertOne(member)
+    await db('chat').updateOne(
       { _id: chat._id, kind: 'chat' },
       { $set: { memberIds: chat.memberIds.concat(userId) } }
     )
   }
 
-  await invs.deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
+  await db('chat-invite').deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
 
   return accept ? member : undefined
 }

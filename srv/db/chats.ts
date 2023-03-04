@@ -5,35 +5,37 @@ import { db } from './client'
 import { AppSchema } from './schema'
 import { now } from './util'
 
-const chats = db('chat')
-const msgs = db('chat-message')
-
 export async function getMessages(chatId: string) {
-  const docs = await msgs.find({ kind: 'chat-message', chatId }).sort({ createdAt: 1 })
+  const docs = await db('chat-message')
+    .find({ kind: 'chat-message', chatId })
+    .sort({ createdAt: 1 })
+    .toArray()
   return docs
 }
 
 export async function list() {
-  const docs = await chats.find({ kind: 'chat' })
+  const docs = await db('chat').find({ kind: 'chat' }).toArray()
   return docs
 }
 
 export async function getChat(id: string) {
-  const chat = await chats.findOne({ _id: id, kind: 'chat' })
+  const chat = await db('chat').findOne({ _id: id, kind: 'chat' })
   return chat
 }
 
 export async function listByCharacter(characterId: string) {
-  const docs = await chats.find({
-    kind: 'chat',
-    characterId,
-  })
+  const docs = await db('chat')
+    .find({
+      kind: 'chat',
+      characterId,
+    })
+    .toArray()
 
   return docs
 }
 
 export async function getMessageAndChat(msgId: string) {
-  const msg = await msgs.findOne({ _id: msgId, kind: 'chat-message' })
+  const msg = await db('chat-message').findOne({ _id: msgId, kind: 'chat-message' })
   if (!msg) return
 
   const chat = await getChat(msg.chatId)
@@ -41,7 +43,7 @@ export async function getMessageAndChat(msgId: string) {
 }
 
 export async function update(id: string, props: Partial<AppSchema.Chat>) {
-  await chats.updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
+  await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
   return getChat(id)
 }
 
@@ -74,7 +76,7 @@ export async function create(
     messageCount: props.greeting ? 1 : 0,
   }
 
-  await chats.insertOne(doc)
+  await db('chat').insertOne(doc)
 
   if (props.greeting) {
     const msg: AppSchema.ChatMessage = {
@@ -86,7 +88,7 @@ export async function create(
       createdAt: now(),
       updatedAt: now(),
     }
-    await msgs.insertOne(msg)
+    await db('chat-message').insertOne(msg)
   }
   return doc
 }
@@ -114,34 +116,34 @@ export async function createChatMessage(
     updatedAt: new Date().toISOString(),
   }
 
-  if (!ephemeral) await msgs.insertOne(doc)
+  if (!ephemeral) await db('chat-message').insertOne(doc)
   return doc
 }
 
 export async function editMessage(id: string, content: string) {
-  const doc = await msgs.updateOne(
+  const doc = await db('chat-message').updateOne(
     { _id: id },
-    { $set: { msg: content, updatedAt: now() } },
-    { returnUpdatedDocs: true }
+    { $set: { msg: content, updatedAt: now() } }
   )
 
-  return doc
+  const msg = await getMessage(id)
+  return msg
 }
 
 export async function getMessage(messageId: string) {
-  const msg = await msgs.findOne({ _id: messageId, kind: 'chat-message' })
+  const msg = await db('chat-message').findOne({ _id: messageId, kind: 'chat-message' })
   return msg
 }
 
 export async function deleteMessages(messageIds: string[]) {
-  await chats.deleteMany({ _id: { $in: messageIds } }, { multi: true })
+  await db('chat').deleteMany({ _id: { $in: messageIds } })
 }
 
 export async function deleteChat(chatId: string) {
-  await chats.deleteMany({ _id: chatId, kind: 'chat' }, {})
-  await chats.deleteMany({ kind: 'chat-member', chatId }, {})
-  await chats.deleteMany({ kind: 'chat-invite', chatId }, {})
-  await msgs.deleteMany({ kind: 'chat-message', chatId }, { multi: true })
+  await db('chat').deleteMany({ _id: chatId, kind: 'chat' }, {})
+  await db('chat-member').deleteMany({ chatId })
+  await db('chat-invite').deleteMany({ chatId })
+  await db('chat-member').deleteMany({ chatId })
 }
 
 export async function deleteAllChats(characterId?: string) {
@@ -151,13 +153,15 @@ export async function deleteAllChats(characterId?: string) {
     chatQuery.characterId = characterId
   }
 
-  chats.find({})
-  const chatIds = await chats.find(chatQuery).then((chats) => chats.map((ch) => ch._id))
+  const chatIds = await db('chat')
+    .find(chatQuery)
+    .toArray()
+    .then((chats) => chats.map((ch) => ch._id))
 
-  const chatsDeleted = await chats.remove(chatQuery, { multi: true })
+  const chatsDeleted = await db('chat').deleteMany(chatQuery)
   logger.info({ deleted: chatsDeleted }, 'Deleting')
 
-  const msgsDeleted = msgs.remove({ chatId: { $in: chatIds } }, { multi: true })
+  const msgsDeleted = db('chat-message').deleteMany({ chatId: { $in: chatIds } })
   logger.info({ deleted: msgsDeleted }, 'Messages deleted')
 }
 
@@ -166,7 +170,7 @@ export function canViewChat(senderId: string, chat: AppSchema.Chat) {
 }
 
 export async function getAllChats(userId: string) {
-  const list = await chats
+  const list = await db('chat')
     .find({
       $or: [
         { kind: 'chat', userId },
@@ -174,6 +178,7 @@ export async function getAllChats(userId: string) {
       ],
     })
     .sort({ updatedAt: -1 })
+    .toArray()
 
   return list
 }
@@ -189,6 +194,6 @@ export async function getRecentMessages(chatId: string, before?: string) {
     query.createdAt = { $lt: before }
   }
 
-  const messages = await msgs.find(query).sort({ createdAt: -1 }).limit(50)
+  const messages = await db('chat-message').find(query).sort({ createdAt: -1 }).limit(50).toArray()
   return messages
 }

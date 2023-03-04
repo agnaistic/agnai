@@ -1,8 +1,6 @@
 import { v4 } from 'uuid'
 import { db } from '../../db'
 
-const locks = db('chat-lock')
-
 /**
  * We will use a semaphore to prevent multiple message requests to the same conversion.
  * We will verify the status of the lock at various times to ensure it's validity.
@@ -12,7 +10,7 @@ const locks = db('chat-lock')
  */
 
 export async function obtainLock(chatId: string, ttl = 20) {
-  const existing = await locks.findOne({ kind: 'chat-lock', chatLock: chatId })
+  const existing = await db('chat-lock').findOne({ kind: 'chat-lock', chatLock: chatId })
   if (existing) {
     const expires = new Date(existing.obtained)
     expires.setSeconds(expires.getSeconds() + existing.ttl)
@@ -24,7 +22,7 @@ export async function obtainLock(chatId: string, ttl = 20) {
   }
 
   const lockId = v4()
-  await locks.updateOne(
+  await db('chat-lock').updateOne(
     { chatLock: chatId },
     {
       $set: {
@@ -42,11 +40,11 @@ export async function obtainLock(chatId: string, ttl = 20) {
 }
 
 export async function releaseLock(chatId: string) {
-  await locks.deleteMany({ chatLock: chatId }, {})
+  await db('chat-lock').deleteMany({ chatLock: chatId }, {})
 }
 
 export async function verifyLock(opts: { chatId: string; lockId: string }) {
-  const lock = await locks.findOne({ chatLock: opts.chatId })
+  const lock = await db('chat-lock').findOne({ chatLock: opts.chatId })
   if (!lock) {
     throw new Error(`Lock is not valid: Lock does not exist`)
   }

@@ -32,6 +32,7 @@
     "@types/express": "^4.17.17",
     "@types/js-cookie": "^3.0.2",
     "@types/jsonwebtoken": "^9.0.1",
+    "@types/mongodb": "^4.0.7",
     "@types/multiparty": "^0.0.33",
     "@types/nedb": "^1.8.12",
     "@types/needle": "^3.2.0",
@@ -52,6 +53,7 @@
     "jsonwebtoken": "^9.0.0",
     "localtunnel": "^2.0.2",
     "lucide-solid": "0.105.0-alpha.9",
+    "mongodb": "^5.1.0",
     "multiparty": "^4.2.3",
     "nedb-promises": "^6.2.1",
     "needle": "^3.2.0",
@@ -71,6 +73,5 @@
     "uuid": "^9.0.0",
     "ws": "^8.12.1",
     "zustand": "^4.3.3"
-  },
-  "devDependencies": {}
+  }
 }

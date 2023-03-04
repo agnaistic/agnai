@@ -3,8 +3,6 @@ import { db } from './client'
 import { AppSchema } from './schema'
 import { now } from './util'
 
-const chars = db('character')
-
 export async function createCharacter(
   userId: string,
   char: Pick<
@@ -22,7 +20,7 @@ export async function createCharacter(
     ...char,
   }
 
-  await chars.insertOne(newChar)
+  await db('character').insertOne(newChar)
   return newChar
 }
 
@@ -38,25 +36,27 @@ export async function updateCharacter(
   if (edit.avatar === undefined) {
     delete edit.avatar
   }
-  await chars.updateOne({ _id: id, userId, kind: 'character' }, { $set: edit })
+  await db('character').updateOne({ _id: id, userId, kind: 'character' }, { $set: edit })
   return getCharacter(userId, id)
 }
 
 export async function getCharacter(userId: string, id: string) {
-  const char = await chars.findOne({ kind: 'character', _id: id, userId })
+  const char = await db('character').findOne({ kind: 'character', _id: id, userId })
   return char
 }
 
 export async function getCharacters(userId: string) {
-  const list = await chars.find({ kind: 'character', userId })
+  const list = await db('character').find({ kind: 'character', userId }).toArray()
   return list
 }
 
 export async function deleteCharacter(charId: string, userId: string) {
-  await chars.removeOne({ _id: charId, userId, kind: 'character' }, {})
+  await db('character').deleteOne({ _id: charId, userId, kind: 'character' }, {})
 }
 
 export async function getCharacterList(charIds: string[]) {
-  const list = await chars.find({ _id: { $in: charIds }, kind: 'character' })
+  const list = await db('character')
+    .find({ _id: { $in: charIds }, kind: 'character' })
+    .toArray()
   return list
 }

@@ -17,15 +17,17 @@ dotenv.config({ path: '.env' })
  */
 if (!process.env.JWT_SECRET) {
   const secret = readSecret()
-  if (!secret && process.env.NODE_ENV === 'production') {
+  if (secret) {
+    process.env.JWT_SECRET = secret
+  } else if (!secret && process.env.NODE_ENV === 'production') {
     throw new Error(
       `JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`
     )
+  } else {
+    const newSecret = v4()
+    writeFileSync('.token_secret', newSecret)
+    process.env.JWT_SECRET = newSecret
   }
-
-  const newSecret = v4()
-  writeFileSync('.token_secret', newSecret)
-  process.env.JWT_SECRET = secret
 }
 
 export const config = {
@@ -33,9 +35,9 @@ export const config = {
   port: +env('PORT', '3001'),
   assetFolder: env('ASSET_FOLDER', resolve(process.cwd(), 'dist', 'assets')),
   db: {
-    name: env('DB_NAME', 'pyg'),
-    host: env('DB_HOST', ''),
-    port: +env('DB_PORT', '27017'),
+    name: env('DB_NAME', 'agnai'),
+    host: env('DB_HOST', 'localhost'),
+    port: env('DB_PORT', '27107'),
   },
   kobold: {
     maxLength: +env('KOBOLD_MAX_LENGTH', '200'),

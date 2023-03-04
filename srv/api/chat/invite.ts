@@ -5,29 +5,9 @@ import { handle } from '../wrap'
 import { publishOne } from '../ws/handle'
 
 export const getInvites = handle(async (req) => {
-  const { invites, relations } = await store.invites.list(req.userId!)
+  const { invites, chats, characters, profiles } = await store.invites.list(req.userId!)
 
-  const chats: Record<string, AppSchema.Chat> = {}
-  const chars: Record<string, AppSchema.Character> = {}
-  const profiles: Record<string, AppSchema.Profile> = {}
-
-  for (const rel of relations) {
-    switch (rel.kind) {
-      case 'chat':
-        chats[rel._id] = rel
-        continue
-
-      case 'character':
-        chars[rel._id] = rel
-        continue
-
-      case 'profile':
-        profiles[rel.userId] = rel
-        continue
-    }
-  }
-
-  return { invites, chats, chars, profiles }
+  return { invites, chats, chars: characters, profiles }
 })
 
 export const createInvite = handle(async (req) => {
