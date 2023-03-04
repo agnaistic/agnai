@@ -5,7 +5,7 @@ import { basename, dirname, extname, resolve } from 'path'
 import { createReadStream, mkdirSync, readdirSync } from 'fs'
 import { v4 } from 'uuid'
 import { assertValid, Validator } from 'frisker'
-import { logger } from '../logger'
+import { config } from '../config'
 
 export type Attachment = {
   field: string
@@ -83,26 +83,24 @@ export async function renameFile(attach: Attachment, filename: string) {
   const folder = dirname(attach.filename)
   const ext = extname(attach.filename)
 
-  await rename(resolve(assetFolders, base), resolve(assetFolders, filename + ext))
+  await rename(resolve(config.assetFolder, base), resolve(config.assetFolder, filename + ext))
 }
 
-const assetFolders = resolve(process.cwd(), 'dist', 'assets')
-
 export async function saveFile(filename: string, content: any) {
-  await writeFile(resolve(assetFolders, filename), content, { encoding: 'utf8' })
+  await writeFile(resolve(config.assetFolder, filename), content, { encoding: 'utf8' })
 }
 
 export function getFile(filename: string) {
-  const stream = createReadStream(resolve(assetFolders, filename))
+  const stream = createReadStream(resolve(config.assetFolder, filename))
   const type = getType(filename)
   return { stream, type }
 }
 
 function createAssetFolder() {
   try {
-    readdirSync(assetFolders)
+    readdirSync(config.assetFolder)
   } catch (ex) {
-    mkdirSync(assetFolders)
+    mkdirSync(config.assetFolder)
   }
 }
 

@@ -2,7 +2,7 @@ FROM node:18-bullseye-slim
 
 WORKDIR /app
 VOLUME [ "/app/db" ]
-VOLUME [ "/app/dist/assets" ]
+VOLUME [ "/app/assets" ]
 
 RUN npm install pnpm -g
 
@@ -14,12 +14,13 @@ ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
 
-RUN pnpm run build:server && pnpm run build
+RUN pnpm run build:server && pnpm run build && mkdir -p /app/assets
 
 ENV ADAPTERS=horde,novel,kobold \
   LOG_LEVEL=info \
   INITIAL_USER=administrator \
-  DB_NAME=agnai
+  DB_NAME=agnai \
+  ASSET_FOLDER=/app/assets
 
 EXPOSE 3001
 EXPOSE 5001

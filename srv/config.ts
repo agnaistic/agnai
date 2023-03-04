@@ -1,5 +1,6 @@
 import dotenv from 'dotenv'
 import { readFileSync, writeFileSync } from 'fs'
+import { resolve } from 'path'
 import { v4 } from 'uuid'
 import { AIAdapter } from '../common/adapters'
 
@@ -30,6 +31,7 @@ if (!process.env.JWT_SECRET) {
 export const config = {
   jwtSecret: env('JWT_SECRET'),
   port: +env('PORT', '3001'),
+  assetFolder: env('ASSET_FOLDER', resolve(process.cwd(), 'dist', 'assets')),
   db: {
     name: env('DB_NAME', 'pyg'),
     host: env('DB_HOST', ''),
