@@ -4,6 +4,19 @@ import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { publishMany } from '../ws/handle'
 
+const genSetting = {
+  temp: 'number',
+  maxTokens: 'number',
+  repetitionPenalty: 'number',
+  repetitionPenaltyRange: 'number',
+  repetitionPenaltySlope: 'number',
+  typicalP: 'number',
+  topP: 'number',
+  topK: 'number',
+  topA: 'number',
+  tailFreeSampling: 'number',
+} as const
+
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
@@ -43,4 +56,17 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   })
 
   return message
+})
+
+export const updateChatGenSettings = handle(async ({ params, userId, body }) => {
+  const chatId = params.id
+  assertValid(genSetting, body)
+
+  const chat = await store.chats.getChat(chatId)
+  if (chat?.userId !== userId) {
+    throw errors.Forbidden
+  }
+
+  await store.chats.updateGenSetting(chatId, body)
+  return { success: true }
 })

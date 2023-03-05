@@ -47,6 +47,10 @@ export async function update(id: string, props: Partial<AppSchema.Chat>) {
   return getChat(id)
 }
 
+export async function updateGenSetting(chatId: string, props: AppSchema.Chat['genSettings']) {
+  await db('chat').updateOne({ _id: chatId }, { $set: { genSettings: props, genPreset: '' } })
+}
+
 export async function create(
   characterId: string,
   props: Pick<

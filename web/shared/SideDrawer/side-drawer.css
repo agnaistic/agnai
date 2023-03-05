@@ -1,29 +1,29 @@
-.drawer {
+.side-drawer {
   height: calc(100vh - 58px);
-  position: absolute;
+  position: fixed;
   top: 58px;
-  left: 0;
+  right: -470px;
   transition: opacity 250ms ease;
-  transition: left 250ms ease;
-  @apply w-72 bg-background-lighter  lg:relative lg:top-0 lg:clear-none lg:h-[calc(100vh-64px)] lg:w-72;
+  transition: right 250ms ease;
+  @apply w-72 bg-background-lighter lg:top-[72px] lg:clear-none lg:h-[calc(100vh-72px)] lg:w-72;
   @apply z-10 lg:z-0;
 }
 
-.drawer--hide {
+.side-drawer--hide {
   animation-fill-mode: forwards;
   animation: hideDrawer 0s ease 250ms;
-  @apply left-[-470px] lg:left-0 lg:opacity-100;
+  @apply right-[0px] lg:opacity-100;
 }
 
-.drawer__content {
+.side-drawer__content {
   /* position: fixed; */
   top: 0;
-  left: 0;
+  right: 0;
   height: 100%;
   transition: 250ms ease;
 }
 
-.drawer > * > a.active {
+.side-drawer > * > a.active {
   @apply bg-slate-800;
 }
 

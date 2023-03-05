@@ -1,6 +1,7 @@
 import { AppSchema } from '../../db/schema'
 import gpt from 'gpt-3-encoder'
 import { store } from '../../db'
+import { logger } from '../../logger'
 
 type PromptOpts = {
   chat: AppSchema.Chat
@@ -78,6 +79,7 @@ async function appendHistory(
     .replace(SELF_REPLACE, owner.handle)
 
   const prompt = [preamble, middle, postamble].join('\n')
+
   return prompt
 }
 

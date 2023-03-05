@@ -146,9 +146,81 @@
     background: transparent;
   }
 
-  .side-drawer {
-    @apply bg-background-lighter;
-    width: calc(100vw-32px);
-    height: calc(100vh-72);
+  .toggle-pill-color input[type='checkbox'] {
+    display: none;
+  }
+  .toggle-pill-color input[type='checkbox'] + label {
+    display: block;
+    position: relative;
+    width: 3em;
+    height: 1.6em;
+    margin-bottom: 20px;
+    border-radius: 1em;
+    /* background: #e84d4d; */
+    box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -webkit-transition: background 0.1s ease-in-out;
+    transition: background 0.1s ease-in-out;
+    @apply bg-slate-700;
+  }
+  .toggle-pill-color input[type='checkbox'] + label:before {
+    content: '';
+    display: block;
+    width: 1.2em;
+    height: 1.2em;
+    border-radius: 1em;
+    background: #fff;
+    box-shadow: 2px 0px 5px rgba(0, 0, 0, 0.2);
+    position: absolute;
+    left: 0.2em;
+    top: 0.2em;
+    -webkit-transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out;
+  }
+  .toggle-pill-color input[type='checkbox']:checked + label {
+    @apply bg-purple-500;
+    /* background: #47cf73; */
+  }
+  .toggle-pill-color input[type='checkbox']:checked + label:before {
+    box-shadow: -2px 0px 5px rgba(0, 0, 0, 0.2);
+    left: 1.6em;
+  }
+
+  .drawer {
+    height: calc(100vh - 58px);
+    position: absolute;
+    top: 58px;
+    left: 0;
+    transition: opacity 250ms ease;
+    transition: left 250ms ease;
+    @apply w-72 bg-background-lighter  lg:relative lg:top-0 lg:clear-none lg:h-[calc(100vh-64px)] lg:w-72;
+    @apply z-10 lg:z-0;
+  }
+
+  .drawer--hide {
+    animation-fill-mode: forwards;
+    animation: hideDrawer 0s ease 250ms;
+    @apply left-[-470px] lg:left-0 lg:opacity-100;
+  }
+
+  .drawer__content {
+    /* position: fixed; */
+    top: 0;
+    left: 0;
+    height: 100%;
+    transition: 250ms ease;
+  }
+
+  .drawer > * > a.active {
+    @apply bg-slate-800;
+  }
+
+  @keyframes hideDrawer {
+    to {
+      visibility: hidden;
+    }
   }
 }

@@ -1,11 +1,10 @@
 import { A } from '@solidjs/router'
-import { Bot, Eye, Github, LogOut, MailPlus, Settings, User, Users } from 'lucide-solid'
+import { Bot, Eye, Github, LogOut, MailPlus, Settings, Sliders, User, Users } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
-import AvatarIcon from '../../shared/AvatarIcon'
-import { inviteStore, settingStore, userStore } from '../../store'
-import './drawer.css'
+import AvatarIcon from './shared/AvatarIcon'
+import { inviteStore, settingStore, userStore } from './store'
 
-const Drawer: Component = () => {
+const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
 
@@ -31,6 +30,10 @@ const Drawer: Component = () => {
 
           <Item href="/settings">
             <Settings /> Settings
+          </Item>
+
+          <Item href="/presets">
+            <Sliders /> Presets
           </Item>
 
           <Show when={user.user?.admin}>
@@ -87,4 +90,4 @@ const InviteBadge: Component = () => {
   )
 }
 
-export default Drawer
+export default Navigation

@@ -14,5 +14,5 @@
     "skipDefaultLibCheck": true,
     "sourceMap": true
   },
-  "include": ["web", "srv"]
+  "include": ["web", "srv", "common"]
 }

@@ -1,13 +1,10 @@
-import { Sliders, Send } from 'lucide-solid'
-import { Component, JSX, Show } from 'solid-js'
+import { Send } from 'lucide-solid'
+import { Component, JSX } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
-import { userStore } from '../../../store'
 import { msgStore } from '../../../store/message'
 import './Message.css'
 
-const InputBar: Component<{ chat: AppSchema.Chat; openConfig: () => void }> = (props) => {
-  const state = userStore()
-
+const InputBar: Component<{ chat: AppSchema.Chat }> = (props) => {
   let ref: HTMLInputElement | undefined
   const send = () => {
     if (!ref) return
@@ -24,11 +21,6 @@ const InputBar: Component<{ chat: AppSchema.Chat; openConfig: () => void }> = (p
         class="focusable-field w-full rounded-xl px-4 py-2"
         onKeyUp={(ev) => ev.key === 'Enter' && send()}
       />
-      <Show when={props.chat.userId === state.user?._id}>
-        <IconButton onClick={props.openConfig}>
-          <Sliders size={20} />
-        </IconButton>
-      </Show>
       <IconButton onClick={send}>
         <Send size={20} />
       </IconButton>

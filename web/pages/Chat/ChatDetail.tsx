@@ -1,14 +1,16 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ChevronLeft, MailPlus, X } from 'lucide-solid'
+import { Bookmark, ChevronLeft, MailPlus, Settings, Sliders, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Modal, { ModalFooter } from '../../shared/Modal'
+import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
 import { getStrictForm } from '../../shared/util'
-import { chatStore } from '../../store'
+import { chatStore, userStore } from '../../store'
 import { msgStore } from '../../store/message'
+import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
 import Header from './components/Header'
 import InputBar from './components/InputBar'
@@ -16,6 +18,8 @@ import Message from './components/Message'
 import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
+  const user = userStore()
+
   const chats = chatStore((s) => ({
     chat: s.active?.chat,
     character: s.active?.char,
@@ -29,6 +33,8 @@ const ChatDetail: Component = () => {
   }))
 
   const [removeId, setRemoveId] = createSignal('')
+  const [showMem, setShowMem] = createSignal(false)
+  const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
   const { id } = useParams()
@@ -53,7 +59,7 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class="mb-4 flex h-full flex-col justify-between pb-4">
           <div class="flex h-full flex-col-reverse">
-            <InputBar chat={chats.chat!} openConfig={() => setShowConfig(true)} />
+            <InputBar chat={chats.chat!} />
             <div class="flex flex-col-reverse overflow-y-scroll">
               <div class="flex flex-col gap-4 pt-4 pb-4">
                 <For each={msgs.msgs}>
@@ -89,10 +95,30 @@ const ChatDetail: Component = () => {
                   <ChevronLeft size={16} class="mt-0.5" /> Conversations
                 </div>
               </A>
-              <div class="focusable-icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
-                <Tooltip tip="Invite user" position="bottom">
-                  <MailPlus />
-                </Tooltip>
+
+              <div class="flex flex-row gap-2">
+                <div
+                  class="focusable-icon-button cursor-pointer"
+                  onClick={() => setShowInvite(true)}
+                >
+                  <Tooltip tip="Invite user" position="bottom">
+                    <MailPlus />
+                  </Tooltip>
+                </div>
+
+                <Show when={chats.chat?.userId === user.user?._id}>
+                  <div class="icon-button">
+                    <Bookmark onClick={() => setShowMem(!showMem())} />
+                  </div>
+
+                  <div class="icon-button">
+                    <Sliders onClick={() => setShowGen(true)} />
+                  </div>
+
+                  <div class="icon-button">
+                    <Settings onClick={() => setShowConfig(true)} />
+                  </div>
+                </Show>
               </div>
             </div>
           </div>
@@ -100,11 +126,15 @@ const ChatDetail: Component = () => {
       </Show>
       <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
       <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
+      <ChatGenSettingsModal show={showGen()} close={() => setShowGen(false)} chat={chats.chat!} />
       <InviteModal
         show={showInvite()}
         close={() => setShowInvite(false)}
         chatId={chats.chat?._id!}
       />
+      <SideDrawer show={showMem()} right>
+        <div>Yolo</div>
+      </SideDrawer>
     </>
   )
 }

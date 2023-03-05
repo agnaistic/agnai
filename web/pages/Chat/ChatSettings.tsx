@@ -3,7 +3,7 @@ import { CHAT_ADAPTERS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
@@ -21,8 +21,8 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
   let ref: any
 
-  const onSave = (ev: Event) => {
-    const body = getStrictForm(ev, {
+  const onSave = () => {
+    const body = getStrictForm(ref, {
       name: 'string',
       adapter: CHAT_ADAPTERS,
       greeting: 'string',
@@ -31,7 +31,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       schema: ['wpp', 'boostyle', 'sbf'],
     } as const)
 
-    const attributes = getAttributeMap(ev)
+    const attributes = getAttributeMap(ref)
 
     const overrides: AppSchema.CharacterPersona = {
       kind: body.schema,
@@ -43,8 +43,18 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
     })
   }
 
+  const Footer = (
+    <>
+      {' '}
+      <Button schema="secondary" onClick={props.close}>
+        Cancel
+      </Button>
+      <Button onClick={onSave}>Save</Button>
+    </>
+  )
+
   return (
-    <Modal show={props.show} title="Chat Settings" close={props.close}>
+    <Modal show={props.show} title="Chat Settings" close={props.close} footer={Footer}>
       <form ref={ref} onSubmit={onSave}>
         <Dropdown
           class="mb-2"
@@ -88,13 +98,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         <div class="mt-4 flex flex-col gap-2 text-sm">
           <PersonaAttributes value={state.active?.overrides.attributes} hideLabel />
         </div>
-
-        <ModalFooter>
-          <Button schema="secondary" onClick={props.close}>
-            Cancel
-          </Button>
-          <Button type="submit">Save</Button>
-        </ModalFooter>
       </form>
     </Modal>
   )

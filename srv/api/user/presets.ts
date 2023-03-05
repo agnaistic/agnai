@@ -1,6 +1,6 @@
 import { assertValid } from 'frisker'
+import { presets } from '../../../common/presets'
 import { store } from '../../db'
-import { presets } from '../adapter/presets'
 import { handle } from '../wrap'
 
 const genSetting = {

@@ -9,11 +9,11 @@ import ChatDetail from './pages/Chat/ChatDetail'
 import { settingStore, userStore } from './store'
 import LoginPage from './pages/Login'
 import ProfilePage from './pages/Profile'
-import Drawer from './pages/Drawer'
 import ChatList from './pages/Chat/ChatList'
 import UsersPage from './pages/Admin/UsersPage'
 import { InvitesPage } from './pages/Invite/InvitesPage'
 import HomePage from './pages/Home'
+import Navigation from './Navigation'
 
 const App: Component = () => {
   const state = userStore()
@@ -27,7 +27,7 @@ const App: Component = () => {
     <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-purple-900 flex h-screen flex-col justify-between">
       <NavBar />
       <div class="flex w-full grow flex-row overflow-y-hidden">
-        <Drawer />
+        <Navigation />
         <div class="w-full overflow-y-auto">
           <div class="mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4 ">
             <Show when={!state.loggedIn}>

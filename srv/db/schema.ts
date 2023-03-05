@@ -1,5 +1,5 @@
 import { AIAdapter, ChatAdapter } from '../../common/adapters'
-import { GenerationPreset } from '../api/adapter/presets'
+import { GenerationPreset } from '../../common/presets'
 
 export namespace AppSchema {
   export interface Token {
@@ -56,8 +56,8 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
 
-    genPreset?: GenerationPreset
-    genSettings?: GenSettings
+    genPreset?: GenerationPreset | ''
+    genSettings?: Omit<GenSettings, 'name'>
   }
 
   export interface ChatMember {

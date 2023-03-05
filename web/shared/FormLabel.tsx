@@ -2,7 +2,7 @@ import { Component, JSX, Show } from 'solid-js'
 
 export const FormLabel: Component<{
   fieldName?: string
-  label?: string
+  label?: string | JSX.Element
   helperText?: string | JSX.Element
 }> = (props) => (
   <Show when={!!props.label}>

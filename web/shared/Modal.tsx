@@ -7,6 +7,7 @@ interface Props {
   show: boolean
   children: JSX.Element
   close: () => void
+  footer?: JSX.Element
 }
 
 const Modal: Component<Props> = (props) => {
@@ -24,9 +25,14 @@ const Modal: Component<Props> = (props) => {
                 <X />
               </div>
             </div>
+
             <div class="max-h-[90vh] overflow-y-auto p-4 text-lg sm:max-h-[75vh] ">
               {props.children}
             </div>
+
+            <Show when={props.footer}>
+              <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
+            </Show>
           </div>
         </div>
       </div>
@@ -34,6 +40,9 @@ const Modal: Component<Props> = (props) => {
   )
 }
 
+/**
+ * Use when a sticky footer is not wanted or required. Otherwise use the `footer` property.
+ */
 export const ModalFooter: Component<{ children: JSX.Element }> = (props) => (
   <div class="mt-2 flex w-full flex-row justify-end gap-2">{props.children}</div>
 )
