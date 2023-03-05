@@ -35,14 +35,21 @@ See the [roadmap here](https://github.com/users/sceuick/projects/1).
 
 If you're only looking to run AgnAI without contributing:
 
-1. Install [Node.js](https://nodejs.org/en/download/)
-2. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/)
-3. Clone the project: `git clone https://github.com/sceuick/agn-ai` or [download it](https://github.com/sceuick/agn-ai/archive/refs/heads/dev.zip)
-4. From inside the project folder in your terminal/console:
+### Using Docker
+
+1. Clone the project
+2. Run: `docker compose -d -f self-host.docker-compose.yml -p agnai`
+
+### Manually
+
+3. Install [Node.js](https://nodejs.org/en/download/)
+4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/)
+5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
+6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm install`
    - `npm build:all`
    - `npm start`
-5. If you wish to run a public facing version:
+7. If you wish to run a public facing version:
    - `npm run start:public`
 
 ## Design Goals

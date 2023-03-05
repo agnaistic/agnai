@@ -2,7 +2,7 @@ version: '3.9'
 
 services:
   app:
-    image: ghcr.io/sceuick/agnaistic:latest
+    image: ghcr.io/lumunai-companion/agnaistic:latest
     networks:
       storage_swarm:
         aliases:
