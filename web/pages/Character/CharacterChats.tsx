@@ -20,7 +20,7 @@ const CharacterChats: Component = () => {
 
   return (
     <div class="flex flex-col gap-2">
-      <PageHeader title={`Conversations with ${state.char?.char.name || '...'}`} />
+      <PageHeader title={`Chats with ${state.char?.char.name || '...'}`} />
 
       <div class="flex w-full justify-end gap-2">
         <Button onClick={() => setCreate(true)}>

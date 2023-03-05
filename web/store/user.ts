@@ -117,7 +117,7 @@ export const userStore = createStore<State>(
 
     async updateConfig(_, config: Partial<AppSchema.User>) {
       const res = await api.post('/user/config', config)
-      if (res.error) toastStore.error(`Failed to update config`)
+      if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         toastStore.success(`Updated settings`)
         return { user: res.result }

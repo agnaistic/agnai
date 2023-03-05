@@ -152,6 +152,6 @@ export const summarizeChat = handle(async (req) => {
   const entities = await getResponseEntities(chatId, req.userId!)
   const prompt = await createPrompt(entities)
 
-  const summary = await post({ url: '/summarize', body: { prompt }, baseUrl: PY_URL })
+  const summary = await post({ url: '/summarize', body: { prompt }, host: PY_URL })
   return { summary }
 })

@@ -41,7 +41,7 @@ const Drawer: Component = () => {
 
           <a
             class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-slate-700"
-            href="https://github.com/sceuick/agn-ai"
+            href="https://github.com/luminai-companion/agn-ai"
             target="_blank"
           >
             <Github />

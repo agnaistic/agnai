@@ -1,4 +1,4 @@
-import { useNavigate } from '@solidjs/router'
+import { A, useNavigate } from '@solidjs/router'
 import { RefreshCw } from 'lucide-solid'
 import { Component, createEffect, For, Show } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -70,8 +70,13 @@ const Chats: Component = () => {
 }
 
 const NoChats: Component = () => (
-  <div class="mt-4 flex w-full justify-center text-xl">
-    There are no conversations saved for this character. Get started!
+  <div class="mt-4 flex w-full flex-col items-center text-xl">
+    There are no conversations saved for this character.{' '}
+    <div>
+      <A href="/character/list" class="link">
+        Get started!
+      </A>
+    </div>
   </div>
 )
 

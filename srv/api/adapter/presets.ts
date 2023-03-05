@@ -3,11 +3,13 @@ import { AppSchema } from '../../db/schema'
 
 export type GenerationPreset = keyof typeof presets
 
+const MAX_TOKENS = 80
+
 export const presets = {
   basic: {
     adapters: AI_ADAPTERS.slice(),
     name: 'Simple',
-    maxTokens: 80,
+    maxTokens: MAX_TOKENS,
     repetitionPenalty: 1.08,
     repetitionPenaltySlope: 0.9,
     repetitionPenaltyRange: 1024,
@@ -20,7 +22,7 @@ export const presets = {
   novel_20BC: {
     adapters: ['novel'],
     name: 'Novel 20BC+',
-    maxTokens: 80,
+    maxTokens: MAX_TOKENS,
     repetitionPenalty: 1.055,
     repetitionPenaltyRange: 2048,
     repetitionPenaltySlope: 3.33,
@@ -33,7 +35,7 @@ export const presets = {
   novel_blueLighter: {
     adapters: ['novel'],
     name: 'Novel Blue Lighter',
-    maxTokens: 80,
+    maxTokens: MAX_TOKENS,
     repetitionPenalty: 1.05,
     repetitionPenaltyRange: 560,
     repetitionPenaltySlope: 0,
@@ -46,6 +48,8 @@ export const presets = {
     order: [3, 4, 5, 2, 0],
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings> & { adapters: AIAdapter[] }>
+
+export const GENERATION_PRESET = Object.keys(presets) as GenerationPreset[]
 
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
@@ -126,6 +130,19 @@ const maps: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     order: '',
   },
   horde: {
+    maxTokens: 'max_length',
+    repetitionPenalty: 'rep_pen',
+    repetitionPenaltyRange: 'rep_pen_range',
+    repetitionPenaltySlope: 'rep_pen_slope',
+    tailFreeSampling: 'tfs',
+    temp: 'temperature',
+    topK: 'top_k',
+    topP: 'top_p',
+    typicalP: 'typical',
+    topA: 'top_a',
+    order: 'sampler_order',
+  },
+  luminai: {
     maxTokens: 'max_length',
     repetitionPenalty: 'rep_pen',
     repetitionPenaltyRange: 'rep_pen_range',

@@ -7,6 +7,7 @@ import { errors, StatusError } from '../wrap'
 import { handleChai } from './chai'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
+import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { createPrompt } from './prompt'
@@ -26,6 +27,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   kobold: handleKobold,
   ooba: handleOoba,
   horde: handleHorde,
+  luminai: handleLuminAI,
 }
 
 export async function createResponseStream(opts: GenerateOptions) {

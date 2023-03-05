@@ -87,6 +87,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     defaultAdapter: 'horde',
     koboldUrl: '',
     novelModel: NOVEL_MODELS.euterpe,
+    luminaiUrl: '',
     oobaUrl: '',
     horde: {
       model: 'PygmalionAI/pygmalion-6b',
@@ -127,4 +128,29 @@ export async function getProfiles(ownerId: string, userIds: string[]) {
     .find({ kind: 'profile', userId: { $in: userIds.concat(ownerId) } })
     .toArray()
   return list
+}
+
+export async function getUserPresets(userId: string) {
+  const presets = await db('gen-setting').find({ userId }).toArray()
+  return presets
+}
+
+export async function createUserPreset(userId: string, settings: AppSchema.GenSettings) {
+  const preset: AppSchema.UserGenSettings = {
+    _id: v4(),
+    kind: 'gen-setting',
+    userId,
+    ...settings,
+  }
+
+  await db('gen-setting').insertOne(preset)
+  return preset
+}
+
+export async function updateUserPreset(
+  userId: string,
+  presetId: string,
+  update: AppSchema.GenSettings
+) {
+  await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
 }

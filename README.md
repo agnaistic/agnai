@@ -1,29 +1,29 @@
 # AgnAIstic
 
-> Agnai: AI Agnostic, Self-hosted or Multi-tenant
+> AI Agnostic Chat, Self-hosted or Multi-tenant
 
 AI Agnostic Chat
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
 <div style="display: flex; flex-direction: row; gap: 0.5rem;" >
-<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/chat.png?raw=true" height="150">
-<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/persona.png?raw=true" height="150">
-<img src="https://github.com/sceuick/agn-ai/blob/dev/screenshots/settings.png?raw=true" height="150">
+<img src="./screenshots/chat.png" height="150">
+<img src="./screenshots/persona.png" height="150">
+<img src="./screenshots/settings.png" height="150">
 </div>
 
 ## Features
 
-- Multiple AI adapters: Support for Kobold, Novel, AI Horde, Chai
+- Multiple AI services: Support for Kobold, Novel, AI Horde, Chai
 - Group Conversations: Multiple users with one character/bot
 - Multiple persona schema formats (W++, Square bracket format, Boostyle)
 - Multi-tenancy:
   - User authentication
-  - Individual user settings: Which adapter to use and their own adapter configuration
+  - Individual user settings: Which AI service to use and their own service configuration
   - Individual user generation settings (_In progress_)
 - Chat overrides:
-  - Change the AI adapter for a specific chat
-  - Change the character for a specific chat
+  - Choose the AI service for a specific chat
+  - Personalise the character for a specific chat
 
 ## Roadmap
 
@@ -51,9 +51,9 @@ This project quickly deviated from the upstream project. This project is not int
 Ultimately the design goals for this project are my own.
 
 - High quality codebase
-- Adapters: Transparently use a variety of AI models and services to converse with
-  - Initial adapters: Kobold, Kobold Horde, and Novel
-- Implementing adapters should be low friction
+- AI Services: Transparently use a variety of AI models and services to converse with
+  - Initial AI services: Kobold, Kobold Horde, and Novel
+- Supporting additional AI services should be low friction
 - Lightweight to self-host
 - Avoiding native dependencies and Docker to be easy for non-technical people to install and run
 

@@ -1,51 +1,24 @@
-import { Router } from 'express'
 import { assertValid } from 'frisker'
-import { store } from '../db'
-import { AppSchema } from '../db/schema'
-import { loggedIn } from './auth'
-import { errors, handle, StatusError } from './wrap'
-import { handleUpload } from './upload'
-import { publishAll } from './ws/handle'
-import { findUser, HORDE_GUEST_KEY } from './horde'
-import { config } from '../config'
+import { config } from '../../config'
+import { store } from '../../db'
+import { AppSchema } from '../../db/schema'
+import { findUser, HORDE_GUEST_KEY } from '../horde'
+import { get } from '../request'
+import { handleUpload } from '../upload'
+import { errors, handle, StatusError } from '../wrap'
+import { publishAll } from '../ws/handle'
 
-const router = Router()
-
-const getProfile = handle(async ({ userId }) => {
+export const getProfile = handle(async ({ userId }) => {
   const profile = await store.users.getProfile(userId!)
   return profile
 })
 
-const getConfig = handle(async ({ userId }) => {
+export const getConfig = handle(async ({ userId }) => {
   const user = await store.users.getUser(userId!)
   return user
 })
 
-const register = handle(async (req) => {
-  assertValid({ handle: 'string', username: 'string', password: 'string' }, req.body)
-  const { profile, token, user } = await store.users.createUser(req.body)
-  req.log.info({ user: user.username, id: user._id }, 'User registered')
-  return { profile, token, user }
-})
-
-const login = handle(async (req) => {
-  assertValid({ username: 'string', password: 'string' }, req.body)
-  const result = await store.users.authenticate(req.body.username, req.body.password)
-
-  if (!result) {
-    throw new StatusError('Unauthorized', 401)
-  }
-
-  return result
-})
-
-const changePassword = handle(async (req) => {
-  assertValid({ password: 'string' }, req.body)
-  await store.admin.changePassword({ username: req.user?.username!, password: req.body.password })
-  return { success: true }
-})
-
-const updateConfig = handle(async ({ userId, body }) => {
+export const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {
       novelApiKey: 'string?',
@@ -53,6 +26,7 @@ const updateConfig = handle(async ({ userId, body }) => {
       koboldUrl: 'string?',
       hordeApiKey: 'string?',
       hordeModel: 'string?',
+      luminaiUrl: 'string?',
       defaultAdapter: config.adapters,
     },
     body
@@ -78,8 +52,11 @@ const updateConfig = handle(async ({ userId, body }) => {
     }
   }
 
+  await verifyKobldUrl(prevUser, body.koboldUrl)
+
   const update: Partial<AppSchema.User> = {
     defaultAdapter: body.defaultAdapter,
+    luminaiUrl: body.luminaiUrl,
   }
 
   if (body.koboldUrl !== undefined) update.koboldUrl = body.koboldUrl
@@ -99,7 +76,7 @@ const updateConfig = handle(async ({ userId, body }) => {
   return user
 })
 
-const updateProfile = handle(async (req) => {
+export const updateProfile = handle(async (req) => {
   const form = await handleUpload(req, { handle: 'string' })
   const [file] = form.attachments
 
@@ -121,12 +98,12 @@ const updateProfile = handle(async (req) => {
   return profile
 })
 
-router.get('/', loggedIn, getProfile)
-router.get('/config', loggedIn, getConfig)
-router.post('/register', register)
-router.post('/password', loggedIn, changePassword)
-router.post('/login', login)
-router.post('/config', loggedIn, updateConfig)
-router.post('/profile', loggedIn, updateProfile)
+async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
+  if (!incomingUrl) return
+  if (user.koboldUrl === incomingUrl) return
 
-export default router
+  const res = await get({ host: incomingUrl, url: '/api/v1/model' })
+  if (res.error) {
+    throw new StatusError(`Kobold URL could not be verified: ${res.error.message}`, 400)
+  }
+}

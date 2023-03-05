@@ -49,7 +49,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         <Dropdown
           class="mb-2"
           fieldName="adapter"
-          label="AI Adapater"
+          label="AI Service"
           value={state.active?.adapter}
           items={[
             { label: 'Default', value: 'default' },

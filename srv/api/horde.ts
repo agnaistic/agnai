@@ -59,7 +59,7 @@ export type FindUserResponse = {
 async function updateModelCache() {
   const url = `/status/models?type=text`
   const models = await get<HordeModel[]>({ url }).catch(() => null)
-  if (!models) return
+  if (!models?.result) return
 
-  TEXT_CACHE = models.filter((model) => model.type !== 'image')
+  TEXT_CACHE = models.result.filter((model) => model.type !== 'image')
 }

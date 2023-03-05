@@ -30,8 +30,8 @@ const base = {
   // tfs: 0.9,
 }
 
-export const handleKobold: ModelAdapter = async function* ({ char, members, user, prompt }) {
-  const body = { ...base, ...getGenSettings('basic', 'kobold'), prompt }
+export const handleLuminAI: ModelAdapter = async function* ({ char, members, user, prompt }) {
+  const body = { koboldUrl: user.koboldUrl, ...base, ...getGenSettings('basic', 'kobold'), prompt }
 
   let attempts = 0
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4

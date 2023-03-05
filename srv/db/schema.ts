@@ -1,4 +1,5 @@
 import { AIAdapter, ChatAdapter } from '../../common/adapters'
+import { GenerationPreset } from '../api/adapter/presets'
 
 export namespace AppSchema {
   export interface Token {
@@ -27,6 +28,7 @@ export namespace AppSchema {
     novelApiKey: string
     novelModel: string
     koboldUrl: string
+    luminaiUrl: string
     oobaUrl: string
 
     horde: {
@@ -55,6 +57,9 @@ export namespace AppSchema {
 
     createdAt: string
     updatedAt: string
+
+    genPreset?: GenerationPreset
+    genSettings?: GenSettings
   }
 
   export interface ChatMember {
@@ -131,6 +136,12 @@ export namespace AppSchema {
     lockId: string
   }
 
+  export interface UserGenSettings extends GenSettings {
+    _id: string
+    kind: 'gen-setting'
+    userId: string
+  }
+
   export interface GenSettings {
     name: string
     temp: number
@@ -162,5 +173,6 @@ export type AllDoc =
   | AppSchema.ChatLock
   | AppSchema.ChatMember
   | AppSchema.ChatInvite
+  | AppSchema.UserGenSettings
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []

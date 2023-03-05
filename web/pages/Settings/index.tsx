@@ -30,6 +30,7 @@ const Settings: Component = () => {
       novelModel: 'string?',
       hordeApiKey: 'string?',
       hordeModel: 'string?',
+      luminaiUrl: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
     userStore.updateConfig(body)
@@ -52,9 +53,9 @@ const Settings: Component = () => {
         <div class="flex flex-col gap-4">
           <Dropdown
             fieldName="defaultAdapter"
-            label="Default AI Adapter"
+            label="Default AI Service"
             items={adaptersToOptions(cfg.config.adapters)}
-            helperText="The default adapter conversations will use unless otherwise configured"
+            helperText="The default service conversations will use unless otherwise configured"
             value={state.user?.defaultAdapter}
           />
 
@@ -89,6 +90,17 @@ const Settings: Component = () => {
             />
           </Show>
 
+          <Show when={cfg.config.adapters.includes('luminai')}>
+            <Divider />
+            <TextInput
+              fieldName="luminaiUrl"
+              label="LuminAI URL"
+              helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
+              placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+              value={state.user?.luminaiUrl}
+            />
+          </Show>
+
           <Show when={cfg.config.adapters.includes('novel')}>
             <Divider />
             <h3 class="text-xl">NovelAI settings</h3>
@@ -112,7 +124,7 @@ const Settings: Component = () => {
                   <a
                     class="text-purple-500"
                     target="_blank"
-                    href="https://github.com/sceuick/agn-ai/blob/dev/instructions/novel.md"
+                    href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
                   >
                     Instructions
                   </a>

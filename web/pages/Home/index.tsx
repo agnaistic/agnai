@@ -20,7 +20,7 @@ const HomePage: Component = () => {
           This is currently in a fairly early stage of development. Bugs and some rough edges are
           expected, but are encouraged to be reported. If you encounter an issue you can head over
           to the{' '}
-          <a href="https://github.com/sceuick/agn-ai/issues" target="_blank" class="link">
+          <a href="https://github.com/luminai-companion/agn-ai/issues" target="_blank" class="link">
             GitHub repository
           </a>{' '}
           and create an issue.
@@ -58,7 +58,7 @@ const HomePage: Component = () => {
           You can provide your API key and choose between Euterpe and Krake in the settings page.
           Visit the{' '}
           <a
-            href="https://github.com/sceuick/agn-ai/blob/dev/instructions/novel.md"
+            href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
             target="_blank"
             class="link"
           >
