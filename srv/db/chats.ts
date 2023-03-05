@@ -136,12 +136,12 @@ export async function getMessage(messageId: string) {
 }
 
 export async function deleteMessages(messageIds: string[]) {
-  await db('chat').deleteMany({ _id: { $in: messageIds } })
+  await db('chat-message').deleteMany({ _id: { $in: messageIds } })
 }
 
 export async function deleteChat(chatId: string) {
   await db('chat').deleteMany({ _id: chatId, kind: 'chat' }, {})
-  await db('chat-member').deleteMany({ chatId })
+  await db('chat-message').deleteMany({ chatId })
   await db('chat-invite').deleteMany({ chatId })
   await db('chat-member').deleteMany({ chatId })
 }
