@@ -31,10 +31,8 @@ export namespace AppSchema {
     luminaiUrl: string
     oobaUrl: string
 
-    horde: {
-      key: string
-      model: string
-    }
+    hordeKey: string
+    hordeModel: string
 
     defaultAdapter: AIAdapter
   }

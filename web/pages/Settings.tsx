@@ -1,13 +1,13 @@
-import { Component, createEffect, createSignal, Show } from 'solid-js'
+import { Component, createEffect, Show } from 'solid-js'
 import { Save } from 'lucide-solid'
-import Button from '../../shared/Button'
-import PageHeader from '../../shared/PageHeader'
-import TextInput from '../../shared/TextInput'
-import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import Dropdown from '../../shared/Dropdown'
-import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../../common/adapters'
-import { settingStore, userStore } from '../../store'
-import Divider from '../../shared/Divider'
+import Button from '../shared/Button'
+import PageHeader from '../shared/PageHeader'
+import TextInput from '../shared/TextInput'
+import { adaptersToOptions, getStrictForm } from '../shared/util'
+import Dropdown from '../shared/Dropdown'
+import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../common/adapters'
+import { settingStore, userStore } from '../store'
+import Divider from '../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
@@ -66,15 +66,14 @@ const Settings: Component = () => {
               fieldName="hordeApiKey"
               label="Horde API Key"
               helperText={HordeHelpText}
-              value={state.user?.horde?.key}
               placeholder="0000000000"
               type="password"
             />
             <Dropdown
               fieldName="hordeModel"
-              helperText={<span>Currently set to: {state.user?.horde?.model || 'None'}</span>}
+              helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
               label="Horde Model"
-              value={state.user?.horde?.model}
+              value={state.user?.hordeModel}
               items={[{ label: 'None', value: '' }].concat(...cfg.models.map(toItem))}
             />
           </Show>
@@ -119,8 +118,9 @@ const Settings: Component = () => {
               type="password"
               helperText={
                 <>
-                  NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization
-                  headers.{' '}
+                  NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.
+                  Please note that this token expires periodically. You will occasionally need to
+                  re-enter this token. headers.{' '}
                   <a
                     class="text-purple-500"
                     target="_blank"
@@ -132,7 +132,6 @@ const Settings: Component = () => {
                 </>
               }
               placeholder="..."
-              value={state.user?.novelApiKey}
             />
           </Show>
         </div>

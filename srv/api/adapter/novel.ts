@@ -1,5 +1,6 @@
 import needle from 'needle'
 import { v4 } from 'uuid'
+import { decryptText } from '../../db/util'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
@@ -83,7 +84,7 @@ export const handleNovel: ModelAdapter = async function* ({ char, members, user,
     json: true,
     // timeout: 2000,
     response_timeout: 15000,
-    headers: { Authorization: `Bearer ${user.novelApiKey}` },
+    headers: { Authorization: `Bearer ${decryptText(user.novelApiKey)}` },
   }).catch((err) => ({ err }))
 
   if ('err' in response) {

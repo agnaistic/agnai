@@ -7,7 +7,7 @@ import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../logger'
 import { errors } from '../api/wrap'
-import { encrypt } from './util'
+import { encryptPassword } from './util'
 
 export type NewUser = {
   username: string
@@ -75,7 +75,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     throw errors.BadRequest
   }
 
-  const hash = await encrypt(newUser.password)
+  const hash = await encryptPassword(newUser.password)
 
   const user: AppSchema.User = {
     _id: v4(),
@@ -89,10 +89,8 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     novelModel: NOVEL_MODELS.euterpe,
     luminaiUrl: '',
     oobaUrl: '',
-    horde: {
-      model: 'PygmalionAI/pygmalion-6b',
-      key: '',
-    },
+    hordeModel: 'PygmalionAI/pygmalion-6b',
+    hordeKey: '',
   }
 
   await db('user').insertOne(user)

@@ -1,4 +1,5 @@
 import needle from 'needle'
+import { decryptText } from '../../db/util'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { HORDE_GUEST_KEY } from '../horde'
@@ -12,29 +13,27 @@ const base = { n: 1, max_context_length: 1024 }
 const defaultModel = 'PygmalionAI/pygmalion-6b'
 
 export const handleHorde: ModelAdapter = async function* ({ char, members, prompt, user, sender }) {
-  if (!user.horde || !user.horde.model) {
+  if (!user.hordeModel) {
     yield { error: `Horde request failed: Not configured` }
     return
   }
 
   const settings = getGenSettings('basic', 'kobold')
   const body = {
-    models: [user.horde?.model || defaultModel],
+    models: [user.hordeModel || defaultModel],
     prompt,
     workers: [],
   }
 
+  const key = user.hordeKey ? decryptText(user.hordeKey) : HORDE_GUEST_KEY
   const params = { ...base, ...settings }
-  const headers = { apikey: user.horde?.key || HORDE_GUEST_KEY, 'Client-Agent': 'KoboldAiLite:11' }
+  const headers = { apikey: key, 'Client-Agent': 'KoboldAiLite:11' }
 
   const init = await needle(
     'post',
     `${baseUrl}/generate/text/async`,
     { ...body, params },
-    {
-      json: true,
-      headers,
-    }
+    { json: true, headers }
   ).catch((err) => ({ error: err }))
 
   if ('error' in init) {

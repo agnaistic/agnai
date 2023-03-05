@@ -2,6 +2,7 @@ import { assertValid } from 'frisker'
 import { config } from '../../config'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
+import { encryptText } from '../../db/util'
 import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
 import { handleUpload } from '../upload'
@@ -15,6 +16,10 @@ export const getProfile = handle(async ({ userId }) => {
 
 export const getConfig = handle(async ({ userId }) => {
   const user = await store.users.getUser(userId!)
+  if (user) {
+    user.novelApiKey = ''
+    user.hordeKey = ''
+  }
   return user
 })
 
@@ -37,8 +42,12 @@ export const updateConfig = handle(async ({ userId, body }) => {
     throw errors.Forbidden
   }
 
+  const update: Partial<AppSchema.User> = {
+    defaultAdapter: body.defaultAdapter,
+  }
+
   if (body.hordeApiKey) {
-    const prevKey = prevUser.horde?.key
+    const prevKey = prevUser.hordeKey
     const isNewKey =
       body.hordeApiKey !== '' &&
       body.hordeApiKey !== HORDE_GUEST_KEY &&
@@ -50,26 +59,25 @@ export const updateConfig = handle(async ({ userId, body }) => {
         throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
       }
     }
+
+    update.hordeKey = encryptText(body.hordeApiKey)
   }
 
   await verifyKobldUrl(prevUser, body.koboldUrl)
 
-  const update: Partial<AppSchema.User> = {
-    defaultAdapter: body.defaultAdapter,
-    luminaiUrl: body.luminaiUrl,
-  }
-
   if (body.koboldUrl !== undefined) update.koboldUrl = body.koboldUrl
+  if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
+
   if (body.hordeModel) {
-    update.horde = {
-      key: body.hordeApiKey!,
-      model: body.hordeModel!,
-    }
+    update.hordeModel = body.hordeModel!
   }
 
   if (body.novelModel) {
     update.novelModel = body.novelModel
-    update.novelApiKey = body.novelApiKey!
+  }
+
+  if (body.novelApiKey) {
+    update.novelApiKey = encryptText(body.novelApiKey!)
   }
 
   const user = await store.users.updateUser(userId!, update)
