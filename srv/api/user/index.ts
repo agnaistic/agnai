@@ -6,11 +6,12 @@ import { getConfig, getProfile, updateConfig, updateProfile } from './settings'
 
 const router = Router()
 
+router.post('/login', login)
+router.post('/register', register)
+
 router.get('/', loggedIn, getProfile)
 router.get('/config', loggedIn, getConfig)
-router.post('/register', register)
 router.post('/password', loggedIn, changePassword)
-router.post('/login', login)
 router.post('/config', loggedIn, updateConfig)
 router.post('/profile', loggedIn, updateProfile)
 router.get('/presets', loggedIn, getBasePresets)

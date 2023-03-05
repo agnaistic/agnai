@@ -7,7 +7,7 @@ import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../logger'
 import { errors } from '../api/wrap'
-import { encryptPassword } from './util'
+import { encryptPassword, now, STARTER_CHARACTER } from './util'
 
 export type NewUser = {
   username: string
@@ -93,7 +93,16 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     hordeKey: '',
   }
 
+  const startChar: AppSchema.Character = {
+    ...STARTER_CHARACTER,
+    _id: v4(),
+    userId: user._id,
+    createdAt: now(),
+    updatedAt: now(),
+  }
+
   await db('user').insertOne(user)
+  await db('character').insertOne(startChar)
 
   const profile: AppSchema.Profile = {
     _id: v4(),
