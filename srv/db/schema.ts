@@ -134,7 +134,7 @@ export namespace AppSchema {
     lockId: string
   }
 
-  export interface UserGenSettings extends GenSettings {
+  export interface UserGenPreset extends GenSettings {
     _id: string
     kind: 'gen-setting'
     userId: string
@@ -171,6 +171,6 @@ export type AllDoc =
   | AppSchema.ChatLock
   | AppSchema.ChatMember
   | AppSchema.ChatInvite
-  | AppSchema.UserGenSettings
+  | AppSchema.UserGenPreset
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []

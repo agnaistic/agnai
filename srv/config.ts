@@ -36,7 +36,7 @@ export const config = {
   assetFolder: env('ASSET_FOLDER', resolve(process.cwd(), 'dist', 'assets')),
   db: {
     name: env('DB_NAME', 'agnai'),
-    host: env('DB_HOST', 'localhost'),
+    host: env('DB_HOST', '127.0.01'),
     port: env('DB_PORT', '27107'),
   },
   kobold: {

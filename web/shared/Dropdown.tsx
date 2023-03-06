@@ -14,6 +14,7 @@ const Dropdown: Component<{
   items: DropdownItem[]
   value?: string
   class?: string
+  onChange?: (item: DropdownItem) => void
 }> = (props) => {
   return (
     <div>
@@ -23,6 +24,7 @@ const Dropdown: Component<{
           name={props.fieldName}
           class="rounded-xl  bg-purple-600 py-2 px-3 shadow-none"
           multiple={props.multiple}
+          onChange={(ev) => console.log(ev)}
         >
           <For each={props.items}>
             {(item) => (

@@ -3,7 +3,6 @@ import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
-import GenerationSettings from './pages/GenerationSettings'
 import Settings from './pages/Settings'
 import ChatDetail from './pages/Chat/ChatDetail'
 import { settingStore, userStore } from './store'
@@ -14,6 +13,7 @@ import UsersPage from './pages/Admin/UsersPage'
 import { InvitesPage } from './pages/Invite/InvitesPage'
 import HomePage from './pages/Home'
 import Navigation from './Navigation'
+import GenerationPresetsPage from './pages/GenerationPresets'
 
 const App: Component = () => {
   const state = userStore()
@@ -40,7 +40,7 @@ const App: Component = () => {
                 <Route path="/chat/:id" component={ChatDetail} />
                 <CharacterRoutes />
                 <Route path="/" component={HomePage} />
-                <Route path="/generation-settings" component={GenerationSettings} />
+                <Route path="/presets" component={GenerationPresetsPage} />
                 <Route path="/profile" component={ProfilePage} />
                 <Route path="/settings" component={Settings} />
                 <Route path="/invites" component={InvitesPage} />

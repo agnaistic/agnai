@@ -143,7 +143,7 @@ export async function getUserPresets(userId: string) {
 }
 
 export async function createUserPreset(userId: string, settings: AppSchema.GenSettings) {
-  const preset: AppSchema.UserGenSettings = {
+  const preset: AppSchema.UserGenPreset = {
     _id: v4(),
     kind: 'gen-setting',
     userId,

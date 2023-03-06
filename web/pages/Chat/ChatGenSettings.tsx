@@ -2,11 +2,11 @@ import { Save, X } from 'lucide-solid'
 import { Component } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
+import GenerationSettings, { genSettings } from '../../shared/GenSettings'
 import Modal from '../../shared/Modal'
 import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
-import GenerationSettings, { genSettings } from '../GenerationSettings'
 
 export const ChatGenSettingsModal: Component<{
   chat: AppSchema.Chat

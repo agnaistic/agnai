@@ -15,13 +15,13 @@
     "model": "python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
     "model:watch": "nodemon -e py --watch model --exec \"python -m flask --app model/app.py run --host 0.0.0.0 -p 5001\"",
     "server": "node srv/start.js",
-    "server:watch": "nodemon -e js --watch srv --exec \"node --inspect srv/start.js\"",
+    "server:watch": "nodemon -e js --delay 1 --watch srv --exec \"node --inspect srv/start.js\"",
     "start": "NODE_ENV=dev concurrently -c auto -n web,api,mod,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\" \"npm run build:server:watch\"",
     "start:public": "NODE_ENV=dev concurrently -c auto -n web,api,mod,lt \"parcel watch web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\" \"npx lt --port 3001\"",
     "start:win": "set NODE_ENV=dev && parcel web/index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
     "typecheck": "tsc -p tsconfig.json",
-    "up": "docker-compose up -d -p agnai"
+    "up": "docker compose -p agnai up -d"
   },
   "dependencies": {
     "@babel/core": "^7.20.12",
