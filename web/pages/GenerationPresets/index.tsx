@@ -80,7 +80,7 @@ export const GenerationPresetsPage: Component = () => {
             </Button>
           </div>
         </div>
-        <div class="flex flex-col gap-4">
+        <div class="flex flex-col gap-4 p-2">
           <Show when={!state.presets.length && !preset()}>
             <div class="flex w-full justify-center">
               You have no personalised presets saved. Click New Preset to get started.

@@ -2,10 +2,11 @@ import { AIAdapter } from '../../../common/adapters'
 import { mapPresetsToAdapter, defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
-import { AppLog } from '../../logger'
+import { AppLog, logger } from '../../logger'
 import { errors, StatusError } from '../wrap'
 import { handleChai } from './chai'
 import { handleHorde } from './horde'
+import { createImagePrompt } from './image'
 import { handleKobold } from './kobold'
 import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
@@ -63,6 +64,23 @@ export async function createResponseStream(opts: GenerateOptions) {
   const stream = handler(adapterOpts)
 
   return { chat, char, stream }
+}
+
+export async function createImageStream(opts: { chatId: string; senderId: string }) {
+  const { chat, char, members } = await getResponseEntities(opts.chatId, opts.senderId)
+
+  const isOwnerOrMember = opts.senderId === chat.userId || chat.memberIds.includes(opts.senderId)
+  if (!isOwnerOrMember) {
+    throw errors.Forbidden
+  }
+
+  const sender = members.find((mem) => mem.userId === opts.senderId)
+  if (!sender) {
+    throw new StatusError('Sender not found in chat members', 400)
+  }
+
+  const prompt = await createImagePrompt({ char, members, chat })
+  logger.info({ prompt }, 'Image prompt')
 }
 
 export async function getResponseEntities(chatId: string, senderId: string) {

@@ -1,7 +1,6 @@
 import { AppSchema } from '../../db/schema'
 import gpt from 'gpt-3-encoder'
 import { store } from '../../db'
-import { logger } from '../../logger'
 
 type PromptOpts = {
   chat: AppSchema.Chat

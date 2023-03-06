@@ -4,6 +4,7 @@ import { createChat } from './create'
 import { updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage } from './edit'
 
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
+import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites } from './invite'
 import { generateMessage, retryMessage, summarizeChat } from './message'
 import { deleteChat, deleteMessages } from './remove'
@@ -31,5 +32,7 @@ router.post('/:id/message', generateMessage)
 router.put('/:id/message', updateMessage)
 router.delete('/:id/messages', deleteMessages)
 router.delete('/:id', deleteChat)
+
+router.post('/:id/image', createImage)
 
 export default router
