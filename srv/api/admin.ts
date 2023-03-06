@@ -19,7 +19,13 @@ const setUserPassword = handle(async (req) => {
   return { success: true }
 })
 
+const getUserInfo = handle(async ({ params }) => {
+  const info = await store.admin.getUserInfo(params.id)
+  return info
+})
+
 router.get('/users', getUsers)
+router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)
 
 export default router

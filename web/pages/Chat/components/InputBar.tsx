@@ -1,4 +1,4 @@
-import { Send } from 'lucide-solid'
+import { Image, ImagePlus, Send } from 'lucide-solid'
 import { Component, JSX } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import { msgStore } from '../../../store/message'
@@ -12,6 +12,11 @@ const InputBar: Component<{ chat: AppSchema.Chat }> = (props) => {
     msgStore.send(props.chat._id, ref.value)
     ref.value = ''
   }
+
+  const createImage = () => {
+    msgStore.createImage(props.chat._id)
+  }
+
   return (
     <div class="flex justify-center gap-2 max-sm:pb-0">
       <input
@@ -21,6 +26,9 @@ const InputBar: Component<{ chat: AppSchema.Chat }> = (props) => {
         class="focusable-field w-full rounded-xl px-4 py-2"
         onKeyUp={(ev) => ev.key === 'Enter' && send()}
       />
+      <IconButton onClick={createImage}>
+        <ImagePlus />
+      </IconButton>
       <IconButton onClick={send}>
         <Send size={20} />
       </IconButton>

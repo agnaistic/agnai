@@ -81,6 +81,8 @@ export async function createImageStream(opts: { chatId: string; senderId: string
 
   const prompt = await createImagePrompt({ char, members, chat })
   logger.info({ prompt }, 'Image prompt')
+
+  return prompt
 }
 
 export async function getResponseEntities(chatId: string, senderId: string) {

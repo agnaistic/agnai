@@ -95,6 +95,13 @@ export const msgStore = createStore<MsgStore>('messages', {
       }
       return { msgs: msgs.slice(0, index) }
     },
+    async *createImage(_, chatId: string) {
+      const res = await api.post(`/chat/${chatId}/image`)
+      if (res.error) toastStore.error(`Failed to request image: ${res.error}`)
+      if (res.result) {
+        console.log(res.result)
+      }
+    },
   }
 })
 
