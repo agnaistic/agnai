@@ -108,10 +108,6 @@ const ChatDetail: Component = () => {
 
                 <Show when={chats.chat?.userId === user.user?._id}>
                   <div class="icon-button">
-                    <Bookmark onClick={() => setShowMem(!showMem())} />
-                  </div>
-
-                  <div class="icon-button">
                     <Sliders onClick={() => setShowGen(true)} />
                   </div>
 
@@ -133,7 +129,8 @@ const ChatDetail: Component = () => {
         chatId={chats.chat?._id!}
       />
       <SideDrawer show={showMem()} right>
-        <div>Yolo</div>
+        <div class="text-xl">Memory</div>
+        <div>Work in progress</div>
       </SideDrawer>
     </>
   )
