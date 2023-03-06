@@ -1,4 +1,4 @@
-import { Save, X } from 'lucide-solid'
+import { RefreshCw, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ModalFooter } from '../../shared/Modal'
@@ -26,6 +26,9 @@ const UsersPage: Component = () => {
       <PageHeader title="User Management" />
 
       <div class="flex flex-col gap-2">
+        <div class="flex justify-end">
+          <RefreshCw size={16} class="icon-button" onClick={adminStore.getUsers} />
+        </div>
         <For each={state.users}>
           {(user) => (
             <div class="flex h-12 flex-row items-center gap-2 rounded-xl bg-slate-900">
