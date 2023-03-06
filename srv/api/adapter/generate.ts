@@ -1,5 +1,5 @@
-import { Response } from 'express'
 import { AIAdapter } from '../../../common/adapters'
+import { mapPresetsToAdapter, defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { AppLog } from '../../logger'
@@ -47,7 +47,17 @@ export async function createResponseStream(opts: GenerateOptions) {
 
   const prompt = await createPrompt({ char, chat, members, retry: opts.retry })
 
-  const adapterOpts = { ...opts, chat, char, members, user, sender, prompt }
+  const rawGenSettings = await getGenerationSettings(chat, adapter)
+  const adapterOpts = {
+    ...opts,
+    chat,
+    char,
+    members,
+    user,
+    sender,
+    prompt,
+    genSettings: mapPresetsToAdapter(rawGenSettings, adapter),
+  }
 
   const handler = handlers[adapter]
   const stream = handler(adapterOpts)
@@ -85,4 +95,14 @@ function getAdapater(chat: AppSchema.Chat, user: AppSchema.User) {
   if (chat.adapter && chat.adapter !== 'default') return chat.adapter
 
   return user.defaultAdapter
+}
+
+async function getGenerationSettings(chat: AppSchema.Chat, adapter: AIAdapter) {
+  if (chat.genSettings) return chat.genSettings
+  if (!chat.genPreset) return defaultPresets.basic
+
+  if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
+
+  const preset = await store.users.getUserPreset(chat.genPreset)
+  return preset || defaultPresets.basic
 }

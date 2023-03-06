@@ -56,7 +56,7 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
 
-    genPreset?: GenerationPreset | ''
+    genPreset?: GenerationPreset | string
     genSettings?: Omit<GenSettings, 'name'>
   }
 

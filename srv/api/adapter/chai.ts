@@ -2,7 +2,6 @@ import needle from 'needle'
 import { config } from '../../config'
 import { logger } from '../../logger'
 import { trimResponse } from '../chat/common'
-import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
 const base = {
@@ -13,7 +12,7 @@ const base = {
   top_p: 1,
 }
 
-export const handleChai: ModelAdapter = async function* ({ char, members, prompt }) {
+export const handleChai: ModelAdapter = async function* ({ char, members, prompt, genSettings }) {
   if (!config.chai.url) {
     yield { error: 'Chai URL not set' }
     return
@@ -24,7 +23,7 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
     return
   }
 
-  const body = { ...getGenSettings('basic', 'chai'), text: prompt }
+  const body = { ...genSettings, text: prompt }
 
   const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
     json: true,

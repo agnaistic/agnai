@@ -1,15 +1,29 @@
 import { AppSchema } from '../srv/db/schema'
-import { AI_ADAPTERS, AIAdapter, ChatAdapter } from './adapters'
+import { AIAdapter, ChatAdapter } from './adapters'
 
-export type GenerationPreset = keyof typeof presets
+export type GenerationPreset = keyof typeof defaultPresets
 
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
 const MAX_TOKENS = 80
 
-export const presets = {
+export const presetValidator = {
+  name: 'string',
+  temp: 'number',
+  maxTokens: 'number',
+  repetitionPenalty: 'number',
+  repetitionPenaltyRange: 'number',
+  repetitionPenaltySlope: 'number',
+  typicalP: 'number',
+  topP: 'number',
+  topK: 'number',
+  topA: 'number',
+  tailFreeSampling: 'number',
+  order: ['number?'],
+} as const
+
+export const defaultPresets = {
   basic: {
-    adapters: AI_ADAPTERS.slice(),
     name: 'Simple',
     maxTokens: MAX_TOKENS,
     repetitionPenalty: 1.08,
@@ -23,7 +37,6 @@ export const presets = {
     tailFreeSampling: 0.9,
   },
   novel_20BC: {
-    adapters: ['novel'],
     name: 'Novel 20BC+',
     maxTokens: MAX_TOKENS,
     repetitionPenalty: 1.055,
@@ -36,7 +49,6 @@ export const presets = {
     order: [0, 1, 2, 3],
   },
   novel_blueLighter: {
-    adapters: ['novel'],
     name: 'Novel Blue Lighter',
     maxTokens: MAX_TOKENS,
     repetitionPenalty: 1.05,
@@ -50,16 +62,43 @@ export const presets = {
     topA: 0.085,
     order: [3, 4, 5, 2, 0],
   },
-} satisfies Record<string, Partial<AppSchema.GenSettings> & { adapters: AIAdapter[] }>
+} satisfies Record<string, Partial<AppSchema.GenSettings>>
 
-export function getGenSettings(
-  preset: GenerationPreset | AppSchema.GenSettings,
-  adapter: AIAdapter
-) {
+const disabledValues: { [key in keyof GenMap]?: AppSchema.GenSettings[key] } = {
+  topP: 1,
+  topK: 0,
+  topA: 1,
+  typicalP: 1,
+  tailFreeSampling: 1,
+  repetitionPenalty: 1,
+  repetitionPenaltySlope: 0,
+}
+
+export function mapPresetsToAdapter(presets: Partial<AppSchema.GenSettings>, adapter: AIAdapter) {
   const map = serviceGenMap[adapter]
-  const presetValues = (
-    typeof preset === 'string' ? presets[preset] : preset
-  ) as AppSchema.GenSettings
+  const body: any = {}
+
+  for (const [keyStr, value] of Object.entries(map)) {
+    const key = keyStr as keyof GenMap
+    if (!value) continue
+
+    const presetValue = presets[key]
+    const disabledValue = disabledValues[key]
+
+    if (presetValue === undefined) continue
+
+    // Remove disabled values from generation settings
+    if (disabledValue !== undefined && presetValue === disabledValue) continue
+
+    body[value] = presetValue
+  }
+
+  return body
+}
+
+export function getGenSettings(chat: AppSchema.Chat, adapter: AIAdapter) {
+  const map = serviceGenMap[adapter]
+  const presetValues = getPresetValues(chat)
 
   const body: any = {}
   for (const [keyStr, value] of Object.entries(map)) {
@@ -67,12 +106,27 @@ export function getGenSettings(
     if (!value) continue
 
     const presetValue = presetValues[key]
+    const disabledValue = disabledValues[key]
+
     if (presetValue === undefined) continue
 
-    body[value] = presetValues[key]
+    // Remove disabled values from generation settings
+    if (disabledValue !== undefined && presetValue === disabledValue) continue
+
+    body[value] = presetValue
   }
 
   return body
+}
+
+function getPresetValues(chat: AppSchema.Chat): Partial<AppSchema.GenSettings> {
+  if (chat.genPreset && isDefaultPreset(chat.genPreset)) {
+    return defaultPresets[chat.genPreset]
+  }
+
+  if (chat.genSettings) return chat.genSettings
+
+  return defaultPresets.basic
 }
 
 export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
@@ -154,4 +208,8 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: 'top_a',
     order: 'sampler_order',
   },
+}
+
+export function isDefaultPreset(value: string): value is GenerationPreset {
+  return value in defaultPresets
 }

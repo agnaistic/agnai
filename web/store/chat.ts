@@ -125,7 +125,28 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
       if (res.result) {
         if (active && active.chat._id === chatId) {
-          yield { active: { ...active, chat: { ...active.chat, genSettings: settings } } }
+          yield {
+            active: {
+              ...active,
+              chat: { ...active.chat, genSettings: settings, genPreset: undefined },
+            },
+          }
+          toastStore.success('Updated chat generation settings')
+          onSucces?.()
+        }
+      }
+    },
+    async *editChatGenPreset({ active }, chatId: string, preset: string, onSucces?: () => void) {
+      const res = await api.method('put', `/chat/${chatId}/preset`, { preset })
+      if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
+      if (res.result) {
+        if (active && active.chat._id === chatId) {
+          yield {
+            active: {
+              ...active,
+              chat: { ...active.chat, genSettings: undefined, genPreset: preset },
+            },
+          }
           toastStore.success('Updated chat generation settings')
           onSucces?.()
         }

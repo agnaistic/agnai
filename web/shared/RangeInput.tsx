@@ -9,6 +9,7 @@ const RangeInput: Component<{
   min: number
   max: number
   step: number
+  disabled?: boolean
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
@@ -40,6 +41,7 @@ const RangeInput: Component<{
           max={props.max}
           step={props.step}
           onInput={onInput}
+          disabled={props.disabled}
         />
       </ul>
       <Show when={props.helperText}>
@@ -63,6 +65,7 @@ const RangeInput: Component<{
         step={props.step}
         onInput={onInput}
         value={value()}
+        disabled={props.disabled}
       />
     </div>
   )

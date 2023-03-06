@@ -70,3 +70,16 @@ export const updateChatGenSettings = handle(async ({ params, userId, body }) => 
   await store.chats.updateGenSetting(chatId, body)
   return { success: true }
 })
+
+export const updateChatGenPreset = handle(async ({ params, userId, body }) => {
+  const chatId = params.id
+  assertValid({ preset: 'string' }, body)
+
+  const chat = await store.chats.getChat(chatId)
+  if (chat?.userId !== userId) {
+    throw errors.Forbidden
+  }
+
+  await store.chats.updateGenPreset(chatId, body.preset)
+  return { success: true }
+})

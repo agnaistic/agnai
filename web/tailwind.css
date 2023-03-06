@@ -126,6 +126,14 @@
     @apply bg-slate-800 text-gray-500;
   }
 
+  input[type='number']:disabled {
+    @apply bg-slate-800 text-gray-500;
+  }
+
+  /* input[type='text']:invalid {
+    @apply border-2 border-red-600;
+  } */
+
   input[type='range'] {
     background: rgb(255 255 255 / 0.05);
     background-image: linear-gradient(rgb(152 64 160), rgb(152 64 160));
@@ -138,6 +146,13 @@
     border-radius: 50%;
     background: rgb(152 64 160);
     box-shadow: 0 0 2px 0 #555;
+  }
+
+  input[type='range']:disabled {
+    background-image: linear-gradient(
+      rgb(64 28 76 / var(--tw-bg-opacity)),
+      rgb(64 28 76 / var(--tw-bg-opacity))
+    );
   }
 
   input[type='range']::-webkit-slider-runnable-track {

@@ -14,8 +14,15 @@ const Dropdown: Component<{
   items: DropdownItem[]
   value?: string
   class?: string
+  disabled?: boolean
   onChange?: (item: DropdownItem) => void
 }> = (props) => {
+  const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
+    if (!props.onChange) return
+    const item = props.items.find((item) => item.value === ev.currentTarget.value)
+    props.onChange(item!)
+  }
+
   return (
     <div>
       <FormLabel label={props.label} helperText={props.helperText} />
@@ -24,7 +31,8 @@ const Dropdown: Component<{
           name={props.fieldName}
           class="rounded-xl  bg-purple-600 py-2 px-3 shadow-none"
           multiple={props.multiple}
-          onChange={(ev) => console.log(ev)}
+          onChange={onChange}
+          disabled={props.disabled}
         >
           <For each={props.items}>
             {(item) => (

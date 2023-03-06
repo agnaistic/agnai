@@ -8,4 +8,5 @@ export type ModelAdapter = (opts: {
   message: string
   sender: AppSchema.Profile
   prompt: string
+  genSettings: any
 }) => AsyncGenerator<string | { error: any }>

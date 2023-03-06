@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
 import { createChat } from './create'
-import { updateChat, updateChatGenSettings, updateMessage } from './edit'
+import { updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage } from './edit'
 
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { createInvite, acceptInvite, rejectInvite, getInvites } from './invite'
@@ -18,6 +18,7 @@ router.post('/', createChat)
 router.get('/:id', getChatDetail)
 router.put('/:id', updateChat)
 router.put('/:id/generation', updateChatGenSettings)
+router.put('/:id/preset', updateChatGenPreset)
 
 router.post('/:id/invite', createInvite)
 router.post('/:inviteId/accept', acceptInvite)

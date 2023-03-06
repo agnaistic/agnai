@@ -1,7 +1,7 @@
 import { Component } from 'solid-js'
 import RangeInput from './RangeInput'
 import { AppSchema } from '../../srv/db/schema'
-import { presets } from '../../common/presets'
+import { defaultPresets } from '../../common/presets'
 
 export const genSettings = {
   temp: 'number',
@@ -16,7 +16,10 @@ export const genSettings = {
   tailFreeSampling: 'number',
 } as const
 
-const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }> = (props) => (
+const GenerationSettings: Component<{
+  inherit?: AppSchema.Chat['genSettings']
+  disabled?: boolean
+}> = (props) => (
   <>
     <div class="flex flex-col gap-4">
       <RangeInput
@@ -26,7 +29,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={16}
         max={512}
         step={4}
-        value={props.inherit?.maxTokens || presets.basic.maxTokens}
+        value={props.inherit?.maxTokens || defaultPresets.basic.maxTokens}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="temp"
@@ -35,7 +39,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0.1}
         max={20}
         step={0.01}
-        value={props.inherit?.temp || presets.basic.temp}
+        value={props.inherit?.temp || defaultPresets.basic.temp}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="topP"
@@ -44,7 +49,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={1}
         step={0.01}
-        value={props.inherit?.topP ?? presets.basic.topP}
+        value={props.inherit?.topP ?? defaultPresets.basic.topP}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="topK"
@@ -53,7 +59,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={100}
         step={1}
-        value={props.inherit?.topK ?? presets.basic.topK}
+        value={props.inherit?.topK ?? defaultPresets.basic.topK}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="topA"
@@ -62,7 +69,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={1}
         step={0.01}
-        value={props.inherit?.topA ?? presets.basic.topA}
+        value={props.inherit?.topA ?? defaultPresets.basic.topA}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="tailFreeSampling"
@@ -71,7 +79,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={1}
         step={0.001}
-        value={props.inherit?.tailFreeSampling ?? presets.basic.tailFreeSampling}
+        value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="typicalP"
@@ -80,7 +89,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={1}
         step={0.01}
-        value={props.inherit?.typicalP ?? presets.basic.typicalP}
+        value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="repetitionPenalty"
@@ -89,7 +99,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={3}
         step={0.01}
-        value={props.inherit?.repetitionPenalty ?? presets.basic.repetitionPenalty}
+        value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="repetitionPenaltyRange"
@@ -98,7 +109,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={2048}
         step={1}
-        value={props.inherit?.repetitionPenaltyRange ?? presets.basic.repetitionPenaltyRange}
+        value={props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="repetitionPenaltySlope"
@@ -107,7 +119,8 @@ const GenerationSettings: Component<{ inherit?: AppSchema.Chat['genSettings'] }>
         min={0}
         max={10}
         step={0.01}
-        value={props.inherit?.repetitionPenaltySlope ?? presets.basic.repetitionPenaltySlope}
+        value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
+        disabled={props.disabled}
       />
     </div>
   </>

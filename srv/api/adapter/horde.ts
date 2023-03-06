@@ -4,7 +4,6 @@ import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { HORDE_GUEST_KEY } from '../horde'
 import { publishOne } from '../ws/handle'
-import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
 const baseUrl = 'https://stablehorde.net/api/v2'
@@ -12,13 +11,19 @@ const baseUrl = 'https://stablehorde.net/api/v2'
 const base = { n: 1, max_context_length: 1024 }
 const defaultModel = 'PygmalionAI/pygmalion-6b'
 
-export const handleHorde: ModelAdapter = async function* ({ char, members, prompt, user, sender }) {
+export const handleHorde: ModelAdapter = async function* ({
+  char,
+  members,
+  prompt,
+  user,
+  sender,
+  genSettings,
+}) {
   if (!user.hordeModel) {
     yield { error: `Horde request failed: Not configured` }
     return
   }
 
-  const settings = getGenSettings('basic', 'kobold')
   const body = {
     models: [user.hordeModel || defaultModel],
     prompt,
@@ -26,7 +31,7 @@ export const handleHorde: ModelAdapter = async function* ({ char, members, promp
   }
 
   const key = user.hordeKey ? decryptText(user.hordeKey) : HORDE_GUEST_KEY
-  const params = { ...base, ...settings }
+  const params = { ...base, ...genSettings }
   const headers = { apikey: key, 'Client-Agent': 'KoboldAiLite:11' }
 
   const init = await needle(

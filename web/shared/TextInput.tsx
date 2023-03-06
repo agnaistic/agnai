@@ -11,6 +11,7 @@ const TextInput: Component<{
   value?: number | string
   required?: boolean
   class?: string
+  pattern?: string
   onKeyUp?: (key: string) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 }> = (props) => {
@@ -44,6 +45,7 @@ const TextInput: Component<{
             onkeyup={(ev) => props.onKeyUp?.(ev.key)}
             onchange={(ev) => props.onChange?.(ev)}
             disabled={props.disabled}
+            pattern={props.pattern}
           />
         }
       >

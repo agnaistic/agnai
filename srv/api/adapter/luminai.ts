@@ -1,7 +1,6 @@
 import needle from 'needle'
 import { logger } from '../../logger'
 import { joinParts, trimResponse } from '../chat/common'
-import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
 const MAX_NEW_TOKENS = 196
@@ -30,8 +29,14 @@ const base = {
   // tfs: 0.9,
 }
 
-export const handleLuminAI: ModelAdapter = async function* ({ char, members, user, prompt }) {
-  const body = { koboldUrl: user.koboldUrl, ...base, ...getGenSettings('basic', 'kobold'), prompt }
+export const handleLuminAI: ModelAdapter = async function* ({
+  char,
+  members,
+  user,
+  prompt,
+  genSettings,
+}) {
+  const body = { koboldUrl: user.koboldUrl, ...base, ...genSettings, prompt }
 
   let attempts = 0
   let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4

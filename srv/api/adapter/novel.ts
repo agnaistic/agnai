@@ -4,7 +4,6 @@ import { decryptText } from '../../db/util'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
-import { getGenSettings } from './presets'
 import { ModelAdapter } from './type'
 
 const novelUrl = `https://api.novelai.net/ai/generate`
@@ -65,17 +64,22 @@ const base = {
   // top_p: 0.9,
 }
 
-export const handleNovel: ModelAdapter = async function* ({ char, members, user, prompt }) {
+export const handleNovel: ModelAdapter = async function* ({
+  char,
+  members,
+  user,
+  prompt,
+  genSettings,
+}) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
     return
   }
 
-  const settings = getGenSettings('novel_20BC', 'novel')
   const body = {
     model: user.novelModel,
     input: prompt,
-    parameters: { ...base, ...settings },
+    parameters: { ...base, ...genSettings },
   }
 
   const endTokens = ['***', 'Scenario:', '----']

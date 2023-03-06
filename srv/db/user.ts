@@ -160,4 +160,11 @@ export async function updateUserPreset(
   update: AppSchema.GenSettings
 ) {
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
+  const updated = await db('gen-setting').findOne({ _id: presetId })
+  return updated
+}
+
+export async function getUserPreset(presetId: string) {
+  const preset = await db('gen-setting').findOne({ _id: presetId })
+  return preset
 }
