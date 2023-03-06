@@ -13,6 +13,7 @@ const RadioGroup: Component<{
   options: RadioOption[]
   horizontal?: boolean
   value?: string
+  onChange?: (value: RadioOption['id']) => void
 }> = (props) => (
   <div class={`flex ${props.horizontal ? 'flex-row gap-4' : 'flex-col'}`}>
     <For each={props.options}>
@@ -27,6 +28,7 @@ const RadioGroup: Component<{
             id={option.id}
             checked={option.isChecked || props.value === option.id}
             value={option.id}
+            onChange={(ev) => props.onChange?.(ev.currentTarget.value)}
           />
           <label class="form-check-label inline-block cursor-pointer" for={option.id}>
             {option.label}

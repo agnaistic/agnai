@@ -4,6 +4,7 @@ import { store } from '../db'
 import { loggedIn } from './auth'
 import { handle, StatusError } from './wrap'
 import { handleUpload } from './upload'
+import { PERSONA_FORMATS } from '../../common/adapters'
 
 const router = Router()
 
@@ -14,7 +15,7 @@ const valid = {
   greeting: 'string',
   sampleChat: 'string',
   persona: {
-    kind: ['wpp', 'sbf', 'boostyle'],
+    kind: PERSONA_FORMATS,
     attributes: 'any',
   },
 } as const

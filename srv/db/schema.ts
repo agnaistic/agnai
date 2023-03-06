@@ -1,4 +1,4 @@
-import { AIAdapter, ChatAdapter } from '../../common/adapters'
+import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
 import { GenerationPreset } from '../../common/presets'
 
 export namespace AppSchema {
@@ -84,10 +84,12 @@ export namespace AppSchema {
   }
 
   /** Description of the character */
-  export type CharacterPersona = {
-    kind: 'wpp' | 'sbf' | 'boostyle'
-    attributes: { [key: string]: string[] }
-  }
+  export type CharacterPersona =
+    | {
+        kind: PersonaFormat
+        attributes: { [key: string]: string[] }
+      }
+    | { kind: 'text'; attributes: { text: [string] } }
 
   export interface Character {
     _id: string

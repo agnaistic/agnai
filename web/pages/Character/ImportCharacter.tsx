@@ -3,7 +3,7 @@ import { Component, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { ModalFooter } from '../../shared/Modal'
-import { characterStore, toastStore } from '../../store'
+import { characterStore, NewCharacter, toastStore } from '../../store'
 
 const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (props) => {
   const [json, setJson] = createSignal<any>(undefined)
@@ -14,9 +14,13 @@ const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (p
     try {
       const content = await getFileAsString(files[0])
       const json = JSON.parse(content)
-      setJson(json)
+      const char = jsonToCharacter(json)
+      toastStore.success('Character file accepted')
+      setJson(char)
     } catch (ex) {
-      toastStore.warn('Invalid file format: Must be exported from Agnaistic')
+      toastStore.warn(
+        'Invalid file format. Supported formats: Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
+      )
     }
   }
 
@@ -37,7 +41,7 @@ const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (p
           label="JSON File"
           fieldName="json"
           accept="text/json"
-          helperText="Currently only JSON files exported from Agnaistic are supported"
+          helperText="Supported formats: Agnaistic, CAI, TavernAI, TextGen, Pygmalion"
           required
           onUpdate={updateJson}
         />
@@ -66,3 +70,68 @@ const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (p
 }
 
 export default ImportCharacterModal
+
+type ImportFormat = keyof typeof formatMaps | 'agnai'
+
+const formatMaps = {
+  tavern: {
+    name: 'name',
+    persona: ['description', 'personality'],
+    scenario: 'scenario',
+    greeting: 'first_mes',
+    sampleChat: 'mes_example',
+  },
+  ooba: {
+    name: 'char_name',
+    persona: ['char_persona'],
+    scenario: 'world_scenario',
+    greeting: 'char_greeting',
+    sampleChat: 'example_dialogue',
+  },
+} satisfies Record<string, ImportKeys>
+
+type ImportKeys = {
+  name: string
+  persona: string[]
+  greeting: string
+  scenario: string
+  sampleChat: string
+}
+
+function jsonToCharacter(json: any): NewCharacter {
+  const format = getImportFormat(json)
+
+  if (format === 'agnai') {
+    return json
+  }
+
+  const map = formatMaps[format]
+
+  const persona = map.persona
+    .map((key) => json[key])
+    .filter((text) => !!text)
+    .join('\n')
+
+  const char: NewCharacter = {
+    name: json[map.name],
+    greeting: json[map.greeting],
+    persona: {
+      kind: 'text',
+      attributes: {
+        text: [persona],
+      },
+    },
+    sampleChat: json[map.sampleChat],
+    scenario: json[map.scenario],
+  }
+
+  return char
+}
+
+function getImportFormat(obj: any): ImportFormat {
+  if ('adapter' in obj && 'userId' in obj) return 'agnai'
+  if ('char_name' in obj) return 'ooba'
+  if ('mes_example' in obj) return 'tavern'
+
+  throw new Error('Unknown import format')
+}

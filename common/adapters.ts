@@ -2,12 +2,13 @@ export type AIAdapter = (typeof AI_ADAPTERS)[number]
 export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
 export type PersonaFormat = (typeof PERSONA_FORMATS)[number]
 
-export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf'] as const
+export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'text'] as const
 
 export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   boostyle: 'Boostyle',
   wpp: 'W++',
   sbf: 'SBF',
+  text: 'Plain Text',
 }
 
 export const AI_ADAPTERS = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai'] as const

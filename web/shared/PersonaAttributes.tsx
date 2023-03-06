@@ -1,4 +1,4 @@
-import { Minus, MinusCircle, Plus } from 'lucide-solid'
+import { MinusCircle, Plus } from 'lucide-solid'
 import { Component, createSignal, For, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
@@ -13,16 +13,25 @@ const defaultAttrs = [
   { key: 'personality', values: '' },
 ]
 
-const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel?: boolean }> = (
-  props
-) => {
+const PersonaAttributes: Component<{
+  value?: Record<string, string[]>
+  plainText?: boolean
+  hideLabel?: boolean
+}> = (props) => {
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
+  const [text, setText] = createSignal('')
 
   createSignal(() => {
     if (props.value) {
       setAttrs(toAttrs(props.value))
     }
-  }, props.value)
+
+    if (props.plainText) {
+      setText(props.value?.text?.[0] || '')
+    }
+
+    console.log(props.value)
+  })
 
   const add = () => setAttrs((prev) => [...prev, { key: '', values: '' }])
 
@@ -45,28 +54,40 @@ const PersonaAttributes: Component<{ value?: Record<string, string[]>; hideLabel
         <FormLabel
           label="Persona Attributes"
           helperText={
-            <span>
-              The attributes of your persona. See the link at the top of the page for more
-              information.
-              <br />
-              It is highly recommended to always include the attributes <b>mind</b> and{' '}
-              <b>personality</b>.<br />
-              Example attributes: mind, personality, gender, appearance, likes, dislikes.
-            </span>
+            <>
+              <span>
+                The attributes of your persona. See the link at the top of the page for more
+                information.
+                <br />
+                <Show when={!props.plainText}>
+                  It is highly recommended to always include the attributes <b>mind</b> and{' '}
+                  <b>personality</b>.<br />
+                  Example attributes: mind, personality, gender, appearance, likes, dislikes.
+                </Show>
+              </span>
+            </>
           }
         />
       </Show>
-      <div>
-        <Button onClick={add}>
-          <Plus size={16} />
-          Add Attribute
-        </Button>
-      </div>
-      <div class="mt-2 flex w-full flex-col gap-2">
-        <For each={attrs()}>
-          {(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} remove={remove} />}
-        </For>
-      </div>
+      <Show when={props.plainText}>
+        <div>
+          <TextInput fieldName="attr-key.0" value="text" class="hidden" />
+          <TextInput fieldName="attr-value.0" value={props.value?.text?.[0]} isMultiline />
+        </div>
+      </Show>
+      <Show when={!props.plainText}>
+        <div>
+          <Button onClick={add}>
+            <Plus size={16} />
+            Add Attribute
+          </Button>
+        </div>
+        <div class="mt-2 flex w-full flex-col gap-2">
+          <For each={attrs()}>
+            {(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} remove={remove} />}
+          </For>
+        </div>
+      </Show>
     </>
   )
 }

@@ -5,17 +5,19 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
-import { getFormEntries, getStrictForm } from '../../shared/util'
+import { getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import { characterStore } from '../../store'
 import { useNavigate, useParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
+import { PERSONA_FORMATS } from '../../../common/adapters'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
   { id: 'wpp', label: 'W++' },
   { id: 'sbf', label: 'SBF' },
+  { id: 'text', label: 'Plain Text' },
 ]
 
 const CreateCharacter: Component = () => {
@@ -31,6 +33,7 @@ const CreateCharacter: Component = () => {
     characterStore.getCharacters()
   })
 
+  const [schema, setSchema] = createSignal(state.edit?.persona.kind || 'boostyle')
   const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
   const nav = useNavigate()
 
@@ -42,13 +45,14 @@ const CreateCharacter: Component = () => {
 
   const onSubmit = (ev: Event) => {
     const body = getStrictForm(ev, {
-      kind: ['wpp', 'boostyle', 'sbf'],
+      kind: PERSONA_FORMATS,
       name: 'string',
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
     } as const)
     const attributes = getAttributeMap(ev)
+
     const persona = {
       kind: body.kind,
       attributes,
@@ -129,16 +133,31 @@ const CreateCharacter: Component = () => {
         />
 
         <div>
-          <FormLabel label="Persona Schema" helperText="Format to use for the character's format" />
+          <FormLabel
+            label="Persona Schema"
+            helperText={
+              <>
+                <p class="font-bold">
+                  WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible. Changing
+                  between them will cause data loss.
+                </p>
+                <p>Format to use for the character's format</p>
+              </>
+            }
+          />
           <RadioGroup
             name="kind"
             horizontal
             options={options}
             value={state.edit?.persona.kind || 'boostyle'}
+            onChange={(kind) => setSchema(kind as any)}
           />
         </div>
 
-        <PersonaAttributes value={state.edit?.persona.attributes} />
+        <PersonaAttributes
+          value={state.edit?.persona.attributes}
+          plainText={state.edit?.persona.kind === 'text'}
+        />
 
         <TextInput
           isMultiline
