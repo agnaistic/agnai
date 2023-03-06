@@ -38,7 +38,7 @@ If you're only looking to run AgnAI without contributing:
 ### Using Docker
 
 1. Clone the project
-2. Run: `docker compose -d -f self-host.docker-compose.yml -p agnai`
+2. Run: `docker compose -p agnai up -d -f self-host.docker-compose.yml`
 
 ### Manually
 
