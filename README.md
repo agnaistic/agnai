@@ -4,6 +4,8 @@
 
 AI Agnostic Chat
 
+[Try it out!](https://agn.carlossus.com)
+
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
 <div style="display: flex; flex-direction: row; gap: 0.5rem;" >
@@ -14,22 +16,26 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
 ## Features
 
-- Multiple AI services: Support for Kobold, Novel, AI Horde, Chai
-- Group Conversations: Multiple users with one character/bot
+- **Group Conversations**: Multiple users with one character/bot
+- **Multiple AI services**: Support for Kobold, Novel, AI Horde, Chai, LuminAI
 - Multiple persona schema formats (W++, Square bracket format, Boostyle)
 - Multi-tenancy:
   - User authentication
   - Individual user settings: Which AI service to use and their own service configuration
-  - Individual user generation settings (_In progress_)
-- Chat overrides:
+  - Individual user generation settings
+- Chat specific overrides:
   - Choose the AI service for a specific chat
   - Personalise the character for a specific chat
+  - Customise the generation preset/settings for a specific chat
+- Image generation (_IN PROGRESS_)
 
 ## Roadmap
 
 See the [roadmap here](https://github.com/users/sceuick/projects/1).
 
 ## Quick Start for Users
+
+You can visit the hosted version at [Agn.carlossus.com](https://agn.carlossus.com)
 
 > CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
 
