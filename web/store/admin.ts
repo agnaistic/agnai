@@ -3,8 +3,17 @@ import { api } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
 
+type UserInfo = {
+  userId: string
+  chats: number
+  characters: number
+  handle: string
+  avatar: string
+}
+
 type AdminState = {
   users: AppSchema.User[]
+  info?: UserInfo
 }
 
 export const adminStore = createStore<AdminState>('admin', { users: [] })((_) => {
@@ -21,6 +30,11 @@ export const adminStore = createStore<AdminState>('admin', { users: [] })((_) =>
       if (res.error) return toastStore.error(`Failed to update user: ${res.error}`)
       if (res.result) toastStore.success(`Update user settings`)
       onSuccess?.()
+    },
+    async getInfo(_, userId: string) {
+      const res = await api.get<UserInfo>(`/admin/users/${userId}/info`)
+      if (res.error) toastStore.error(`Failed to get user info: ${res.error}`)
+      if (res.result) return { info: res.result }
     },
   }
 })
