@@ -167,11 +167,8 @@ export async function deleteAllChats(characterId?: string) {
     .toArray()
     .then((chats) => chats.map((ch) => ch._id))
 
-  const chatsDeleted = await db('chat').deleteMany(chatQuery)
-  logger.info({ deleted: chatsDeleted }, 'Deleting')
-
-  const msgsDeleted = db('chat-message').deleteMany({ chatId: { $in: chatIds } })
-  logger.info({ deleted: msgsDeleted }, 'Messages deleted')
+  await db('chat').deleteMany(chatQuery)
+  await db('chat-message').deleteMany({ chatId: { $in: chatIds } })
 }
 
 export function canViewChat(senderId: string, chat: AppSchema.Chat) {

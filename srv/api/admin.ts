@@ -22,7 +22,6 @@ const setUserPassword = handle(async (req) => {
 
 const getUserInfo = handle(async ({ params }) => {
   const info = await store.admin.getUserInfo(params.id)
-  logger.info({ info }, 'info')
   return info
 })
 

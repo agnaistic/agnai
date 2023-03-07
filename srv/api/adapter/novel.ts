@@ -69,7 +69,7 @@ export const handleNovel: ModelAdapter = async function* ({
   members,
   user,
   prompt,
-  genSettings,
+  settings,
 }) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
@@ -79,7 +79,7 @@ export const handleNovel: ModelAdapter = async function* ({
   const body = {
     model: user.novelModel,
     input: prompt,
-    parameters: { ...base, ...genSettings },
+    parameters: { ...base, ...settings },
   }
 
   const endTokens = ['***', 'Scenario:', '----']
@@ -97,14 +97,12 @@ export const handleNovel: ModelAdapter = async function* ({
   }
 
   const status = response.statusCode || 0
-  logger.warn({ output: response.body }, 'Novel response')
   if (statuses[status]) {
     yield { error: statuses[status] }
     return
   }
 
   if (status >= 400) {
-    logger.error({})
     yield { error: response.statusMessage! }
     return
   }

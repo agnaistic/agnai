@@ -27,7 +27,8 @@ export async function createImagePrompt({ chat, members, char }: ImageRequest) {
       : members.find((mem) => mem.userId === msg.userId)?.handle
     if (!sender) continue
 
-    const text = msg.msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
+    const text =
+      `${sender}: ` + msg.msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
     const length = gpt.encode(text).length
     if (length + current > MAX_TOKENS) break
 

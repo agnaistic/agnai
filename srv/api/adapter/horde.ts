@@ -17,7 +17,7 @@ export const handleHorde: ModelAdapter = async function* ({
   prompt,
   user,
   sender,
-  genSettings,
+  settings,
 }) {
   if (!user.hordeModel) {
     yield { error: `Horde request failed: Not configured` }
@@ -31,7 +31,7 @@ export const handleHorde: ModelAdapter = async function* ({
   }
 
   const key = user.hordeKey ? decryptText(user.hordeKey) : HORDE_GUEST_KEY
-  const params = { ...base, ...genSettings }
+  const params = { ...base, ...settings }
   const headers = { apikey: key, 'Client-Agent': 'KoboldAiLite:11' }
 
   const init = await needle(
@@ -60,8 +60,6 @@ export const handleHorde: ModelAdapter = async function* ({
   const id = init.body.id
   const started = Date.now()
   await wait()
-
-  logger.info({ id }, 'Horde async request started')
 
   let text = ''
   let checks = 0
@@ -105,7 +103,6 @@ export const handleHorde: ModelAdapter = async function* ({
 
     if (check.body.generations.length) {
       text = check.body.generations[0].text
-      logger.debug({ generations: check.body.generations, text }, `Horde response`)
       break
     }
   }

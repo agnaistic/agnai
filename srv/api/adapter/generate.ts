@@ -31,8 +31,11 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   luminai: handleLuminAI,
 }
 
-export async function createResponseStream(opts: GenerateOptions) {
-  const { chat, char, user, members } = await getResponseEntities(opts.chatId, opts.senderId)
+export async function createTextStream(opts: GenerateOptions) {
+  const { chat, char, user, members, settings, adapter } = await getResponseEntities(
+    opts.chatId,
+    opts.senderId
+  )
 
   const isOwnerOrMember = opts.senderId === chat.userId || chat.memberIds.includes(opts.senderId)
   if (!isOwnerOrMember) {
@@ -44,11 +47,14 @@ export async function createResponseStream(opts: GenerateOptions) {
     throw new StatusError('Sender not found in chat members', 400)
   }
 
-  const adapter = getAdapater(chat, user)
+  const prompt = await createPrompt({
+    char,
+    chat,
+    members,
+    retry: opts.retry,
+    settings,
+  })
 
-  const prompt = await createPrompt({ char, chat, members, retry: opts.retry })
-
-  const rawGenSettings = await getGenerationSettings(chat, adapter)
   const adapterOpts = {
     ...opts,
     chat,
@@ -57,7 +63,7 @@ export async function createResponseStream(opts: GenerateOptions) {
     user,
     sender,
     prompt,
-    genSettings: mapPresetsToAdapter(rawGenSettings, adapter),
+    settings,
   }
 
   const handler = handlers[adapter]
@@ -80,7 +86,7 @@ export async function createImageStream(opts: { chatId: string; senderId: string
   }
 
   const prompt = await createImagePrompt({ char, members, chat })
-  logger.info({ prompt }, 'Image prompt')
+  logger.debug({ prompt }, 'Image prompt')
 
   return prompt
 }
@@ -106,9 +112,12 @@ export async function getResponseEntities(chatId: string, senderId: string) {
     throw new StatusError('Character not found', 404)
   }
 
+  const adapter = getAdapater(chat, user)
   const members = await store.users.getProfiles(chat.userId, chat.memberIds)
+  const rawGenSettings = await getGenerationSettings(chat, adapter)
+  const settings = mapPresetsToAdapter(rawGenSettings, adapter)
 
-  return { chat, char, user, members }
+  return { chat, char, user, members, adapter, settings }
 }
 
 function getAdapater(chat: AppSchema.Chat, user: AppSchema.User) {

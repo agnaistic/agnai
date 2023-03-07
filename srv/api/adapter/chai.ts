@@ -12,7 +12,7 @@ const base = {
   top_p: 1,
 }
 
-export const handleChai: ModelAdapter = async function* ({ char, members, prompt, genSettings }) {
+export const handleChai: ModelAdapter = async function* ({ char, members, prompt, settings }) {
   if (!config.chai.url) {
     yield { error: 'Chai URL not set' }
     return
@@ -23,7 +23,7 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
     return
   }
 
-  const body = { ...genSettings, text: prompt }
+  const body = { ...settings, text: prompt }
 
   const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
     json: true,
@@ -42,8 +42,6 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
     yield { error: response.err.message }
     return
   }
-
-  logger.warn(response.body, 'Chai response')
 
   const status = response.statusCode || 0
   if (status >= 500) {

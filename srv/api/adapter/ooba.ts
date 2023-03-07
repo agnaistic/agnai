@@ -76,7 +76,6 @@ export const handleOoba: ModelAdapter = async function* ({ char, members, user, 
       yield { error: `text-generation-webui request failed: Received empty response. Try again.` }
       return
     }
-    logger.warn({ text, body: resp.body }, 'Oobabooga response')
     const parsed = sanitise(text.replace(prompt, ''))
     const trimmed = trimResponse(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed ? trimmed.response : parsed

@@ -1,6 +1,6 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { createResponseStream, getResponseEntities } from '../adapter/generate'
+import { createTextStream, getResponseEntities } from '../adapter/generate'
 import { createPrompt } from '../adapter/prompt'
 import { post, PY_URL } from '../request'
 import { errors, handle } from '../wrap'
@@ -39,7 +39,7 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
     publishMany(members, { type: 'message-created', msg: userMsg, chatId: id })
   }
 
-  const { stream } = await createResponseStream({
+  const { stream } = await createTextStream({
     senderId: userId!,
     chatId: id,
     message: body.message,
@@ -101,7 +101,7 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
 
   await verifyLock({ chatId: id, lockId })
 
-  const { stream } = await createResponseStream({
+  const { stream } = await createTextStream({
     chatId: params.id,
     message: body.message,
     senderId: userId!,

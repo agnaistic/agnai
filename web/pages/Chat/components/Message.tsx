@@ -64,7 +64,7 @@ const Message: Component<{
                 timeStyle: 'short',
               }).format(new Date(props.msg.createdAt))}
             </span>
-            <Show when={props.msg.characterId && user.user?._id === props.chat?.userId}>
+            <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
               <div class="ml-2 flex flex-row items-center gap-2 text-white/10">
                 <ThumbsUp size={14} class="mt-[-0.15rem] cursor-pointer hover:text-white" />
                 <ThumbsDown size={14} class="cursor-pointer hover:text-white" />
