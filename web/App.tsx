@@ -14,14 +14,15 @@ import { InvitesPage } from './pages/Invite/InvitesPage'
 import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import GenerationPresetsPage from './pages/GenerationPresets'
+import GuestRouter from './pages/Guest'
 
 const App: Component = () => {
   const state = userStore()
   if (state.loggedIn) {
     userStore.getProfile()
     userStore.getConfig()
-    settingStore.getConfig()
   }
+  settingStore.getConfig()
 
   return (
     <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] flex h-screen flex-col justify-between">
@@ -30,15 +31,15 @@ const App: Component = () => {
         <Navigation />
         <div class="w-full overflow-y-auto">
           <div class="mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4 ">
-            <Show when={!state.loggedIn}>
-              <LoginPage />
-            </Show>
             <Routes>
+              <Show when={!state.loggedIn}>
+                <GuestRouter />
+              </Show>
               <Show when={state.loggedIn}>
+                <CharacterRoutes />
                 <Route path="/chats" component={ChatList} />
                 <Route path="/chat" component={ChatDetail} />
                 <Route path="/chat/:id" component={ChatDetail} />
-                <CharacterRoutes />
                 <Route path="/" component={HomePage} />
                 <Route path="/presets" component={GenerationPresetsPage} />
                 <Route path="/profile" component={ProfilePage} />
@@ -48,6 +49,7 @@ const App: Component = () => {
                   <Route path="/admin/users" component={UsersPage} />
                 </Show>
               </Show>
+              <Route path="*" component={LoginPage} />
             </Routes>
           </div>
         </div>

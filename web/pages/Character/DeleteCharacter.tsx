@@ -7,13 +7,14 @@ import Modal, { ModalFooter } from '../../shared/Modal'
 import { characterStore } from '../../store'
 
 const DeleteCharacterModal: Component<{
-  char?: AppSchema.Character
+  char?: Pick<AppSchema.Character, '_id' | 'name' | 'avatar'>
   show: boolean
   close: () => void
+  onDelete: (charId: string) => void
 }> = (props) => {
   const onDelete = () => {
     if (!props.char) return
-    characterStore.deleteCharacter(props.char._id, props.close)
+    props.onDelete(props.char._id)
   }
   return (
     <Modal show={props.show && !!props.char} title="Confirm Deletion" close={props.close}>

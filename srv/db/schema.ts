@@ -103,7 +103,6 @@ export namespace AppSchema {
     sampleChat: string
 
     avatar?: string
-    adapter: ChatAdapter
 
     createdAt: string
     updatedAt: string

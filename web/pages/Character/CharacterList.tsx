@@ -45,11 +45,16 @@ const CharacterList: Component = () => {
         </div>
         {chars.list.length === 0 ? <NoCharacters /> : null}
       </Show>
-      <ImportCharacterModal show={showImport()} close={() => setImport(false)} />
+      <ImportCharacterModal
+        show={showImport()}
+        close={() => setImport(false)}
+        onSave={(char) => characterStore.createCharacter(char, () => setImport(false))}
+      />
       <DeleteCharacterModal
         char={showDelete()}
         show={!!showDelete()}
         close={() => setDelete(undefined)}
+        onDelete={(id) => characterStore.deleteCharacter(id, () => setDelete(undefined))}
       />
     </>
   )

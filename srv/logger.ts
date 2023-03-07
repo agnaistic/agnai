@@ -60,20 +60,6 @@ export function logMiddleware() {
   return middleware
 }
 
-function redact(toRedact: Set<string>, body: any) {
-  if (!body) return
-  if (typeof body !== 'object') return
-
-  for (const key in body) {
-    if (toRedact.has(key)) {
-      body[key] = '[REDACTED]'
-      continue
-    }
-
-    redact(toRedact, body[key])
-  }
-}
-
 export const logger = parentLogger('app')
 
 function getLogLevel() {
