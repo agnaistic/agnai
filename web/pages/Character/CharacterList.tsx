@@ -58,7 +58,7 @@ const CharacterList: Component = () => {
 const Character: Component<{ character: AppSchema.Character; delete: () => void }> = (props) => {
   return (
     <div class="flex w-full gap-2">
-      <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-gray-900">
+      <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-[var(--bg-800)]">
         <A
           class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl  sm:w-9/12"
           href={`/character/${props.character._id}/chats`}
@@ -96,7 +96,7 @@ function charToJson(char: AppSchema.Character) {
 const NoCharacters: Component = () => (
   <div class="mt-16 flex w-full justify-center rounded-full text-xl">
     You have no characters!&nbsp;
-    <A class="text-purple-500" href="/character/create">
+    <A class="text-[var(--hl-500)]" href="/character/create">
       Create a character
     </A>
     &nbsp;to get started!

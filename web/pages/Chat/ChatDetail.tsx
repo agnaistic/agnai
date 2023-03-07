@@ -1,5 +1,5 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { Bookmark, ChevronLeft, MailPlus, Settings, Sliders, X } from 'lucide-solid'
+import { Bookmark, ChevronLeft, MailPlus, MessageCircle, Settings, Sliders, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -58,6 +58,32 @@ const ChatDetail: Component = () => {
       </Show>
       <Show when={chats.chat}>
         <div class="mb-4 flex h-full flex-col justify-between pb-4">
+          <div class="flex items-center justify-between">
+            <A href={`/character/${chats.character?._id}/chats`}>
+              <div class="flex h-8 cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+                <ChevronLeft />
+                {chats.character?.name}
+              </div>
+            </A>
+
+            <div class="flex flex-row gap-2">
+              <div class="icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
+                <Tooltip tip="Invite user" position="bottom">
+                  <MailPlus />
+                </Tooltip>
+              </div>
+
+              <Show when={chats.chat?.userId === user.user?._id}>
+                <div class="icon-button">
+                  <Sliders onClick={() => setShowGen(true)} />
+                </div>
+
+                <div class="icon-button">
+                  <Settings onClick={() => setShowConfig(true)} />
+                </div>
+              </Show>
+            </div>
+          </div>
           <div class="flex h-full flex-col-reverse">
             <InputBar chat={chats.chat!} />
             <div class="flex flex-col-reverse overflow-y-scroll">
@@ -83,36 +109,7 @@ const ChatDetail: Component = () => {
                 </Show>
                 <Show when={msgs.waiting}>
                   <div class="flex justify-center">
-                    <div class="dot-flashing bg-purple-700"></div>
-                  </div>
-                </Show>
-              </div>
-              <Header participants={[chats.character?.name!]} />
-            </div>
-            <div class="flex items-center justify-between">
-              <A href={`/character/${chats.character?._id}/chats`}>
-                <div class="flex h-8 cursor-pointer flex-row items-center justify-between text-sm text-white/50">
-                  <ChevronLeft size={16} class="mt-0.5" /> Conversations
-                </div>
-              </A>
-
-              <div class="flex flex-row gap-2">
-                <div
-                  class="focusable-icon-button cursor-pointer"
-                  onClick={() => setShowInvite(true)}
-                >
-                  <Tooltip tip="Invite user" position="bottom">
-                    <MailPlus />
-                  </Tooltip>
-                </div>
-
-                <Show when={chats.chat?.userId === user.user?._id}>
-                  <div class="icon-button">
-                    <Sliders onClick={() => setShowGen(true)} />
-                  </div>
-
-                  <div class="icon-button">
-                    <Settings onClick={() => setShowConfig(true)} />
+                    <div class="dot-flashing bg-[var(--hl-700)]"></div>
                   </div>
                 </Show>
               </div>

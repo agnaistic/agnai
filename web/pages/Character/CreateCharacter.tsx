@@ -82,7 +82,7 @@ const CreateCharacter: Component = () => {
           <span>
             For character information tips and information visit{' '}
             <a
-              class="text-purple-500"
+              class="link"
               href="https://rentry.org/pygtips#character-creation-tips"
               target="_blank"
             >

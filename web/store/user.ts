@@ -1,4 +1,3 @@
-import { HordeModel } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { chatStore } from './chat'
@@ -14,7 +13,11 @@ type State = {
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
+  theme: ThemeColor
 }
+
+type ThemeColor = (typeof themeColors)[number]
+export const themeColors = ['blue', 'sky', 'teal', 'orange'] as const
 
 export const userStore = createStore<State>(
   'user',
@@ -123,19 +126,49 @@ export const userStore = createStore<State>(
         return { user: res.result }
       }
     },
+
+    setTheme(_, color: ThemeColor) {
+      updateTheme(color)
+      return {}
+    },
   }
 })
 
 function init(): State {
   const existing = getAuth()
+  const theme = getSavedTheme()
+  updateTheme(theme)
 
   if (!existing) {
-    return { loading: false, jwt: '', loggedIn: false }
+    return {
+      loading: false,
+      jwt: '',
+      loggedIn: false,
+      theme,
+    }
   }
 
   return {
     loggedIn: true,
     loading: false,
     jwt: existing,
+    theme,
   }
+}
+
+function updateTheme(theme: ThemeColor) {
+  localStorage.setItem('theme', theme)
+  const root = document.documentElement
+  for (let shade = 100; shade <= 900; shade += 100) {
+    const color = getComputedStyle(root).getPropertyValue(`--${theme}-${shade}`)
+    root.style.setProperty(`--hl-${shade}`, color)
+  }
+}
+
+function getSavedTheme() {
+  const theme = (localStorage.getItem('theme') || 'orange') as ThemeColor
+  console.log({ theme })
+  if (!themeColors.includes(theme)) return 'orange'
+
+  return theme
 }

@@ -13,7 +13,7 @@ const SideDrawer: Component<{
     >
       <div class="side-drawer__content flex flex-col gap-2 px-4">{props.children}</div>
       <Show when={props.footer}>
-        <div class="flex h-16 w-full items-center justify-between border-t-2 border-slate-800 px-4 ">
+        <div class="flex h-16 w-full items-center justify-between border-t-2 border-[var(--bg-800)] px-4 ">
           {props.footer}
         </div>
       </Show>

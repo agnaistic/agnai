@@ -43,7 +43,7 @@ const Navigation: Component = () => {
           </Show>
 
           <a
-            class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-slate-700"
+            class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
             href="https://github.com/luminai-companion/agn-ai"
             target="_blank"
           >
@@ -51,7 +51,7 @@ const Navigation: Component = () => {
             GitHub
           </a>
         </div>
-        <div class="flex h-16 w-full items-center justify-between border-t-2 border-slate-800 px-4 ">
+        <div class="flex h-16 w-full items-center justify-between border-t-2 border-[var(--bg-800)] px-4 ">
           <div class="flex items-center gap-4">
             <AvatarIcon avatarUrl={user.profile?.avatar} />
             <div>{user.profile?.handle}</div>
@@ -69,7 +69,7 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
   return (
     <A
       href={props.href}
-      class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-slate-700 "
+      class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] "
     >
       {props.children}
     </A>

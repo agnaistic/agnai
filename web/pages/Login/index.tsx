@@ -31,11 +31,11 @@ const LoginPage: Component = () => {
           subtitle={
             <span>
               Please{' '}
-              <a class="cursor-pointer text-purple-500" onClick={() => setRegister(false)}>
+              <a class="link" onClick={() => setRegister(false)}>
                 login
               </a>{' '}
               to your account or{' '}
-              <a class="cursor-pointer text-purple-500" onClick={() => setRegister(true)}>
+              <a class="link" onClick={() => setRegister(true)}>
                 register
               </a>
             </span>

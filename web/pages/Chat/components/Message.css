@@ -14,8 +14,7 @@
   */
 
 :root {
-  /* --dot-color: #9880ff; */
-  --dot-color: rgb(127 55 129);
+  --dot-color: var(--hl-700);
 }
 
 .dot-elastic {

@@ -2,7 +2,7 @@ import { Component, For } from 'solid-js'
 import { Toast, toastStore } from './store'
 
 const bgColor = {
-  default: 'bg-gray-500',
+  default: 'bg-[var(--bg-500)]',
   error: 'bg-red-600',
   success: 'bg-green-600',
   warn: 'bg-orange-600',
@@ -24,7 +24,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
   return (
     <div class="flex flex-row">
       <div class={`${bg} w-2 rounded-l-lg p-2`}></div>
-      <div class={`rounded-r-lg bg-gray-700 p-2`} onClick={onClick}>
+      <div class={`rounded-r-lg bg-[var(--bg-700)] p-2`} onClick={onClick}>
         {props.toast.message}
       </div>
     </div>

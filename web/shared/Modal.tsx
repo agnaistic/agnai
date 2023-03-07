@@ -17,7 +17,7 @@ const Modal: Component<Props> = (props) => {
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="rounded-lg bg-gray-900 shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
+        <div class="rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
           <div class="">
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
