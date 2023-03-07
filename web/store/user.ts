@@ -166,9 +166,8 @@ function updateTheme(theme: ThemeColor) {
 }
 
 function getSavedTheme() {
-  const theme = (localStorage.getItem('theme') || 'orange') as ThemeColor
-  console.log({ theme })
-  if (!themeColors.includes(theme)) return 'orange'
+  const theme = (localStorage.getItem('theme') || 'sky') as ThemeColor
+  if (!themeColors.includes(theme)) return 'sky'
 
   return theme
 }

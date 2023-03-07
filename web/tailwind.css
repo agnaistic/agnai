@@ -190,7 +190,7 @@
   }
 
   input[type='file']::file-selector-button {
-    @apply bg-[var(--hl-600)] p-2 text-white;
+    @apply bg-[var(--hl-700)] p-2 text-white;
 
     border: 0;
 
@@ -268,7 +268,7 @@
     transition: all 0.2s ease-in-out;
   }
   .toggle-pill-color input[type='checkbox']:checked + label {
-    @apply bg-[var(--hl-500)];
+    @apply bg-[var(--hl-700)];
     /* background: #47cf73; */
   }
   .toggle-pill-color input[type='checkbox']:checked + label:before {
