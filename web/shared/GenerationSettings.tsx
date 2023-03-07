@@ -33,6 +33,16 @@ const GenerationSettings: Component<{
         disabled={props.disabled}
       />
       <RangeInput
+        fieldName="maxContextLength"
+        label="Max New Tokens"
+        helperText="Maximum context size. Typically 2048 for most models. OpenAI supports up to 4096."
+        min={16}
+        max={4096}
+        step={4}
+        value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
+        disabled={props.disabled}
+      />
+      <RangeInput
         fieldName="temp"
         label="Temperature"
         helperText="Randomness of sampling. High values can increase creativity but may make text less sensible. Lower values will make text more predictable but can become repetitious."

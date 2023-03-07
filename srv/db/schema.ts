@@ -146,6 +146,7 @@ export namespace AppSchema {
     name: string
     temp: number
     maxTokens: number
+    maxContextLength?: number
     repetitionPenalty: number
     repetitionPenaltyRange: number
     repetitionPenaltySlope: number

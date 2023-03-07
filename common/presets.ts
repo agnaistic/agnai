@@ -11,6 +11,7 @@ export const presetValidator = {
   name: 'string',
   temp: 'number',
   maxTokens: 'number',
+  maxContextLength: 'number?',
   repetitionPenalty: 'number',
   repetitionPenaltyRange: 'number',
   repetitionPenaltySlope: 'number',
@@ -26,6 +27,7 @@ export const defaultPresets = {
   basic: {
     name: 'Simple',
     maxTokens: MAX_TOKENS,
+    maxContextLength: 2048,
     repetitionPenalty: 1.08,
     repetitionPenaltySlope: 0.9,
     repetitionPenaltyRange: 1024,
@@ -39,6 +41,7 @@ export const defaultPresets = {
   novel_20BC: {
     name: 'Novel 20BC+',
     maxTokens: MAX_TOKENS,
+    maxContextLength: 2048,
     repetitionPenalty: 1.055,
     repetitionPenaltyRange: 2048,
     repetitionPenaltySlope: 3.33,
@@ -51,6 +54,7 @@ export const defaultPresets = {
   novel_blueLighter: {
     name: 'Novel Blue Lighter',
     maxTokens: MAX_TOKENS,
+    maxContextLength: 2048,
     repetitionPenalty: 1.05,
     repetitionPenaltyRange: 560,
     repetitionPenaltySlope: 0,
