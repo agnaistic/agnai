@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 /** Global focus style override. */
 *:focus {
   @apply outline-none;
