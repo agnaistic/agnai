@@ -34,8 +34,8 @@ const GenerationSettings: Component<{
       />
       <RangeInput
         fieldName="maxContextLength"
-        label="Max New Tokens"
-        helperText="Maximum context size. Typically 2048 for most models. OpenAI supports up to 4096."
+        label="Max Context Length"
+        helperText="Maximum context length. Typically 2048 for most models. OpenAI supports up to 4096."
         min={16}
         max={4096}
         step={4}
