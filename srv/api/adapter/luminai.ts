@@ -34,51 +34,35 @@ export const handleLuminAI: ModelAdapter = async function* ({
   members,
   user,
   prompt,
-  genSettings,
+  settings,
 }) {
-  const body = { koboldUrl: user.koboldUrl, ...base, ...genSettings, prompt }
-
-  let attempts = 0
-  let maxAttempts = body.max_length / MAX_NEW_TOKENS + 4
-
+  const body = { koboldUrl: user.koboldUrl, ...base, ...settings, prompt }
   const endTokens = ['END_OF_DIALOG']
 
-  const parts: string[] = []
+  const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
+    json: true,
+  }).catch((err) => ({ error: err }))
 
-  while (attempts < maxAttempts) {
-    attempts++
+  if ('error' in resp) {
+    yield { error: `Kobold request failed: ${resp.error?.message || resp.error}` }
+    return
+  }
 
-    const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
-      json: true,
-    }).catch((err) => ({ error: err }))
+  if (resp.statusCode && resp.statusCode >= 400) {
+    yield { error: `Kobold request failed: ${resp.statusMessage}` }
+    return
+  }
 
-    if ('error' in resp) {
-      yield { error: `Kobold request failed: ${resp.error?.message || resp.error}` }
+  const text = resp.body.results?.[0]?.text as string
+  if (text) {
+    const trimmed = trimResponse(text, char, members, endTokens)
+    if (trimmed) {
+      yield trimmed.response
       return
     }
-
-    if (resp.statusCode && resp.statusCode >= 400) {
-      yield { error: `Kobold request failed: ${resp.statusMessage}` }
-      return
-    }
-
-    const text = resp.body.results?.[0]?.text as string
-    if (text) {
-      parts.push(text)
-      const combined = joinParts(parts)
-      const trimmed = trimResponse(combined, char, members, endTokens)
-      if (trimmed) {
-        logger.info({ all: parts, ...trimmed }, 'Kobold response')
-        yield trimmed.response
-        return
-      }
-
-      body.prompt = combined
-      yield combined
-    } else {
-      logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
-      yield { error: resp.body }
-      return
-    }
+  } else {
+    logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
+    yield { error: resp.body }
+    return
   }
 }

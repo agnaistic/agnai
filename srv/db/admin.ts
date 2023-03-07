@@ -10,7 +10,6 @@ export async function getUsers() {
 export async function changePassword(opts: { username: string; password: string }) {
   const hash = await encryptPassword(opts.password)
   await db('user').updateOne({ kind: 'user', username: opts.username }, { $set: { hash } })
-  logger.info(opts, 'Password updated')
   return true
 }
 

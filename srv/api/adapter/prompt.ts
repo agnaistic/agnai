@@ -6,14 +6,16 @@ type PromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
   members: AppSchema.Profile[]
+  settings: AppSchema.GenSettings
   retry?: AppSchema.ChatMessage
 }
 
-const MAX_TOKENS = 2048
+const DEFAULT_MAX_TOKENS = 2048
+
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export async function createPrompt({ chat, char, members, retry }: PromptOpts) {
+export async function createPrompt({ chat, char, members, retry, settings }: PromptOpts) {
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
   if (chat.scenario) {
@@ -24,7 +26,7 @@ export async function createPrompt({ chat, char, members, retry }: PromptOpts) {
 
   const post = [`${char.name}:`]
 
-  const prompt = await appendHistory(chat, members, char, pre, post, retry)
+  const prompt = await appendHistory(chat, members, char, settings, pre, post, retry)
   return prompt
 }
 
@@ -32,10 +34,12 @@ async function appendHistory(
   chat: AppSchema.Chat,
   members: AppSchema.Profile[],
   char: AppSchema.Character,
+  settings: AppSchema.GenSettings,
   pre: string[],
   post: string[],
   retry?: AppSchema.ChatMessage
 ) {
+  const maxContext = settings.maxContextLength || DEFAULT_MAX_TOKENS
   const owner = members.find((mem) => mem.userId === chat.userId)
   if (!owner) {
     throw new Error(`Cannot produce prompt: Owner profile not found`)
@@ -63,12 +67,12 @@ async function appendHistory(
 
     for (const hist of history) {
       const nextTokens = gpt.encode(hist).length
-      if (nextTokens + tokens > MAX_TOKENS) break
+      if (nextTokens + tokens > maxContext) break
       tokens += nextTokens
       lines.unshift(hist)
     }
 
-    if (tokens >= MAX_TOKENS || messages.length < 50) break
+    if (tokens >= maxContext || messages.length < 50) break
     before = messages.slice(-1)[0].createdAt
   } while (true)
 
