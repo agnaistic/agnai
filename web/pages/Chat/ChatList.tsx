@@ -17,7 +17,7 @@ const ChatList: Component = () => {
 
   return (
     <div class="flex flex-col gap-2">
-      <PageHeader title="Conversations" />
+      <PageHeader title="Chats" />
 
       {!state.all?.chats.length && <NoChats />}
       <Show when={state.all}>

@@ -1,5 +1,16 @@
 import { A } from '@solidjs/router'
-import { Bot, Eye, Github, LogOut, MailPlus, Settings, Sliders, User, Users } from 'lucide-solid'
+import {
+  Bot,
+  Eye,
+  Github,
+  LogOut,
+  MailPlus,
+  MessageCircle,
+  Settings,
+  Sliders,
+  User,
+  Users,
+} from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { inviteStore, settingStore, userStore } from './store'
@@ -21,7 +32,7 @@ const Navigation: Component = () => {
           </Item>
 
           <Item href="/chats">
-            <Users /> Chats
+            <MessageCircle /> Chats
           </Item>
 
           <Item href="/invites">
