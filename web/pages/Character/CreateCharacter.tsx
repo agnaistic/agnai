@@ -7,7 +7,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore } from '../../store'
+import { characterStore, guestStore, userStore } from '../../store'
 import { useNavigate, useParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -22,15 +22,17 @@ const options = [
 
 const CreateCharacter: Component = () => {
   const { editId, duplicateId } = useParams()
-  const state = characterStore((s) => ({
-    edit:
-      editId || duplicateId
-        ? s.characters.list.find((ch) => ch._id === (editId || duplicateId))
-        : undefined,
-  }))
+  const srcId = editId || duplicateId || ''
+  const state = userStore().loggedIn
+    ? characterStore((s) => ({
+        edit: s.characters.list.find((ch) => ch._id === srcId),
+      }))
+    : guestStore((s) => ({ edit: s.chars.find((ch) => ch._id === srcId) }))
 
   createEffect(() => {
-    characterStore.getCharacters()
+    if (userStore().loggedIn) {
+      characterStore.getCharacters()
+    }
   })
 
   const [schema, setSchema] = createSignal(state.edit?.persona.kind || 'boostyle')
@@ -68,9 +70,11 @@ const CreateCharacter: Component = () => {
     }
 
     if (editId) {
-      characterStore.editCharacter(editId, payload, () => nav('/character/list'))
+      const fn = userStore().loggedIn ? characterStore.editCharacter : guestStore.editCharacter
+      fn(editId, payload, () => nav('/character/list'))
     } else {
-      characterStore.createCharacter(payload, () => nav('/character/list'))
+      const fn = userStore().loggedIn ? characterStore.createCharacter : guestStore.createCharacter
+      fn(payload, () => nav('/character/list'))
     }
   }
 

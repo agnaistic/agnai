@@ -21,7 +21,7 @@ export function trimResponse(
     (prev, curr) => {
       const index = generated.indexOf(curr)
       if (index === -1) return prev
-      const text = generated.slice(0, index)
+      const text = generated.slice(0, index).trim()
       if (prev.index === -1) return { index, response: text }
       return index < prev.index ? { index, response: text } : prev
     },
@@ -33,7 +33,7 @@ export function trimResponse(
 }
 
 export function joinParts(parts: string[]) {
-  return parts.map(sanitise).join(' ')
+  return parts.map(sanitise).join(' ').trim()
 }
 
 export function sanitise(generated: string) {

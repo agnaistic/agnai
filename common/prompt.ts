@@ -6,16 +6,16 @@ export type PromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
   members: AppSchema.Profile[]
-  settings: AppSchema.GenSettings
+  settings?: AppSchema.GenSettings
   messages: AppSchema.ChatMessage[]
   retry?: AppSchema.ChatMessage
 }
 
-const BOT_REPLACE = /\{\{char\}\}/g
-const SELF_REPLACE = /\{\{user\}\}/g
+export const BOT_REPLACE = /\{\{char\}\}/g
+export const SELF_REPLACE = /\{\{user\}\}/g
 
 export function createPrompt(opts: PromptOpts) {
-  const { chat, char, members, settings, messages, retry } = opts
+  const { chat, char, members, settings = defaultPresets.basic, messages, retry } = opts
   const { pre, post } = createPromptSurrounds(opts)
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
 
@@ -25,7 +25,7 @@ export function createPrompt(opts: PromptOpts) {
   for (const msg of messages) {
     const name = msg.characterId ? char.name : getHandle(members, msg.userId)
     const text = `${name}: ${msg.msg}`
-    const size = gpt.encode(text).length + tokens
+    const size = gpt.encode(text).length
 
     if (size + tokens > maxContext) break
 
@@ -33,7 +33,8 @@ export function createPrompt(opts: PromptOpts) {
     tokens += size
   }
 
-  const prompt = [pre, ...history.join('\n'), post].join('\n')
+  const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
+  console.log({ maxContext, prompt, tokens })
   return prompt
 }
 
@@ -53,7 +54,11 @@ export function createPromptSurrounds(opts: Pick<PromptOpts, 'chat' | 'char' | '
 
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
   if (chat.scenario) pre.push(`Scenario: ${chat.scenario}`)
-  pre.push(`<START>`, ...chat.sampleChat.split('\n').filter(removeEmpty))
+
+  const sampleChat = chat.sampleChat.split('\n').filter(removeEmpty)
+  if (chat.scenario.includes('<START>') || chat.sampleChat.includes('<START>'))
+    pre.push(...sampleChat)
+  else pre.push(...sampleChat)
 
   return {
     pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),

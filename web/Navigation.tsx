@@ -89,23 +89,23 @@ const GuestNavigation: Component = () => {
   return (
     <div class={`drawer flex flex-col gap-4 pt-4 ${menu.showMenu ? '' : 'drawer--hide'}`}>
       <div class="drawer__content flex flex-col gap-2 px-4">
-        <Item href="/guest/profile">
+        <Item href="/profile">
           <User /> Profile
         </Item>
 
-        <Item href="/guest/character/list">
+        <Item href="/character/list">
           <Bot /> Characters
         </Item>
 
-        <Item href="/guest/chats">
+        <Item href="/chats">
           <MessageCircle /> Chats
         </Item>
 
-        <Item href="/guest/settings">
+        <Item href="/settings">
           <Settings /> Settings
         </Item>
 
-        <Item href="/guest/presets">
+        <Item href="/presets">
           <Sliders /> Presets
         </Item>
 

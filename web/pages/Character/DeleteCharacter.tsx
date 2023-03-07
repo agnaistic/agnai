@@ -4,23 +4,26 @@ import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ModalFooter } from '../../shared/Modal'
-import { characterStore } from '../../store'
+import { characterStore, guestStore, userStore } from '../../store'
 
 const DeleteCharacterModal: Component<{
   char?: Pick<AppSchema.Character, '_id' | 'name' | 'avatar'>
   show: boolean
   close: () => void
-  onDelete: (charId: string) => void
 }> = (props) => {
   const onDelete = () => {
     if (!props.char) return
-    props.onDelete(props.char._id)
+    if (userStore().loggedIn) {
+      characterStore.deleteCharacter(props.char._id, props.close)
+    } else {
+      guestStore.deleteCharacter(props.char._id, props.close)
+    }
   }
   return (
     <Modal show={props.show && !!props.char} title="Confirm Deletion" close={props.close}>
       <div class="flex flex-col items-center gap-4">
         <div>Are you sure you wish to delete this character?</div>
-        <div class="flex justify-center">
+        <div class="flex justify-center gap-4">
           <AvatarIcon avatarUrl={props.char!.avatar} />
           {props.char!.name}
         </div>

@@ -9,13 +9,16 @@ import { toastStore } from './toasts'
 type ChatState = {
   lastChatId: string | null
   loaded: boolean
+  // All user chats a user owns or is a member of
   all?: {
     chats: AppSchema.Chat[]
     chars: { [charId: string]: AppSchema.Character }
   }
+  // All chats for a particular character
   char?: {
     chats: AppSchema.Chat[]
     char: AppSchema.Character
+    // Active or more recent chat
   }
   active?: {
     chat: AppSchema.Chat

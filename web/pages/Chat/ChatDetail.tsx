@@ -8,29 +8,32 @@ import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
 import { getStrictForm } from '../../shared/util'
-import { chatStore, userStore } from '../../store'
+import { chatStore, guestStore, userStore } from '../../store'
 import { msgStore } from '../../store/message'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
-import Header from './components/Header'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
 import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
-  const user = userStore()
+  const user = userStore().loggedIn ? userStore() : guestStore()
 
-  const chats = chatStore((s) => ({
-    chat: s.active?.chat,
-    character: s.active?.char,
-    lastId: s.lastChatId,
-  }))
+  const chats = userStore().loggedIn
+    ? chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
+    : guestStore((s) => ({ ...s.active, lastId: s.lastChatId }))
 
-  const msgs = msgStore((s) => ({
-    msgs: s.msgs,
-    partial: s.partial,
-    waiting: s.waiting,
-  }))
+  const msgs = userStore().loggedIn
+    ? msgStore((s) => ({
+        msgs: s.msgs,
+        partial: s.partial,
+        waiting: s.waiting,
+      }))
+    : guestStore((s) => ({
+        msgs: s.active?.msgs || [],
+        partial: s.partial,
+        waiting: s.waiting,
+      }))
 
   const [removeId, setRemoveId] = createSignal('')
   const [showMem, setShowMem] = createSignal(false)
@@ -46,7 +49,8 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
-    chatStore.getChat(id)
+    if (userStore().loggedIn) chatStore.getChat(id)
+    else guestStore.getChat(id)
   })
 
   return (
@@ -59,10 +63,10 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class="mb-4 flex h-full flex-col justify-between pb-4">
           <div class="flex items-center justify-between">
-            <A href={`/character/${chats.character?._id}/chats`}>
+            <A href={`/character/${chats.char?._id}/chats`}>
               <div class="flex h-8 cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
                 <ChevronLeft />
-                {chats.character?.name}
+                {chats.char?.name}
               </div>
             </A>
 
@@ -93,7 +97,7 @@ const ChatDetail: Component = () => {
                     <Message
                       msg={msg}
                       chat={chats.chat}
-                      char={chats.character}
+                      char={chats.char}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                     />
@@ -101,8 +105,8 @@ const ChatDetail: Component = () => {
                 </For>
                 <Show when={msgs.partial}>
                   <Message
-                    msg={emptyMsg(chats.character?._id!, msgs.partial!)}
-                    char={chats.character}
+                    msg={emptyMsg(chats.char?._id!, msgs.partial!)}
+                    char={chats.char}
                     chat={chats.chat}
                     onRemove={() => {}}
                   />

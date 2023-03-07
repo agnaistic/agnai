@@ -4,6 +4,7 @@ import { AppSocket } from './types'
 import { config } from '../../config'
 import { logger } from '../../logger'
 
+const allSockets = new Map<string, AppSocket>()
 const userSockets = new Map<string, AppSocket[]>()
 
 type Handler = (client: AppSocket, data: any) => void
@@ -41,6 +42,8 @@ export function handleMessage(client: AppSocket) {
   client.on('ping', () => {
     client.send('pong')
   })
+
+  allSockets.set(client.uid, client)
 }
 
 function parse(data: any) {
@@ -73,6 +76,7 @@ function login(client: AppSocket, data: any) {
 }
 
 function logout(client: AppSocket) {
+  allSockets.delete(client.uid)
   if (!client.userId) return
   const userId = client.userId
   const sockets = userSockets.get(userId) || []
@@ -112,4 +116,10 @@ export function publishAll<T extends { type: string }>(data: T) {
       socket.send(JSON.stringify(data))
     }
   }
+}
+
+export function publishGuest<T extends { type: string }>(socketId: string, data: T) {
+  const socket = allSockets.get(socketId)
+  if (!socket) return
+  socket.send(JSON.stringify(data))
 }

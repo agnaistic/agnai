@@ -14,7 +14,6 @@ import { InvitesPage } from './pages/Invite/InvitesPage'
 import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import GenerationPresetsPage from './pages/GenerationPresets'
-import GuestRouter from './pages/Guest'
 
 const App: Component = () => {
   const state = userStore()
@@ -32,24 +31,22 @@ const App: Component = () => {
         <div class="w-full overflow-y-auto">
           <div class="mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4 ">
             <Routes>
-              <Show when={!state.loggedIn}>
-                <GuestRouter />
-              </Show>
+              <CharacterRoutes />
+              <Route path="/chats" component={ChatList} />
+              <Route path="/chat" component={ChatDetail} />
+              <Route path="/chat/:id" component={ChatDetail} />
+              <Route path="/" component={HomePage} />
+              <Route path="/presets" component={GenerationPresetsPage} />
+              <Route path="/profile" component={ProfilePage} />
+              <Route path="/settings" component={Settings} />
               <Show when={state.loggedIn}>
-                <CharacterRoutes />
-                <Route path="/chats" component={ChatList} />
-                <Route path="/chat" component={ChatDetail} />
-                <Route path="/chat/:id" component={ChatDetail} />
-                <Route path="/" component={HomePage} />
-                <Route path="/presets" component={GenerationPresetsPage} />
-                <Route path="/profile" component={ProfilePage} />
-                <Route path="/settings" component={Settings} />
                 <Route path="/invites" component={InvitesPage} />
                 <Show when={state.user?.admin}>
                   <Route path="/admin/users" component={UsersPage} />
                 </Show>
               </Show>
-              <Route path="*" component={LoginPage} />
+              <Route path="/login" component={LoginPage} />
+              <Route path="*" component={HomePage} />
             </Routes>
           </div>
         </div>

@@ -31,6 +31,7 @@ export function setupSockets(srv: Server) {
     client.token = ''
     client.isAlive = true
 
+    client.send(JSON.stringify({ type: 'connected', uid: client.uid }))
     client.on('pong', heartbeart)
     handleMessage(client)
   })

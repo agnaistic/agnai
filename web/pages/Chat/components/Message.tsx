@@ -3,7 +3,7 @@ import showdown from 'showdown'
 import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
-import { chatStore, userStore } from '../../../store'
+import { chatStore, guestStore, userStore } from '../../../store'
 import { msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
@@ -15,19 +15,32 @@ const Message: Component<{
   last?: boolean
   onRemove: () => void
 }> = (props) => {
-  const user = userStore()
+  const user = userStore().loggedIn ? userStore() : guestStore()
+  const members = userStore().loggedIn
+    ? chatStore((s) => s.memberIds)
+    : guestStore((s) => ({ [s.user._id]: s.profile }))
+
   const [edit, setEdit] = createSignal(false)
-  const members = chatStore((s) => s.memberIds)
+
   const cancelEdit = () => {
     setEdit(false)
   }
 
-  const state = chatStore((s) => ({ members: s.memberIds }))
-
   const saveEdit = () => {
     if (!ref) return
     setEdit(false)
-    msgStore.editMessage(props.msg._id, ref.innerText)
+
+    if (userStore().loggedIn) msgStore.editMessage(props.msg._id, ref.innerText)
+  }
+
+  const resendMessage = () => {
+    if (userStore().loggedIn) msgStore.resend(props.msg.chatId, props.msg._id)
+    else guestStore.recreateMessage(props.msg.chatId, props.msg._id)
+  }
+
+  const retryMessage = () => {
+    if (userStore().loggedIn) msgStore.retry(props.msg.chatId)
+    else guestStore.recreateMessage(props.msg.chatId, props.msg._id)
   }
 
   const startEdit = () => {
@@ -56,7 +69,7 @@ const Message: Component<{
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-row">
             <b class="mr-2 text-white">
-              {props.msg.characterId ? props.char?.name! : state.members[props.msg.userId!]?.handle}
+              {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span class="text-sm text-white/25">
               {new Intl.DateTimeFormat('en-US', {
@@ -77,15 +90,11 @@ const Message: Component<{
                 <RefreshCw
                   size={16}
                   class="cursor-pointer text-white/20 hover:text-white"
-                  onClick={() => msgStore.retry(props.msg.chatId)}
+                  onClick={retryMessage}
                 />
               </Show>
               <Show when={props.last && !props.msg.characterId}>
-                <RefreshCw
-                  size={16}
-                  class="cursor-pointer"
-                  onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
-                />
+                <RefreshCw size={16} class="cursor-pointer" onClick={resendMessage} />
               </Show>
               <Pencil
                 size={16}

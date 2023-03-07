@@ -22,7 +22,6 @@ export const handleKobold: ModelAdapter = async function* ({
   settings,
 }) {
   const body = { ...base, ...settings, prompt }
-
   const endTokens = ['END_OF_DIALOG']
 
   const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
@@ -36,6 +35,7 @@ export const handleKobold: ModelAdapter = async function* ({
 
   if (resp.statusCode && resp.statusCode >= 400) {
     yield { error: `Kobold request failed: ${resp.statusMessage}` }
+    logger.error({ error: resp.body }, `Kobld request failed`)
     return
   }
 

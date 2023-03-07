@@ -2,6 +2,7 @@ import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
+import { userStore } from './user'
 
 type CharacterState = {
   characters: {
@@ -22,6 +23,10 @@ export type NewCharacter = {
 export const characterStore = createStore<CharacterState>('character', {
   characters: { loaded: false, list: [] },
 })((get, set) => {
+  userStore.subscribe((curr, prev) => {
+    if (!curr.loggedIn) characterStore.logout()
+  })
+
   return {
     logout() {
       return { characters: { loaded: false, list: [] } }
@@ -29,7 +34,7 @@ export const characterStore = createStore<CharacterState>('character', {
     getCharacters: async () => {
       const res = await api.get('/character')
       if (res.error) toastStore.error('Failed to retrieve characters')
-      else {
+      if (res.result) {
         return { characters: { list: res.result.characters, loaded: true } }
       }
     },

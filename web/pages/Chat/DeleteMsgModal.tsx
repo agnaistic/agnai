@@ -1,15 +1,22 @@
 import { Component } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal, { ModalFooter } from '../../shared/Modal'
+import { guestStore, userStore } from '../../store'
 import { msgStore } from '../../store/message'
 
 const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
   props
 ) => {
-  const state = msgStore()
+  const state = userStore().loggedIn
+    ? msgStore()
+    : guestStore((s) => ({ msgs: s.active?.msgs || [] }))
 
   const confirm = () => {
-    msgStore.deleteMessages(props.messageId)
+    if (userStore().loggedIn) {
+      msgStore.deleteMessages(props.messageId)
+    } else {
+      guestStore.deleteMessages(props.messageId)
+    }
     props.close()
   }
 

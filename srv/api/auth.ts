@@ -4,6 +4,9 @@ import { AppRequest, errors } from './wrap'
 import { config } from '../config'
 
 export const authMiddleware: any = (req: AppRequest, _res: Response, next: NextFunction) => {
+  const socketId = req.get('socket-id') || ''
+  req.socketId = socketId
+
   const header = req.get('authorization')
   if (!header) {
     return next()

@@ -35,6 +35,7 @@ specifiers:
   needle: ^3.2.0
   nodemon: ^2.0.20
   parcel: ^2.8.3
+  path-browserify: ^1.0.0
   pino: ^8.10.0
   pino-pretty: ^9.2.0
   postcss: ^8.4.21
@@ -99,6 +100,9 @@ dependencies:
   uuid: 9.0.0
   ws: 8.12.1
   zustand: 4.3.3
+
+devDependencies:
+  path-browserify: 1.0.1
 
 packages:
 
@@ -2925,6 +2929,10 @@ packages:
     resolution: {integrity: sha512-CiyeOxFT/JZyN5m0z9PfXw4SCBJ6Sygz1Dpl0wqjlhDEGGBP1GnsUVEL0p63hoG1fcj3fHynXi9NYO4nWOL+qQ==}
     engines: {node: '>= 0.8'}
     dev: false
+
+  /path-browserify/1.0.1:
+    resolution: {integrity: sha512-b7uo2UCUOYZcnF/3ID0lulOJi/bafxa1xPe7ZPsammBSpjSWQkjNxlt635YGS2MiR9GjvuXCtz2emr3jbsz98g==}
+    dev: true
 
   /path-parse/1.0.7:
     resolution: {integrity: sha512-LDJzPVEEEPR+y48z93A0Ed0yXb8pAByGWo/k5YYdYgpY2/2EsOsksJrq7lOHxryrVOn1ejG6oAp8ahvOIQD8sw==}

@@ -1,8 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api, clearAuth, getAuth, setAuth } from './api'
-import { chatStore } from './chat'
 import { createStore } from './create'
-import { msgStore } from './message'
 import { publish } from './socket'
 import { toastStore } from './toasts'
 
@@ -74,8 +72,6 @@ export const userStore = createStore<State>(
     },
     logout() {
       clearAuth()
-      msgStore.logout()
-      chatStore.logout()
       publish({ type: 'logout' })
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },

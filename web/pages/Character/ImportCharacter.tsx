@@ -37,7 +37,7 @@ const ImportCharacterModal: Component<{
 
   const onImport = async () => {
     if (!json()) return
-    props.onSave({ ...json(), avatar })
+    props.onSave({ ...json(), avatar: avatar() })
   }
 
   return (

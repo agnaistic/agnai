@@ -3,6 +3,7 @@ import { api } from './api'
 import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+import { userStore } from './user'
 
 type MsgStore = {
   activeChatId: string
@@ -16,6 +17,10 @@ export const msgStore = createStore<MsgStore>('messages', {
   activeChatId: '',
   msgs: [],
 })((get) => {
+  userStore.subscribe((curr, prev) => {
+    if (!curr.loggedIn) msgStore.logout()
+  })
+
   return {
     logout() {
       return {

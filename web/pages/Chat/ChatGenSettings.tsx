@@ -8,7 +8,7 @@ import GenerationSettings, { genSettings } from '../../shared/GenerationSettings
 import Modal from '../../shared/Modal'
 import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
-import { chatStore } from '../../store'
+import { chatStore, guestStore, userStore } from '../../store'
 import { presetStore } from '../../store/presets'
 
 const presetList = Object.entries(defaultPresets).map(([key, preset]) => ({
@@ -31,7 +31,7 @@ export const ChatGenSettingsModal: Component<{
   }))
 
   createEffect(() => {
-    presetStore.getPresets()
+    if (userStore().loggedIn) presetStore.getPresets()
 
     if (props.chat) {
       setUsePreset(!!props.chat.genPreset)
@@ -39,12 +39,25 @@ export const ChatGenSettingsModal: Component<{
   })
 
   const onSave = () => {
+    const loggedIn = userStore().loggedIn
     if (usePreset()) {
       const body = getStrictForm(ref, { preset: 'string' })
-      chatStore.editChatGenPreset(props.chat._id, body.preset, props.close)
+      if (loggedIn) chatStore.editChatGenPreset(props.chat._id, body.preset, props.close)
+      else
+        guestStore.editChat(
+          props.chat._id,
+          { genPreset: body.preset, genSettings: undefined },
+          props.close
+        )
     } else {
       const body = getStrictForm(ref, genSettings)
-      chatStore.editChatGenSettings(props.chat._id, body, props.close)
+      if (loggedIn) chatStore.editChatGenSettings(props.chat._id, body, props.close)
+      else
+        guestStore.editChat(
+          props.chat._id,
+          { genPreset: undefined, genSettings: body },
+          props.close
+        )
     }
   }
 

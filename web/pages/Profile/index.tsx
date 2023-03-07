@@ -7,12 +7,13 @@ import Modal, { ModalFooter } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { toastStore, userStore } from '../../store'
+import { guestStore, toastStore, userStore } from '../../store'
 
 const ProfilePage: Component = () => {
-  const state = userStore()
+  const state = userStore().loggedIn ? userStore() : guestStore()
   const [pass, setPass] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
+
   const onAvatar = (files: FileInputResult[]) => {
     const [file] = files
     if (!file) return setAvatar()
@@ -22,7 +23,12 @@ const ProfilePage: Component = () => {
   const submit = (ev: Event) => {
     const body = getStrictForm(ev, { handle: 'string' })
     const payload = { handle: body.handle, avatar: avatar() }
-    userStore.updateProfile(payload)
+
+    if (userStore().loggedIn) {
+      userStore.updateProfile(payload)
+    } else {
+      guestStore.saveProfile(payload.handle, payload.avatar)
+    }
   }
 
   return (

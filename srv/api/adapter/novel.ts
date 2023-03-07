@@ -18,50 +18,12 @@ const base = {
   generate_until_sentence: true,
   min_length: 8,
   prefix: 'vanilla',
-  // order: [0, 1, 2, 3, 5],
   stop_sequences: [[27]],
   use_cache: false,
   use_string: true,
   repetition_penalty_frequency: 0,
   repetition_penalty_presence: 0,
   bad_word_ids: badWordIds,
-  // do_sample: true,
-  // logit_bias_exp: [
-  //   {
-  //     sequence: [1333],
-  //     bias: -0.1,
-  //     ensure_sequence_finish: false,
-  //     generate_once: false,
-  //   },
-  //   {
-  //     sequence: [2296],
-  //     bias: -0.1,
-  //     ensure_sequence_finish: false,
-  //     generate_once: false,
-  //   },
-  //   {
-  //     sequence: [3],
-  //     bias: -2,
-  //     ensure_sequence_finish: false,
-  //     generate_once: false,
-  //   },
-  //   {
-  //     sequence: [187],
-  //     bias: 2,
-  //     ensure_sequence_finish: false,
-  //     generate_once: true,
-  //   },
-  // ],
-  // top_a: 0.0,
-
-  // max_length: config.kobold.maxLength,
-  // repetition_penalty: 1.08,
-  // repetition_penalty_slope: 3.33,
-  // repetition_penalty_range: 2048,
-  // tail_free_sampling: 0.879,
-  // temperature: 0.63,
-  // top_k: 0,
-  // top_p: 0.9,
 }
 
 export const handleNovel: ModelAdapter = async function* ({

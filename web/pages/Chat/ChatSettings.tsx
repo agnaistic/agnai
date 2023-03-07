@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import { chatStore, settingStore } from '../../store'
+import { chatStore, guestStore, settingStore, userStore } from '../../store'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -16,7 +16,9 @@ const options = [
 ]
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = chatStore((s) => ({ active: s.active?.chat, char: s.active?.char }))
+  const state = userStore().loggedIn
+    ? chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
+    : guestStore((s) => ({ ...s.active }))
   const cfg = settingStore()
 
   let ref: any
@@ -38,7 +40,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       attributes,
     }
 
-    chatStore.editChat(state.active?._id!, { ...body, overrides }, () => {
+    chatStore.editChat(state.chat?._id!, { ...body, overrides }, () => {
       props.close()
     })
   }
@@ -60,32 +62,32 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           class="mb-2"
           fieldName="adapter"
           label="AI Service"
-          value={state.active?.adapter}
+          value={state.chat?.adapter}
           items={[
             { label: 'Default', value: 'default' },
             ...adaptersToOptions(cfg.config.adapters),
           ]}
         />
-        <TextInput fieldName="name" class="text-sm" value={state.active?.name} label="Chat name" />
+        <TextInput fieldName="name" class="text-sm" value={state.chat?.name} label="Chat name" />
         <TextInput
           fieldName="greeting"
           class="text-sm"
           isMultiline
-          value={state.active?.greeting}
+          value={state.chat?.greeting}
           label="Greeting"
         />
         <TextInput
           fieldName="scenario"
           class="text-sm"
           isMultiline
-          value={state.active?.scenario}
+          value={state.chat?.scenario}
           label="Scenario"
         />
         <TextInput
           fieldName="sampleChat"
           class="text-sm"
           isMultiline
-          value={state.active?.sampleChat}
+          value={state.chat?.sampleChat}
           label="Sample Chat"
         />
 
@@ -93,10 +95,10 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           fieldName="schema"
           label="Persona"
           items={options}
-          value={state.active?.overrides.kind || state.char?.persona.kind}
+          value={state.chat?.overrides.kind || state.char?.persona.kind}
         />
         <div class="mt-4 flex flex-col gap-2 text-sm">
-          <PersonaAttributes value={state.active?.overrides.attributes} hideLabel />
+          <PersonaAttributes value={state.chat?.overrides.attributes} hideLabel />
         </div>
       </form>
     </Modal>

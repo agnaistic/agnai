@@ -73,5 +73,8 @@
     "uuid": "^9.0.0",
     "ws": "^8.12.1",
     "zustand": "^4.3.3"
+  },
+  "devDependencies": {
+    "path-browserify": "^1.0.0"
   }
 }

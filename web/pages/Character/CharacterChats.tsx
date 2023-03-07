@@ -1,26 +1,34 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { chatStore } from '../../store'
+import { chatStore, guestStore, userStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
 import { Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import { toDuration } from '../../shared/util'
 import { ConfirmModel } from '../../shared/Modal'
+import { AppSchema } from '../../../srv/db/schema'
 
 const CharacterChats: Component = () => {
+  const { id } = useParams()
   const [showCreate, setCreate] = createSignal(false)
 
-  const state = chatStore()
-  const { id } = useParams()
+  const state = userStore().loggedIn
+    ? chatStore((s) => ({ chats: s.char?.chats || [], char: s.char?.char }))
+    : guestStore((s) => ({
+        chats: s.chats.filter((ch) => ch.characterId === id),
+        char: s.chars.find((c) => c._id === id),
+      }))
 
   createEffect(() => {
-    chatStore.getBotChats(id)
+    if (userStore().loggedIn) {
+      chatStore.getBotChats(id)
+    }
   })
 
   return (
     <div class="flex flex-col gap-2">
-      <PageHeader title={`Chats with ${state.char?.char.name || '...'}`} />
+      <PageHeader title={`Chats with ${state.char?.name || '...'}`} />
 
       <div class="flex w-full justify-end gap-2">
         <Button onClick={() => setCreate(true)}>
@@ -28,22 +36,25 @@ const CharacterChats: Component = () => {
           Conversation
         </Button>
       </div>
-      {state.char?.chats.length === 0 && <NoChats />}
-      <Show when={state.char?.chats.length}>
-        <Chats />
+      {state.chats.length === 0 && <NoChats />}
+      <Show when={state.chats.length}>
+        <Chats chats={state.chats} />
       </Show>
-      <CreateChatModal show={showCreate()} onClose={() => setCreate(false)} />
+      <CreateChatModal show={showCreate()} onClose={() => setCreate(false)} char={state.char} />
     </div>
   )
 }
 
-const Chats: Component = () => {
-  const state = chatStore()
+const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
   const nav = useNavigate()
   const [showDelete, setDelete] = createSignal('')
 
   const confirmDelete = () => {
-    chatStore.deleteChat(showDelete(), () => setDelete(''))
+    if (userStore().loggedIn) {
+      chatStore.deleteChat(showDelete(), () => setDelete(''))
+    } else {
+      guestStore.deleteChat(showDelete(), () => setDelete(''))
+    }
   }
 
   return (
@@ -53,7 +64,7 @@ const Chats: Component = () => {
         <div class="flex w-2/12 justify-center"></div>
         <div class="flex w-4/12 justify-start text-sm">Updated</div>
       </div>
-      <For each={state.char?.chats}>
+      <For each={props.chats}>
         {(chat) => (
           <div class="flex w-full gap-2">
             <div

@@ -6,7 +6,7 @@ import TextInput from '../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../shared/util'
 import Dropdown from '../shared/Dropdown'
 import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../common/adapters'
-import { settingStore, themeColors, userStore } from '../store'
+import { guestStore, settingStore, themeColors, userStore } from '../store'
 import Divider from '../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
@@ -15,12 +15,16 @@ const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as Defau
 const themeOptions = themeColors.map((color) => ({ label: color, value: color }))
 
 const Settings: Component = () => {
-  const state = userStore()
+  const style = userStore((s) => ({ theme: s.theme }))
+  const state = userStore().loggedIn ? userStore() : guestStore()
   const cfg = settingStore()
 
   createEffect(() => {
     // Always reload settings when entering this page
-    userStore.getConfig()
+    if (userStore().loggedIn) {
+      userStore.getConfig()
+    }
+
     settingStore.getHordeModels()
   })
 
@@ -34,7 +38,9 @@ const Settings: Component = () => {
       luminaiUrl: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
-    userStore.updateConfig(body)
+
+    if (userStore().loggedIn) userStore.updateConfig(body)
+    else guestStore.saveConfig(body)
   }
 
   const HordeHelpText = (
@@ -56,7 +62,7 @@ const Settings: Component = () => {
             fieldName="theme"
             items={themeOptions}
             label="Theme Color"
-            value={state.theme}
+            value={style.theme}
             onChange={(item) => userStore.setTheme(item.value as any)}
           />
 
