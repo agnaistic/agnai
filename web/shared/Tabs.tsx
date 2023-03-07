@@ -14,7 +14,7 @@ const Tabs: Component<{
             onClick={() => props.select(i())}
             class={`flex w-full cursor-pointer items-center justify-center border-b-2 text-sm sm:text-4xl ${border(
               props.selected() === i()
-            )} px-4 text-xl hover:border-slate-700 `}
+            )} px-4 text-xl hover:border-[var(--bg-700)] `}
           >
             {tab}
           </div>
@@ -26,4 +26,5 @@ const Tabs: Component<{
 
 export default Tabs
 
-const border = (selected: boolean) => (selected ? `border-purple-500` : `border-slate-800`)
+const border = (selected: boolean) =>
+  selected ? `border-[var(--hl-500)]` : `border-[var(--bg-800)]`

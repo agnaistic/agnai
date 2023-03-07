@@ -24,7 +24,7 @@
 }
 
 .side-drawer > * > a.active {
-  @apply bg-slate-800;
+  background-color: var(--bg-800);
 }
 
 @keyframes hideDrawer {

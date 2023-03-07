@@ -6,12 +6,13 @@ import TextInput from '../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../shared/util'
 import Dropdown from '../shared/Dropdown'
 import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../common/adapters'
-import { settingStore, userStore } from '../store'
+import { settingStore, themeColors, userStore } from '../store'
 import Divider from '../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
 const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
+const themeOptions = themeColors.map((color) => ({ label: color, value: color }))
 
 const Settings: Component = () => {
   const state = userStore()
@@ -39,7 +40,7 @@ const Settings: Component = () => {
   const HordeHelpText = (
     <span>
       Leave blank to use guest account. Visit{' '}
-      <a class="text-purple-500" href="https://stablehorde.net" target="_blank">
+      <a class="link" href="https://stablehorde.net" target="_blank">
         stablehorde.net
       </a>{' '}
       to register.
@@ -51,6 +52,14 @@ const Settings: Component = () => {
       <PageHeader title="Settings" subtitle="Configuration" />
       <form onSubmit={onSubmit}>
         <div class="flex flex-col gap-4">
+          <Dropdown
+            fieldName="theme"
+            items={themeOptions}
+            label="Theme Color"
+            value={state.theme}
+            onChange={(item) => userStore.setTheme(item.value as any)}
+          />
+
           <Dropdown
             fieldName="defaultAdapter"
             label="Default AI Service"
@@ -122,7 +131,7 @@ const Settings: Component = () => {
                   Please note that this token expires periodically. You will occasionally need to
                   re-enter this token. headers.{' '}
                   <a
-                    class="text-purple-500"
+                    class="link"
                     target="_blank"
                     href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
                   >

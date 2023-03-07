@@ -12,7 +12,7 @@ const AvatarIcon: Component<{ avatarUrl?: string; class?: string; bot?: boolean 
       </Show>
       <Show when={!props.avatarUrl}>
         <div
-          class={`flex h-8 w-8 items-center justify-center rounded-full bg-slate-700 ${
+          class={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-600)] ${
             props.class || ''
           }`}
         >

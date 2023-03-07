@@ -21,10 +21,7 @@ const ChatList: Component = () => {
 
       {!state.all?.chats.length && <NoChats />}
       <Show when={state.all}>
-        <div
-          class="focusable-icon-button flex cursor-pointer justify-end"
-          onClick={chatStore.getAllChats}
-        >
+        <div class="icon-button flex cursor-pointer justify-end" onClick={chatStore.getAllChats}>
           <RefreshCw />
         </div>
         <Chats />
@@ -42,12 +39,13 @@ const Chats: Component = () => {
     <div class="flex flex-col gap-2">
       <For each={state.all?.chats}>
         {(chat) => {
-          const owner = chat.userId === users.user?._id ? `border-slate-700` : 'border-slate-900'
+          const owner =
+            chat.userId === users.user?._id ? `border-[var(--bg-700)]` : 'border-[var(--bg-900)]'
 
           return (
             <div
               class={
-                'flex h-12 cursor-pointer flex-row items-center gap-2 rounded-xl border-2 bg-gray-900 ' +
+                'flex h-12 cursor-pointer flex-row items-center gap-2 rounded-xl border-2 bg-[var(--bg-900)] ' +
                 owner
               }
               onClick={() => nav(`/chat/${chat._id}`)}

@@ -30,7 +30,7 @@ export const InvitesPage: Component = () => {
 
         <Show when={state.invites.length}>
           <div class="flex flex-col gap-4">
-            <div class="flex flex-row gap-2 rounded-xl bg-slate-900 p-2 text-lg font-bold">
+            <div class="flex flex-row gap-2 rounded-xl bg-[var(--bg-900)] p-2 text-lg font-bold">
               <div class="w-3/12">From</div>
               <div class="w-3/12">Character</div>
               <div class="w-3/12">Sent</div>
@@ -39,7 +39,7 @@ export const InvitesPage: Component = () => {
 
             <For each={state.invites}>
               {(invite) => (
-                <div class="flex flex-row gap-2 rounded-xl bg-slate-900 p-2">
+                <div class="flex flex-row gap-2 rounded-xl bg-[var(--bg-900)] p-2">
                   <div class="w-3/12">{state.profiles[invite.byUserId]?.handle}</div>
                   <div class="w-3/12">{state.chars[invite.characterId]?.name}</div>
                   <div class="w-3/12">{toDuration(new Date(invite.createdAt))}</div>

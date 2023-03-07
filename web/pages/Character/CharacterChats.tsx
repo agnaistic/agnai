@@ -57,7 +57,7 @@ const Chats: Component = () => {
         {(chat) => (
           <div class="flex w-full gap-2">
             <div
-              class="flex h-12 w-full cursor-pointer flex-row items-center gap-2 rounded-xl bg-gray-900"
+              class="flex h-12 w-full cursor-pointer flex-row items-center gap-2 rounded-xl bg-[var(--bg-900)]"
               onClick={() => nav(`/chat/${chat._id}`)}
             >
               <div class="w-6/12 px-4">{chat.name || 'Untitled'}</div>

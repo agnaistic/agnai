@@ -57,7 +57,8 @@ const RangeInput: Component<{
         cursor-ew-resize
         appearance-none
         rounded-xl
-        accent-purple-400/50
+        text-opacity-50
+        accent-[var(--hl-400)]
         focus:shadow-none focus:outline-none focus:ring-0
       "
         min={props.min}
