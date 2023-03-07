@@ -110,9 +110,17 @@ export const guestStore = createStore<GuestState>(
   },
   deleteCharacter(state, charId: string, onSuccess?: Function) {
     const next = state.chars.filter((ch) => ch._id !== charId)
+    const toDelete = state.chats.filter((ch) => ch.characterId === charId).map((ch) => ch._id)
+    const chats = state.chats.filter((ch) => ch.characterId !== charId)
     saveChars(next)
+    saveChats(chats)
+
+    for (const id of toDelete) {
+      deleteMessages(id)
+    }
+
     onSuccess?.()
-    return { chars: next }
+    return { chars: next, chats }
   },
   async *editCharacter(state, charId: string, char: NewCharacter, onSuccess?: Function) {
     const { avatar: file, ...props } = char
@@ -149,6 +157,7 @@ export const guestStore = createStore<GuestState>(
   },
   async *editChat(state, chatId: string, edit: Partial<AppSchema.Chat>, onSuccess?: Function) {
     const next = state.chats.map((chat) => (chat._id !== chatId ? chat : { ...chat, ...edit }))
+    toastStore.success('Updated chat settings')
     saveChats(next)
     yield { chats: next }
     onSuccess?.()
