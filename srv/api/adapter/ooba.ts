@@ -78,7 +78,7 @@ export const handleOoba: ModelAdapter = async function* ({ char, members, user, 
     }
     const parsed = sanitise(text.replace(prompt, ''))
     const trimmed = trimResponse(parsed, char, members, ['END_OF_DIALOG'])
-    yield trimmed ? trimmed.response : parsed
+    yield trimmed || parsed
   } catch (ex: any) {
     yield { error: `text-generation-webui request failed: ${ex.message}` }
     return

@@ -1,6 +1,5 @@
 import needle from 'needle'
 import { config } from '../../config'
-import { logger } from '../../logger'
 import { trimResponse } from '../chat/common'
 import { ModelAdapter } from './type'
 
@@ -66,5 +65,5 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
   ]
 
   const trimmed = trimResponse(response.body.data, char, members, endTokens)
-  yield trimmed ? trimmed.response : response.body.data
+  yield trimmed || response.body.data
 }

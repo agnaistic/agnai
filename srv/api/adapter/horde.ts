@@ -110,7 +110,7 @@ export const handleHorde: ModelAdapter = async function* ({
 
   const sanitised = sanitise(text)
   const trimmed = trimResponse(sanitised, char, members, ['END_OF_DIALOG'])
-  yield trimmed ? trimmed.response : sanitised
+  yield trimmed || sanitised
 }
 
 function wait() {
