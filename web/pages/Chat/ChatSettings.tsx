@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import { chatStore, guestStore, settingStore, userStore } from '../../store'
+import { chatStore, settingStore } from '../../store'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -16,9 +16,8 @@ const options = [
 ]
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = userStore().loggedIn
-    ? chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
-    : guestStore((s) => ({ ...s.active }))
+  const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
+
   const cfg = settingStore()
 
   let ref: any

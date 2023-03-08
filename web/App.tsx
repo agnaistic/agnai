@@ -17,10 +17,8 @@ import GenerationPresetsPage from './pages/GenerationPresets'
 
 const App: Component = () => {
   const state = userStore()
-  if (state.loggedIn) {
-    userStore.getProfile()
-    userStore.getConfig()
-  }
+  userStore.getProfile()
+  userStore.getConfig()
   settingStore.getConfig()
 
   return (

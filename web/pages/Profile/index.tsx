@@ -1,5 +1,5 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -7,10 +7,10 @@ import Modal, { ModalFooter } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { guestStore, toastStore, userStore } from '../../store'
+import { toastStore, userStore } from '../../store'
 
 const ProfilePage: Component = () => {
-  const state = userStore().loggedIn ? userStore() : guestStore()
+  const state = userStore()
   const [pass, setPass] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
 
@@ -24,12 +24,13 @@ const ProfilePage: Component = () => {
     const body = getStrictForm(ev, { handle: 'string' })
     const payload = { handle: body.handle, avatar: avatar() }
 
-    if (userStore().loggedIn) {
-      userStore.updateProfile(payload)
-    } else {
-      guestStore.saveProfile(payload.handle, payload.avatar)
-    }
+    userStore.updateProfile(payload)
   }
+
+  createEffect(() => {
+    userStore.getProfile()
+    userStore.getConfig()
+  })
 
   return (
     <>

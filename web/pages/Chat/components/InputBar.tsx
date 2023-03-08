@@ -1,7 +1,6 @@
-import { Image, ImagePlus, Send } from 'lucide-solid'
+import { ImagePlus, Send } from 'lucide-solid'
 import { Component, JSX } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
-import { guestStore, userStore } from '../../../store'
 import { msgStore } from '../../../store/message'
 import './Message.css'
 
@@ -11,8 +10,7 @@ const InputBar: Component<{ chat: AppSchema.Chat }> = (props) => {
     if (!ref) return
     if (!ref.value) return
 
-    if (userStore().loggedIn) msgStore.send(props.chat._id, ref.value)
-    else guestStore.createMessage(props.chat._id, ref.value)
+    msgStore.send(props.chat._id, ref.value)
     ref.value = ''
   }
 

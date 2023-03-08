@@ -1,8 +1,9 @@
-import { A } from '@solidjs/router'
+import { A, useNavigate } from '@solidjs/router'
 import {
   Bot,
   Eye,
   Github,
+  LogIn,
   LogOut,
   MailPlus,
   MessageCircle,
@@ -13,17 +14,27 @@ import {
 } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
-import { guestStore, inviteStore, settingStore, userStore } from './store'
+import { inviteStore, settingStore, userStore } from './store'
 
 const Navigation: Component = () => {
   const state = userStore()
-  if (state.user) return <UserNavigation />
-  return <GuestNavigation />
+
+  return (
+    <Show when={state.loggedIn} fallback={<GuestNavigation />}>
+      <UserNavigation />
+    </Show>
+  )
 }
 
 const UserNavigation: Component = () => {
   const state = settingStore()
   const user = userStore()
+  const nav = useNavigate()
+
+  const logout = () => {
+    nav('/')
+    userStore.logout()
+  }
 
   return (
     <Show when={user.loggedIn}>
@@ -73,8 +84,8 @@ const UserNavigation: Component = () => {
             <AvatarIcon avatarUrl={user.profile?.avatar} />
             <div>{user.profile?.handle}</div>
           </div>
-          <div onClick={userStore.logout}>
-            <LogOut class="cursor-pointer text-white/50 hover:text-white" />
+          <div onClick={logout} class="icon-button cursor-pointer ">
+            <LogOut />
           </div>
         </div>
       </div>
@@ -84,11 +95,15 @@ const UserNavigation: Component = () => {
 
 const GuestNavigation: Component = () => {
   const menu = settingStore((s) => ({ showMenu: s.showMenu }))
-  const state = guestStore()
+  const state = userStore()
 
   return (
     <div class={`drawer flex flex-col gap-4 pt-4 ${menu.showMenu ? '' : 'drawer--hide'}`}>
       <div class="drawer__content flex flex-col gap-2 px-4">
+        <Item href="/login">
+          <LogIn /> Login
+        </Item>
+
         <Item href="/profile">
           <User /> Profile
         </Item>
@@ -120,8 +135,8 @@ const GuestNavigation: Component = () => {
       </div>
       <div class="flex h-16 w-full items-center justify-between border-t-2 border-[var(--bg-800)] px-4 ">
         <div class="flex items-center gap-4">
-          <AvatarIcon avatarUrl={state.profile.avatar} />
-          <div>{state.profile.handle === 'You' ? 'Guest' : state.profile.handle}</div>
+          <AvatarIcon avatarUrl={state.profile?.avatar} />
+          <div>{state.profile?.handle === 'You' ? 'Guest' : state.profile?.handle}</div>
         </div>
         <div onClick={userStore.logout}>
           <LogOut class="cursor-pointer text-white/50 hover:text-white" />

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { chatStore, guestStore, userStore } from '../../store'
+import { chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
 import { Plus, Trash } from 'lucide-solid'
@@ -13,17 +13,10 @@ const CharacterChats: Component = () => {
   const { id } = useParams()
   const [showCreate, setCreate] = createSignal(false)
 
-  const state = userStore().loggedIn
-    ? chatStore((s) => ({ chats: s.char?.chats || [], char: s.char?.char }))
-    : guestStore((s) => ({
-        chats: s.chats.filter((ch) => ch.characterId === id),
-        char: s.chars.find((c) => c._id === id),
-      }))
+  const state = chatStore((s) => ({ chats: s.char?.chats || [], char: s.char?.char }))
 
   createEffect(() => {
-    if (userStore().loggedIn) {
-      chatStore.getBotChats(id)
-    }
+    chatStore.getBotChats(id)
   })
 
   return (
@@ -50,11 +43,7 @@ const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
   const [showDelete, setDelete] = createSignal('')
 
   const confirmDelete = () => {
-    if (userStore().loggedIn) {
-      chatStore.deleteChat(showDelete(), () => setDelete(''))
-    } else {
-      guestStore.deleteChat(showDelete(), () => setDelete(''))
-    }
+    chatStore.deleteChat(showDelete(), () => setDelete(''))
   }
 
   return (

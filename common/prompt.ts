@@ -34,7 +34,6 @@ export function createPrompt(opts: PromptOpts) {
   }
 
   const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
-  console.log({ maxContext, prompt, tokens })
   return prompt
 }
 

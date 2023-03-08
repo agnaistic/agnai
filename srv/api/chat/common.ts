@@ -18,8 +18,8 @@ export function trimResponse(
   }
 
   const trimmed = baseEndTokens.concat(...endTokens).reduce(
-    (prev, curr) => {
-      const index = generated.indexOf(curr)
+    (prev, endToken) => {
+      const index = generated.indexOf(endToken)
       if (index === -1) return prev
       const text = generated.slice(0, index).trim()
       if (prev.index === -1) return { index, response: text }
@@ -28,7 +28,10 @@ export function trimResponse(
     { index: -1, response: '' }
   )
 
-  if (trimmed.index === -1) return
+  if (trimmed.index === -1) {
+    return { index: -1, response: sanitise(generated) }
+  }
+
   return trimmed
 }
 

@@ -1,20 +1,11 @@
 import { assertValid } from 'frisker'
-import { AI_ADAPTERS } from '../../../common/adapters'
+import { v4 } from 'uuid'
 import { store } from '../../db'
-import { createGuestTextStream, createTextStream } from '../adapter/generate'
-import { errors, handle, StatusError } from '../wrap'
-import { publishGuest, publishMany } from '../ws/handle'
+import { AppSchema } from '../../db/schema'
+import { createGuestTextStream } from '../adapter/generate'
+import { errors, handle } from '../wrap'
+import { publishGuest } from '../ws/handle'
 import { obtainLock, releaseLock, verifyLock } from './lock'
-
-/**
- * TODO:
- * 1. Both endpoints need to receive the entities:
- * - chat
- * - character
- * - history
- *
- *
- */
 
 export const guestGenerateMsg = handle(async ({ userId, params, body, log, socketId }, res) => {
   if (!socketId) throw errors.Forbidden
@@ -26,7 +17,9 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
       chat: 'any',
       user: 'any',
       sender: 'any',
+      message: 'string',
       prompt: 'string',
+      retry: 'boolean?',
     },
     body
   )
@@ -35,7 +28,22 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
   const lockProps = { chatId: id, lockId }
 
   res.json({ success: true, message: 'Generating message' })
-  // publishGuest(socketId, { type: 'message-creating', chatId: body.chat._id })
+
+  // User hit 'enter' -- we will mimic creating a new user-genered message
+  // This is to allow the front-end to have simplier logic
+  if (!body.retry) {
+    const userMsg: AppSchema.ChatMessage = {
+      _id: v4(),
+      chatId: id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      kind: 'chat-message',
+      msg: body.message,
+      userId: 'anon',
+    }
+    publishGuest(socketId, { type: 'message-created', msg: userMsg, chatId: id })
+  }
+
   await verifyLock(lockProps)
 
   const { stream } = await createGuestTextStream(body)
@@ -58,8 +66,17 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
 
   await verifyLock(lockProps)
 
+  const response: AppSchema.ChatMessage = {
+    _id: v4(),
+    chatId: id,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    kind: 'chat-message',
+    msg: generated,
+    characterId: body.char._id,
+  }
   if (!error && generated) {
-    publishGuest(socketId, { type: 'guest-message-created', generated, chatId: id })
+    publishGuest(socketId, { type: 'guest-message-created', msg: response, chatId: id })
   }
 
   await store.chats.update(id, {})

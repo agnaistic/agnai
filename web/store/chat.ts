@@ -2,6 +2,7 @@ import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore } from './create'
+import { data } from './data'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -56,12 +57,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async getChat(_, id: string) {
-      const res = await api.get<{
-        chat: AppSchema.Chat
-        messages: AppSchema.ChatMessage[]
-        character: AppSchema.Character
-        members: AppSchema.Profile[]
-      }>(`/chat/${id}`)
+      const res = await data.chats.getChat(id)
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
         localStorage.setItem('lastChatId', id)
@@ -85,7 +81,7 @@ export const chatStore = createStore<ChatState>('chat', {
       update: Partial<AppSchema.Chat>,
       onSuccess?: () => void
     ) {
-      const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
+      const res = await data.chats.editChat(id, update)
       if (res.error) {
         toastStore.error(`Failed to update chat: ${res.error}`)
         return
@@ -124,7 +120,7 @@ export const chatStore = createStore<ChatState>('chat', {
       settings: AppSchema.Chat['genSettings'],
       onSucces?: () => void
     ) {
-      const res = await api.method('put', `/chat/${chatId}/generation`, settings)
+      const res = await data.chats.editChatGenSettings(chatId, settings)
       if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
       if (res.result) {
         if (active && active.chat._id === chatId) {
@@ -140,7 +136,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *editChatGenPreset({ active }, chatId: string, preset: string, onSucces?: () => void) {
-      const res = await api.method('put', `/chat/${chatId}/preset`, { preset })
+      const res = await data.chats.editChatGenPreset(chatId, preset)
       if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
       if (res.result) {
         if (active && active.chat._id === chatId) {
@@ -156,9 +152,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *getAllChats({ all }) {
-      const res = await api.get<{ chats: AppSchema.Chat[]; characters: AppSchema.Character[] }>(
-        '/chat'
-      )
+      const res = await data.chats.getAllChats()
 
       if (res.error) {
         toastStore.error(`Could not retrieve chats`)
@@ -173,9 +167,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     getBotChats: async (_, characterId: string) => {
-      const res = await api.get<{ character: AppSchema.Character; chats: AppSchema.Chat[] }>(
-        `/chat/${characterId}/chats`
-      )
+      const res = await data.chats.getBotChats(characterId)
       if (res.error) toastStore.error('Failed to retrieve conversations')
       if (res.result) {
         return {
@@ -188,7 +180,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *createChat(_, characterId: string, props: NewChat, onSuccess?: (id: string) => void) {
-      const res = await api.post<AppSchema.Chat>('/chat', { characterId, ...props })
+      const res = await data.chats.createChat(characterId, props)
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
         const { characters } = characterStore.getState()
@@ -207,7 +199,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *deleteChat({ active, all }, chatId: string, onSuccess?: Function) {
-      const res = await api.method('delete', `/chat/${chatId}`)
+      const res = await data.chats.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {
         toastStore.success('Successfully deleted chat')

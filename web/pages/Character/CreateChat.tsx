@@ -8,7 +8,7 @@ import Modal, { ModalFooter } from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { chatStore, guestStore, userStore } from '../../store'
+import { chatStore } from '../../store'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -40,11 +40,7 @@ const CreateChatModal: Component<{
     const characterId = props.char._id
 
     const payload = { ...body, overrides: { kind: body.schema, attributes } }
-    if (userStore().loggedIn) {
-      chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
-    } else {
-      guestStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
-    }
+    chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
 
   return (

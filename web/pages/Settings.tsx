@@ -1,12 +1,12 @@
 import { Component, createEffect, Show } from 'solid-js'
-import { Save } from 'lucide-solid'
+import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../shared/Button'
 import PageHeader from '../shared/PageHeader'
 import TextInput from '../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../shared/util'
 import Dropdown from '../shared/Dropdown'
 import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../common/adapters'
-import { guestStore, settingStore, themeColors, userStore } from '../store'
+import { settingStore, themeColors, userStore } from '../store'
 import Divider from '../shared/Divider'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
@@ -16,15 +16,12 @@ const themeOptions = themeColors.map((color) => ({ label: color, value: color })
 
 const Settings: Component = () => {
   const style = userStore((s) => ({ theme: s.theme }))
-  const state = userStore().loggedIn ? userStore() : guestStore()
+  const state = userStore()
   const cfg = settingStore()
 
   createEffect(() => {
     // Always reload settings when entering this page
-    if (userStore().loggedIn) {
-      userStore.getConfig()
-    }
-
+    userStore.getConfig()
     settingStore.getHordeModels()
   })
 
@@ -39,8 +36,7 @@ const Settings: Component = () => {
       defaultAdapter: adapterOptions,
     } as const)
 
-    if (userStore().loggedIn) userStore.updateConfig(body)
-    else guestStore.saveConfig(body)
+    userStore.updateConfig(body)
   }
 
   const HordeHelpText = (
@@ -150,6 +146,14 @@ const Settings: Component = () => {
             />
           </Show>
         </div>
+        <Show when={!state.loggedIn}>
+          <div class="mt-8 mb-4 flex w-full flex-col items-center justify-center">
+            <div>This cannot be undone!</div>
+            <Button class="bg-red-600" onClick={userStore.clearGuestState}>
+              <AlertTriangle /> Delete Guest State <AlertTriangle />
+            </Button>
+          </div>
+        </Show>
         <div class="flex justify-end gap-2 pt-4">
           <Button type="submit">
             <Save />

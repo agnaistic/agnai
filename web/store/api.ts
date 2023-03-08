@@ -167,3 +167,7 @@ export function getAuth() {
 export function clearAuth() {
   Cookies.remove('auth')
 }
+
+export function isLoggedIn() {
+  return !!getAuth()
+}

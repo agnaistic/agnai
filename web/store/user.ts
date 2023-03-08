@@ -1,6 +1,8 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
+import { data } from './data'
+import { local } from './data/storage'
 import { publish } from './socket'
 import { toastStore } from './toasts'
 
@@ -22,6 +24,49 @@ export const userStore = createStore<State>(
   init()
 )((get, set) => {
   return {
+    async getProfile() {
+      const res = await data.user.getProfile()
+      if (res.error) return toastStore.error(`Failed to get profile`)
+      if (res.result) {
+        return { profile: res.result }
+      }
+    },
+
+    async getConfig() {
+      const res = await data.user.getConfig()
+      if (res.error) return toastStore.error(`Failed to get user config`)
+      if (res.result) {
+        return { user: res.result }
+      }
+    },
+
+    async updateProfile(_, profile: { handle: string; avatar?: File }) {
+      const res = await data.user.updateProfile(profile.handle, profile.avatar)
+      if (res.error) toastStore.error(`Failed to update profile`)
+      if (res.result) {
+        toastStore.success(`Updated settings`)
+        return { profile: res.result }
+      }
+    },
+
+    async updateConfig(_, config: Partial<AppSchema.User>) {
+      const res = await data.user.updateConfig(config)
+      if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
+      if (res.result) {
+        toastStore.success(`Updated settings`)
+        return { user: res.result }
+      }
+    },
+
+    async changePassword(_, password: string, onSuccess?: Function) {
+      const res = await api.post('/user/password', { password })
+      if (res.error) return toastStore.error('Failed to change password')
+      if (res.result) {
+        toastStore.success(`Successfully changed password`)
+        onSuccess?.()
+      }
+    },
+
     async *login(_, username: string, password: string, onSuccess?: () => void) {
       yield { loading: true }
 
@@ -75,57 +120,26 @@ export const userStore = createStore<State>(
       publish({ type: 'logout' })
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
-    async getProfile() {
-      const res = await api.get('/user')
-      if (res.error) return toastStore.error(`Failed to get profile`)
-      if (res.result) {
-        return { profile: res.result }
-      }
-    },
-    async getConfig() {
-      const res = await api.get('/user/config')
-      if (res.error) return toastStore.error(`Failed to get user config`)
-      if (res.result) {
-        return { user: res.result }
-      }
-    },
-
-    async changePassword(_, password: string, onSuccess?: Function) {
-      const res = await api.post('/user/password', { password })
-      if (res.error) return toastStore.error('Failed to change password')
-      if (res.result) {
-        toastStore.success(`Successfully changed password`)
-        onSuccess?.()
-      }
-    },
-
-    async updateProfile(_, profile: { handle: string; avatar?: File }) {
-      const form = new FormData()
-      form.append('handle', profile.handle)
-      if (profile.avatar) {
-        form.append('avatar', profile.avatar)
-      }
-
-      const res = await api.upload('/user/profile', form)
-      if (res.error) toastStore.error(`Failed to update profile`)
-      if (res.result) {
-        toastStore.success(`Updated settings`)
-        return { profile: res.result }
-      }
-    },
-
-    async updateConfig(_, config: Partial<AppSchema.User>) {
-      const res = await api.post('/user/config', config)
-      if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
-      if (res.result) {
-        toastStore.success(`Updated settings`)
-        return { user: res.result }
-      }
-    },
 
     setTheme(_, color: ThemeColor) {
       updateTheme(color)
       return {}
+    },
+
+    clearGuestState() {
+      const chats = local.loadItem('chats')
+      for (const chat of chats) {
+        localStorage.removeItem(`messages-${chat._id}`)
+      }
+
+      for (const key in local.KEYS) {
+        localStorage.removeItem(key)
+        local.loadItem(key as any)
+      }
+
+      toastStore.error(`Guest state successfully reset`)
+      userStore.getConfig()
+      userStore.getProfile()
     },
   }
 })

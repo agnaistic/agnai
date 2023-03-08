@@ -5,17 +5,13 @@ import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import PageHeader from '../../shared/PageHeader'
 import { toDuration } from '../../shared/util'
-import { chatStore, guestStore, userStore } from '../../store'
+import { chatStore, userStore } from '../../store'
 
 const ChatList: Component = () => {
-  const state = userStore().loggedIn
-    ? chatStore()
-    : guestStore((s) => ({ all: { chats: s.chats, chars: toCharacterMap(s.chars) } }))
+  const state = chatStore()
 
   createEffect(() => {
-    if (userStore().loggedIn && !state.all) {
-      chatStore.getAllChats()
-    }
+    chatStore.getAllChats()
   })
 
   return (
@@ -36,7 +32,7 @@ const ChatList: Component = () => {
 const Chats: Component<{ chats: AppSchema.Chat[]; chars: Record<string, AppSchema.Character> }> = (
   props
 ) => {
-  const users = userStore().loggedIn ? userStore() : guestStore()
+  const users = userStore()
   const nav = useNavigate()
 
   return (

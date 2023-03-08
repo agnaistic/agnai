@@ -1,6 +1,8 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
+import { data } from './data'
+import { local } from './data/storage'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { userStore } from './user'
@@ -18,7 +20,7 @@ export const msgStore = createStore<MsgStore>('messages', {
   msgs: [],
 })((get) => {
   userStore.subscribe((curr, prev) => {
-    if (!curr.loggedIn) msgStore.logout()
+    if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
   })
 
   return {
@@ -32,7 +34,10 @@ export const msgStore = createStore<MsgStore>('messages', {
       }
     },
     async editMessage({ msgs }, msgId: string, msg: string) {
-      const res = await api.method('put', `/chat/${msgId}/message`, { message: msg })
+      const prev = msgs.find((m) => m._id === msgId)
+      if (!prev) return toastStore.error(`Cannot find message`)
+
+      const res = await data.msg.editMessage(prev, msg)
       if (res.error) {
         toastStore.error(`Failed to update message: ${res.error}`)
       }
@@ -58,21 +63,23 @@ export const msgStore = createStore<MsgStore>('messages', {
       const [message, replace] = msgs.slice(-2)
       yield { msgs: msgs.slice(0, -1), retrying: replace, partial: '' }
 
-      await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
-        message: message.msg,
-      })
+      const res = await data.msg.retryCharacterMessage(chatId, message, replace)
+      if (res.error) {
+        toastStore.error(`Generation request failed: ${res.error}`)
+        yield { partial: undefined, waiting: undefined }
+      }
     },
     async resend({ msgs }, chatId: string, msgId: string) {
       const msgIndex = msgs.findIndex((m) => m._id === msgId)
-      const msg = msgs[msgIndex]
 
       if (msgIndex === -1) {
         return toastStore.error('Cannot resend message: Message not found')
       }
 
+      const msg = msgs[msgIndex]
       msgStore.send(chatId, msg.msg, true)
     },
-    async *send({ msgs }, chatId: string, message: string, retry?: boolean) {
+    async *send(_, chatId: string, message: string, retry?: boolean) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -81,10 +88,13 @@ export const msgStore = createStore<MsgStore>('messages', {
 
       yield { partial: '', waiting: chatId }
 
-      await api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
-        message,
-        retry,
-      })
+      const res = retry
+        ? await data.msg.retryUserMessage(chatId, message)
+        : await data.msg.sendMessage(chatId, message)
+      if (res.error) {
+        toastStore.error(`Generation request failed: ${res.error}`)
+        yield { partial: undefined, waiting: undefined }
+      }
     },
     async deleteMessages({ msgs, activeChatId }, fromId: string) {
       const index = msgs.findIndex((m) => m._id === fromId)
@@ -93,7 +103,7 @@ export const msgStore = createStore<MsgStore>('messages', {
       }
 
       const deleteIds = msgs.slice(index).map((m) => m._id)
-      const res = await api.method('delete', `/chat/${activeChatId}/messages`, { ids: deleteIds })
+      const res = await data.msg.deleteMessages(activeChatId, deleteIds)
 
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)
@@ -188,4 +198,20 @@ subscribe('message-creating', { chatId: 'string' }, (body) => {
 
 subscribe('message-horde-eta', { eta: 'number' }, (body) => {
   toastStore.normal(`Horde ETA: ${body.eta}s`)
+})
+
+subscribe('guest-message-created', { msg: 'any', chatId: 'string' }, (body) => {
+  const { msgs, activeChatId } = msgStore.getState()
+  if (activeChatId !== body.chatId) return
+
+  const next = msgs.concat(body.msg)
+
+  local.saveMessages(body.chatId, next)
+
+  msgStore.setState({
+    msgs: next,
+    retrying: undefined,
+    partial: undefined,
+    waiting: undefined,
+  })
 })

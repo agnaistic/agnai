@@ -5,30 +5,22 @@ import { Copy, Download, Edit, Import, Plus, Trash } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
 import { A } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
-import { characterStore, guestStore, NewCharacter, userStore } from '../../store'
+import { characterStore, NewCharacter, userStore } from '../../store'
 import ImportCharacterModal from './ImportCharacter'
 import DeleteCharacterModal from './DeleteCharacter'
 
 const CharacterList: Component = () => {
-  const chars = userStore().loggedIn
-    ? characterStore((s) => s.characters)
-    : guestStore((s) => ({ list: s.chars, loaded: true }))
+  const chars = characterStore((s) => s.characters)
 
   const [showImport, setImport] = createSignal(false)
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
 
   const onSave = (char: NewCharacter) => {
-    if (userStore().loggedIn) {
-      characterStore.createCharacter(char, () => setImport(false))
-    } else {
-      guestStore.createCharacter(char, () => setImport(false))
-    }
+    characterStore.createCharacter(char, () => setImport(false))
   }
 
   createEffect(() => {
-    if (userStore().loggedIn) {
-      characterStore.getCharacters()
-    }
+    characterStore.getCharacters()
   })
 
   return (

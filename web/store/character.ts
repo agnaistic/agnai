@@ -1,6 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
-import { api } from './api'
 import { createStore } from './create'
+import { data } from './data'
 import { toastStore } from './toasts'
 import { userStore } from './user'
 
@@ -24,7 +24,7 @@ export const characterStore = createStore<CharacterState>('character', {
   characters: { loaded: false, list: [] },
 })((get, set) => {
   userStore.subscribe((curr, prev) => {
-    if (!curr.loggedIn) characterStore.logout()
+    if (!curr.loggedIn && prev.loggedIn) characterStore.logout()
   })
 
   return {
@@ -32,25 +32,14 @@ export const characterStore = createStore<CharacterState>('character', {
       return { characters: { loaded: false, list: [] } }
     },
     getCharacters: async () => {
-      const res = await api.get('/character')
+      const res = await data.chars.getCharacters()
       if (res.error) toastStore.error('Failed to retrieve characters')
       if (res.result) {
         return { characters: { list: res.result.characters, loaded: true } }
       }
     },
     createCharacter: async (_, char: NewCharacter, onSuccess?: () => void) => {
-      const form = new FormData()
-      form.append('name', char.name)
-      form.append('greeting', char.greeting)
-      form.append('scenario', char.scenario)
-      form.append('persona', JSON.stringify(char.persona))
-      form.append('sampleChat', char.sampleChat)
-      if (char.avatar) {
-        form.append('avatar', char.avatar)
-      }
-
-      const res = await api.upload(`/character`, form)
-
+      const res = await data.chars.createCharacter(char)
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
         toastStore.success(`Successfully created character`)
@@ -59,17 +48,7 @@ export const characterStore = createStore<CharacterState>('character', {
       }
     },
     editCharacter: async (_, characterId: string, char: NewCharacter, onSuccess?: () => void) => {
-      const form = new FormData()
-      form.append('name', char.name)
-      form.append('greeting', char.greeting)
-      form.append('scenario', char.scenario)
-      form.append('persona', JSON.stringify(char.persona))
-      form.append('sampleChat', char.sampleChat)
-      if (char.avatar) {
-        form.append('avatar', char.avatar)
-      }
-
-      const res = await api.upload(`/character/${characterId}`, form)
+      const res = await data.chars.editChracter(characterId, char)
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
@@ -79,7 +58,7 @@ export const characterStore = createStore<CharacterState>('character', {
       }
     },
     deleteCharacter: async ({ characters: { list } }, charId: string, onSuccess?: () => void) => {
-      const res = await api.method('delete', `/character/${charId}`)
+      const res = await data.chars.deleteCharacter(charId)
       if (res.error) return toastStore.error(`Failed to delete character`)
       if (res.result) {
         const next = list.filter((char) => char._id !== charId)
