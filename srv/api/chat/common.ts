@@ -20,10 +20,16 @@ export function trimResponse(
   let index = -1
   const trimmed = baseEndTokens.concat(...endTokens).reduce((prev, endToken) => {
     const idx = generated.indexOf(endToken)
+
     if (idx === -1) return prev
+
     const text = generated.slice(0, index)
-    if (index === -1) return text
-    return idx < index ? text : prev
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
   }, '')
 
   if (index === -1) {
