@@ -205,7 +205,8 @@ subscribe('guest-message-created', { msg: 'any', chatId: 'string' }, (body) => {
   if (activeChatId !== body.chatId) return
 
   const next = msgs.concat(body.msg)
-
+  const chats = local.loadItem('chats')
+  local.saveChats(local.replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
   local.saveMessages(body.chatId, next)
 
   msgStore.setState({

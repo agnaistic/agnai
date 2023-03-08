@@ -163,7 +163,7 @@ export const chatStore = createStore<ChatState>('chat', {
           prev[curr._id] = curr
           return prev
         }, {})
-        return { all: { chats: res.result.chats, chars } }
+        return { all: { chats: res.result.chats.sort(sortDesc), chars } }
       }
     },
     getBotChats: async (_, characterId: string) => {
@@ -174,7 +174,7 @@ export const chatStore = createStore<ChatState>('chat', {
           loaded: true,
           char: {
             char: res.result.character,
-            chats: res.result.chats,
+            chats: res.result.chats.sort(sortDesc),
           },
         }
       }
@@ -260,3 +260,7 @@ subscribe('chat-deleted', { chatId: 'string' }, (body) => {
     chatStore.setState({ char: { ...char, chats: next } })
   }
 })
+
+function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): number {
+  return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
+}

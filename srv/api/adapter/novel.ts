@@ -32,6 +32,7 @@ export const handleNovel: ModelAdapter = async function* ({
   user,
   prompt,
   settings,
+  guest,
 }) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
@@ -50,7 +51,9 @@ export const handleNovel: ModelAdapter = async function* ({
     json: true,
     // timeout: 2000,
     response_timeout: 15000,
-    headers: { Authorization: `Bearer ${decryptText(user.novelApiKey)}` },
+    headers: {
+      Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
+    },
   }).catch((err) => ({ err }))
 
   if ('err' in response) {
