@@ -23,7 +23,7 @@ export function trimResponse(
 
     if (idx === -1) return prev
 
-    const text = generated.slice(0, index)
+    const text = generated.slice(0, idx)
     if (index === -1 || idx < index) {
       index = idx
       return text
