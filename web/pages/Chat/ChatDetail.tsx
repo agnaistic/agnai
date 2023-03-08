@@ -1,5 +1,5 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { Bookmark, ChevronLeft, MailPlus, MessageCircle, Settings, Sliders, X } from 'lucide-solid'
+import { ChevronLeft, MailPlus, Settings, Sliders, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -12,19 +12,14 @@ import { chatStore, userStore } from '../../store'
 import { msgStore } from '../../store/message'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
-import Header from './components/Header'
 import InputBar from './components/InputBar'
-import Message from './components/Message'
+import Message, { SplitMessage } from './components/Message'
 import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
   const user = userStore()
 
-  const chats = chatStore((s) => ({
-    chat: s.active?.chat,
-    character: s.active?.char,
-    lastId: s.lastChatId,
-  }))
+  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
 
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
@@ -46,12 +41,14 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
+    userStore.getProfile()
+    userStore.getConfig()
     chatStore.getChat(id)
   })
 
   return (
     <>
-      <Show when={!chats.chat}>
+      <Show when={!chats.chat || !chats.char || !user.profile}>
         <div>
           <div>Loading conversation...</div>
         </div>
@@ -59,10 +56,10 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class="mb-4 flex h-full flex-col justify-between pb-4">
           <div class="flex items-center justify-between">
-            <A href={`/character/${chats.character?._id}/chats`}>
+            <A href={`/character/${chats.char?._id}/chats`}>
               <div class="flex h-8 cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
                 <ChevronLeft />
-                {chats.character?.name}
+                {chats.char?.name}
               </div>
             </A>
 
@@ -92,8 +89,8 @@ const ChatDetail: Component = () => {
                   {(msg, i) => (
                     <Message
                       msg={msg}
-                      chat={chats.chat}
-                      char={chats.character}
+                      chat={chats.chat!}
+                      char={chats.char!}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                     />
@@ -101,9 +98,9 @@ const ChatDetail: Component = () => {
                 </For>
                 <Show when={msgs.partial}>
                   <Message
-                    msg={emptyMsg(chats.character?._id!, msgs.partial!)}
-                    char={chats.character}
-                    chat={chats.chat}
+                    msg={emptyMsg(chats.char?._id!, msgs.partial!)}
+                    char={chats.char!}
+                    chat={chats.chat!}
                     onRemove={() => {}}
                   />
                 </Show>
@@ -176,4 +173,72 @@ function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
+}
+
+function splitMessages(
+  char: AppSchema.Character,
+  profile: AppSchema.Profile,
+  msgs: AppSchema.ChatMessage[]
+) {
+  if (!char || !profile) return []
+
+  const newMsgs = msgs.flatMap((msg) => splitMessage(char, profile, msg))
+  return newMsgs
+}
+
+function splitMessage(
+  char: AppSchema.Character,
+  profile: AppSchema.Profile,
+  msg: AppSchema.ChatMessage
+): SplitMessage[] {
+  const CHARS = [`${char.name}:`, `{{char}}:`]
+  const USERS = [`${profile.handle || 'You'}:`, `{{user}}:`]
+
+  const next: AppSchema.ChatMessage[] = []
+
+  const splits = msg.msg.split('\n')
+  if (splits.length === 1) {
+    next.push(msg)
+  }
+
+  for (const split of splits) {
+    const trim = split.trim()
+    let newMsg: AppSchema.ChatMessage | undefined
+
+    for (const CHAR of CHARS) {
+      if (newMsg) break
+      if (trim.startsWith(CHAR)) {
+        newMsg = { ...msg, msg: trim.replace(CHAR, ''), characterId: char._id, userId: undefined }
+        break
+      }
+    }
+
+    for (const USER of USERS) {
+      if (newMsg) break
+      if (trim.startsWith(USER)) {
+        newMsg = {
+          ...msg,
+          msg: trim.replace(USER, ''),
+          userId: profile.userId,
+          characterId: undefined,
+        }
+        break
+      }
+    }
+
+    if (!next.length && !newMsg) return [msg]
+
+    if (!newMsg) {
+      const lastMsg = next.slice(-1)[0]
+      lastMsg.msg += ` ${trim}`
+      continue
+    }
+
+    next.push(newMsg)
+    continue
+  }
+
+  if (!next.length || next.length === 1) return [msg]
+  const newSplits = next.map((next) => ({ ...next, split: true }))
+  return newSplits
 }

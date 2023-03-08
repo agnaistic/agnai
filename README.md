@@ -44,7 +44,7 @@ If you're only looking to run AgnAI without contributing:
 ### Using Docker
 
 1. Clone the project
-2. Run: `docker compose -p agnai up -d -f self-host.docker-compose.yml`
+2. Run: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
 
 ### Manually
 
@@ -53,10 +53,12 @@ If you're only looking to run AgnAI without contributing:
 5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
 6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm install`
-   - `npm build:all`
-   - `npm start`
-7. If you wish to run a public facing version:
-   - `npm run start:public`
+   - Build and run the project in watch mode:
+     - Mac/Linux: `npm run start`
+     - Windows: `npm run start:win`
+   - Build and run the project with Local Tunnel:
+     - Mac/Linux: `npm run start:public`
+     - Windows: `npm run start:public:win`
 
 ## Design Goals
 
@@ -89,14 +91,15 @@ If you have Node and `pnpm` installed and working, you can start the development
 # Install dependencies
 > pnpm install --lockfile
 
-# Start the frontend, backend, and python service
-> pnpm start
-
 # Run MongoDB using Docker
 > pnpm run up
 
-# Start the public facing version:
-> pnpm start:public
+# Start the frontend, backend, and python service
+# Mac/Linux
+> pnpm start
+
+# Windows
+> pnpm start:win
 ```
 
 ### Developer Tooling

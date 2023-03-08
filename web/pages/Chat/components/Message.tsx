@@ -1,6 +1,7 @@
 import { Check, Pencil, RefreshCw, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
 import showdown from 'showdown'
-import { Component, createSignal, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { chatStore, userStore } from '../../../store'
@@ -9,25 +10,66 @@ import { msgStore } from '../../../store/message'
 const showdownConverter = new showdown.Converter()
 
 const Message: Component<{
-  msg: AppSchema.ChatMessage
-  chat?: AppSchema.Chat
-  char?: AppSchema.Character
+  msg: SplitMessage
+  chat: AppSchema.Chat
+  char: AppSchema.Character
   last?: boolean
   onRemove: () => void
 }> = (props) => {
   const user = userStore()
-  const [edit, setEdit] = createSignal(false)
+
+  const splits = createMemo(
+    () => {
+      const next = splitMessage(props.char, user.profile!, props.msg)
+      return next
+    },
+    { equals: false }
+  )
+
+  return (
+    <For each={splits()}>
+      {(msg, i) => (
+        <SingleMessage
+          msg={msg}
+          chat={props.chat}
+          char={props.char}
+          onRemove={props.onRemove}
+          last={props.last && i() === splits().length - 1}
+        />
+      )}
+    </For>
+  )
+}
+
+const SingleMessage: Component<{
+  msg: SplitMessage
+  chat: AppSchema.Chat
+  char: AppSchema.Character
+  last?: boolean
+  onRemove: () => void
+}> = (props) => {
+  const user = userStore()
   const members = chatStore((s) => s.memberIds)
+
+  const [edit, setEdit] = createSignal(false)
+
   const cancelEdit = () => {
     setEdit(false)
   }
 
-  const state = chatStore((s) => ({ members: s.memberIds }))
-
   const saveEdit = () => {
     if (!ref) return
     setEdit(false)
+
     msgStore.editMessage(props.msg._id, ref.innerText)
+  }
+
+  const resendMessage = () => {
+    msgStore.resend(props.msg.chatId, props.msg._id)
+  }
+
+  const retryMessage = () => {
+    msgStore.retry(props.msg.chatId)
   }
 
   const startEdit = () => {
@@ -56,7 +98,7 @@ const Message: Component<{
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-row">
             <b class="mr-2 text-white">
-              {props.msg.characterId ? props.char?.name! : state.members[props.msg.userId!]?.handle}
+              {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span class="text-sm text-white/25">
               {new Intl.DateTimeFormat('en-US', {
@@ -77,26 +119,24 @@ const Message: Component<{
                 <RefreshCw
                   size={16}
                   class="cursor-pointer text-white/20 hover:text-white"
-                  onClick={() => msgStore.retry(props.msg.chatId)}
+                  onClick={retryMessage}
                 />
               </Show>
               <Show when={props.last && !props.msg.characterId}>
-                <RefreshCw
+                <RefreshCw size={16} class="cursor-pointer" onClick={resendMessage} />
+              </Show>
+              <Show when={!props.msg.split}>
+                <Pencil
                   size={16}
-                  class="cursor-pointer"
-                  onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
+                  class="cursor-pointer text-white/20 hover:text-white"
+                  onClick={startEdit}
+                />
+                <Trash
+                  size={16}
+                  class="cursor-pointer text-white/20 hover:text-white"
+                  onClick={props.onRemove}
                 />
               </Show>
-              <Pencil
-                size={16}
-                class="cursor-pointer text-white/20 hover:text-white"
-                onClick={startEdit}
-              />
-              <Trash
-                size={16}
-                class="cursor-pointer text-white/20 hover:text-white"
-                onClick={props.onRemove}
-              />
             </div>
           </Show>
           <Show when={edit()}>
@@ -108,7 +148,11 @@ const Message: Component<{
         </div>
         <div class="break-words opacity-50">
           <Show when={!edit()}>
-            <div innerHTML={showdownConverter.makeHtml(props.msg.msg)} />
+            <div
+              innerHTML={showdownConverter.makeHtml(
+                parseMessage(props.msg.msg, props.char!, user.profile!)
+              )}
+            />
           </Show>
           <Show when={edit()}>
             <div ref={ref} contentEditable={true}>
@@ -122,3 +166,66 @@ const Message: Component<{
 }
 
 export default Message
+
+function parseMessage(msg: string, char: AppSchema.Character, profile: AppSchema.Profile) {
+  return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
+}
+
+export type SplitMessage = AppSchema.ChatMessage & { split?: boolean }
+
+function splitMessage(
+  char: AppSchema.Character,
+  profile: AppSchema.Profile,
+  msg: AppSchema.ChatMessage
+): SplitMessage[] {
+  const CHARS = [`${char.name}:`, `{{char}}:`]
+  const USERS = [`${profile.handle || 'You'}:`, `{{user}}:`]
+
+  const next: AppSchema.ChatMessage[] = []
+
+  const splits = msg.msg.split('\n')
+  if (splits.length === 1) {
+    next.push(msg)
+  }
+
+  for (const split of splits) {
+    const trim = split.trim()
+    let newMsg: AppSchema.ChatMessage | undefined
+
+    for (const CHAR of CHARS) {
+      if (newMsg) break
+      if (trim.startsWith(CHAR)) {
+        newMsg = { ...msg, msg: trim.replace(CHAR, ''), characterId: char._id, userId: undefined }
+        break
+      }
+    }
+
+    for (const USER of USERS) {
+      if (newMsg) break
+      if (trim.startsWith(USER)) {
+        newMsg = {
+          ...msg,
+          msg: trim.replace(USER, ''),
+          userId: profile.userId,
+          characterId: undefined,
+        }
+        break
+      }
+    }
+
+    if (!next.length && !newMsg) return [msg]
+
+    if (!newMsg) {
+      const lastMsg = next.slice(-1)[0]
+      lastMsg.msg += ` ${trim}`
+      continue
+    }
+
+    next.push(newMsg)
+    continue
+  }
+
+  if (!next.length || next.length === 1) return [msg]
+  const newSplits = next.map((next) => ({ ...next, split: true }))
+  return newSplits
+}

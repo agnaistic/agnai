@@ -2,7 +2,9 @@ import { UnwrapBody, assertValid } from 'frisker'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
 import { DropdownItem } from './Dropdown'
 
-type FormRef = { [key: string]: 'string' | 'string?' | readonly string[] | 'number' | 'number?' }
+type FormRef = {
+  [key: string]: 'string' | 'string?' | readonly string[] | 'number' | 'number?'
+}
 
 export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
   evt.preventDefault?.()

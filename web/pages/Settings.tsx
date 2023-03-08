@@ -1,5 +1,5 @@
 import { Component, createEffect, Show } from 'solid-js'
-import { Save } from 'lucide-solid'
+import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../shared/Button'
 import PageHeader from '../shared/PageHeader'
 import TextInput from '../shared/TextInput'
@@ -15,6 +15,7 @@ const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as Defau
 const themeOptions = themeColors.map((color) => ({ label: color, value: color }))
 
 const Settings: Component = () => {
+  const style = userStore((s) => ({ theme: s.theme }))
   const state = userStore()
   const cfg = settingStore()
 
@@ -34,6 +35,7 @@ const Settings: Component = () => {
       luminaiUrl: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
+
     userStore.updateConfig(body)
   }
 
@@ -56,7 +58,7 @@ const Settings: Component = () => {
             fieldName="theme"
             items={themeOptions}
             label="Theme Color"
-            value={state.theme}
+            value={style.theme}
             onChange={(item) => userStore.setTheme(item.value as any)}
           />
 
@@ -144,6 +146,14 @@ const Settings: Component = () => {
             />
           </Show>
         </div>
+        <Show when={!state.loggedIn}>
+          <div class="mt-8 mb-4 flex w-full flex-col items-center justify-center">
+            <div>This cannot be undone!</div>
+            <Button class="bg-red-600" onClick={userStore.clearGuestState}>
+              <AlertTriangle /> Delete Guest State <AlertTriangle />
+            </Button>
+          </div>
+        </Show>
         <div class="flex justify-end gap-2 pt-4">
           <Button type="submit">
             <Save />

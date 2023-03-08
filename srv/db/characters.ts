@@ -13,7 +13,6 @@ export async function createCharacter(
   const newChar: AppSchema.Character = {
     _id: v4(),
     kind: 'character',
-    adapter: 'default',
     userId,
     createdAt: now(),
     updatedAt: now(),

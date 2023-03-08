@@ -1,6 +1,7 @@
 import { A, useNavigate } from '@solidjs/router'
 import { RefreshCw } from 'lucide-solid'
 import { Component, createEffect, For, Show } from 'solid-js'
+import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import PageHeader from '../../shared/PageHeader'
 import { toDuration } from '../../shared/util'
@@ -10,9 +11,7 @@ const ChatList: Component = () => {
   const state = chatStore()
 
   createEffect(() => {
-    if (!state.all) {
-      chatStore.getAllChats()
-    }
+    chatStore.getAllChats()
   })
 
   return (
@@ -24,20 +23,21 @@ const ChatList: Component = () => {
         <div class="icon-button flex cursor-pointer justify-end" onClick={chatStore.getAllChats}>
           <RefreshCw />
         </div>
-        <Chats />
+        <Chats chats={state.all?.chats || []} chars={state.all?.chars || {}} />
       </Show>
     </div>
   )
 }
 
-const Chats: Component = () => {
-  const state = chatStore()
+const Chats: Component<{ chats: AppSchema.Chat[]; chars: Record<string, AppSchema.Character> }> = (
+  props
+) => {
   const users = userStore()
   const nav = useNavigate()
 
   return (
     <div class="flex flex-col gap-2">
-      <For each={state.all?.chats}>
+      <For each={props.chats}>
         {(chat) => {
           const owner =
             chat.userId === users.user?._id ? `border-[var(--bg-700)]` : 'border-[var(--bg-900)]'
@@ -51,8 +51,8 @@ const Chats: Component = () => {
               onClick={() => nav(`/chat/${chat._id}`)}
             >
               <div class="flex w-6/12 items-center gap-4 px-4">
-                <AvatarIcon avatarUrl={state.all?.chars[chat.characterId]?.avatar} />
-                <b>{state.all?.chars[chat.characterId]?.name}</b>
+                <AvatarIcon avatarUrl={props.chars[chat.characterId]?.avatar} />
+                <b>{props.chars[chat.characterId]?.name}</b>
                 {chat.name || 'Untitled'}
               </div>
               <div class="flex w-2/12 justify-center"></div>
@@ -79,3 +79,10 @@ const NoChats: Component = () => (
 )
 
 export default ChatList
+
+function toCharacterMap(chars: AppSchema.Character[]) {
+  return chars.reduce<Record<string, AppSchema.Character>>(
+    (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+    {}
+  )
+}

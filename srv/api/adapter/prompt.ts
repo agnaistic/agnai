@@ -1,6 +1,7 @@
 import { AppSchema } from '../../db/schema'
 import gpt from 'gpt-3-encoder'
 import { store } from '../../db'
+import { formatCharacter } from '../../../common/prompt'
 
 type PromptOpts = {
   chat: AppSchema.Chat
@@ -26,19 +27,14 @@ export async function createPrompt({ chat, char, members, retry, settings }: Pro
 
   const post = [`${char.name}:`]
 
-  const prompt = await appendHistory(chat, members, char, settings, pre, post, retry)
+  const prompt = await insertMessages({ chat, members, char, settings, pre, post, retry })
   return prompt
 }
 
-async function appendHistory(
-  chat: AppSchema.Chat,
-  members: AppSchema.Profile[],
-  char: AppSchema.Character,
-  settings: AppSchema.GenSettings,
-  pre: string[],
-  post: string[],
-  retry?: AppSchema.ChatMessage
-) {
+type InsertOpts = PromptOpts & { pre: string[]; post: string[]; msgs?: string[] }
+
+async function insertMessages(opts: InsertOpts) {
+  const { settings, members, chat, char, pre, post, retry } = opts
   const maxContext = settings.maxContextLength || DEFAULT_MAX_TOKENS
   const owner = members.find((mem) => mem.userId === chat.userId)
   if (!owner) {
@@ -84,65 +80,6 @@ async function appendHistory(
   const prompt = [preamble, middle, postamble].join('\n')
 
   return prompt
-}
-
-export function formatCharacter(name: string, persona: AppSchema.CharacterPersona) {
-  switch (persona.kind) {
-    case 'wpp': {
-      const attrs = Object.entries(persona.attributes)
-        .map(([key, values]) => `${key}(${values.map(quote).join(' + ')})`)
-        .join('\n')
-
-      return [`[character("${name}") {`, attrs, '}]'].join('\n')
-    }
-
-    case 'sbf': {
-      const attrs = Object.entries(persona.attributes).map(
-        ([key, values]) => `${key}: ${values.map(quote).join(', ')}`
-      )
-
-      return `[ character: "${name}"; ${attrs.join('; ')} ]`
-    }
-
-    case 'boostyle': {
-      const attrs = Object.values(persona.attributes).reduce(
-        (prev, curr) => {
-          prev.push(...curr)
-          return prev
-        },
-        [name]
-      )
-      return attrs.join(' + ')
-    }
-  }
-}
-
-export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'ooba') {
-  switch (target) {
-    case 'tavern': {
-      return {
-        name: char.name,
-        first_mes: char.greeting,
-        scenario: char.scenario,
-        description: formatCharacter(char.name, char.persona),
-        mes_example: char.sampleChat,
-      }
-    }
-
-    case 'ooba': {
-      return {
-        char_name: char.name,
-        char_greeting: char.greeting,
-        world_scenario: char.scenario,
-        char_persona: formatCharacter(char.name, char.persona),
-        example_dialogue: char.sampleChat,
-      }
-    }
-  }
-}
-
-function quote(str: string) {
-  return `"${str}"`
 }
 
 function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Profile[]) {

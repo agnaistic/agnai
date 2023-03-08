@@ -37,6 +37,7 @@ export type AppRequest = Omit<express.Request, 'log'> & {
   user?: AppSchema.Token
   userId?: string
   log: AppLog
+  socketId: string
 }
 
 export const errors = {

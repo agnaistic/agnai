@@ -7,7 +7,10 @@
   "license": "AGPL-3.0",
   "scripts": {
     "build": "NODE_ENV=production parcel build web/index.html --no-optimize --detailed-report",
+    "build:prod": "NODE_ENV=production parcel build web/index.html --detailed-report",
+    "build:win": "setx NODE_ENV \"production\" && parcel build web/index.html --no-optimize --detailed-report",
     "build:all": "npm run build && npm run build:server",
+    "build:all:win": "npm run build:win && npm run build:server",
     "build:server": "tsc -p srv.tsconfig.json",
     "build:server:watch": "tsc -p srv.tsconfig.json -w",
     "format": "prettier web --check && prettier srv --check",
@@ -19,7 +22,8 @@
     "start:all": "NODE_ENV=dev concurrently -c auto -n web,api,mod,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\" \"npm run build:server:watch\"",
     "start": "NODE_ENV=dev concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:public": "NODE_ENV=dev concurrently -c auto -n web,api,mod,lt \"parcel watch web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\" \"npx lt --port 3001\"",
-    "start:win": "set NODE_ENV=dev && parcel web/index.html",
+    "start:public:win": "setx NODE_ENV \"dev\" && concurrently -c auto -n web,api,mod,lt \"parcel watch web/index.html --no-cache\" \"npm run server:watch\" \"npm run model:watch\" \"npx lt --port 3001\"",
+    "start:win": "set NODE_ENV=dev && concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "test": "echo \"Error: no test specified\" && exit 1",
     "typecheck": "tsc -p tsconfig.json",
     "up": "docker compose -p agnai up -d"
@@ -73,5 +77,8 @@
     "uuid": "^9.0.0",
     "ws": "^8.12.1",
     "zustand": "^4.3.3"
+  },
+  "devDependencies": {
+    "path-browserify": "^1.0.0"
   }
 }

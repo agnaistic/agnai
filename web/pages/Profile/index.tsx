@@ -1,5 +1,5 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -13,6 +13,7 @@ const ProfilePage: Component = () => {
   const state = userStore()
   const [pass, setPass] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
+
   const onAvatar = (files: FileInputResult[]) => {
     const [file] = files
     if (!file) return setAvatar()
@@ -22,8 +23,14 @@ const ProfilePage: Component = () => {
   const submit = (ev: Event) => {
     const body = getStrictForm(ev, { handle: 'string' })
     const payload = { handle: body.handle, avatar: avatar() }
+
     userStore.updateProfile(payload)
   }
+
+  createEffect(() => {
+    userStore.getProfile()
+    userStore.getConfig()
+  })
 
   return (
     <>

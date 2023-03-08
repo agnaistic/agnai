@@ -4,6 +4,7 @@ import { createChat } from './create'
 import { updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage } from './edit'
 
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
+import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites } from './invite'
 import { generateMessage, retryMessage, summarizeChat } from './message'
@@ -11,6 +12,7 @@ import { deleteChat, deleteMessages } from './remove'
 
 const router = Router()
 
+router.post('/:id/guest-message', guestGenerateMsg)
 router.use(loggedIn)
 router.get('/', getAllChats)
 router.get('/invites', getInvites)

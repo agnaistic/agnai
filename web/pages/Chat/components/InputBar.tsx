@@ -1,4 +1,4 @@
-import { Image, ImagePlus, Send } from 'lucide-solid'
+import { ImagePlus, Send } from 'lucide-solid'
 import { Component, JSX } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import { msgStore } from '../../../store/message'
@@ -9,6 +9,7 @@ const InputBar: Component<{ chat: AppSchema.Chat }> = (props) => {
   const send = () => {
     if (!ref) return
     if (!ref.value) return
+
     msgStore.send(props.chat._id, ref.value)
     ref.value = ''
   }

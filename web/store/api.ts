@@ -1,5 +1,11 @@
 import Cookies from 'js-cookie'
 
+let socketId = ''
+
+export function setSocketId(id: string) {
+  socketId = id
+}
+
 export const baseUrl =
   location.port === '1234' || location.port === '3001'
     ? `http://${location.hostname}:3001`
@@ -104,6 +110,7 @@ function headers() {
   const headers: any = {
     Accept: 'application/json',
     'Content-Type': 'application/json',
+    'Socket-ID': socketId,
   }
 
   if (jwt) {
@@ -159,4 +166,8 @@ export function getAuth() {
 
 export function clearAuth() {
   Cookies.remove('auth')
+}
+
+export function isLoggedIn() {
+  return !!getAuth()
 }

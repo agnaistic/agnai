@@ -7,7 +7,7 @@ import Modal, { ModalFooter } from '../../shared/Modal'
 import { characterStore } from '../../store'
 
 const DeleteCharacterModal: Component<{
-  char?: AppSchema.Character
+  char?: Pick<AppSchema.Character, '_id' | 'name' | 'avatar'>
   show: boolean
   close: () => void
 }> = (props) => {
@@ -19,7 +19,7 @@ const DeleteCharacterModal: Component<{
     <Modal show={props.show && !!props.char} title="Confirm Deletion" close={props.close}>
       <div class="flex flex-col items-center gap-4">
         <div>Are you sure you wish to delete this character?</div>
-        <div class="flex justify-center">
+        <div class="flex justify-center gap-4">
           <AvatarIcon avatarUrl={props.char!.avatar} />
           {props.char!.name}
         </div>

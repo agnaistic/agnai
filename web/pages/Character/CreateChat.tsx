@@ -22,11 +22,11 @@ const CreateChatModal: Component<{
   char?: AppSchema.Character
 }> = (props) => {
   let ref: any
-  const state = chatStore()
   const nav = useNavigate()
 
   const onCreate = (ev: Event) => {
-    if (!state.char) return
+    if (!props.char) return
+
     const body = getStrictForm(ref, {
       name: 'string',
       greeting: 'string',
@@ -37,19 +37,17 @@ const CreateChatModal: Component<{
 
     const attributes = getAttributeMap(ref)
 
-    const characterId = state.char.char._id
-    chatStore.createChat(
-      characterId,
-      { ...body, overrides: { kind: body.schema, attributes } },
-      (id) => nav(`/chat/${id}`)
-    )
+    const characterId = props.char._id
+
+    const payload = { ...body, overrides: { kind: body.schema, attributes } }
+    chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
 
   return (
     <Modal
       show={props.show}
       close={props.onClose}
-      title={`Create Conversation with ${state.char?.char.name}`}
+      title={`Create Conversation with ${props.char?.name}`}
     >
       <form ref={ref}>
         <div class="mb-2 text-sm">
@@ -74,7 +72,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="greeting"
           label="Greeting"
-          value={state.char?.char.greeting}
+          value={props.char?.greeting}
           class="text-xs"
         ></TextInput>
 
@@ -82,7 +80,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="scenario"
           label="Scenario"
-          value={state.char?.char.scenario}
+          value={props.char?.scenario}
           class="text-xs"
         ></TextInput>
 
@@ -90,7 +88,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="sampleChat"
           label="Sample Chat"
-          value={state.char?.char.sampleChat}
+          value={props.char?.sampleChat}
           class="text-xs"
         ></TextInput>
 
@@ -99,11 +97,11 @@ const CreateChatModal: Component<{
           fieldName="schema"
           label="Persona"
           items={options}
-          value={state.active?.chat.overrides.kind}
+          value={props.char?.persona.kind}
         />
 
         <div class="w-full text-sm">
-          <PersonaAttributes value={state.char?.char.persona.attributes} hideLabel />
+          <PersonaAttributes value={props.char?.persona.attributes} hideLabel />
         </div>
 
         <ModalFooter>

@@ -3,9 +3,15 @@ import { Component, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal, { ModalFooter } from '../../shared/Modal'
-import { characterStore, NewCharacter, toastStore } from '../../store'
+import { NewCharacter, toastStore } from '../../store'
 
-const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (props) => {
+export type ImportCharacter = NewCharacter & { avatar?: File }
+
+const ImportCharacterModal: Component<{
+  show: boolean
+  close: () => void
+  onSave: (char: ImportCharacter) => void
+}> = (props) => {
   const [json, setJson] = createSignal<any>(undefined)
   const [avatar, setAvatar] = createSignal<string | undefined>(undefined)
 
@@ -31,7 +37,7 @@ const ImportCharacterModal: Component<{ show: boolean; close: () => void }> = (p
 
   const onImport = async () => {
     if (!json()) return
-    characterStore.createCharacter({ ...json(), avatar }, props.close)
+    props.onSave({ ...json(), avatar: avatar() })
   }
 
   return (

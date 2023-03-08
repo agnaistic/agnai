@@ -1,5 +1,5 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createSignal } from 'solid-js'
 import { defaultPresets } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'

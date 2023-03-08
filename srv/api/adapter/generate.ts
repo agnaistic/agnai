@@ -1,5 +1,10 @@
 import { AIAdapter } from '../../../common/adapters'
-import { mapPresetsToAdapter, defaultPresets, isDefaultPreset } from '../../../common/presets'
+import {
+  mapPresetsToAdapter,
+  defaultPresets,
+  isDefaultPreset,
+  getGenSettings,
+} from '../../../common/presets'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { AppLog, logger } from '../../logger'
@@ -29,6 +34,22 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   ooba: handleOoba,
   horde: handleHorde,
   luminai: handleLuminAI,
+}
+
+export async function createGuestTextStream(opts: {
+  chat: AppSchema.Chat
+  user: AppSchema.User
+  sender: AppSchema.Profile
+  char: AppSchema.Character
+  prompt: string
+}) {
+  const adapter = getAdapater(opts.chat, opts.user)
+  const rawSettings = await getGenerationSettings(opts.chat, adapter, true)
+  const settings = mapPresetsToAdapter(rawSettings, adapter)
+
+  const handler = handlers[adapter]
+  const stream = handler({ ...opts, settings, members: [opts.sender] })
+  return { stream }
 }
 
 export async function createTextStream(opts: GenerateOptions) {
@@ -126,11 +147,12 @@ function getAdapater(chat: AppSchema.Chat, user: AppSchema.User) {
   return user.defaultAdapter
 }
 
-async function getGenerationSettings(chat: AppSchema.Chat, adapter: AIAdapter) {
+async function getGenerationSettings(chat: AppSchema.Chat, adapter: AIAdapter, guest?: boolean) {
   if (chat.genSettings) return chat.genSettings
   if (!chat.genPreset) return defaultPresets.basic
 
   if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
+  if (guest) return defaultPresets.basic
 
   const preset = await store.users.getUserPreset(chat.genPreset)
   return preset || defaultPresets.basic

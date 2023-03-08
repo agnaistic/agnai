@@ -1,5 +1,5 @@
 import { UnwrapBody, Validator, isValid } from 'frisker'
-import { baseUrl, getAuth } from './api'
+import { baseUrl, getAuth, setSocketId } from './api'
 
 type Handler = { validator: Validator; fn: (body: any) => void }
 
@@ -83,3 +83,7 @@ function parse(blob: string) {
     return data
   } catch (ex) {}
 }
+
+subscribe('connected', { uid: 'string' }, (body) => {
+  setSocketId(body.uid)
+})

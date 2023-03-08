@@ -40,11 +40,7 @@ function parentLogger(name: string) {
 export function logMiddleware() {
   const toRedact = new Set<string>(['password', 'token', 'history'])
   const middleware = (req: any, res: Response, next: NextFunction) => {
-    const body: any = { ...req.body }
-
-    redact(toRedact, body)
-
-    const log = logger.child({ requestId: uuid.v4(), url: req.url, method: req.method, body })
+    const log = logger.child({ requestId: uuid.v4(), url: req.url, method: req.method })
 
     req.log = log
 
@@ -62,20 +58,6 @@ export function logMiddleware() {
   }
 
   return middleware
-}
-
-function redact(toRedact: Set<string>, body: any) {
-  if (!body) return
-  if (typeof body !== 'object') return
-
-  for (const key in body) {
-    if (toRedact.has(key)) {
-      body[key] = '[REDACTED]'
-      continue
-    }
-
-    redact(toRedact, body[key])
-  }
 }
 
 export const logger = parentLogger('app')

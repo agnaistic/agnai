@@ -22,11 +22,9 @@ const options = [
 
 const CreateCharacter: Component = () => {
   const { editId, duplicateId } = useParams()
+  const srcId = editId || duplicateId || ''
   const state = characterStore((s) => ({
-    edit:
-      editId || duplicateId
-        ? s.characters.list.find((ch) => ch._id === (editId || duplicateId))
-        : undefined,
+    edit: s.characters.list.find((ch) => ch._id === srcId),
   }))
 
   createEffect(() => {
