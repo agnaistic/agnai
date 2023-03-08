@@ -18,6 +18,7 @@ export const handleHorde: ModelAdapter = async function* ({
   user,
   sender,
   settings,
+  guest,
 }) {
   if (!user.hordeModel) {
     yield { error: `Horde request failed: Not configured` }
@@ -30,7 +31,7 @@ export const handleHorde: ModelAdapter = async function* ({
     workers: [],
   }
 
-  const key = user.hordeKey ? decryptText(user.hordeKey) : HORDE_GUEST_KEY
+  const key = user.hordeKey ? (guest ? user.hordeKey : decryptText(user.hordeKey)) : HORDE_GUEST_KEY
   const params = { ...base, ...settings }
   const headers = { apikey: key, 'Client-Agent': 'KoboldAiLite:11' }
 

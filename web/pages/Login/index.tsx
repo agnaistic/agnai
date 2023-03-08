@@ -25,22 +25,22 @@ const LoginPage: Component = () => {
   return (
     <div class="flex w-full flex-col items-center">
       <div class="my-4 border-b border-white/5" />
+      <PageHeader
+        title={<div class="flex w-full justify-center">Welcome</div>}
+        subtitle={
+          <span>
+            <a class="link" onClick={() => setRegister(false)}>
+              Login
+            </a>{' '}
+            to your account or&nbsp;
+            <a class="link" onClick={() => setRegister(true)}>
+              register
+            </a>
+            &nbsp;or continue as a guest.
+          </span>
+        }
+      />
       <div class="w-full max-w-sm">
-        <PageHeader
-          title={`Welcome. `}
-          subtitle={
-            <span>
-              <a class="link" onClick={() => setRegister(false)}>
-                Login
-              </a>{' '}
-              to your account or{' '}
-              <a class="link" onClick={() => setRegister(true)}>
-                register
-              </a>
-              or continue as a guest.
-            </span>
-          }
-        />
         <Show when={register()}>
           <RegisterForm isLoading={store.loading} />
         </Show>
@@ -62,7 +62,7 @@ const LoginPage: Component = () => {
             be stored on any servers.
           </p>
           <p>
-            If you choose the register your data will be stored and accessible on any devices you
+            If you choose to register your data will be stored and accessible on any devices you
             login with.
           </p>
         </div>

@@ -48,7 +48,7 @@ export async function createGuestTextStream(opts: {
   const settings = mapPresetsToAdapter(rawSettings, adapter)
 
   const handler = handlers[adapter]
-  const stream = handler({ ...opts, settings, members: [opts.sender] })
+  const stream = handler({ ...opts, settings, members: [opts.sender], guest: true })
   return { stream }
 }
 
