@@ -159,7 +159,7 @@ function createNewChat(char: AppSchema.Character, props: NewChat) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kind: 'chat-message',
-    msg: char.sampleChat,
+    msg: char.greeting,
     characterId: char._id,
   }
 
