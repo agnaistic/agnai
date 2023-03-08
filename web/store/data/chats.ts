@@ -37,7 +37,7 @@ export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
   const prev = chats.find((ch) => ch._id === id)
   if (!prev) return local.error(`Chat not found`)
 
-  const next = { ...prev, ...update }
+  const next = { ...prev, ...update, updatedAt: new Date().toISOString() }
   local.saveChats(local.replace(id, chats, next))
   return local.result(next)
 }
@@ -110,7 +110,12 @@ export async function editChatGenSettings(chatId: string, settings: AppSchema.Ch
   const chat = chats.find((ch) => ch._id === chatId)
   if (!chat) return local.error(`Chat not found`)
 
-  const next: AppSchema.Chat = { ...chat, genSettings: settings, genPreset: undefined }
+  const next: AppSchema.Chat = {
+    ...chat,
+    genSettings: settings,
+    genPreset: undefined,
+    updatedAt: new Date().toISOString(),
+  }
   saveChats(local.replace(chatId, chats, next))
   return local.result(next)
 }
@@ -125,7 +130,12 @@ export async function editChatGenPreset(chatId: string, preset: string) {
   const chat = chats.find((ch) => ch._id === chatId)
   if (!chat) return local.error(`Chat not found`)
 
-  const next: AppSchema.Chat = { ...chat, genSettings: undefined, genPreset: preset }
+  const next: AppSchema.Chat = {
+    ...chat,
+    genSettings: undefined,
+    genPreset: preset,
+    updatedAt: new Date().toISOString(),
+  }
   saveChats(local.replace(chatId, chats, next))
   return local.result(next)
 }
