@@ -56,10 +56,8 @@ export const handleLuminAI: ModelAdapter = async function* ({
   const text = resp.body.results?.[0]?.text as string
   if (text) {
     const trimmed = trimResponse(text, char, members, endTokens)
-    if (trimmed) {
-      yield trimmed.response
-      return
-    }
+    yield trimmed || text
+    return
   } else {
     logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
     yield { error: resp.body }

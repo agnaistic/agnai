@@ -11,28 +11,32 @@ export function trimResponse(
   members: AppSchema.Profile[],
   endTokens: string[]
 ) {
-  const baseEndTokens = [`${char.name}:`, `${char.name} :`, 'END_OF_DIALOG', '<END>']
+  const baseEndTokens = [`${char.name}:`, `${char.name} :`, 'END_OF_DIALOG', '<END>', '\n\n']
 
   for (const member of members) {
     baseEndTokens.push(`${member.handle}:`, `${member.handle} :`)
   }
 
-  const trimmed = baseEndTokens.concat(...endTokens).reduce(
-    (prev, endToken) => {
-      const index = generated.indexOf(endToken)
-      if (index === -1) return prev
-      const text = generated.slice(0, index).trim()
-      if (prev.index === -1) return { index, response: text }
-      return index < prev.index ? { index, response: text } : prev
-    },
-    { index: -1, response: '' }
-  )
+  let index = -1
+  const trimmed = baseEndTokens.concat(...endTokens).reduce((prev, endToken) => {
+    const idx = generated.indexOf(endToken)
 
-  if (trimmed.index === -1) {
-    return { index: -1, response: sanitise(generated) }
+    if (idx === -1) return prev
+
+    const text = generated.slice(0, idx)
+    if (index === -1 || idx < index) {
+      index = idx
+      return text
+    }
+
+    return prev
+  }, '')
+
+  if (index === -1) {
+    return sanitise(generated)
   }
 
-  return trimmed
+  return sanitise(trimmed)
 }
 
 export function joinParts(parts: string[]) {
