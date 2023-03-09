@@ -10,7 +10,6 @@ import {
   Settings,
   Sliders,
   User,
-  Users,
 } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
@@ -94,15 +93,17 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
-  const menu = settingStore((s) => ({ showMenu: s.showMenu }))
+  const menu = settingStore((s) => ({ showMenu: s.showMenu, config: s.config }))
   const state = userStore()
 
   return (
     <div class={`drawer flex flex-col gap-4 pt-4 ${menu.showMenu ? '' : 'drawer--hide'}`}>
       <div class="drawer__content flex flex-col gap-2 px-4">
-        <Item href="/login">
-          <LogIn /> Login
-        </Item>
+        <Show when={menu.config.canAuth}>
+          <Item href="/login">
+            <LogIn /> Login
+          </Item>
+        </Show>
 
         <Item href="/profile">
           <User /> Profile
@@ -138,9 +139,11 @@ const GuestNavigation: Component = () => {
           <AvatarIcon avatarUrl={state.profile?.avatar} />
           <div>{state.profile?.handle === 'You' ? 'Guest' : state.profile?.handle}</div>
         </div>
-        <div onClick={userStore.logout}>
-          <LogOut class="cursor-pointer text-white/50 hover:text-white" />
-        </div>
+        <Show when={state.loggedIn}>
+          <div onClick={userStore.logout}>
+            <LogOut class="cursor-pointer text-white/50 hover:text-white" />
+          </div>
+        </Show>
       </div>
     </div>
   )

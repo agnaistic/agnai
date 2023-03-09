@@ -52,7 +52,7 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
       form.append('avatar', avatar)
     }
 
-    const res = await api.upload(`/character/${char}`, form)
+    const res = await api.upload(`/character/${charId}`, form)
     return res
   }
 

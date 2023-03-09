@@ -49,7 +49,7 @@ export async function createGuestTextStream(opts: {
 
   const handler = handlers[adapter]
   const stream = handler({ ...opts, settings, members: [opts.sender], guest: true })
-  return { stream }
+  return { stream, adapter }
 }
 
 export async function createTextStream(opts: GenerateOptions) {
@@ -90,7 +90,7 @@ export async function createTextStream(opts: GenerateOptions) {
   const handler = handlers[adapter]
   const stream = handler(adapterOpts)
 
-  return { chat, char, stream }
+  return { chat, char, stream, adapter }
 }
 
 export async function createImageStream(opts: { chatId: string; senderId: string }) {

@@ -58,6 +58,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       if (!user) {
         throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
       }
+      update.hordeName = user.result?.username
     }
 
     update.hordeKey = encryptText(body.hordeApiKey)

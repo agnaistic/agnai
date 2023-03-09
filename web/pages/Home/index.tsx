@@ -17,14 +17,48 @@ const HomePage: Component = () => {
       />
       <div class="flex flex-col gap-4">
         <div>
+          <span class="font-bold">Useful Links:</span>
+          <ul>
+            <li>
+              •{' '}
+              <a
+                href="https://github.com/luminai-companion/agn-ai/issues"
+                target="_blank"
+                class="link"
+              >
+                Github Repository
+              </a>
+            </li>
+            <li>
+              •{' '}
+              <a
+                href="https://github.com/users/sceuick/projects/1/views/1"
+                target="_blank"
+                class="link"
+              >
+                Feature Roadmap
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div>
           This is currently in a fairly early stage of development. Bugs and some rough edges are
-          expected, but are encouraged to be reported. If you encounter an issue you can head over
-          to the{' '}
+          expected, but you are encouraged to be reported. If you encounter an issue or have an idea
+          you can head over to the{' '}
           <a href="https://github.com/luminai-companion/agn-ai/issues" target="_blank" class="link">
             GitHub repository
           </a>{' '}
           and create an issue.
         </div>
+        <div class="text-2xl font-bold">Registration</div>
+        <p>
+          You don't need to register to use Agnaistic. You can use it anonymously and no data will
+          be stored on any servers.
+        </p>
+        <p>
+          If you choose to register your data will be stored and accessible on any devices you login
+          with.
+        </p>
         <div class="text-2xl font-bold">Getting Started</div>
         <div class="lg">
           <p>
@@ -40,7 +74,7 @@ const HomePage: Component = () => {
           </p>
           <p>
             <span class="font-bold">Available services:</span>{' '}
-            {cfg.adapters.map((a) => a.label).join(', ')}
+            {cfg.adapters.map((a) => a.label).join(', ')}.
           </p>
         </div>
         <div class="text-lg font-bold"> Using Kobold AI</div>
