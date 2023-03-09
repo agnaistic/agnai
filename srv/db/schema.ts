@@ -37,6 +37,7 @@ export namespace AppSchema {
     hordeKey: string
     hordeModel: string
     hordeName?: string
+    hordeWorkers?: string[]
 
     defaultAdapter: AIAdapter
   }

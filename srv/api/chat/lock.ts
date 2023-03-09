@@ -9,7 +9,7 @@ import { db } from '../../db'
  * We are relying on the database to throw when a unique constraint is violated.
  */
 
-export async function obtainLock(chatId: string, ttl = 20) {
+export async function obtainLock(chatId: string, ttl = 10) {
   const existing = await db('chat-lock').findOne({ kind: 'chat-lock', chatLock: chatId })
   if (existing) {
     const expires = new Date(existing.obtained)
@@ -45,11 +45,9 @@ export async function releaseLock(chatId: string) {
 
 export async function verifyLock(opts: { chatId: string; lockId: string }) {
   const lock = await db('chat-lock').findOne({ chatLock: opts.chatId })
-  if (!lock) {
-    throw new Error(`Lock is not valid: Lock does not exist`)
-  }
+  if (!lock) return
 
   if (lock.lockId !== opts.lockId) {
-    throw new Error(`Lock is not valid: Lock IDs do not much`)
+    throw new Error(`Lock is not valid: Lock IDs do not match`)
   }
 }

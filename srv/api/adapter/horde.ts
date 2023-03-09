@@ -2,13 +2,13 @@ import needle from 'needle'
 import { decryptText } from '../../db/util'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
-import { HORDE_GUEST_KEY } from '../horde'
+import { getHordeWorkers, HORDE_GUEST_KEY } from '../horde'
 import { publishOne } from '../ws/handle'
 import { ModelAdapter } from './type'
 
 const baseUrl = 'https://stablehorde.net/api/v2'
 
-const base = { n: 1, max_context_length: 1024 }
+const base = { n: 1 }
 const defaultModel = 'PygmalionAI/pygmalion-6b'
 
 export const handleHorde: ModelAdapter = async function* ({
@@ -26,9 +26,18 @@ export const handleHorde: ModelAdapter = async function* ({
   }
 
   const body = {
-    models: [user.hordeModel || defaultModel],
+    // An empty models array will use any model
+    models: [user.hordeModel || defaultModel].filter((m) => !!m),
     prompt,
-    workers: [],
+    workers: [] as string[],
+  }
+
+  const availableWorkers = getHordeWorkers()
+  for (const workerId of user.hordeWorkers || []) {
+    const match = availableWorkers.some((w) => w.id === workerId)
+    if (match) {
+      body.workers.push(workerId)
+    }
   }
 
   const key = user.hordeKey ? (guest ? user.hordeKey : decryptText(user.hordeKey)) : HORDE_GUEST_KEY
@@ -87,18 +96,18 @@ export const handleHorde: ModelAdapter = async function* ({
       return
     }
 
+    if (check.body.faulted) {
+      logger.error({ error: check.body }, `Horde request failed: Job faulted`)
+      yield { error: `Horde request failed: Job faulted` }
+      continue
+    }
+
     if (!check.body.done) {
       checks++
       if (checks === 1) {
         publishOne(sender.userId, { type: 'message-horde-eta', eta: check.body.wait_time })
       }
       await wait()
-      continue
-    }
-
-    if (check.body.faulted) {
-      logger.error({ error: check.body }, `Horde request failed: Job failure`)
-      yield { error: `Horde request failed: Job failure` }
       continue
     }
 

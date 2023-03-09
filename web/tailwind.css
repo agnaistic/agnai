@@ -149,6 +149,22 @@
     @apply bg-[var(--bg-600)] hover:bg-[var(--bg-500)] active:bg-[var(--bg-400)];
   }
 
+  .btn-red {
+    @apply btn-base bg-red-700 active:bg-red-300 enabled:hover:bg-red-400;
+    @apply disabled:bg-red-900 disabled:text-white/25;
+  }
+
+  .btn-green {
+    @apply btn-base bg-green-700 active:bg-green-300 enabled:hover:bg-green-400;
+    @apply disabled:bg-green-900 disabled:text-white/25;
+  }
+
+  .btn-yellow,
+  .btn-orange {
+    @apply btn-base bg-yellow-700 active:bg-yellow-500 enabled:hover:bg-yellow-600;
+    @apply disabled:bg-orange-900 disabled:text-white/25;
+  }
+
   .btn-clear {
     @apply btn-base;
     @apply bg-transparent;
@@ -187,6 +203,10 @@
    */
   .form-check-input:checked[type='radio'] {
     background-image: url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%22-4 -4 8 8%22%3E%3Ccircle r=%222%22 fill=%22%23fff%22/%3E%3C/svg%3E');
+  }
+
+  option:checked {
+    @apply bg-[var(--hl-100)] text-black;
   }
 
   input[type='file']::file-selector-button {

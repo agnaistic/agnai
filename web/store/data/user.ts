@@ -20,6 +20,27 @@ export async function getConfig() {
   return api.get<AppSchema.User>('/user/config')
 }
 
+export async function deleteApiKey(kind: 'novel' | 'horde') {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/user/config/${kind}`)
+    return res
+  }
+
+  const user = local.loadItem('config')
+  if (kind === 'novel') {
+    user.novelApiKey = ''
+    user.novelVerified = false
+  }
+
+  if (kind === 'horde') {
+    user.hordeKey = ''
+    user.hordeName = ''
+  }
+
+  local.saveConfig(user)
+  return local.result({ success: true })
+}
+
 export async function updateProfile(handle: string, file?: File) {
   const avatar = await getImageData(file)
   if (!isLoggedIn()) {

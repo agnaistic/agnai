@@ -5,7 +5,14 @@ type ButtonSchema = keyof typeof kinds
 const kinds = {
   primary: 'btn-primary',
   secondary: 'btn-secondary',
+  grey: 'btn-secondary',
+  gray: 'btn-secondary',
   clear: 'btn-clear',
+  red: 'btn-red',
+  error: 'btn-red',
+  success: 'btn-green',
+  green: 'btn-green',
+  warning: 'btn-orange',
 } satisfies { [key: string]: string }
 
 const sizes = {

@@ -25,6 +25,24 @@ export const getConfig = handle(async ({ userId }) => {
   return user
 })
 
+export const deleteHordeKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    hordeKey: '',
+    hordeName: '',
+  })
+
+  return { success: true }
+})
+
+export const deleteNovelKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    novelApiKey: '',
+    novelVerified: false,
+  })
+
+  return { success: true }
+})
+
 export const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {
@@ -34,6 +52,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       hordeApiKey: 'string?',
       hordeModel: 'string?',
       luminaiUrl: 'string?',
+      hordeWorkers: ['string'],
       defaultAdapter: config.adapters,
     },
     body
@@ -46,6 +65,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   const update: Partial<AppSchema.User> = {
     defaultAdapter: body.defaultAdapter,
+    hordeWorkers: body.hordeWorkers,
   }
 
   if (body.hordeApiKey) {

@@ -122,6 +122,12 @@ export function error(error: string) {
   return { result: undefined, error }
 }
 
+export function result<T>(result: T) {
+  return Promise.resolve({ result, status: 200, error: undefined })
+}
+
+;<T>(result: T): Result<T> => Promise.resolve({ result, status: 200, error: undefined })
+
 export function replace<T extends { _id: string }>(id: string, list: T[], item: Partial<T>) {
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }
@@ -140,7 +146,7 @@ export const local = {
   ID,
   error,
   replace,
-  result: <T>(result: T): Result<T> => Promise.resolve({ result, status: 200, error: undefined }),
+  result,
 }
 
 type Result<T> = Promise<{ result: T | undefined; error?: string; status: number }>

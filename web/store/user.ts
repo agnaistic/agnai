@@ -126,6 +126,20 @@ export const userStore = createStore<State>(
       return {}
     },
 
+    async deleteKey({ user }, kind: 'novel' | 'horde') {
+      const res = await data.user.deleteApiKey(kind)
+      if (res.error) return toastStore.error(`Failed to update settings: ${res.error}`)
+
+      if (!user) return
+      if (kind === 'novel') {
+        return { user: { ...user, novelApiKey: '', novelVerified: false } }
+      }
+
+      if (kind === 'horde') {
+        return { user: { ...user, hordeKey: '', hordeName: '' } }
+      }
+    },
+
     clearGuestState() {
       const chats = local.loadItem('chats')
       for (const chat of chats) {

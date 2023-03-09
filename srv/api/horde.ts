@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { HordeModel } from '../../common/adapters'
+import { HordeModel, HordeWorker } from '../../common/adapters'
 import { get } from './request'
 import { handle } from './wrap'
 
@@ -10,6 +10,7 @@ const router = Router()
 const CACHE_TTL_MS = 120000
 
 let TEXT_CACHE: HordeModel[] = []
+let WORKER_CACHE: HordeWorker[] = []
 let IMAGE_CACHE: HordeModel[] = []
 
 updateModelCache()
@@ -57,9 +58,20 @@ export type FindUserResponse = {
 }
 
 async function updateModelCache() {
-  const url = `/status/models?type=text`
-  const models = await get<HordeModel[]>({ url }).catch(() => null)
-  if (!models?.result) return
+  const [models, workers] = await Promise.all([
+    get<HordeModel[]>({ url: `/status/models?type=text` }).catch(() => null),
+    get<HordeWorker[]>({ url: `/workers?type=text` }),
+  ])
 
-  TEXT_CACHE = models.result.filter((model) => model.type !== 'image')
+  if (models?.result) {
+    TEXT_CACHE = models.result.filter((model) => model.type !== 'image')
+  }
+
+  if (workers.result) {
+    WORKER_CACHE = workers.result
+  }
+}
+
+export function getHordeWorkers() {
+  return WORKER_CACHE.slice()
 }

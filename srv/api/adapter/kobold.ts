@@ -3,6 +3,8 @@ import { logger } from '../../logger'
 import { trimResponse } from '../chat/common'
 import { ModelAdapter } from './type'
 
+const REQUIRED_SAMPLERS = [0, 1, 2, 3, 4, 5]
+
 const base = {
   use_story: false,
   use_memory: false,
@@ -22,6 +24,16 @@ export const handleKobold: ModelAdapter = async function* ({
   settings,
 }) {
   const body = { ...base, ...settings, prompt }
+
+  // Kobold sampler order parameter must contain all 6 samplers to be valid
+  // If the sampler order is provided, but incomplete, add the remaining samplers.
+  if (body.order && body.order.length !== 6) {
+    for (const sampler of REQUIRED_SAMPLERS) {
+      if (body.order.includes(sampler)) continue
+
+      body.order.push(sampler)
+    }
+  }
   const endTokens = ['END_OF_DIALOG']
 
   const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
@@ -35,7 +47,7 @@ export const handleKobold: ModelAdapter = async function* ({
 
   if (resp.statusCode && resp.statusCode >= 400) {
     yield { error: `Kobold request failed: ${resp.statusMessage}` }
-    logger.error({ error: resp.body }, `Kobld request failed`)
+    logger.error({ error: resp.body }, `Kobold request failed`)
     return
   }
 

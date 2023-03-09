@@ -1,13 +1,15 @@
-import { Component, createEffect, createMemo, Show } from 'solid-js'
-import { AlertTriangle, Save } from 'lucide-solid'
+import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { AlertTriangle, Save, X } from 'lucide-solid'
 import Button from '../shared/Button'
 import PageHeader from '../shared/PageHeader'
 import TextInput from '../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../shared/util'
-import Dropdown from '../shared/Dropdown'
-import { CHAT_ADAPTERS, ChatAdapter, HordeModel } from '../../common/adapters'
+import Dropdown, { DropdownItem } from '../shared/Dropdown'
+import { CHAT_ADAPTERS, ChatAdapter, HordeModel, HordeWorker } from '../../common/adapters'
 import { settingStore, themeColors, userStore } from '../store'
 import Divider from '../shared/Divider'
+import MultiDropdown from '../shared/MultiDropdown'
+import Modal from '../shared/Modal'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
@@ -19,10 +21,14 @@ const Settings: Component = () => {
   const state = userStore()
   const cfg = settingStore()
 
+  const [workers, setWorkers] = createSignal<DropdownItem[]>()
+  const [show, setShow] = createSignal(false)
+
   createEffect(() => {
     // Always reload settings when entering this page
     userStore.getConfig()
     settingStore.getHordeModels()
+    settingStore.getHordeWorkers()
   })
 
   const onSubmit = (evt: Event) => {
@@ -36,7 +42,10 @@ const Settings: Component = () => {
       defaultAdapter: adapterOptions,
     } as const)
 
-    userStore.updateConfig(body)
+    userStore.updateConfig({
+      ...body,
+      hordeWorkers: workers()?.map((w) => w.value) || state.user?.hordeWorkers || [],
+    })
   }
 
   const hordeName = createMemo(
@@ -97,13 +106,27 @@ const Settings: Component = () => {
               placeholder={state.user?.hordeName ? 'API key has been verified' : ''}
               type="password"
             />
+
+            <Show when={state.user?.hordeName}>
+              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('horde')}>
+                Delete Horde API Key
+              </Button>
+            </Show>
+
             <Dropdown
               fieldName="hordeModel"
               helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
               label="Horde Model"
               value={state.user?.hordeModel}
-              items={[{ label: 'None', value: '' }].concat(...cfg.models.map(toItem))}
+              items={[{ label: 'Any', value: '' }].concat(...cfg.models.map(toItem))}
             />
+
+            <div class="flex items-center gap-4">
+              <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
+              <div>
+                Workers selected: {workers()?.length ?? state.user?.hordeWorkers?.length ?? '0'}
+              </div>
+            </div>
           </Show>
 
           <Show when={cfg.config.adapters.includes('kobold')}>
@@ -161,6 +184,11 @@ const Settings: Component = () => {
               }
               placeholder={novelVerified()}
             />
+            <Show when={state.user?.novelVerified}>
+              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('novel')}>
+                Delete Novel API Key
+              </Button>
+            </Show>
           </Show>
         </div>
         <Show when={!state.loggedIn}>
@@ -177,6 +205,7 @@ const Settings: Component = () => {
             Save
           </Button>
         </div>
+        <WorkerModal show={show()} close={() => setShow(false)} save={setWorkers} />
       </form>
     </>
   )
@@ -184,9 +213,78 @@ const Settings: Component = () => {
 
 export default Settings
 
+const WorkerModal: Component<{
+  show: boolean
+  close: () => void
+  save: (items: DropdownItem[]) => void
+}> = (props) => {
+  const cfg = settingStore((s) => ({
+    workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
+  }))
+
+  const state = userStore()
+
+  const [selected, setSelected] = createSignal<DropdownItem[]>()
+
+  const save = () => {
+    if (selected()) {
+      props.save(selected()!)
+    } else if (state.user?.hordeWorkers) {
+      props.save(cfg.workers.filter((w) => state.user?.hordeWorkers!.includes(w.value)))
+    }
+
+    props.close()
+  }
+
+  return (
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Specify AI Horde Workers"
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button onClick={save}>
+            <Save /> Select Workers
+          </Button>
+        </>
+      }
+    >
+      <div class="flex flex-col gap-4 text-sm">
+        <MultiDropdown
+          fieldName="workers"
+          items={cfg.workers}
+          label="Select Workers"
+          helperText="To use any worker de-select all workers"
+          onChange={setSelected}
+          values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
+        />
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}
+          </div>
+          <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
+            De-select All
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
+
 function toItem(model: HordeModel) {
   return {
     label: `${model.name} - (queue: ${model.queued}, eta: ${model.eta}, count: ${model.count})`,
     value: model.name,
   }
+}
+
+function sortWorkers({ models: l }: HordeWorker, { models: r }: HordeWorker) {
+  return l[0] > r[0] ? 1 : l[0] === r[0] ? 0 : -1
+}
+
+function toWorkerItem(wkr: HordeWorker): DropdownItem {
+  return { label: `${wkr.name} - ${wkr.models[0]}`, value: wkr.id }
 }

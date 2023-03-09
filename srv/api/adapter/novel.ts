@@ -1,6 +1,6 @@
 import needle from 'needle'
-import { v4 } from 'uuid'
 import { decryptText } from '../../db/util'
+import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
 import { ModelAdapter } from './type'
@@ -71,6 +71,13 @@ export const handleNovel: ModelAdapter = async function* ({
     yield { error: response.statusMessage! }
     return
   }
+
+  if (response.body.error) {
+    yield { error: `Novel API returnen an error: ${response.body.error}` }
+    return
+  }
+
+  logger.debug(response.body, 'Novel response')
 
   const parsed = sanitise(response.body.output)
   const trimmed = trimResponse(parsed, char, members, endTokens)

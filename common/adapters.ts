@@ -32,6 +32,36 @@ export type HordeModel = {
   type?: string
 }
 
+export type HordeWorker = {
+  id: string
+  name: string
+  type: 'text' | 'image'
+  online: number
+  max_length: number
+  max_context_length: number
+
+  requests_fulfilled: number
+  kudos_rewards: number
+  kudos_details: {
+    generated: number
+    uptime?: number
+  }
+  performance: string
+  threads: number
+  uptime: number
+  maintenance_mode: boolean
+  nsfw: boolean
+  trusted: boolean
+  flagged: false
+  uncompleted_jobs: number
+  models: string[]
+  team: {
+    name?: string
+    id?: string
+  }
+  bridge_agent: string
+}
+
 export const ADAPTER_LABELS: Record<AIAdapter, string> = {
   chai: 'Chai',
   horde: 'Horde',

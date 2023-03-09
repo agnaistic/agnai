@@ -46,6 +46,8 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
     log,
   })
 
+  log.setBindings({ adapter })
+
   let generated = ''
   let error = false
   for await (const gen of stream) {
