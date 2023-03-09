@@ -7,8 +7,6 @@ type PostReq = {
   body: any
 }
 
-const DEFAULT_API_KEY = '0000000000'
-
 const baseUrl = `https://stablehorde.net/api/v2`
 
 export const PY_URL = 'http://localhost:5001'

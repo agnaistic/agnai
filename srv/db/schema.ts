@@ -25,8 +25,11 @@ export namespace AppSchema {
     hash: string
 
     admin: boolean
+
     novelApiKey: string
     novelModel: string
+    novelVerified?: boolean
+
     koboldUrl: string
     luminaiUrl: string
     oobaUrl: string
