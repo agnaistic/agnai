@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import { CHAT_ADAPTERS } from '../../../common/adapters'
+import { ADAPTER_LABELS, CHAT_ADAPTERS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import { chatStore, settingStore } from '../../store'
+import { chatStore, settingStore, userStore } from '../../store'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -17,7 +17,7 @@ const options = [
 
 const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (props) => {
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
-
+  const user = userStore()
   const cfg = settingStore()
 
   let ref: any
@@ -60,6 +60,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         <Dropdown
           class="mb-2"
           fieldName="adapter"
+          helperText={`Default is set to: ${ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']}`}
           label="AI Service"
           value={state.chat?.adapter}
           items={[

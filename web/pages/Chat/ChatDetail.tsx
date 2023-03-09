@@ -3,7 +3,7 @@ import { ChevronLeft, MailPlus, Settings, Sliders, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
@@ -141,7 +141,22 @@ const InviteModal: Component<{ chatId: string; show: boolean; close: () => void 
   }
 
   return (
-    <Modal show={props.show} close={props.close} title="Invite User to Conversation">
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Invite User to Conversation"
+      footer={
+        <>
+          {' '}
+          <Button size="sm" schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button size="sm" onClick={save}>
+            <MailPlus /> Invite
+          </Button>
+        </>
+      }
+    >
       <form ref={ref} class="flex flex-col gap-2">
         <TextInput
           fieldName="userId"
@@ -149,16 +164,6 @@ const InviteModal: Component<{ chatId: string; show: boolean; close: () => void 
           helperText="The ID of the user to invite. The user should provide this to you"
         />
       </form>
-
-      <ModalFooter>
-        <Button size="sm" schema="secondary" onClick={props.close}>
-          <X /> Cancel
-        </Button>
-
-        <Button size="sm" onClick={save}>
-          <MailPlus /> Invite
-        </Button>
-      </ModalFooter>
     </Modal>
   )
 }
@@ -173,17 +178,6 @@ function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
-}
-
-function splitMessages(
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  msgs: AppSchema.ChatMessage[]
-) {
-  if (!char || !profile) return []
-
-  const newMsgs = msgs.flatMap((msg) => splitMessage(char, profile, msg))
-  return newMsgs
 }
 
 function splitMessage(

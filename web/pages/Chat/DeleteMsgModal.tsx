@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 import Button from '../../shared/Button'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import { msgStore } from '../../store/message'
 
 const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
@@ -14,15 +14,21 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
   }
 
   return (
-    <Modal title="Confirm Delete" show={props.show} close={props.close}>
+    <Modal
+      title="Confirm Delete"
+      show={props.show}
+      close={props.close}
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            Cancel
+          </Button>
+          <Button onClick={confirm}>Delete</Button>
+        </>
+      }
+    >
       Are you sure wish to delete the last{' '}
       {state.msgs.length - state.msgs.findIndex(byId(props.messageId))} messages?
-      <ModalFooter>
-        <Button schema="secondary" onClick={props.close}>
-          Cancel
-        </Button>
-        <Button onClick={confirm}>Delete</Button>
-      </ModalFooter>
     </Modal>
   )
 }

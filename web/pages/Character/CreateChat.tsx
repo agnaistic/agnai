@@ -4,7 +4,7 @@ import { Component } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
@@ -48,6 +48,19 @@ const CreateChatModal: Component<{
       show={props.show}
       close={props.onClose}
       title={`Create Conversation with ${props.char?.name}`}
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.onClose}>
+            <X />
+            Close
+          </Button>
+
+          <Button onClick={onCreate}>
+            <Check />
+            Create
+          </Button>
+        </>
+      }
     >
       <form ref={ref}>
         <div class="mb-2 text-sm">
@@ -103,18 +116,6 @@ const CreateChatModal: Component<{
         <div class="w-full text-sm">
           <PersonaAttributes value={props.char?.persona.attributes} hideLabel />
         </div>
-
-        <ModalFooter>
-          <Button schema="secondary" onClick={props.onClose}>
-            <X />
-            Close
-          </Button>
-
-          <Button onClick={onCreate}>
-            <Check />
-            Create
-          </Button>
-        </ModalFooter>
       </form>
     </Modal>
   )
