@@ -12,7 +12,7 @@ type SettingStore = {
 export const settingStore = createStore<SettingStore>('settings', {
   showMenu: false,
   models: [],
-  config: { adapters: [] },
+  config: { adapters: [], canAuth: true },
 })((_) => ({
   menu({ showMenu }) {
     return { showMenu: !showMenu }

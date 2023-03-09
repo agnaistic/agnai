@@ -93,15 +93,17 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
-  const menu = settingStore((s) => ({ showMenu: s.showMenu }))
+  const menu = settingStore((s) => ({ showMenu: s.showMenu, config: s.config }))
   const state = userStore()
 
   return (
     <div class={`drawer flex flex-col gap-4 pt-4 ${menu.showMenu ? '' : 'drawer--hide'}`}>
       <div class="drawer__content flex flex-col gap-2 px-4">
-        <Item href="/login">
-          <LogIn /> Login
-        </Item>
+        <Show when={menu.config.canAuth}>
+          <Item href="/login">
+            <LogIn /> Login
+          </Item>
+        </Show>
 
         <Item href="/profile">
           <User /> Profile

@@ -4,20 +4,23 @@ import { logger } from '../logger'
 import { AllDoc, Doc } from './schema'
 
 const uri = `mongodb://${config.db.host}:${config.db.port}`
+let connected = false
 
-logger.info({ uri }, 'MongoDB URI')
+logger.debug({ uri }, 'MongoDB URI')
 let database: Db | null = null
 
 export async function connect() {
   const cli = new MongoClient(uri, { ignoreUndefined: true })
-  await cli.connect()
-  database = cli.db(config.db.name)
+  try {
+    await cli.connect()
+    database = cli.db(config.db.name)
 
-  // const conn = await MongoClient.connect(uri, { ignoreUndefined: true })
-  // database = conn.db(config.db.name)
-
-  logger.info('Connected to MongoDB')
-  return database
+    logger.info('Connected to MongoDB')
+    connected = true
+    return database
+  } catch (ex) {
+    logger.warn(`Could not connect to database: Running in anonymous-only mode`)
+  }
 }
 
 export function getDb() {
@@ -35,6 +38,10 @@ export function db<T extends AllDoc['kind']>(kind: T) {
 
 export function catchErr(err?: any): null {
   return null
+}
+
+export function isConnected() {
+  return connected
 }
 
 export async function createIndexes() {

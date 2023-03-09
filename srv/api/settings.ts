@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { config } from '../config'
+import { isConnected } from '../db/client'
 import { handle } from './wrap'
 
 const router = Router()
@@ -9,7 +10,8 @@ const appConfig = {
 }
 
 const getAppConfig = handle(async () => {
-  return appConfig
+  const canAuth = isConnected()
+  return { ...appConfig, canAuth }
 })
 
 router.get('/', getAppConfig)

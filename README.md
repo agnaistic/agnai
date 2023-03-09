@@ -44,12 +44,17 @@ If you're only looking to run AgnAI without contributing:
 ### Using Docker
 
 1. Clone the project
-2. Run: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
+2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
+3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 agnaistic:latest`
+   - `-dt` Run the container detached
+   - `--restart=always` Restart at start up or if the server crashes
+   - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`
 
 ### Manually
 
 3. Install [Node.js](https://nodejs.org/en/download/)
-4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/)
+4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/) **Optional**
+   - The database is optional. Agnaistic will run in `anonymous-only` mode if there is no database available.
 5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
 6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm install`
@@ -67,7 +72,7 @@ Ultimately the design goals for this project are my own.
 
 - High quality codebase
 - AI Services: Transparently use a variety of AI models and services to converse with
-  - Initial AI services: Kobold, Kobold Horde, and Novel
+  - Initial AI services: Kobold, AI Horde, and Novel
 - Supporting additional AI services should be low friction
 - Lightweight to self-host
 - Avoiding native dependencies and Docker to be easy for non-technical people to install and run
