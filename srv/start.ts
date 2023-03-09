@@ -8,7 +8,6 @@ server.listen(config.port, '0.0.0.0', async () => {
   const db = await connect()
   if (db) {
     await createIndexes()
-
     // Initialise settings if empty
     await store.users.ensureInitialUser()
   }

@@ -1,12 +1,12 @@
 import needle from 'needle'
 import { v4 } from 'uuid'
 import { decryptText } from '../../db/util'
-import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
 import { ModelAdapter } from './type'
 
-const novelUrl = `https://api.novelai.net/ai/generate`
+export const NOVEL_BASEURL = `https://api.novelai.net`
+const novelUrl = `${NOVEL_BASEURL}/ai/generate`
 
 const statuses: Record<number, string> = {
   400: 'Invalid payload',
@@ -18,7 +18,7 @@ const base = {
   generate_until_sentence: true,
   min_length: 8,
   prefix: 'vanilla',
-  stop_sequences: [[27]],
+  stop_sequences: [[27]], // Stop on ':'
   use_cache: false,
   use_string: true,
   repetition_penalty_frequency: 0,
@@ -47,7 +47,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const endTokens = ['***', 'Scenario:', '----']
 
-  const response = await needle('post', novelUrl + `?${v4()}`, body, {
+  const response = await needle('post', novelUrl, body, {
     json: true,
     // timeout: 2000,
     response_timeout: 15000,

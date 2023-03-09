@@ -1,4 +1,4 @@
-import { Component, createEffect, Show } from 'solid-js'
+import { Component, createEffect, createMemo, Show } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../shared/Button'
 import PageHeader from '../shared/PageHeader'
@@ -39,14 +39,31 @@ const Settings: Component = () => {
     userStore.updateConfig(body)
   }
 
+  const hordeName = createMemo(
+    () => {
+      if (state.user?.hordeName) return `Logged in as ${state.user.hordeName}.`
+      return `Currently using anonymous access.`
+    },
+    { equals: false }
+  )
+
+  const novelVerified = createMemo(
+    () => (state.user?.novelVerified ? 'API Key has been verified' : ''),
+    { equals: false }
+  )
+
   const HordeHelpText = (
-    <span>
-      Leave blank to use guest account. Visit{' '}
-      <a class="link" href="https://stablehorde.net" target="_blank">
-        stablehorde.net
-      </a>{' '}
-      to register.
-    </span>
+    <>
+      <span>{hordeName()}</span>
+      <br />
+      <span>
+        Leave blank to use guest account. Visit{' '}
+        <a class="link" href="https://aihorde.net" target="_blank">
+          stablehorde.net
+        </a>{' '}
+        to register.
+      </span>
+    </>
   )
 
   return (
@@ -72,12 +89,12 @@ const Settings: Component = () => {
 
           <Show when={cfg.config.adapters.includes('horde')}>
             <Divider />
-            <h3 class="text-xl">Stable Horde settings</h3>
+            <h3 class="text-xl">AI Horde settings</h3>
             <TextInput
               fieldName="hordeApiKey"
-              label="Horde API Key"
+              label="AI Horde API Key"
               helperText={HordeHelpText}
-              placeholder="0000000000"
+              placeholder={state.user?.hordeName ? 'API key has been verified' : ''}
               type="password"
             />
             <Dropdown
@@ -142,7 +159,7 @@ const Settings: Component = () => {
                   .
                 </>
               }
-              placeholder="..."
+              placeholder={novelVerified()}
             />
           </Show>
         </div>
