@@ -107,10 +107,11 @@ export type NewMessage = {
   message: string
   characterId?: string
   senderId?: string
+  adapter?: string
 }
 
 export async function createChatMessage(
-  { chatId, message, characterId, senderId }: NewMessage,
+  { chatId, message, characterId, senderId, adapter }: NewMessage,
   ephemeral?: boolean
 ) {
   const doc: AppSchema.ChatMessage = {
@@ -121,6 +122,7 @@ export async function createChatMessage(
     characterId,
     userId: senderId,
     msg: message,
+    adapter,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   }
@@ -129,11 +131,13 @@ export async function createChatMessage(
   return doc
 }
 
-export async function editMessage(id: string, content: string) {
-  const doc = await db('chat-message').updateOne(
-    { _id: id },
-    { $set: { msg: content, updatedAt: now() } }
-  )
+export async function editMessage(id: string, content: string, adapter?: string) {
+  const edit: any = { msg: content, updatedAt: now() }
+  if (adapter) {
+    edit.adapter = adapter
+  }
+
+  const doc = await db('chat-message').updateOne({ _id: id }, { $set: edit })
 
   const msg = await getMessage(id)
   return msg

@@ -46,7 +46,7 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
 
   await verifyLock(lockProps)
 
-  const { stream } = await createGuestTextStream(body)
+  const { stream, adapter } = await createGuestTextStream(body)
 
   let generated = ''
   let error = false
@@ -76,7 +76,7 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
     characterId: body.char._id,
   }
   if (!error && generated) {
-    publishGuest(socketId, { type: 'guest-message-created', msg: response, chatId: id })
+    publishGuest(socketId, { type: 'guest-message-created', msg: response, chatId: id, adapter })
   }
 
   await store.chats.update(id, {})

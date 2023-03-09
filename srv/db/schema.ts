@@ -33,6 +33,7 @@ export namespace AppSchema {
 
     hordeKey: string
     hordeModel: string
+    hordeName?: string
 
     defaultAdapter: AIAdapter
   }
@@ -78,6 +79,7 @@ export namespace AppSchema {
 
     // Only chat owners can rate messages for now
     rating?: 'y' | 'n' | 'none'
+    adapter?: string
 
     createdAt: string
     updatedAt: string
