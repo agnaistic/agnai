@@ -3,7 +3,7 @@ import { Component, createEffect, createSignal } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
@@ -108,20 +108,27 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
   }
 
   return (
-    <Modal show={props.show} close={props.close} title="Change Password">
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Change Password"
+      footer={
+        <>
+          {' '}
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button onClick={save}>
+            <Save /> Update
+          </Button>
+        </>
+      }
+    >
       <div>
         <form ref={ref} class="flex flex-col gap-2">
           <div class="w-full justify-center">Update your password</div>
           <TextInput type="password" fieldName="newPassword" required />
           <TextInput type="password" fieldName="confirmPassword" required />
-          <ModalFooter>
-            <Button schema="secondary" onClick={props.close}>
-              <X /> Cancel
-            </Button>
-            <Button onClick={save}>
-              <Save /> Update
-            </Button>
-          </ModalFooter>
         </form>
       </div>
     </Modal>

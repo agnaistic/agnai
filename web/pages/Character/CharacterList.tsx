@@ -8,9 +8,9 @@ import AvatarIcon from '../../shared/AvatarIcon'
 import { characterStore, NewCharacter } from '../../store'
 import ImportCharacterModal from './ImportCharacter'
 import DeleteCharacterModal from './DeleteCharacter'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import Dropdown from '../../shared/Dropdown'
-import { exportCharacter, formatCharacter } from '../../../common/prompt'
+import { exportCharacter } from '../../../common/prompt'
 
 const CharacterList: Component = () => {
   const chars = characterStore((s) => s.characters)
@@ -132,7 +132,16 @@ const DownloadModal: Component<{ show: boolean; close: () => void; char?: AppSch
   const [schema, setSchema] = createSignal(opts()[0].value)
 
   return (
-    <Modal show={props.show && !!props.char} close={props.close} title="Download Character">
+    <Modal
+      show={props.show && !!props.char}
+      close={props.close}
+      title="Download Character"
+      footer={
+        <Button schema="secondary" onClick={props.close}>
+          <X /> Close
+        </Button>
+      }
+    >
       <form ref={ref} class="flex flex-col gap-4">
         <Dropdown
           label="Output Format"
@@ -170,12 +179,6 @@ const DownloadModal: Component<{ show: boolean; close: () => void; char?: AppSch
           </a>
         </div>
       </form>
-
-      <ModalFooter>
-        <Button schema="secondary" onClick={props.close}>
-          <X /> Close
-        </Button>
-      </ModalFooter>
     </Modal>
   )
 }

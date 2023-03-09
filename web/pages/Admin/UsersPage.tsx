@@ -1,7 +1,7 @@
 import { RefreshCw, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
@@ -58,7 +58,12 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string }>
   const state = adminStore()
 
   return (
-    <Modal show={props.show} close={props.close} title={state.info?.handle || '...'}>
+    <Modal
+      show={props.show}
+      close={props.close}
+      title={state.info?.handle || '...'}
+      footer={<Button onClick={props.close}>Close</Button>}
+    >
       <div class="flex flex-col gap-4">
         <TextInput fieldName="id" label="User ID" value={state.info?.userId} disabled />
         <TextInput fieldName="handle" label="Handle" value={state.info?.handle} disabled />
@@ -74,9 +79,6 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string }>
             <img src={state.info?.avatar} height="128px" />
           </div>
         </Show>
-        <ModalFooter>
-          <Button onClick={props.close}>Close</Button>
-        </ModalFooter>
       </div>
     </Modal>
   )
@@ -92,21 +94,28 @@ const PasswordModal: Component<{ username: string; show: boolean; close: () => v
   }
 
   return (
-    <Modal show={props.show} close={props.close} title="Change Password">
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Change Password"
+      footer={
+        <>
+          {' '}
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button onClick={save}>
+            <Save /> Update
+          </Button>
+        </>
+      }
+    >
       <div>
         Update password for: <b>{props.username}</b>
       </div>
       <div>
         <form ref={ref}>
           <TextInput type="password" fieldName="newPassword" required />
-          <ModalFooter>
-            <Button schema="secondary" onClick={props.close}>
-              <X /> Cancel
-            </Button>
-            <Button onClick={save}>
-              <Save /> Update
-            </Button>
-          </ModalFooter>
         </form>
       </div>
     </Modal>

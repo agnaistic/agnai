@@ -3,7 +3,7 @@ import { Component } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
-import Modal, { ModalFooter } from '../../shared/Modal'
+import Modal from '../../shared/Modal'
 import { characterStore } from '../../store'
 
 const DeleteCharacterModal: Component<{
@@ -16,14 +16,12 @@ const DeleteCharacterModal: Component<{
     characterStore.deleteCharacter(props.char._id, props.close)
   }
   return (
-    <Modal show={props.show && !!props.char} title="Confirm Deletion" close={props.close}>
-      <div class="flex flex-col items-center gap-4">
-        <div>Are you sure you wish to delete this character?</div>
-        <div class="flex justify-center gap-4">
-          <AvatarIcon avatarUrl={props.char!.avatar} />
-          {props.char!.name}
-        </div>
-        <ModalFooter>
+    <Modal
+      show={props.show && !!props.char}
+      title="Confirm Deletion"
+      close={props.close}
+      footer={
+        <>
           <Button schema="secondary" onClick={props.close}>
             <X />
             Cancel
@@ -32,7 +30,15 @@ const DeleteCharacterModal: Component<{
           <Button onClick={onDelete}>
             <Trash /> Delete
           </Button>
-        </ModalFooter>
+        </>
+      }
+    >
+      <div class="flex flex-col items-center gap-4">
+        <div>Are you sure you wish to delete this character?</div>
+        <div class="flex justify-center gap-4">
+          <AvatarIcon avatarUrl={props.char!.avatar} />
+          {props.char!.name}
+        </div>
       </div>
     </Modal>
   )
