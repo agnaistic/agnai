@@ -78,7 +78,7 @@ const getCharacter = handle(async ({ userId, params }) => {
 
 const deleteCharacter = handle(async ({ userId, params }) => {
   const id = params.id
-  await store.characters.deleteCharacter(userId!, id)
+  await store.characters.deleteCharacter({ userId: userId!, charId: id })
   return { success: true }
 })
 

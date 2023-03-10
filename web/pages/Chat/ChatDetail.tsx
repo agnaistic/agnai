@@ -54,16 +54,16 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <div class="mb-4 flex h-full flex-col justify-between pb-4">
-          <div class="flex items-center justify-between">
+        <div class="flex h-full flex-col justify-between sm:py-2">
+          <div class="flex h-8 items-center justify-between ">
             <A href={`/character/${chats.char?._id}/chats`}>
-              <div class="flex h-8 cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+              <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
                 <ChevronLeft />
                 {chats.char?.name}
               </div>
             </A>
 
-            <div class="flex flex-row gap-2">
+            <div class="flex flex-row items-center gap-2">
               <div class="icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
                 <Tooltip tip="Invite user" position="bottom">
                   <MailPlus />
@@ -81,10 +81,10 @@ const ChatDetail: Component = () => {
               </Show>
             </div>
           </div>
-          <div class="flex h-full flex-col-reverse">
+          <div class="flex h-[calc(100%-32px)] flex-col-reverse">
             <InputBar chat={chats.chat!} />
-            <div class="flex flex-col-reverse overflow-y-scroll">
-              <div class="flex flex-col gap-4 pt-4 pb-4">
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
+              <div class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
                   {(msg, i) => (
                     <Message

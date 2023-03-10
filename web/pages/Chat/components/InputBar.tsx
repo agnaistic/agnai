@@ -19,7 +19,7 @@ const InputBar: Component<{ chat: AppSchema.Chat }> = (props) => {
   }
 
   return (
-    <div class="flex justify-center gap-2 max-sm:pb-0">
+    <div class="flex items-center justify-center gap-2 max-sm:pb-0">
       <input
         ref={ref}
         type="text"

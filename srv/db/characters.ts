@@ -49,8 +49,8 @@ export async function getCharacters(userId: string) {
   return list
 }
 
-export async function deleteCharacter(charId: string, userId: string) {
-  await db('character').deleteOne({ _id: charId, userId, kind: 'character' }, {})
+export async function deleteCharacter(opts: { charId: string; userId: string }) {
+  await db('character').deleteOne({ _id: opts.charId, userId: opts.userId, kind: 'character' }, {})
 }
 
 export async function getCharacterList(charIds: string[]) {
