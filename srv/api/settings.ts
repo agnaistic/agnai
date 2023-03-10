@@ -17,7 +17,7 @@ const getAppConfig = handle(async () => {
 
   if (appConfig.version === null) {
     const content = await readFile(resolve(process.cwd(), 'version.txt')).catch(() => 'unknown')
-    appConfig.version = content.toString().trim()
+    appConfig.version = content.toString().trim().slice(0, 11)
   }
 
   return { ...appConfig, canAuth }
