@@ -42,8 +42,8 @@ export async function deleteApiKey(kind: 'novel' | 'horde') {
 }
 
 export async function updateProfile(handle: string, file?: File) {
-  const avatar = await getImageData(file)
   if (!isLoggedIn()) {
+    const avatar = await getImageData(file)
     const prev = local.loadItem('profile')
     const next: AppSchema.Profile = {
       ...prev,

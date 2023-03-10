@@ -40,7 +40,6 @@ export async function deleteCharacter(charId: string) {
 }
 
 export async function editChracter(charId: string, { avatar: file, ...char }: NewCharacter) {
-  const avatar = await getImageData(file)
   if (isLoggedIn()) {
     const form = new FormData()
     form.append('name', char.name)
@@ -48,14 +47,15 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
     form.append('sampleChat', char.sampleChat)
-    if (avatar) {
-      form.append('avatar', avatar)
+    if (file) {
+      form.append('avatar', file)
     }
 
     const res = await api.upload(`/character/${charId}`, form)
     return res
   }
 
+  const avatar = await getImageData(file)
   const chars = loadItem('characters')
   const prev = chars.find((ch) => ch._id === charId)
 
