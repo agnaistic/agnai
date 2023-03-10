@@ -77,7 +77,6 @@ export async function retryUserMessage(chatId: string, message: string) {
   if ('error' in entities) return entities
 
   const { chat, char, profile, msgs, user } = entities
-
   const prompt = createPrompt({ char, chat, members: [profile], messages: msgs })
 
   await api.post(`/chat/${chat._id}/guest-message`, {
@@ -172,6 +171,19 @@ function getGuestEntities(chatId: string) {
   const profile = loadItem('profile')
   const msgs = local.getMessages(chat?._id)
   const user = loadItem('config')
+  setPreset(chat)
 
   return { chat, char, profile, msgs, user }
+}
+
+function setPreset(chat: AppSchema.Chat) {
+  // The server does not store presets for users
+  // Override the `genSettings` property with the locally stored preset data if found
+  if (chat.genPreset) {
+    const presets = loadItem('presets')
+    const preset = presets.find((pre) => pre._id === chat.genPreset)
+    if (preset) {
+      chat.genSettings = preset
+    }
+  }
 }

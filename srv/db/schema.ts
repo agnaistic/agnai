@@ -61,8 +61,8 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
 
-    genPreset?: GenerationPreset | string | null
-    genSettings?: Omit<GenSettings, 'name'> | null
+    genPreset?: GenerationPreset | string
+    genSettings?: Omit<GenSettings, 'name'>
   }
 
   export interface ChatMember {

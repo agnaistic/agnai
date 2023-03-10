@@ -215,6 +215,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
   },
 }
 
-export function isDefaultPreset(value: string): value is GenerationPreset {
+export function isDefaultPreset(value?: string): value is GenerationPreset {
+  if (!value) return false
   return value in defaultPresets
 }

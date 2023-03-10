@@ -140,17 +140,6 @@ const Settings: Component = () => {
             />
           </Show>
 
-          <Show when={cfg.config.adapters.includes('luminai')}>
-            <Divider />
-            <TextInput
-              fieldName="luminaiUrl"
-              label="LuminAI URL"
-              helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
-              placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-              value={state.user?.luminaiUrl}
-            />
-          </Show>
-
           <Show when={cfg.config.adapters.includes('novel')}>
             <Divider />
             <h3 class="text-xl">NovelAI settings</h3>
@@ -191,6 +180,18 @@ const Settings: Component = () => {
             </Show>
           </Show>
         </div>
+
+        <Show when={cfg.config.adapters.includes('luminai')}>
+          <Divider />
+          <TextInput
+            fieldName="luminaiUrl"
+            label="LuminAI URL"
+            helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
+            placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+            value={state.user?.luminaiUrl}
+          />
+        </Show>
+
         <Show when={!state.loggedIn}>
           <div class="mt-8 mb-4 flex w-full flex-col items-center justify-center">
             <div>This cannot be undone!</div>

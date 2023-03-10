@@ -1,6 +1,7 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ChevronLeft, MailPlus, Settings, Sliders, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -35,6 +36,11 @@ const ChatDetail: Component = () => {
   const { id } = useParams()
   const nav = useNavigate()
 
+  const adapter = createMemo(() => {
+    if (!chats.chat?.adapter || chats.chat?.adapter === 'default') return user.user?.defaultAdapter!
+    return chats.chat.adapter!
+  })
+
   createEffect(() => {
     if (!id) {
       if (!chats.lastId) return nav('/character/list')
@@ -64,6 +70,7 @@ const ChatDetail: Component = () => {
             </A>
 
             <div class="flex flex-row items-center gap-2">
+              <div class="text-xs italic text-white/25">{ADAPTER_LABELS[adapter()]}</div>
               <div class="icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
                 <Tooltip tip="Invite user" position="bottom">
                   <MailPlus />
