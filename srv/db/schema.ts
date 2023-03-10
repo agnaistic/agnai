@@ -165,6 +165,7 @@ export namespace AppSchema {
 
   export interface AppConfig {
     adapters: AIAdapter[]
+    version: string
     canAuth: boolean
   }
 }

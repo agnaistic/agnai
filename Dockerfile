@@ -6,6 +6,8 @@ VOLUME [ "/app/assets" ]
 
 RUN npm install pnpm -g
 
+ARG SHA=unknown
+
 ADD package.json pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
 
@@ -14,7 +16,7 @@ ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
 
-RUN pnpm run build:server && pnpm run build && mkdir -p /app/assets
+RUN pnpm run build:server && pnpm run build && mkdir -p /app/assets && echo "${SHA}" > /app/version.txt
 
 ENV ADAPTERS=horde,novel,kobold,luminai \
   LOG_LEVEL=info \

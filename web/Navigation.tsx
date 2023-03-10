@@ -78,14 +78,17 @@ const UserNavigation: Component = () => {
             GitHub
           </a>
         </div>
-        <div class="flex h-16 w-full items-center justify-between border-t-2 border-[var(--bg-800)] px-4 ">
-          <div class="flex items-center gap-4">
-            <AvatarIcon avatarUrl={user.profile?.avatar} />
-            <div>{user.profile?.handle}</div>
+        <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-800)] px-4">
+          <div class="mt-2 flex w-full items-center justify-between">
+            <div class="flex items-center gap-4">
+              <AvatarIcon avatarUrl={user.profile?.avatar} />
+              <div>{user.profile?.handle}</div>
+            </div>
+            <div onClick={logout} class="icon-button cursor-pointer ">
+              <LogOut />
+            </div>
           </div>
-          <div onClick={logout} class="icon-button cursor-pointer ">
-            <LogOut />
-          </div>
+          <div class="mb-1 text-[0.6rem] italic text-white/25">{state.config.version}</div>
         </div>
       </div>
     </Show>

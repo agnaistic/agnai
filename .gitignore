@@ -13,5 +13,5 @@ runtime
 bin
 *.js
 *.map
-
+version.txt
 !srv.tsconfig.json
