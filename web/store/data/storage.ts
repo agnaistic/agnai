@@ -1,3 +1,4 @@
+import { v4 } from 'uuid'
 import { NOVEL_MODELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 
@@ -28,7 +29,7 @@ type LocalStorage = {
 const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   characters: [
     {
-      _id: ID,
+      _id: v4(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       kind: 'character',
@@ -115,6 +116,7 @@ export function loadItem<TKey extends keyof typeof KEYS>(key: TKey): LocalStorag
 
   const fallback = fallbacks[key]
   localStorage.setItem(key, JSON.stringify(fallback))
+
   return fallback
 }
 

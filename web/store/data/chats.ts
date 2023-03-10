@@ -79,8 +79,17 @@ export async function getAllChats() {
     return res
   }
 
-  const chats = loadItem('chats')
   const characters = loadItem('characters')
+  const chats = loadItem('chats')
+
+  if (!chats.length) {
+    const [char] = characters
+    const { chat, msg } = createNewChat(char, { ...char, overrides: char.persona })
+    local.saveChats([chat])
+    local.saveMessages(chat._id, [msg])
+
+    chats.push(chat)
+  }
 
   return local.result({ chats, characters })
 }
@@ -140,7 +149,7 @@ export async function editChatGenPreset(chatId: string, preset: string) {
   return local.result(next)
 }
 
-function createNewChat(char: AppSchema.Character, props: NewChat) {
+export function createNewChat(char: AppSchema.Character, props: NewChat) {
   const chat: AppSchema.Chat = {
     _id: v4(),
     characterId: char._id,
