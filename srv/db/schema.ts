@@ -33,6 +33,7 @@ export namespace AppSchema {
     koboldUrl: string
     luminaiUrl: string
     oobaUrl: string
+    oaiKey: string
 
     hordeKey: string
     hordeModel: string
@@ -88,7 +89,7 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
   }
-
+  
   /** Description of the character */
   export type CharacterPersona =
     | {
@@ -161,6 +162,10 @@ export namespace AppSchema {
     topA: number
     tailFreeSampling: number
     order?: number[]
+    frequencyPenalty: number,
+    presencePenalty: number,
+    gaslight: string,
+    oaiModel: string,
   }
 
   export interface AppConfig {

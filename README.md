@@ -17,7 +17,7 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 ## Features
 
 - **Group Conversations**: Multiple users with one character/bot
-- **Multiple AI services**: Support for Kobold, Novel, AI Horde, Chai, LuminAI
+- **Multiple AI services**: Support for Kobold, Novel, AI Horde, Chai, LuminAI, OpenAI
 - Multiple persona schema formats (W++, Square bracket format, Boostyle)
 - Multi-tenancy:
   - User authentication

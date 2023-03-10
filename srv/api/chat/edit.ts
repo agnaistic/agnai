@@ -15,6 +15,10 @@ const genSetting = {
   topK: 'number',
   topA: 'number',
   tailFreeSampling: 'number',
+  frequencyPenalty: 'number',
+  presencePenalty: 'number',
+  gaslight: 'string',
+  oaiModel: 'string',
 } as const
 
 export const updateChat = handle(async ({ params, body, user }) => {

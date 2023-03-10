@@ -1,5 +1,8 @@
 import { Component } from 'solid-js'
 import RangeInput from './RangeInput'
+import TextInput from './TextInput'
+import Dropdown from './Dropdown'
+import { DropdownItem } from './Dropdown'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
 
@@ -14,6 +17,10 @@ export const genSettings = {
   topK: 'number',
   topA: 'number',
   tailFreeSampling: 'number',
+  frequencyPenalty: 'number',
+  presencePenalty: 'number',
+  gaslight: 'string',
+  oaiModel: 'string',
 } as const
 
 const GenerationSettings: Component<{
@@ -131,6 +138,40 @@ const GenerationSettings: Component<{
         step={0.01}
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
+      />
+      <RangeInput
+        fieldName="frequencyPenalty"
+        label="Frequency Penalty"
+        helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim."
+        min={-2.0}
+        max={2.0}
+        step={0.01}
+        value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
+        disabled={props.disabled}
+      />
+      <RangeInput
+        fieldName="presencePenalty"
+        label="Presence Penalty"
+        helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics."
+        min={-2.0}
+        max={2.0}
+        step={0.01}
+        value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
+        disabled={props.disabled}
+      />
+      <TextInput
+        fieldName="gaslight"
+        label="Gaslight Prompt"
+        helperText="How the character definitions are sent to OpenAI. use {{name}} for the characters name from JSON, {{personality}} for personality, and {{user}} for you. Example is taken from TavernAI GPT-3.5-Turbo."
+        placeholder="Enter roleplay mode. You will write {{name}}'s next reply in a dialogue between {{name}} and {{user}}. Do not decide what You says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{name}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\n"
+        value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
+      />
+      <Dropdown
+        fieldName="oaiModel"
+        label="OpenAI Model"
+        items={[{label: "DaVinci", value: "text-davinci-003"},{label: "Turbo", value: "gpt-3.5-turbo"}]}
+        helperText="Which OpenAI model to use"
+        value={props.inherit?.oaiModel}
       />
     </div>
   </>

@@ -1,4 +1,4 @@
-lockfileVersion: 5.3
+lockfileVersion: 5.4
 
 specifiers:
   '@babel/core': ^7.20.12
@@ -97,7 +97,7 @@ dependencies:
   showdown: 2.1.0
   solid-js: 1.6.9
   solid-refresh: 0.4.2_solid-js@1.6.9
-  tailwindcss: 3.2.4
+  tailwindcss: 3.2.4_postcss@8.4.21
   typescript: 4.9.5
   uuid: 9.0.0
   ws: 8.12.1
@@ -549,7 +549,7 @@ packages:
       - '@parcel/core'
     dev: false
 
-  /@parcel/config-default/2.8.3_d0e09bd126101a24361fa9a1d13dcbb6:
+  /@parcel/config-default/2.8.3_2dqjxujgcancinq7vgq5cpolwy:
     resolution: {integrity: sha512-o/A/mbrO6X/BfGS65Sib8d6SSG45NYrNooNBkH/o7zbOBSRQxwyTlysleK1/3Wa35YpvFyLOwgfakqCtbGy4fw==}
     peerDependencies:
       '@parcel/core': ^2.8.3
@@ -559,7 +559,7 @@ packages:
       '@parcel/core': 2.8.3
       '@parcel/namer-default': 2.8.3_@parcel+core@2.8.3
       '@parcel/optimizer-css': 2.8.3_@parcel+core@2.8.3
-      '@parcel/optimizer-htmlnano': 2.8.3_d0e09bd126101a24361fa9a1d13dcbb6
+      '@parcel/optimizer-htmlnano': 2.8.3_2dqjxujgcancinq7vgq5cpolwy
       '@parcel/optimizer-image': 2.8.3_@parcel+core@2.8.3
       '@parcel/optimizer-svgo': 2.8.3_@parcel+core@2.8.3
       '@parcel/optimizer-terser': 2.8.3_@parcel+core@2.8.3
@@ -725,7 +725,7 @@ packages:
       - '@parcel/core'
     dev: false
 
-  /@parcel/optimizer-htmlnano/2.8.3_d0e09bd126101a24361fa9a1d13dcbb6:
+  /@parcel/optimizer-htmlnano/2.8.3_2dqjxujgcancinq7vgq5cpolwy:
     resolution: {integrity: sha512-L8/fHbEy8Id2a2E0fwR5eKGlv9VYDjrH9PwdJE9Za9v1O/vEsfl/0T/79/x129l5O0yB6EFQkFa20MiK3b+vOg==}
     engines: {node: '>= 12.0.0', parcel: ^2.8.3}
     dependencies:
@@ -2945,7 +2945,7 @@ packages:
       '@parcel/core':
         optional: true
     dependencies:
-      '@parcel/config-default': 2.8.3_d0e09bd126101a24361fa9a1d13dcbb6
+      '@parcel/config-default': 2.8.3_2dqjxujgcancinq7vgq5cpolwy
       '@parcel/core': 2.8.3
       '@parcel/diagnostic': 2.8.3
       '@parcel/events': 2.8.3
@@ -3626,10 +3626,12 @@ packages:
       stable: 0.1.8
     dev: false
 
-  /tailwindcss/3.2.4:
+  /tailwindcss/3.2.4_postcss@8.4.21:
     resolution: {integrity: sha512-AhwtHCKMtR71JgeYDaswmZXhPcW9iuI9Sp2LvZPo9upDZ7231ZJ7eA9RaURbhpXGVlrjX4cFNlB4ieTetEb7hQ==}
     engines: {node: '>=12.13.0'}
     hasBin: true
+    peerDependencies:
+      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3

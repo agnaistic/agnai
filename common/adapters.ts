@@ -11,7 +11,7 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   text: 'Plain Text',
 }
 
-export const AI_ADAPTERS = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai'] as const
+export const AI_ADAPTERS = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai','openai'] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
 export const MULTI_TENANT_ADAPTERS = ['novel', 'chai', 'kobold'] as const
@@ -69,4 +69,5 @@ export const ADAPTER_LABELS: Record<AIAdapter, string> = {
   novel: 'NovelAI',
   ooba: 'Text-Generation-WebUI',
   luminai: 'LuminAI',
+  openai: 'OpenAI',
 }

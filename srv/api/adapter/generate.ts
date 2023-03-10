@@ -16,6 +16,7 @@ import { handleKobold } from './kobold'
 import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
+import { handleOAI } from './openai'
 import { createPrompt } from './prompt'
 import { ModelAdapter } from './type'
 
@@ -34,6 +35,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   ooba: handleOoba,
   horde: handleHorde,
   luminai: handleLuminAI,
+  openai: handleOAI,
 }
 
 export async function createGuestTextStream(opts: {
