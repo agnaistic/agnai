@@ -16,7 +16,7 @@ export const settingStore = createStore<SettingStore>('settings', {
   showMenu: false,
   models: [],
   workers: [],
-  config: { adapters: [], canAuth: true },
+  config: { adapters: [], canAuth: true, version: '...' },
 })((_) => ({
   menu({ showMenu }) {
     return { showMenu: !showMenu }

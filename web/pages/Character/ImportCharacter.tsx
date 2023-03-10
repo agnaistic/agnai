@@ -140,7 +140,7 @@ function jsonToCharacter(json: any): NewCharacter {
 }
 
 function getImportFormat(obj: any): ImportFormat {
-  if ('adapter' in obj && 'userId' in obj) return 'agnai'
+  if (obj.kind === 'character') return 'agnai'
   if ('char_name' in obj) return 'ooba'
   if ('mes_example' in obj) return 'tavern'
 
