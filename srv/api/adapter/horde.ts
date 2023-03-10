@@ -3,8 +3,10 @@ import { decryptText } from '../../db/util'
 import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { getHordeWorkers, HORDE_GUEST_KEY } from '../horde'
-import { publishOne } from '../ws/handle'
+import { sendOne } from '../ws'
 import { ModelAdapter } from './type'
+
+const REQUIRED_SAMPLERS = [0, 1, 2, 3, 4, 5]
 
 const baseUrl = 'https://stablehorde.net/api/v2'
 
@@ -41,7 +43,17 @@ export const handleHorde: ModelAdapter = async function* ({
   }
 
   const key = user.hordeKey ? (guest ? user.hordeKey : decryptText(user.hordeKey)) : HORDE_GUEST_KEY
+
   const params = { ...base, ...settings }
+
+  if (params.order && params.order.length !== 6) {
+    for (const sampler of REQUIRED_SAMPLERS) {
+      if (params.order.includes(sampler)) continue
+
+      params.order.push(sampler)
+    }
+  }
+
   const headers = { apikey: key, 'Client-Agent': 'KoboldAiLite:11' }
 
   const init = await needle(
@@ -105,7 +117,7 @@ export const handleHorde: ModelAdapter = async function* ({
     if (!check.body.done) {
       checks++
       if (checks === 1) {
-        publishOne(sender.userId, { type: 'message-horde-eta', eta: check.body.wait_time })
+        sendOne(sender.userId, { type: 'message-horde-eta', eta: check.body.wait_time })
       }
       await wait()
       continue

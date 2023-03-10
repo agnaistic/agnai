@@ -39,6 +39,12 @@ export const config = {
     host: env('DB_HOST', '127.0.0.1'),
     port: env('DB_PORT', '27107'),
   },
+  redis: {
+    host: env('REDIS_HOST', '127.0.0.1'),
+    port: +env('REDIS_PORT', '6379'),
+    user: env('REDIS_USER', ''),
+    pass: env('REDIS_PASSWORD', ''),
+  },
   kobold: {
     maxLength: +env('KOBOLD_MAX_LENGTH', '200'),
   },

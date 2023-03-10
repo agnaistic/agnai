@@ -41,6 +41,7 @@ export async function createGuestTextStream(opts: {
   user: AppSchema.User
   sender: AppSchema.Profile
   char: AppSchema.Character
+  log: AppLog
   prompt: string
 }) {
   const adapter = getAdapater(opts.chat, opts.user)

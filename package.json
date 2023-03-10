@@ -69,6 +69,7 @@
     "prettier": "^2.8.3",
     "prettier-plugin-tailwindcss": "^0.2.1",
     "process": "^0.11.10",
+    "redis": "^4.6.5",
     "showdown": "^2.1.0",
     "solid-js": "^1.6.9",
     "solid-refresh": "^0.4.2",

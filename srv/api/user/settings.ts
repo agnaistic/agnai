@@ -9,7 +9,7 @@ import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
 import { handleUpload } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
-import { publishAll } from '../ws/handle'
+import { sendAll } from '../ws'
 
 export const getProfile = handle(async ({ userId }) => {
   const profile = await store.users.getProfile(userId!)
@@ -131,7 +131,7 @@ export const updateProfile = handle(async (req) => {
   const profile = await store.users.updateProfile(req.userId!, update)
 
   if (previous.handle !== form.handle) {
-    publishAll({ type: 'profile-handle-changed', userId: req.userId!, handle: form.handle })
+    sendAll({ type: 'profile-handle-changed', userId: req.userId!, handle: form.handle })
   }
   return profile
 })

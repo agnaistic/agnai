@@ -37,6 +37,7 @@ export const defaultPresets = {
     typicalP: 1,
     topA: 1,
     tailFreeSampling: 0.9,
+    order: [],
   },
   novel_20BC: {
     name: 'Novel 20BC+',

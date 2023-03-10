@@ -1,6 +1,5 @@
 import needle from 'needle'
 import { decryptText } from '../../db/util'
-import { logger } from '../../logger'
 import { sanitise, trimResponse } from '../chat/common'
 import { badWordIds } from './novel-bad-words'
 import { ModelAdapter } from './type'
@@ -33,6 +32,7 @@ export const handleNovel: ModelAdapter = async function* ({
   prompt,
   settings,
   guest,
+  log,
 }) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }
@@ -63,21 +63,22 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const status = response.statusCode || 0
   if (statuses[status]) {
+    log.error({ error: response.body }, `Novel response failed (${status})`)
     yield { error: statuses[status] }
     return
   }
 
   if (status >= 400) {
+    log.error({ error: response.body }, 'Novel response failed')
     yield { error: response.statusMessage! }
     return
   }
 
   if (response.body.error) {
-    yield { error: `Novel API returnen an error: ${response.body.error}` }
+    log.error({ error: response.body }, `Novel response failed (${status})`)
+    yield { error: `Novel API returned an error: ${response.body.error}` }
     return
   }
-
-  logger.debug(response.body, 'Novel response')
 
   const parsed = sanitise(response.body.output)
   const trimmed = trimResponse(parsed, char, members, endTokens)

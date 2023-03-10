@@ -2,7 +2,7 @@ import { assertValid } from 'frisker'
 import { config } from '../../config'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
-import { publishMany } from '../ws/handle'
+import { sendMany } from '../ws'
 
 const genSetting = {
   temp: 'number',
@@ -49,7 +49,7 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
 
   const message = await store.chats.editMessage(params.id, body.message)
 
-  publishMany(prev.chat?.memberIds.concat(prev.chat.userId), {
+  sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
     messageId: params.id,
     message: body.message,

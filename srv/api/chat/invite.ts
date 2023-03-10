@@ -1,8 +1,7 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { AppSchema } from '../../db/schema'
 import { handle } from '../wrap'
-import { publishOne } from '../ws/handle'
+import { sendOne } from '../ws'
 
 export const getInvites = handle(async (req) => {
   const { invites, chats, characters, profiles } = await store.invites.list(req.userId!)
@@ -24,7 +23,7 @@ export const createInvite = handle(async (req) => {
 
   if (!invite) return { success: false }
 
-  publishOne(req.body.userId, { type: 'invite-created', invite })
+  sendOne(req.body.userId, { type: 'invite-created', invite })
   return invite
 })
 

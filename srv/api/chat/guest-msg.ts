@@ -4,10 +4,10 @@ import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { createGuestTextStream } from '../adapter/generate'
 import { errors, handle } from '../wrap'
-import { publishGuest } from '../ws/handle'
+import { sendGuest } from '../ws'
 import { obtainLock, releaseLock, verifyLock } from './lock'
 
-export const guestGenerateMsg = handle(async ({ userId, params, body, log, socketId }, res) => {
+export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, res) => {
   if (!socketId) throw errors.Forbidden
 
   const id = params.id
@@ -41,25 +41,25 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
       msg: body.message,
       userId: 'anon',
     }
-    publishGuest(socketId, { type: 'message-created', msg: userMsg, chatId: id })
+    sendGuest(socketId, { type: 'message-created', msg: userMsg, chatId: id })
   }
 
   await verifyLock(lockProps)
 
-  const { stream, adapter } = await createGuestTextStream(body)
+  const { stream, adapter } = await createGuestTextStream({ ...body, log })
 
   let generated = ''
   let error = false
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
-      publishGuest(socketId, { type: 'guest-message-partial', partial: gen, chatId: id })
+      sendGuest(socketId, { type: 'guest-message-partial', partial: gen, chatId: id })
       continue
     }
 
     if (gen.error) {
       error = true
-      publishGuest(socketId, { type: 'message-error', error: gen.error, chatId: id })
+      sendGuest(socketId, { type: 'message-error', error: gen.error, chatId: id })
       continue
     }
   }
@@ -76,7 +76,7 @@ export const guestGenerateMsg = handle(async ({ userId, params, body, log, socke
     characterId: body.char._id,
   }
   if (!error && generated) {
-    publishGuest(socketId, { type: 'guest-message-created', msg: response, chatId: id, adapter })
+    sendGuest(socketId, { type: 'guest-message-created', msg: response, chatId: id, adapter })
   }
 
   await store.chats.update(id, {})

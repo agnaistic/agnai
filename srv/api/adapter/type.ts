@@ -1,4 +1,5 @@
 import { AppSchema } from '../../db/schema'
+import { AppLog } from '../../logger'
 
 export type ModelAdapter = (opts: {
   chat: AppSchema.Chat
@@ -9,4 +10,5 @@ export type ModelAdapter = (opts: {
   prompt: string
   settings: Omit<AppSchema.GenSettings, 'name'>
   guest?: boolean
+  log: AppLog
 }) => AsyncGenerator<string | { error: any }>

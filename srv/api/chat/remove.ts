@@ -1,7 +1,7 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
-import { publishMany } from '../ws/handle'
+import { sendMany } from '../ws'
 
 export const deleteMessages = handle(async ({ body, params, userId }) => {
   const chatId = params.id
@@ -17,7 +17,7 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
   }
 
   await store.chats.deleteMessages(body.ids)
-  publishMany(chat.memberIds.concat(chat.userId), { type: 'messages-deleted', ids: body.ids })
+  sendMany(chat.memberIds.concat(chat.userId), { type: 'messages-deleted', ids: body.ids })
   return { success: true }
 })
 
@@ -32,6 +32,6 @@ export const deleteChat = handle(async ({ params, userId }) => {
   }
 
   await store.chats.deleteChat(params.id)
-  publishMany(chat.memberIds.concat(chat.userId), { type: 'chat-deleted', chatId: params.id })
+  sendMany(chat.memberIds.concat(chat.userId), { type: 'chat-deleted', chatId: params.id })
   return { success: true }
 })
