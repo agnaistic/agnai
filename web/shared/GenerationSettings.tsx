@@ -162,7 +162,7 @@ const GenerationSettings: Component<{
       <TextInput
         fieldName="gaslight"
         label="Gaslight Prompt"
-        helperText="How the character definitions are sent to OpenAI. use {{name}} for the characters name from JSON, {{personality}} for personality, and {{user}} for you. Example is taken from TavernAI GPT-3.5-Turbo."
+        helperText="How the character definitions are sent to OpenAI. use {{name}} for the characters name from JSON, {{personality}} for personality, and {{user}} for you. Only used if using Turbo model. Example is taken from TavernAI GPT-3.5-Turbo."
         placeholder="Enter roleplay mode. You will write {{name}}'s next reply in a dialogue between {{name}} and {{user}}. Do not decide what You says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{name}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\n"
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
       />
