@@ -46,7 +46,7 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
 
   await verifyLock(lockProps)
 
-  const { stream, adapter } = await createGuestTextStream({ ...body, log })
+  const { stream, adapter } = await createGuestTextStream({ ...body, socketId, log })
 
   let generated = ''
   let error = false

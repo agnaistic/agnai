@@ -42,6 +42,7 @@ export async function createGuestTextStream(opts: {
   sender: AppSchema.Profile
   char: AppSchema.Character
   log: AppLog
+  socketId: string
   prompt: string
 }) {
   const adapter = getAdapater(opts.chat, opts.user)
@@ -49,7 +50,7 @@ export async function createGuestTextStream(opts: {
   const settings = mapPresetsToAdapter(rawSettings, adapter)
 
   const handler = handlers[adapter]
-  const stream = handler({ ...opts, settings, members: [opts.sender], guest: true })
+  const stream = handler({ ...opts, settings, members: [opts.sender], guest: opts.socketId })
   return { stream, adapter }
 }
 

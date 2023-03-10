@@ -8,7 +8,9 @@ export type ModelAdapter = (opts: {
   members: AppSchema.Profile[]
   sender: AppSchema.Profile
   prompt: string
-  settings: Omit<AppSchema.GenSettings, 'name'>
-  guest?: boolean
+
+  /** GenSettings mapped to an object for the target adapter */
+  settings: any
+  guest?: string
   log: AppLog
 }) => AsyncGenerator<string | { error: any }>
