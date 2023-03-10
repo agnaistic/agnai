@@ -184,7 +184,7 @@ const DownloadModal: Component<{ show: boolean; close: () => void; char?: AppSch
 }
 
 function charToJson(char: AppSchema.Character, format: string, schema: string) {
-  const { _id, updatedAt, createdAt, kind, avatar, ...json } = char
+  const { _id, ...json } = char
 
   const copy = { ...char }
   copy.persona.kind = schema as any
