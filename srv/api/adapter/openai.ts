@@ -84,7 +84,7 @@ export const handleOAI: ModelAdapter = async function* ({ char, members, user, p
 
   try {
     let text = ""
-    if(oaiModel === "text-davinci-003") {
+    if(!turbo) {
       text = resp.body["choices"][0]["text"]
     } else {
       text = resp.body["choices"][0]["message"]["content"]
