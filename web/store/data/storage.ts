@@ -62,6 +62,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     oobaUrl: '',
     username: '',
     novelApiKey: '',
+    oaiKey: '',
     novelModel: NOVEL_MODELS.euterpe,
     hordeKey: '',
     hordeModel: 'PygmalionAI/pygmalion-6b',

@@ -1,5 +1,5 @@
 import { AppSchema } from '../srv/db/schema'
-import { AIAdapter, ChatAdapter } from './adapters'
+import { AIAdapter, ChatAdapter, OPENAI_MODELS } from './adapters'
 
 export type GenerationPreset = keyof typeof defaultPresets
 
@@ -44,7 +44,8 @@ export const defaultPresets = {
     order: [0, 1, 2, 3, 4, 5, 6],
     frequencyPenalty: 0.7,
     presencePenalty: 0.7,
-    oaiModel: "text-davinci-003",
+    gaslight: '',
+    oaiModel: 'text-davinci-003',
   },
   novel_20BC: {
     name: 'Novel 20BC+',
@@ -76,11 +77,14 @@ export const defaultPresets = {
   },
   openai: {
     name: 'OpenAI',
+    temp: 0.5,
+    oaiModel: OPENAI_MODELS.DaVinci,
     maxTokens: 300,
     maxContextLength: 4095,
     frequencyPenalty: 0.7,
     presencePenalty: 0.7,
-    gaslight: "Enter roleplay mode. You will write {{name}}'s next reply in a dialogue between {{name}} and {{user}}. Do not decide what You says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{name}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\n",
+    gaslight:
+      "Enter roleplay mode. You will write {{name}}'s next reply in a dialogue between {{name}} and {{user}}. Do not decide what You says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{name}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\n",
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
 
@@ -162,10 +166,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
-    frequencyPenalty: '',
-    presencePenalty: '',
-    gaslight: '',
-    oaiModel: '',
   },
   novel: {
     maxTokens: 'max_length',
@@ -179,10 +179,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical_p',
     topA: 'top_a',
     order: 'order',
-    frequencyPenalty: '',
-    presencePenalty: '',
-    gaslight: '',
-    oaiModel: '',
   },
   chai: {
     repetitionPenalty: 'repetition_penalty',
@@ -196,10 +192,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: '',
     topA: '',
     order: '',
-    frequencyPenalty: '',
-    presencePenalty: '',
-    gaslight: '',
-    oaiModel: '',
   },
   ooba: {
     maxTokens: '',
@@ -213,10 +205,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: '',
     topA: '',
     order: '',
-    frequencyPenalty: '',
-    presencePenalty: '',
-    gaslight: '',
-    oaiModel: '',
   },
   horde: {
     maxTokens: 'max_length',
@@ -230,10 +218,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
-    frequencyPenalty: '',
-    presencePenalty: '',
-    gaslight: '',
-    oaiModel: '',
   },
   luminai: {
     maxTokens: 'max_length',
@@ -247,10 +231,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
-    frequencyPenalty: '',
-    presencePenalty: '',
-    gaslight: '',
-    oaiModel: '',
   },
   openai: {
     maxTokens: 'max_tokens',

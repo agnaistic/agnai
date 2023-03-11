@@ -11,12 +11,25 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   text: 'Plain Text',
 }
 
-export const AI_ADAPTERS = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai','openai'] as const
+export const AI_ADAPTERS = [
+  'kobold',
+  'novel',
+  'chai',
+  'ooba',
+  'horde',
+  'luminai',
+  'openai',
+] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
 export const MULTI_TENANT_ADAPTERS = ['novel', 'chai', 'kobold'] as const
 
 export type NovelModel = keyof typeof NOVEL_MODELS
+
+export const OPENAI_MODELS = {
+  DaVinci: 'text-davinci-003',
+  Turbo: 'gpt-3.5.turbo',
+}
 
 export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',
