@@ -31,9 +31,15 @@ const CreateCharacter: Component = () => {
     characterStore.getCharacters()
   })
 
-  const [schema, setSchema] = createSignal(state.edit?.persona.kind || 'boostyle')
+  const [schema, setSchema] = createSignal(state.edit?.persona.kind)
   const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
   const nav = useNavigate()
+
+  createEffect(() => {
+    if (!schema() && state.edit?.persona.kind) {
+      setSchema(state.edit?.persona.kind)
+    }
+  })
 
   const updateFile = (files: FileInputResult[]) => {
     if (!files.length) return setAvatar()
@@ -159,7 +165,7 @@ const CreateCharacter: Component = () => {
         <Show when={(editId || duplicateId) && state.edit}>
           <PersonaAttributes
             value={state.edit?.persona.attributes}
-            plainText={state.edit?.persona.kind === 'text'}
+            plainText={schema() === 'text'}
           />
         </Show>
 
