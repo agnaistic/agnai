@@ -152,10 +152,16 @@ const CreateCharacter: Component = () => {
           />
         </div>
 
-        <PersonaAttributes
-          value={state.edit?.persona.attributes}
-          plainText={state.edit?.persona.kind === 'text'}
-        />
+        <Show when={!editId && !duplicateId}>
+          <PersonaAttributes plainText={state.edit?.persona.kind === 'text'} />
+        </Show>
+
+        <Show when={(editId || duplicateId) && state.edit}>
+          <PersonaAttributes
+            value={state.edit?.persona.attributes}
+            plainText={state.edit?.persona.kind === 'text'}
+          />
+        </Show>
 
         <TextInput
           isMultiline
