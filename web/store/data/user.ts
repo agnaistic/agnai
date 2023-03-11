@@ -20,7 +20,7 @@ export async function getConfig() {
   return api.get<AppSchema.User>('/user/config')
 }
 
-export async function deleteApiKey(kind: 'novel' | 'horde') {
+export async function deleteApiKey(kind: string) {
   if (isLoggedIn()) {
     const res = await api.method('delete', `/user/config/${kind}`)
     return res

@@ -44,6 +44,14 @@ export const deleteNovelKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteOaiKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    oaiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {

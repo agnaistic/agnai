@@ -161,6 +161,9 @@ const Settings: Component = () => {
               placeholder="E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
               value={state.user?.oaiKey}
             />
+            <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
+              Delete HOpenAI Key
+            </Button>
           </Show>
 
           <Show when={cfg.config.adapters.includes('novel')}>
