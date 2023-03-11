@@ -4,7 +4,7 @@
 
 AI Agnostic Chat
 
-[Try it out!](https://agn.carlossus.com)
+[Try it out!](https://agnai.chat)
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
@@ -35,7 +35,7 @@ See the [roadmap here](https://github.com/users/sceuick/projects/1).
 
 ## Quick Start for Users
 
-You can visit the hosted version at [Agn.carlossus.com](https://agn.carlossus.com)
+You can visit the hosted version at [agnai.chat](https://agnai.chat)
 
 > CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
 
