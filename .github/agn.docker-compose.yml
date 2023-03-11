@@ -9,7 +9,7 @@ services:
           - agnaistic
     deploy:
       replicas: 2
-    ports: 
+    ports:
       - '3001:3001'
     volumes:
       - agn-data:/app/db
@@ -24,7 +24,7 @@ services:
       REDIS_PORT: 6379
       CHAI_URL: /run/secrets/chai_url
       CHAI_UID: /run/secrets/chai_uid
-      CHAI_TOKEN: /run/secrets/chai_token
+      CHAI_KEY: /run/secrets/chai_token
       ADAPTERS: horde,novel,kobold,openai,chai
     secrets:
       - jwt_secret
