@@ -71,6 +71,15 @@ function env(key: string, fallback?: string): string {
     throw new Error(`Required environment variable not set: "${key}"`)
   }
 
+  if (value.startsWith('/run/secrets/')) {
+    try {
+      const content = readFileSync(value, 'utf-8').toString()
+      return content
+    } catch (ex) {
+      throw new Error(`Required environment secret not available: ${value}`)
+    }
+  }
+
   return value
 }
 
