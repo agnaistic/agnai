@@ -20,6 +20,8 @@ services:
       DB_PORT: 27017
       NODE_ENV: production
       JWT_SECRET: /run/secrets/jwt_secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     secrets:
       - jwt_secret
 
