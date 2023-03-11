@@ -18,7 +18,7 @@ ADD web/ ./web
 
 RUN pnpm run build:server && pnpm run build && mkdir -p /app/assets && echo "${SHA}" > /app/version.txt
 
-ENV ADAPTERS=horde,novel,kobold,luminai,openai \
+ENV ADAPTERS=horde,novel,kobold,luminai,openai,chai \
   LOG_LEVEL=info \
   INITIAL_USER=administrator \
   DB_NAME=agnai \
