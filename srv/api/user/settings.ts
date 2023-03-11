@@ -62,7 +62,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       hordeModel: 'string?',
       luminaiUrl: 'string?',
       hordeWorkers: ['string'],
-      oaiKey: 'string',
+      oaiKey: 'string?',
       defaultAdapter: config.adapters,
     },
     body
