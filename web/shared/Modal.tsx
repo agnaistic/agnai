@@ -18,7 +18,7 @@ const Modal: Component<Props> = (props) => {
           <div class="absolute inset-0 bg-black" />
         </div>
         <div class="flex h-screen items-center">
-          <div class="my-auto max-h-[95vh] rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
+          <div class="my-auto max-h-[85vh] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
               <div onClick={props.close}>
@@ -26,11 +26,8 @@ const Modal: Component<Props> = (props) => {
               </div>
             </div>
 
-            <div
-              class={`${
-                props.footer ? 'max-h-[80vh]' : 'max-h-[95vh]'
-              } overflow-y-auto p-4 text-lg`}
-            >
+            {/* 132px is the height of the title + footer*/}
+            <div class={`max-h-[calc(85vh-132px)] overflow-y-auto p-4 text-lg`}>
               {props.children}
             </div>
 

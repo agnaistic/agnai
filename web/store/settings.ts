@@ -21,6 +21,9 @@ export const settingStore = createStore<SettingStore>('settings', {
   menu({ showMenu }) {
     return { showMenu: !showMenu }
   },
+  closeMenu: () => {
+    return { showMenu: false }
+  },
   async getConfig() {
     const res = await api.get('/settings')
     if (res.result) {

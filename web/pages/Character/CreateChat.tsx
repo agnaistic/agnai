@@ -47,7 +47,7 @@ const CreateChatModal: Component<{
     <Modal
       show={props.show}
       close={props.onClose}
-      title={`Create Conversation with ${props.char?.name}`}
+      title={`Create Chat with ${props.char?.name}`}
       footer={
         <>
           <Button schema="secondary" onClick={props.onClose}>

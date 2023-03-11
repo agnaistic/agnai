@@ -79,6 +79,16 @@ Ultimately the design goals for this project are my own.
 
 ## For Developers
 
+### Recommended Development Tooling
+
+I'd highly recommend using [VSCode](https://code.visualstudio.com/) with the following extensions:
+
+- `Prettier - Code formatter`: For auto-formatting
+- `Tailwind CSS Intellisense`: For auto-completion and intellisense with Tailwind CSS classes
+- And adding `"editor.formatOnSave": true` to your VSCode `settings.json` to auto-format with Prettier
+
+When using `pnpm start`, the Node.JS server is run using `--inspect`. This means you can use various [Inspector Clients](https://nodejs.org/en/docs/guides/debugging-getting-started/#inspector-clients) for debugging.
+
 ### Tech Stack
 
 The important parts of the stack are:

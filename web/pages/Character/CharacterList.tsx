@@ -19,7 +19,7 @@ const CharacterList: Component = () => {
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
   const [char, setChar] = createSignal<AppSchema.Character>()
 
-  const onSave = (char: NewCharacter) => {
+  const onImport = (char: NewCharacter) => {
     characterStore.createCharacter(char, () => setImport(false))
   }
 
@@ -60,7 +60,7 @@ const CharacterList: Component = () => {
         </div>
         {chars.list.length === 0 ? <NoCharacters /> : null}
       </Show>
-      <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onSave} />
+      <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
       <DownloadModal show={!!char()} close={() => setChar()} char={char()} />
       <DeleteCharacterModal
         char={showDelete()}
@@ -83,7 +83,7 @@ const Character: Component<{
           class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl  sm:w-9/12"
           href={`/character/${props.character._id}/chats`}
         >
-          <AvatarIcon avatarUrl={props.character.avatar} class="mx-4 h-10 w-10 rounded-md" />
+          <AvatarIcon avatarUrl={props.character.avatar} size="10" class="mx-4" />
           <div class="text-lg font-bold">{props.character.name}</div>
         </A>
       </div>
