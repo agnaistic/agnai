@@ -28,7 +28,7 @@ export type NovelModel = keyof typeof NOVEL_MODELS
 
 export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
-  Turbo: 'gpt-3.5.turbo',
+  Turbo: 'gpt-3.5-turbo',
 }
 
 export const NOVEL_MODELS = {

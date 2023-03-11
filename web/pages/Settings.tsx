@@ -162,7 +162,7 @@ const Settings: Component = () => {
               value={state.user?.oaiKey}
             />
             <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
-              Delete HOpenAI Key
+              Delete OpenAI Key
             </Button>
           </Show>
 
