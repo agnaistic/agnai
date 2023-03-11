@@ -43,8 +43,8 @@ const HomePage: Component = () => {
         </div>
         <div>
           This is currently in a fairly early stage of development. Bugs and some rough edges are
-          expected, but you are encouraged to be reported. If you encounter an issue or have an idea
-          you can head over to the{' '}
+          expected. If you encounter an issue or have an idea you'd like to share you can head over
+          to the{' '}
           <a href="https://github.com/luminai-companion/agn-ai/issues" target="_blank" class="link">
             GitHub repository
           </a>{' '}
@@ -56,8 +56,8 @@ const HomePage: Component = () => {
           be stored on any servers.
         </p>
         <p>
-          If you choose to register your data will be stored and accessible on any devices you login
-          with.
+          If you choose to register, your data will be stored and accessible on any devices you
+          login with.
         </p>
         <div class="text-2xl font-bold">Getting Started</div>
         <div class="lg">
@@ -84,8 +84,8 @@ const HomePage: Component = () => {
         </div>
         <div class="text-lg font-bold"> Using AI Horde</div>
         <div>
-          By default we use anonymous access. and the <b>Pygmalion 6B</b> model. You can provide
-          your API key or change the model in the Settings page.
+          By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your
+          API key or change the model in the Settings page.
         </div>
         <div class="text-lg font-bold"> Using Novel AI</div>
         <div>
