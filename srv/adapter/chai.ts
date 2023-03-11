@@ -1,6 +1,6 @@
 import needle from 'needle'
-import { config } from '../../config'
-import { trimResponse } from '../chat/common'
+import { config } from '../config'
+import { trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 const base = {

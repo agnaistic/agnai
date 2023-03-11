@@ -6,9 +6,8 @@
  */
 
 import needle from 'needle'
-import { config } from '../../config'
-import { logger } from '../../logger'
-import { sanitise, trimResponse } from '../chat/common'
+import { config } from '../config'
+import { sanitise, trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 const base = {

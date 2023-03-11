@@ -1,4 +1,4 @@
-import { createImageStream } from '../adapter/generate'
+import { createImageStream } from '../../adapter/generate'
 import { handle } from '../wrap'
 
 /**

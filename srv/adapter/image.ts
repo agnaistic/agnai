@@ -1,6 +1,6 @@
 import gpt from 'gpt-3-encoder'
-import { store } from '../../db'
-import { AppSchema } from '../../db/schema'
+import { store } from '../db'
+import { AppSchema } from '../db/schema'
 
 const MAX_TOKENS = 128
 const BOT_REPLACE = /\{\{char\}\}/g

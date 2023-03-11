@@ -1,13 +1,9 @@
-/**
- * GPT-3.5-turbo
- */
-
 import needle from 'needle'
-import { sanitise, trimResponse } from '../chat/common'
+import { sanitise, trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
-import { decryptText } from '../../db/util'
-import { defaultPresets } from '../../../common/presets'
-import { formatCharacter } from '../../../common/prompt'
+import { decryptText } from '../db/util'
+import { defaultPresets } from '../../common/presets'
+import { formatCharacter } from '../../common/prompt'
 
 const baseUrl = `https://api.openai.com/v1`
 

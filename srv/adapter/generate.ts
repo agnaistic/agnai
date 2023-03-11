@@ -1,14 +1,9 @@
-import { AIAdapter } from '../../../common/adapters'
-import {
-  mapPresetsToAdapter,
-  defaultPresets,
-  isDefaultPreset,
-  getGenSettings,
-} from '../../../common/presets'
-import { store } from '../../db'
-import { AppSchema } from '../../db/schema'
-import { AppLog, logger } from '../../logger'
-import { errors, StatusError } from '../wrap'
+import { AIAdapter } from '../../common/adapters'
+import { mapPresetsToAdapter, defaultPresets, isDefaultPreset } from '../../common/presets'
+import { store } from '../db'
+import { AppSchema } from '../db/schema'
+import { AppLog, logger } from '../logger'
+import { errors, StatusError } from '../api/wrap'
 import { handleChai } from './chai'
 import { handleHorde } from './horde'
 import { createImagePrompt } from './image'

@@ -1,5 +1,5 @@
-import { AppSchema } from '../../db/schema'
-import { AppLog } from '../../logger'
+import { AppSchema } from '../db/schema'
+import { AppLog } from '../logger'
 
 export type ModelAdapter = (opts: {
   chat: AppSchema.Chat

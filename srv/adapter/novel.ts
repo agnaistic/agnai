@@ -1,6 +1,6 @@
 import needle from 'needle'
-import { decryptText } from '../../db/util'
-import { sanitise, trimResponse } from '../chat/common'
+import { decryptText } from '../db/util'
+import { sanitise, trimResponse } from '../api/chat/common'
 import { badWordIds } from './novel-bad-words'
 import { ModelAdapter } from './type'
 

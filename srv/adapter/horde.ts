@@ -1,10 +1,10 @@
 import needle from 'needle'
-import { defaultPresets } from '../../../common/presets'
-import { decryptText } from '../../db/util'
-import { logger } from '../../logger'
-import { sanitise, trimResponse } from '../chat/common'
-import { getHordeWorkers, HORDE_GUEST_KEY } from '../horde'
-import { sendGuest, sendOne } from '../ws'
+import { defaultPresets } from '../../common/presets'
+import { decryptText } from '../db/util'
+import { logger } from '../logger'
+import { sanitise, trimResponse } from '../api/chat/common'
+import { getHordeWorkers, HORDE_GUEST_KEY } from '../api/horde'
+import { sendGuest, sendOne } from '../api/ws'
 import { ModelAdapter } from './type'
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
