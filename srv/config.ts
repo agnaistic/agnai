@@ -51,8 +51,8 @@ export const config = {
   noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
   chai: {
     url: env('CHAI_URL', ''),
-    uid: env('CHAI_UID', 'empty'),
-    key: env('CHAI_KEY', 'empty'),
+    uid: env('CHAI_UID', ''),
+    key: env('CHAI_KEY', ''),
   },
   classifyUrl: env('CLASSIFY_URL', 'http://localhost:5001'),
   init: {
@@ -63,6 +63,8 @@ export const config = {
     .split(',')
     .filter((i) => !!i) as AIAdapter[],
 }
+
+console.log({ config }, 'Config')
 
 function env(key: string, fallback?: string): string {
   const value = process.env[key] || fallback || ''
