@@ -19,11 +19,17 @@ const SELF_REPLACE = /\{\{user\}\}/g
 export async function createPrompt({ chat, char, members, retry, settings }: PromptOpts) {
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
+  const hasStartSignal =
+    chat.scenario.includes('<START>') ||
+    chat.sampleChat.includes('<START>') ||
+    chat.greeting.includes('<START>')
+
   if (chat.scenario) {
     pre.push(`Scenario: ${chat.scenario}`)
   }
 
-  pre.push(`<START>`, ...chat.sampleChat.split('\n'))
+  if (!hasStartSignal) pre.push('<START>')
+  pre.push(...chat.sampleChat.split('\n'))
 
   const post = [`${char.name}:`]
 

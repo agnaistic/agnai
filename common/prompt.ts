@@ -22,7 +22,9 @@ export function createPrompt(opts: PromptOpts) {
   const history: string[] = []
   let tokens = gpt.encode([pre, post].join('\n')).length
 
-  for (const msg of messages) {
+  const messagesDesc = messages.slice().sort(sortDesc)
+
+  for (const msg of messagesDesc) {
     const name = msg.characterId ? char.name : getHandle(members, msg.userId)
     const text = `${name}: ${msg.msg}`
     const size = gpt.encode(text).length
@@ -51,13 +53,19 @@ export function createPromptSurrounds(opts: Pick<PromptOpts, 'chat' | 'char' | '
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
+  const hasStartSignal =
+    chat.scenario.includes('<START>') ||
+    chat.sampleChat.includes('<START>') ||
+    chat.greeting.includes('<START>')
+
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
+
   if (chat.scenario) pre.push(`Scenario: ${chat.scenario}`)
 
+  if (!hasStartSignal) pre.push('<START>')
+
   const sampleChat = chat.sampleChat.split('\n').filter(removeEmpty)
-  if (chat.scenario.includes('<START>') || chat.sampleChat.includes('<START>'))
-    pre.push(...sampleChat)
-  else pre.push(...sampleChat)
+  pre.push(...sampleChat)
 
   return {
     pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),
@@ -126,4 +134,8 @@ function quote(str: string) {
 
 function removeEmpty(value?: string) {
   return !!value
+}
+
+function sortDesc(left: AppSchema.ChatMessage, right: AppSchema.ChatMessage) {
+  return left.createdAt > right.createdAt ? 1 : left.createdAt === right.createdAt ? 0 : -1
 }

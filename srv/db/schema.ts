@@ -167,12 +167,27 @@ export namespace AppSchema {
     presencePenalty?: number
     gaslight?: string
     oaiModel?: string
+
+    memoryDepth?: number
   }
 
   export interface AppConfig {
     adapters: AIAdapter[]
     version: string
     canAuth: boolean
+  }
+
+  export interface MemoryBook {
+    _id: string
+    name: string
+    userId: string
+    entries: MemoryEntry[]
+  }
+
+  export interface MemoryEntry {
+    name: string
+    keywords: string[]
+    entry: string
   }
 }
 
