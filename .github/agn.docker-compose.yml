@@ -20,8 +20,16 @@ services:
       DB_PORT: 27017
       NODE_ENV: production
       JWT_SECRET: /run/secrets/jwt_secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CHAI_URL: /run/secrets/chai_url
+      CHAI_UID: /run/secrets/chai_uid
+      CHAI_TOKEN: /run/secrets/chai_token
     secrets:
       - jwt_secret
+      - chai_url
+      - chai_uid
+      - chai_token
 
 networks:
   storage_swarm:
@@ -29,6 +37,12 @@ networks:
 
 secrets:
   jwt_secret:
+    external: true
+  chai_url:
+    external: true
+  chai_uid:
+    external: true
+  chai_token:
     external: true
 
 volumes:
