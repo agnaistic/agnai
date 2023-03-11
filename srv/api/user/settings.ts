@@ -21,6 +21,7 @@ export const getConfig = handle(async ({ userId }) => {
   if (user) {
     user.novelApiKey = ''
     user.hordeKey = ''
+    user.oaiKey = ''
   }
   return user
 })
@@ -43,6 +44,14 @@ export const deleteNovelKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteOaiKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    oaiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {
@@ -53,6 +62,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       hordeModel: 'string?',
       luminaiUrl: 'string?',
       hordeWorkers: ['string'],
+      oaiKey: 'string',
       defaultAdapter: config.adapters,
     },
     body
@@ -108,6 +118,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
     update.novelVerified = true
     update.novelApiKey = encryptText(body.novelApiKey!)
+  }
+
+  if (body.oaiKey) {
+    update.oaiKey = encryptText(body.oaiKey!)
   }
 
   const user = await store.users.updateUser(userId!, update)

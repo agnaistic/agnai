@@ -11,4 +11,4 @@ services:
     image: redis:7
     restart: always
     ports:
-      - '6378:6379'
+      - '6379:6379'

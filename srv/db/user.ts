@@ -91,6 +91,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     oobaUrl: '',
     hordeModel: 'PygmalionAI/pygmalion-6b',
     hordeKey: '',
+    oaiKey: '',
   }
 
   const startChar: AppSchema.Character = {
