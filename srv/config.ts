@@ -64,8 +64,6 @@ export const config = {
     .filter((i) => !!i) as AIAdapter[],
 }
 
-console.log({ config }, 'Config')
-
 function env(key: string, fallback?: string): string {
   const value = process.env[key] || fallback || ''
 
@@ -75,7 +73,7 @@ function env(key: string, fallback?: string): string {
 
   if (value.startsWith('/run/secrets/')) {
     try {
-      const content = readFileSync(value, 'utf-8').toString()
+      const content = readFileSync(value, 'utf-8').toString().trim()
       return content
     } catch (ex) {
       throw new Error(`Required environment secret not available: ${value}`)
