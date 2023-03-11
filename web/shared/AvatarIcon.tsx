@@ -1,20 +1,23 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import { Component, Show } from 'solid-js'
+import { Component, createMemo, Show } from 'solid-js'
 
-const AvatarIcon: Component<{ avatarUrl?: string; class?: string; bot?: boolean }> = (props) => {
+const AvatarIcon: Component<{
+  avatarUrl?: string
+  class?: string
+  bot?: boolean
+  size?: string | number
+}> = (props) => {
+  const cls = createMemo(() => props.class || '')
+  const size = createMemo(() => (props.size ? `h-${props.size} w-${props.size}` : 'h-8 w-8'))
+
   return (
     <>
       <Show when={props.avatarUrl}>
-        <img
-          class={`h-8 w-8 rounded-full bg-black object-scale-down ${props.class || ''}`}
-          src={props.avatarUrl}
-        />
+        <img class={`${size()} rounded-full object-cover ${cls()}`} src={props.avatarUrl} />
       </Show>
       <Show when={!props.avatarUrl}>
         <div
-          class={`flex h-8 w-8 items-center justify-center rounded-full bg-[var(--bg-600)] ${
-            props.class || ''
-          }`}
+          class={`flex ${size()} items-center justify-center rounded-full bg-[var(--bg-600)] ${cls()}`}
         >
           <Show when={!props.bot}>
             <VenetianMask />

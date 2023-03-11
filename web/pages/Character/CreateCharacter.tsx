@@ -103,7 +103,7 @@ const CreateCharacter: Component = () => {
         <div class="flex w-full gap-2">
           <Show when={state.edit}>
             <div class="flex items-center">
-              <AvatarIcon avatarUrl={state.edit?.avatar} class="h-12 w-12" />
+              <AvatarIcon avatarUrl={state.edit?.avatar} size="12" />
             </div>
           </Show>
           <FileInput

@@ -1,5 +1,6 @@
 import { Import, X } from 'lucide-solid'
 import { Component, createSignal } from 'solid-js'
+import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
@@ -13,7 +14,7 @@ const ImportCharacterModal: Component<{
   onSave: (char: ImportCharacter) => void
 }> = (props) => {
   const [json, setJson] = createSignal<any>(undefined)
-  const [avatar, setAvatar] = createSignal<string | undefined>(undefined)
+  const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
 
   const updateJson = async (files: FileInputResult[]) => {
     if (!files.length) return setJson()
@@ -32,7 +33,7 @@ const ImportCharacterModal: Component<{
 
   const updateAvatar = (files: FileInputResult[]) => {
     if (!files.length) setAvatar()
-    else setAvatar(files[0].content)
+    else setAvatar(() => files[0].file)
   }
 
   const onImport = async () => {
@@ -140,9 +141,13 @@ function jsonToCharacter(json: any): NewCharacter {
 }
 
 function getImportFormat(obj: any): ImportFormat {
-  if (obj.kind === 'character') return 'agnai'
+  if (obj.kind === 'character' || isNative(obj)) return 'agnai'
   if ('char_name' in obj) return 'ooba'
   if ('mes_example' in obj) return 'tavern'
 
   throw new Error('Unknown import format')
+}
+
+function isNative(obj: any): obj is AppSchema.Character {
+  return !!obj.name && !!obj.persona && !!obj.greeting && !!obj.scenario && !!obj.sampleChat
 }
