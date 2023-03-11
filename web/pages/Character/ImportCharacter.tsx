@@ -113,8 +113,6 @@ type ImportKeys = {
 function jsonToCharacter(json: any): NewCharacter {
   const format = getImportFormat(json)
 
-  console.log(json)
-
   if (format === 'agnai') {
     return json
   }

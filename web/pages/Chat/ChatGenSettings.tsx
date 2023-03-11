@@ -89,10 +89,7 @@ export const ChatGenSettingsModal: Component<{
             items={state.options.concat(presetList)}
             value={props.chat.genPreset}
             disabled={!usePreset()}
-            onChange={(item) => {
-              console.log(item)
-              setSelected(item.value)
-            }}
+            onChange={(item) => setSelected(item.value)}
           />
 
           <Show when={usePreset()}>
