@@ -1,6 +1,6 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal } from 'solid-js'
-import { defaultPresets } from '../../../common/presets'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { defaultPresets, GenerationPreset } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
@@ -22,19 +22,32 @@ export const ChatGenSettingsModal: Component<{
   close: () => void
 }> = (props) => {
   const [usePreset, setUsePreset] = createSignal(!!props.chat?.genPreset)
+  const [selected, setSelected] = createSignal(props.chat?.genPreset)
+
   let ref: any
 
   const state = presetStore(({ presets }) => ({
-    presets: [{ label: 'None', value: '' }].concat(
+    presets,
+    options: [{ label: 'None', value: '' }].concat(
       presets.map((pre) => ({ label: pre.name, value: pre._id }))
     ),
   }))
+
+  const presets = createMemo(() => {
+    const all: Partial<AppSchema.UserGenPreset>[] = state.presets
+    const defaults = Object.entries(defaultPresets).map<Partial<AppSchema.UserGenPreset>>(
+      ([key, preset]) => ({ ...preset, _id: key })
+    )
+
+    return all.concat(defaults)
+  })
 
   createEffect(() => {
     presetStore.getPresets()
 
     if (props.chat) {
       setUsePreset(!!props.chat.genPreset)
+      setSelected(props.chat.genPreset)
     }
   })
 
@@ -73,12 +86,30 @@ export const ChatGenSettingsModal: Component<{
         <form ref={ref}>
           <Dropdown
             fieldName="preset"
-            items={state.presets.concat(presetList)}
+            items={state.options.concat(presetList)}
             value={props.chat.genPreset}
             disabled={!usePreset()}
+            onChange={(item) => {
+              console.log(item)
+              setSelected(item.value)
+            }}
           />
 
-          <GenerationSettings inherit={props.chat.genSettings} disabled={usePreset()} />
+          <Show when={usePreset()}>
+            <For each={presets()}>
+              {(preset) => (
+                <Show when={selected() === preset._id!}>
+                  <div class="bold text-lg">Using: {preset.name}</div>
+                  <GenerationSettings inherit={preset} disabled />
+                </Show>
+              )}
+            </For>
+          </Show>
+
+          <Show when={!usePreset()}>
+            <div class="bold text-lg">Using: Custom Preset</div>
+            <GenerationSettings inherit={props.chat.genSettings} />
+          </Show>
         </form>
       </div>
     </Modal>

@@ -25,7 +25,7 @@ export const genSettings = {
 } as const
 
 const GenerationSettings: Component<{
-  inherit?: AppSchema.Chat['genSettings']
+  inherit?: Partial<AppSchema.GenSettings>
   disabled?: boolean
 }> = (props) => (
   <>
