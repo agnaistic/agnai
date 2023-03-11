@@ -125,6 +125,7 @@ const CreateCharacter: Component = () => {
           fieldName="scenario"
           label="Scenario"
           helperText="The current circumstances and context of the conversation and the characters."
+          placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
           value={state.edit?.scenario}
         />
 
@@ -133,6 +134,9 @@ const CreateCharacter: Component = () => {
           fieldName="greeting"
           label="Greeting"
           helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
+          placeholder={
+            "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
+          }
           value={state.edit?.greeting}
         />
 
@@ -141,6 +145,7 @@ const CreateCharacter: Component = () => {
             label="Persona Schema"
             helperText={
               <>
+                <p>If you do not know what this mean, you can leave this as-is.</p>
                 <p class="font-bold">
                   WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible. Changing
                   between them will cause data loss.
@@ -176,10 +181,10 @@ const CreateCharacter: Component = () => {
           helperText={
             <span>
               Example chat between you and the character. This section is very important for
-              informing the model how your character should speak.
+              teaching your character should speak.
             </span>
           }
-          placeholder="You: Hello\n{{char}}: *smiles* Hello!"
+          placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
           value={state.edit?.sampleChat}
         />
 

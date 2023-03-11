@@ -197,7 +197,7 @@ subscribe('message-creating', { chatId: 'string' }, (body) => {
 })
 
 subscribe('message-horde-eta', { eta: 'number' }, (body) => {
-  toastStore.normal(`Horde ETA: ${body.eta}s`)
+  toastStore.normal(`Response ETA: ${body.eta}s`)
 })
 
 subscribe('guest-message-created', { msg: 'any', chatId: 'string' }, (body) => {

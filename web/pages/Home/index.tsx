@@ -60,6 +60,22 @@ const HomePage: Component = () => {
           login with.
         </p>
         <div class="text-2xl font-bold">Getting Started</div>
+
+        <div class="text-xl font-bold">Quick Start</div>
+        <div class="lg">
+          <p>
+            A character has been created for you! You can head to the{' '}
+            <A href="/character/list" class="link">
+              Characters
+            </A>{' '}
+            page, choose a character and create a conversation to get started!
+          </p>
+          <p>
+            You can edit the character from the Characters page or from the Chat. This may be
+            helpful to see an example of how to author your own character.
+          </p>
+        </div>
+
         <div class="lg">
           <p>
             Head over to the{' '}

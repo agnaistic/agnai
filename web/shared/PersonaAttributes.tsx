@@ -60,7 +60,8 @@ const PersonaAttributes: Component<{
                 <Show when={!props.plainText}>
                   It is highly recommended to always include the attributes <b>mind</b> and{' '}
                   <b>personality</b>.<br />
-                  Example attributes: mind, personality, gender, appearance, likes, dislikes.
+                  <b>Example attributes</b>: mind, personality, appearance, likes, dislikes, hates,
+                  loves.
                 </Show>
               </span>
             </>
