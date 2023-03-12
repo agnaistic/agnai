@@ -84,7 +84,10 @@ const SingleMessage: Component<{
   let ref: HTMLDivElement | undefined
 
   return (
-    <div class="flex w-full gap-4 rounded-l-md hover:bg-[var(--bg-800)]">
+    <div
+      class="flex w-full gap-4 rounded-l-md hover:bg-[var(--bg-800)]"
+      data-sender={props.msg.characterId ? 'bot' : 'user'}
+    >
       <div class="flex w-12 items-center justify-center">
         <Show when={props.char && !!props.msg.characterId}>
           <AvatarIcon avatarUrl={props.char?.avatar} bot />
