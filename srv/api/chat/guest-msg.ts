@@ -5,7 +5,7 @@ import { AppSchema } from '../../db/schema'
 import { createGuestTextStream } from '../../adapter/generate'
 import { errors, handle } from '../wrap'
 import { sendGuest } from '../ws'
-import { obtainLock, releaseLock, verifyLock } from './lock'
+import { releaseLock } from './lock'
 
 export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, res) => {
   if (!socketId) throw errors.Forbidden
@@ -24,9 +24,6 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
     body
   )
 
-  const lockId = await obtainLock(id)
-  const lockProps = { chatId: id, lockId }
-
   res.json({ success: true, message: 'Generating message' })
 
   // User hit 'enter' -- we will mimic creating a new user-genered message
@@ -43,8 +40,6 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
     }
     sendGuest(socketId, { type: 'message-created', msg: userMsg, chatId: id })
   }
-
-  await verifyLock(lockProps)
 
   const { stream, adapter } = await createGuestTextStream({ ...body, socketId, log })
 
@@ -63,8 +58,6 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
       continue
     }
   }
-
-  await verifyLock(lockProps)
 
   const response: AppSchema.ChatMessage = {
     _id: v4(),
