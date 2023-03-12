@@ -8,12 +8,12 @@ import ChatDetail from './pages/Chat/ChatDetail'
 import { settingStore, userStore } from './store'
 import LoginPage from './pages/Login'
 import ProfilePage from './pages/Profile'
-import ChatList from './pages/Chat/ChatList'
 import UsersPage from './pages/Admin/UsersPage'
 import { InvitesPage } from './pages/Invite/InvitesPage'
 import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import GenerationPresetsPage from './pages/GenerationPresets'
+import CharacterChats from './pages/Character/CharacterChats'
 
 const App: Component = () => {
   const state = userStore()
@@ -31,7 +31,7 @@ const App: Component = () => {
           <div class="mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4 ">
             <Routes>
               <CharacterRoutes />
-              <Route path="/chats" component={ChatList} />
+              <Route path="/chats" component={CharacterChats} />
               <Route path="/chat" component={ChatDetail} />
               <Route path="/chat/:id" component={ChatDetail} />
               <Route path="/" component={HomePage} />

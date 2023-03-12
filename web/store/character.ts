@@ -5,6 +5,7 @@ import { toastStore } from './toasts'
 import { userStore } from './user'
 
 type CharacterState = {
+  loading?: boolean
   characters: {
     loaded: boolean
     list: AppSchema.Character[]
@@ -31,8 +32,13 @@ export const characterStore = createStore<CharacterState>('character', {
     logout() {
       return { characters: { loaded: false, list: [] } }
     },
-    getCharacters: async () => {
+    async *getCharacters(state) {
+      if (state.loading) return
+
+      yield { loading: true }
       const res = await data.chars.getCharacters()
+      yield { loading: false }
+
       if (res.error) toastStore.error('Failed to retrieve characters')
       if (res.result) {
         return { characters: { list: res.result.characters, loaded: true } }

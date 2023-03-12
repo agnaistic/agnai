@@ -4,7 +4,7 @@ permissions:
   # This is required for actions/checkout
   contents: read
 
-on: [push]
+on: [push, pull_request]
 
 env:
   node-version: '18.4.0'

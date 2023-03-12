@@ -1,6 +1,6 @@
 import { useNavigate } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
-import { Component } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
@@ -8,7 +8,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { chatStore } from '../../store'
+import { characterStore, chatStore } from '../../store'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -18,14 +18,33 @@ const options = [
 
 const CreateChatModal: Component<{
   show: boolean
-  onClose: () => void
+  close: () => void
   char?: AppSchema.Character
 }> = (props) => {
   let ref: any
+
   const nav = useNavigate()
+  const [selectedChar, setChar] = createSignal<AppSchema.Character>()
+  const state = characterStore((s) => ({ chars: s.characters.list, loaded: s.characters.loaded }))
+
+  const char = createMemo(() => {
+    const curr = selectedChar() || props.char
+    return curr
+  })
+
+  createEffect(() => {
+    if (!state.loaded) {
+      characterStore.getCharacters()
+    }
+
+    if (!selectedChar() && !props.char && state.chars.length) {
+      setChar(state.chars[0])
+    }
+  })
 
   const onCreate = (ev: Event) => {
-    if (!props.char) return
+    const character = selectedChar() || props.char
+    if (!character) return
 
     const body = getStrictForm(ref, {
       name: 'string',
@@ -37,7 +56,7 @@ const CreateChatModal: Component<{
 
     const attributes = getAttributeMap(ref)
 
-    const characterId = props.char._id
+    const characterId = character._id
 
     const payload = { ...body, overrides: { kind: body.schema, attributes } }
     chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
@@ -46,11 +65,11 @@ const CreateChatModal: Component<{
   return (
     <Modal
       show={props.show}
-      close={props.onClose}
-      title={`Create Chat with ${props.char?.name}`}
+      close={props.close}
+      title={`Create Chat with ${char()?.name}`}
       footer={
         <>
-          <Button schema="secondary" onClick={props.onClose}>
+          <Button schema="secondary" onClick={props.close}>
             <X />
             Close
           </Button>
@@ -70,6 +89,16 @@ const CreateChatModal: Component<{
         <div class="mb-4 text-sm">
           The information provided here is only applied to the newly created conversation.
         </div>
+        <Show when={!props.char}>
+          <Dropdown
+            items={state.chars.map((char) => ({ label: char.name, value: char._id }))}
+            fieldName="character"
+            label="Character"
+            helperText="The conversation's central character"
+            onChange={(item) => setChar(state.chars.find((ch) => ch._id === item.value))}
+          />
+        </Show>
+
         <TextInput
           class="text-sm"
           fieldName="name"
@@ -85,7 +114,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="greeting"
           label="Greeting"
-          value={props.char?.greeting}
+          value={char()?.greeting}
           class="text-xs"
         ></TextInput>
 
@@ -93,7 +122,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="scenario"
           label="Scenario"
-          value={props.char?.scenario}
+          value={char()?.scenario}
           class="text-xs"
         ></TextInput>
 
@@ -101,7 +130,7 @@ const CreateChatModal: Component<{
           isMultiline
           fieldName="sampleChat"
           label="Sample Chat"
-          value={props.char?.sampleChat}
+          value={char()?.sampleChat}
           class="text-xs"
         ></TextInput>
 
@@ -110,11 +139,22 @@ const CreateChatModal: Component<{
           fieldName="schema"
           label="Persona"
           items={options}
-          value={props.char?.persona.kind}
+          value={char()?.persona.kind}
         />
 
         <div class="w-full text-sm">
-          <PersonaAttributes value={props.char?.persona.attributes} hideLabel />
+          <Show when={props.char}>
+            <PersonaAttributes value={char()?.persona.attributes} hideLabel />
+          </Show>
+          <Show when={!props.char && !!char()}>
+            <For each={state.chars}>
+              {(item) => (
+                <Show when={char()?._id === item._id}>
+                  <PersonaAttributes value={char()?.persona.attributes} hideLabel />
+                </Show>
+              )}
+            </For>
+          </Show>
         </div>
       </form>
     </Modal>
