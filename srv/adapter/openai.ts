@@ -20,10 +20,7 @@ export const handleOAI: ModelAdapter = async function* ({
   sender,
   log,
 }) {
-  log.info(`ASDASD`)
-  log.info(`NJEG ${user.oaiKey}`)
   if (!user.oaiKey) {
-    log.info("TOMATo")
     yield { error: `OpenAI request failed: Not configured` }
     return
   }
