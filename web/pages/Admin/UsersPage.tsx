@@ -25,7 +25,7 @@ const UsersPage: Component = () => {
     <div>
       <PageHeader title="User Management" />
 
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2 pb-4">
         <div class="flex justify-end">
           <RefreshCw size={16} class="icon-button" onClick={adminStore.getUsers} />
         </div>
@@ -37,9 +37,6 @@ const UsersPage: Component = () => {
               <div class="flex w-6/12 justify-end gap-2 pr-2">
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
                   Info
-                </Button>
-                <Button size="sm" onClick={() => setPw(user.username)}>
-                  Set Password
                 </Button>
               </div>
             </div>
