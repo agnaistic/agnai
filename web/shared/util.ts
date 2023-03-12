@@ -116,3 +116,12 @@ function toRawDuration(valueSecs: number) {
 export function adaptersToOptions(adapters: AIAdapter[]): DropdownItem[] {
   return adapters.map((adp) => ({ label: ADAPTER_LABELS[adp], value: adp }))
 }
+
+export function toEntityMap<T extends { _id: string }>(list: T[]): Record<string, T> {
+  const map = list.reduce((prev, curr) => {
+    prev[curr._id] = curr
+    return prev
+  }, {} as Record<string, T>)
+
+  return map
+}

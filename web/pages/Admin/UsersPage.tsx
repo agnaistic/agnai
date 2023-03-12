@@ -10,11 +10,11 @@ import { adminStore } from '../../store/admin'
 const UsersPage: Component = () => {
   const [pw, setPw] = createSignal('')
   const state = adminStore()
-  const [info, setInfo] = createSignal('')
+  const [info, setInfo] = createSignal<{ name: string; id: string }>()
 
-  const loadInfo = (userId: string) => {
-    setInfo(userId)
-    adminStore.getInfo(userId)
+  const loadInfo = (id: string, name: string) => {
+    setInfo({ id, name })
+    adminStore.getInfo(id)
   }
 
   createEffect(() => {
@@ -35,7 +35,7 @@ const UsersPage: Component = () => {
               <div class="w-4/12 px-4 text-xs">{user._id}</div>
               <div class="w-2/12 px-4">{user.username}</div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">
-                <Button size="sm" onClick={() => loadInfo(user._id)}>
+                <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
                   Info
                 </Button>
                 <Button size="sm" onClick={() => setPw(user.username)}>
@@ -46,7 +46,12 @@ const UsersPage: Component = () => {
           )}
         </For>
         <PasswordModal show={!!pw()} username={pw()} close={() => setPw('')} />
-        <InfoModel show={!!info()} close={() => setInfo('')} userId={info()} />
+        <InfoModel
+          show={!!info()}
+          close={() => setInfo()}
+          userId={info()?.id!}
+          name={info()?.name!}
+        />
       </div>
     </div>
   )
@@ -54,14 +59,16 @@ const UsersPage: Component = () => {
 
 export default UsersPage
 
-const InfoModel: Component<{ show: boolean; close: () => void; userId: string }> = (props) => {
+const InfoModel: Component<{ show: boolean; close: () => void; userId: string; name: string }> = (
+  props
+) => {
   const state = adminStore()
 
   return (
     <Modal
       show={props.show}
       close={props.close}
-      title={state.info?.handle || '...'}
+      title={`${props.name}: ${state.info?.handle || '...'}`}
       footer={<Button onClick={props.close}>Close</Button>}
     >
       <div class="flex flex-col gap-4">
