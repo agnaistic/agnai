@@ -12,7 +12,7 @@ const DeleteChatModal: Component<{
 }> = (props) => {
   const onDelete = () => {
     if (!props.chat) return
-    chatStore.deleteChat(props.chat?._id,props.close)
+    chatStore.deleteChat(props.chat?._id, props.close)
   }
   return (
     <Modal
@@ -34,9 +34,7 @@ const DeleteChatModal: Component<{
     >
       <div class="flex flex-col items-center gap-4">
         <div>Are you sure you wish to delete this chat?</div>
-        <div class="flex justify-center gap-4">
-          {props.chat!.name}
-        </div>
+        <div class="flex justify-center gap-4">{props.chat!.name}</div>
       </div>
     </Modal>
   )

@@ -11,6 +11,7 @@ import DeleteChatModal from './components/DeleteChat'
 
 const ChatList: Component = () => {
   const state = chatStore()
+  const user = userStore()
 
   createEffect(() => {
     chatStore.getAllChats()
@@ -34,6 +35,7 @@ const ChatList: Component = () => {
                 chat={chat}
                 char={state.all?.chars[chat.characterId]}
                 delete={() => setDelete(chat)}
+                owner={chat.userId === user.user?._id}
               />
             )}
           </For>
@@ -51,6 +53,7 @@ const ChatList: Component = () => {
 const Chat: Component<{
   chat: AppSchema.Chat
   char?: AppSchema.Character
+  owner: boolean
   delete: () => void
 }> = (props) => {
   return (
@@ -61,11 +64,13 @@ const Chat: Component<{
           href={`/chat/${props.chat._id}`}
         >
           <AvatarIcon avatarUrl={props.char?.avatar} size="10" class="mx-4" />
-          <div class="text-lg font-bold">{props.chat.name || "Untitled"}</div>
+          <div class="text-lg font-bold">{props.chat.name || 'Untitled'}</div>
         </A>
       </div>
       <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
-        <Trash class="cursor-pointer text-white/25 hover:text-white" onClick={props.delete} />
+        <Show when={props.owner}>
+          <Trash class="cursor-pointer text-white/25 hover:text-white" onClick={props.delete} />
+        </Show>
       </div>
     </div>
   )
