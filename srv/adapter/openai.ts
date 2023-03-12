@@ -19,6 +19,7 @@ export const handleOAI: ModelAdapter = async function* ({
   settings,
   sender,
   log,
+  guest,
 }) {
   if (!user.oaiKey) {
     yield { error: `OpenAI request failed: Not configured` }
@@ -66,7 +67,7 @@ export const handleOAI: ModelAdapter = async function* ({
     body.prompt = prompt
   }
 
-  const bearer = user._id === "anon" ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
+  const bearer = !!guest ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
 
   const headers = {
     'Content-Type': 'application/json',
