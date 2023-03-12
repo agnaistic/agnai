@@ -11,8 +11,9 @@ import { handleUpload } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
 import { sendAll } from '../ws'
 
-export const getProfile = handle(async ({ userId }) => {
-  const profile = await store.users.getProfile(userId!)
+export const getProfile = handle(async ({ userId, params }) => {
+  const id = params.id ? params.id : userId!
+  const profile = await store.users.getProfile(id!)
   return profile
 })
 

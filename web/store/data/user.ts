@@ -2,13 +2,15 @@ import * as local from './storage'
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../srv/db/schema'
 
-export async function getProfile() {
+export async function getProfile(id?: string) {
   if (!isLoggedIn()) {
+    // We never retrieve profiles by 'id' for anonymous users
     const profile = local.loadItem('profile')
     return { result: profile, error: undefined }
   }
 
-  return api.get<AppSchema.Profile>('/user')
+  const url = id ? `/user/${id}` : `/user`
+  return api.get<AppSchema.Profile>(url)
 }
 
 export async function getConfig() {

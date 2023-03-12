@@ -56,6 +56,22 @@ export const chatStore = createStore<ChatState>('chat', {
         memberIds: {},
       }
     },
+    /**
+     * If a user accepts an invite to a chat, their profile has not been fetched and cached
+     * To fix this, we'll lazy load them when they send a message and their profile isn't already present
+     */
+    async getMemberProfile({ memberIds, lastChatId }, chatId: string, id: string) {
+      // Only retrieve profiles if the chat is _active_ to avoid unnecessary profile retrieval
+      if (!lastChatId || chatId !== lastChatId) return
+      if (memberIds[id]) return
+
+      const res = await data.user.getProfile(id)
+      if (res.result) {
+        return {
+          memberIds: { ...memberIds, [id]: res.result },
+        }
+      }
+    },
     async getChat(_, id: string) {
       const res = await data.chats.getChat(id)
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
@@ -264,3 +280,8 @@ subscribe('chat-deleted', { chatId: 'string' }, (body) => {
 function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): number {
   return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
 }
+
+subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
+  if (!body.msg.userId) return
+  chatStore.getMemberProfile(body.chatId, body.msg.userId)
+})
