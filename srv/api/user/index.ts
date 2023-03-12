@@ -19,6 +19,7 @@ router.post('/register', register)
 
 router.get('/', loggedIn, getProfile)
 router.get('/config', loggedIn, getConfig)
+router.get('/:id', getProfile)
 router.delete('/config/horde', loggedIn, deleteHordeKey)
 router.delete('/config/novel', loggedIn, deleteNovelKey)
 router.delete('/config/openai', loggedIn, deleteOaiKey)
