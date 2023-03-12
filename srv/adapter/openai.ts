@@ -20,11 +20,13 @@ export const handleOAI: ModelAdapter = async function* ({
   sender,
   log,
 }) {
+  log.info(`ASDASD`)
+  log.info(`NJEG ${user.oaiKey}`)
   if (!user.oaiKey) {
+    log.info("TOMATo")
     yield { error: `OpenAI request failed: Not configured` }
     return
   }
-
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
 
   const body: any = {
@@ -67,9 +69,11 @@ export const handleOAI: ModelAdapter = async function* ({
     body.prompt = prompt
   }
 
+  const bearer = user._id === "anon" ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
+
   const headers = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${decryptText(user.oaiKey)}`,
+    Authorization: bearer,
   }
 
   const url = turbo ? `${baseUrl}/chat/completions` : `${baseUrl}/completions`
