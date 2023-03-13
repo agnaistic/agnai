@@ -13,7 +13,7 @@ import { presetStore } from '../../store/presets'
 export const GenerationPresetsPage: Component = () => {
   let ref: any
 
-  const state = presetStore(({ presets, saving }) => ({
+  let state = presetStore(({ presets, saving }) => ({
     saving,
     presets,
     items: presets.map<DropdownItem>((p) => ({ label: p.name, value: p._id })),
@@ -40,12 +40,30 @@ export const GenerationPresetsPage: Component = () => {
     }
   }
 
-  const [preset, setPreset] = createSignal<AppSchema.UserGenPreset>()
-  const [selected, setSelected] = createSignal<AppSchema.UserGenPreset>()
-
   const startNew = () => {
     setPreset((_) => ({ _id: '', ...emptyPreset, kind: 'gen-setting', userId: '' }))
   }
+
+  const deletePreset = () => {
+    const preset = selected()
+    if (preset) {
+      setPreset(preset)
+      startNew()
+      presetStore.deletePreset(preset._id)
+      window.location.reload()
+      return
+    }
+
+    if (state.items.length) {
+      onSelect(state.items[0])
+      deletePreset()
+    }
+  }
+
+  const [preset, setPreset] = createSignal<AppSchema.UserGenPreset>()
+  const [selected, setSelected] = createSignal<AppSchema.UserGenPreset>()
+
+
 
   const onSave = (ev: Event) => {
     ev.preventDefault()
@@ -71,6 +89,7 @@ export const GenerationPresetsPage: Component = () => {
             <Show when={state.presets.length}>
               <Dropdown fieldName="preset" items={state.items} onChange={onSelect} />
               <Button onClick={editPreset}>Edit Preset</Button>
+              <Button schema="red" onClick={deletePreset}>Delete Preset</Button>
             </Show>
           </div>
           <div>
@@ -120,7 +139,7 @@ export const GenerationPresetsPage: Component = () => {
 
 export default GenerationPresetsPage
 
-const emptyPreset: AppSchema.GenSettings = {
+export const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
   name: '',
   maxTokens: 80,

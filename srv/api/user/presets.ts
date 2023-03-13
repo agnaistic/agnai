@@ -30,3 +30,9 @@ export const updateUserPreset = handle(async ({ params, body, userId }) => {
   const preset = await store.users.updateUserPreset(userId!, params.id, body)
   return preset
 })
+
+export const deleteUserPreset = handle(async ({ params }) => {
+  await store.users.deleteUserPreset(params.id)
+
+  return { success: true }
+})
