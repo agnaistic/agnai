@@ -46,6 +46,7 @@ export const defaultPresets = {
     presencePenalty: 0.7,
     gaslight: '',
     oaiModel: 'text-davinci-003',
+    memoryDepth: 5,
   },
   novel_20BC: {
     name: 'Novel 20BC+',

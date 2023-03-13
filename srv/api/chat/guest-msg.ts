@@ -42,6 +42,7 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
   }
 
   const { stream, adapter } = await createGuestTextStream({ ...body, socketId, log })
+  log.setBindings({ adapter })
 
   let generated = ''
   let error = false

@@ -111,6 +111,8 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
     retry: prev.msg,
   })
 
+  log.setBindings({ adapter })
+
   let generated = ''
   let error = false
 
