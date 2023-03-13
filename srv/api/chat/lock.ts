@@ -44,10 +44,16 @@ export async function releaseLock(chatId: string) {
 }
 
 export async function verifyLock(opts: { chatId: string; lockId: string }) {
-  const lock = await db('chat-lock').findOne({ chatLock: opts.chatId })
-  if (!lock) return
-
-  if (lock.lockId !== opts.lockId) {
-    throw new Error(`Lock is not valid: Lock IDs do not match`)
-  }
+  /**
+   * We will disable this for now. We will instead take the more 'optimistic' approach of allow all generations to complete
+   * instead of cancelling them if a chat manages to create concurrent generations.
+   *
+   * If the user manages to generate two messages at the same time, they'll experience 'ghost' messages
+   * We will wait for user reports of strange behaviour
+   */
+  // const lock = await db('chat-lock').findOne({ chatLock: opts.chatId })
+  // if (!lock) return
+  // if (lock.lockId !== opts.lockId) {
+  //   throw new Error(`Lock is not valid: Lock IDs do not match`)
+  // }
 }
