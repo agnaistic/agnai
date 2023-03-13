@@ -155,8 +155,8 @@ export async function createUserPreset(userId: string, settings: AppSchema.GenSe
   return preset
 }
 
-export async function deleteUserPreset(presetId: string,) {
-  await db('gen-setting').deleteOne({_id: presetId})
+export async function deleteUserPreset(presetId: string) {
+  await db('gen-setting').deleteOne({ _id: presetId })
   return
 }
 

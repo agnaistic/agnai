@@ -52,7 +52,7 @@ export async function editPreset(presetId: string, update: PresetUpdate) {
 
 export async function deletePreset(presetId: string) {
   if (isLoggedIn()) {
-    const res = await api.method('delete',`/user/presets/${presetId}`)
+    const res = await api.method('delete', `/user/presets/${presetId}`)
     return res
   }
 
@@ -60,21 +60,20 @@ export async function deletePreset(presetId: string) {
   let preset: AppSchema.UserGenPreset = { _id: '', ...emptyPreset, kind: 'gen-setting', userId: '' }
 
   for (let i = 0; i < presets.length; i++) {
-    const element = presets[i];
-    if(element._id === presetId) {
+    const element = presets[i]
+    if (element._id === presetId) {
       preset = element
     }
   }
 
-  if(preset._id !== "") {
-    local.savePresets(presets.splice(presets.indexOf(preset,1)))
+  if (preset._id !== '') {
+    local.savePresets(presets.splice(presets.indexOf(preset, 1)))
     return {
       result: -1,
       status: 500,
-      error: "Preset not found in Local Storage",
+      error: 'Preset not found in Local Storage',
     }
   }
-  
 
   return {
     result: 0,

@@ -1,5 +1,4 @@
 import { AppSchema } from '../../srv/db/schema'
-import { emptyPreset } from '../pages/GenerationPresets'
 import { createStore } from './create'
 import { data } from './data'
 import { PresetUpdate } from './data/presets'
@@ -61,14 +60,9 @@ export const presetStore = createStore<PresetStore>('presets', { presets: [], sa
       if (res.error) toastStore.error(`Failed to delete preset: ${res.error}`)
       if (res.result) {
         toastStore.success('Successfully deleted preset!')
-        let preset: AppSchema.UserGenPreset = { _id: '', ...emptyPreset, kind: 'gen-setting', userId: '' }
-        for (let i = 0; i < presets.length; i++) {
-          const element = presets[i];
-          if(element._id === presetId) {
-            preset = element
-          }
-        }
-        yield { presets: presets.splice(presets.indexOf(preset,1)) }
+
+        const next = presets.filter((pre) => pre._id !== presetId)
+        yield { presets: next }
         onSuccess?.(res.result)
       }
     },
