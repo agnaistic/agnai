@@ -140,13 +140,26 @@ const CreateChatModal: Component<{
           class="text-xs"
         ></TextInput>
 
-        <Dropdown
-          class="mb-2 text-sm"
-          fieldName="schema"
-          label="Persona"
-          items={options}
-          value={props.char?.persona.kind || char()?.persona.kind}
-        />
+        <Show when={(props.char?.persona.kind || char()?.persona.kind) !== 'text'}>
+          <Dropdown
+            class="mb-2 text-sm"
+            fieldName="schema"
+            label="Persona"
+            items={options}
+            value={props.char?.persona.kind || char()?.persona.kind}
+          />
+        </Show>
+
+        <Show when={(props.char?.persona.kind || char()?.persona.kind) === 'text'}>
+          <Dropdown
+            class="mb-2 text-sm"
+            fieldName="schema"
+            label="Persona"
+            items={[{ label: 'Plain text', value: 'text' }]}
+            value={props.char?.persona.kind || char()?.persona.kind}
+            disabled
+          />
+        </Show>
 
         <div class="w-full text-sm">
           <Show when={props.char}>
