@@ -7,17 +7,23 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { userStore } from './user'
 
-type MsgStore = {
+type ChatID = string
+type MsgID = string
+
+export type MsgState = {
   activeChatId: string
   msgs: AppSchema.ChatMessage[]
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: string
+  retries: Record<ChatID, Record<MsgID, string[]>>
+  swipe?: { msgId: string; pos: number; list: string[] }
 }
 
-export const msgStore = createStore<MsgStore>('messages', {
+export const msgStore = createStore<MsgState>('messages', {
   activeChatId: '',
   msgs: [],
+  retries: {},
 })((get) => {
   userStore.subscribe((curr, prev) => {
     if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
@@ -117,6 +123,9 @@ export const msgStore = createStore<MsgStore>('messages', {
         console.log(res.result)
       }
     },
+    setSwipe(_, next?: MsgState['swipe']) {
+      return { swipe: next }
+    },
   }
 })
 
@@ -140,18 +149,23 @@ subscribe('message-retry', { messageId: 'string', chatId: 'string', message: 'st
       .filter((msg) => msg._id !== body.messageId)
       .concat({ ...retrying, msg: body.message }),
   })
+
+  addMsgToRetries(body.chatId, { _id: body.messageId, msg: body.message })
 })
 
 subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   const { msgs, activeChatId } = msgStore.getState()
   if (activeChatId !== body.chatId) return
+  const msg = body.msg as AppSchema.ChatMessage
 
   // If the message is from a user don't clear the "waiting for response" flags
-  if (body.msg.userId) {
-    msgStore.setState({ msgs: msgs.concat(body.msg) })
+  if (msg.userId) {
+    msgStore.setState({ msgs: msgs.concat(msg) })
   } else {
-    msgStore.setState({ msgs: msgs.concat(body.msg), partial: undefined, waiting: undefined })
+    msgStore.setState({ msgs: msgs.concat(msg), partial: undefined, waiting: undefined })
   }
+
+  addMsgToRetries(body.chatId, msg)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
@@ -190,7 +204,7 @@ subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) 
 })
 
 subscribe('message-creating', { chatId: 'string' }, (body) => {
-  const { waiting, activeChatId } = msgStore.getState()
+  const { waiting, activeChatId, retries } = msgStore.getState()
   if (body.chatId !== activeChatId) return
 
   msgStore.setState({ waiting: activeChatId, partial: '' })
@@ -216,3 +230,19 @@ subscribe('guest-message-created', { msg: 'any', chatId: 'string' }, (body) => {
     waiting: undefined,
   })
 })
+
+/**
+ * This may consume an annoying amount of memory if a user does not refresh often
+ */
+function addMsgToRetries(chatId: string, msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
+  const { retries } = msgStore.getState()
+  const next = { ...retries }
+  if (!next[chatId]) next[chatId] = {}
+  if (!next[chatId][msg._id]) next[chatId][msg._id] = []
+
+  // Replace the reference to ensure subscribers update due to object equality
+  next[chatId] = { ...next[chatId] }
+
+  next[chatId][msg._id] = next[chatId][msg._id].concat(msg.msg)
+  msgStore.setState({ retries: next })
+}

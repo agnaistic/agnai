@@ -5,7 +5,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { chatStore, userStore } from '../../../store'
-import { msgStore } from '../../../store/message'
+import { MsgState, msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
 
@@ -14,6 +14,7 @@ const Message: Component<{
   chat: AppSchema.Chat
   char: AppSchema.Character
   last?: boolean
+  swipe?: MsgState['swipe']
   onRemove: () => void
 }> = (props) => {
   const user = userStore()
@@ -35,6 +36,7 @@ const Message: Component<{
           char={props.char}
           onRemove={props.onRemove}
           last={props.last && i() === splits().length - 1}
+          swipe={props.swipe}
         />
       )}
     </For>
@@ -46,6 +48,7 @@ const SingleMessage: Component<{
   chat: AppSchema.Chat
   char: AppSchema.Character
   last?: boolean
+  swipe: MsgState['swipe']
   onRemove: () => void
 }> = (props) => {
   const user = userStore()
@@ -80,6 +83,16 @@ const SingleMessage: Component<{
     setEdit(true)
     ref?.focus()
   }
+
+  const swipeText = createMemo(() => {
+    if (!props.swipe) return
+    if (props.swipe.msgId !== props.msg._id) return
+
+    const text = props.swipe.list[props.swipe.pos]
+    if (text === props.msg.msg) return
+    console.log(props.swipe, text)
+    return text
+  })
 
   let ref: HTMLDivElement | undefined
 
@@ -150,12 +163,18 @@ const SingleMessage: Component<{
               <Check size={16} class="cursor-pointer text-green-500" onClick={saveEdit} />
             </div>
           </Show>
+          <Show when={swipeText()}>
+            <div class="mr-4 flex items-center gap-2 text-sm">
+              <X size={16} class="cursor-pointer text-red-500" onClick={cancelEdit} />
+              <Check size={16} class="cursor-pointer text-green-500" onClick={saveEdit} />
+            </div>
+          </Show>
         </div>
         <div class="break-words opacity-50">
           <Show when={!edit()}>
             <div
               innerHTML={showdownConverter.makeHtml(
-                parseMessage(props.msg.msg, props.char!, user.profile!)
+                parseMessage(swipeText() || props.msg.msg, props.char!, user.profile!)
               )}
             />
           </Show>

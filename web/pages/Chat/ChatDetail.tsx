@@ -1,5 +1,5 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ChevronLeft, MailPlus, Settings, Sliders, X } from 'lucide-solid'
+import { ChevronLeft, ChevronRight, MailPlus, Settings, Sliders, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
@@ -26,6 +26,7 @@ const ChatDetail: Component = () => {
     msgs: s.msgs,
     partial: s.partial,
     waiting: s.waiting,
+    swipe: s.swipe,
   }))
 
   const [removeId, setRemoveId] = createSignal('')
@@ -90,6 +91,7 @@ const ChatDetail: Component = () => {
           </div>
           <div class="flex h-[calc(100%-32px)] flex-col-reverse">
             <InputBar chat={chats.chat!} />
+            <SwipeMessage chatId={chats.chat?._id!} msg={msgs.msgs.slice(-1)[0]} />
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
@@ -100,6 +102,7 @@ const ChatDetail: Component = () => {
                       char={chats.char!}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
+                      swipe={msgs.swipe}
                     />
                   )}
                 </For>
@@ -175,6 +178,57 @@ const InviteModal: Component<{ chatId: string; show: boolean; close: () => void 
   )
 }
 
+const SwipeMessage: Component<{ chatId: string; msg: AppSchema.ChatMessage }> = (props) => {
+  const state = msgStore(({ retries, swipe }) => ({ retries, swipe }))
+
+  const [pos, setPos] = createSignal(0)
+
+  const swipes = createMemo<{ id: string; messages: string[] }>((prev) => {
+    const messages = (state.retries[props.chatId]?.[props.msg._id] || [])
+      .slice()
+      .concat('one', 'two', 'three')
+    if (prev?.id !== props.msg._id) {
+      setPos(0)
+
+      if (messages.length) {
+        msgStore.setSwipe({ msgId: props.msg._id, pos: 0, list: messages })
+      } else {
+        msgStore.setSwipe()
+      }
+    }
+
+    return { id: props.msg._id, messages: messages.slice().concat('One', 'Two', 'Three') }
+  })
+
+  const swipe = (dir: -1 | 1) => {
+    const max = swipes().messages.length - 1
+    const curr = state.swipe?.pos ?? 0
+    let next = curr + dir
+
+    if (next < 0) next = max
+    else if (next > max) next = 0
+
+    msgStore.setSwipe({ pos: next, list: swipes().messages, msgId: props.msg._id })
+  }
+
+  return (
+    <div class="flex h-6 w-full justify-between text-white/50">
+      <Show when={swipes().messages.length > 0}>
+        <div class="cursor:pointer hover:text-white">
+          <Button schema="clear" onClick={() => swipe(-1)}>
+            <ChevronLeft />
+          </Button>
+        </div>
+        <div class="cursor:pointer hover:text-white">
+          <Button schema="clear" onClick={() => swipe(1)}>
+            <ChevronRight />
+          </Button>
+        </div>
+      </Show>
+    </div>
+  )
+}
+
 function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
   return {
     kind: 'chat-message',
@@ -185,61 +239,4 @@ function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
-}
-
-function splitMessage(
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  msg: AppSchema.ChatMessage
-): SplitMessage[] {
-  const CHARS = [`${char.name}:`, `{{char}}:`]
-  const USERS = [`${profile.handle || 'You'}:`, `{{user}}:`]
-
-  const next: AppSchema.ChatMessage[] = []
-
-  const splits = msg.msg.split('\n')
-  if (splits.length === 1) {
-    next.push(msg)
-  }
-
-  for (const split of splits) {
-    const trim = split.trim()
-    let newMsg: AppSchema.ChatMessage | undefined
-
-    for (const CHAR of CHARS) {
-      if (newMsg) break
-      if (trim.startsWith(CHAR)) {
-        newMsg = { ...msg, msg: trim.replace(CHAR, ''), characterId: char._id, userId: undefined }
-        break
-      }
-    }
-
-    for (const USER of USERS) {
-      if (newMsg) break
-      if (trim.startsWith(USER)) {
-        newMsg = {
-          ...msg,
-          msg: trim.replace(USER, ''),
-          userId: profile.userId,
-          characterId: undefined,
-        }
-        break
-      }
-    }
-
-    if (!next.length && !newMsg) return [msg]
-
-    if (!newMsg) {
-      const lastMsg = next.slice(-1)[0]
-      lastMsg.msg += ` ${trim}`
-      continue
-    }
-
-    next.push(newMsg)
-    continue
-  }
-
-  if (!next.length || next.length === 1) return [msg]
-  const newSplits = next.map((next) => ({ ...next, split: true }))
-  return newSplits
 }
