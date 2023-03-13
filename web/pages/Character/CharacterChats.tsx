@@ -6,7 +6,7 @@ import Button from '../../shared/Button'
 import { Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import { toDuration, toEntityMap } from '../../shared/util'
-import { ConfirmModel } from '../../shared/Modal'
+import { ConfirmModal } from '../../shared/Modal'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 
@@ -89,7 +89,7 @@ const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
           </div>
         )}
       </For>
-      <ConfirmModel
+      <ConfirmModal
         show={!!showDelete()}
         close={() => setDelete('')}
         confirm={confirmDelete}

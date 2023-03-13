@@ -1,10 +1,12 @@
-import { Plus, Save } from 'lucide-solid'
+import { useNavigate, useParams } from '@solidjs/router'
+import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { defaultPresets, presetValidator } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown, { DropdownItem } from '../../shared/Dropdown'
 import GenerationSettings from '../../shared/GenerationSettings'
+import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
@@ -13,38 +15,63 @@ import { presetStore } from '../../store/presets'
 export const GenerationPresetsPage: Component = () => {
   let ref: any
 
+  const params = useParams()
+
+  const nav = useNavigate()
+  const [loaded, setLoaded] = createSignal(false)
+  const [edit, setEdit] = createSignal(false)
+  const [editing, setEditing] = createSignal<AppSchema.UserGenPreset>()
+  const [deleting, setDeleting] = createSignal(false)
+
+  const onEdit = (preset: AppSchema.UserGenPreset) => {
+    nav(`/presets/${preset._id}`)
+  }
+
   const state = presetStore(({ presets, saving }) => ({
     saving,
     presets,
     items: presets.map<DropdownItem>((p) => ({ label: p.name, value: p._id })),
   }))
 
-  createEffect(() => {
-    presetStore.getPresets()
-  })
+  createEffect(async () => {
+    if (!loaded()) {
+      presetStore.getPresets()
+      setLoaded(true)
+    }
 
-  const onSelect = (item: DropdownItem) => {
-    const preset = state.presets.find((pre) => pre._id === item.value)
-    setSelected(preset)
-  }
-
-  const editPreset = () => {
-    if (selected()) {
-      setPreset(selected())
+    if (params.id === 'new') {
+      setEditing()
+      await Promise.resolve()
+      setEditing((_) => ({ _id: '', ...emptyPreset, kind: 'gen-setting', userId: '' }))
       return
     }
 
-    if (state.items.length) {
-      onSelect(state.items[0])
-      editPreset()
-    }
-  }
+    const preset = editing()
 
-  const [preset, setPreset] = createSignal<AppSchema.UserGenPreset>()
-  const [selected, setSelected] = createSignal<AppSchema.UserGenPreset>()
+    if (params.id && !preset) {
+      const preset = state.presets.find((p) => p._id === params.id)
+      setEditing(preset)
+      return
+    }
+
+    if (params.id && preset && preset._id !== params.id) {
+      setEditing()
+      await Promise.resolve()
+      const preset = state.presets.find((p) => p._id === params.id)
+      setEditing(preset)
+    }
+  })
 
   const startNew = () => {
-    setPreset((_) => ({ _id: '', ...emptyPreset, kind: 'gen-setting', userId: '' }))
+    nav('/presets/new')
+  }
+
+  const deletePreset = () => {
+    const preset = editing()
+    if (!preset) return
+
+    presetStore.deletePreset(preset._id, () => nav('/presets'))
+    setEditing()
   }
 
   const onSave = (ev: Event) => {
@@ -52,12 +79,12 @@ export const GenerationPresetsPage: Component = () => {
     if (state.saving) return
     const body = getStrictForm(ref, presetValidator)
 
-    const prev = preset()
+    const prev = editing()
     if (prev?._id) {
       presetStore.updatePreset(prev._id, body)
     } else {
       presetStore.createPreset(body, (newPreset) => {
-        setPreset(newPreset)
+        nav(`/presets/${newPreset._id}`)
       })
     }
   }
@@ -68,12 +95,16 @@ export const GenerationPresetsPage: Component = () => {
       <div class="flex flex-col gap-2">
         <div class="flex flex-row justify-between">
           <div class="flex items-center gap-4">
-            <Show when={state.presets.length}>
-              <Dropdown fieldName="preset" items={state.items} onChange={onSelect} />
-              <Button onClick={editPreset}>Edit Preset</Button>
+            <Show when={editing()}>
+              <Button schema="red" onClick={() => setDeleting(true)}>
+                Delete Preset
+              </Button>
             </Show>
           </div>
-          <div>
+          <div class="flex gap-4">
+            <Show when={state.presets.length > 0}>
+              <Button onClick={() => setEdit(true)}>Edit Preset</Button>
+            </Show>
             <Button onClick={startNew}>
               <Plus />
               New Preset
@@ -81,18 +112,24 @@ export const GenerationPresetsPage: Component = () => {
           </div>
         </div>
         <div class="flex flex-col gap-4 p-2">
-          <Show when={!state.presets.length && !preset()}>
+          <Show when={!state.presets.length && !editing()}>
             <div class="flex w-full justify-center">
               You have no personalised presets saved. Click New Preset to get started.
             </div>
           </Show>
-          <Show when={preset()}>
+
+          <Show when={state.presets.length && !editing()}>
+            <div class="flex w-full justify-center">
+              Click&nbsp;<b>Edit Preset</b>&nbsp;or&nbsp;<b>New Preset</b>&nbsp;to get started.
+            </div>
+          </Show>
+          <Show when={editing()}>
             <form ref={ref} onSubmit={onSave}>
               <div class="flex flex-col gap-4">
                 <TextInput
                   fieldName="id"
                   label="Id"
-                  value={preset()?._id || 'New Preset'}
+                  value={editing()?._id || 'New Preset'}
                   disabled
                 />
                 <TextInput
@@ -100,10 +137,10 @@ export const GenerationPresetsPage: Component = () => {
                   label="Name"
                   helperText="A name or short description of your preset"
                   placeholder="E.g. Pygmalion Creative"
-                  value={preset()?.name}
+                  value={editing()?.name}
                   required
                 />
-                <GenerationSettings inherit={preset()} />
+                <GenerationSettings inherit={editing()} />
               </div>
               <div class="flex flex-row justify-end">
                 <Button type="submit" disabled={state.saving}>
@@ -114,6 +151,13 @@ export const GenerationPresetsPage: Component = () => {
           </Show>
         </div>
       </div>
+      <EditPreset show={edit()} close={() => setEdit(false)} select={onEdit} />
+      <ConfirmModal
+        show={deleting()}
+        close={() => setDeleting(false)}
+        confirm={deletePreset}
+        message="Are you sure you wish to delete this preset?"
+      />
     </>
   )
 }
@@ -124,4 +168,51 @@ const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
   name: '',
   maxTokens: 80,
+}
+
+const EditPreset: Component<{
+  show: boolean
+  close: () => void
+  select: (preset: AppSchema.UserGenPreset) => void
+}> = (props) => {
+  const params = useParams()
+
+  let ref: any
+  const state = presetStore()
+
+  const select = () => {
+    const body = getStrictForm(ref, { preset: 'string' })
+    const preset = state.presets.find((preset) => preset._id === body.preset)
+    props.select(preset!)
+    props.close()
+  }
+
+  return (
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Edit Preset"
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button onClick={select}>
+            <Edit /> Edit Preset
+          </Button>
+        </>
+      }
+    >
+      <form ref={ref}>
+        <Dropdown
+          fieldName="preset"
+          label="Preset"
+          helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."
+          items={state.presets
+            .filter((pre) => pre._id !== params.id)
+            .map((pre) => ({ label: pre.name, value: pre._id }))}
+        />
+      </form>
+    </Modal>
+  )
 }

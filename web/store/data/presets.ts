@@ -48,3 +48,15 @@ export async function editPreset(presetId: string, update: PresetUpdate) {
   local.savePresets(local.replace(presetId, presets, preset))
   return local.result(preset)
 }
+
+export async function deletePreset(presetId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/user/presets/${presetId}`)
+    return res
+  }
+
+  const presets = loadItem('presets')
+  const next = presets.filter((pre) => pre._id !== presetId)
+  local.savePresets(next)
+  return local.result({ success: true })
+}

@@ -43,12 +43,17 @@ const Modal: Component<Props> = (props) => {
 
 export default Modal
 
-export const ConfirmModel: Component<{
+export const ConfirmModal: Component<{
   show: boolean
   close: () => void
   confirm: () => void
   message: string
 }> = (props) => {
+  const confirm = () => {
+    props.confirm()
+    props.close()
+  }
+
   return (
     <Modal
       show={props.show}
@@ -60,7 +65,7 @@ export const ConfirmModel: Component<{
             <X /> Cancel
           </Button>
 
-          <Button onClick={props.confirm}>
+          <Button onClick={confirm}>
             <Check /> Confirm
           </Button>
         </>

@@ -35,6 +35,7 @@ const App: Component = () => {
               <Route path="/chat" component={ChatDetail} />
               <Route path="/chat/:id" component={ChatDetail} />
               <Route path="/" component={HomePage} />
+              <Route path="/presets/:id" component={GenerationPresetsPage} />
               <Route path="/presets" component={GenerationPresetsPage} />
               <Route path="/profile" component={ProfilePage} />
               <Route path="/settings" component={Settings} />

@@ -49,5 +49,22 @@ export const presetStore = createStore<PresetStore>('presets', { presets: [], sa
         onSuccess?.(res.result)
       }
     },
+    async *deletePreset(
+      { presets },
+      presetId: string,
+      onSuccess?: (preset: AppSchema.UserGenPreset) => void
+    ) {
+      yield { saving: true }
+      const res = await data.presets.deletePreset(presetId)
+      yield { saving: false }
+      if (res.error) toastStore.error(`Failed to delete preset: ${res.error}`)
+      if (res.result) {
+        toastStore.success('Successfully deleted preset!')
+
+        const next = presets.filter((pre) => pre._id !== presetId)
+        yield { presets: next }
+        onSuccess?.(res.result)
+      }
+    },
   })
 )
