@@ -164,7 +164,7 @@ const CreateCharacter: Component = () => {
         </div>
 
         <Show when={!editId && !duplicateId}>
-          <PersonaAttributes plainText={state.edit?.persona.kind === 'text'} />
+          <PersonaAttributes plainText={schema() === 'text'} />
         </Show>
 
         <Show when={(editId || duplicateId) && state.edit}>

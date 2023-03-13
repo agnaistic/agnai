@@ -42,7 +42,13 @@ const CreateChatModal: Component<{
     }
   })
 
-  const onCreate = (ev: Event) => {
+  const selectChar = async (char: AppSchema.Character) => {
+    setChar()
+    await Promise.resolve()
+    setChar(char)
+  }
+
+  const onCreate = () => {
     const character = selectedChar() || props.char
     if (!character) return
 
@@ -95,7 +101,7 @@ const CreateChatModal: Component<{
             fieldName="character"
             label="Character"
             helperText="The conversation's central character"
-            onChange={(item) => setChar(state.chars.find((ch) => ch._id === item.value))}
+            onChange={(item) => selectChar(state.chars.find((ch) => ch._id === item.value)!)}
           />
         </Show>
 
@@ -139,21 +145,24 @@ const CreateChatModal: Component<{
           fieldName="schema"
           label="Persona"
           items={options}
-          value={char()?.persona.kind}
+          value={props.char?.persona.kind || char()?.persona.kind}
         />
 
         <div class="w-full text-sm">
           <Show when={props.char}>
-            <PersonaAttributes value={char()?.persona.attributes} hideLabel />
+            <PersonaAttributes
+              value={props.char!.persona.attributes}
+              hideLabel
+              plainText={props.char?.persona.kind === 'text'}
+            />
           </Show>
           <Show when={!props.char && !!char()}>
-            <For each={state.chars}>
-              {(item) => (
-                <Show when={char()?._id === item._id}>
-                  <PersonaAttributes value={char()?.persona.attributes} hideLabel />
-                </Show>
-              )}
-            </For>
+            <PersonaAttributes
+              value={char()?.persona.attributes}
+              hideLabel
+              plainText={char()?.persona.kind === 'text'}
+            />
+            {/* <For each={state.chars}>{(item) => <Show when={char()?._id === item._id}></Show>}</For> */}
           </Show>
         </div>
       </form>
