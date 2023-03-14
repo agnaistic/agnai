@@ -5,7 +5,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { chatStore, userStore } from '../../../store'
-import { msgStore } from '../../../store/message'
+import { MsgState, msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
 
@@ -14,6 +14,7 @@ const Message: Component<{
   chat: AppSchema.Chat
   char: AppSchema.Character
   last?: boolean
+  swipe?: MsgState['swipe']
   onRemove: () => void
 }> = (props) => {
   const user = userStore()
@@ -35,6 +36,7 @@ const Message: Component<{
           char={props.char}
           onRemove={props.onRemove}
           last={props.last && i() === splits().length - 1}
+          swipe={props.swipe}
         />
       )}
     </For>
@@ -46,6 +48,7 @@ const SingleMessage: Component<{
   chat: AppSchema.Chat
   char: AppSchema.Character
   last?: boolean
+  swipe: MsgState['swipe']
   onRemove: () => void
 }> = (props) => {
   const user = userStore()
@@ -81,6 +84,27 @@ const SingleMessage: Component<{
     ref?.focus()
   }
 
+  const swipeText = createMemo(() => {
+    if (!props.swipe) return
+    if (props.swipe.msgId !== props.msg._id) return
+    if (!props.msg.characterId) return
+
+    const text = props.swipe.list[props.swipe.pos]
+    if (text === props.msg.msg) return
+    return text
+  })
+
+  const clearSwipe = () => {
+    msgStore.setSwipe()
+  }
+
+  const saveSwipe = () => {
+    const text = swipeText()
+    if (!text) return
+
+    msgStore.editMessage(props.msg._id, text)
+  }
+
   let ref: HTMLDivElement | undefined
 
   return (
@@ -105,11 +129,8 @@ const SingleMessage: Component<{
             <b class="mr-2 text-white">
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
-            <span class="text-sm text-white/25">
-              {new Intl.DateTimeFormat('en-US', {
-                dateStyle: 'short',
-                timeStyle: 'short',
-              }).format(new Date(props.msg.createdAt))}
+            <span class="text-sm text-white/30">
+              {new Date(props.msg.createdAt).toLocaleString()}
             </span>
             <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
               <div class="ml-2 flex flex-row items-center gap-2 text-white/10">
@@ -150,12 +171,18 @@ const SingleMessage: Component<{
               <Check size={16} class="cursor-pointer text-green-500" onClick={saveEdit} />
             </div>
           </Show>
+          <Show when={swipeText()}>
+            <div class="mr-4 flex items-center gap-2 text-sm">
+              <X size={16} class="cursor-pointer text-red-500" onClick={clearSwipe} />
+              <Check size={16} class="cursor-pointer text-green-500" onClick={saveSwipe} />
+            </div>
+          </Show>
         </div>
-        <div class="break-words opacity-50">
+        <div class="break-words opacity-75">
           <Show when={!edit()}>
             <div
               innerHTML={showdownConverter.makeHtml(
-                parseMessage(props.msg.msg, props.char!, user.profile!)
+                parseMessage(swipeText() || props.msg.msg, props.char!, user.profile!)
               )}
             />
           </Show>

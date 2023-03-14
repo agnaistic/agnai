@@ -3,14 +3,6 @@ import { config } from '../config'
 import { trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
-const base = {
-  repetition_penalty: 1.1,
-  response_length: 64,
-  tempature: 0.6,
-  top_k: 40,
-  top_p: 1,
-}
-
 export const handleChai: ModelAdapter = async function* ({ char, members, prompt, settings }) {
   if (!config.chai.url) {
     yield { error: 'Chai URL not set' }

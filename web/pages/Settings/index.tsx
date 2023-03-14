@@ -63,8 +63,6 @@ const Settings: Component = () => {
         return prev
       }, {} as AppSchema.User['defaultPresets'])
 
-    console.log(defaultPresets)
-
     userStore.updateConfig({
       ...body,
       hordeWorkers: workers()?.map((w) => w.value) || state.user?.hordeWorkers || [],
