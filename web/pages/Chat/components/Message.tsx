@@ -87,6 +87,7 @@ const SingleMessage: Component<{
   const swipeText = createMemo(() => {
     if (!props.swipe) return
     if (props.swipe.msgId !== props.msg._id) return
+    if (!props.msg.characterId) return
 
     const text = props.swipe.list[props.swipe.pos]
     if (text === props.msg.msg) return
