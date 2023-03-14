@@ -43,7 +43,7 @@ export async function createGuestTextStream(opts: {
   prompt: string
 }) {
   const adapter = getAdapater(opts.chat, opts.user)
-  const rawSettings = await getGenerationSettings(opts.chat, adapter, true)
+  const rawSettings = await getGenerationSettings(opts.user, opts.chat, adapter, true)
   const settings = mapPresetsToAdapter(rawSettings, adapter)
 
   const handler = handlers[adapter]
@@ -134,7 +134,7 @@ export async function getResponseEntities(chatId: string, senderId: string) {
 
   const adapter = getAdapater(chat, user)
   const members = await store.users.getProfiles(chat.userId, chat.memberIds)
-  const rawGenSettings = await getGenerationSettings(chat, adapter)
+  const rawGenSettings = await getGenerationSettings(user, chat, adapter)
   const settings = mapPresetsToAdapter(rawGenSettings, adapter)
 
   return { chat, char, user, members, adapter, settings }
@@ -146,7 +146,12 @@ function getAdapater(chat: AppSchema.Chat, user: AppSchema.User) {
   return user.defaultAdapter
 }
 
-async function getGenerationSettings(chat: AppSchema.Chat, adapter: AIAdapter, guest?: boolean) {
+async function getGenerationSettings(
+  user: AppSchema.User,
+  chat: AppSchema.Chat,
+  adapter: AIAdapter,
+  guest?: boolean
+) {
   if (chat.genPreset) {
     if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
     if (guest) {
@@ -155,6 +160,20 @@ async function getGenerationSettings(chat: AppSchema.Chat, adapter: AIAdapter, g
     }
 
     const preset = await store.users.getUserPreset(chat.genPreset)
+    if (preset) return preset
+  }
+
+  const servicePreset = user.defaultPresets?.[adapter]
+  if (servicePreset) {
+    if (isDefaultPreset(servicePreset)) return defaultPresets[servicePreset]
+
+    // No user presets are persisted for anonymous users
+    // Do not try to check the database for them
+    if (guest) {
+      return defaultPresets.basic
+    }
+
+    const preset = await store.users.getUserPreset(servicePreset)
     if (preset) return preset
   }
 

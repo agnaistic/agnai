@@ -88,6 +88,7 @@ const SingleMessage: Component<{
       class="flex w-full gap-4 rounded-l-md hover:bg-[var(--bg-800)]"
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
+      data-user={props.msg.userId ? members[props.msg.userId]?.handle : ''}
     >
       <div class="flex w-12 items-center justify-center">
         <Show when={props.char && !!props.msg.characterId}>

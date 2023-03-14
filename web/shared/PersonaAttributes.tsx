@@ -122,6 +122,7 @@ export default PersonaAttributes
 export function getAttributeMap(event: Event | HTMLFormElement) {
   const entries = getFormEntries(event)
   const map: any = {}
+
   for (const [key, value] of entries) {
     if (key.startsWith('attr-key')) {
       const id = key.replace('attr-key.', '')
@@ -132,6 +133,7 @@ export function getAttributeMap(event: Event | HTMLFormElement) {
     if (key.startsWith('attr-value')) {
       const id = key.replace('attr-value.', '')
       if (!map[id]) map[id] = {}
+      map[id].value = [value]
       map[id].values = value
         .split(',')
         .map((i) => i.trim())
@@ -141,7 +143,8 @@ export function getAttributeMap(event: Event | HTMLFormElement) {
 
   const values = Object.values(map).reduce<Record<string, string[]>>((prev: any, curr: any) => {
     if (!curr.values || !curr.values.length) return prev
-    prev[curr.key] = curr.values
+    if (curr.key === 'text') prev[curr.key] = curr.value
+    else prev[curr.key] = curr.values
     return prev
   }, {})
   return values

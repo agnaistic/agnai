@@ -1,15 +1,23 @@
 import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { AlertTriangle, Save, X } from 'lucide-solid'
-import Button from '../shared/Button'
-import PageHeader from '../shared/PageHeader'
-import TextInput from '../shared/TextInput'
-import { adaptersToOptions, getStrictForm } from '../shared/util'
-import Dropdown, { DropdownItem } from '../shared/Dropdown'
-import { CHAT_ADAPTERS, ChatAdapter, HordeModel, HordeWorker } from '../../common/adapters'
-import { settingStore, themeColors, userStore } from '../store'
-import Divider from '../shared/Divider'
-import MultiDropdown from '../shared/MultiDropdown'
-import Modal from '../shared/Modal'
+import Button from '../../shared/Button'
+import PageHeader from '../../shared/PageHeader'
+import TextInput from '../../shared/TextInput'
+import { adaptersToOptions, getFormEntries, getStrictForm } from '../../shared/util'
+import Dropdown, { DropdownItem } from '../../shared/Dropdown'
+import {
+  CHAT_ADAPTERS,
+  ChatAdapter,
+  HordeModel,
+  HordeWorker,
+  AIAdapter,
+} from '../../../common/adapters'
+import { settingStore, themeColors, userStore } from '../../store'
+import Divider from '../../shared/Divider'
+import MultiDropdown from '../../shared/MultiDropdown'
+import Modal from '../../shared/Modal'
+import { DefaultPresets } from './DefaultPresets'
+import { AppSchema } from '../../../srv/db/schema'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
@@ -43,9 +51,22 @@ const Settings: Component = () => {
       defaultAdapter: adapterOptions,
     } as const)
 
+    const defaultPresets = getFormEntries(evt)
+      .filter(([name]) => name.startsWith('preset.'))
+      .map(([name, value]) => {
+        return { adapter: name.replace('preset.', '') as AIAdapter, presetId: value }
+      })
+      .reduce((prev, curr) => {
+        prev![curr.adapter] = curr.presetId
+        return prev
+      }, {} as AppSchema.User['defaultPresets'])
+
+    console.log(defaultPresets)
+
     userStore.updateConfig({
       ...body,
       hordeWorkers: workers()?.map((w) => w.value) || state.user?.hordeWorkers || [],
+      defaultPresets,
     })
   }
 
@@ -96,6 +117,8 @@ const Settings: Component = () => {
             helperText="The default service conversations will use unless otherwise configured"
             value={state.user?.defaultAdapter}
           />
+
+          <DefaultPresets />
 
           <Show when={cfg.config.adapters.includes('horde')}>
             <Divider />

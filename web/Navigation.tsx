@@ -28,7 +28,7 @@ const Navigation: Component = () => {
   const hide = createMemo(() => (state.showMenu ? '' : 'drawer--hide'))
 
   return (
-    <div class={`drawer flex flex-col gap-4 pt-4 ${hide()}`}>
+    <div data-menu="" class={`drawer flex flex-col gap-4 pt-4 ${hide()}`}>
       <div class="drawer__content flex flex-col gap-2 px-4">
         <Show when={user.loggedIn} fallback={<GuestNavigation />}>
           <UserNavigation />

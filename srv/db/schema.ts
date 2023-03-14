@@ -41,6 +41,7 @@ export namespace AppSchema {
     hordeWorkers?: string[]
 
     defaultAdapter: AIAdapter
+    defaultPresets?: { [key in AIAdapter]?: string }
   }
 
   export interface Chat {
