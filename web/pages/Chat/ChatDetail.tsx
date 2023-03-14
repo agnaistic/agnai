@@ -82,7 +82,6 @@ const ChatDetail: Component = () => {
   }
 
   const confirmSwipe = () => {
-    console.log('Confirming...')
     msgStore.confirmSwipe(swipe(), () => setSwipe(0))
   }
 
