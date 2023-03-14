@@ -94,16 +94,9 @@ export const GenerationPresetsPage: Component = () => {
       <PageHeader title="Generation Presets" subtitle="Your personal generation presets" />
       <div class="flex flex-col gap-2">
         <div class="flex flex-row justify-between">
-          <div class="flex items-center gap-4">
-            <Show when={editing()}>
-              <Button schema="red" onClick={() => setDeleting(true)}>
-                Delete Preset
-              </Button>
-            </Show>
-          </div>
           <div class="flex gap-4">
-            <Show when={state.presets.length > 0}>
-              <Button onClick={() => setEdit(true)}>Edit Preset</Button>
+            <Show when={state.presets.length > 1}>
+              <Button onClick={() => setEdit(true)}>Load Preset</Button>
             </Show>
             <Button onClick={startNew}>
               <Plus />
@@ -112,17 +105,6 @@ export const GenerationPresetsPage: Component = () => {
           </div>
         </div>
         <div class="flex flex-col gap-4 p-2">
-          <Show when={!state.presets.length && !editing()}>
-            <div class="flex w-full justify-center">
-              You have no personalised presets saved. Click New Preset to get started.
-            </div>
-          </Show>
-
-          <Show when={state.presets.length && !editing()}>
-            <div class="flex w-full justify-center">
-              Click&nbsp;<b>Edit Preset</b>&nbsp;or&nbsp;<b>New Preset</b>&nbsp;to get started.
-            </div>
-          </Show>
           <Show when={editing()}>
             <form ref={ref} onSubmit={onSave}>
               <div class="flex flex-col gap-4">
@@ -191,14 +173,14 @@ const EditPreset: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title="Edit Preset"
+      title="Load Preset"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
             <X /> Cancel
           </Button>
           <Button onClick={select}>
-            <Edit /> Edit Preset
+            <Edit /> Load Preset
           </Button>
         </>
       }
