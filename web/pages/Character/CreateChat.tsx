@@ -19,6 +19,7 @@ const options = [
 const CreateChatModal: Component<{
   show: boolean
   close: () => void
+  id?: string
   char?: AppSchema.Character
 }> = (props) => {
   let ref: any
@@ -38,6 +39,12 @@ const CreateChatModal: Component<{
     }
 
     if (!selectedChar() && !props.char && state.chars.length) {
+      if (props.id) {
+        const char = state.chars.find((ch) => ch._id === props.id)
+        if (char) setChar(char)
+        return
+      }
+
       setChar(state.chars[0])
     }
   })

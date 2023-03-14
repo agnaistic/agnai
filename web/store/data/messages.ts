@@ -101,11 +101,13 @@ export async function retryUserMessage(chatId: string, message: string) {
 export async function retryCharacterMessage(
   chatId: string,
   message: AppSchema.ChatMessage,
-  replace: AppSchema.ChatMessage
+  replace: AppSchema.ChatMessage,
+  continueOn?: string
 ) {
   if (isLoggedIn()) {
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
       message: message.msg,
+      continue: continueOn,
     })
   }
 
@@ -117,7 +119,14 @@ export async function retryCharacterMessage(
   const index = msgs.findIndex((msg) => msg._id === replace._id)
   if (index === -1) return local.error(`Cannot find message to replace`)
 
-  const prompt = createPrompt({ char, chat, members: [profile], messages: msgs.slice(0, index) })
+  const prompt = createPrompt({
+    char,
+    chat,
+    members: [profile],
+    messages: msgs.slice(0, index),
+    continue: continueOn,
+  })
+
   return api.post(`/chat/${chat._id}/guest-message`, {
     char,
     chat,
@@ -126,6 +135,7 @@ export async function retryCharacterMessage(
     prompt,
     retry: true,
     message: message.msg,
+    continue: continueOn,
   })
 }
 

@@ -46,7 +46,12 @@ const CharacterChats: Component = () => {
       <Show when={state.chats.length}>
         <Chats chats={state.chats} />
       </Show>
-      <CreateChatModal show={showCreate()} close={() => setCreate(false)} char={state.char} />
+      <CreateChatModal
+        show={showCreate()}
+        close={() => setCreate(false)}
+        char={state.char}
+        id={id}
+      />
     </div>
   )
 }

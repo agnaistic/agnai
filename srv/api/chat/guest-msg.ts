@@ -20,6 +20,7 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
       message: 'string',
       prompt: 'string',
       retry: 'boolean?',
+      continue: 'string?',
     },
     body
   )
@@ -60,17 +61,25 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
     }
   }
 
+  const responseText = body.continue ? `${body.continue} ${generated}` : generated
+
   const response: AppSchema.ChatMessage = {
     _id: v4(),
     chatId: id,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kind: 'chat-message',
-    msg: generated,
+    msg: responseText,
     characterId: body.char._id,
   }
   if (!error && generated) {
-    sendGuest(socketId, { type: 'guest-message-created', msg: response, chatId: id, adapter })
+    sendGuest(socketId, {
+      type: 'guest-message-created',
+      msg: response,
+      chatId: id,
+      adapter,
+      continue: !!body.continue,
+    })
   }
 
   await store.chats.update(id, {})

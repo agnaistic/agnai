@@ -9,6 +9,7 @@ export type PromptOpts = {
   settings?: AppSchema.GenSettings
   messages: AppSchema.ChatMessage[]
   retry?: AppSchema.ChatMessage
+  continue?: string
 }
 
 export const BOT_REPLACE = /\{\{char\}\}/g
@@ -49,7 +50,9 @@ function getHandle(members: AppSchema.Profile[], id?: string) {
   return 'You'
 }
 
-export function createPromptSurrounds(opts: Pick<PromptOpts, 'chat' | 'char' | 'members'>) {
+export function createPromptSurrounds(
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>
+) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
@@ -66,6 +69,11 @@ export function createPromptSurrounds(opts: Pick<PromptOpts, 'chat' | 'char' | '
 
   const sampleChat = chat.sampleChat.split('\n').filter(removeEmpty)
   pre.push(...sampleChat)
+
+  const post = [`${char.name}:`]
+  if (opts.continue) {
+    post.unshift(`${char.name}: ${opts.continue}`)
+  }
 
   return {
     pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),
