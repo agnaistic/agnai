@@ -19,5 +19,3 @@ services:
   mongo:
     image: mongo:6
     restart: always
-    ports:
-      - '27017:27017'
