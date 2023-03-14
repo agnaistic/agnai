@@ -28,7 +28,7 @@ const Dropdown: Component<{
       <div class={`overflow-hidden bg-transparent ${props.class}`}>
         <select
           name={props.fieldName}
-          class={`rounded-xl bg-[var(--hl-700)] py-2 px-3 shadow-none `}
+          class={`form-field rounded-xl bg-[var(--hl-700)] py-2 px-3 shadow-none `}
           onChange={onChange}
           disabled={props.disabled}
         >

@@ -10,17 +10,28 @@ export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
   const form = new FormData(target as HTMLFormElement)
+
+  const disable = enableAll(target)
+
   const body = Array.from(form.entries()).reduce((prev, [key, value]) => {
     Object.assign(prev, { [key]: value })
     return prev
   }, {})
 
+  disable()
+
   return body as any
 }
+
+type Field = HTMLSelectElement | HTMLInputElement
 
 export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
+
+  const elements = target.querySelectorAll('.form-field') as NodeListOf<Field>
+
+  const disable = enableAll(target)
   const form = new FormData(target as HTMLFormElement)
 
   const values = Object.keys(body).reduce((prev, curr) => {
@@ -33,6 +44,8 @@ export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
     return prev
   }, {} as any) as UnwrapBody<T>
 
+  disable()
+
   assertValid(body, values)
   return values
 }
@@ -40,8 +53,14 @@ export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
 export function getFormEntries(evt: Event | HTMLFormElement): Array<[string, string]> {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
+  const disable = enableAll(target)
   const form = new FormData(target as HTMLFormElement)
-  return Array.from(form.entries()).map(([key, value]) => [key, value.toString()])
+  const entries = Array.from(form.entries()).map(
+    ([key, value]) => [key, value.toString()] as [string, string]
+  )
+  disable()
+
+  return entries
 }
 
 export function formatDate(value: string | number | Date) {
@@ -124,4 +143,26 @@ export function toEntityMap<T extends { _id: string }>(list: T[]): Record<string
   }, {} as Record<string, T>)
 
   return map
+}
+
+/**
+ * Disabled form fields cannot be accessed using `form.get` or `form.entries`.
+ * To circumvent this, we will enable all fields then disable them once we've accessed the fields
+ */
+function enableAll(form: HTMLFormElement) {
+  const elements = form.querySelectorAll('.form-field') as NodeListOf<Field>
+
+  const disabled: Field[] = []
+  for (const ele of elements) {
+    if (ele.disabled) {
+      disabled.push(ele)
+      ele.disabled = false
+    }
+  }
+
+  return () => {
+    for (const ele of disabled) {
+      ele.disabled = true
+    }
+  }
 }

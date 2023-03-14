@@ -34,7 +34,7 @@ const MultiDropdown: Component<{
       {/* <div class={`h-max bg-[var(--hl-700)] ${props.class || ''} rounded-xl py-4 px-2`}> */}
       <select
         name={props.fieldName}
-        class={`h-max rounded-sm bg-[var(--hl-700)] p-2 shadow-none`}
+        class={`form-field h-max rounded-sm bg-[var(--hl-700)] p-2 shadow-none`}
         multiple
         onChange={onChange}
         disabled={props.disabled}

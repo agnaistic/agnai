@@ -41,7 +41,7 @@ const TextInput: Component<{
             required={props.required}
             placeholder={placeholder()}
             value={value()}
-            class={'focusable-field w-full rounded-xl px-4 py-2 ' + props.class}
+            class={'form-field focusable-field w-full rounded-xl px-4 py-2 ' + props.class}
             onkeyup={(ev) => props.onKeyUp?.(ev.key)}
             onchange={(ev) => props.onChange?.(ev)}
             disabled={props.disabled}
@@ -55,7 +55,9 @@ const TextInput: Component<{
           required={props.required}
           placeholder={placeholder()}
           value={value()}
-          class={'focusable-field w-full rounded-xl px-4 py-2 !text-white ' + props.class}
+          class={
+            'form-field focusable-field w-full rounded-xl px-4 py-2 !text-white ' + props.class
+          }
           disabled={props.disabled}
           onInput={(e) => {
             const ele = e.target as HTMLTextAreaElement

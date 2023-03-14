@@ -25,10 +25,6 @@ const PersonaAttributes: Component<{
     if (props.value) {
       setAttrs(toAttrs(props.value))
     }
-
-    if (props.plainText) {
-      setText(props.value?.text?.[0] || '')
-    }
   })
 
   const add = () => setAttrs((prev) => [...prev, { key: '', values: '' }])

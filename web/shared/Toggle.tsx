@@ -20,6 +20,7 @@ export const Toggle: Component<{
 
       <input
         type="checkbox"
+        class="form-field"
         id={props.fieldName}
         name={props.fieldName}
         checked={props.value}
