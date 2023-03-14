@@ -90,9 +90,19 @@ const SingleMessage: Component<{
 
     const text = props.swipe.list[props.swipe.pos]
     if (text === props.msg.msg) return
-    console.log(props.swipe, text)
     return text
   })
+
+  const clearSwipe = () => {
+    msgStore.setSwipe()
+  }
+
+  const saveSwipe = () => {
+    const text = swipeText()
+    if (!text) return
+
+    msgStore.editMessage(props.msg._id, text)
+  }
 
   let ref: HTMLDivElement | undefined
 
@@ -118,11 +128,8 @@ const SingleMessage: Component<{
             <b class="mr-2 text-white">
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
-            <span class="text-sm text-white/25">
-              {new Intl.DateTimeFormat('en-US', {
-                dateStyle: 'short',
-                timeStyle: 'short',
-              }).format(new Date(props.msg.createdAt))}
+            <span class="text-sm text-white/30">
+              {new Date(props.msg.createdAt).toLocaleString()}
             </span>
             <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
               <div class="ml-2 flex flex-row items-center gap-2 text-white/10">
@@ -165,12 +172,12 @@ const SingleMessage: Component<{
           </Show>
           <Show when={swipeText()}>
             <div class="mr-4 flex items-center gap-2 text-sm">
-              <X size={16} class="cursor-pointer text-red-500" onClick={cancelEdit} />
-              <Check size={16} class="cursor-pointer text-green-500" onClick={saveEdit} />
+              <X size={16} class="cursor-pointer text-red-500" onClick={clearSwipe} />
+              <Check size={16} class="cursor-pointer text-green-500" onClick={saveSwipe} />
             </div>
           </Show>
         </div>
-        <div class="break-words opacity-50">
+        <div class="break-words opacity-75">
           <Show when={!edit()}>
             <div
               innerHTML={showdownConverter.makeHtml(

@@ -184,9 +184,8 @@ const SwipeMessage: Component<{ chatId: string; msg: AppSchema.ChatMessage }> = 
   const [pos, setPos] = createSignal(0)
 
   const swipes = createMemo<{ id: string; messages: string[] }>((prev) => {
-    const messages = (state.retries[props.chatId]?.[props.msg._id] || [])
-      .slice()
-      .concat('one', 'two', 'three')
+    const messages = [props.msg.msg].concat(state.retries[props.chatId]?.[props.msg._id] || [])
+
     if (prev?.id !== props.msg._id) {
       setPos(0)
 
@@ -197,7 +196,7 @@ const SwipeMessage: Component<{ chatId: string; msg: AppSchema.ChatMessage }> = 
       }
     }
 
-    return { id: props.msg._id, messages: messages.slice().concat('One', 'Two', 'Three') }
+    return { id: props.msg._id, messages: messages.slice() }
   })
 
   const swipe = (dir: -1 | 1) => {
@@ -213,7 +212,7 @@ const SwipeMessage: Component<{ chatId: string; msg: AppSchema.ChatMessage }> = 
 
   return (
     <div class="flex h-6 w-full justify-between text-white/50">
-      <Show when={swipes().messages.length > 0}>
+      <Show when={swipes().messages.length > 1}>
         <div class="cursor:pointer hover:text-white">
           <Button schema="clear" onClick={() => swipe(-1)}>
             <ChevronLeft />

@@ -39,7 +39,7 @@ export const msgStore = createStore<MsgState>('messages', {
         waiting: undefined,
       }
     },
-    async editMessage({ msgs }, msgId: string, msg: string) {
+    async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)
 
@@ -48,7 +48,8 @@ export const msgStore = createStore<MsgState>('messages', {
         toastStore.error(`Failed to update message: ${res.error}`)
       }
       if (res.result) {
-        return { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg } : m)) }
+        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg } : m)) }
+        onSuccess?.()
       }
     },
 
