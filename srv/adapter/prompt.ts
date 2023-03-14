@@ -9,6 +9,7 @@ type PromptOpts = {
   members: AppSchema.Profile[]
   settings: AppSchema.GenSettings
   retry?: AppSchema.ChatMessage
+  continue?: string
 }
 
 const DEFAULT_MAX_TOKENS = 2048
@@ -16,7 +17,7 @@ const DEFAULT_MAX_TOKENS = 2048
 const BOT_REPLACE = /\{\{char\}\}/g
 const SELF_REPLACE = /\{\{user\}\}/g
 
-export async function createPrompt({ chat, char, members, retry, settings }: PromptOpts) {
+export async function createPrompt({ chat, char, members, retry, settings, ...opts }: PromptOpts) {
   const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
 
   const hasStartSignal =
@@ -32,6 +33,10 @@ export async function createPrompt({ chat, char, members, retry, settings }: Pro
   pre.push(...chat.sampleChat.split('\n'))
 
   const post = [`${char.name}:`]
+
+  if (opts.continue) {
+    post.unshift(`${char.name}: ${opts.continue}`)
+  }
 
   const prompt = await insertMessages({ chat, members, char, settings, pre, post, retry })
   return prompt

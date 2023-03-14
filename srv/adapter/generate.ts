@@ -21,6 +21,7 @@ export type GenerateOptions = {
   message: string
   log: AppLog
   retry?: AppSchema.ChatMessage
+  continue?: string
 }
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
@@ -41,6 +42,7 @@ export async function createGuestTextStream(opts: {
   log: AppLog
   socketId: string
   prompt: string
+  continue?: string
 }) {
   const adapter = getAdapater(opts.chat, opts.user)
   const rawSettings = await getGenerationSettings(opts.user, opts.chat, adapter, true)
@@ -73,6 +75,7 @@ export async function createTextStream(opts: GenerateOptions) {
     members,
     retry: opts.retry,
     settings,
+    continue: opts.continue,
   })
 
   const adapterOpts = {

@@ -45,12 +45,8 @@ export function isConnected() {
 }
 
 export async function createIndexes() {
-  // await client.ensureIndex({ fieldName: 'username' })
-  // await client.ensureIndex({
-  //   fieldName: 'kind',
-  // })
-  // await client.ensureIndex({
-  //   fieldName: 'chatId',
-  //   sparse: true,
-  // })
+  await db('chat-member').createIndex({ chatId: 1 }, { name: 'chat-messages_chatId' })
+  await db('profile').createIndex({ userId: 1 }, { name: 'profiles_userId' })
+  await db('character').createIndex({ userId: 1 }, { name: 'characters_userId' })
+  await db('chat').createIndex({ userId: 1 }, { name: 'chats_userId' })
 }

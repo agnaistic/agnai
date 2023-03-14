@@ -83,7 +83,7 @@ export const handleHorde: ModelAdapter = async function* ({
 
   const id = init.body.id
   const started = Date.now()
-  await wait()
+  await wait(1)
 
   let text = ''
   let checks = 0
@@ -137,6 +137,6 @@ export const handleHorde: ModelAdapter = async function* ({
   yield trimmed || sanitised
 }
 
-function wait() {
-  return new Promise((resolve) => setTimeout(resolve, 2000))
+function wait(secs = 2) {
+  return new Promise((resolve) => setTimeout(resolve, secs * 1000))
 }

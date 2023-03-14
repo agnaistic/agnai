@@ -13,11 +13,14 @@ const AvatarIcon: Component<{
   return (
     <>
       <Show when={props.avatarUrl}>
-        <img class={`${size()} rounded-full object-cover ${cls()}`} src={props.avatarUrl} />
+        <img
+          class={`${size()} rounded-md bg-transparent object-cover ${cls()}`}
+          src={props.avatarUrl}
+        />
       </Show>
       <Show when={!props.avatarUrl}>
         <div
-          class={`flex ${size()} items-center justify-center rounded-full bg-[var(--bg-600)] ${cls()}`}
+          class={`flex ${size()}  items-center justify-center rounded-md bg-[var(--bg-600)] ${cls()}`}
         >
           <Show when={!props.bot}>
             <VenetianMask />

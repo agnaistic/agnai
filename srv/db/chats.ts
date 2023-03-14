@@ -1,5 +1,4 @@
 import { v4 } from 'uuid'
-import { logger } from '../logger'
 import { getCharacter } from './characters'
 import { db } from './client'
 import { AppSchema } from './schema'

@@ -81,7 +81,7 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
 export const retryMessage = handle(async ({ body, params, userId, log }, res) => {
   const { id, messageId } = params
 
-  assertValid({ message: 'string', ephemeral: 'boolean?' }, body)
+  assertValid({ message: 'string', continue: 'string?', ephemeral: 'boolean?' }, body)
 
   const lockId = await obtainLock(id)
 
@@ -109,7 +109,10 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
     senderId: userId!,
     log,
     retry: prev.msg,
+    continue: body.continue,
   })
+
+  log.setBindings({ adapter })
 
   let generated = ''
   let error = false
@@ -117,7 +120,6 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
-      sendMany(members, { type: 'message-partial', partial: gen, ...props, adapter })
       continue
     }
 
@@ -128,11 +130,13 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
     }
   }
 
+  const response = body.continue ? `${body.continue} ${generated}` : generated
+
   if (!body.ephemeral) {
     await verifyLock({ chatId: id, lockId })
 
     if (!error && generated) {
-      await store.chats.editMessage(messageId, generated, adapter)
+      await store.chats.editMessage(messageId, response, adapter)
     }
 
     await store.chats.update(id, {})
@@ -141,7 +145,7 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
   sendMany(members, {
     type: 'message-retry',
     ...props,
-    message: generated,
+    message: response,
     adapter,
   })
 

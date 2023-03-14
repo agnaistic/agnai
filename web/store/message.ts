@@ -7,26 +7,24 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { userStore } from './user'
 
-type ChatID = string
-type MsgID = string
-
 export type MsgState = {
   activeChatId: string
   msgs: AppSchema.ChatMessage[]
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: string
-  retries: Record<ChatID, Record<MsgID, string[]>>
-  swipe?: { msgId: string; pos: number; list: string[] }
+  retries?: { msgId: string; list: string[] }
 }
 
 export const msgStore = createStore<MsgState>('messages', {
   activeChatId: '',
   msgs: [],
-  retries: {},
-})((get) => {
+})((get, set) => {
   userStore.subscribe((curr, prev) => {
     if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
+    if (curr.loggedIn !== prev.loggedIn) {
+      set({ retries: undefined })
+    }
   })
 
   return {
@@ -53,7 +51,7 @@ export const msgStore = createStore<MsgState>('messages', {
       }
     },
 
-    async *retry({ msgs }, chatId: string) {
+    async *retry({ msgs, retries }, chatId: string, cont?: string) {
       if (msgs.length < 3) {
         toastStore.error(`Cannot retry: Not enough messages`)
         return
@@ -68,9 +66,19 @@ export const msgStore = createStore<MsgState>('messages', {
       yield { partial: '', waiting: chatId }
 
       const [message, replace] = msgs.slice(-2)
-      yield { msgs: msgs.slice(0, -1), retrying: replace, partial: '' }
 
-      const res = await data.msg.retryCharacterMessage(chatId, message, replace)
+      yield { retrying: replace, partial: '' }
+      if (retries?.msgId !== replace._id) {
+        yield { retries: { msgId: replace._id, list: [] } }
+      }
+
+      if (!cont) {
+        yield { msgs: msgs.slice(0, -1) }
+      }
+
+      addMsgToRetries(replace)
+
+      const res = await data.msg.retryCharacterMessage(chatId, message, replace, cont)
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
@@ -86,22 +94,34 @@ export const msgStore = createStore<MsgState>('messages', {
       const msg = msgs[msgIndex]
       msgStore.send(chatId, msg.msg, true)
     },
-    async *send(_, chatId: string, message: string, retry?: boolean) {
+    async *send({ msgs }, chatId: string, message: string, retry?: boolean) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
         return
       }
-
       yield { partial: '', waiting: chatId }
 
       const res = retry
         ? await data.msg.retryUserMessage(chatId, message)
         : await data.msg.sendMessage(chatId, message)
+
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
       }
+    },
+    async *confirmSwipe({ retries }, position: number, onSuccess?: Function) {
+      const replacement = retries?.list?.[position]
+      if (!retries || !replacement) {
+        return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
+      }
+
+      retries.list.splice(position, 1)
+      const next = [replacement].concat(retries.list)
+
+      yield { retries: { list: next, msgId: retries.msgId } }
+      msgStore.editMessage(retries.msgId, replacement, onSuccess)
     },
     async deleteMessages({ msgs, activeChatId }, fromId: string) {
       const index = msgs.findIndex((m) => m._id === fromId)
@@ -124,9 +144,6 @@ export const msgStore = createStore<MsgState>('messages', {
         console.log(res.result)
       }
     },
-    setSwipe(_, next?: MsgState['swipe']) {
-      return { swipe: next }
-    },
   }
 })
 
@@ -137,22 +154,30 @@ subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => 
   msgStore.setState({ partial: body.partial })
 })
 
-subscribe('message-retry', { messageId: 'string', chatId: 'string', message: 'string' }, (body) => {
-  const { retrying, msgs, activeChatId } = msgStore.getState()
-  if (!retrying) return
-  if (activeChatId !== body.chatId) return
+subscribe(
+  'message-retry',
+  { messageId: 'string', chatId: 'string', message: 'string', continue: 'boolean?' },
+  async (body) => {
+    const { retrying, msgs, activeChatId } = msgStore.getState()
+    if (!retrying) return
+    if (activeChatId !== body.chatId) return
 
-  msgStore.setState({
-    partial: undefined,
-    retrying: undefined,
-    waiting: undefined,
-    msgs: msgs
-      .filter((msg) => msg._id !== body.messageId)
-      .concat({ ...retrying, msg: body.message }),
-  })
+    const next = msgs.filter((msg) => msg._id !== body.messageId)
 
-  addMsgToRetries(body.chatId, { _id: body.messageId, msg: body.message })
-})
+    msgStore.setState({
+      partial: undefined,
+      retrying: undefined,
+      waiting: undefined,
+      msgs: next,
+    })
+
+    await Promise.resolve()
+
+    addMsgToRetries({ _id: body.messageId, msg: body.message })
+
+    msgStore.setState({ msgs: next.concat({ ...retrying, msg: body.message }) })
+  }
+)
 
 subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   const { msgs, activeChatId } = msgStore.getState()
@@ -163,10 +188,15 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   if (msg.userId) {
     msgStore.setState({ msgs: msgs.concat(msg) })
   } else {
-    msgStore.setState({ msgs: msgs.concat(msg), partial: undefined, waiting: undefined })
+    msgStore.setState({
+      msgs: msgs.concat(msg),
+      partial: undefined,
+      waiting: undefined,
+      retries: undefined,
+    })
   }
 
-  addMsgToRetries(body.chatId, msg)
+  addMsgToRetries(msg)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
@@ -215,35 +245,50 @@ subscribe('message-horde-eta', { eta: 'number' }, (body) => {
   toastStore.normal(`Response ETA: ${body.eta}s`)
 })
 
-subscribe('guest-message-created', { msg: 'any', chatId: 'string' }, (body) => {
-  const { msgs, activeChatId } = msgStore.getState()
-  if (activeChatId !== body.chatId) return
+subscribe(
+  'guest-message-created',
+  { msg: 'any', chatId: 'string', continue: 'boolean?' },
+  (body) => {
+    const { msgs, activeChatId, retrying } = msgStore.getState()
+    if (activeChatId !== body.chatId) return
 
-  const next = msgs.concat(body.msg)
-  const chats = local.loadItem('chats')
-  local.saveChats(local.replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
-  local.saveMessages(body.chatId, next)
+    if (retrying) {
+      body.msg._id = retrying._id
+    }
 
-  msgStore.setState({
-    msgs: next,
-    retrying: undefined,
-    partial: undefined,
-    waiting: undefined,
-  })
-})
+    const next = msgs.filter((m) => m._id !== retrying?._id).concat(body.msg)
+
+    const chats = local.loadItem('chats')
+    local.saveChats(local.replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
+    local.saveMessages(body.chatId, next)
+
+    addMsgToRetries(body.msg)
+
+    msgStore.setState({
+      msgs: next,
+      retrying: undefined,
+      partial: undefined,
+      waiting: undefined,
+    })
+  }
+)
 
 /**
  * This may consume an annoying amount of memory if a user does not refresh often
  */
-function addMsgToRetries(chatId: string, msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
+function addMsgToRetries(msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
   const { retries } = msgStore.getState()
-  const next = { ...retries }
-  if (!next[chatId]) next[chatId] = {}
-  if (!next[chatId][msg._id]) next[chatId][msg._id] = []
 
-  // Replace the reference to ensure subscribers update due to object equality
-  next[chatId] = { ...next[chatId] }
+  if (retries?.msgId !== msg._id) {
+    return
+  }
+  const next = retries ? { ...retries } : { msgId: msg._id, list: [] }
 
-  next[chatId][msg._id] = next[chatId][msg._id].concat(msg.msg)
+  if (!next.list.includes(msg.msg)) {
+    next.list.unshift(msg.msg)
+  }
+
+  next.list = next.list.slice()
+
   msgStore.setState({ retries: next })
 }

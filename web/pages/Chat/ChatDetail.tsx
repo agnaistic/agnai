@@ -1,6 +1,7 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ChevronLeft, ChevronRight, MailPlus, Settings, Sliders, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { createMutable } from 'solid-js/store'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -14,7 +15,7 @@ import { msgStore } from '../../store/message'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
 import InputBar from './components/InputBar'
-import Message, { SplitMessage } from './components/Message'
+import Message from './components/Message'
 import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
@@ -26,9 +27,11 @@ const ChatDetail: Component = () => {
     msgs: s.msgs,
     partial: s.partial,
     waiting: s.waiting,
-    swipe: s.swipe,
+    retries: s.retries?.list || [],
+    swipeId: s.retries?.msgId,
   }))
 
+  const [swipe, setSwipe] = createSignal(0)
   const [removeId, setRemoveId] = createSignal('')
   const [showMem, setShowMem] = createSignal(false)
   const [showGen, setShowGen] = createSignal(false)
@@ -36,6 +39,18 @@ const ChatDetail: Component = () => {
   const [showInvite, setShowInvite] = createSignal(false)
   const { id } = useParams()
   const nav = useNavigate()
+
+  const clickSwipe = (dir: -1 | 1) => () => {
+    const prev = swipe()
+    const max = msgs.retries.length - 1
+
+    let next = prev + dir
+    if (next < 0) next = max
+    else if (next > max) next = 0
+
+    console.log(msgs.retries[next])
+    setSwipe(next)
+  }
 
   const adapter = createMemo(() => {
     if (!chats.chat?.adapter || chats.chat?.adapter === 'default') return user.user?.defaultAdapter!
@@ -52,6 +67,23 @@ const ChatDetail: Component = () => {
     userStore.getConfig()
     chatStore.getChat(id)
   })
+
+  const sendMessage = (message: string) => {
+    setSwipe(0)
+    msgStore.send(chats.chat?._id!, message)
+  }
+
+  const moreMessage = (message: string) => {
+    msgStore.retry(chats.chat?._id!, message)
+  }
+
+  const cancelSwipe = () => {
+    setSwipe(0)
+  }
+
+  const confirmSwipe = () => {
+    msgStore.confirmSwipe(swipe(), () => setSwipe(0))
+  }
 
   return (
     <>
@@ -90,8 +122,19 @@ const ChatDetail: Component = () => {
             </div>
           </div>
           <div class="flex h-[calc(100%-32px)] flex-col-reverse">
-            <InputBar chat={chats.chat!} />
-            <SwipeMessage chatId={chats.chat?._id!} msg={msgs.msgs.slice(-1)[0]} />
+            <InputBar
+              chat={chats.chat!}
+              swiped={swipe() !== 0}
+              send={sendMessage}
+              more={moreMessage}
+            />
+            <SwipeMessage
+              chatId={chats.chat?._id!}
+              pos={swipe()}
+              prev={clickSwipe(-1)}
+              next={clickSwipe(1)}
+              list={msgs.retries}
+            />
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
@@ -102,7 +145,9 @@ const ChatDetail: Component = () => {
                       char={chats.char!}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
-                      swipe={msgs.swipe}
+                      swipe={msg._id === msgs.swipeId && swipe() > 0 && msgs.retries[swipe()]}
+                      confirmSwipe={confirmSwipe}
+                      cancelSwipe={cancelSwipe}
                     />
                   )}
                 </For>
@@ -178,48 +223,26 @@ const InviteModal: Component<{ chatId: string; show: boolean; close: () => void 
   )
 }
 
-const SwipeMessage: Component<{ chatId: string; msg: AppSchema.ChatMessage }> = (props) => {
-  const state = msgStore(({ retries, swipe }) => ({ retries, swipe }))
-
-  const [pos, setPos] = createSignal(0)
-
-  const swipes = createMemo<{ id: string; messages: string[] }>((prev) => {
-    const messages = [props.msg.msg].concat(state.retries[props.chatId]?.[props.msg._id] || [])
-
-    if (prev?.id !== props.msg._id) {
-      setPos(0)
-
-      if (messages.length) {
-        msgStore.setSwipe({ msgId: props.msg._id, pos: 0, list: messages })
-      } else {
-        msgStore.setSwipe()
-      }
-    }
-
-    return { id: props.msg._id, messages: messages.slice() }
-  })
-
-  const swipe = (dir: -1 | 1) => {
-    const max = swipes().messages.length - 1
-    const curr = state.swipe?.pos ?? 0
-    let next = curr + dir
-
-    if (next < 0) next = max
-    else if (next > max) next = 0
-
-    msgStore.setSwipe({ pos: next, list: swipes().messages, msgId: props.msg._id })
-  }
-
+const SwipeMessage: Component<{
+  chatId: string
+  list: string[]
+  prev: () => void
+  next: () => void
+  pos: number
+}> = (props) => {
   return (
-    <div class="flex h-6 w-full justify-between text-white/50">
-      <Show when={swipes().messages.length > 1}>
+    <div class="flex h-6 w-full items-center justify-between text-white/50">
+      <Show when={props.list.length > 1}>
         <div class="cursor:pointer hover:text-white">
-          <Button schema="clear" onClick={() => swipe(-1)}>
+          <Button schema="clear" onClick={props.prev}>
             <ChevronLeft />
           </Button>
         </div>
+        <div class="text-white/40">
+          {props.pos + 1} / {props.list.length}
+        </div>
         <div class="cursor:pointer hover:text-white">
-          <Button schema="clear" onClick={() => swipe(1)}>
+          <Button schema="clear" onClick={props.next}>
             <ChevronRight />
           </Button>
         </div>

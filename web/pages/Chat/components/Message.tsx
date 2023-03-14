@@ -9,14 +9,18 @@ import { MsgState, msgStore } from '../../../store/message'
 
 const showdownConverter = new showdown.Converter()
 
-const Message: Component<{
+type MessageProps = {
   msg: SplitMessage
   chat: AppSchema.Chat
   char: AppSchema.Character
   last?: boolean
-  swipe?: MsgState['swipe']
+  swipe?: string | false
+  confirmSwipe?: () => void
+  cancelSwipe?: () => void
   onRemove: () => void
-}> = (props) => {
+}
+
+const Message: Component<MessageProps> = (props) => {
   const user = userStore()
 
   const splits = createMemo(
@@ -37,20 +41,15 @@ const Message: Component<{
           onRemove={props.onRemove}
           last={props.last && i() === splits().length - 1}
           swipe={props.swipe}
+          confirmSwipe={props.confirmSwipe}
+          cancelSwipe={props.cancelSwipe}
         />
       )}
     </For>
   )
 }
 
-const SingleMessage: Component<{
-  msg: SplitMessage
-  chat: AppSchema.Chat
-  char: AppSchema.Character
-  last?: boolean
-  swipe: MsgState['swipe']
-  onRemove: () => void
-}> = (props) => {
+const SingleMessage: Component<MessageProps> = (props) => {
   const user = userStore()
   const members = chatStore((s) => s.memberIds)
 
@@ -84,26 +83,10 @@ const SingleMessage: Component<{
     ref?.focus()
   }
 
-  const swipeText = createMemo(() => {
-    if (!props.swipe) return
-    if (props.swipe.msgId !== props.msg._id) return
-    if (!props.msg.characterId) return
-
-    const text = props.swipe.list[props.swipe.pos]
-    if (text === props.msg.msg) return
-    return text
+  const msgText = createMemo(() => {
+    if (props.last && props.swipe) return props.swipe
+    return props.msg.msg
   })
-
-  const clearSwipe = () => {
-    msgStore.setSwipe()
-  }
-
-  const saveSwipe = () => {
-    const text = swipeText()
-    if (!text) return
-
-    msgStore.editMessage(props.msg._id, text)
-  }
 
   let ref: HTMLDivElement | undefined
 
@@ -139,7 +122,7 @@ const SingleMessage: Component<{
               </div>
             </Show>
           </div>
-          <Show when={!edit() && user.user?._id === props.chat?.userId}>
+          <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
             <div class="mr-4 flex items-center gap-2 text-sm">
               <Show when={props.last && props.msg.characterId}>
                 <RefreshCw
@@ -171,10 +154,18 @@ const SingleMessage: Component<{
               <Check size={16} class="cursor-pointer text-green-500" onClick={saveEdit} />
             </div>
           </Show>
-          <Show when={swipeText()}>
+          <Show when={props.last && props.swipe}>
             <div class="mr-4 flex items-center gap-2 text-sm">
-              <X size={16} class="cursor-pointer text-red-500" onClick={clearSwipe} />
-              <Check size={16} class="cursor-pointer text-green-500" onClick={saveSwipe} />
+              <X
+                size={16}
+                class="cursor-pointer text-red-500"
+                onClick={() => props.cancelSwipe?.()}
+              />
+              <Check
+                size={16}
+                class="cursor-pointer text-green-500"
+                onClick={() => props.confirmSwipe?.()}
+              />
             </div>
           </Show>
         </div>
@@ -182,13 +173,13 @@ const SingleMessage: Component<{
           <Show when={!edit()}>
             <div
               innerHTML={showdownConverter.makeHtml(
-                parseMessage(swipeText() || props.msg.msg, props.char!, user.profile!)
+                parseMessage(msgText(), props.char!, user.profile!)
               )}
             />
           </Show>
           <Show when={edit()}>
             <div ref={ref} contentEditable={true}>
-              {props.msg.msg}
+              {msgText()}
             </div>
           </Show>
         </div>
