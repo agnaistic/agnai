@@ -96,7 +96,7 @@ export const ChatGenSettingsModal: Component<{
             <For each={presets()}>
               {(preset) => (
                 <Show when={selected() === preset._id!}>
-                  <div class="bold text-lg">Using: {preset.name}</div>
+                  <div class="bold text-md">Using: {preset.name}</div>
                   <GenerationSettings inherit={preset} disabled />
                 </Show>
               )}
@@ -104,7 +104,7 @@ export const ChatGenSettingsModal: Component<{
           </Show>
 
           <Show when={!usePreset()}>
-            <div class="bold text-lg">Using: Custom Preset</div>
+            <div class="bold text-md">Using: Custom Preset</div>
             <GenerationSettings inherit={props.chat.genSettings} />
           </Show>
         </form>

@@ -18,6 +18,7 @@ import MultiDropdown from '../../shared/MultiDropdown'
 import Modal from '../../shared/Modal'
 import { DefaultPresets } from './DefaultPresets'
 import { AppSchema } from '../../../srv/db/schema'
+import { presetStore } from '../../store/presets'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
@@ -37,6 +38,7 @@ const Settings: Component = () => {
     userStore.getConfig()
     settingStore.getHordeModels()
     settingStore.getHordeWorkers()
+    presetStore.getPresets()
   })
 
   const onSubmit = (evt: Event) => {
