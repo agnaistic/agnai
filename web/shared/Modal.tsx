@@ -18,7 +18,7 @@ const Modal: Component<Props> = (props) => {
           <div class="absolute inset-0 bg-black" />
         </div>
         <div class="flex h-screen items-center">
-          <div class="my-auto max-h-[85vh] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:w-full sm:max-w-lg">
+          <div class="my-auto max-h-[85vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:w-[32rem] sm:max-w-lg">
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
               <div onClick={props.close}>

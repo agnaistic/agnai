@@ -214,7 +214,7 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
       }
     },
-    async *deleteChat({ active, all }, chatId: string, onSuccess?: Function) {
+    async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
       const res = await data.chats.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {
@@ -225,6 +225,10 @@ export const chatStore = createStore<ChatState>('chat', {
 
         if (all?.chats) {
           yield { all: { ...all, chats: all.chats.filter((ch) => ch._id !== chatId) } }
+        }
+
+        if (char?.chats) {
+          yield { char: { ...char, chats: char.chats.filter((ch) => ch._id !== chatId) } }
         }
 
         onSuccess?.()

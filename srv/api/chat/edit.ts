@@ -30,7 +30,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
       scenario: 'string',
       sampleChat: 'string',
       overrides: {
-        kind: ['wpp', 'sbf', 'boostyle'],
+        kind: ['wpp', 'sbf', 'boostyle', 'text'],
         attributes: 'any',
       },
     },

@@ -1,4 +1,4 @@
-import { Component } from 'solid-js'
+import { Component, Show } from 'solid-js'
 import { ADAPTER_LABELS, CHAT_ADAPTERS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -29,7 +29,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       greeting: 'string',
       sampleChat: 'string',
       scenario: 'string',
-      schema: ['wpp', 'boostyle', 'sbf'],
+      schema: ['wpp', 'boostyle', 'sbf', 'text'],
     } as const)
 
     const attributes = getAttributeMap(ref)
@@ -91,14 +91,28 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           label="Sample Chat"
         />
 
-        <Dropdown
-          fieldName="schema"
-          label="Persona"
-          items={options}
-          value={state.chat?.overrides.kind || state.char?.persona.kind}
-        />
+        <Show when={state.char?.persona.kind !== 'text'}>
+          <Dropdown
+            fieldName="schema"
+            label="Persona"
+            items={options}
+            value={state.chat?.overrides.kind || state.char?.persona.kind}
+          />
+        </Show>
+        <Show when={state.char?.persona.kind === 'text'}>
+          <Dropdown
+            fieldName="schema"
+            label="Persona"
+            items={[{ label: 'Plain text', value: 'text' }]}
+            value={'text'}
+          />
+        </Show>
         <div class="mt-4 flex flex-col gap-2 text-sm">
-          <PersonaAttributes value={state.chat?.overrides.attributes} hideLabel />
+          <PersonaAttributes
+            value={state.chat?.overrides.attributes}
+            hideLabel
+            plainText={state.char?.persona.kind === 'text'}
+          />
         </div>
       </form>
     </Modal>
