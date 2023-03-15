@@ -1,5 +1,14 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ChevronLeft, ChevronRight, MailPlus, Settings, Sliders, X } from 'lucide-solid'
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  MailPlus,
+  Settings,
+  Sliders,
+  X,
+} from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { createMutable } from 'solid-js/store'
 import { ADAPTER_LABELS } from '../../../common/adapters'
@@ -10,7 +19,7 @@ import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
 import { getStrictForm } from '../../shared/util'
-import { chatStore, userStore } from '../../store'
+import { chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store/message'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -20,9 +29,8 @@ import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
   const user = userStore()
-
+  const cfg = settingStore()
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
-
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
     partial: s.partial,
@@ -97,8 +105,10 @@ const ChatDetail: Component = () => {
           <div class="flex h-8 items-center justify-between ">
             <A href={`/character/${chats.char?._id}/chats`}>
               <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
-                <ChevronLeft />
-                {chats.char?.name}
+                <Show when={!cfg.fullscreen}>
+                  <ChevronLeft />
+                  {chats.char?.name}
+                </Show>
               </div>
             </A>
 
@@ -118,6 +128,18 @@ const ChatDetail: Component = () => {
                 <div class="icon-button">
                   <Settings onClick={() => setShowConfig(true)} />
                 </div>
+
+                <Show when={!cfg.fullscreen}>
+                  <div class="icon-button" onClick={() => settingStore.fullscreen(true)}>
+                    <ArrowUpRight />
+                  </div>
+                </Show>
+
+                <Show when={cfg.fullscreen}>
+                  <div class="icon-button" onClick={() => settingStore.fullscreen(false)}>
+                    <ArrowDownLeft />
+                  </div>
+                </Show>
               </Show>
             </div>
           </div>

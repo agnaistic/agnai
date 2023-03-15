@@ -6,6 +6,20 @@ import { local } from './data/storage'
 import { publish } from './socket'
 import { toastStore } from './toasts'
 
+const UI_KEY = 'ui-settings'
+
+const defaultUIsettings: State['ui'] = {
+  theme: 'sky',
+  mode: 'dark',
+  avatarSize: 'md',
+  avatarCorners: 'circle',
+}
+
+export const AVATAR_SIZES = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
+export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
+export const UI_MODE = ['light', 'dark'] as const
+export const UI_THEME = ['blue', 'sky', 'teal', 'orange'] as const
+
 type State = {
   loading: boolean
   error?: string
@@ -13,11 +27,18 @@ type State = {
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
-  theme: ThemeColor
+  ui: {
+    theme: ThemeColor
+    mode: ThemeMode
+    avatarSize: AvatarSize
+    avatarCorners: AvatarCornerRadius
+  }
 }
 
-type ThemeColor = (typeof themeColors)[number]
-export const themeColors = ['blue', 'sky', 'teal', 'orange'] as const
+export type ThemeColor = (typeof UI_THEME)[number]
+export type ThemeMode = (typeof UI_MODE)[number]
+export type AvatarSize = (typeof AVATAR_SIZES)[number]
+export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
 
 export const userStore = createStore<State>(
   'user',
@@ -121,9 +142,10 @@ export const userStore = createStore<State>(
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
 
-    setTheme(_, color: ThemeColor) {
-      updateTheme(color)
-      return {}
+    updateUI({ ui }, update: Partial<State['ui']>) {
+      const next = { ...ui, ...update }
+      updateTheme(next)
+      return { ui: next }
     },
 
     async deleteKey({ user }, kind: 'novel' | 'horde' | 'openai') {
@@ -160,15 +182,15 @@ export const userStore = createStore<State>(
 
 function init(): State {
   const existing = getAuth()
-  const theme = getSavedTheme()
-  updateTheme(theme)
+  const ui = getUIsettings()
+  updateTheme(ui)
 
   if (!existing) {
     return {
       loading: false,
       jwt: '',
       loggedIn: false,
-      theme,
+      ui,
     }
   }
 
@@ -176,22 +198,37 @@ function init(): State {
     loggedIn: true,
     loading: false,
     jwt: existing,
-    theme,
+    ui,
   }
 }
 
-function updateTheme(theme: ThemeColor) {
-  localStorage.setItem('theme', theme)
+function updateTheme(ui: State['ui']) {
+  localStorage.setItem(UI_KEY, JSON.stringify(ui))
   const root = document.documentElement
   for (let shade = 100; shade <= 900; shade += 100) {
-    const color = getComputedStyle(root).getPropertyValue(`--${theme}-${shade}`)
+    const num = ui.mode === 'light' ? 1000 - shade : shade
+
+    const color = getComputedStyle(root).getPropertyValue(`--${ui.theme}-${num}`)
     root.style.setProperty(`--hl-${shade}`, color)
+
+    const bg = getComputedStyle(root).getPropertyValue(`--dark-${num}`)
+    root.style.setProperty(`--bg-${shade}`, bg)
+
+    const text = getComputedStyle(root).getPropertyValue(`--black-${num}`)
+    root.style.setProperty(`--text-${shade}`, text)
   }
 }
 
-function getSavedTheme() {
+function getUIsettings() {
+  const settings: State['ui'] = JSON.parse(
+    localStorage.getItem(UI_KEY) || JSON.stringify(defaultUIsettings)
+  )
   const theme = (localStorage.getItem('theme') || 'sky') as ThemeColor
-  if (!themeColors.includes(theme)) return 'sky'
+  localStorage.removeItem('theme')
 
-  return theme
+  if (theme && UI_THEME.includes(theme)) {
+    settings.theme = theme
+  }
+
+  return settings
 }

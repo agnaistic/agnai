@@ -32,7 +32,7 @@ const FileInput: Component<{
         name={props.fieldName}
         type="file"
         accept={props.accept}
-        class={`w-full rounded-xl bg-white/5 ${props.class}`}
+        class={`w-full rounded-xl bg-[var(--bg-800)] ${props.class}`}
         onChange={(ev) => onFile(ev.currentTarget.files)}
       />
     </div>

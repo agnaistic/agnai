@@ -28,8 +28,8 @@ const App: Component = () => {
       <NavBar />
       <div class="flex w-full grow flex-row overflow-y-hidden">
         <Navigation />
-        <div class="w-full overflow-y-auto">
-          <div class="mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4 ">
+        <div class="w-full overflow-y-auto ">
+          <div class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}>
             <Routes>
               <CharacterRoutes />
               <Route path="/chats" component={CharacterChats} />

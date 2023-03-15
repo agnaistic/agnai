@@ -26,25 +26,39 @@ const Navigation: Component = () => {
   }
 
   const hide = createMemo(() => (state.showMenu ? '' : 'drawer--hide'))
+  const fullscreen = createMemo(() => (state.fullscreen ? 'hidden' : ''))
 
   return (
-    <div data-menu="" class={`drawer flex flex-col gap-4 pt-4 ${hide()}`}>
+    <div
+      data-menu=""
+      class={`drawer flex flex-col gap-4 bg-[var(--bg-800)] pt-4 ${hide()} ${fullscreen()}`}
+    >
       <div class="drawer__content flex flex-col gap-2 px-4">
+        <div class="hidden w-full items-center justify-center sm:flex">
+          <A href="/">
+            <div class="h-7 w-fit items-center justify-center rounded-lg bg-[var(--hl-600)] px-4">
+              Agnaistic
+            </div>
+          </A>
+        </div>
         <Show when={user.loggedIn} fallback={<GuestNavigation />}>
           <UserNavigation />
         </Show>
       </div>
-      <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-800)] px-4">
+      <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
         <div class="mt-2 flex w-full items-center justify-between">
           <div class="flex items-center gap-4">
-            <AvatarIcon avatarUrl={user.profile?.avatar} />
+            <AvatarIcon
+              avatarUrl={user.profile?.avatar}
+              format={{ corners: 'circle', size: 'md' }}
+            />
             <div>{user.profile?.handle}</div>
           </div>
           <div onClick={logout} class="icon-button cursor-pointer ">
             <LogOut />
           </div>
         </div>
-        <div class="mb-1 text-[0.6rem] italic text-white/25">{state.config.version}</div>
+        <div class="text-200 mb-1 text-[0.6rem] italic">{state.config.version}</div>
       </div>
     </div>
   )

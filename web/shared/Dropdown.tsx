@@ -1,9 +1,9 @@
 import { Component, JSX, For } from 'solid-js'
 import { FormLabel } from './FormLabel'
 
-export type DropdownItem = {
+export type DropdownItem<T extends string = string> = {
   label: string
-  value: string
+  value: T
 }
 
 const Dropdown: Component<{
@@ -35,7 +35,7 @@ const Dropdown: Component<{
           <For each={props.items}>
             {(item) => (
               <option
-                class="border-0 border-none bg-zinc-900"
+                class="bg-[var(--hl-500)])] border-0 border-none"
                 value={item.value}
                 selected={props.value === item.value}
               >

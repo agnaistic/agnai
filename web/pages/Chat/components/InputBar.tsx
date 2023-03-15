@@ -54,12 +54,16 @@ const InputBar: Component<{
   )
 }
 
-const IconButton: Component<{ children: JSX.Element; onClick?: (ev: MouseEvent) => void }> = (
-  props
-) => (
+const IconButton: Component<{
+  children: JSX.Element
+  onClick?: (ev: MouseEvent) => void
+  class?: string
+}> = (props) => (
   <button
     type="button"
-    class="focusable-icon-button focusable-field rounded-xl border-2 border-transparent bg-transparent py-3 px-1"
+    class={`focusable-icon-button focusable-field rounded-xl border-2 border-transparent bg-transparent py-3 px-1 ${
+      props.class || ''
+    }`}
     onClick={(ev) => props.onClick?.(ev)}
   >
     {props.children}

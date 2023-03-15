@@ -12,21 +12,20 @@ import {
   HordeWorker,
   AIAdapter,
 } from '../../../common/adapters'
-import { settingStore, themeColors, userStore } from '../../store'
+import { settingStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 import MultiDropdown from '../../shared/MultiDropdown'
 import Modal from '../../shared/Modal'
 import { DefaultPresets } from './DefaultPresets'
 import { AppSchema } from '../../../srv/db/schema'
 import { presetStore } from '../../store/presets'
+import UISettings from './UISettings'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
 const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
-const themeOptions = themeColors.map((color) => ({ label: color, value: color }))
 
 const Settings: Component = () => {
-  const style = userStore((s) => ({ theme: s.theme }))
   const state = userStore()
   const cfg = settingStore()
 
@@ -102,13 +101,7 @@ const Settings: Component = () => {
       <PageHeader title="Settings" subtitle="Configuration" />
       <form onSubmit={onSubmit}>
         <div class="flex flex-col gap-4">
-          <Dropdown
-            fieldName="theme"
-            items={themeOptions}
-            label="Theme Color"
-            value={style.theme}
-            onChange={(item) => userStore.setTheme(item.value as any)}
-          />
+          <UISettings />
 
           <Dropdown
             fieldName="defaultAdapter"
@@ -122,7 +115,7 @@ const Settings: Component = () => {
 
           <Show when={cfg.config.adapters.includes('horde')}>
             <Divider />
-            <h3 class="text-xl">AI Horde settings</h3>
+            <h3 class="text-lg font-bold">AI Horde settings</h3>
             <TextInput
               fieldName="hordeApiKey"
               label="AI Horde API Key"

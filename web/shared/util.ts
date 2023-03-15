@@ -166,3 +166,11 @@ function enableAll(form: HTMLFormElement) {
     }
   }
 }
+
+export function capitalize(input: string) {
+  return input.slice(0, 1).toUpperCase() + input.slice(1)
+}
+
+export function toDropdownItems(values: string[] | readonly string[]): DropdownItem[] {
+  return values.map((value) => ({ label: capitalize(value), value }))
+}

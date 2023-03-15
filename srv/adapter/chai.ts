@@ -3,7 +3,7 @@ import { config } from '../config'
 import { trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
-export const handleChai: ModelAdapter = async function* ({ char, members, prompt, settings }) {
+export const handleChai: ModelAdapter = async function* ({ char, members, prompt, settings, log }) {
   if (!config.chai.url) {
     yield { error: 'Chai URL not set' }
     return
@@ -36,11 +36,13 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
 
   const status = response.statusCode || 0
   if (status >= 500) {
-    yield { error: 'Chai internal server error' }
+    log.error(response.body, 'Chai request failed')
+    yield { error: `Chai internal server error: ` }
     return
   }
 
   if (status >= 400) {
+    log.error(response.body, 'Chai request failed')
     yield { error: 'Chai request error' }
     return
   }
