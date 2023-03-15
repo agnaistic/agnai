@@ -28,8 +28,14 @@ const AvatarIcon: Component<Props> = (props) => {
   return (
     <>
       <Show when={props.avatarUrl}>
-        <div class={`${fmtSize()} ${fmtCorners()} ${props.class || ''}`}>
+        <div
+          class={`${fmtSize()} ${fmtCorners()} ${props.class || ''}`}
+          data-bot-avatar={props.bot}
+          data-user-avatar={!props.bot}
+        >
           <img
+            data-bot-image={props.bot}
+            data-user-image={!props.bot}
             class={`m-auto ${
               format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'
             } ${fmtFit()} ${fmtCorners()}`}
@@ -40,13 +46,15 @@ const AvatarIcon: Component<Props> = (props) => {
       </Show>
       <Show when={!props.avatarUrl}>
         <div
+          data-bot-avatar={props.bot}
+          data-user-avatar={!props.bot}
           class={`flex ${fmtSize()} items-center justify-center rounded-full bg-[var(--bg-700)] ${cls()}`}
         >
           <Show when={!props.bot}>
-            <VenetianMask />
+            <VenetianMask data-user-icon />
           </Show>
           <Show when={props.bot}>
-            <Bot />
+            <Bot data-bot-icon />
           </Show>
         </div>
       </Show>

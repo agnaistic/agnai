@@ -88,6 +88,9 @@ const SingleMessage: Component<MessageProps> = (props) => {
     return props.msg.msg
   })
 
+  const isBot = createMemo(() => !!props.msg.characterId)
+  const isUser = createMemo(() => !!props.msg.userId)
+
   let ref: HTMLDivElement | undefined
 
   const format = createMemo(() => ({
@@ -99,12 +102,13 @@ const SingleMessage: Component<MessageProps> = (props) => {
     <div
       class="flex w-full gap-4 rounded-l-md hover:bg-[var(--bg-800)]"
       data-sender={props.msg.characterId ? 'bot' : 'user'}
-      data-bot={props.msg.characterId}
-      data-user={props.msg.userId}
+      data-bot-block={isBot()}
+      data-user-block={isUser()}
     >
       <div
         class="flex items-center justify-center"
-        data-avatar={props.msg.characterId ? 'bot' : 'user'}
+        data-bot-avatar={isBot()}
+        data-user-avatar={isUser()}
       >
         <Show when={props.char && !!props.msg.characterId}>
           <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
@@ -117,10 +121,12 @@ const SingleMessage: Component<MessageProps> = (props) => {
       <div class="flex w-full select-text flex-col">
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-row">
-            <b class="text-900 mr-2">
+            <b class="text-900 mr-2" data-bot-name={isBot()} data-user-name={isUser()}>
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
-            <span class="text-300 text-sm">{new Date(props.msg.createdAt).toLocaleString()}</span>
+            <span class="text-300 text-sm" data-bot-time={isBot} data-user-time={isUser()}>
+              {new Date(props.msg.createdAt).toLocaleString()}
+            </span>
             <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
               <div class="text-200 ml-2 flex flex-row items-center gap-2">
                 <ThumbsUp size={14} class="hover:text-100 mt-[-0.15rem] cursor-pointer" />
@@ -129,7 +135,11 @@ const SingleMessage: Component<MessageProps> = (props) => {
             </Show>
           </div>
           <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
-            <div class="mr-4 flex items-center gap-2 text-sm">
+            <div
+              class="mr-4 flex items-center gap-2 text-sm"
+              data-bot-editing={isBot()}
+              data-user-editing={isUser()}
+            >
               <Show when={props.last && props.msg.characterId}>
                 <RefreshCw size={16} class="icon-button" onClick={retryMessage} />
               </Show>
@@ -166,6 +176,8 @@ const SingleMessage: Component<MessageProps> = (props) => {
         <div class="break-words opacity-75">
           <Show when={!edit()}>
             <div
+              data-bot-message={isBot()}
+              data-user-message={isUser()}
               innerHTML={showdownConverter.makeHtml(
                 parseMessage(msgText(), props.char!, user.profile!)
               )}
