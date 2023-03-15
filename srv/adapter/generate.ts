@@ -173,7 +173,7 @@ async function getGenerationSettings(
     // No user presets are persisted for anonymous users
     // Do not try to check the database for them
     if (guest) {
-      return defaultPresets.basic
+      return getFallbackPreset(adapter)
     }
 
     const preset = await store.users.getUserPreset(servicePreset)
@@ -181,5 +181,22 @@ async function getGenerationSettings(
   }
 
   if (chat.genSettings) return chat.genSettings
-  return defaultPresets.basic
+  return getFallbackPreset(adapter)
+}
+
+function getFallbackPreset(adapter: AIAdapter) {
+  switch (adapter) {
+    case 'chai':
+    case 'kobold':
+    case 'horde':
+    case 'luminai':
+    case 'ooba':
+      return defaultPresets.basic
+
+    case 'openai':
+      return defaultPresets.openai
+
+    case 'novel':
+      return defaultPresets.novel_20BC
+  }
 }
