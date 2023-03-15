@@ -35,9 +35,11 @@ const Navigation: Component = () => {
     >
       <div class="drawer__content flex flex-col gap-2 px-4">
         <div class="hidden w-full items-center justify-center sm:flex">
-          <div class="h-7 w-fit items-center justify-center rounded-lg bg-[var(--hl-600)] px-4">
-            Agnaistic
-          </div>
+          <A href="/">
+            <div class="h-7 w-fit items-center justify-center rounded-lg bg-[var(--hl-600)] px-4">
+              Agnaistic
+            </div>
+          </A>
         </div>
         <Show when={user.loggedIn} fallback={<GuestNavigation />}>
           <UserNavigation />
