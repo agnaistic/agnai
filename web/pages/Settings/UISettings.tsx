@@ -1,7 +1,7 @@
 import { Component } from 'solid-js'
 import Dropdown from '../../shared/Dropdown'
 import { toDropdownItems } from '../../shared/util'
-import { AVATAR_CORNERS, AVATAR_SHAPE, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
+import { AVATAR_CORNERS, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
 
 const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -47,13 +47,6 @@ const UISettings: Component = () => {
           items={toDropdownItems(AVATAR_CORNERS)}
           value={state.ui.avatarCorners}
           onChange={(item) => userStore.updateUI({ avatarCorners: item.value as any })}
-        />
-        <Dropdown
-          fieldName="avatarShape"
-          label="Shape"
-          items={toDropdownItems(AVATAR_SHAPE)}
-          value={state.ui.avatarShape}
-          onChange={(item) => userStore.updateUI({ avatarShape: item.value as any })}
         />
       </div>
     </>

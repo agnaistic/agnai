@@ -1,6 +1,5 @@
 import { Bot, VenetianMask } from 'lucide-solid'
 import { Component, createMemo, Show } from 'solid-js'
-import { AppSchema } from '../../srv/db/schema'
 import { AvatarCornerRadius, AvatarSize } from '../store'
 
 type Props = {
@@ -8,7 +7,6 @@ type Props = {
   class?: string
   bot?: boolean
   format?: Format
-  circle?: boolean
 }
 
 type Format = {
@@ -16,7 +14,7 @@ type Format = {
   corners: AvatarCornerRadius
 }
 
-const defaultFormat: Format = { size: 'md', corners: 'full' }
+const defaultFormat: Format = { size: 'md', corners: 'circle' }
 
 const AvatarIcon: Component<Props> = (props) => {
   const cls = createMemo(() => props.class || '')
@@ -30,11 +28,11 @@ const AvatarIcon: Component<Props> = (props) => {
   return (
     <>
       <Show when={props.avatarUrl}>
-        <div class={`${fmtSize()} ${fmtCorners()} ${cls()} ${fmtFit()} flex items-center`}>
+        <div class={`${fmtSize()} ${fmtCorners()} ${props.class || ''}`}>
           <img
-            class={`${
-              props.circle ? fmtSize() : fmtSize()
-            } ${fmtCorners()} ${fmtFit} object-scale-down11111`}
+            class={`m-auto ${
+              format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'
+            } ${fmtFit()} ${fmtCorners()}`}
             src={props.avatarUrl}
             data-bot-avatar={props.bot}
           />
@@ -69,7 +67,7 @@ const fit: Record<AvatarCornerRadius, string> = {
   sm: 'object-cover sm:object-scale-down',
   md: 'object-cover sm:object-scale-down',
   lg: 'object-cover sm:object-scale-down',
-  full: 'object-cover sm:object-cover',
+  circle: 'object-cover sm:object-cover',
   none: 'object-cover sm:object-scale-down',
 }
 
@@ -77,7 +75,7 @@ const corners: Record<AvatarCornerRadius, string> = {
   sm: 'rounded-sm sm:rounded-sm',
   md: 'rounded-md sm:rounded-md',
   lg: 'rounded-lg sm:rounded-lg',
-  full: 'rounded-full sm:rounded-full',
+  circle: 'rounded-full sm:rounded-full',
   none: '',
 }
 

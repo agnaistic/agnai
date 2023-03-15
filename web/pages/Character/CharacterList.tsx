@@ -83,11 +83,7 @@ const Character: Component<{
           class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl  sm:w-9/12"
           href={`/character/${props.character._id}/chats`}
         >
-          <AvatarIcon
-            avatarUrl={props.character.avatar}
-            class="mx-4"
-            format={{ corners: 'full', size: 'md' }}
-          />
+          <AvatarIcon avatarUrl={props.character.avatar} class="mx-4" />
           <div class="text-lg font-bold">{props.character.name}</div>
         </A>
       </div>

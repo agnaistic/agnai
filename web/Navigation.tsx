@@ -47,9 +47,8 @@ const Navigation: Component = () => {
         <div class="mt-2 flex w-full items-center justify-between">
           <div class="flex items-center gap-4">
             <AvatarIcon
-              circle
               avatarUrl={user.profile?.avatar}
-              format={{ corners: 'full', size: 'md' }}
+              format={{ corners: 'circle', size: 'md' }}
             />
             <div>{user.profile?.handle}</div>
           </div>

@@ -110,11 +110,7 @@ const SingleMessage: Component<MessageProps> = (props) => {
           <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
         </Show>
         <Show when={!props.msg.characterId}>
-          <AvatarIcon
-            avatarUrl={members[props.msg.userId!]?.avatar}
-            format={format()}
-            circle={user.ui.avatarShape === 'circle'}
-          />
+          <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} format={format()} />
         </Show>
       </div>
 

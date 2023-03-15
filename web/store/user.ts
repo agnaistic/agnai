@@ -12,13 +12,11 @@ const defaultUIsettings: State['ui'] = {
   theme: 'sky',
   mode: 'dark',
   avatarSize: 'md',
-  avatarCorners: 'full',
-  avatarShape: 'circle',
+  avatarCorners: 'circle',
 }
 
 export const AVATAR_SIZES = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
-export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'full', 'none'] as const
-export const AVATAR_SHAPE = ['circle', 'original'] as const
+export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const UI_MODE = ['light', 'dark'] as const
 export const UI_THEME = ['blue', 'sky', 'teal', 'orange'] as const
 
@@ -34,7 +32,6 @@ type State = {
     mode: ThemeMode
     avatarSize: AvatarSize
     avatarCorners: AvatarCornerRadius
-    avatarShape: AvatarShape
   }
 }
 
@@ -42,7 +39,6 @@ export type ThemeColor = (typeof UI_THEME)[number]
 export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
-export type AvatarShape = (typeof AVATAR_SHAPE)[number]
 
 export const userStore = createStore<State>(
   'user',
