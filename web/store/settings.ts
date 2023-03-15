@@ -5,6 +5,7 @@ import { createStore } from './create'
 
 type SettingStore = {
   showMenu: boolean
+  fullscreen: boolean
   config: AppSchema.AppConfig
   models: HordeModel[]
   workers: HordeWorker[]
@@ -14,6 +15,7 @@ const HORDE_URL = `https://stablehorde.net/api/v2`
 
 export const settingStore = createStore<SettingStore>('settings', {
   showMenu: false,
+  fullscreen: false,
   models: [],
   workers: [],
   config: { adapters: [], canAuth: true, version: '...' },
@@ -23,6 +25,9 @@ export const settingStore = createStore<SettingStore>('settings', {
   },
   closeMenu: () => {
     return { showMenu: false }
+  },
+  fullscreen(_, next: boolean) {
+    return { fullscreen: next }
   },
   async getConfig() {
     const res = await api.get('/settings')

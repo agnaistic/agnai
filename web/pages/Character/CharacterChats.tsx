@@ -75,11 +75,16 @@ const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
         {(chat) => (
           <div class="flex w-full gap-2">
             <div
-              class="flex h-12 w-full cursor-pointer flex-row items-center gap-2 rounded-xl bg-[var(--bg-900)] hover:bg-[var(--bg-800)]"
+              class="flex h-12 w-full cursor-pointer flex-row items-center gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-700)]"
               onClick={() => nav(`/chat/${chat._id}`)}
             >
               <div class="flex w-1/2 items-center gap-2 sm:w-2/12">
-                <AvatarIcon avatarUrl={chars.map[chat.characterId]?.avatar} class="ml-2" />
+                <AvatarIcon
+                  avatarUrl={chars.map[chat.characterId]?.avatar}
+                  class="ml-2"
+                  circle
+                  format={{ size: 'md', corners: 'full' }}
+                />
                 {chars.map[chat.characterId]?.name}
               </div>
               <div class="w-6/12 px-4">{chat.name || 'Untitled'}</div>

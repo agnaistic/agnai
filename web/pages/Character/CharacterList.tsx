@@ -83,23 +83,27 @@ const Character: Component<{
           class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl  sm:w-9/12"
           href={`/character/${props.character._id}/chats`}
         >
-          <AvatarIcon avatarUrl={props.character.avatar} size="10" class="mx-4" />
+          <AvatarIcon
+            avatarUrl={props.character.avatar}
+            class="mx-4"
+            format={{ corners: 'full', size: 'md' }}
+          />
           <div class="text-lg font-bold">{props.character.name}</div>
         </A>
       </div>
       <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
         <a onClick={props.download}>
-          <Download class="cursor-pointer text-white/25 hover:text-white" />
+          <Download class="icon-button" />
         </a>
         <A href={`/character/${props.character._id}/edit`}>
-          <Edit class="cursor-pointer text-white/25 hover:text-white" />
+          <Edit class="icon-button" />
         </A>
 
         <A href={`/character/create/${props.character._id}`}>
-          <Copy class="cursor-pointer text-white/25 hover:text-white" />
+          <Copy class="icon-button" />
         </A>
 
-        <Trash class="cursor-pointer text-white/25 hover:text-white" onClick={props.delete} />
+        <Trash class="icon-button" onClick={props.delete} />
       </div>
     </div>
   )

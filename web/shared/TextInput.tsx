@@ -27,7 +27,7 @@ const TextInput: Component<{
         <label for={props.fieldName}>
           <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
           <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-1 text-sm text-white/50">{props.helperText}</p>
+            <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
           </Show>
         </label>
       </Show>
@@ -55,9 +55,7 @@ const TextInput: Component<{
           required={props.required}
           placeholder={placeholder()}
           value={value()}
-          class={
-            'form-field focusable-field w-full rounded-xl px-4 py-2 !text-white ' + props.class
-          }
+          class={'form-field focusable-field text-900 w-full rounded-xl px-4 py-2 ' + props.class}
           disabled={props.disabled}
           onInput={(e) => {
             const ele = e.target as HTMLTextAreaElement

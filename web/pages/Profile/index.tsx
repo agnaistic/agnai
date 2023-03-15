@@ -40,7 +40,7 @@ const ProfilePage: Component = () => {
           <div class="flex flex-col gap-2">
             <div class="text-xl">How you appear</div>
             <div class="flex flex-row gap-2">
-              <AvatarIcon size="12" avatarUrl={state.profile?.avatar} />
+              <AvatarIcon avatarUrl={state.profile?.avatar} />
               <div class="flex items-center">{state.profile?.handle}</div>
             </div>
           </div>

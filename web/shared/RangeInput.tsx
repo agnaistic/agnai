@@ -45,7 +45,7 @@ const RangeInput: Component<{
         />
       </ul>
       <Show when={props.helperText}>
-        <p class="mt-[-0.125rem] pb-2 text-sm text-white/50">{props.helperText}</p>
+        <p class="mt-[-0.125rem] pb-2 text-sm text-[var(--text-700)]">{props.helperText}</p>
       </Show>
       <input
         ref={input}

@@ -25,7 +25,7 @@ export const DefaultPresets: Component = () => {
   return (
     <>
       <Divider />
-      <h3 class="text-xl">Default Service Presets</h3>
+      <h3 class="text-lg font-bold">Default Service Presets</h3>
       <For each={cfg.config.adapters}>
         {(adp) => (
           <Dropdown
