@@ -37,7 +37,7 @@ export const config = {
   db: {
     name: env('DB_NAME', 'agnai'),
     host: env('DB_HOST', '127.0.0.1'),
-    port: env('DB_PORT', '27107'),
+    port: env('DB_PORT', '27017'),
   },
   redis: {
     host: env('REDIS_HOST', '127.0.0.1'),
