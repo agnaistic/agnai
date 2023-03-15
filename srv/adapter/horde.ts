@@ -100,12 +100,13 @@ export const handleHorde: ModelAdapter = async function* ({
     }).catch((error) => ({ error }))
 
     if ('error' in check) {
+      logger.error({ error: check.error }, `Horde request failed (check)`)
       yield { error: `Horde request failed: ${check.error}` }
       return
     }
 
     if (check.statusCode && check.statusCode >= 400) {
-      logger.error({ error: check.body }, `Horde request failed`)
+      logger.error({ error: check.body }, `Horde request failed (${check.statusCode})`)
       yield { error: `Horde request failed: ${check.statusMessage}` }
       return
     }

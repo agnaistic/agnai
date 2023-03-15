@@ -57,6 +57,7 @@ export const handleNovel: ModelAdapter = async function* ({
   }).catch((err) => ({ err }))
 
   if ('err' in response) {
+    log.error({ err: `Novel request failed: ${response.err?.message || response.err}` })
     yield { error: response.err.message }
     return
   }
@@ -69,7 +70,7 @@ export const handleNovel: ModelAdapter = async function* ({
   }
 
   if (status >= 400) {
-    log.error({ error: response.body }, 'Novel response failed')
+    log.error({ error: response.body }, `Novel request failed (${status})`)
     yield { error: response.statusMessage! }
     return
   }

@@ -78,6 +78,7 @@ export const handleOAI: ModelAdapter = async function* ({
   const resp = await needle('post', url, JSON.stringify(body), { json: true, headers }).catch(
     (err) => ({ error: err })
   )
+
   if ('error' in resp) {
     log.error({ error: resp.error }, 'OpenAI failed to send')
     yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
@@ -85,7 +86,7 @@ export const handleOAI: ModelAdapter = async function* ({
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    log.error({ body: resp.body }, 'OpenAI request failed')
+    log.error({ body: resp.body }, `OpenAI request failed (${resp.statusCode})`)
     yield { error: `OpenAI request failed: ${resp.statusMessage}` }
     return
   }
