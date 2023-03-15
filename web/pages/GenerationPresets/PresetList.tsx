@@ -1,5 +1,5 @@
 import { A, useNavigate } from '@solidjs/router'
-import { Edit, Trash } from 'lucide-solid'
+import { Edit, Plus, Trash } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
@@ -26,6 +26,14 @@ const PresetList: Component = () => {
   return (
     <>
       <PageHeader title="Generation Presets" subtitle="Your personal generation presets" />
+      <div class="mb-4 flex w-full justify-end">
+        <A href="/presets/new">
+          <Button>
+            <Plus />
+            New Preset
+          </Button>
+        </A>
+      </div>
       <Show when={!state.presets.length}>
         <div class="flex w-full justify-center">
           You have no personalised presets saved. Create a{' '}
