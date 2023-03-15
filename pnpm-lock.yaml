@@ -1,4 +1,4 @@
-lockfileVersion: 5.4
+lockfileVersion: 5.3
 
 specifiers:
   '@babel/core': ^7.20.12
@@ -38,6 +38,9 @@ specifiers:
   path-browserify: ^1.0.0
   pino: ^8.10.0
   pino-pretty: ^9.2.0
+  png-chunk-text: ^1.0.0
+  png-chunks-encode: ^1.0.0
+  png-chunks-extract: ^1.0.0
   postcss: ^8.4.21
   prettier: ^2.8.3
   prettier-plugin-tailwindcss: ^0.2.1
@@ -97,7 +100,7 @@ dependencies:
   showdown: 2.1.0
   solid-js: 1.6.9
   solid-refresh: 0.4.2_solid-js@1.6.9
-  tailwindcss: 3.2.4_postcss@8.4.21
+  tailwindcss: 3.2.4
   typescript: 4.9.5
   uuid: 9.0.0
   ws: 8.12.1
@@ -105,6 +108,9 @@ dependencies:
 
 devDependencies:
   path-browserify: 1.0.1
+  png-chunk-text: 1.0.0
+  png-chunks-encode: 1.0.0
+  png-chunks-extract: 1.0.0
 
 packages:
 
@@ -549,7 +555,7 @@ packages:
       - '@parcel/core'
     dev: false
 
-  /@parcel/config-default/2.8.3_2dqjxujgcancinq7vgq5cpolwy:
+  /@parcel/config-default/2.8.3_d0e09bd126101a24361fa9a1d13dcbb6:
     resolution: {integrity: sha512-o/A/mbrO6X/BfGS65Sib8d6SSG45NYrNooNBkH/o7zbOBSRQxwyTlysleK1/3Wa35YpvFyLOwgfakqCtbGy4fw==}
     peerDependencies:
       '@parcel/core': ^2.8.3
@@ -559,7 +565,7 @@ packages:
       '@parcel/core': 2.8.3
       '@parcel/namer-default': 2.8.3_@parcel+core@2.8.3
       '@parcel/optimizer-css': 2.8.3_@parcel+core@2.8.3
-      '@parcel/optimizer-htmlnano': 2.8.3_2dqjxujgcancinq7vgq5cpolwy
+      '@parcel/optimizer-htmlnano': 2.8.3_d0e09bd126101a24361fa9a1d13dcbb6
       '@parcel/optimizer-image': 2.8.3_@parcel+core@2.8.3
       '@parcel/optimizer-svgo': 2.8.3_@parcel+core@2.8.3
       '@parcel/optimizer-terser': 2.8.3_@parcel+core@2.8.3
@@ -725,7 +731,7 @@ packages:
       - '@parcel/core'
     dev: false
 
-  /@parcel/optimizer-htmlnano/2.8.3_2dqjxujgcancinq7vgq5cpolwy:
+  /@parcel/optimizer-htmlnano/2.8.3_d0e09bd126101a24361fa9a1d13dcbb6:
     resolution: {integrity: sha512-L8/fHbEy8Id2a2E0fwR5eKGlv9VYDjrH9PwdJE9Za9v1O/vEsfl/0T/79/x129l5O0yB6EFQkFa20MiK3b+vOg==}
     engines: {node: '>= 12.0.0', parcel: ^2.8.3}
     dependencies:
@@ -1795,6 +1801,11 @@ packages:
       path-type: 4.0.0
       yaml: 1.10.2
     dev: false
+
+  /crc-32/0.3.0:
+    resolution: {integrity: sha512-kucVIjOmMc1f0tv53BJ/5WIX+MGLcKuoBhnGqQrgKJNqLByb/sVMWfW/Aw6hw0jgcqjJ2pi9E5y32zOIpaUlsA==}
+    engines: {node: '>=0.8'}
+    dev: true
 
   /css-select/4.3.0:
     resolution: {integrity: sha512-wPpOYtnsVontu2mODhA19JrqWxNsfdatRKd64kmpRbQgh1KtItko5sTnEpPdpSaJszTOhEMlF/RPz28qj4HqhQ==}
@@ -2945,7 +2956,7 @@ packages:
       '@parcel/core':
         optional: true
     dependencies:
-      '@parcel/config-default': 2.8.3_2dqjxujgcancinq7vgq5cpolwy
+      '@parcel/config-default': 2.8.3_d0e09bd126101a24361fa9a1d13dcbb6
       '@parcel/core': 2.8.3
       '@parcel/diagnostic': 2.8.3
       '@parcel/events': 2.8.3
@@ -3069,6 +3080,23 @@ packages:
       sonic-boom: 3.2.1
       thread-stream: 2.3.0
     dev: false
+
+  /png-chunk-text/1.0.0:
+    resolution: {integrity: sha512-DEROKU3SkkLGWNMzru3xPVgxyd48UGuMSZvioErCure6yhOc/pRH2ZV+SEn7nmaf7WNf3NdIpH+UTrRdKyq9Lw==}
+    dev: true
+
+  /png-chunks-encode/1.0.0:
+    resolution: {integrity: sha512-J1jcHgbQRsIIgx5wxW9UmCymV3wwn4qCCJl6KYgEU/yHCh/L2Mwq/nMOkRPtmV79TLxRZj5w3tH69pvygFkDqA==}
+    dependencies:
+      crc-32: 0.3.0
+      sliced: 1.0.1
+    dev: true
+
+  /png-chunks-extract/1.0.0:
+    resolution: {integrity: sha512-ZiVwF5EJ0DNZyzAqld8BP1qyJBaGOFaq9zl579qfbkcmOwWLLO4I9L8i2O4j3HkI6/35i0nKG2n+dZplxiT89Q==}
+    dependencies:
+      crc-32: 0.3.0
+    dev: true
 
   /postcss-import/14.1.0_postcss@8.4.21:
     resolution: {integrity: sha512-flwI+Vgm4SElObFVPpTIT7SU7R3qk2L7PyduMcokiaVKuWv9d/U+Gm/QAd8NDLuykTWTkcrjOeD2Pp1rMeBTGw==}
@@ -3470,6 +3498,10 @@ packages:
       semver: 7.0.0
     dev: false
 
+  /sliced/1.0.1:
+    resolution: {integrity: sha512-VZBmZP8WU3sMOZm1bdgTadsQbcscK0UM8oKxKVBs4XAhUo2Xxzm/OFMGBkPusxw9xL3Uy8LrzEqGqJhclsr0yA==}
+    dev: true
+
   /smart-buffer/4.2.0:
     resolution: {integrity: sha512-94hK0Hh8rPqQl2xXc3HsaBoOXKV20MToPkcXvwbISWLEs+64sBq5kFgn2kJDHb1Pry9yrP0dxrCI9RRci7RXKg==}
     engines: {node: '>= 6.0.0', npm: '>= 3.0.0'}
@@ -3626,12 +3658,10 @@ packages:
       stable: 0.1.8
     dev: false
 
-  /tailwindcss/3.2.4_postcss@8.4.21:
+  /tailwindcss/3.2.4:
     resolution: {integrity: sha512-AhwtHCKMtR71JgeYDaswmZXhPcW9iuI9Sp2LvZPo9upDZ7231ZJ7eA9RaURbhpXGVlrjX4cFNlB4ieTetEb7hQ==}
     engines: {node: '>=12.13.0'}
     hasBin: true
-    peerDependencies:
-      postcss: ^8.0.9
     dependencies:
       arg: 5.0.2
       chokidar: 3.5.3

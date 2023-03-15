@@ -80,6 +80,9 @@
     "zustand": "^4.3.3"
   },
   "devDependencies": {
-    "path-browserify": "^1.0.0"
+    "path-browserify": "^1.0.0",
+    "png-chunk-text": "^1.0.0",
+    "png-chunks-encode": "^1.0.0",
+    "png-chunks-extract": "^1.0.0"
   }
 }
