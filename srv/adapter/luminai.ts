@@ -1,32 +1,16 @@
 import needle from 'needle'
 import { logger } from '../logger'
-import { joinParts, trimResponse } from '../api/chat/common'
+import { getEndTokens, trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
+import { defaultPresets } from '../../common/presets'
 
-const MAX_NEW_TOKENS = 196
+const REQUIRED_SAMPLERS = defaultPresets.basic.order
 
 const base = {
   use_story: false,
   use_memory: false,
   use_authors_note: false,
   use_world_info: false,
-  max_context_length: 1400, // Tuneable by user?
-  sampler_order: [6, 0, 1, 2, 3, 4, 5],
-
-  // Generation settings -- Can be overriden by the user
-  top_a: 0.0,
-  /**
-   * We deliberately use a low 'max length' to aid with streaming and the lack of support of 'stop tokens' in Kobold.
-   */
-  // max_length: config.kobold.maxLength || 32,
-  // temperature: 0.65,
-  // top_p: 0.9,
-  // top_k: 0,
-  // typical: 1,
-  // rep_pen: 1.08,
-  // rep_pen_slope: 0.9,
-  // rep_pen_range: 1024,
-  // tfs: 0.9,
 }
 
 export const handleLuminAI: ModelAdapter = async function* ({
@@ -38,7 +22,18 @@ export const handleLuminAI: ModelAdapter = async function* ({
   log,
 }) {
   const endTokens = ['END_OF_DIALOG']
-  const body = { koboldUrl: user.koboldUrl, ...base, ...settings, prompt }
+  const stopTokens = getEndTokens(char, members, ['END_OF_DIALOG'])
+  const body = { koboldUrl: user.koboldUrl, stopTokens, ...base, ...settings, prompt }
+
+  // Kobold sampler order parameter must contain all 6 samplers to be valid
+  // If the sampler order is provided, but incomplete, add the remaining samplers.
+  if (body.sampler_order && body.sampler_order.length !== 6) {
+    for (const sampler of REQUIRED_SAMPLERS) {
+      if (body.sampler_order.includes(sampler)) continue
+
+      body.sampler_order.push(sampler)
+    }
+  }
 
   log.debug(body, 'LuminAI payload')
 

@@ -11,10 +11,6 @@ const base = {
   use_memory: false,
   use_authors_note: false,
   use_world_info: false,
-
-  /**
-   * We deliberately use a low 'max length' to aid with streaming and the lack of support of 'stop tokens' in Kobold.
-   */
 }
 
 export const handleKobold: ModelAdapter = async function* ({
