@@ -13,12 +13,13 @@ export type MsgState = {
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: string
-  retries?: { msgId: string; list: string[] }
+  retries: Record<string, string[]>
 }
 
 export const msgStore = createStore<MsgState>('messages', {
   activeChatId: '',
   msgs: [],
+  retries: {},
 })((get, set) => {
   userStore.subscribe((curr, prev) => {
     if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
@@ -51,7 +52,7 @@ export const msgStore = createStore<MsgState>('messages', {
       }
     },
 
-    async *retry({ msgs, retries }, chatId: string, cont?: string) {
+    async *retry({ msgs }, chatId: string, cont?: string) {
       if (msgs.length < 3) {
         toastStore.error(`Cannot retry: Not enough messages`)
         return
@@ -68,9 +69,6 @@ export const msgStore = createStore<MsgState>('messages', {
       const [message, replace] = msgs.slice(-2)
 
       yield { retrying: replace, partial: '' }
-      if (retries?.msgId !== replace._id) {
-        yield { retries: { msgId: replace._id, list: [] } }
-      }
 
       if (!cont) {
         yield { msgs: msgs.slice(0, -1) }
@@ -111,17 +109,18 @@ export const msgStore = createStore<MsgState>('messages', {
         yield { partial: undefined, waiting: undefined }
       }
     },
-    async *confirmSwipe({ retries }, position: number, onSuccess?: Function) {
-      const replacement = retries?.list?.[position]
+    async *confirmSwipe({ retries }, msgId: string, position: number, onSuccess?: Function) {
+      const replacement = retries[msgId]?.[position]
       if (!retries || !replacement) {
         return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
       }
 
-      retries.list.splice(position, 1)
-      const next = [replacement].concat(retries.list)
+      const list = retries[msgId]
+      list.splice(position, 1)
+      const next = [replacement].concat(list)
 
-      yield { retries: { list: next, msgId: retries.msgId } }
-      msgStore.editMessage(retries.msgId, replacement, onSuccess)
+      yield { retries: { ...retries, [msgId]: next } }
+      msgStore.editMessage(msgId, replacement, onSuccess)
     },
     async deleteMessages({ msgs, activeChatId }, fromId: string) {
       const index = msgs.findIndex((m) => m._id === fromId)
@@ -192,7 +191,6 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
       msgs: msgs.concat(msg),
       partial: undefined,
       waiting: undefined,
-      retries: undefined,
     })
   }
 
@@ -279,16 +277,15 @@ subscribe(
 function addMsgToRetries(msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
   const { retries } = msgStore.getState()
 
-  if (retries?.msgId !== msg._id) {
-    return
-  }
-  const next = retries ? { ...retries } : { msgId: msg._id, list: [] }
-
-  if (!next.list.includes(msg.msg)) {
-    next.list.unshift(msg.msg)
+  if (!retries[msg._id]) {
+    retries[msg._id] = []
   }
 
-  next.list = next.list.slice()
+  const next = retries[msg._id]
 
-  msgStore.setState({ retries: next })
+  if (!next.includes(msg.msg)) {
+    next.unshift(msg.msg)
+  }
+
+  msgStore.setState({ retries: { ...retries, [msg._id]: next.slice() } })
 }

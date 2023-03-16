@@ -35,9 +35,17 @@ const ChatDetail: Component = () => {
     msgs: s.msgs,
     partial: s.partial,
     waiting: s.waiting,
-    retries: s.retries?.list || [],
-    swipeId: s.retries?.msgId,
+    retries: s.retries,
   }))
+
+  const retries = createMemo(() => {
+    const last = msgs.msgs.slice(-1)[0]
+    if (!last) return
+
+    const msgId = last._id
+
+    return { msgId, list: msgs.retries[msgId] || [] }
+  })
 
   const [swipe, setSwipe] = createSignal(0)
   const [removeId, setRemoveId] = createSignal('')
@@ -49,14 +57,15 @@ const ChatDetail: Component = () => {
   const nav = useNavigate()
 
   const clickSwipe = (dir: -1 | 1) => () => {
+    const ret = retries()
+    if (!ret || !ret.list.length) return
     const prev = swipe()
-    const max = msgs.retries.length - 1
+    const max = ret.list.length - 1
 
     let next = prev + dir
     if (next < 0) next = max
     else if (next > max) next = 0
 
-    console.log(msgs.retries[next])
     setSwipe(next)
   }
 
@@ -89,8 +98,8 @@ const ChatDetail: Component = () => {
     setSwipe(0)
   }
 
-  const confirmSwipe = () => {
-    msgStore.confirmSwipe(swipe(), () => setSwipe(0))
+  const confirmSwipe = (msgId: string) => {
+    msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
   return (
@@ -155,7 +164,7 @@ const ChatDetail: Component = () => {
               pos={swipe()}
               prev={clickSwipe(-1)}
               next={clickSwipe(1)}
-              list={msgs.retries}
+              list={retries()?.list || []}
             />
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div class="flex flex-col gap-2">
@@ -167,8 +176,10 @@ const ChatDetail: Component = () => {
                       char={chats.char!}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
-                      swipe={msg._id === msgs.swipeId && swipe() > 0 && msgs.retries[swipe()]}
-                      confirmSwipe={confirmSwipe}
+                      swipe={
+                        msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
+                      }
+                      confirmSwipe={() => confirmSwipe(msg._id)}
                       cancelSwipe={cancelSwipe}
                     />
                   )}
