@@ -61,9 +61,8 @@ const SingleMessage: Component<MessageProps> = (props) => {
 
   const saveEdit = () => {
     if (!ref) return
-    setEdit(false)
-
     msgStore.editMessage(props.msg._id, ref.innerText)
+    setEdit(false)
   }
 
   const resendMessage = () => {
@@ -75,11 +74,10 @@ const SingleMessage: Component<MessageProps> = (props) => {
   }
 
   const startEdit = () => {
+    setEdit(true)
     if (ref) {
       ref.innerText = props.msg.msg
     }
-
-    setEdit(true)
     ref?.focus()
   }
 
@@ -184,9 +182,7 @@ const SingleMessage: Component<MessageProps> = (props) => {
             />
           </Show>
           <Show when={edit()}>
-            <div ref={ref} contentEditable={true}>
-              {msgText()}
-            </div>
+            <div ref={ref} contentEditable={true}></div>
           </Show>
         </div>
       </div>
@@ -197,7 +193,12 @@ const SingleMessage: Component<MessageProps> = (props) => {
 export default Message
 
 function parseMessage(msg: string, char: AppSchema.Character, profile: AppSchema.Profile) {
-  return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
+  return msg
+    .replace(BOT_REPLACE, char.name)
+    .replace(SELF_REPLACE, profile?.handle || 'You')
+    .split('\n')
+    .filter((v) => !!v)
+    .join('\n\n')
 }
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean }
