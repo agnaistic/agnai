@@ -15,7 +15,7 @@ server.listen(config.port, '0.0.0.0', async () => {
 })
 
 // No longer accept requests when shutting down
-// Allow as many responses that in generating to complete as possible during the shutdown window
+// Allow as many responses currently generating to complete as possible during the shutdown window
 // The shutdown window is ~10 seconds
 process.on('SIGTERM', () => {
   logger.warn(`Received SIGTERM. Server shutting down.`)

@@ -1,10 +1,10 @@
 # AgnAIstic
 
-> AI Agnostic Chat, Self-hosted or Multi-tenant
+> AI Agnostic Chat with Personalised Characters. Self-hosted or Multi-tenant.
 
 AI Agnostic Chat
 
-[Try it out!](https://agnai.chat) | [Discord](https://discord.gg/DAn38sA8Qj)
+[Live Version](https://agnai.chat) | [Discord](https://discord.gg/DAn38sA8Qj) | [Roadmap](https://github.com/users/sceuick/projects/1)
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
@@ -24,18 +24,14 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
   - Individual user settings: Which AI service to use and their own service configuration
   - Individual user generation settings
 - Chat specific overrides:
-  - Choose the AI service for a specific chat
-  - Personalise the character for a specific chat
-  - Customise the generation preset/settings for a specific chat
+  - Choose the AI service
+  - Personalise the character
+  - Customise the generation preset/settings
 - Image generation (_IN PROGRESS_)
-
-## Roadmap
-
-See the [roadmap here](https://github.com/users/sceuick/projects/1).
 
 ## Quick Start for Users
 
-You can visit the hosted version at [agnai.chat](https://agnai.chat)
+You can visit the hosted version at [Agnai.chat](https://agnai.chat)
 
 > CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
 
@@ -122,8 +118,9 @@ If you have Node and `pnpm` installed and working, you can start the development
 - Redux Dev Tools
   - The front-end application state is wired up to the Redux Dev Tools chrome extension.
 - NodeJS debugger
-  - The `start` script launchs the NodeJS API using the `--inspect` flag
-  - Go to the url `chrome://inspect` to use the debugger
+  - The `pnpm start` script launchs the NodeJS API using the `--inspect` flag
+  - Attach using the default launch task in VSCode (`F5`)
+  - Or go to the url `chrome://inspect` to use the debugger
 
 ### Format and Type Checking
 
