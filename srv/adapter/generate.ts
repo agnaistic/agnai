@@ -12,8 +12,9 @@ import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
-import { createPrompt } from './prompt'
+import { getMessagesForPrompt } from './prompt'
 import { ModelAdapter } from './type'
+import { createPrompt } from '../../common/prompt'
 
 export type GenerateOptions = {
   senderId: string
@@ -42,6 +43,7 @@ export async function createGuestTextStream(opts: {
   log: AppLog
   socketId: string
   prompt: string
+  lines?: string[]
   continue?: string
 }) {
   const adapter = getAdapater(opts.chat, opts.user)
@@ -69,13 +71,24 @@ export async function createTextStream(opts: GenerateOptions) {
     throw new StatusError('Sender not found in chat members', 400)
   }
 
-  const prompt = await createPrompt({
+  const promptOpts = {
     char,
     chat,
     members,
     retry: opts.retry,
     settings,
     continue: opts.continue,
+  }
+  const { messages } = await getMessagesForPrompt(promptOpts)
+
+  const prompt = createPrompt({
+    char,
+    chat,
+    members,
+    retry: opts.retry,
+    settings,
+    continue: opts.continue,
+    messages,
   })
 
   const adapterOpts = {
@@ -85,8 +98,8 @@ export async function createTextStream(opts: GenerateOptions) {
     members,
     user,
     sender,
-    prompt,
     settings,
+    ...prompt,
   }
 
   const handler = handlers[adapter]

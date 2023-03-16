@@ -2,6 +2,8 @@ import gpt from 'gpt-3-encoder'
 import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './presets'
 
+const DEFAULT_MAX_TOKENS = 2048
+
 export type PromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
@@ -20,14 +22,11 @@ export function createPrompt(opts: PromptOpts) {
   const { pre, post } = createPromptSurrounds(opts)
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
 
+  const lines = getLinesForPrompt(opts)
   const history: string[] = []
   let tokens = gpt.encode([pre, post].join('\n')).length
 
-  const messagesDesc = messages.slice().sort(sortDesc)
-
-  for (const msg of messagesDesc) {
-    const name = msg.characterId ? char.name : getHandle(members, msg.userId)
-    const text = `${name}: ${msg.msg}`
+  for (const text of lines) {
     const size = gpt.encode(text).length
 
     if (size + tokens > maxContext) break
@@ -37,7 +36,7 @@ export function createPrompt(opts: PromptOpts) {
   }
 
   const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
-  return prompt
+  return { lines, prompt }
 }
 
 function getHandle(members: AppSchema.Profile[], id?: string) {
@@ -79,6 +78,54 @@ export function createPromptSurrounds(
     pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),
     post: `${char.name}:`,
   }
+}
+
+type PromptParts = {
+  scenario?: string
+  greeting?: string
+  sampleChat?: string[]
+  persona: string
+  post: string[]
+}
+
+export function getPromptParts(
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>,
+  personaKind?: AppSchema.CharacterPersona['kind']
+) {
+  const { chat, char, members } = opts
+  const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+
+  const replace = (value: string) => placeholderReplace(value, char.name, sender)
+
+  const parts: PromptParts = {
+    persona: formatCharacter(char.name, chat.overrides),
+    post: [],
+  }
+
+  if (chat.scenario) {
+    parts.scenario = replace(chat.scenario)
+  }
+
+  if (chat.sampleChat) {
+    parts.sampleChat = chat.sampleChat.split('\n').filter(removeEmpty).map(replace)
+  }
+
+  if (chat.greeting) {
+    parts.greeting = replace(chat.greeting)
+  }
+
+  const post = [`${char.name}:`]
+  if (opts.continue) {
+    post.unshift(`${char.name}: ${opts.continue}`)
+  }
+
+  parts.post = post.map(replace)
+
+  return parts
+}
+
+function placeholderReplace(value: string, charName: string, senderName: string) {
+  return value.replace(BOT_REPLACE, charName).replace(SELF_REPLACE, senderName)
 }
 
 export function formatCharacter(name: string, persona: AppSchema.CharacterPersona) {
@@ -150,4 +197,40 @@ function removeEmpty(value?: string) {
 
 function sortDesc(left: AppSchema.ChatMessage, right: AppSchema.ChatMessage) {
   return left.createdAt > right.createdAt ? 1 : left.createdAt === right.createdAt ? 0 : -1
+}
+
+/**
+ * We 'ambitiously' get enough tokens to fill up the entire prompt.
+ *
+ * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
+ */
+export function getLinesForPrompt(
+  { chat, settings, char, members, messages }: PromptOpts,
+  lines: string[] = []
+) {
+  const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
+  let tokens = 0
+
+  const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
+
+  do {
+    const history = messages.map(formatMsg)
+
+    for (const hist of history) {
+      const nextTokens = gpt.encode(hist).length
+      if (nextTokens + tokens > maxContext) break
+      tokens += nextTokens
+      lines.unshift(hist)
+    }
+
+    if (tokens >= maxContext || messages.length < 50) break
+  } while (true)
+
+  return lines
+}
+
+function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Profile[]) {
+  const member = members.find((mem) => chat.userId === mem.userId)
+
+  return chat.characterId ? `${bot}: ` : `${member?.handle}: `
 }

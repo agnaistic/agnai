@@ -8,6 +8,7 @@ export type ModelAdapter = (opts: {
   members: AppSchema.Profile[]
   sender: AppSchema.Profile
   prompt: string
+  lines?: string[]
 
   /** GenSettings mapped to an object for the target adapter */
   settings: any

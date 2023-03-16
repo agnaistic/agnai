@@ -157,17 +157,6 @@ const Settings: Component = () => {
             />
           </Show>
 
-          <Show when={cfg.config.adapters.includes('luminai')}>
-            <Divider />
-            <TextInput
-              fieldName="luminaiUrl"
-              label="LuminAI URL"
-              helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
-              placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-              value={state.user?.luminaiUrl}
-            />
-          </Show>
-
           <Show when={cfg.config.adapters.includes('openai')}>
             <Divider />
             <TextInput

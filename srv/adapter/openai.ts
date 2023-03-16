@@ -3,7 +3,7 @@ import { sanitise, trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { formatCharacter } from '../../common/prompt'
+import { formatCharacter, getPromptParts } from '../../common/prompt'
 
 const baseUrl = `https://api.openai.com/v1`
 
@@ -11,16 +11,8 @@ type OpenAIMessagePropType = {
   role: 'user' | 'assistant' | 'system'
   content: string
 }
-export const handleOAI: ModelAdapter = async function* ({
-  char,
-  members,
-  user,
-  prompt,
-  settings,
-  sender,
-  log,
-  guest,
-}) {
+export const handleOAI: ModelAdapter = async function* (opts) {
+  const { char, members, user, prompt, settings, sender, log, guest, lines } = opts
   if (!user.oaiKey) {
     yield { error: `OpenAI request failed: Not configured` }
     return
@@ -35,17 +27,17 @@ export const handleOAI: ModelAdapter = async function* ({
     frequency_penalty: settings.frequency_penalty ?? defaultPresets.openai.frequencyPenalty,
   }
 
+  const promptParts = getPromptParts(opts)
+
   const turbo = oaiModel === 'gpt-3.5-turbo'
   if (turbo) {
     // i looked at miku code before writing this
     // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L86
     // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L65
-    const conversation = prompt.replace(char.greeting, '')
-    const lines = conversation.split('\n')
     const messages: OpenAIMessagePropType[] = [
       {
         role: 'system',
-        content: settings.gaslight
+        content: (settings.gaslight || defaultPresets.openai.gaslight)
           .replace(/\{\{name\}\}/g, char.name)
           .replace(/\{\{char\}\}/g, char.name)
           .replace(/\{\{user\}\}/g, sender.handle || 'You')
@@ -54,11 +46,16 @@ export const handleOAI: ModelAdapter = async function* ({
       },
     ]
 
-    for (const line of lines) {
-      const startsChar = line.startsWith(char.name)
+    const all = []
+    if (promptParts.sampleChat) all.push(...promptParts.sampleChat)
+    if (lines) all.push(...lines)
+
+    for (const line of all) {
+      const isBot = line.startsWith(char.name)
+      const content = line.substring(line.indexOf(':') + 1).trim()
       messages.push({
-        role: startsChar ? 'assistant' : 'user',
-        content: line.substring(line.indexOf(':')),
+        role: isBot ? 'assistant' : 'user',
+        content,
       })
     }
 

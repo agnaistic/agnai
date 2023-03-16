@@ -47,7 +47,8 @@ export async function sendMessage(chatId: string, message: string) {
     chat,
     user,
     sender: profile,
-    prompt,
+    prompt: prompt.prompt,
+    lines: prompt.lines,
     message,
   })
   return local.result({ success: true })
@@ -85,7 +86,8 @@ export async function retryUserMessage(chatId: string, message: string) {
     chat,
     user,
     sender: profile,
-    prompt,
+    prompt: prompt.prompt,
+    lines: prompt.lines,
     message,
     retry: true,
   })
@@ -132,7 +134,8 @@ export async function retryCharacterMessage(
     chat,
     user,
     sender: profile,
-    prompt,
+    prompt: prompt.prompt,
+    lines: prompt.lines,
     retry: true,
     message: message.msg,
     continue: continueOn,

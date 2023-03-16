@@ -1,7 +1,6 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { createTextStream, getResponseEntities } from '../../adapter/generate'
-import { createPrompt } from '../../adapter/prompt'
 import { post, PY_URL } from '../request'
 import { errors, handle } from '../wrap'
 import { sendMany } from '../ws'
@@ -157,7 +156,7 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
 export const summarizeChat = handle(async (req) => {
   const chatId = req.params.id
   const entities = await getResponseEntities(chatId, req.userId!)
-  const prompt = await createPrompt(entities)
+  const prompt = 'TODO' // await createPrompt(entities)
 
   const summary = await post({ url: '/summarize', body: { prompt }, host: PY_URL })
   return { summary }

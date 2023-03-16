@@ -20,6 +20,7 @@ export const guestGenerateMsg = handle(async ({ params, body, log, socketId }, r
       message: 'string',
       prompt: 'string',
       retry: 'boolean?',
+      lines: ['string?'],
       continue: 'string?',
     },
     body

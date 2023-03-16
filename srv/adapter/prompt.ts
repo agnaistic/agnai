@@ -1,5 +1,4 @@
 import gpt from 'gpt-3-encoder'
-import { formatCharacter } from '../../common/prompt'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 
@@ -14,63 +13,20 @@ type PromptOpts = {
 
 const DEFAULT_MAX_TOKENS = 2048
 
-const BOT_REPLACE = /\{\{char\}\}/g
-const SELF_REPLACE = /\{\{user\}\}/g
-
-export async function createPrompt({ chat, char, members, retry, settings, ...opts }: PromptOpts) {
-  const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
-
-  const hasStartSignal =
-    chat.scenario.includes('<START>') ||
-    chat.sampleChat.includes('<START>') ||
-    chat.greeting.includes('<START>')
-
-  if (chat.scenario) {
-    pre.push(`Scenario: ${chat.scenario}`)
-  }
-
-  if (!hasStartSignal) pre.push('<START>')
-  pre.push(...chat.sampleChat.split('\n'))
-
-  const post = [`${char.name}:`]
-
-  if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
-  }
-
-  const prompt = await insertMessages({ chat, members, char, settings, pre, post, retry })
-  return prompt
-}
-
-type InsertOpts = PromptOpts & { pre: string[]; post: string[]; msgs?: string[] }
-
-async function insertMessages(opts: InsertOpts) {
-  const { settings, members, chat, char, pre, post, retry } = opts
+export async function getMessagesForPrompt({ chat, settings, char, members }: PromptOpts) {
   const maxContext = settings.maxContextLength || DEFAULT_MAX_TOKENS
-  const owner = members.find((mem) => mem.userId === chat.userId)
-  if (!owner) {
-    throw new Error(`Cannot produce prompt: Owner profile not found`)
-  }
+  let before: string | undefined
+  let tokens = 0
 
-  // We need to do this early for accurate token counts
-  const preamble = pre
-    .filter(removeEmpty)
-    .join('\n')
-    .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, owner.handle)
-  const postamble = post
-    .filter(removeEmpty)
-    .join('\n')
-    .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, owner.handle)
-
-  let tokens = gpt.encode(preamble + '\n' + postamble).length
   const lines: string[] = []
-  let before = retry?.createdAt
+  const msgs: AppSchema.ChatMessage[] = []
+
+  const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
 
   do {
     const messages = await store.chats.getRecentMessages(chat._id, before)
-    const history = messages.map((chat) => prefix(chat, char.name, members) + chat.msg)
+    msgs.push(...messages)
+    const history = messages.map(formatMsg)
 
     for (const hist of history) {
       const nextTokens = gpt.encode(hist).length
@@ -83,22 +39,11 @@ async function insertMessages(opts: InsertOpts) {
     before = messages.slice(-1)[0].createdAt
   } while (true)
 
-  const middle = lines
-    .join('\n')
-    .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, owner.handle)
-
-  const prompt = [preamble, middle, postamble].join('\n')
-
-  return prompt
+  return { lines, messages: msgs }
 }
 
 function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Profile[]) {
   const member = members.find((mem) => chat.userId === mem.userId)
 
   return chat.characterId ? `${bot}: ` : `${member?.handle}: `
-}
-
-function removeEmpty(value?: string) {
-  return !!value
 }
