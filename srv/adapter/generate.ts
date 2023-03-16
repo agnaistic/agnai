@@ -159,7 +159,7 @@ async function getGenerationSettings(
     if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
     if (guest) {
       if (chat.genSettings) return chat.genSettings
-      return defaultPresets.basic
+      return getFallbackPreset(adapter)
     }
 
     const preset = await store.users.getUserPreset(chat.genPreset)
