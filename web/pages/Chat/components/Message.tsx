@@ -122,7 +122,11 @@ const SingleMessage: Component<MessageProps> = (props) => {
             <b class="text-900 mr-2" data-bot-name={isBot()} data-user-name={isUser()}>
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
-            <span class="text-300 text-sm" data-bot-time={isBot} data-user-time={isUser()}>
+            <span
+              class="text-400 flex items-center text-sm"
+              data-bot-time={isBot}
+              data-user-time={isUser()}
+            >
               {new Date(props.msg.createdAt).toLocaleString()}
             </span>
             <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
