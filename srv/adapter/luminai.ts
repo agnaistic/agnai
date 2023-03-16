@@ -35,9 +35,12 @@ export const handleLuminAI: ModelAdapter = async function* ({
   user,
   prompt,
   settings,
+  log,
 }) {
-  const body = { koboldUrl: user.koboldUrl, ...base, ...settings, prompt }
   const endTokens = ['END_OF_DIALOG']
+  const body = { koboldUrl: user.koboldUrl, ...base, ...settings, prompt }
+
+  log.debug(body, 'LuminAI payload')
 
   const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
     json: true,

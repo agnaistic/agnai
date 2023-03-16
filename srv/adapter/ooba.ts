@@ -30,7 +30,14 @@ const base = {
 
 const defaultUrl = `http://127.0.0.1:7860`
 
-export const handleOoba: ModelAdapter = async function* ({ char, members, user, prompt, sender }) {
+export const handleOoba: ModelAdapter = async function* ({
+  char,
+  members,
+  user,
+  prompt,
+  sender,
+  log,
+}) {
   const body = [
     prompt,
     base.max_new_tokens,
@@ -52,6 +59,8 @@ export const handleOoba: ModelAdapter = async function* ({ char, members, user, 
     base.max_context_length,
     1,
   ]
+
+  log.debug({ body }, 'Textgen payload')
 
   const resp = await needle(
     'post',

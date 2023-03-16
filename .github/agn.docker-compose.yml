@@ -15,6 +15,7 @@ services:
       - agn-data:/app/db
       - agn-assets:/app/dist/assets
     environment:
+      LOG_LEVEL: info
       DB_NAME: agnai
       DB_HOST: mongodb
       DB_PORT: 27017

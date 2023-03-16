@@ -23,6 +23,7 @@ export const handleKobold: ModelAdapter = async function* ({
   user,
   prompt,
   settings,
+  log,
 }) {
   const body = { ...base, ...settings, prompt }
 
@@ -37,6 +38,8 @@ export const handleKobold: ModelAdapter = async function* ({
   }
 
   const endTokens = ['END_OF_DIALOG']
+
+  log.debug(body, 'Kobold payload')
 
   const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
     json: true,

@@ -47,6 +47,8 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const endTokens = ['***', 'Scenario:', '----']
 
+  log.debug({ ...body, parameters: { ...body.parameters, bad_word_ids: null } }, 'NovelAI payload')
+
   const response = await needle('post', novelUrl, body, {
     json: true,
     // timeout: 2000,

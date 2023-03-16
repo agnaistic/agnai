@@ -74,6 +74,8 @@ export const handleOAI: ModelAdapter = async function* ({
     Authorization: bearer,
   }
 
+  log.debug(body, 'OpenAI payload')
+
   const url = turbo ? `${baseUrl}/chat/completions` : `${baseUrl}/completions`
   const resp = await needle('post', url, JSON.stringify(body), { json: true, headers }).catch(
     (err) => ({ error: err })

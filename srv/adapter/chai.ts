@@ -16,6 +16,8 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
 
   const body = { ...settings, text: prompt }
 
+  log.debug(body, 'Chai payload')
+
   const response = await needle('post', `${config.chai.url}/generate/gptj`, body, {
     json: true,
     timeout: 3000,
