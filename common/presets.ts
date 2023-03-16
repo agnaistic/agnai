@@ -47,6 +47,8 @@ export const defaultPresets = {
     gaslight: '',
     oaiModel: 'text-davinci-003',
     memoryDepth: 5,
+    memoryContextLimit: 500,
+    memoryReverseWeight: false,
   },
   novel_20BC: {
     name: 'Novel 20BC+',
@@ -255,4 +257,21 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
 export function isDefaultPreset(value?: string): value is GenerationPreset {
   if (!value) return false
   return value in defaultPresets
+}
+
+export function getFallbackPreset(adapter: AIAdapter) {
+  switch (adapter) {
+    case 'chai':
+    case 'kobold':
+    case 'horde':
+    case 'luminai':
+    case 'ooba':
+      return defaultPresets.basic
+
+    case 'openai':
+      return defaultPresets.openai
+
+    case 'novel':
+      return defaultPresets.novel_20BC
+  }
 }

@@ -1,5 +1,10 @@
 import { AIAdapter } from '../../common/adapters'
-import { mapPresetsToAdapter, defaultPresets, isDefaultPreset } from '../../common/presets'
+import {
+  mapPresetsToAdapter,
+  defaultPresets,
+  isDefaultPreset,
+  getFallbackPreset,
+} from '../../common/presets'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { AppLog, logger } from '../logger'
@@ -195,21 +200,4 @@ async function getGenerationSettings(
 
   if (chat.genSettings) return chat.genSettings
   return getFallbackPreset(adapter)
-}
-
-function getFallbackPreset(adapter: AIAdapter) {
-  switch (adapter) {
-    case 'chai':
-    case 'kobold':
-    case 'horde':
-    case 'luminai':
-    case 'ooba':
-      return defaultPresets.basic
-
-    case 'openai':
-      return defaultPresets.openai
-
-    case 'novel':
-      return defaultPresets.novel_20BC
-  }
 }

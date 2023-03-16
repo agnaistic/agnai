@@ -18,7 +18,10 @@ export const BOT_REPLACE = /\{\{char\}\}/g
 export const SELF_REPLACE = /\{\{user\}\}/g
 
 export function createPrompt(opts: PromptOpts) {
-  const { chat, char, members, settings = defaultPresets.basic, messages, retry } = opts
+  const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
+  opts.messages = sortedMsgs
+
+  const { settings = defaultPresets.basic } = opts
   const { pre, post } = createPromptSurrounds(opts)
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
 
@@ -37,16 +40,6 @@ export function createPrompt(opts: PromptOpts) {
 
   const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
   return { lines, prompt }
-}
-
-function getHandle(members: AppSchema.Profile[], id?: string) {
-  if (!id) return 'You'
-
-  for (const mem of members) {
-    if (mem.userId === id) return mem.handle || 'You'
-  }
-
-  return 'You'
 }
 
 export function createPromptSurrounds(
@@ -88,10 +81,7 @@ type PromptParts = {
   post: string[]
 }
 
-export function getPromptParts(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>,
-  personaKind?: AppSchema.CharacterPersona['kind']
-) {
+export function getPromptParts(opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
@@ -195,17 +185,13 @@ function removeEmpty(value?: string) {
   return !!value
 }
 
-function sortDesc(left: AppSchema.ChatMessage, right: AppSchema.ChatMessage) {
-  return left.createdAt > right.createdAt ? 1 : left.createdAt === right.createdAt ? 0 : -1
-}
-
 /**
  * We 'ambitiously' get enough tokens to fill up the entire prompt.
  *
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export function getLinesForPrompt(
-  { chat, settings, char, members, messages }: PromptOpts,
+  { settings, char, members, messages, retry, continue: cont }: PromptOpts,
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
@@ -213,7 +199,8 @@ export function getLinesForPrompt(
 
   const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
 
-  const history = messages.map(formatMsg)
+  const base = cont ? messages : retry ? messages.slice(1) : messages
+  const history = base.map(formatMsg)
 
   for (const hist of history) {
     const nextTokens = gpt.encode(hist).length
@@ -229,4 +216,8 @@ function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Pro
   const member = members.find((mem) => chat.userId === mem.userId)
 
   return chat.characterId ? `${bot}: ` : `${member?.handle}: `
+}
+
+function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
+  return l.createdAt > r.createdAt ? -1 : l.createdAt === r.createdAt ? 0 : 1
 }

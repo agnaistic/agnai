@@ -125,8 +125,9 @@ export async function retryCharacterMessage(
     char,
     chat,
     members: [profile],
-    messages: msgs.slice(0, index),
+    messages: msgs,
     continue: continueOn,
+    retry: replace,
   })
 
   return api.post(`/chat/${chat._id}/guest-message`, {

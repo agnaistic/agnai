@@ -10,7 +10,6 @@ import {
   X,
 } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import { createMutable } from 'solid-js/store'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -44,7 +43,7 @@ const ChatDetail: Component = () => {
 
     const msgId = last._id
 
-    return { msgId, list: msgs.retries[msgId] || [] }
+    return { msgId, list: msgs.retries?.[msgId] || [] }
   })
 
   const [swipe, setSwipe] = createSignal(0)
@@ -122,7 +121,7 @@ const ChatDetail: Component = () => {
             </A>
 
             <div class="flex flex-row items-center gap-2">
-              <div class="text-xs italic text-white/25">{ADAPTER_LABELS[adapter()]}</div>
+              <div class="text-xs italic text-[var(--text-500)]">{ADAPTER_LABELS[adapter()]}</div>
               <div class="icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
                 <Tooltip tip="Invite user" position="bottom">
                   <MailPlus />
@@ -264,17 +263,17 @@ const SwipeMessage: Component<{
   pos: number
 }> = (props) => {
   return (
-    <div class="flex h-6 w-full items-center justify-between text-white/50">
+    <div class="flex h-6 w-full items-center justify-between text-[var(--text-800)]">
       <Show when={props.list.length > 1}>
-        <div class="cursor:pointer hover:text-white">
+        <div class="cursor:pointer hover:text-[var(--text-900)]">
           <Button schema="clear" onClick={props.prev}>
             <ChevronLeft />
           </Button>
         </div>
-        <div class="text-white/40">
+        <div class="text-[var(--text-800)]">
           {props.pos + 1} / {props.list.length}
         </div>
-        <div class="cursor:pointer hover:text-white">
+        <div class="cursor:pointer hover:text-[var(--text-800)]">
           <Button schema="clear" onClick={props.next}>
             <ChevronRight />
           </Button>
