@@ -213,18 +213,14 @@ export function getLinesForPrompt(
 
   const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
 
-  do {
-    const history = messages.map(formatMsg)
+  const history = messages.map(formatMsg)
 
-    for (const hist of history) {
-      const nextTokens = gpt.encode(hist).length
-      if (nextTokens + tokens > maxContext) break
-      tokens += nextTokens
-      lines.unshift(hist)
-    }
-
-    if (tokens >= maxContext || messages.length < 50) break
-  } while (true)
+  for (const hist of history) {
+    const nextTokens = gpt.encode(hist).length
+    if (nextTokens + tokens > maxContext) break
+    tokens += nextTokens
+    lines.unshift(hist)
+  }
 
   return lines
 }
