@@ -17,6 +17,10 @@
   --dot-color: var(--hl-700);
 }
 
+em {
+  color: var(--text-800);
+}
+
 .dot-elastic {
   position: relative;
   width: 10px;

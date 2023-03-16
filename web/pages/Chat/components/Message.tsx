@@ -127,7 +127,7 @@ const SingleMessage: Component<
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span
-              class="text-400 flex items-center text-sm"
+              class="text-600 flex items-center text-sm"
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
