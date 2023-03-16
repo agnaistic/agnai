@@ -1,5 +1,7 @@
 import type { AppSchema } from '../srv/db/schema'
 import { OPENAI_MODELS } from './adapters'
+import gpt from 'gpt-3-encoder'
+import { getMemoryPrompt } from './memory'
 import { defaultPresets } from './presets'
 import { getEncoder } from './tokenize'
 
@@ -14,21 +16,33 @@ export type PromptOpts = {
   messages: AppSchema.ChatMessage[]
   retry?: AppSchema.ChatMessage
   continue?: string
+  book?: AppSchema.MemoryBook
 }
 
 export const BOT_REPLACE = /\{\{char\}\}/g
 export const SELF_REPLACE = /\{\{user\}\}/g
+
+const testBook: AppSchema.MemoryBook = {
+  _id: '',
+  name: 'test book',
+  userId: '',
+  entries: [
+    { keywords: ['test'], priority: 10, weight: 5, name: '', entry: 'Testing' },
+    { keywords: ['foo'], priority: 10, weight: 4, name: '', entry: 'Foo bar baz qux' },
+  ],
+}
 
 export function createPrompt(opts: PromptOpts) {
   const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
   const { settings = defaultPresets.basic } = opts
-  const { pre, post, parts } = createPromptSurrounds(opts)
+  const lines = getLinesForPrompt(opts)
+  const { pre, post, parts } = createPromptSurrounds({ ...opts, lines })
   const { adapter, model } = getAdapter(opts.chat, opts.config, opts.settings)
+
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
 
-  const lines = getLinesForPrompt(opts)
   const history: string[] = []
 
   const encoder = getEncoder(adapter, model)
@@ -50,9 +64,12 @@ export function createPrompt(opts: PromptOpts) {
 const START_TEXT = '<START>'
 
 export function createPromptSurrounds(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'> & { lines: string[] }
 ) {
   const { chat, char, members } = opts
+
+  const memory = getMemoryPrompt(opts)
+
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const parts = getPromptParts(opts)
@@ -65,6 +82,11 @@ export function createPromptSurrounds(
 
   if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
   if (!hasStart) pre.push('<START>')
+
+  if (memory?.prompt) {
+    pre.push(memory.prompt)
+  }
+
   if (parts.sampleChat) pre.push(...parts.sampleChat)
 
   const post = [`${char.name}:`]
@@ -235,7 +257,16 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export function getLinesForPrompt(
-  { settings, char, members, messages, retry, continue: cont, ...opts }: PromptOpts,
+  {
+    settings,
+    char,
+    members,
+    messages,
+    retry,
+    continue: cont,
+    book = testBook,
+    ...opts
+  }: PromptOpts,
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS

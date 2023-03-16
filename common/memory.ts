@@ -2,14 +2,15 @@ import gpt from 'gpt-3-encoder'
 import { AppSchema } from '../srv/db/schema'
 import { AIAdapter } from './adapters'
 import { defaultPresets, getFallbackPreset } from './presets'
+import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 
 type MemoryOpts = {
   chat: AppSchema.Chat
-  settings?: AppSchema.UserGenPreset
-  book: AppSchema.MemoryBook
+  char: AppSchema.Character
+  settings?: Partial<AppSchema.UserGenPreset>
+  book?: AppSchema.MemoryBook
   lines: string[]
-  message: string
-  adapter: AIAdapter
+  members: AppSchema.Profile[]
 }
 
 type Match = {
@@ -22,6 +23,8 @@ type Match = {
   entry: AppSchema.MemoryEntry
 
   tokens: number
+
+  text: string
 }
 
 /**
@@ -31,36 +34,61 @@ type Match = {
  * - If there is a tie due to using the same keyword, the earliest entry in the book wins
  */
 
-export function getMemoryPrompt({ chat, book, ...opts }: MemoryOpts) {
-  if (!book.entries) return
+export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts) {
+  if (!book?.entries) return
+  const sender = opts.members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const settings: Partial<AppSchema.GenSettings> = opts.settings || getFallbackPreset(opts.adapter)
-  const depth = settings.memoryDepth || defaultPresets.basic.memoryDepth
-  const maxMemory = settings.memoryContextLimit || defaultPresets.basic.memoryContextLimit
-  const reveseWeight = settings.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
+  const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth
+  const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
+  const reveseWeight = settings?.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
 
   if (isNaN(depth) || depth <= 0) return
 
-  const entries: Match[] = []
+  const matches: Match[] = []
 
   let id = 0
-  const combinedText = opts.lines.join(' ')
+  const combinedText = opts.lines.join(' ').toLowerCase()
+  const baseText = `${opts.char.name}'s Memory: `
 
   for (const entry of book.entries) {
     let index = -1
     for (const keyword of entry.keywords) {
-      const match = combinedText.lastIndexOf(keyword)
+      const match = combinedText.lastIndexOf(keyword.toLowerCase())
       if (match === -1 || match < index) continue
       index = match
     }
 
     if (index > -1) {
-      const tokens = gpt.encode(entry.entry).length
-      entries.push({ index, entry, id: ++id, tokens })
+      const text = entry.entry.replace(BOT_REPLACE, opts.char.name).replace(SELF_REPLACE, sender)
+      const tokens = gpt.encode(text).length
+      matches.push({ index, entry, id: ++id, tokens, text })
     }
   }
 
-  entries.sort(byPriorityThenIndex)
+  matches.sort(byPriorityThenIndex)
+
+  const entries = matches.reduce(
+    (prev, curr) => {
+      if (prev.budget >= memoryBudget) return prev
+      if (prev.budget + curr.tokens > memoryBudget) return prev
+
+      prev.budget += curr.tokens
+      prev.list.push(curr)
+      return prev
+    },
+    { list: [] as Match[], budget: gpt.encode(baseText).length }
+  )
+
+  const prompt = entries.list
+    .map(({ text }) => text)
+    .reverse()
+    .join('\n')
+
+  return {
+    prompt: `${baseText}${prompt}`,
+    entries,
+    tokens: entries.budget,
+  }
 }
 
 function byPriorityThenIndex(
