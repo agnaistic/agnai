@@ -4,7 +4,7 @@
 
 AI Agnostic Chat
 
-[Try it out!](https://agnai.chat)
+[Try it out!](https://agnai.chat) | [Discord](https://discord.gg/DAn38sA8Qj)
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
