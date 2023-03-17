@@ -27,7 +27,13 @@ const testBook: AppSchema.MemoryBook = {
   name: 'test book',
   userId: '',
   entries: [
-    { keywords: ['test'], priority: 10, weight: 5, name: '', entry: 'Testing' },
+    {
+      keywords: ['skin colour'],
+      priority: 10,
+      weight: 5,
+      name: '',
+      entry: '{{user}} has blue skin',
+    },
     { keywords: ['foo'], priority: 10, weight: 4, name: '', entry: 'Foo bar baz qux' },
   ],
 }
