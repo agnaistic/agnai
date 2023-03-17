@@ -34,13 +34,17 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // i looked at miku code before writing this
     // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L86
     // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L65
+    const gaslight = settings.gaslight || defaultPresets.openai.gaslight
+    const user = sender.handle || 'You'
+
     const messages: OpenAIMessagePropType[] = [
       {
         role: 'system',
-        content: (settings.gaslight || defaultPresets.openai.gaslight)
+        content: gaslight
+          .replace(/\{\{name\}\}/g, char.name)
           .replace(/\<BOT>/g, char.name)
           .replace(/\{\{char\}\}/g, char.name)
-          .replace(/\{\{user\}\}/g, sender.handle || 'You')
+          .replace(/\{\{user\}\}/g, user)
           .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
           .replace(/\{\{scenario\}\}/g, char.scenario)
           .replace(/\{\{example_dialogue\}\}/g, char.sampleChat),
@@ -48,14 +52,31 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     ]
 
     const all = []
-    // if (promptParts.sampleChat) all.push(...promptParts.sampleChat)
+    if (!gaslight.includes('{{example_dialogue}}') && promptParts.sampleChat) {
+      all.push(...promptParts.sampleChat)
+      all.push('<START>')
+    }
     if (lines) all.push(...lines)
+
+    let role: 'user' | 'assistant' | 'system' = 'assistant'
 
     for (const line of all) {
       const isBot = line.startsWith(char.name)
-      const content = line.substring(line.indexOf(':') + 1).trim()
+      const isUser = line.startsWith(sender.handle)
+      let content = ''
+
+      if (isBot || isUser) {
+        isBot ? (role = 'assistant') : (role = 'user')
+        content = line.substring(line.indexOf(':') + 1).trim()
+      } else if (!isBot && !isUser) {
+        if (line === '<START>') {
+          role = 'system'
+        }
+        content += line
+      }
+
       messages.push({
-        role: isBot ? 'assistant' : 'user',
+        role: role,
         content,
       })
     }
