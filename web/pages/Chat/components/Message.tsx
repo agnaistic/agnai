@@ -40,16 +40,20 @@ const Message: Component<MessageProps> = (props) => {
           char={props.char}
           onRemove={props.onRemove}
           last={props.last && i() === splits().length - 1}
+          lastSplit={i() === splits().length - 1}
           swipe={props.swipe}
           confirmSwipe={props.confirmSwipe}
           cancelSwipe={props.cancelSwipe}
+          original={props.msg}
         />
       )}
     </For>
   )
 }
 
-const SingleMessage: Component<MessageProps> = (props) => {
+const SingleMessage: Component<
+  MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
+> = (props) => {
   const user = userStore()
   const members = chatStore((s) => s.memberIds)
 
@@ -76,7 +80,7 @@ const SingleMessage: Component<MessageProps> = (props) => {
   const startEdit = () => {
     setEdit(true)
     if (ref) {
-      ref.innerText = props.msg.msg
+      ref.innerText = props.original.msg
     }
     ref?.focus()
   }
@@ -148,7 +152,7 @@ const SingleMessage: Component<MessageProps> = (props) => {
               <Show when={props.last && !props.msg.characterId}>
                 <RefreshCw size={16} class="cursor-pointer" onClick={resendMessage} />
               </Show>
-              <Show when={!props.msg.split}>
+              <Show when={!props.msg.split || props.lastSplit}>
                 <Pencil size={16} class="icon-button" onClick={startEdit} />
                 <Trash size={16} class="icon-button" onClick={props.onRemove} />
               </Show>

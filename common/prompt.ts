@@ -1,4 +1,5 @@
-import { AppSchema } from '../srv/db/schema'
+import type { AppSchema } from '../srv/db/schema'
+import { OPENAI_MODELS } from './adapters'
 import { defaultPresets } from './presets'
 import { getEncoder } from './tokenize'
 
@@ -31,10 +32,10 @@ export function createPrompt(opts: PromptOpts) {
   const history: string[] = []
 
   const encoder = getEncoder(adapter, model)
-  let tokens = encoder([pre, post].join('\n')).length
+  let tokens = encoder(pre) + encoder(post)
 
   for (const text of lines) {
-    const size = encoder(text).length
+    const size = encoder(text, true)
 
     if (size + tokens > maxContext) break
 
@@ -78,15 +79,19 @@ export function createPromptSurrounds(
   }
 }
 
-type PromptParts = {
+export type PromptParts = {
   scenario?: string
   greeting?: string
   sampleChat?: string[]
   persona: string
+  gaslight: string
   post: string[]
+  gaslightHasChat: boolean
 }
 
-export function getPromptParts(opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>) {
+export function getPromptParts(
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings'>
+) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
@@ -95,6 +100,8 @@ export function getPromptParts(opts: Pick<PromptOpts, 'chat' | 'char' | 'members
   const parts: PromptParts = {
     persona: formatCharacter(char.name, chat.overrides),
     post: [],
+    gaslight: '',
+    gaslightHasChat: false,
   }
 
   if (chat.scenario) {
@@ -112,6 +119,31 @@ export function getPromptParts(opts: Pick<PromptOpts, 'chat' | 'char' | 'members
   const post = [`${char.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
+  }
+
+  const gaslight =
+    opts.chat.genSettings?.gaslight || opts.settings?.gaslight || defaultPresets.openai.gaslight
+
+  const sampleChat = parts.sampleChat?.join('\n') || ''
+  parts.gaslight = gaslight
+    .replace(/\{\{example_dialogue\}\}/g, sampleChat)
+    .replace(/\{\{scenario\}\}/g, parts.scenario || '')
+    .replace(/\{\{name\}\}/g, char.name)
+    .replace(/\<BOT\>/g, char.name)
+    .replace(/\{\{char\}\}/g, char.name)
+    .replace(/\{\{user\}\}/g, sender)
+    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
+
+  /**
+   * If the gaslight does not have a sample chat placeholder, but we do have sample chat
+   * then will be adding it to the prompt _after_ the gaslight.
+   *
+   * We will flag that this needs to occur
+   *
+   * Edit: We will simply remove the sampleChat from the parts since it has already be included in the prompt using the gaslight
+   */
+  if (gaslight.includes('{{example_dialogue}}')) {
+    parts.sampleChat = undefined
   }
 
   parts.post = post.map(replace)
@@ -197,7 +229,8 @@ function removeEmpty(value?: string) {
 }
 
 /**
- * We 'ambitiously' get enough tokens to fill up the entire prompt.
+ * We 'optimistically' get enough tokens to fill up the entire prompt.
+ * This is an estimate and will be pruned by the caller.
  *
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
@@ -210,13 +243,15 @@ export function getLinesForPrompt(
   const encoder = getEncoder(adapter, model)
   let tokens = 0
 
-  const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
+  const sender = members.find((mem) => opts.chat.userId === mem.userId)?.handle || 'You'
+
+  const formatMsg = (chat: AppSchema.ChatMessage) => fillPlaceholders(chat, char.name, sender)
 
   const base = cont ? messages : retry ? messages.slice(1) : messages
   const history = base.map(formatMsg)
 
   for (const hist of history) {
-    const nextTokens = encoder(hist).length
+    const nextTokens = encoder(hist)
     if (nextTokens + tokens > maxContext) break
     tokens += nextTokens
     lines.unshift(hist)
@@ -225,10 +260,10 @@ export function getLinesForPrompt(
   return lines
 }
 
-function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Profile[]) {
-  const member = members.find((mem) => chat.userId === mem.userId)
-
-  return chat.characterId ? `${bot}: ` : `${member?.handle}: `
+function fillPlaceholders(chat: AppSchema.ChatMessage, char: string, user: string) {
+  const prefix = chat.characterId ? char : user
+  const msg = chat.msg.replace(BOT_REPLACE, char).replace(SELF_REPLACE, user)
+  return `${prefix}: ${msg}`
 }
 
 function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {

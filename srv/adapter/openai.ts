@@ -3,7 +3,9 @@ import { sanitise, trimResponse } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { formatCharacter, getPromptParts } from '../../common/prompt'
+import { BOT_REPLACE, formatCharacter, getPromptParts, SELF_REPLACE } from '../../common/prompt'
+import { getEncoder } from '../../common/tokenize'
+import { OPENAI_MODELS } from '../../common/adapters'
 
 const baseUrl = `https://api.openai.com/v1`
 
@@ -29,42 +31,31 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const promptParts = getPromptParts(opts)
 
-  const turbo = oaiModel === 'gpt-3.5-turbo'
+  const turbo = oaiModel === OPENAI_MODELS.Turbo
   if (turbo) {
-    // i looked at miku code before writing this
-    // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L86
-    // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L65
-    const gaslight = settings.gaslight || defaultPresets.openai.gaslight
+    const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
     const user = sender.handle || 'You'
 
-    const messages: OpenAIMessagePropType[] = [
-      {
-        role: 'system',
-        content: gaslight
-          .replace(/\{\{example_dialogue\}\}/g, char.sampleChat)
-          .replace(/\{\{sample_chat\}\}/g, char.sampleChat)
-          .replace(/\{\{scenario\}\}/g, char.scenario)
-          .replace(/\{\{name\}\}/g, char.name)
-          .replace(/\<BOT\>/g, char.name)
-          .replace(/\{\{char\}\}/g, char.name)
-          .replace(/\{\{user\}\}/g, user)
-          .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona)),
-      },
-    ]
+    const messages: OpenAIMessagePropType[] = [{ role: 'system', content: promptParts.gaslight }]
+    const history: OpenAIMessagePropType[] = []
 
     const all = []
-    if (!gaslight.includes('{{example_dialogue}}') && promptParts.sampleChat) {
-      all.push(...promptParts.sampleChat)
-      all.push('<START>')
-    }
+
+    const maxBudget =
+      (settings.maxContextLength || defaultPresets.basic.maxContextLength) - settings.max_tokens
+    let tokens = encoder(promptParts.gaslight)
 
     if (lines) all.push(...lines)
 
-    for (const line of all) {
+    for (const line of all.reverse()) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
       const isUser = line.startsWith(sender.handle)
-      const content = line.substring(line.indexOf(':') + 1).trim()
+      const content = line
+        .substring(line.indexOf(':') + 1)
+        .trim()
+        .replace(BOT_REPLACE, char.name)
+        .replace(SELF_REPLACE, user)
 
       if (isBot) {
         role = 'assistant'
@@ -74,10 +65,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         role = 'system'
       }
 
-      messages.push({ role, content })
-    }
+      const length = encoder(content)
+      if (tokens + length > maxBudget) break
 
-    body.messages = messages
+      tokens += length
+      history.push({ role, content })
+    }
   } else {
     body.prompt = prompt
   }
