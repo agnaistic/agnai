@@ -42,22 +42,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
           .replace(/\{\{char\}\}/g, char.name)
           .replace(/\{\{user\}\}/g, sender.handle || 'You')
           .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
-          .replace(/\{\{scenario\}\}/g, char.scenario),
+          .replace(/\{\{scenario\}\}/g, char.scenario)
+          .replace(/\{\{example_dialogue\}\}/g, char.sampleChat),
       },
     ]
-
-    const all = []
-    if (promptParts.sampleChat) all.push(...promptParts.sampleChat)
-    if (lines) all.push(...lines)
-
-    for (const line of all) {
-      const isBot = line.startsWith(char.name)
-      const content = line.substring(line.indexOf(':') + 1).trim()
-      messages.push({
-        role: isBot ? 'assistant' : 'user',
-        content,
-      })
-    }
 
     body.messages = messages
   } else {
