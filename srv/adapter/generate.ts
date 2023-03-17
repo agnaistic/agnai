@@ -185,6 +185,8 @@ async function getGenerationSettings(
     if (preset) return preset
   }
 
+  if (chat.genSettings) return chat.genSettings
+
   const servicePreset = user.defaultPresets?.[adapter]
   if (servicePreset) {
     if (isDefaultPreset(servicePreset)) return defaultPresets[servicePreset]
@@ -199,6 +201,5 @@ async function getGenerationSettings(
     if (preset) return preset
   }
 
-  if (chat.genSettings) return chat.genSettings
   return getFallbackPreset(adapter)
 }
