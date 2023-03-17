@@ -1,12 +1,13 @@
-import gpt from 'gpt-3-encoder'
 import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './presets'
+import { getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
 
 export type PromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
+  config: AppSchema.User
   members: AppSchema.Profile[]
   settings?: AppSchema.GenSettings
   messages: AppSchema.ChatMessage[]
@@ -22,15 +23,18 @@ export function createPrompt(opts: PromptOpts) {
   opts.messages = sortedMsgs
 
   const { settings = defaultPresets.basic } = opts
-  const { pre, post } = createPromptSurrounds(opts)
+  const { pre, post, parts } = createPromptSurrounds(opts)
+  const { adapter, model } = getAdapter(opts.chat, opts.config, opts.settings)
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
 
   const lines = getLinesForPrompt(opts)
   const history: string[] = []
-  let tokens = gpt.encode([pre, post].join('\n')).length
+
+  const encoder = getEncoder(adapter, model)
+  let tokens = encoder([pre, post].join('\n')).length
 
   for (const text of lines) {
-    const size = gpt.encode(text).length
+    const size = encoder(text).length
 
     if (size + tokens > maxContext) break
 
@@ -39,8 +43,10 @@ export function createPrompt(opts: PromptOpts) {
   }
 
   const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
-  return { lines, prompt }
+  return { lines, prompt, parts }
 }
+
+const START_TEXT = '<START>'
 
 export function createPromptSurrounds(
   opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>
@@ -48,19 +54,17 @@ export function createPromptSurrounds(
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const hasStartSignal =
-    chat.scenario.includes('<START>') ||
-    chat.sampleChat.includes('<START>') ||
-    chat.greeting.includes('<START>')
+  const parts = getPromptParts(opts)
+  const hasStart =
+    parts.greeting?.includes(START_TEXT) ||
+    chat.sampleChat?.includes(START_TEXT) ||
+    chat.scenario?.includes(START_TEXT)
 
-  const pre: string[] = [`${char.name}'s Persona: ${formatCharacter(char.name, chat.overrides)}`]
+  const pre: string[] = [`${char.name}'s Persona: ${parts.persona}`]
 
-  if (chat.scenario) pre.push(`Scenario: ${chat.scenario}`)
-
-  if (!hasStartSignal) pre.push('<START>')
-
-  const sampleChat = chat.sampleChat.split('\n').filter(removeEmpty)
-  pre.push(...sampleChat)
+  if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
+  if (!hasStart) pre.push('<START>')
+  if (parts.sampleChat) pre.push(...parts.sampleChat)
 
   const post = [`${char.name}:`]
   if (opts.continue) {
@@ -69,7 +73,8 @@ export function createPromptSurrounds(
 
   return {
     pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),
-    post: `${char.name}:`,
+    post: parts.post.join('\n'),
+    parts,
   }
 }
 
@@ -197,10 +202,12 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export function getLinesForPrompt(
-  { settings, char, members, messages, retry, continue: cont }: PromptOpts,
+  { settings, char, members, messages, retry, continue: cont, ...opts }: PromptOpts,
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
+  const { adapter, model } = getAdapter(opts.chat, opts.config, settings)
+  const encoder = getEncoder(adapter, model)
   let tokens = 0
 
   const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
@@ -209,7 +216,7 @@ export function getLinesForPrompt(
   const history = base.map(formatMsg)
 
   for (const hist of history) {
-    const nextTokens = gpt.encode(hist).length
+    const nextTokens = encoder(hist).length
     if (nextTokens + tokens > maxContext) break
     tokens += nextTokens
     lines.unshift(hist)
@@ -226,4 +233,23 @@ function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Pro
 
 function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
   return l.createdAt > r.createdAt ? -1 : l.createdAt === r.createdAt ? 0 : 1
+}
+
+export function getAdapter(
+  chat: AppSchema.Chat,
+  config: AppSchema.User,
+  preset?: Partial<AppSchema.GenSettings>
+) {
+  let adapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
+  let model = ''
+
+  if (adapter === 'novel') {
+    model = config.novelModel
+  }
+
+  if (adapter === 'openai') {
+    model = preset?.oaiModel || defaultPresets.openai.oaiModel
+  }
+
+  return { adapter, model }
 }

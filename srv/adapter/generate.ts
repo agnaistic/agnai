@@ -94,6 +94,7 @@ export async function createTextStream(opts: GenerateOptions) {
     settings,
     continue: opts.continue,
     messages,
+    config: user,
   })
 
   const adapterOpts = {

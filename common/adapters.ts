@@ -26,10 +26,12 @@ export const MULTI_TENANT_ADAPTERS = ['novel', 'chai', 'kobold'] as const
 
 export type NovelModel = keyof typeof NOVEL_MODELS
 
+export type OpenAIModel = (typeof OPENAI_MODELS)[keyof typeof OPENAI_MODELS]
+
 export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',
-}
+} as const
 
 export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',

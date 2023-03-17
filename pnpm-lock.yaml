@@ -2,6 +2,7 @@ lockfileVersion: 5.3
 
 specifiers:
   '@babel/core': ^7.20.12
+  '@dqbd/tiktoken': ^1.0.2
   '@solidjs/router': ^0.6.0
   '@types/bcryptjs': ^2.4.2
   '@types/cors': ^2.8.13
@@ -57,6 +58,7 @@ specifiers:
 
 dependencies:
   '@babel/core': 7.20.12
+  '@dqbd/tiktoken': 1.0.2
   '@solidjs/router': 0.6.0_solid-js@1.6.9
   '@types/bcryptjs': 2.4.2
   '@types/cors': 2.8.13
@@ -329,6 +331,10 @@ packages:
       '@babel/helper-string-parser': 7.19.4
       '@babel/helper-validator-identifier': 7.19.1
       to-fast-properties: 2.0.0
+    dev: false
+
+  /@dqbd/tiktoken/1.0.2:
+    resolution: {integrity: sha512-AjGTBRWsMoVmVeN55NLyupyM8TNamOUBl6tj5t/leLDVup3CFGO9tVagNL1jf3GyZLkWZSTmYVbPQ/M2LEcNzw==}
     dev: false
 
   /@jridgewell/gen-mapping/0.1.1:
