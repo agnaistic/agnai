@@ -41,13 +41,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       {
         role: 'system',
         content: gaslight
+          .replace(/\{\{example_dialogue\}\}/g, char.sampleChat)
+          .replace(/\{\{sample_chat\}\}/g, char.sampleChat)
+          .replace(/\{\{scenario\}\}/g, char.scenario)
           .replace(/\{\{name\}\}/g, char.name)
-          .replace(/\<BOT>/g, char.name)
+          .replace(/\<BOT\>/g, char.name)
           .replace(/\{\{char\}\}/g, char.name)
           .replace(/\{\{user\}\}/g, user)
-          .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
-          .replace(/\{\{scenario\}\}/g, char.scenario)
-          .replace(/\{\{example_dialogue\}\}/g, char.sampleChat),
+          .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona)),
       },
     ]
 
@@ -56,29 +57,24 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       all.push(...promptParts.sampleChat)
       all.push('<START>')
     }
+
     if (lines) all.push(...lines)
 
-    let role: 'user' | 'assistant' | 'system' = 'assistant'
-
     for (const line of all) {
+      let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
       const isUser = line.startsWith(sender.handle)
-      let content = ''
+      const content = line.substring(line.indexOf(':') + 1).trim()
 
-      if (isBot || isUser) {
-        isBot ? (role = 'assistant') : (role = 'user')
-        content = line.substring(line.indexOf(':') + 1).trim()
-      } else if (!isBot && !isUser) {
-        if (line === '<START>') {
-          role = 'system'
-        }
-        content += line
+      if (isBot) {
+        role = 'assistant'
+      } else if (isUser) {
+        role = 'user'
+      } else if (line === '<START>') {
+        role = 'system'
       }
 
-      messages.push({
-        role: role,
-        content,
-      })
+      messages.push({ role, content })
     }
 
     body.messages = messages
