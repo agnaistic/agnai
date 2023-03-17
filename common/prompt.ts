@@ -1,11 +1,17 @@
 import type { AppSchema } from '../srv/db/schema'
-import { OPENAI_MODELS } from './adapters'
-import gpt from 'gpt-3-encoder'
+import { AIAdapter } from './adapters'
 import { getMemoryPrompt } from './memory'
 import { defaultPresets } from './presets'
 import { getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
+
+export type PromptConfig = {
+  adapter: AIAdapter
+  model: string
+  encoder: (value: string, dialog?: boolean) => number
+  lines: string[]
+}
 
 export type PromptOpts = {
   chat: AppSchema.Chat
@@ -32,26 +38,41 @@ const testBook: AppSchema.MemoryBook = {
       priority: 10,
       weight: 5,
       name: '',
-      entry: '{{user}} has blue skin',
+      entry: "{{user}}'s skin is blue",
+    },
+    {
+      keywords: ['height'],
+      priority: 10,
+      weight: 5,
+      name: '',
+      entry: '{{user}} is incredibly small',
     },
     { keywords: ['foo'], priority: 10, weight: 4, name: '', entry: 'Foo bar baz qux' },
   ],
 }
 
 export function createPrompt(opts: PromptOpts) {
+  opts.book = testBook
   const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
   const { settings = defaultPresets.basic } = opts
   const lines = getLinesForPrompt(opts)
-  const { pre, post, parts } = createPromptSurrounds({ ...opts, lines })
   const { adapter, model } = getAdapter(opts.chat, opts.config, opts.settings)
+  const encoder = getEncoder(adapter, model)
+  const cfg: PromptConfig = {
+    adapter,
+    model,
+    encoder,
+    lines,
+  }
+
+  const { pre, post, parts } = createPromptSurrounds(opts, cfg)
 
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
 
   const history: string[] = []
 
-  const encoder = getEncoder(adapter, model)
   let tokens = encoder(pre) + encoder(post)
 
   for (const text of lines) {
@@ -70,11 +91,12 @@ export function createPrompt(opts: PromptOpts) {
 const START_TEXT = '<START>'
 
 export function createPromptSurrounds(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'> & { lines: string[] }
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>,
+  cfg: PromptConfig
 ) {
   const { chat, char, members } = opts
 
-  const memory = getMemoryPrompt(opts)
+  const memory = getMemoryPrompt(opts, cfg)
 
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
@@ -87,11 +109,12 @@ export function createPromptSurrounds(
   const pre: string[] = [`${char.name}'s Persona: ${parts.persona}`]
 
   if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
-  if (!hasStart) pre.push('<START>')
 
   if (memory?.prompt) {
     pre.push(memory.prompt)
   }
+
+  if (!hasStart) pre.push('<START>')
 
   if (parts.sampleChat) pre.push(...parts.sampleChat)
 
