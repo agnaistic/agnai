@@ -52,7 +52,6 @@ export const generateMessage = handle(async ({ userId, params, body, log }, res)
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
-      sendMany(members, { type: 'message-partial', partial: gen, adapter, chatId: id })
       continue
     }
 

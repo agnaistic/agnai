@@ -40,7 +40,7 @@ export async function sendMessage(chatId: string, message: string) {
   // We intentionally do not store the new message in local storage
   // The server will send the 'user message' via the socket if the this request is not a retry
   const next = msgs.concat(newMessage(chat, local.ID, message.trim()))
-  const prompt = createPrompt({ char, chat, members: [profile], messages: next })
+  const prompt = createPrompt({ char, chat, members: [profile], messages: next, config: user })
 
   await api.post(`/chat/${chat._id}/guest-message`, {
     char,
@@ -79,7 +79,13 @@ export async function retryUserMessage(chatId: string, message: string) {
   if ('error' in entities) return entities
 
   const { chat, char, profile, msgs, user } = entities
-  const prompt = createPrompt({ char, chat, members: [profile], messages: msgs })
+  const prompt = createPrompt({
+    char,
+    chat,
+    members: [profile],
+    messages: msgs,
+    config: entities.user,
+  })
 
   await api.post(`/chat/${chat._id}/guest-message`, {
     char,
@@ -128,6 +134,7 @@ export async function retryCharacterMessage(
     messages: msgs,
     continue: continueOn,
     retry: replace,
+    config: entities.user,
   })
 
   return api.post(`/chat/${chat._id}/guest-message`, {

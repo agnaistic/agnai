@@ -24,7 +24,7 @@ export const msgStore = createStore<MsgState>('messages', {
   userStore.subscribe((curr, prev) => {
     if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
     if (curr.loggedIn !== prev.loggedIn) {
-      set({ retries: undefined })
+      set({ retries: {} })
     }
   })
 
