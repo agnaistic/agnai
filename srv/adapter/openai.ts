@@ -34,29 +34,47 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // i looked at miku code before writing this
     // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L86
     // https://github.com/miku-gg/miku/blob/master/packages/extensions/src/chat-prompt-completers/OpenAIPromptCompleter.ts#L65
+    const gaslight = settings.gaslight || defaultPresets.openai.gaslight
+    const user = sender.handle || 'You'
+
     const messages: OpenAIMessagePropType[] = [
       {
         role: 'system',
-        content: (settings.gaslight || defaultPresets.openai.gaslight)
+        content: gaslight
+          .replace(/\{\{example_dialogue\}\}/g, char.sampleChat)
+          .replace(/\{\{sample_chat\}\}/g, char.sampleChat)
+          .replace(/\{\{scenario\}\}/g, char.scenario)
           .replace(/\{\{name\}\}/g, char.name)
+          .replace(/\<BOT\>/g, char.name)
           .replace(/\{\{char\}\}/g, char.name)
-          .replace(/\{\{user\}\}/g, sender.handle || 'You')
-          .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
-          .replace(/\{\{scenario\}\}/g, char.scenario),
+          .replace(/\{\{user\}\}/g, user)
+          .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona)),
       },
     ]
 
     const all = []
-    if (promptParts.sampleChat) all.push(...promptParts.sampleChat)
+    if (!gaslight.includes('{{example_dialogue}}') && promptParts.sampleChat) {
+      all.push(...promptParts.sampleChat)
+      all.push('<START>')
+    }
+
     if (lines) all.push(...lines)
 
     for (const line of all) {
+      let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
+      const isUser = line.startsWith(sender.handle)
       const content = line.substring(line.indexOf(':') + 1).trim()
-      messages.push({
-        role: isBot ? 'assistant' : 'user',
-        content,
-      })
+
+      if (isBot) {
+        role = 'assistant'
+      } else if (isUser) {
+        role = 'user'
+      } else if (line === '<START>') {
+        role = 'system'
+      }
+
+      messages.push({ role, content })
     }
 
     body.messages = messages
