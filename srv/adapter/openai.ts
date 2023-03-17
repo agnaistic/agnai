@@ -71,6 +71,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       tokens += length
       history.push({ role, content })
     }
+
+    body.messages = messages.concat(history.reverse())
   } else {
     body.prompt = prompt
   }
