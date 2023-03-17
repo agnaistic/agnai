@@ -148,7 +148,13 @@ export function formatCharacter(name: string, persona: AppSchema.CharacterPerson
     }
 
     case 'text': {
-      return persona.attributes.text[0]
+      const text = persona.attributes.text?.[0]
+      if (text === undefined) {
+        throw new Error(
+          `Could not format character: Format is 'text', but the attribute is not defined. This may be due to missing data when importing a character.`
+        )
+      }
+      return text
     }
   }
 }
