@@ -58,7 +58,6 @@ const testBook: AppSchema.MemoryBook = {
 }
 
 export function createPrompt(opts: PromptOpts) {
-  opts.book = testBook
   const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
