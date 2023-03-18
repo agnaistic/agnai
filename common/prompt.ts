@@ -152,7 +152,7 @@ export function getPromptParts(
   const replace = (value: string) => placeholderReplace(value, char.name, sender)
 
   const parts: PromptParts = {
-    persona: formatCharacter(char.name, chat.overrides),
+    persona: formatCharacter(char.name, chat.overrides).replace(/\n+/g, ' '),
     post: [],
     gaslight: '',
     gaslightHasChat: false,

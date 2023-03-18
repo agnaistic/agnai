@@ -26,7 +26,7 @@ const Modal: Component<Props> = (props) => {
         </div>
         <div class="flex h-screen items-center">
           <div
-            class={`my-auto max-h-[85vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all ${width()}`}
+            class={`my-auto max-h-[85vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all ${width()} sm:max-w-6xl`}
           >
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
