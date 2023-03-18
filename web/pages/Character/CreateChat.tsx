@@ -80,6 +80,7 @@ const CreateChatModal: Component<{
       show={props.show}
       close={props.close}
       title={`Create Chat with ${char()?.name}`}
+      maxWidth="half"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
