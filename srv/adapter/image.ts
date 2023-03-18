@@ -16,7 +16,7 @@ export type ImageRequest = {
 }
 
 export async function createImagePrompt({ chat, members, char }: ImageRequest) {
-  const lastMessages = await store.chats.getRecentMessages(chat._id)
+  const lastMessages = await store.msgs.getRecentMessages(chat._id)
 
   const fit: string[] = []
   let current = suffixLength

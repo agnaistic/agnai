@@ -8,7 +8,7 @@ const Tooltip: Component<{
   tip: string | JSX.Element
 }> = (props) => {
   return (
-    <div class="tooltip">
+    <div class="tooltip select-none">
       {props.children}
       <div
         class=" tooltip-text hidden w-[128px] justify-center rounded-xl bg-[var(--bg-700)] px-2 py-1 text-sm sm:flex"

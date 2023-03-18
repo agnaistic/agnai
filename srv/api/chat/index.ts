@@ -7,7 +7,7 @@ import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites } from './invite'
-import { generateMessage, retryMessage, summarizeChat } from './message'
+import { generateMessage, getMessages, retryMessage, summarizeChat } from './message'
 import { deleteChat, deleteMessages } from './remove'
 
 const router = Router()
@@ -17,6 +17,7 @@ router.use(loggedIn)
 router.get('/', getAllChats)
 router.get('/invites', getInvites)
 router.get('/:id/summary', summarizeChat)
+router.get('/:id/messages', getMessages)
 router.post('/', createChat)
 router.get('/:id', getChatDetail)
 router.put('/:id', updateChat)

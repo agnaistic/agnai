@@ -181,7 +181,7 @@ async function getGenerationSettings(
       return getFallbackPreset(adapter)
     }
 
-    const preset = await store.users.getUserPreset(chat.genPreset)
+    const preset = await store.presets.getUserPreset(chat.genPreset)
     if (preset) return preset
   }
 
@@ -197,7 +197,7 @@ async function getGenerationSettings(
       return getFallbackPreset(adapter)
     }
 
-    const preset = await store.users.getUserPreset(servicePreset)
+    const preset = await store.presets.getUserPreset(servicePreset)
     if (preset) return preset
   }
 

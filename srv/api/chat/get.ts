@@ -17,7 +17,7 @@ export const getChatDetail = handle(async ({ userId, params }) => {
   }
 
   const character = await store.characters.getCharacter(chat.userId, chat.characterId)
-  const messages = await store.chats.getMessages(id)
+  const messages = await store.msgs.getMessages(id)
   const members = await store.users.getProfiles(chat.userId, chat.memberIds)
 
   return { chat, messages, character, members }

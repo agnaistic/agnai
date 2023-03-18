@@ -150,8 +150,8 @@ const Settings: Component = () => {
             <Divider />
             <TextInput
               fieldName="koboldUrl"
-              label="Kobold URL"
-              helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
+              label="Kobold Compatible URL"
+              helperText="Fully qualified URL. This URL must be publicly accessible."
               placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
               value={state.user?.koboldUrl}
             />
@@ -163,7 +163,11 @@ const Settings: Component = () => {
               fieldName="oaiKey"
               label="OpenAI Key"
               helperText="Valid OpenAI Key."
-              placeholder="E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+              placeholder={
+                state.user?.oaiKeySet
+                  ? 'OpenAI key is set'
+                  : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+              }
               type="password"
               value={state.user?.oaiKey}
             />
@@ -218,7 +222,7 @@ const Settings: Component = () => {
           <TextInput
             fieldName="luminaiUrl"
             label="LuminAI URL"
-            helperText="Fully qualified URL for Kobold. This URL must be publicly accessible."
+            helperText="Fully qualified URL. This URL must be publicly accessible."
             placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
             value={state.user?.luminaiUrl}
           />

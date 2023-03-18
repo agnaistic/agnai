@@ -16,7 +16,7 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
     throw errors.Forbidden
   }
 
-  await store.chats.deleteMessages(body.ids)
+  await store.msgs.deleteMessages(body.ids)
   sendMany(chat.memberIds.concat(chat.userId), { type: 'messages-deleted', ids: body.ids })
   return { success: true }
 })

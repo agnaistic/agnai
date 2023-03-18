@@ -14,12 +14,14 @@ export type MsgState = {
   retrying?: AppSchema.ChatMessage
   waiting?: string
   retries: Record<string, string[]>
+  nextLoading: boolean
 }
 
 export const msgStore = createStore<MsgState>('messages', {
   activeChatId: '',
   msgs: [],
   retries: {},
+  nextLoading: false,
 })((get, set) => {
   userStore.subscribe((curr, prev) => {
     if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
@@ -38,6 +40,23 @@ export const msgStore = createStore<MsgState>('messages', {
         waiting: undefined,
       }
     },
+
+    async *getNextMessages({ msgs, activeChatId, nextLoading }) {
+      if (nextLoading) return
+      const msg = msgs[0]
+      if (!msg || msg.first) return
+
+      yield { nextLoading: true }
+
+      const before = msg.createdAt
+
+      const res = await data.msg.getMessages(activeChatId, before)
+      yield { nextLoading: false }
+      if (res.result) {
+        return { msgs: res.result.messages.concat(msgs) }
+      }
+    },
+
     async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)

@@ -1,6 +1,6 @@
 import { Route } from '@solidjs/router'
 import { Component } from 'solid-js'
-import CharacterChats from './CharacterChats'
+import CharacterChats from './ChatList'
 import CreateCharacter from './CreateCharacter'
 import CharacterList from './CharacterList'
 

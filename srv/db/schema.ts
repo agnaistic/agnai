@@ -33,7 +33,9 @@ export namespace AppSchema {
     koboldUrl: string
     luminaiUrl: string
     oobaUrl: string
+
     oaiKey: string
+    oaiKeySet?: boolean
 
     hordeKey: string
     hordeModel: string
@@ -89,6 +91,7 @@ export namespace AppSchema {
 
     createdAt: string
     updatedAt: string
+    first?: boolean
   }
 
   /** Description of the character */

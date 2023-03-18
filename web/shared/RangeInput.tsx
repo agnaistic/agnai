@@ -34,7 +34,7 @@ const RangeInput: Component<{
         <input
           id={props.fieldName}
           name={props.fieldName}
-          class="focusable-field float-right inline-block rounded-lg border border-white/5 bg-transparent p-1 hover:border-white/20"
+          class="focusable-field float-right inline-block rounded-lg border border-white/5 p-1 hover:border-white/20"
           value={value()}
           type="number"
           min={props.min}

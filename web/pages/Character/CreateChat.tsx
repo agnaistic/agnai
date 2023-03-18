@@ -80,6 +80,7 @@ const CreateChatModal: Component<{
       show={props.show}
       close={props.close}
       title={`Create Chat with ${char()?.name}`}
+      maxWidth="half"
       footer={
         <>
           <Button schema="secondary" onClick={props.close}>
@@ -154,7 +155,6 @@ const CreateChatModal: Component<{
             label="Persona"
             items={options}
             value={props.char?.persona.kind || char()?.persona.kind}
-            disabled
           />
         </Show>
 
@@ -165,7 +165,6 @@ const CreateChatModal: Component<{
             label="Persona"
             items={[{ label: 'Plain text', value: 'text' }]}
             value={'text'}
-            disabled
           />
         </Show>
 

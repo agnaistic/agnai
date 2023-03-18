@@ -1,4 +1,4 @@
-import { Check, Pencil, RefreshCw, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
+import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
 import showdown from 'showdown'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
@@ -18,6 +18,7 @@ type MessageProps = {
   confirmSwipe?: () => void
   cancelSwipe?: () => void
   onRemove: () => void
+  editing: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -45,6 +46,7 @@ const Message: Component<MessageProps> = (props) => {
           confirmSwipe={props.confirmSwipe}
           cancelSwipe={props.cancelSwipe}
           original={props.msg}
+          editing={props.editing}
         />
       )}
     </For>
@@ -83,6 +85,11 @@ const SingleMessage: Component<
       ref.innerText = props.original.msg
     }
     ref?.focus()
+  }
+
+  const showPrompt = () => {
+    if (!user.user) return
+    chatStore.showPrompt(user.user, props.msg)
   }
 
   const msgText = createMemo(() => {
@@ -127,7 +134,7 @@ const SingleMessage: Component<
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span
-              class="text-400 flex items-center text-sm"
+              class="text-600 flex items-center text-sm"
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
@@ -146,15 +153,18 @@ const SingleMessage: Component<
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
+              <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
+                <Show when={!!props.msg.characterId}>
+                  <Terminal size={16} onClick={showPrompt} class="icon-button" />
+                </Show>
+                <Pencil size={16} class="icon-button" onClick={startEdit} />
+                <Trash size={16} class="icon-button" onClick={props.onRemove} />
+              </Show>
               <Show when={props.last && props.msg.characterId}>
                 <RefreshCw size={16} class="icon-button" onClick={retryMessage} />
               </Show>
               <Show when={props.last && !props.msg.characterId}>
                 <RefreshCw size={16} class="cursor-pointer" onClick={resendMessage} />
-              </Show>
-              <Show when={!props.msg.split || props.lastSplit}>
-                <Pencil size={16} class="icon-button" onClick={startEdit} />
-                <Trash size={16} class="icon-button" onClick={props.onRemove} />
               </Show>
             </div>
           </Show>
@@ -204,6 +214,7 @@ function parseMessage(msg: string, char: AppSchema.Character, profile: AppSchema
   return msg
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, profile?.handle || 'You')
+    .replace(/(<|>)/g, '*')
     .split('\n')
     .filter((v) => !!v)
     .join('\n\n')

@@ -33,7 +33,7 @@ const Button: Component<{
   <button
     type={props.type || 'button'}
     class={
-      `${kinds[props.schema || 'primary']} items-center justify-center ${
+      `${kinds[props.schema || 'primary']} select-none items-center justify-center ${
         sizes[props.size || 'md']
       } ` + props.class
     }

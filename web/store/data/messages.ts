@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
-import { defaultPresets, isDefaultPreset } from '../../../common/presets'
+import { isDefaultPreset } from '../../../common/presets'
 import { createPrompt } from '../../../common/prompt'
-import { AppSchema, defaultGenPresets } from '../../../srv/db/schema'
+import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, local } from './storage'
 
@@ -15,6 +15,16 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
   const next = local.replace(msg._id, messages, { msg: replace })
   local.saveMessages(msg.chatId, next)
   return local.result({ success: true })
+}
+
+export async function getMessages(chatId: string, before: string) {
+  // Guest users already have their entire chat history
+  if (!isLoggedIn()) return local.result({ messages: [] })
+
+  const res = await api.get<{ messages: AppSchema.ChatMessage[] }>(`/chat/${chatId}/messages`, {
+    before,
+  })
+  return res
 }
 
 /**

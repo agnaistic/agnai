@@ -4,15 +4,19 @@ import {
   ArrowUpRight,
   ChevronLeft,
   ChevronRight,
+  Edit,
   MailPlus,
   Settings,
   Sliders,
+  ToggleLeft,
+  ToggleRight,
   X,
 } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
-import { AppSchema } from '../../../srv/db/schema'
+import { getAdapter } from '../../../common/prompt'
 import Button from '../../shared/Button'
+import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
@@ -24,6 +28,7 @@ import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
+import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
 
 const ChatDetail: Component = () => {
@@ -52,6 +57,7 @@ const ChatDetail: Component = () => {
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
+  const [editing, setEditing] = createSignal(false)
   const { id } = useParams()
   const nav = useNavigate()
 
@@ -69,8 +75,9 @@ const ChatDetail: Component = () => {
   }
 
   const adapter = createMemo(() => {
-    if (!chats.chat?.adapter || chats.chat?.adapter === 'default') return user.user?.defaultAdapter!
-    return chats.chat.adapter!
+    if (!chats.chat || !user.user) return ''
+    const { adapter } = getAdapter(chats.chat!, user.user!)
+    return ADAPTER_LABELS[adapter]
   })
 
   createEffect(() => {
@@ -120,9 +127,19 @@ const ChatDetail: Component = () => {
               </div>
             </A>
 
-            <div class="flex flex-row items-center gap-2">
-              <div class="text-xs italic text-[var(--text-500)]">{ADAPTER_LABELS[adapter()]}</div>
-              <div class="icon-button cursor-pointer" onClick={() => setShowInvite(true)}>
+            <div class="flex flex-row gap-3">
+              <div class="flex items-center text-xs italic text-[var(--text-500)]">{adapter()}</div>
+              <div class="icon-button" onClick={() => setEditing(!editing())}>
+                <Tooltip tip="Toggle edit mode">
+                  <Show when={editing()}>
+                    <ToggleRight class="text-[var(--hl-500)]" />
+                  </Show>
+                  <Show when={!editing()}>
+                    <ToggleLeft />
+                  </Show>
+                </Tooltip>
+              </div>
+              <div class="icon-button" onClick={() => setShowInvite(true)}>
                 <Tooltip tip="Invite user" position="bottom">
                   <MailPlus />
                 </Tooltip>
@@ -173,6 +190,7 @@ const ChatDetail: Component = () => {
                       msg={msg}
                       chat={chats.chat!}
                       char={chats.char!}
+                      editing={editing()}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
@@ -183,20 +201,13 @@ const ChatDetail: Component = () => {
                     />
                   )}
                 </For>
-                <Show when={msgs.partial}>
-                  <Message
-                    msg={emptyMsg(chats.char?._id!, msgs.partial!)}
-                    char={chats.char!}
-                    chat={chats.chat!}
-                    onRemove={() => {}}
-                  />
-                </Show>
                 <Show when={msgs.waiting}>
                   <div class="flex justify-center">
                     <div class="dot-flashing bg-[var(--hl-700)]"></div>
                   </div>
                 </Show>
               </div>
+              <InfiniteScroll />
             </div>
           </div>
         </div>
@@ -209,6 +220,7 @@ const ChatDetail: Component = () => {
         close={() => setShowInvite(false)}
         chatId={chats.chat?._id!}
       />
+      <PromptModal />
       <SideDrawer show={showMem()} right>
         <div class="text-xl">Memory</div>
         <div>Work in progress</div>
@@ -283,14 +295,22 @@ const SwipeMessage: Component<{
   )
 }
 
-function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
-  return {
-    kind: 'chat-message',
-    _id: '',
-    chatId: '',
-    characterId,
-    msg: message,
-    updatedAt: new Date().toISOString(),
-    createdAt: new Date().toISOString(),
+const InfiniteScroll: Component = () => {
+  const state = msgStore((s) => ({ loading: s.nextLoading, msgs: s.msgs }))
+  const onEnter = () => {
+    msgStore.getNextMessages()
   }
+
+  return (
+    <Show when={state.msgs.length > 0}>
+      <div class="flex w-full justify-center">
+        <Show when={!state.loading}>
+          <IsVisible onEnter={onEnter} />
+        </Show>
+        <Show when={state.loading}>
+          <div class="dot-flashing bg-[var(--hl-700)]"></div>
+        </Show>
+      </div>
+    </Show>
+  )
 }
