@@ -7,9 +7,21 @@ import { AppSchema } from '../../db/schema'
 import { encryptText } from '../../db/util'
 import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
+import { getAppConfig } from '../settings'
 import { handleUpload } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
 import { sendAll } from '../ws'
+
+export const getInitialLoad = handle(async ({ userId }) => {
+  const [profile, user, presets, settings] = await Promise.all([
+    store.users.getProfile(userId!),
+    getSafeUserConfig(userId!),
+    store.presets.getUserPresets(userId!),
+    getAppConfig(),
+  ])
+
+  return { profile, user, presets, settings }
+})
 
 export const getProfile = handle(async ({ userId, params }) => {
   const id = params.id ? params.id : userId!
@@ -18,14 +30,7 @@ export const getProfile = handle(async ({ userId, params }) => {
 })
 
 export const getConfig = handle(async ({ userId }) => {
-  const user = await store.users.getUser(userId!)
-  if (user) {
-    user.novelApiKey = ''
-    user.hordeKey = ''
-
-    if (user.oaiKey) user.oaiKeySet = true
-    user.oaiKey = ''
-  }
+  const user = await getSafeUserConfig(userId!)
   return user
 })
 
@@ -173,4 +178,16 @@ async function verifyNovelKey(key: string) {
   })
 
   return res.statusCode && res.statusCode <= 400
+}
+
+async function getSafeUserConfig(userId: string) {
+  const user = await store.users.getUser(userId!)
+  if (user) {
+    user.novelApiKey = ''
+    user.hordeKey = ''
+
+    if (user.oaiKey) user.oaiKeySet = true
+    user.oaiKey = ''
+  }
+  return user
 }

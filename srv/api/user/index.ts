@@ -7,6 +7,7 @@ import {
   deleteNovelKey,
   deleteOaiKey,
   getConfig,
+  getInitialLoad,
   getProfile,
   updateConfig,
   updateProfile,
@@ -16,7 +17,7 @@ const router = Router()
 
 router.post('/login', login)
 router.post('/register', register)
-
+router.get('/init', loggedIn, getInitialLoad)
 router.get('/', loggedIn, getProfile)
 router.get('/presets', loggedIn, getUserPresets)
 router.get('/config', loggedIn, getConfig)

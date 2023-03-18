@@ -175,6 +175,7 @@ export namespace AppSchema {
     memoryDepth?: number
     memoryContextLimit?: number
     memoryReverseWeight?: boolean
+    src?: string
   }
 
   export interface AppConfig {
@@ -184,6 +185,7 @@ export namespace AppSchema {
   }
 
   export interface MemoryBook {
+    kind: 'memory'
     _id: string
     name: string
     userId: string
@@ -215,5 +217,6 @@ export type AllDoc =
   | AppSchema.ChatMember
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
+  | AppSchema.MemoryBook
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []

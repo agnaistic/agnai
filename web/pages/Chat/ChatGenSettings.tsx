@@ -28,7 +28,7 @@ export const ChatGenSettingsModal: Component<{
 
   const state = presetStore(({ presets }) => ({
     presets,
-    options: [{ label: 'None', value: '' }].concat(
+    options: [{ label: 'Service Preset or Fallback', value: '' }].concat(
       presets.map((pre) => ({ label: pre.name, value: pre._id }))
     ),
   }))

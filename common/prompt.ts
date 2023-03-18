@@ -1,7 +1,7 @@
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter } from './adapters'
 import { getMemoryPrompt } from './memory'
-import { defaultPresets } from './presets'
+import { defaultPresets, isDefaultPreset } from './presets'
 import { getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
@@ -34,7 +34,8 @@ export type PromptOpts = {
 export const BOT_REPLACE = /\{\{char\}\}/g
 export const SELF_REPLACE = /\{\{user\}\}/g
 
-const testBook: AppSchema.MemoryBook = {
+export const testBook: AppSchema.MemoryBook = {
+  kind: 'memory',
   _id: '',
   name: 'test book',
   userId: '',
@@ -331,6 +332,7 @@ export function getAdapter(
 ) {
   let adapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
   let model = ''
+  let presetName = 'Fallback Preset'
 
   if (adapter === 'novel') {
     model = config.novelModel
@@ -340,5 +342,19 @@ export function getAdapter(
     model = preset?.oaiModel || defaultPresets.openai.oaiModel
   }
 
-  return { adapter, model }
+  if (chat.genPreset) {
+    if (isDefaultPreset(chat.genPreset)) {
+      presetName = 'Chat, Default Preset'
+    } else presetName = 'Chat, User Preset'
+  } else if (chat.genSettings) {
+    presetName = 'Chat, Preset Settings'
+  } else if (config.defaultPresets) {
+    const servicePreset = config.defaultPresets[adapter]
+    if (servicePreset) {
+      const source = servicePreset in defaultPresets ? 'Default' : 'User'
+      presetName = `Service, ${source} Preset`
+    }
+  }
+
+  return { adapter, model, preset: presetName }
 }
