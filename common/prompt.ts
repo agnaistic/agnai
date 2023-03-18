@@ -6,6 +6,12 @@ import { getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
 
+export type Prompt = {
+  prompt: string
+  lines: string[]
+  parts: PromptParts
+}
+
 export type PromptConfig = {
   adapter: AIAdapter
   model: string

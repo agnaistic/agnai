@@ -1,3 +1,4 @@
+import { createPrompt, Prompt } from '../../common/prompt'
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { characterStore } from './character'
@@ -27,6 +28,7 @@ type ChatState = {
   }
   activeMembers: AppSchema.Profile[]
   memberIds: { [userId: string]: AppSchema.Profile }
+  prompt?: Prompt
 }
 
 export type NewChat = {
@@ -237,6 +239,26 @@ export const chatStore = createStore<ChatState>('chat', {
     async getChatSummary(_, chatId: string) {
       const res = await api.get(`/chat/${chatId}/summary`)
       console.log(res.result, res.error)
+    },
+
+    async showPrompt({ activeMembers, active }, user: AppSchema.User, msg: AppSchema.ChatMessage) {
+      if (!active) return
+
+      const { msgs } = msgStore.getState()
+
+      const prompt = createPrompt({
+        chat: active.chat,
+        char: active.char!,
+        messages: msgs.filter((m) => m.createdAt < msg.createdAt),
+        config: user,
+        members: activeMembers,
+      })
+
+      return { prompt }
+    },
+
+    closePrompt() {
+      return { prompt: undefined }
     },
   }
 })

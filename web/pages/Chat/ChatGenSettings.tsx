@@ -74,7 +74,13 @@ export const ChatGenSettingsModal: Component<{
   )
 
   return (
-    <Modal show={props.show} close={props.close} footer={Footer} title="Chat Generation Settings">
+    <Modal
+      show={props.show}
+      close={props.close}
+      footer={Footer}
+      title="Chat Generation Settings"
+      maxWidth="half"
+    >
       <div class="text-sm">
         <Toggle
           fieldName={'usePreset'}

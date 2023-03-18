@@ -24,7 +24,7 @@ export async function getMessagesForPrompt({ chat, settings, char, members }: Pr
   const formatMsg = (chat: AppSchema.ChatMessage) => prefix(chat, char.name, members) + chat.msg
 
   do {
-    const messages = await store.chats.getRecentMessages(chat._id, before)
+    const messages = await store.msgs.getRecentMessages(chat._id, before)
     msgs.push(...messages)
     const history = messages.map(formatMsg)
 

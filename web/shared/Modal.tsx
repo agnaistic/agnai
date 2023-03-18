@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-solid'
-import { Component, Show, JSX } from 'solid-js'
+import { Component, Show, JSX, createMemo } from 'solid-js'
 import Button from './Button'
 
 interface Props {
@@ -8,9 +8,17 @@ interface Props {
   children: JSX.Element
   close: () => void
   footer?: JSX.Element
+  maxWidth?: 'full' | 'half'
 }
 
 const Modal: Component<Props> = (props) => {
+  const width = createMemo(() => {
+    console.log(props.maxWidth)
+    if (!props.maxWidth) return `sm:max-w-lg`
+
+    return props.maxWidth === 'full' ? `sm:w-[calc(100vw-64px)]` : 'sm:w-[calc(50vw)]'
+  })
+
   return (
     <Show when={props.show}>
       <div class="fixed inset-x-0 top-0  items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
@@ -18,10 +26,12 @@ const Modal: Component<Props> = (props) => {
           <div class="absolute inset-0 bg-black" />
         </div>
         <div class="flex h-screen items-center">
-          <div class="my-auto max-h-[85vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:w-[32rem] sm:max-w-lg">
+          <div
+            class={`my-auto max-h-[85vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all ${width()}`}
+          >
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
-              <div onClick={props.close}>
+              <div onClick={props.close} class="cursor-pointer">
                 <X />
               </div>
             </div>

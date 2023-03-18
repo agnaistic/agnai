@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, JSX } from 'solid-js'
+import { Component, Show, createMemo, JSX, onMount } from 'solid-js'
 
 const TextInput: Component<{
   fieldName: string
@@ -15,11 +15,19 @@ const TextInput: Component<{
   onKeyUp?: (key: string) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 }> = (props) => {
+  let ref: any
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
 
   const value = createMemo(() =>
     props.value !== undefined ? props.value : (null as unknown as undefined)
   )
+
+  onMount(() => {
+    if (!ref) return
+
+    ref.style.height = ''
+    ref.style.height = `${ref.scrollHeight}px`
+  })
 
   return (
     <div class="w-full">
@@ -52,6 +60,7 @@ const TextInput: Component<{
         <textarea
           id={props.fieldName}
           name={props.fieldName}
+          ref={ref}
           required={props.required}
           placeholder={placeholder()}
           value={value()}

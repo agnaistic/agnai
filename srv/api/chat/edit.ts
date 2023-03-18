@@ -51,7 +51,7 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const message = await store.chats.editMessage(params.id, body.message)
+  const message = await store.msgs.editMessage(params.id, body.message)
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
@@ -71,7 +71,7 @@ export const updateChatGenSettings = handle(async ({ params, userId, body }) => 
     throw errors.Forbidden
   }
 
-  await store.chats.updateGenSetting(chatId, body)
+  await store.presets.updateGenSetting(chatId, body)
   return { success: true }
 })
 
@@ -84,6 +84,6 @@ export const updateChatGenPreset = handle(async ({ params, userId, body }) => {
     throw errors.Forbidden
   }
 
-  await store.chats.updateGenPreset(chatId, body.preset)
+  await store.presets.updateGenPreset(chatId, body.preset)
   return { success: true }
 })

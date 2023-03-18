@@ -91,6 +91,7 @@ export namespace AppSchema {
 
     createdAt: string
     updatedAt: string
+    first?: boolean
   }
 
   /** Description of the character */

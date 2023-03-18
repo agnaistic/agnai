@@ -55,7 +55,13 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   )
 
   return (
-    <Modal show={props.show} title="Chat Settings" close={props.close} footer={Footer}>
+    <Modal
+      show={props.show}
+      title="Chat Settings"
+      close={props.close}
+      footer={Footer}
+      maxWidth="half"
+    >
       <form ref={ref} onSubmit={onSave}>
         <Dropdown
           class="mb-2"

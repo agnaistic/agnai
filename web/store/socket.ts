@@ -53,7 +53,6 @@ function onMessage(msg: MessageEvent<any>) {
     if (!payload.type) continue
     const handlers = listeners.get(payload.type)
     if (!handlers || !handlers.length) continue
-    console.log(JSON.stringify(payload))
 
     for (const handler of handlers) {
       if (!isValid(handler.validator, payload)) continue
