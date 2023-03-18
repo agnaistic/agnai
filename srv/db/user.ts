@@ -138,4 +138,3 @@ export async function getProfiles(ownerId: string, userIds: string[]) {
     .toArray()
   return list
 }
-
