@@ -45,7 +45,7 @@ export const defaultPresets = {
     frequencyPenalty: 0.7,
     presencePenalty: 0.7,
     gaslight: '',
-    oaiModel: 'text-davinci-003',
+    oaiModel: OPENAI_MODELS.Turbo,
     memoryDepth: 5,
     memoryContextLimit: 500,
     memoryReverseWeight: false,
@@ -81,7 +81,7 @@ export const defaultPresets = {
   openai: {
     name: 'OpenAI',
     temp: 0.5,
-    oaiModel: OPENAI_MODELS.DaVinci,
+    oaiModel: OPENAI_MODELS.Turbo,
     maxTokens: 300,
     maxContextLength: 4095,
     frequencyPenalty: 0.7,
