@@ -13,7 +13,6 @@ interface Props {
 
 const Modal: Component<Props> = (props) => {
   const width = createMemo(() => {
-    console.log(props.maxWidth)
     if (!props.maxWidth) return `sm:max-w-lg`
 
     return props.maxWidth === 'full' ? `sm:w-[calc(100vw-64px)]` : 'sm:w-[calc(50vw)]'

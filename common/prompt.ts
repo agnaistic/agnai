@@ -292,16 +292,7 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export function getLinesForPrompt(
-  {
-    settings,
-    char,
-    members,
-    messages,
-    retry,
-    continue: cont,
-    book = testBook,
-    ...opts
-  }: PromptOpts,
+  { settings, char, members, messages, retry, continue: cont, book, ...opts }: PromptOpts,
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
