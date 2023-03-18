@@ -154,7 +154,6 @@ const CreateChatModal: Component<{
             label="Persona"
             items={options}
             value={props.char?.persona.kind || char()?.persona.kind}
-            disabled
           />
         </Show>
 
@@ -165,7 +164,6 @@ const CreateChatModal: Component<{
             label="Persona"
             items={[{ label: 'Plain text', value: 'text' }]}
             value={'text'}
-            disabled
           />
         </Show>
 

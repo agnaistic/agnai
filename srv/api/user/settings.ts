@@ -22,6 +22,8 @@ export const getConfig = handle(async ({ userId }) => {
   if (user) {
     user.novelApiKey = ''
     user.hordeKey = ''
+
+    if (user.oaiKey) user.oaiKeySet = true
     user.oaiKey = ''
   }
   return user

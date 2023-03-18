@@ -78,14 +78,13 @@ const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
               class="flex h-12 w-full cursor-pointer flex-row items-center gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-700)]"
               onClick={() => nav(`/chat/${chat._id}`)}
             >
-              <div class="flex w-1/2 items-center gap-2 sm:w-2/12">
+              <div class="flex w-1/2 items-center gap-2 sm:w-5/12">
                 <AvatarIcon avatarUrl={chars.map[chat.characterId]?.avatar} class="ml-2" />
                 {chars.map[chat.characterId]?.name}
               </div>
-              <div class="w-6/12 px-4">{chat.name || 'Untitled'}</div>
-              <div class="hidden w-1/2  justify-between sm:flex sm:w-4/12">
+              <div class="w-5/12 px-4">{chat.name || 'Untitled'}</div>
+              <div class="hidden w-1/2  justify-between sm:flex sm:w-2/12">
                 <div class="text-sm">{toDuration(new Date(chat.updatedAt))} ago</div>
-                <div class="mx-4 flex items-center gap-2"></div>
               </div>
             </div>
             <div class="flex items-center" onClick={() => setDelete(chat._id)}>

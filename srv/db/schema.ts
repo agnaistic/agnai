@@ -33,7 +33,9 @@ export namespace AppSchema {
     koboldUrl: string
     luminaiUrl: string
     oobaUrl: string
+
     oaiKey: string
+    oaiKeySet?: boolean
 
     hordeKey: string
     hordeModel: string
