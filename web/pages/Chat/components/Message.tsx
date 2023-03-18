@@ -155,7 +155,7 @@ const SingleMessage: Component<
             >
               <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
                 <Show when={!!props.msg.characterId}>
-                  <Terminal size={16} onClick={showPrompt} />
+                  <Terminal size={16} onClick={showPrompt} class="icon-button" />
                 </Show>
                 <Pencil size={16} class="icon-button" onClick={startEdit} />
                 <Trash size={16} class="icon-button" onClick={props.onRemove} />

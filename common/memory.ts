@@ -84,7 +84,7 @@ export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts, c
     .join('. ')
 
   return {
-    prompt: `${baseText}${prompt}`,
+    prompt: prompt ? `${baseText}${prompt}` : '',
     entries,
     tokens: entries.budget,
   }

@@ -74,9 +74,7 @@ export function createPrompt(opts: PromptOpts) {
   }
 
   const { pre, post, parts } = createPromptSurrounds(opts, cfg)
-
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
-
   const history: string[] = []
 
   let tokens = encoder(pre) + encoder(post)

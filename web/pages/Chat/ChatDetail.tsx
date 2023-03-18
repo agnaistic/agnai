@@ -57,7 +57,7 @@ const ChatDetail: Component = () => {
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
-  const [editing, setEditing] = createSignal(true)
+  const [editing, setEditing] = createSignal(false)
   const { id } = useParams()
   const nav = useNavigate()
 
