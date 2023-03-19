@@ -11,10 +11,6 @@ const PresetList: Component = () => {
   const state = presetStore()
   const [deleting, setDeleting] = createSignal<string>()
 
-  createEffect(() => {
-    presetStore.getPresets()
-  })
-
   const deletePreset = () => {
     const presetId = deleting()
     if (!presetId) return

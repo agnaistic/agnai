@@ -32,14 +32,6 @@ const Settings: Component = () => {
   const [workers, setWorkers] = createSignal<DropdownItem[]>()
   const [show, setShow] = createSignal(false)
 
-  createEffect(() => {
-    // Always reload settings when entering this page
-    userStore.getConfig()
-    settingStore.getHordeModels()
-    settingStore.getHordeWorkers()
-    presetStore.getPresets()
-  })
-
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {
       koboldUrl: 'string?',

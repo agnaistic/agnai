@@ -22,6 +22,7 @@ export async function getInit() {
   const user = local.loadItem('config')
   const profile = local.loadItem('profile')
   const presets = local.loadItem('presets')
+  const memory = local.loadItem('memory')
   const res = await api.get<AppSchema.AppConfig>('/settings')
 
   if (res.error) {
@@ -29,6 +30,7 @@ export async function getInit() {
       user,
       profile,
       presets,
+      memory,
       config: emptyCfg,
     })
   }

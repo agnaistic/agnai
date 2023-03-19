@@ -45,8 +45,8 @@ export const userStore = createStore<State>(
   'user',
   init()
 )((get, set) => {
-  settingStore.subscribe(({ init }) => {
-    if (init) {
+  settingStore.subscribe(({ init }, prev) => {
+    if (init && !prev.init) {
       userStore.setState({ user: init.user, profile: init.profile })
     }
   })
@@ -181,8 +181,7 @@ export const userStore = createStore<State>(
       }
 
       toastStore.error(`Guest state successfully reset`)
-      userStore.getConfig()
-      userStore.getProfile()
+      settingStore.init()
     },
   }
 })

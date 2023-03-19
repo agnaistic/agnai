@@ -194,6 +194,7 @@ body {
     @apply _focusable-base;
     @apply bg-[var(--bg-800)] hover:bg-[var(--bg-700)] active:bg-white/20;
     @apply placeholder:text-[var(--text-600)];
+    @apply border-[var(--bg-700)];
   }
 
   .focusable-icon-button,

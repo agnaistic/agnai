@@ -5,6 +5,7 @@ import * as invites from './invite'
 import * as admin from './admin'
 import * as presets from './presets'
 import * as msgs from './messages'
+import * as memory from './memory'
 
 export { db } from './client'
 
@@ -16,4 +17,5 @@ export const store = {
   admin,
   presets,
   msgs,
+  memory,
 }

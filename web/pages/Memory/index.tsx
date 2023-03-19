@@ -1,3 +1,4 @@
+import { A } from '@solidjs/router'
 import { Plus, Trash } from 'lucide-solid'
 import { Component, createEffect, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
@@ -15,10 +16,12 @@ const MemoryPage: Component = () => {
     <>
       <PageHeader title="Memory Library" />
       <div class="flex w-full justify-end">
-        <Button>
-          <Plus />
-          Memory
-        </Button>
+        <A href="/memory/new">
+          <Button>
+            <Plus />
+            Memory
+          </Button>
+        </A>
       </div>
 
       <Show when={!state.books.list.length}>
@@ -28,11 +31,17 @@ const MemoryPage: Component = () => {
       <Show when={state.books.list.length}>
         <For each={state.books.list}>
           {(book) => (
-            <div class="mt-2 flex w-full items-center gap-2">
-              <div class="flex h-12 w-full cursor-pointer items-center gap-2 rounded-xl bg-[var(--bg-800)] px-4 hover:bg-[var(--bg-700)]">
+            <div class="mt-2 flex w-full items-center gap-4">
+              <A
+                href={`/memory/${book._id}`}
+                class="flex h-12 w-full cursor-pointer items-center gap-2 rounded-xl bg-[var(--bg-800)] px-4 hover:bg-[var(--bg-700)]"
+              >
                 {book.name}
+              </A>
+
+              <div class="icon-button">
+                <Trash />
               </div>
-              <Trash />
             </div>
           )}
         </For>

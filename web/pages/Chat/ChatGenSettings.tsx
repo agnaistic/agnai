@@ -43,8 +43,6 @@ export const ChatGenSettingsModal: Component<{
   })
 
   createEffect(() => {
-    presetStore.getPresets()
-
     if (props.chat) {
       setUsePreset(!!props.chat.genPreset)
       setSelected(props.chat.genPreset)

@@ -18,7 +18,6 @@ export const GenerationPresetsPage: Component = () => {
   const params = useParams()
 
   const nav = useNavigate()
-  const [loaded, setLoaded] = createSignal(false)
   const [edit, setEdit] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.UserGenPreset>()
   const [deleting, setDeleting] = createSignal(false)
@@ -34,11 +33,6 @@ export const GenerationPresetsPage: Component = () => {
   }))
 
   createEffect(async () => {
-    if (!loaded()) {
-      presetStore.getPresets()
-      setLoaded(true)
-    }
-
     if (params.id === 'new') {
       setEditing()
       await Promise.resolve()

@@ -12,8 +12,8 @@ type PresetStore = {
 
 export const presetStore = createStore<PresetStore>('presets', { presets: [], saving: false })(
   (_) => {
-    settingStore.subscribe(({ init }) => {
-      if (init) {
+    settingStore.subscribe(({ init }, prev) => {
+      if (init && !prev.init) {
         presetStore.setState({ presets: init.presets })
       }
     })

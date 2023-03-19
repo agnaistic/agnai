@@ -87,8 +87,6 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
-    userStore.getProfile()
-    userStore.getConfig()
     chatStore.getChat(id)
   })
 

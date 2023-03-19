@@ -15,7 +15,7 @@ const main: Encoder = function main(value: string) {
 }
 
 const krake: Encoder = function krake(value: string) {
-  return gpt.encode(value).length + 4
+  return gpt.encode(value).length + 6
 }
 
 let davinci: Encoder
