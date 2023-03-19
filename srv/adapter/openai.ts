@@ -41,8 +41,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     const all = []
 
-    const maxBudget =
+    let maxBudget =
       (settings.maxContextLength || defaultPresets.basic.maxContextLength) - settings.max_tokens
+
     let tokens = encoder(promptParts.gaslight)
 
     if (lines) all.push(...lines)
@@ -87,9 +88,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   log.debug(body, 'OpenAI payload')
 
   const url = turbo ? `${baseUrl}/chat/completions` : `${baseUrl}/completions`
-  const resp = await needle('post', url, JSON.stringify(body), { json: true, headers }).catch(
-    (err) => ({ error: err })
-  )
+  const resp = await needle('post', url, JSON.stringify(body), {
+    json: true,
+    headers,
+  }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
     log.error({ error: resp.error }, 'OpenAI failed to send')

@@ -113,6 +113,7 @@ export async function createTextStream(opts: GenerateOptions) {
     settings,
     log: opts.log,
     gen,
+    continuation: !!opts.continue,
     ...prompt,
   }
 

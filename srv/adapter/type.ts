@@ -9,6 +9,7 @@ export type AdapterProps = {
   sender: AppSchema.Profile
   prompt: string
   lines?: string[]
+  continuation?: boolean
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>
