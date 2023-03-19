@@ -51,6 +51,7 @@ If you're only looking to run AgnAI without contributing:
 3. Install [Node.js](https://nodejs.org/en/download/)
 4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/) **Optional**
    - The database is optional. Agnaistic will run in `anonymous-only` mode if there is no database available.
+   - `Anonymous` users have their data saved to the browser's local storage. Your data will "persist", but not be shareable between devices or other browsers. Clearing your browser's application data/cookies will delete this data.
 5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
 6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm install`
@@ -90,6 +91,7 @@ When using `pnpm start`, the Node.JS server is run using `--inspect`. This means
 The important parts of the stack are:
 
 - [MongoDB](https://www.mongodb.com/docs/manual/installation/) for persistence
+- [Redis](https://redis.io) for distributed messaging for websockets.
 - [SolidJS](https://www.solidjs.com/) for interactivity
 - [TailwindCSS](https://tailwindcss.com/) for styling
 - [pnpm](https://pnpm.io/) for dependency management
