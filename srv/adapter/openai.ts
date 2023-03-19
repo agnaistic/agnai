@@ -47,7 +47,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     if (lines) all.push(...lines)
 
-    for (const line of all.reverse()) {
+    for (const line of all) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
       const isUser = line.startsWith(sender.handle)
