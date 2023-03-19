@@ -3,6 +3,7 @@ import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
 import { data } from './data'
 import { local } from './data/storage'
+import { settingStore } from './settings'
 import { publish } from './socket'
 import { toastStore } from './toasts'
 
@@ -44,6 +45,12 @@ export const userStore = createStore<State>(
   'user',
   init()
 )((get, set) => {
+  settingStore.subscribe(({ init }) => {
+    if (init) {
+      userStore.setState({ user: init.user, profile: init.profile })
+    }
+  })
+
   return {
     async getProfile() {
       const res = await data.user.getProfile()

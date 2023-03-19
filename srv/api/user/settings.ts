@@ -13,14 +13,14 @@ import { errors, handle, StatusError } from '../wrap'
 import { sendAll } from '../ws'
 
 export const getInitialLoad = handle(async ({ userId }) => {
-  const [profile, user, presets, settings] = await Promise.all([
+  const [profile, user, presets, config] = await Promise.all([
     store.users.getProfile(userId!),
     getSafeUserConfig(userId!),
     store.presets.getUserPresets(userId!),
     getAppConfig(),
   ])
 
-  return { profile, user, presets, settings }
+  return { profile, user, presets, config }
 })
 
 export const getProfile = handle(async ({ userId, params }) => {

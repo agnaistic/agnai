@@ -2,6 +2,7 @@ import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
+import { data } from './data'
 
 type SettingStore = {
   showMenu: boolean
@@ -9,6 +10,12 @@ type SettingStore = {
   config: AppSchema.AppConfig
   models: HordeModel[]
   workers: HordeWorker[]
+  init?: {
+    profile: AppSchema.Profile
+    user: AppSchema.User
+    presets: AppSchema.UserGenPreset[]
+    config: AppSchema.AppConfig
+  }
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -20,6 +27,12 @@ export const settingStore = createStore<SettingStore>('settings', {
   workers: [],
   config: { adapters: [], canAuth: true, version: '...' },
 })((_) => ({
+  async init() {
+    const res = await data.user.getInit()
+    if (res.result) {
+      return { init: res.result, config: res.result.config }
+    }
+  },
   menu({ showMenu }) {
     return { showMenu: !showMenu }
   },

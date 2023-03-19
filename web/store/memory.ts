@@ -4,6 +4,7 @@ import { data } from './data'
 import { toastStore } from './toasts'
 
 type MemoryState = {
+  show: boolean
   books: {
     loaded: boolean
     list: AppSchema.MemoryBook[]
@@ -11,9 +12,13 @@ type MemoryState = {
 }
 
 export const memoryStore = createStore<MemoryState>('memory', {
+  show: true,
   books: { loaded: false, list: [] },
 })((get, set) => {
   return {
+    toggle(_, show: boolean) {
+      return { show }
+    },
     async *getAll({ books: prev }) {
       yield { books: { loaded: false, list: [] } }
       const res = await data.memory.getBooks()
