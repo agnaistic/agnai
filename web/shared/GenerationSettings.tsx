@@ -43,9 +43,9 @@ const GenerationSettings: Component<{
       <RangeInput
         fieldName="maxContextLength"
         label="Max Context Length"
-        helperText="Maximum context length. Typically 2048 for most models. OpenAI supports up to 4096."
+        helperText="Maximum context length. Typically 2048 for most models. OpenAI supports up to 4K. Scale supports up to 8K. If you set this too high, you may get unexpected results or errors."
         min={16}
-        max={4096}
+        max={8000}
         step={4}
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}

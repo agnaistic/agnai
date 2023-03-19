@@ -1,7 +1,7 @@
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter } from './adapters'
 import { getMemoryPrompt } from './memory'
-import { defaultPresets, isDefaultPreset } from './presets'
+import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
@@ -74,7 +74,7 @@ export function createPrompt(opts: PromptOpts) {
   }
 
   const { pre, post, parts } = createPromptSurrounds(opts, cfg)
-  const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
+  const maxContext = settings.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
   const history: string[] = []
 
   let tokens = encoder(pre + '\n' + post)
