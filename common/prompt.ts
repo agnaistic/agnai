@@ -77,10 +77,10 @@ export function createPrompt(opts: PromptOpts) {
   const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
   const history: string[] = []
 
-  let tokens = encoder(pre) + encoder(post)
+  let tokens = encoder(pre + '\n' + post)
 
   for (const text of lines) {
-    const size = encoder(text, true)
+    const size = encoder(text + '\n')
 
     if (size + tokens > maxContext) break
 
@@ -88,7 +88,8 @@ export function createPrompt(opts: PromptOpts) {
     tokens += size
   }
 
-  const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
+  const prompt = [pre, ...history.reverse(), post].filter(removeEmpty).join('\n')
+  const finalContext = encoder(prompt)
   return { lines, prompt, parts }
 }
 
@@ -302,14 +303,14 @@ export function getLinesForPrompt(
 
   const formatMsg = (chat: AppSchema.ChatMessage) => fillPlaceholders(chat, char.name, sender)
 
-  const base = cont ? messages : retry ? messages.slice(1) : messages
+  const base = cont ? messages : messages
   const history = base.map(formatMsg)
 
   for (const hist of history) {
     const nextTokens = encoder(hist)
     if (nextTokens + tokens > maxContext) break
     tokens += nextTokens
-    lines.unshift(hist)
+    lines.push(hist)
   }
 
   return lines

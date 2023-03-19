@@ -34,6 +34,14 @@ export const getConfig = handle(async ({ userId }) => {
   return user
 })
 
+export const deleteScaleKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    scaleApiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteHordeKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     hordeKey: '',
@@ -73,6 +81,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
       oaiKey: 'string?',
       defaultAdapter: config.adapters,
       defaultPresets: 'any',
+      scaleUrl: 'string?',
+      scaleApiKey: 'string?',
     },
     body
   )
@@ -134,7 +144,13 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.oaiKey = encryptText(body.oaiKey!)
   }
 
-  const user = await store.users.updateUser(userId!, update)
+  if (body.scaleUrl !== undefined) update.scaleUrl = body.scaleUrl
+  if (body.scaleApiKey) {
+    update.scaleApiKey = encryptText(body.scaleApiKey)
+  }
+
+  await store.users.updateUser(userId!, update)
+  const user = await getSafeUserConfig(userId!)
   return user
 })
 
@@ -186,8 +202,15 @@ async function getSafeUserConfig(userId: string) {
     user.novelApiKey = ''
     user.hordeKey = ''
 
-    if (user.oaiKey) user.oaiKeySet = true
-    user.oaiKey = ''
+    if (user.oaiKey) {
+      user.oaiKeySet = true
+      user.oaiKey = ''
+    }
+
+    if (user.scaleApiKey) {
+      user.scaleApiKeySet = true
+      user.scaleApiKey = ''
+    }
   }
   return user
 }

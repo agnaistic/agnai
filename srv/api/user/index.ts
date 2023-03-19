@@ -6,6 +6,7 @@ import {
   deleteHordeKey,
   deleteNovelKey,
   deleteOaiKey,
+  deleteScaleKey,
   getConfig,
   getInitialLoad,
   getProfile,
@@ -22,6 +23,7 @@ router.get('/', loggedIn, getProfile)
 router.get('/presets', loggedIn, getUserPresets)
 router.get('/config', loggedIn, getConfig)
 router.get('/:id', loggedIn, getProfile)
+router.delete('/config/scale', loggedIn, deleteScaleKey)
 router.delete('/config/horde', loggedIn, deleteHordeKey)
 router.delete('/config/novel', loggedIn, deleteNovelKey)
 router.delete('/config/openai', loggedIn, deleteOaiKey)

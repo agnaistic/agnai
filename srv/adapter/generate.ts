@@ -19,7 +19,9 @@ import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { getMessagesForPrompt } from './prompt'
 import { AdapterProps, ModelAdapter } from './type'
-import { createPrompt } from '../../common/prompt'
+import { createPrompt, getAdapter } from '../../common/prompt'
+import { handleScale } from './scale'
+import { getEncoder } from '../../common/tokenize'
 
 export type GenerateOptions = {
   senderId: string
@@ -38,6 +40,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   horde: handleHorde,
   luminai: handleLuminAI,
   openai: handleOAI,
+  scale: handleScale,
 }
 
 export async function createGuestTextStream(opts: {
@@ -51,7 +54,8 @@ export async function createGuestTextStream(opts: {
   lines?: string[]
   continue?: string
 }) {
-  const adapter = getAdapater(opts.chat, opts.user)
+  const { adapter, model } = getAdapter(opts.chat, opts.user)
+
   const gen = await getGenerationSettings(opts.user, opts.chat, adapter, true)
   const settings = mapPresetsToAdapter(gen, adapter)
 
@@ -61,7 +65,7 @@ export async function createGuestTextStream(opts: {
 }
 
 export async function createTextStream(opts: GenerateOptions) {
-  const { chat, char, user, members, settings, adapter, gen } = await getResponseEntities(
+  const { chat, char, user, members, settings, adapter, gen, model } = await getResponseEntities(
     opts.chatId,
     opts.senderId
   )
@@ -76,6 +80,8 @@ export async function createTextStream(opts: GenerateOptions) {
     throw new StatusError('Sender not found in chat members', 400)
   }
 
+  const encoder = getEncoder(adapter, model)
+
   const promptOpts = {
     char,
     chat,
@@ -84,7 +90,7 @@ export async function createTextStream(opts: GenerateOptions) {
     settings,
     continue: opts.continue,
   }
-  const { messages } = await getMessagesForPrompt(promptOpts)
+  const { messages } = await getMessagesForPrompt(promptOpts, encoder)
 
   const prompt = createPrompt({
     char,
@@ -156,18 +162,12 @@ export async function getResponseEntities(chatId: string, senderId: string) {
     throw new StatusError('Character not found', 404)
   }
 
-  const adapter = getAdapater(chat, user)
+  const { adapter, model } = getAdapter(chat, user)
   const members = await store.users.getProfiles(chat.userId, chat.memberIds)
   const gen = await getGenerationSettings(user, chat, adapter)
   const settings = mapPresetsToAdapter(gen, adapter)
 
-  return { chat, char, user, members, adapter, settings, gen }
-}
-
-function getAdapater(chat: AppSchema.Chat, user: AppSchema.User) {
-  if (chat.adapter && chat.adapter !== 'default') return chat.adapter
-
-  return user.defaultAdapter
+  return { chat, char, user, members, adapter, settings, gen, model }
 }
 
 async function getGenerationSettings(

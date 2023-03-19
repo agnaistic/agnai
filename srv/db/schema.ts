@@ -42,6 +42,10 @@ export namespace AppSchema {
     hordeName?: string
     hordeWorkers?: string[]
 
+    scaleUrl?: string
+    scaleApiKey?: string
+    scaleApiKeySet?: boolean
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
   }

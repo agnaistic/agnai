@@ -16,7 +16,7 @@ type OpenAIMessagePropType = {
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, settings, sender, log, guest, lines } = opts
   if (!user.oaiKey) {
-    yield { error: `OpenAI request failed: Not configured` }
+    yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel

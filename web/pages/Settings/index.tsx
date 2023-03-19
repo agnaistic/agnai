@@ -49,6 +49,8 @@ const Settings: Component = () => {
       hordeModel: 'string?',
       luminaiUrl: 'string?',
       oaiKey: 'string?',
+      scaleApiKey: 'string?',
+      scaleUrl: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
 
@@ -169,10 +171,33 @@ const Settings: Component = () => {
                   : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
               }
               type="password"
-              value={state.user?.oaiKey}
             />
             <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
               Delete OpenAI Key
+            </Button>
+          </Show>
+
+          <Show when={cfg.config.adapters.includes('scale')}>
+            <Divider />
+            <TextInput
+              fieldName="scaleUrl"
+              label="Scale URL"
+              helperText="Fully qualified Scale URL."
+              placeholder={'E.g. https://dashboard.scale.com/spellbook/api/v2/deploy/a1b2c3'}
+              value={state.user?.scaleUrl}
+            />
+            <TextInput
+              fieldName="scaleApiKey"
+              label="Scale API Key"
+              placeholder={
+                state.user?.scaleApiKeySet
+                  ? 'Scale API key is set'
+                  : 'E.g. 9rv440nv7ogj6s7j312flqijd'
+              }
+              type="password"
+            />
+            <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('scale')}>
+              Delete Scale API Key
             </Button>
           </Show>
 

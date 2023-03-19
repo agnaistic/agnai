@@ -162,6 +162,14 @@ const GenerationSettings: Component<{
         value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
         disabled={props.disabled}
       />
+      <Dropdown
+        fieldName="oaiModel"
+        label="OpenAI Model"
+        items={Object.entries(OPENAI_MODELS).map(([label, value]) => ({ label, value }))}
+        helperText="Which OpenAI model to use"
+        value={props.inherit?.oaiModel}
+        disabled={props.disabled}
+      />
       <TextInput
         fieldName="gaslight"
         label="Gaslight Prompt"
@@ -169,14 +177,6 @@ const GenerationSettings: Component<{
         placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{char}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\nThis is how {{char}} should talk\n{{example_dialogue}}"
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
-        disabled={props.disabled}
-      />
-      <Dropdown
-        fieldName="oaiModel"
-        label="OpenAI Model"
-        items={Object.entries(OPENAI_MODELS).map(([label, value]) => ({ label, value }))}
-        helperText="Which OpenAI model to use"
-        value={props.inherit?.oaiModel}
         disabled={props.disabled}
       />
     </div>
