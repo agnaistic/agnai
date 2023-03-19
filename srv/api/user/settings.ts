@@ -116,9 +116,9 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.hordeKey = encryptText(body.hordeApiKey)
   }
 
-  await verifyKobldUrl(prevUser, body.koboldUrl)
+  const validKoboldUrl = await verifyKobldUrl(prevUser, body.koboldUrl)
 
-  if (body.koboldUrl !== undefined) update.koboldUrl = body.koboldUrl
+  if (validKoboldUrl !== undefined) update.koboldUrl = validKoboldUrl
   if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
 
   if (body.hordeModel) {
@@ -180,10 +180,20 @@ async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
   if (!incomingUrl) return
   if (user.koboldUrl === incomingUrl) return
 
-  const res = await get({ host: incomingUrl, url: '/api/v1/model' })
+  const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
+  if (!url || !url[0]) {
+    throw new StatusError(
+      `Kobold URL provided could not be verified: Invalid URL format. Use a fully qualified URL, e.g.: http://127.0.0.1:5000`,
+      400
+    )
+  }
+
+  const res = await get({ host: url[0], url: '/api/v1/model' })
   if (res.error) {
     throw new StatusError(`Kobold URL could not be verified: ${res.error.message}`, 400)
   }
+
+  return url[0]
 }
 
 async function verifyNovelKey(key: string) {
