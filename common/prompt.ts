@@ -1,7 +1,7 @@
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter } from './adapters'
 import { getMemoryPrompt } from './memory'
-import { defaultPresets } from './presets'
+import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
@@ -34,7 +34,8 @@ export type PromptOpts = {
 export const BOT_REPLACE = /\{\{char\}\}/g
 export const SELF_REPLACE = /\{\{user\}\}/g
 
-const testBook: AppSchema.MemoryBook = {
+export const testBook: AppSchema.MemoryBook = {
+  kind: 'memory',
   _id: '',
   name: 'test book',
   userId: '',
@@ -73,13 +74,13 @@ export function createPrompt(opts: PromptOpts) {
   }
 
   const { pre, post, parts } = createPromptSurrounds(opts, cfg)
-  const maxContext = settings.maxContextLength || defaultPresets.basic.maxContextLength
+  const maxContext = settings.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
   const history: string[] = []
 
-  let tokens = encoder(pre) + encoder(post)
+  let tokens = encoder(pre + '\n' + post)
 
   for (const text of lines) {
-    const size = encoder(text, true)
+    const size = encoder(text + '\n')
 
     if (size + tokens > maxContext) break
 
@@ -87,7 +88,8 @@ export function createPrompt(opts: PromptOpts) {
     tokens += size
   }
 
-  const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
+  const prompt = [pre, ...history.reverse(), post].filter(removeEmpty).join('\n')
+  const finalContext = encoder(prompt)
   return { lines, prompt, parts }
 }
 
@@ -301,14 +303,14 @@ export function getLinesForPrompt(
 
   const formatMsg = (chat: AppSchema.ChatMessage) => fillPlaceholders(chat, char.name, sender)
 
-  const base = cont ? messages : retry ? messages.slice(1) : messages
+  const base = cont ? messages : messages
   const history = base.map(formatMsg)
 
   for (const hist of history) {
     const nextTokens = encoder(hist)
     if (nextTokens + tokens > maxContext) break
     tokens += nextTokens
-    lines.unshift(hist)
+    lines.push(hist)
   }
 
   return lines
@@ -331,6 +333,7 @@ export function getAdapter(
 ) {
   let adapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
   let model = ''
+  let presetName = 'Fallback Preset'
 
   if (adapter === 'novel') {
     model = config.novelModel
@@ -340,5 +343,19 @@ export function getAdapter(
     model = preset?.oaiModel || defaultPresets.openai.oaiModel
   }
 
-  return { adapter, model }
+  if (chat.genPreset) {
+    if (isDefaultPreset(chat.genPreset)) {
+      presetName = 'Chat, Default Preset'
+    } else presetName = 'Chat, User Preset'
+  } else if (chat.genSettings) {
+    presetName = 'Chat, Preset Settings'
+  } else if (config.defaultPresets) {
+    const servicePreset = config.defaultPresets[adapter]
+    if (servicePreset) {
+      const source = servicePreset in defaultPresets ? 'Default' : 'User'
+      presetName = `Service, ${source} Preset`
+    }
+  }
+
+  return { adapter, model, preset: presetName }
 }

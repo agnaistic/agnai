@@ -19,6 +19,7 @@ export const AI_ADAPTERS = [
   'horde',
   'luminai',
   'openai',
+  'scale',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -85,4 +86,5 @@ export const ADAPTER_LABELS: Record<AIAdapter, string> = {
   ooba: 'Text-Generation-WebUI',
   luminai: 'LuminAI',
   openai: 'OpenAI',
+  scale: 'Scale',
 }

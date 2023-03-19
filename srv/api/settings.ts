@@ -12,7 +12,16 @@ const appConfig: any = {
   version: null,
 }
 
-const getAppConfig = handle(async () => {
+const getSettings = handle(async () => {
+  const config = await getAppConfig()
+  return config
+})
+
+router.get('/', getSettings)
+
+export default router
+
+export async function getAppConfig() {
   const canAuth = isConnected()
 
   if (appConfig.version === null) {
@@ -21,8 +30,4 @@ const getAppConfig = handle(async () => {
   }
 
   return { ...appConfig, canAuth }
-})
-
-router.get('/', getAppConfig)
-
-export default router
+}

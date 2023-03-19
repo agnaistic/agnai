@@ -17,7 +17,7 @@ const PromptModal: Component = () => {
         class="min-h-[300px] text-sm"
         fieldName="prompt"
         label="Prompt"
-        helperText="This is an approximation. It may differ from the prompt actually used at the time. For authenticated users, the prompt generated on the server may contain more context as it retrieves messages from the database until the 'history' portion of your prompt is full."
+        helperText="This is an approximation. It may differ from the prompt actually used at the time. For authenticated users, the prompt generated on the server may contain more context as it retrieves messages from the database until the 'history' portion of your prompt is full. OpenAI Turbo has a different payload and is generated server-side only."
         value={state.prompt?.prompt}
         isMultiline
         disabled

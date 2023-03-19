@@ -1,7 +1,7 @@
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 
-export type ModelAdapter = (opts: {
+export type AdapterProps = {
   chat: AppSchema.Chat
   char: AppSchema.Character
   user: AppSchema.User
@@ -11,7 +11,10 @@ export type ModelAdapter = (opts: {
   lines?: string[]
 
   /** GenSettings mapped to an object for the target adapter */
+  gen: Partial<AppSchema.GenSettings>
   settings: any
   guest?: string
   log: AppLog
-}) => AsyncGenerator<string | { error: any }>
+}
+
+export type ModelAdapter = (opts: AdapterProps) => AsyncGenerator<string | { error: any }>

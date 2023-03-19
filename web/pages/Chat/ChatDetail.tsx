@@ -76,8 +76,9 @@ const ChatDetail: Component = () => {
 
   const adapter = createMemo(() => {
     if (!chats.chat || !user.user) return ''
-    const { adapter } = getAdapter(chats.chat!, user.user!)
-    return ADAPTER_LABELS[adapter]
+    const { adapter, preset } = getAdapter(chats.chat!, user.user!)
+    const label = `${ADAPTER_LABELS[adapter]} - ${preset}`
+    return label
   })
 
   createEffect(() => {

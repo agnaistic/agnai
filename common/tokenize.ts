@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
-import { AIAdapter, OPENAI_MODELS } from './adapters'
+import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
 import gpt from 'gpt-3-encoder'
 import { AppSchema } from '../srv/db/schema'
 const cl100k_base = require('@dqbd/tiktoken/encoders/cl100k_base.json')
@@ -8,14 +8,25 @@ const p50k_base = require('@dqbd/tiktoken/encoders/p50k_base.json')
 
 const wasm = fs.readFileSync('./node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm')
 
-type Encoder = (value: string, dialog?: boolean) => number
+export type Encoder = (value: string) => number
 
-let main: Encoder = (value: string) => gpt.encode(value).length
+const main: Encoder = function main(value: string) {
+  return gpt.encode(value).length
+}
+
+const krake: Encoder = function krake(value: string) {
+  return gpt.encode(value).length + 4
+}
+
 let davinci: Encoder
 let turbo: Encoder
 
 export function getEncoder(adapter: AIAdapter, model?: string) {
-  if (adapter !== 'openai') return main
+  if (adapter !== 'openai' && adapter !== 'novel') return main
+
+  if (model === NOVEL_MODELS.krake) {
+    return krake
+  }
 
   if (model === OPENAI_MODELS.DaVinci) {
     return davinci ?? gpt.encode
@@ -34,8 +45,8 @@ async function prepareTokenizers() {
 
     {
       const encoder = new Tiktoken(p50k_base.bpe_ranks, p50k_base.special_tokens, p50k_base.pat_str)
-      davinci = (value, dialog) => {
-        const tokens = encoder.encode(dialogTrim(value, dialog ?? false)).length + 4
+      davinci = (value) => {
+        const tokens = encoder.encode(value).length + 4
         return tokens
       }
     }
@@ -47,8 +58,8 @@ async function prepareTokenizers() {
         cl100k_base.pat_str
       )
 
-      turbo = (value, dialog) => {
-        const tokens = encoder.encode(dialogTrim(value, dialog ?? false)).length + 4
+      turbo = (value) => {
+        const tokens = encoder.encode(value).length + 4
         return tokens
       }
     }

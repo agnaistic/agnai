@@ -4,6 +4,7 @@ import * as chats from './chats'
 import * as user from './user'
 import * as msg from './messages'
 import * as presets from './presets'
+import * as memory from './memory'
 
 export const data = {
   local,
@@ -12,4 +13,5 @@ export const data = {
   msg,
   user,
   presets,
+  memory,
 }

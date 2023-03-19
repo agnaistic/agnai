@@ -148,7 +148,7 @@ export const userStore = createStore<State>(
       return { ui: next }
     },
 
-    async deleteKey({ user }, kind: 'novel' | 'horde' | 'openai') {
+    async deleteKey({ user }, kind: 'novel' | 'horde' | 'openai' | 'scale') {
       const res = await data.user.deleteApiKey(kind)
       if (res.error) return toastStore.error(`Failed to update settings: ${res.error}`)
 

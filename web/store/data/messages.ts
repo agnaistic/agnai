@@ -1,6 +1,6 @@
 import { v4 } from 'uuid'
 import { isDefaultPreset } from '../../../common/presets'
-import { createPrompt } from '../../../common/prompt'
+import { createPrompt, getAdapter } from '../../../common/prompt'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, local } from './storage'
@@ -211,31 +211,33 @@ function getGuestEntities(chatId: string) {
 function setPreset(user: AppSchema.User, chat: AppSchema.Chat) {
   // The server does not store presets for users
   // Override the `genSettings` property with the locally stored preset data if found
+  const presets = loadItem('presets')
   if (chat.genPreset) {
-    const presets = loadItem('presets')
+    if (isDefaultPreset(chat.genPreset)) return
     const preset = presets.find((pre) => pre._id === chat.genPreset)
     if (preset) {
       chat.genSettings = preset
     }
   }
 
-  const adapter = !chat.adapter || chat.adapter === 'default' ? user.defaultAdapter : chat.adapter
+  if (chat.genSettings) return
+
+  const { adapter } = getAdapter(chat, user)
   if (!user.defaultPresets) return
 
   /**
    * If an anonymous user has configured default service presets then
    * we need to send those along with the request in the form of 'overrides'
    */
-  const defaultPreset = user.defaultPresets[adapter]
-  if (!defaultPreset) return
+  const svcPreset = user.defaultPresets[adapter]
+  if (!svcPreset) return
 
   // Default presets are correctly handled by the API
-  if (isDefaultPreset(defaultPreset)) {
-    chat.genPreset = defaultPreset
+  if (isDefaultPreset(svcPreset)) {
+    chat.genPreset = svcPreset
     return
   }
 
-  const presets = loadItem('presets')
-  const preset = presets.find((pre) => pre._id === defaultPreset)
+  const preset = presets.find((pre) => pre._id === svcPreset)
   chat.genSettings = preset
 }

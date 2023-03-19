@@ -7,6 +7,7 @@ import user from './user'
 import admin from './admin'
 import horde from './horde'
 import settings from './settings'
+import memory from './memory'
 
 const router = Router()
 
@@ -18,5 +19,6 @@ router.use('/classify', classify)
 router.use('/admin', admin)
 router.use('/horde', horde)
 router.use('/settings', settings)
+router.use('/memory', memory)
 
 export default router
