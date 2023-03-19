@@ -174,3 +174,20 @@ export function capitalize(input: string) {
 export function toDropdownItems(values: string[] | readonly string[]): DropdownItem[] {
   return values.map((value) => ({ label: capitalize(value), value }))
 }
+
+export function debounce(fn: Function, secs = 2) {
+  const ms = secs * 1000
+  let lastCalled = 0
+
+  const wrapped = () => {
+    const now = Date.now()
+    const diff = now - lastCalled
+
+    if (diff < ms) return
+    lastCalled = now
+
+    return fn()
+  }
+
+  return wrapped
+}
