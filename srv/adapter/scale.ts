@@ -31,7 +31,6 @@ export const handleScale: ModelAdapter = async function* ({
   const response = await needle('post', user.scaleUrl, body, {
     json: true,
     // timeout: 2000,
-    response_timeout: 20000,
     headers: {
       Authorization: auth,
     },
