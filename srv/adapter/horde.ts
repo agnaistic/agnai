@@ -2,7 +2,7 @@ import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { decryptText } from '../db/util'
 import { logger } from '../logger'
-import { sanitise, trimResponse } from '../api/chat/common'
+import { sanitise, trimResponse, trimResponseV2 } from '../api/chat/common'
 import { getHordeWorkers, HORDE_GUEST_KEY } from '../api/horde'
 import { sendGuest, sendOne } from '../api/ws'
 import { ModelAdapter } from './type'
@@ -137,7 +137,7 @@ export const handleHorde: ModelAdapter = async function* ({
   }
 
   const sanitised = sanitise(text)
-  const trimmed = trimResponse(sanitised, char, members, ['END_OF_DIALOG'])
+  const trimmed = trimResponseV2(sanitised, char, members, ['END_OF_DIALOG'])
   yield trimmed || sanitised
 }
 

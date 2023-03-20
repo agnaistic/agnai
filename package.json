@@ -25,7 +25,7 @@
     "start:public": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html --no-cache\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:public:win": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html --no-cache\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:win": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "pnpx mocha \"tests/**.spec.js\"",
     "typecheck": "tsc -p tsconfig.json",
     "up": "docker compose -p agnai up -d"
   },
@@ -82,6 +82,10 @@
     "zustand": "^4.3.3"
   },
   "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
     "path-browserify": "^1.0.0",
     "png-chunk-text": "^1.0.0",
     "png-chunks-encode": "^1.0.0",

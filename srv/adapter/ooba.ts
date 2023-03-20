@@ -7,7 +7,7 @@
 
 import needle from 'needle'
 import { config } from '../config'
-import { sanitise, trimResponse } from '../api/chat/common'
+import { sanitise, trimResponse, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 const base = {
@@ -85,7 +85,7 @@ export const handleOoba: ModelAdapter = async function* ({
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponse(parsed, char, members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
     yield { error: `text-generation-webui request failed: ${ex.message}` }

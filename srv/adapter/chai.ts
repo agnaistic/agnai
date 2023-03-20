@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { config } from '../config'
-import { trimResponse } from '../api/chat/common'
+import { trimResponse, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 export const handleChai: ModelAdapter = async function* ({ char, members, prompt, settings, log }) {
@@ -60,6 +60,6 @@ export const handleChai: ModelAdapter = async function* ({ char, members, prompt
     'END_OF_DIALOG',
   ]
 
-  const trimmed = trimResponse(response.body.data, char, members, endTokens)
+  const trimmed = trimResponseV2(response.body.data, char, members, endTokens)
   yield trimmed || response.body.data
 }

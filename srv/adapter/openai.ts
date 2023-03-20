@@ -1,5 +1,5 @@
 import needle from 'needle'
-import { sanitise, trimResponse } from '../api/chat/common'
+import { sanitise, trimResponse, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
@@ -118,7 +118,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponse(parsed, char, members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
