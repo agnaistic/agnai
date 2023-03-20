@@ -113,6 +113,10 @@
   --highlight: rgb(14 165 233);
 }
 
+* > code {
+  @apply rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
+}
+
 .text-100 {
   color: var(--text-100);
 }
@@ -334,14 +338,17 @@ body {
   }
 
   .toggle-pill-color input[type='checkbox'] {
-    display: none;
+    visibility: hidden;
+    width: 0;
+    height: 0;
+    position: absolute;
   }
   .toggle-pill-color input[type='checkbox'] + label {
     display: block;
     position: relative;
     width: 3em;
     height: 1.6em;
-    margin-bottom: 20px;
+    /* margin-bottom: 20px; */
     border-radius: 1em;
     /* background: #e84d4d; */
     box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.3);

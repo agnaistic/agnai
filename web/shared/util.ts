@@ -25,7 +25,7 @@ export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
 
 type Field = HTMLSelectElement | HTMLInputElement
 
-export function getStrictForm<T extends FormRef>(evt: Event, body: T) {
+export function getStrictForm<T extends FormRef>(evt: Event | HTMLFormElement, body: T) {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
 

@@ -1,5 +1,7 @@
 import { Component, Show, createMemo, JSX, onMount } from 'solid-js'
 
+const MIN_HEIGHT = 40
+
 const TextInput: Component<{
   fieldName: string
   label?: string
@@ -25,8 +27,9 @@ const TextInput: Component<{
   onMount(() => {
     if (!ref) return
 
+    const next = +ref.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : ref.scrollHeight
     ref.style.height = ''
-    ref.style.height = `${ref.scrollHeight}px`
+    ref.style.height = `${next}px`
   })
 
   return (
@@ -64,12 +67,16 @@ const TextInput: Component<{
           required={props.required}
           placeholder={placeholder()}
           value={value()}
-          class={'form-field focusable-field text-900 w-full rounded-xl px-4 py-2 ' + props.class}
+          class={
+            'form-field focusable-field text-900 min-h-[32px] w-full rounded-xl px-4 py-2 ' +
+            props.class
+          }
           disabled={props.disabled}
           onInput={(e) => {
             const ele = e.target as HTMLTextAreaElement
+            const next = +ele.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : ele.scrollHeight
             ele.style.height = ''
-            ele.style.height = `${ele.scrollHeight}px`
+            ele.style.height = `${next}px`
           }}
         />
       </Show>

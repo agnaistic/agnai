@@ -46,6 +46,7 @@ export const testBook: AppSchema.MemoryBook = {
       weight: 5,
       name: '',
       entry: "{{user}}'s skin is blue",
+      enabled: true,
     },
     {
       keywords: ['height'],
@@ -53,8 +54,16 @@ export const testBook: AppSchema.MemoryBook = {
       weight: 5,
       name: '',
       entry: '{{user}} is incredibly small',
+      enabled: true,
     },
-    { keywords: ['foo'], priority: 10, weight: 4, name: '', entry: 'Foo bar baz qux' },
+    {
+      keywords: ['foo'],
+      priority: 10,
+      weight: 4,
+      name: '',
+      entry: 'Foo bar baz qux',
+      enabled: true,
+    },
   ],
 }
 

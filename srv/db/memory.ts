@@ -1,8 +1,6 @@
 import { v4 } from 'uuid'
 import { db } from './client'
-import { AppSchema } from './schema'
-
-type NewBook = Omit<AppSchema.MemoryBook, 'userId' | '_id' | 'kind'>
+import { AppSchema, NewBook } from './schema'
 
 export async function getBooks(userId: string) {
   const books = await db('memory').find({ userId }).toArray()

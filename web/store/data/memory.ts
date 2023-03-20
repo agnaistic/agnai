@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema, NewBook } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { local } from './storage'
 
@@ -13,7 +13,7 @@ export async function getBooks() {
   return local.result({ books })
 }
 
-export async function createBook(book: Omit<AppSchema.MemoryBook, '_id' | 'userId' | 'kind'>) {
+export async function createBook(book: NewBook) {
   if (isLoggedIn()) {
     const res = await api.post<AppSchema.MemoryBook>(`/memory`, book)
     return res
@@ -29,4 +29,18 @@ export async function createBook(book: Omit<AppSchema.MemoryBook, '_id' | 'userI
   local.saveBooks(books)
 
   return local.result(next)
+}
+
+export async function updateBook(bookId: string, update: NewBook) {
+  if (isLoggedIn()) {
+    const res = await api.method('put', `/memory/${bookId}`, update)
+    return res
+  }
+
+  const books = local
+    .loadItem('memory')
+    .map((book) => (book._id === bookId ? { ...book, ...update } : book))
+  local.saveBooks(books)
+
+  return local.result({ success: true })
 }

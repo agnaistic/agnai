@@ -15,7 +15,6 @@ import {
 import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { inviteStore, settingStore, userStore } from './store'
-import { memoryStore } from './store/memory'
 
 const Navigation: Component = () => {
   const state = settingStore()

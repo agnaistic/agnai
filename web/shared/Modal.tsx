@@ -9,14 +9,20 @@ interface Props {
   close: () => void
   footer?: JSX.Element
   maxWidth?: 'full' | 'half'
+  onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
 }
 
 const Modal: Component<Props> = (props) => {
+  let ref: any
   const width = createMemo(() => {
     if (!props.maxWidth) return `sm:max-w-lg`
 
     return props.maxWidth === 'full' ? `sm:w-[calc(100vw-64px)]` : 'sm:w-[calc(50vw)]'
   })
+
+  const defaultSubmit = (ev: Event) => {
+    ev.preventDefault()
+  }
 
   return (
     <Show when={props.show}>
@@ -25,8 +31,10 @@ const Modal: Component<Props> = (props) => {
           <div class="absolute inset-0 bg-black" />
         </div>
         <div class="flex h-screen items-center">
-          <div
-            class={`my-auto max-h-[85vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all ${width()} sm:max-w-6xl`}
+          <form
+            ref={ref}
+            onSubmit={props.onSubmit || defaultSubmit}
+            class={`my-auto max-h-[95vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all ${width()} sm:max-w-6xl`}
           >
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
@@ -36,14 +44,14 @@ const Modal: Component<Props> = (props) => {
             </div>
 
             {/* 132px is the height of the title + footer*/}
-            <div class={`max-h-[calc(85vh-132px)] overflow-y-auto p-4 text-lg`}>
+            <div class={`max-h-[calc(95vh-132px)] overflow-y-auto p-4 text-lg`}>
               {props.children}
             </div>
 
             <Show when={props.footer}>
               <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
             </Show>
-          </div>
+          </form>
         </div>
       </div>
     </Show>

@@ -54,6 +54,8 @@ export namespace AppSchema {
     _id: string
     kind: 'chat'
     userId: string
+    memoryId?: string
+
     memberIds: string[]
 
     name: string
@@ -210,6 +212,8 @@ export namespace AppSchema {
 
     /** When determining what order to render the memories, the highest will be at the bottom  */
     weight: number
+
+    enabled: boolean
   }
 }
 
@@ -228,3 +232,5 @@ export type AllDoc =
   | AppSchema.MemoryBook
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []
+
+export type NewBook = Omit<AppSchema.MemoryBook, 'userId' | '_id' | 'kind'>

@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
-import { testBook } from '../../../common/prompt'
 import { store } from '../../db'
 import { loggedIn } from '../auth'
 import { handle } from '../wrap'
@@ -12,6 +11,7 @@ const validEntry = {
   weight: 'number',
   priority: 'number',
   entry: 'string',
+  enabled: 'boolean',
   keywords: ['string'],
 } as const
 
@@ -20,8 +20,8 @@ const validBook = {
   entries: [validEntry],
 } as const
 
-const getUserBooks = handle(async () => {
-  const books = [{ ...testBook }]
+const getUserBooks = handle(async ({ userId }) => {
+  const books = await store.memory.getBooks(userId!)
   return { books }
 })
 
@@ -47,6 +47,6 @@ const removeBook = handle(async ({ userId, params }) => {
 router.get('/', loggedIn, getUserBooks)
 router.post('/', loggedIn, createBook)
 router.put('/:id', loggedIn, updateBook)
-router.delete('/:id', loggedIn)
+router.delete('/:id', loggedIn, removeBook)
 
 export default router

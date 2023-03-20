@@ -87,20 +87,19 @@ export const GenerationPresetsPage: Component = () => {
     <>
       <PageHeader title="Generation Presets" subtitle="Your personal generation presets" />
       <div class="flex flex-col gap-2">
-        <div class="flex flex-row justify-between">
-          <div class="flex gap-4">
-            <Show when={state.presets.length > 1}>
-              <Button onClick={() => setEdit(true)}>Load Preset</Button>
-            </Show>
-            <Button onClick={startNew}>
-              <Plus />
-              New Preset
-            </Button>
-          </div>
-        </div>
+        <div class="flex flex-row justify-between"></div>
         <div class="flex flex-col gap-4 p-2">
           <Show when={editing()}>
             <form ref={ref} onSubmit={onSave}>
+              <div class="flex gap-4">
+                <Show when={state.presets.length > 1}>
+                  <Button onClick={() => setEdit(true)}>Load Preset</Button>
+                </Show>
+                <Button onClick={startNew}>
+                  <Plus />
+                  New Preset
+                </Button>
+              </div>
               <div class="flex flex-col gap-4">
                 <TextInput
                   fieldName="id"

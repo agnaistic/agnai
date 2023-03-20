@@ -1,4 +1,4 @@
-import { assertValid } from 'frisker'
+import { assertValid, isValidPartial } from 'frisker'
 import { config } from '../../config'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
@@ -29,13 +29,16 @@ export const updateChat = handle(async ({ params, body, user }) => {
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
+      memoryId: 'string?',
       overrides: {
         kind: ['wpp', 'sbf', 'boostyle', 'text'],
         attributes: 'any',
       },
     },
-    body
+    body,
+    true
   )
+
   const id = params.id
   const prev = await store.chats.getChat(id)
   if (prev?.userId !== user?.userId) throw errors.Forbidden
