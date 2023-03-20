@@ -115,7 +115,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         </Show>
         <div class="mt-4 flex flex-col gap-2 text-sm">
           <PersonaAttributes
-            value={state.chat?.overrides.attributes}
+            value={state.chat?.overrides.attributes || state.char?.persona.attributes}
             hideLabel
             plainText={state.char?.persona.kind === 'text'}
           />

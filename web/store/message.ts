@@ -52,8 +52,17 @@ export const msgStore = createStore<MsgState>('messages', {
 
       const res = await data.msg.getMessages(activeChatId, before)
       yield { nextLoading: false }
-      if (res.result) {
+      if (res.result && res.result.messages.length) {
         return { msgs: res.result.messages.concat(msgs) }
+      }
+
+      if (res.result && !res.result.messages.length) {
+        return {
+          msgs: msgs.map((msg, i) => {
+            if (i === 0) return { ...msg, first: true }
+            return msg
+          }),
+        }
       }
     },
 

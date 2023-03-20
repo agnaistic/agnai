@@ -1,10 +1,10 @@
 import { Component, createMemo, For } from 'solid-js'
-import { ADAPTER_LABELS, AI_ADAPTERS } from '../../../common/adapters'
+import { ADAPTER_LABELS } from '../../../common/adapters'
 import { defaultPresets } from '../../../common/presets'
 import Divider from '../../shared/Divider'
 import Dropdown from '../../shared/Dropdown'
 import { settingStore, userStore } from '../../store'
-import { presetStore } from '../../store/presets'
+import { presetStore } from '../../store'
 
 export const DefaultPresets: Component = () => {
   const presets = presetStore((s) => ({ list: s.presets }))

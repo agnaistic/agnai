@@ -4,7 +4,7 @@ import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { presetStore } from '../../store/presets'
+import { presetStore } from '../../store'
 
 const PresetList: Component = () => {
   const nav = useNavigate()

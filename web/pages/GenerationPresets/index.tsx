@@ -10,7 +10,7 @@ import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { presetStore } from '../../store/presets'
+import { presetStore } from '../../store'
 
 export const GenerationPresetsPage: Component = () => {
   let ref: any

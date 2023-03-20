@@ -1,6 +1,6 @@
 import { Save, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import { defaultPresets, GenerationPreset } from '../../../common/presets'
+import { defaultPresets } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
@@ -9,7 +9,7 @@ import Modal from '../../shared/Modal'
 import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
 import { chatStore } from '../../store'
-import { presetStore } from '../../store/presets'
+import { presetStore } from '../../store'
 
 const presetList = Object.entries(defaultPresets).map(([key, preset]) => ({
   label: preset.name,

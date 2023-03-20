@@ -10,7 +10,7 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { getFormEntries, getStrictForm } from '../../shared/util'
-import { memoryStore } from '../../store/memory'
+import { memoryStore } from '../../store'
 
 const newBook: AppSchema.MemoryBook = {
   _id: '',
@@ -131,7 +131,6 @@ export const EditMemoryPage = () => {
   const nav = useNavigate()
   const { id } = useParams()
   const state = memoryStore()
-  const [loaded, setLoaded] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.MemoryBook>()
 
   createEffect(() => {
@@ -143,11 +142,6 @@ export const EditMemoryPage = () => {
     const match = state.books.list.find((m) => m._id === id)
     if (match) {
       setEditing(match)
-    }
-
-    if (!match && !loaded()) {
-      memoryStore.getAll()
-      setLoaded(true)
     }
   })
 

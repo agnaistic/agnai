@@ -1,8 +1,9 @@
 import { v4 } from 'uuid'
-import { isDefaultPreset } from '../../../common/presets'
+import { defaultPresets, getFallbackPreset, isDefaultPreset } from '../../../common/presets'
 import { createPrompt, getAdapter } from '../../../common/prompt'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
+import { getStore } from '../create'
 import { loadItem, local } from './storage'
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
@@ -38,18 +39,16 @@ export async function getMessages(chatId: string, before: string) {
 export async function sendMessage(chatId: string, message: string) {
   if (!chatId) return local.error('Could not send message: No active chat')
 
+  const entities = getPromptEntities()
   if (isLoggedIn()) {
+    console.log(entities)
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, { message })
   }
 
-  const entities = getGuestEntities(chatId)
-  if ('error' in entities) return entities
-
-  const { chat, char, profile, msgs, user } = entities
-
+  const { messages, char, chat, user, profile } = entities
   // We intentionally do not store the new message in local storage
   // The server will send the 'user message' via the socket if the this request is not a retry
-  const next = msgs.concat(newMessage(chat, local.ID, message.trim()))
+  const next = messages.concat(newMessage(chat, local.ID, message.trim()))
   const prompt = createPrompt({ char, chat, members: [profile], messages: next, config: user })
 
   await api.post(`/chat/${chat._id}/guest-message`, {
@@ -77,6 +76,7 @@ export async function sendMessage(chatId: string, message: string) {
  */
 export async function retryUserMessage(chatId: string, message: string) {
   if (!chatId) return local.error('Could not send message: No active chat')
+  const entities = getPromptEntities()
 
   if (isLoggedIn()) {
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
@@ -85,15 +85,15 @@ export async function retryUserMessage(chatId: string, message: string) {
     })
   }
 
-  const entities = getGuestEntities(chatId)
   if ('error' in entities) return entities
 
-  const { chat, char, profile, msgs, user } = entities
+  const { chat, char, profile, messages, user, book } = entities
   const prompt = createPrompt({
     char,
     chat,
     members: [profile],
-    messages: msgs,
+    messages,
+    book,
     config: entities.user,
   })
 
@@ -122,6 +122,7 @@ export async function retryCharacterMessage(
   replace: AppSchema.ChatMessage,
   continueOn?: string
 ) {
+  const entities = getPromptEntities()
   if (isLoggedIn()) {
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
       message: message.msg,
@@ -129,22 +130,22 @@ export async function retryCharacterMessage(
     })
   }
 
-  const entities = getGuestEntities(chatId)
   if ('error' in entities) return entities
 
-  const { chat, char, msgs, profile, user } = entities
+  const { chat, char, messages, profile, user, book } = entities
 
-  const index = msgs.findIndex((msg) => msg._id === replace._id)
+  const index = messages.findIndex((msg) => msg._id === replace._id)
   if (index === -1) return local.error(`Cannot find message to replace`)
 
   const prompt = createPrompt({
     char,
     chat,
     members: [profile],
-    messages: msgs,
+    messages,
     continue: continueOn,
     retry: replace,
     config: entities.user,
+    book,
   })
 
   return api.post(`/chat/${chat._id}/guest-message`, {
@@ -192,35 +193,91 @@ function newMessage(
   }
 }
 
-function getGuestEntities(chatId: string) {
-  const chat = loadItem('chats').find((ch) => ch._id === chatId)
-  const char = loadItem('characters').find((ch) => ch._id === chat?.characterId)
-
-  if (!chat || !char) {
-    return local.error(`Chat or character not found (chat: ${!!chat}, character: ${!!char})`)
+function getPromptEntities() {
+  if (isLoggedIn()) {
+    const entities = getAuthedPromptEntities()
+    if (!entities) throw new Error(`Could not collate data for prompting`)
+    return entities
   }
 
-  const profile = loadItem('profile')
-  const msgs = local.getMessages(chat?._id)
-  const user = loadItem('config')
-  setPreset(user, chat)
-
-  return { chat, char, profile, msgs, user }
+  const entities = getGuestEntities()
+  if (!entities) throw new Error(`Could not collate data for prompting`)
+  return entities
 }
 
-function setPreset(user: AppSchema.User, chat: AppSchema.Chat) {
+function getGuestEntities() {
+  const active = getStore('chat').getState().active
+  if (!active) return
+
+  const chat = active.chat
+  const char = active.char
+
+  if (!chat || !char) return
+
+  const book = chat?.memoryId
+    ? loadItem('memory').find((mem) => mem._id === chat.memoryId)
+    : undefined
+  const profile = loadItem('profile')
+  const messages = local.getMessages(chat?._id)
+  const user = loadItem('config')
+  const settings = getGuestPreset(user, chat)
+
+  return { chat, char, user, profile, book, messages, settings, members: [] }
+}
+
+export function getAuthedPromptEntities() {
+  const { active, activeMembers: members } = getStore('chat').getState()
+  if (!active) return
+
+  const { profile, user } = getStore('user').getState()
+  if (!profile || !user) return
+
+  const chat = active.chat
+  const char = active.char
+
+  const book = getStore('memory')
+    .getState()
+    .books.list.find((book) => book._id === chat.memoryId)
+  const messages = getStore('messages').getState().msgs
+  const settings = getAuthGenSettings(chat, user)
+
+  return { chat, char, user, profile, book, messages, settings, members }
+}
+
+function getAuthGenSettings(
+  chat: AppSchema.Chat,
+  user: AppSchema.User
+): Partial<AppSchema.GenSettings> | undefined {
+  const presets = getStore('presets').getState().presets
+  if (chat.genPreset) {
+    if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
+    const preset = presets.find((pre) => pre._id === chat.genPreset)
+    if (preset) return preset
+  }
+
+  if (chat.genSettings) return chat.genSettings
+  const { adapter } = getAdapter(chat, user)
+  if (!user.defaultPresets) return
+
+  const svcPreset = user.defaultPresets[adapter]
+  if (!svcPreset) return
+
+  if (isDefaultPreset(svcPreset)) return defaultPresets[svcPreset]
+  const preset = presets.find((pre) => pre._id === svcPreset)
+  return preset
+}
+
+function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
   // The server does not store presets for users
   // Override the `genSettings` property with the locally stored preset data if found
   const presets = loadItem('presets')
   if (chat.genPreset) {
-    if (isDefaultPreset(chat.genPreset)) return
+    if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
     const preset = presets.find((pre) => pre._id === chat.genPreset)
-    if (preset) {
-      chat.genSettings = preset
-    }
+    return preset
   }
 
-  if (chat.genSettings) return
+  if (chat.genSettings) return chat.genSettings
 
   const { adapter } = getAdapter(chat, user)
   if (!user.defaultPresets) return
@@ -234,10 +291,9 @@ function setPreset(user: AppSchema.User, chat: AppSchema.Chat) {
 
   // Default presets are correctly handled by the API
   if (isDefaultPreset(svcPreset)) {
-    chat.genPreset = svcPreset
-    return
+    return defaultPresets[svcPreset]
   }
 
   const preset = presets.find((pre) => pre._id === svcPreset)
-  chat.genSettings = preset
+  return preset
 }

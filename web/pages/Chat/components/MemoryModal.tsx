@@ -6,7 +6,7 @@ import Divider from '../../../shared/Divider'
 import Dropdown from '../../../shared/Dropdown'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
-import { memoryStore } from '../../../store/memory'
+import { memoryStore } from '../../../store'
 import EditMemoryForm, { getBookUpdate } from '../../Memory/EditMemory'
 
 const ChatMemoryModal: Component<{

@@ -15,6 +15,7 @@ export async function getInit() {
       user: AppSchema.User
       presets: AppSchema.UserGenPreset[]
       config: AppSchema.AppConfig
+      books: AppSchema.MemoryBook[]
     }>('/user/init')
     return res
   }
@@ -22,7 +23,7 @@ export async function getInit() {
   const user = local.loadItem('config')
   const profile = local.loadItem('profile')
   const presets = local.loadItem('presets')
-  const memory = local.loadItem('memory')
+  const books = local.loadItem('memory')
   const res = await api.get<AppSchema.AppConfig>('/settings')
 
   if (res.error) {
@@ -30,7 +31,7 @@ export async function getInit() {
       user,
       profile,
       presets,
-      memory,
+      books,
       config: emptyCfg,
     })
   }
@@ -39,6 +40,7 @@ export async function getInit() {
     user,
     profile,
     presets,
+    books,
     config: res.result!,
   })
 }

@@ -15,6 +15,7 @@ type SettingStore = {
     user: AppSchema.User
     presets: AppSchema.UserGenPreset[]
     config: AppSchema.AppConfig
+    books: AppSchema.MemoryBook[]
   }
 }
 

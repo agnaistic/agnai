@@ -2,7 +2,7 @@ import { ImagePlus, PlusCircle, Send } from 'lucide-solid'
 import { Component, JSX, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import { chatStore, toastStore } from '../../../store'
-import { msgStore } from '../../../store/message'
+import { msgStore } from '../../../store'
 import './Message.css'
 
 const InputBar: Component<{

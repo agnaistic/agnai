@@ -127,6 +127,7 @@ const CreateCharacter: Component = () => {
           helperText="The current circumstances and context of the conversation and the characters."
           placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
           value={state.edit?.scenario}
+          isMultiline
         />
 
         <TextInput

@@ -1,7 +1,7 @@
 import { Component } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
-import { msgStore } from '../../store/message'
+import { msgStore } from '../../store'
 
 const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
   props

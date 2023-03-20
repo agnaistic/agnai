@@ -3,14 +3,10 @@ import { Plus, Trash } from 'lucide-solid'
 import { Component, createEffect, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { memoryStore } from '../../store/memory'
+import { memoryStore } from '../../store'
 
 const MemoryPage: Component = () => {
   const state = memoryStore()
-
-  createEffect(() => {
-    memoryStore.getAll()
-  })
 
   return (
     <>

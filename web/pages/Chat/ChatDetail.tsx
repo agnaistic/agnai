@@ -22,8 +22,8 @@ import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, userStore } from '../../store'
-import { memoryStore } from '../../store/memory'
-import { msgStore } from '../../store/message'
+import { memoryStore } from '../../store'
+import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
 import InputBar from './components/InputBar'
@@ -94,10 +94,6 @@ const ChatDetail: Component = () => {
     }
 
     chatStore.getChat(id)
-
-    if (!memory.loaded) {
-      memoryStore.getAll()
-    }
   })
 
   const sendMessage = (message: string) => {

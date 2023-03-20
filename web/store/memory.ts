@@ -1,6 +1,7 @@
 import { AppSchema, NewBook } from '../../srv/db/schema'
 import { createStore } from './create'
 import { data } from './data'
+import { settingStore } from './settings'
 import { toastStore } from './toasts'
 
 type MemoryState = {
@@ -21,6 +22,12 @@ export const memoryStore = createStore<MemoryState>('memory', {
   loadingAll: false,
   updating: false,
 })((get, set) => {
+  settingStore.subscribe(({ init }, prev) => {
+    if (init && !prev.init) {
+      memoryStore.setState({ books: { list: init.books, loaded: true } })
+    }
+  })
+
   return {
     toggle(_, show: boolean) {
       return { show }
