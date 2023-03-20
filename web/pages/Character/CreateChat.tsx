@@ -49,10 +49,8 @@ const CreateChatModal: Component<{
     }
   })
 
-  const selectChar = async (char: AppSchema.Character) => {
-    setChar()
-    await Promise.resolve()
-    setChar(char)
+  const selectChar = async (chr: AppSchema.Character) => {
+    setChar(chr)
   }
 
   const onCreate = () => {
@@ -176,13 +174,23 @@ const CreateChatModal: Component<{
               plainText={props.char?.persona.kind === 'text'}
             />
           </Show>
-          <Show when={!props.char && !!char()}>
-            <PersonaAttributes
-              value={char()?.persona.attributes}
+          <Show when={!props.char && !!selectedChar()}>
+            {/* <PersonaAttributes
+              value={selectedChar()?.persona.attributes}
               hideLabel
-              plainText={char()?.persona.kind === 'text'}
-            />
-            {/* <For each={state.chars}>{(item) => <Show when={char()?._id === item._id}></Show>}</For> */}
+              plainText={selectedChar()?.persona.kind === 'text'}
+            /> */}
+            <For each={state.chars}>
+              {(item) => (
+                <Show when={selectedChar()?._id === item._id}>
+                  <PersonaAttributes
+                    value={item.persona.attributes}
+                    hideLabel
+                    plainText={item.persona.kind === 'text'}
+                  />
+                </Show>
+              )}
+            </For>
           </Show>
         </div>
       </form>

@@ -225,17 +225,21 @@ export type SplitMessage = AppSchema.ChatMessage & { split?: boolean }
 function splitMessage(
   char: AppSchema.Character,
   profile: AppSchema.Profile,
-  msg: AppSchema.ChatMessage
+  incoming: AppSchema.ChatMessage
 ): SplitMessage[] {
   const CHARS = [`${char.name}:`, `{{char}}:`]
   const USERS = [`${profile.handle || 'You'}:`, `{{user}}:`]
 
+  const msg = { ...incoming }
+  if (msg.msg.startsWith(`${char.name}:`)) {
+    msg.msg = msg.msg.replace(`${char.name}:`, '').trim()
+  } else if (msg.msg.startsWith(`${char.name} :`)) {
+    msg.msg = msg.msg.replace(`${char.name} :`, '').trim()
+  }
+
   const next: AppSchema.ChatMessage[] = []
 
   const splits = msg.msg.split('\n')
-  if (splits.length === 1) {
-    next.push(msg)
-  }
 
   for (const split of splits) {
     const trim = split.trim()
