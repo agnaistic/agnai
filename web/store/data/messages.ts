@@ -28,6 +28,66 @@ export async function getMessages(chatId: string, before: string) {
   return res
 }
 
+type GenerateOpts =
+  /**
+   * A user sending a new message
+   */
+  | { kind: 'send'; text: string }
+  /**
+   * Either:
+   * - The last message in the chat is a user message so we are going to generate a new response
+   * - The last message in the chat is a bot message so we are going to re-generate a response and update the 'replacingId' chat message
+   */
+  | { kind: 'retry' }
+  /**
+   * The last message in the chat is a bot message and we want to generate more text for this message.
+   */
+  | { kind: 'continue' }
+
+export async function generateResponseV2(opts: GenerateOpts) {
+  const entities = getPromptEntities()
+  const [message, lastMessage] = entities.messages.slice(-2)
+
+  let retry: AppSchema.ChatMessage | undefined
+  let replacingId: string | undefined
+  if (opts.kind === 'retry') {
+    if (lastMessage.characterId) {
+      retry = message
+      replacingId = lastMessage._id
+    } else {
+      retry = lastMessage
+    }
+  }
+
+  const messages = (
+    opts.kind === 'send' || opts.kind === 'continue'
+      ? entities.messages
+      : replacingId
+      ? entities.messages.slice(0, -1)
+      : entities.messages
+  ).slice()
+
+  if (opts.kind === 'send') {
+    messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
+  }
+
+  const prompt = createPrompt({
+    char: entities.char,
+    chat: entities.chat,
+    config: entities.user,
+    members: entities.members.concat([entities.profile]),
+    continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
+    book: entities.book,
+    retry,
+    settings: entities.settings,
+    messages,
+  })
+
+  console.log('-------------------')
+  console.log(prompt.parts)
+  console.log(prompt.prompt)
+}
+
 /**
  * This handles:
  * - The user sending a new message (typing a message and pressing Enter)
@@ -37,6 +97,7 @@ export async function getMessages(chatId: string, before: string) {
  * @returns
  */
 export async function sendMessage(chatId: string, message: string) {
+  generateResponseV2({ kind: 'send', text: message })
   if (!chatId) return local.error('Could not send message: No active chat')
 
   const entities = getPromptEntities()
@@ -70,11 +131,12 @@ export async function sendMessage(chatId: string, message: string) {
  * If the last message is server-generated, we use 'retryCharacterMessage' for this as we are replacing a message.
  *
  * @param chatId
- * @param message
+ * @param message The content of the user message
  * @param retry Flag that indicates: - the last message is being re-sent AND the last message is from the user.
  * @returns
  */
 export async function retryUserMessage(chatId: string, message: string) {
+  generateResponseV2({ kind: 'retry' })
   if (!chatId) return local.error('Could not send message: No active chat')
   const entities = getPromptEntities()
 
@@ -122,6 +184,7 @@ export async function retryCharacterMessage(
   replace: AppSchema.ChatMessage,
   continueOn?: string
 ) {
+  generateResponseV2({ kind: 'retry' })
   const entities = getPromptEntities()
   if (isLoggedIn()) {
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
@@ -193,6 +256,10 @@ function newMessage(
   }
 }
 
+function createPromptRequest() {
+  const entities = getPromptEntities()
+}
+
 function getPromptEntities() {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
@@ -222,10 +289,10 @@ function getGuestEntities() {
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
 
-  return { chat, char, user, profile, book, messages, settings, members: [] }
+  return { chat, char, user, profile, book, messages, settings, members: [] as AppSchema.Profile[] }
 }
 
-export function getAuthedPromptEntities() {
+function getAuthedPromptEntities() {
   const { active, activeMembers: members } = getStore('chat').getState()
   if (!active) return
 
@@ -296,4 +363,19 @@ function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
 
   const preset = presets.find((pre) => pre._id === svcPreset)
   return preset
+}
+
+function emptyMsg(
+  chat: AppSchema.Chat,
+  props: Partial<AppSchema.ChatMessage>
+): AppSchema.ChatMessage {
+  return {
+    _id: '',
+    kind: 'chat-message',
+    chatId: chat._id,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    msg: '',
+    ...props,
+  }
 }

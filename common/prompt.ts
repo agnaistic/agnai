@@ -24,7 +24,7 @@ export type PromptOpts = {
   char: AppSchema.Character
   config: AppSchema.User
   members: AppSchema.Profile[]
-  settings?: AppSchema.GenSettings
+  settings?: Partial<AppSchema.GenSettings>
   messages: AppSchema.ChatMessage[]
   retry?: AppSchema.ChatMessage
   continue?: string

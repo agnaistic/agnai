@@ -227,15 +227,29 @@ const ChatDetail: Component = () => {
           </div>
         </div>
       </Show>
-      <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
-      <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
-      <ChatGenSettingsModal show={showGen()} close={() => setShowGen(false)} chat={chats.chat!} />
-      <InviteModal
-        show={showInvite()}
-        close={() => setShowInvite(false)}
-        chatId={chats.chat?._id!}
-      />
+
+      <Show when={!!removeId()}>
+        <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
+      </Show>
+
+      <Show when={showConfig()}>
+        <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
+      </Show>
+
+      <Show when={showGen()}>
+        <ChatGenSettingsModal show={showGen()} close={() => setShowGen(false)} chat={chats.chat!} />
+      </Show>
+
+      <Show when={showInvite()}>
+        <InviteModal
+          show={showInvite()}
+          close={() => setShowInvite(false)}
+          chatId={chats.chat?._id!}
+        />
+      </Show>
+
       <PromptModal />
+
       <Show when={chats.chat}>
         <ChatMemoryModal
           chat={chats.chat!}
