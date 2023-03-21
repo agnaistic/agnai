@@ -55,6 +55,7 @@ If you're only looking to run AgnAI without contributing:
 5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
 6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm install`
+   - `npm run build:all`
    - Build and run the project in watch mode:
      - Mac/Linux: `npm run start`
      - Windows: `npm run start:win`
