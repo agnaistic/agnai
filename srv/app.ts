@@ -20,7 +20,7 @@ app.use(cors())
 app.use(logMiddleware())
 app.use('/api', api)
 
-app.use('/assets', express.static(config.assetFolder))
+// app.use('/assets', express.static(config.assetFolder))
 app.use('/', express.static('dist'))
 app.use('/', express.static('assets'))
 
