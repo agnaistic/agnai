@@ -1,5 +1,30 @@
+import type { PromptParts } from '../../common/prompt'
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
+
+export type GenerateRequestV2 = {
+  kind: 'send' | 'retry' | 'continue'
+  chat: AppSchema.Chat
+  user: AppSchema.User
+  char: AppSchema.Character
+  sender: AppSchema.Profile
+  members: AppSchema.Profile[]
+  parts: Omit<PromptParts, 'gaslightHasChat'>
+  lines: string[]
+  text?: string
+  settings?: Partial<AppSchema.GenSettings>
+  replacing?: AppSchema.ChatMessage
+  continuing?: AppSchema.ChatMessage
+}
+
+export type GenerateOptions = {
+  senderId: string
+  chatId: string
+  message: string
+  log: AppLog
+  retry?: AppSchema.ChatMessage
+  continue?: string
+}
 
 export type AdapterProps = {
   chat: AppSchema.Chat
@@ -9,7 +34,6 @@ export type AdapterProps = {
   sender: AppSchema.Profile
   prompt: string
   lines?: string[]
-  continuation?: boolean
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>

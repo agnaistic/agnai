@@ -1,8 +1,9 @@
+import { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter } from './adapters'
-import { getMemoryPrompt } from './memory'
+import { getMemoryPrompt, MemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
-import { getEncoder } from './tokenize'
+import { Encoder, getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
 
@@ -15,14 +16,14 @@ export type Prompt = {
 export type PromptConfig = {
   adapter: AIAdapter
   model: string
-  encoder: (value: string, dialog?: boolean) => number
+  encoder: Encoder
   lines: string[]
 }
 
 export type PromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
-  config: AppSchema.User
+  user: AppSchema.User
   members: AppSchema.Profile[]
   settings?: Partial<AppSchema.GenSettings>
   messages: AppSchema.ChatMessage[]
@@ -71,19 +72,31 @@ export function createPrompt(opts: PromptOpts) {
   const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
-  const { settings = defaultPresets.basic } = opts
   const lines = getLinesForPrompt(opts)
-  const { adapter, model } = getAdapter(opts.chat, opts.config, opts.settings)
-  const encoder = getEncoder(adapter, model)
-  const cfg: PromptConfig = {
-    adapter,
-    model,
-    encoder,
-    lines,
-  }
+  const { prompt, parts } = createPromptWithParts(opts, lines)
+  return { lines, prompt, parts }
+}
 
-  const { pre, post, parts } = createPromptSurrounds(opts, cfg)
-  const maxContext = settings.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
+const START_TEXT = '<START>'
+
+export function createPromptWithParts(
+  opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
+  lines: string[]
+) {
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
+  const { pre, parts, post } = createPromptSurrounds(
+    {
+      chat: opts.chat,
+      char: opts.char,
+      members: opts.members,
+      user: opts.user,
+    },
+    lines
+  )
+
+  const maxContext =
+    opts.settings?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
   const history: string[] = []
 
   let tokens = encoder(pre + '\n' + post)
@@ -99,22 +112,17 @@ export function createPrompt(opts: PromptOpts) {
 
   const prompt = [pre, ...history.reverse(), post].filter(removeEmpty).join('\n')
   const finalContext = encoder(prompt)
-  return { lines, prompt, parts }
+  return { lines, prompt, parts, pre, post }
 }
 
-const START_TEXT = '<START>'
-
 export function createPromptSurrounds(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>,
-  cfg: PromptConfig
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'user'>,
+  lines: string[]
 ) {
   const { chat, char, members } = opts
-
-  const memory = getMemoryPrompt(opts, cfg)
-
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const parts = getPromptParts(opts)
+  const parts = getPromptParts(opts, lines)
   const hasStart =
     parts.greeting?.includes(START_TEXT) ||
     chat.sampleChat?.includes(START_TEXT) ||
@@ -124,8 +132,8 @@ export function createPromptSurrounds(
 
   if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
-  if (memory?.prompt) {
-    pre.push(memory.prompt)
+  if (parts.memory?.prompt) {
+    pre.push(parts.memory.prompt)
   }
 
   if (!hasStart) pre.push('<START>')
@@ -152,10 +160,12 @@ export type PromptParts = {
   gaslight: string
   post: string[]
   gaslightHasChat: boolean
+  memory?: MemoryPrompt
 }
 
 export function getPromptParts(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings'>
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user'>,
+  lines: string[]
 ) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
@@ -186,6 +196,8 @@ export function getPromptParts(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
+  parts.memory = getMemoryPrompt({ ...opts, lines })
+
   const gaslight =
     opts.chat.genSettings?.gaslight || opts.settings?.gaslight || defaultPresets.openai.gaslight
 
@@ -197,7 +209,7 @@ export function getPromptParts(
     .replace(/\<BOT\>/g, char.name)
     .replace(/\{\{char\}\}/g, char.name)
     .replace(/\{\{user\}\}/g, sender)
-    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
+    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
@@ -304,7 +316,7 @@ export function getLinesForPrompt(
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
-  const { adapter, model } = getAdapter(opts.chat, opts.config, settings)
+  const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
   const encoder = getEncoder(adapter, model)
   let tokens = 0
 

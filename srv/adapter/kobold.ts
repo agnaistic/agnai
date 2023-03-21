@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { logger } from '../logger'
-import { trimResponse, trimResponseV2 } from '../api/chat/common'
+import { trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
@@ -33,7 +33,7 @@ export const handleKobold: ModelAdapter = async function* ({
     }
   }
 
-  const endTokens = ['END_OF_DIALOG']
+  const endTokens = ['END_OF_DIALOG', 'You:']
 
   log.debug(body, 'Kobold payload')
 

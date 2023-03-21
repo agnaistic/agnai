@@ -1,6 +1,9 @@
 import { v4 } from 'uuid'
+import { getMemoryPrompt } from '../../../common/memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from '../../../common/presets'
-import { createPrompt, getAdapter } from '../../../common/prompt'
+import { createPrompt, getAdapter, PromptParts } from '../../../common/prompt'
+import { getEncoder } from '../../../common/tokenize'
+import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
@@ -49,20 +52,26 @@ export async function generateResponseV2(opts: GenerateOpts) {
   const [message, lastMessage] = entities.messages.slice(-2)
 
   let retry: AppSchema.ChatMessage | undefined
-  let replacingId: string | undefined
+  let replacing: AppSchema.ChatMessage | undefined
+  let continuing: AppSchema.ChatMessage | undefined
+
   if (opts.kind === 'retry') {
     if (lastMessage.characterId) {
       retry = message
-      replacingId = lastMessage._id
+      replacing = lastMessage
     } else {
       retry = lastMessage
     }
   }
 
+  if (opts.kind === 'continue') {
+    continuing = lastMessage
+  }
+
   const messages = (
     opts.kind === 'send' || opts.kind === 'continue'
       ? entities.messages
-      : replacingId
+      : replacing
       ? entities.messages.slice(0, -1)
       : entities.messages
   ).slice()
@@ -74,7 +83,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
   const prompt = createPrompt({
     char: entities.char,
     chat: entities.chat,
-    config: entities.user,
+    user: entities.user,
     members: entities.members.concat([entities.profile]),
     continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
     book: entities.book,
@@ -83,9 +92,23 @@ export async function generateResponseV2(opts: GenerateOpts) {
     messages,
   })
 
-  console.log('-------------------')
-  console.log(prompt.parts)
-  console.log(prompt.prompt)
+  const request: GenerateRequestV2 = {
+    kind: opts.kind,
+    chat: entities.chat,
+    user: entities.user,
+    char: entities.char,
+    sender: entities.profile,
+    members: entities.members,
+    parts: prompt.parts,
+    lines: prompt.lines,
+    text: opts.kind === 'send' ? opts.text : undefined,
+    settings: entities.settings,
+    replacing,
+    continuing,
+  }
+
+  const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
+  return res
 }
 
 /**
@@ -102,7 +125,6 @@ export async function sendMessage(chatId: string, message: string) {
 
   const entities = getPromptEntities()
   if (isLoggedIn()) {
-    console.log(entities)
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, { message })
   }
 
@@ -110,7 +132,7 @@ export async function sendMessage(chatId: string, message: string) {
   // We intentionally do not store the new message in local storage
   // The server will send the 'user message' via the socket if the this request is not a retry
   const next = messages.concat(newMessage(chat, local.ID, message.trim()))
-  const prompt = createPrompt({ char, chat, members: [profile], messages: next, config: user })
+  const prompt = createPrompt({ char, chat, members: [profile], messages: next, user })
 
   await api.post(`/chat/${chat._id}/guest-message`, {
     char,
@@ -156,7 +178,7 @@ export async function retryUserMessage(chatId: string, message: string) {
     members: [profile],
     messages,
     book,
-    config: entities.user,
+    user: entities.user,
   })
 
   await api.post(`/chat/${chat._id}/guest-message`, {
@@ -207,7 +229,7 @@ export async function retryCharacterMessage(
     messages,
     continue: continueOn,
     retry: replace,
-    config: entities.user,
+    user: entities.user,
     book,
   })
 

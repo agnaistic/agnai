@@ -18,19 +18,10 @@ import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { getMessagesForPrompt } from './prompt'
-import { AdapterProps, ModelAdapter } from './type'
-import { createPrompt, getAdapter } from '../../common/prompt'
+import { AdapterProps, GenerateOptions, GenerateRequestV2, ModelAdapter } from './type'
+import { createPrompt, createPromptWithParts, getAdapter } from '../../common/prompt'
 import { handleScale } from './scale'
 import { getEncoder } from '../../common/tokenize'
-
-export type GenerateOptions = {
-  senderId: string
-  chatId: string
-  message: string
-  log: AppLog
-  retry?: AppSchema.ChatMessage
-  continue?: string
-}
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
   chai: handleChai,
@@ -41,6 +32,34 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   luminai: handleLuminAI,
   openai: handleOAI,
   scale: handleScale,
+}
+
+export async function createTextStreamV2(
+  opts: GenerateRequestV2,
+  log: AppLog,
+  guestSocketId?: string
+) {
+  const { adapter } = getAdapter(opts.chat, opts.user)
+  const handler = handlers[adapter]
+  const prompt = createPromptWithParts(opts, opts.lines)
+
+  const gen = opts.settings || getFallbackPreset(adapter)
+  const settings = mapPresetsToAdapter(gen, adapter)
+  const stream = handler({
+    char: opts.char,
+    chat: opts.chat,
+    gen: opts.settings || {},
+    log,
+    members: opts.members.concat(opts.sender),
+    prompt: prompt.prompt,
+    sender: opts.sender,
+    settings,
+    user: opts.user,
+    guest: guestSocketId,
+    lines: opts.lines,
+  })
+
+  return { stream, adapter }
 }
 
 export async function createGuestTextStream(opts: {
@@ -100,7 +119,7 @@ export async function createTextStream(opts: GenerateOptions) {
     settings,
     continue: opts.continue,
     messages,
-    config: user,
+    user,
   })
 
   const adapterOpts: AdapterProps = {
@@ -113,7 +132,6 @@ export async function createTextStream(opts: GenerateOptions) {
     settings,
     log: opts.log,
     gen,
-    continuation: !!opts.continue,
     ...prompt,
   }
 

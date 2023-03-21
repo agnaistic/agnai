@@ -1,14 +1,22 @@
 import { AppSchema } from '../srv/db/schema'
-import { AIAdapter } from './adapters'
-import { defaultPresets, getFallbackPreset } from './presets'
-import { BOT_REPLACE, PromptConfig, SELF_REPLACE } from './prompt'
+import { defaultPresets } from './presets'
+import { BOT_REPLACE, getAdapter, SELF_REPLACE } from './prompt'
+import { getEncoder } from './tokenize'
 
 type MemoryOpts = {
+  user: AppSchema.User
   chat: AppSchema.Chat
   char: AppSchema.Character
   settings?: Partial<AppSchema.UserGenPreset>
   book?: AppSchema.MemoryBook
+  lines: string[]
   members: AppSchema.Profile[]
+}
+
+export type MemoryPrompt = {
+  prompt: string
+  entries: Match[]
+  tokens: number
 }
 
 type Match = {
@@ -32,10 +40,14 @@ type Match = {
  * - If there is a tie due to using the same keyword, the earliest entry in the book wins
  */
 
-export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts, cfg: PromptConfig) {
-  if (!book?.entries) return
+export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
+  const { chat, book, settings, members, char, lines, user } = opts
 
-  const sender = opts.members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+  if (!book?.entries) return
+  const { adapter, model } = getAdapter(chat, user, settings)
+  const encoder = getEncoder(adapter, model)
+
+  const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth
   const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
@@ -46,8 +58,8 @@ export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts, c
   const matches: Match[] = []
 
   let id = 0
-  const combinedText = cfg.lines.join(' ').toLowerCase()
-  const baseText = `World Information: `
+  const combinedText = lines.join(' ').toLowerCase()
+  const baseText = `Facts: `
 
   for (const entry of book.entries) {
     let index = -1
@@ -58,8 +70,8 @@ export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts, c
     }
 
     if (index > -1) {
-      const text = entry.entry.replace(BOT_REPLACE, opts.char.name).replace(SELF_REPLACE, sender)
-      const tokens = cfg.encoder(text)
+      const text = entry.entry.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
+      const tokens = encoder(text)
       matches.push({ index, entry, id: ++id, tokens, text })
     }
   }
@@ -75,7 +87,7 @@ export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts, c
       prev.list.push(curr)
       return prev
     },
-    { list: [] as Match[], budget: cfg.encoder(baseText) }
+    { list: [] as Match[], budget: encoder(baseText) }
   )
 
   const prompt = entries.list
@@ -85,7 +97,7 @@ export function getMemoryPrompt({ chat, book, settings, ...opts }: MemoryOpts, c
 
   return {
     prompt: prompt ? `${baseText}${prompt}` : '',
-    entries,
+    entries: entries.list,
     tokens: entries.budget,
   }
 }

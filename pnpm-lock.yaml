@@ -27,7 +27,7 @@ specifiers:
   cors: ^2.8.5
   dotenv: ^16.0.3
   express: ^4.18.2
-  frisker: ^1.6.0
+  frisker: ^1.6.2
   gpt-3-encoder: ^1.1.4
   js-cookie: ^3.0.1
   jsonwebtoken: ^9.0.0
@@ -84,7 +84,7 @@ dependencies:
   cors: 2.8.5
   dotenv: 16.0.3
   express: 4.18.2
-  frisker: 1.6.0
+  frisker: 1.6.2
   gpt-3-encoder: 1.1.4
   js-cookie: 3.0.1
   jsonwebtoken: 9.0.0
@@ -2276,8 +2276,8 @@ packages:
     engines: {node: '>= 0.6'}
     dev: false
 
-  /frisker/1.6.0:
-    resolution: {integrity: sha512-6LFxvymkQ0md2cYlJd1jVBLjGC0b91cN3uNMvC1vcJRWXTkgbmgS6JZc6ljF6JZAd//OEJBNOmAOCJ26a8oVCg==}
+  /frisker/1.6.2:
+    resolution: {integrity: sha512-rn1G4CB+QbZXl35/a4ZTUNDZw34dVWN+ttExOmaTyDWoD9Zs7PfjX5xR84X/NV44U/okNdCR5njwR9Xqhi2S3w==}
     dependencies:
       '@types/node': 15.14.9
     dev: false
