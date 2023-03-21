@@ -31,7 +31,9 @@ export async function initMessageBus() {
     })
     connected = true
   } catch (ex) {
-    logger.warn({ err: ex }, `Message bus not connected - Running in non-distributed mode`)
+    logger.warn(
+      `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignored this warning.`
+    )
   }
 }
 
