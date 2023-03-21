@@ -73,27 +73,21 @@ export function createPrompt(opts: PromptOpts) {
   opts.messages = sortedMsgs
 
   const lines = getLinesForPrompt(opts)
-  const { prompt, parts } = createPromptWithParts(opts, lines)
-  return { lines, prompt, parts }
+  const parts = getPromptParts(opts, lines)
+  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines)
+  return { prompt, lines, pre, post, parts, history }
 }
 
 const START_TEXT = '<START>'
 
 export function createPromptWithParts(
   opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
+  parts: PromptParts,
   lines: string[]
 ) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getEncoder(adapter, model)
-  const { pre, parts, post } = createPromptSurrounds(
-    {
-      chat: opts.chat,
-      char: opts.char,
-      members: opts.members,
-      user: opts.user,
-    },
-    lines
-  )
+  const { pre, post } = buildPrompt(opts, parts, lines)
 
   const maxContext =
     opts.settings?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
@@ -115,14 +109,19 @@ export function createPromptWithParts(
   return { lines, prompt, parts, pre, post }
 }
 
-export function createPromptSurrounds(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'user'>,
-  lines: string[]
-) {
-  const { chat, char, members } = opts
-  const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+type BuildPromptOpts = {
+  chat: AppSchema.Chat
+  char: AppSchema.Character
+  user: AppSchema.User
+  continue?: string
+  members: AppSchema.Profile[]
+  settings?: Partial<AppSchema.GenSettings>
+}
 
-  const parts = getPromptParts(opts, lines)
+export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: string[]) {
+  const { chat, char } = opts
+  const sender = opts.members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+
   const hasStart =
     parts.greeting?.includes(START_TEXT) ||
     chat.sampleChat?.includes(START_TEXT) ||
@@ -145,10 +144,40 @@ export function createPromptSurrounds(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
+
+  const maxContext =
+    opts.settings?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
+  const history: string[] = []
+
+  let tokens = encoder(pre + '\n' + post)
+
+  for (const text of lines) {
+    const size = encoder(text + '\n')
+
+    if (size + tokens > maxContext) break
+
+    history.push(text)
+    tokens += size
+  }
+
+  /**
+   * TODO: This is doubling up on memory a fair bit
+   * This is left like this for 'prompt re-ordering'
+   * However the prompt re-ordering should probably occur earlier
+   */
+
+  const preamble = pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
+  const postamble = parts.post.join('\n')
+  const prompt = [preamble, ...history.reverse(), postamble].filter(removeEmpty).join('\n')
+
   return {
-    pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),
-    post: parts.post.join('\n'),
+    pre: preamble,
+    post: postamble,
+    history: history.join('\n'),
     parts,
+    prompt,
   }
 }
 
@@ -164,7 +193,7 @@ export type PromptParts = {
 }
 
 export function getPromptParts(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user'>,
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
   lines: string[]
 ) {
   const { chat, char, members } = opts

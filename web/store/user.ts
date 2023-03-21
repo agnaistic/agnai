@@ -146,6 +146,8 @@ export const userStore = createStore<State>(
     logout() {
       clearAuth()
       publish({ type: 'logout' })
+      settingStore.setState({ init: undefined })
+      settingStore.init()
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
 

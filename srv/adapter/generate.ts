@@ -19,7 +19,7 @@ import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { getMessagesForPrompt } from './prompt'
 import { AdapterProps, GenerateOptions, GenerateRequestV2, ModelAdapter } from './type'
-import { createPrompt, createPromptWithParts, getAdapter } from '../../common/prompt'
+import { buildPrompt, createPrompt, createPromptWithParts, getAdapter } from '../../common/prompt'
 import { handleScale } from './scale'
 import { getEncoder } from '../../common/tokenize'
 
@@ -41,7 +41,7 @@ export async function createTextStreamV2(
 ) {
   const { adapter } = getAdapter(opts.chat, opts.user)
   const handler = handlers[adapter]
-  const prompt = createPromptWithParts(opts, opts.lines)
+  const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
 
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)

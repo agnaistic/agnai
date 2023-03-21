@@ -63,6 +63,7 @@ export const memoryStore = createStore<MemoryState>('memory', {
 
       if (res.result) {
         yield { books: { ...books, list: books.list.concat(res.result) } }
+        toastStore.success('Created memory book')
         onSuccess?.(res.result)
       }
     },

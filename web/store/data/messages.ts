@@ -92,6 +92,8 @@ export async function generateResponseV2(opts: GenerateOpts) {
     messages,
   })
 
+  console.log(prompt.parts.memory)
+
   const request: GenerateRequestV2 = {
     kind: opts.kind,
     chat: entities.chat,
@@ -120,7 +122,6 @@ export async function generateResponseV2(opts: GenerateOpts) {
  * @returns
  */
 export async function sendMessage(chatId: string, message: string) {
-  generateResponseV2({ kind: 'send', text: message })
   if (!chatId) return local.error('Could not send message: No active chat')
 
   const entities = getPromptEntities()
@@ -158,7 +159,6 @@ export async function sendMessage(chatId: string, message: string) {
  * @returns
  */
 export async function retryUserMessage(chatId: string, message: string) {
-  generateResponseV2({ kind: 'retry' })
   if (!chatId) return local.error('Could not send message: No active chat')
   const entities = getPromptEntities()
 
@@ -206,7 +206,6 @@ export async function retryCharacterMessage(
   replace: AppSchema.ChatMessage,
   continueOn?: string
 ) {
-  generateResponseV2({ kind: 'retry' })
   const entities = getPromptEntities()
   if (isLoggedIn()) {
     return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
@@ -278,10 +277,6 @@ function newMessage(
   }
 }
 
-function createPromptRequest() {
-  const entities = getPromptEntities()
-}
-
 function getPromptEntities() {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
@@ -306,6 +301,7 @@ function getGuestEntities() {
   const book = chat?.memoryId
     ? loadItem('memory').find((mem) => mem._id === chat.memoryId)
     : undefined
+
   const profile = loadItem('profile')
   const messages = local.getMessages(chat?._id)
   const user = loadItem('config')
@@ -327,6 +323,7 @@ function getAuthedPromptEntities() {
   const book = getStore('memory')
     .getState()
     .books.list.find((book) => book._id === chat.memoryId)
+
   const messages = getStore('messages').getState().msgs
   const settings = getAuthGenSettings(chat, user)
 

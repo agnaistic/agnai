@@ -37,6 +37,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
         memory: 'any?',
         sampleChat: ['string?'],
         gaslight: 'string',
+        gaslightHasChat: 'boolean',
         post: ['string'],
       },
       lines: ['string'],
@@ -54,7 +55,6 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const guest = userId ? undefined : socketId
 
   const lockId = await obtainLock(chatId)
-  const lockProps = { chatId, lockId }
 
   const chat: AppSchema.Chat = guest ? body.chat : await store.chats.getChat(chatId)
   if (!chat) {
@@ -85,7 +85,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
       })
 
       await store.chats.update(chatId, {})
-      sendMany(body.members, { type: 'message-created', msg: userMsg, chatId })
+      sendMany(members, { type: 'message-created', msg: userMsg, chatId })
     }
   }
 
@@ -109,9 +109,9 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
   }
 
+  await releaseLock(chatId)
   if (error) return
 
-  await releaseLock(lockId)
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
   if (guest) {
@@ -183,6 +183,10 @@ function newMessage(
   }
   return userMsg
 }
+/**
+ * V1 response generation routes
+ * To be removed
+ */
 
 export const generateMessage = handle(async ({ userId, params, body, log }, res) => {
   const id = params.id

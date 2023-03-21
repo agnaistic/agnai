@@ -9,7 +9,7 @@ export type GenerateRequestV2 = {
   char: AppSchema.Character
   sender: AppSchema.Profile
   members: AppSchema.Profile[]
-  parts: Omit<PromptParts, 'gaslightHasChat'>
+  parts: PromptParts
   lines: string[]
   text?: string
   settings?: Partial<AppSchema.GenSettings>

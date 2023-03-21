@@ -92,19 +92,15 @@ export const msgStore = createStore<MsgState>('messages', {
         return
       }
 
-      yield { partial: '', waiting: chatId }
-
       const [message, replace] = msgs.slice(-2)
-
-      yield { retrying: replace, partial: '' }
-
-      if (!cont) {
-        yield { msgs: msgs.slice(0, -1) }
-      }
+      yield { partial: '', waiting: chatId, retrying: replace }
 
       addMsgToRetries(replace)
 
       const res = await data.msg.generateResponseV2({ kind: 'retry' })
+      if (!cont) {
+        yield { msgs: msgs.slice(0, -1) }
+      }
 
       // const res = await data.msg.retryCharacterMessage(chatId, message, replace, cont)
       if (res.error) {
@@ -133,10 +129,6 @@ export const msgStore = createStore<MsgState>('messages', {
       const res = retry
         ? await data.msg.generateResponseV2({ kind: 'retry' })
         : await data.msg.generateResponseV2({ kind: 'send', text: message })
-
-      // const res = retry
-      //   ? await data.msg.retryUserMessage(chatId, message)
-      //   : await data.msg.sendMessage(chatId, message)
 
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
