@@ -92,8 +92,6 @@ export async function generateResponseV2(opts: GenerateOpts) {
     messages,
   })
 
-  console.log(prompt.parts.memory)
-
   const request: GenerateRequestV2 = {
     kind: opts.kind,
     chat: entities.chat,

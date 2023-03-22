@@ -63,7 +63,7 @@ const ChatDetail: Component = () => {
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
-  const [editing, setEditing] = createSignal(false)
+  const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const { id } = useParams()
   const nav = useNavigate()
 
@@ -113,6 +113,12 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
+  function toggleEditing() {
+    const next = !editing()
+    setEditing(next)
+    saveEditingState(next)
+  }
+
   return (
     <>
       <Show when={!chats.chat || !chats.char || !user.profile}>
@@ -136,7 +142,7 @@ const ChatDetail: Component = () => {
               <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
                 {adapter()}
               </div>
-              <div class="icon-button" onClick={() => setEditing(!editing())}>
+              <div class="icon-button" onClick={toggleEditing}>
                 <Tooltip tip="Toggle edit mode">
                   <Show when={editing()}>
                     <ToggleRight class="text-[var(--hl-500)]" />
@@ -346,4 +352,18 @@ const InfiniteScroll: Component = () => {
       </div>
     </Show>
   )
+}
+
+type DetailSettings = { editing?: boolean }
+
+const EDITING_KEY = 'chat-detail-settings'
+function saveEditingState(value: boolean) {
+  const prev = getEditingState()
+  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, editing: value }))
+}
+
+function getEditingState() {
+  const prev = localStorage.getItem(EDITING_KEY) || '{}'
+  const body = JSON.parse(prev) as DetailSettings
+  return body
 }

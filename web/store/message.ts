@@ -97,7 +97,10 @@ export const msgStore = createStore<MsgState>('messages', {
 
       addMsgToRetries(replace)
 
-      const res = await data.msg.generateResponseV2({ kind: 'retry' })
+      const res = cont
+        ? await data.msg.generateResponseV2({ kind: 'continue' })
+        : await data.msg.generateResponseV2({ kind: 'retry' })
+
       if (!cont) {
         yield { msgs: msgs.slice(0, -1) }
       }
