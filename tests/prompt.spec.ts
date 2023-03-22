@@ -88,7 +88,7 @@ describe('Prompt building', () => {
   })
 
   it('will include will two memories by weight when triggered', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER')])
+    const actual = build([botMsg('FIRST'), toMsg('10-TRIGGER'), toMsg('1-TRIGGER')])
     expect(actual.prompt).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
@@ -97,8 +97,8 @@ describe('Prompt building', () => {
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
-        'You: 1-TRIGGER',
         'You: 10-TRIGGER',
+        'You: 1-TRIGGER',
         'Bot:'
       )
     )

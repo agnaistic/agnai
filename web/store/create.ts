@@ -1,5 +1,5 @@
 import { StoreApi, createStore as create } from 'zustand/vanilla'
-import { createStore as createSolidStore } from 'solid-js/store'
+import * as solidstore from 'solid-js/store'
 import { onCleanup } from 'solid-js'
 import type { userStore } from './user'
 import type { chatStore } from './chat'
@@ -140,7 +140,7 @@ export function createStore<State extends {}>(name: string, init: State) {
 
     const useStore = <T extends object = State>(selector?: (state: State) => T) => {
       const init = selector ? selector(store.getState()) : store.getState()
-      const [solid, setSolid] = createSolidStore<T>(init as any)
+      const [solid, setSolid] = solidstore.createStore<T>(init as any)
 
       const unsub = store.subscribe((next) => {
         const nextState = selector ? selector(next) : next
