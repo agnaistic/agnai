@@ -1,7 +1,6 @@
 import { Router } from 'express'
 import { assertValid } from 'frisker'
 import { store } from '../db'
-import { logger } from '../logger'
 import { isAdmin, loggedIn } from './auth'
 import { handle } from './wrap'
 

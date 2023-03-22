@@ -7,23 +7,6 @@ import { defaultPresets } from '../../common/presets'
 import { OPENAI_MODELS } from '../../common/adapters'
 import Divider from './Divider'
 
-export const genSettings = {
-  temp: 'number',
-  maxTokens: 'number',
-  repetitionPenalty: 'number',
-  repetitionPenaltyRange: 'number',
-  repetitionPenaltySlope: 'number',
-  typicalP: 'number',
-  topP: 'number',
-  topK: 'number',
-  topA: 'number',
-  tailFreeSampling: 'number',
-  frequencyPenalty: 'number',
-  presencePenalty: 'number',
-  gaslight: 'string',
-  oaiModel: 'string',
-} as const
-
 const GenerationSettings: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   disabled?: boolean
@@ -60,6 +43,30 @@ const GenerationSettings: Component<{
         value={props.inherit?.temp || defaultPresets.basic.temp}
         disabled={props.disabled}
       />
+
+      <RangeInput
+        fieldName="memoryContextLimit"
+        label="Memory: Context Limit"
+        helperText="The maximum context length (in tokens) for the memory prompt."
+        min={1}
+        // No idea what the max should be
+        max={2000}
+        step={1}
+        value={props.inherit?.memoryContextLimit || defaultPresets.basic.memoryContextLimit}
+        disabled={props.disabled}
+      />
+
+      <RangeInput
+        fieldName="memoryDepth"
+        label="Memory: Chat History Depth"
+        helperText="How far back in the chat history to look for keywords."
+        min={1}
+        max={100}
+        step={1}
+        value={props.inherit?.memoryDepth || defaultPresets.basic.memoryDepth}
+        disabled={props.disabled}
+      />
+
       <RangeInput
         fieldName="topP"
         label="Top P"
@@ -172,7 +179,7 @@ const GenerationSettings: Component<{
       />
       <TextInput
         fieldName="gaslight"
-        label="Gaslight Prompt"
+        label="Gaslight Prompt (OpenAI / Scale)"
         helperText="How the character definitions are sent to OpenAI. Placeholders: {{char}} {{user}} {{personality}} {{example_dialogue}}. If {{example_dialogue}} is not present then example dialogues will be sent as conversation history."
         placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{char}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\nThis is how {{char}} should talk\n{{example_dialogue}}"
         isMultiline

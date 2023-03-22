@@ -8,14 +8,15 @@ export type GenerationPreset = keyof typeof defaultPresets
 
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
-export const presetValidator = {
-  name: 'string',
+export const chatGenSettings = {
   temp: 'number',
   maxTokens: 'number',
   maxContextLength: 'number?',
   repetitionPenalty: 'number',
   repetitionPenaltyRange: 'number',
   repetitionPenaltySlope: 'number',
+  memoryContextLimit: 'number?',
+  memoryDepth: 'number?',
   typicalP: 'number',
   topP: 'number',
   topK: 'number',
@@ -26,6 +27,11 @@ export const presetValidator = {
   presencePenalty: 'number',
   gaslight: 'string',
   oaiModel: 'string',
+} as const
+
+export const presetValidator = {
+  name: 'string',
+  ...chatGenSettings,
 } as const
 
 const disabledValues: { [key in keyof GenMap]?: AppSchema.GenSettings[key] } = {

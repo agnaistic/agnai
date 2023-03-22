@@ -2,7 +2,6 @@ import jwt from 'jsonwebtoken'
 import { assertValid } from 'frisker'
 import { AppSocket } from './types'
 import { config } from '../../config'
-import { logger } from '../../logger'
 
 const allSockets = new Map<string, AppSocket>()
 const userSockets = new Map<string, AppSocket[]>()

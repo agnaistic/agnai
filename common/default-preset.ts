@@ -89,5 +89,7 @@ export const defaultPresets = {
   scale: {
     name: 'scale',
     maxContextLength: 7600,
+    // Not providing a default gaslight intentionally as most users have thier gaslight configured within Scale.
+    gaslight: ``,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

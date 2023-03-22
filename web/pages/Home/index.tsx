@@ -39,6 +39,16 @@ const HomePage: Component = () => {
                 Feature Roadmap
               </a>
             </li>
+            <li>
+              •{' '}
+              <a
+                href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/memory.md"
+                target="_blank"
+                class="link"
+              >
+                Memory Book Guide
+              </a>
+            </li>
           </ul>
         </div>
         <div>

@@ -10,7 +10,21 @@ const MemoryPage: Component = () => {
 
   return (
     <>
-      <PageHeader title="Memory Library" />
+      <PageHeader
+        title="Memory Library"
+        subtitle={
+          <>
+            {' '}
+            <a
+              href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/memory.md"
+              target="_blank"
+              class="link"
+            >
+              Memory Book Guide
+            </a>
+          </>
+        }
+      />
       <div class="flex w-full justify-end">
         <A href="/memory/new">
           <Button>

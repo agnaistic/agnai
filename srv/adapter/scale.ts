@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { sanitise, trimResponse, trimResponseV2 } from '../api/chat/common'
+import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 export const handleScale: ModelAdapter = async function* ({
@@ -30,7 +30,6 @@ export const handleScale: ModelAdapter = async function* ({
 
   const response = await needle('post', user.scaleUrl, body, {
     json: true,
-    // timeout: 2000,
     headers: {
       Authorization: auth,
     },

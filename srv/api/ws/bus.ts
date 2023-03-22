@@ -6,6 +6,7 @@ import { publishAll, publishGuest, publishMany, publishOne } from './handle'
 let connected = false
 
 const MESSAGE_EVENT = 'agnaistic-message'
+const COUNT_EVENT = 'agnaistic-users'
 
 export const clients = {
   pub: redis.createClient({ url: getUri() }),
@@ -29,6 +30,7 @@ export async function initMessageBus() {
         handleBus(json)
       } catch (ex) {}
     })
+
     connected = true
   } catch (ex) {
     logger.warn(

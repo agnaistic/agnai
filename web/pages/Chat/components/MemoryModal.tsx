@@ -41,7 +41,9 @@ const ChatMemoryModal: Component<{
 
   const Footer = () => (
     <>
-      <Button schema="secondary">Close</Button>
+      <Button schema="secondary" onClick={props.close}>
+        Close
+      </Button>
       <Button disabled={id() === ''} type="submit">
         <Save />
         Save Memory Book

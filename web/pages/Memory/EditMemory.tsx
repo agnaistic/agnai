@@ -50,14 +50,7 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
   return (
     <>
       <div class="flex flex-col gap-2">
-        <div class="flex w-full justify-between">
-          <div>
-            <Show when={!props.hideSave}>
-              <Button type="submit">
-                <Save /> Save
-              </Button>
-            </Show>
-          </div>
+        <div class="flex w-full justify-end">
           <Button onClick={addEntry}>
             <Plus /> Entry
           </Button>
@@ -79,46 +72,6 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
         <For each={editing().entries}>
           {(entry, i) => <EntryCard {...entry} index={i()} onRemove={() => onRemoveEntry(i())} />}
         </For>
-
-        <div class="mt-8 flex flex-col">
-          <div class="flex flex-col gap-2">
-            <div class="text-lg font-bold">Defintitons</div>
-            <FormLabel
-              fieldName="priorty"
-              label="Priorty"
-              helperText="When deciding which entries to INCLUDE in the prompt, the higher the priority entries win."
-            />
-
-            <FormLabel
-              fieldName="weight"
-              label="Weight"
-              helperText="When deciding how to ORDER entries, the higher the weight the closer to the bottom."
-            />
-
-            <FormLabel
-              fieldName="keywords"
-              label="Keywords"
-              helperText={
-                <>
-                  These are the terms that trigger the entry to be potentially included in the
-                  prompt. You can use <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code>{' '}
-                  placeholders here.
-                </>
-              }
-            />
-
-            <FormLabel
-              fieldName="entry"
-              label="Entry"
-              helperText={
-                <>
-                  This is the text that will be included in the prompt. You can use{' '}
-                  <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders here.
-                </>
-              }
-            />
-          </div>
-        </div>
       </div>
     </>
   )
@@ -163,11 +116,51 @@ export const EditMemoryPage = () => {
       <Show when={!!editing()}>
         <form ref={ref} onSubmit={saveBook}>
           <EditMemoryForm book={editing()!} />
-          <div class="flex justify-end">
+          <div class="mt-4 flex justify-end">
             <Button type="submit">
               <Save />
               {id === 'new' ? 'Create Book' : 'Update Book'}
             </Button>
+          </div>
+
+          <div class="mt-8 flex flex-col">
+            <div class="flex flex-col gap-2">
+              <div class="text-lg font-bold">Defintitons</div>
+              <FormLabel
+                fieldName="priorty"
+                label="Priorty"
+                helperText="When deciding which entries to INCLUDE in the prompt, the higher the priority entries win."
+              />
+
+              <FormLabel
+                fieldName="weight"
+                label="Weight"
+                helperText="When deciding how to ORDER entries, the higher the weight the closer to the bottom."
+              />
+
+              <FormLabel
+                fieldName="keywords"
+                label="Keywords"
+                helperText={
+                  <>
+                    These are the terms that trigger the entry to be potentially included in the
+                    prompt. You can use <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code>{' '}
+                    placeholders here.
+                  </>
+                }
+              />
+
+              <FormLabel
+                fieldName="entry"
+                label="Entry"
+                helperText={
+                  <>
+                    This is the text that will be included in the prompt. You can use{' '}
+                    <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders here.
+                  </>
+                }
+              />
+            </div>
           </div>
         </form>
       </Show>

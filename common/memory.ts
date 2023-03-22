@@ -62,6 +62,8 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
   const baseText = `Facts: `
 
   for (const entry of book.entries) {
+    if (!entry.enabled) continue
+
     let index = -1
     for (const keyword of entry.keywords) {
       const match = combinedText.lastIndexOf(keyword.toLowerCase())

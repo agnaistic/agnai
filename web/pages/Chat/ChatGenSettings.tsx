@@ -1,10 +1,10 @@
 import { Save, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import { defaultPresets } from '../../../common/presets'
+import { chatGenSettings, defaultPresets } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Dropdown from '../../shared/Dropdown'
-import GenerationSettings, { genSettings } from '../../shared/GenerationSettings'
+import GenerationSettings from '../../shared/GenerationSettings'
 import Modal from '../../shared/Modal'
 import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
@@ -54,7 +54,7 @@ export const ChatGenSettingsModal: Component<{
       const body = getStrictForm(ref, { preset: 'string' })
       chatStore.editChatGenPreset(props.chat._id, body.preset, props.close)
     } else {
-      const body = getStrictForm(ref, genSettings)
+      const body = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenSettings(props.chat._id, body, props.close)
     }
   }
