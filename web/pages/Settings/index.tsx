@@ -1,5 +1,5 @@
-import { Component, createMemo, createSignal, Show } from 'solid-js'
-import { AlertTriangle, Save, X } from 'lucide-solid'
+import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { AlertTriangle, RefreshCw, Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -28,8 +28,17 @@ const Settings: Component = () => {
   const state = userStore()
   const cfg = settingStore()
 
+  createEffect(() => {
+    refreshHorde()
+  })
+
   const [workers, setWorkers] = createSignal<DropdownItem[]>()
   const [show, setShow] = createSignal(false)
+
+  const refreshHorde = () => {
+    settingStore.getHordeModels()
+    settingStore.getHordeWorkers()
+  }
 
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {
@@ -123,13 +132,20 @@ const Settings: Component = () => {
               </Button>
             </Show>
 
-            <Dropdown
-              fieldName="hordeModel"
-              helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
-              label="Horde Model"
-              value={state.user?.hordeModel}
-              items={[{ label: 'Any', value: '' }].concat(...cfg.models.map(toItem))}
-            />
+            <div class="flex justify-between">
+              <div class="w-fit">
+                <Dropdown
+                  fieldName="hordeModel"
+                  helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
+                  label="Horde Model"
+                  value={state.user?.hordeModel}
+                  items={[{ label: 'Any', value: '' }].concat(...cfg.models.map(toItem))}
+                />
+              </div>
+              <div class="icon-button flex items-center" onClick={refreshHorde}>
+                <RefreshCw />
+              </div>
+            </div>
 
             <div class="flex items-center gap-4">
               <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
