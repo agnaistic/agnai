@@ -49,7 +49,7 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
 
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth
+  const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
   const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
   const reveseWeight = settings?.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
 
@@ -58,7 +58,7 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
   const matches: Match[] = []
 
   let id = 0
-  const combinedText = lines.join(' ').toLowerCase()
+  const combinedText = lines.slice(0, depth).join(' ').toLowerCase()
   const baseText = `Facts: `
 
   for (const entry of book.entries) {
@@ -96,7 +96,7 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
     .join('. ')
 
   return {
-    prompt: prompt ? `${baseText}${prompt}` : '',
+    prompt: prompt ? `${baseText}${prompt}.` : '',
     entries: entries.list,
     tokens: entries.budget,
   }
@@ -106,7 +106,7 @@ function byPriorityThenIndex(
   { id: lid, index: li, entry: l }: Match,
   { id: rid, index: ri, entry: r }: Match
 ) {
-  if (l.weight !== r.weight) return l.weight > r.weight ? 1 : -1
+  if (l.weight !== r.weight) return l.weight < r.weight ? 1 : -1
   if (li !== ri) return li > ri ? 1 : -1
   return lid > rid ? 1 : lid === rid ? 0 : -1
 }

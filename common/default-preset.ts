@@ -22,7 +22,7 @@ export const defaultPresets = {
     presencePenalty: 0.7,
     gaslight: '',
     oaiModel: OPENAI_MODELS.Turbo,
-    memoryDepth: 5,
+    memoryDepth: 50,
     memoryContextLimit: 500,
     memoryReverseWeight: false,
   },

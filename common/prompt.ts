@@ -1,6 +1,6 @@
 import { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
-import { AIAdapter } from './adapters'
+import { AIAdapter, OPENAI_MODELS } from './adapters'
 import { getMemoryPrompt, MemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder, getEncoder } from './tokenize'
@@ -248,7 +248,12 @@ export function getPromptParts(
    *
    * Edit: We will simply remove the sampleChat from the parts since it has already be included in the prompt using the gaslight
    */
-  if (gaslight.includes('{{example_dialogue}}')) {
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  if (
+    gaslight.includes('{{example_dialogue}}') &&
+    adapter === 'openai' &&
+    model === OPENAI_MODELS.Turbo
+  ) {
     parts.sampleChat = undefined
   }
 
@@ -341,7 +346,7 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export function getLinesForPrompt(
-  { settings, char, members, messages, retry, continue: cont, book, ...opts }: PromptOpts,
+  { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
