@@ -44,13 +44,33 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
     })
   }
 
+  const revert = () => {
+    const char = state.char
+    if (!char) return
+
+    chatStore.editChat(state.chat?._id!, {
+      greeting: char.greeting,
+      scenario: char.scenario,
+      sampleChat: char.sampleChat,
+      overrides: { ...char.persona },
+    })
+  }
+
   const Footer = (
     <>
-      {' '}
-      <Button schema="secondary" onClick={props.close}>
-        Cancel
-      </Button>
-      <Button onClick={onSave}>Save</Button>
+      <div class="flex w-full justify-between">
+        <div>
+          <Button schema="secondary" onClick={revert}>
+            Revert to Character Defaults
+          </Button>
+        </div>
+        <div class="flex gap-4">
+          <Button schema="secondary" onClick={props.close}>
+            Cancel
+          </Button>
+          <Button onClick={onSave}>Save</Button>
+        </div>
+      </div>
     </>
   )
 
@@ -115,7 +135,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         </Show>
         <div class="mt-4 flex flex-col gap-2 text-sm">
           <PersonaAttributes
-            value={state.chat?.overrides.attributes}
+            value={state.chat?.overrides.attributes || state.char?.persona.attributes}
             hideLabel
             plainText={state.char?.persona.kind === 'text'}
           />

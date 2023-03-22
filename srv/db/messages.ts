@@ -55,7 +55,15 @@ export async function editMessage(id: string, content: string, adapter?: string)
   return msg
 }
 
-export async function getMessages(chatId: string, before = now()) {
+export async function getMessages(chatId: string, before?: string) {
+  // The initial fetch will retrieve 100 messages.
+  // This is to ensure that users have sufficient messages in their application state to build prompts with enough context.
+  let pageSize = PAGE_SIZE
+  if (!before) {
+    before = now()
+    pageSize = 100
+  }
+
   const docs = await db('chat-message')
     .find({
       kind: 'chat-message',
@@ -63,14 +71,14 @@ export async function getMessages(chatId: string, before = now()) {
       $and: [{ createdAt: { $lt: before } }, { createdAt: { $ne: before } }],
     })
     .sort({ createdAt: -1 })
-    .limit(PAGE_SIZE + 1)
+    .limit(pageSize + 1)
     .toArray()
 
   if (!docs.length) return []
 
   docs.reverse()
 
-  if (docs.length < PAGE_SIZE + 1) {
+  if (docs.length < pageSize + 1) {
     docs[0].first = true
     return docs
   }

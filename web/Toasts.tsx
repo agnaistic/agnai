@@ -22,7 +22,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
   const bg = bgColor[props.toast.type]
   const onClick = () => toastStore.remove(props.toast.id)
   return (
-    <div class="flex flex-row">
+    <div class="flex flex-row justify-end">
       <div class={`${bg} w-2 rounded-l-lg p-2`}></div>
       <div class={`cursor-pointer rounded-r-lg bg-[var(--bg-700)] p-2`} onClick={onClick}>
         {props.toast.message}

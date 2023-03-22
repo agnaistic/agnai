@@ -1,11 +1,10 @@
 .side-drawer {
-  height: calc(100vh - 58px);
+  height: calc(100vh);
   position: fixed;
-  top: 58px;
   right: -470px;
   transition: opacity 250ms ease;
   transition: right 250ms ease;
-  @apply w-72 bg-background-lighter lg:top-[72px] lg:clear-none lg:h-[calc(100vh-72px)] lg:w-72;
+  @apply w-[calc(100vw-32px)]  bg-[var(--bg-800)] sm:w-96 lg:top-[72px] lg:clear-none lg:h-[100vh];
   @apply z-10 lg:z-0;
 }
 

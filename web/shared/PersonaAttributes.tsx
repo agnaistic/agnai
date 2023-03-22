@@ -1,5 +1,5 @@
 import { MinusCircle, Plus } from 'lucide-solid'
-import { Component, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
@@ -18,13 +18,19 @@ const PersonaAttributes: Component<{
   plainText?: boolean
   hideLabel?: boolean
 }> = (props) => {
+  const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
-  const [text, setText] = createSignal('')
 
   createSignal(() => {
     if (props.value) {
       setAttrs(toAttrs(props.value))
     }
+  })
+
+  createEffect(() => {
+    if (prev() === props.value) return
+    setAttrs(toAttrs(props.value))
+    setPrev(props.value)
   })
 
   const add = () => setAttrs((prev) => [...prev, { key: '', values: '' }])

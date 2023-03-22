@@ -1,5 +1,6 @@
 import { A, useNavigate } from '@solidjs/router'
 import {
+  Book,
   Bot,
   Eye,
   Github,
@@ -72,33 +73,29 @@ const UserNavigation: Component = () => {
       <Item href="/profile">
         <User /> Profile
       </Item>
-
       <Item href="/character/list">
         <Bot /> Characters
       </Item>
-
       <Item href="/chats">
         <MessageCircle /> Chats
       </Item>
-
+      <Item href="/memory">
+        <Book /> Memory
+      </Item>
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
       </Item>
-
       <Item href="/settings">
         <Settings /> Settings
       </Item>
-
       <Item href="/presets">
         <Sliders /> Presets
       </Item>
-
       <Show when={user.user?.admin}>
         <Item href="/admin/users">
           <Eye /> Users
         </Item>
       </Show>
-
       <a
         class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
         href="https://github.com/luminai-companion/agn-ai"

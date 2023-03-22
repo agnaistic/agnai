@@ -2,6 +2,49 @@ import * as local from './storage'
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../srv/db/schema'
 
+const emptyCfg: AppSchema.AppConfig = {
+  adapters: [],
+  canAuth: false,
+  version: '',
+}
+
+export async function getInit() {
+  if (isLoggedIn()) {
+    const res = await api.get<{
+      profile: AppSchema.Profile
+      user: AppSchema.User
+      presets: AppSchema.UserGenPreset[]
+      config: AppSchema.AppConfig
+      books: AppSchema.MemoryBook[]
+    }>('/user/init')
+    return res
+  }
+
+  const user = local.loadItem('config')
+  const profile = local.loadItem('profile')
+  const presets = local.loadItem('presets')
+  const books = local.loadItem('memory')
+  const res = await api.get<AppSchema.AppConfig>('/settings')
+
+  if (res.error) {
+    return local.result({
+      user,
+      profile,
+      presets,
+      books,
+      config: emptyCfg,
+    })
+  }
+
+  return local.result({
+    user,
+    profile,
+    presets,
+    books,
+    config: res.result!,
+  })
+}
+
 export async function getProfile(id?: string) {
   if (!isLoggedIn()) {
     // We never retrieve profiles by 'id' for anonymous users

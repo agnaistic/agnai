@@ -93,6 +93,12 @@ const HomePage: Component = () => {
             {cfg.adapters.map((a) => a.label).join(', ')}.
           </p>
         </div>
+        <div class="text-lg font-bold"> Using Scale</div>
+        <div>
+          As far as I am currently aware, Scale does not accept any parameters except for the
+          prompt. The "gaslight", temperature, stop sequences, and "max tokens" are configured in
+          the Spellbook 'App Variant' UI.
+        </div>
         <div class="text-lg font-bold"> Using Kobold AI</div>
         <div>
           If you're self-hosting KoboldAI or using Colab, you can use the LocalTunnel URL in the{' '}

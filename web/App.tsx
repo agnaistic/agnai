@@ -15,15 +15,15 @@ import Navigation from './Navigation'
 import GenerationPresetsPage from './pages/GenerationPresets'
 import CharacterChats from './pages/Character/ChatList'
 import PresetList from './pages/GenerationPresets/PresetList'
+import MemoryPage from './pages/Memory'
+import { EditMemoryPage } from './pages/Memory/EditMemory'
 
 const App: Component = () => {
   const state = userStore()
   const cfg = settingStore()
 
   createEffect(() => {
-    userStore.getProfile()
-    userStore.getConfig()
-    settingStore.getConfig()
+    settingStore.init()
   })
 
   return (
@@ -43,6 +43,8 @@ const App: Component = () => {
               <Route path="/presets" component={PresetList} />
               <Route path="/profile" component={ProfilePage} />
               <Route path="/settings" component={Settings} />
+              <Route path="/memory" component={MemoryPage} />
+              <Route path="/memory/:id" component={EditMemoryPage} />
               <Show when={state.loggedIn}>
                 <Route path="/invites" component={InvitesPage} />
                 <Show when={state.user?.admin}>

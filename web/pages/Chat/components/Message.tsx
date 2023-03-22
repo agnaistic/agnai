@@ -5,7 +5,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { chatStore, userStore } from '../../../store'
-import { MsgState, msgStore } from '../../../store/message'
+import { MsgState, msgStore } from '../../../store'
 
 const showdownConverter = new showdown.Converter()
 
@@ -228,7 +228,7 @@ function splitMessage(
   incoming: AppSchema.ChatMessage
 ): SplitMessage[] {
   const CHARS = [`${char.name}:`, `{{char}}:`]
-  const USERS = [`${profile.handle || 'You'}:`, `{{user}}:`]
+  const USERS = [`${profile?.handle || 'You'}:`, `{{user}}:`]
 
   const msg = { ...incoming }
   if (msg.msg.startsWith(`${char.name}:`)) {

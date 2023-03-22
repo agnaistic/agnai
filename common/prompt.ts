@@ -1,8 +1,9 @@
+import { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
-import { AIAdapter } from './adapters'
-import { getMemoryPrompt } from './memory'
+import { AIAdapter, OPENAI_MODELS } from './adapters'
+import { getMemoryPrompt, MemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
-import { getEncoder } from './tokenize'
+import { Encoder, getEncoder } from './tokenize'
 
 const DEFAULT_MAX_TOKENS = 2048
 
@@ -15,16 +16,16 @@ export type Prompt = {
 export type PromptConfig = {
   adapter: AIAdapter
   model: string
-  encoder: (value: string, dialog?: boolean) => number
+  encoder: Encoder
   lines: string[]
 }
 
 export type PromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
-  config: AppSchema.User
+  user: AppSchema.User
   members: AppSchema.Profile[]
-  settings?: AppSchema.GenSettings
+  settings?: Partial<AppSchema.GenSettings>
   messages: AppSchema.ChatMessage[]
   retry?: AppSchema.ChatMessage
   continue?: string
@@ -46,6 +47,7 @@ export const testBook: AppSchema.MemoryBook = {
       weight: 5,
       name: '',
       entry: "{{user}}'s skin is blue",
+      enabled: true,
     },
     {
       keywords: ['height'],
@@ -53,8 +55,16 @@ export const testBook: AppSchema.MemoryBook = {
       weight: 5,
       name: '',
       entry: '{{user}} is incredibly small',
+      enabled: true,
     },
-    { keywords: ['foo'], priority: 10, weight: 4, name: '', entry: 'Foo bar baz qux' },
+    {
+      keywords: ['foo'],
+      priority: 10,
+      weight: 4,
+      name: '',
+      entry: 'Foo bar baz qux',
+      enabled: true,
+    },
   ],
 }
 
@@ -62,19 +72,25 @@ export function createPrompt(opts: PromptOpts) {
   const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
-  const { settings = defaultPresets.basic } = opts
   const lines = getLinesForPrompt(opts)
-  const { adapter, model } = getAdapter(opts.chat, opts.config, opts.settings)
-  const encoder = getEncoder(adapter, model)
-  const cfg: PromptConfig = {
-    adapter,
-    model,
-    encoder,
-    lines,
-  }
+  const parts = getPromptParts(opts, lines)
+  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines)
+  return { prompt, lines, pre, post, parts, history }
+}
 
-  const { pre, post, parts } = createPromptSurrounds(opts, cfg)
-  const maxContext = settings.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
+const START_TEXT = '<START>'
+
+export function createPromptWithParts(
+  opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
+  parts: PromptParts,
+  lines: string[]
+) {
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
+  const { pre, post } = buildPrompt(opts, parts, lines)
+
+  const maxContext =
+    opts.settings?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
   const history: string[] = []
 
   let tokens = encoder(pre + '\n' + post)
@@ -90,22 +106,22 @@ export function createPrompt(opts: PromptOpts) {
 
   const prompt = [pre, ...history.reverse(), post].filter(removeEmpty).join('\n')
   const finalContext = encoder(prompt)
-  return { lines, prompt, parts }
+  return { lines, prompt, parts, pre, post }
 }
 
-const START_TEXT = '<START>'
+type BuildPromptOpts = {
+  chat: AppSchema.Chat
+  char: AppSchema.Character
+  user: AppSchema.User
+  continue?: string
+  members: AppSchema.Profile[]
+  settings?: Partial<AppSchema.GenSettings>
+}
 
-export function createPromptSurrounds(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue'>,
-  cfg: PromptConfig
-) {
-  const { chat, char, members } = opts
+export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: string[]) {
+  const { chat, char } = opts
+  const sender = opts.members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const memory = getMemoryPrompt(opts, cfg)
-
-  const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
-
-  const parts = getPromptParts(opts)
   const hasStart =
     parts.greeting?.includes(START_TEXT) ||
     chat.sampleChat?.includes(START_TEXT) ||
@@ -115,8 +131,8 @@ export function createPromptSurrounds(
 
   if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
-  if (memory?.prompt) {
-    pre.push(memory.prompt)
+  if (parts.memory?.prompt) {
+    pre.push(parts.memory.prompt)
   }
 
   if (!hasStart) pre.push('<START>')
@@ -128,10 +144,40 @@ export function createPromptSurrounds(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
+
+  const maxContext =
+    opts.settings?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength!
+  const history: string[] = []
+
+  let tokens = encoder(pre + '\n' + post)
+
+  for (const text of lines) {
+    const size = encoder(text + '\n')
+
+    if (size + tokens > maxContext) break
+
+    history.push(text)
+    tokens += size
+  }
+
+  /**
+   * TODO: This is doubling up on memory a fair bit
+   * This is left like this for 'prompt re-ordering'
+   * However the prompt re-ordering should probably occur earlier
+   */
+
+  const preamble = pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
+  const postamble = parts.post.join('\n')
+  const prompt = [preamble, ...history.reverse(), postamble].filter(removeEmpty).join('\n')
+
   return {
-    pre: pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender),
-    post: parts.post.join('\n'),
+    pre: preamble,
+    post: postamble,
+    history: history.join('\n'),
     parts,
+    prompt,
   }
 }
 
@@ -143,10 +189,12 @@ export type PromptParts = {
   gaslight: string
   post: string[]
   gaslightHasChat: boolean
+  memory?: MemoryPrompt
 }
 
 export function getPromptParts(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings'>
+  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
+  lines: string[]
 ) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
@@ -177,6 +225,8 @@ export function getPromptParts(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
+  parts.memory = getMemoryPrompt({ ...opts, lines })
+
   const gaslight =
     opts.chat.genSettings?.gaslight || opts.settings?.gaslight || defaultPresets.openai.gaslight
 
@@ -188,7 +238,7 @@ export function getPromptParts(
     .replace(/\<BOT\>/g, char.name)
     .replace(/\{\{char\}\}/g, char.name)
     .replace(/\{\{user\}\}/g, sender)
-    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, char.persona))
+    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
@@ -198,7 +248,12 @@ export function getPromptParts(
    *
    * Edit: We will simply remove the sampleChat from the parts since it has already be included in the prompt using the gaslight
    */
-  if (gaslight.includes('{{example_dialogue}}')) {
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  if (
+    gaslight.includes('{{example_dialogue}}') &&
+    adapter === 'openai' &&
+    model === OPENAI_MODELS.Turbo
+  ) {
     parts.sampleChat = undefined
   }
 
@@ -291,11 +346,11 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export function getLinesForPrompt(
-  { settings, char, members, messages, retry, continue: cont, book, ...opts }: PromptOpts,
+  { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
   lines: string[] = []
 ) {
   const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
-  const { adapter, model } = getAdapter(opts.chat, opts.config, settings)
+  const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
   const encoder = getEncoder(adapter, model)
   let tokens = 0
 

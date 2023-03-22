@@ -1,6 +1,29 @@
-import create, { StoreApi } from 'zustand/vanilla'
-import { createStore as createSolidStore, reconcile } from 'solid-js/store'
+import { StoreApi, createStore as create } from 'zustand/vanilla'
+import { createStore as createSolidStore } from 'solid-js/store'
 import { onCleanup } from 'solid-js'
+import type { userStore } from './user'
+import type { chatStore } from './chat'
+import type { toastStore } from './toasts'
+import type { characterStore } from './character'
+import type { inviteStore } from './invites'
+import type { settingStore } from './settings'
+import type { memoryStore } from './memory'
+import type { msgStore } from './message'
+import type { adminStore } from './admin'
+import type { presetStore } from './presets'
+
+type StoreMap = {
+  user: typeof userStore
+  chat: typeof chatStore
+  toasts: typeof toastStore
+  character: typeof characterStore
+  invite: typeof inviteStore
+  setting: typeof settingStore
+  memory: typeof memoryStore
+  messages: typeof msgStore
+  admin: typeof adminStore
+  presets: typeof presetStore
+}
 
 type HandlerReturn<S> =
   | MaybeState<S>
@@ -22,6 +45,10 @@ const devTools = win.__REDUX_DEVTOOLS_EXTENSION__?.connect?.() || {
 type CachedStore = (() => any) & StoreApi<any>
 
 const stores: { [name: string]: CachedStore } = {}
+
+export function getStore<TKey extends keyof StoreMap>(name: TKey): StoreMap[TKey] {
+  return stores[name] as any
+}
 
 function send(name: string, action: any, state: any) {
   const print = name

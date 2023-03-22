@@ -5,7 +5,7 @@ import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { adminStore } from '../../store/admin'
+import { adminStore } from '../../store'
 
 const UsersPage: Component = () => {
   const [pw, setPw] = createSignal('')

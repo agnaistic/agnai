@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { AlertTriangle, Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -18,7 +18,6 @@ import MultiDropdown from '../../shared/MultiDropdown'
 import Modal from '../../shared/Modal'
 import { DefaultPresets } from './DefaultPresets'
 import { AppSchema } from '../../../srv/db/schema'
-import { presetStore } from '../../store/presets'
 import UISettings from './UISettings'
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
@@ -31,14 +30,6 @@ const Settings: Component = () => {
 
   const [workers, setWorkers] = createSignal<DropdownItem[]>()
   const [show, setShow] = createSignal(false)
-
-  createEffect(() => {
-    // Always reload settings when entering this page
-    userStore.getConfig()
-    settingStore.getHordeModels()
-    settingStore.getHordeWorkers()
-    presetStore.getPresets()
-  })
 
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {

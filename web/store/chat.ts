@@ -250,7 +250,7 @@ export const chatStore = createStore<ChatState>('chat', {
         chat: active.chat,
         char: active.char!,
         messages: msgs.filter((m) => m.createdAt < msg.createdAt),
-        config: user,
+        user,
         members: activeMembers,
       })
 

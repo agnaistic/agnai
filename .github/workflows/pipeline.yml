@@ -75,5 +75,27 @@ jobs:
       - name: Restore cached dependencies
         uses: ./.github/actions/restore-pnpm-cache
 
-      - name: Run Typescript compiler
+      - name: Run TypeScript checks
         run: pnpm run typecheck
+
+  tests:
+    name: Tests
+    needs: dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install Node and PNPM
+        uses: ./.github/actions/install-node-pnpm
+        with:
+          node-version: ${{  env.node-version  }}
+          pnpm-version: ${{  env.pnpm-version  }}
+
+      - name: Restore cached dependencies
+        uses: ./.github/actions/restore-pnpm-cache
+
+      - name: Run tests
+        run: |
+          pnpm run build:server
+          pnpm run test

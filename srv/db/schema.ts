@@ -54,6 +54,8 @@ export namespace AppSchema {
     _id: string
     kind: 'chat'
     userId: string
+    memoryId?: string
+
     memberIds: string[]
 
     name: string
@@ -199,13 +201,19 @@ export namespace AppSchema {
   export interface MemoryEntry {
     name: string
 
+    /** The text injected into the prompt */
+    entry: string
+
+    /** Keywords that trigger the entry to be injected */
+    keywords: string[]
+
     /** When choosing which memories to discard, lowest priority will be discarded first */
     priority: number
 
     /** When determining what order to render the memories, the highest will be at the bottom  */
     weight: number
-    keywords: string[]
-    entry: string
+
+    enabled: boolean
   }
 }
 
@@ -224,3 +232,5 @@ export type AllDoc =
   | AppSchema.MemoryBook
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []
+
+export type NewBook = Omit<AppSchema.MemoryBook, 'userId' | '_id' | 'kind'>

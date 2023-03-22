@@ -2,9 +2,9 @@ import { A, useNavigate, useParams } from '@solidjs/router'
 import {
   ArrowDownLeft,
   ArrowUpRight,
+  Book,
   ChevronLeft,
   ChevronRight,
-  Edit,
   MailPlus,
   Settings,
   Sliders,
@@ -18,15 +18,16 @@ import { getAdapter } from '../../../common/prompt'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
 import Tooltip from '../../shared/Tooltip'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, userStore } from '../../store'
-import { msgStore } from '../../store/message'
+import { memoryStore } from '../../store'
+import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
 import InputBar from './components/InputBar'
+import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
@@ -40,6 +41,11 @@ const ChatDetail: Component = () => {
     partial: s.partial,
     waiting: s.waiting,
     retries: s.retries,
+  }))
+
+  const memory = memoryStore((s) => ({
+    book: s.books.list.find((bk) => chats.chat?.memoryId === bk._id),
+    loaded: s.books.loaded,
   }))
 
   const retries = createMemo(() => {
@@ -57,7 +63,7 @@ const ChatDetail: Component = () => {
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
-  const [editing, setEditing] = createSignal(false)
+  const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const { id } = useParams()
   const nav = useNavigate()
 
@@ -87,8 +93,6 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
-    userStore.getProfile()
-    userStore.getConfig()
     chatStore.getChat(id)
   })
 
@@ -107,6 +111,12 @@ const ChatDetail: Component = () => {
 
   const confirmSwipe = (msgId: string) => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
+  }
+
+  function toggleEditing() {
+    const next = !editing()
+    setEditing(next)
+    saveEditingState(next)
   }
 
   return (
@@ -129,8 +139,10 @@ const ChatDetail: Component = () => {
             </A>
 
             <div class="flex flex-row gap-3">
-              <div class="flex items-center text-xs italic text-[var(--text-500)]">{adapter()}</div>
-              <div class="icon-button" onClick={() => setEditing(!editing())}>
+              <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
+                {adapter()}
+              </div>
+              <div class="icon-button" onClick={toggleEditing}>
                 <Tooltip tip="Toggle edit mode">
                   <Show when={editing()}>
                     <ToggleRight class="text-[var(--hl-500)]" />
@@ -147,6 +159,14 @@ const ChatDetail: Component = () => {
               </div>
 
               <Show when={chats.chat?.userId === user.user?._id}>
+                <div class="icon-button">
+                  <Book
+                    onClick={() => {
+                      setShowMem(!showMem())
+                      console.log(memory.book, showMem())
+                    }}
+                  />
+                </div>
                 <div class="icon-button">
                   <Sliders onClick={() => setShowGen(true)} />
                 </div>
@@ -213,19 +233,37 @@ const ChatDetail: Component = () => {
           </div>
         </div>
       </Show>
-      <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
-      <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
-      <ChatGenSettingsModal show={showGen()} close={() => setShowGen(false)} chat={chats.chat!} />
-      <InviteModal
-        show={showInvite()}
-        close={() => setShowInvite(false)}
-        chatId={chats.chat?._id!}
-      />
+
+      <Show when={!!removeId()}>
+        <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
+      </Show>
+
+      <Show when={showConfig()}>
+        <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
+      </Show>
+
+      <Show when={showGen()}>
+        <ChatGenSettingsModal show={showGen()} close={() => setShowGen(false)} chat={chats.chat!} />
+      </Show>
+
+      <Show when={showInvite()}>
+        <InviteModal
+          show={showInvite()}
+          close={() => setShowInvite(false)}
+          chatId={chats.chat?._id!}
+        />
+      </Show>
+
       <PromptModal />
-      <SideDrawer show={showMem()} right>
-        <div class="text-xl">Memory</div>
-        <div>Work in progress</div>
-      </SideDrawer>
+
+      <Show when={chats.chat}>
+        <ChatMemoryModal
+          chat={chats.chat!}
+          book={memory.book}
+          show={!!chats.chat && showMem()}
+          close={() => setShowMem(false)}
+        />
+      </Show>
     </>
   )
 }
@@ -314,4 +352,18 @@ const InfiniteScroll: Component = () => {
       </div>
     </Show>
   )
+}
+
+type DetailSettings = { editing?: boolean }
+
+const EDITING_KEY = 'chat-detail-settings'
+function saveEditingState(value: boolean) {
+  const prev = getEditingState()
+  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, editing: value }))
+}
+
+function getEditingState() {
+  const prev = localStorage.getItem(EDITING_KEY) || '{}'
+  const body = JSON.parse(prev) as DetailSettings
+  return body
 }

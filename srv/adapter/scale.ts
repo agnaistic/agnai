@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { sanitise, trimResponse } from '../api/chat/common'
+import { sanitise, trimResponse, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 export const handleScale: ModelAdapter = async function* ({
@@ -56,6 +56,6 @@ export const handleScale: ModelAdapter = async function* ({
   }
 
   const parsed = sanitise(response.body.output)
-  const trimmed = trimResponse(parsed, char, members, [])
+  const trimmed = trimResponseV2(parsed, char, members, [])
   yield trimmed || parsed
 }

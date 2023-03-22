@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { logger } from '../logger'
-import { getEndTokens, trimResponse } from '../api/chat/common'
+import { getEndTokens, trimResponse, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 
@@ -53,7 +53,7 @@ export const handleLuminAI: ModelAdapter = async function* ({
 
   const text = resp.body.results?.[0]?.text as string
   if (text) {
-    const trimmed = trimResponse(text, char, members, endTokens)
+    const trimmed = trimResponseV2(text, char, members, endTokens)
     yield trimmed || text
     return
   } else {

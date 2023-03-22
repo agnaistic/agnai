@@ -1,9 +1,9 @@
 import needle from 'needle'
-import { sanitise, trimResponse } from '../api/chat/common'
+import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, formatCharacter, getPromptParts, SELF_REPLACE } from '../../common/prompt'
+import { BOT_REPLACE, getPromptParts, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 
@@ -29,7 +29,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     frequency_penalty: settings.frequency_penalty ?? defaultPresets.openai.frequencyPenalty,
   }
 
-  const promptParts = getPromptParts(opts)
+  const promptParts = getPromptParts(opts, opts.lines || [])
 
   const turbo = oaiModel === OPENAI_MODELS.Turbo
   if (turbo) {
@@ -118,7 +118,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponse(parsed, char, members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
