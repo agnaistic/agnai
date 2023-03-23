@@ -1,3 +1,4 @@
+import { customSettings } from '../../config'
 import { AppSchema } from '../../db/schema'
 
 /**
@@ -77,7 +78,11 @@ export function getEndTokens(
   members: AppSchema.Profile[],
   endTokens: string[] = []
 ) {
-  const baseEndTokens = ['END_OF_DIALOG', '<END>', '\n\n'].concat(endTokens)
+  const baseEndTokens = ['END_OF_DIALOG', '<END>'].concat(endTokens)
+
+  if (customSettings.baseEndTokens) {
+    baseEndTokens.push(...customSettings.baseEndTokens)
+  }
 
   if (char) {
     baseEndTokens.push(`${char.name}:`, `${char.name} :`)

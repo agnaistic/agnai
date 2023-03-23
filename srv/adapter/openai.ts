@@ -44,7 +44,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     let tokens = encoder(parts.gaslight)
 
-    if (lines) all.push(...lines)
+    if (lines) {
+      all.push(...lines)
+    }
 
     for (const line of all) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
