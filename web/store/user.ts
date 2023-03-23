@@ -14,12 +14,14 @@ const defaultUIsettings: State['ui'] = {
   mode: 'dark',
   avatarSize: 'md',
   avatarCorners: 'circle',
+  input: 'single',
 }
 
 export const AVATAR_SIZES = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
 export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const UI_MODE = ['light', 'dark'] as const
 export const UI_THEME = ['blue', 'sky', 'teal', 'orange'] as const
+export const UI_INPUT_TYPE = ['single', 'multi'] as const
 
 type State = {
   loading: boolean
@@ -33,6 +35,7 @@ type State = {
     mode: ThemeMode
     avatarSize: AvatarSize
     avatarCorners: AvatarCornerRadius
+    input: ChatInputType
   }
 }
 
@@ -40,6 +43,7 @@ export type ThemeColor = (typeof UI_THEME)[number]
 export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
+export type ChatInputType = (typeof UI_INPUT_TYPE)[number]
 
 export const userStore = createStore<State>(
   'user',
