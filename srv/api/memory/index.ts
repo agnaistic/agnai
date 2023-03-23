@@ -17,6 +17,7 @@ const validEntry = {
 
 const validBook = {
   name: 'string',
+  description: 'string?',
   entries: [validEntry],
 } as const
 

@@ -10,6 +10,7 @@ const router = Router()
 
 const valid = {
   name: 'string',
+  description: 'string?',
   avatar: 'string?',
   scenario: 'string',
   greeting: 'string',
@@ -60,6 +61,7 @@ const editCharacter = handle(async (req) => {
     name: body.name,
     persona,
     avatar,
+    description: body.description,
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,

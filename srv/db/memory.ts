@@ -8,13 +8,20 @@ export async function getBooks(userId: string) {
 }
 
 export async function createBook(userId: string, book: NewBook) {
-  const id = v4()
-
   const newBook: AppSchema.MemoryBook = {
     _id: v4(),
     kind: 'memory',
     userId,
-    ...book,
+    name: book.name,
+    description: book.description || '',
+    entries: book.entries.map((entry) => ({
+      enabled: entry.enabled,
+      entry: entry.entry,
+      keywords: entry.keywords,
+      name: entry.name,
+      priority: entry.priority,
+      weight: entry.weight,
+    })),
   }
 
   await db('memory').insertOne(newBook)
@@ -27,6 +34,7 @@ export async function updateBook(userId: string, bookId: string, book: NewBook) 
     {
       $set: {
         name: book.name,
+        description: book.description,
         entries: book.entries,
       },
     }

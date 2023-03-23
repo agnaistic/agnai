@@ -59,7 +59,7 @@ const Navigation: Component = () => {
             <LogOut />
           </div>
         </div>
-        <div class="text-200 mb-1 text-[0.6rem] italic">{state.config.version}</div>
+        <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
       </div>
     </div>
   )

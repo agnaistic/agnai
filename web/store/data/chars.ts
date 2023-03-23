@@ -46,6 +46,7 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
     form.append('greeting', char.greeting)
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
+    form.append('description', char.description || '')
     form.append('sampleChat', char.sampleChat)
     if (file) {
       form.append('avatar', file)
