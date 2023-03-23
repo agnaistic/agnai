@@ -15,7 +15,10 @@ setupSockets(server)
 
 const index = resolve(process.cwd(), 'dist', 'index.html')
 
-app.use(express.json({ limit: '2mb' }), express.urlencoded({ extended: true }))
+app.use(
+  express.json({ limit: `${config.limits.payload}mb` }),
+  express.urlencoded({ limit: `${config.limits.upload}mb`, extended: true })
+)
 app.use(cors())
 app.use(logMiddleware())
 app.use('/api', api)

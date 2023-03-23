@@ -5,7 +5,7 @@ const RangeInput: Component<{
   label: string
   fieldName: string
   value: number
-  helperText?: string
+  helperText?: string | JSX.Element
   min: number
   max: number
   step: number

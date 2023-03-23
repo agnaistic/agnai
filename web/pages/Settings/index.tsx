@@ -130,6 +130,14 @@ const Settings: Component = () => {
           </div>
 
           <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
+            <Dropdown
+              fieldName="defaultAdapter"
+              label="Default AI Service"
+              items={adaptersToOptions(cfg.config.adapters)}
+              helperText="The default service conversations will use unless otherwise configured"
+              value={state.user?.defaultAdapter}
+            />
+
             <Show when={cfg.config.adapters.includes('horde')}>
               <Divider />
               <h3 class="text-lg font-bold">AI Horde settings</h3>

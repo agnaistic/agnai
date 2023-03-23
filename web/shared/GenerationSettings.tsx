@@ -26,7 +26,20 @@ const GenerationSettings: Component<{
       <RangeInput
         fieldName="maxContextLength"
         label="Max Context Length"
-        helperText="Maximum context length. Typically 2048 for most models. OpenAI supports up to 4K. Scale supports up to 8K. If you set this too high, you may get unexpected results or errors."
+        helperText={
+          <>
+            <p>
+              Maximum context length. Typically 2048 for most models. OpenAI supports up to 4K.
+              Scale supports up to 8K. If you set this too high, you may get unexpected results or
+              errors.
+            </p>
+            <p>
+              We don't have a GPT-4 tokenizer to correctly count tokens for GPT-4 services.
+              Therefore we can't precisely count tokens when generating a prompt. Keep this well
+              below 8K to ensure you don't exceed the limit.
+            </p>
+          </>
+        }
         min={16}
         max={8000}
         step={4}

@@ -48,6 +48,10 @@ export const config = {
   kobold: {
     maxLength: +env('KOBOLD_MAX_LENGTH', '200'),
   },
+  limits: {
+    upload: +env('IMAGE_SIZE_LIMIT', '2'),
+    payload: +env('JSON_SIZE_LIMIT', '2'),
+  },
   noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
   chai: {
     url: env('CHAI_URL', ''),
