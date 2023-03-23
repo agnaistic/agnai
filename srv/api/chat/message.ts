@@ -54,7 +54,9 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   const guest = userId ? undefined : socketId
 
-  const lockId = await obtainLock(chatId)
+  if (userId) {
+    await obtainLock(chatId)
+  }
 
   const chat: AppSchema.Chat = guest ? body.chat : await store.chats.getChat(chatId)
   if (!chat) {
@@ -109,7 +111,6 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
   }
 
-  await releaseLock(chatId)
   if (error) return
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
@@ -125,6 +126,8 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     })
     return
   }
+
+  await releaseLock(chatId)
 
   if (body.kind === 'send') {
     const msg = await store.msgs.createChatMessage({
