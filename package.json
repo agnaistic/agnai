@@ -22,9 +22,11 @@
     "start:all": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:web": "parcel web/index.html",
     "start": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
+    "start:debug": "LOG_LEVEL=debug concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:public": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:public:win": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:win": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
+    "start:debug:win": "set LOG_LEVEL debug && concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "test": "pnpx mocha \"tests/**.spec.js\"",
     "typecheck": "tsc -p tsconfig.json",
     "up": "docker compose -p agnai up -d"

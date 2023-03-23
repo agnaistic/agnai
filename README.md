@@ -75,6 +75,28 @@ Ultimately the design goals for this project are my own.
 - Lightweight to self-host
 - Avoiding native dependencies and Docker to be easy for non-technical people to install and run
 
+## Self-Hosting Settings
+
+To try and cater for the small tweaks and tuning that people need for their specific needs at an application level we have `settings.json`.  
+You can create a file called `settings.json` at the root level to apply some changes across the entire application.  
+If you have a specific need for your application, this is the place to ask to have it catered for.
+
+I will try and find a balance between catering to these requests and not having them get out of control in the codebase.
+
+Examples of requests that are suited for this:
+
+- I want a "default memory book" applied to all users.
+- I want to use a different set of end tokens than the ones provided.
+- I want to disable anonymous access
+
+### settings.json
+
+You can copy or look at `template.settings.json` for an example of all of the available settings. You will need to restart Agnai for changes to take effect.
+
+Currently supported custom settings:
+
+- `baseEndTokens`: Add extra response end tokens to the base set.
+
 ## For Developers
 
 ### Recommended Development Tooling
