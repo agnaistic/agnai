@@ -88,5 +88,19 @@ export const memoryStore = createStore<MemoryState>('memory', {
         yield { books: { list: next, loaded: true } }
       }
     },
+
+    async *remove({ books: { list: prev } }, bookId: string, onSuccess?: Function) {
+      const res = await data.memory.removeBook(bookId)
+
+      if (res.error) {
+        toastStore.error(`Failed to remove book: ${res.error}`)
+      }
+
+      if (res.result) {
+        const next = prev.filter((book) => book._id !== bookId)
+        yield { books: { list: next, loaded: true } }
+        toastStore.success('Book deleted')
+      }
+    },
   }
 })
