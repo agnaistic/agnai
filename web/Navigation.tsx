@@ -131,6 +131,10 @@ const GuestNavigation: Component = () => {
         <MessageCircle /> Chats
       </Item>
 
+      <Item href="/memory">
+        <Book /> Memory
+      </Item>
+
       <Item href="/settings">
         <Settings /> Settings
       </Item>

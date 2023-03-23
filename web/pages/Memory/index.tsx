@@ -1,12 +1,17 @@
 import { A } from '@solidjs/router'
 import { Plus, Trash } from 'lucide-solid'
 import { Component, createEffect, For, Show } from 'solid-js'
+import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { memoryStore } from '../../store'
 
 const MemoryPage: Component = () => {
   const state = memoryStore()
+
+  const removeBook = (book: AppSchema.MemoryBook) => {
+    memoryStore.remove(book._id)
+  }
 
   return (
     <>
@@ -29,7 +34,7 @@ const MemoryPage: Component = () => {
         <A href="/memory/new">
           <Button>
             <Plus />
-            Memory
+            Create Book
           </Button>
         </A>
       </div>
@@ -49,7 +54,7 @@ const MemoryPage: Component = () => {
                 {book.name}
               </A>
 
-              <div class="icon-button">
+              <div class="icon-button" onClick={() => removeBook(book)}>
                 <Trash />
               </div>
             </div>

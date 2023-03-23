@@ -26,11 +26,11 @@ const emptyEntry: AppSchema.MemoryEntry = {
   keywords: [],
   priority: 0,
   weight: 0,
-  enabled: false,
+  enabled: true,
 }
 
 const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean }> = (props) => {
-  const { id } = useParams()
+  const params = useParams()
   const [editing, setEditing] = createSignal(props.book)
 
   const addEntry = () => {
@@ -58,7 +58,7 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
         <FormLabel
           fieldName="id"
           label="Id"
-          helperText={id === 'new' ? 'New book' : editing()._id}
+          helperText={params.id === 'new' ? 'New book' : params.id}
         />
         <TextInput
           fieldName="name"
@@ -82,17 +82,17 @@ export default EditMemoryForm
 export const EditMemoryPage = () => {
   let ref: any
   const nav = useNavigate()
-  const { id } = useParams()
+  const params = useParams()
   const state = memoryStore()
   const [editing, setEditing] = createSignal<AppSchema.MemoryBook>()
 
   createEffect(() => {
-    if (id === 'new') {
+    if (params.id === 'new') {
       setEditing({ ...newBook, entries: [{ ...emptyEntry, name: 'New Entry' }] })
       return
     }
 
-    const match = state.books.list.find((m) => m._id === id)
+    const match = state.books.list.find((m) => m._id === params.id)
     if (match) {
       setEditing(match)
     }
@@ -101,12 +101,15 @@ export const EditMemoryPage = () => {
   const saveBook = (ev: Event) => {
     ev.preventDefault()
     const body = getBookUpdate(ref)
-    if (!id) return
+    if (!params.id) return
 
-    if (id === 'new') {
-      memoryStore.create(body, (book) => nav(`/memory/${book._id}`))
+    if (params.id === 'new') {
+      memoryStore.create(body, (book) => {
+        setEditing(book)
+        nav(`/memory/${book._id}`)
+      })
     } else {
-      memoryStore.update(id, body)
+      memoryStore.update(params.id, body)
     }
   }
 
@@ -119,7 +122,7 @@ export const EditMemoryPage = () => {
           <div class="mt-4 flex justify-end">
             <Button type="submit">
               <Save />
-              {id === 'new' ? 'Create Book' : 'Update Book'}
+              {!editing()?._id ? 'Create Book' : 'Update Book'}
             </Button>
           </div>
 

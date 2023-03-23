@@ -44,3 +44,15 @@ export async function updateBook(bookId: string, update: NewBook) {
 
   return local.result({ success: true })
 }
+
+export async function removeBook(bookId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/memory/${bookId}`)
+    return res
+  }
+
+  const books = local.loadItem('memory').filter((book) => book._id !== bookId)
+  local.saveBooks(books)
+
+  return local.result({ success: true })
+}

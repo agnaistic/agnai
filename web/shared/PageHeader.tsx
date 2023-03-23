@@ -1,9 +1,9 @@
 import { Component, JSX, Show } from 'solid-js'
 import Divider from './Divider'
 
-const PageHeader: Component<{ title: string | JSX.Element; subtitle?: string | JSX.Element }> = (
-  props
-) => (
+type Props = { title: string | JSX.Element; subtitle?: string | JSX.Element; noDivider?: boolean }
+
+const PageHeader: Component<Props> = (props) => (
   <>
     <h1 class="text-900 justify-center text-4xl sm:flex sm:w-full sm:justify-start">
       {props.title}
@@ -11,7 +11,9 @@ const PageHeader: Component<{ title: string | JSX.Element; subtitle?: string | J
     <Show when={!!props.subtitle}>
       <p class="text-[var(--text-700)]">{props.subtitle}</p>
     </Show>
-    <Divider />
+    <Show when={!props.noDivider}>
+      <Divider />
+    </Show>
   </>
 )
 

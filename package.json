@@ -21,7 +21,7 @@
     "server:watch": "nodemon -e js --delay 1 --watch srv --watch common --exec \"node --inspect srv/start.js\" --watch \".env\"",
     "start:all": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:web": "parcel web/index.html",
-    "start": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
+    "start": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:public": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:public:win": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:win": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",

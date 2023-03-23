@@ -96,5 +96,5 @@ export function joinParts(parts: string[]) {
 }
 
 export function sanitise(generated: string) {
-  return generated.replace(/\s+/g, ' ').trim()
+  return generated.replace(/  +/g, ' ').trim()
 }

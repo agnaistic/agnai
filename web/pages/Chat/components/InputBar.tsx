@@ -11,7 +11,7 @@ const InputBar: Component<{
   send: (msg: string) => void
   more: (msg: string) => void
 }> = (props) => {
-  let ref: HTMLInputElement | undefined
+  let ref: any
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
 
   const send = () => {
@@ -39,6 +39,16 @@ const InputBar: Component<{
         class="focusable-field w-full rounded-xl px-4 py-2"
         onKeyUp={(ev) => ev.key === 'Enter' && send()}
       />
+      {/* <textarea
+        ref={ref}
+        placeholder="Send a message..."
+        class="focusable-field h-10 min-h-[40px] w-full rounded-xl px-4 py-2"
+        onKeyUp={(ev) => {
+          if (ev.key !== 'Enter') return
+          if (ev.ctrlKey || ev.shiftKey) return
+          send()
+        }}
+      /> */}
       {/* <IconButton onClick={createImage}>
         <ImagePlus />
       </IconButton> */}

@@ -19,6 +19,15 @@ import Modal from '../../shared/Modal'
 import { DefaultPresets } from './DefaultPresets'
 import { AppSchema } from '../../../srv/db/schema'
 import UISettings from './UISettings'
+import Tabs from '../../shared/Tabs'
+
+const settingTabs = {
+  ai: 'AI Settings',
+  ui: 'UI Settings',
+  service: 'Presets',
+}
+
+type Tab = keyof typeof settingTabs
 
 type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 
@@ -34,6 +43,10 @@ const Settings: Component = () => {
 
   const [workers, setWorkers] = createSignal<DropdownItem[]>()
   const [show, setShow] = createSignal(false)
+  const [tab, setTab] = createSignal(0)
+
+  const tabs = ['ai', 'ui', 'service'] satisfies Tab[]
+  const currentTab = createMemo(() => tabs[tab()])
 
   const refreshHorde = () => {
     settingStore.getHordeModels()
@@ -98,180 +111,182 @@ const Settings: Component = () => {
     </>
   )
 
+  const tabClass = `flex flex-col gap-4`
+
   return (
     <>
-      <PageHeader title="Settings" subtitle="Configuration" />
+      <PageHeader title="Settings" subtitle="Configuration" noDivider />
+      <div class="my-2">
+        <Tabs tabs={tabs.map((t) => settingTabs[t])} selected={tab} select={setTab} />
+      </div>
       <form onSubmit={onSubmit}>
         <div class="flex flex-col gap-4">
-          <UISettings />
+          <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
+            <UISettings />
+          </div>
 
-          <Dropdown
-            fieldName="defaultAdapter"
-            label="Default AI Service"
-            items={adaptersToOptions(cfg.config.adapters)}
-            helperText="The default service conversations will use unless otherwise configured"
-            value={state.user?.defaultAdapter}
-          />
+          <div class={currentTab() === 'service' ? tabClass : 'hidden'}>
+            <DefaultPresets />
+          </div>
 
-          <DefaultPresets />
+          <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
+            <Show when={cfg.config.adapters.includes('horde')}>
+              <Divider />
+              <h3 class="text-lg font-bold">AI Horde settings</h3>
+              <TextInput
+                fieldName="hordeApiKey"
+                label="AI Horde API Key"
+                helperText={HordeHelpText}
+                placeholder={state.user?.hordeName ? 'API key has been verified' : ''}
+                type="password"
+              />
 
-          <Show when={cfg.config.adapters.includes('horde')}>
-            <Divider />
-            <h3 class="text-lg font-bold">AI Horde settings</h3>
-            <TextInput
-              fieldName="hordeApiKey"
-              label="AI Horde API Key"
-              helperText={HordeHelpText}
-              placeholder={state.user?.hordeName ? 'API key has been verified' : ''}
-              type="password"
-            />
+              <Show when={state.user?.hordeName}>
+                <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('horde')}>
+                  Delete Horde API Key
+                </Button>
+              </Show>
 
-            <Show when={state.user?.hordeName}>
-              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('horde')}>
-                Delete Horde API Key
+              <div class="flex justify-between">
+                <div class="w-fit">
+                  <Dropdown
+                    fieldName="hordeModel"
+                    helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
+                    label="Horde Model"
+                    value={state.user?.hordeModel}
+                    items={[{ label: 'Any', value: '' }].concat(...cfg.models.map(toItem))}
+                  />
+                </div>
+                <div class="icon-button flex items-center" onClick={refreshHorde}>
+                  <RefreshCw />
+                </div>
+              </div>
+              <div class="flex items-center gap-4">
+                <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
+                <div>
+                  Workers selected: {workers()?.length ?? state.user?.hordeWorkers?.length ?? '0'}
+                </div>
+              </div>
+            </Show>
+
+            <Show when={cfg.config.adapters.includes('kobold')}>
+              <Divider />
+              <TextInput
+                fieldName="koboldUrl"
+                label="Kobold Compatible URL"
+                helperText="Fully qualified URL. This URL must be publicly accessible."
+                placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+                value={state.user?.koboldUrl}
+              />
+            </Show>
+
+            <Show when={cfg.config.adapters.includes('openai')}>
+              <Divider />
+              <TextInput
+                fieldName="oaiKey"
+                label="OpenAI Key"
+                helperText="Valid OpenAI Key."
+                placeholder={
+                  state.user?.oaiKeySet
+                    ? 'OpenAI key is set'
+                    : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+                }
+                type="password"
+              />
+              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
+                Delete OpenAI Key
               </Button>
             </Show>
 
-            <div class="flex justify-between">
-              <div class="w-fit">
-                <Dropdown
-                  fieldName="hordeModel"
-                  helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
-                  label="Horde Model"
-                  value={state.user?.hordeModel}
-                  items={[{ label: 'Any', value: '' }].concat(...cfg.models.map(toItem))}
-                />
-              </div>
-              <div class="icon-button flex items-center" onClick={refreshHorde}>
-                <RefreshCw />
-              </div>
-            </div>
-
-            <div class="flex items-center gap-4">
-              <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
-              <div>
-                Workers selected: {workers()?.length ?? state.user?.hordeWorkers?.length ?? '0'}
-              </div>
-            </div>
-          </Show>
-
-          <Show when={cfg.config.adapters.includes('kobold')}>
-            <Divider />
-            <TextInput
-              fieldName="koboldUrl"
-              label="Kobold Compatible URL"
-              helperText="Fully qualified URL. This URL must be publicly accessible."
-              placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-              value={state.user?.koboldUrl}
-            />
-          </Show>
-
-          <Show when={cfg.config.adapters.includes('openai')}>
-            <Divider />
-            <TextInput
-              fieldName="oaiKey"
-              label="OpenAI Key"
-              helperText="Valid OpenAI Key."
-              placeholder={
-                state.user?.oaiKeySet
-                  ? 'OpenAI key is set'
-                  : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-              }
-              type="password"
-            />
-            <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
-              Delete OpenAI Key
-            </Button>
-          </Show>
-
-          <Show when={cfg.config.adapters.includes('scale')}>
-            <Divider />
-            <TextInput
-              fieldName="scaleUrl"
-              label="Scale URL"
-              helperText="Fully qualified Scale URL."
-              placeholder={'E.g. https://dashboard.scale.com/spellbook/api/v2/deploy/a1b2c3'}
-              value={state.user?.scaleUrl}
-            />
-            <TextInput
-              fieldName="scaleApiKey"
-              label="Scale API Key"
-              placeholder={
-                state.user?.scaleApiKeySet
-                  ? 'Scale API key is set'
-                  : 'E.g. 9rv440nv7ogj6s7j312flqijd'
-              }
-              type="password"
-            />
-            <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('scale')}>
-              Delete Scale API Key
-            </Button>
-          </Show>
-
-          <Show when={cfg.config.adapters.includes('novel')}>
-            <Divider />
-            <h3 class="text-xl">NovelAI settings</h3>
-            <Dropdown
-              fieldName="novelModel"
-              label="NovelAI Model"
-              items={[
-                { label: 'Euterpe', value: 'euterpe-v2' },
-                { label: 'Krake', value: 'krake-v2' },
-              ]}
-              value={state.user?.novelModel}
-            />
-            <TextInput
-              fieldName="novelApiKey"
-              label="Novel API Key"
-              type="password"
-              helperText={
-                <>
-                  NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.
-                  Please note that this token expires periodically. You will occasionally need to
-                  re-enter this token. headers.{' '}
-                  <a
-                    class="link"
-                    target="_blank"
-                    href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
-                  >
-                    Instructions
-                  </a>
-                  .
-                </>
-              }
-              placeholder={novelVerified()}
-            />
-            <Show when={state.user?.novelVerified}>
-              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('novel')}>
-                Delete Novel API Key
+            <Show when={cfg.config.adapters.includes('scale')}>
+              <Divider />
+              <TextInput
+                fieldName="scaleUrl"
+                label="Scale URL"
+                helperText="Fully qualified Scale URL."
+                placeholder={'E.g. https://dashboard.scale.com/spellbook/api/v2/deploy/a1b2c3'}
+                value={state.user?.scaleUrl}
+              />
+              <TextInput
+                fieldName="scaleApiKey"
+                label="Scale API Key"
+                placeholder={
+                  state.user?.scaleApiKeySet
+                    ? 'Scale API key is set'
+                    : 'E.g. 9rv440nv7ogj6s7j312flqijd'
+                }
+                type="password"
+              />
+              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('scale')}>
+                Delete Scale API Key
               </Button>
             </Show>
-          </Show>
+
+            <Show when={cfg.config.adapters.includes('novel')}>
+              <Divider />
+              <h3 class="text-xl">NovelAI settings</h3>
+              <Dropdown
+                fieldName="novelModel"
+                label="NovelAI Model"
+                items={[
+                  { label: 'Euterpe', value: 'euterpe-v2' },
+                  { label: 'Krake', value: 'krake-v2' },
+                ]}
+                value={state.user?.novelModel}
+              />
+              <TextInput
+                fieldName="novelApiKey"
+                label="Novel API Key"
+                type="password"
+                helperText={
+                  <>
+                    NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.
+                    Please note that this token expires periodically. You will occasionally need to
+                    re-enter this token. headers.{' '}
+                    <a
+                      class="link"
+                      target="_blank"
+                      href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
+                    >
+                      Instructions
+                    </a>
+                    .
+                  </>
+                }
+                placeholder={novelVerified()}
+              />
+              <Show when={state.user?.novelVerified}>
+                <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('novel')}>
+                  Delete Novel API Key
+                </Button>
+              </Show>
+            </Show>
+
+            <Show when={cfg.config.adapters.includes('luminai')}>
+              <Divider />
+              <TextInput
+                fieldName="luminaiUrl"
+                label="LuminAI URL"
+                helperText="Fully qualified URL. This URL must be publicly accessible."
+                placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+                value={state.user?.luminaiUrl}
+              />
+            </Show>
+            <Show when={!state.loggedIn}>
+              <div class="mt-8 mb-4 flex w-full flex-col items-center justify-center">
+                <div>This cannot be undone!</div>
+                <Button class="bg-red-600" onClick={userStore.clearGuestState}>
+                  <AlertTriangle /> Delete Guest State <AlertTriangle />
+                </Button>
+              </div>
+            </Show>
+          </div>
         </div>
 
-        <Show when={cfg.config.adapters.includes('luminai')}>
-          <Divider />
-          <TextInput
-            fieldName="luminaiUrl"
-            label="LuminAI URL"
-            helperText="Fully qualified URL. This URL must be publicly accessible."
-            placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-            value={state.user?.luminaiUrl}
-          />
-        </Show>
-
-        <Show when={!state.loggedIn}>
-          <div class="mt-8 mb-4 flex w-full flex-col items-center justify-center">
-            <div>This cannot be undone!</div>
-            <Button class="bg-red-600" onClick={userStore.clearGuestState}>
-              <AlertTriangle /> Delete Guest State <AlertTriangle />
-            </Button>
-          </div>
-        </Show>
         <div class="flex justify-end gap-2 pt-4">
           <Button type="submit">
             <Save />
-            Save
+            Update Settings
           </Button>
         </div>
         <WorkerModal show={show()} close={() => setShow(false)} save={setWorkers} />

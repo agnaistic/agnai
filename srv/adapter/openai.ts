@@ -14,7 +14,7 @@ type OpenAIMessagePropType = {
   content: string
 }
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, settings, sender, log, guest, lines } = opts
+  const { char, members, user, prompt, settings, sender, log, guest, lines, parts } = opts
   if (!user.oaiKey) {
     yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
     return
@@ -29,14 +29,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     frequency_penalty: settings.frequency_penalty ?? defaultPresets.openai.frequencyPenalty,
   }
 
-  const promptParts = getPromptParts(opts, opts.lines || [])
-
   const turbo = oaiModel === OPENAI_MODELS.Turbo
   if (turbo) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
     const user = sender.handle || 'You'
 
-    const messages: OpenAIMessagePropType[] = [{ role: 'system', content: promptParts.gaslight }]
+    const messages: OpenAIMessagePropType[] = [{ role: 'system', content: parts.gaslight }]
     const history: OpenAIMessagePropType[] = []
 
     const all = []
@@ -44,7 +42,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     let maxBudget =
       (settings.maxContextLength || defaultPresets.basic.maxContextLength) - settings.max_tokens
 
-    let tokens = encoder(promptParts.gaslight)
+    let tokens = encoder(parts.gaslight)
 
     if (lines) all.push(...lines)
 
@@ -74,6 +72,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     body.messages = messages.concat(history.reverse())
+    // const finalCost = body.messages.reduce((prev, curr) => encoder(curr.content) + prev, 0)
+    // finalCost
   } else {
     body.prompt = prompt
   }

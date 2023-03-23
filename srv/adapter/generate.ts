@@ -17,11 +17,9 @@ import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
-import { getMessagesForPrompt } from './prompt'
-import { AdapterProps, GenerateOptions, GenerateRequestV2, ModelAdapter } from './type'
-import { buildPrompt, createPrompt, createPromptWithParts, getAdapter } from '../../common/prompt'
+import { GenerateRequestV2, ModelAdapter } from './type'
+import { createPromptWithParts, getAdapter } from '../../common/prompt'
 import { handleScale } from './scale'
-import { getEncoder } from '../../common/tokenize'
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
   chai: handleChai,
@@ -52,6 +50,7 @@ export async function createTextStreamV2(
     log,
     members: opts.members.concat(opts.sender),
     prompt: prompt.prompt,
+    parts: prompt.parts,
     sender: opts.sender,
     settings,
     user: opts.user,
@@ -60,85 +59,6 @@ export async function createTextStreamV2(
   })
 
   return { stream, adapter }
-}
-
-export async function createGuestTextStream(opts: {
-  chat: AppSchema.Chat
-  user: AppSchema.User
-  sender: AppSchema.Profile
-  char: AppSchema.Character
-  log: AppLog
-  socketId: string
-  prompt: string
-  lines?: string[]
-  continue?: string
-}) {
-  const { adapter, model } = getAdapter(opts.chat, opts.user)
-
-  const gen = await getGenerationSettings(opts.user, opts.chat, adapter, true)
-  const settings = mapPresetsToAdapter(gen, adapter)
-
-  const handler = handlers[adapter]
-  const stream = handler({ ...opts, settings, members: [opts.sender], guest: opts.socketId, gen })
-  return { stream, adapter }
-}
-
-export async function createTextStream(opts: GenerateOptions) {
-  const { chat, char, user, members, settings, adapter, gen, model } = await getResponseEntities(
-    opts.chatId,
-    opts.senderId
-  )
-
-  const isOwnerOrMember = opts.senderId === chat.userId || chat.memberIds.includes(opts.senderId)
-  if (!isOwnerOrMember) {
-    throw errors.Forbidden
-  }
-
-  const sender = members.find((mem) => mem.userId === opts.senderId)
-  if (!sender) {
-    throw new StatusError('Sender not found in chat members', 400)
-  }
-
-  const encoder = getEncoder(adapter, model)
-
-  const promptOpts = {
-    char,
-    chat,
-    members,
-    retry: opts.retry,
-    settings,
-    continue: opts.continue,
-  }
-  const { messages } = await getMessagesForPrompt(promptOpts, encoder)
-
-  const prompt = createPrompt({
-    char,
-    chat,
-    members,
-    retry: opts.retry,
-    settings,
-    continue: opts.continue,
-    messages,
-    user,
-  })
-
-  const adapterOpts: AdapterProps = {
-    ...opts,
-    chat,
-    char,
-    members,
-    user,
-    sender,
-    settings,
-    log: opts.log,
-    gen,
-    ...prompt,
-  }
-
-  const handler = handlers[adapter]
-  const stream = handler(adapterOpts)
-
-  return { chat, char, stream, adapter }
 }
 
 export async function createImageStream(opts: { chatId: string; senderId: string }) {

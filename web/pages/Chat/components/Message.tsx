@@ -4,6 +4,7 @@ import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
+import { toDuration } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
 import { MsgState, msgStore } from '../../../store'
 
@@ -134,7 +135,7 @@ const SingleMessage: Component<
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span
-              class="text-600 flex items-center text-sm"
+              class="text-600 flex items-center text-xs"
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
@@ -149,29 +150,43 @@ const SingleMessage: Component<
           </div>
           <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
             <div
-              class="mr-4 flex items-center gap-2 text-sm"
+              class="mr-4 flex items-center gap-3 text-sm"
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
               <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
                 <Show when={!!props.msg.characterId}>
-                  <Terminal size={16} onClick={showPrompt} class="icon-button" />
+                  <div onClick={showPrompt} class="icon-button">
+                    <Terminal size={16} />
+                  </div>
                 </Show>
-                <Pencil size={16} class="icon-button" onClick={startEdit} />
-                <Trash size={16} class="icon-button" onClick={props.onRemove} />
+                <div class="icon-button" onClick={startEdit}>
+                  <Pencil size={16} />
+                </div>
+                <div class="icon-button" onClick={props.onRemove}>
+                  <Trash size={16} />
+                </div>
               </Show>
               <Show when={props.last && props.msg.characterId}>
-                <RefreshCw size={16} class="icon-button" onClick={retryMessage} />
+                <div class="icon-button" onClick={retryMessage}>
+                  <RefreshCw size={16} />
+                </div>
               </Show>
               <Show when={props.last && !props.msg.characterId}>
-                <RefreshCw size={16} class="cursor-pointer" onClick={resendMessage} />
+                <div class="cursor-pointer" onClick={resendMessage}>
+                  <RefreshCw size={16} />
+                </div>
               </Show>
             </div>
           </Show>
           <Show when={edit()}>
-            <div class="mr-4 flex items-center gap-2 text-sm">
-              <X size={16} class="cursor-pointer text-red-500" onClick={cancelEdit} />
-              <Check size={16} class="cursor-pointer text-green-500" onClick={saveEdit} />
+            <div class="mr-4 flex items-center gap-4 text-sm">
+              <div class="icon-button text-red-500" onClick={cancelEdit}>
+                <X size={22} />
+              </div>
+              <div class="icon-button text-green-500" onClick={saveEdit}>
+                <Check size={22} />
+              </div>
             </div>
           </Show>
           <Show when={props.last && props.swipe}>
