@@ -29,8 +29,6 @@ export function getStrictForm<T extends FormRef>(evt: Event | HTMLFormElement, b
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
 
-  const elements = target.querySelectorAll('.form-field') as NodeListOf<Field>
-
   const disable = enableAll(target)
   const form = new FormData(target as HTMLFormElement)
 

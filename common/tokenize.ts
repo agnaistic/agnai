@@ -2,7 +2,7 @@ import fs from 'fs'
 import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
 import gpt from 'gpt-3-encoder'
-import { AppSchema } from '../srv/db/schema'
+
 const cl100k_base = require('@dqbd/tiktoken/encoders/cl100k_base.json')
 const p50k_base = require('@dqbd/tiktoken/encoders/p50k_base.json')
 
@@ -29,11 +29,11 @@ export function getEncoder(adapter: AIAdapter, model?: string) {
   }
 
   if (model === OPENAI_MODELS.DaVinci) {
-    return davinci ?? gpt.encode
+    return davinci ?? krake
   }
 
   if (model === OPENAI_MODELS.Turbo) {
-    return turbo ?? gpt.encode
+    return turbo ?? krake
   }
 
   return main
@@ -63,7 +63,10 @@ async function prepareTokenizers() {
         return tokens
       }
     }
-  } catch (ex) {}
+  } catch (ex) {
+    console.warn(`Failed to load OAI tokenizers`)
+    console.warn(ex)
+  }
 }
 
 prepareTokenizers()

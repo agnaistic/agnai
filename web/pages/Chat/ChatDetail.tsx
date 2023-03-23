@@ -160,12 +160,7 @@ const ChatDetail: Component = () => {
 
               <Show when={chats.chat?.userId === user.user?._id}>
                 <div class="icon-button">
-                  <Book
-                    onClick={() => {
-                      setShowMem(!showMem())
-                      console.log(memory.book, showMem())
-                    }}
-                  />
+                  <Book onClick={() => setShowMem(!showMem())} />
                 </div>
                 <div class="icon-button">
                   <Sliders onClick={() => setShowGen(true)} />

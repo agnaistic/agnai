@@ -93,7 +93,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE. ENTRY TWO.',
+        'Facts: ENTRY ONE. ENTRY TWO',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -114,7 +114,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY TWO. ENTRY THREE.',
+        'Facts: ENTRY TWO. ENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -137,7 +137,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE.',
+        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -159,7 +159,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY TIE. ENTRY THREE.',
+        'Facts: ENTRY TIE. ENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',

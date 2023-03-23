@@ -40,6 +40,8 @@ type Match = {
  * - If there is a tie due to using the same keyword, the earliest entry in the book wins
  */
 
+export const MEMORY_PREFIX = 'Facts: '
+
 export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
   const { chat, book, settings, members, char, lines, user } = opts
 
@@ -59,7 +61,6 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
 
   let id = 0
   const combinedText = lines.slice(0, depth).join(' ').toLowerCase()
-  const baseText = `Facts: `
 
   for (const entry of book.entries) {
     if (!entry.enabled) continue
@@ -89,7 +90,7 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
       prev.list.push(curr)
       return prev
     },
-    { list: [] as Match[], budget: encoder(baseText) }
+    { list: [] as Match[], budget: encoder(MEMORY_PREFIX) }
   )
 
   const prompt = entries.list
@@ -98,7 +99,7 @@ export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
     .join('. ')
 
   return {
-    prompt: prompt ? `${baseText}${prompt}.` : '',
+    prompt,
     entries: entries.list,
     tokens: entries.budget,
   }

@@ -1,7 +1,7 @@
 import { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, OPENAI_MODELS } from './adapters'
-import { getMemoryPrompt, MemoryPrompt } from './memory'
+import { getMemoryPrompt, MemoryPrompt, MEMORY_PREFIX } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder, getEncoder } from './tokenize'
 
@@ -132,7 +132,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
   if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
   if (parts.memory?.prompt) {
-    pre.push(parts.memory.prompt)
+    pre.push(`${MEMORY_PREFIX}${parts.memory.prompt}`)
   }
 
   if (!hasStart) pre.push('<START>')
@@ -234,11 +234,12 @@ export function getPromptParts(
   parts.gaslight = gaslight
     .replace(/\{\{example_dialogue\}\}/g, sampleChat)
     .replace(/\{\{scenario\}\}/g, parts.scenario || '')
+    .replace(/\{\{memory\}\}/g, parts.memory?.prompt || '')
     .replace(/\{\{name\}\}/g, char.name)
     .replace(/\<BOT\>/g, char.name)
+    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
     .replace(/\{\{char\}\}/g, char.name)
     .replace(/\{\{user\}\}/g, sender)
-    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat

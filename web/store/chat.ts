@@ -2,8 +2,9 @@ import { createPrompt, Prompt } from '../../common/prompt'
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { characterStore } from './character'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { data } from './data'
+import { memoryStore } from './memory'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -246,12 +247,15 @@ export const chatStore = createStore<ChatState>('chat', {
 
       const { msgs } = msgStore.getState()
 
+      const book = memoryStore.getState().books.list.find((bk) => bk._id === active.chat.memoryId)
+
       const prompt = createPrompt({
         chat: active.chat,
         char: active.char!,
         messages: msgs.filter((m) => m.createdAt < msg.createdAt),
         user,
         members: activeMembers,
+        book,
       })
 
       return { prompt }
