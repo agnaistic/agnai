@@ -14,6 +14,7 @@ type CharacterState = {
 
 export type NewCharacter = {
   name: string
+  description?: string
   greeting: string
   scenario: string
   sampleChat: string

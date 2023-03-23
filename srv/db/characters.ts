@@ -28,7 +28,7 @@ export async function updateCharacter(
   userId: string,
   char: Pick<
     AppSchema.Character,
-    'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario'
+    'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario' | 'description'
   >
 ) {
   const edit = { ...char, updatedAt: now() }

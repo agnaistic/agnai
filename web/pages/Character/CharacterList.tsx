@@ -84,7 +84,10 @@ const Character: Component<{
           href={`/character/${props.character._id}/chats`}
         >
           <AvatarIcon avatarUrl={props.character.avatar} class="mx-4" />
-          <div class="text-lg font-bold">{props.character.name}</div>
+          <div class="text-lg">
+            <span class="font-bold">{props.character.name}</span>
+            <span class="ml-2">{props.character.description}</span>
+          </div>
         </A>
       </div>
       <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">

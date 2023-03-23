@@ -114,6 +114,7 @@ export namespace AppSchema {
     userId: string
 
     name: string
+    description?: string
     persona: CharacterPersona
     greeting: string
     scenario: string
@@ -194,6 +195,7 @@ export namespace AppSchema {
     kind: 'memory'
     _id: string
     name: string
+    description?: string
     userId: string
     entries: MemoryEntry[]
   }

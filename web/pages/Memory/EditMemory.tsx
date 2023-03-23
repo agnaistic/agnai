@@ -15,6 +15,7 @@ import { memoryStore } from '../../store'
 const newBook: AppSchema.MemoryBook = {
   _id: '',
   name: '',
+  description: '',
   entries: [],
   kind: 'memory',
   userId: '',
@@ -66,6 +67,13 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
           value={editing().name}
           placeholder="Name for your memory book"
           required
+        />
+
+        <TextInput
+          fieldName="description"
+          label="Description"
+          value={editing().description}
+          placeholder="(Optional) A description for your memory book"
         />
         <Divider />
         <div class="text-lg font-bold">Entries</div>
@@ -237,7 +245,7 @@ const EntryCard: Component<AppSchema.MemoryEntry & { index: number; onRemove: ()
 
 export function getBookUpdate(ref: Event | HTMLFormElement) {
   const inputs = getFormEntries(ref)
-  const { name } = getStrictForm(ref, { name: 'string' })
+  const { name, description } = getStrictForm(ref, { name: 'string', description: 'string?' })
 
   const map = new Map<string, AppSchema.MemoryEntry>()
   for (const [key, value] of inputs) {
@@ -274,6 +282,6 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
 
   const entries = Array.from(map.values())
 
-  const book = { name, entries }
+  const book = { name, description, entries }
   return book
 }
