@@ -72,8 +72,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     body.messages = messages.concat(history.reverse())
-    const finalCost = body.messages.reduce((prev, curr) => encoder(curr.content) + prev, 0)
-    finalCost
+    // const finalCost = body.messages.reduce((prev, curr) => encoder(curr.content) + prev, 0)
+    // finalCost
   } else {
     body.prompt = prompt
   }
