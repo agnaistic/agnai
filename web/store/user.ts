@@ -242,5 +242,5 @@ function getUIsettings() {
     settings.theme = theme
   }
 
-  return settings
+  return { ...defaultUIsettings, ...settings }
 }
