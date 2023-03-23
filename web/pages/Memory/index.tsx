@@ -1,9 +1,10 @@
 import { A } from '@solidjs/router'
-import { Plus, Trash } from 'lucide-solid'
+import { Download, Plus, Trash, Upload } from 'lucide-solid'
 import { Component, createEffect, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
+import Tooltip from '../../shared/Tooltip'
 import { memoryStore } from '../../store'
 
 const MemoryPage: Component = () => {
@@ -30,7 +31,10 @@ const MemoryPage: Component = () => {
           </>
         }
       />
-      <div class="flex w-full justify-end">
+      <div class="flex w-full justify-end gap-4">
+        {/* <Button>
+          <Upload /> Import Book
+        </Button> */}
         <A href="/memory/new">
           <Button>
             <Plus />
@@ -54,6 +58,13 @@ const MemoryPage: Component = () => {
                 {book.name}
               </A>
 
+              <a
+                class="icon-button"
+                href={`data:text/json:charset=utf-8,${encodeBook(book)}`}
+                download={`book-${book._id.slice(0, 4)}-${book.name}.json`}
+              >
+                <Download />
+              </a>
               <div class="icon-button" onClick={() => removeBook(book)}>
                 <Trash />
               </div>
@@ -72,3 +83,10 @@ export default MemoryPage
 const NoBooks = () => (
   <div class="flex justify-center">You have no memory books yet. Click Create to get started.</div>
 )
+
+function encodeBook(book: AppSchema.MemoryBook) {
+  const { _id, userId, ...body } = book
+  return encodeURIComponent(JSON.stringify(body, null, 2))
+}
+
+function validateBook(json: any) {}

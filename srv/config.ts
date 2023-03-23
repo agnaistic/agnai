@@ -49,8 +49,8 @@ export const config = {
     maxLength: +env('KOBOLD_MAX_LENGTH', '200'),
   },
   limits: {
-    image: +env('IMAGE_SIZE_LIMIT', '2'),
-    json: +env('JSON_SIZE_LIMIT', '1'),
+    upload: +env('IMAGE_SIZE_LIMIT', '2'),
+    payload: +env('JSON_SIZE_LIMIT', '2'),
   },
   noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
   chai: {
