@@ -42,7 +42,7 @@ const InputBar: Component<{
           onKeyUp={(ev) => ev.key === 'Enter' && send()}
         />
       </Show>
-      <Show when={ui.input === 'multi'}>
+      <Show when={!ui.input || ui.input === 'multi'}>
         <textarea
           ref={ref}
           placeholder="Send a message..."
