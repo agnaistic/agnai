@@ -115,7 +115,7 @@ export const GenerationPresetsPage: Component = () => {
                   value={editing()?.name}
                   required
                 />
-                <GenerationSettings inherit={editing()} />
+                <GenerationSettings showAll={params.id === 'new'} inherit={editing()} />
               </div>
               <div class="flex flex-row justify-end">
                 <Button type="submit" disabled={state.saving}>

@@ -9,6 +9,7 @@ interface Props {
   close: () => void
   footer?: JSX.Element
   maxWidth?: 'full' | 'half'
+  fixedHeight?: boolean
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
 }
 
@@ -19,6 +20,8 @@ const Modal: Component<Props> = (props) => {
 
     return props.maxWidth === 'full' ? `sm:w-[calc(100vw-64px)]` : 'sm:w-[calc(50vw)]'
   })
+
+  const minHeight = createMemo(() => (props.fixedHeight ? `min-h-[calc(95vh-132px)]` : ''))
 
   const defaultSubmit = (ev: Event) => {
     ev.preventDefault()
@@ -44,7 +47,7 @@ const Modal: Component<Props> = (props) => {
             </div>
 
             {/* 132px is the height of the title + footer*/}
-            <div class={`max-h-[calc(95vh-132px)] overflow-y-auto p-4 text-lg`}>
+            <div class={`max-h-[calc(95vh-132px)] ${minHeight()} overflow-y-auto p-4 text-lg`}>
               {props.children}
             </div>
 

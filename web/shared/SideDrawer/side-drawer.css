@@ -1,5 +1,7 @@
 .side-drawer {
   height: calc(100vh);
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
   position: fixed;
   right: -470px;
   transition: opacity 250ms ease;
