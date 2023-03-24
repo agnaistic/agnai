@@ -93,7 +93,7 @@ const GeneralSettings: Component<Props> = (props) => {
         label="OpenAI Model"
         items={Object.entries(OPENAI_MODELS).map(([label, value]) => ({ label, value }))}
         helperText="Which OpenAI model to use"
-        value={props.inherit?.oaiModel}
+        value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
         disabled={props.disabled}
       />
     </>
