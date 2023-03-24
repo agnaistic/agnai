@@ -141,7 +141,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
     if (hasStart) pre.slice(-1, pre.length)
 
-    pre.push('<START>')
+    if (!hasStart) pre.push('<START>')
 
     if (parts.sampleChat) pre.push(...parts.sampleChat)
   }
