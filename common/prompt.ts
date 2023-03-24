@@ -124,10 +124,12 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
   const hasStart =
     parts.greeting?.includes(START_TEXT) ||
-    chat.sampleChat?.includes(START_TEXT) ||
+    (chat.sampleChat?.includes(START_TEXT) && chat.sampleChat?.endsWith(START_TEXT)) ||
     chat.scenario?.includes(START_TEXT)
 
-  const pre: string[] = [`${char.name}'s Persona: ${parts.persona}`]
+  const pre: string[] = opts.settings?.useGaslight
+    ? parts.gaslight.split('\n')
+    : [`${char.name}'s Persona: ${parts.persona}`]
 
   if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 

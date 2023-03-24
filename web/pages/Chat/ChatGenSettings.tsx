@@ -83,11 +83,13 @@ export const ChatGenSettingsModal: Component<{
       <div class="text-sm">
         <div class="mb-2 flex items-center gap-4">
           <div>Use Preset</div>
-          <Toggle
-            fieldName={'usePreset'}
-            onChange={(value) => setUsePreset(value)}
-            value={usePreset()}
-          />
+          <div class="mb-5">
+            <Toggle
+              fieldName={'usePreset'}
+              onChange={(value) => setUsePreset(value)}
+              value={usePreset()}
+            />
+          </div>
         </div>
 
         <form ref={ref}>

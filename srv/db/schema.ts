@@ -177,6 +177,7 @@ export namespace AppSchema {
     frequencyPenalty?: number
     presencePenalty?: number
     gaslight?: string
+    useGaslight: boolean
     oaiModel?: string
 
     memoryDepth?: number

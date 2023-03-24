@@ -3,7 +3,7 @@ import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
 import { DropdownItem } from './Dropdown'
 
 type FormRef = {
-  [key: string]: 'string' | 'string?' | readonly string[] | 'number' | 'number?'
+  [key: string]: 'string' | 'string?' | readonly string[] | 'boolean' | 'number' | 'number?'
 }
 
 export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
@@ -34,7 +34,13 @@ export function getStrictForm<T extends FormRef>(evt: Event | HTMLFormElement, b
 
   const values = Object.keys(body).reduce((prev, curr) => {
     const type = body[curr]
-    let value: string | number | undefined = form.get(curr)?.toString()
+    let value: string | number | boolean | undefined = form.get(curr)?.toString()
+
+    if (type === 'boolean') {
+      if (value === 'on') value = true
+      if (value === undefined) value = false
+    }
+
     if ((type === 'number' || type === 'number?') && value !== undefined) {
       value = +value
     }
