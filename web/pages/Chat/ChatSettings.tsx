@@ -34,7 +34,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
     const attributes = getAttributeMap(ref)
 
-    const overrides: AppSchema.CharacterPersona = {
+    const overrides: AppSchema.Persona = {
       kind: body.schema,
       attributes,
     }

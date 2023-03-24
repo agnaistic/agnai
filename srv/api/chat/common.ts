@@ -1,6 +1,11 @@
 import { customSettings } from '../../config'
 import { AppSchema } from '../../db/schema'
 
+export const personaValidator = {
+  kind: ['wpp', 'sbf', 'boostyle', 'text'],
+  attributes: 'any',
+} as const
+
 /**
  * A single response can contain multiple end tokens
  *

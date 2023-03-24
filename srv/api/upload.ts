@@ -5,7 +5,7 @@ import { rename, writeFile } from 'fs/promises'
 import { basename, dirname, extname, resolve } from 'path'
 import { createReadStream, mkdirSync, readdirSync } from 'fs'
 import { v4 } from 'uuid'
-import { assertValid, Validator } from 'frisker'
+import { assertValid, Validator, UnwrapBody } from 'frisker'
 import { config } from '../config'
 
 export type Attachment = {
@@ -22,7 +22,7 @@ export function handleUpload<T extends Validator>(req: Request, type: T) {
   const attachments: Attachment[] = []
   const jobs: Promise<any>[] = []
 
-  return new Promise<T & { attachments: Attachment[] }>((resolve, reject) => {
+  return new Promise<UnwrapBody<T> & { attachments: Attachment[] }>((resolve, reject) => {
     form.on('part', (part) => {
       const chunks: Buffer[] = []
       part.on('data', (chunk) => {

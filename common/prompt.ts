@@ -128,22 +128,27 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
     (chat.sampleChat?.includes(START_TEXT) && chat.sampleChat?.endsWith(START_TEXT)) ||
     chat.scenario?.includes(START_TEXT)
 
-  const pre: string[] = opts.settings?.useGaslight
-    ? parts.gaslight.split('\n')
-    : [`${char.name}'s Persona: ${parts.persona}`]
+  const pre: string[] = []
 
-  if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
+  if (!opts.settings?.useGaslight) {
+    pre.push(`${char.name}'s Persona: ${parts.persona}`)
 
-  if (parts.memory?.prompt) {
-    pre.push(`${MEMORY_PREFIX}${parts.memory.prompt}`)
+    if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
+
+    if (parts.memory?.prompt) {
+      pre.push(`${MEMORY_PREFIX}${parts.memory.prompt}`)
+    }
+
+    if (hasStart) pre.slice(-1, pre.length)
+
+    pre.push('<START>')
+
+    if (parts.sampleChat) pre.push(...parts.sampleChat)
   }
 
-  if (hasStart) pre.slice(-1, pre.length)
-
-  if (user?.selfscription && !parts.persona.includes('You')) pre.push(user.selfscription)
-  pre.push('<START>')
-
-  if (parts.sampleChat) pre.push(...parts.sampleChat)
+  if (opts.settings?.useGaslight) {
+    pre.push(parts.gaslight)
+  }
 
   const post = [`${char.name}:`]
   if (opts.continue) {
@@ -192,6 +197,7 @@ export type PromptParts = {
   greeting?: string
   sampleChat?: string[]
   persona: string
+  senderPersona?: string
   gaslight: string
   post: string[]
   gaslightHasChat: boolean
@@ -273,7 +279,7 @@ function placeholderReplace(value: string, charName: string, senderName: string)
   return value.replace(BOT_REPLACE, charName).replace(SELF_REPLACE, senderName)
 }
 
-export function formatCharacter(name: string, persona: AppSchema.CharacterPersona) {
+export function formatCharacter(name: string, persona: AppSchema.Persona) {
   switch (persona.kind) {
     case 'wpp': {
       const attrs = Object.entries(persona.attributes)

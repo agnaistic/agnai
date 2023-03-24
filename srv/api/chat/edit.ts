@@ -4,6 +4,7 @@ import { config } from '../../config'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { sendMany } from '../ws'
+import { personaValidator } from './common'
 
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
@@ -14,10 +15,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
       scenario: 'string',
       sampleChat: 'string',
       memoryId: 'string?',
-      overrides: {
-        kind: ['wpp', 'sbf', 'boostyle', 'text'],
-        attributes: 'any',
-      },
+      overrides: personaValidator,
     },
     body,
     true

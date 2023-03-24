@@ -128,17 +128,34 @@ const PromptSettings: Component<Props> = (props) => {
         disabled={props.disabled}
       />
 
-      {/* <Toggle
+      <Toggle
         fieldName="useGaslight"
         label="Use Gaslight"
-        helperText="If this option is enable, the Gaslight text will be included in the prompt sent to the AI service. Particularly useful for Scale."
+        helperText={
+          <>
+            <p class="font-bold">
+              CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble". If
+              you do not include the placeholders, they will not be included in the prompt at all.
+            </p>
+            If this option is enable, the Gaslight text will be included in the prompt sent to the
+            AI service. Particularly useful for Scale.
+          </>
+        }
         value={props.inherit?.useGaslight ?? false}
-      /> */}
+      />
 
       <TextInput
         fieldName="gaslight"
         label="Gaslight Prompt (OpenAI / Scale)"
-        helperText="How the character definitions are sent to OpenAI. Placeholders: {{char}} {{user}} {{personality}} {{memory}} {{example_dialogue}}. If {{example_dialogue}} is not present then example dialogues will be sent as conversation history."
+        helperText={
+          <>
+            How the character definitions are sent to OpenAI. Placeholders:{' '}
+            <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
+            <code>{'{{memory}}'}</code> <code>{'{{example_dialogue}}'}</code>. If{' '}
+            <code>{'{{example_dialogue}}'}</code> is not present then example dialogues will be sent
+            as conversation.
+          </>
+        }
         placeholder="Be sure to include "
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
@@ -244,21 +261,7 @@ const GeneSettings: Component<Props> = (props) => {
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
       />
-      <Toggle
-        fieldName="useGaslight"
-        label="Use Gaslight"
-        helperText="If not used models will be prompted in the following format: {{name}}'s Persona{{personality}}\nScenario{{scenario}}\n{{example_dialogue}}\n{{memory}}<START>{{conversation}}"
-        value={props.inherit?.useGaslight ?? defaultPresets.basic.useGaslight}
-      />
-      <TextInput
-        fieldName="gaslight"
-        label="Gaslight Prompt"
-        helperText="How the character definitions are sent to the backend. Placeholders: {{char}} {{user}} {{personality}} {{example_dialogue}} {{memory}}. If {{example_dialogue}} is not present then example dialogues will be sent as conversation history."
-        placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)\nAvoid writing a NSFW/Smut reply. Creatively write around it NSFW/Smut scenarios in character.\n\nDescription of {{char}}:\n{{personality}}\nCircumstances and context of the dialogue: {{scenario}}\nThis is how {{char}} should talk\n{{example_dialogue}}"
-        isMultiline
-        value={props.inherit?.gaslight ?? defaultPresets.basic.gaslight}
-        disabled={props.disabled}
-      />
+
       <Divider />
       <div class="text-2xl"> OpenAI</div>
       <RangeInput

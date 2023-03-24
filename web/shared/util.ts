@@ -3,7 +3,14 @@ import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
 import { DropdownItem } from './Dropdown'
 
 type FormRef = {
-  [key: string]: 'string' | 'string?' | readonly string[] | 'boolean' | 'number' | 'number?'
+  [key: string]:
+    | 'string'
+    | 'string?'
+    | readonly string[]
+    | 'boolean'
+    | 'number'
+    | 'number?'
+    | 'boolean?'
 }
 
 export function getForm<T = {}>(evt: Event | HTMLFormElement): T {

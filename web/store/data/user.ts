@@ -83,11 +83,20 @@ export async function deleteApiKey(kind: string) {
     user.hordeName = ''
   }
 
+  if (kind === 'openai') {
+    user.oaiKey = ''
+    user.oaiKeySet = false
+  }
+
+  if (kind === 'scale') {
+    user.scaleApiKey = ''
+  }
+
   local.saveConfig(user)
   return local.result({ success: true })
 }
 
-export async function updateProfile(handle: string, file?: File, selfscription?: string) {
+export async function updateProfile(handle: string, file?: File) {
   if (!isLoggedIn()) {
     const avatar = await getImageData(file)
     const prev = local.loadItem('profile')
@@ -95,15 +104,14 @@ export async function updateProfile(handle: string, file?: File, selfscription?:
       ...prev,
       handle,
       avatar: avatar || prev.avatar,
-      selfscription: selfscription,
     }
+
     local.saveProfile(next)
     return { result: next, error: undefined }
   }
 
   const form = new FormData()
   form.append('handle', handle)
-  if (selfscription) form.append('selfscription', selfscription)
   if (file) form.append('avatar', file)
 
   const res = await api.upload<AppSchema.Profile>('/user/profile', form)
@@ -113,7 +121,17 @@ export async function updateProfile(handle: string, file?: File, selfscription?:
 export async function updateConfig(config: Partial<AppSchema.User>) {
   if (!isLoggedIn()) {
     const prev = local.loadItem('config')
+    console.log('prev', prev, 'config', config)
     const next: AppSchema.User = { ...prev, ...config }
+
+    if (prev.novelApiKey && !next.novelApiKey) {
+      next.novelApiKey = prev.novelApiKey
+    }
+
+    if (prev.oaiKey && !next.oaiKey) {
+      next.oaiKey = prev.oaiKey
+    }
+
     local.saveConfig(next)
     return { result: next, error: undefined }
   }

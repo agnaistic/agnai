@@ -170,6 +170,77 @@ describe('Prompt building', () => {
       )
     )
   })
+
+  it('will include gaslight for non-turbo adapter', () => {
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      { settings: { gaslight: 'GASLIGHT {{user}}', useGaslight: true } }
+    )
+
+    expect(actual.prompt).to.equal(
+      expected(
+        'GASLIGHT You',
+        'Bot: FIRST',
+        'You: 1-TRIGGER',
+        'You: TIE-TRIGGER',
+        'You: 20-TRIGGER',
+        'Bot:'
+      )
+    )
+  })
+
+  it('will include placeholders in the gaslight', () => {
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: {
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
+          useGaslight: true,
+        },
+      }
+    )
+
+    expect(actual.prompt).to.equal(
+      expected(
+        'GASLIGHT',
+        'You',
+        'Bot',
+        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE',
+        'Bot: FIRST',
+        'You: 1-TRIGGER',
+        'You: TIE-TRIGGER',
+        'You: 20-TRIGGER',
+        'Bot:'
+      )
+    )
+  })
+
+  it('will not use the gaslight when set to false', () => {
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: {
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
+          useGaslight: false,
+        },
+      }
+    )
+
+    expect(actual.prompt).to.equal(
+      expected(
+        `Bot's Persona: PERSONA`,
+        'Scenario: SCENARIO',
+        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE',
+        '<START>',
+        'Bot: SAMPLE_CHAT',
+        'Bot: FIRST',
+        'You: 1-TRIGGER',
+        'You: TIE-TRIGGER',
+        'You: 20-TRIGGER',
+        'Bot:'
+      )
+    )
+  })
 })
 
 function build(

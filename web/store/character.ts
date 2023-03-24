@@ -19,7 +19,7 @@ export type NewCharacter = {
   scenario: string
   sampleChat: string
   avatar?: File
-  persona: AppSchema.CharacterPersona
+  persona: AppSchema.Persona
 }
 
 export const characterStore = createStore<CharacterState>('character', {

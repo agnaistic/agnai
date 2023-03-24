@@ -145,8 +145,11 @@ const Settings: Component = () => {
                 fieldName="hordeApiKey"
                 label="AI Horde API Key"
                 helperText={HordeHelpText}
-                placeholder={state.user?.hordeName ? 'API key has been verified' : ''}
+                placeholder={
+                  state.user?.hordeName || state.user?.hordeKey ? 'API key has been verified' : ''
+                }
                 type="password"
+                value={state.user?.hordeKey}
               />
 
               <Show when={state.user?.hordeName}>
@@ -200,6 +203,7 @@ const Settings: Component = () => {
                     : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
                 }
                 type="password"
+                value={state.user?.oaiKey}
               />
               <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
                 Delete OpenAI Key
@@ -224,6 +228,7 @@ const Settings: Component = () => {
                     : 'E.g. 9rv440nv7ogj6s7j312flqijd'
                 }
                 type="password"
+                value={state.user?.scaleApiKey}
               />
               <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('scale')}>
                 Delete Scale API Key
@@ -246,6 +251,7 @@ const Settings: Component = () => {
                 fieldName="novelApiKey"
                 label="Novel API Key"
                 type="password"
+                value={state.user?.novelApiKey}
                 helperText={
                   <>
                     NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.

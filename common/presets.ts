@@ -27,7 +27,7 @@ export const chatGenSettings = {
   presencePenalty: 'number',
   gaslight: 'string',
   oaiModel: 'string',
-  useGaslight: 'boolean',
+  useGaslight: 'boolean?',
 } as const
 
 export const presetValidator = {

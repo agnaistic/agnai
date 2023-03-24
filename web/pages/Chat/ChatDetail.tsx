@@ -32,7 +32,6 @@ import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
-import SelfscriptionModal from './SelfscriptionModal'
 
 const ChatDetail: Component = () => {
   const user = userStore()
@@ -64,7 +63,6 @@ const ChatDetail: Component = () => {
   const [showMem, setShowMem] = createSignal(false)
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
-  const [showSelfscription, setShowSelfscription] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const { id } = useParams()
@@ -116,20 +114,6 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
-  const warnSelfscription = () => {
-    if (!chats.char) return false
-    if (chats.char.persona.attributes.text)
-      return chats.char.persona.attributes.text[0].includes('{{user}}')
-    else {
-      const attrs = Object.entries(chats.char.persona.attributes)
-      for (let i = 0; i < attrs.length; i++) {
-        const attr = attrs[i]
-        if (attr.includes('{{user}}')) return true
-      }
-    }
-    return false
-  }
-
   function toggleEditing() {
     const next = !editing()
     setEditing(next)
@@ -152,15 +136,6 @@ const ChatDetail: Component = () => {
                   <ChevronLeft />
                 </A>
                 {chats.char?.name}
-                <Show when={warnSelfscription()}>
-                  <div class="icon-button">
-                    <AlertCircle
-                      size={20}
-                      color={'red'}
-                      onclick={() => setShowSelfscription(true)}
-                    />
-                  </div>
-                </Show>
               </Show>
             </div>
 
@@ -261,10 +236,6 @@ const ChatDetail: Component = () => {
 
       <Show when={showConfig()}>
         <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
-      </Show>
-
-      <Show when={showSelfscription()}>
-        <SelfscriptionModal show={showSelfscription()} close={() => setShowSelfscription(false)} />
       </Show>
 
       <Show when={showGen()}>
