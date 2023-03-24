@@ -5,6 +5,7 @@ import { config } from '../../config'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { encryptText } from '../../db/util'
+import { personaValidator } from '../chat/common'
 import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
 import { getAppConfig } from '../settings'
@@ -156,7 +157,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
 })
 
 export const updateProfile = handle(async (req) => {
-  const form = await handleUpload(req, { handle: 'string' })
+  const form = await handleUpload(req, { handle: 'string' } as const)
+
   const [file] = form.attachments
 
   const previous = await store.users.getProfile(req.userId!)
@@ -164,7 +166,10 @@ export const updateProfile = handle(async (req) => {
     throw errors.Forbidden
   }
 
-  const update: Partial<AppSchema.Profile> = { handle: form.handle }
+  const update: Partial<AppSchema.Profile> = {
+    handle: form.handle,
+  }
+
   if (file) {
     update.avatar = file.filename
   }
@@ -174,6 +179,7 @@ export const updateProfile = handle(async (req) => {
   if (previous.handle !== form.handle) {
     sendAll({ type: 'profile-handle-changed', userId: req.userId!, handle: form.handle })
   }
+
   return profile
 })
 
@@ -224,4 +230,35 @@ async function getSafeUserConfig(userId: string) {
     }
   }
   return user
+}
+
+function isSamePersona(left?: AppSchema.Persona, right?: AppSchema.Persona) {
+  if (!left || !right) {
+    if (!left && !right) return true
+    return false
+  }
+
+  if (left.kind === 'text' || right.kind === 'text') {
+    if (left.kind !== right.kind) return false
+    return left.attributes.text?.[0] === right.attributes.text?.[0]
+  }
+
+  const [keys, values] = Object.keys(left.attributes)
+
+  const leftSet = new Set(keys)
+  for (const key in right.attributes) {
+    leftSet.add(key)
+  }
+
+  if (leftSet.size !== keys.length) return false
+
+  for (const key of keys) {
+    const l = left.attributes[key]
+    const r = right.attributes[key]
+
+    const set = new Set(...l, ...r)
+    if (set.size !== l.length) return false
+  }
+
+  return true
 }

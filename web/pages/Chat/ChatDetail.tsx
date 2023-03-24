@@ -11,6 +11,7 @@ import {
   ToggleLeft,
   ToggleRight,
   X,
+  AlertCircle,
 } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
@@ -129,14 +130,14 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class="flex h-full flex-col justify-between sm:py-2">
           <div class="flex h-8 items-center justify-between ">
-            <A href={`/character/${chats.char?._id}/chats`}>
-              <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
-                <Show when={!cfg.fullscreen}>
+            <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+              <Show when={!cfg.fullscreen}>
+                <A href={`/character/${chats.char?._id}/chats`}>
                   <ChevronLeft />
-                  {chats.char?.name}
-                </Show>
-              </div>
-            </A>
+                </A>
+                {chats.char?.name}
+              </Show>
+            </div>
 
             <div class="flex flex-row gap-3">
               <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">

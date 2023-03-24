@@ -25,6 +25,7 @@ export const defaultPresets = {
     memoryDepth: 50,
     memoryContextLimit: 500,
     memoryReverseWeight: false,
+    useGaslight: false,
   },
   novel_20BC: {
     name: 'Novel 20BC+',
@@ -38,6 +39,7 @@ export const defaultPresets = {
     topK: 20,
     topP: 1,
     order: [0, 1, 2, 3],
+    useGaslight: false,
   },
   novel_blueLighter: {
     name: 'Novel Blue Lighter',
@@ -53,6 +55,7 @@ export const defaultPresets = {
     typicalP: 0.965,
     topA: 0.085,
     order: [3, 4, 5, 2, 0],
+    useGaslight: false,
   },
   openai: {
     name: 'OpenAI - Turbo',

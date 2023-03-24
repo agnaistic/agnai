@@ -1,6 +1,7 @@
 import * as local from './storage'
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../srv/db/schema'
+import { toastStore } from '../toasts'
 
 const emptyCfg: AppSchema.AppConfig = {
   adapters: [],
@@ -82,6 +83,15 @@ export async function deleteApiKey(kind: string) {
     user.hordeName = ''
   }
 
+  if (kind === 'openai') {
+    user.oaiKey = ''
+    user.oaiKeySet = false
+  }
+
+  if (kind === 'scale') {
+    user.scaleApiKey = ''
+  }
+
   local.saveConfig(user)
   return local.result({ success: true })
 }
@@ -95,6 +105,7 @@ export async function updateProfile(handle: string, file?: File) {
       handle,
       avatar: avatar || prev.avatar,
     }
+
     local.saveProfile(next)
     return { result: next, error: undefined }
   }
@@ -110,7 +121,17 @@ export async function updateProfile(handle: string, file?: File) {
 export async function updateConfig(config: Partial<AppSchema.User>) {
   if (!isLoggedIn()) {
     const prev = local.loadItem('config')
+    console.log('prev', prev, 'config', config)
     const next: AppSchema.User = { ...prev, ...config }
+
+    if (prev.novelApiKey && !next.novelApiKey) {
+      next.novelApiKey = prev.novelApiKey
+    }
+
+    if (prev.oaiKey && !next.oaiKey) {
+      next.oaiKey = prev.oaiKey
+    }
+
     local.saveConfig(next)
     return { result: next, error: undefined }
   }

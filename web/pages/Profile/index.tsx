@@ -23,7 +23,6 @@ const ProfilePage: Component = () => {
   const submit = (ev: Event) => {
     const body = getStrictForm(ev, { handle: 'string' })
     const payload = { handle: body.handle, avatar: avatar() }
-
     userStore.updateProfile(payload)
   }
 

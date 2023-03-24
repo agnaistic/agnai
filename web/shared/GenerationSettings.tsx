@@ -128,17 +128,34 @@ const PromptSettings: Component<Props> = (props) => {
         disabled={props.disabled}
       />
 
-      {/* <Toggle
+      <Toggle
         fieldName="useGaslight"
         label="Use Gaslight"
-        helperText="If this option is enable, the Gaslight text will be included in the prompt sent to the AI service. Particularly useful for Scale."
+        helperText={
+          <>
+            <p class="font-bold">
+              CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble". If
+              you do not include the placeholders, they will not be included in the prompt at all.
+            </p>
+            If this option is enable, the Gaslight text will be included in the prompt sent to the
+            AI service. Particularly useful for Scale.
+          </>
+        }
         value={props.inherit?.useGaslight ?? false}
-      /> */}
+      />
 
       <TextInput
         fieldName="gaslight"
         label="Gaslight Prompt (OpenAI / Scale)"
-        helperText="How the character definitions are sent to OpenAI. Placeholders: {{char}} {{user}} {{personality}} {{memory}} {{example_dialogue}}. If {{example_dialogue}} is not present then example dialogues will be sent as conversation history."
+        helperText={
+          <>
+            How the character definitions are sent to OpenAI. Placeholders:{' '}
+            <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
+            <code>{'{{memory}}'}</code> <code>{'{{example_dialogue}}'}</code>. If{' '}
+            <code>{'{{example_dialogue}}'}</code> is not present then example dialogues will be sent
+            as conversation.
+          </>
+        }
         placeholder="Be sure to include "
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
@@ -244,6 +261,7 @@ const GeneSettings: Component<Props> = (props) => {
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
       />
+
       <Divider />
       <div class="text-2xl"> OpenAI</div>
       <RangeInput

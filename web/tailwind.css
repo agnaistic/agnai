@@ -341,7 +341,6 @@ body {
     visibility: hidden;
     width: 0;
     height: 0;
-    position: absolute;
   }
   .toggle-pill-color input[type='checkbox'] + label {
     display: block;
