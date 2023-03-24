@@ -247,7 +247,7 @@ const GeneSettings: Component<Props> = (props) => {
       <Toggle
         fieldName="useGaslight"
         label="Use Gaslight"
-        helperText="Weather to use gaslight or not."
+        helperText="If not used models will be prompted in the following format: {{name}}'s Persona{{personality}}\nScenario{{scenario}}\n{{example_dialogue}}\n{{memory}}<START>{{conversation}}"
         value={props.inherit?.useGaslight ?? defaultPresets.basic.useGaslight}
       />
       <TextInput
