@@ -19,8 +19,8 @@ app.use(
   express.json({ limit: `${config.limits.payload}mb` }),
   express.urlencoded({ limit: `${config.limits.upload}mb`, extended: true })
 )
-app.use(cors())
 app.use(logMiddleware())
+app.use(cors())
 app.use('/api', api)
 
 // app.use('/assets', express.static(config.assetFolder))
