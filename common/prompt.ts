@@ -197,7 +197,6 @@ export type PromptParts = {
   greeting?: string
   sampleChat?: string[]
   persona: string
-  senderPersona?: string
   gaslight: string
   post: string[]
   gaslightHasChat: boolean

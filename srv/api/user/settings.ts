@@ -157,9 +157,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
 })
 
 export const updateProfile = handle(async (req) => {
-  const form = await handleUpload(req, { handle: 'string', persona: 'string?' } as const)
-  const persona = form.persona ? JSON.parse(form.persona) : undefined
-  if (persona) assertValid(personaValidator, persona)
+  const form = await handleUpload(req, { handle: 'string' } as const)
 
   const [file] = form.attachments
 
@@ -170,7 +168,6 @@ export const updateProfile = handle(async (req) => {
 
   const update: Partial<AppSchema.Profile> = {
     handle: form.handle,
-    persona,
   }
 
   if (file) {

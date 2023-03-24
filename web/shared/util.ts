@@ -43,7 +43,7 @@ export function getStrictForm<T extends FormRef>(evt: Event | HTMLFormElement, b
     const type = body[curr]
     let value: string | number | boolean | undefined = form.get(curr)?.toString()
 
-    if (type === 'boolean') {
+    if (type === 'boolean' || type === 'boolean?') {
       if (value === 'on') value = true
       if (value === undefined) value = false
     }
