@@ -1,4 +1,5 @@
 import Cookies from 'js-cookie'
+import { toastStore } from './toasts'
 
 let socketId = ''
 

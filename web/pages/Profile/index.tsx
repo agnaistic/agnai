@@ -21,9 +21,8 @@ const ProfilePage: Component = () => {
   }
 
   const submit = (ev: Event) => {
-    const body = getStrictForm(ev, { handle: 'string' })
-    const payload = { handle: body.handle, avatar: avatar() }
-
+    const body = getStrictForm(ev, { handle: 'string', selfscription: 'string' })
+    const payload = { handle: body.handle, avatar: avatar(), selfscription: body.selfscription }
     userStore.updateProfile(payload)
   }
 
@@ -74,6 +73,15 @@ const ProfilePage: Component = () => {
             accept="image/jpeg,image/png"
             helperText={'File size limit of 2MB'}
             onUpdate={onAvatar}
+          />
+
+          <TextInput
+            fieldName="selfscription"
+            label="Selfscription"
+            helperText="Describe yourself in here so characters know what you're like. You can leave this blank. You can use {{user}} to represent your display name."
+            placeholder="{{user}} is a X year old human male that likes ABC."
+            isMultiline
+            value={state.profile?.selfscription}
           />
 
           <div>

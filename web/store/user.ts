@@ -72,8 +72,12 @@ export const userStore = createStore<State>(
       }
     },
 
-    async updateProfile(_, profile: { handle: string; avatar?: File }) {
-      const res = await data.user.updateProfile(profile.handle, profile.avatar)
+    async updateProfile(_, profile: { handle: string; avatar?: File; selfscription?: string }) {
+      const res = await data.user.updateProfile(
+        profile.handle,
+        profile.avatar,
+        profile.selfscription
+      )
       if (res.error) toastStore.error(`Failed to update profile`)
       if (res.result) {
         toastStore.success(`Updated settings`)

@@ -11,6 +11,7 @@ import {
   ToggleLeft,
   ToggleRight,
   X,
+  AlertCircle,
 } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
@@ -31,6 +32,7 @@ import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
+import SelfscriptionModal from './SelfscriptionModal'
 
 const ChatDetail: Component = () => {
   const user = userStore()
@@ -62,6 +64,7 @@ const ChatDetail: Component = () => {
   const [showMem, setShowMem] = createSignal(false)
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
+  const [showSelfscription, setShowSelfscription] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const { id } = useParams()
@@ -113,6 +116,20 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
+  const warnSelfscription = () => {
+    if (!chats.char) return false
+    if (chats.char.persona.attributes.text)
+      return chats.char.persona.attributes.text[0].includes('{{user}}')
+    else {
+      const attrs = Object.entries(chats.char.persona.attributes)
+      for (let i = 0; i < attrs.length; i++) {
+        const attr = attrs[i]
+        if (attr.includes('{{user}}')) return true
+      }
+    }
+    return false
+  }
+
   function toggleEditing() {
     const next = !editing()
     setEditing(next)
@@ -129,14 +146,23 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class="flex h-full flex-col justify-between sm:py-2">
           <div class="flex h-8 items-center justify-between ">
-            <A href={`/character/${chats.char?._id}/chats`}>
-              <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
-                <Show when={!cfg.fullscreen}>
+            <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+              <Show when={!cfg.fullscreen}>
+                <A href={`/character/${chats.char?._id}/chats`}>
                   <ChevronLeft />
-                  {chats.char?.name}
+                </A>
+                {chats.char?.name}
+                <Show when={warnSelfscription()}>
+                  <div class="icon-button">
+                    <AlertCircle
+                      size={20}
+                      color={'red'}
+                      onclick={() => setShowSelfscription(true)}
+                    />
+                  </div>
                 </Show>
-              </div>
-            </A>
+              </Show>
+            </div>
 
             <div class="flex flex-row gap-3">
               <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
@@ -235,6 +261,10 @@ const ChatDetail: Component = () => {
 
       <Show when={showConfig()}>
         <ChatSettingsModal show={showConfig()} close={() => setShowConfig(false)} />
+      </Show>
+
+      <Show when={showSelfscription()}>
+        <SelfscriptionModal show={showSelfscription()} close={() => setShowSelfscription(false)} />
       </Show>
 
       <Show when={showGen()}>

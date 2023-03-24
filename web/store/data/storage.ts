@@ -72,7 +72,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     koboldUrl: '',
     luminaiUrl: '',
   },
-  profile: { _id: '', kind: 'profile', userId: ID, handle: 'You' },
+  profile: { _id: '', kind: 'profile', userId: ID, handle: 'You', selfscription: '' },
   lastChatId: '',
   messages: [],
   memory: [],

@@ -156,7 +156,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
 })
 
 export const updateProfile = handle(async (req) => {
-  const form = await handleUpload(req, { handle: 'string' })
+  const form = await handleUpload(req, { handle: 'string', selfscription: 'string' })
   const [file] = form.attachments
 
   const previous = await store.users.getProfile(req.userId!)
@@ -164,7 +164,10 @@ export const updateProfile = handle(async (req) => {
     throw errors.Forbidden
   }
 
-  const update: Partial<AppSchema.Profile> = { handle: form.handle }
+  const update: Partial<AppSchema.Profile> = {
+    handle: form.handle,
+    selfscription: form.selfscription,
+  }
   if (file) {
     update.avatar = file.filename
   }
@@ -173,6 +176,13 @@ export const updateProfile = handle(async (req) => {
 
   if (previous.handle !== form.handle) {
     sendAll({ type: 'profile-handle-changed', userId: req.userId!, handle: form.handle })
+  }
+  if (previous.selfscription !== form.selfscription) {
+    sendAll({
+      type: 'profile-selfscription-changed',
+      userId: req.userId!,
+      selfscription: form.selfscription,
+    })
   }
   return profile
 })

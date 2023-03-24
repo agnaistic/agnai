@@ -16,6 +16,7 @@ export namespace AppSchema {
     userId: string
     handle: string
     avatar?: string
+    selfscription?: string
   }
 
   export interface User {

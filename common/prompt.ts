@@ -120,7 +120,8 @@ type BuildPromptOpts = {
 
 export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: string[]) {
   const { chat, char } = opts
-  const sender = opts.members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+  const user = opts.members.find((mem) => mem.userId === chat.userId)
+  const sender = user?.handle || 'You'
 
   const hasStart =
     parts.greeting?.includes(START_TEXT) ||
@@ -137,7 +138,10 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
     pre.push(`${MEMORY_PREFIX}${parts.memory.prompt}`)
   }
 
-  if (!hasStart) pre.push('<START>')
+  if (hasStart) pre.slice(-1, pre.length)
+
+  if (user?.selfscription && !parts.persona.includes('You')) pre.push(user.selfscription)
+  pre.push('<START>')
 
   if (parts.sampleChat) pre.push(...parts.sampleChat)
 

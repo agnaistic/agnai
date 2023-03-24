@@ -1,6 +1,7 @@
 import * as local from './storage'
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../srv/db/schema'
+import { toastStore } from '../toasts'
 
 const emptyCfg: AppSchema.AppConfig = {
   adapters: [],
@@ -86,7 +87,7 @@ export async function deleteApiKey(kind: string) {
   return local.result({ success: true })
 }
 
-export async function updateProfile(handle: string, file?: File) {
+export async function updateProfile(handle: string, file?: File, selfscription?: string) {
   if (!isLoggedIn()) {
     const avatar = await getImageData(file)
     const prev = local.loadItem('profile')
@@ -94,6 +95,7 @@ export async function updateProfile(handle: string, file?: File) {
       ...prev,
       handle,
       avatar: avatar || prev.avatar,
+      selfscription: selfscription,
     }
     local.saveProfile(next)
     return { result: next, error: undefined }
@@ -101,6 +103,7 @@ export async function updateProfile(handle: string, file?: File) {
 
   const form = new FormData()
   form.append('handle', handle)
+  if (selfscription) form.append('selfscription', selfscription)
   if (file) form.append('avatar', file)
 
   const res = await api.upload<AppSchema.Profile>('/user/profile', form)
