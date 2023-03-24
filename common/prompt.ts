@@ -125,7 +125,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
   const hasStart =
     parts.greeting?.includes(START_TEXT) ||
-    (chat.sampleChat?.includes(START_TEXT) && chat.sampleChat?.endsWith(START_TEXT)) ||
+    chat.sampleChat?.includes(START_TEXT) ||
     chat.scenario?.includes(START_TEXT)
 
   const pre: string[] = []
