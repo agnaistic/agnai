@@ -110,7 +110,6 @@ const CreateCharacter: Component = () => {
 
         <TextInput
           fieldName="description"
-          required
           label="Description"
           helperText="A description or label for your character. This is will not influence your character in any way."
           placeholder=""
