@@ -3,6 +3,7 @@ FROM node:18-bullseye-slim
 WORKDIR /app
 VOLUME [ "/app/db" ]
 VOLUME [ "/app/assets" ]
+VOLUME [ "/app/dist/assets" ]
 
 RUN npm install pnpm -g
 

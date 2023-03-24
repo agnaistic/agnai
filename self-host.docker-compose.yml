@@ -13,8 +13,6 @@ services:
       - INITIAL_USER=admin
       - INITIAL_PASSWORD=password
       - JWT_SECRET=self-hosting
-    volumes:
-      - /dist/assets:/app/dist/assets
     
   mongo:
     image: mongo:6
