@@ -1,4 +1,5 @@
-import { Component, Show, createMemo, JSX, onMount } from 'solid-js'
+import { Component, Show, createMemo, JSX, onMount, createEffect } from 'solid-js'
+import IsVisible from './IsVisible'
 
 const MIN_HEIGHT = 40
 
@@ -24,12 +25,15 @@ const TextInput: Component<{
     props.value !== undefined ? props.value : (null as unknown as undefined)
   )
 
-  onMount(() => {
+  const resize = () => {
     if (!ref) return
 
     const next = +ref.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : ref.scrollHeight
-    ref.style.height = ''
     ref.style.height = `${next}px`
+  }
+
+  onMount(() => {
+    resize()
   })
 
   return (
@@ -60,6 +64,7 @@ const TextInput: Component<{
           />
         }
       >
+        <IsVisible onEnter={resize} />
         <textarea
           id={props.fieldName}
           name={props.fieldName}
@@ -72,12 +77,7 @@ const TextInput: Component<{
             props.class
           }
           disabled={props.disabled}
-          onInput={(e) => {
-            const ele = e.target as HTMLTextAreaElement
-            const next = +ele.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : ele.scrollHeight
-            ele.style.height = ''
-            ele.style.height = `${next}px`
-          }}
+          onInput={resize}
         />
       </Show>
     </div>

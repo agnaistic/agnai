@@ -119,7 +119,7 @@ const Settings: Component = () => {
       <div class="my-2">
         <Tabs tabs={tabs.map((t) => settingTabs[t])} selected={tab} select={setTab} />
       </div>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} autocomplete="off">
         <div class="flex flex-col gap-4">
           <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
             <UISettings />

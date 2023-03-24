@@ -77,6 +77,7 @@ export const ChatGenSettingsModal: Component<{
       close={props.close}
       footer={Footer}
       title="Chat Generation Settings"
+      fixedHeight
       maxWidth="half"
     >
       <div class="text-sm">
