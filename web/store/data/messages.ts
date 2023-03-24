@@ -92,12 +92,15 @@ export async function generateResponseV2(opts: GenerateOpts) {
     messages,
   })
 
+  const { avatar: _, ...sender } = entities.profile
+  const { avatar: __, ...char } = entities.char
+
   const request: GenerateRequestV2 = {
     kind: opts.kind,
     chat: entities.chat,
     user: entities.user,
-    char: entities.char,
-    sender: entities.profile,
+    char,
+    sender,
     members: entities.members,
     parts: prompt.parts,
     lines: prompt.lines,
@@ -109,138 +112,6 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
   return res
-}
-
-/**
- * This handles:
- * - The user sending a new message (typing a message and pressing Enter)
- *
- * @param chatId
- * @param message
- * @returns
- */
-export async function sendMessage(chatId: string, message: string) {
-  if (!chatId) return local.error('Could not send message: No active chat')
-
-  const entities = getPromptEntities()
-  if (isLoggedIn()) {
-    return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, { message })
-  }
-
-  const { messages, char, chat, user, profile } = entities
-  // We intentionally do not store the new message in local storage
-  // The server will send the 'user message' via the socket if the this request is not a retry
-  const next = messages.concat(newMessage(chat, local.ID, message.trim()))
-  const prompt = createPrompt({ char, chat, members: [profile], messages: next, user })
-
-  await api.post(`/chat/${chat._id}/guest-message`, {
-    char,
-    chat,
-    user,
-    sender: profile,
-    prompt: prompt.prompt,
-    lines: prompt.lines,
-    message,
-  })
-  return local.result({ success: true })
-}
-
-/**
- * This handles:
- * - The last message being re-sent when the message is last message is user-generated
- *
- * If the last message is server-generated, we use 'retryCharacterMessage' for this as we are replacing a message.
- *
- * @param chatId
- * @param message The content of the user message
- * @param retry Flag that indicates: - the last message is being re-sent AND the last message is from the user.
- * @returns
- */
-export async function retryUserMessage(chatId: string, message: string) {
-  if (!chatId) return local.error('Could not send message: No active chat')
-  const entities = getPromptEntities()
-
-  if (isLoggedIn()) {
-    return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/message`, {
-      message,
-      retry: true,
-    })
-  }
-
-  if ('error' in entities) return entities
-
-  const { chat, char, profile, messages, user, book } = entities
-  const prompt = createPrompt({
-    char,
-    chat,
-    members: [profile],
-    messages,
-    book,
-    user: entities.user,
-  })
-
-  await api.post(`/chat/${chat._id}/guest-message`, {
-    char,
-    chat,
-    user,
-    sender: profile,
-    prompt: prompt.prompt,
-    lines: prompt.lines,
-    message,
-    retry: true,
-  })
-  return local.result({ success: true })
-}
-
-/**
- *
- * @param chatId
- * @param message The user-generated message preceding the message to replace
- * @param replace The server-generated message we are replacing
- */
-export async function retryCharacterMessage(
-  chatId: string,
-  message: AppSchema.ChatMessage,
-  replace: AppSchema.ChatMessage,
-  continueOn?: string
-) {
-  const entities = getPromptEntities()
-  if (isLoggedIn()) {
-    return api.post<string | AppSchema.ChatMessage>(`/chat/${chatId}/retry/${replace._id}`, {
-      message: message.msg,
-      continue: continueOn,
-    })
-  }
-
-  if ('error' in entities) return entities
-
-  const { chat, char, messages, profile, user, book } = entities
-
-  const index = messages.findIndex((msg) => msg._id === replace._id)
-  if (index === -1) return local.error(`Cannot find message to replace`)
-
-  const prompt = createPrompt({
-    char,
-    chat,
-    members: [profile],
-    messages,
-    continue: continueOn,
-    retry: replace,
-    user: entities.user,
-    book,
-  })
-
-  return api.post(`/chat/${chat._id}/guest-message`, {
-    char,
-    chat,
-    user,
-    sender: profile,
-    prompt: prompt.prompt,
-    lines: prompt.lines,
-    retry: true,
-    message: message.msg,
-    continue: continueOn,
-  })
 }
 
 export async function deleteMessages(chatId: string, msgIds: string[]) {
