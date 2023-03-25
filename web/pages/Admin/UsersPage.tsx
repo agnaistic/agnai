@@ -35,6 +35,9 @@ const UsersPage: Component = () => {
               <div class="w-4/12 px-4 text-xs">{user._id}</div>
               <div class="w-2/12 px-4">{user.username}</div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">
+                <Button size="sm" onClick={() => setPw(user.username)}>
+                  Set Password
+                </Button>
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
                   Info
                 </Button>
