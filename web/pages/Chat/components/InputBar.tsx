@@ -35,6 +35,7 @@ const InputBar: Component<{
     <div class="flex items-center justify-center gap-2 max-sm:pb-0">
       <Show when={ui.input === 'single'}>
         <input
+          spellcheck
           ref={ref}
           type="text"
           placeholder="Send a message..."
@@ -44,6 +45,7 @@ const InputBar: Component<{
       </Show>
       <Show when={!ui.input || ui.input === 'multi'}>
         <textarea
+          spellcheck
           ref={ref}
           placeholder="Send a message..."
           class="focusable-field h-10 min-h-[40px] w-full rounded-xl px-4 py-2"

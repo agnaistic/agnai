@@ -6,10 +6,9 @@ import {
   ChevronLeft,
   ChevronRight,
   MailPlus,
+  Menu,
   Settings,
   Sliders,
-  ToggleLeft,
-  ToggleRight,
   X,
 } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
@@ -18,8 +17,9 @@ import { getAdapter } from '../../../common/prompt'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
+import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
-import Tooltip from '../../shared/Tooltip'
+import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, userStore } from '../../store'
 import { memoryStore } from '../../store'
@@ -31,6 +31,9 @@ import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
+import './chat-detail.css'
+
+const EDITING_KEY = 'chat-detail-settings'
 
 const ChatDetail: Component = () => {
   const user = userStore()
@@ -60,6 +63,7 @@ const ChatDetail: Component = () => {
   const [swipe, setSwipe] = createSignal(0)
   const [removeId, setRemoveId] = createSignal('')
   const [showMem, setShowMem] = createSignal(false)
+  const [showOpts, setShowOpts] = createSignal(false)
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
@@ -142,32 +146,10 @@ const ChatDetail: Component = () => {
               <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
                 {adapter()}
               </div>
-              <div class="icon-button" onClick={toggleEditing}>
-                <Tooltip tip="Toggle edit mode">
-                  <Show when={editing()}>
-                    <ToggleRight class="text-[var(--hl-500)]" />
-                  </Show>
-                  <Show when={!editing()}>
-                    <ToggleLeft />
-                  </Show>
-                </Tooltip>
-              </div>
-              <div class="icon-button" onClick={() => setShowInvite(true)}>
-                <Tooltip tip="Invite user" position="bottom">
-                  <MailPlus />
-                </Tooltip>
-              </div>
 
               <Show when={chats.chat?.userId === user.user?._id}>
-                <div class="icon-button">
-                  <Book onClick={() => setShowMem(!showMem())} />
-                </div>
-                <div class="icon-button">
-                  <Sliders onClick={() => setShowGen(true)} />
-                </div>
-
-                <div class="icon-button">
-                  <Settings onClick={() => setShowConfig(true)} />
+                <div class="icon-button" onClick={() => setShowOpts(!showOpts())}>
+                  <Menu />
                 </div>
 
                 <Show when={!cfg.fullscreen}>
@@ -251,6 +233,55 @@ const ChatDetail: Component = () => {
 
       <PromptModal />
 
+      <SideDrawer show={showOpts()} close={() => setShowOpts(false)} title="Chat Options">
+        <div class="flex flex-col gap-2">
+          <Option onClick={() => setEditing(!editing())}>
+            <div class="flex w-full items-center justify-between">
+              <div>Enable Chat Editing</div>
+              <Toggle
+                class="flex items-center"
+                fieldName="editChat"
+                value={editing()}
+                onChange={() => setEditing(!editing())}
+              />
+            </div>
+          </Option>
+
+          <Option
+            onClick={() => setShowInvite(true)}
+            close={() => setShowOpts(false)}
+            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+          >
+            <MailPlus /> Invite User
+          </Option>
+
+          <Option
+            onClick={() => setShowMem(true)}
+            close={() => setShowOpts(false)}
+            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+          >
+            <Book />
+            Edit Chat Memory
+          </Option>
+
+          <Option
+            onClick={() => setShowGen(true)}
+            close={() => setShowOpts(false)}
+            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+          >
+            <Sliders /> Generation Settings
+          </Option>
+
+          <Option
+            onClick={() => setShowConfig(true)}
+            close={() => setShowOpts(false)}
+            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+          >
+            <Settings /> Chat Settings
+          </Option>
+        </div>
+      </SideDrawer>
+
       <Show when={chats.chat}>
         <ChatMemoryModal
           chat={chats.chat!}
@@ -298,6 +329,28 @@ const InviteModal: Component<{ chatId: string; show: boolean; close: () => void 
         />
       </form>
     </Modal>
+  )
+}
+
+const Option: Component<{
+  children: any
+  class?: string
+  onClick: () => void
+  close?: () => void
+}> = (props) => {
+  const onClick = () => {
+    props.onClick()
+    props.close?.()
+  }
+  return (
+    <div
+      class={`flex w-full cursor-pointer select-none rounded-md bg-[var(--hl-900)] py-2 px-4 hover:bg-[var(--hl-800)] ${
+        props.class || ''
+      }`}
+      onClick={onClick}
+    >
+      {props.children}
+    </div>
   )
 }
 
@@ -351,7 +404,6 @@ const InfiniteScroll: Component = () => {
 
 type DetailSettings = { editing?: boolean }
 
-const EDITING_KEY = 'chat-detail-settings'
 function saveEditingState(value: boolean) {
   const prev = getEditingState()
   localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, editing: value }))

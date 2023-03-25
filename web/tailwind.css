@@ -165,6 +165,21 @@ body {
   width: 2.5rem;
 }
 
+body {
+  @apply text-900 bg-[var(--bg-900)];
+  height: -webkit-fill-available;
+}
+
+.app {
+  height: 100vh;
+}
+
+@supports (-webkit-touch-callout: none) {
+  .app {
+    @apply h-[calc(100vh-74px)];
+  }
+}
+
 .link {
   @apply text-[var(--hl-500)] hover:text-[var(--hl-300)];
 }
@@ -389,21 +404,21 @@ body {
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;
-    @apply w-[calc(100vw-80px)] bg-[var(--bg-900)] sm:w-72  lg:relative lg:top-0 lg:clear-none lg:h-[calc(100vh)] lg:w-72;
-    @apply z-10 lg:z-0;
+    @apply w-[calc(100vw-40px)] max-w-[320px] bg-[var(--bg-900)] sm:relative  sm:top-0 sm:clear-none sm:h-[100vh] sm:w-72;
+    @apply z-10 sm:z-0;
   }
 
   .drawer--hide {
     animation-fill-mode: forwards;
     animation: hideDrawer 0s ease 200ms;
-    @apply left-[-470px] lg:left-0 lg:opacity-100;
+    @apply left-[-100vw] sm:left-0 sm:opacity-100;
   }
 
   .drawer__content {
     /* position: fixed; */
     top: 0;
     left: 0;
-    height: 100%;
+    height: calc(100% - 64px);
     transition: 250ms ease;
   }
 

@@ -67,13 +67,13 @@ export const handleNovel: ModelAdapter = async function* ({
   const status = response.statusCode || 0
   if (statuses[status]) {
     log.error({ error: response.body }, `Novel response failed (${status})`)
-    yield { error: statuses[status] }
+    yield { error: `Novel API returned an error: ${statuses[status]}` }
     return
   }
 
   if (status >= 400) {
     log.error({ error: response.body }, `Novel request failed (${status})`)
-    yield { error: response.statusMessage! }
+    yield { error: `Novel API returned an error: ${response.statusMessage!}` }
     return
   }
 
