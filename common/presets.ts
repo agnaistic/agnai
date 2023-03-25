@@ -113,7 +113,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
-    useGaslight: 'useGaslight',
   },
   novel: {
     maxTokens: 'max_length',
@@ -127,7 +126,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical_p',
     topA: 'top_a',
     order: 'order',
-    useGaslight: 'useGaslight',
   },
   chai: {
     repetitionPenalty: 'repetition_penalty',
@@ -141,7 +139,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: '',
     topA: '',
     order: '',
-    useGaslight: '',
   },
   ooba: {
     maxTokens: '',
@@ -155,7 +152,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: '',
     topA: '',
     order: '',
-    useGaslight: '',
   },
   horde: {
     maxTokens: 'max_length',
@@ -169,7 +165,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
-    useGaslight: 'useGaslight',
   },
   luminai: {
     maxTokens: 'max_length',
@@ -183,7 +178,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
-    useGaslight: 'useGaslight',
   },
   openai: {
     maxTokens: 'max_tokens',
@@ -201,7 +195,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     presencePenalty: 'presence_penalty',
     gaslight: 'gaslight',
     oaiModel: 'oaiModel',
-    useGaslight: 'useGaslight',
   },
   scale: {
     maxTokens: '',
@@ -219,7 +212,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     presencePenalty: '',
     gaslight: '',
     oaiModel: '',
-    useGaslight: 'useGaslight',
   },
 }
 
