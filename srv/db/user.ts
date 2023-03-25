@@ -32,6 +32,11 @@ export async function ensureInitialUser() {
   logger.info(config.init, 'Created initial user')
 }
 
+export async function getMetrics() {
+  const totalUsers = await db('user').countDocuments()
+  return { totalUsers }
+}
+
 export async function getProfile(userId: string) {
   const profile = await db('profile').findOne({ kind: 'profile', userId })
   return profile

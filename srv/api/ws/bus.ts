@@ -1,9 +1,18 @@
+import * as os from 'os'
 import * as redis from 'redis'
 import { config } from '../../config'
 import { logger } from '../../logger'
-import { publishAll, publishGuest, publishMany, publishOne } from './handle'
+import { getAllCount, publishAll, publishGuest, publishMany, publishOne } from './handle'
 
 let connected = false
+
+type LiveCount = {
+  count: number
+  hostname: string
+  date: Date
+}
+
+let liveCounts: Record<string, LiveCount> = {}
 
 const MESSAGE_EVENT = 'agnaistic-message'
 const COUNT_EVENT = 'agnaistic-users'
@@ -11,6 +20,20 @@ const COUNT_EVENT = 'agnaistic-users'
 export const clients = {
   pub: redis.createClient({ url: getUri() }),
   sub: redis.createClient({ url: getUri() }),
+}
+
+export function getLiveCounts() {
+  if (!connected) return [{ hostname: os.hostname(), count: getAllCount(), date: new Date() }]
+
+  const entries: LiveCount[] = []
+  const now = Date.now()
+  for (const [hostname, entry] of Object.entries(liveCounts)) {
+    const diff = now - entry.date.valueOf()
+    if (diff > 15000) continue
+    entries.push(entry)
+  }
+
+  return entries
 }
 
 export function isConnected() {
@@ -22,6 +45,20 @@ export async function initMessageBus() {
     await clients.pub.connect()
     await clients.sub.connect()
     logger.info('Connected to message bus')
+
+    setInterval(() => {
+      clients.pub.publish(
+        COUNT_EVENT,
+        JSON.stringify({ count: getAllCount(), hostname: os.hostname() })
+      )
+    }, 10000)
+
+    clients.sub.subscribe(COUNT_EVENT, (msg) => {
+      try {
+        const json = JSON.parse(msg)
+        liveCounts[json.hostname] = { ...json, date: new Date() }
+      } catch (ex) {}
+    })
 
     clients.sub.subscribe(MESSAGE_EVENT, async (msg, _channel) => {
       try {

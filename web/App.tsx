@@ -17,6 +17,7 @@ import CharacterChats from './pages/Character/ChatList'
 import PresetList from './pages/GenerationPresets/PresetList'
 import MemoryPage from './pages/Memory'
 import { EditMemoryPage } from './pages/Memory/EditMemory'
+import MetricsPage from './pages/Admin/Metrics'
 
 const App: Component = () => {
   const state = userStore()
@@ -48,6 +49,7 @@ const App: Component = () => {
               <Show when={state.loggedIn}>
                 <Route path="/invites" component={InvitesPage} />
                 <Show when={state.user?.admin}>
+                  <Route path="/admin/metrics" component={MetricsPage} />
                   <Route path="/admin/users" component={UsersPage} />
                 </Show>
               </Show>

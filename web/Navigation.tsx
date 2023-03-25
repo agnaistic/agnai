@@ -1,5 +1,6 @@
 import { A, useNavigate } from '@solidjs/router'
 import {
+  Activity,
   Book,
   Bot,
   Eye,
@@ -92,8 +93,8 @@ const UserNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
       <Show when={user.user?.admin}>
-        <Item href="/admin/users">
-          <Eye /> Users
+        <Item href="/admin/metrics">
+          <Activity /> Metrics
         </Item>
       </Show>
       <a

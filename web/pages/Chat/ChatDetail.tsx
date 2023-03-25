@@ -11,7 +11,6 @@ import {
   ToggleLeft,
   ToggleRight,
   X,
-  AlertCircle,
 } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'

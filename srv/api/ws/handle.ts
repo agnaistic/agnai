@@ -13,6 +13,10 @@ const handlers: Record<string, Handler> = {
   logout,
 }
 
+export function getAllCount() {
+  return allSockets.size
+}
+
 export function handleMessage(client: AppSocket) {
   client.on('message', (data) => {
     const payload = parse(data)
@@ -85,7 +89,10 @@ function logout(client: AppSocket) {
 
   const next = sockets.filter((s) => s.uid !== client.uid)
   userSockets.set(userId, next)
-  client.dispatch({ type: 'logout', success: true })
+
+  if (client.OPEN) {
+    client.dispatch({ type: 'logout', success: true })
+  }
 }
 
 export function publishMany<T extends { type: string }>(userIds: string[], data: T) {
