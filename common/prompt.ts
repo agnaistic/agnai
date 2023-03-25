@@ -368,7 +368,8 @@ export function getLinesForPrompt(
 
   const sender = members.find((mem) => opts.chat.userId === mem.userId)?.handle || 'You'
 
-  const formatMsg = (chat: AppSchema.ChatMessage) => fillPlaceholders(chat, char.name, sender)
+  const formatMsg = (chat: AppSchema.ChatMessage) =>
+    fillPlaceholders(chat, char.name, sender).trim()
 
   const base = cont ? messages : messages
   const history = base.map(formatMsg)
@@ -424,5 +425,39 @@ export function getAdapter(
     }
   }
 
-  return { adapter, model, preset: presetName }
+  const contextLimit = getContextLimit(
+    adapter,
+    model,
+    preset?.maxContextLength ?? defaultPresets.basic.maxContextLength
+  )
+
+  return { adapter, model, preset: presetName, contextLimit }
+}
+
+/**
+ * When we know the maximum context limit for a particular LLM, ensure that the context limit we use does not exceed it.
+ */
+function getContextLimit(adapter: AIAdapter, model: string, limit: number): number {
+  switch (adapter) {
+    case 'chai':
+      return Math.min(2048, limit)
+
+    // Any LLM could be used here so don't max any assumptions
+    case 'kobold':
+    case 'luminai':
+    case 'horde':
+    case 'ooba':
+      return limit
+
+    case 'novel':
+      return Math.min(2048, limit)
+
+    case 'openai': {
+      if (!model || model === OPENAI_MODELS.Turbo || model === OPENAI_MODELS.DaVinci) return 4096
+      return limit
+    }
+
+    case 'scale':
+      return limit
+  }
 }
