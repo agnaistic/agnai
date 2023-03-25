@@ -29,7 +29,7 @@ const getMetrics = handle(async () => {
   const counts = getLiveCounts()
   const metrics = await store.users.getMetrics()
 
-  const connected = counts.map((count) => count.count)
+  const connected = counts.map((count) => count.count).reduce((prev, curr) => prev + curr, 0)
 
   return {
     ...metrics,
