@@ -1,5 +1,5 @@
 import { A, useNavigate } from '@solidjs/router'
-import { Edit, Plus, Trash } from 'lucide-solid'
+import { Copy, Edit, Plus, Trash } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
@@ -57,6 +57,14 @@ const PresetList: Component = () => {
                 class="icon-button"
               >
                 <Trash />
+              </Button>
+              <Button
+                schema="clear"
+                size="sm"
+                onClick={() => nav(`/presets/new?fromPresetId=${preset._id}`)}
+                class="icon-button"
+              >
+                <Copy />
               </Button>
             </div>
           )}
