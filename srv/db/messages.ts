@@ -34,6 +34,24 @@ export async function createChatMessage(
   return doc
 }
 
+export async function createManyChatMessages(messages: NewMessage[]) {
+  const docs: AppSchema.ChatMessage[] = messages.map((msg) => ({
+    _id: v4(),
+    kind: 'chat-message',
+    rating: 'none',
+    chatId: msg.chatId,
+    characterId: msg.characterId,
+    userId: msg.senderId,
+    msg: msg.message,
+    adapter: msg.adapter,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }))
+
+  await db('chat-message').insertMany(docs)
+  return docs
+}
+
 export async function getMessage(messageId: string) {
   const msg = await db('chat-message').findOne({ _id: messageId, kind: 'chat-message' })
   return msg
