@@ -17,6 +17,11 @@ export type MsgState = {
   nextLoading: boolean
 }
 
+export type NewMsgImport = {
+  chatId: string
+  msgs: { sender: 'character' | 'user'; text: string }[]
+}
+
 export const msgStore = createStore<MsgState>('messages', {
   activeChatId: '',
   msgs: [],
@@ -191,6 +196,14 @@ export const msgStore = createStore<MsgState>('messages', {
       if (res.error) toastStore.error(`Failed to request image: ${res.error}`)
       if (res.result) {
         console.log(res.result)
+      }
+    },
+    async *importMessages(_, props: NewMsgImport, onSuccess?: Function) {
+      const res = await data.msg.importMessages(props)
+      if (res.error) toastStore.error(`Failed to import messages: ${res.error}`)
+      if (res.result) {
+        yield { msgs: res.result.messages }
+        onSuccess?.()
       }
     },
   }
