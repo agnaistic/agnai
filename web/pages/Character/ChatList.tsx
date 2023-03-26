@@ -60,12 +60,10 @@ const CharacterChats: Component = () => {
       </Show>
 
       <div class="flex w-full justify-end gap-2">
-        {state.char && (
-          <Button onClick={() => setImport(true)}>
-            <Import />
-            Import
-          </Button>
-        )}
+        <Button onClick={() => setImport(true)}>
+          <Import />
+          Import
+        </Button>
         <Button onClick={() => setCreate(true)}>
           <Plus />
           Chat
@@ -84,7 +82,7 @@ const CharacterChats: Component = () => {
       <ImportChatModal
         show={showImport()}
         close={() => setImport(false)}
-        char={state.char}
+        targetChar={state.char}
         onSave={onSaveImport}
       />
     </div>

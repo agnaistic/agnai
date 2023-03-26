@@ -1,10 +1,12 @@
-import { Component, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { X } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
-import { NewMsgImport, toastStore } from '../../store'
+import { characterStore, NewMsgImport, toastStore } from '../../store'
+import Divider from '../../shared/Divider'
+import Dropdown from '../../shared/Dropdown'
 
 type ImportMessages = NewMsgImport['msgs']
 
@@ -12,9 +14,11 @@ const ImportChatModal: Component<{
   show: boolean
   close: () => void
   onSave: (msgs: ImportMessages) => void
-  char?: AppSchema.Character
+  targetChar?: AppSchema.Character
 }> = (props) => {
   const [logImport, setLogImport] = createSignal<ImportMessages | undefined>()
+  const [charId, setCharId] = createSignal(props.targetChar?._id)
+  const charState = characterStore((s) => ({ chars: s.characters.list }))
 
   const updateLogImport = async (files: FileInputResult[]) => {
     if (!files.length) return setLogImport()
@@ -45,7 +49,7 @@ const ImportChatModal: Component<{
   return (
     <Modal
       show={props.show}
-      title={`Import Chat Log for ${props.char?.name}`}
+      title={'Import Chat Log'}
       close={props.close}
       footer={
         <>
@@ -58,6 +62,22 @@ const ImportChatModal: Component<{
       }
     >
       <div class="flex flex-col gap-2">
+        <p>
+          You can import a chat log from a supported format. A new chat will be created, and all
+          messages in the log will be attributed either to you or the character you select.
+        </p>
+        <Show when={!props.targetChar}>
+          <Dropdown
+            fieldName="charName"
+            label="Character"
+            value={charId()}
+            items={charState.chars.map((char) => ({ label: char.name, value: char._id }))}
+            onChange={(item) => setCharId(item.value)}
+          />
+        </Show>
+        <Show when={!!props.targetChar}>
+          <p>Your chat log will be imported for {props.targetChar?.name}.</p>
+        </Show>
         <FileInput
           label="JSON Lines File (.jsonl)"
           fieldName="json"
@@ -66,6 +86,9 @@ const ImportChatModal: Component<{
           required
           onUpdate={updateLogImport}
         />
+        <Show when={logImport()}>
+          <p>{logImport()?.length} message(s) will be imported.</p>
+        </Show>
       </div>
     </Modal>
   )
@@ -73,7 +96,7 @@ const ImportChatModal: Component<{
 
 export default ImportChatModal
 
-type LogImportFormat = keyof typeof formatMaps | 'agnai'
+type LogImportFormat = keyof typeof formatMaps
 type LogImportKeys = {
   timestamp: string
   sender: string
@@ -108,7 +131,7 @@ type TavernLine = { [K in TavernFormat[keyof TavernFormat]]: any }
 function parseTavernLine(line: TavernLine): ImportMessages[number] {
   const { is_user, mes, send_date } = line
   return {
-    sender: !!is_user ? 'user' : 'character',
+    sender: JSON.parse(is_user) ? 'user' : 'character',
     text: String(mes),
     timestamp: parseInt(send_date),
   }
