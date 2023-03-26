@@ -2,30 +2,38 @@ import { Component, createSignal } from 'solid-js'
 import { X } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import FileInput, { FileInputResult } from '../../shared/FileInput'
+import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
-import { toastStore } from '../../store'
+import { NewMsgImport, toastStore } from '../../store'
 
-export type ImportChat = AppSchema.Chat & { json?: File }
+type ImportMessages = NewMsgImport['msgs']
 
 const ImportChatModal: Component<{
   show: boolean
   close: () => void
-  onSave: (chat: any) => void
+  onSave: (msgs: ImportMessages) => void
   char?: AppSchema.Character
 }> = (props) => {
-  const [json, setJson] = createSignal<any>(undefined)
+  const [logImport, setLogImport] = createSignal<ImportMessages | undefined>()
 
-  const updateJson = async (files: FileInputResult[]) => {
-    if (!files.length) return setJson()
+  const updateLogImport = async (files: FileInputResult[]) => {
+    if (!files.length) return setLogImport()
     try {
-      const content = await files[0].file.text()
-      const json = JSON.parse(content)
-      // importJson(json)
-      toastStore.success('Chat file accepted')
+      const content = await getFileAsString(files[0])
+      const result = parseLog(content)
+      setLogImport(result)
+      toastStore.success('Chat log accepted')
     } catch (ex) {
-      toastStore.warn('Invalid file format. Supported formats: TavernAI')
+      const message = ex instanceof Error ? ex.message : 'Unknown error'
+      toastStore.warn(`Invalid chat log file format. Supported formats: TavernAI (${message})`)
+      setLogImport()
     }
+  }
+
+  const onImport = async () => {
+    const msgs = logImport()
+    if (!msgs?.length) return
+    props.onSave(msgs)
   }
 
   return (
@@ -39,7 +47,7 @@ const ImportChatModal: Component<{
             <X />
             Cancel
           </Button>
-          <Button onClick={() => {}}>Import</Button>
+          <Button onClick={onImport}>Import</Button>
         </>
       }
     >
@@ -50,7 +58,7 @@ const ImportChatModal: Component<{
           accept="application/json-lines,application/jsonl,text/jsonl"
           helperText="Supported formats: TavernAI"
           required
-          onUpdate={updateJson}
+          onUpdate={updateLogImport}
         />
       </div>
     </Modal>
@@ -58,3 +66,41 @@ const ImportChatModal: Component<{
 }
 
 export default ImportChatModal
+
+type LogImportFormat = keyof typeof formatMaps | 'agnai'
+type LogImportKeys = {
+  timestamp: string
+  sender: string
+  text: string
+}
+
+const formatMaps = {
+  tavern: {
+    timestamp: 'send_date',
+    sender: 'is_user',
+    text: 'mes',
+  } as const,
+} satisfies Record<string, LogImportKeys>
+
+function getLogFormat(log: any): LogImportFormat {
+  // The first line of a TavernAI jsonl file is a chat metadata object.
+  if ('user_name' in log[0] && 'character_name' in log[0] && 'create_date' in log[0])
+    return 'tavern'
+  throw new Error('Unrecognized log format')
+}
+
+function parseLog(log: any): ImportMessages {
+  const format = getLogFormat(log)
+  if (format === 'tavern') {
+    return log.slice(1).map(parseTavernLine)
+  }
+  return []
+}
+
+type TavernFormat = typeof formatMaps.tavern
+type TavernLine = { [K in TavernFormat[keyof TavernFormat]]: any }
+function parseTavernLine(line: TavernLine): ImportMessages[number] {
+  // Do we want to do anything with timestamps?
+  const { is_user, mes } = line
+  return { sender: !!is_user ? 'user' : 'character', text: String(mes) }
+}
