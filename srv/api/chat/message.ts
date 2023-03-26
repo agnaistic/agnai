@@ -216,8 +216,8 @@ export const importMessages = handle(async ({ body, params, userId }) => {
       messages: [
         // In lieu of some mechanism to map imported messages to existing Agnai users or characters,
         // we assume that all bot messages are from the character and user messages are from the
-        // chat owner.
-        { text: 'string', sender: ['character', 'user'] },
+        // chat owner. Works for Tavern chats but obviously not for Agnai's own multi-user chats.
+        { text: 'string', sender: ['character', 'user'], timestamp: 'number' },
       ],
     },
     body
@@ -228,6 +228,7 @@ export const importMessages = handle(async ({ body, params, userId }) => {
       chatId: chat._id,
       message: m.text,
       adapter: chat.adapter,
+      createdAt: new Date(m.timestamp).toISOString(),
       ...(m.sender === 'character' ? { characterId: chat.characterId } : { userId }),
     }))
   )

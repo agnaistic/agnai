@@ -19,7 +19,7 @@ export type MsgState = {
 
 export type NewMsgImport = {
   chatId: string
-  msgs: { sender: 'character' | 'user'; text: string }[]
+  msgs: { sender: 'character' | 'user'; text: string; timestamp: number }[]
 }
 
 export const msgStore = createStore<MsgState>('messages', {
