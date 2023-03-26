@@ -32,22 +32,10 @@ const CharacterChats: Component = () => {
     }
   })
 
-  const onSaveImport = (char: AppSchema.Character, msgs: NewMsgImport['msgs']) => {
-    const newChatPayload: NewChat = {
-      name: 'Imported Chat',
-      scenario: char.scenario,
-      sampleChat: char.sampleChat,
-      greeting: '',
-      // Not sure if it is safe to assign this reference rather than deep clone
-      overrides: char.persona,
-    }
-
-    // This is pretty bad, need to make it a single store action
-    chatStore.createChat(char._id, newChatPayload, (chatId) => {
-      msgStore.importMessages({ chatId, msgs }, () => {
-        toastStore.success('Chat imported successfully')
-        setImport(false)
-      })
+  const onSaveImport = (msgImport: NewMsgImport) => {
+    msgStore.importMessages(msgImport, () => {
+      toastStore.success('Chat imported successfully')
+      setImport(false)
     })
   }
 

@@ -8,15 +8,15 @@ import { characterStore, NewMsgImport, toastStore } from '../../store'
 import Divider from '../../shared/Divider'
 import Dropdown from '../../shared/Dropdown'
 
-type ImportMessages = NewMsgImport['msgs']
+type StagedLog = NewMsgImport['msgs']
 
 const ImportChatModal: Component<{
   show: boolean
   close: () => void
-  onSave: (char: AppSchema.Character, msgs: ImportMessages) => void
+  onSave: (msgImport: NewMsgImport) => void
   char?: AppSchema.Character
 }> = (props) => {
-  const [stagedLog, setStagedLog] = createSignal<ImportMessages>()
+  const [stagedLog, setStagedLog] = createSignal<StagedLog>()
   const [charId, setCharId] = createSignal<string>()
   const charState = characterStore((s) => ({ chars: s.characters.list }))
 
@@ -52,7 +52,7 @@ const ImportChatModal: Component<{
     const msgs = stagedLog()
     const char = charState.chars.find((char) => char._id === charId())
     if (!msgs?.length || !char) return
-    props.onSave(char, msgs)
+    props.onSave({ msgs, char })
   }
 
   return (
@@ -72,9 +72,10 @@ const ImportChatModal: Component<{
     >
       <div class="flex flex-col gap-2">
         <p>
-          You can import a chat log from a supported format. A new chat will be created, and all
-          messages in the log will be attributed either to you or the character you select.
+          <strong>Note: </strong>This currently doesn't support multi-user chats. All messages will
+          be attributed either to you or the selected character.
         </p>
+        <Divider />
         <Show when={!props.char}>
           <Dropdown
             fieldName="charName"
@@ -127,7 +128,7 @@ function getLogFormat(log: any[]): LogImportFormat {
   throw new Error('Unrecognized log format')
 }
 
-function parseLog(log: any[]): ImportMessages {
+function parseLog(log: any[]): StagedLog {
   const format = getLogFormat(log)
   if (format === 'tavern') {
     return log.slice(1).map(parseTavernLine)
@@ -137,7 +138,7 @@ function parseLog(log: any[]): ImportMessages {
 
 type TavernFormat = typeof formatMaps.tavern
 type TavernLine = { [K in TavernFormat[keyof TavernFormat]]: any }
-function parseTavernLine(line: TavernLine): ImportMessages[number] {
+function parseTavernLine(line: TavernLine): StagedLog[number] {
   const { is_user, mes, send_date } = line
   return {
     sender: JSON.parse(is_user) ? 'user' : 'character',

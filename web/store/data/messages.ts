@@ -129,7 +129,7 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
   return local.result({ success: true })
 }
 
-export async function importMessages({ chatId, msgs }: NewMsgImport) {
+export async function importMessages(chatId: string, { msgs }: NewMsgImport) {
   if (isLoggedIn()) {
     const res = await api.method<{ messages: AppSchema.ChatMessage[] }>(
       'post',

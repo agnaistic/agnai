@@ -199,12 +199,26 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *createChat(_, characterId: string, props: NewChat, onSuccess?: (id: string) => void) {
+    async *createChat(
+      { all, char },
+      characterId: string,
+      props: NewChat,
+      onSuccess?: (id: string) => void
+    ) {
       const res = await data.chats.createChat(characterId, props)
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
         const { characters } = characterStore.getState()
         const character = characters.list.find((ch) => ch._id === characterId)
+
+        if (all?.chats) {
+          yield { all: { ...all, chats: [res.result, ...all.chats] } }
+        }
+
+        if (char?.char._id === characterId) {
+          yield { char: { ...char, chats: [res.result, ...char.chats] } }
+        }
+
         yield { active: { chat: res.result, char: character! } }
 
         onSuccess?.(res.result._id)
