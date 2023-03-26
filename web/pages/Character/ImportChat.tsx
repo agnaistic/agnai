@@ -16,7 +16,7 @@ const ImportChatModal: Component<{
   onSave: (char: AppSchema.Character, msgs: ImportMessages) => void
   char?: AppSchema.Character
 }> = (props) => {
-  const [logImport, setLogImport] = createSignal<ImportMessages>()
+  const [stagedLog, setStagedLog] = createSignal<ImportMessages>()
   const [charId, setCharId] = createSignal<string>()
   const charState = characterStore((s) => ({ chars: s.characters.list }))
 
@@ -28,28 +28,28 @@ const ImportChatModal: Component<{
     }
   })
 
-  const updateLogImport = async (files: FileInputResult[]) => {
-    if (!files.length) return setLogImport()
+  const onSelectLog = async (files: FileInputResult[]) => {
+    if (!files.length) return setStagedLog()
     try {
-      const content = await getFileAsString(files[0])
-      // Assumes that the file is a jsonl file, but may need more robust handling for other formats
-      const lines = content
+      const textContent = await getFileAsString(files[0])
+      // Assumes that the file is a jsonl file; needs more robust handling for future formats
+      const logLines = textContent
         .split('\n')
         .map((line) => JSON.parse(line))
         .filter(Boolean)
-      const result = parseLog(lines)
-      setLogImport(result)
+      const parsed = parseLog(logLines)
+      setStagedLog(parsed)
       toastStore.success('Chat log accepted')
     } catch (ex) {
       const message = ex instanceof Error ? ex.message : 'Unknown error'
       toastStore.warn(`Invalid chat log file format. Supported formats: TavernAI (${message})`)
       console.error(ex)
-      setLogImport()
+      setStagedLog()
     }
   }
 
   const onImport = () => {
-    const msgs = logImport()
+    const msgs = stagedLog()
     const char = charState.chars.find((char) => char._id === charId())
     if (!msgs?.length || !char) return
     props.onSave(char, msgs)
@@ -93,10 +93,10 @@ const ImportChatModal: Component<{
           accept="application/json-lines,application/jsonl,text/jsonl"
           helperText="Supported formats: TavernAI"
           required
-          onUpdate={updateLogImport}
+          onUpdate={onSelectLog}
         />
-        <Show when={logImport()}>
-          <p>{logImport()?.length} message(s) will be imported.</p>
+        <Show when={stagedLog()}>
+          <p>{stagedLog()?.length} message(s) will be imported.</p>
         </Show>
       </div>
     </Modal>
