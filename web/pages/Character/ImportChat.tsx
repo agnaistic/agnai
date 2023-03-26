@@ -23,9 +23,7 @@ const ImportChatModal: Component<{
   createEffect(() => {
     if (props.char && props.char._id !== charId()) {
       setCharId(props.char?._id)
-    }
-
-    if (!charId() && charState.chars.length) {
+    } else if (!charId() && charState.chars.length) {
       setCharId(charState.chars[0]._id)
     }
   })
@@ -45,7 +43,6 @@ const ImportChatModal: Component<{
     } catch (ex) {
       const message = ex instanceof Error ? ex.message : 'Unknown error'
       toastStore.warn(`Invalid chat log file format. Supported formats: TavernAI (${message})`)
-      console.error(ex)
       setStagedLog()
     }
   }
@@ -54,7 +51,6 @@ const ImportChatModal: Component<{
     const msgs = stagedLog()
     const char = charState.chars.find((char) => char._id === charId())
     if (!msgs?.length || !char) return
-    console.log('importing chat log for', char.name)
     props.onSave({ msgs, char })
   }
 
