@@ -198,11 +198,11 @@ export const msgStore = createStore<MsgState>('messages', {
         console.log(res.result)
       }
     },
-    async *importMessages(_, props: NewMsgImport, onSuccess?: Function) {
+    async *importMessages({ msgs }, props: NewMsgImport, onSuccess?: Function) {
       const res = await data.msg.importMessages(props)
       if (res.error) toastStore.error(`Failed to import messages: ${res.error}`)
       if (res.result) {
-        yield { msgs: res.result.messages }
+        yield { msgs: msgs.concat(res.result.messages) }
         onSuccess?.()
       }
     },
