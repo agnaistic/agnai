@@ -13,10 +13,7 @@ export type NewMessage = {
   adapter?: string
 }
 
-export type ImportedMessage = NewMessage & {
-  /** ISO-8601 timestamp */
-  createdAt: string
-}
+export type ImportedMessage = NewMessage & { createdAt: string }
 
 export async function createChatMessage(
   { chatId, message, characterId, senderId, adapter }: NewMessage,

@@ -206,9 +206,8 @@ function newMessage(
 export const importMessages = handle(async ({ body, params, userId }) => {
   const chatId = params.id
   const chat = await store.chats.getChat(chatId)
+  
   if (!chat) throw errors.NotFound
-
-  // Should guest users be allowed to import chats?
   if (!userId || chat.userId !== userId) throw errors.Forbidden
 
   assertValid(
@@ -229,7 +228,7 @@ export const importMessages = handle(async ({ body, params, userId }) => {
       message: m.text,
       adapter: chat.adapter,
       createdAt: new Date(m.timestamp).toISOString(),
-      ...(m.sender === 'character' ? { characterId: chat.characterId } : { userId }),
+      ...(m.sender === 'character' ? { characterId: chat.characterId } : { senderId: userId }),
     }))
   )
 
