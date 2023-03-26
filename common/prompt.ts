@@ -130,7 +130,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
   const pre: string[] = []
 
-  if (!opts.settings?.useGaslight) {
+  if (!opts.settings?.useGaslight && !opts.settings?.useGaslight) {
     pre.push(`${char.name}'s Persona: ${parts.persona}`)
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
@@ -146,9 +146,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
     if (parts.sampleChat) pre.push(...parts.sampleChat)
   }
 
-  if (opts.settings?.useGaslight) {
-    pre.push(parts.gaslight)
-  }
+  if (opts.settings?.useGaslight || opts.chat?.genSettings?.useGaslight) pre.push(parts.gaslight)
 
   const post = [`${char.name}:`]
   if (opts.continue) {

@@ -6,6 +6,7 @@ import { createStore } from './create'
 import { data } from './data'
 import { memoryStore } from './memory'
 import { msgStore } from './message'
+import { presetStore } from './presets'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
@@ -248,6 +249,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const { msgs } = msgStore.getState()
 
       const book = memoryStore.getState().books.list.find((bk) => bk._id === active.chat.memoryId)
+      const settings = presetStore.getState().presets.find((p) => p._id === active.chat.genPreset)
 
       const prompt = createPrompt({
         chat: active.chat,
@@ -256,6 +258,7 @@ export const chatStore = createStore<ChatState>('chat', {
         user,
         members: activeMembers,
         book,
+        settings: settings,
       })
 
       return { prompt }
