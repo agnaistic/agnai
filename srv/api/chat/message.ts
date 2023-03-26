@@ -202,6 +202,38 @@ function newMessage(
   }
   return userMsg
 }
+
+export const importMessages = handle(async ({ body, params, userId }) => {
+  const chatId = params.id
+  const chat = await store.chats.getChat(chatId)
+  if (!chat) throw errors.NotFound
+
+  // Should guest users be allowed to import chats?
+  if (!userId || chat.userId !== userId) throw errors.Forbidden
+
+  assertValid(
+    {
+      messages: [
+        // In lieu of some mechanism to map imported messages to existing Agnai users or characters,
+        // we assume that all bot messages are from the character and user messages are from the
+        // chat owner.
+        { message: 'string', sender: ['character', 'user'] },
+      ],
+    },
+    body
+  )
+
+  await store.msgs.createManyChatMessages(
+    body.messages.map((m) => ({
+      chatId: chat._id,
+      message: m.message,
+      adapter: chat.adapter,
+      ...(m.sender === 'character' ? { characterId: chat.characterId } : { userId }),
+    }))
+  )
+
+  return { success: true }
+})
 /**
  * V1 response generation routes
  * To be removed
