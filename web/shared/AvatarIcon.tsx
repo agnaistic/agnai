@@ -63,8 +63,8 @@ const AvatarIcon: Component<Props> = (props) => {
 }
 
 const sizes: Record<AvatarSize, string> = {
-  sm: 'h-4 w-4 sm:h-8 sm:w-8',
-  md: 'h-6 w-6 sm:h-10 sm:w-10',
+  sm: 'h- w-8 sm:h-8 sm:w-8',
+  md: 'h-8 w-8 sm:h-10 sm:w-10',
   lg: 'h-8 w-8 sm:h-12 sm:w-12',
   xl: 'h-10 w-10 sm:h-16 sm:w-16',
   '2xl': 'h-12 w-12 sm:h-20 sm:w-20',

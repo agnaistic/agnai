@@ -5,12 +5,14 @@ import {
   Book,
   ChevronLeft,
   ChevronRight,
+  Download,
   MailPlus,
   Menu,
   Settings,
   Sliders,
   X,
 } from 'lucide-solid'
+import ChatExport from './ChatExport'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { getAdapter } from '../../../common/prompt'
@@ -22,7 +24,6 @@ import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, userStore } from '../../store'
-import { memoryStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -46,11 +47,6 @@ const ChatDetail: Component = () => {
     retries: s.retries,
   }))
 
-  const memory = memoryStore((s) => ({
-    book: s.books.list.find((bk) => chats.chat?.memoryId === bk._id),
-    loaded: s.books.loaded,
-  }))
-
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last) return
@@ -67,6 +63,7 @@ const ChatDetail: Component = () => {
   const [showGen, setShowGen] = createSignal(false)
   const [showConfig, setShowConfig] = createSignal(false)
   const [showInvite, setShowInvite] = createSignal(false)
+  const [showExport, setShowExport] = createSignal(false)
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const { id } = useParams()
   const nav = useNavigate()
@@ -279,16 +276,27 @@ const ChatDetail: Component = () => {
           >
             <Settings /> Chat Settings
           </Option>
+
+          <Option
+            onClick={() => setShowExport(true)}
+            close={() => setShowOpts(false)}
+            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+          >
+            <Download /> Export Chat
+          </Option>
         </div>
       </SideDrawer>
 
-      <Show when={chats.chat}>
+      <Show when={showMem()}>
         <ChatMemoryModal
           chat={chats.chat!}
-          book={memory.book}
           show={!!chats.chat && showMem()}
           close={() => setShowMem(false)}
         />
+      </Show>
+
+      <Show when={showExport()}>
+        <ChatExport show={showExport()} close={() => setShowExport(false)} />
       </Show>
     </>
   )

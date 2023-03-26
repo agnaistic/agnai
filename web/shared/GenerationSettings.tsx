@@ -16,7 +16,7 @@ type Props = {
 }
 
 const GenerationSettings: Component<Props> = (props) => {
-  const tabs = ['General', 'Prompt', 'Generation'] as const
+  const tabs = ['General', 'Prompt'] as const
   const [tab, setTab] = createSignal(0)
 
   return (
@@ -24,7 +24,7 @@ const GenerationSettings: Component<Props> = (props) => {
       <Show when={!props.showAll}>
         <Tabs tabs={tabs} select={setTab} selected={tab} />
       </Show>
-
+      <Divider />
       <div class="flex flex-col gap-4">
         <Section show={props.showAll || tabs[tab()] === 'General'}>
           <GeneralSettings disabled={props.disabled} inherit={props.inherit} />
@@ -34,7 +34,7 @@ const GenerationSettings: Component<Props> = (props) => {
           <PromptSettings disabled={props.disabled} inherit={props.inherit} />
         </Section>
 
-        <Section show={props.showAll || tabs[tab()] === 'Generation'}>
+        <Section show={props.showAll || tabs[tab()] === 'General'}>
           <GeneSettings disabled={props.disabled} inherit={props.inherit} />
         </Section>
       </div>
@@ -52,7 +52,6 @@ const Section: Component<SectProps> = (props) => (
 const GeneralSettings: Component<Props> = (props) => {
   return (
     <>
-      <Divider />
       <div class="text-xl font-bold">General Settings</div>
       <RangeInput
         fieldName="maxTokens"
@@ -103,7 +102,6 @@ const GeneralSettings: Component<Props> = (props) => {
 const PromptSettings: Component<Props> = (props) => {
   return (
     <>
-      <Divider />
       <div class="text-xl font-bold">Prompt Settings</div>
       <RangeInput
         fieldName="memoryContextLimit"
@@ -168,7 +166,6 @@ const PromptSettings: Component<Props> = (props) => {
 const GeneSettings: Component<Props> = (props) => {
   return (
     <>
-      <Divider />
       <div class="text-xl font-bold">Generation Settings</div>
       <RangeInput
         fieldName="temp"

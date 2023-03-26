@@ -11,12 +11,11 @@ import EditMemoryForm, { getBookUpdate } from '../../Memory/EditMemory'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
-  book?: AppSchema.MemoryBook
   show: boolean
   close: () => void
 }> = (props) => {
   const state = memoryStore((s) => ({
-    books: s.books.list,
+    books: s.books,
     items: s.books.list.map((book) => ({ label: book.name, value: book._id })),
   }))
 
@@ -28,7 +27,7 @@ const ChatMemoryModal: Component<{
     setBook(undefined)
     await Promise.resolve()
 
-    const match = state.books.find((book) => book._id === id)
+    const match = state.books.list.find((book) => book._id === id)
     setBook(match)
   }
 
