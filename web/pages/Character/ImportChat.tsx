@@ -21,9 +21,11 @@ const ImportChatModal: Component<{
   const charState = characterStore((s) => ({ chars: s.characters.list }))
 
   createEffect(() => {
-    if (!charId() && props.char) {
-      setCharId(props.char._id)
-    } else if (!charId() && charState.chars.length) {
+    if (props.char && props.char._id !== charId()) {
+      setCharId(props.char?._id)
+    }
+
+    if (!charId() && charState.chars.length) {
       setCharId(charState.chars[0]._id)
     }
   })
@@ -52,6 +54,7 @@ const ImportChatModal: Component<{
     const msgs = stagedLog()
     const char = charState.chars.find((char) => char._id === charId())
     if (!msgs?.length || !char) return
+    console.log('importing chat log for', char.name)
     props.onSave({ msgs, char })
   }
 
