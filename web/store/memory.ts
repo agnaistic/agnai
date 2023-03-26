@@ -100,6 +100,7 @@ export const memoryStore = createStore<MemoryState>('memory', {
         const next = prev.filter((book) => book._id !== bookId)
         yield { books: { list: next, loaded: true } }
         toastStore.success('Book deleted')
+        onSuccess?.()
       }
     },
   }

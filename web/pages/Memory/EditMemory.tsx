@@ -31,7 +31,6 @@ const emptyEntry: AppSchema.MemoryEntry = {
 }
 
 const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean }> = (props) => {
-  const params = useParams()
   const [editing, setEditing] = createSignal(props.book)
 
   const addEntry = () => {
@@ -59,7 +58,7 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
         <FormLabel
           fieldName="id"
           label="Id"
-          helperText={params.id === 'new' ? 'New book' : params.id}
+          helperText={props.book._id === '' ? 'New book' : props.book._id}
         />
         <TextInput
           fieldName="name"
@@ -194,9 +193,12 @@ const EntryCard: Component<AppSchema.MemoryEntry & { index: number; onRemove: ()
             class="w-full border-[1px]"
             value={props.name}
           />
-          <div class="flex items-center">
-            <Toggle fieldName={`enabled.${props.index}`} value={!!props.enabled} />
-          </div>
+          <Toggle
+            fieldName={`enabled.${props.index}`}
+            value={!!props.enabled}
+            class="flex items-center"
+          />
+
           <Button schema="clear" class="icon-button" onClick={props.onRemove}>
             <X />
           </Button>

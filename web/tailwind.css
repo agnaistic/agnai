@@ -167,6 +167,7 @@ body {
 
 body {
   @apply text-900 bg-[var(--bg-900)];
+  height: 100%;
   height: -webkit-fill-available;
 }
 

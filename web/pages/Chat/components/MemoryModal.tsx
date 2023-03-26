@@ -1,5 +1,5 @@
 import { Save } from 'lucide-solid'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
@@ -21,10 +21,19 @@ const ChatMemoryModal: Component<{
   }))
 
   const [id, setId] = createSignal(props.chat.memoryId || '')
-  const book = createMemo(() => {
-    if (!id()) return
-    const match = state.books.find((book) => book._id === id())
-    return match
+  const [book, setBook] = createSignal<AppSchema.MemoryBook>()
+
+  const changeBook = async (id: string) => {
+    setId(id)
+    setBook(undefined)
+    await Promise.resolve()
+
+    const match = state.books.find((book) => book._id === id)
+    setBook(match)
+  }
+
+  onMount(() => {
+    changeBook(props.chat.memoryId || '')
   })
 
   const onSubmit = (ev: Event) => {
@@ -58,6 +67,7 @@ const ChatMemoryModal: Component<{
       close={props.close}
       footer={<Footer />}
       onSubmit={onSubmit}
+      fixedHeight
     >
       <div class="flex flex-col gap-2">
         <div class="flex items-end justify-between">
@@ -67,7 +77,7 @@ const ChatMemoryModal: Component<{
             helperText="The memory book your chat will use"
             items={[{ label: 'None', value: '' }].concat(state.items)}
             value={id()}
-            onChange={(item) => setId(item.value)}
+            onChange={(item) => changeBook(item.value)}
           />
           <Button
             disabled={id() === (props.chat.memoryId || '')}

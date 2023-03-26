@@ -12,7 +12,7 @@ const InputBar: Component<{
   more: (msg: string) => void
 }> = (props) => {
   let ref: any
-  const ui = userStore((s) => s.ui)
+  const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
 
   const send = () => {
@@ -33,7 +33,7 @@ const InputBar: Component<{
 
   return (
     <div class="flex items-center justify-center gap-2 max-sm:pb-0">
-      <Show when={ui.input === 'single'}>
+      <Show when={user.ui.input === 'single'}>
         <input
           spellcheck
           ref={ref}
@@ -43,7 +43,7 @@ const InputBar: Component<{
           onKeyUp={(ev) => ev.key === 'Enter' && send()}
         />
       </Show>
-      <Show when={!ui.input || ui.input === 'multi'}>
+      <Show when={!user.ui.input || user.ui.input === 'multi'}>
         <textarea
           spellcheck
           ref={ref}
@@ -59,7 +59,7 @@ const InputBar: Component<{
       {/* <IconButton onClick={createImage}>
         <ImagePlus />
       </IconButton> */}
-      <Show when={!!state.lastMsg?.characterId}>
+      <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
         <IconButton onClick={() => props.more(state.lastMsg.msg)}>
           <PlusCircle />
         </IconButton>
