@@ -13,12 +13,20 @@ type ImportMessages = NewMsgImport['msgs']
 const ImportChatModal: Component<{
   show: boolean
   close: () => void
-  onSave: (msgs: ImportMessages) => void
-  targetChar?: AppSchema.Character
+  onSave: (char: AppSchema.Character, msgs: ImportMessages) => void
+  char?: AppSchema.Character
 }> = (props) => {
-  const [logImport, setLogImport] = createSignal<ImportMessages | undefined>()
-  const [charId, setCharId] = createSignal(props.targetChar?._id)
+  const [logImport, setLogImport] = createSignal<ImportMessages>()
+  const [charId, setCharId] = createSignal<string>()
   const charState = characterStore((s) => ({ chars: s.characters.list }))
+
+  createEffect(() => {
+    if (!charId() && props.char) {
+      setCharId(props.char._id)
+    } else if (!charId() && charState.chars.length) {
+      setCharId(charState.chars[0]._id)
+    }
+  })
 
   const updateLogImport = async (files: FileInputResult[]) => {
     if (!files.length) return setLogImport()
@@ -42,8 +50,9 @@ const ImportChatModal: Component<{
 
   const onImport = () => {
     const msgs = logImport()
-    if (!msgs?.length) return
-    props.onSave(msgs)
+    const char = charState.chars.find((char) => char._id === charId())
+    if (!msgs?.length || !char) return
+    props.onSave(char, msgs)
   }
 
   return (
@@ -66,7 +75,7 @@ const ImportChatModal: Component<{
           You can import a chat log from a supported format. A new chat will be created, and all
           messages in the log will be attributed either to you or the character you select.
         </p>
-        <Show when={!props.targetChar}>
+        <Show when={!props.char}>
           <Dropdown
             fieldName="charName"
             label="Character"
@@ -75,8 +84,8 @@ const ImportChatModal: Component<{
             onChange={(item) => setCharId(item.value)}
           />
         </Show>
-        <Show when={!!props.targetChar}>
-          <p>Your chat log will be imported for {props.targetChar?.name}.</p>
+        <Show when={!!props.char}>
+          <p>Your chat log will be imported for {props.char?.name}.</p>
         </Show>
         <FileInput
           label="JSON Lines File (.jsonl)"
