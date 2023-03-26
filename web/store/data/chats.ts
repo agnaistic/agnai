@@ -56,7 +56,7 @@ export async function createChat(characterId: string, props: NewChat) {
   const { chat, msg } = createNewChat(char, props)
 
   local.saveChats(chats.concat(chat))
-  local.saveMessages(chat._id, [msg])
+  if (props.greeting) local.saveMessages(chat._id, [msg])
   return local.result(chat)
 }
 
