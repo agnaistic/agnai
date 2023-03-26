@@ -20,17 +20,23 @@ const ImportChatModal: Component<{
     if (!files.length) return setLogImport()
     try {
       const content = await getFileAsString(files[0])
-      const result = parseLog(content)
+      // Assumes that the file is a jsonl file, but may need more robust handling for other formats
+      const lines = content
+        .split('\n')
+        .map((line) => JSON.parse(line))
+        .filter(Boolean)
+      const result = parseLog(lines)
       setLogImport(result)
       toastStore.success('Chat log accepted')
     } catch (ex) {
       const message = ex instanceof Error ? ex.message : 'Unknown error'
       toastStore.warn(`Invalid chat log file format. Supported formats: TavernAI (${message})`)
+      console.error(ex)
       setLogImport()
     }
   }
 
-  const onImport = async () => {
+  const onImport = () => {
     const msgs = logImport()
     if (!msgs?.length) return
     props.onSave(msgs)
@@ -82,14 +88,14 @@ const formatMaps = {
   } as const,
 } satisfies Record<string, LogImportKeys>
 
-function getLogFormat(log: any): LogImportFormat {
+function getLogFormat(log: any[]): LogImportFormat {
   // The first line of a TavernAI jsonl file is a chat metadata object.
   if ('user_name' in log[0] && 'character_name' in log[0] && 'create_date' in log[0])
     return 'tavern'
   throw new Error('Unrecognized log format')
 }
 
-function parseLog(log: any): ImportMessages {
+function parseLog(log: any[]): ImportMessages {
   const format = getLogFormat(log)
   if (format === 'tavern') {
     return log.slice(1).map(parseTavernLine)
@@ -100,7 +106,10 @@ function parseLog(log: any): ImportMessages {
 type TavernFormat = typeof formatMaps.tavern
 type TavernLine = { [K in TavernFormat[keyof TavernFormat]]: any }
 function parseTavernLine(line: TavernLine): ImportMessages[number] {
-  // Do we want to do anything with timestamps?
-  const { is_user, mes } = line
-  return { sender: !!is_user ? 'user' : 'character', text: String(mes) }
+  const { is_user, mes, send_date } = line
+  return {
+    sender: !!is_user ? 'user' : 'character',
+    text: String(mes),
+    timestamp: parseInt(send_date),
+  }
 }

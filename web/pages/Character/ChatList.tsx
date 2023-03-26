@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { characterStore, chatStore } from '../../store'
+import { characterStore, chatStore, msgStore, NewChat, NewMsgImport, toastStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
 import { Import, Plus, Trash } from 'lucide-solid'
@@ -15,8 +15,6 @@ const CharacterChats: Component = () => {
   const { id } = useParams()
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
-
-  // const onImport = () => {
 
   const state = chatStore((s) => {
     if (id) {
@@ -33,6 +31,27 @@ const CharacterChats: Component = () => {
       chatStore.getAllChats()
     }
   })
+
+  const onSaveImport = (msgs: NewMsgImport['msgs']) => {
+    if (!state.char) return
+
+    const newChatPayload: NewChat = {
+      name: 'Imported Chat',
+      scenario: state.char.scenario,
+      sampleChat: state.char.sampleChat,
+      greeting: '',
+      // Not sure if it is safe to assign this reference rather than deep clone
+      overrides: state.char.persona,
+    }
+
+    // This is pretty bad, need to make it a single store action
+    chatStore.createChat(state.char._id, newChatPayload, (chatId) => {
+      msgStore.importMessages({ chatId, msgs }, () => {
+        toastStore.success('Chat imported successfully')
+        setImport(false)
+      })
+    })
+  }
 
   return (
     <div class="flex flex-col gap-2">
@@ -66,7 +85,7 @@ const CharacterChats: Component = () => {
         show={showImport()}
         close={() => setImport(false)}
         char={state.char}
-        onSave={() => {}}
+        onSave={onSaveImport}
       />
     </div>
   )
