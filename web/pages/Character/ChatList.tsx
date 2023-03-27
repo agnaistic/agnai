@@ -3,8 +3,9 @@ import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
-import { Plus, Trash } from 'lucide-solid'
+import { Import, Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
+import ImportChatModal from './ImportChat'
 import { toDuration, toEntityMap } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
 import { AppSchema } from '../../../srv/db/schema'
@@ -13,6 +14,7 @@ import AvatarIcon from '../../shared/AvatarIcon'
 const CharacterChats: Component = () => {
   const { id } = useParams()
   const [showCreate, setCreate] = createSignal(false)
+  const [showImport, setImport] = createSignal(false)
 
   const state = chatStore((s) => {
     if (id) {
@@ -37,6 +39,10 @@ const CharacterChats: Component = () => {
       </Show>
 
       <div class="flex w-full justify-end gap-2">
+        <Button onClick={() => setImport(true)}>
+          <Import />
+          Import
+        </Button>
         <Button onClick={() => setCreate(true)}>
           <Plus />
           Chat
@@ -52,6 +58,7 @@ const CharacterChats: Component = () => {
         char={state.char}
         id={id}
       />
+      <ImportChatModal show={showImport()} close={() => setImport(false)} char={state.char} />
     </div>
   )
 }

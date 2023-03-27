@@ -1,5 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
+import { chatStore, NewChat } from './chat'
 import { createStore } from './create'
 import { data } from './data'
 import { local } from './data/storage'

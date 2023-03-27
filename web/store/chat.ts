@@ -4,9 +4,7 @@ import { api } from './api'
 import { characterStore } from './character'
 import { createStore } from './create'
 import { data } from './data'
-import { memoryStore } from './memory'
 import { msgStore } from './message'
-import { presetStore } from './presets'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
@@ -31,6 +29,14 @@ type ChatState = {
   activeMembers: AppSchema.Profile[]
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt
+}
+
+export type ImportChat = {
+  name: string
+  greeting: string
+  scenario: string
+  sampleChat: string
+  messages: Array<{ msg: string; characterId?: string; userId?: string }>
 }
 
 export type NewChat = {
@@ -199,12 +205,26 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *createChat(_, characterId: string, props: NewChat, onSuccess?: (id: string) => void) {
+    async *createChat(
+      { all, char },
+      characterId: string,
+      props: NewChat,
+      onSuccess?: (id: string) => void
+    ) {
       const res = await data.chats.createChat(characterId, props)
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
         const { characters } = characterStore.getState()
         const character = characters.list.find((ch) => ch._id === characterId)
+
+        if (all?.chats) {
+          yield { all: { ...all, chats: [res.result, ...all.chats] } }
+        }
+
+        if (char?.char._id === characterId) {
+          yield { char: { ...char, chats: [res.result, ...char.chats] } }
+        }
+
         yield { active: { chat: res.result, char: character! } }
 
         onSuccess?.(res.result._id)
@@ -238,19 +258,38 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
       }
     },
+
+    async *importChat(
+      { all, char },
+      characterId: string,
+      imported: ImportChat,
+      onSuccess?: (chat: AppSchema.Chat) => void
+    ) {
+      const res = await data.chats.importChat(characterId, imported)
+      if (res.error) toastStore.error(`Failed to import chat: ${res.error}`)
+      if (res.result) {
+        if (all?.chats) {
+          yield { all: { ...all, chats: [res.result, ...all.chats] } }
+        }
+
+        if (char?.char._id === characterId) {
+          yield { char: { ...char, chats: [res.result, ...char.chats] } }
+        }
+
+        onSuccess?.(res.result)
+      }
+    },
+
     async getChatSummary(_, chatId: string) {
       const res = await api.get(`/chat/${chatId}/summary`)
       console.log(res.result, res.error)
     },
 
-    async showPrompt({ activeMembers, active }, user: AppSchema.User, msg: AppSchema.ChatMessage) {
+    async showPrompt({ active }, _user: AppSchema.User, msg: AppSchema.ChatMessage) {
       if (!active) return
 
       const { msgs } = msgStore.getState()
       const entities = data.msg.getPromptEntities()
-
-      const book = memoryStore.getState().books.list.find((bk) => bk._id === active.chat.memoryId)
-      const settings = presetStore.getState().presets.find((p) => p._id === active.chat.genPreset)
 
       const prompt = createPrompt({
         ...entities,
