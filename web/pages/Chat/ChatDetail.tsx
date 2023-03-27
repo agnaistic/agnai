@@ -12,7 +12,16 @@ import {
   ToggleRight,
   X,
 } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Show,
+  onMount,
+  onCleanup,
+} from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { getAdapter } from '../../../common/prompt'
 import Button from '../../shared/Button'
@@ -31,6 +40,7 @@ import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
+import { AppSchema } from '../../../srv/db/schema'
 
 const ChatDetail: Component = () => {
   const user = userStore()
@@ -40,7 +50,6 @@ const ChatDetail: Component = () => {
     msgs: s.msgs,
     partial: s.partial,
     waiting: s.waiting,
-    retries: s.retries,
   }))
 
   const memory = memoryStore((s) => ({
@@ -49,12 +58,12 @@ const ChatDetail: Component = () => {
   }))
 
   const retries = createMemo(() => {
-    const last = msgs.msgs.slice(-1)[0]
+    const last = msgs.msgs.slice(msgs.msgs.length - 1)[0]
     if (!last) return
 
     const msgId = last._id
 
-    return { msgId, list: msgs.retries?.[msgId] || [] }
+    return { msgId, list: msgStore.getState().retries[msgId] || [] }
   })
 
   const [swipe, setSwipe] = createSignal(0)
@@ -69,16 +78,43 @@ const ChatDetail: Component = () => {
 
   const clickSwipe = (dir: -1 | 1) => () => {
     const ret = retries()
-    if (!ret || !ret.list.length) return
+    if (!ret) return
     const prev = swipe()
     const max = ret.list.length - 1
 
     let next = prev + dir
+
     if (next < 0) next = max
-    else if (next > max) next = 0
+    else if (next > max) {
+      msgStore.retry(id)
+    }
 
     setSwipe(next)
   }
+
+  function retryMessage() {
+    msgStore.retry(id)
+    setSwipe(swipe() + 1)
+  }
+
+  onMount(() => {
+    window.onkeydown = (e: KeyboardEvent): any => {
+      const key = e.key
+
+      if (!e.ctrlKey) return
+
+      if (key === 'ArrowRight') {
+        clickSwipe(1)()
+      }
+      if (key === 'ArrowLeft') {
+        clickSwipe(-1)()
+      }
+    }
+  })
+
+  onCleanup(() => {
+    window.onkeydown = null
+  })
 
   const adapter = createMemo(() => {
     if (!chats.chat || !user.user) return ''
@@ -96,21 +132,21 @@ const ChatDetail: Component = () => {
     chatStore.getChat(id)
   })
 
+  const confirmSwipe = (msgId: string) => {
+    msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
+  }
+
   const sendMessage = (message: string) => {
+    const msgs = msgStore.getState().msgs
+    const msgId = msgs[msgs.length - 1]._id
+
+    confirmSwipe(msgId)
     setSwipe(0)
     msgStore.send(chats.chat?._id!, message)
   }
 
   const moreMessage = (message: string) => {
     msgStore.retry(chats.chat?._id!, message)
-  }
-
-  const cancelSwipe = () => {
-    setSwipe(0)
-  }
-
-  const confirmSwipe = (msgId: string) => {
-    msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
   function toggleEditing() {
@@ -185,12 +221,7 @@ const ChatDetail: Component = () => {
             </div>
           </div>
           <div class="flex h-[calc(100%-32px)] flex-col-reverse">
-            <InputBar
-              chat={chats.chat!}
-              swiped={swipe() !== 0}
-              send={sendMessage}
-              more={moreMessage}
-            />
+            <InputBar chat={chats.chat!} send={sendMessage} more={moreMessage} />
             <SwipeMessage
               chatId={chats.chat?._id!}
               pos={swipe()}
@@ -209,18 +240,20 @@ const ChatDetail: Component = () => {
                       editing={editing()}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
-                      swipe={
-                        msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
-                      }
-                      confirmSwipe={() => confirmSwipe(msg._id)}
-                      cancelSwipe={cancelSwipe}
+                      swipe={swipe()}
+                      retryMessage={retryMessage}
                     />
                   )}
                 </For>
                 <Show when={msgs.waiting}>
-                  <div class="flex justify-center">
-                    <div class="dot-flashing bg-[var(--hl-700)]"></div>
-                  </div>
+                  <Message
+                    msg={emptyMsg(chats.char?._id!, msgs.partial!)}
+                    char={chats.char!}
+                    chat={chats.chat!}
+                    onRemove={() => {}}
+                    editing={editing()}
+                    retryMessage={retryMessage}
+                  />
                 </Show>
               </div>
               <InfiniteScroll />
@@ -309,22 +342,22 @@ const SwipeMessage: Component<{
   pos: number
 }> = (props) => {
   return (
-    <div class="flex h-6 w-full items-center justify-between text-[var(--text-800)]">
-      <Show when={props.list.length > 1}>
-        <div class="cursor:pointer hover:text-[var(--text-900)]">
-          <Button schema="clear" onClick={props.prev}>
-            <ChevronLeft />
-          </Button>
-        </div>
-        <div class="text-[var(--text-800)]">
-          {props.pos + 1} / {props.list.length}
-        </div>
-        <div class="cursor:pointer hover:text-[var(--text-800)]">
-          <Button schema="clear" onClick={props.next}>
-            <ChevronRight />
-          </Button>
-        </div>
-      </Show>
+    <div class="my-1 flex h-6 w-full items-center justify-between text-white/50">
+      <div
+        class={`${props.list.length > 1 ? 'visible' : 'invisible'} cursor:pointer hover:text-white`}
+      >
+        <Button schema="clear" onClick={props.prev}>
+          <ChevronLeft />
+        </Button>
+      </div>
+      <div class={`${props.list.length > 1 ? 'visible' : 'invisible'} text-500`}>
+        {props.pos + 1} / {props.list.length}
+      </div>
+      <div class="cursor:pointer hover:text-900">
+        <Button schema="clear" onClick={props.next}>
+          <ChevronRight />
+        </Button>
+      </div>
     </div>
   )
 }
@@ -361,4 +394,16 @@ function getEditingState() {
   const prev = localStorage.getItem(EDITING_KEY) || '{}'
   const body = JSON.parse(prev) as DetailSettings
   return body
+}
+
+function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
+  return {
+    kind: 'chat-message',
+    _id: '',
+    chatId: '',
+    characterId,
+    msg: message,
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  }
 }

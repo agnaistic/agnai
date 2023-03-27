@@ -7,7 +7,6 @@ import './Message.css'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
-  swiped: boolean
   send: (msg: string) => void
   more: (msg: string) => void
 }> = (props) => {
@@ -18,10 +17,6 @@ const InputBar: Component<{
   const send = () => {
     if (!ref) return
     if (!ref.value) return
-
-    if (props.swiped) {
-      return toastStore.warn(`Confirm or cancel swiping before sending`)
-    }
 
     props.send(ref.value)
     ref.value = ''

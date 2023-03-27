@@ -312,9 +312,7 @@ function addMsgToRetries(msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
 
   const next = retries[msg._id]
 
-  if (!next.includes(msg.msg)) {
-    next.unshift(msg.msg)
-  }
+  if (!next.includes(msg.msg)) next.push(msg.msg)
 
   msgStore.setState({ retries: { ...retries, [msg._id]: next.slice() } })
 }

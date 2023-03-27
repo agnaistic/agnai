@@ -15,11 +15,11 @@ type MessageProps = {
   chat: AppSchema.Chat
   char: AppSchema.Character
   last?: boolean
-  swipe?: string | false
+  swipe?: number
   confirmSwipe?: () => void
-  cancelSwipe?: () => void
   onRemove: () => void
   editing: boolean
+  retryMessage: () => void
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -44,10 +44,9 @@ const Message: Component<MessageProps> = (props) => {
           last={props.last && i() === splits().length - 1}
           lastSplit={i() === splits().length - 1}
           swipe={props.swipe}
-          confirmSwipe={props.confirmSwipe}
-          cancelSwipe={props.cancelSwipe}
           original={props.msg}
           editing={props.editing}
+          retryMessage={props.retryMessage}
         />
       )}
     </For>
@@ -68,7 +67,11 @@ const SingleMessage: Component<
 
   const saveEdit = () => {
     if (!ref) return
+    const retries = msgStore.getState().retries[props.msg._id]
+    if (retries) retries[props.swipe!] = ref.innerText
+    props.confirmSwipe?.()
     msgStore.editMessage(props.msg._id, ref.innerText)
+
     setEdit(false)
   }
 
@@ -76,14 +79,10 @@ const SingleMessage: Component<
     msgStore.resend(props.msg.chatId, props.msg._id)
   }
 
-  const retryMessage = () => {
-    msgStore.retry(props.msg.chatId)
-  }
-
   const startEdit = () => {
     setEdit(true)
     if (ref) {
-      ref.innerText = props.original.msg
+      ref.innerText = msgText()
     }
     ref?.focus()
   }
@@ -94,8 +93,9 @@ const SingleMessage: Component<
   }
 
   const msgText = createMemo(() => {
-    if (props.last && props.swipe) return props.swipe
-    return props.msg.msg
+    const retries = msgStore.getState().retries[props.msg._id]
+
+    return retries ? retries[props.swipe!] : props.msg.msg
   })
 
   const isBot = createMemo(() => !!props.msg.characterId)
@@ -141,40 +141,36 @@ const SingleMessage: Component<
             >
               {new Date(props.msg.createdAt).toLocaleString()}
             </span>
-            <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
-              <div class="text-200 ml-2 flex flex-row items-center gap-2">
-                <ThumbsUp size={14} class="hover:text-100 mt-[-0.15rem] cursor-pointer" />
-                <ThumbsDown size={14} class="hover:text-100 cursor-pointer" />
-              </div>
-            </Show>
           </div>
-          <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
+          <Show when={!edit() && user.user?._id === props.chat?.userId}>
             <div
               class="mr-4 flex items-center gap-3 text-sm"
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
-              <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
+              <Show
+                when={props.editing && props.msg._id != '' && (!props.msg.split || props.lastSplit)}
+              >
                 <Show when={!!props.msg.characterId}>
                   <div onClick={showPrompt} class="icon-button">
-                    <Terminal size={16} />
+                    <Terminal size={18} />
                   </div>
                 </Show>
                 <div class="icon-button" onClick={startEdit}>
-                  <Pencil size={16} />
+                  <Pencil size={18} />
                 </div>
                 <div class="icon-button" onClick={props.onRemove}>
-                  <Trash size={16} />
+                  <Trash size={18} />
                 </div>
               </Show>
               <Show when={props.last && props.msg.characterId}>
-                <div class="icon-button" onClick={retryMessage}>
-                  <RefreshCw size={16} />
+                <div class="icon-button" onClick={props.retryMessage}>
+                  <RefreshCw size={18} />
                 </div>
               </Show>
               <Show when={props.last && !props.msg.characterId}>
                 <div class="cursor-pointer" onClick={resendMessage}>
-                  <RefreshCw size={16} />
+                  <RefreshCw size={18} />
                 </div>
               </Show>
             </div>
@@ -189,20 +185,6 @@ const SingleMessage: Component<
               </div>
             </div>
           </Show>
-          <Show when={props.last && props.swipe}>
-            <div class="mr-4 flex items-center gap-2 text-sm">
-              <X
-                size={16}
-                class="cursor-pointer text-red-500"
-                onClick={() => props.cancelSwipe?.()}
-              />
-              <Check
-                size={16}
-                class="cursor-pointer text-green-500"
-                onClick={() => props.confirmSwipe?.()}
-              />
-            </div>
-          </Show>
         </div>
         <div class="break-words opacity-75">
           <Show when={!edit()}>
@@ -214,8 +196,19 @@ const SingleMessage: Component<
               )}
             />
           </Show>
+          <Show when={props.msg._id === ''}>
+            <div class="my-2 ml-5">
+              <div class="dot-flashing bg-[var(--hl-700)]"></div>
+            </div>
+          </Show>
           <Show when={edit()}>
             <div ref={ref} contentEditable={true}></div>
+          </Show>
+          <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
+            <div class="text-400 my-2 ml-1 flex flex-row items-center gap-2">
+              <ThumbsUp size={18} class="hover:text-100 mt-[-0.15rem] cursor-pointer" />
+              <ThumbsDown size={18} class="hover:text-100 cursor-pointer" />
+            </div>
           </Show>
         </div>
       </div>
