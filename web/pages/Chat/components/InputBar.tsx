@@ -17,9 +17,8 @@ const InputBar: Component<{
 
   const [text, setText] = createSignal('')
 
-  const updateText = () => {
+  const updateText = (ev: Event) => {
     if (!ref) return
-
     setText(ref.value)
   }
 
@@ -62,11 +61,13 @@ const InputBar: Component<{
           ref={ref}
           placeholder="Send a message..."
           class="focusable-field h-10 min-h-[40px] w-full rounded-xl px-4 py-2"
-          onKeyDown={updateText}
-          onKeyUp={(ev) => {
-            if (ev.key !== 'Enter') return
-            if (ev.ctrlKey || ev.shiftKey) return
-            send()
+          onKeyPress={(ev) => {
+            if (ev.key === 'Enter') {
+              if (ev.ctrlKey || ev.shiftKey) return
+              return send()
+            }
+
+            updateText(ev)
           }}
         />
       </Show>

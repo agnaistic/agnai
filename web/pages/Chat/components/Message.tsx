@@ -215,7 +215,13 @@ const SingleMessage: Component<
             />
           </Show>
           <Show when={edit()}>
-            <div ref={ref} contentEditable={true}></div>
+            <div
+              ref={ref}
+              contentEditable={true}
+              onKeyUp={(ev) => {
+                if (ev.key === 'Escape') cancelEdit()
+              }}
+            ></div>
           </Show>
         </div>
       </div>

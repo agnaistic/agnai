@@ -170,13 +170,15 @@ const ChatDetail: Component = () => {
               send={sendMessage}
               more={moreMessage}
             />
-            <SwipeMessage
-              chatId={chats.chat?._id!}
-              pos={swipe()}
-              prev={clickSwipe(-1)}
-              next={clickSwipe(1)}
-              list={retries()?.list || []}
-            />
+            <Show when={chats.chat?.userId === user.user?._id}>
+              <SwipeMessage
+                chatId={chats.chat?._id!}
+                pos={swipe()}
+                prev={clickSwipe(-1)}
+                next={clickSwipe(1)}
+                list={retries()?.list || []}
+              />
+            </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
