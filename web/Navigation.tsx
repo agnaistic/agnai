@@ -3,7 +3,6 @@ import {
   Activity,
   Book,
   Bot,
-  Eye,
   Github,
   LogIn,
   LogOut,

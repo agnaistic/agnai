@@ -105,7 +105,7 @@ export const userStore = createStore<State>(
       const res = await api.post('/user/login', { username, password })
       yield { loading: false }
       if (res.error) {
-        return toastStore.error(`Failed to authenticated`)
+        return toastStore.error(`Authentication failed`)
       }
 
       setAuth(res.result.token)

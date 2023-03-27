@@ -14,7 +14,7 @@ type OpenAIMessagePropType = {
   content: string
 }
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, settings, sender, log, guest, lines, parts } = opts
+  const { char, members, user, prompt, settings, sender, log, guest, lines, parts, gen } = opts
   if (!user.oaiKey) {
     yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
     return
@@ -23,10 +23,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const body: any = {
     model: oaiModel,
-    temperature: settings.temperature ?? defaultPresets.openai.temp,
-    max_tokens: settings.max_tokens ?? defaultPresets.openai.maxTokens,
-    presence_penalty: settings.presence_penalty ?? defaultPresets.openai.presencePenalty,
-    frequency_penalty: settings.frequency_penalty ?? defaultPresets.openai.frequencyPenalty,
+
+    temperature: gen.temp ?? defaultPresets.openai.temp,
+    max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
+    presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
+    frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
   }
 
   const turbo = oaiModel === OPENAI_MODELS.Turbo
@@ -40,7 +41,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     const all = []
 
     let maxBudget =
-      (settings.maxContextLength || defaultPresets.basic.maxContextLength) - settings.max_tokens
+      (gen.maxContextLength || defaultPresets.openai.maxContextLength) - body.max_tokens
 
     let tokens = encoder(parts.gaslight)
 

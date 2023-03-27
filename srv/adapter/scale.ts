@@ -30,6 +30,7 @@ export const handleScale: ModelAdapter = async function* ({
 
   const response = await needle('post', user.scaleUrl, body, {
     json: true,
+    open_timeout: 0,
     headers: {
       Authorization: auth,
     },
@@ -37,14 +38,14 @@ export const handleScale: ModelAdapter = async function* ({
 
   if ('err' in response) {
     log.error({ err: `Scale request failed: ${response.err?.message || response.err}` })
-    yield { error: response.err.message }
+    yield { error: `Scale request failed: ${response.err.message || response.err}` }
     return
   }
 
   const status = response.statusCode || 0
   if (status >= 400) {
     log.error({ error: response.body }, `Scale request failed (${status})`)
-    yield { error: response.statusMessage! }
+    yield { error: `Scale API returned an error: ${response.statusMessage!}` }
     return
   }
 
