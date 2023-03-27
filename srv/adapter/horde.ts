@@ -57,7 +57,7 @@ export const handleHorde: ModelAdapter = async function* ({
     }
   }
 
-  const headers = { apikey: key, 'Client-Agent': 'KoboldAiLite:11' }
+  const headers = { apikey: key }
 
   log.debug(body, 'Horde payload')
 
@@ -123,8 +123,18 @@ export const handleHorde: ModelAdapter = async function* ({
     if (!check.body.done) {
       checks++
       if (checks === 1) {
-        if (guest) sendGuest(guest, { type: 'message-horde-eta', eta: check.body.wait_time })
-        else sendOne(sender.userId, { type: 'message-horde-eta', eta: check.body.wait_time })
+        if (guest)
+          sendGuest(guest, {
+            type: 'message-horde-eta',
+            eta: check.body.wait_time,
+            queue: check.body.queue_position,
+          })
+        else
+          sendOne(sender.userId, {
+            type: 'message-horde-eta',
+            eta: check.body.wait_time,
+            queue: check.body.queue_position,
+          })
       }
       await wait()
       continue

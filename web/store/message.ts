@@ -296,8 +296,8 @@ subscribe('message-creating', { chatId: 'string' }, (body) => {
   msgStore.setState({ waiting: activeChatId, partial: '' })
 })
 
-subscribe('message-horde-eta', { eta: 'number' }, (body) => {
-  toastStore.normal(`Response ETA: ${body.eta}s`)
+subscribe('message-horde-eta', { eta: 'number', queue: 'number' }, (body) => {
+  toastStore.normal(`Queue: ${body.queue}`)
 })
 
 subscribe(

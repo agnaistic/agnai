@@ -25,7 +25,8 @@ const InputBar: Component<{
 
   const send = () => {
     if (!ref) return
-    const value = text().trim()
+
+    const value = ref.value.trim() || text().trim()
     if (!value) return
 
     if (props.swiped) {

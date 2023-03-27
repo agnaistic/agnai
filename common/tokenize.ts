@@ -59,7 +59,7 @@ async function prepareTokenizers() {
       )
 
       turbo = (value) => {
-        const tokens = encoder.encode(value).length + 4
+        const tokens = encoder.encode(value).length + 5
         return tokens
       }
     }
