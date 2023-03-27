@@ -1,63 +1,78 @@
 import { Component, createEffect, createSignal, Show } from 'solid-js'
-import { X } from 'lucide-solid'
+import { Upload, X } from 'lucide-solid'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
-import { characterStore, NewMsgImport, toastStore } from '../../store'
+import { characterStore, chatStore, ImportChat, NewMsgImport, toastStore } from '../../store'
 import Divider from '../../shared/Divider'
 import Dropdown from '../../shared/Dropdown'
+import { assertValid, UnwrapBody } from 'frisker'
 
-type StagedLog = NewMsgImport['msgs']
+const importValid = {
+  name: 'string',
+  greeting: 'string',
+  scenario: 'string',
+  sampleChat: 'string',
+  messages: [
+    {
+      msg: 'string',
+      characterId: 'string?',
+      userId: 'string?',
+    },
+  ],
+} as const
 
 const ImportChatModal: Component<{
   show: boolean
   close: () => void
-  onSave: (msgImport: NewMsgImport) => void
   char?: AppSchema.Character
 }> = (props) => {
-  const [stagedLog, setStagedLog] = createSignal<StagedLog>()
+  const [json, setJson] = createSignal<ImportChat>()
   const [charId, setCharId] = createSignal<string>()
-  const charState = characterStore((s) => ({ chars: s.characters.list }))
+  const state = characterStore((s) => ({ chars: s.characters.list }))
 
   createEffect(() => {
     if (props.char && props.char._id !== charId()) {
       setCharId(props.char?._id)
-    } else if (!charId() && charState.chars.length) {
-      setCharId(charState.chars[0]._id)
+    } else if (!charId() && state.chars.length) {
+      setCharId(state.chars[0]._id)
     }
   })
 
   const onSelectLog = async (files: FileInputResult[]) => {
-    if (!files.length) return setStagedLog()
+    if (!files.length) return setJson()
     try {
-      const textContent = await getFileAsString(files[0])
-      // Assumes that the file is a jsonl file; needs more robust handling for future formats
-      const logLines = textContent
-        .split('\n')
-        .map((line) => JSON.parse(line))
-        .filter(Boolean)
-      const parsed = parseLog(logLines)
-      setStagedLog(parsed)
+      const content = await getFileAsString(files[0])
+      const parsed = parseContent(content)
+      if (!parsed) {
+        throw new Error(`Unrecognized format`)
+      }
+      assertValid(importValid, parsed.json)
+      setJson(parsed.json)
+
+      // TODO: Set chat log to signal
       toastStore.success('Chat log accepted')
     } catch (ex) {
       const message = ex instanceof Error ? ex.message : 'Unknown error'
-      toastStore.warn(`Invalid chat log file format. Supported formats: TavernAI (${message})`)
-      setStagedLog()
+      toastStore.warn(
+        `Invalid chat log file format. Supported formats: Agnaistic, TavernAI (${message})`
+      )
+      setJson()
     }
   }
 
   const onImport = () => {
-    const msgs = stagedLog()
-    const char = charState.chars.find((char) => char._id === charId())
-    if (!msgs?.length || !char) return
-    props.onSave({ msgs, char })
+    const chat = json()
+    const char = state.chars.find((char) => char._id === charId())
+    if (!chat?.messages.length || !char) return
+    chatStore.importChat(char._id, chat, props.close)
   }
 
   return (
     <Modal
       show={props.show}
-      title={'Import Chat Log'}
+      title="Import Chat Log"
       close={props.close}
       footer={
         <>
@@ -65,7 +80,10 @@ const ImportChatModal: Component<{
             <X />
             Cancel
           </Button>
-          <Button onClick={onImport}>Import</Button>
+          <Button onClick={onImport}>
+            <Upload />
+            Import
+          </Button>
         </>
       }
     >
@@ -80,7 +98,7 @@ const ImportChatModal: Component<{
             fieldName="charName"
             label="Character"
             value={charId()}
-            items={charState.chars.map((char) => ({ label: char.name, value: char._id }))}
+            items={state.chars.map((char) => ({ label: char.name, value: char._id }))}
             onChange={(item) => setCharId(item.value)}
           />
         </Show>
@@ -91,12 +109,12 @@ const ImportChatModal: Component<{
           label="JSON Lines File (.jsonl)"
           fieldName="json"
           accept="application/json-lines,application/jsonl,text/jsonl"
-          helperText="Supported formats: TavernAI"
+          helperText="Supported formats: Agnaistic, TavernAI"
           required
           onUpdate={onSelectLog}
         />
-        <Show when={stagedLog()}>
-          <p>{stagedLog()?.length} message(s) will be imported.</p>
+        <Show when={json()}>
+          <p>{json()?.messages.length} message(s) will be imported.</p>
         </Show>
       </div>
     </Modal>
@@ -120,28 +138,51 @@ const formatMaps = {
   } as const,
 } satisfies Record<string, LogImportKeys>
 
-function getLogFormat(log: any[]): LogImportFormat {
-  // The first line of a TavernAI jsonl file is a chat metadata object.
-  if ('user_name' in log[0] && 'character_name' in log[0] && 'create_date' in log[0])
-    return 'tavern'
-  throw new Error('Unrecognized log format')
-}
+function parseContent(content: string) {
+  /**
+   * Agnaistic format
+   */
+  try {
+    const json = JSON.parse(content)
+    assertValid(
+      {
+        name: 'string',
+        greeting: 'string',
+        scenario: 'string',
+        sampleChat: 'string',
+        messages: [{ msg: 'string', characterId: 'string?', userId: 'string?' }],
+      },
+      json
+    )
 
-function parseLog(log: any[]): StagedLog {
-  const format = getLogFormat(log)
-  if (format === 'tavern') {
-    return log.slice(1).map(parseTavernLine)
-  }
-  return []
-}
+    return { type: 'aganistic', json }
+  } catch (ex) {}
 
-type TavernFormat = typeof formatMaps.tavern
-type TavernLine = { [K in TavernFormat[keyof TavernFormat]]: any }
-function parseTavernLine(line: TavernLine): StagedLog[number] {
-  const { is_user, mes, send_date } = line
-  return {
-    sender: JSON.parse(is_user) ? 'user' : 'character',
-    text: String(mes),
-    timestamp: parseInt(send_date) || 0,
-  }
+  /**
+   * TavernAI format
+   */
+  try {
+    const lines = content
+      .split('\n')
+      .slice(1)
+      .filter((line) => !!line.trim())
+      .map((line) => JSON.parse(line))
+
+    const messages = lines.map((line) => ({
+      msg: String(line.mes),
+      userId: line.is_user ? 'anon' : undefined,
+      characterId: line.is_user ? undefined : 'imported',
+    }))
+
+    const json = {
+      name: '',
+      greeting: '',
+      scenario: '',
+      sampleChat: '',
+      messages,
+    }
+    return { kind: 'tavern', json }
+  } catch (ex) {}
+
+  return
 }

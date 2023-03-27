@@ -32,13 +32,6 @@ const CharacterChats: Component = () => {
     }
   })
 
-  const onSaveImport = (msgImport: NewMsgImport) => {
-    msgStore.importMessages(msgImport, () => {
-      toastStore.success('Chat imported successfully')
-      setImport(false)
-    })
-  }
-
   return (
     <div class="flex flex-col gap-2">
       <Show when={!!id} fallback={<PageHeader title="Chats" />}>
@@ -65,12 +58,7 @@ const CharacterChats: Component = () => {
         char={state.char}
         id={id}
       />
-      <ImportChatModal
-        show={showImport()}
-        close={() => setImport(false)}
-        char={state.char}
-        onSave={onSaveImport}
-      />
+      <ImportChatModal show={showImport()} close={() => setImport(false)} char={state.char} />
     </div>
   )
 }

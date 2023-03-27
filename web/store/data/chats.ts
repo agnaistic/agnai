@@ -1,7 +1,7 @@
+import type { ImportChat, NewChat } from '../chat'
 import { v4 } from 'uuid'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
-import { NewChat } from '../chat'
 import { loadItem, local, saveChats } from './storage'
 
 export async function getChat(id: string) {
@@ -57,6 +57,42 @@ export async function createChat(characterId: string, props: NewChat) {
 
   local.saveChats(chats.concat(chat))
   if (props.greeting) local.saveMessages(chat._id, [msg])
+  return local.result(chat)
+}
+
+export async function importChat(characterId: string, props: ImportChat) {
+  if (isLoggedIn()) {
+    const res = await api.post<AppSchema.Chat>(`/chat/import`, { characterId, ...props })
+    return res
+  }
+
+  const char = local.loadItem('characters').find((char) => char._id === characterId)
+  if (!char) {
+    return local.error(`Character not found`)
+  }
+
+  const { chat } = createNewChat(char, {
+    name: props.name,
+    scenario: props.scenario || char.scenario,
+    greeting: props.greeting || char.greeting,
+    sampleChat: props.sampleChat || char.sampleChat,
+    overrides: { ...char.persona },
+  })
+
+  const messages: AppSchema.ChatMessage[] = props.messages.map((msg) => ({
+    _id: v4(),
+    chatId: chat._id,
+    kind: 'chat-message',
+    msg: msg.msg,
+    characterId: msg.characterId ? char._id : undefined,
+    userId: msg.userId ? local.ID : undefined,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }))
+
+  local.saveChats(local.loadItem('chats').concat(chat))
+  local.saveMessages(chat._id, messages)
+
   return local.result(chat)
 }
 

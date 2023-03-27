@@ -199,37 +199,6 @@ export const msgStore = createStore<MsgState>('messages', {
         console.log(res.result)
       }
     },
-    async *importMessages({ msgs }, props: NewMsgImport, onSuccess?: Function) {
-      const newChatPayload: NewChat = {
-        name: 'Imported Chat',
-        scenario: props.char.scenario,
-        sampleChat: props.char.sampleChat,
-        greeting: '',
-        overrides: props.char.persona,
-      }
-
-      let chatId: string | undefined
-      try {
-        const newChatPromise = new Promise<string>((resolve, reject) => {
-          const rejectTimeout = setTimeout(reject, 5000)
-          chatStore.createChat(props.char._id, newChatPayload, (chatId) => {
-            clearTimeout(rejectTimeout)
-            resolve(chatId)
-          })
-        })
-        chatId = await newChatPromise
-      } catch (e) {
-        toastStore.error('Failed to create new chat for import')
-        return
-      }
-
-      const res = await data.msg.importMessages(chatId, props)
-      if (res.error) toastStore.error(`Failed to import messages: ${res.error}`)
-      if (res.result) {
-        yield { msgs: msgs.concat(res.result.messages) }
-        onSuccess?.()
-      }
-    },
   }
 })
 

@@ -35,7 +35,7 @@ export type Handler = (req: AppRequest, res: express.Response, next: express.Nex
 
 export type AppRequest = Omit<express.Request, 'log'> & {
   user?: AppSchema.Token
-  userId?: string
+  userId: string
   log: AppLog
   socketId: string
 }

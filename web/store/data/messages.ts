@@ -129,30 +129,6 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
   return local.result({ success: true })
 }
 
-export async function importMessages(chatId: string, { msgs }: NewMsgImport) {
-  if (isLoggedIn()) {
-    const res = await api.method<{ messages: AppSchema.ChatMessage[] }>(
-      'post',
-      `/chat/${chatId}/import`,
-      { messages: msgs }
-    )
-    return res
-  }
-
-  const chat = local.loadItem('chats').filter((c) => c._id === chatId)[0]
-  const newMessages: AppSchema.ChatMessage[] = msgs.map((msg) => {
-    const isFromChar = msg.sender === 'character'
-    const senderId = isFromChar ? chat.characterId : chat.userId
-    return newMessage(chat, senderId, msg.text, isFromChar)
-  })
-
-  const messages = local.getMessages(chatId)
-  const next = messages.concat(newMessages)
-  local.saveMessages(chatId, next)
-
-  return local.result({ messages: newMessages })
-}
-
 function newMessage(
   chat: AppSchema.Chat,
   senderId: string,

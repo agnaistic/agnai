@@ -36,7 +36,7 @@ export async function createChatMessage(
   return doc
 }
 
-export async function createManyChatMessages(messages: ImportedMessage[]) {
+export async function importMessages(messages: NewMessage[]) {
   const docs: AppSchema.ChatMessage[] = messages.map((msg) => ({
     _id: v4(),
     kind: 'chat-message',
@@ -46,8 +46,8 @@ export async function createManyChatMessages(messages: ImportedMessage[]) {
     userId: msg.senderId,
     msg: msg.message,
     adapter: msg.adapter,
-    createdAt: msg.createdAt,
-    updatedAt: msg.createdAt,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
   }))
 
   await db('chat-message').insertMany(docs)
