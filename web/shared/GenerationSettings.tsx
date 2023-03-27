@@ -59,7 +59,7 @@ const GeneralSettings: Component<Props> = (props) => {
         helperText="Number of tokens the AI should generate. Higher numbers will take longer to generate."
         min={16}
         max={512}
-        step={4}
+        step={1}
         value={props.inherit?.maxTokens || defaultPresets.basic.maxTokens}
         disabled={props.disabled}
       />
