@@ -79,7 +79,7 @@ const ChatDetail: Component = () => {
 
   const clickSwipe = (dir: -1 | 1) => () => {
     const ret = retries()
-    if (!ret) return
+    if (!ret || msgs.waiting) return
     const prev = swipe()
     const max = ret.list.length - 1
 
