@@ -1,4 +1,4 @@
-import { createImageStream } from '../../adapter/generate'
+// import { createImageStream } from '../../adapter/generate'
 import { handle } from '../wrap'
 
 /**
@@ -6,6 +6,6 @@ import { handle } from '../wrap'
  */
 
 export const createImage = handle(async ({ body, params, userId }) => {
-  const stream = await createImageStream({ chatId: params.id, senderId: userId! })
-  return { stream }
+  // const stream = await createImageStream({ chatId: params.id, senderId: userId! })
+  return { success: false }
 })

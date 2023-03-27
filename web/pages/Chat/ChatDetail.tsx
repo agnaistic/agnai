@@ -137,17 +137,17 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
-  const sendMessage = (message: string) => {
+  const sendMessage = (message: string, onSuccess?: () => void) => {
     const msgs = msgStore.getState().msgs
     const msgId = msgs[msgs.length - 1]._id
 
     confirmSwipe(msgId)
     setSwipe(0)
-    msgStore.send(chats.chat?._id!, message)
+    msgStore.send(chats.chat?._id!, message, false, onSuccess)
   }
 
   const moreMessage = (message: string) => {
-    msgStore.retry(chats.chat?._id!, message)
+    msgStore.continuation(chats.chat?._id!)
   }
 
   function toggleEditing() {

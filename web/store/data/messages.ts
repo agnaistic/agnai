@@ -146,7 +146,7 @@ function newMessage(
   }
 }
 
-function getPromptEntities() {
+export function getPromptEntities() {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
     if (!entities) throw new Error(`Could not collate data for prompting`)
