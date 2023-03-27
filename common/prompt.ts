@@ -130,7 +130,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
   const pre: string[] = []
 
-  if (!opts.settings?.useGaslight && !opts.settings?.useGaslight) {
+  if (!opts.settings?.useGaslight) {
     pre.push(`${char.name}'s Persona: ${parts.persona}`)
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
