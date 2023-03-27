@@ -72,10 +72,9 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     throw errors.Forbidden
   }
 
-  if (userId)
-    if (userId) {
-      sendMany(members, { type: 'message-creating', chatId })
-    }
+  if (userId) {
+    sendMany(members, { type: 'message-creating', chatId })
+  }
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send') {
