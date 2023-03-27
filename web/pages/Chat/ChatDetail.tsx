@@ -97,9 +97,9 @@ const ChatDetail: Component = () => {
     chatStore.getChat(id)
   })
 
-  const sendMessage = (message: string) => {
+  const sendMessage = (message: string, onSuccess?: () => void) => {
     setSwipe(0)
-    msgStore.send(chats.chat?._id!, message, false)
+    msgStore.send(chats.chat?._id!, message, false, onSuccess)
   }
 
   const moreMessage = (message: string) => {

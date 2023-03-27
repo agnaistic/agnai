@@ -1,10 +1,9 @@
 import { assertValid } from 'frisker'
 import { store } from '../../db'
-import { createTextStreamV2, getResponseEntities } from '../../adapter/generate'
-import { post, PY_URL } from '../request'
+import { createTextStreamV2 } from '../../adapter/generate'
 import { errors, handle } from '../wrap'
 import { sendGuest, sendMany } from '../ws'
-import { obtainLock, releaseLock, verifyLock } from './lock'
+import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../db/schema'
 import { v4 } from 'uuid'
 
@@ -68,9 +67,6 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     if (!members.includes(userId)) {
       throw errors.Forbidden
     }
-
-    await obtainLock(chatId)
-    sendMany(members, { type: 'message-creating', chatId })
   }
 
   // For authenticated users we will verify parts of the payload
@@ -92,9 +88,25 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
   }
 
-  res.json({ success: true, message: 'Generating message' })
+  /**
+   * For group chats we won't worry about lock integrity.
+   * We still need to create the user message and broadcast it,
+   * but if there is a lock in place do not attempt to generate a message.
+   */
+  try {
+    if (userId) await obtainLock(chatId)
+  } catch (ex) {
+    if (members.length === 1) throw ex
+    return res.json({ success: true, generating: false, message: 'User message created' })
+  }
 
-  const { stream, adapter } = await createTextStreamV2(body, log, guest)
+  if (userId) {
+    sendMany(members, { type: 'message-creating', chatId })
+  }
+
+  res.json({ success: true, generating: true, message: 'Generating message' })
+
+  const { stream, adapter } = await createTextStreamV2({ ...body, chat }, log, guest)
   log.setBindings({ adapter })
 
   let generated = ''

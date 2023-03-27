@@ -38,9 +38,6 @@ export async function createTextStreamV2(
   log: AppLog,
   guestSocketId?: string
 ) {
-  const { adapter } = getAdapter(opts.chat, opts.user)
-  const handler = handlers[adapter]
-
   /**
    * We need to ensure the prompt is always generated using the correct version of the memory book.
    * If a non-owner initiates generation, they will not have the memory book.
@@ -55,6 +52,9 @@ export async function createTextStreamV2(
     opts.settings = entities.gen
     opts.char = entities.char
   }
+
+  const { adapter } = getAdapter(opts.chat, opts.user)
+  const handler = handlers[adapter]
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
 
