@@ -181,6 +181,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
   },
   openai: {
     maxTokens: 'max_tokens',
+    maxContextLength: 'maxContextLength',
     repetitionPenalty: '',
     repetitionPenaltyRange: '',
     repetitionPenaltySlope: '',
