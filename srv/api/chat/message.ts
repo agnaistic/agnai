@@ -55,24 +55,21 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const guest = userId ? undefined : socketId
 
   const chat: AppSchema.Chat = guest ? body.chat : await store.chats.getChat(chatId)
+  const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)
   if (!chat) {
     throw errors.NotFound
   }
 
-  if (userId && chat.userId !== userId && body.kind === 'continue') {
-    throw errors.Forbidden
-  }
-
   if (userId) {
+    if (body.kind === 'continue' && userId !== chat.userId) {
+      throw errors.Forbidden
+    }
+
+    if (!members.includes(userId)) {
+      throw errors.Forbidden
+    }
+
     await obtainLock(chatId)
-  }
-
-  const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)
-  if (userId && !members.includes(userId)) {
-    throw errors.Forbidden
-  }
-
-  if (userId) {
     sendMany(members, { type: 'message-creating', chatId })
   }
 
@@ -115,7 +112,10 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
   }
 
-  if (error) return
+  if (error) {
+    await releaseLock(chatId)
+    return
+  }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
@@ -207,11 +207,11 @@ export const retryMessage = handle(async ({ body, params, userId, log }, res) =>
     .json({ message: 'Your browser is running on an old version. Please refresh.' })
 })
 
-export const summarizeChat = handle(async (req) => {
-  const chatId = req.params.id
-  const entities = await getResponseEntities(chatId, req.userId!)
-  const prompt = 'TODO' // await createPrompt(entities)
+// export const summarizeChat = handle(async (req) => {
+//   const chatId = req.params.id
+//   const entities = await getResponseEntities(chatId, req.userId!)
+//   const prompt = 'TODO' // await createPrompt(entities)
 
-  const summary = await post({ url: '/summarize', body: { prompt }, host: PY_URL })
-  return { summary }
-})
+//   const summary = await post({ url: '/summarize', body: { prompt }, host: PY_URL })
+//   return { summary }
+// })

@@ -247,18 +247,14 @@ export const chatStore = createStore<ChatState>('chat', {
       if (!active) return
 
       const { msgs } = msgStore.getState()
+      const entities = data.msg.getPromptEntities()
 
       const book = memoryStore.getState().books.list.find((bk) => bk._id === active.chat.memoryId)
       const settings = presetStore.getState().presets.find((p) => p._id === active.chat.genPreset)
 
       const prompt = createPrompt({
-        chat: active.chat,
-        char: active.char!,
+        ...entities,
         messages: msgs.filter((m) => m.createdAt < msg.createdAt),
-        user,
-        members: activeMembers,
-        book,
-        settings: settings,
       })
 
       return { prompt }

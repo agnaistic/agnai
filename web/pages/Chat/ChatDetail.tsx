@@ -99,11 +99,11 @@ const ChatDetail: Component = () => {
 
   const sendMessage = (message: string) => {
     setSwipe(0)
-    msgStore.send(chats.chat?._id!, message)
+    msgStore.send(chats.chat?._id!, message, false)
   }
 
   const moreMessage = (message: string) => {
-    msgStore.retry(chats.chat?._id!, message)
+    msgStore.continuation(chats.chat?._id!)
   }
 
   const cancelSwipe = () => {
