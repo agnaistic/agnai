@@ -142,6 +142,6 @@ function parseTavernLine(line: TavernLine): StagedLog[number] {
   return {
     sender: JSON.parse(is_user) ? 'user' : 'character',
     text: String(mes),
-    timestamp: parseInt(send_date),
+    timestamp: parseInt(send_date) || 0,
   }
 }
