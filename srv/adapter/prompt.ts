@@ -1,4 +1,3 @@
-import gpt from 'gpt-3-encoder'
 import { Encoder } from '../../common/tokenize'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
