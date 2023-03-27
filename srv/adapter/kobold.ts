@@ -58,7 +58,7 @@ export const handleKobold: ModelAdapter = async function* ({
     yield trimmed || text
   } else {
     logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
-    yield { error: resp.body }
+    yield { error: `Kobold failed to generate a response: ${resp.body}` }
     return
   }
 }

@@ -6,6 +6,7 @@ export const Toggle: Component<{
   value?: boolean
   label?: string | JSX.Element
   helperText?: string | JSX.Element
+  class?: string
   onChange?: (value: boolean) => void
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -13,7 +14,7 @@ export const Toggle: Component<{
   }
 
   return (
-    <div class="toggle-pill-color">
+    <div class={`toggle-pill-color ${props.class || ''}`}>
       <Show when={props.label}>
         <FormLabel label={props.label} helperText={props.helperText} />
       </Show>

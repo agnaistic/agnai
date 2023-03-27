@@ -28,7 +28,7 @@ const App: Component = () => {
   })
 
   return (
-    <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] flex h-screen flex-col justify-between">
+    <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
       <NavBar />
       <div class="flex w-full grow flex-row overflow-y-hidden">
         <Navigation />

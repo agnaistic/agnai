@@ -41,7 +41,7 @@ If you're only looking to run AgnAI without contributing:
 
 1. Clone the project
 2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
-3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 agnaistic:latest`
+3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 ghcr.io/luminai-companion/agnaistic:latest`
    - `-dt` Run the container detached
    - `--restart=always` Restart at start up or if the server crashes
    - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`

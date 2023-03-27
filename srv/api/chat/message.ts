@@ -54,13 +54,17 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   const guest = userId ? undefined : socketId
 
-  if (userId) {
-    await obtainLock(chatId)
-  }
-
   const chat: AppSchema.Chat = guest ? body.chat : await store.chats.getChat(chatId)
   if (!chat) {
     throw errors.NotFound
+  }
+
+  if (userId && chat.userId !== userId && body.kind === 'continue') {
+    throw errors.Forbidden
+  }
+
+  if (userId) {
+    await obtainLock(chatId)
   }
 
   const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)

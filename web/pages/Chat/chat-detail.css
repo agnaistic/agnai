@@ -1,0 +1,35 @@
+.chat {
+  display: grid;
+
+  grid-template-columns: 1fr;
+  grid-template-rows: auto 1fr auto;
+  grid-template-areas:
+    'header'
+    'messages'
+    'input';
+
+  @apply h-full sm:py-2;
+  overflow: hidden;
+}
+
+.chat__header {
+  grid-area: header;
+  @apply flex h-8 items-center justify-between;
+}
+
+.chat__messages {
+  grid-area: messages;
+  @apply flex flex-col-reverse;
+  @apply h-[calc(100%-90px)];
+}
+
+.chat__input {
+  grid-area: input;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* .chat {
+    @apply h-[calc(100%-58px)] sm:h-full;
+  } */
+  /* CSS specific to iOS devices */
+}

@@ -187,9 +187,9 @@ subscribe(
   { messageId: 'string', chatId: 'string', message: 'string', continue: 'boolean?' },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
-    if (!retrying) return
     if (activeChatId !== body.chatId) return
 
+    const prev = msgs.find((msg) => msg._id === body.messageId)
     const next = msgs.filter((msg) => msg._id !== body.messageId)
 
     msgStore.setState({
@@ -203,7 +203,14 @@ subscribe(
 
     addMsgToRetries({ _id: body.messageId, msg: body.message })
 
-    msgStore.setState({ msgs: next.concat({ ...retrying, msg: body.message }) })
+    if (retrying) {
+      msgStore.setState({ msgs: next.concat({ ...retrying, msg: body.message }) })
+    } else {
+      if (activeChatId !== body.chatId || !prev) return
+      msgStore.setState({
+        msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
+      })
+    }
   }
 )
 

@@ -44,3 +44,10 @@ export async function updateBook(userId: string, bookId: string, book: NewBook) 
 export async function deleteBook(userId: string, bookId: string) {
   await db('memory').deleteOne({ _id: bookId, userId })
 }
+
+export async function getBook(bookId: string) {
+  const book = await db('memory').findOne({ _id: bookId })
+
+  if (!book) return
+  return book
+}

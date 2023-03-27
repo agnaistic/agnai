@@ -20,6 +20,7 @@ import { handleOAI } from './openai'
 import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter } from '../../common/prompt'
 import { handleScale } from './scale'
+import { getMemoryPrompt } from '../../common/memory'
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
   chai: handleChai,
@@ -39,6 +40,19 @@ export async function createTextStreamV2(
 ) {
   const { adapter } = getAdapter(opts.chat, opts.user)
   const handler = handlers[adapter]
+
+  /**
+   * We need to ensure the prompt is always generated using the correct version of the memory book.
+   * If a non-owner initiates generation, they will not have the memory book.
+   *
+   * Everything else should be update to date at this point
+   */
+  if (!guestSocketId && opts.chat.memoryId) {
+    const book = await store.memory.getBook(opts.chat.memoryId)
+    const memory = getMemoryPrompt({ ...opts, book: book })
+    opts.parts.memory = memory
+  }
+
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
 
   const gen = opts.settings || getFallbackPreset(adapter)

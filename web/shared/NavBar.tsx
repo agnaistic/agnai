@@ -10,10 +10,10 @@ const NavBar: Component = () => {
     <Show when={!cfg.fullscreen}>
       <span
         data-header=""
-        class="flex justify-between gap-4 border-b-2 border-[var(--bg-800)] bg-[var(--bg-900)] px-4 py-5 shadow-xl max-lg:p-3 sm:hidden"
+        class="flex justify-between gap-4 border-b-2 border-[var(--bg-800)] bg-[var(--bg-900)] px-4 py-5 shadow-xl max-sm:p-3 sm:hidden"
       >
-        <span class="flex w-full items-center justify-between gap-2 font-semibold lg:justify-start">
-          <div class="w-8 lg:hidden" onClick={settingStore.menu}>
+        <span class="flex w-full items-center justify-between gap-2 font-semibold sm:justify-start">
+          <div class="w-8 sm:hidden" onClick={settingStore.menu}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
           <div>
@@ -21,7 +21,7 @@ const NavBar: Component = () => {
               <span class="rounded-xl bg-[var(--hl-700)] py-2 px-4">Agnaistic</span>
             </A>
           </div>
-          <div class="w-8 lg:hidden"></div>
+          <div class="w-8 sm:hidden"></div>
         </span>
       </span>
     </Show>
