@@ -219,6 +219,7 @@ const SingleMessage: Component<
 export default Message
 
 function parseMessage(msg: string, char: AppSchema.Character, profile: AppSchema.Profile) {
+  if (!msg) return ''
   return msg
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, profile?.handle || 'You')

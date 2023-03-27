@@ -2,7 +2,7 @@ import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { createStore } from './create'
 import { data } from './data'
-import { local } from './data/storage'
+import { local, replace } from './data/storage'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { userStore } from './user'
@@ -159,8 +159,9 @@ export const msgStore = createStore<MsgState>('messages', {
 
       if (res.result) onSuccess?.()
     },
-    async *confirmSwipe({ retries }, msgId: string, position: number, onSuccess?: Function) {
+    async *confirmSwipe({ msgs, retries }, msgId: string, position: number, onSuccess?: Function) {
       const replacement = retries[msgId]?.[position]
+
       if (!retries || !replacement) {
         return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
       }
@@ -171,6 +172,7 @@ export const msgStore = createStore<MsgState>('messages', {
 
       yield { retries: { ...retries, [msgId]: next } }
       msgStore.editMessage(msgId, replacement, onSuccess)
+      msgs[msgs.length - 1].msg = replacement
     },
     async deleteMessages({ msgs, activeChatId }, fromId: string) {
       const index = msgs.findIndex((m) => m._id === fromId)
