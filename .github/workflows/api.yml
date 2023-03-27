@@ -4,7 +4,8 @@ on:
     branches: ['dev']
 
 env:
-  IMAGE_NAME: agnaistic
+  node-version: '18.4.0'
+  pnpm-version: 7.2.1
 
 jobs:
   build:
