@@ -49,6 +49,8 @@ export namespace AppSchema {
 
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
+
+    createdAt?: string
   }
 
   export interface Chat {

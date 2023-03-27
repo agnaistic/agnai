@@ -60,6 +60,10 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   }
 
   if (userId) {
+    if (body.kind === 'retry' && userId !== chat.userId) {
+      throw errors.Forbidden
+    }
+
     if (body.kind === 'continue' && userId !== chat.userId) {
       throw errors.Forbidden
     }
@@ -202,6 +206,7 @@ function newMessage(
   }
   return userMsg
 }
+
 /**
  * V1 response generation routes
  * To be removed

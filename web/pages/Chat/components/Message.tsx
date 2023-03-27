@@ -202,7 +202,13 @@ const SingleMessage: Component<
             </div>
           </Show>
           <Show when={edit()}>
-            <div ref={ref} contentEditable={true}></div>
+            <div
+              ref={ref}
+              contentEditable={true}
+              onKeyUp={(ev) => {
+                if (ev.key === 'Escape') cancelEdit()
+              }}
+            ></div>
           </Show>
           <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
             <div class="text-400 my-2 ml-1 flex flex-row items-center gap-2">

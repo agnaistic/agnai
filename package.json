@@ -11,6 +11,7 @@
     "build:win": "parcel build web/index.html --no-optimize --detailed-report",
     "build:all": "npm run build && npm run build:server",
     "build:all:win": "npm run build:win && npm run build:server",
+    "build:api": "tsc -p api.tsconfig.json",
     "build:server": "tsc -p srv.tsconfig.json",
     "build:server:watch": "tsc -p srv.tsconfig.json -w",
     "format": "prettier web --check && prettier srv --check",

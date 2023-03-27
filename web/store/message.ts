@@ -1,5 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
+import { chatStore, NewChat } from './chat'
 import { createStore } from './create'
 import { data } from './data'
 import { local, replace } from './data/storage'
@@ -298,8 +299,8 @@ subscribe('message-creating', { chatId: 'string' }, (body) => {
   msgStore.setState({ waiting: activeChatId, partial: '' })
 })
 
-subscribe('message-horde-eta', { eta: 'number' }, (body) => {
-  toastStore.normal(`Response ETA: ${body.eta}s`)
+subscribe('message-horde-eta', { eta: 'number', queue: 'number' }, (body) => {
+  toastStore.normal(`Queue: ${body.queue}`)
 })
 
 subscribe(

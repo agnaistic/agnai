@@ -98,6 +98,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     hordeKey: '',
     oaiKey: '',
     defaultPresets: {},
+    createdAt: new Date().toISOString(),
   }
 
   const startChar: AppSchema.Character = {

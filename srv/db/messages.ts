@@ -13,6 +13,8 @@ export type NewMessage = {
   adapter?: string
 }
 
+export type ImportedMessage = NewMessage & { createdAt: string }
+
 export async function createChatMessage(
   { chatId, message, characterId, senderId, adapter }: NewMessage,
   ephemeral?: boolean
@@ -32,6 +34,24 @@ export async function createChatMessage(
 
   if (!ephemeral) await db('chat-message').insertOne(doc)
   return doc
+}
+
+export async function importMessages(messages: NewMessage[]) {
+  const docs: AppSchema.ChatMessage[] = messages.map((msg) => ({
+    _id: v4(),
+    kind: 'chat-message',
+    rating: 'none',
+    chatId: msg.chatId,
+    characterId: msg.characterId,
+    userId: msg.senderId,
+    msg: msg.message,
+    adapter: msg.adapter,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }))
+
+  await db('chat-message').insertMany(docs)
+  return docs
 }
 
 export async function getMessage(messageId: string) {
