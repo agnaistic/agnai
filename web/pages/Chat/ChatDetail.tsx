@@ -230,7 +230,18 @@ const ChatDetail: Component = () => {
 
       <PromptModal />
 
-      <SideDrawer show={showOpts()} close={() => setShowOpts(false)} title="Chat Options">
+      <Modal
+        show={showOpts()}
+        close={() => setShowOpts(false)}
+        title="Chat Options"
+        footer={
+          <>
+            <Button schema="secondary" onClick={() => setShowOpts(false)}>
+              Close
+            </Button>
+          </>
+        }
+      >
         <div class="flex flex-col gap-2">
           <Option onClick={() => setEditing(!editing())}>
             <div class="flex w-full items-center justify-between">
@@ -285,7 +296,7 @@ const ChatDetail: Component = () => {
             <Download /> Export Chat
           </Option>
         </div>
-      </SideDrawer>
+      </Modal>
 
       <Show when={showMem()}>
         <ChatMemoryModal

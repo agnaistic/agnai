@@ -92,9 +92,9 @@ const UserNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
       <Show when={user.user?.admin}>
-      <Item href="/admin/metrics">
+        <Item href="/admin/metrics">
           <Activity /> Metrics
-        </Item
+        </Item>
       </Show>
       <a
         class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
