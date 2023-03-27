@@ -149,12 +149,12 @@ const PromptSettings: Component<Props> = (props) => {
           <>
             How the character definitions are sent to OpenAI. Placeholders:{' '}
             <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
-            <code>{'{{memory}}'}</code> <code>{'{{example_dialogue}}'}</code>. If{' '}
-            <code>{'{{example_dialogue}}'}</code> is not present then example dialogues will be sent
-            as conversation.
+            <code>{'{{memory}}'}</code> <code>{'{{scenario}}'}</code>{' '}
+            <code>{'{{example_dialogue}}'}</code>. If <code>{'{{example_dialogue}}'}</code> is not
+            present then example dialogues will be sent as conversation.
           </>
         }
-        placeholder="Be sure to include "
+        placeholder="Be sure to include the placeholders above"
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
         disabled={props.disabled}

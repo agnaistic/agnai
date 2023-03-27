@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from '@solidjs/router'
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { defaultPresets, presetValidator } from '../../../common/presets'
@@ -16,6 +16,7 @@ export const GenerationPresetsPage: Component = () => {
   let ref: any
 
   const params = useParams()
+  const [queryParams] = useSearchParams()
 
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
@@ -36,7 +37,9 @@ export const GenerationPresetsPage: Component = () => {
     if (params.id === 'new') {
       setEditing()
       await Promise.resolve()
-      setEditing((_) => ({ _id: '', ...emptyPreset, kind: 'gen-setting', userId: '' }))
+      const template = state.presets.find((p) => p._id === queryParams.preset)
+      const preset = template ? { ...template } : { ...emptyPreset }
+      setEditing((_) => ({ ...preset, _id: '', kind: 'gen-setting', userId: '' }))
       return
     }
 
