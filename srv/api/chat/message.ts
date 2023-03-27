@@ -60,10 +60,10 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   }
 
   if (userId) {
-    if (body.kind === 'retry' && userId !== chat.userId)  {
+    if (body.kind === 'retry' && userId !== chat.userId) {
       throw errors.Forbidden
     }
-    
+
     if (body.kind === 'continue' && userId !== chat.userId) {
       throw errors.Forbidden
     }
@@ -71,7 +71,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     if (!members.includes(userId)) {
       throw errors.Forbidden
     }
-  
+  }
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send') {
