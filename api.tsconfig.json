@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "noEmit": false,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "sourceMap": true
+  },
+  "include": ["srv", "common"]
+}
