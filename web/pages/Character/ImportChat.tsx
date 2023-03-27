@@ -4,10 +4,10 @@ import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
-import { characterStore, chatStore, ImportChat, NewMsgImport, toastStore } from '../../store'
+import { characterStore, chatStore, ImportChat, toastStore } from '../../store'
 import Divider from '../../shared/Divider'
 import Dropdown from '../../shared/Dropdown'
-import { assertValid, UnwrapBody } from 'frisker'
+import { assertValid } from 'frisker'
 
 const importValid = {
   name: 'string',

@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { characterStore, chatStore, msgStore, NewChat, NewMsgImport, toastStore } from '../../store'
+import { characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
 import { Import, Plus, Trash } from 'lucide-solid'

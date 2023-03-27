@@ -207,38 +207,6 @@ function newMessage(
   return userMsg
 }
 
-// export const importMessages = handle(async ({ body, params, userId }) => {
-//   const chatId = params.id
-//   const chat = await store.chats.getChat(chatId)
-
-//   if (!chat) throw errors.NotFound
-//   if (!userId || chat.userId !== userId) throw errors.Forbidden
-
-//   assertValid(
-//     {
-//       messages: [
-//         // In lieu of some mechanism to map imported messages to existing Agnai users or characters,
-//         // we assume that all bot messages are from the character and user messages are from the
-//         // chat owner. Works for Tavern chats but obviously not for Agnai's own multi-user chats.
-//         { text: 'string', sender: ['character', 'user'], timestamp: 'number' },
-//       ],
-//     },
-//     body
-//   )
-
-//   const result = await store.msgs.createManyChatMessages(
-//     body.messages.map((m) => ({
-//       chatId: chat._id,
-//       message: m.text,
-//       adapter: chat.adapter,
-//       createdAt: new Date(m.timestamp).toISOString(),
-//       ...(m.sender === 'character' ? { characterId: chat.characterId } : { senderId: userId }),
-//     }))
-//   )
-
-//   return { messages: result }
-// })
-
 /**
  * V1 response generation routes
  * To be removed

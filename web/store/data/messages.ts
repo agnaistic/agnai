@@ -1,13 +1,10 @@
 import { v4 } from 'uuid'
-import { getMemoryPrompt } from '../../../common/memory'
-import { defaultPresets, getFallbackPreset, isDefaultPreset } from '../../../common/presets'
-import { createPrompt, getAdapter, PromptParts } from '../../../common/prompt'
-import { getEncoder } from '../../../common/tokenize'
+import { defaultPresets, isDefaultPreset } from '../../../common/presets'
+import { createPrompt, getAdapter } from '../../../common/prompt'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
-import { NewMsgImport } from '../message'
 import { loadItem, local } from './storage'
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {

@@ -18,11 +18,6 @@ export type MsgState = {
   nextLoading: boolean
 }
 
-export type NewMsgImport = {
-  char: AppSchema.Character
-  msgs: { sender: 'character' | 'user'; text: string; timestamp: number }[]
-}
-
 export const msgStore = createStore<MsgState>('messages', {
   activeChatId: '',
   msgs: [],
