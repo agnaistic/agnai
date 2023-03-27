@@ -46,10 +46,18 @@ const PresetList: Component = () => {
             <div class="flex w-1/2 items-center gap-2">
               <A
                 href={`/presets/${preset._id}`}
-                class="flex h-12 w-full gap-4 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
+                class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
               >
                 <div class="ml-4 flex w-full items-center">{preset.name}</div>
               </A>
+              <Button
+                schema="clear"
+                size="sm"
+                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
+                class="icon-button"
+              >
+                <Copy />
+              </Button>
               <Button
                 schema="clear"
                 size="sm"
@@ -57,14 +65,6 @@ const PresetList: Component = () => {
                 class="icon-button"
               >
                 <Trash />
-              </Button>
-              <Button
-                schema="clear"
-                size="sm"
-                onClick={() => nav(`/presets/new?fromPresetId=${preset._id}`)}
-                class="icon-button"
-              >
-                <Copy />
               </Button>
             </div>
           )}

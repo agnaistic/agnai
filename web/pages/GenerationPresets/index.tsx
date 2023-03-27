@@ -37,9 +37,8 @@ export const GenerationPresetsPage: Component = () => {
     if (params.id === 'new') {
       setEditing()
       await Promise.resolve()
-      let preset = emptyPreset
-      const templatePreset = state.presets.find((p) => p._id === queryParams.fromPresetId)
-      if (templatePreset) preset = { ...templatePreset, name: `${templatePreset.name} (duplicate)` }
+      const template = state.presets.find((p) => p._id === queryParams.preset)
+      const preset = template ? { ...template } : { ...emptyPreset }
       setEditing((_) => ({ ...preset, _id: '', kind: 'gen-setting', userId: '' }))
       return
     }
