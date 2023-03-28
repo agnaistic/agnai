@@ -123,7 +123,6 @@ const ImportChatModal: Component<{
 
 export default ImportChatModal
 
-type LogImportFormat = keyof typeof formatMaps
 type LogImportKeys = {
   timestamp: string
   sender: string
