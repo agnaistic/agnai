@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
-import { defaultPresets, presetValidator } from '../../../common/presets'
+import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
@@ -16,7 +16,7 @@ export const GenerationPresetsPage: Component = () => {
   let ref: any
 
   const params = useParams()
-  const [queryParams] = useSearchParams()
+  const [query] = useSearchParams()
 
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
@@ -37,9 +37,11 @@ export const GenerationPresetsPage: Component = () => {
     if (params.id === 'new') {
       setEditing()
       await Promise.resolve()
-      const template = state.presets.find((p) => p._id === queryParams.preset)
+      const template = isDefaultPreset(query.preset)
+        ? defaultPresets[query.preset]
+        : state.presets.find((p) => p._id === query.preset)
       const preset = template ? { ...template } : { ...emptyPreset }
-      setEditing((_) => ({ ...preset, _id: '', kind: 'gen-setting', userId: '' }))
+      setEditing({ ...emptyPreset, ...preset, _id: '', kind: 'gen-setting', userId: '' })
       return
     }
 
@@ -88,7 +90,7 @@ export const GenerationPresetsPage: Component = () => {
 
   return (
     <>
-      <PageHeader title="Generation Presets" subtitle="Your personal generation presets" />
+      <PageHeader title="Generation Presets" subtitle="generation settings presets" />
       <div class="flex flex-col gap-2">
         <div class="flex flex-row justify-between"></div>
         <div class="flex flex-col gap-4 p-2">
@@ -120,11 +122,13 @@ export const GenerationPresetsPage: Component = () => {
                 />
                 <GenerationSettings showAll={params.id === 'new'} inherit={editing()} />
               </div>
-              <div class="flex flex-row justify-end">
-                <Button type="submit" disabled={state.saving}>
-                  <Save /> Save
-                </Button>
-              </div>
+              <Show when={editing()?.userId !== 'SYSTEM'}>
+                <div class="flex flex-row justify-end">
+                  <Button type="submit" disabled={state.saving}>
+                    <Save /> Save
+                  </Button>
+                </div>
+              </Show>
             </form>
           </Show>
         </div>
