@@ -7,7 +7,7 @@ export async function createCharacter(
   userId: string,
   char: Pick<
     AppSchema.Character,
-    'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario'
+    'name' | 'avatar' | 'persona' | 'sampleChat' | 'greeting' | 'scenario' | 'description'
   >
 ) {
   const newChar: AppSchema.Character = {
