@@ -1,8 +1,8 @@
 name: Publish API
 on:
   push:
-    branches: ['dev']
-
+    tags:
+      - '*'
 env:
   node-version: '18.4.0'
   pnpm-version: 7.2.1
