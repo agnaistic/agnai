@@ -34,6 +34,7 @@ const createCharacter = handle(async (req) => {
     name: body.name,
     persona,
     sampleChat: body.sampleChat,
+    description: body.description,
     scenario: body.scenario,
     avatar,
     greeting: body.greeting,

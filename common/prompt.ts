@@ -130,7 +130,8 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
   const pre: string[] = []
 
-  if (!opts.settings?.useGaslight) {
+  // If the gaslight is empty or useGaslight is disabled, proceed without it
+  if (!opts.settings?.useGaslight || !opts.settings.gaslight) {
     pre.push(`${char.name}'s Persona: ${parts.persona}`)
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
@@ -139,14 +140,15 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
       pre.push(`${MEMORY_PREFIX}${parts.memory.prompt}`)
     }
 
-    if (hasStart) pre.slice(-1, pre.length)
-
     if (!hasStart) pre.push('<START>')
 
     if (parts.sampleChat) pre.push(...parts.sampleChat)
   }
 
-  if (opts.settings?.useGaslight || opts.chat?.genSettings?.useGaslight) pre.push(parts.gaslight)
+  // Only use the gaslight if specifically configured to and when it exists.
+  if (opts.settings?.useGaslight && opts.settings?.gaslight) {
+    pre.push(opts.settings.gaslight)
+  }
 
   const post = [`${char.name}:`]
   if (opts.continue) {
