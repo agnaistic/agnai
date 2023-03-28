@@ -9,6 +9,9 @@ import { chatStore, userStore } from '../../../store'
 import { MsgState, msgStore } from '../../../store'
 
 const showdownConverter = new showdown.Converter()
+// Ensure single newlines are turned into <br> instead of left as plaintext
+// newlines and hence not rendered
+showdownConverter.setOption('simpleLineBreaks', true)
 
 type MessageProps = {
   msg: SplitMessage
@@ -207,6 +210,7 @@ const SingleMessage: Component<
         <div class="break-words opacity-75">
           <Show when={!edit()}>
             <div
+              class="rendered-markdown"
               data-bot-message={isBot()}
               data-user-message={isUser()}
               innerHTML={showdownConverter.makeHtml(
@@ -236,9 +240,6 @@ function parseMessage(msg: string, char: AppSchema.Character, profile: AppSchema
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, profile?.handle || 'You')
     .replace(/(<|>)/g, '*')
-    .split('\n')
-    .filter((v) => !!v)
-    .join('\n\n')
 }
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean }

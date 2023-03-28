@@ -1,3 +1,7 @@
+.rendered-markdown p:not(:last-child) {
+  margin-bottom: 1em; /* ensure <p> els are visually separated by empty line */
+}
+
 /*!
  * three-dots - v0.3.2
  * CSS loading animations made with single element
