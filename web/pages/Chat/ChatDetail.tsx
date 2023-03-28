@@ -138,6 +138,12 @@ const ChatDetail: Component = () => {
               </Show>
             </div>
 
+            <div class="flex flex-row items-center justify-between gap-4 text-sm">
+              <Show when={chats.chat?.name}>
+                {chats.chat?.name}
+              </Show>
+            </div>
+
             <div class="flex flex-row gap-3">
               <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
                 {adapter()}
