@@ -144,22 +144,20 @@ const ChatDetail: Component = () => {
                 {adapter()}
               </div>
 
-              <Show when={chats.chat?.userId === user.user?._id}>
-                <div class="icon-button" onClick={() => setShowOpts(!showOpts())}>
-                  <Menu />
+              <div class="icon-button" onClick={() => setShowOpts(!showOpts())}>
+                <Menu />
+              </div>
+
+              <Show when={!cfg.fullscreen}>
+                <div class="icon-button" onClick={() => settingStore.fullscreen(true)}>
+                  <ArrowUpRight />
                 </div>
+              </Show>
 
-                <Show when={!cfg.fullscreen}>
-                  <div class="icon-button" onClick={() => settingStore.fullscreen(true)}>
-                    <ArrowUpRight />
-                  </div>
-                </Show>
-
-                <Show when={cfg.fullscreen}>
-                  <div class="icon-button" onClick={() => settingStore.fullscreen(false)}>
-                    <ArrowDownLeft />
-                  </div>
-                </Show>
+              <Show when={cfg.fullscreen}>
+                <div class="icon-button" onClick={() => settingStore.fullscreen(false)}>
+                  <ArrowDownLeft />
+                </div>
               </Show>
             </div>
           </div>
@@ -245,50 +243,52 @@ const ChatDetail: Component = () => {
         }
       >
         <div class="flex flex-col gap-2">
-          <Option onClick={() => setEditing(!editing())}>
-            <div class="flex w-full items-center justify-between">
-              <div>Enable Chat Editing</div>
-              <Toggle
-                class="flex items-center"
-                fieldName="editChat"
-                value={editing()}
-                onChange={() => setEditing(!editing())}
-              />
-            </div>
-          </Option>
+          <Show when={chats.chat?.userId === user.user?._id}>
+            <Option onClick={() => setEditing(!editing())}>
+              <div class="flex w-full items-center justify-between">
+                <div>Enable Chat Editing</div>
+                <Toggle
+                  class="flex items-center"
+                  fieldName="editChat"
+                  value={editing()}
+                  onChange={() => setEditing(!editing())}
+                />
+              </div>
+            </Option>
 
-          <Option
-            onClick={() => setShowInvite(true)}
-            close={() => setShowOpts(false)}
-            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-          >
-            <MailPlus /> Invite User
-          </Option>
+            <Option
+              onClick={() => setShowInvite(true)}
+              close={() => setShowOpts(false)}
+              class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+            >
+              <MailPlus /> Invite User
+            </Option>
 
-          <Option
-            onClick={() => setShowMem(true)}
-            close={() => setShowOpts(false)}
-            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-          >
-            <Book />
-            Edit Chat Memory
-          </Option>
+            <Option
+              onClick={() => setShowMem(true)}
+              close={() => setShowOpts(false)}
+              class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+            >
+              <Book />
+              Edit Chat Memory
+            </Option>
 
-          <Option
-            onClick={() => setShowGen(true)}
-            close={() => setShowOpts(false)}
-            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-          >
-            <Sliders /> Generation Settings
-          </Option>
+            <Option
+              onClick={() => setShowGen(true)}
+              close={() => setShowOpts(false)}
+              class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+            >
+              <Sliders /> Generation Settings
+            </Option>
 
-          <Option
-            onClick={() => setShowConfig(true)}
-            close={() => setShowOpts(false)}
-            class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-          >
-            <Settings /> Chat Settings
-          </Option>
+            <Option
+              onClick={() => setShowConfig(true)}
+              close={() => setShowOpts(false)}
+              class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+            >
+              <Settings /> Chat Settings
+            </Option>
+          </Show>
 
           <Option
             onClick={() => setShowExport(true)}
