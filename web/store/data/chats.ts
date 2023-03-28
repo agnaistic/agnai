@@ -79,15 +79,16 @@ export async function importChat(characterId: string, props: ImportChat) {
     overrides: { ...char.persona },
   })
 
-  const messages: AppSchema.ChatMessage[] = props.messages.map((msg) => ({
+  const start = Date.now()
+  const messages: AppSchema.ChatMessage[] = props.messages.map((msg, i) => ({
     _id: v4(),
     chatId: chat._id,
     kind: 'chat-message',
     msg: msg.msg,
     characterId: msg.characterId ? char._id : undefined,
     userId: msg.userId ? local.ID : undefined,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date(start + i).toISOString(),
+    updatedAt: new Date(start + i).toISOString(),
   }))
 
   local.saveChats(local.loadItem('chats').concat(chat))
