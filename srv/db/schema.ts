@@ -179,6 +179,9 @@ export namespace AppSchema {
 
     gaslight?: string
     useGaslight?: boolean
+    ujb?: string
+    useUJB?: boolean
+    antiBond?: boolean
 
     frequencyPenalty?: number
     presencePenalty?: number

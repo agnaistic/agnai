@@ -32,6 +32,7 @@ export type OpenAIModel = (typeof OPENAI_MODELS)[keyof typeof OPENAI_MODELS]
 export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',
+  GPT4: 'gpt-4',
 } as const
 
 export const NOVEL_MODELS = {

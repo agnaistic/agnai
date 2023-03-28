@@ -30,8 +30,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
   }
 
-  const turbo = oaiModel === OPENAI_MODELS.Turbo
-  if (turbo) {
+  const useChat = oaiModel === (OPENAI_MODELS.Turbo || OPENAI_MODELS.GPT4)
+  if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
     const user = sender.handle || 'You'
 
@@ -48,6 +48,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     if (lines) {
       all.push(...lines)
     }
+
+    if (gen.useUJB && gen.ujb) history.push({ role: 'system', content: gen.ujb })
 
     for (const line of all) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
@@ -81,6 +83,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.prompt = prompt
   }
 
+  if (gen.antiBond) body.logit_bias = { 3938: 8, 11049: 8, 64186: 8, 42120: 8 }
+
   const bearer = !!guest ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
 
   const headers = {
@@ -90,7 +94,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   log.debug(body, 'OpenAI payload')
 
-  const url = turbo ? `${baseUrl}/chat/completions` : `${baseUrl}/completions`
+  const url = useChat ? `${baseUrl}/chat/completions` : `${baseUrl}/completions`
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -110,7 +114,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   try {
     let text = ''
-    if (!turbo) {
+    if (!useChat) {
       text = resp.body.choices[0].text
     } else {
       text = resp.body.choices[0].message.content

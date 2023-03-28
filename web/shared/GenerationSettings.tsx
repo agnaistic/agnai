@@ -135,7 +135,7 @@ const PromptSettings: Component<Props> = (props) => {
               CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble". If
               you do not include the placeholders, they will not be included in the prompt at all.
             </p>
-            If this option is enable, the Gaslight text will be included in the prompt sent to the
+            If this option is enabled, the Gaslight text will be included in the prompt sent to the
             AI service. Particularly useful for Scale.
           </>
         }
@@ -157,6 +157,41 @@ const PromptSettings: Component<Props> = (props) => {
         placeholder="Be sure to include the placeholders above"
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
+        disabled={props.disabled}
+      />
+
+      <Toggle
+        fieldName="antiBond"
+        label="Anti-Bond"
+        helperText={
+          <>
+            If this option is enabled, OpenAI will be prompted with logit biases to discourage the
+            model from talking about "bonding." This is mostly a problem on GPT4 but you can use it
+            if you want on all OpenAI models
+          </>
+        }
+        value={props.inherit?.antiBond ?? false}
+      />
+
+      <Toggle
+        fieldName="useUJB"
+        label="Use UJB"
+        helperText={
+          <>
+            If this option is enabled, the UJB prompt will be appened as a system role message to
+            the end of the conversation before prompting OpenAI. Only works on OpenAI models that
+            use chat completions (gpt-4/turbo)
+          </>
+        }
+        value={props.inherit?.useUJB ?? false}
+      />
+
+      <TextInput
+        fieldName="ujb"
+        label="UJB Prompt (GPT-4 / Turbo)"
+        placeholder="E.g. Keep OOC out of your reply."
+        isMultiline
+        value={props.inherit?.ujb ?? defaultPresets.openai.ujb}
         disabled={props.disabled}
       />
     </>
