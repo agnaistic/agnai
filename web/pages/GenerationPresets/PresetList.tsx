@@ -43,7 +43,7 @@ const PresetList: Component = () => {
       <div class="flex flex-col items-center gap-2">
         <For each={state.presets}>
           {(preset) => (
-            <div class="flex w-1/2 items-center gap-2">
+            <div class="flex w-full items-center gap-2">
               <A
                 href={`/presets/${preset._id}`}
                 class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
