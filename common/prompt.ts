@@ -145,14 +145,28 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
     if (parts.sampleChat) pre.push(...parts.sampleChat)
   }
 
-  // Only use the gaslight if specifically configured to and when it exists.
-  if (opts.settings?.useGaslight && opts.settings?.gaslight) {
-    pre.push(opts.settings.gaslight)
-  }
-
   const post = [`${char.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
+  }
+
+  // Only use the gaslight if specifically configured to and when it exists.
+
+  if (opts.settings?.useGaslight && opts.settings?.gaslight) {
+    const splitgaslight = opts.settings.gaslight
+      .replace(/\{\{example_dialogue\}\}/g, parts.sampleChat?.join('\n') || '')
+      .replace(/\{\{scenario\}\}/g, parts.scenario || '')
+      .replace(/\{\{memory\}\}/g, parts.memory?.prompt || '')
+      .replace(/\{\{name\}\}/g, char.name)
+      .replace(/\<BOT\>/g, char.name)
+      .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
+      .replace(/\{\{char\}\}/g, char.name)
+      .replace(/\{\{user\}\}/g, sender)
+      .split(/\{\{messages\}\}/g)
+    pre.push(splitgaslight[0])
+    if (typeof splitgaslight[1] !== 'undefined') {
+      post.unshift(splitgaslight[1])
+    }
   }
 
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
@@ -242,7 +256,8 @@ export function getPromptParts(
     opts.chat.genSettings?.gaslight || opts.settings?.gaslight || defaultPresets.openai.gaslight
 
   const sampleChat = parts.sampleChat?.join('\n') || ''
-  parts.gaslight = gaslight
+
+  const splitgaslight = gaslight
     .replace(/\{\{example_dialogue\}\}/g, sampleChat)
     .replace(/\{\{scenario\}\}/g, parts.scenario || '')
     .replace(/\{\{memory\}\}/g, parts.memory?.prompt || '')
@@ -251,6 +266,12 @@ export function getPromptParts(
     .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
     .replace(/\{\{char\}\}/g, char.name)
     .replace(/\{\{user\}\}/g, sender)
+    .split(/\{\{messages\}\}/g)
+
+  parts.gaslight = splitgaslight[0]
+  if (opts.settings?.useGaslight && typeof splitgaslight[1] !== 'undefined') {
+    post.unshift(splitgaslight[1])
+  }
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat

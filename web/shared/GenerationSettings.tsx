@@ -132,11 +132,13 @@ const PromptSettings: Component<Props> = (props) => {
         helperText={
           <>
             <p class="font-bold">
-              CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble". If
-              you do not include the placeholders, they will not be included in the prompt at all.
+              CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble" and
+              "post-amble". If you do not include the placeholders, they will not be included in the
+              prompt at all (except <code>{'{{example_dialogue}}'}</code> and
+              <code>{'{{messages}}'}</code>).
             </p>
-            If this option is enable, the Gaslight text will be included in the prompt sent to the
-            AI service. Particularly useful for Scale.
+            If this option is enabled, the Gaslight text will be included in the prompt sent to the
+            AI service. Particularly useful for Scale, OpenAI or Alpaca.
           </>
         }
         value={props.inherit?.useGaslight ?? false}
@@ -144,14 +146,16 @@ const PromptSettings: Component<Props> = (props) => {
 
       <TextInput
         fieldName="gaslight"
-        label="Gaslight Prompt (OpenAI / Scale)"
+        label="Gaslight Prompt"
         helperText={
           <>
-            How the character definitions are sent to OpenAI. Placeholders:{' '}
+            How the character definitions are sent to the prompt. Placeholders:{' '}
             <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
             <code>{'{{memory}}'}</code> <code>{'{{scenario}}'}</code>{' '}
-            <code>{'{{example_dialogue}}'}</code>. If <code>{'{{example_dialogue}}'}</code> is not
-            present then example dialogues will be sent as conversation.
+            <code>{'{{example_dialogue}}'}</code> <code>{'{{messages}}'}</code>. If{' '}
+            <code>{'{{example_dialogue}}'}</code> is not present then example dialogues will be sent
+            as conversation. If <code>{'{{messages}}'}</code> is not present then messages will be
+            sent as they normally would.
           </>
         }
         placeholder="Be sure to include the placeholders above"
