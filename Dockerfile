@@ -5,7 +5,7 @@ VOLUME [ "/app/db" ]
 VOLUME [ "/app/assets" ]
 VOLUME [ "/app/dist/assets" ]
 
-RUN npm install pnpm -g
+RUN npm install pnpm@6 -g
 
 ARG SHA=unknown
 
