@@ -49,7 +49,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       all.push(...lines)
     }
 
-    if (gen.useUJB && gen.ujb) history.push({ role: 'system', content: gen.ujb })
+    if (gen.useUJB && gen.ujb) {
+      history.push({ role: 'system', content: gen.ujb })
+      tokens += encoder(gen.ujb)
+    }
 
     for (const line of all) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
