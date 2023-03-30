@@ -19,7 +19,6 @@ import { getAdapter } from '../../../common/prompt'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import SideDrawer from '../../shared/SideDrawer'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { getStrictForm } from '../../shared/util'
@@ -244,14 +243,14 @@ const ChatDetail: Component = () => {
       >
         <div class="flex flex-col gap-2">
           <Show when={chats.chat?.userId === user.user?._id}>
-            <Option onClick={() => setEditing(!editing())}>
+            <Option onClick={toggleEditing}>
               <div class="flex w-full items-center justify-between">
                 <div>Enable Chat Editing</div>
                 <Toggle
                   class="flex items-center"
                   fieldName="editChat"
                   value={editing()}
-                  onChange={() => setEditing(!editing())}
+                  onChange={toggleEditing}
                 />
               </div>
             </Option>
@@ -383,7 +382,7 @@ const SwipeMessage: Component<{
   pos: number
 }> = (props) => {
   return (
-    <div class="flex h-6 w-full items-center justify-between text-[var(--text-800)]">
+    <div class="flex h-6 min-h-[1.5rem] w-full items-center justify-between text-[var(--text-800)]">
       <Show when={props.list.length > 1}>
         <div class="cursor:pointer hover:text-[var(--text-900)]">
           <Button schema="clear" onClick={props.prev}>
