@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from 'frisker'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
-import { DropdownItem } from './Dropdown'
+import { Option } from './Select'
 
 type FormRef = {
   [key: string]:
@@ -143,7 +143,7 @@ function toRawDuration(valueSecs: number) {
   }
 }
 
-export function adaptersToOptions(adapters: AIAdapter[]): DropdownItem[] {
+export function adaptersToOptions(adapters: AIAdapter[]): Option[] {
   return adapters.map((adp) => ({ label: ADAPTER_LABELS[adp], value: adp }))
 }
 
@@ -182,7 +182,7 @@ export function capitalize(input: string) {
   return input.slice(0, 1).toUpperCase() + input.slice(1)
 }
 
-export function toDropdownItems(values: string[] | readonly string[]): DropdownItem[] {
+export function toDropdownItems(values: string[] | readonly string[]): Option[] {
   return values.map((value) => ({ label: capitalize(value), value }))
 }
 

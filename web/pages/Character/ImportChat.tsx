@@ -6,7 +6,7 @@ import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileIn
 import Modal from '../../shared/Modal'
 import { characterStore, chatStore, ImportChat, toastStore } from '../../store'
 import Divider from '../../shared/Divider'
-import Dropdown from '../../shared/Dropdown'
+import Select from '../../shared/Select'
 import { assertValid } from 'frisker'
 
 const importValid = {
@@ -94,7 +94,7 @@ const ImportChatModal: Component<{
         </p>
         <Divider />
         <Show when={!props.char}>
-          <Dropdown
+          <Select
             fieldName="charName"
             label="Character"
             value={charId()}

@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import Dropdown from '../../shared/Dropdown'
+import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
 import { AVATAR_CORNERS, AVATAR_SIZES, UI_INPUT_TYPE, UI_THEME, userStore } from '../../store'
 
@@ -12,7 +12,7 @@ const UISettings: Component = () => {
     <>
       <h3 class="text-lg font-bold">Theme</h3>
       <div class="flex flex-row justify-start gap-4">
-        <Dropdown
+        <Select
           fieldName="theme"
           items={themeOptions}
           label="Color"
@@ -20,7 +20,7 @@ const UISettings: Component = () => {
           onChange={(item) => userStore.updateUI({ theme: item.value as any })}
         />
 
-        <Dropdown
+        <Select
           fieldName="mode"
           label="Mode"
           items={[
@@ -34,14 +34,14 @@ const UISettings: Component = () => {
 
       <h4 class="text-md font-bold">Chat Avatars</h4>
       <div class="flex flex-row justify-start gap-4">
-        <Dropdown
+        <Select
           fieldName="avatarSize"
           label="Size"
           items={toDropdownItems(AVATAR_SIZES)}
           value={state.ui.avatarSize}
           onChange={(item) => userStore.updateUI({ avatarSize: item.value as any })}
         />
-        <Dropdown
+        <Select
           fieldName="avatarCorners"
           label="Corner Radius"
           items={toDropdownItems(AVATAR_CORNERS)}
@@ -50,7 +50,7 @@ const UISettings: Component = () => {
         />
       </div>
 
-      <Dropdown
+      <Select
         fieldName="chatInputType"
         label="Input Type"
         helperText={

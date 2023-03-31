@@ -3,7 +3,7 @@ import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
-import Dropdown from '../../../shared/Dropdown'
+import Select from '../../../shared/Select'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
@@ -70,7 +70,7 @@ const ChatMemoryModal: Component<{
     >
       <div class="flex flex-col gap-2">
         <div class="flex items-end justify-between">
-          <Dropdown
+          <Select
             fieldName="memoryId"
             label="Chat Memory Book"
             helperText="The memory book your chat will use"

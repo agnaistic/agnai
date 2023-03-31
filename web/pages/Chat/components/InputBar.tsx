@@ -1,6 +1,8 @@
-import { ImagePlus, PlusCircle, Send } from 'lucide-solid'
+import { ChevronUp, ImagePlus, PlusCircle, Send } from 'lucide-solid'
 import { Component, createSignal, JSX, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
+import Button from '../../../shared/Button'
+import { Dropup } from '../../../shared/DropMenu'
 import { chatStore, toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
@@ -43,14 +45,14 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="flex items-center justify-center gap-2 max-sm:pb-0">
+    <div class="flex items-center justify-center max-sm:pb-0">
       <Show when={user.ui.input === 'single'}>
         <input
           spellcheck
           ref={ref}
           type="text"
           placeholder="Send a message..."
-          class="focusable-field w-full rounded-xl px-4 py-2"
+          class="focusable-field w-full rounded-xl rounded-r-none px-4 py-2"
           onKeyDown={updateText}
           onKeyUp={(ev) => ev.key === 'Enter' && send()}
         />
@@ -60,7 +62,7 @@ const InputBar: Component<{
           spellcheck
           ref={ref}
           placeholder="Send a message..."
-          class="focusable-field h-10 min-h-[40px] w-full rounded-xl px-4 py-2"
+          class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
           onKeyPress={(ev) => {
             if (ev.key === 'Enter') {
               if (ev.ctrlKey || ev.shiftKey) return
@@ -71,35 +73,20 @@ const InputBar: Component<{
           }}
         />
       </Show>
-      {/* <IconButton onClick={createImage}>
-        <ImagePlus />
-      </IconButton> */}
-      <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
+      <Dropup>
+        <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
+          <Button schema="clear" onClick={() => props.more(state.lastMsg.msg)}>
+            <PlusCircle size={14} /> Generate More
+          </Button>
+        </Show>
+      </Dropup>
+      {/* <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
         <IconButton onClick={() => props.more(state.lastMsg.msg)}>
           <PlusCircle />
         </IconButton>
-      </Show>
-      <IconButton onClick={send}>
-        <Send size={20} />
-      </IconButton>
+      </Show> */}
     </div>
   )
 }
-
-const IconButton: Component<{
-  children: JSX.Element
-  onClick?: (ev: MouseEvent) => void
-  class?: string
-}> = (props) => (
-  <button
-    type="button"
-    class={`focusable-icon-button focusable-field rounded-xl border-2 border-transparent bg-transparent py-3 px-1 ${
-      props.class || ''
-    }`}
-    onClick={(ev) => props.onClick?.(ev)}
-  >
-    {props.children}
-  </button>
-)
 
 export default InputBar

@@ -1,7 +1,7 @@
 import { Component, createSignal, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
-import Dropdown from './Dropdown'
+import Select from './Select'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
 import { OPENAI_MODELS } from '../../common/adapters'
@@ -87,7 +87,7 @@ const GeneralSettings: Component<Props> = (props) => {
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}
       />
-      <Dropdown
+      <Select
         fieldName="oaiModel"
         label="OpenAI Model"
         items={Object.entries(OPENAI_MODELS).map(([label, value]) => ({ label, value }))}
