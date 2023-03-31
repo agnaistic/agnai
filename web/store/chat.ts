@@ -82,15 +82,16 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async getChat(_, id: string) {
+    async *getChat(_, id: string) {
       const res = await data.chats.getChat(id)
+
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
         localStorage.setItem('lastChatId', id)
 
         msgStore.setState({ msgs: res.result.messages, activeChatId: id })
 
-        return {
+        yield {
           lastChatId: id,
           active: {
             chat: res.result.chat,

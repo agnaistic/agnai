@@ -263,7 +263,7 @@ export function getPromptParts(
   if (
     gaslight.includes('{{example_dialogue}}') &&
     adapter === 'openai' &&
-    model === OPENAI_MODELS.Turbo
+    model === (OPENAI_MODELS.Turbo || model === OPENAI_MODELS.GPT4)
   ) {
     parts.sampleChat = undefined
   }

@@ -28,6 +28,8 @@ export const chatGenSettings = {
   gaslight: 'string',
   oaiModel: 'string',
   useGaslight: 'boolean?',
+  ultimeJailbreak: 'string?',
+  antiBond: 'boolean?',
 } as const
 
 export const presetValidator = {

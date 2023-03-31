@@ -32,15 +32,18 @@ const TextInput: Component<{
     ref.style.height = `${next}px`
   }
 
-  onMount(() => {
-    resize()
-  })
+  onMount(resize)
 
   return (
     <div class="w-full">
       <Show when={!!props.label}>
         <label for={props.fieldName}>
-          <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
+          <div class={props.helperText ? '' : 'pb-1'}>
+            {props.label}
+            <Show when={props.isMultiline}>
+              <IsVisible onEnter={resize} />
+            </Show>
+          </div>
           <Show when={!!props.helperText}>
             <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
           </Show>
@@ -64,7 +67,6 @@ const TextInput: Component<{
           />
         }
       >
-        <IsVisible onEnter={resize} />
         <textarea
           id={props.fieldName}
           name={props.fieldName}
