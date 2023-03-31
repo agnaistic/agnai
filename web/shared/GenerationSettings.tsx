@@ -140,6 +140,7 @@ const PromptSettings: Component<Props> = (props) => {
           </>
         }
         value={props.inherit?.useGaslight ?? false}
+        disabled={props.disabled}
       />
 
       <TextInput
@@ -171,6 +172,7 @@ const PromptSettings: Component<Props> = (props) => {
           </>
         }
         value={props.inherit?.antiBond ?? false}
+        disabled={props.disabled}
       />
 
       <TextInput

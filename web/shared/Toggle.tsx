@@ -9,8 +9,10 @@ export const Toggle: Component<{
   helperText?: string | JSX.Element
   class?: string
   onChange?: (value: boolean) => void
+  disabled?: boolean
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
+    if (props.disabled) return
     props.onChange?.(ev.currentTarget.checked)
   }
 
@@ -19,7 +21,7 @@ export const Toggle: Component<{
       <Show when={props.label}>
         <FormLabel label={props.label} helperText={props.helperText} />
       </Show>
-      <label class="toggle">
+      <label class={`toggle ${props.disabled ? 'toggle-disabled' : ''}`}>
         <input
           type="checkbox"
           class="toggle-checkbox"
@@ -27,8 +29,9 @@ export const Toggle: Component<{
           name={props.fieldName}
           checked={props.value}
           onChange={onChange}
+          disabled={props.disabled}
         />
-        <div class="toggle-switch"></div>
+        <div class={`toggle-switch ${props.disabled ? 'toggle-disabled' : ''}`}></div>
       </label>
     </div>
   )

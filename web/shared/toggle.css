@@ -3,6 +3,10 @@
   display: inline-block;
 }
 
+.toggle.toggle-disabled {
+  cursor: not-allowed;
+}
+
 .toggle-switch {
   display: inline-block;
   background: var(--bg-500);
@@ -13,10 +17,16 @@
   vertical-align: middle;
   transition: background 0.25s;
 }
+
+.toggle-switch:disabled {
+  background: var(--bg-300);
+}
+
 .toggle-switch:before,
 .toggle-switch:after {
   content: '';
 }
+
 .toggle-switch:before {
   display: block;
   background: linear-gradient(to bottom, #fff 0%, #fff 100%);
@@ -29,13 +39,29 @@
   left: 4px;
   transition: left 0.25s;
 }
+
+.toggle-switch.toggle-disabled:before {
+  background: linear-gradient(to bottom, #bbb 0%, #bbb 100%); 
+}
+
 .toggle:hover .toggle-switch:before {
   background: linear-gradient(to bottom, #eee 0%, #eee 100%);
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
 }
+
+.toggle:hover .toggle-switch.toggle-disabled:before {
+  background: linear-gradient(to bottom, #bbb 0%, #bbb 100%);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.5);
+}
+
 .toggle-checkbox:checked + .toggle-switch {
   background: var(--hl-700);
 }
+
+.toggle-checkbox:checked:disabled + .toggle-switch {
+  background: var(--hl-900);
+}
+
 .toggle-checkbox:checked + .toggle-switch:before {
   left: 30px;
 }
