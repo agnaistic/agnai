@@ -26,10 +26,9 @@ export const chatGenSettings = {
   frequencyPenalty: 'number',
   presencePenalty: 'number',
   gaslight: 'string',
-  ujb: 'string',
   oaiModel: 'string',
   useGaslight: 'boolean?',
-  useUJB: 'boolean?',
+  ultimeJailbreak: 'string?',
   antiBond: 'boolean?',
 } as const
 

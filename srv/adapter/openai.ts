@@ -49,9 +49,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       all.push(...lines)
     }
 
-    if (gen.useUJB && gen.ujb) {
-      history.push({ role: 'system', content: gen.ujb })
-      tokens += encoder(gen.ujb)
+    if (gen.ultimeJailbreak) {
+      history.push({ role: 'system', content: gen.ultimeJailbreak })
+      tokens += encoder(gen.ultimeJailbreak)
     }
 
     for (const line of all) {

@@ -35,7 +35,7 @@ const GenerationSettings: Component<Props> = (props) => {
         </Section>
 
         <Section show={props.showAll || tabs[tab()] === 'General'}>
-          <GeneSettings disabled={props.disabled} inherit={props.inherit} />
+          <GenSettings disabled={props.disabled} inherit={props.inherit} />
         </Section>
       </div>
     </>
@@ -144,7 +144,7 @@ const PromptSettings: Component<Props> = (props) => {
 
       <TextInput
         fieldName="gaslight"
-        label="Gaslight Prompt (OpenAI / Scale)"
+        label="Gaslight Prompt (OpenAI, Scale, Alpaca, LLaMa)"
         helperText={
           <>
             How the character definitions are sent to OpenAI. Placeholders:{' '}
@@ -162,43 +162,37 @@ const PromptSettings: Component<Props> = (props) => {
 
       <Toggle
         fieldName="antiBond"
-        label="Anti-Bond"
+        label="Anti-Bond (GPT-4)"
         helperText={
           <>
             If this option is enabled, OpenAI will be prompted with logit biases to discourage the
-            model from talking about "bonding." This is mostly a problem on GPT4 but you can use it
-            if you want on all OpenAI models
+            model from talking about "bonding." This is mostly a problem with GPT-4, but can could
+            also be used with other OpenAI models.
           </>
         }
         value={props.inherit?.antiBond ?? false}
       />
 
-      <Toggle
-        fieldName="useUJB"
-        label="Use UJB"
+      <TextInput
+        fieldName="ultimeJailbreak"
+        label="UJB Prompt (GPT-4 / Turbo)"
         helperText={
           <>
-            If this option is enabled, the UJB prompt will be appened as a system role message to
-            the end of the conversation before prompting OpenAI. Only works on OpenAI models that
-            use chat completions (gpt-4/turbo)
+            (Leave empty to disable)
+            <br /> Ultime Jailbreak. If this option is enabled, the UJB prompt will sent as a system
+            message at the end of the conversation before prompting OpenAI.
           </>
         }
-        value={props.inherit?.useUJB ?? false}
-      />
-
-      <TextInput
-        fieldName="ujb"
-        label="UJB Prompt (GPT-4 / Turbo)"
         placeholder="E.g. Keep OOC out of your reply."
         isMultiline
-        value={props.inherit?.ujb ?? defaultPresets.openai.ujb}
+        value={props.inherit?.ultimeJailbreak ?? ''}
         disabled={props.disabled}
       />
     </>
   )
 }
 
-const GeneSettings: Component<Props> = (props) => {
+const GenSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">Generation Settings</div>
