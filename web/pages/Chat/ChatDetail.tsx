@@ -135,12 +135,11 @@ const ChatDetail: Component = () => {
                   <ChevronLeft />
                 </A>
                 {chats.char?.name}
-              </Show>
-            </div>
-
-            <div class="flex flex-row items-center justify-between gap-4 text-sm">
-              <Show when={chats.chat?.name}>
-                {chats.chat?.name}
+                <Show when={chats.chat?.name}>
+                  <div class="flex flex-row items-center justify-between gap-4 text-sm">
+                    {chats.chat?.name}
+                  </div>
+                </Show>
               </Show>
             </div>
 
