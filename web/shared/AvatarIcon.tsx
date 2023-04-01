@@ -31,7 +31,7 @@ const AvatarIcon: Component<Props> = (props) => {
     <>
       <Show when={props.avatarUrl}>
         <div
-          class={`${fmtSize()} ${fmtCorners()} ${props.class || ''}`}
+          class={`${fmtSize()} ${fmtCorners()} shrink-0 ${props.class || ''}`}
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}
         >
