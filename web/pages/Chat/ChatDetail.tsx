@@ -151,7 +151,7 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <div class="flex h-full flex-col justify-between sm:py-2">
+        <div class="flex h-full flex-col justify-between sm:py-2 max-w-3xl mx-auto">
           <div class="flex h-8 items-center justify-between rounded-md" style={headerBg()}>
             <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen}>
@@ -197,7 +197,7 @@ const ChatDetail: Component = () => {
               </Show>
             </div>
           </div>
-          <div class="flex h-[calc(100%-32px)] flex-col-reverse">
+          <div class="flex h-[calc(100%-32px)] flex-col-reverse gap-1">
             <InputBar
               chat={chats.chat!}
               swiped={swipe() !== 0}
@@ -213,8 +213,8 @@ const ChatDetail: Component = () => {
                 list={retries()?.list || []}
               />
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
-              <div class="flex flex-col gap-4">
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
+              <div class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
                   {(msg, i) => (
                     <Message
@@ -233,7 +233,7 @@ const ChatDetail: Component = () => {
                   )}
                 </For>
                 <Show when={msgs.waiting}>
-                  <div class="flex justify-center">
+                  <div class="flex justify-center mt-3">
                     <div class="dot-flashing bg-[var(--hl-700)]"></div>
                   </div>
                 </Show>

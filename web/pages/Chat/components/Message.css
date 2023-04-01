@@ -3,9 +3,15 @@
 }
 
 .rendered-markdown p:not(:last-child) {
-  margin-bottom: 1em; /* ensure <p> els are visually separated by empty line */
+  margin-bottom: 0.4em; /* ensure <p> els are visually separated by empty line */
 }
 
 em {
   color: var(--chat-italics);
+}
+
+/* This small manual adjustment is unfortunately necessary for harmony */
+.message-date {
+  position: relative;
+  top: -1px;
 }

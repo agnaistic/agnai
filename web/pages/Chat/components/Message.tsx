@@ -127,14 +127,14 @@ const SingleMessage: Component<
 
   return (
     <div
-      class="flex w-full gap-4 rounded-md pr-2"
+      class="flex w-full rounded-md pr-2 py-2 px-2 sm:px-4"
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
       data-user={props.msg.userId ? members[props.msg.userId]?.handle : ''}
     >
       <div
-        class="flex items-start justify-center p-2"
+        class="flex items-start justify-center pr-4"
         data-bot-avatar={isBot()}
         data-user-avatar={isUser()}
       >
@@ -146,14 +146,18 @@ const SingleMessage: Component<
         </Show>
       </div>
 
-      <div class="flex w-full select-text flex-col">
+      <div class="flex w-full select-text flex-col gap-1">
         <div class="flex w-full flex-row justify-between">
-          <div class="flex flex-row">
-            <b class="text-900 mr-2" data-bot-name={isBot()} data-user-name={isUser()}>
+          <div class="flex flex-col sm:flex-row items-start sm:items-end gap-1 sm:gap-0">
+            <b
+              class="leading-none text-lg text-900 mr-2"
+              data-bot-name={isBot()}
+              data-user-name={isUser()}
+            >
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span
-              class="text-600 flex items-center text-xs"
+              class="message-date leading-none text-600 flex items-center text-xs"
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
@@ -225,7 +229,7 @@ const SingleMessage: Component<
         <div class="break-words">
           <Show when={!edit()}>
             <div
-              class="rendered-markdown"
+              class="rendered-markdown pr-1 sm:pr-3"
               data-bot-message={isBot()}
               data-user-message={isUser()}
               innerHTML={showdownConverter.makeHtml(
