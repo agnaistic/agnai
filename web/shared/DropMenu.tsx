@@ -64,7 +64,7 @@ export const DropMenu: Component<{
       </Show>
       <div class="relative text-sm">
         <Show when={props.show}>
-          <div class={`absolute ${vert()} ${horz()} z-20 w-fit rounded-md bg-[var(--bg-700)]`}>
+          <div class={`absolute ${vert()} ${horz()} z-20 w-fit rounded-md bg-[var(--bg-800)]`}>
             {props.children}
           </div>
         </Show>

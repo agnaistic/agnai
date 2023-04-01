@@ -66,6 +66,7 @@ const ChatMemoryModal: Component<{
       close={props.close}
       footer={<Footer />}
       onSubmit={onSubmit}
+      maxWidth="half"
       fixedHeight
     >
       <div class="flex flex-col gap-2">

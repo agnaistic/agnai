@@ -359,8 +359,13 @@ export function getLinesForPrompt(
   { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
   lines: string[] = []
 ) {
-  const maxContext = settings?.maxContextLength || DEFAULT_MAX_TOKENS
   const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
+  const maxContext = getContextLimit(
+    adapter,
+    model,
+    settings?.maxContextLength || DEFAULT_MAX_TOKENS
+  )
+
   const encoder = getEncoder(adapter, model)
   let tokens = 0
 

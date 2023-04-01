@@ -1,4 +1,6 @@
-import { Component } from 'solid-js'
+import { Component, createSignal } from 'solid-js'
+import Button from '../../shared/Button'
+import FileInput, { FileInputResult, getFileAsBuffer } from '../../shared/FileInput'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
 import { AVATAR_CORNERS, AVATAR_SIZES, UI_INPUT_TYPE, UI_THEME, userStore } from '../../store'
@@ -7,6 +9,13 @@ const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
 
 const UISettings: Component = () => {
   const state = userStore()
+
+  const onBackground = async (results: FileInputResult[]) => {
+    if (!results.length) return
+    const [result] = results
+
+    userStore.setBackground(result)
+  }
 
   return (
     <>
@@ -65,6 +74,11 @@ const UISettings: Component = () => {
         value={state.ui.input}
         onChange={(item) => userStore.updateUI({ input: item.value as any })}
       />
+
+      <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />
+      <div class="my-2 w-full justify-center">
+        <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
+      </div>
     </>
   )
 }

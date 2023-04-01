@@ -1,4 +1,4 @@
-import { Component, createEffect, Show } from 'solid-js'
+import { Component, createEffect, createMemo, JSX, Show } from 'solid-js'
 import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
@@ -28,12 +28,20 @@ const App: Component = () => {
     settingStore.init()
   })
 
+  const bg = createMemo(() => {
+    return {
+      'background-image': state.background ? `url(${state.background})` : undefined,
+      'background-repeat': 'no-repeat',
+      'background-size': 'cover',
+    }
+  })
+
   return (
     <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
       <NavBar />
       <div class="flex w-full grow flex-row overflow-y-hidden">
         <Navigation />
-        <div class="w-full overflow-y-auto ">
+        <div class="w-full overflow-y-auto" data-background style={bg()}>
           <div class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}>
             <Routes>
               <CharacterRoutes />

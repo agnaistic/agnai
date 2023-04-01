@@ -8,12 +8,13 @@ import {
   Download,
   MailPlus,
   Menu,
+  Palette,
   Settings,
   Sliders,
   X,
 } from 'lucide-solid'
 import ChatExport from './ChatExport'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { getAdapter } from '../../../common/prompt'
 import Button from '../../shared/Button'
@@ -21,7 +22,7 @@ import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { getStrictForm } from '../../shared/util'
+import { getRootRgb, getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
@@ -33,10 +34,11 @@ import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
 import './chat-detail.css'
 import { DropMenu } from '../../shared/DropMenu'
+import UISettings from '../Settings/UISettings'
 
 const EDITING_KEY = 'chat-detail-settings'
 
-type Modal = 'export' | 'settings' | 'invite' | 'memory' | 'gen'
+type Modal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui'
 
 const ChatDetail: Component = () => {
   const user = userStore()
@@ -124,6 +126,14 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
+  const headerBg = createMemo(() => {
+    const rgb = getRootRgb('bg-900')
+    const styles: JSX.CSSProperties = {
+      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`,
+    }
+    return styles
+  })
+
   return (
     <>
       <Show when={!chats.chat || !chats.char || !user.profile}>
@@ -133,7 +143,7 @@ const ChatDetail: Component = () => {
       </Show>
       <Show when={chats.chat}>
         <div class="flex h-full flex-col justify-between sm:py-2">
-          <div class="flex h-8 items-center justify-between ">
+          <div class="flex h-8 items-center justify-between rounded-md" style={headerBg()}>
             <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen}>
                 <A href={`/character/${chats.char?._id}/chats`}>
@@ -195,7 +205,7 @@ const ChatDetail: Component = () => {
               />
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
-              <div class="flex flex-col gap-2">
+              <div class="flex flex-col gap-4">
                 <For each={msgs.msgs}>
                   {(msg, i) => (
                     <Message
@@ -250,6 +260,16 @@ const ChatDetail: Component = () => {
       </Show>
 
       <PromptModal />
+      <Show when={modal() === 'ui'}>
+        <Modal
+          show={true}
+          close={setModal}
+          title="UI Settings"
+          footer={<Button onClick={setModal}>Close</Button>}
+        >
+          <UISettings />
+        </Modal>
+      </Show>
     </>
   )
 }
@@ -310,6 +330,13 @@ const ChatOptions: Component<{
       </Show>
 
       <Option
+        onClick={() => props.show('ui')}
+        class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+      >
+        <Palette /> UI Settings
+      </Option>
+
+      <Option
         onClick={() => props.show('export')}
         class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
       >
@@ -366,14 +393,9 @@ const Option: Component<{
     props.close?.()
   }
   return (
-    <div
-      class={`flex w-full cursor-pointer select-none rounded-md bg-[var(--hl-900)] py-2 px-4 hover:bg-[var(--hl-800)] ${
-        props.class || ''
-      }`}
-      onClick={onClick}
-    >
+    <Button schema="secondary" size="sm" onClick={onClick}>
       {props.children}
-    </div>
+    </Button>
   )
 }
 
@@ -385,22 +407,26 @@ const SwipeMessage: Component<{
   pos: number
 }> = (props) => {
   return (
-    <div class="flex h-6 min-h-[1.5rem] w-full items-center justify-between text-[var(--text-800)]">
-      <Show when={props.list.length > 1}>
-        <div class="cursor:pointer hover:text-[var(--text-900)]">
-          <Button schema="clear" onClick={props.prev}>
-            <ChevronLeft />
-          </Button>
-        </div>
-        <div class="text-[var(--text-800)]">
-          {props.pos + 1} / {props.list.length}
-        </div>
-        <div class="cursor:pointer hover:text-[var(--text-800)]">
-          <Button schema="clear" onClick={props.next}>
-            <ChevronRight />
-          </Button>
-        </div>
-      </Show>
+    <div class="swipe">
+      <div></div>
+      <div class="swipe__content">
+        <Show when={props.list.length > 1}>
+          <div class="cursor:pointer hover:text-[var(--text-900)]">
+            <Button schema="clear" class="p-0" onClick={props.prev}>
+              <ChevronLeft />
+            </Button>
+          </div>
+          <div class="text-[var(--text-800)]">
+            {props.pos + 1} / {props.list.length}
+          </div>
+          <div class="cursor:pointer hover:text-[var(--text-800)]">
+            <Button schema="clear" class="p-0" onClick={props.next}>
+              <ChevronRight />
+            </Button>
+          </div>
+        </Show>
+      </div>
+      <div></div>
     </div>
   )
 }

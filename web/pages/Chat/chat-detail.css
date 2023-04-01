@@ -33,3 +33,14 @@
   } */
   /* CSS specific to iOS devices */
 }
+
+.swipe {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr 1fr;
+  @apply h-6 min-h-[1.5rem] w-full items-center gap-2 text-[var(--text-800)];
+}
+
+.swipe__content {
+  @apply flex h-6 items-center justify-center gap-4;
+}

@@ -202,3 +202,31 @@ export function debounce(fn: Function, secs = 2) {
 
   return wrapped
 }
+
+/**
+ * @param name E.g. bg-100, hl-800, rose-300
+ */
+export function getRootVariable(name: string) {
+  const root = document.documentElement
+  const value = getComputedStyle(root).getPropertyValue(`--${name}`)
+  return value
+}
+
+export function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim())
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null
+}
+
+/**
+ * @param name E.g. bg-100, hl-800, rose-300
+ */
+export function getRootRgb(name: string) {
+  const value = getRootVariable(name)
+  return hexToRgb(value)!
+}
