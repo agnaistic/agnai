@@ -18,6 +18,7 @@ import PresetList from './pages/GenerationPresets/PresetList'
 import MemoryPage from './pages/Memory'
 import { EditMemoryPage } from './pages/Memory/EditMemory'
 import MetricsPage from './pages/Admin/Metrics'
+import './dots.css'
 
 const App: Component = () => {
   const state = userStore()

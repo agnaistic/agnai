@@ -4,7 +4,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
-import { NewCharacter, toastStore } from '../../store'
+import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractTavernData } from './util'
 
 export type ImportCharacter = NewCharacter & { avatar?: File }
@@ -14,6 +14,7 @@ const ImportCharacterModal: Component<{
   close: () => void
   onSave: (char: ImportCharacter) => void
 }> = (props) => {
+  const state = characterStore()
   const [json, setJson] = createSignal<any>(undefined)
   const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
 
@@ -72,7 +73,7 @@ const ImportCharacterModal: Component<{
             Cancel
           </Button>
 
-          <Button onClick={onImport}>
+          <Button onClick={onImport} disabled={state.creating}>
             <Import />
             Import
           </Button>

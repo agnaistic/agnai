@@ -10,6 +10,7 @@ type CharacterState = {
     loaded: boolean
     list: AppSchema.Character[]
   }
+  creating: boolean
 }
 
 export type NewCharacter = {
@@ -23,6 +24,7 @@ export type NewCharacter = {
 }
 
 export const characterStore = createStore<CharacterState>('character', {
+  creating: false,
   characters: { loaded: false, list: [] },
 })((get, set) => {
   userStore.subscribe((curr, prev) => {
@@ -45,8 +47,12 @@ export const characterStore = createStore<CharacterState>('character', {
         return { characters: { list: res.result.characters, loaded: true } }
       }
     },
-    createCharacter: async (_, char: NewCharacter, onSuccess?: () => void) => {
+    async *createCharacter({ creating }, char: NewCharacter, onSuccess?: () => void) {
+      if (creating) return
+
+      yield { creating: true }
       const res = await data.chars.createCharacter(char)
+      yield { creating: false }
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
         toastStore.success(`Successfully created character`)

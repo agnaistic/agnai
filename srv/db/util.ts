@@ -55,3 +55,7 @@ export const STARTER_CHARACTER: AppSchema.Character = {
   greeting:
     "*A soft smile appears on my face as I see you enter the room* Hello! It's good to see you again. Please have a seat! What is on your mind today?",
 }
+
+export async function wait(ms: number) {
+  return new Promise((res) => setTimeout(res, ms))
+}
