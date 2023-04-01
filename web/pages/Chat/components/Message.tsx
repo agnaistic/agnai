@@ -162,12 +162,6 @@ const SingleMessage: Component<
             >
               {new Date(props.msg.createdAt).toLocaleString()}
             </span>
-            <Show when={props.msg.characterId && user.user?._id === props.chat?.userId && false}>
-              <div class="text-200 ml-2 flex flex-row items-center gap-2">
-                <ThumbsUp size={14} class="hover:text-100 mt-[-0.15rem] cursor-pointer" />
-                <ThumbsDown size={14} class="hover:text-100 cursor-pointer" />
-              </div>
-            </Show>
           </div>
           <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
             <div
@@ -236,6 +230,11 @@ const SingleMessage: Component<
               )}
             />
           </Show>
+          <Show when={props.msg._id === ''}>
+            <div class="my-2 ml-4">
+              <div class="dot-flashing bg-[var(--hl-700)]"></div>
+            </div>
+          </Show>
           <Show when={edit()}>
             <div
               ref={ref}
@@ -244,6 +243,16 @@ const SingleMessage: Component<
                 if (ev.key === 'Escape') cancelEdit()
               }}
             ></div>
+          </Show>
+          <Show
+            when={
+              !edit() && props.msg.characterId && user.user?._id === props.chat?.userId && false
+            }
+          >
+            <div class="text-900 mt-2 flex flex-row items-center gap-2">
+              <ThumbsUp size={14} class="hover:text-600 mt-[-0.15rem] cursor-pointer" />
+              <ThumbsDown size={14} class="hover:text-600 cursor-pointer" />
+            </div>
           </Show>
         </div>
       </div>

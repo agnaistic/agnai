@@ -32,6 +32,7 @@ import UISettings from '../Settings/UISettings'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
+import { AppSchema } from '../../../srv/db/schema'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -232,9 +233,13 @@ const ChatDetail: Component = () => {
                   )}
                 </For>
                 <Show when={msgs.waiting}>
-                  <div class="mt-3 flex justify-center">
-                    <div class="dot-flashing bg-[var(--hl-700)]"></div>
-                  </div>
+                  <Message
+                    msg={emptyMsg(chats.char?._id!, msgs.partial!)}
+                    char={chats.char!}
+                    chat={chats.chat!}
+                    onRemove={() => {}}
+                    editing={editing()}
+                  />
                 </Show>
               </div>
               <InfiniteScroll />
@@ -407,4 +412,15 @@ function getHeaderBg(mode: UI['mode']) {
     background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`,
   }
   return styles
+}
+function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
+  return {
+    kind: 'chat-message',
+    _id: '',
+    chatId: '',
+    characterId,
+    msg: message,
+    updatedAt: new Date().toISOString(),
+    createdAt: new Date().toISOString(),
+  }
 }
