@@ -24,6 +24,8 @@ import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { getRootRgb, getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, userStore } from '../../store'
+import { AVATAR_SIZES, AvatarCornerRadius } from '../../store/user'
+import * as UserStore from '../../store/user'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -110,8 +112,15 @@ const ChatDetail: Component = () => {
   })
 
   const sendMessage = (message: string, onSuccess?: () => void) => {
-    setSwipe(0)
-    msgStore.send(chats.chat?._id!, message, false, onSuccess)
+    if (isDevCommand(message)) {
+      switch (message) {
+        case '/devCycleAvatarSettings':
+          devCycleAvatarSettings(user)
+      }
+    } else {
+      setSwipe(0)
+      msgStore.send(chats.chat?._id!, message, false, onSuccess)
+    }
   }
 
   const moreMessage = (message: string) => {
@@ -463,3 +472,35 @@ function getEditingState() {
   const body = JSON.parse(prev) as DetailSettings
   return body
 }
+
+/* Magic strings for dev testing purposes. */
+const devCommands = ['/devCycleAvatarSettings'] as const
+
+type DevCommand = (typeof devCommands)[number]
+
+const isDevCommand = (str: string): str is DevCommand => devCommands.some((cmd) => cmd === str)
+
+const devCycleAvatarSettings = (user: UserStore.State) => {
+  const originalSettings = {
+    avatarCorners: user.ui.avatarCorners,
+    avatarSize: user.ui.avatarSize,
+  }
+  const testedCornerSettings: AvatarCornerRadius[] = ['md', 'circle']
+  const settingPermutations = testedCornerSettings.flatMap((avatarCorners) =>
+    AVATAR_SIZES.map((avatarSize) => ({ avatarCorners, avatarSize }))
+  )
+  const applyPermutations = ([perm, ...rest]: (typeof settingPermutations)) => {
+    if (perm === undefined) {
+      console.log('Done demonstrating avatar setting permutations, restoring original settings')
+      const { avatarCorners, avatarSize } = originalSettings
+      userStore.updateUI({ avatarCorners, avatarSize })
+    } else {
+      console.log(perm)
+      const { avatarCorners, avatarSize } = perm
+      userStore.updateUI({ avatarCorners, avatarSize })
+      setTimeout(() => applyPermutations(rest), 800)
+    }
+  }
+  applyPermutations(settingPermutations)
+}
+

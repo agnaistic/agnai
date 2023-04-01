@@ -25,7 +25,7 @@ export const UI_MODE = ['light', 'dark'] as const
 export const UI_THEME = ['blue', 'sky', 'teal', 'orange', 'rose', 'pink'] as const
 export const UI_INPUT_TYPE = ['single', 'multi'] as const
 
-type State = {
+export type State = {
   loading: boolean
   error?: string
   loggedIn: boolean
