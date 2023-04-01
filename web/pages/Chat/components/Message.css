@@ -1,7 +1,11 @@
+.rendered-markdown {
+  color: var(--text-800);
+}
+
 .rendered-markdown p:not(:last-child) {
   margin-bottom: 1em; /* ensure <p> els are visually separated by empty line */
 }
 
 em {
-  color: var(--text-800);
+  color: var(--chat-italics);
 }

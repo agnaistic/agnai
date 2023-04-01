@@ -222,7 +222,7 @@ const SingleMessage: Component<
             </div>
           </Show>
         </div>
-        <div class="break-words opacity-75">
+        <div class="break-words">
           <Show when={!edit()}>
             <div
               class="rendered-markdown"
