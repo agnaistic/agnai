@@ -503,4 +503,3 @@ const devCycleAvatarSettings = (user: UserStore.State) => {
   }
   applyPermutations(settingPermutations)
 }
-

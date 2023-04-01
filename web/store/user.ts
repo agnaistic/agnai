@@ -17,6 +17,7 @@ const defaultUIsettings: State['ui'] = {
   avatarSize: 'md',
   avatarCorners: 'circle',
   input: 'single',
+  font: 'default',
 }
 
 export const AVATAR_SIZES = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
@@ -24,6 +25,7 @@ export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const UI_MODE = ['light', 'dark'] as const
 export const UI_THEME = ['blue', 'sky', 'teal', 'orange', 'rose', 'pink'] as const
 export const UI_INPUT_TYPE = ['single', 'multi'] as const
+export const UI_FONT = ['default', 'lato'] as const
 
 export type State = {
   loading: boolean
@@ -38,6 +40,7 @@ export type State = {
     avatarSize: AvatarSize
     avatarCorners: AvatarCornerRadius
     input: ChatInputType
+    font: FontSetting
   }
   background?: string
 }
@@ -47,6 +50,7 @@ export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
 export type ChatInputType = (typeof UI_INPUT_TYPE)[number]
+export type FontSetting = (typeof UI_FONT)[number]
 
 export const userStore = createStore<State>(
   'user',
@@ -245,6 +249,11 @@ function updateTheme(ui: State['ui']) {
     const text = getComputedStyle(root).getPropertyValue(`--black-${num}`)
     root.style.setProperty(`--text-${shade}`, text)
   }
+  const fontValue = {
+    lato: 'Lato, sans-serif',
+    default: 'unset',
+  }[ui.font]
+  root.style.setProperty(`--sitewide-font`, fontValue)
 }
 
 function getUIsettings() {

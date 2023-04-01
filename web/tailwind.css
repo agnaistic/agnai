@@ -8,6 +8,8 @@
 }
 
 :root {
+  --sitewide-font: unset;
+
   --hl-100: #e0f2fe;
   --hl-200: #bae6fd;
   --hl-300: #7dd3fc;
@@ -179,6 +181,7 @@
 
 body {
   color: var(--text-100);
+  font-family: var(--sitewide-font);
 }
 
 .w-10 {

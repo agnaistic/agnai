@@ -39,6 +39,16 @@ const UISettings: Component = () => {
           value={state.ui.mode}
           onChange={(item) => userStore.updateUI({ mode: item.value as any })}
         />
+        <Select
+          fieldName="font"
+          label="Font"
+          items={[
+            { label: 'Default', value: 'default' },
+            { label: 'Lato (Roko)', value: 'lato' },
+          ]}
+          value={state.ui.font}
+          onChange={(item) => userStore.updateUI({ font: item.value as any })}
+        />
       </div>
 
       <h4 class="text-md font-bold">Chat Avatars</h4>
