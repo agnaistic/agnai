@@ -1,20 +1,20 @@
 import { Component, JSX, For } from 'solid-js'
 import { FormLabel } from './FormLabel'
 
-export type DropdownItem<T extends string = string> = {
+export type Option<T extends string = string> = {
   label: string
   value: T
 }
 
-const Dropdown: Component<{
+const Select: Component<{
   fieldName: string
   label?: string
   helperText?: string | JSX.Element
-  items: DropdownItem[]
+  items: Option[]
   value?: string
   class?: string
   disabled?: boolean
-  onChange?: (item: DropdownItem) => void
+  onChange?: (item: Option) => void
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
     if (!props.onChange) return
@@ -49,4 +49,4 @@ const Dropdown: Component<{
   )
 }
 
-export default Dropdown
+export default Select

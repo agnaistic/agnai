@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from 'frisker'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
-import { DropdownItem } from './Dropdown'
+import { Option } from './Select'
 
 type FormRef = {
   [key: string]:
@@ -143,7 +143,7 @@ function toRawDuration(valueSecs: number) {
   }
 }
 
-export function adaptersToOptions(adapters: AIAdapter[]): DropdownItem[] {
+export function adaptersToOptions(adapters: AIAdapter[]): Option[] {
   return adapters.map((adp) => ({ label: ADAPTER_LABELS[adp], value: adp }))
 }
 
@@ -182,7 +182,7 @@ export function capitalize(input: string) {
   return input.slice(0, 1).toUpperCase() + input.slice(1)
 }
 
-export function toDropdownItems(values: string[] | readonly string[]): DropdownItem[] {
+export function toDropdownItems(values: string[] | readonly string[]): Option[] {
   return values.map((value) => ({ label: capitalize(value), value }))
 }
 
@@ -201,4 +201,32 @@ export function debounce(fn: Function, secs = 2) {
   }
 
   return wrapped
+}
+
+/**
+ * @param name E.g. bg-100, hl-800, rose-300
+ */
+export function getRootVariable(name: string) {
+  const root = document.documentElement
+  const value = getComputedStyle(root).getPropertyValue(`--${name}`)
+  return value
+}
+
+export function hexToRgb(hex: string) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim())
+  return result
+    ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16),
+      }
+    : null
+}
+
+/**
+ * @param name E.g. bg-100, hl-800, rose-300
+ */
+export function getRootRgb(name: string) {
+  const value = getRootVariable(name)
+  return hexToRgb(value)!
 }

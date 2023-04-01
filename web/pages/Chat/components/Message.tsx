@@ -4,7 +4,7 @@ import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
-import { toDuration } from '../../../shared/util'
+import { getRootVariable, hexToRgb, toDuration } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
 import { MsgState, msgStore } from '../../../store'
 
@@ -111,15 +111,30 @@ const SingleMessage: Component<
     corners: user.ui.avatarCorners,
   }))
 
+  const bgStyles = createMemo((prev) => {
+    if (!user.background) return {}
+    user.ui.mode
+    const hex = getRootVariable('bg-800')
+    if (!hex) return {}
+
+    const rgb = hexToRgb(hex)
+    if (!rgb) return {}
+
+    return {
+      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .7)`,
+    }
+  })
+
   return (
     <div
-      class="flex w-full gap-4 rounded-l-md hover:bg-[var(--bg-800)]"
+      class="flex w-full gap-4 rounded-md pr-2"
+      style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
       data-user={props.msg.userId ? members[props.msg.userId]?.handle : ''}
     >
       <div
-        class="flex items-center justify-center"
+        class="flex items-start justify-center p-2"
         data-bot-avatar={isBot()}
         data-user-avatar={isUser()}
       >
@@ -164,20 +179,20 @@ const SingleMessage: Component<
                   </div>
                 </Show>
                 <div class="icon-button" onClick={startEdit}>
-                  <Pencil size={16} />
+                  <Pencil size={18} />
                 </div>
                 <div class="icon-button" onClick={props.onRemove}>
-                  <Trash size={16} />
+                  <Trash size={18} />
                 </div>
               </Show>
               <Show when={props.last && props.msg.characterId}>
                 <div class="icon-button" onClick={retryMessage}>
-                  <RefreshCw size={16} />
+                  <RefreshCw size={18} />
                 </div>
               </Show>
               <Show when={props.last && !props.msg.characterId}>
                 <div class="cursor-pointer" onClick={resendMessage}>
-                  <RefreshCw size={16} />
+                  <RefreshCw size={18} />
                 </div>
               </Show>
             </div>
@@ -193,14 +208,14 @@ const SingleMessage: Component<
             </div>
           </Show>
           <Show when={props.last && props.swipe}>
-            <div class="mr-4 flex items-center gap-2 text-sm">
+            <div class="mr-4 flex items-center gap-4 text-sm">
               <X
-                size={16}
+                size={22}
                 class="cursor-pointer text-red-500"
                 onClick={() => props.cancelSwipe?.()}
               />
               <Check
-                size={16}
+                size={22}
                 class="cursor-pointer text-green-500"
                 onClick={() => props.confirmSwipe?.()}
               />

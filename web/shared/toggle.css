@@ -41,7 +41,7 @@
 }
 
 .toggle-switch.toggle-disabled:before {
-  background: linear-gradient(to bottom, #bbb 0%, #bbb 100%); 
+  background: linear-gradient(to bottom, #bbb 0%, #bbb 100%);
 }
 
 .toggle:hover .toggle-switch:before {

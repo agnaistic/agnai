@@ -4,7 +4,7 @@ import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getFormEntries, getStrictForm } from '../../shared/util'
-import Dropdown, { DropdownItem } from '../../shared/Dropdown'
+import Select, { Option } from '../../shared/Select'
 import {
   CHAT_ADAPTERS,
   ChatAdapter,
@@ -41,7 +41,7 @@ const Settings: Component = () => {
     refreshHorde()
   })
 
-  const [workers, setWorkers] = createSignal<DropdownItem[]>()
+  const [workers, setWorkers] = createSignal<Option[]>()
   const [show, setShow] = createSignal(false)
   const [tab, setTab] = createSignal(0)
 
@@ -130,7 +130,7 @@ const Settings: Component = () => {
           </div>
 
           <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
-            <Dropdown
+            <Select
               fieldName="defaultAdapter"
               label="Default AI Service"
               items={adaptersToOptions(cfg.config.adapters)}
@@ -160,7 +160,7 @@ const Settings: Component = () => {
 
               <div class="flex justify-between">
                 <div class="w-fit">
-                  <Dropdown
+                  <Select
                     fieldName="hordeModel"
                     helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
                     label="Horde Model"
@@ -238,7 +238,7 @@ const Settings: Component = () => {
             <Show when={cfg.config.adapters.includes('novel')}>
               <Divider />
               <h3 class="text-xl">NovelAI settings</h3>
-              <Dropdown
+              <Select
                 fieldName="novelModel"
                 label="NovelAI Model"
                 items={[
@@ -314,7 +314,7 @@ export default Settings
 const WorkerModal: Component<{
   show: boolean
   close: () => void
-  save: (items: DropdownItem[]) => void
+  save: (items: Option[]) => void
 }> = (props) => {
   const cfg = settingStore((s) => ({
     workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
@@ -322,7 +322,7 @@ const WorkerModal: Component<{
 
   const state = userStore()
 
-  const [selected, setSelected] = createSignal<DropdownItem[]>()
+  const [selected, setSelected] = createSignal<Option[]>()
 
   const save = () => {
     if (selected()) {
@@ -383,6 +383,6 @@ function sortWorkers({ models: l }: HordeWorker, { models: r }: HordeWorker) {
   return l[0] > r[0] ? 1 : l[0] === r[0] ? 0 : -1
 }
 
-function toWorkerItem(wkr: HordeWorker): DropdownItem {
+function toWorkerItem(wkr: HordeWorker): Option {
   return { label: `${wkr.name} - ${wkr.models[0]}`, value: wkr.id }
 }

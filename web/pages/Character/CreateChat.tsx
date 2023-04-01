@@ -3,7 +3,7 @@ import { Check, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Dropdown from '../../shared/Dropdown'
+import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
@@ -102,7 +102,7 @@ const CreateChatModal: Component<{
           The information provided here is only applied to the newly created conversation.
         </div>
         <Show when={!props.char}>
-          <Dropdown
+          <Select
             items={state.chars.map((char) => ({ label: char.name, value: char._id }))}
             fieldName="character"
             label="Character"
@@ -147,7 +147,7 @@ const CreateChatModal: Component<{
         ></TextInput>
 
         <Show when={(props.char?.persona.kind || char()?.persona.kind) !== 'text'}>
-          <Dropdown
+          <Select
             class="mb-2 text-sm"
             fieldName="schema"
             label="Persona"
@@ -157,7 +157,7 @@ const CreateChatModal: Component<{
         </Show>
 
         <Show when={(props.char?.persona.kind || char()?.persona.kind) === 'text'}>
-          <Dropdown
+          <Select
             class="mb-2 text-sm"
             fieldName="schema"
             label="Persona"

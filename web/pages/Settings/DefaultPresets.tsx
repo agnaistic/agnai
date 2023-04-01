@@ -2,7 +2,7 @@ import { Component, createMemo, For } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { defaultPresets } from '../../../common/presets'
 import Divider from '../../shared/Divider'
-import Dropdown from '../../shared/Dropdown'
+import Select from '../../shared/Select'
 import { settingStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 
@@ -28,7 +28,7 @@ export const DefaultPresets: Component = () => {
       <h3 class="text-lg font-bold">Default Service Presets</h3>
       <For each={cfg.config.adapters}>
         {(adp) => (
-          <Dropdown
+          <Select
             fieldName={`preset.${adp}`}
             label={ADAPTER_LABELS[adp]}
             items={options()}

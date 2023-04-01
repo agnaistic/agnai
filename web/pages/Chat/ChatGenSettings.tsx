@@ -3,7 +3,7 @@ import { Component, createEffect, createMemo, createSignal, For, Show } from 'so
 import { chatGenSettings, defaultPresets } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Dropdown from '../../shared/Dropdown'
+import Select from '../../shared/Select'
 import GenerationSettings from '../../shared/GenerationSettings'
 import Modal from '../../shared/Modal'
 import { Toggle } from '../../shared/Toggle'
@@ -93,7 +93,7 @@ export const ChatGenSettingsModal: Component<{
         </div>
 
         <form ref={ref} class="flex flex-col gap-2">
-          <Dropdown
+          <Select
             fieldName="preset"
             items={state.options.concat(presetList)}
             value={props.chat.genPreset}

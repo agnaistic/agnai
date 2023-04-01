@@ -4,7 +4,7 @@ import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { defaultPresets, presetValidator } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Dropdown, { DropdownItem } from '../../shared/Dropdown'
+import Select, { Option } from '../../shared/Select'
 import GenerationSettings from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
@@ -30,7 +30,7 @@ export const GenerationPresetsPage: Component = () => {
   const state = presetStore(({ presets, saving }) => ({
     saving,
     presets,
-    items: presets.map<DropdownItem>((p) => ({ label: p.name, value: p._id })),
+    items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
   }))
 
   createEffect(async () => {
@@ -182,7 +182,7 @@ const EditPreset: Component<{
       }
     >
       <form ref={ref}>
-        <Dropdown
+        <Select
           fieldName="preset"
           label="Preset"
           helperText="Select a preset to start editing. If you are currently editing a preset, it won't be in the list."

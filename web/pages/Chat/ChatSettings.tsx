@@ -2,7 +2,7 @@ import { Component, Show } from 'solid-js'
 import { ADAPTER_LABELS, CHAT_ADAPTERS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Dropdown from '../../shared/Dropdown'
+import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
@@ -61,7 +61,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       <div class="flex w-full justify-between">
         <div>
           <Button schema="secondary" onClick={revert}>
-            Revert to Character Defaults
+            Reset to Character
           </Button>
         </div>
         <div class="flex gap-4">
@@ -83,7 +83,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       maxWidth="half"
     >
       <form ref={ref} onSubmit={onSave}>
-        <Dropdown
+        <Select
           class="mb-2"
           fieldName="adapter"
           helperText={`Default is set to: ${ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']}`}
@@ -118,7 +118,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         />
 
         <Show when={state.char?.persona.kind !== 'text'}>
-          <Dropdown
+          <Select
             fieldName="schema"
             label="Persona"
             items={options}
@@ -126,7 +126,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           />
         </Show>
         <Show when={state.char?.persona.kind === 'text'}>
-          <Dropdown
+          <Select
             fieldName="schema"
             label="Persona"
             items={[{ label: 'Plain text', value: 'text' }]}
