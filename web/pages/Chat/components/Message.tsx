@@ -127,14 +127,14 @@ const SingleMessage: Component<
 
   return (
     <div
-      class="flex w-full gap-4 rounded-md pr-2"
+      class="flex w-full rounded-md py-2 px-2 pr-2 sm:px-4"
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
       data-user={props.msg.userId ? members[props.msg.userId]?.handle : ''}
     >
       <div
-        class="flex items-start justify-center p-2"
+        class="flex items-start justify-center pr-4"
         data-bot-avatar={isBot()}
         data-user-avatar={isUser()}
       >
@@ -146,14 +146,18 @@ const SingleMessage: Component<
         </Show>
       </div>
 
-      <div class="flex w-full select-text flex-col">
+      <div class="flex w-full select-text flex-col gap-1">
         <div class="flex w-full flex-row justify-between">
-          <div class="flex flex-row">
-            <b class="text-900 mr-2" data-bot-name={isBot()} data-user-name={isUser()}>
+          <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
+            <b
+              class="text-900 mr-2 text-lg leading-none"
+              data-bot-name={isBot()}
+              data-user-name={isUser()}
+            >
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span
-              class="text-600 flex items-center text-xs"
+              class="message-date text-600 flex items-center text-xs leading-none"
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
@@ -222,10 +226,10 @@ const SingleMessage: Component<
             </div>
           </Show>
         </div>
-        <div class="break-words opacity-75">
+        <div class="break-words">
           <Show when={!edit()}>
             <div
-              class="rendered-markdown"
+              class="rendered-markdown pr-1 sm:pr-3"
               data-bot-message={isBot()}
               data-user-message={isUser()}
               innerHTML={showdownConverter.makeHtml(

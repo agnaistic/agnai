@@ -22,14 +22,16 @@ const AvatarIcon: Component<Props> = (props) => {
   const format = createMemo(() => props.format || defaultFormat)
 
   const fmtFit = createMemo(() => fit[format().corners])
-  const fmtSize = createMemo(() => sizes[format().size])
+  const fmtSize = createMemo(() =>
+    format().corners === 'circle' ? sizesCircle[format().size] : sizes[format().size]
+  )
   const fmtCorners = createMemo(() => corners[format().corners])
 
   return (
     <>
       <Show when={props.avatarUrl}>
         <div
-          class={`${fmtSize()} ${fmtCorners()} ${props.class || ''}`}
+          class={`${fmtSize()} ${fmtCorners()} shrink-0 ${props.class || ''}`}
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}
         >
@@ -63,12 +65,21 @@ const AvatarIcon: Component<Props> = (props) => {
 }
 
 const sizes: Record<AvatarSize, string> = {
-  sm: 'h- w-8 sm:h-8 sm:w-8',
-  md: 'h-8 w-8 sm:h-10 sm:w-10',
-  lg: 'h-8 w-8 sm:h-12 sm:w-12',
-  xl: 'h-10 w-10 sm:h-16 sm:w-16',
-  '2xl': 'h-12 w-12 sm:h-20 sm:w-20',
-  '3xl': 'h-16 w-16 sm:h-24 sm:w-24',
+  sm: 'w-8 sm:w-8',
+  md: 'w-8 sm:w-10',
+  lg: 'w-8 sm:w-12',
+  xl: 'w-10 sm:w-16',
+  '2xl': 'w-12 sm:w-20',
+  '3xl': 'w-16 sm:w-24',
+}
+
+const sizesCircle: Record<AvatarSize, string> = {
+  sm: sizes.sm + ' h-8 sm:h-8',
+  md: sizes.md + ' h-8 sm:h-10',
+  lg: sizes.lg + ' h-8 sm:h-12',
+  xl: sizes.xl + ' h-10 sm:h-16',
+  '2xl': sizes['2xl'] + ' h-12 sm:h-20',
+  '3xl': sizes['3xl'] + ' h-16 sm:h-24',
 }
 
 const fit: Record<AvatarCornerRadius, string> = {

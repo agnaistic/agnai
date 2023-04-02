@@ -11,7 +11,7 @@ const PromptModal: Component = () => {
       show={!!state.prompt}
       close={chatStore.closePrompt}
       title="Message Prompt"
-      maxWidth="full"
+      maxWidth="half"
     >
       <TextInput
         class="min-h-[300px] text-sm"

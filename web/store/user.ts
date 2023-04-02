@@ -11,12 +11,18 @@ import { toastStore } from './toasts'
 const UI_KEY = 'ui-settings'
 const BACKGROUND_KEY = 'ui-bg'
 
-const defaultUIsettings: State['ui'] = {
+const defaultUIsettings: UserState['ui'] = {
   theme: 'sky',
   mode: 'dark',
   avatarSize: 'md',
   avatarCorners: 'circle',
   input: 'single',
+  font: 'default',
+}
+
+const fontFaces: { [key in FontSetting]: string } = {
+  lato: 'Lato, sans-serif',
+  default: 'unset',
 }
 
 export const AVATAR_SIZES = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
@@ -24,8 +30,9 @@ export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const UI_MODE = ['light', 'dark'] as const
 export const UI_THEME = ['blue', 'sky', 'teal', 'orange', 'rose', 'pink'] as const
 export const UI_INPUT_TYPE = ['single', 'multi'] as const
+export const UI_FONT = ['default', 'lato'] as const
 
-type State = {
+export type UserState = {
   loading: boolean
   error?: string
   loggedIn: boolean
@@ -38,6 +45,7 @@ type State = {
     avatarSize: AvatarSize
     avatarCorners: AvatarCornerRadius
     input: ChatInputType
+    font: FontSetting
   }
   background?: string
 }
@@ -47,8 +55,9 @@ export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
 export type ChatInputType = (typeof UI_INPUT_TYPE)[number]
+export type FontSetting = (typeof UI_FONT)[number]
 
-export const userStore = createStore<State>(
+export const userStore = createStore<UserState>(
   'user',
   init()
 )((get, set) => {
@@ -158,7 +167,7 @@ export const userStore = createStore<State>(
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
 
-    updateUI({ ui }, update: Partial<State['ui']>) {
+    updateUI({ ui }, update: Partial<UserState['ui']>) {
       const next = { ...ui, ...update }
       updateTheme(next)
       return { ui: next }
@@ -204,7 +213,7 @@ export const userStore = createStore<State>(
   }
 })
 
-function init(): State {
+function init(): UserState {
   const existing = getAuth()
   const ui = getUIsettings()
   const background = localStorage.getItem(BACKGROUND_KEY) || undefined
@@ -230,7 +239,7 @@ function init(): State {
   }
 }
 
-function updateTheme(ui: State['ui']) {
+function updateTheme(ui: UserState['ui']) {
   localStorage.setItem(UI_KEY, JSON.stringify(ui))
   const root = document.documentElement
   for (let shade = 100; shade <= 900; shade += 100) {
@@ -242,14 +251,16 @@ function updateTheme(ui: State['ui']) {
     const bg = getComputedStyle(root).getPropertyValue(`--dark-${num}`)
     root.style.setProperty(`--bg-${shade}`, bg)
 
-    const text = getComputedStyle(root).getPropertyValue(`--black-${num}`)
+    const text = getComputedStyle(root).getPropertyValue(`--dark-${900 - (num - 100)}`)
     root.style.setProperty(`--text-${shade}`, text)
   }
+
+  root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
 
 function getUIsettings() {
   const json = localStorage.getItem(UI_KEY) || JSON.stringify(defaultUIsettings)
-  const settings: State['ui'] = JSON.parse(json)
+  const settings: UserState['ui'] = JSON.parse(json)
   const theme = (localStorage.getItem('theme') || settings.theme) as ThemeColor
   localStorage.removeItem('theme')
 
