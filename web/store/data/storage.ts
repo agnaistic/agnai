@@ -1,5 +1,6 @@
 import { v4 } from 'uuid'
 import { NOVEL_MODELS } from '../../../common/adapters'
+import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../srv/db/schema'
 
 type StorageKey = keyof typeof KEYS
@@ -36,22 +37,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
       updatedAt: new Date().toISOString(),
       kind: 'character',
       userId: 'anonymous',
-      name: 'Robot',
-      persona: {
-        kind: 'boostyle',
-        attributes: {
-          species: ['human'],
-          mind: ['kind', 'compassionate', 'caring', 'tender', 'forgiving'],
-          personality: ['kind', 'compassionate', 'caring', 'tender', 'forgiving'],
-          job: ['therapist'],
-        },
-      },
-      sampleChat:
-        '{{user}}: Something has been troubling me this week.\r\n{{char}}: *I appear genuinely concerned* What is troubling you?',
-      scenario:
-        "Robot is in their office. You knock on the door and Robot beckons you inside. You open the door and enter Robot's office.",
-      greeting:
-        "*A soft smile appears on my face as I see you enter the room* Hello! It's good to see you again. Please have a seat! What is on your mind today?",
+      ...defaultChars.Robot,
     },
   ],
   chats: [],

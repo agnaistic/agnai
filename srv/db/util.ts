@@ -2,6 +2,7 @@ import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 import { config } from '../config'
 import { AppSchema } from './schema'
+import { defaultChars } from '../../common/characters'
 
 const ALGO = 'aes-192-cbc'
 const KEY = crypto.scryptSync(config.jwtSecret, 'salt', 24)
@@ -38,22 +39,7 @@ export const STARTER_CHARACTER: AppSchema.Character = {
   kind: 'character',
   createdAt: '',
   updatedAt: '',
-  name: 'Robot',
-  persona: {
-    kind: 'boostyle',
-    attributes: {
-      species: ['human'],
-      mind: ['kind', 'compassionate', 'caring', 'tender', 'forgiving'],
-      personality: ['kind', 'compassionate', 'caring', 'tender', 'forgiving'],
-      job: ['therapist'],
-    },
-  },
-  sampleChat:
-    '{{user}}: Something has been troubling me this week.\r\n{{char}}: *I appear genuinely concerned* What is troubling you?',
-  scenario:
-    "Robot is in their office. You knock on the door and Robot beckons you inside. You open the door and enter Robot's office.",
-  greeting:
-    "*A soft smile appears on my face as I see you enter the room* Hello! It's good to see you again. Please have a seat! What is on your mind today?",
+  ...defaultChars.Robot,
 }
 
 export async function wait(ms: number) {

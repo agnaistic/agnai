@@ -7,7 +7,7 @@
 }
 
 em {
-  color: var(--chat-italics);
+  color: var(--text-600);
 }
 
 /* This small manual adjustment is unfortunately necessary for harmony */
