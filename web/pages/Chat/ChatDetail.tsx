@@ -69,7 +69,6 @@ const ChatDetail: Component = () => {
   }
 
   const showModal = (modal: ChatModal) => {
-    console.log('modal', modal)
     setModal(modal)
     setShowOpts(false)
   }

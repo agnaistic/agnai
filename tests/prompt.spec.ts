@@ -3,9 +3,9 @@ import { OPENAI_MODELS } from '../common/adapters'
 import { createPrompt } from '../common/prompt'
 import { getEncoder } from '../common/tokenize'
 import { AppSchema } from '../srv/db/schema'
-import { toBook, toBot, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
+import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
 
-const char = toBot('Bot')
+const char = toChar('Bot')
 const profile = toProfile('You')
 const chat = toChat(char, {})
 const user = toUser('anon')

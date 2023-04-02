@@ -10,6 +10,7 @@ const RangeInput: Component<{
   max: number
   step: number
   disabled?: boolean
+  onChange?: (value: number) => void
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
@@ -21,8 +22,9 @@ const RangeInput: Component<{
   }
 
   const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
-    setValue(Number(event.currentTarget.value))
+    setValue(+event.currentTarget.value)
     updateRangeSliders()
+    props.onChange?.(+event.currentTarget.value)
   }
 
   createEffect(updateRangeSliders)

@@ -18,6 +18,7 @@ const defaultUIsettings: UserState['ui'] = {
   avatarCorners: 'circle',
   input: 'single',
   font: 'default',
+  msgOpacity: 0.8,
 }
 
 const fontFaces: { [key in FontSetting]: string } = {
@@ -46,6 +47,9 @@ export type UserState = {
     avatarCorners: AvatarCornerRadius
     input: ChatInputType
     font: FontSetting
+
+    /** 0 -> 1. 0 = transparent. 1 = opaque */
+    msgOpacity: number
   }
   background?: string
 }

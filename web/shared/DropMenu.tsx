@@ -50,7 +50,6 @@ export const DropMenu: Component<{
   const horz = createMemo(() => (props.horz === 'left' ? 'right-0' : ''))
 
   const close = () => {
-    console.log('clicked overlay')
     props.close()
   }
 

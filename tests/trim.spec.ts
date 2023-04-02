@@ -1,8 +1,8 @@
 import { expect } from 'chai'
 import { trimResponseV2, trimResponse } from '../srv/api/chat/common'
-import { toBot, toBotMsg, toProfile } from './util'
+import { toChar, toBotMsg, toProfile } from './util'
 
-const bot = toBot('Bot')
+const bot = toChar('Bot')
 
 const u1 = toProfile('Human1')
 const u2 = toProfile('Human2')

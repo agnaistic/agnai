@@ -121,7 +121,6 @@ export async function updateProfile(handle: string, file?: File) {
 export async function updateConfig(config: Partial<AppSchema.User>) {
   if (!isLoggedIn()) {
     const prev = local.loadItem('config')
-    console.log('prev', prev, 'config', config)
     const next: AppSchema.User = { ...prev, ...config }
 
     if (prev.novelApiKey && !next.novelApiKey) {

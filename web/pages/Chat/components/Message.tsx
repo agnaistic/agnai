@@ -121,7 +121,7 @@ const SingleMessage: Component<
     if (!rgb) return {}
 
     return {
-      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, .7)`,
+      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
     }
   })
 
