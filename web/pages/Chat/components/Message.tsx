@@ -127,7 +127,7 @@ const SingleMessage: Component<
 
   return (
     <div
-      class="flex w-full rounded-md pr-2 py-2 px-2 sm:px-4"
+      class="flex w-full rounded-md py-2 px-2 pr-2 sm:px-4"
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
@@ -148,16 +148,16 @@ const SingleMessage: Component<
 
       <div class="flex w-full select-text flex-col gap-1">
         <div class="flex w-full flex-row justify-between">
-          <div class="flex flex-col sm:flex-row items-start sm:items-end gap-1 sm:gap-0">
+          <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
             <b
-              class="leading-none text-lg text-900 mr-2"
+              class="text-900 mr-2 text-lg leading-none"
               data-bot-name={isBot()}
               data-user-name={isUser()}
             >
               {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
             </b>
             <span
-              class="message-date leading-none text-600 flex items-center text-xs"
+              class="message-date text-600 flex items-center text-xs leading-none"
               data-bot-time={isBot}
               data-user-time={isUser()}
             >

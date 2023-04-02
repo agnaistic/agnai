@@ -14,7 +14,7 @@
     "build:api": "tsc -p api.tsconfig.json",
     "build:server": "tsc -p srv.tsconfig.json",
     "build:server:watch": "tsc -p srv.tsconfig.json -w",
-    "format": "prettier web --check && prettier srv --check",
+    "format": "prettier --check \"web/**/*.tsx\" \"web/**/*.ts\" \"web/**/*.css\" \"web/**/*.html\" && prettier --check \"srv/**/*.ts\"",
     "format:fix": "prettier web --write && prettier srv --write",
     "model": "python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
     "model:watch": "nodemon -e py --watch model --exec \"python -m flask --app model/app.py run --host 0.0.0.0 -p 5001\"",
@@ -30,6 +30,7 @@
     "start:debug:win": "set LOG_LEVEL=debug && concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "test": "mocha \"tests/**.spec.js\"",
     "typecheck": "tsc -p tsconfig.json",
+    "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d"
   },
   "dependencies": {
