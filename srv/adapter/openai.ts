@@ -86,7 +86,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     body.prompt = prompt
   }
 
-  if (gen.antiBond) body.logit_bias = { 3938: 8, 11049: 8, 64186: 8, 42120: 8 }
+  if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
 
   const bearer = !!guest ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
 
