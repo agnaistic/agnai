@@ -31,13 +31,14 @@ import { DropMenu } from '../../shared/DropMenu'
 import UISettings from '../Settings/UISettings'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
+import MemberModal from './MemberModal'
 
 const EDITING_KEY = 'chat-detail-settings'
 
 const ChatDetail: Component = () => {
   const user = userStore()
   const cfg = settingStore()
-  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
+  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.activeMembers }))
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
     partial: s.partial,
@@ -61,6 +62,12 @@ const ChatDetail: Component = () => {
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const { id } = useParams()
   const nav = useNavigate()
+
+  const isSelfRemoved = createMemo(() => {
+    if (!user.profile) return false
+    const isMember = chats.members.some((mem) => mem.userId === user.profile?.userId)
+    return !isMember
+  })
 
   function toggleEditing() {
     const next = !editing()
@@ -207,6 +214,11 @@ const ChatDetail: Component = () => {
                 list={retries()?.list || []}
               />
             </Show>
+            <Show when={isSelfRemoved()}>
+              <div class="flex w-full justify-center">
+                You have been removed from the conversation
+              </div>
+            </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
               <div class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
@@ -260,6 +272,10 @@ const ChatDetail: Component = () => {
 
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
+      </Show>
+
+      <Show when={modal() === 'members'}>
+        <MemberModal show={true} close={setModal} />
       </Show>
 
       <PromptModal />

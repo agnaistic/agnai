@@ -1,10 +1,10 @@
-import { Book, Download, MailPlus, Palette, Settings, Sliders } from 'lucide-solid'
+import { Book, Download, MailPlus, Palette, Settings, Sliders, Users } from 'lucide-solid'
 import { Component, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, userStore } from '../../store'
 
-export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui'
+export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui' | 'members'
 
 const ChatOptions: Component<{
   show: (modal: ChatModal) => void
@@ -42,6 +42,13 @@ const ChatOptions: Component<{
         >
           <Book />
           Edit Chat Memory
+        </Option>
+
+        <Option
+          onClick={() => props.show('members')}
+          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+        >
+          <Users /> Particpants
         </Option>
 
         <Option

@@ -12,7 +12,9 @@ export const getChatDetail = handle(async ({ userId, params }) => {
   const chat = await store.chats.getChat(id)
 
   if (!chat) throw errors.NotFound
-  if (!store.chats.canViewChat(userId!, chat)) {
+
+  const canView = await store.chats.canViewChat(userId, chat)
+  if (!canView) {
     throw errors.Forbidden
   }
 

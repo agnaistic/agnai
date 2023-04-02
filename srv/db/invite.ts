@@ -8,6 +8,7 @@
 
 import { v4 } from 'uuid'
 import { errors, StatusError } from '../api/wrap'
+import { publishMany } from '../api/ws/handle'
 import { getChat } from './chats'
 import { db } from './client'
 import { AppSchema } from './schema'
@@ -124,9 +125,32 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
       { _id: chat._id, kind: 'chat' },
       { $set: { memberIds: chat.memberIds.concat(userId) } }
     )
+    const profile = await db('profile').findOne({ userId })
+    publishMany([chat.userId, ...chat.memberIds.concat(userId)], {
+      type: 'member-added',
+      chatId: chat._id,
+      profile,
+    })
   }
 
   await db('chat-invite').deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
 
   return accept ? member : undefined
+}
+
+export async function removeMember(chatId: string, requestedBy: string, memberId: string) {
+  const chat = await db('chat').findOne({ _id: chatId })
+  if (!chat) throw errors.NotFound
+
+  if (chat.userId !== requestedBy) {
+    throw errors.Forbidden
+  }
+
+  if (chat.memberIds.includes(memberId)) {
+    publishMany([requestedBy, ...chat.memberIds], { type: 'member-removed', chatId, memberId })
+    const next = chat.memberIds.filter((id) => id !== memberId)
+    await db('chat').updateOne({ _id: chatId }, { $set: { memberIds: next } })
+  }
+
+  await db('chat-member').deleteMany({ chatId, userId: memberId })
 }

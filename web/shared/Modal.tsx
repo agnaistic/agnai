@@ -67,7 +67,7 @@ export const ConfirmModal: Component<{
   show: boolean
   close: () => void
   confirm: () => void
-  message: string
+  message: string | JSX.Element
 }> = (props) => {
   const confirm = () => {
     props.confirm()

@@ -1,9 +1,9 @@
-import { ChevronUp, ImagePlus, PlusCircle, Send } from 'lucide-solid'
-import { Component, createSignal, JSX, Show } from 'solid-js'
+import { ChevronUp, PlusCircle } from 'lucide-solid'
+import { Component, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
-import { DropMenu, Dropup } from '../../../shared/DropMenu'
-import { chatStore, toastStore, userStore } from '../../../store'
+import { DropMenu } from '../../../shared/DropMenu'
+import { toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
 
