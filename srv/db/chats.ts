@@ -112,15 +112,53 @@ export async function canViewChat(senderId: string, chat: AppSchema.Chat) {
 }
 
 export async function getAllChats(userId: string) {
+  const memberships = await db('chat-member').find({ userId }).toArray()
+
   const list = await db('chat')
-    .find({
-      $or: [
-        { kind: 'chat', userId },
-        { kind: 'chat', memberIds: userId },
-      ],
-    })
-    .sort({ updatedAt: -1 })
+    .aggregate([
+      {
+        $match: {
+          $or: [{ userId }, { _id: { $in: memberships.map((mem) => mem.chatId) } }],
+        },
+      },
+      {
+        $lookup: {
+          from: 'character',
+          localField: 'characterId',
+          foreignField: '_id',
+          as: 'character',
+        },
+      },
+      { $unwind: { path: '$character' } },
+      {
+        $project: {
+          userId: 1,
+          memoryId: 1,
+          memberIds: 1,
+          name: 1,
+          characterId: 1,
+          adapter: 1,
+          greeting: 1,
+          scenario: 1,
+          sampleChat: 1,
+          overrides: 1,
+          created: 1,
+          updatedAt: 1,
+          genPreset: 1,
+          genSettings: 1,
+          'character.name': 1,
+        },
+      },
+    ])
     .toArray()
 
   return list
+}
+
+export async function getActiveMembers(chatId: string) {
+  const members = await db('chat-member')
+    .find({ chatId })
+    .toArray()
+    .then((list) => list.map((member) => member.userId))
+  return members
 }

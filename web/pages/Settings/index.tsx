@@ -58,7 +58,7 @@ const Settings: Component = () => {
       koboldUrl: 'string?',
       novelApiKey: 'string?',
       novelModel: 'string?',
-      hordeApiKey: 'string?',
+      hordeKey: 'string?',
       hordeModel: 'string?',
       luminaiUrl: 'string?',
       oaiKey: 'string?',
@@ -142,7 +142,7 @@ const Settings: Component = () => {
               <Divider />
               <h3 class="text-lg font-bold">AI Horde settings</h3>
               <TextInput
-                fieldName="hordeApiKey"
+                fieldName="hordeKey"
                 label="AI Horde API Key"
                 helperText={HordeHelpText}
                 placeholder={

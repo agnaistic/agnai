@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
-import { characterStore, chatStore } from '../../store'
+import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
 import { Import, Plus, Trash } from 'lucide-solid'
@@ -8,16 +8,15 @@ import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
 import { toDuration, toEntityMap } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
-import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 
 const CharacterChats: Component = () => {
-  const { id } = useParams()
+  const params = useParams()
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
 
   const state = chatStore((s) => {
-    if (id) {
+    if (params.id) {
       return { chats: s.char?.chats || [], char: s.char?.char }
     }
 
@@ -25,8 +24,8 @@ const CharacterChats: Component = () => {
   })
 
   createEffect(() => {
-    if (id) {
-      chatStore.getBotChats(id)
+    if (params.id) {
+      chatStore.getBotChats(params.id)
     } else {
       chatStore.getAllChats()
     }
@@ -34,7 +33,7 @@ const CharacterChats: Component = () => {
 
   return (
     <div class="flex flex-col gap-2">
-      <Show when={!!id} fallback={<PageHeader title="Chats" />}>
+      <Show when={!!params.id} fallback={<PageHeader title="Chats" />}>
         <PageHeader title={`Chats with ${state.char?.name || '...'}`} />
       </Show>
 
@@ -56,14 +55,14 @@ const CharacterChats: Component = () => {
         show={showCreate()}
         close={() => setCreate(false)}
         char={state.char}
-        id={id}
+        id={params.id}
       />
       <ImportChatModal show={showImport()} close={() => setImport(false)} char={state.char} />
     </div>
   )
 }
 
-const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
+const Chats: Component<{ chats: AllChat[] }> = (props) => {
   const chars = characterStore((s) => ({
     list: s.characters.list || [],
     map: toEntityMap(s.characters.list),
@@ -87,7 +86,7 @@ const Chats: Component<{ chats: AppSchema.Chat[] }> = (props) => {
             >
               <div class="flex w-1/2 items-center gap-2 sm:w-5/12">
                 <AvatarIcon avatarUrl={chars.map[chat.characterId]?.avatar} class="ml-2" />
-                {chars.map[chat.characterId]?.name}
+                {chat.character?.name || chars.map[chat.characterId]?.name}
               </div>
               <div class="w-5/12 px-4">{chat.name || 'Untitled'}</div>
               <div class="hidden w-1/2  justify-between sm:flex sm:w-2/12">

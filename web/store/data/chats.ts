@@ -4,6 +4,8 @@ import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, local, saveChats } from './storage'
 
+export type AllChat = AppSchema.Chat & { character?: { name: string } }
+
 export async function getChat(id: string) {
   if (isLoggedIn()) {
     const res = await api.get<{
@@ -11,6 +13,7 @@ export async function getChat(id: string) {
       messages: AppSchema.ChatMessage[]
       character: AppSchema.Character
       members: AppSchema.Profile[]
+      active: string[]
     }>(`/chat/${id}`)
     return res
   }
@@ -24,7 +27,7 @@ export async function getChat(id: string) {
     return local.error(`Chat or character not found`)
   }
 
-  return local.result({ chat, character, messages, members: [profile] })
+  return local.result({ chat, character, messages, members: [profile], active: [] })
 }
 
 export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
@@ -110,14 +113,12 @@ export async function deleteChat(chatId: string) {
 
 export async function getAllChats() {
   if (isLoggedIn()) {
-    const res = await api.get<{ chats: AppSchema.Chat[]; characters: AppSchema.Character[] }>(
-      '/chat'
-    )
+    const res = await api.get<{ chats: AllChat[]; characters: AppSchema.Character[] }>('/chat')
     return res
   }
 
   const characters = loadItem('characters')
-  const chats = loadItem('chats')
+  const chats = loadItem('chats') as AllChat[]
 
   if (!chats.length) {
     const [char] = characters

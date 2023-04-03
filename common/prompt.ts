@@ -345,12 +345,14 @@ function getLinesForPrompt({
   const maxContext = getContextLimit(settings, adapter, model)
 
   const encoder = getEncoder(adapter, model)
-  let tokens = 0
 
-  const sender = members.find((mem) => opts.chat.userId === mem.userId)?.handle || 'You'
+  const profiles = new Map<string, AppSchema.Profile>()
+  for (const member of members) {
+    profiles.set(member.userId, member)
+  }
 
   const formatMsg = (chat: AppSchema.ChatMessage) =>
-    fillPlaceholders(chat, char.name, sender).trim()
+    fillPlaceholders(chat, char.name, profiles.get(chat.userId!)?.handle || 'You').trim()
 
   const base = cont ? messages : messages
   const history = base.map(formatMsg)

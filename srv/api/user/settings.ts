@@ -77,6 +77,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       novelModel: 'string?',
       koboldUrl: 'string?',
       hordeApiKey: 'string?',
+      hordeKey: 'string?',
       hordeModel: 'string?',
       luminaiUrl: 'string?',
       hordeWorkers: ['string'],
@@ -100,22 +101,22 @@ export const updateConfig = handle(async ({ userId, body }) => {
     defaultPresets: body.defaultPresets,
   }
 
-  if (body.hordeApiKey) {
+  if (body.hordeKey || body.hordeApiKey) {
     const prevKey = prevUser.hordeKey
+    const incomingKey = body.hordeKey || body.hordeApiKey!
+
     const isNewKey =
-      body.hordeApiKey !== '' &&
-      body.hordeApiKey !== HORDE_GUEST_KEY &&
-      body.hordeApiKey !== prevKey
+      body.hordeKey !== '' && body.hordeKey !== HORDE_GUEST_KEY && body.hordeKey !== prevKey
 
     if (isNewKey) {
-      const user = await findUser(body.hordeApiKey).catch(() => null)
+      const user = await findUser(incomingKey).catch(() => null)
       if (!user) {
         throw new StatusError('Cannot set Horde API Key: Could not validate API key', 400)
       }
       update.hordeName = user.result?.username
     }
 
-    update.hordeKey = encryptText(body.hordeApiKey)
+    update.hordeKey = encryptText(incomingKey)
   }
 
   const validKoboldUrl = await verifyKobldUrl(prevUser, body.koboldUrl)

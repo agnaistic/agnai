@@ -20,9 +20,10 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
     chatStore.uninviteUser(state.active?.chat._id, member.userId)
   }
 
-  const nonOwners = createMemo(() =>
-    state.activeMembers.filter((mem) => mem.userId !== state.active?.chat.userId)
-  )
+  const nonOwners = createMemo(() => {
+    const profiles = state.active?.participantIds.map((id) => state.memberIds[id])
+    return profiles || []
+  })
 
   const Footer = (
     <>

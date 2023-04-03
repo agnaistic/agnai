@@ -54,24 +54,24 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       tokens += encoder(gen.ultimeJailbreak)
     }
 
-    for (const line of all) {
+    for (const line of all.reverse()) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
-      const isUser = line.startsWith(sender.handle)
-      const content = line
-        .substring(line.indexOf(':') + 1)
-        .trim()
-        .replace(BOT_REPLACE, char.name)
-        .replace(SELF_REPLACE, user)
+      const content = isBot
+        ? line
+            .substring(line.indexOf(':') + 1)
+            .trim()
+            .replace(BOT_REPLACE, char.name)
+            .replace(SELF_REPLACE, user)
+        : line
 
       if (isBot) {
         role = 'assistant'
-      } else if (isUser) {
-        role = 'user'
       } else if (line === '<START>') {
         role = 'system'
+      } else {
+        role = 'user'
       }
-
       const length = encoder(content)
       if (tokens + length > maxBudget) break
 
@@ -80,7 +80,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     body.messages = messages.concat(history.reverse())
-    // const finalCost = body.messages.reduce((prev, curr) => encoder(curr.content) + prev, 0)
+    // const finalCost = body.messages.reduce((prev: any, curr: any) => encoder(curr.content) + prev, 0)
     // finalCost
   } else {
     body.prompt = prompt

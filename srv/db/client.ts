@@ -45,7 +45,8 @@ export function isConnected() {
 }
 
 export async function createIndexes() {
-  await db('chat-member').createIndex({ chatId: 1 }, { name: 'chat-messages_chatId' })
+  await db('chat-member').createIndex({ chatId: 1 }, { name: 'chat-messages_chatId' }) // This index name is a typo, but can't be changed due to already being shipped
+  await db('chat-member').createIndex({ userId: 1 }, { name: 'chat-members_userId' })
   await db('profile').createIndex({ userId: 1 }, { name: 'profiles_userId' })
   await db('character').createIndex({ userId: 1 }, { name: 'characters_userId' })
   await db('chat').createIndex({ userId: 1 }, { name: 'chats_userId' })

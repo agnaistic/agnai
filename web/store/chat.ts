@@ -4,16 +4,19 @@ import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
 import { data } from './data'
+import { AllChat } from './data/chats'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+
+export { AllChat }
 
 type ChatState = {
   lastChatId: string | null
   loaded: boolean
   // All user chats a user owns or is a member of
   all?: {
-    chats: AppSchema.Chat[]
+    chats: AllChat[]
     chars: { [charId: string]: AppSchema.Character }
   }
   // All chats for a particular character
@@ -25,6 +28,7 @@ type ChatState = {
   active?: {
     chat: AppSchema.Chat
     char: AppSchema.Character
+    participantIds: string[]
   }
   activeMembers: AppSchema.Profile[]
   memberIds: { [userId: string]: AppSchema.Profile }
@@ -96,6 +100,7 @@ export const chatStore = createStore<ChatState>('chat', {
           active: {
             chat: res.result.chat,
             char: res.result.character,
+            participantIds: res.result.active,
           },
           activeMembers: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
@@ -137,7 +142,9 @@ export const chatStore = createStore<ChatState>('chat', {
         }
 
         if (active && active.chat._id === id) {
-          yield { active: { chat: res.result!, char: active.char } }
+          yield {
+            active: { chat: res.result!, char: active.char, participantIds: active.participantIds },
+          }
         }
       }
     },
@@ -180,11 +187,11 @@ export const chatStore = createStore<ChatState>('chat', {
     },
     async *getAllChats({ all }) {
       const res = await data.chats.getAllChats()
-
       if (res.error) {
         toastStore.error(`Could not retrieve chats`)
         return { all }
       }
+
       if (res.result) {
         const chars = res.result.characters.reduce<any>((prev, curr) => {
           prev[curr._id] = curr
@@ -226,7 +233,7 @@ export const chatStore = createStore<ChatState>('chat', {
           yield { char: { ...char, chats: [res.result, ...char.chats] } }
         }
 
-        yield { active: { chat: res.result, char: character! } }
+        yield { active: { chat: res.result, char: character!, participantIds: [] } }
 
         onSuccess?.(res.result._id)
       }
@@ -375,8 +382,9 @@ subscribe('member-removed', { memberId: 'string', chatId: 'string' }, (body) => 
   if (!active?.chat) return
   if (active.chat._id !== body.chatId) return
 
+  const nextIds = active.participantIds.filter((id) => id !== body.memberId)
   const nextMembers = activeMembers.filter((mem) => mem.userId !== body.memberId)
-  chatStore.setState({ activeMembers: nextMembers })
+  chatStore.setState({ activeMembers: nextMembers, active: { ...active, participantIds: nextIds } })
 })
 
 subscribe(
@@ -390,15 +398,16 @@ subscribe(
     if (!active || active.chat._id !== body.chatId) return
 
     const nextMembers = activeMembers.concat(body.profile)
-    const nextIds = { ...memberIds, [body.profile.userId]: body.profile }
+    const nextProfileMap = { ...memberIds, [body.profile.userId]: body.profile }
+    const nextIds = active.participantIds.concat(body.profile.userId)
     const nextChat = {
       ...active.chat,
       memberIds: active.chat.memberIds.concat(body.profile.userId),
     }
     chatStore.setState({
       activeMembers: nextMembers,
-      memberIds: nextIds,
-      active: { ...active, chat: nextChat },
+      memberIds: nextProfileMap,
+      active: { ...active, participantIds: nextIds, chat: nextChat },
     })
   }
 )
