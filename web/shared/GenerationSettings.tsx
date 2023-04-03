@@ -1,4 +1,4 @@
-import { Component, createSignal, Show } from 'solid-js'
+import { Component, createSignal, For, JSX, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
@@ -8,6 +8,7 @@ import { OPENAI_MODELS, CLAUDE_MODELS } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import Tabs from './Tabs'
+import { Check, X } from 'lucide-solid'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -49,10 +50,36 @@ const Section: Component<SectProps> = (props) => (
   <div class={`flex-col gap-4 ${props.show ? 'flex' : 'hidden'}`}>{props.children}</div>
 )
 
+export function CreateTooltip(adapters: string[]): JSX.Element {
+  const allAdapaters = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai', 'scale']
+  return (
+    <div>
+      <For each={allAdapaters}>
+        {(adapter) => (
+          <div class="flex flex-row gap-2">
+            <Show when={adapters.includes(adapter)}>
+              <div class="text-green-500">
+                <Check />
+              </div>
+            </Show>
+            <Show when={!adapters.includes(adapter)}>
+              <div class="text-red-500">
+                <X />
+              </div>
+            </Show>
+            {adapter}
+          </div>
+        )}
+      </For>
+    </div>
+  )
+}
+
 const GeneralSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">General Settings</div>
+      <p class="text-sm text-[var(--text-700)]">These are used for all adapters.</p>
       <RangeInput
         fieldName="maxTokens"
         label="Max New Tokens"
@@ -114,6 +141,7 @@ const PromptSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">Prompt Settings</div>
+      <p class="text-sm text-[var(--text-700)]">These are used for all adapters.</p>
       <RangeInput
         fieldName="memoryContextLimit"
         label="Memory: Context Limit"
@@ -172,9 +200,12 @@ const PromptSettings: Component<Props> = (props) => {
         disabled={props.disabled}
       />
 
+      <Divider />
+      <div class="text-2xl"> OpenAI Specific</div>
+
       <Toggle
         fieldName="antiBond"
-        label="Anti-Bond (GPT-4)"
+        label="Anti-Bond"
         helperText={
           <>
             If this option is enabled, OpenAI will be prompted with logit biases to discourage the
@@ -218,6 +249,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.temp || defaultPresets.basic.temp}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai']}
       />
 
       <RangeInput
@@ -229,6 +261,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topP ?? defaultPresets.basic.topP}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="topK"
@@ -239,6 +272,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.topK ?? defaultPresets.basic.topK}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="topA"
@@ -249,6 +283,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topA ?? defaultPresets.basic.topA}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="tailFreeSampling"
@@ -259,6 +294,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.001}
         value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="typicalP"
@@ -269,6 +305,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="repetitionPenalty"
@@ -279,6 +316,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="repetitionPenaltyRange"
@@ -289,6 +327,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="repetitionPenaltySlope"
@@ -299,9 +338,10 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <Divider />
-      <div class="text-2xl"> Text-Generation-WebUI</div>
+      <div class="text-2xl"> Text-Generation-WebUI Specific</div>
       <RangeInput
         fieldName="encoderRepitionPenalty"
         label="Encoder Repition Penalty"
@@ -323,7 +363,7 @@ const GenSettings: Component<Props> = (props) => {
         disabled={props.disabled}
       />
       <Divider />
-      <div class="text-2xl"> OpenAI</div>
+      <div class="text-2xl"> OpenAI Specific</div>
       <RangeInput
         fieldName="frequencyPenalty"
         label="Frequency Penalty"
