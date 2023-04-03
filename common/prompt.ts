@@ -364,15 +364,16 @@ function getLinesForPrompt({
 function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
   let estimated = amble
 
+  let count = encoder(amble)
   const adding: string[] = []
 
   for (const line of lines) {
-    estimated += line + '\n'
-    const tokens = encoder(estimated)
-    if (tokens > tokenLimit) {
+    const tokens = encoder(line + '\n')
+    if (tokens + count > tokenLimit) {
       return adding
     }
 
+    count += tokens
     adding.push(line)
   }
 
