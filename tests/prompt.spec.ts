@@ -262,7 +262,7 @@ function build(
     members: [profile],
     user,
     chat: opts.chat || chat,
-    messages: messages.slice().reverse(),
+    messages,
     book: opts.book || book,
     settings: opts.settings,
     continue: opts.continue,

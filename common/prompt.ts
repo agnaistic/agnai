@@ -68,6 +68,11 @@ export const testBook: AppSchema.MemoryBook = {
   ],
 }
 
+/**
+ * This is only ever invoked client-side
+ * @param opts
+ * @returns
+ */
 export function createPrompt(opts: PromptOpts) {
   const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
   opts.messages = sortedMsgs
@@ -83,6 +88,14 @@ export function createPrompt(opts: PromptOpts) {
 
 const START_TEXT = '<START>'
 
+/**
+ * This is only ever invoked server-side
+ *
+ * @param opts
+ * @param parts
+ * @param lines Always in time-ascending order (oldest to newest)
+ * @returns
+ */
 export function createPromptWithParts(
   opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
   parts: PromptParts,
@@ -220,7 +233,7 @@ export function getPromptParts(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
-  parts.memory = getMemoryPrompt({ ...opts, lines })
+  parts.memory = getMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
 

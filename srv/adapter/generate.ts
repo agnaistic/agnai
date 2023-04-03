@@ -39,6 +39,8 @@ export async function createTextStreamV2(
   guestSocketId?: string
 ) {
   /**
+   * N.b.: The front-end sends the `lines` and `history` in TIME-ASCENDING order. I.e. Oldest -> Newest
+   *
    * We need to ensure the prompt is always generated using the correct version of the memory book.
    * If a non-owner initiates generation, they will not have the memory book.
    *
