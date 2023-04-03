@@ -41,7 +41,7 @@ const updateBook = handle(async ({ body, userId, params }) => {
 })
 
 const removeBook = handle(async ({ userId, params }) => {
-  await store.memory.deleteBook(params.id, userId!)
+  await store.memory.deleteBook(userId, params.id)
   return { success: true }
 })
 
