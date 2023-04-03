@@ -206,7 +206,7 @@ body {
 }
 
 .link {
-  @apply text-[var(--hl-500)] hover:text-[var(--hl-300)];
+  @apply cursor-pointer text-[var(--hl-500)] hover:text-[var(--hl-300)];
 }
 
 @layer base {
