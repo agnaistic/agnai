@@ -148,8 +148,6 @@ export async function removeMember(chatId: string, requestedBy: string, memberId
 
   if (chat.memberIds.includes(memberId)) {
     publishMany([requestedBy, ...chat.memberIds], { type: 'member-removed', chatId, memberId })
-    const next = chat.memberIds.filter((id) => id !== memberId)
-    await db('chat').updateOne({ _id: chatId }, { $set: { memberIds: next } })
   }
 
   await db('chat-member').deleteMany({ chatId, userId: memberId })

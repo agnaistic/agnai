@@ -167,6 +167,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
+    maxContextLength: 'max_context_length',
   },
   luminai: {
     maxTokens: 'max_length',
