@@ -105,8 +105,10 @@ export async function deleteAllChats(characterId?: string) {
   await db('chat-message').deleteMany({ chatId: { $in: chatIds } })
 }
 
-export function canViewChat(senderId: string, chat: AppSchema.Chat) {
-  return chat.userId === senderId || chat.memberIds.includes(senderId)
+export async function canViewChat(senderId: string, chat: AppSchema.Chat) {
+  if (chat.userId === senderId) return true
+  const membership = await db('chat-member').findOne({ chatId: chat._id, userId: senderId })
+  return !!membership
 }
 
 export async function getAllChats(userId: string) {

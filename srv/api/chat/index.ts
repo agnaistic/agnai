@@ -6,7 +6,7 @@ import { updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage }
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
-import { createInvite, acceptInvite, rejectInvite, getInvites } from './invite'
+import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessage, generateMessageV2, getMessages, retryMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 
@@ -27,6 +27,7 @@ router.put('/:id/preset', updateChatGenPreset)
 router.post('/', createChat)
 router.post('/import', importChat)
 router.post('/:id/invite', createInvite)
+router.post('/:id/uninvite', uninviteMember)
 router.post('/:inviteId/accept', acceptInvite)
 router.post('/:inviteId/reject', rejectInvite)
 

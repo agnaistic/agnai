@@ -40,3 +40,11 @@ export const rejectInvite = handle(async (req) => {
   await store.invites.answer(req.userId!, inviteId, false)
   return { success: true }
 })
+
+export const uninviteMember = handle(async (req) => {
+  const chatId = req.params.id
+  assertValid({ userId: 'string' }, req.body)
+
+  store.invites.removeMember(chatId, req.userId, req.body.userId)
+  return { success: true }
+})

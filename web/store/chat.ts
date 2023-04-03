@@ -2,7 +2,7 @@ import { createPrompt, Prompt } from '../../common/prompt'
 import { AppSchema } from '../../srv/db/schema'
 import { api } from './api'
 import { characterStore } from './character'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { data } from './data'
 import { msgStore } from './message'
 import { subscribe } from './socket'
@@ -231,6 +231,7 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.(res.result._id)
       }
     },
+
     async inviteUser(_, chatId: string, userId: string, onSuccess?: () => void) {
       const res = await api.post(`/chat/${chatId}/invite`, { userId })
       if (res.error) return toastStore.error(`Failed to invite user: ${res.error}`)
@@ -239,6 +240,16 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
       }
     },
+
+    async uninviteUser(_, chatId: string, memberId: string, onSuccess?: () => void) {
+      const res = await api.post(`/chat/${chatId}/uninvite`, { userId: memberId })
+      if (res.error) return toastStore.error(`Failed to remove user: ${res.error}`)
+      if (res.result) {
+        toastStore.success(`Member removed from chat`)
+        onSuccess?.()
+      }
+    },
+
     async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
       const res = await data.chats.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
@@ -354,3 +365,40 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   if (!body.msg.userId) return
   chatStore.getMemberProfile(body.chatId, body.msg.userId)
 })
+
+subscribe('member-removed', { memberId: 'string', chatId: 'string' }, (body) => {
+  const profile = getStore('user').getState().profile
+  if (!profile) return
+
+  const { activeMembers, active } = chatStore.getState()
+
+  if (!active?.chat) return
+  if (active.chat._id !== body.chatId) return
+
+  const nextMembers = activeMembers.filter((mem) => mem.userId !== body.memberId)
+  chatStore.setState({ activeMembers: nextMembers })
+})
+
+subscribe(
+  'member-added',
+  {
+    chatId: 'string',
+    profile: { kind: 'any', userId: 'string', handle: 'string', _id: 'string', avatar: 'string?' },
+  },
+  (body) => {
+    const { active, activeMembers, memberIds } = chatStore.getState()
+    if (!active || active.chat._id !== body.chatId) return
+
+    const nextMembers = activeMembers.concat(body.profile)
+    const nextIds = { ...memberIds, [body.profile.userId]: body.profile }
+    const nextChat = {
+      ...active.chat,
+      memberIds: active.chat.memberIds.concat(body.profile.userId),
+    }
+    chatStore.setState({
+      activeMembers: nextMembers,
+      memberIds: nextIds,
+      active: { ...active, chat: nextChat },
+    })
+  }
+)

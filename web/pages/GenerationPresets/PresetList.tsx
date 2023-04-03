@@ -1,6 +1,6 @@
 import { A, useNavigate } from '@solidjs/router'
 import { Copy, Edit, Plus, Trash } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
@@ -18,6 +18,10 @@ const PresetList: Component = () => {
     presetStore.deletePreset(presetId, () => nav('/presets'))
     setDeleting()
   }
+
+  onMount(() => {
+    presetStore.getPresets()
+  })
 
   return (
     <>
