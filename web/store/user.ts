@@ -184,6 +184,7 @@ export const userStore = createStore<UserState>(
 
     setBackground(_, file: FileInputResult | null) {
       if (!file) {
+        setBackground(null)
         return { background: undefined }
       }
 

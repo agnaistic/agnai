@@ -29,11 +29,13 @@ const App: Component = () => {
   })
 
   const bg = createMemo(() => {
-    return {
+    const styles: JSX.CSSProperties = {
       'background-image': state.background ? `url(${state.background})` : undefined,
       'background-repeat': 'no-repeat',
       'background-size': 'cover',
+      'background-position': 'center',
     }
+    return styles
   })
 
   return (
