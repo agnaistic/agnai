@@ -9,24 +9,6 @@ import needle from 'needle'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
-const base = {
-  do_sample: true,
-  temperature: 0.65,
-  top_a: 0.0,
-  top_p: 0.9,
-  top_k: 0,
-  typical_p: 1,
-  repetition_penalty: 1.08,
-  length_penalty: 1,
-  penalty_alpha: 0,
-  no_repeat_ngram_size: 0,
-  max_new_tokens: 80,
-  early_stopping: false,
-  min_length: 0,
-  num_beams: 1,
-  max_context_length: 2048,
-}
-
 const defaultUrl = `http://127.0.0.1:7860`
 
 export const handleOoba: ModelAdapter = async function* ({
@@ -34,29 +16,26 @@ export const handleOoba: ModelAdapter = async function* ({
   members,
   user,
   prompt,
-  sender,
+  settings,
   log,
 }) {
   const body = [
     prompt,
-    base.max_new_tokens,
-    base.do_sample,
-    base.temperature,
-    base.top_p,
-    base.typical_p,
-    base.repetition_penalty,
-    base.top_k,
-    base.min_length,
-    base.no_repeat_ngram_size,
-    base.num_beams,
-    base.penalty_alpha,
-    base.length_penalty,
-    base.early_stopping,
-    char.name,
-    sender.handle,
-    true, // Stop at line break
-    base.max_context_length,
-    1,
+    settings.max_new_tokens,
+    true, // do_sample
+    settings.top_p,
+    settings.temperature,
+    settings.typical_p || 1,
+    settings.repetition_penalty,
+    settings.encoder_repetition_penalty,
+    settings.top_k,
+    0, // no min_length
+    0, // no_repeat_ngram_size
+    1, // num_beams
+    settings.penalty_alpha,
+    1, // length_penalty
+    true, // stop at line break
+    -1, // random seed
   ]
 
   log.debug({ body }, 'Textgen payload')
@@ -65,7 +44,7 @@ export const handleOoba: ModelAdapter = async function* ({
     'post',
     `${user.oobaUrl || defaultUrl}/run/textgen`,
     { data: body },
-    { json: true, timeout: 2000, response_timeout: 10000 }
+    { json: true }
   ).catch((err) => ({ error: err }))
   if ('error' in resp) {
     yield { error: `text-generatuin-webui request failed: ${resp.error?.message || resp.error}` }

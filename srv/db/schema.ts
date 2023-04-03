@@ -187,6 +187,8 @@ export namespace AppSchema {
     topK: number
     topA: number
     tailFreeSampling: number
+    encoderRepitionPenalty?: number
+    penaltyAlpha?: number
     order?: number[]
 
     gaslight?: string

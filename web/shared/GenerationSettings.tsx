@@ -300,7 +300,28 @@ const GenSettings: Component<Props> = (props) => {
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
       />
-
+      <Divider />
+      <div class="text-2xl"> Text-Generation-WebUI</div>
+      <RangeInput
+        fieldName="encoderRepitionPenalty"
+        label="Encoder Repition Penalty"
+        helperText="The paramater for encoder_repetition_penalty. An exponential penalty on sequences that are not in the original input. 1.0 means no penalty"
+        min={0.8}
+        max={1.5}
+        step={0.01}
+        value={props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
+        disabled={props.disabled}
+      />
+      <RangeInput
+        fieldName="penaltyAlpha"
+        label="Penalty Alpha"
+        helperText="The values balance the model confidence and the degeneration penalty in contrastive search decoding"
+        min={0}
+        max={5}
+        step={0.01}
+        value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
+        disabled={props.disabled}
+      />
       <Divider />
       <div class="text-2xl"> OpenAI</div>
       <RangeInput

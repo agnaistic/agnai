@@ -85,6 +85,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       koboldUrl: 'string?',
       thirdPartyFormat: 'string?',
       hordeUseTrusted: 'boolean?',
+      oobaUrl: 'string?',
       hordeApiKey: 'string?',
       hordeKey: 'string?',
       hordeModel: 'string?',
@@ -169,6 +170,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
     update.novelVerified = true
     update.novelApiKey = encryptText(body.novelApiKey!)
+  }
+
+  if (body.oobaUrl) {
+    update.oobaUrl = body.oobaUrl
   }
 
   if (body.oaiKey) {

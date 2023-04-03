@@ -11,6 +11,7 @@ import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
 import LuminAISettings from './components/LuminAISettings'
 import KoboldAISettings from './components/KoboldAISettings'
+import OobaAISettings from './components/OobaAISettings'
 import ChaiSettings from './components/ChaiSettings'
 import ClaudeSettings from './components/ClaudeSettings'
 
@@ -67,6 +68,11 @@ const AISettings: Component<{
       <div class={currentTab() === 'kobold' ? tabClass : 'hidden'}>
         <AIPreset adapter="kobold" />
         <KoboldAISettings />
+      </div>
+
+      <div class={currentTab() === 'ooba' ? tabClass : 'hidden'}>
+        <AIPreset adapter="ooba" />
+        <OobaAISettings />
       </div>
 
       <div class={currentTab() === 'openai' ? tabClass : 'hidden'}>
