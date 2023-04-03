@@ -11,7 +11,21 @@ import { toastStore } from './toasts'
 const UI_KEY = 'ui-settings'
 const BACKGROUND_KEY = 'ui-bg'
 
-const defaultUIsettings: UserState['ui'] = {
+export type UISettings = {
+  theme: ThemeColor
+  mode: ThemeMode
+  avatarSize: AvatarSize
+  avatarCorners: AvatarCornerRadius
+  input: ChatInputType
+  font: FontSetting
+
+  /** 0 -> 1. 0 = transparent. 1 = opaque */
+  msgOpacity: number
+
+  chatWidth?: 'full' | 'narrow'
+}
+
+const defaultUIsettings: UISettings = {
   theme: 'sky',
   mode: 'dark',
   avatarSize: 'md',
@@ -19,6 +33,7 @@ const defaultUIsettings: UserState['ui'] = {
   input: 'single',
   font: 'default',
   msgOpacity: 0.8,
+  chatWidth: 'full',
 }
 
 const fontFaces: { [key in FontSetting]: string } = {
@@ -40,17 +55,7 @@ export type UserState = {
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
-  ui: {
-    theme: ThemeColor
-    mode: ThemeMode
-    avatarSize: AvatarSize
-    avatarCorners: AvatarCornerRadius
-    input: ChatInputType
-    font: FontSetting
-
-    /** 0 -> 1. 0 = transparent. 1 = opaque */
-    msgOpacity: number
-  }
+  ui: UISettings
   background?: string
 }
 
@@ -171,7 +176,7 @@ export const userStore = createStore<UserState>(
       return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
     },
 
-    updateUI({ ui }, update: Partial<UserState['ui']>) {
+    updateUI({ ui }, update: Partial<UISettings>) {
       const next = { ...ui, ...update }
       updateTheme(next)
       return { ui: next }
@@ -243,7 +248,7 @@ function init(): UserState {
   }
 }
 
-function updateTheme(ui: UserState['ui']) {
+function updateTheme(ui: UISettings) {
   localStorage.setItem(UI_KEY, JSON.stringify(ui))
   const root = document.documentElement
   for (let shade = 100; shade <= 900; shade += 100) {
@@ -264,7 +269,7 @@ function updateTheme(ui: UserState['ui']) {
 
 function getUIsettings() {
   const json = localStorage.getItem(UI_KEY) || JSON.stringify(defaultUIsettings)
-  const settings: UserState['ui'] = JSON.parse(json)
+  const settings: UISettings = JSON.parse(json)
   const theme = (localStorage.getItem('theme') || settings.theme) as ThemeColor
   localStorage.removeItem('theme')
 

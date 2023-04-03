@@ -165,7 +165,7 @@ const Settings: Component = () => {
                     helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
                     label="Horde Model"
                     value={state.user?.hordeModel}
-                    items={[{ label: 'Any', value: '' }].concat(...cfg.models.map(toItem))}
+                    items={[{ label: 'Any', value: 'any' }].concat(...cfg.models.map(toItem))}
                   />
                 </div>
                 <div class="icon-button flex items-center" onClick={refreshHorde}>

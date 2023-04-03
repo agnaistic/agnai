@@ -116,6 +116,7 @@ This is how {{char}} should talk
   },
   scale: {
     name: 'scale',
+    maxTokens: 300,
     maxContextLength: 7600,
     // Not providing a default gaslight intentionally as most users have thier gaslight configured within Scale.
     gaslight: ``,

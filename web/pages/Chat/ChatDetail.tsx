@@ -144,6 +144,17 @@ const ChatDetail: Component = () => {
     return styles
   })
 
+  const chatWidth = createMemo(() => {
+    switch (user.ui.chatWidth) {
+      case 'narrow':
+        return 'max-w-3xl'
+
+      case 'full':
+      default:
+        return 'w-full'
+    }
+  })
+
   return (
     <>
       <Show when={!chats.chat || !chats.char || !user.profile}>
@@ -152,7 +163,7 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <div class="mx-auto flex h-full max-w-3xl flex-col justify-between sm:py-2">
+        <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
           <div class="flex h-8 items-center justify-between rounded-md" style={headerBg()}>
             <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen}>

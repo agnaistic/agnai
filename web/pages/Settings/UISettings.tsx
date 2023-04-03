@@ -96,6 +96,16 @@ const UISettings: Component = () => {
       <Divider />
       <div class="text-lg font-bold">Chat Styling</div>
 
+      <Select
+        fieldName="chatWidth"
+        label="Chat Width"
+        items={[
+          { label: 'Full Width', value: 'full' },
+          { label: 'Narrow', value: 'narrow' },
+        ]}
+        onChange={(item) => userStore.updateUI({ chatWidth: item.value as any })}
+      />
+
       <RangeInput
         fieldName="msgOpacity"
         value={state.ui.msgOpacity}
