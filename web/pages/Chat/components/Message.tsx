@@ -112,7 +112,6 @@ const SingleMessage: Component<
   }))
 
   const bgStyles = createMemo((prev) => {
-    if (!user.background) return {}
     user.ui.mode
     const hex = getRootVariable('bg-800')
     if (!hex) return {}
