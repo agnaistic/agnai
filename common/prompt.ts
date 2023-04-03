@@ -92,7 +92,7 @@ export function createPromptWithParts(
   const maxContext = getContextLimit(opts.settings, adapter, model)
   const history = fillPromptWithLines(encoder, maxContext, pre + '\n' + post, lines)
 
-  const prompt = [pre, ...history.reverse(), post].filter(removeEmpty).join('\n')
+  const prompt = [pre, ...history, post].filter(removeEmpty).join('\n')
   return { lines, prompt, parts, pre, post }
 }
 
@@ -157,7 +157,7 @@ export function buildPrompt(opts: BuildPromptOpts, parts: PromptParts, lines: st
 
   const preamble = pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
   const postamble = parts.post.join('\n')
-  const prompt = [preamble, ...history.reverse(), postamble].filter(removeEmpty).join('\n')
+  const prompt = [preamble, ...history, postamble].filter(removeEmpty).join('\n')
 
   return {
     pre: preamble,
@@ -355,19 +355,10 @@ function getLinesForPrompt({
     fillPlaceholders(chat, char.name, profiles.get(chat.userId!)?.handle || 'You').trim()
 
   const base = cont ? messages : messages
-  const history = base.map(formatMsg)
+  const history = base.slice().sort(sortMessagesDesc).map(formatMsg)
 
   const lines = fillPromptWithLines(encoder, maxContext, '', history)
-  return lines
-
-  // for (const hist of history) {
-  //   const nextTokens = encoder(hist)
-  //   if (nextTokens + tokens > maxContext) break
-  //   tokens += nextTokens
-  //   lines.push(hist)
-  // }
-
-  // return lines
+  return lines.reverse()
 }
 
 function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
@@ -385,7 +376,7 @@ function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string
     adding.push(line)
   }
 
-  return lines
+  return adding
 }
 
 function fillPlaceholders(chat: AppSchema.ChatMessage, char: string, user: string) {

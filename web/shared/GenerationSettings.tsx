@@ -181,8 +181,8 @@ const PromptSettings: Component<Props> = (props) => {
         helperText={
           <>
             (Leave empty to disable)
-            <br /> Ultime Jailbreak. If this option is enabled, the UJB prompt will sent as a system
-            message at the end of the conversation before prompting OpenAI.
+            <br /> Ultimate Jailbreak. If this option is enabled, the UJB prompt will sent as a
+            system message at the end of the conversation before prompting OpenAI.
           </>
         }
         placeholder="E.g. Keep OOC out of your reply."
