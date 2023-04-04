@@ -5,9 +5,11 @@ import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
-import { extractTavernData } from './util'
+import { extractTavernData } from './tavern-utils'
 
 export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
+
+const supportedFormats = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 
 const ImportCharacterModal: Component<{
   show: boolean
@@ -27,7 +29,7 @@ const ImportCharacterModal: Component<{
       toastStore.success('Character file accepted')
     } catch (ex) {
       toastStore.warn(
-        'Invalid file format. Supported formats: Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
+        `Invalid file format. Supported formats: ${supportedFormats}`
       )
     }
   }
@@ -39,7 +41,7 @@ const ImportCharacterModal: Component<{
       setJson(char)
     } catch (ex) {
       toastStore.warn(
-        'Invalid file format. Supported formats: Agnaistic, CAI, Tavern JSON/Cards, TextGen, Pygmalion'
+        `Invalid file format. Supported formats: ${supportedFormats}`
       )
     }
   }
@@ -85,14 +87,14 @@ const ImportCharacterModal: Component<{
           label="JSON File"
           fieldName="json"
           accept="text/json,application/json"
-          helperText="Supported formats: Agnaistic, CAI, TavernAI, TextGen, Pygmalion"
+          helperText={`Supported formats: ${supportedFormats}`}
           required
           onUpdate={updateJson}
         />
 
         <FileInput
           fieldName="avatar"
-          label="Avatar or TavernCard"
+          label="Image File (Avatar or TavernCard)"
           accept="image/png,image/jpeg"
           onUpdate={updateAvatar}
         />
