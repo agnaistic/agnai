@@ -54,7 +54,9 @@ If you're only looking to run AgnAI without contributing:
    - `Anonymous` users have their data saved to the browser's local storage. Your data will "persist", but not be shareable between devices or other browsers. Clearing your browser's application data/cookies will delete this data.
 5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
 6. From inside the cloned/unpacked folder in your terminal/console:
-   - `npm install`
+   - `npm run deps`
+     - **Do this every time you update AgnAI, just in case.**
+     - This will install the dependencies using `pnpm v6`
    - `npm run build:all`
    - Build and run the project in watch mode:
      - Mac/Linux: `npm run start`
@@ -121,21 +123,19 @@ The important parts of the stack are:
 
 ### Quick Start
 
-If you have Node and `pnpm` installed and working, you can start the development server with:
-
 ```bash
 # Install dependencies
-> pnpm install --lockfile
+> npm run deps
 
 # Run MongoDB using Docker
-> pnpm run up
+> npm run up
 
 # Start the frontend, backend, and python service
 # Mac/Linux
-> pnpm start
+> npm start
 
 # Windows
-> pnpm start:win
+> npm run start:win
 ```
 
 ### Developer Tooling
