@@ -13,6 +13,12 @@ type OpenAIMessagePropType = {
   role: 'user' | 'assistant' | 'system'
   content: string
 }
+
+const CHAT_MODELS: Record<string, boolean> = {
+  [OPENAI_MODELS.Turbo]: true,
+  [OPENAI_MODELS.GPT4]: true,
+}
+
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, settings, sender, log, guest, lines, parts, gen } = opts
   if (!user.oaiKey) {
@@ -30,7 +36,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
   }
 
-  const useChat = oaiModel === (OPENAI_MODELS.Turbo || OPENAI_MODELS.GPT4)
+  const useChat = !!CHAT_MODELS[oaiModel]
+
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
     const user = sender.handle || 'You'
