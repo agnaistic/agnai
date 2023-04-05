@@ -5,7 +5,6 @@ import PageHeader from '../../shared/PageHeader'
 import { getFormEntries, getStrictForm } from '../../shared/util'
 import { CHAT_ADAPTERS, ChatAdapter, AIAdapter } from '../../../common/adapters'
 import { userStore } from '../../store'
-import { DefaultPresets } from './DefaultPresets'
 import { AppSchema } from '../../../srv/db/schema'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
@@ -15,7 +14,6 @@ import { Show } from 'solid-js'
 const settingTabs = {
   ai: 'AI Settings',
   ui: 'UI Settings',
-  service: 'Presets',
   guest: 'Guest Data',
 }
 
@@ -31,7 +29,7 @@ const Settings: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [workers, setWorkers] = createSignal<string[]>(state.user?.hordeWorkers || [])
 
-  const tabs: Tab[] = ['ai', 'ui', 'service']
+  const tabs: Tab[] = ['ai', 'ui']
   if (!state.loggedIn) tabs.push('guest')
   const currentTab = createMemo(() => tabs[tab()])
 
@@ -77,16 +75,12 @@ const Settings: Component = () => {
       </div>
       <form onSubmit={onSubmit} autocomplete="off">
         <div class="flex flex-col gap-4">
-          <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
-            <UISettings />
-          </div>
-
-          <div class={currentTab() === 'service' ? tabClass : 'hidden'}>
-            <DefaultPresets />
-          </div>
-
           <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
             <AISettings onHordeWorkersChange={setWorkers} />
+          </div>
+
+          <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
+            <UISettings />
           </div>
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>

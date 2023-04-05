@@ -1,5 +1,5 @@
 import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
-import { AlertTriangle, RefreshCw, Save, X } from 'lucide-solid'
+import { RefreshCw, Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions } from '../../shared/util'
@@ -10,10 +10,10 @@ import {
   HordeWorker,
 } from '../../../common/adapters'
 import { settingStore, userStore } from '../../store'
-import Divider from '../../shared/Divider'
 import MultiDropdown from '../../shared/MultiDropdown'
 import Modal from '../../shared/Modal'
 import Tabs from '../../shared/Tabs'
+import { AIPreset } from './components/AIPreset'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -23,11 +23,11 @@ const AISettings: Component<{
 
   createEffect(() => {
     refreshHorde()
-    console.log(cfg.config.adapters)
     setTabs(cfg.config.adapters.map(a => ADAPTER_LABELS[a] || a))
-    if(tab() == -1){
+    if(!ready() && cfg.config.adapters?.length) {
       var defaultTab = (cfg.config.adapters as (string | undefined)[]).indexOf(state.user?.defaultAdapter)
       setTab(defaultTab == -1 ? 0 : defaultTab)
+      setReady(true)
     }
   })
 
@@ -35,6 +35,7 @@ const AISettings: Component<{
   const [show, setShow] = createSignal(false)
   const [tabs, setTabs] = createSignal<string[]>([])
   const [tab, setTab] = createSignal(-1)
+  const [ready, setReady] = createSignal(false)
 
   const currentTab = createMemo(() => cfg.config.adapters[tab()])
 
@@ -79,19 +80,22 @@ const AISettings: Component<{
 
   return (
     <>
-      <Select
-        fieldName="defaultAdapter"
-        label="Default AI Service"
-        items={adaptersToOptions(cfg.config.adapters)}
-        helperText="The default service conversations will use unless otherwise configured"
-        value={state.user?.defaultAdapter}
-      />
+      <Show when={ready()}>
+        <Select
+          fieldName="defaultAdapter"
+          label="Default AI Service"
+          items={adaptersToOptions(cfg.config.adapters)}
+          helperText="The default service conversations will use unless otherwise configured"
+          value={state.user?.defaultAdapter}
+        />
 
-      <div class="my-2">
-        <Tabs tabs={tabs()} selected={tab} select={setTab} />
-      </div>
+        <div class="my-2">
+          <Tabs tabs={tabs()} selected={tab} select={setTab} />
+        </div>
+      </Show>
 
       <div class={currentTab() === 'horde' ? tabClass : 'hidden'}>
+        <AIPreset adapter="horde" />
         <TextInput
           fieldName="hordeKey"
           label="AI Horde API Key"
@@ -132,6 +136,7 @@ const AISettings: Component<{
       </div>
 
       <div class={currentTab() === 'kobold' ? tabClass : 'hidden'}>
+        <AIPreset adapter="kobold" />
         <TextInput
           fieldName="koboldUrl"
           label="Kobold Compatible URL"
@@ -142,6 +147,7 @@ const AISettings: Component<{
       </div>
 
       <div class={currentTab() === 'openai' ? tabClass : 'hidden'}>
+        <AIPreset adapter="openai" />
         <TextInput
           fieldName="oaiKey"
           label="OpenAI Key"
@@ -160,6 +166,7 @@ const AISettings: Component<{
       </div>
 
       <div class={currentTab() === 'scale' ? tabClass : 'hidden'}>
+        <AIPreset adapter="scale" />
         <TextInput
           fieldName="scaleUrl"
           label="Scale URL"
@@ -184,6 +191,7 @@ const AISettings: Component<{
       </div>
 
       <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
+        <AIPreset adapter="novel" />
         <Select
           fieldName="novelModel"
           label="NovelAI Model"
@@ -223,6 +231,7 @@ const AISettings: Component<{
       </div>
 
       <div class={currentTab() === 'luminai' ? tabClass : 'hidden'}>
+        <AIPreset adapter="luminai" />
         <TextInput
           fieldName="luminaiUrl"
           label="LuminAI URL"
