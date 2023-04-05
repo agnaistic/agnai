@@ -47,6 +47,8 @@ export namespace AppSchema {
     scaleApiKey?: string
     scaleApiKeySet?: boolean
 
+    claudeApiKey?: string
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
 
@@ -185,6 +187,7 @@ export namespace AppSchema {
     frequencyPenalty?: number
     presencePenalty?: number
     oaiModel?: string
+    claudeModel?: string
 
     memoryDepth?: number
     memoryContextLimit?: number

@@ -92,6 +92,10 @@ export async function deleteApiKey(kind: string) {
     user.scaleApiKey = ''
   }
 
+  if (kind === 'claude') {
+    user.claudeApiKey = ''
+  }
+
   local.saveConfig(user)
   return local.result({ success: true })
 }

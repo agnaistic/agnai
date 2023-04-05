@@ -20,6 +20,7 @@ export const AI_ADAPTERS = [
   'luminai',
   'openai',
   'scale',
+  'claude',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -33,6 +34,16 @@ export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',
   GPT4: 'gpt-4',
+} as const
+
+/** Note: I'm claude-v1 and claude-instant-v1 not included as they may point
+ * to different models in the future. Any new model names should be added manually.
+ * <https://console.anthropic.com/docs/api/reference#-v1-complete>
+ */
+export const CLAUDE_MODELS = {
+  'claude-v1.0': 'claude-v1.0',
+  'claude-v1.2': 'claude-v1.2',
+  'claude-instant-v1.0': 'claude-instant-v1.0',
 } as const
 
 export const NOVEL_MODELS = {
@@ -88,4 +99,5 @@ export const ADAPTER_LABELS: Record<AIAdapter, string> = {
   luminai: 'LuminAI',
   openai: 'OpenAI',
   scale: 'Scale',
+  claude: 'Claude',
 }

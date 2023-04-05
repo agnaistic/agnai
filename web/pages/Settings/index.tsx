@@ -64,6 +64,7 @@ const Settings: Component = () => {
       oaiKey: 'string?',
       scaleApiKey: 'string?',
       scaleUrl: 'string?',
+      claudeApiKey: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
 
@@ -207,6 +208,25 @@ const Settings: Component = () => {
               />
               <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
                 Delete OpenAI Key
+              </Button>
+            </Show>
+
+            <Show when={cfg.config.adapters.includes('claude')}>
+              <Divider />
+              <TextInput
+                fieldName="claudeApiKey"
+                label="Claude Key"
+                helperText="Valid Claude Key."
+                placeholder={
+                  ((!state.user?.claudeApiKey))
+                    ? 'Claude key is set'
+                    : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+                }
+                type="password"
+                value={state.user?.claudeApiKey}
+              />
+              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('claude')}>
+                Delete Claude Key
               </Button>
             </Show>
 

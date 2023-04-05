@@ -17,6 +17,7 @@ import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
+import { handleClaude } from './claude'
 import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter } from '../../common/prompt'
 import { handleScale } from './scale'
@@ -31,6 +32,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   luminai: handleLuminAI,
   openai: handleOAI,
   scale: handleScale,
+  claude: handleClaude,
 }
 
 export async function createTextStreamV2(
