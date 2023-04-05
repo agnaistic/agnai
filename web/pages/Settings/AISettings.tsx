@@ -10,6 +10,7 @@ import Tabs from '../../shared/Tabs'
 import { AIPreset } from './components/AIPreset'
 import HordeAISettings from './components/HordeAISettings'
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import OpenAISettings from './components/OpenAISettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -73,21 +74,7 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'openai' ? tabClass : 'hidden'}>
         <AIPreset adapter="openai" />
-        <TextInput
-          fieldName="oaiKey"
-          label="OpenAI Key"
-          helperText="Valid OpenAI Key."
-          placeholder={
-            state.user?.oaiKeySet
-              ? 'OpenAI key is set'
-              : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
-          }
-          type="password"
-          value={state.user?.oaiKey}
-        />
-        <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
-          Delete OpenAI Key
-        </Button>
+        <OpenAISettings />
       </div>
 
       <div class={currentTab() === 'scale' ? tabClass : 'hidden'}>
