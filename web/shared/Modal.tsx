@@ -24,7 +24,7 @@ const Modal: Component<Props> = (props) => {
   })
 
   const minHeight = createMemo(() =>
-    props.fixedHeight ? `min-h-[calc(${H_MOBILE}-132px)] sm:min-h-[calc(90vh-132px)]` : ''
+    props.fixedHeight ? `min-h-[calc(80vh-132px)] sm:min-h-[calc(90vh-132px)]` : ''
   )
 
   const defaultSubmit = (ev: Event) => {
@@ -41,7 +41,7 @@ const Modal: Component<Props> = (props) => {
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}
-            class={`my-auto max-h-[${H_MOBILE}] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
+            class={`my-auto max-h-[80vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
           >
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
@@ -52,7 +52,7 @@ const Modal: Component<Props> = (props) => {
 
             {/* 132px is the height of the title + footer*/}
             <div
-              class={`max-h-[calc(${H_MOBILE}-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto p-4 text-lg`}
+              class={`max-h-[calc(80vh-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto p-4 text-lg`}
             >
               {props.children}
             </div>
