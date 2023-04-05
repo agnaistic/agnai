@@ -1,4 +1,3 @@
-import TextInput from '../../shared/TextInput'
 import { adaptersToOptions } from '../../shared/util'
 import Select from '../../shared/Select'
 import {
@@ -12,6 +11,9 @@ import { Component, Show, createEffect, createMemo, createSignal } from 'solid-j
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
+import LuminAISettings from './components/LuminAISettings'
+import KoboldAISettings from './components/KoboldAISettings'
+import ChaiSettings from './components/ChaiSettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -38,6 +40,10 @@ const AISettings: Component<{
 
   return (
     <>
+      <Show when={!ready()}>
+        <div>Loading...</div>
+      </Show>
+
       <Show when={ready()}>
         <Select
           fieldName="defaultAdapter"
@@ -59,13 +65,7 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'kobold' ? tabClass : 'hidden'}>
         <AIPreset adapter="kobold" />
-        <TextInput
-          fieldName="koboldUrl"
-          label="Kobold Compatible URL"
-          helperText="Fully qualified URL. This URL must be publicly accessible."
-          placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-          value={state.user?.koboldUrl}
-        />
+        <KoboldAISettings />
       </div>
 
       <div class={currentTab() === 'openai' ? tabClass : 'hidden'}>
@@ -85,13 +85,12 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'luminai' ? tabClass : 'hidden'}>
         <AIPreset adapter="luminai" />
-        <TextInput
-          fieldName="luminaiUrl"
-          label="LuminAI URL"
-          helperText="Fully qualified URL. This URL must be publicly accessible."
-          placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-          value={state.user?.luminaiUrl}
-        />
+        <LuminAISettings />
+      </div>
+
+      <div class={currentTab() === 'chai' ? tabClass : 'hidden'}>
+        <AIPreset adapter="chai" />
+        <ChaiSettings />
       </div>
     </>
   )
