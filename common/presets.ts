@@ -211,11 +211,8 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topP: '',
     typicalP: '',
     topA: '',
-    order: '',
-    frequencyPenalty: '',
-    presencePenalty: '',
     gaslight: 'gaslight',
-    oaiModel: 'oaiModel',
+    claudeModel: 'claudeModel'
   },
   scale: {
     maxTokens: '',

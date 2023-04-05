@@ -36,8 +36,9 @@ export const OPENAI_MODELS = {
   GPT4: 'gpt-4',
 } as const
 
-/** Note: I'm claude-v1 and claude-instant-v1 not included as they may point
- * to different models in the future. Any new model names should be added manually.
+/** Note: claude-v1 and claude-instant-v1 not included as they may point
+ * to different models in the future. New models may be less appropriate
+ * for roleplaying so they should be updated to manually
  * <https://console.anthropic.com/docs/api/reference#-v1-complete>
  */
 export const CLAUDE_MODELS = {
