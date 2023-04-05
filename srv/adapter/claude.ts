@@ -99,7 +99,8 @@ const mkPrompt = (opts: AdapterProps): string => {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
   const gaslightCost = encoder('System: ' + parts.gaslight)
-  const ujbCost = gen.ultimeJailbreak ? encoder('System: ' + gen.ultimeJailbreak) : 0
+  const ujb = gen.ultimeJailbreak?.replace(BOT_REPLACE, char.name)?.replace(SELF_REPLACE, username)
+  const ujbCost = ujb ? encoder('System: ' + gen.ultimeJailbreak) : 0
   const maxBudget = maxContextLength - maxResponseTokens - gaslightCost - ujbCost
   const history = lines.map((ln) => lineToMsg(ln, char.name, username))
   const dropMsgUntilWithinBudget = (msgs: Msg[]): Msg[] =>
@@ -110,7 +111,7 @@ const mkPrompt = (opts: AdapterProps): string => {
   const messages = [
     { name: 'System', content: parts.gaslight },
     ...historyTruncated,
-    ...(gen.ultimeJailbreak ? [{ name: 'System', content: gen.ultimeJailbreak }] : []),
+    ...(ujb ? [{ name: 'System', content: ujb }] : []),
   ]
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
   return '\n\n' + messages.map(formatMsg).join('\n\n') + '\n\n' + char.name + ':'
