@@ -1,4 +1,3 @@
-import Button from '../../shared/Button'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions } from '../../shared/util'
 import Select from '../../shared/Select'
@@ -12,6 +11,7 @@ import HordeAISettings from './components/HordeAISettings'
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
+import NovelAISettings from './components/NovelAISettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -33,11 +33,6 @@ const AISettings: Component<{
   const [ready, setReady] = createSignal(false)
 
   const currentTab = createMemo(() => cfg.config.adapters[tab()])
-
-  const novelVerified = createMemo(
-    () => (state.user?.novelVerified ? 'API Key has been verified' : ''),
-    { equals: false }
-  )
 
   const tabClass = `flex flex-col gap-4`
 
@@ -85,42 +80,7 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
         <AIPreset adapter="novel" />
-        <Select
-          fieldName="novelModel"
-          label="NovelAI Model"
-          items={[
-            { label: 'Euterpe', value: 'euterpe-v2' },
-            { label: 'Krake', value: 'krake-v2' },
-          ]}
-          value={state.user?.novelModel}
-        />
-        <TextInput
-          fieldName="novelApiKey"
-          label="Novel API Key"
-          type="password"
-          value={state.user?.novelApiKey}
-          helperText={
-            <>
-              NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.
-              Please note that this token expires periodically. You will occasionally need to
-              re-enter this token. headers.{' '}
-              <a
-                class="link"
-                target="_blank"
-                href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
-              >
-                Instructions
-              </a>
-              .
-            </>
-          }
-          placeholder={novelVerified()}
-        />
-        <Show when={state.user?.novelVerified}>
-          <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('novel')}>
-            Delete Novel API Key
-          </Button>
-        </Show>
+        <NovelAISettings />
       </div>
 
       <div class={currentTab() === 'luminai' ? tabClass : 'hidden'}>
