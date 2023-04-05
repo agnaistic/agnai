@@ -25,12 +25,16 @@ const AISettings: Component<{
     refreshHorde()
     console.log(cfg.config.adapters)
     setTabs(cfg.config.adapters.map(a => ADAPTER_LABELS[a] || a))
+    if(tab() == -1){
+      var defaultTab = (cfg.config.adapters as (string | undefined)[]).indexOf(state.user?.defaultAdapter)
+      setTab(defaultTab == -1 ? 0 : defaultTab)
+    }
   })
 
   const [workers, setWorkers] = createSignal<Option[]>()
   const [show, setShow] = createSignal(false)
   const [tabs, setTabs] = createSignal<string[]>([])
-  const [tab, setTab] = createSignal(0)
+  const [tab, setTab] = createSignal(-1)
 
   const currentTab = createMemo(() => cfg.config.adapters[tab()])
 
