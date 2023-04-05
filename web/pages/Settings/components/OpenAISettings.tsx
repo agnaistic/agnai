@@ -1,6 +1,6 @@
 import { Component } from "solid-js"
 import TextInput from "../../../shared/TextInput"
-import { settingStore, userStore } from "../../../store"
+import { userStore } from "../../../store"
 import Button from "../../../shared/Button"
 
 const OpenAISettings: Component = () => {

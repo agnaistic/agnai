@@ -11,6 +11,7 @@ import { AIPreset } from './components/AIPreset'
 import HordeAISettings from './components/HordeAISettings'
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
+import ScaleSettings from './components/ScaleSettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -79,27 +80,7 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'scale' ? tabClass : 'hidden'}>
         <AIPreset adapter="scale" />
-        <TextInput
-          fieldName="scaleUrl"
-          label="Scale URL"
-          helperText="Fully qualified Scale URL."
-          placeholder={'E.g. https://dashboard.scale.com/spellbook/api/v2/deploy/a1b2c3'}
-          value={state.user?.scaleUrl}
-        />
-        <TextInput
-          fieldName="scaleApiKey"
-          label="Scale API Key"
-          placeholder={
-            state.user?.scaleApiKeySet
-              ? 'Scale API key is set'
-              : 'E.g. 9rv440nv7ogj6s7j312flqijd'
-          }
-          type="password"
-          value={state.user?.scaleApiKey}
-        />
-        <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('scale')}>
-          Delete Scale API Key
-        </Button>
+        <ScaleSettings />
       </div>
 
       <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
