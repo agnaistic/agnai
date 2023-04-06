@@ -44,6 +44,14 @@ export const deleteScaleKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteClaudeKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    claudeApiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteHordeKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     hordeKey: '',
@@ -86,6 +94,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       defaultPresets: 'any',
       scaleUrl: 'string?',
       scaleApiKey: 'string?',
+      claudeApiKey: 'string?',
     },
     body
   )
@@ -150,6 +159,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
   if (body.scaleUrl !== undefined) update.scaleUrl = body.scaleUrl
   if (body.scaleApiKey) {
     update.scaleApiKey = encryptText(body.scaleApiKey)
+  }
+
+  if (body.claudeApiKey) {
+    update.claudeApiKey = encryptText(body.claudeApiKey)
   }
 
   await store.users.updateUser(userId!, update)
