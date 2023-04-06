@@ -84,6 +84,7 @@ const InputBar: Component<{
                 schema="secondary"
                 class="w-full"
                 onClick={() => props.more(state.lastMsg.msg)}
+                alignLeft
               >
                 <PlusCircle size={18} /> Generate More
               </Button>

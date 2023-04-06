@@ -29,12 +29,14 @@ const Button: Component<{
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
   class?: string
+  alignLeft?: boolean
 }> = (props) => (
   <button
     type={props.type || 'button'}
     class={
-      `${kinds[props.schema || 'primary']} select-none items-center ${sizes[props.size || 'md']} ` +
-      props.class
+      `${kinds[props.schema || 'primary']} select-none items-center ${
+        props.alignLeft ? '' : 'justify-center'
+      } ${sizes[props.size || 'md']} ` + props.class
     }
     disabled={props.disabled}
     onClick={props.onClick}
