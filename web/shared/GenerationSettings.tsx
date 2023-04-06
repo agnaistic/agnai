@@ -71,8 +71,8 @@ const GeneralSettings: Component<Props> = (props) => {
           <>
             <p>
               Maximum context length. Typically 2048 for most models. OpenAI supports up to 4K.
-              Scale and Claude support up to 8K. If you set this too high, you may get unexpected results or
-              errors.
+              Scale and Claude support up to 8K. If you set this too high, you may get unexpected
+              results or errors.
             </p>
             <p>
               We don't have GPT-4 or Claude tokenizers to correctly count tokens for those services.
