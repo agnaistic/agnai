@@ -5,7 +5,6 @@ import { config } from '../../config'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { encryptText } from '../../db/util'
-import { personaValidator } from '../chat/common'
 import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
 import { getAppConfig } from '../settings'
@@ -242,37 +241,11 @@ async function getSafeUserConfig(userId: string) {
       user.scaleApiKeySet = true
       user.scaleApiKey = ''
     }
+
+    if (user.claudeApiKey) {
+      user.claudeApiKey = ''
+      user.claudeApiKeySet = true
+    }
   }
   return user
-}
-
-function isSamePersona(left?: AppSchema.Persona, right?: AppSchema.Persona) {
-  if (!left || !right) {
-    if (!left && !right) return true
-    return false
-  }
-
-  if (left.kind === 'text' || right.kind === 'text') {
-    if (left.kind !== right.kind) return false
-    return left.attributes.text?.[0] === right.attributes.text?.[0]
-  }
-
-  const [keys, values] = Object.keys(left.attributes)
-
-  const leftSet = new Set(keys)
-  for (const key in right.attributes) {
-    leftSet.add(key)
-  }
-
-  if (leftSet.size !== keys.length) return false
-
-  for (const key of keys) {
-    const l = left.attributes[key]
-    const r = right.attributes[key]
-
-    const set = new Set(...l, ...r)
-    if (set.size !== l.length) return false
-  }
-
-  return true
 }

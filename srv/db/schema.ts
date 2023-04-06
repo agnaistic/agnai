@@ -48,11 +48,14 @@ export namespace AppSchema {
     scaleApiKeySet?: boolean
 
     claudeApiKey?: string
+    claudeApiKeySet?: boolean
 
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
 
     createdAt?: string
+
+    // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
   }
 
   export interface Chat {

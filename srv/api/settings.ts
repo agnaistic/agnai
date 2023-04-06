@@ -1,6 +1,7 @@
 import { Router } from 'express'
 import { readFile } from 'fs/promises'
 import { resolve } from 'path'
+import { getRegisteredAdapters } from '../adapter/register'
 import { config } from '../config'
 import { isConnected } from '../db/client'
 import { handle } from './wrap'
@@ -10,6 +11,10 @@ const router = Router()
 const appConfig: any = {
   adapters: config.adapters,
   version: null,
+  // adapterSettings: getRegisteredAdapters().map((adp) => ({
+  //   name: adp.name,
+  //   settings: adp.options.settings,
+  // })),
 }
 
 const getSettings = handle(async () => {

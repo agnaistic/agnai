@@ -10,35 +10,35 @@ import { OPENAI_MODELS } from '../../common/adapters'
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
 const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
 
-type Msg = {
-  name: string
-  content: string
-}
-
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { char, members, user, settings, log, guest, gen, sender } = opts
   if (!user.claudeApiKey) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
+
   const claudeModel = settings.claudeModel ?? defaultPresets.claude.claudeModel
   const username = sender.handle || 'You'
+
+  const stops = new Set([
+    `\n\n${char.name}:`,
+    `\n\n${username}:`,
+    `\n\nSystem:`,
+    ...members.map((member) => `\n\n${member.handle}:`),
+  ])
+
   const requestBody = {
     model: claudeModel,
     temperature: Math.min(1, Math.max(0, gen.temp ?? defaultPresets.claude.temp)),
     max_tokens_to_sample: gen.maxTokens ?? defaultPresets.claude.maxTokens,
-    prompt: mkPrompt(opts),
-    stop_sequences: [
-      `\n\n${char.name}:`,
-      `\n\n${username}:`,
-      `\n\nSystem:`,
-      ...members.map((member) => `\n\n${member.handle}:`),
-    ],
+    prompt: createClaudePrompt(opts),
+    stop_sequences: Array.from(stops),
   }
 
   log.debug(requestBody, 'Claude payload')
 
   const url = `https://api.anthropic.com/v1/complete`
+
   const resp = await needle('post', url, JSON.stringify(requestBody), {
     json: true,
     headers: {
@@ -78,42 +78,38 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 }
 
-const mkPrompt = (opts: AdapterProps): string => {
-  const lineToMsg = (line: string, charname: string, username: string): Msg => {
-    if (line === '<START>') {
-      return { name: 'System', content: line }
-    } else {
-      const name = line.split(':')[0] ?? 'You'
-      const lineUtterance = line.split(':')[1] ?? line
-      const content = lineUtterance
-        .trim()
-        .replace(BOT_REPLACE, charname)
-        .replace(SELF_REPLACE, username)
-      return { name, content }
-    }
-  }
-  const formatMsg = (msg: Msg): string => `${msg.name}: ${msg.content}`
-  const sum = (nums: number[]): number => nums.reduce((acc, cur) => acc + cur, 0)
+function createClaudePrompt(opts: AdapterProps): string {
   const { char, sender, parts, gen } = opts
   const username = sender.handle || 'You'
   const lines = opts.lines ?? []
+
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
+
   const gaslightCost = encoder('System: ' + parts.gaslight)
   const ujb = gen.ultimeJailbreak?.replace(BOT_REPLACE, char.name)?.replace(SELF_REPLACE, username)
   const ujbCost = ujb ? encoder('System: ' + gen.ultimeJailbreak) : 0
-  const maxBudget = maxContextLength - maxResponseTokens - gaslightCost - ujbCost
-  const history = lines.map((ln) => lineToMsg(ln, char.name, username))
-  const dropMsgUntilWithinBudget = (msgs: Msg[]): Msg[] =>
-    sum(msgs.map((msg) => encoder(formatMsg(msg)))) <= maxBudget
-      ? msgs
-      : dropMsgUntilWithinBudget(msgs.slice(1))
-  const historyTruncated = dropMsgUntilWithinBudget(history)
-  const messages = [
-    { name: 'System', content: parts.gaslight },
-    ...historyTruncated,
-    ...(ujb ? [{ name: 'System', content: ujb }] : []),
-  ]
+
+  const maxBudget =
+    maxContextLength - maxResponseTokens - gaslightCost - ujbCost - encoder(char.name + ':')
+
+  let tokens = 0
+  const history: string[] = []
+
+  for (const line of lines.slice().reverse()) {
+    const cost = encoder(line)
+    if (cost + tokens >= maxBudget) break
+
+    tokens += cost
+    history.push(line)
+  }
+
+  const messages = [`System: ${parts.gaslight}`, ...history.reverse()]
+
+  if (ujb) {
+    messages.push(`System: ${ujb}`)
+  }
+
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
-  return '\n\n' + messages.map(formatMsg).join('\n\n') + '\n\n' + char.name + ':'
+  return '\n\n' + messages.join('\n\n') + '\n\n' + char.name + ':'
 }

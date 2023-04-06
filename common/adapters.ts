@@ -2,6 +2,27 @@ export type AIAdapter = (typeof AI_ADAPTERS)[number]
 export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
 export type PersonaFormat = (typeof PERSONA_FORMATS)[number]
 
+export type AdapterSetting = {
+  /** The name of the field within the settings object */
+  field: string
+
+  /** The name as it appears in the Settings UI */
+  label: string
+
+  /** Any additional information about the setting (for UI only) */
+  helperText?: string
+
+  /** If this is a secret that should be encrypted */
+  secret: boolean
+}
+
+export type AdapterOptions = {
+  /** Name of the adapter that will be displayed in the UI */
+  label: string
+
+  settings: AdapterSetting[]
+}
+
 export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'text'] as const
 
 export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
@@ -42,9 +63,9 @@ export const OPENAI_MODELS = {
  * <https://console.anthropic.com/docs/api/reference#-v1-complete>
  */
 export const CLAUDE_MODELS = {
-  'claude-v1.0': 'claude-v1.0',
-  'claude-v1.2': 'claude-v1.2',
-  'claude-instant-v1.0': 'claude-instant-v1.0',
+  ClaudeV1: 'claude-v1.0',
+  ClaudeV1_2: 'claude-v1.2',
+  ClaudeInstantV1: 'claude-instant-v1.0',
 } as const
 
 export const NOVEL_MODELS = {
