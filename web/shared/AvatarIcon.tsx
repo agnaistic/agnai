@@ -1,5 +1,5 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import { Component, createMemo, Show } from 'solid-js'
+import { Accessor, Component, createMemo, Show } from 'solid-js'
 import { AvatarCornerRadius, AvatarSize } from '../store'
 
 type Props = {
@@ -7,6 +7,7 @@ type Props = {
   class?: string
   bot?: boolean
   format?: Format
+  anonymizeOn?: Accessor<boolean>
 }
 
 type Format = {
@@ -27,6 +28,12 @@ const AvatarIcon: Component<Props> = (props) => {
   )
   const fmtCorners = createMemo(() => corners[format().corners])
 
+  // We don't simply remove or change the image, because
+  // this would cause a DOM shift (bad UX). If the user's avatar is tall,
+  // replacing it with the default round avatar would cause long messages to
+  // shrink.
+  const opacityClass = () => (props.anonymizeOn?.() ? 'opacity-0' : '')
+
   return (
     <>
       <Show when={props.avatarUrl}>
@@ -38,9 +45,12 @@ const AvatarIcon: Component<Props> = (props) => {
           <img
             data-bot-image={props.bot}
             data-user-image={!props.bot}
-            class={`m-auto ${
-              format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'
-            } ${fmtFit()} ${fmtCorners()}`}
+            class={`
+              m-auto
+              ${format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'}
+              ${fmtFit()} ${fmtCorners()}
+              ${opacityClass()}
+            `}
             src={props.avatarUrl}
             data-bot-avatar={props.bot}
           />
