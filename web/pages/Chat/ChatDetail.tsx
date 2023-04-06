@@ -70,7 +70,12 @@ const ChatDetail: Component = () => {
 
   const isSelfRemoved = createMemo(() => {
     if (!user.profile) return false
-    const isMember = chats.members.some((mem) => mem.userId === user.profile?.userId)
+    if (!chats.chat) return false
+
+    const isMember =
+      chats.chat.userId === user.profile.userId ||
+      chats.members.some((mem) => mem.userId === user.profile?.userId)
+
     return !isMember
   })
 
