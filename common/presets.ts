@@ -212,7 +212,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: '',
     topA: '',
     gaslight: 'gaslight',
-    claudeModel: 'claudeModel'
+    claudeModel: 'claudeModel',
   },
   scale: {
     maxTokens: '',
@@ -258,5 +258,8 @@ export function getFallbackPreset(adapter: AIAdapter) {
 
     case 'claude':
       return defaultPresets.claude
+
+    default:
+      throw new Error(`Unknown adapter: ${adapter}`)
   }
 }
