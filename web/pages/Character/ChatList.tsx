@@ -1,9 +1,9 @@
-import { useNavigate, useParams } from '@solidjs/router'
+import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
-import { Import, Plus, Trash } from 'lucide-solid'
+import { ChevronLeft, Edit, Import, Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
 import { toDuration, toEntityMap } from '../../shared/util'
@@ -12,6 +12,7 @@ import AvatarIcon from '../../shared/AvatarIcon'
 
 const CharacterChats: Component = () => {
   const params = useParams()
+  const nav = useNavigate()
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
 
@@ -33,21 +34,39 @@ const CharacterChats: Component = () => {
 
   return (
     <div class="flex flex-col gap-2">
-      <Show when={!!params.id} fallback={<PageHeader title="Chats" />}>
-        <PageHeader title={`Chats with ${state.char?.name || '...'}`} />
-      </Show>
+      <PageHeader title="Chats" />
 
-      <div class="flex w-full justify-end gap-2">
-        <Button onClick={() => setImport(true)}>
-          <Import />
-          Import
-        </Button>
-        <Button onClick={() => setCreate(true)}>
-          <Plus />
-          Chat
-        </Button>
+      <div class="mx-auto flex h-full flex-col justify-between sm:py-2 w-full">
+        <div class="flex h-8 items-center justify-between rounded-md">
+          <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+            <A href={`/character/list`}>
+              <ChevronLeft />
+            </A>
+            <Show when={!!params.id} fallback={<span>Chats (all characters)</span>}>
+              <span>Chats with {state.char?.name || "..."}</span>
+            </Show>
+          </div>
+
+          <div class="flex flex-row gap-3">
+            <Button onClick={() => setImport(true)}>
+              <Import />
+              Import
+            </Button>
+            <Show when={!!params.id}>
+              <Button onClick={() => nav(`/character/${params.id}/edit`)}>
+                <Edit />
+                Edit Character
+              </Button>
+            </Show>
+            <Button onClick={() => setCreate(true)}>
+              <Plus />
+              Chat
+            </Button>
+          </div>
+        </div>
       </div>
-      {state.chats.length === 0 && <NoChats />}
+
+      {state.chats.length === 0 && <NoChats character={state.char?.name} />}
       <Show when={state.chats.length}>
         <Chats chats={state.chats} />
       </Show>
@@ -109,9 +128,14 @@ const Chats: Component<{ chats: AllChat[] }> = (props) => {
   )
 }
 
-const NoChats: Component = () => (
+const NoChats: Component<{ character?: string }> = (props) => (
   <div class="mt-4 flex w-full justify-center text-xl">
-    There are no conversations saved for this character. Get started!
+    <Show when={!props.character}>
+      You have no conversations yet.
+    </Show>
+    <Show when={props.character}>
+      You have no conversations with <i>{props.character}</i>.
+    </Show>
   </div>
 )
 
