@@ -59,11 +59,12 @@ If you're only looking to run AgnAI without contributing:
      - This will install the dependencies using `pnpm v6`
    - `npm run build:all`
    - Build and run the project in watch mode:
-     - Mac/Linux: `npm run start`
-     - Windows: `npm run start:win`
+     - Mac/Linux: `npm run start` (access the app at `localhost:1234`)
+     - Windows: `npm run start:win` (access the app at `localhost:3001`)
    - Build and run the project with Local Tunnel:
      - Mac/Linux: `npm run start:public`
      - Windows: `npm run start:public:win`
+     - Your app URL will be printed at the beginning of the console output.
 
 ## Design Goals
 
