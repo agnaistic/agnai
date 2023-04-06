@@ -13,6 +13,8 @@ import { AppSchema } from '../../../srv/db/schema'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import WorkerModal from './WorkerModal'
+import Loading from '../../shared/Loading'
+import Modal from '../../shared/Modal'
 
 const settingTabs = {
   ai: 'AI Settings',
@@ -36,6 +38,7 @@ const Settings: Component = () => {
 
   const [workers, setWorkers] = createSignal<Option[]>()
   const [show, setShow] = createSignal(false)
+  const [usage, setUsage] = createSignal(false)
   const [tab, setTab] = createSignal(0)
 
   const tabs = ['ai', 'ui', 'service'] satisfies Tab[]
@@ -44,6 +47,11 @@ const Settings: Component = () => {
   const refreshHorde = () => {
     settingStore.getHordeModels()
     settingStore.getHordeWorkers()
+  }
+
+  const showUsage = () => {
+    userStore.openaiUsage()
+    setUsage(true)
   }
 
   const onSubmit = (evt: Event) => {
@@ -190,7 +198,14 @@ const Settings: Component = () => {
               <TextInput
                 fieldName="oaiKey"
                 label="OpenAI Key"
-                helperText="Valid OpenAI Key."
+                helperText={
+                  <>
+                    Valid OpenAI Key.{' '}
+                    <a class="link" onClick={showUsage}>
+                      View Usage
+                    </a>
+                  </>
+                }
                 placeholder={
                   state.user?.oaiKeySet
                     ? 'OpenAI key is set'
@@ -199,6 +214,7 @@ const Settings: Component = () => {
                 type="password"
                 value={state.user?.oaiKey}
               />
+              <Loading />
               <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
                 Delete OpenAI Key
               </Button>
@@ -317,12 +333,37 @@ const Settings: Component = () => {
           </Button>
         </div>
         <WorkerModal show={show()} close={() => setShow(false)} save={setWorkers} />
+        <OpenAIUsageModal show={usage()} close={() => setUsage(false)} />
       </form>
     </>
   )
 }
 
 export default Settings
+
+const OpenAIUsageModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  const state = userStore((s) => s.metadata)
+  const value = createMemo(() => {
+    if (!state.openaiUsage) 'unknown'
+
+    const amount = Math.round(state.openaiUsage!) / 100
+    return `$${amount}`
+  })
+
+  return (
+    <Modal title="OpenAI Usage" show={props.show} close={props.close}>
+      <div class="flex">
+        <div class="mr-4">Usage this month: </div>
+        <div>
+          <Show when={!state.openaiUsage}>
+            <Loading />
+          </Show>
+          <Show when={!!state.openaiUsage}>{value()}</Show>
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 function toItem(model: HordeModel) {
   return {

@@ -6,8 +6,9 @@ import { defaultPresets } from '../../common/presets'
 import { BOT_REPLACE, getPromptParts, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
+import { StatusError } from '../api/wrap'
 
-const baseUrl = `https://api.openai.com/v1`
+const baseUrl = `https://api.openai.com`
 
 type OpenAIMessagePropType = {
   role: 'user' | 'assistant' | 'system'
@@ -102,7 +103,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   log.debug(body, 'OpenAI payload')
 
-  const url = useChat ? `${baseUrl}/chat/completions` : `${baseUrl}/completions`
+  const url = useChat ? `${baseUrl}/v1/chat/completions` : `${baseUrl}/v1/completions`
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -140,4 +141,39 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
+}
+
+export type OAIUsage = {
+  daily_costs: Array<{ timestamp: number; line_item: Array<{ name: string; cost: number }> }>
+  object: string
+  total_usage: number
+}
+
+export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OAIUsage> {
+  const key = guest ? oaiKey : decryptText(oaiKey)
+  const headers = {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${key}`,
+  }
+
+  const date = new Date()
+  date.setDate(1)
+  const start_date = date.toISOString().slice(0, 10)
+
+  date.setMonth(date.getMonth() + 1)
+  const end_date = date.toISOString().slice(0, 10)
+
+  const res = await needle(
+    'get',
+    `${baseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
+    { headers }
+  )
+  if (res.statusCode && res.statusCode >= 400) {
+    throw new StatusError(
+      `Failed to retrieve usage (${res.statusCode}): ${res.body?.message || res.statusMessage}`,
+      400
+    )
+  }
+
+  return res.body
 }

@@ -57,6 +57,9 @@ export type UserState = {
   user?: AppSchema.User
   ui: UISettings
   background?: string
+  metadata: {
+    openaiUsage?: number
+  }
 }
 
 export type ThemeColor = (typeof UI_THEME)[number]
@@ -220,6 +223,22 @@ export const userStore = createStore<UserState>(
       toastStore.error(`Guest state successfully reset`)
       settingStore.init()
     },
+    async openaiUsage({ metadata }) {
+      const res = await api.post('/user/services/openai-usage')
+      if (res.error) {
+        toastStore.error(`Could not retrieve usage: ${res.error}`)
+      }
+
+      if (res.result) {
+        return {
+          metadata: {
+            ...metadata,
+            openaiUsage: res.result.total_usage,
+            openaiCosts: res.result.daily_costs,
+          },
+        }
+      }
+    },
   }
 })
 
@@ -237,6 +256,7 @@ function init(): UserState {
       loggedIn: false,
       ui,
       background,
+      metadata: {},
     }
   }
 
@@ -246,6 +266,7 @@ function init(): UserState {
     jwt: existing,
     ui,
     background,
+    metadata: {},
   }
 }
 

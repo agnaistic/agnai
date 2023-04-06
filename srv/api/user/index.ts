@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { loggedIn } from '../auth'
 import { changePassword, login, register } from './auth'
 import { createUserPreset, getUserPresets, updateUserPreset, deleteUserPreset } from './presets'
+import { openaiUsage } from './services'
 import {
   deleteHordeKey,
   deleteNovelKey,
@@ -19,6 +20,7 @@ const router = Router()
 
 router.post('/login', login)
 router.post('/register', register)
+router.post('/services/openai-usage', openaiUsage)
 router.get('/init', loggedIn, getInitialLoad)
 router.get('/', loggedIn, getProfile)
 router.get('/presets', loggedIn, getUserPresets)

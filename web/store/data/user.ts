@@ -143,6 +143,20 @@ export async function updateConfig(config: Partial<AppSchema.User>) {
   return res
 }
 
+export async function getOpenAIUsage() {
+  if (isLoggedIn()) {
+    const res = await api.post('/user/services/openai-usage')
+    return res
+  }
+
+  const user = local.loadItem('config')
+  if (!user.oaiKey) {
+    return local.error(`OpenAI key not set`)
+  }
+
+  return api.post('/user/services/openai-usage', { key: user.oaiKey })
+}
+
 async function getImageData(file?: File) {
   if (!file) return
   const reader = new FileReader()

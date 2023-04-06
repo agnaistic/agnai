@@ -24,7 +24,6 @@ const valid = {
 const createCharacter = handle(async (req) => {
   const body = await handleUpload(req, { ...valid, persona: 'string' })
   const persona = JSON.parse(body.persona)
-
   assertValid(valid.persona, persona)
 
   const [file] = body.attachments

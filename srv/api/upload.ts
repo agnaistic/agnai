@@ -3,7 +3,7 @@ import { mkdirpSync } from 'mkdirp'
 import { Request } from 'express'
 import { rename, writeFile } from 'fs/promises'
 import { basename, dirname, extname, resolve } from 'path'
-import { createReadStream, mkdirSync, readdirSync } from 'fs'
+import { createReadStream, readdirSync } from 'fs'
 import { v4 } from 'uuid'
 import { assertValid, Validator, UnwrapBody } from 'frisker'
 import { config } from '../config'
@@ -15,7 +15,7 @@ export type Attachment = {
   type: string
 }
 
-export function handleUpload<T extends Validator>(req: Request, type: T) {
+export function handleUpload<T extends Validator>(req: Request, type: T, filename?: string) {
   const form = new mp.Form()
 
   const obj: any = {}
