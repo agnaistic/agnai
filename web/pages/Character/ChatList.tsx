@@ -1,19 +1,22 @@
-import { useNavigate, useParams } from '@solidjs/router'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { A, useNavigate, useParams } from '@solidjs/router'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
-import { Import, Plus, Trash } from 'lucide-solid'
+import { ChevronLeft, Edit, Import, Menu, Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
 import { toDuration, toEntityMap } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
 import AvatarIcon from '../../shared/AvatarIcon'
+import { DropMenu } from '../../shared/DropMenu'
 
 const CharacterChats: Component = () => {
   const params = useParams()
+  const nav = useNavigate()
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
+  const [opts, setOpts] = createSignal(false)
 
   const state = chatStore((s) => {
     if (params.id) {
@@ -31,23 +34,72 @@ const CharacterChats: Component = () => {
     }
   })
 
+  const wrap = (fn: Function) => () => {
+    fn()
+    setOpts(false)
+  }
+
+  const Options = () => (
+    <>
+      <button
+        class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
+        onClick={wrap(() => setImport(true))}
+      >
+        <Import />
+        Import
+      </button>
+      <Show when={!!params.id}>
+        <button
+          class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
+          onClick={wrap(() => nav(`/character/${params.id}/edit`))}
+        >
+          <Edit />
+          Edit Character
+        </button>
+      </Show>
+      <button
+        class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
+        onClick={wrap(() => setCreate(true))}
+      >
+        <Plus />
+        Chat
+      </button>
+    </>
+  )
+
   return (
     <div class="flex flex-col gap-2">
-      <Show when={!!params.id} fallback={<PageHeader title="Chats" />}>
-        <PageHeader title={`Chats with ${state.char?.name || '...'}`} />
-      </Show>
+      <PageHeader title="Chats" />
 
-      <div class="flex w-full justify-end gap-2">
-        <Button onClick={() => setImport(true)}>
-          <Import />
-          Import
-        </Button>
-        <Button onClick={() => setCreate(true)}>
-          <Plus />
-          Chat
-        </Button>
+      <div class="mx-auto flex h-full w-full flex-col justify-between sm:py-2">
+        <div class="flex h-8 items-center justify-between rounded-md">
+          <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+            <A href={`/character/list`}>
+              <ChevronLeft />
+            </A>
+            <Show when={!!params.id} fallback={<span>Chats (all characters)</span>}>
+              <span>Chats with {state.char?.name || '...'}</span>
+            </Show>
+          </div>
+
+          <div class="hidden gap-3 sm:flex">
+            <Options />
+          </div>
+
+          <div class="sm:hidden" onClick={() => setOpts(true)}>
+            <Menu class="icon-button" />
+            <Show when={opts()}>
+              <DropMenu show={true} close={() => setOpts(false)} horz="left">
+                <div class="flex w-60 flex-col gap-2 p-2">
+                  <Options />
+                </div>
+              </DropMenu>
+            </Show>
+          </div>
+        </div>
       </div>
-      {state.chats.length === 0 && <NoChats />}
+
+      {state.chats.length === 0 && <NoChats character={state.char?.name} />}
       <Show when={state.chats.length}>
         <Chats chats={state.chats} />
       </Show>
@@ -109,9 +161,12 @@ const Chats: Component<{ chats: AllChat[] }> = (props) => {
   )
 }
 
-const NoChats: Component = () => (
+const NoChats: Component<{ character?: string }> = (props) => (
   <div class="mt-4 flex w-full justify-center text-xl">
-    There are no conversations saved for this character. Get started!
+    <Show when={!props.character}>You have no conversations yet.</Show>
+    <Show when={props.character}>
+      You have no conversations with <i>{props.character}</i>.
+    </Show>
   </div>
 )
 

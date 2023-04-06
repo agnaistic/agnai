@@ -26,7 +26,7 @@ services:
       CHAI_URL: /run/secrets/chai_url
       CHAI_UID: /run/secrets/chai_uid
       CHAI_KEY: /run/secrets/chai_token
-      ADAPTERS: horde,novel,kobold,openai,scale
+      ADAPTERS: horde,novel,kobold,openai,scale,claude
     secrets:
       - jwt_secret
       - chai_url

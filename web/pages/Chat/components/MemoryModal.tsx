@@ -70,24 +70,22 @@ const ChatMemoryModal: Component<{
       fixedHeight
     >
       <div class="flex flex-col gap-2">
-        <div class="flex items-end justify-between">
-          <Select
-            fieldName="memoryId"
-            label="Chat Memory Book"
-            helperText="The memory book your chat will use"
-            items={[{ label: 'None', value: '' }].concat(state.items)}
-            value={id()}
-            onChange={(item) => changeBook(item.value)}
-          />
-          <Button
-            disabled={id() === (props.chat.memoryId || '')}
-            class="h-fit w-fit"
-            onClick={useMemoryBook}
-          >
-            <Save />
-            Use Memory Book
-          </Button>
-        </div>
+        <Select
+          fieldName="memoryId"
+          label="Chat Memory Book"
+          helperText="The memory book your chat will use"
+          items={[{ label: 'None', value: '' }].concat(state.items)}
+          value={id()}
+          onChange={(item) => changeBook(item.value)}
+        />
+        <Button
+          disabled={id() === (props.chat.memoryId || '')}
+          class="h-fit w-fit"
+          onClick={useMemoryBook}
+        >
+          <Save />
+          Use Memory Book
+        </Button>
         <Divider />
 
         <Show when={book()}>

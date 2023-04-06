@@ -94,7 +94,7 @@ const Option: Component<{
     props.close?.()
   }
   return (
-    <Button schema="secondary" size="sm" onClick={onClick}>
+    <Button schema="secondary" size="sm" onClick={onClick} alignLeft>
       {props.children}
     </Button>
   )
