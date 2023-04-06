@@ -1,10 +1,10 @@
 import { Component, createSignal, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
-import Select from './Select'
+import Select, { Option } from './Select'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_MODELS } from '../../common/adapters'
+import { OPENAI_MODELS, CLAUDE_MODELS } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import Tabs from './Tabs'
@@ -71,11 +71,11 @@ const GeneralSettings: Component<Props> = (props) => {
           <>
             <p>
               Maximum context length. Typically 2048 for most models. OpenAI supports up to 4K.
-              Scale supports up to 8K. If you set this too high, you may get unexpected results or
-              errors.
+              Scale and Claude support up to 8K. If you set this too high, you may get unexpected
+              results or errors.
             </p>
             <p>
-              We don't have a GPT-4 tokenizer to correctly count tokens for GPT-4 services.
+              We don't have GPT-4 or Claude tokenizers to correctly count tokens for those services.
               Therefore we can't precisely count tokens when generating a prompt. Keep this well
               below 8K to ensure you don't exceed the limit.
             </p>
@@ -90,14 +90,25 @@ const GeneralSettings: Component<Props> = (props) => {
       <Select
         fieldName="oaiModel"
         label="OpenAI Model"
-        items={Object.entries(OPENAI_MODELS).map(([label, value]) => ({ label, value }))}
+        items={modelsToItems(OPENAI_MODELS)}
         helperText="Which OpenAI model to use"
         value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
+        disabled={props.disabled}
+      />
+      <Select
+        fieldName="claudeModel"
+        label="Claude Model"
+        items={modelsToItems(CLAUDE_MODELS)}
+        helperText="Which Claude model to use"
+        value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
         disabled={props.disabled}
       />
     </>
   )
 }
+
+const modelsToItems = (models: Record<string, string>): Option<string>[] =>
+  Object.entries(models).map(([label, value]) => ({ label, value }))
 
 const PromptSettings: Component<Props> = (props) => {
   return (
@@ -145,7 +156,7 @@ const PromptSettings: Component<Props> = (props) => {
 
       <TextInput
         fieldName="gaslight"
-        label="Gaslight Prompt (OpenAI, Scale, Alpaca, LLaMa)"
+        label="Gaslight Prompt (OpenAI, Scale, Alpaca, LLaMa, Claude)"
         helperText={
           <>
             How the character definitions are sent to OpenAI. Placeholders:{' '}
@@ -177,12 +188,12 @@ const PromptSettings: Component<Props> = (props) => {
 
       <TextInput
         fieldName="ultimeJailbreak"
-        label="UJB Prompt (GPT-4 / Turbo)"
+        label="UJB Prompt (GPT-4 / Turbo / Claude)"
         helperText={
           <>
             (Leave empty to disable)
             <br /> Ultimate Jailbreak. If this option is enabled, the UJB prompt will sent as a
-            system message at the end of the conversation before prompting OpenAI.
+            system message at the end of the conversation before prompting OpenAI or Claude.
           </>
         }
         placeholder="E.g. Keep OOC out of your reply."

@@ -27,6 +27,7 @@ export const chatGenSettings = {
   presencePenalty: 'number',
   gaslight: 'string',
   oaiModel: 'string',
+  claudeModel: 'string',
   useGaslight: 'boolean?',
   ultimeJailbreak: 'string?',
   antiBond: 'boolean?',
@@ -199,6 +200,20 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     gaslight: 'gaslight',
     oaiModel: 'oaiModel',
   },
+  claude: {
+    maxTokens: 'max_tokens_to_sample',
+    repetitionPenalty: '',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+    temp: 'temperature',
+    topK: '',
+    topP: '',
+    typicalP: '',
+    topA: '',
+    gaslight: 'gaslight',
+    claudeModel: 'claudeModel'
+  },
   scale: {
     maxTokens: '',
     repetitionPenalty: '',
@@ -240,5 +255,8 @@ export function getFallbackPreset(adapter: AIAdapter) {
 
     case 'scale':
       return defaultPresets.scale
+
+    case 'claude':
+      return defaultPresets.claude
   }
 }

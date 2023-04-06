@@ -1,25 +1,18 @@
 import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
-import { AlertTriangle, RefreshCw, Save, X } from 'lucide-solid'
+import { AlertTriangle, RefreshCw, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getFormEntries, getStrictForm } from '../../shared/util'
 import Select, { Option } from '../../shared/Select'
-import {
-  CHAT_ADAPTERS,
-  ChatAdapter,
-  HordeModel,
-  HordeWorker,
-  AIAdapter,
-} from '../../../common/adapters'
+import { CHAT_ADAPTERS, ChatAdapter, HordeModel, AIAdapter } from '../../../common/adapters'
 import { settingStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
-import MultiDropdown from '../../shared/MultiDropdown'
-import Modal from '../../shared/Modal'
 import { DefaultPresets } from './DefaultPresets'
 import { AppSchema } from '../../../srv/db/schema'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
+import WorkerModal from './WorkerModal'
 
 const settingTabs = {
   ai: 'AI Settings',
@@ -64,6 +57,7 @@ const Settings: Component = () => {
       oaiKey: 'string?',
       scaleApiKey: 'string?',
       scaleUrl: 'string?',
+      claudeApiKey: 'string?',
       defaultAdapter: adapterOptions,
     } as const)
 
@@ -210,6 +204,25 @@ const Settings: Component = () => {
               </Button>
             </Show>
 
+            <Show when={cfg.config.adapters.includes('claude')}>
+              <Divider />
+              <TextInput
+                fieldName="claudeApiKey"
+                label="Claude Key"
+                helperText="Valid Claude Key."
+                placeholder={
+                  state.user?.claudeApiKeySet
+                    ? 'Claude key is set'
+                    : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+                }
+                type="password"
+                value={state.user?.claudeApiKey}
+              />
+              <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('claude')}>
+                Delete Claude Key
+              </Button>
+            </Show>
+
             <Show when={cfg.config.adapters.includes('scale')}>
               <Divider />
               <TextInput
@@ -311,78 +324,9 @@ const Settings: Component = () => {
 
 export default Settings
 
-const WorkerModal: Component<{
-  show: boolean
-  close: () => void
-  save: (items: Option[]) => void
-}> = (props) => {
-  const cfg = settingStore((s) => ({
-    workers: s.workers.slice().sort(sortWorkers).map(toWorkerItem),
-  }))
-
-  const state = userStore()
-
-  const [selected, setSelected] = createSignal<Option[]>()
-
-  const save = () => {
-    if (selected()) {
-      props.save(selected()!)
-    } else if (state.user?.hordeWorkers) {
-      props.save(cfg.workers.filter((w) => state.user?.hordeWorkers!.includes(w.value)))
-    }
-
-    props.close()
-  }
-
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Specify AI Horde Workers"
-      footer={
-        <>
-          <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
-          </Button>
-          <Button onClick={save}>
-            <Save /> Select Workers
-          </Button>
-        </>
-      }
-    >
-      <div class="flex flex-col gap-4 text-sm">
-        <MultiDropdown
-          fieldName="workers"
-          items={cfg.workers}
-          label="Select Workers"
-          helperText="To use any worker de-select all workers"
-          onChange={setSelected}
-          values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
-        />
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}
-          </div>
-          <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
-            De-select All
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  )
-}
-
 function toItem(model: HordeModel) {
   return {
     label: `${model.name} - (queue: ${model.queued}, eta: ${model.eta}, count: ${model.count})`,
     value: model.name,
   }
-}
-
-function sortWorkers({ models: l }: HordeWorker, { models: r }: HordeWorker) {
-  return l[0] > r[0] ? 1 : l[0] === r[0] ? 0 : -1
-}
-
-function toWorkerItem(wkr: HordeWorker): Option {
-  return { label: `${wkr.name} - ${wkr.models[0]}`, value: wkr.id }
 }

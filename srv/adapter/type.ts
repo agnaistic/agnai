@@ -34,7 +34,7 @@ export type AdapterProps = {
   sender: AppSchema.Profile
   prompt: string
   parts: PromptParts
-  lines?: string[]
+  lines: string[]
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>

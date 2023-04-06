@@ -111,6 +111,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   res.json({ success: true, generating: true, message: 'Generating message' })
 
   const { stream, adapter } = await createTextStreamV2({ ...body, chat }, log, guest)
+
   log.setBindings({ adapter })
 
   let generated = ''

@@ -47,10 +47,15 @@ export namespace AppSchema {
     scaleApiKey?: string
     scaleApiKeySet?: boolean
 
+    claudeApiKey?: string
+    claudeApiKeySet?: boolean
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
 
     createdAt?: string
+
+    // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
   }
 
   export interface Chat {
@@ -185,6 +190,7 @@ export namespace AppSchema {
     frequencyPenalty?: number
     presencePenalty?: number
     oaiModel?: string
+    claudeModel?: string
 
     memoryDepth?: number
     memoryContextLimit?: number

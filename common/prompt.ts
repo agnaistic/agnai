@@ -476,5 +476,8 @@ function getContextLimit(
 
     case 'scale':
       return configuredMax - genAmount
+
+    case 'claude':
+      return configuredMax - genAmount
   }
 }
