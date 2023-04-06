@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { logger } from '../logger'
-import { getEndTokens, trimResponse, trimResponseV2 } from '../api/chat/common'
+import { getEndTokens, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 
@@ -21,7 +21,6 @@ export const handleLuminAI: ModelAdapter = async function* ({
   settings,
   log,
 }) {
-  const endTokens = ['END_OF_DIALOG']
   const stopTokens = getEndTokens(char, members, ['END_OF_DIALOG'])
   const body = { koboldUrl: user.koboldUrl, stopTokens, ...base, ...settings, prompt }
 
@@ -42,18 +41,18 @@ export const handleLuminAI: ModelAdapter = async function* ({
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    yield { error: `Kobold request failed: ${resp.error?.message || resp.error}` }
+    yield { error: `LAI.Kobold request failed: ${resp.error?.message || resp.error}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `Kobold request failed: ${resp.statusMessage}` }
+    yield { error: `LAI.Kobold request failed: ${resp.statusMessage}` }
     return
   }
 
   const text = resp.body.results?.[0]?.text as string
   if (text) {
-    const trimmed = trimResponseV2(text, char, members, endTokens)
+    const trimmed = trimResponseV2(text, char, members, stopTokens)
     yield trimmed || text
     return
   } else {

@@ -32,10 +32,6 @@ export function db<T extends AllDoc['kind']>(kind: T) {
   return getDb().collection<Doc<T>>(kind)
 }
 
-// export function db<T extends AllDoc['kind'] = AllDoc['kind']>(_kind?: T) {
-//   return client as Nedb<Doc<T>>
-// }
-
 export function catchErr(err?: any): null {
   return null
 }
