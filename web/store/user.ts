@@ -60,6 +60,7 @@ export type UserState = {
   metadata: {
     openaiUsage?: number
   }
+  oaiUsageLoading: boolean
 }
 
 export type ThemeColor = (typeof UI_THEME)[number]
@@ -227,14 +228,17 @@ export const userStore = createStore<UserState>(
       toastStore.error(`Guest state successfully reset`)
       settingStore.init()
     },
-    async openaiUsage({ metadata }) {
+    async *openaiUsage({ metadata }) {
+      yield { oaiUsageLoading: true }
       const res = await api.post('/user/services/openai-usage')
+      yield { oaiUsageLoading: false }
       if (res.error) {
         toastStore.error(`Could not retrieve usage: ${res.error}`)
+        yield { metadata: { ...metadata, openaiUsage: -1 } }
       }
 
       if (res.result) {
-        return {
+        yield {
           metadata: {
             ...metadata,
             openaiUsage: res.result.total_usage,
@@ -260,6 +264,7 @@ function init(): UserState {
       loggedIn: false,
       ui,
       background,
+      oaiUsageLoading: false,
       metadata: {},
     }
   }
@@ -270,6 +275,7 @@ function init(): UserState {
     jwt: existing,
     ui,
     background,
+    oaiUsageLoading: false,
     metadata: {},
   }
 }

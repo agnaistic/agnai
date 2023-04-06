@@ -341,11 +341,11 @@ const Settings: Component = () => {
 export default Settings
 
 const OpenAIUsageModal: Component<{ show: boolean; close: () => void }> = (props) => {
-  const state = userStore((s) => s.metadata)
+  const state = userStore()
   const value = createMemo(() => {
-    if (!state.openaiUsage) 'unknown'
+    if (state.metadata.openaiUsage === undefined || state.metadata.openaiUsage < 0) 'unknown'
 
-    const amount = Math.round(state.openaiUsage!) / 100
+    const amount = Math.round(state.metadata.openaiUsage!) / 100
     return `$${amount}`
   })
 
@@ -354,10 +354,10 @@ const OpenAIUsageModal: Component<{ show: boolean; close: () => void }> = (props
       <div class="flex">
         <div class="mr-4">Usage this month: </div>
         <div>
-          <Show when={!state.openaiUsage}>
+          <Show when={state.oaiUsageLoading}>
             <Loading />
           </Show>
-          <Show when={!!state.openaiUsage}>{value()}</Show>
+          <Show when={!state.oaiUsageLoading}>{value()}</Show>
         </div>
       </div>
     </Modal>
