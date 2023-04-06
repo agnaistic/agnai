@@ -41,6 +41,11 @@ const InputBar: Component<{
     })
   }
 
+  const more = () => {
+    props.more(state.lastMsg.msg)
+    setMenu(false)
+  }
+
   return (
     <div class="flex items-center justify-center max-sm:pb-2">
       <Show when={user.ui.input === 'single'}>
@@ -80,12 +85,7 @@ const InputBar: Component<{
         <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
           <div class="w-48 p-2">
             <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
-              <Button
-                schema="secondary"
-                class="w-full"
-                onClick={() => props.more(state.lastMsg.msg)}
-                alignLeft
-              >
+              <Button schema="secondary" class="w-full" onClick={more} alignLeft>
                 <PlusCircle size={18} /> Generate More
               </Button>
             </Show>
