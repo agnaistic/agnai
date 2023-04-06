@@ -31,6 +31,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     stop_sequences: [
       `\n\n${char.name}:`,
       `\n\n${username}:`,
+      `\n\nSystem:`,
       ...members.map((member) => `\n\n${member.handle}:`),
     ],
   }
