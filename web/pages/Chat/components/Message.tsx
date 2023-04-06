@@ -244,11 +244,7 @@ const SingleMessage: Component<
               }}
             ></div>
           </Show>
-          <Show
-            when={
-              !edit() && props.msg.characterId && user.user?._id === props.chat?.userId && false
-            }
-          >
+          <Show when={false}>
             <div class="text-900 mt-2 flex flex-row items-center gap-2">
               <ThumbsUp size={14} class="hover:text-600 mt-[-0.15rem] cursor-pointer" />
               <ThumbsDown size={14} class="hover:text-600 cursor-pointer" />

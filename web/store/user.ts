@@ -207,6 +207,10 @@ export const userStore = createStore<UserState>(
       if (kind === 'horde') {
         return { user: { ...user, hordeKey: '', hordeName: '' } }
       }
+
+      if (kind === 'claude') {
+        return { user: { ...user, claudeApiKey: '', claudeApiKeySet: false } }
+      }
     },
 
     clearGuestState() {

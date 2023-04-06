@@ -178,7 +178,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
       sendMany(members, { type: 'message-created', msg, chatId, adapter })
     }
   } else if (body.kind === 'continue') {
-    await store.msgs.editMessage(body.continuing._id, generated, adapter)
+    await store.msgs.editMessage(body.continuing._id, responseText, adapter)
     sendMany(members, {
       type: 'message-retry',
       chatId,
