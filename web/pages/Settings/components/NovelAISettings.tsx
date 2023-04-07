@@ -1,8 +1,8 @@
-import { Component, Show, createMemo } from "solid-js"
-import TextInput from "../../../shared/TextInput"
-import { userStore } from "../../../store"
-import Button from "../../../shared/Button"
-import Select from "../../../shared/Select"
+import { Component, Show, createMemo } from 'solid-js'
+import TextInput from '../../../shared/TextInput'
+import { userStore } from '../../../store'
+import Button from '../../../shared/Button'
+import Select from '../../../shared/Select'
 
 const NovelAISettings: Component = () => {
   const state = userStore()
@@ -30,9 +30,9 @@ const NovelAISettings: Component = () => {
         value={state.user?.novelApiKey}
         helperText={
           <>
-            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.
-            Please note that this token expires periodically. You will occasionally need to
-            re-enter this token. headers.{' '}
+            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization. Please
+            note that this token expires periodically. You will occasionally need to re-enter this
+            token. headers.{' '}
             <a
               class="link"
               target="_blank"

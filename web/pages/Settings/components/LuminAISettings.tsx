@@ -1,6 +1,6 @@
-import { Component } from "solid-js"
-import TextInput from "../../../shared/TextInput"
-import { userStore } from "../../../store"
+import { Component } from 'solid-js'
+import TextInput from '../../../shared/TextInput'
+import { userStore } from '../../../store'
 
 const LuminAISettings: Component = () => {
   const state = userStore()

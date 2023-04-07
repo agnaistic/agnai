@@ -1,7 +1,7 @@
-import { Component } from "solid-js"
-import TextInput from "../../../shared/TextInput"
-import { userStore } from "../../../store"
-import Button from "../../../shared/Button"
+import { Component } from 'solid-js'
+import TextInput from '../../../shared/TextInput'
+import { userStore } from '../../../store'
+import Button from '../../../shared/Button'
 
 const ScaleSettings: Component = () => {
   const state = userStore()
@@ -19,9 +19,7 @@ const ScaleSettings: Component = () => {
         fieldName="scaleApiKey"
         label="Scale API Key"
         placeholder={
-          state.user?.scaleApiKeySet
-            ? 'Scale API key is set'
-            : 'E.g. 9rv440nv7ogj6s7j312flqijd'
+          state.user?.scaleApiKeySet ? 'Scale API key is set' : 'E.g. 9rv440nv7ogj6s7j312flqijd'
         }
         type="password"
         value={state.user?.scaleApiKey}

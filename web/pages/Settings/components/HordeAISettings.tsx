@@ -1,12 +1,12 @@
-import { Component, Show, createEffect, createMemo, createSignal } from "solid-js"
-import TextInput from "../../../shared/TextInput"
-import { settingStore, userStore } from "../../../store"
-import Button from "../../../shared/Button"
+import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import TextInput from '../../../shared/TextInput'
+import { settingStore, userStore } from '../../../store'
+import Button from '../../../shared/Button'
 import Select, { Option } from '../../../shared/Select'
-import { RefreshCw, Save, X } from "lucide-solid"
-import Modal from "../../../shared/Modal"
-import MultiDropdown from "../../../shared/MultiDropdown"
-import { HordeModel, HordeWorker } from "../../../../common/adapters"
+import { RefreshCw, Save, X } from 'lucide-solid'
+import Modal from '../../../shared/Modal'
+import MultiDropdown from '../../../shared/MultiDropdown'
+import { HordeModel, HordeWorker } from '../../../../common/adapters'
 
 const HordeAISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -88,9 +88,7 @@ const HordeAISettings: Component<{
       </div>
       <div class="flex items-center gap-4">
         <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
-        <div>
-          Workers selected: {workers()?.length ?? state.user?.hordeWorkers?.length ?? '0'}
-        </div>
+        <div>Workers selected: {workers()?.length ?? state.user?.hordeWorkers?.length ?? '0'}</div>
       </div>
 
       <WorkerModal show={show()} close={() => setShow(false)} save={onSaveHordeWorkers} />

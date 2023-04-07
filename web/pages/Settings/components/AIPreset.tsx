@@ -22,12 +22,12 @@ export const AIPreset: Component<{ adapter: AIAdapter }> = (props) => {
 
   return (
     <>
-        <Select
-          fieldName={`preset.${props.adapter}`}
-          label={`Default Preset (${ADAPTER_LABELS[props.adapter]})`}
-          items={options()}
-          value={user.user?.defaultPresets?.[props.adapter] || ''}
-        />
+      <Select
+        fieldName={`preset.${props.adapter}`}
+        label={`Default Preset (${ADAPTER_LABELS[props.adapter]})`}
+        items={options()}
+        value={user.user?.defaultPresets?.[props.adapter] || ''}
+      />
     </>
   )
 }
