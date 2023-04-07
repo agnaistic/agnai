@@ -212,10 +212,19 @@ export function getPromptParts(
   const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
   if (memory) parts.memory = memory.prompt
 
-  const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
-  const ujb = opts.settings?.ultimeJailbreak
+  let gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
+  const gaslightLines = gaslight.split('\n')
+
+  if (!parts.memory) {
+    gaslight = gaslightLines.filter((line) => !line.includes('{{memory}}')).join('\n')
+  }
+  if (!parts.sampleChat) {
+    gaslight = gaslightLines.filter((line) => !line.includes('{{example_dialogue}}')).join('\n')
+  }
 
   const sampleChat = parts.sampleChat?.join('\n') || ''
+
+  const ujb = opts.settings?.ultimeJailbreak
 
   if (ujb) {
     parts.ujb = ujb

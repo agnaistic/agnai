@@ -190,8 +190,11 @@ const PromptSettings: Component<Props> = (props) => {
             How the character definitions are sent to OpenAI. Placeholders:{' '}
             <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
             <code>{'{{memory}}'}</code> <code>{'{{scenario}}'}</code>{' '}
-            <code>{'{{example_dialogue}}'}</code>. If <code>{'{{example_dialogue}}'}</code> is not
-            present then example dialogues will be sent as conversation.
+            <code>{'{{example_dialogue}}'}</code>. Any placeholders not present in the gaslight will
+            not be sent to the model. Lines with placeholders present in the gaslight but not in the
+            character will be removed, for example if a character has no example dialogue the line
+            in the gaslight containing <code>{'{{example_dialogue}}'}</code> will be removed before
+            being sent to the model.
           </>
         }
         placeholder="Be sure to include the placeholders above"
