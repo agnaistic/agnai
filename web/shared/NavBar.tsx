@@ -18,7 +18,7 @@ const NavBar: Component = () => {
           </div>
           <div>
             <A href="/">
-              <span class="rounded-xl bg-[var(--hl-700)] py-2 px-4">Agnaistic</span>
+              Agn<span class="rounded-xl text-[var(--hl-500)]">ai</span>stic
             </A>
           </div>
           <div class="w-8 sm:hidden"></div>
