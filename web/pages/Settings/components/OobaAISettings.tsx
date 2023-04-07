@@ -9,7 +9,7 @@ const OobaAISettings: Component = () => {
     <>
       <TextInput
         fieldName="oobaUrl"
-        label="Oobagooga Compatible URL"
+        label="Text-Generation-WebUI Compatible URL"
         helperText="Fully qualified URL. This URL must be publicly accessible."
         placeholder="E.g. https://8f41b512420d87f523.gradio.live"
         value={state.user?.oobaUrl}

@@ -147,6 +147,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.thirdPartyFormat = body.thirdPartyFormat as typeof update.thirdPartyFormat
   }
 
+  const validOobaUrl = await verifyOobaUrl(prevUser, body.oobaUrl)
+  if (validOobaUrl !== undefined) update.oobaUrl = validOobaUrl
   if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
 
   if (body.images) {
@@ -170,10 +172,6 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
     update.novelVerified = true
     update.novelApiKey = encryptText(body.novelApiKey!)
-  }
-
-  if (body.oobaUrl) {
-    update.oobaUrl = body.oobaUrl
   }
 
   if (body.oaiKey) {
@@ -244,6 +242,20 @@ async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
   return url[0]
 }
 
+async function verifyOobaUrl(user: AppSchema.User, incomingUrl?: string) {
+  if (!incomingUrl) return incomingUrl
+  if (user.oobaUrl === incomingUrl) return
+
+  const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
+
+  if (!url || !url[0]) {
+    throw new StatusError(
+      `Ooba URL provided could not be verified: Invalid URL format. Use a fully qualified URL, e.g.: http://127.0.0.1:7860`,
+      400
+    )
+  }
+  return url[0]
+}
 async function verifyNovelKey(key: string) {
   const res = await needle('get', `${NOVEL_BASEURL}/user/data`, {
     headers: { Authorization: `Bearer ${key}` },

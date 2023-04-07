@@ -189,26 +189,24 @@ const SingleMessage: Component<
               <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
                 <Show when={!!props.msg.characterId && !isImage()}>
                   <div onClick={showPrompt} class="icon-button">
-                    <Terminal size={16} />
+                    <Terminal size={20} />
                   </div>
                 </Show>
-                <Show when={!isImage()}>
-                  <div class="icon-button" onClick={startEdit}>
-                    <Pencil size={18} />
-                  </div>
-                </Show>
+                <div class="icon-button" onClick={startEdit}>
+                  <Pencil size={20} />
+                </div>
                 <div class="icon-button" onClick={props.onRemove}>
-                  <Trash size={18} />
+                  <Trash size={20} />
                 </div>
               </Show>
               <Show when={props.last && props.msg.characterId}>
                 <div class="icon-button" onClick={retryMessage}>
-                  <RefreshCw size={18} />
+                  <RefreshCw size={20} />
                 </div>
               </Show>
               <Show when={props.last && !props.msg.characterId}>
                 <div class="cursor-pointer" onClick={resendMessage}>
-                  <RefreshCw size={18} />
+                  <RefreshCw size={20} />
                 </div>
               </Show>
             </div>
