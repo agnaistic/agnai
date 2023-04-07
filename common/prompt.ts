@@ -213,13 +213,19 @@ export function getPromptParts(
   if (memory) parts.memory = memory.prompt
 
   let gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
-  const gaslightLines = gaslight.split('\n')
+  let gaslightLines = gaslight.split('\n')
 
-  if (!parts.memory) {
+  if (!parts.memory || parts.memory.prompt === '') {
     gaslight = gaslightLines.filter((line) => !line.includes('{{memory}}')).join('\n')
+    gaslightLines = gaslight.split('\n')
+  }
+  if (!parts.scenario) {
+    gaslight = gaslightLines.filter((line) => !line.includes('{{scenario}}')).join('\n')
+    gaslightLines = gaslight.split('\n')
   }
   if (!parts.sampleChat) {
     gaslight = gaslightLines.filter((line) => !line.includes('{{example_dialogue}}')).join('\n')
+    gaslightLines = gaslight.split('\n')
   }
 
   const sampleChat = parts.sampleChat?.join('\n') || ''
