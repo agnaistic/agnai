@@ -1,8 +1,6 @@
 import { adaptersToOptions } from '../../shared/util'
 import Select from '../../shared/Select'
-import {
-  ADAPTER_LABELS,
-} from '../../../common/adapters'
+import { ADAPTER_LABELS } from '../../../common/adapters'
 import { settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
 import { AIPreset } from './components/AIPreset'
@@ -14,6 +12,7 @@ import NovelAISettings from './components/NovelAISettings'
 import LuminAISettings from './components/LuminAISettings'
 import KoboldAISettings from './components/KoboldAISettings'
 import ChaiSettings from './components/ChaiSettings'
+import ClaudeSettings from './components/ClaudeSettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -22,9 +21,11 @@ const AISettings: Component<{
   const cfg = settingStore()
 
   createEffect(() => {
-    setTabs(cfg.config.adapters.map(a => ADAPTER_LABELS[a] || a))
-    if(!ready() && cfg.config.adapters?.length) {
-      var defaultTab = (cfg.config.adapters as (string | undefined)[]).indexOf(state.user?.defaultAdapter)
+    setTabs(cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a))
+    if (!ready() && cfg.config.adapters?.length) {
+      var defaultTab = (cfg.config.adapters as (string | undefined)[]).indexOf(
+        state.user?.defaultAdapter
+      )
       setTab(defaultTab == -1 ? 0 : defaultTab)
       setReady(true)
     }
@@ -91,6 +92,11 @@ const AISettings: Component<{
       <div class={currentTab() === 'chai' ? tabClass : 'hidden'}>
         <AIPreset adapter="chai" />
         <ChaiSettings />
+      </div>
+
+      <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>
+        <AIPreset adapter="claude" />
+        <ClaudeSettings />
       </div>
     </>
   )
