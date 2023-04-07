@@ -41,6 +41,7 @@ export namespace AppSchema {
     hordeKey: string
     hordeModel: string
     hordeName?: string
+    hordeUseTrusted?: boolean
     hordeWorkers?: string[]
 
     scaleUrl?: string

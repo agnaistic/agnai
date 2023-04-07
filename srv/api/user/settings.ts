@@ -83,6 +83,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       novelApiKey: 'string?',
       novelModel: 'string?',
       koboldUrl: 'string?',
+      hordeUseTrusted: 'boolean?',
       hordeApiKey: 'string?',
       hordeKey: 'string?',
       hordeModel: 'string?',
@@ -107,6 +108,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
     defaultAdapter: body.defaultAdapter,
     hordeWorkers: body.hordeWorkers,
     defaultPresets: body.defaultPresets,
+    hordeUseTrusted: body.hordeUseTrusted ?? false,
   }
 
   if (body.hordeKey || body.hordeApiKey) {

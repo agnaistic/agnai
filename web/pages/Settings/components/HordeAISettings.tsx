@@ -7,6 +7,7 @@ import { RefreshCw, Save, X } from 'lucide-solid'
 import Modal from '../../../shared/Modal'
 import MultiDropdown from '../../../shared/MultiDropdown'
 import { HordeModel, HordeWorker } from '../../../../common/adapters'
+import { Toggle } from '../../../shared/Toggle'
 
 const HordeAISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -55,6 +56,12 @@ const HordeAISettings: Component<{
 
   return (
     <>
+      <Toggle
+        fieldName="hordeUseTrusted"
+        label="Use Trusted Workers Only"
+        value={state.user?.hordeUseTrusted ?? false}
+        helperText="This may help reduce 'bad responses' by using only 'trusted' workers. Warning: This may increase response times."
+      />
       <TextInput
         fieldName="hordeKey"
         label="AI Horde API Key"

@@ -2,10 +2,11 @@ import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { decryptText } from '../db/util'
 import { logger } from '../logger'
-import { sanitise, trimResponse, trimResponseV2 } from '../api/chat/common'
+import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { getHordeWorkers, HORDE_GUEST_KEY } from '../api/horde'
 import { sendGuest, sendOne } from '../api/ws'
 import { ModelAdapter } from './type'
+import { config } from '../config'
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
 
@@ -33,6 +34,7 @@ export const handleHorde: ModelAdapter = async function* ({
     models: [] as string[],
     prompt,
     workers: [] as string[],
+    trusted_workers: user.hordeUseTrusted ?? false,
   }
 
   if (user.hordeModel && user.hordeModel !== 'any') {
@@ -94,9 +96,11 @@ export const handleHorde: ModelAdapter = async function* ({
   let text = ''
   let checks = 0
 
+  const MAX_WAIT_MS = config.horde.maxWaitSecs * 1000
+
   while (true) {
     const diff = Date.now() - started
-    if (diff > 120000) {
+    if (diff > MAX_WAIT_MS) {
       yield { error: `Horde request failed: Timed out` }
       return
     }

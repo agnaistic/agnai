@@ -24,7 +24,7 @@ export const Toggle: Component<{
       <label class={`toggle ${props.disabled ? 'toggle-disabled' : ''}`}>
         <input
           type="checkbox"
-          class="toggle-checkbox"
+          class="toggle-checkbox w-0"
           id={props.fieldName}
           name={props.fieldName}
           checked={props.value}

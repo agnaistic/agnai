@@ -71,6 +71,9 @@ export const config = {
     uid: env('CHAI_UID', ''),
     key: env('CHAI_KEY', ''),
   },
+  horde: {
+    maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),
+  },
   classifyUrl: env('CLASSIFY_URL', 'http://localhost:5001'),
   init: {
     username: env('INITIAL_USER', 'admin'),

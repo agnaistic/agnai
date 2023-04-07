@@ -38,6 +38,7 @@ const Settings: Component = () => {
       koboldUrl: 'string?',
       novelApiKey: 'string?',
       novelModel: 'string?',
+      hordeUseTrusted: 'boolean?',
       hordeKey: 'string?',
       hordeModel: 'string?',
       luminaiUrl: 'string?',

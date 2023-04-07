@@ -13,3 +13,9 @@
 - `console.log(JSON.parse(localStorage.getItem('session')).auth_token)`
 
 4. Copy/paste the resulting output into the `Novel API Key` field
+
+The API Key will look something like this:
+
+```
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6Ii4uLiIsImlhdCI6MTUxNjIzOTAyMn0.pCVUFONBLI_Lw3vKQG6ykCkuWNeG4cDhdEqRO_QJbh4
+```

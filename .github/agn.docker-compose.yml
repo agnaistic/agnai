@@ -23,6 +23,7 @@ services:
       JWT_SECRET: /run/secrets/jwt_secret
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      HORDE_WAIT_SECS: 150
       CHAI_URL: /run/secrets/chai_url
       CHAI_UID: /run/secrets/chai_uid
       CHAI_KEY: /run/secrets/chai_token
