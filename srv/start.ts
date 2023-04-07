@@ -7,12 +7,11 @@ import { logger } from './logger'
 
 async function start() {
   await Promise.all([initDb(), initMessageBus()])
-  logger.info({ port: config.port }, 'Server started')
-}
 
-server.listen(config.port, '0.0.0.0', async () => {
-  logger.info({ port: config.port }, 'Server started')
-})
+  server.listen(config.port, '0.0.0.0', async () => {
+    logger.info({ port: config.port }, `Server started http://127.0.0.1:${config.port}`)
+  })
+}
 
 // No longer accept requests when shutting down
 // Allow as many responses currently generating to complete as possible during the shutdown window
