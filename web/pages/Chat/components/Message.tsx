@@ -1,5 +1,6 @@
 import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
 import showdown from 'showdown'
+import { Accessor } from 'solid-js'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
@@ -23,6 +24,7 @@ type MessageProps = {
   cancelSwipe?: () => void
   onRemove: () => void
   editing: boolean
+  anonymize?: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -51,6 +53,7 @@ const Message: Component<MessageProps> = (props) => {
           cancelSwipe={props.cancelSwipe}
           original={props.msg}
           editing={props.editing}
+          anonymize={props.anonymize}
         />
       )}
     </For>
@@ -96,13 +99,28 @@ const SingleMessage: Component<
     chatStore.showPrompt(user.user, props.msg)
   }
 
-  const msgText = createMemo(() => {
-    if (props.last && props.swipe) return props.swipe
-    return props.msg.msg
-  })
-
   const isBot = createMemo(() => !!props.msg.characterId)
   const isUser = createMemo(() => !!props.msg.userId)
+
+  const uncensoredHandle = members[props.msg.userId!]?.handle
+  const userNumber = Object.keys(members).findIndex((m) => m === props.msg.userId) + 1
+
+  const handleToShow = () => (props.anonymize ? 'User #' + userNumber : uncensoredHandle)
+
+  const msgText = createMemo(() => {
+    if (props.last && props.swipe) return props.swipe
+    if (props.anonymize) {
+      return Object.values(members)
+        .reduce(
+          (censoredTxt, mem, i) =>
+            censoredTxt.replace(new RegExp(mem.handle.trim(), 'g'), 'User ' + (i + 1)),
+          props.msg.msg
+        )
+        .replace(SELF_REPLACE, 'User 1')
+    } else {
+      return props.msg.msg
+    }
+  })
 
   let ref: HTMLDivElement | undefined
 
@@ -141,7 +159,11 @@ const SingleMessage: Component<
           <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
         </Show>
         <Show when={!props.msg.characterId}>
-          <AvatarIcon avatarUrl={members[props.msg.userId!]?.avatar} format={format()} />
+          <AvatarIcon
+            avatarUrl={members[props.msg.userId!]?.avatar}
+            format={format()}
+            anonymize={props.anonymize}
+          />
         </Show>
       </div>
 
@@ -153,7 +175,7 @@ const SingleMessage: Component<
               data-bot-name={isBot()}
               data-user-name={isUser()}
             >
-              {props.msg.characterId ? props.char?.name! : members[props.msg.userId!]?.handle}
+              {props.msg.characterId ? props.char?.name! : handleToShow()}
             </b>
             <span
               class="message-date text-600 flex items-center text-xs leading-none"

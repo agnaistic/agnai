@@ -63,6 +63,7 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
+  const [anonymize, setAnonymize] = createSignal(false)
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
@@ -84,6 +85,8 @@ const ChatDetail: Component = () => {
     setEditing(next)
     saveEditingState(next)
   }
+
+  const toggleAnonymize = () => setAnonymize(!anonymize())
 
   const showModal = (modal: ChatModal) => {
     setModal(modal)
@@ -180,7 +183,13 @@ const ChatDetail: Component = () => {
                   horz="left"
                   vert="down"
                 >
-                  <ChatOptions show={showModal} editing={editing()} toggleEditing={toggleEditing} />
+                  <ChatOptions
+                    show={showModal}
+                    editing={editing()}
+                    toggleEditing={toggleEditing}
+                    anonymizeOn={anonymize()}
+                    toggleAnonymize={toggleAnonymize}
+                  />
                 </DropMenu>
               </div>
 
@@ -219,7 +228,7 @@ const ChatDetail: Component = () => {
               </div>
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
-              <div class="flex flex-col gap-2">
+              <div id="chat-messages" class="flex flex-col gap-2">
                 <For each={msgs.msgs}>
                   {(msg, i) => (
                     <Message
@@ -227,6 +236,7 @@ const ChatDetail: Component = () => {
                       chat={chats.chat!}
                       char={chats.char!}
                       editing={editing()}
+                      anonymize={anonymize()}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
@@ -244,6 +254,7 @@ const ChatDetail: Component = () => {
                     chat={chats.chat!}
                     onRemove={() => {}}
                     editing={editing()}
+                    anonymize={anonymize()}
                   />
                 </Show>
               </div>
