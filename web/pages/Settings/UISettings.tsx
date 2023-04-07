@@ -125,7 +125,6 @@ const UISettings: Component = () => {
           editing={false}
           msg={toBotMsg(bot, '*I wave excitedly* Hello world!\nHow are you today?')}
           onRemove={noop}
-          anonymizeOn={() => false}
         />
 
         <Show when={state.profile}>
@@ -135,7 +134,6 @@ const UISettings: Component = () => {
             editing={false}
             msg={toUserMsg(state.profile!, '*I wave back* Hi {{char}}!\nFancy meeting you here!')}
             onRemove={noop}
-            anonymizeOn={() => false}
           />
         </Show>
       </div>

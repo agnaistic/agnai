@@ -63,7 +63,7 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
-  const [anonymizeOn, setAnonymize] = createSignal(false)
+  const [anonymize, setAnonymize] = createSignal(false)
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
@@ -86,7 +86,7 @@ const ChatDetail: Component = () => {
     saveEditingState(next)
   }
 
-  const toggleAnonymize = () => setAnonymize(!anonymizeOn())
+  const toggleAnonymize = () => setAnonymize(!anonymize())
 
   const showModal = (modal: ChatModal) => {
     setModal(modal)
@@ -187,7 +187,7 @@ const ChatDetail: Component = () => {
                     show={showModal}
                     editing={editing()}
                     toggleEditing={toggleEditing}
-                    anonymizeOn={anonymizeOn()}
+                    anonymizeOn={anonymize()}
                     toggleAnonymize={toggleAnonymize}
                   />
                 </DropMenu>
@@ -236,7 +236,7 @@ const ChatDetail: Component = () => {
                       chat={chats.chat!}
                       char={chats.char!}
                       editing={editing()}
-                      anonymizeOn={anonymizeOn}
+                      anonymize={anonymize()}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
@@ -254,7 +254,7 @@ const ChatDetail: Component = () => {
                     chat={chats.chat!}
                     onRemove={() => {}}
                     editing={editing()}
-                    anonymizeOn={anonymizeOn}
+                    anonymize={anonymize()}
                   />
                 </Show>
               </div>

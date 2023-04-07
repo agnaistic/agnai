@@ -3,7 +3,6 @@ import { Component, Show, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, userStore } from '../../store'
-import html2canvas from 'html2canvas'
 
 export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui' | 'members'
 
@@ -16,26 +15,6 @@ const ChatOptions: Component<{
 }> = (props) => {
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
   const user = userStore()
-  const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
-  const screenshotChat = () => {
-    if (screenshotInProgress()) return
-    const chatMsgsEl = document.getElementById('chat-messages')
-    if (chatMsgsEl) {
-      chatMsgsEl.classList.add('bg-black')
-      setScreenshotInProgress(true)
-      html2canvas(chatMsgsEl).then((canvas) => {
-        window.open()?.document.write(`
-            <div>
-              <img src="${canvas.toDataURL()}" style="display: block;margin: auto"/>
-            </div>
-          `)
-        setScreenshotInProgress(false)
-      })
-      chatMsgsEl.classList.remove('bg-black')
-    } else {
-      console.error("Couldn't find messages element when trying to take screenshot.")
-    }
-  }
 
   return (
     <div class="flex w-60 flex-col gap-2 p-2">
@@ -54,7 +33,7 @@ const ChatOptions: Component<{
 
         <Option onClick={props.toggleAnonymize}>
           <div class="flex w-full items-center justify-between">
-            <div>Anonymize chat</div>
+            <div>Anonymize Chat</div>
             <Toggle
               class="flex items-center"
               fieldName="anonymizeChat"
@@ -62,11 +41,6 @@ const ChatOptions: Component<{
               onChange={props.toggleAnonymize}
             />
           </div>
-        </Option>
-
-        <Option onClick={screenshotChat}>
-          {/* Unfortunately msgs has to be abbreviated to fit on one line */}
-          <Camera /> Screenshot loaded msgs
         </Option>
 
         <Option

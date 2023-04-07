@@ -24,7 +24,7 @@ type MessageProps = {
   cancelSwipe?: () => void
   onRemove: () => void
   editing: boolean
-  anonymizeOn: Accessor<boolean>
+  anonymize?: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -53,7 +53,7 @@ const Message: Component<MessageProps> = (props) => {
           cancelSwipe={props.cancelSwipe}
           original={props.msg}
           editing={props.editing}
-          anonymizeOn={props.anonymizeOn}
+          anonymize={props.anonymize}
         />
       )}
     </For>
@@ -104,11 +104,12 @@ const SingleMessage: Component<
 
   const uncensoredHandle = members[props.msg.userId!]?.handle
   const userNumber = Object.keys(members).findIndex((m) => m === props.msg.userId) + 1
-  const handleToShow = () => (props.anonymizeOn() ? 'User ' + userNumber : uncensoredHandle)
+
+  const handleToShow = () => (props.anonymize ? 'User #' + userNumber : uncensoredHandle)
 
   const msgText = createMemo(() => {
     if (props.last && props.swipe) return props.swipe
-    if (props.anonymizeOn()) {
+    if (props.anonymize) {
       return Object.values(members)
         .reduce(
           (censoredTxt, mem, i) =>
@@ -161,7 +162,7 @@ const SingleMessage: Component<
           <AvatarIcon
             avatarUrl={members[props.msg.userId!]?.avatar}
             format={format()}
-            anonymizeOn={props.anonymizeOn}
+            anonymize={props.anonymize}
           />
         </Show>
       </div>
