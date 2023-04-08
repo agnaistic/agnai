@@ -7,6 +7,7 @@ const emptyCfg: AppSchema.AppConfig = {
   adapters: [],
   canAuth: false,
   version: '',
+  assetPrefix: '',
 }
 
 export async function getInit() {

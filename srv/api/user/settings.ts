@@ -8,7 +8,7 @@ import { encryptText } from '../../db/util'
 import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
 import { getAppConfig } from '../settings'
-import { handleUpload } from '../upload'
+import { entityUpload, handleForm } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
 import { sendAll } from '../ws'
 
@@ -172,9 +172,12 @@ export const updateConfig = handle(async ({ userId, body }) => {
 })
 
 export const updateProfile = handle(async (req) => {
-  const form = await handleUpload(req, { handle: 'string' } as const)
-
-  const [file] = form.attachments
+  const form = await handleForm(req, { handle: 'string' } as const)
+  const filename = await entityUpload(
+    'profile',
+    req.userId,
+    form.attachments.find((a) => a.field === 'avatar')
+  )
 
   const previous = await store.users.getProfile(req.userId!)
   if (!previous) {
@@ -185,8 +188,8 @@ export const updateProfile = handle(async (req) => {
     handle: form.handle,
   }
 
-  if (file) {
-    update.avatar = file.filename
+  if (filename) {
+    update.avatar = filename
   }
 
   const profile = await store.users.updateProfile(req.userId!, update)

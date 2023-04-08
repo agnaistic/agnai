@@ -123,7 +123,7 @@ const UISettings: Component = () => {
           char={bot}
           chat={chat}
           editing={false}
-          msg={toBotMsg(bot, '*I wave excitedly* Hello world!\nHow are you today?')}
+          msg={toBotMsg(bot, '*I wave excitedly* Hello world!\nHow are you today?', { _id: '1' })}
           onRemove={noop}
         />
 
@@ -132,7 +132,9 @@ const UISettings: Component = () => {
             char={bot}
             chat={chat}
             editing={false}
-            msg={toUserMsg(state.profile!, '*I wave back* Hi {{char}}!\nFancy meeting you here!')}
+            msg={toUserMsg(state.profile!, '*I wave back* Hi {{char}}!\nFancy meeting you here!', {
+              _id: '2',
+            })}
             onRemove={noop}
           />
         </Show>
@@ -146,4 +148,4 @@ export default UISettings
 function noop() {}
 
 const bot = toChar('Robot')
-const chat = toChat(bot, { name: 'Example Chat' })
+const chat = toChat(bot, { _id: '1', name: 'Example Chat' })

@@ -9,17 +9,26 @@ let connected = false
 logger.debug({ uri }, 'MongoDB URI')
 let database: Db | null = null
 
-export async function connect() {
+export async function connect(silent = false) {
   const cli = new MongoClient(uri, { ignoreUndefined: true })
   try {
     await cli.connect()
     database = cli.db(config.db.name)
+    cli.on('close', () => {
+      connected = false
+      logger.warn('MongoDB disconnected. Retrying...')
+      setTimeout(connect, 5000)
+    })
 
     logger.info('Connected to MongoDB')
     connected = true
     return database
   } catch (ex) {
-    logger.warn(`Could not connect to database: Running in anonymous-only mode`)
+    if (!silent) {
+      logger.warn(`Could not connect to database: Running in anonymous-only mode`)
+    }
+
+    setTimeout(() => connect(true), 5000)
   }
 }
 

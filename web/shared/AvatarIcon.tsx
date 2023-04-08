@@ -1,6 +1,7 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import { Accessor, Component, createMemo, Show } from 'solid-js'
+import { Component, createMemo, Show } from 'solid-js'
 import { AvatarCornerRadius, AvatarSize } from '../store'
+import { getAssetUrl } from './util'
 
 type Props = {
   avatarUrl?: string
@@ -49,7 +50,7 @@ const AvatarIcon: Component<Props> = (props) => {
               ${format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'}
               ${fmtFit()} ${fmtCorners()}
             `}
-            src={props.avatarUrl}
+            src={getAssetUrl(props.avatarUrl!)}
             data-bot-avatar={props.bot}
           />
         </div>

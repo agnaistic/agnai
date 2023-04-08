@@ -82,6 +82,13 @@ export const config = {
   adapters: env('ADAPTERS', 'novel,horde,kobold,chai,luminai,openai,scale,claude')
     .split(',')
     .filter((i) => !!i) as AIAdapter[],
+  storage: {
+    enabled: !!env('USE_S3', ''),
+    id: env('AWS_ACCESS_KEY_ID', ''),
+    key: env('AWS_SECRET_ACCESS_KEY', ''),
+    bucket: env('BUCKET_NAME', ''),
+    endpoint: env('BUCKET_ENDPOINT', ''),
+  },
 }
 
 function env(key: string, fallback?: string): string {

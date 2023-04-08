@@ -4,7 +4,7 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
+import { getAssetUrl, getStrictForm } from '../../shared/util'
 import { adminStore } from '../../store'
 
 const UsersPage: Component = () => {
@@ -83,7 +83,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
         />
         <Show when={state.info?.avatar}>
           <div class="flex w-full justify-center">
-            <img src={state.info?.avatar} height="128px" />
+            <img src={getAssetUrl(state.info?.avatar!)} height="128px" />
           </div>
         </Show>
       </div>

@@ -1,10 +1,12 @@
 import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
+import { setAssetPrefix } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
 import { data } from './data'
 
 type SettingStore = {
+  initLoading: boolean
   showMenu: boolean
   fullscreen: boolean
   config: AppSchema.AppConfig
@@ -22,15 +24,20 @@ type SettingStore = {
 const HORDE_URL = `https://stablehorde.net/api/v2`
 
 export const settingStore = createStore<SettingStore>('settings', {
+  initLoading: true,
   showMenu: false,
   fullscreen: false,
   models: [],
   workers: [],
-  config: { adapters: [], canAuth: true, version: '...' },
+  config: { adapters: [], canAuth: true, version: '...', assetPrefix: '' },
 })((_) => ({
-  async init() {
+  async *init() {
+    yield { initLoading: true }
     const res = await data.user.getInit()
+    yield { initLoading: false }
+
     if (res.result) {
+      setAssetPrefix(res.result.config.assetPrefix)
       return { init: res.result, config: res.result.config }
     }
   },

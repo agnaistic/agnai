@@ -51,7 +51,11 @@ export function toUser(name: string): AppSchema.User {
   }
 }
 
-export function toBotMsg(bot: AppSchema.Character, msg: string): AppSchema.ChatMessage {
+export function toBotMsg(
+  bot: AppSchema.Character,
+  msg: string,
+  props?: Partial<AppSchema.ChatMessage>
+): AppSchema.ChatMessage {
   return {
     _id: '',
     chatId: '',
@@ -60,10 +64,15 @@ export function toBotMsg(bot: AppSchema.Character, msg: string): AppSchema.ChatM
     msg,
     characterId: bot._id,
     updatedAt: '',
+    ...props,
   }
 }
 
-export function toUserMsg(user: AppSchema.Profile, msg: string): AppSchema.ChatMessage {
+export function toUserMsg(
+  user: AppSchema.Profile,
+  msg: string,
+  props?: Partial<AppSchema.ChatMessage>
+): AppSchema.ChatMessage {
   return {
     _id: '',
     chatId: '',
@@ -72,6 +81,7 @@ export function toUserMsg(user: AppSchema.Profile, msg: string): AppSchema.ChatM
     msg,
     userId: user.userId,
     updatedAt: new Date().toISOString(),
+    ...props,
   }
 }
 

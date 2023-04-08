@@ -11,6 +11,9 @@ const router = Router()
 const appConfig: any = {
   adapters: config.adapters,
   version: null,
+  assetPrefix: config.storage.enabled
+    ? `https://${config.storage.bucket}.${config.storage.endpoint}`
+    : '',
   // adapterSettings: getRegisteredAdapters().map((adp) => ({
   //   name: adp.name,
   //   settings: adp.options.settings,

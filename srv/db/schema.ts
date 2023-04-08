@@ -203,6 +203,7 @@ export namespace AppSchema {
     adapters: AIAdapter[]
     version: string
     canAuth: boolean
+    assetPrefix: string
   }
 
   export interface MemoryBook {

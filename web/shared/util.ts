@@ -13,6 +13,19 @@ type FormRef = {
     | 'boolean?'
 }
 
+const PREFIX_CACHE_KEY = 'agnai-asset-prefix'
+
+let assetPrefix: string = localStorage.getItem(PREFIX_CACHE_KEY) || ''
+
+export function getAssetUrl(filename: string) {
+  return `${assetPrefix}/${filename}`.replace(/\/\//g, '/')
+}
+
+export function setAssetPrefix(prefix: string) {
+  localStorage.setItem(PREFIX_CACHE_KEY, prefix)
+  assetPrefix = prefix
+}
+
 export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)

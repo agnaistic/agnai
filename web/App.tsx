@@ -19,10 +19,16 @@ import MemoryPage from './pages/Memory'
 import { EditMemoryPage } from './pages/Memory/EditMemory'
 import MetricsPage from './pages/Admin/Metrics'
 import './dots.css'
+import Loading from './shared/Loading'
+import Button from './shared/Button'
 
 const App: Component = () => {
   const state = userStore()
   const cfg = settingStore()
+
+  const reload = () => {
+    settingStore.init()
+  }
 
   createEffect(() => {
     settingStore.init()
@@ -45,30 +51,46 @@ const App: Component = () => {
         <Navigation />
         <div class="w-full overflow-y-auto" data-background style={bg()}>
           <div class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}>
-            <Routes>
-              <CharacterRoutes />
-              <Route path="/chats" component={CharacterChats} />
-              <Route path="/chat" component={ChatDetail} />
-              <Route path="/chat/:id" component={ChatDetail} />
-              <Route path="/" component={HomePage} />
-              <Route path="/presets/:id" component={GenerationPresetsPage} />
-              <Route path="/presets" component={PresetList} />
-              <Route path="/profile" component={ProfilePage} />
-              <Route path="/settings" component={Settings} />
-              <Route path="/memory" component={MemoryPage} />
-              <Route path="/memory/:id" component={EditMemoryPage} />
-              <Show when={state.loggedIn}>
-                <Route path="/invites" component={InvitesPage} />
-                <Show when={state.user?.admin}>
-                  <Route path="/admin/metrics" component={MetricsPage} />
-                  <Route path="/admin/users" component={UsersPage} />
+            <Show when={cfg.init}>
+              <Routes>
+                <CharacterRoutes />
+                <Route path="/chats" component={CharacterChats} />
+                <Route path="/chat" component={ChatDetail} />
+                <Route path="/chat/:id" component={ChatDetail} />
+                <Route path="/" component={HomePage} />
+                <Route path="/presets/:id" component={GenerationPresetsPage} />
+                <Route path="/presets" component={PresetList} />
+                <Route path="/profile" component={ProfilePage} />
+                <Route path="/settings" component={Settings} />
+                <Route path="/memory" component={MemoryPage} />
+                <Route path="/memory/:id" component={EditMemoryPage} />
+                <Show when={state.loggedIn}>
+                  <Route path="/invites" component={InvitesPage} />
+                  <Show when={state.user?.admin}>
+                    <Route path="/admin/metrics" component={MetricsPage} />
+                    <Route path="/admin/users" component={UsersPage} />
+                  </Show>
                 </Show>
-              </Show>
-              <Show when={cfg.config.canAuth}>
-                <Route path="/login" component={LoginPage} />
-              </Show>
-              <Route path="*" component={HomePage} />
-            </Routes>
+                <Show when={cfg.config.canAuth}>
+                  <Route path="/login" component={LoginPage} />
+                </Show>
+                <Route path="*" component={HomePage} />
+              </Routes>
+            </Show>
+            <Show when={!cfg.init && cfg.initLoading}>
+              <div class="flex h-[80vh] items-center justify-center">
+                <Loading />
+              </div>
+            </Show>
+
+            <Show when={!cfg.init && !cfg.initLoading}>
+              <div class="flex flex-col items-center gap-2">
+                <div>Agnaistic failed to loaded</div>
+                <div>
+                  <Button onClick={reload}>Try Again</Button>
+                </div>
+              </div>
+            </Show>
           </div>
         </div>
       </div>

@@ -28,11 +28,19 @@ services:
       CHAI_UID: /run/secrets/chai_uid
       CHAI_KEY: /run/secrets/chai_token
       ADAPTERS: horde,novel,kobold,openai,scale,claude
+      AWS_ACCESS_KEY_ID: /run/secrets/aws_id
+      AWS_SECRET_ACCESS_KEY: /run/secrets/aws_secret
+      BUCKET_NAME: /run/secrets/bucket_name
+      BUCKET_ENDPOINT: /run/secrets/bucket_endpoint
     secrets:
       - jwt_secret
       - chai_url
       - chai_uid
       - chai_token
+      - aws_id
+      - aws_secret
+      - bucket_name
+      - bucket_endpoint
 
 networks:
   storage_swarm:
@@ -46,6 +54,14 @@ secrets:
   chai_uid:
     external: true
   chai_token:
+    external: true
+  aws_id:
+    external: true
+  aws_secret:
+    external: true
+  bucket_name:
+    external: true
+  bucket_endpoint:
     external: true
 
 volumes:
