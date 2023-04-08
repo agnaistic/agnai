@@ -17,16 +17,13 @@ services:
     environment:
       LOG_LEVEL: info
       DB_NAME: agnai
-      DB_HOST: mongodb
+      DB_HOST: /run/secrets/db_host
       DB_PORT: 27017
       NODE_ENV: production
       JWT_SECRET: /run/secrets/jwt_secret
-      REDIS_HOST: redis
+      REDIS_HOST: /run/secrets/redis_host
       REDIS_PORT: 6379
       HORDE_WAIT_SECS: 150
-      CHAI_URL: /run/secrets/chai_url
-      CHAI_UID: /run/secrets/chai_uid
-      CHAI_KEY: /run/secrets/chai_token
       ADAPTERS: horde,novel,kobold,openai,scale,claude
       USE_S3: 'true'
       AWS_ACCESS_KEY_ID: /run/secrets/aws_id
@@ -35,13 +32,12 @@ services:
       BUCKET_ENDPOINT: /run/secrets/bucket_endpoint
     secrets:
       - jwt_secret
-      - chai_url
-      - chai_uid
-      - chai_token
       - aws_id
       - aws_secret
       - bucket_name
       - bucket_endpoint
+      - db_host
+      - redis_host
 
 networks:
   storage_swarm:
@@ -50,12 +46,6 @@ networks:
 secrets:
   jwt_secret:
     external: true
-  chai_url:
-    external: true
-  chai_uid:
-    external: true
-  chai_token:
-    external: true
   aws_id:
     external: true
   aws_secret:
@@ -63,6 +53,10 @@ secrets:
   bucket_name:
     external: true
   bucket_endpoint:
+    external: true
+  db_host:
+    external: true
+  redis_host:
     external: true
 
 volumes:
