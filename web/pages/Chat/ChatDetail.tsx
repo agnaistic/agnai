@@ -9,7 +9,17 @@ import {
   X,
 } from 'lucide-solid'
 import ChatExport from './ChatExport'
-import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  Show,
+  onMount,
+  onCleanup,
+} from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { getAdapter, getChatPreset } from '../../../common/prompt'
 import Button from '../../shared/Button'
@@ -111,6 +121,25 @@ const ChatDetail: Component = () => {
 
     setSwipe(next)
   }
+
+  onMount(() => {
+    window.onkeydown = (e: KeyboardEvent): any => {
+      const key = e.key
+
+      if (!e.ctrlKey) return
+
+      if (key === 'ArrowRight') {
+        clickSwipe(1)()
+      }
+      if (key === 'ArrowLeft') {
+        clickSwipe(-1)()
+      }
+    }
+  })
+
+  onCleanup(() => {
+    window.onkeydown = null
+  })
 
   const adapter = createMemo(() => {
     if (!chats.chat?.adapter || !user.user) return ''
