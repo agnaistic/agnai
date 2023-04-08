@@ -8,6 +8,8 @@ import admin from './admin'
 import horde from './horde'
 import settings from './settings'
 import memory from './memory'
+import selfhost from './self-host'
+import { config } from '../config'
 
 const router = Router()
 
@@ -20,5 +22,9 @@ router.use('/admin', admin)
 router.use('/horde', horde)
 router.use('/settings', settings)
 router.use('/memory', memory)
+
+if (config.selfhost) {
+  router.use('/self', selfhost)
+}
 
 export default router

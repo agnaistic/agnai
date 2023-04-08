@@ -4,7 +4,7 @@
 
 AI Agnostic Chat
 
-[Live Version](https://agnai.chat) | [Discord](https://discord.gg/DAn38sA8Qj) | [Roadmap](https://github.com/users/sceuick/projects/1)
+[Live Version](https://agnai.chat) | [Discord](https://discord.gg/luminai) | [Roadmap](https://github.com/users/sceuick/projects/1)
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
@@ -35,7 +35,14 @@ You can visit the hosted version at [Agnai.chat](https://agnai.chat)
 
 > CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
 
-If you're only looking to run AgnAI without contributing:
+### Using NPM
+
+Agnaistic is bundled as an NPM package and can be installed globally:
+
+```
+> npm install agnaistic -g
+> agnaistic
+```
 
 ### Using Docker
 

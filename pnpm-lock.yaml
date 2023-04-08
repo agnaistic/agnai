@@ -32,6 +32,7 @@ specifiers:
   jsonwebtoken: ^9.0.0
   localtunnel: ^2.0.2
   lucide-solid: 0.105.0-alpha.9
+  minimist: ^1.2.8
   mkdirp: ^2.1.4
   mocha: ^10.2.0
   mongodb: ^5.1.0
@@ -78,6 +79,7 @@ dependencies:
   frisker: 1.6.2
   gpt-3-encoder: 1.1.4
   jsonwebtoken: 9.0.0
+  minimist: 1.2.8
   mkdirp: 2.1.4
   mongodb: 5.1.0
   multiparty: 4.2.3
@@ -2970,7 +2972,7 @@ packages:
     dependencies:
       acorn-node: 1.8.2
       defined: 1.0.1
-      minimist: 1.2.7
+      minimist: 1.2.8
     dev: true
 
   /didyoumean/1.2.2:
@@ -3855,8 +3857,8 @@ packages:
       brace-expansion: 2.0.1
     dev: false
 
-  /minimist/1.2.7:
-    resolution: {integrity: sha512-bzfL1YUZsP41gmu/qjrEk0Q6i2ix/cVeAhbCbqH9u3zYutS1cLg00qhrD0M2MVdCcx4Sc0UpP2eBWo9rotpq6g==}
+  /minimist/1.2.8:
+    resolution: {integrity: sha512-2yyAR8qBkN3YuheJanUpWC5U3bb5osDywNB8RzDVlDwDHbocAJveqqj1u8+SVD7jkWT4yvsHCpWqqWqAxb0zCA==}
 
   /mkdirp/2.1.4:
     resolution: {integrity: sha512-Cy9cV4pRSl1o10i1dURTuRt4T04l0DkS1WZrT+Jir886OqOVkSv4FbOA7pgjhS8kEUrmm4kCRvv5var2iOCxpA==}
@@ -4221,7 +4223,7 @@ packages:
       fast-safe-stringify: 2.1.1
       help-me: 4.2.0
       joycon: 3.1.1
-      minimist: 1.2.7
+      minimist: 1.2.8
       on-exit-leak-free: 2.1.0
       pino-abstract-transport: 1.0.0
       pump: 3.0.0

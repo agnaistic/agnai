@@ -89,6 +89,7 @@ export const config = {
     bucket: env('BUCKET_NAME', ''),
     endpoint: env('BUCKET_ENDPOINT', ''),
   },
+  selfhost: !!env('SELF_HOST', ''),
 }
 
 function env(key: string, fallback?: string): string {

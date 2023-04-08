@@ -9,6 +9,7 @@ async function start() {
   await Promise.all([initDb(), initMessageBus()])
 
   server.listen(config.port, '0.0.0.0', async () => {
+    if (config.selfhost) logger.info(`Running in self-hosted mode`)
     logger.info({ port: config.port }, `Server started http://127.0.0.1:${config.port}`)
   })
 }
