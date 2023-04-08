@@ -28,7 +28,7 @@ services:
       CHAI_UID: /run/secrets/chai_uid
       CHAI_KEY: /run/secrets/chai_token
       ADAPTERS: horde,novel,kobold,openai,scale,claude
-      USE_S3: true
+      USE_S3: 'true'
       AWS_ACCESS_KEY_ID: /run/secrets/aws_id
       AWS_SECRET_ACCESS_KEY: /run/secrets/aws_secret
       BUCKET_NAME: /run/secrets/bucket_name
