@@ -22,9 +22,11 @@ const OpenAISettings: Component = () => {
         helperText={
           <>
             Valid OpenAI Key.{' '}
-            <a class="link" onClick={showUsage}>
-              View Usage
-            </a>
+            <Show when={state.user?.oaiKeySet}>
+              <a class="link" onClick={showUsage}>
+                View Usage
+              </a>
+            </Show>
           </>
         }
         placeholder={

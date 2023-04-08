@@ -8,7 +8,7 @@ services:
         aliases:
           - agnaistic
     deploy:
-      replicas: 2
+      replicas: 4
     ports:
       - '3001:3001'
     volumes:
