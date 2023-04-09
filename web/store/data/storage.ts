@@ -223,7 +223,11 @@ export function loadItem<TKey extends keyof typeof KEYS>(
 ): LocalStorage[TKey] {
   if (local) {
     const item = localStorage.getItem(KEYS[key])
-    if (item) return JSON.parse(item)
+    if (item) {
+      const parsed = JSON.parse(item)
+      localStore.set(key, parsed)
+      return parsed
+    }
 
     const fallback = fallbacks[key]
     localStorage.setItem(key, JSON.stringify(fallback))
