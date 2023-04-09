@@ -1,8 +1,8 @@
 import { AppSchema } from '../../srv/db/schema'
+import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { data } from './data'
 import { toastStore } from './toasts'
-import { userStore } from './user'
 
 type CharacterState = {
   loading?: boolean
@@ -24,18 +24,20 @@ export type NewCharacter = {
   originalAvatar?: any
 }
 
-export const characterStore = createStore<CharacterState>('character', {
+const initState: CharacterState = {
   creating: false,
   characters: { loaded: false, list: [] },
-})((get, set) => {
-  userStore.subscribe((curr, prev) => {
-    if (!curr.loggedIn && prev.loggedIn) characterStore.logout()
+}
+
+export const characterStore = createStore<CharacterState>(
+  'character',
+  initState
+)((get, set) => {
+  events.on(EVENTS.loggedOut, () => {
+    characterStore.setState(initState)
   })
 
   return {
-    logout() {
-      return { characters: { loaded: false, list: [] } }
-    },
     async *getCharacters(state) {
       if (state.loading) return
 

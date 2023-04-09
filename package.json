@@ -1,6 +1,6 @@
 {
   "name": "agnaistic",
-  "version": "0.1.0-alpha1",
+  "version": "0.1.0-alpha3",
   "description": "Agnostic AI Chat",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -87,6 +87,7 @@
     "buffer": "^5.5.0",
     "chai": "^4.3.7",
     "concurrently": "^7.6.0",
+    "events": "^3.1.0",
     "js-cookie": "^3.0.1",
     "localtunnel": "^2.0.2",
     "lucide-solid": "0.105.0-alpha.9",

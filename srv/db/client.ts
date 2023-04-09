@@ -10,7 +10,7 @@ logger.debug({ uri }, 'MongoDB URI')
 let database: Db | null = null
 
 export async function connect(silent = false) {
-  const cli = new MongoClient(uri, { ignoreUndefined: true })
+  const cli = new MongoClient(uri, { ignoreUndefined: true, connectTimeoutMS: 2000 })
   try {
     await cli.connect()
     database = cli.db(config.db.name)
@@ -29,6 +29,7 @@ export async function connect(silent = false) {
     }
 
     setTimeout(() => connect(true), 5000)
+    throw ex
   }
 }
 

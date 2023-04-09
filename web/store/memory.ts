@@ -1,7 +1,7 @@
 import { AppSchema, NewBook } from '../../srv/db/schema'
+import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { data } from './data'
-import { settingStore } from './settings'
 import { toastStore } from './toasts'
 
 type MemoryState = {
@@ -15,17 +15,20 @@ type MemoryState = {
   updating: boolean
 }
 
-export const memoryStore = createStore<MemoryState>('memory', {
+const initState: MemoryState = {
   creating: false,
   show: true,
   books: { loaded: false, list: [] },
   loadingAll: false,
   updating: false,
-})((get, set) => {
-  settingStore.subscribe(({ init }, prev) => {
-    if (init && !prev.init) {
-      memoryStore.setState({ books: { list: init.books, loaded: true } })
-    }
+}
+
+export const memoryStore = createStore<MemoryState>(
+  'memory',
+  initState
+)((get, set) => {
+  events.on(EVENTS.loggedOut, () => {
+    memoryStore.setState(initState)
   })
 
   return {

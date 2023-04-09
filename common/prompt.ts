@@ -35,39 +35,6 @@ export type PromptOpts = {
 export const BOT_REPLACE = /\{\{char\}\}/g
 export const SELF_REPLACE = /\{\{user\}\}/g
 
-export const testBook: AppSchema.MemoryBook = {
-  kind: 'memory',
-  _id: '',
-  name: 'test book',
-  userId: '',
-  entries: [
-    {
-      keywords: ['skin colour'],
-      priority: 10,
-      weight: 5,
-      name: '',
-      entry: "{{user}}'s skin is blue",
-      enabled: true,
-    },
-    {
-      keywords: ['height'],
-      priority: 10,
-      weight: 5,
-      name: '',
-      entry: '{{user}} is incredibly small',
-      enabled: true,
-    },
-    {
-      keywords: ['foo'],
-      priority: 10,
-      weight: 4,
-      name: '',
-      entry: 'Foo bar baz qux',
-      enabled: true,
-    },
-  ],
-}
-
 /**
  * This is only ever invoked client-side
  * @param opts

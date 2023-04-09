@@ -6,7 +6,9 @@ import { connect, createIndexes } from './db/client'
 import { logger } from './logger'
 
 async function start() {
-  await Promise.all([initDb(), initMessageBus()])
+  try {
+    await Promise.all([initDb(), initMessageBus()])
+  } catch (ex) {}
 
   server.listen(config.port, '0.0.0.0', async () => {
     if (config.selfhost) logger.info(`Running in self-hosted mode`)

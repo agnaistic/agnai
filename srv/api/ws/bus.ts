@@ -73,6 +73,7 @@ export async function initMessageBus() {
     logger.warn(
       `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignored this warning.`
     )
+    throw ex
   }
 }
 
