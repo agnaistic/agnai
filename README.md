@@ -6,7 +6,7 @@ AI Agnostic Chat
 
 [Live Version](https://agnai.chat) | [Discord](https://discord.gg/luminai) | [Roadmap](https://github.com/users/sceuick/projects/1)
 
-Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
+You can visit the hosted version at [Agnai.chat](https://agnai.chat)
 
 <div style="display: flex; flex-direction: row; gap: 0.5rem;" >
 <img src="./screenshots/chat.png" height="150">
@@ -14,37 +14,37 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 <img src="./screenshots/settings.png" height="150">
 </div>
 
+Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
+
+## Quick Start
+
+(Requires Node.JS)  
+Agnaistic is bundled as an NPM package and can be installed globally:
+
+```sh
+# Install or update:
+> npm install agnaistic -g
+> agnai
+
+# View launch options:
+> agnai help
+
+```
+
 ## Features
 
 - **Group Conversations**: Multiple users with one character/bot
-- **Multiple AI services**: Support for Kobold, Novel, AI Horde, Chai, LuminAI, OpenAI
-- Multiple persona schema formats (W++, Square bracket format, Boostyle)
+- **Multiple AI services**: Support for Kobold, Novel, AI Horde, LuminAI, OpenAI, Claude
+- Multiple persona schema formats: W++, Square bracket format (SBF), Boostyle, Plain text
 - Multi-tenancy:
   - User authentication
-  - Individual user settings: Which AI service to use and their own service configuration
-  - Individual user generation settings
-- Chat specific overrides:
-  - Choose the AI service
-  - Personalise the character
-  - Customise the generation preset/settings
-- Image generation (_IN PROGRESS_)
+  - User settings: Which AI service to use and their own settings
+  - User generation settings
+- Chat specific overrides: AI Service, Character, Generation Settings
 
-## Quick Start for Users
+## Alternative
 
-You can visit the hosted version at [Agnai.chat](https://agnai.chat)
-
-> CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
-
-### Using NPM
-
-Agnaistic is bundled as an NPM package and can be installed globally:
-
-```
-> npm install agnaistic -g
-> agnaistic
-```
-
-### Using Docker
+### Docker
 
 1. Clone the project
 2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`

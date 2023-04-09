@@ -1,7 +1,9 @@
 name: Publish NPM Package
+
 on:
   push:
-    branches: ['dev']
+    tags:
+      - '*'
 
 env:
   node-version: '18.4.0'

@@ -96,7 +96,7 @@ export async function handleGuestInit() {
   setSelfHosting(!!cfg.result?.selfhosting)
 
   if (selfHosting()) {
-    const res = await api.get('/selfhost')
+    const res = await api.get('/json')
 
     if (
       !res.result.user ||
@@ -107,7 +107,7 @@ export async function handleGuestInit() {
       !res.result.chats
     ) {
       const entities = await migrateToJson()
-      await api.post('/selfhost', entities)
+      await api.post('/json', entities)
       return local.result({ ...entities, config: cfg.result! })
     }
 
@@ -131,11 +131,11 @@ export async function handleGuestInit() {
 async function migrateToJson() {
   const entities = getGuestInitEntities()
 
-  await api.post('/selfhost', entities)
+  await api.post('/json', entities)
 
   for (const chat of entities.chats) {
     const messages = await local.getMessages(chat._id, true)
-    await api.post(`/selfhost/messages/${chat._id}`, messages)
+    await api.post(`/json/messages/${chat._id}`, messages)
   }
 
   return entities
@@ -154,7 +154,7 @@ function getGuestInitEntities() {
 
 export function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
   if (SELF_HOSTING) {
-    api.post(`/selfhost/messages/${chatId}`, messages)
+    api.post(`/json/messages/${chatId}`, messages)
   } else {
     const key = `messages-${chatId}`
     localStorage.setItem(key, JSON.stringify(messages))
@@ -166,7 +166,7 @@ export async function getMessages(
   local?: boolean
 ): Promise<AppSchema.ChatMessage[]> {
   if (!local && SELF_HOSTING) {
-    const res = await api.get(`/selfhost/messages/${chatId}`)
+    const res = await api.get(`/json/messages/${chatId}`)
     if (res.result) return res.result
     if (res.error) {
       toastStore.error(`Failed to load messages: ${res.error}`)
@@ -211,7 +211,7 @@ export function deleteChatMessages(chatId: string) {
 function saveItem<TKey extends keyof typeof KEYS>(key: TKey, value: LocalStorage[TKey]) {
   if (SELF_HOSTING) {
     localStore.set(key, value)
-    api.post('/selfhost', { [key]: value })
+    api.post('/json', { [key]: value })
   } else {
     localStore.set(key, value)
     localStorage.setItem(KEYS[key], JSON.stringify(value))

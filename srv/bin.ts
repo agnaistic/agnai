@@ -5,9 +5,9 @@ const argv = require('minimist')(process.argv.slice(2))
 const options: string[] = []
 
 const selfhost = flag(
-  `Enable self-hosting mode. Browser local storage won't be used. Instead, JSON files will be managed by the server.`,
-  's',
-  'self'
+  `Disable JSON storage mode. Browser local storage won't be used. Instead, JSON files will be managed by the server.`,
+  'j',
+  'json'
 )
 
 const port = flag(`Choose the port run the server on. Default: 3001`, 'p', 'port')
@@ -21,7 +21,7 @@ if (process.argv.slice(2).join(' ').includes('help')) {
   process.exit(0)
 }
 
-if (selfhost) process.env.SELF_HOST = '1'
+if (selfhost) process.env.SELF_HOST = ''
 
 if (port) {
   const value = +port

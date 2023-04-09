@@ -79,7 +79,7 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env('ADAPTERS', 'novel,horde,kobold,chai,luminai,openai,scale,claude')
+  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude')
     .split(',')
     .filter((i) => !!i) as AIAdapter[],
   storage: {
@@ -89,7 +89,7 @@ export const config = {
     bucket: env('BUCKET_NAME', ''),
     endpoint: env('BUCKET_ENDPOINT', ''),
   },
-  selfhost: !!env('SELF_HOST', ''),
+  jsonStorage: !!env('JSON_STORAGE', ''),
 }
 
 function env(key: string, fallback?: string): string {

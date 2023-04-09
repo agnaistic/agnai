@@ -8,7 +8,7 @@ import admin from './admin'
 import horde from './horde'
 import settings from './settings'
 import memory from './memory'
-import selfhost from './self-host'
+import selfhost from './json'
 import { config } from '../config'
 
 const router = Router()
@@ -23,8 +23,8 @@ router.use('/horde', horde)
 router.use('/settings', settings)
 router.use('/memory', memory)
 
-if (config.selfhost) {
-  router.use('/selfhost', selfhost)
+if (config.jsonStorage) {
+  router.use('/json', selfhost)
 }
 
 export default router

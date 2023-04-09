@@ -11,9 +11,13 @@ async function start() {
   } catch (ex) {}
 
   server.listen(config.port, '0.0.0.0', async () => {
-    if (config.selfhost) logger.info(`Running in self-hosted mode`)
+    if (config.jsonStorage) logger.info(`Running in self-hosted mode`)
     logger.info({ port: config.port }, `Server started http://127.0.0.1:${config.port}`)
   })
+
+  if (config.jsonStorage) {
+    logger.info(`JSON storage enabled for guests`)
+  }
 }
 
 // No longer accept requests when shutting down

@@ -12,7 +12,7 @@ const router = Router()
 const appConfig: AppSchema.AppConfig = {
   adapters: config.adapters,
   version: '',
-  selfhosting: config.selfhost,
+  selfhosting: config.jsonStorage,
   canAuth: false,
   assetPrefix: config.storage.enabled
     ? `https://${config.storage.bucket}.${config.storage.endpoint}`
