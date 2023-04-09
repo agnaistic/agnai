@@ -128,7 +128,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topP: 'top_p',
     typicalP: 'typical_p',
     topA: 'top_a',
-    order: 'order',
+    order: '',
   },
   chai: {
     repetitionPenalty: 'repetition_penalty',
