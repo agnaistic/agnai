@@ -60,7 +60,9 @@ export const handleOoba: ModelAdapter = async function* ({
   try {
     const text = resp.body.data[0]
     if (!text) {
-      yield { error: `text-generation-webui request failed: Received empty response. Try again.` }
+      yield {
+        error: `text-generation-webui request failed: Received empty response (probably OOM). Try again.`,
+      }
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
