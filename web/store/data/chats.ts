@@ -23,8 +23,12 @@ export async function getChat(id: string) {
   const profile = loadItem('profile')
   const messages = await local.getMessages(id)
 
-  if (!chat || !character) {
-    return local.error(`Chat or character not found`)
+  if (!chat) {
+    return local.error(`Chat not found in data`)
+  }
+
+  if (!character) {
+    return local.error(`Character not found in data`)
   }
 
   return local.result({ chat, character, messages, members: [profile], active: [] })

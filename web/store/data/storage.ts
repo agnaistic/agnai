@@ -213,6 +213,7 @@ function saveItem<TKey extends keyof typeof KEYS>(key: TKey, value: LocalStorage
     localStore.set(key, value)
     api.post('/selfhost', { [key]: value })
   } else {
+    localStore.set(key, value)
     localStorage.setItem(KEYS[key], JSON.stringify(value))
   }
 }

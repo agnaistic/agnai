@@ -228,9 +228,9 @@ export const userStore = createStore<UserState>(
       toastStore.error(`Guest state successfully reset`)
       settingStore.init()
     },
-    async *openaiUsage({ metadata }) {
+    async *openaiUsage({ metadata, user }) {
       yield { oaiUsageLoading: true }
-      const res = await api.post('/user/services/openai-usage')
+      const res = await api.post('/user/services/openai-usage', { key: user?.oaiKey })
       yield { oaiUsageLoading: false }
       if (res.error) {
         toastStore.error(`Could not retrieve usage: ${res.error}`)

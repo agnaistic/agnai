@@ -22,7 +22,7 @@ const OpenAISettings: Component = () => {
         helperText={
           <>
             Valid OpenAI Key.{' '}
-            <Show when={state.user?.oaiKeySet}>
+            <Show when={state.user?.oaiKeySet || state.user?.oaiKey}>
               <a class="link" onClick={showUsage}>
                 View Usage
               </a>
@@ -30,12 +30,12 @@ const OpenAISettings: Component = () => {
           </>
         }
         placeholder={
-          state.user?.oaiKeySet
+          state.user?.oaiKeySet || state.user?.oaiKey
             ? 'OpenAI key is set'
             : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         }
         type="password"
-        value={state.user?.oaiKey}
+        value={''}
       />
       <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('openai')}>
         Delete OpenAI Key
