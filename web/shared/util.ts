@@ -1,5 +1,6 @@
 import { UnwrapBody, assertValid } from 'frisker'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
+import { isLoggedIn } from '../store/api'
 import { Option } from './Select'
 
 type FormRef = {
@@ -18,8 +19,12 @@ const PREFIX_CACHE_KEY = 'agnai-asset-prefix'
 let assetPrefix: string = localStorage.getItem(PREFIX_CACHE_KEY) || ''
 
 export function getAssetUrl(filename: string) {
-  const infix = assetPrefix.endsWith('/') || filename.startsWith('/') ? '' : '/'
-  return `${assetPrefix}${infix}${filename}`
+  if (isLoggedIn()) {
+    const infix = assetPrefix.endsWith('/') || filename.startsWith('/') ? '' : '/'
+    return `${assetPrefix}${infix}${filename}`
+  }
+
+  return filename
 }
 
 export function setAssetPrefix(prefix: string) {
