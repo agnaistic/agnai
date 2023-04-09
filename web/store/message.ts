@@ -1,5 +1,5 @@
 import { AppSchema } from '../../srv/db/schema'
-import { api } from './api'
+import { api, isLoggedIn } from './api'
 import { chatStore, NewChat } from './chat'
 import { createStore } from './create'
 import { data } from './data'
@@ -242,14 +242,19 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   const msg = body.msg as AppSchema.ChatMessage
 
   // If the message is from a user don't clear the "waiting for response" flags
+  const nextMsgs = msgs.concat(msg)
   if (msg.userId) {
-    msgStore.setState({ msgs: msgs.concat(msg) })
+    msgStore.setState({ msgs: nextMsgs })
   } else {
     msgStore.setState({
-      msgs: msgs.concat(msg),
+      msgs: nextMsgs,
       partial: undefined,
       waiting: undefined,
     })
+  }
+
+  if (!isLoggedIn()) {
+    local.saveMessages(body.chatId, nextMsgs)
   }
 
   addMsgToRetries(msg)

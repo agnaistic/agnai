@@ -125,7 +125,8 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
     if (gen.error) {
       error = true
-      sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
+      if (!guest) sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
+      else sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
       continue
     }
   }

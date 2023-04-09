@@ -29,7 +29,7 @@ export const settingStore = createStore<SettingStore>('settings', {
   fullscreen: false,
   models: [],
   workers: [],
-  config: { adapters: [], canAuth: true, version: '...', assetPrefix: '' },
+  config: { adapters: [], canAuth: true, version: '...', assetPrefix: '', selfhosting: false },
 })((_) => ({
   async *init() {
     yield { initLoading: true }
@@ -68,4 +68,6 @@ export const settingStore = createStore<SettingStore>('settings', {
 
     return { workers: json }
   },
+
+  async *guestMigrate() {},
 }))

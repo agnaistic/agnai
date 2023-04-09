@@ -24,7 +24,7 @@ router.use('/settings', settings)
 router.use('/memory', memory)
 
 if (config.selfhost) {
-  router.use('/self', selfhost)
+  router.use('/selfhost', selfhost)
 }
 
 export default router

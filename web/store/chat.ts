@@ -308,7 +308,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (!active) return
 
       const { msgs } = msgStore.getState()
-      const entities = data.msg.getPromptEntities()
+      const entities = await data.msg.getPromptEntities()
 
       const prompt = createPrompt({
         ...entities,

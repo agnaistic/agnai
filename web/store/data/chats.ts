@@ -21,7 +21,7 @@ export async function getChat(id: string) {
   const chat = loadItem('chats').find((ch) => ch._id === id)
   const character = loadItem('characters').find((ch) => ch._id === chat?.characterId)
   const profile = loadItem('profile')
-  const messages = local.getMessages(id)
+  const messages = await local.getMessages(id)
 
   if (!chat || !character) {
     return local.error(`Chat or character not found`)
