@@ -1,8 +1,10 @@
 import { Router } from 'express'
 import { readFile, writeFile } from 'fs/promises'
 import { resolve } from 'path'
-import { errors, handle } from '../wrap'
+import { StatusError, handle } from '../wrap'
 import { getAppConfig } from '../settings'
+import { v4 } from 'uuid'
+import { entityUpload, saveBase64File } from '../upload'
 
 const basePath = resolve(__dirname, '../../../db')
 
@@ -94,8 +96,37 @@ async function read(file: string) {
 }
 
 async function saveFile(file: string, content: any) {
+  if (Array.isArray(content)) {
+    for (const ent of content) {
+      if (!ent.avatar) continue
+      ent.avatar = await saveAvatar(ent.avatar)
+    }
+  } else if (content && content.avatar) {
+    content.avatar = await saveAvatar(content.avatar)
+  }
+
   await writeFile(
     resolve(basePath, file),
     typeof content === 'string' ? content : JSON.stringify(content, null, 2)
   )
+}
+
+async function saveAvatar(avatar: string) {
+  const ext = avatar.includes('image/png')
+    ? '.png'
+    : avatar.includes('image/jpeg')
+    ? '.jpeg'
+    : avatar.includes('jpg')
+    ? '.jpg'
+    : null
+
+  if (!ext) {
+    return avatar
+  }
+
+  const data = avatar.replace(/^data:image\/([a-z0-9]+);base64,/, '')
+  const filename = `${v4()}${ext}`
+
+  const outname = await saveBase64File(filename, data)
+  return outname
 }

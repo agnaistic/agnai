@@ -83,12 +83,21 @@ export async function createCharacter(char: ImportCharacter) {
       form.append('avatar', char.avatar)
     }
 
+    if (char.originalAvatar) {
+      form.append('originalAvatar', char.originalAvatar)
+    }
+
     const res = await api.upload<AppSchema.Character>(`/character`, form)
     return res
   }
 
   const { avatar: file, ...props } = char
-  const avatar = file ? await getImageData(file) : undefined
+  const avatar = file
+    ? await getImageData(file)
+    : char.originalAvatar
+    ? char.originalAvatar
+    : undefined
+
   const newChar: AppSchema.Character = { ...props, ...baseChar(), avatar, _id: v4() }
 
   const chars = loadItem('characters')

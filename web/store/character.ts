@@ -21,6 +21,7 @@ export type NewCharacter = {
   sampleChat: string
   avatar?: File
   persona: AppSchema.Persona
+  originalAvatar?: any
 }
 
 export const characterStore = createStore<CharacterState>('character', {
