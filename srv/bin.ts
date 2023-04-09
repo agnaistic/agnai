@@ -4,7 +4,7 @@ const argv = require('minimist')(process.argv.slice(2))
 
 const options: string[] = []
 
-const selfhost = flag(
+const disableJson = flag(
   `Disable JSON storage mode. Browser local storage won't be used. Instead, JSON files will be managed by the server.`,
   'j',
   'json'
@@ -21,7 +21,7 @@ if (process.argv.slice(2).join(' ').includes('help')) {
   process.exit(0)
 }
 
-if (selfhost) process.env.SELF_HOST = ''
+if (!disableJson) process.env.SELF_HOST = '1'
 
 if (port) {
   const value = +port
