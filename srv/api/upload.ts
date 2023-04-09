@@ -1,11 +1,10 @@
-import { S3 } from 'aws-sdk'
+import { S3 } from '@aws-sdk/client-s3'
 import mp from 'multiparty'
 import { mkdirpSync } from 'mkdirp'
 import { Request } from 'express'
-import { rename, writeFile } from 'fs/promises'
-import { basename, dirname, extname, resolve } from 'path'
+import { writeFile } from 'fs/promises'
+import { extname, resolve } from 'path'
 import { createReadStream, readdirSync } from 'fs'
-import { v4 } from 'uuid'
 import { assertValid, Validator, UnwrapBody } from 'frisker'
 import { config } from '../config'
 
@@ -90,15 +89,13 @@ export async function entityUpload(kind: string, id: string, attachment?: Attach
 export async function upload(attachment: Attachment, name: string) {
   const filename = `${name}.${attachment.ext}`
   if (config.storage.enabled) {
-    await s3
-      .putObject({
-        Bucket: config.storage.bucket,
-        Key: `assets/${name}.${attachment.ext}`,
-        Body: attachment.content,
-        ContentType: attachment.type,
-        ACL: 'public-read',
-      })
-      .promise()
+    await s3.putObject({
+      Bucket: config.storage.bucket,
+      Key: `assets/${name}.${attachment.ext}`,
+      Body: attachment.content,
+      ContentType: attachment.type,
+      ACL: 'public-read',
+    })
     return `/assets/` + filename
   }
 
