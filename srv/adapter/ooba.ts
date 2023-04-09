@@ -19,31 +19,32 @@ export const handleOoba: ModelAdapter = async function* ({
   settings,
   log,
 }) {
-  const body = [
-    prompt,
-    settings.max_new_tokens,
-    true, // do_sample
-    settings.top_p,
-    settings.temperature,
-    settings.typical_p || 1,
-    settings.repetition_penalty,
-    settings.encoder_repetition_penalty,
-    settings.top_k,
-    0, // no min_length
-    0, // no_repeat_ngram_size
-    1, // num_beams
-    settings.penalty_alpha,
-    1, // length_penalty
-    true, // stop at line break
-    -1, // random seed
-  ]
+  const body = {
+    max_new_tokens: settings.max_new_tokens,
+    do_sample: true,
+    temperature: settings.temperature,
+    top_p: settings.top_p,
+    typical_p: settings.typical_p || 1,
+    repetition_penalty: settings.repetition_penalty,
+    encoder_repetition_penalty: settings.encoder_repetition_penalty,
+    top_k: settings.top_k,
+    min_length: 0,
+    no_repeat_ngram_size: 0,
+    num_beams: 1,
+    penalty_alpha: settings.penalty_alpha,
+    length_penalty: 1,
+    early_stopping: true,
+    seed: -1,
+  }
 
-  log.debug({ body }, 'Textgen payload')
+  const payload = [JSON.stringify([prompt, body])]
+
+  log.debug({ payload }, 'Textgen payload')
 
   const resp = await needle(
     'post',
     `${user.oobaUrl || defaultUrl}/run/textgen`,
-    { data: body },
+    { data: payload },
     { json: true }
   ).catch((err) => ({ error: err }))
   if ('error' in resp) {
