@@ -39,7 +39,7 @@ if (process.argv.slice(2).join(' ').includes('help')) {
   process.exit(0)
 }
 
-if (!disableJson) process.env.SELF_HOST = '1'
+if (!disableJson) process.env.JSON_STORAGE = '1'
 
 if (port) {
   const value = +port
