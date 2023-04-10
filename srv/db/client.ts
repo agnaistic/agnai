@@ -10,10 +10,19 @@ logger.debug({ uri }, 'MongoDB URI')
 let database: Db | null = null
 
 export async function connect(silent = false) {
-  const cli = new MongoClient(uri, { ignoreUndefined: true, connectTimeoutMS: 2000 })
+  if (!config.db.host) {
+    logger.info(`No MongoDB host provided: Running in anonymous-only mode`)
+    return
+  }
+
+  const cli = new MongoClient(uri, { ignoreUndefined: true })
   try {
+    const timer = setTimeout(() => cli.close(), 2000)
     await cli.connect()
+    clearTimeout(timer)
+
     database = cli.db(config.db.name)
+
     cli.on('close', () => {
       connected = false
       logger.warn('MongoDB disconnected. Retrying...')
@@ -29,7 +38,6 @@ export async function connect(silent = false) {
     }
 
     setTimeout(() => connect(true), 5000)
-    throw ex
   }
 }
 

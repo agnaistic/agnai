@@ -1,12 +1,11 @@
 import { Router } from 'express'
 import { readFile, writeFile } from 'fs/promises'
 import { resolve } from 'path'
-import { StatusError, handle } from '../wrap'
+import { handle } from '../wrap'
 import { getAppConfig } from '../settings'
 import { v4 } from 'uuid'
-import { entityUpload, saveBase64File } from '../upload'
-
-const basePath = resolve(__dirname, '../../../db')
+import { saveBase64File } from '../upload'
+import { config } from '../../config'
 
 const names = {
   user: 'user.json',
@@ -87,7 +86,7 @@ router.post('/messages/:id', saveMessages)
 export default router
 
 async function read(file: string) {
-  const content = await readFile(resolve(basePath, file)).catch(() => null)
+  const content = await readFile(resolve(config.jsonFolder, file)).catch(() => null)
   if (!content) return
   try {
     const json = JSON.parse(content.toString())
@@ -106,7 +105,7 @@ async function saveFile(file: string, content: any) {
   }
 
   await writeFile(
-    resolve(basePath, file),
+    resolve(config.jsonFolder, file),
     typeof content === 'string' ? content : JSON.stringify(content, null, 2)
   )
 }

@@ -90,6 +90,7 @@ export const config = {
     endpoint: env('BUCKET_ENDPOINT', ''),
   },
   jsonStorage: !!env('JSON_STORAGE', ''),
+  jsonFolder: env('JSON_FOLDER', resolve(__dirname, '..', 'db')),
 }
 
 function env(key: string, fallback?: string): string {

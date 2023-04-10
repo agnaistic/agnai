@@ -23,7 +23,7 @@ Agnaistic is bundled as an NPM package and can be installed globally:
 
 ```sh
 # Install or update:
-> npm install agnaistic -g
+> npm install agnai -g
 > agnai
 
 # View launch options:
