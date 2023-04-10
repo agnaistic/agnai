@@ -36,7 +36,12 @@ import { AppSchema } from '../../../srv/db/schema'
 
 const EDITING_KEY = 'chat-detail-settings'
 
-const ChatDetail: Component = () => {
+type ChatDetailProps = {
+  anonymize: boolean
+  toggleAnonymize: () => void
+}
+
+const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
@@ -63,7 +68,6 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
-  const [anonymize, setAnonymize] = createSignal(false)
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
@@ -85,8 +89,6 @@ const ChatDetail: Component = () => {
     setEditing(next)
     saveEditingState(next)
   }
-
-  const toggleAnonymize = () => setAnonymize(!anonymize())
 
   const showModal = (modal: ChatModal) => {
     setModal(modal)
@@ -189,8 +191,8 @@ const ChatDetail: Component = () => {
                     show={showModal}
                     editing={editing()}
                     toggleEditing={toggleEditing}
-                    anonymizeOn={anonymize()}
-                    toggleAnonymize={toggleAnonymize}
+                    anonymizeOn={props.anonymize}
+                    toggleAnonymize={props.toggleAnonymize}
                   />
                 </DropMenu>
               </div>
@@ -238,7 +240,7 @@ const ChatDetail: Component = () => {
                       chat={chats.chat!}
                       char={chats.char!}
                       editing={editing()}
-                      anonymize={anonymize()}
+                      anonymize={props.anonymize}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
@@ -256,7 +258,7 @@ const ChatDetail: Component = () => {
                     chat={chats.chat!}
                     onRemove={() => {}}
                     editing={editing()}
-                    anonymize={anonymize()}
+                    anonymize={props.anonymize}
                   />
                 </Show>
               </div>
