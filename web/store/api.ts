@@ -1,5 +1,6 @@
 import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
+import { toastStore } from './toasts'
 
 let socketId = ''
 
@@ -97,7 +98,12 @@ async function callApi<T = any>(
 
   if (res.status === 401) {
     events.emit(EVENTS.sessionExpired)
-    return { result: undefined, status: 401, error: 'Unauthorized' }
+    toastStore.error(`Your session has expired. Please login again.`)
+    return {
+      result: undefined,
+      status: 401,
+      error: 'Unauthorized',
+    }
   }
 
   if (res.status >= 400) {
