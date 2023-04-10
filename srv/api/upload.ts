@@ -9,8 +9,9 @@ import { assertValid, Validator, UnwrapBody } from 'frisker'
 import { config } from '../config'
 
 const s3 = new S3({
-  region: process.env.AWS_REGION || 'us-east-1',
-  endpoint: config.storage.endpoint,
+  region: 'us-east-1',
+  forcePathStyle: false,
+  endpoint: `https://${config.storage.endpoint}`,
   credentials: {
     accessKeyId: config.storage.id,
     secretAccessKey: config.storage.key,
