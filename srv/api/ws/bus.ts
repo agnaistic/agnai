@@ -41,6 +41,13 @@ export function isConnected() {
 }
 
 export async function initMessageBus() {
+  if (!config.redis.host) {
+    logger.info(
+      `No Redis host provided - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`
+    )
+    return
+  }
+
   try {
     await clients.pub.connect()
     await clients.sub.connect()
@@ -71,7 +78,7 @@ export async function initMessageBus() {
     connected = true
   } catch (ex) {
     logger.warn(
-      `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignored this warning.`
+      `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`
     )
   }
 }

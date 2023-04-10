@@ -46,7 +46,7 @@ if (!process.env.JWT_SECRET) {
 export const config = {
   jwtSecret: env('JWT_SECRET'),
   port: +env('PORT', '3001'),
-  assetFolder: env('ASSET_FOLDER', resolve(process.cwd(), 'dist', 'assets')),
+  assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
   db: {
     name: env('DB_NAME', 'agnai'),
     host: env('DB_HOST', '127.0.0.1'),
@@ -79,7 +79,7 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env('ADAPTERS', 'novel,horde,kobold,chai,luminai,openai,scale,claude')
+  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude')
     .split(',')
     .filter((i) => !!i) as AIAdapter[],
   storage: {
@@ -89,6 +89,8 @@ export const config = {
     bucket: env('BUCKET_NAME', ''),
     endpoint: env('BUCKET_ENDPOINT', ''),
   },
+  jsonStorage: !!env('JSON_STORAGE', ''),
+  jsonFolder: env('JSON_FOLDER', resolve(__dirname, '..', 'db')),
 }
 
 function env(key: string, fallback?: string): string {

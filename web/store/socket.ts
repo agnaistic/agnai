@@ -5,8 +5,8 @@ type Handler = { validator: Validator; fn: (body: any) => void }
 
 const listeners = new Map<string, Handler[]>()
 
-const BASE_RETRY = 250
-const MAX_RETRY = 5000
+const BASE_RETRY = 100
+const MAX_RETRY = 1000
 let RETRY_TIME = 0
 
 let socket: WebSocket
@@ -16,13 +16,11 @@ createSocket()
 function createSocket() {
   const socketUrl = baseUrl.replace('https://', 'wss://').replace('http://', 'ws://')
   const ws = new WebSocket(socketUrl)
+
   socket = ws
   ws.onopen = onConnected
   ws.onmessage = onMessage
   ws.onclose = onClose
-  ws.onerror = () => {
-    ws.close()
-  }
 }
 
 export function publish<T extends { type: string }>(payload: T) {
@@ -63,6 +61,7 @@ function onMessage(msg: MessageEvent<any>) {
 }
 
 function onConnected() {
+  RETRY_TIME = 0
   const token = getAuth()
   if (!token) return
   publish({ type: 'login', token })

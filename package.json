@@ -1,10 +1,20 @@
 {
-  "name": "agnaistic",
-  "version": "0.1.0",
-  "private": true,
+  "name": "agnai",
+  "version": "0.1.0-alpha-11",
   "description": "Agnostic AI Chat",
   "keywords": [],
   "license": "AGPL-3.0",
+  "bin": {
+    "agnaistic": "./srv/bin.js",
+    "agnai": "./srv/bin.js"
+  },
+  "files": [
+    "srv/**",
+    "srv/**/*.map",
+    "common/*",
+    "dist/index.*",
+    "db/.gitkeep"
+  ],
   "scripts": {
     "build": "parcel build web/index.html --no-optimize --detailed-report",
     "build:prod": "NODE_ENV=production parcel build web/index.html --detailed-report",
@@ -27,6 +37,8 @@
     "start:public": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --port 3001\"",
     "start:public:win": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --local-host 127.0.0.1 --port 3001\"",
     "start:win": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
+    "selfhost": "npm run deps && npm run build:all && SELF_HOST=1 npm run server",
+    "selfhost:win": "set \"SELF_HOST=1\" && npm run deps && npm run build:all && npm run server",
     "start:debug:win": "set LOG_LEVEL=debug && concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "test": "mocha \"tests/**.spec.js\"",
     "typecheck": "tsc -p tsconfig.json",
@@ -54,6 +66,7 @@
     "frisker": "1.6.2",
     "gpt-3-encoder": "^1.1.4",
     "jsonwebtoken": "^9.0.0",
+    "minimist": "^1.2.8",
     "mkdirp": "^2.1.4",
     "mongodb": "^5.1.0",
     "multiparty": "^4.2.3",
@@ -75,6 +88,7 @@
     "buffer": "^5.5.0",
     "chai": "^4.3.7",
     "concurrently": "^7.6.0",
+    "events": "^3.1.0",
     "js-cookie": "^3.0.1",
     "localtunnel": "^2.0.2",
     "lucide-solid": "0.105.0-alpha.9",

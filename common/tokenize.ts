@@ -2,11 +2,12 @@ import fs from 'fs'
 import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
 import gpt from 'gpt-3-encoder'
+import { resolve } from 'path'
 
 const cl100k_base = require('@dqbd/tiktoken/encoders/cl100k_base.json')
 const p50k_base = require('@dqbd/tiktoken/encoders/p50k_base.json')
 
-const wasm = fs.readFileSync('./node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm')
+const wasm = getWasm()
 
 export type Encoder = (value: string) => number
 
@@ -41,7 +42,7 @@ export function getEncoder(adapter: AIAdapter, model?: string) {
 
 async function prepareTokenizers() {
   try {
-    await init((imports) => WebAssembly.instantiate(wasm, imports))
+    await init((imports) => WebAssembly.instantiate(wasm!, imports))
 
     {
       const encoder = new Tiktoken(p50k_base.bpe_ranks, p50k_base.special_tokens, p50k_base.pat_str)
@@ -71,7 +72,15 @@ async function prepareTokenizers() {
 
 prepareTokenizers()
 
-function dialogTrim(value: string, dialog: boolean) {
-  if (!dialog) return value
-  return value.substring(value.indexOf(':') + 1).trim()
+function getWasm() {
+  try {
+    const wasm = fs.readFileSync('./node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm')
+    return wasm
+  } catch (ex) {}
+
+  try {
+    const path = resolve(__dirname, '..', 'node_modules/@dqbd/tiktoken/lite/tiktoken_bg.wasm')
+    const wasm = fs.readFileSync(path)
+    return wasm
+  } catch (ex) {}
 }

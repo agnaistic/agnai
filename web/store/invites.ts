@@ -1,4 +1,5 @@
 import { AppSchema } from '../../srv/db/schema'
+import { EVENTS, events } from '../emitter'
 import { api } from './api'
 import { createStore } from './create'
 import { subscribe } from './socket'
@@ -11,12 +12,21 @@ type InviteState = {
   chats: Record<string, AppSchema.Chat>
 }
 
-export const inviteStore = createStore<InviteState>('invite', {
+const initState: InviteState = {
   invites: [],
   chars: {},
   profiles: {},
   chats: {},
-})((_) => {
+}
+
+export const inviteStore = createStore<InviteState>(
+  'invite',
+  initState
+)((_) => {
+  events.on(EVENTS.loggedOut, () => {
+    inviteStore.setState(initState)
+  })
+
   return {
     async getInvites() {
       const res = await api.get('/chat/invites')

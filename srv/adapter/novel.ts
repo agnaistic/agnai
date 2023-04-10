@@ -3,7 +3,6 @@ import { decryptText } from '../db/util'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { badWordIds } from './novel-bad-words'
 import { ModelAdapter } from './type'
-import { getEncoder } from '../../common/tokenize'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = `${NOVEL_BASEURL}/ai/generate`
@@ -34,6 +33,7 @@ export const handleNovel: ModelAdapter = async function* ({
   settings,
   guest,
   log,
+  ...opts
 }) {
   if (!user.novelApiKey) {
     yield { error: 'Novel API key not set' }

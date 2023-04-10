@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractTavernData } from './util'
 
-export type ImportCharacter = NewCharacter & { avatar?: File }
+export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
 
 const ImportCharacterModal: Component<{
   show: boolean

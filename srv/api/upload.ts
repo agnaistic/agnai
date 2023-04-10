@@ -105,6 +105,12 @@ export async function upload(attachment: Attachment, name: string) {
 
 export async function saveFile(filename: string, content: any) {
   await writeFile(resolve(config.assetFolder, filename), content, { encoding: 'utf8' })
+  return `/assets/${filename}`
+}
+
+export async function saveBase64File(filename: string, content: any) {
+  await writeFile(resolve(config.assetFolder, filename), content, 'base64')
+  return `/assets/${filename}`
 }
 
 export function getFile(filename: string) {

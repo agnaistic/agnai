@@ -11,9 +11,11 @@ import { config } from './config'
 const app = express()
 const server = new Server(app)
 
+const baseFolder = resolve(__dirname, '..')
+
 setupSockets(server)
 
-const index = resolve(process.cwd(), 'dist', 'index.html')
+const index = resolve(baseFolder, 'dist', 'index.html')
 
 app.use(
   express.json({ limit: `${config.limits.payload}mb` }),
@@ -23,9 +25,9 @@ app.use(logMiddleware())
 app.use(cors())
 app.use('/api', api)
 
-// app.use('/assets', express.static(config.assetFolder))
-app.use('/', express.static('dist'))
-app.use('/', express.static('assets'))
+app.use('/', express.static(config.assetFolder))
+app.use('/', express.static(resolve(baseFolder, 'dist')))
+app.use('/', express.static(resolve(baseFolder, 'assets')))
 
 app.use((req, res, next) => {
   if (req.url.startsWith('/api')) {

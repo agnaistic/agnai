@@ -4,9 +4,9 @@
 
 AI Agnostic Chat
 
-[Live Version](https://agnai.chat) | [Discord](https://discord.gg/DAn38sA8Qj) | [Roadmap](https://github.com/users/sceuick/projects/1)
+[Live Version](https://agnai.chat) | [Discord](https://discord.gg/luminai) | [Roadmap](https://github.com/users/sceuick/projects/1)
 
-Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
+You can visit the hosted version at [Agnai.chat](https://agnai.chat)
 
 <div style="display: flex; flex-direction: row; gap: 0.5rem;" >
 <img src="./screenshots/chat.png" height="150">
@@ -14,30 +14,35 @@ Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 <img src="./screenshots/settings.png" height="150">
 </div>
 
+Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
+
+## Quick Start
+
+(Requires Node.JS)  
+Agnaistic is bundled as an NPM package and can be installed globally:
+
+```sh
+# Install or update:
+> npm install agnai -g
+> agnai
+
+# View launch options:
+> agnai help
+
+```
+
 ## Features
 
 - **Group Conversations**: Multiple users with one character/bot
-- **Multiple AI services**: Support for Kobold, Novel, AI Horde, Chai, LuminAI, OpenAI
-- Multiple persona schema formats (W++, Square bracket format, Boostyle)
+- **Multiple AI services**: Support for Kobold, Novel, AI Horde, LuminAI, OpenAI, Claude
+- Multiple persona schema formats: W++, Square bracket format (SBF), Boostyle, Plain text
 - Multi-tenancy:
   - User authentication
-  - Individual user settings: Which AI service to use and their own service configuration
-  - Individual user generation settings
-- Chat specific overrides:
-  - Choose the AI service
-  - Personalise the character
-  - Customise the generation preset/settings
-- Image generation (_IN PROGRESS_)
+  - User settings: Which AI service to use and their own settings
+  - User generation settings
+- Chat specific overrides: AI Service, Character, Generation Settings
 
-## Quick Start for Users
-
-You can visit the hosted version at [Agnai.chat](https://agnai.chat)
-
-> CAUTION: This project is in an early stage of development. You may experience breaking changes between updates.
-
-If you're only looking to run AgnAI without contributing:
-
-### Using Docker
+## Running with Docker
 
 1. Clone the project
 2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
@@ -46,7 +51,7 @@ If you're only looking to run AgnAI without contributing:
    - `--restart=always` Restart at start up or if the server crashes
    - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`
 
-### Manually
+## Running Manually
 
 3. Install [Node.js](https://nodejs.org/en/download/)
 4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/) **Optional**
@@ -121,10 +126,10 @@ The important parts of the stack are:
 - [TailwindCSS](https://tailwindcss.com/) for styling
 - [pnpm](https://pnpm.io/) for dependency management
 
-### Quick Start
+### Starting
 
 ```bash
-# Install dependencies
+# Install dependencies - Always run this after pulling changes
 > npm run deps
 
 # Run MongoDB using Docker
@@ -138,10 +143,10 @@ The important parts of the stack are:
 > npm run start:win
 ```
 
-### Developer Tooling
+### Recommended Developer Tooling
 
 - Redux Dev Tools
-  - The front-end application state is wired up to the Redux Dev Tools chrome extension.
+  - The front-end application state is wired up to the "Redux Dev Tools" Chrome extension.
 - NodeJS debugger
   - The `pnpm start` script launchs the NodeJS API using the `--inspect` flag
   - Attach using the default launch task in VSCode (`F5`)

@@ -13,7 +13,7 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
     return res
   }
 
-  const messages = local.getMessages(msg.chatId)
+  const messages = await local.getMessages(msg.chatId)
   const next = local.replace(msg._id, messages, { msg: replace })
   local.saveMessages(msg.chatId, next)
   return local.result({ success: true })
@@ -46,7 +46,7 @@ type GenerateOpts =
   | { kind: 'continue' }
 
 export async function generateResponseV2(opts: GenerateOpts) {
-  const entities = getPromptEntities()
+  const entities = await getPromptEntities()
   const [message, lastMessage] = entities.messages.slice(-2)
 
   let retry: AppSchema.ChatMessage | undefined
@@ -118,7 +118,7 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
     return res
   }
 
-  const msgs = local.getMessages(chatId)
+  const msgs = await local.getMessages(chatId)
   const ids = new Set(msgIds)
   const next = msgs.filter((msg) => ids.has(msg._id) === false)
   local.saveMessages(chatId, next)
@@ -126,37 +126,19 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
   return local.result({ success: true })
 }
 
-function newMessage(
-  chat: AppSchema.Chat,
-  senderId: string,
-  msg: string,
-  fromChar?: boolean
-): AppSchema.ChatMessage {
-  return {
-    _id: v4().slice(0, 8),
-    chatId: chat._id,
-    kind: 'chat-message',
-    userId: fromChar ? undefined : senderId,
-    characterId: fromChar ? senderId : undefined,
-    msg,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-}
-
-export function getPromptEntities() {
+export async function getPromptEntities() {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
     if (!entities) throw new Error(`Could not collate data for prompting`)
     return entities
   }
 
-  const entities = getGuestEntities()
+  const entities = await getGuestEntities()
   if (!entities) throw new Error(`Could not collate data for prompting`)
   return entities
 }
 
-function getGuestEntities() {
+async function getGuestEntities() {
   const active = getStore('chat').getState().active
   if (!active) return
 
@@ -170,7 +152,7 @@ function getGuestEntities() {
     : undefined
 
   const profile = loadItem('profile')
-  const messages = local.getMessages(chat?._id)
+  const messages = await local.getMessages(chat?._id)
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
 

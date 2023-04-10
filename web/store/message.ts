@@ -1,12 +1,11 @@
 import { AppSchema } from '../../srv/db/schema'
-import { api } from './api'
-import { chatStore, NewChat } from './chat'
+import { EVENTS, events } from '../emitter'
+import { api, isLoggedIn } from './api'
 import { createStore } from './create'
 import { data } from './data'
 import { local } from './data/storage'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { userStore } from './user'
 
 export type MsgState = {
   activeChatId: string
@@ -18,30 +17,29 @@ export type MsgState = {
   nextLoading: boolean
 }
 
-export const msgStore = createStore<MsgState>('messages', {
+const initState: MsgState = {
   activeChatId: '',
   msgs: [],
   retries: {},
   nextLoading: false,
-})((get, set) => {
-  userStore.subscribe((curr, prev) => {
-    if (!curr.loggedIn && prev.loggedIn) msgStore.logout()
-    if (curr.loggedIn !== prev.loggedIn) {
-      set({ retries: {} })
-    }
+  waiting: undefined,
+  partial: undefined,
+  retrying: undefined,
+}
+
+export const msgStore = createStore<MsgState>(
+  'messages',
+  initState
+)((get, set) => {
+  events.on('logged-out', () => {
+    msgStore.setState(initState)
+  })
+
+  events.on(EVENTS.loggedIn, () => {
+    msgStore.setState({ retries: {} })
   })
 
   return {
-    logout() {
-      return {
-        activeChatId: '',
-        msgs: [],
-        partial: undefined,
-        retrying: undefined,
-        waiting: undefined,
-      }
-    },
-
     async *getNextMessages({ msgs, activeChatId, nextLoading }) {
       if (nextLoading) return
       const msg = msgs[0]
@@ -242,14 +240,19 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   const msg = body.msg as AppSchema.ChatMessage
 
   // If the message is from a user don't clear the "waiting for response" flags
+  const nextMsgs = msgs.concat(msg)
   if (msg.userId) {
-    msgStore.setState({ msgs: msgs.concat(msg) })
+    msgStore.setState({ msgs: nextMsgs })
   } else {
     msgStore.setState({
-      msgs: msgs.concat(msg),
+      msgs: nextMsgs,
       partial: undefined,
       waiting: undefined,
     })
+  }
+
+  if (!isLoggedIn()) {
+    local.saveMessages(body.chatId, nextMsgs)
   }
 
   addMsgToRetries(msg)

@@ -20,6 +20,7 @@ const valid = {
     kind: PERSONA_FORMATS,
     attributes: 'any',
   },
+  originalAvatar: 'string?',
 } as const
 
 const createCharacter = handle(async (req) => {
@@ -34,6 +35,7 @@ const createCharacter = handle(async (req) => {
     description: body.description,
     scenario: body.scenario,
     greeting: body.greeting,
+    avatar: body.originalAvatar,
   })
 
   const filename = await entityUpload(

@@ -6,11 +6,15 @@ import { connect, createIndexes } from './db/client'
 import { logger } from './logger'
 
 async function start() {
-  await Promise.all([initDb(), initMessageBus()])
+  await Promise.allSettled([initDb(), initMessageBus()])
 
   server.listen(config.port, '0.0.0.0', async () => {
     logger.info({ port: config.port }, `Server started http://127.0.0.1:${config.port}`)
   })
+
+  if (config.jsonStorage) {
+    logger.info(`JSON storage enabled for guests: ${config.jsonFolder}`)
+  }
 }
 
 // No longer accept requests when shutting down

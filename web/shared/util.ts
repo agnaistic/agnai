@@ -205,21 +205,15 @@ export function toDropdownItems(values: string[] | readonly string[]): Option[] 
   return values.map((value) => ({ label: capitalize(value), value }))
 }
 
-export function debounce(fn: Function, secs = 2) {
-  const ms = secs * 1000
-  let lastCalled = 0
+export function debounce<T extends Function>(fn: T, secs = 2): T {
+  let timer: any
 
-  const wrapped = () => {
-    const now = Date.now()
-    const diff = now - lastCalled
-
-    if (diff < ms) return
-    lastCalled = now
-
-    return fn()
+  const wrapped = (...args: any[]) => {
+    clearTimeout(timer)
+    timer = setTimeout(() => fn.apply(null, args), secs * 1000)
   }
 
-  return wrapped
+  return wrapped as any
 }
 
 /**

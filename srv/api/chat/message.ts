@@ -54,10 +54,11 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const guest = userId ? undefined : socketId
 
   const chat: AppSchema.Chat = guest ? body.chat : await store.chats.getChat(chatId)
-  const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)
   if (!chat) {
     throw errors.NotFound
   }
+
+  const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)
 
   if (userId) {
     if (body.kind === 'retry' && userId !== chat.userId) {
@@ -124,7 +125,8 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
     if (gen.error) {
       error = true
-      sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
+      if (!guest) sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
+      else sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
       continue
     }
   }

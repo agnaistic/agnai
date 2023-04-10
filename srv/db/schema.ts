@@ -204,6 +204,7 @@ export namespace AppSchema {
     version: string
     canAuth: boolean
     assetPrefix: string
+    selfhosting: boolean
   }
 
   export interface MemoryBook {

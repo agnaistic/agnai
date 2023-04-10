@@ -2,10 +2,30 @@ import { v4 } from 'uuid'
 import { NOVEL_MODELS } from '../../../common/adapters'
 import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../srv/db/schema'
+import { api } from '../api'
+import { toastStore } from '../toasts'
 
 type StorageKey = keyof typeof KEYS
 
 const ID = 'anon'
+
+const emptyCfg: AppSchema.AppConfig = {
+  adapters: [],
+  canAuth: false,
+  version: '',
+  assetPrefix: '',
+  selfhosting: false,
+}
+
+let SELF_HOSTING = false
+
+export function setSelfHosting(value: boolean) {
+  SELF_HOSTING = value
+}
+
+export function selfHosting() {
+  return SELF_HOSTING
+}
 
 export const KEYS = {
   characters: 'characters',
@@ -28,6 +48,8 @@ type LocalStorage = {
   lastChatId: string
   memory: AppSchema.MemoryBook[]
 }
+
+const localStore = new Map<keyof LocalStorage, any>()
 
 const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   characters: [
@@ -64,54 +86,158 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   memory: [],
 }
 
-export function saveChars(state: AppSchema.Character[]) {
-  localStorage.setItem(KEYS.characters, JSON.stringify(state))
+export async function handleGuestInit() {
+  const cfg = await api.get<AppSchema.AppConfig>('/settings')
+  if (cfg.error) {
+    const entities = getGuestInitEntities()
+    return local.result({ ...entities, config: emptyCfg })
+  }
+
+  setSelfHosting(!!cfg.result?.selfhosting)
+
+  if (selfHosting()) {
+    const res = await api.get('/json')
+
+    if (
+      !res.result.user ||
+      !res.result.profile ||
+      !res.result.presets ||
+      !res.result.books ||
+      !res.result.characters ||
+      !res.result.chats
+    ) {
+      const entities = await migrateToJson()
+      await api.post('/json', entities)
+      return local.result({ ...entities, config: cfg.result! })
+    }
+
+    if (res.result) {
+      localStore.set('config', res.result.user)
+      localStore.set('profile', res.result.profile)
+      localStore.set('presets', res.result.presets)
+      localStore.set('memory', res.result.books)
+      localStore.set('characters', res.result.characters)
+      localStore.set('chats', res.result.chats)
+      return res
+    }
+  }
+
+  return local.result({
+    ...getGuestInitEntities(),
+    config: cfg.result!,
+  })
 }
 
-export function saveChats(state: AppSchema.Chat[]) {
-  localStorage.setItem(KEYS.chats, JSON.stringify(state))
+async function migrateToJson() {
+  const entities = getGuestInitEntities()
+
+  await api.post('/json', entities)
+
+  for (const chat of entities.chats) {
+    const messages = await local.getMessages(chat._id, true)
+    await api.post(`/json/messages/${chat._id}`, messages)
+  }
+
+  return entities
+}
+
+function getGuestInitEntities() {
+  const user = local.loadItem('config', true)
+  const profile = local.loadItem('profile', true)
+  const presets = local.loadItem('presets', true)
+  const books = local.loadItem('memory', true)
+  const characters = local.loadItem('characters', true)
+  const chats = local.loadItem('chats', true)
+
+  return { user, presets, profile, books, characters, chats }
 }
 
 export function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
-  const key = `messages-${chatId}`
-  localStorage.setItem(key, JSON.stringify(messages))
+  if (SELF_HOSTING) {
+    api.post(`/json/messages/${chatId}`, messages)
+  } else {
+    const key = `messages-${chatId}`
+    localStorage.setItem(key, JSON.stringify(messages))
+  }
 }
 
-export function getMessages(chatId: string): AppSchema.ChatMessage[] {
+export async function getMessages(
+  chatId: string,
+  local?: boolean
+): Promise<AppSchema.ChatMessage[]> {
+  if (!local && SELF_HOSTING) {
+    const res = await api.get(`/json/messages/${chatId}`)
+    if (res.result) return res.result
+    if (res.error) {
+      toastStore.error(`Failed to load messages: ${res.error}`)
+      return []
+    }
+  }
+
   const messages = localStorage.getItem(`messages-${chatId}`)
   if (!messages) return []
 
   return JSON.parse(messages) as AppSchema.ChatMessage[]
 }
 
+export function saveChars(state: AppSchema.Character[]) {
+  saveItem('characters', state)
+}
+
+export function saveChats(state: AppSchema.Chat[]) {
+  saveItem('chats', state)
+}
+
 export function saveProfile(state: AppSchema.Profile) {
-  localStorage.setItem(KEYS.profile, JSON.stringify(state))
+  saveItem('profile', state)
 }
 
 export function saveConfig(state: AppSchema.User) {
-  localStorage.setItem(KEYS.config, JSON.stringify(state))
+  saveItem('config', state)
 }
 
 export function savePresets(state: AppSchema.UserGenPreset[]) {
-  localStorage.setItem(KEYS.presets, JSON.stringify(state))
+  saveItem('presets', state)
 }
 
 export function saveBooks(state: AppSchema.MemoryBook[]) {
-  localStorage.setItem(KEYS.memory, JSON.stringify(state))
+  saveItem('memory', state)
 }
 
 export function deleteChatMessages(chatId: string) {
   localStorage.removeItem(`messages-${chatId}`)
 }
 
-export function loadItem<TKey extends keyof typeof KEYS>(key: TKey): LocalStorage[TKey] {
-  const item = localStorage.getItem(KEYS[key])
-  if (item) return JSON.parse(item)
+function saveItem<TKey extends keyof typeof KEYS>(key: TKey, value: LocalStorage[TKey]) {
+  if (SELF_HOSTING) {
+    localStore.set(key, value)
+    api.post('/json', { [key]: value })
+  } else {
+    localStore.set(key, value)
+    localStorage.setItem(KEYS[key], JSON.stringify(value))
+  }
+}
 
-  const fallback = fallbacks[key]
-  localStorage.setItem(key, JSON.stringify(fallback))
+export function loadItem<TKey extends keyof typeof KEYS>(
+  key: TKey,
+  local?: boolean
+): LocalStorage[TKey] {
+  if (local) {
+    const item = localStorage.getItem(KEYS[key])
+    if (item) {
+      const parsed = JSON.parse(item)
+      localStore.set(key, parsed)
+      return parsed
+    }
 
-  return fallback
+    const fallback = fallbacks[key]
+    localStorage.setItem(key, JSON.stringify(fallback))
+
+    return fallback
+  }
+
+  const item = localStore.get(key)
+  return item
 }
 
 export function error(error: string) {

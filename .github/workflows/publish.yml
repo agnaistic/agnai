@@ -1,0 +1,43 @@
+name: Publish NPM Package
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  node-version: '18.4.0'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Install Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{  env.node-version  }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Get cached dependencies
+        # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
+        id: cache-step
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        if: steps.cache-step.outputs.cache-hit != 'true'
+        run: |
+          echo $NODE_ENV
+          npm run deps
+
+      - name: Build and Publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm run build:all
+          # npm publish
