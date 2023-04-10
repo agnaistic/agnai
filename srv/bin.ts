@@ -1,6 +1,11 @@
 #!/usr/bin/env node
-
+const path = require('path')
 const argv = require('minimist')(process.argv.slice(2))
+
+const base = path.resolve(__dirname, '..')
+const assetFolder = path.resolve(base, 'dist/assets')
+const jsonFolder = path.resolve(base, 'db')
+const pkg = require('../package.json')
 
 const options: string[] = []
 
@@ -10,11 +15,24 @@ const disableJson = flag(
   'json'
 )
 
-const port = flag(`Choose the port run the server on. Default: 3001`, 'p', 'port')
+const assets = flag(
+  `Provide a location for the assets (images) folder. Defaults to: ${assetFolder}`,
+  'a',
+  'assets'
+)
+
+const files = flag(
+  `Provide a location for the JSON files folder. Defaults to: ${jsonFolder}`,
+  'f',
+  'files'
+)
+
+const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'port')
 
 if (process.argv.slice(2).join(' ').includes('help')) {
-  console.log('Agnaistic')
-  for (const opt of options) {
+  console.log(`\nAgnaistic v${pkg.version}\n`)
+  const sorted = options.sort((l, r) => (l[1] > r[1] ? 1 : l[1] === r[1] ? 0 : -1))
+  for (const opt of sorted) {
     console.log(opt)
   }
 

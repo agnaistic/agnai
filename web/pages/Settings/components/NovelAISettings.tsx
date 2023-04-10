@@ -31,8 +31,7 @@ const NovelAISettings: Component = () => {
         helperText={
           <>
             NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization. Please
-            note that this token expires periodically. You will occasionally need to re-enter this
-            token. headers.{' '}
+            note this token expires periodically. You will occasionally need to re-enter this token.{' '}
             <a
               class="link"
               target="_blank"

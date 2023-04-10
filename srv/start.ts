@@ -11,7 +11,6 @@ async function start() {
   } catch (ex) {}
 
   server.listen(config.port, '0.0.0.0', async () => {
-    if (config.jsonStorage) logger.info(`Running in self-hosted mode`)
     logger.info({ port: config.port }, `Server started http://127.0.0.1:${config.port}`)
   })
 

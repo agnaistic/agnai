@@ -1,6 +1,6 @@
 {
   "name": "agnaistic",
-  "version": "0.1.0-alpha-6",
+  "version": "0.1.0-alpha-7",
   "description": "Agnostic AI Chat",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -12,7 +12,8 @@
     "srv/**",
     "srv/**/*.map",
     "common/*",
-    "dist/index.*"
+    "dist/index.*",
+    "db/.gitkeep"
   ],
   "scripts": {
     "build": "parcel build web/index.html --no-optimize --detailed-report",

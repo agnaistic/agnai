@@ -25,7 +25,7 @@ app.use(logMiddleware())
 app.use(cors())
 app.use('/api', api)
 
-// app.use('/assets', express.static(config.assetFolder))
+app.use('/', express.static(config.assetFolder))
 app.use('/', express.static(resolve(baseFolder, 'dist')))
 app.use('/', express.static(resolve(baseFolder, 'assets')))
 

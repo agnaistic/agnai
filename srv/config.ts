@@ -46,7 +46,7 @@ if (!process.env.JWT_SECRET) {
 export const config = {
   jwtSecret: env('JWT_SECRET'),
   port: +env('PORT', '3001'),
-  assetFolder: env('ASSET_FOLDER', resolve(process.cwd(), 'dist', 'assets')),
+  assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
   db: {
     name: env('DB_NAME', 'agnai'),
     host: env('DB_HOST', '127.0.0.1'),
