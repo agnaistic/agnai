@@ -65,6 +65,7 @@ export async function createTextStreamV2(
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)
   const stream = handler({
+    kind: opts.kind,
     char: opts.char,
     chat: opts.chat,
     gen: opts.settings || {},

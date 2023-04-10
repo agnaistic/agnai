@@ -197,6 +197,10 @@ export namespace AppSchema {
     memoryContextLimit?: number
     memoryReverseWeight?: boolean
     src?: string
+
+    images?: {
+      adapter: string
+    }
   }
 
   export interface AppConfig {

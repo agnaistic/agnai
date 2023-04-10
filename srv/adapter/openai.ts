@@ -21,7 +21,8 @@ const CHAT_MODELS: Record<string, boolean> = {
 }
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, settings, sender, log, guest, lines, parts, gen } = opts
+  const { char, members, user, prompt, settings, sender, log, guest, lines, parts, gen, kind } =
+    opts
   if (!user.oaiKey) {
     yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
     return
@@ -60,6 +61,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     if (gen.ultimeJailbreak) {
       history.push({ role: 'system', content: gen.ultimeJailbreak })
       tokens += encoder(gen.ultimeJailbreak)
+    }
+
+    if (kind === 'continue') {
+      const content = '(Continue)'
+      tokens += encoder(content)
+      history.push({ role: 'user', content })
     }
 
     for (const line of all.reverse()) {

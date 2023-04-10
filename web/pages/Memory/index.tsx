@@ -1,7 +1,7 @@
 import { A } from '@solidjs/router'
 import { assertValid, isValid } from 'frisker'
 import { Download, Plus, Trash, Upload, X } from 'lucide-solid'
-import { Component, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
@@ -16,6 +16,10 @@ const MemoryPage: Component = () => {
   const removeBook = (book: AppSchema.MemoryBook) => {
     memoryStore.remove(book._id)
   }
+
+  createEffect(() => {
+    memoryStore.getAll()
+  })
 
   return (
     <>

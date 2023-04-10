@@ -31,12 +31,16 @@ export const memoryStore = createStore<MemoryState>(
     memoryStore.setState(initState)
   })
 
+  events.on(EVENTS.init, (init) => {
+    memoryStore.setState({ books: { loaded: true, list: init.books } })
+  })
+
   return {
     toggle(_, show: boolean) {
       return { show }
     },
     async *getAll({ books: prev, loadingAll }) {
-      if (loadingAll || prev.loaded) return
+      if (loadingAll) return
 
       yield { loadingAll: true, books: { loaded: false, list: [] } }
       const res = await data.memory.getBooks()

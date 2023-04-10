@@ -27,6 +27,7 @@ export type GenerateOptions = {
 }
 
 export type AdapterProps = {
+  kind: GenerateRequestV2['kind']
   chat: AppSchema.Chat
   char: AppSchema.Character
   user: AppSchema.User
