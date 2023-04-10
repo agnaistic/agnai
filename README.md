@@ -42,9 +42,7 @@ Agnaistic is bundled as an NPM package and can be installed globally:
   - User generation settings
 - Chat specific overrides: AI Service, Character, Generation Settings
 
-## Alternative
-
-### Docker
+## Running with Docker
 
 1. Clone the project
 2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
@@ -53,7 +51,7 @@ Agnaistic is bundled as an NPM package and can be installed globally:
    - `--restart=always` Restart at start up or if the server crashes
    - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`
 
-### Manually
+## Running Manually
 
 3. Install [Node.js](https://nodejs.org/en/download/)
 4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/) **Optional**
@@ -128,10 +126,10 @@ The important parts of the stack are:
 - [TailwindCSS](https://tailwindcss.com/) for styling
 - [pnpm](https://pnpm.io/) for dependency management
 
-### Quick Start
+### Starting
 
 ```bash
-# Install dependencies
+# Install dependencies - Always run this after pulling changes
 > npm run deps
 
 # Run MongoDB using Docker
@@ -145,10 +143,10 @@ The important parts of the stack are:
 > npm run start:win
 ```
 
-### Developer Tooling
+### Recommended Developer Tooling
 
 - Redux Dev Tools
-  - The front-end application state is wired up to the Redux Dev Tools chrome extension.
+  - The front-end application state is wired up to the "Redux Dev Tools" Chrome extension.
 - NodeJS debugger
   - The `pnpm start` script launchs the NodeJS API using the `--inspect` flag
   - Attach using the default launch task in VSCode (`F5`)
