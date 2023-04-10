@@ -113,7 +113,7 @@ const SingleMessage: Component<
       return Object.values(members)
         .reduce(
           (censoredTxt, mem, i) =>
-            censoredTxt.replace(new RegExp(mem.handle.trim(), 'g'), 'User ' + (i + 1)),
+            censoredTxt.replace(new RegExp(mem.handle.trim(), 'gi'), 'User ' + (i + 1)),
           props.msg.msg
         )
         .replace(SELF_REPLACE, 'User 1')
@@ -141,6 +141,7 @@ const SingleMessage: Component<
       background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
     }
   })
+  const visibilityClass = () => (props.anonymize ? 'invisible' : '')
 
   return (
     <div
@@ -178,7 +179,15 @@ const SingleMessage: Component<
               {props.msg.characterId ? props.char?.name! : handleToShow()}
             </b>
             <span
-              class="message-date text-600 flex items-center text-xs leading-none"
+              class={`
+                message-date
+                text-600
+                flex
+                items-center
+                text-xs
+                leading-none
+                ${visibilityClass()}
+              `}
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
