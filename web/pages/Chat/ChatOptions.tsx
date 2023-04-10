@@ -3,6 +3,7 @@ import { Component, Show, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, userStore } from '../../store'
+import html2canvas from 'html2canvas'
 
 export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui' | 'members'
 
@@ -12,9 +13,28 @@ const ChatOptions: Component<{
   toggleEditing: () => void
   anonymizeOn: boolean
   toggleAnonymize: () => void
+  screenshotInProgress: boolean
+  setScreenshotInProgress: (inProgress: boolean) => void
 }> = (props) => {
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
   const user = userStore()
+  const screenshotChat = () => {
+    if (props.screenshotInProgress) return
+    const chatMsgsEl = document.getElementById('chat-messages')
+    if (chatMsgsEl) {
+      props.setScreenshotInProgress(true)
+      html2canvas(chatMsgsEl).then((canvas) => {
+        window.open()?.document.write(`
+            <div>
+              <img src="${canvas.toDataURL()}" style="display: block;margin: auto"/>
+            </div>
+          `)
+        props.setScreenshotInProgress(false)
+      })
+    } else {
+      console.error("Couldn't find messages element when trying to take screenshot.")
+    }
+  }
 
   return (
     <div class="flex w-60 flex-col gap-2 p-2">
@@ -41,6 +61,15 @@ const ChatOptions: Component<{
               onChange={props.toggleAnonymize}
             />
           </div>
+        </Option>
+
+        <Option onClick={screenshotChat}>
+          {/* Unfortunately msgs has to be abbreviated to fit on one line */}
+          <Camera />
+          <Show when={!props.screenshotInProgress}>Screenshot loaded msgs</Show>
+          <Show when={props.screenshotInProgress}>
+            <em>Loading, please wait...</em>
+          </Show>
         </Option>
 
         <Option

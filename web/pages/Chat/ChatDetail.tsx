@@ -53,6 +53,7 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
     waiting: s.waiting,
     retries: s.retries,
   }))
+  const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
 
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
@@ -148,6 +149,12 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
+  // When html2canvas grabs this element to make a screenshot out
+  // of it, we need to set the background otherwise it will render
+  // as white/transparent resulting in unreadable message contents
+  // if message background is set to 0 opacity
+  const chatBg = () => (screenshotInProgress() ? 'bg-[var(--bg-900)]' : '')
+
   return (
     <>
       <Show when={!chats.chat || !chats.char || !user.profile}>
@@ -193,6 +200,8 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
                     toggleEditing={toggleEditing}
                     anonymizeOn={props.anonymize}
                     toggleAnonymize={props.toggleAnonymize}
+                    screenshotInProgress={screenshotInProgress()}
+                    setScreenshotInProgress={setScreenshotInProgress}
                   />
                 </DropMenu>
               </div>
@@ -232,7 +241,7 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
               </div>
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
-              <div id="chat-messages" class="flex flex-col gap-2">
+              <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
                 <For each={msgs.msgs}>
                   {(msg, i) => (
                     <Message
