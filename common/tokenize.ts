@@ -15,8 +15,8 @@ const main: Encoder = function main(value: string) {
   return gpt.encode(value).length
 }
 
-const krake: Encoder = function krake(value: string) {
-  return gpt.encode(value).length
+const novel: Encoder = function krake(value: string) {
+  return gpt.encode(value).length + 4
 }
 
 let davinci: Encoder
@@ -25,16 +25,16 @@ let turbo: Encoder
 export function getEncoder(adapter: AIAdapter, model?: string) {
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
-  if (model === NOVEL_MODELS.krake) {
-    return krake
+  if (adapter === 'novel') {
+    return novel
   }
 
   if (model === OPENAI_MODELS.DaVinci) {
-    return davinci ?? krake
+    return davinci ?? novel
   }
 
   if (model === OPENAI_MODELS.Turbo) {
-    return turbo ?? krake
+    return turbo ?? novel
   }
 
   return main

@@ -353,7 +353,7 @@ function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string
   const adding: string[] = []
 
   for (const line of lines) {
-    const tokens = encoder(line + '\n')
+    const tokens = encoder(line)
     if (tokens + count > tokenLimit) {
       return adding
     }
@@ -429,11 +429,11 @@ function getContextLimit(
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
     case 'luminai':
-    case 'horde':
     case 'ooba':
       return configuredMax - genAmount
 
     case 'novel':
+    case 'horde':
       return Math.min(2048, configuredMax) - genAmount
 
     case 'openai': {
