@@ -38,6 +38,7 @@ export const characterStore = createStore<CharacterState>(
   })
 
   events.on(EVENTS.init, (init) => {
+    if (!init.characters) return
     characterStore.setState({ characters: { list: init.characters, loaded: true } })
   })
 
