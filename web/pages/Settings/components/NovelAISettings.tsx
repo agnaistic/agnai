@@ -8,7 +8,7 @@ const NovelAISettings: Component = () => {
   const state = userStore()
 
   const novelVerified = createMemo(
-    () => (state.user?.novelVerified ? 'API Key has been verified' : ''),
+    () => (state.user?.novelApiKey || state.user?.novelVerified ? 'API Key has been verified' : ''),
     { equals: false }
   )
 
@@ -27,7 +27,7 @@ const NovelAISettings: Component = () => {
         fieldName="novelApiKey"
         label="Novel API Key"
         type="password"
-        value={state.user?.novelApiKey}
+        value={''}
         helperText={
           <>
             NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization. Please

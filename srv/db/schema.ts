@@ -1,4 +1,5 @@
 import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
+import { ImageAdapter } from '../../common/image'
 import { GenerationPreset } from '../../common/presets'
 
 export namespace AppSchema {
