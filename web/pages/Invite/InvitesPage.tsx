@@ -3,12 +3,18 @@ import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { toDuration } from '../../shared/util'
 import { inviteStore } from '../../store'
+import { useNavigate } from '@solidjs/router'
 
 export const InvitesPage: Component = () => {
   const state = inviteStore()
+  const nav = useNavigate()
 
   const accept = (inviteId: string) => {
+    const invite = state.invites.find(i => i._id == inviteId)
     inviteStore.accept(inviteId)
+    if(invite) {
+      nav(`/chat/${invite.chatId}`)
+    }
   }
 
   const reject = (inviteId: string) => {
