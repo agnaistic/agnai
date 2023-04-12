@@ -12,7 +12,7 @@ export async function getCharacters() {
   }
 
   const characters = local.loadItem('characters')
-  return { result: { characters }, error: undefined }
+  return local.result({ characters })
 }
 
 export async function deleteCharacter(charId: string) {

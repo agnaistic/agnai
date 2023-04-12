@@ -1,6 +1,6 @@
 import { createPrompt, Prompt } from '../../common/prompt'
 import { AppSchema } from '../../srv/db/schema'
-import { events } from '../emitter'
+import { EVENTS, events } from '../emitter'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
@@ -68,8 +68,12 @@ export const chatStore = createStore<ChatState>('chat', {
   activeMembers: [],
   memberIds: {},
 })((get, set) => {
-  events.on('logged-out', () => {
+  events.on(EVENTS.loggedOut, () => {
     chatStore.setState(initState)
+  })
+
+  events.on(EVENTS.init, (init) => {
+    chatStore.setState({ all: { chats: init.chats, chars: init.characters } })
   })
   return {
     /**

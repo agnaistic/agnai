@@ -10,7 +10,7 @@ import { config } from '../config'
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
 
-const baseUrl = 'https://stablehorde.net/api/v2'
+const baseUrl = 'https://horde.koboldai.net/api/v2'
 
 const base = { n: 1 }
 

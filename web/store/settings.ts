@@ -51,7 +51,7 @@ export const settingStore = createStore<SettingState>(
       if (res.result) {
         setAssetPrefix(res.result.config.assetPrefix)
         events.emit(EVENTS.init, res.result)
-        return { init: res.result, config: res.result.config }
+        yield { init: res.result, config: res.result.config }
       }
     },
     menu({ showMenu }) {

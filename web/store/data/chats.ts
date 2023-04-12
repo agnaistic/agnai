@@ -124,7 +124,7 @@ export async function getAllChats() {
   const characters = loadItem('characters')
   const chats = loadItem('chats') as AllChat[]
 
-  if (!chats.length) {
+  if (!chats?.length) {
     const [char] = characters
     const { chat, msg } = createNewChat(char, { ...char, overrides: char.persona })
     local.saveChats([chat])

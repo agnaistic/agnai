@@ -240,9 +240,11 @@ export function isDefaultPreset(value?: string): value is GenerationPreset {
 
 export function getFallbackPreset(adapter: AIAdapter) {
   switch (adapter) {
+    case 'horde':
+      return defaultPresets.horde
+
     case 'chai':
     case 'kobold':
-    case 'horde':
     case 'luminai':
     case 'ooba':
       return defaultPresets.basic

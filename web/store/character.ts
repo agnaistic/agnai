@@ -37,6 +37,10 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState(initState)
   })
 
+  events.on(EVENTS.init, (init) => {
+    characterStore.setState({ characters: { list: init.characters, loaded: true } })
+  })
+
   return {
     async *getCharacters(state) {
       if (state.loading) return

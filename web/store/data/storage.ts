@@ -222,7 +222,7 @@ export function loadItem<TKey extends keyof typeof KEYS>(
   key: TKey,
   local?: boolean
 ): LocalStorage[TKey] {
-  if (local) {
+  if (local || !selfHosting()) {
     const item = localStorage.getItem(KEYS[key])
     if (item) {
       const parsed = JSON.parse(item)
