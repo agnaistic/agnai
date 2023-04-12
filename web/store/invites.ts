@@ -7,16 +7,16 @@ import { toastStore } from './toasts'
 
 type InviteState = {
   invites: AppSchema.ChatInvite[]
-  chars: Record<string, AppSchema.Character>
-  profiles: Record<string, AppSchema.Profile>
-  chats: Record<string, AppSchema.Chat>
+  chars: AppSchema.Character[]
+  profiles: AppSchema.Profile[]
+  chats: AppSchema.Chat[]
 }
 
 const initState: InviteState = {
   invites: [],
-  chars: {},
-  profiles: {},
-  chats: {},
+  chars: [],
+  profiles: [],
+  chats: [],
 }
 
 export const inviteStore = createStore<InviteState>(

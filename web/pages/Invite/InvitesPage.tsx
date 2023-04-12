@@ -40,8 +40,8 @@ export const InvitesPage: Component = () => {
             <For each={state.invites}>
               {(invite) => (
                 <div class="flex flex-row gap-2 rounded-xl bg-[var(--bg-900)] p-2">
-                  <div class="w-3/12">{state.profiles[invite.byUserId]?.handle}</div>
-                  <div class="w-3/12">{state.chars[invite.characterId]?.name}</div>
+                  <div class="w-3/12">{() => state.profiles.find(p => p.userId == invite.byUserId)?.handle ?? "Unknown User"}</div>
+                  <div class="w-3/12">{() => state.chars.find(c => c._id == invite.characterId)?.name ?? "Unknown Character"}</div>
                   <div class="w-3/12">{toDuration(new Date(invite.createdAt))}</div>
                   <div class="flex w-3/12 justify-end gap-4">
                     <div class="cursor-pointer" onClick={() => reject(invite._id)}>
