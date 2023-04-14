@@ -11,6 +11,7 @@ export type NewMessage = {
   characterId?: string
   senderId?: string
   adapter?: string
+  handle?: string
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
@@ -36,7 +37,7 @@ export async function createChatMessage(
   return doc
 }
 
-export async function importMessages(messages: NewMessage[]) {
+export async function importMessages(userId: string, messages: NewMessage[]) {
   const start = Date.now()
   const docs: AppSchema.ChatMessage[] = messages.map((msg, i) => ({
     _id: v4(),
@@ -44,7 +45,15 @@ export async function importMessages(messages: NewMessage[]) {
     rating: 'none',
     chatId: msg.chatId,
     characterId: msg.characterId,
-    userId: msg.senderId,
+    /**
+     * We will use this soon to retain the original handles.
+     * This needs further consideration for how it'll be handled in the front-end
+     * and how ancestors of this chat will retain this information when subsequent exports occur.
+     */
+    // userId: msg.senderId === 'anon' ? userId : msg.senderId,
+    // handle: msg.handle ? { name: msg.handle, userId: msg.senderId } : undefined,
+    handle: msg.handle || undefined,
+    userId: msg.senderId ? msg.senderId : undefined,
     msg: msg.message,
     adapter: msg.adapter,
     createdAt: new Date(start + i).toISOString(),

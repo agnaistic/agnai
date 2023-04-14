@@ -1,8 +1,8 @@
 import { Book, Download, MailPlus, Palette, Settings, Sliders, Users, Camera } from 'lucide-solid'
-import { Component, Show, createSignal } from 'solid-js'
+import { Component, Show, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
-import { chatStore, userStore } from '../../store'
+import { chatStore, settingStore, toastStore, userStore } from '../../store'
 import html2canvas from 'html2canvas'
 
 export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui' | 'members'
@@ -11,34 +11,35 @@ const ChatOptions: Component<{
   show: (modal: ChatModal) => void
   editing: boolean
   toggleEditing: () => void
-  anonymizeOn: boolean
-  toggleAnonymize: () => void
   screenshotInProgress: boolean
   setScreenshotInProgress: (inProgress: boolean) => void
 }> = (props) => {
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
   const user = userStore()
-  const screenshotChat = () => {
+  const cfg = settingStore()
+
+  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
+
+  const screenshotChat = async () => {
     if (props.screenshotInProgress) return
-    const chatMsgsEl = document.getElementById('chat-messages')
-    if (chatMsgsEl) {
-      props.setScreenshotInProgress(true)
-      html2canvas(chatMsgsEl).then((canvas) => {
-        window.open()?.document.write(`
-            <div>
-              <img src="${canvas.toDataURL()}" style="display: block;margin: auto"/>
-            </div>
-          `)
-        props.setScreenshotInProgress(false)
-      })
-    } else {
-      console.error("Couldn't find messages element when trying to take screenshot.")
+    const ele = document.getElementById('chat-messages')
+    if (!ele) {
+      toastStore.error(`Screenshot failed: Couldn't find messages element`)
+      return
     }
+
+    props.setScreenshotInProgress(true)
+    const canvas = await html2canvas(ele)
+    window.open()?.document.write(`
+      <div>
+        <img src="${canvas.toDataURL()}" style="display: block;margin: auto"/>
+      </div>`)
+    props.setScreenshotInProgress(false)
   }
 
   return (
     <div class="flex w-60 flex-col gap-2 p-2">
-      <Show when={chats.chat?.userId === user.user?._id}>
+      <Show when={isOwner()}>
         <Option onClick={props.toggleEditing}>
           <div class="flex w-full items-center justify-between">
             <div>Enable Chat Editing</div>
@@ -51,14 +52,14 @@ const ChatOptions: Component<{
           </div>
         </Option>
 
-        <Option onClick={props.toggleAnonymize}>
+        <Option onClick={settingStore.toggleAnonymize}>
           <div class="flex w-full items-center justify-between">
             <div>Anonymize Chat</div>
             <Toggle
               class="flex items-center"
               fieldName="anonymizeChat"
-              value={props.anonymizeOn}
-              onChange={props.toggleAnonymize}
+              value={cfg.anonymize}
+              onChange={settingStore.toggleAnonymize}
             />
           </div>
         </Option>
@@ -66,7 +67,7 @@ const ChatOptions: Component<{
         <Option onClick={screenshotChat}>
           {/* Unfortunately msgs has to be abbreviated to fit on one line */}
           <Camera />
-          <Show when={!props.screenshotInProgress}>Screenshot loaded msgs</Show>
+          <Show when={!props.screenshotInProgress}>Take Screenshot</Show>
           <Show when={props.screenshotInProgress}>
             <em>Loading, please wait...</em>
           </Show>

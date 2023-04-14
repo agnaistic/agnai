@@ -36,17 +36,12 @@ import { AppSchema } from '../../../srv/db/schema'
 
 const EDITING_KEY = 'chat-detail-settings'
 
-type ChatDetailProps = {
-  anonymize: boolean
-  toggleAnonymize: () => void
-}
-
-const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
+const ChatDetail: Component = () => {
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
   const cfg = settingStore()
-  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.activeMembers }))
+  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.chatProfiles }))
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
     partial: s.partial,
@@ -198,8 +193,6 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
                     show={showModal}
                     editing={editing()}
                     toggleEditing={toggleEditing}
-                    anonymizeOn={props.anonymize}
-                    toggleAnonymize={props.toggleAnonymize}
                     screenshotInProgress={screenshotInProgress()}
                     setScreenshotInProgress={setScreenshotInProgress}
                   />
@@ -249,7 +242,7 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
                       chat={chats.chat!}
                       char={chats.char!}
                       editing={editing()}
-                      anonymize={props.anonymize}
+                      anonymize={cfg.anonymize}
                       last={i() >= 1 && i() === msgs.msgs.length - 1}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
@@ -267,7 +260,7 @@ const ChatDetail: Component<ChatDetailProps> = (props: ChatDetailProps) => {
                     chat={chats.chat!}
                     onRemove={() => {}}
                     editing={editing()}
-                    anonymize={props.anonymize}
+                    anonymize={cfg.anonymize}
                   />
                 </Show>
               </div>

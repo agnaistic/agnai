@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { Component, createEffect, createSignal, onMount } from 'solid-js'
+import { Component, createEffect } from 'solid-js'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
 import PageHeader from '../../shared/PageHeader'
@@ -7,7 +7,6 @@ import { adminStore } from '../../store'
 
 const MetricsPage: Component = () => {
   const state = adminStore()
-  const [timer, setTimer] = createSignal<any>()
 
   createEffect(() => {
     adminStore.getMetrics()
@@ -31,8 +30,26 @@ const MetricsPage: Component = () => {
 
         <FormLabel
           fieldName="active"
+          label="Max Online Users"
+          helperText={state.metrics?.maxLiveCount || '...'}
+        />
+
+        <FormLabel
+          fieldName="totalUsers"
           label="Registered Users"
           helperText={state.metrics?.totalUsers || '...'}
+        />
+
+        <FormLabel
+          fieldName="totalChats"
+          label="Total Chats"
+          helperText={state.metrics?.totalChats?.toLocaleString() || '...'}
+        />
+
+        <FormLabel
+          fieldName="totalMessages"
+          label="Total Messages"
+          helperText={state.metrics?.totalMessages?.toLocaleString() || '...'}
         />
       </div>
     </>

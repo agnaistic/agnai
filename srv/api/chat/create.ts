@@ -30,7 +30,7 @@ export const importChat = handle(async ({ body, userId }) => {
       name: 'string',
       greeting: 'string',
       scenario: 'string',
-      messages: [{ msg: 'string', characterId: 'string?', userId: 'string?' }],
+      messages: [{ msg: 'string', characterId: 'string?', userId: 'string?', handle: 'string?' }],
     },
     body
   )
@@ -55,10 +55,11 @@ export const importChat = handle(async ({ body, userId }) => {
     message: msg.msg,
     adapter: 'import',
     characterId: msg.characterId ? character._id : undefined,
-    senderId: msg.userId ? userId : undefined,
+    senderId: msg.userId ? msg.userId : undefined,
+    handle: msg.handle,
   }))
 
-  await store.msgs.importMessages(messages)
+  await store.msgs.importMessages(userId, messages)
 
   return chat
 })

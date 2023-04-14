@@ -31,7 +31,7 @@ type ChatState = {
     char: AppSchema.Character
     participantIds: string[]
   }
-  activeMembers: AppSchema.Profile[]
+  chatProfiles: AppSchema.Profile[]
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt
 }
@@ -58,14 +58,18 @@ const initState: ChatState = {
   all: undefined,
   char: undefined,
   active: undefined,
-  activeMembers: [],
+
+  /** All profiles that have ever participated in the active chat */
+  chatProfiles: [],
+
+  /** Map of all profiles that have ever participated in the chat */
   memberIds: {},
 }
 
 export const chatStore = createStore<ChatState>('chat', {
   lastChatId: localStorage.getItem('lastChatId'),
   loaded: false,
-  activeMembers: [],
+  chatProfiles: [],
   memberIds: {},
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
@@ -108,7 +112,7 @@ export const chatStore = createStore<ChatState>('chat', {
             char: res.result.character,
             participantIds: res.result.active,
           },
-          activeMembers: res.result.members,
+          chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
         }
       }
@@ -336,10 +340,10 @@ function toMemberKeys(prev: Record<string, AppSchema.Profile>, curr: AppSchema.P
 }
 
 subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (body) => {
-  const { activeMembers, memberIds } = chatStore()
+  const { chatProfiles, memberIds } = chatStore()
   if (!memberIds[body.userId]) return
 
-  const nextMembers = activeMembers.map((am) =>
+  const nextMembers = chatProfiles.map((am) =>
     am.userId === body.userId ? { ...am, handle: body.handle } : am
   )
 
@@ -348,7 +352,7 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
   memberIds[body.userId] = { ...memberIds[body.userId], handle: body.handle }
 
   chatStore.setState({
-    activeMembers: nextMembers,
+    chatProfiles: nextMembers,
     memberIds: { ...memberIds, [body.userId]: next },
   })
 })
@@ -383,14 +387,14 @@ subscribe('member-removed', { memberId: 'string', chatId: 'string' }, (body) => 
   const profile = getStore('user').getState().profile
   if (!profile) return
 
-  const { activeMembers, active } = chatStore.getState()
+  const { chatProfiles, active } = chatStore.getState()
 
   if (!active?.chat) return
   if (active.chat._id !== body.chatId) return
 
   const nextIds = active.participantIds.filter((id) => id !== body.memberId)
-  const nextMembers = activeMembers.filter((mem) => mem.userId !== body.memberId)
-  chatStore.setState({ activeMembers: nextMembers, active: { ...active, participantIds: nextIds } })
+  const nextProfiles = chatProfiles.filter((mem) => mem.userId !== body.memberId)
+  chatStore.setState({ chatProfiles: nextProfiles, active: { ...active, participantIds: nextIds } })
 })
 
 subscribe(
@@ -400,10 +404,10 @@ subscribe(
     profile: { kind: 'any', userId: 'string', handle: 'string', _id: 'string', avatar: 'string?' },
   },
   (body) => {
-    const { active, activeMembers, memberIds } = chatStore.getState()
+    const { active, chatProfiles, memberIds } = chatStore.getState()
     if (!active || active.chat._id !== body.chatId) return
 
-    const nextMembers = activeMembers.concat(body.profile)
+    const nextProfiles = chatProfiles.concat(body.profile)
     const nextProfileMap = { ...memberIds, [body.profile.userId]: body.profile }
     const nextIds = active.participantIds.concat(body.profile.userId)
     const nextChat = {
@@ -411,7 +415,7 @@ subscribe(
       memberIds: active.chat.memberIds.concat(body.profile.userId),
     }
     chatStore.setState({
-      activeMembers: nextMembers,
+      chatProfiles: nextProfiles,
       memberIds: nextProfileMap,
       active: { ...active, participantIds: nextIds, chat: nextChat },
     })

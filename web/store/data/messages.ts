@@ -160,7 +160,7 @@ async function getGuestEntities() {
 }
 
 function getAuthedPromptEntities() {
-  const { active, activeMembers: members } = getStore('chat').getState()
+  const { active, chatProfiles: members } = getStore('chat').getState()
   if (!active) return
 
   const { profile, user } = getStore('user').getState()

@@ -1,4 +1,3 @@
-import { logger } from '../logger'
 import { db } from './client'
 import { encryptPassword } from './util'
 

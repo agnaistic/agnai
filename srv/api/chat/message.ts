@@ -58,6 +58,11 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     throw errors.NotFound
   }
 
+  if (userId && chat.userId !== userId) {
+    const isAllowed = await store.chats.canViewChat(userId, chat)
+    if (!isAllowed) throw errors.Forbidden
+  }
+
   const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)
 
   if (userId) {
@@ -66,10 +71,6 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
 
     if (body.kind === 'continue' && userId !== chat.userId) {
-      throw errors.Forbidden
-    }
-
-    if (!members.includes(userId)) {
       throw errors.Forbidden
     }
   }
