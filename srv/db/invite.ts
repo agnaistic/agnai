@@ -22,9 +22,9 @@ export type NewInvite = {
 export async function list(userId: string) {
   const invites = await db('chat-invite').find({ kind: 'chat-invite', invitedId: userId }).toArray()
 
-  const userIds = [... new Set(invites.map((i) => i.byUserId))]
-  const chatIds = [... new Set(invites.map((i) => i.chatId))]
-  const characterIds = [... new Set(invites.map((i) => i.characterId))]
+  const userIds = Array.from(new Set(invites.map((i) => i.byUserId)))
+  const chatIds = Array.from(new Set(invites.map((i) => i.chatId)))
+  const characterIds = Array.from(new Set(invites.map((i) => i.characterId)))
 
   const [profiles, chats, characters] = await Promise.all([
     db('profile')

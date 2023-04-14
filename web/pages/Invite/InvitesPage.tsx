@@ -1,5 +1,5 @@
 import { Check, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, For, Show } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { toDuration } from '../../shared/util'
 import { inviteStore } from '../../store'
@@ -10,11 +10,10 @@ export const InvitesPage: Component = () => {
   const nav = useNavigate()
 
   const accept = (inviteId: string) => {
-    const invite = state.invites.find(i => i._id == inviteId)
-    inviteStore.accept(inviteId)
-    if(invite) {
-      nav(`/chat/${invite.chatId}`)
-    }
+    const invite = state.invites.find((i) => i._id == inviteId)
+    if (!invite) return
+
+    inviteStore.accept(inviteId, () => nav(`/chat/${invite.chatId}`))
   }
 
   const reject = (inviteId: string) => {
@@ -46,8 +45,12 @@ export const InvitesPage: Component = () => {
             <For each={state.invites}>
               {(invite) => (
                 <div class="flex flex-row gap-2 rounded-xl bg-[var(--bg-900)] p-2">
-                  <div class="w-3/12">{() => state.profiles.find(p => p.userId == invite.byUserId)?.handle ?? "Unknown User"}</div>
-                  <div class="w-3/12">{() => state.chars.find(c => c._id == invite.characterId)?.name ?? "Unknown Character"}</div>
+                  <div class="w-3/12">
+                    {state.profiles[invite.byUserId]?.handle ?? 'Unknown User'}
+                  </div>
+                  <div class="w-3/12">
+                    {state.chars[invite.characterId]?.name ?? 'Unknown Character'}
+                  </div>
                   <div class="w-3/12">{toDuration(new Date(invite.createdAt))}</div>
                   <div class="flex w-3/12 justify-end gap-4">
                     <div class="cursor-pointer" onClick={() => reject(invite._id)}>
