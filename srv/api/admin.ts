@@ -31,11 +31,12 @@ const getMetrics = handle(async () => {
 
   const connected = counts.map((count) => count.count).reduce((prev, curr) => prev + curr, 0)
 
+  const threshold = Date.now() - 30000
   return {
     ...metrics,
     connected,
     maxLiveCount,
-    each: counts.map((count) => ({ ...count, date: count.date.toISOString() })),
+    each: counts.filter((c) => c.date.valueOf() >= threshold),
   }
 })
 

@@ -26,7 +26,9 @@ export const clients = {
 export function getLiveCounts() {
   if (!connected)
     return {
-      entries: [{ hostname: os.hostname(), count: getAllCount(), date: new Date() }],
+      entries: [
+        { hostname: `${os.hostname()}-${process.pid}`, count: getAllCount(), date: new Date() },
+      ],
       maxLiveCount,
     }
 
@@ -60,7 +62,10 @@ export async function initMessageBus() {
 
     setInterval(() => {
       const count = getAllCount()
-      clients.pub.publish(COUNT_EVENT, JSON.stringify({ count, hostname: os.hostname() }))
+      clients.pub.publish(
+        COUNT_EVENT,
+        JSON.stringify({ count, hostname: `${os.hostname()}-${process.pid}` })
+      )
       if (count > maxLiveCount) {
         maxLiveCount = count
       }
