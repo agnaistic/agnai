@@ -3,7 +3,11 @@ import { errors, handle } from '../wrap'
 
 export const getCharacterChats = handle(async (req) => {
   const character = await store.characters.getCharacter(req.userId!, req.params.id)
-  const list = await store.chats.listByCharacter(req.params.id)
+  if (!character) {
+    throw errors.NotFound
+  }
+
+  const list = await store.chats.listByCharacter(req.userId, req.params.id)
   return { character, chats: list }
 })
 

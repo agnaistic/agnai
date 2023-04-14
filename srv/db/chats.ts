@@ -14,9 +14,9 @@ export async function getChat(id: string) {
   return chat
 }
 
-export async function listByCharacter(characterId: string) {
+export async function listByCharacter(userId: string, characterId: string) {
   const docs = await db('chat')
-    .find({ kind: 'chat', characterId })
+    .find({ kind: 'chat', characterId, userId })
     .sort({ updatedAt: -1 })
     .toArray()
 
