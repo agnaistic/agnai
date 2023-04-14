@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, JSX, Show } from 'solid-js'
+import { Component, createEffect, createMemo, JSX, Show, createSignal } from 'solid-js'
 import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
@@ -36,7 +36,8 @@ const App: Component = () => {
 
   const bg = createMemo(() => {
     const styles: JSX.CSSProperties = {
-      'background-image': state.background ? `url(${state.background})` : undefined,
+      'background-image':
+        state.background && !cfg.anonymize ? `url(${state.background})` : undefined,
       'background-repeat': 'no-repeat',
       'background-size': 'cover',
       'background-position': 'center',
@@ -55,8 +56,8 @@ const App: Component = () => {
               <Routes>
                 <CharacterRoutes />
                 <Route path="/chats" component={CharacterChats} />
-                <Route path="/chat" component={ChatDetail} />
-                <Route path="/chat/:id" component={ChatDetail} />
+                <Route path="/chat" component={() => <ChatDetail />} />
+                <Route path="/chat/:id" component={() => <ChatDetail />} />
                 <Route path="/" component={HomePage} />
                 <Route path="/presets/:id" component={GenerationPresetsPage} />
                 <Route path="/presets" component={PresetList} />

@@ -13,6 +13,8 @@ type SettingState = {
   config: AppSchema.AppConfig
   models: HordeModel[]
   workers: HordeWorker[]
+  anonymize: boolean
+
   init?: {
     profile: AppSchema.Profile
     user: AppSchema.User
@@ -25,6 +27,7 @@ type SettingState = {
 const HORDE_URL = `https://stablehorde.net/api/v2`
 
 const initState: SettingState = {
+  anonymize: false,
   initLoading: true,
   showMenu: false,
   fullscreen: false,
@@ -82,6 +85,8 @@ export const settingStore = createStore<SettingState>(
       return { workers: json }
     },
 
-    async *guestMigrate() {},
+    toggleAnonymize({ anonymize }) {
+      return { anonymize: !anonymize }
+    },
   }
 })

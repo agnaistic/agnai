@@ -1,13 +1,12 @@
 import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
 import showdown from 'showdown'
-import { Accessor } from 'solid-js'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
-import { getRootVariable, hexToRgb, toDuration } from '../../../shared/util'
+import { getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
-import { MsgState, msgStore } from '../../../store'
+import { msgStore } from '../../../store'
 
 const showdownConverter = new showdown.Converter()
 // Ensure single newlines are turned into <br> instead of left as plaintext
@@ -64,7 +63,7 @@ const SingleMessage: Component<
   MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
 > = (props) => {
   const user = userStore()
-  const members = chatStore((s) => s.memberIds)
+  const state = chatStore()
 
   const [edit, setEdit] = createSignal(false)
 
@@ -102,24 +101,20 @@ const SingleMessage: Component<
   const isBot = createMemo(() => !!props.msg.characterId)
   const isUser = createMemo(() => !!props.msg.userId)
 
-  const uncensoredHandle = members[props.msg.userId!]?.handle
-  const userNumber = Object.keys(members).findIndex((m) => m === props.msg.userId) + 1
+  const handleToShow = () => {
+    if (props.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
 
-  const handleToShow = () => (props.anonymize ? 'User #' + userNumber : uncensoredHandle)
+    const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
+    return handle
+  }
 
   const msgText = createMemo(() => {
     if (props.last && props.swipe) return props.swipe
-    if (props.anonymize) {
-      return Object.values(members)
-        .reduce(
-          (censoredTxt, mem, i) =>
-            censoredTxt.replace(new RegExp(mem.handle.trim(), 'g'), 'User ' + (i + 1)),
-          props.msg.msg
-        )
-        .replace(SELF_REPLACE, 'User 1')
-    } else {
+    if (!props.anonymize) {
       return props.msg.msg
     }
+
+    return state.chatProfiles.reduce(anonymizeText, props.msg.msg).replace(SELF_REPLACE, 'User #1')
   })
 
   let ref: HTMLDivElement | undefined
@@ -141,6 +136,7 @@ const SingleMessage: Component<
       background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
     }
   })
+  const visibilityClass = () => (props.anonymize ? 'invisible' : '')
 
   return (
     <div
@@ -148,7 +144,7 @@ const SingleMessage: Component<
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
-      data-user={props.msg.userId ? members[props.msg.userId]?.handle : ''}
+      data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
     >
       <div
         class="flex items-start justify-center pr-4"
@@ -160,7 +156,7 @@ const SingleMessage: Component<
         </Show>
         <Show when={!props.msg.characterId}>
           <AvatarIcon
-            avatarUrl={members[props.msg.userId!]?.avatar}
+            avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
             format={format()}
             anonymize={props.anonymize}
           />
@@ -178,7 +174,15 @@ const SingleMessage: Component<
               {props.msg.characterId ? props.char?.name! : handleToShow()}
             </b>
             <span
-              class="message-date text-600 flex items-center text-xs leading-none"
+              class={`
+                message-date
+                text-600
+                flex
+                items-center
+                text-xs
+                leading-none
+                ${visibilityClass()}
+              `}
               data-bot-time={isBot}
               data-user-time={isUser()}
             >
@@ -287,7 +291,7 @@ function parseMessage(msg: string, char: AppSchema.Character, profile: AppSchema
     .replace(/(<|>)/g, '*')
 }
 
-export type SplitMessage = AppSchema.ChatMessage & { split?: boolean }
+export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
 function splitMessage(
   char: AppSchema.Character,
@@ -348,4 +352,16 @@ function splitMessage(
   if (!next.length || next.length === 1) return [msg]
   const newSplits = next.map((next) => ({ ...next, split: true }))
   return newSplits
+}
+
+function getAnonName(members: AppSchema.Profile[], id: string) {
+  for (let i = 0; i < members.length; i++) {
+    if (members[i].userId === id) return `User #${i + 1}`
+  }
+
+  return `User ??`
+}
+
+function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
+  return text.replace(new RegExp(profile.handle.trim(), 'gi'), 'User ' + (i + 1))
 }

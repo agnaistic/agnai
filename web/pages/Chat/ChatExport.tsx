@@ -18,7 +18,8 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
       sampleChat: chat?.sampleChat,
       scenario: chat?.scenario,
       messages: messages.map((msg) => ({
-        userId: msg.userId ? 'anon' : undefined,
+        handle: msg.userId ? chats.memberIds[msg.userId]?.handle || 'You' : undefined,
+        userId: msg.userId ? msg.userId : undefined,
         characterId: msg.characterId ? 'imported' : undefined,
         msg: msg.msg,
       })),
