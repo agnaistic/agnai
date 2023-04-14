@@ -10,6 +10,8 @@ import LoginPage from './pages/Login'
 import ProfilePage from './pages/Profile'
 import UsersPage from './pages/Admin/UsersPage'
 import { InvitesPage } from './pages/Invite/InvitesPage'
+import TermsOfServicePage from './pages/TermsOfService'
+import PrivacyPolicyPage from './pages/PrivacyPolicy'
 import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import GenerationPresetsPage from './pages/GenerationPresets'
@@ -69,6 +71,8 @@ const App: Component = () => {
                 <Route path="/settings" component={Settings} />
                 <Route path="/memory" component={MemoryPage} />
                 <Route path="/memory/:id" component={EditMemoryPage} />
+                <Route path="/terms-of-service" component={TermsOfServicePage} />
+                <Route path="/privacy-policy" component={PrivacyPolicyPage} />
                 <Show when={state.loggedIn}>
                   <Route path="/invites" component={InvitesPage} />
                   <Show when={state.user?.admin}>
