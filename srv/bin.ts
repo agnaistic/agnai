@@ -1,10 +1,12 @@
 #!/usr/bin/env node
-const path = require('path')
-const argv = require('minimist')(process.argv.slice(2))
+import * as path from 'path'
+import * as os from 'os'
+import { mkdirpSync } from 'mkdirp'
+import { copyFileSync, readdirSync } from 'fs'
 
-const base = path.resolve(__dirname, '..')
-const assetFolder = path.resolve(base, 'dist/assets')
-const jsonFolder = path.resolve(base, 'db')
+const argv = require('minimist')(process.argv.slice(2))
+const folders = getFolders()
+
 const pkg = require('../package.json')
 
 const options: string[] = []
@@ -13,18 +15,6 @@ const disableJson = flag(
   `Disable JSON storage mode. Browser local storage won't be used. Instead, JSON files will be managed by the server.`,
   'j',
   'json'
-)
-
-const assets = flag(
-  `Provide a location for the assets (images) folder. Defaults to: ${assetFolder}`,
-  'a',
-  'assets'
-)
-
-const files = flag(
-  `Provide a location for the JSON files folder. Defaults to: ${jsonFolder}`,
-  'f',
-  'files'
 )
 
 const debug = flag(`Enable debug logging. This will print payloads sent to the AI`, 'd', 'debug')
@@ -38,12 +28,36 @@ if (debug) {
   process.env.LOG_LEVEL = 'debug'
 }
 
-if (files) {
-  if (typeof files !== 'string') {
-    console.error(`Error: The '-f' flag was provided with no value.`)
+const jsonLocation = flag(
+  `Provide a location for the JSON files folder. Defaults to: ${folders.json}`,
+  'f',
+  'files'
+)
+
+const assets = flag(
+  `Provide a location for the assets (images) folder. Defaults to: ${folders.assets}`,
+  'a',
+  'assets'
+)
+
+if (jsonLocation) {
+  if (typeof jsonLocation !== 'string') {
+    console.error(`Error: The '-f/--files' flag was provided with no value.`)
     help(-1)
   }
-  process.env.JSON_FOLDER = path.resolve(process.cwd(), files)
+  process.env.JSON_FOLDER = path.resolve(process.cwd(), jsonLocation)
+} else {
+  process.env.JSON_FOLDER = folders.json
+}
+
+if (assets) {
+  if (typeof assets !== 'string') {
+    console.error(`Error: The '-a/--assets' flag was provided with no value.`)
+    help(-1)
+  }
+  process.env.ASSET_FOLDER = path.resolve(process.cwd(), jsonLocation)
+} else {
+  process.env.ASSET_FOLDER = folders.assets
 }
 
 if (!disableJson) {
@@ -88,3 +102,54 @@ function help(code = 0) {
 }
 
 require('./start')
+
+function getFolders() {
+  const home = path.resolve(os.homedir(), '.agnai')
+  const assets = path.resolve(home, 'assets')
+  const json = path.resolve(home, 'json')
+
+  if (argv.files || argv.f) return { assets, json }
+
+  try {
+    readdirSync(home)
+  } catch (ex) {
+    mkdirpSync(home)
+    mkdirpSync(assets)
+    mkdirpSync(json)
+  }
+
+  const oldBase = path.resolve(__dirname, '..')
+
+  const oldAssets = path.resolve(oldBase, 'dist/assets')
+  const oldJson = path.resolve(oldBase, 'db')
+
+  const files = {
+    assets: {
+      old: readdirSync(oldAssets),
+      new: readdirSync(assets),
+    },
+    json: {
+      old: readdirSync(oldJson),
+      new: readdirSync(json),
+    },
+  }
+
+  if (files.assets.old.length && !files.assets.new.length) {
+    console.log('Copying assets to new location...')
+    for (const file of files.assets.old) {
+      copyFileSync(path.resolve(oldAssets, file), path.resolve(assets, file))
+    }
+    console.log('Assets copied.')
+  }
+
+  if (files.json.old.length && !files.json.new.length) {
+    console.log('Copying JSON files to new location...')
+    for (const file of files.json.old) {
+      if (!file.endsWith('.json')) continue
+      copyFileSync(path.resolve(oldJson, file), path.resolve(json, file))
+    }
+    console.log('JSON files copied.')
+  }
+
+  return { assets, json }
+}

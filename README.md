@@ -1,4 +1,4 @@
-# AgnAIstic
+# Agnaistic
 
 > AI Agnostic Chat with Personalised Characters. Self-hosted or Multi-tenant.
 
@@ -30,6 +30,9 @@ Agnaistic is bundled as an NPM package and can be installed globally:
 > agnai help
 
 ```
+
+When using the NPM package, your images and JSON files will be stored in: `HOME_FOLDER/.agnai`.  
+E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
 
 ## Features
 
