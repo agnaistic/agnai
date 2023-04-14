@@ -22,16 +22,20 @@ export type NewInvite = {
 export async function list(userId: string) {
   const invites = await db('chat-invite').find({ kind: 'chat-invite', invitedId: userId }).toArray()
 
-  const ids = invites.reduce<string[]>((prev, curr) => {
-    return prev.concat(curr.invitedId, curr.byUserId, curr.chatId, curr.characterId)
-  }, [])
+  const userIds = Array.from(new Set(invites.map((i) => i.byUserId)))
+  const chatIds = Array.from(new Set(invites.map((i) => i.chatId)))
+  const characterIds = Array.from(new Set(invites.map((i) => i.characterId)))
 
   const [profiles, chats, characters] = await Promise.all([
     db('profile')
-      .find({ userId: { $in: ids } })
+      .find({ userId: { $in: userIds } })
       .toArray(),
-    db('chat').find({ userId }).toArray(),
-    db('character').find({ userId }).toArray(),
+    db('chat')
+      .find({ _id: { $in: chatIds } })
+      .toArray(),
+    db('character')
+      .find({ _id: { $in: characterIds } })
+      .toArray(),
   ])
 
   return {

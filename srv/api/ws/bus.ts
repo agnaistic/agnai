@@ -12,6 +12,7 @@ type LiveCount = {
   date: Date
 }
 
+let maxLiveCount = 0
 let liveCounts: Record<string, LiveCount> = {}
 
 const MESSAGE_EVENT = 'agnaistic-message'
@@ -23,7 +24,11 @@ export const clients = {
 }
 
 export function getLiveCounts() {
-  if (!connected) return [{ hostname: os.hostname(), count: getAllCount(), date: new Date() }]
+  if (!connected)
+    return {
+      entries: [{ hostname: os.hostname(), count: getAllCount(), date: new Date() }],
+      maxLiveCount,
+    }
 
   const entries: LiveCount[] = []
   const now = Date.now()
@@ -33,7 +38,7 @@ export function getLiveCounts() {
     entries.push(entry)
   }
 
-  return entries
+  return { entries, maxLiveCount }
 }
 
 export function isConnected() {
@@ -54,10 +59,11 @@ export async function initMessageBus() {
     logger.info('Connected to message bus')
 
     setInterval(() => {
-      clients.pub.publish(
-        COUNT_EVENT,
-        JSON.stringify({ count: getAllCount(), hostname: os.hostname() })
-      )
+      const count = getAllCount()
+      clients.pub.publish(COUNT_EVENT, JSON.stringify({ count, hostname: os.hostname() }))
+      if (count > maxLiveCount) {
+        maxLiveCount = count
+      }
     }, 10000)
 
     clients.sub.subscribe(COUNT_EVENT, (msg) => {
@@ -65,6 +71,7 @@ export async function initMessageBus() {
         const json = JSON.parse(msg)
         liveCounts[json.hostname] = { ...json, date: new Date() }
       } catch (ex) {}
+      updateMaxCount()
     })
 
     clients.sub.subscribe(MESSAGE_EVENT, async (msg, _channel) => {
@@ -80,6 +87,17 @@ export async function initMessageBus() {
     logger.warn(
       `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`
     )
+  }
+}
+
+function updateMaxCount() {
+  let count = 0
+  for (const value of Object.values(liveCounts)) {
+    count += value.count
+  }
+
+  if (count > maxLiveCount) {
+    maxLiveCount = count
   }
 }
 

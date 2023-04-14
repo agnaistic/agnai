@@ -26,7 +26,7 @@ const getUserInfo = handle(async ({ params }) => {
 })
 
 const getMetrics = handle(async () => {
-  const counts = getLiveCounts()
+  const { entries: counts, maxLiveCount } = getLiveCounts()
   const metrics = await store.users.getMetrics()
 
   const connected = counts.map((count) => count.count).reduce((prev, curr) => prev + curr, 0)
@@ -34,6 +34,7 @@ const getMetrics = handle(async () => {
   return {
     ...metrics,
     connected,
+    maxLiveCount,
     each: counts.map((count) => ({ ...count, date: count.date.toISOString() })),
   }
 })

@@ -9,14 +9,14 @@ type InviteState = {
   invites: AppSchema.ChatInvite[]
   chars: Record<string, AppSchema.Character>
   profiles: Record<string, AppSchema.Profile>
-  chats: Record<string, AppSchema.Chat>
+  chats: AppSchema.Chat[]
 }
 
 const initState: InviteState = {
   invites: [],
   chars: {},
   profiles: {},
-  chats: {},
+  chats: [],
 }
 
 export const inviteStore = createStore<InviteState>(
@@ -29,14 +29,25 @@ export const inviteStore = createStore<InviteState>(
 
   return {
     async getInvites() {
-      const res = await api.get('/chat/invites')
+      const res = await api.get<{
+        invites: AppSchema.ChatInvite[]
+        chars: AppSchema.Character[]
+        chats: AppSchema.Chat[]
+        profiles: AppSchema.Profile[]
+      }>('/chat/invites')
       if (res.error) return toastStore.error('Failed to retrieve invites')
       if (res.result) {
         return {
           invites: res.result.invites,
-          chars: res.result.chars,
+          chars: res.result.chars.reduce(
+            (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+            {}
+          ),
+          profiles: res.result.profiles.reduce(
+            (prev, curr) => Object.assign(prev, { [curr.userId]: curr }),
+            {}
+          ),
           chats: res.result.chats,
-          profiles: res.result.profiles,
         }
       }
     },
@@ -47,12 +58,13 @@ export const inviteStore = createStore<InviteState>(
         toastStore.success(`Successfully invited user to conversation`)
       }
     },
-    async accept({ invites }, inviteId: string) {
+    async *accept({ invites }, inviteId: string, onSuccess?: Function) {
       const res = await api.post(`/chat/${inviteId}/accept`)
       if (res.error) return toastStore.error(`Failed to accept invite: ${res.error}`)
       if (res.result) {
         toastStore.success(`Invitation accepted`)
-        return { invites: invites.filter((inv) => inv._id !== inviteId) }
+        yield { invites: invites.filter((inv) => inv._id !== inviteId) }
+        onSuccess?.()
       }
     },
     async reject({ invites }, inviteId: string) {
