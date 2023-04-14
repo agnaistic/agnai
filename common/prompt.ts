@@ -215,7 +215,7 @@ export function getPromptParts(
   let gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
   let gaslightLines = gaslight.split('\n')
 
-  if (!parts.memory || parts.memory.prompt === '') {
+  if (!parts.memory || parts.memory === '') {
     gaslight = gaslightLines.filter((line) => !line.includes('{{memory}}')).join('\n')
     gaslightLines = gaslight.split('\n')
   }
