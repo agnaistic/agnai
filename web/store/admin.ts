@@ -16,8 +16,6 @@ type AdminState = {
   info?: UserInfo
   metrics?: {
     totalUsers: number
-    totalChats: number
-    totalMessages: number
     connected: number
     maxLiveCount: number
   }

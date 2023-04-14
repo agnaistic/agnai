@@ -39,18 +39,6 @@ const MetricsPage: Component = () => {
           label="Registered Users"
           helperText={state.metrics?.totalUsers || '...'}
         />
-
-        <FormLabel
-          fieldName="totalChats"
-          label="Total Chats"
-          helperText={state.metrics?.totalChats?.toLocaleString() || '...'}
-        />
-
-        <FormLabel
-          fieldName="totalMessages"
-          label="Total Messages"
-          helperText={state.metrics?.totalMessages?.toLocaleString() || '...'}
-        />
       </div>
     </>
   )

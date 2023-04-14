@@ -33,13 +33,9 @@ export async function ensureInitialUser() {
 }
 
 export async function getMetrics() {
-  const [totalUsers, totalChats, totalMessages] = await Promise.all([
-    db('user').countDocuments(),
-    db('chat').countDocuments(),
-    db('chat-message').countDocuments(),
-  ])
+  const [totalUsers] = await Promise.all([db('user').countDocuments()])
 
-  return { totalUsers, totalChats, totalMessages }
+  return { totalUsers }
 }
 
 export async function getProfile(userId: string) {
