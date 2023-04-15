@@ -129,7 +129,7 @@ function getFolders() {
       new: getFileList(assets),
     },
     json: {
-      old: getFileList(oldJson),
+      old: getFileList(oldJson).filter((f) => f.endsWith('.json')),
       new: getFileList(json),
     },
   }
