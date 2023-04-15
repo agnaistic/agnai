@@ -43,6 +43,7 @@ export function toUser(name: string): AppSchema.User {
     hash: '',
     kind: 'user',
     koboldUrl: '',
+    thirdPartyBackendFormat: 'kobold',
     luminaiUrl: '',
     novelApiKey: '',
     novelModel: NOVEL_MODELS.krake,

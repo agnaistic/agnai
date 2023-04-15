@@ -380,7 +380,13 @@ export function getAdapter(
   config: AppSchema.User,
   preset?: Partial<AppSchema.GenSettings>
 ) {
-  let adapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
+  const configAdapter =
+    !chat.adapter
+      || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
+  const adapter =
+    configAdapter === 'kobold' && config.thirdPartyBackendFormat === 'openai'
+      ? 'openai'
+      : configAdapter
   let model = ''
   let presetName = 'Fallback Preset'
 

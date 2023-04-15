@@ -32,6 +32,7 @@ export namespace AppSchema {
     novelVerified?: boolean
 
     koboldUrl: string
+    thirdPartyBackendFormat: 'kobold' | 'openai'
     luminaiUrl: string
     oobaUrl: string
 

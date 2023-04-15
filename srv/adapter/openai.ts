@@ -8,7 +8,7 @@ import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 
-const baseUrl = `https://api.openai.com`
+const openAiBaseUrl = `https://api.openai.com`
 
 type OpenAIMessagePropType = {
   role: 'user' | 'assistant' | 'system'
@@ -28,6 +28,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
+  const baseUrl =
+    user.thirdPartyBackendFormat === 'openai' ? user.koboldUrl || openAiBaseUrl : openAiBaseUrl
 
   const body: any = {
     model: oaiModel,
@@ -172,7 +174,7 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
 
   const res = await needle(
     'get',
-    `${baseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
+    `${openAiBaseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
     { headers }
   )
   if (res.statusCode && res.statusCode >= 400) {
