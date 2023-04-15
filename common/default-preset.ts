@@ -19,6 +19,8 @@ export const defaultPresets = {
     tailFreeSampling: 0.9,
     encoderRepitionPenalty: 1.0,
     penaltyAlpha: 0,
+    addBosToken: false,
+    banEosToken: false,
     order: [0, 1, 2, 3, 4, 5, 6],
     frequencyPenalty: 0.7,
     presencePenalty: 0.7,

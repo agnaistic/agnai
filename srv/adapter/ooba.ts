@@ -35,6 +35,10 @@ export const handleOoba: ModelAdapter = async function* ({
     length_penalty: 1,
     early_stopping: true,
     seed: -1,
+    add_bos_token: settings.add_bos_token || false,
+    custom_stopping_strings: [],
+    truncation_length: 2048,
+    ban_eos_token: settings.ban_eos_token || false,
   }
 
   const payload = [JSON.stringify([prompt, body])]

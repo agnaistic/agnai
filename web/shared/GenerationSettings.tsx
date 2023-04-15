@@ -345,10 +345,24 @@ const GenSettings: Component<Props> = (props) => {
       />
       <Divider />
       <div class="text-2xl"> Text-Generation-WebUI Specific</div>
+      <Toggle
+        fieldName="addBosToken"
+        label="Add BOS Token"
+        helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
+        value={props.inherit?.addBosToken ?? false}
+        disabled={props.disabled}
+      />
+      <Toggle
+        fieldName="banEosToken"
+        label="Ban the end of sequence token. This forces the model to never end the generation prematurely."
+        helperText=""
+        value={props.inherit?.banEosToken ?? false}
+        disabled={props.disabled}
+      />
       <RangeInput
         fieldName="encoderRepitionPenalty"
         label="Encoder Repition Penalty"
-        helperText="The paramater for encoder_repetition_penalty. An exponential penalty on sequences that are not in the original input. 1.0 means no penalty"
+        helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge."
         min={0.8}
         max={1.5}
         step={0.01}

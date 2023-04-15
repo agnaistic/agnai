@@ -189,6 +189,8 @@ export namespace AppSchema {
     tailFreeSampling: number
     encoderRepitionPenalty?: number
     penaltyAlpha?: number
+    addBosToken?: boolean
+    banEosToken?: boolean
     order?: number[]
 
     gaslight?: string
