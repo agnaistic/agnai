@@ -147,9 +147,9 @@ This is how {{char}} should talk
     gaslight: ``,
   },
   claude: {
-    name: 'Claude V1.2',
+    name: 'Claude V1',
     temp: 1,
-    claudeModel: CLAUDE_MODELS.ClaudeV1_3,
+    claudeModel: CLAUDE_MODELS.ClaudeV1,
     maxTokens: 500,
     maxContextLength: 7600,
     gaslight: `Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *he jumps in excitement*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged).
