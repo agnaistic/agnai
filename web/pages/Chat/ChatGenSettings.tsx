@@ -83,6 +83,7 @@ export const ChatGenSettingsModal: Component<{
       title="Chat Generation Settings"
       fixedHeight
       maxWidth="half"
+      fixedHeight
     >
       <div class="text-sm">
         <div class="mb-2 flex items-center gap-4">

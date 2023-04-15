@@ -362,7 +362,7 @@ const GenSettings: Component<Props> = (props) => {
       <RangeInput
         fieldName="encoderRepitionPenalty"
         label="Encoder Repition Penalty"
-        helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge."
+        helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge"
         min={0.8}
         max={1.5}
         step={0.01}
