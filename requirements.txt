@@ -1,6 +1,0 @@
-accelerate==0.16.0
-bitsandbytes==0.37.0
-flexgen==0.1.6
-numpy
-safetensors==0.2.8
-git+https://github.com/huggingface/transformers

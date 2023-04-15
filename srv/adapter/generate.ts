@@ -7,11 +7,10 @@ import {
 } from '../../common/presets'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
-import { AppLog, logger } from '../logger'
+import { AppLog } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { handleChai } from './chai'
 import { handleHorde } from './horde'
-import { createImagePrompt } from './image'
 import { handleKobold } from './kobold'
 import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
@@ -82,25 +81,6 @@ export async function createTextStreamV2(
 
   return { stream, adapter }
 }
-
-// export async function createImageStream(opts: { chatId: string; senderId: string }) {
-//   const { chat, char, members } = await getResponseEntities(opts.chatId, opts.senderId)
-
-//   const isOwnerOrMember = opts.senderId === chat.userId || chat.memberIds.includes(opts.senderId)
-//   if (!isOwnerOrMember) {
-//     throw errors.Forbidden
-//   }
-
-//   const sender = members.find((mem) => mem.userId === opts.senderId)
-//   if (!sender) {
-//     throw new StatusError('Sender not found in chat members', 400)
-//   }
-
-//   const prompt = await createImagePrompt({ char, members, chat })
-//   logger.debug({ prompt }, 'Image prompt')
-
-//   return prompt
-// }
 
 export async function getResponseEntities(chat: AppSchema.Chat, senderId: string) {
   const isOwnerOrMember = senderId === chat.userId || chat.memberIds.includes(senderId)

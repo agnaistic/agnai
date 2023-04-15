@@ -1,6 +1,7 @@
 import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
 import { ImageAdapter } from '../../common/image'
 import { GenerationPreset } from '../../common/presets'
+import { ImageSettings } from './image-schema'
 
 export namespace AppSchema {
   export interface Token {
@@ -58,6 +59,7 @@ export namespace AppSchema {
 
     createdAt?: string
 
+    images?: ImageSettings
     // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
   }
 

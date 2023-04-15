@@ -185,8 +185,8 @@ export const msgStore = createStore<MsgState>(
       }
       return { msgs: msgs.slice(0, index) }
     },
-    async *createImage(_, chatId: string) {
-      const res = await api.post(`/chat/${chatId}/image`)
+    async *createImage(_) {
+      const res = await data.image.generateImage()
       if (res.error) toastStore.error(`Failed to request image: ${res.error}`)
       if (res.result) {
         console.log(res.result)
@@ -257,6 +257,8 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
 
   addMsgToRetries(msg)
 })
+
+subscribe('image-generated', { image: 'any' }, (body) => {})
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   toastStore.error(`Failed to generate response: ${body.error}`)

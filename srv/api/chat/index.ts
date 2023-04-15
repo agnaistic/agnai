@@ -14,6 +14,7 @@ const router = Router()
 
 router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)
+router.post('/:id/image', createImage)
 router.use(loggedIn)
 router.get('/', getAllChats)
 router.get('/invites', getInvites)
@@ -38,7 +39,5 @@ router.post('/:id/message', generateMessage)
 router.put('/:id/message', updateMessage)
 router.delete('/:id/messages', deleteMessages)
 router.delete('/:id', deleteChat)
-
-router.post('/:id/image', createImage)
 
 export default router

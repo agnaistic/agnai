@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
-import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
+import { AIAdapter, OPENAI_MODELS } from './adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 
@@ -22,7 +22,7 @@ const novel: Encoder = function krake(value: string) {
 let davinci: Encoder
 let turbo: Encoder
 
-export function getEncoder(adapter: AIAdapter, model?: string) {
+export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
   if (adapter === 'novel') {

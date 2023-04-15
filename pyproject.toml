@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "agn-ai"
+version = "0.1.0"
+description = "Agnaistic"
+authors = ["Sceuick"]
+license = "AGPL-3.0"
+readme = "README.md"
+packages = [{include = "agn_ai"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+transformers = "4.28.1"
+Flask = "^2.2.3"
+bitsandbytes = "^0.38.1"
+flexgen = "^0.1.7"
+numpy = "^1.24.2"
+accelerate = "^0.18.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

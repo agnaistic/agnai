@@ -5,6 +5,7 @@ import * as user from './user'
 import * as msg from './messages'
 import * as presets from './presets'
 import * as memory from './memory'
+import * as image from './image'
 
 export const data = {
   local,
@@ -14,4 +15,5 @@ export const data = {
   user,
   presets,
   memory,
+  image,
 }
