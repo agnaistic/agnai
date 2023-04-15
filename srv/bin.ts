@@ -125,12 +125,12 @@ function getFolders() {
 
   const files = {
     assets: {
-      old: readdirSync(oldAssets),
-      new: readdirSync(assets),
+      old: getFileList(oldAssets),
+      new: getFileList(assets),
     },
     json: {
-      old: readdirSync(oldJson),
-      new: readdirSync(json),
+      old: getFileList(oldJson),
+      new: getFileList(json),
     },
   }
 
@@ -152,4 +152,13 @@ function getFolders() {
   }
 
   return { assets, json }
+}
+
+function getFileList(dir: string) {
+  try {
+    const files = readdirSync(dir)
+    return files
+  } catch (ex) {
+    return []
+  }
 }
