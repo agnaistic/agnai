@@ -6,8 +6,8 @@ const TermsOfServicePage: Component = () => {
     <div>
       <PageHeader title={<>Agnaistic Terms of Service</>} />
       <div class="flex flex-col gap-4">
-        <p>dated August 22, 2022</p>
-        <p class="gap-2 text-lg">Thank you for using Agnaistic!</p>
+        <p class="font-bold">Dated August 22, 2022</p>
+        <p class="text-lg">Thank you for using Agnaistic!</p>
         <p>
           Agnaistic (hereafter known as the Stakeholders) provide Services to you subject to these
           terms.
@@ -16,18 +16,18 @@ const TermsOfServicePage: Component = () => {
           These Terms of Use apply when you use the Services of the Stakeholders, or our affiliates,
           including our application programming interface (if any), software, tools, developer
           services, data, documentation, and websites ("Services"). The Terms include our Service
-          Terms, Sharing &amp; Publication Policy, Usage Policies, and other documentation,
-          guidelines, or policies we may provide in writing. By using our Services, you agree to
-          these Terms. Our Privacy Policy explains how we collect and use personal information.
+          Terms, Sharing & Publication Policy, Usage Policies, and other documentation, guidelines,
+          or policies we may provide in writing. By using our Services, you agree to these Terms.
+          Our Privacy Policy explains how we collect and use personal information.
         </p>
-        <p>1. Registration and Access</p>
+        <p class="text-lg">1. Registration and Access</p>
         <p>
           You must be at least 18 years old to use the Services. If you are found to be under 18,
           your access to the service will be restricted or revoked. If you use the Services on
           behalf of another person or entity, you must have the authority to accept the Terms on
           their behalf.
         </p>
-        <p>2. Usage Requirements</p>
+        <p class="text-lg">2. Usage Requirements</p>
         <p>
           (a) Use of Services. You may access, and the Stakeholders grant you a non-exclusive right
           to use, the Services in accordance with these Terms. You will comply with these Terms and
@@ -57,7 +57,7 @@ const TermsOfServicePage: Component = () => {
           for third party products. This includes third party language models, generative tooling,
           and other systems which Services interface with.
         </p>
-        <p>3. Content</p>
+        <p class="text-lg">3. Content</p>
         <p>
           (a) Your Content. You may provide input to the Services ("Input"), and receive output
           generated and returned by the Services based on the Input ("Output"). Input and Output are
@@ -97,7 +97,7 @@ const TermsOfServicePage: Component = () => {
           these terms implies that you will use common sense and that you do not expect the content
           provided is superior to your own knowledge or the advice of medical professionals.
         </p>
-        <p>4. Confidentiality, Security and Data Protection</p>
+        <p class="text-lg">4. Confidentiality, Security and Data Protection</p>
         <p>
           (a) Confidentiality. You may be given access to Confidential Information of Stakeholders,
           our affiliates and other third parties. You may use Confidential Information only as
@@ -130,7 +130,7 @@ const TermsOfServicePage: Component = () => {
           processing of such data, and you represent to us that you are processing such data in
           accordance with applicable law.{' '}
         </p>
-        <p>5. Term and Termination</p>
+        <p class="text-lg">5. Term and Termination</p>
         <p>
           (a) Termination; Suspension. These Terms take effect when you first use the Services and
           remain in effect until terminated. You may terminate these Terms at any time for any
@@ -150,7 +150,9 @@ const TermsOfServicePage: Component = () => {
           sections of these Terms which by their nature should survive termination or expiration
           should survive, including but not limited to Sections 3 and 4-8.
         </p>
-        <p>6. Indemnification; Disclaimer of Warranties; Limitations on Liability</p>
+        <p class="text-lg">
+          6. Indemnification; Disclaimer of Warranties; Limitations on Liability
+        </p>
         <p>
           (a) Indemnity. You will defend, indemnify, and hold harmless us, our affiliates, and our
           personnel, from and against any claims, losses, and expenses (including attorneys' fees)
@@ -173,12 +175,11 @@ const TermsOfServicePage: Component = () => {
           LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR EXEMPLARY DAMAGES,
           INCLUDING DAMAGES FOR LOSS OF PROFITS, GOODWILL, USE, OR DATA OR OTHER LOSSES, EVEN IF WE
           HAVE BEEN ADVISED OF THE POSSIBILITY OF SUCH DAMAGES. OUR AGGREGATE LIABILITY UNDER THESE
-          TERMS SHALL NOT EXCEED &#8203;&#8203;THE GREATER OF THE AMOUNT YOU PAID FOR THE SERVICE
-          THAT GAVE RISE TO THE CLAIM DURING THE 12 MONTHS BEFORE THE LIABILITY AROSE OR ONE HUNDRED
-          DOLLARS ($100). THE LIMITATIONS IN THIS SECTION APPLY ONLY TO THE MAXIMUM EXTENT PERMITTED
-          BY APPLICABLE LAW.
+          TERMS SHALL NOT EXCEED THE GREATER OF THE AMOUNT YOU PAID FOR THE SERVICE THAT GAVE RISE
+          TO THE CLAIM DURING THE 12 MONTHS BEFORE THE LIABILITY AROSE OR ONE DOLLAR ($1 USD). THE
+          LIMITATIONS IN THIS SECTION APPLY ONLY TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW.
         </p>
-        <p>7. Dispute Resolution</p>
+        <p class="text-lg">7. Dispute Resolution</p>
         <p>YOU AGREE TO THE FOLLOWING MANDATORY ARBITRATION AND CLASS ACTION WAIVER PROVISIONS:</p>
         <p>
           (a) Informal Dispute Resolution. We would like to understand and try to address your
@@ -190,7 +191,7 @@ const TermsOfServicePage: Component = () => {
           process. If you reside in the EU, the European Commission provides for an online dispute
           resolution platform, which you can access at https://ec.europa.eu/consumers/odr.
         </p>
-        <p>8. General Terms</p>
+        <p class="text-lg">8. General Terms</p>
         <p>
           (a) Relationship of the Parties. These Terms do not create a partnership, joint venture or
           agency relationship between you and Stakeholders or any of Stakeholders' affiliates.
@@ -216,7 +217,7 @@ const TermsOfServicePage: Component = () => {
           affiliate or as part of a corporate reorganization.
         </p>
         <p>
-          (f) Modifications. We may amend these Terms from time to time by posting a revised version
+          (e) Modifications. We may amend these Terms from time to time by posting a revised version
           on the website, or if an update materially adversely affects your rights or obligations
           under these Terms we will provide notice to you either by emailing the email associated
           with your account or providing an in-product notification. Those changes will become
@@ -225,11 +226,11 @@ const TermsOfServicePage: Component = () => {
           change.
         </p>
         <p>
-          (g) Notices. All notices will be in writing. We may notify you using the registration
+          (f) Notices. All notices will be in writing. We may notify you using the registration
           information you provided or the email address associated with your use of the Services.{' '}
         </p>
         <p>
-          (h) Waiver and Severability. If you do not comply with these Terms, and Stakeholders do
+          (g) Waiver and Severability. If you do not comply with these Terms, and Stakeholders do
           not take action right away, this does not mean Stakeholders are giving up any of our
           rights. Except as provided in Section 8, if any part of these Terms is determined to be
           invalid or unenforceable by a court of competent jurisdiction, that term will be enforced
@@ -237,7 +238,7 @@ const TermsOfServicePage: Component = () => {
           terms.
         </p>
         <p>
-          (i) Export Controls. The Services may not be used in or for the benefit of, exported, or
+          (h) Export Controls. The Services may not be used in or for the benefit of, exported, or
           re-exported (a) into any U.S. embargoed countries (collectively, the "Embargoed
           Countries") or (b) to anyone on the U.S. Treasury Department's list of Specially
           Designated Nationals, any other restricted party lists (existing now or in the future)
@@ -249,26 +250,26 @@ const TermsOfServicePage: Component = () => {
           requirements or obligations to know your end users directly.
         </p>
         <p>
-          (j) Equitable Remedies. You acknowledge that if you violate or breach these Terms, it may
+          (i) Equitable Remedies. You acknowledge that if you violate or breach these Terms, it may
           cause irreparable harm to Stakeholders and our affiliates, and Stakeholders shall have the
           right to seek injunctive relief against you in addition to any other legal remedies.
         </p>
         <p>
-          (k) Entire Agreement. These Terms and any policies incorporated in these Terms contain the
+          (j) Entire Agreement. These Terms and any policies incorporated in these Terms contain the
           entire agreement between you and Stakeholders regarding the use of the Services and, other
           than any Service specific terms of use or any applicable enterprise agreements, supersedes
           any prior or contemporaneous agreements, communications, or understandings between you and
           Stakeholders on that subject.
         </p>
         <p>
-          (l) Jurisdiction, Venue and Choice of Law. These Terms will be governed by the laws of the
+          (k) Jurisdiction, Venue and Choice of Law. These Terms will be governed by the laws of the
           State of California, excluding California's conflicts of law rules or principles. Except
           as provided in the "Dispute Resolution" section, all claims arising out of or relating to
           these Terms will be brought exclusively in the federal or state courts of San Francisco
           County, California, USA.
         </p>
-        <p>Attachment A</p>
-        <p>Use Restrictions</p>
+        <p class="text-xl">Attachment A</p>
+        <p class="text-lg">Use Restrictions</p>
         <p>You agree not to use the Model or Derivatives of the Model:</p>
         <p>
           - In any way that violates any applicable national, federal, state, local or international
