@@ -140,7 +140,12 @@ export function buildPrompt(
     pre.push(parts.gaslight)
   }
 
-  const post = [opts.kind === 'self' ? `${sender}:` : `${char.name}:`]
+  if (opts.settings?.ultimeJailbreak)
+    opts.settings.ultimeJailbreak = opts.settings.ultimeJailbreak
+      .replace(BOT_REPLACE, char.name)
+      .replace(SELF_REPLACE, sender)
+
+  const post = [`${char.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }

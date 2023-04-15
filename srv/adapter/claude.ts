@@ -3,7 +3,6 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { AppSchema } from '../db/schema'
@@ -101,8 +100,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
   const gaslightCost = encoder('System: ' + parts.gaslight)
-  const ujb = gen.ultimeJailbreak?.replace(BOT_REPLACE, char.name)?.replace(SELF_REPLACE, username)
-  const ujbCost = ujb ? encoder('System: ' + gen.ultimeJailbreak) : 0
+  let ujbCost = 0
 
   const maxBudget =
     maxContextLength - maxResponseTokens - gaslightCost - ujbCost - encoder(char.name + ':')
@@ -120,8 +118,9 @@ function createClaudePrompt(opts: AdapterProps): string {
 
   const messages = [`System: ${parts.gaslight}`, ...history.reverse()]
 
-  if (ujb) {
-    messages.push(`System: ${ujb}`)
+  if (gen.ultimeJailbreak) {
+    ujbCost = encoder('System: ' + gen.ultimeJailbreak)
+    messages.push(`System: ${gen.ultimeJailbreak}`)
   }
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
