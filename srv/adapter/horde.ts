@@ -95,6 +95,7 @@ export const handleHorde: ModelAdapter = async function* ({
 
   let text = ''
   let checks = 0
+  let sentEta = false
 
   const MAX_WAIT_MS = config.horde.maxWaitSecs * 1000
 
@@ -131,19 +132,18 @@ export const handleHorde: ModelAdapter = async function* ({
 
     if (!check.body.done) {
       checks++
-      if (checks === 1) {
-        if (guest)
-          sendGuest(guest, {
-            type: 'message-horde-eta',
-            eta: check.body.wait_time,
-            queue: check.body.queue_position,
-          })
-        else
-          sendOne(sender.userId, {
-            type: 'message-horde-eta',
-            eta: check.body.wait_time,
-            queue: check.body.queue_position,
-          })
+      if (!sentEta) {
+        const msg = {
+          type: 'message-horde-eta',
+          eta: check.body.wait_time,
+          queue: check.body.queue_position,
+        }
+
+        if (msg.queue > 0 || msg.eta > 0) {
+          sentEta = true
+          if (guest) sendGuest(guest, msg)
+          else sendOne(sender.userId, msg)
+        }
       }
       await wait()
       continue
