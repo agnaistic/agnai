@@ -130,7 +130,6 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.hordeKey = encryptText(incomingKey)
   }
 
-  console.log(body.thirdPartyBackendFormat === 'kobold')
   const validatedThirdPartyUrl =
     body.thirdPartyBackendFormat === 'kobold'
       ? await verifyKobldUrl(prevUser, body.koboldUrl)
