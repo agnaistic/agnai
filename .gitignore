@@ -17,4 +17,4 @@ version.txt
 !srv.tsconfig.json
 settings.json
 .npmrc
-.model
+.model/

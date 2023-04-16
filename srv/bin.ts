@@ -62,6 +62,7 @@ if (assets) {
 
 if (!disableJson) {
   process.env.JSON_STORAGE = '1'
+  process.env.SAVE_IMAGES = '1'
   process.env.IMAGE_SIZE_LIMIT = '10'
   process.env.JSON_SIZE_LIMIT = '10'
 }

@@ -115,6 +115,12 @@ const HomePage: Component = () => {
           <b>Kobold URL</b> field in the Settings page.
         </div>
         <div class="text-lg font-bold"> Using AI Horde</div>
+        <div class="italic">
+          <p>Keep your 'Max New Tokens' below 100 unless you know what you're doing!</p>
+          <p>
+            Using high values for 'Max New Tokens' is the main cause of timeouts and slow replies.
+          </p>
+        </div>
         <div>
           By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your
           API key or change the model in the Settings page.

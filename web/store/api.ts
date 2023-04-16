@@ -92,7 +92,11 @@ async function callApi<T = any>(
   const res = await fetch(`${baseUrl}${prefix}${path}`, {
     ...headers(),
     ...opts,
-  })
+  }).catch((err) => ({ error: err }))
+
+  if ('error' in res) {
+    return { result: undefined, status: 500, error: res.error.message || res.error }
+  }
 
   const json = await res.json()
 

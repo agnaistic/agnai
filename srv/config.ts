@@ -58,9 +58,6 @@ export const config = {
     user: env('REDIS_USER', ''),
     pass: env('REDIS_PASSWORD', ''),
   },
-  kobold: {
-    maxLength: +env('KOBOLD_MAX_LENGTH', '200'),
-  },
   limits: {
     upload: +env('IMAGE_SIZE_LIMIT', '2'),
     payload: +env('JSON_SIZE_LIMIT', '2'),
@@ -88,6 +85,7 @@ export const config = {
     key: env('AWS_SECRET_ACCESS_KEY', ''),
     bucket: env('BUCKET_NAME', ''),
     endpoint: env('BUCKET_ENDPOINT', ''),
+    saveImages: !!env('SAVE_IMAGES', ''),
   },
   jsonStorage: !!env('JSON_STORAGE', ''),
   jsonFolder: env('JSON_FOLDER', resolve(__dirname, '..', 'db')),

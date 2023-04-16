@@ -1,5 +1,5 @@
-import { ChevronUp, PlusCircle } from 'lucide-solid'
-import { Component, createSignal, Show } from 'solid-js'
+import { ChevronUp, ImagePlus, PlusCircle } from 'lucide-solid'
+import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -16,6 +16,8 @@ const InputBar: Component<{
   let ref: any
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
+
+  const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
   const [text, setText] = createSignal('')
   const [menu, setMenu] = createSignal(false)
@@ -39,6 +41,11 @@ const InputBar: Component<{
       ref.value = ''
       setText('')
     })
+  }
+
+  const createImage = () => {
+    msgStore.createImage()
+    setMenu(false)
   }
 
   const more = () => {
@@ -83,8 +90,11 @@ const InputBar: Component<{
           <ChevronUp />
         </button>
         <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
-          <div class="w-48 p-2">
-            <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
+          <div class="flex w-48 flex-col gap-2 p-2">
+            <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
+              <ImagePlus size={18} /> Generage Image
+            </Button>
+            <Show when={!!state.lastMsg?.characterId && isOwner()}>
               <Button schema="secondary" class="w-full" onClick={more} alignLeft>
                 <PlusCircle size={18} /> Generate More
               </Button>
@@ -92,11 +102,6 @@ const InputBar: Component<{
           </div>
         </DropMenu>
       </div>
-      {/* <Show when={!!state.lastMsg?.characterId && props.chat.userId === user.user?._id}>
-        <IconButton onClick={() => props.more(state.lastMsg.msg)}>
-          <PlusCircle />
-        </IconButton>
-      </Show> */}
     </div>
   )
 }

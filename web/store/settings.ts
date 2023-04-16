@@ -13,6 +13,7 @@ type SettingState = {
   config: AppSchema.AppConfig
   models: HordeModel[]
   workers: HordeWorker[]
+  imageWorkers: HordeWorker[]
   anonymize: boolean
 
   init?: {
@@ -33,6 +34,7 @@ const initState: SettingState = {
   fullscreen: false,
   models: [],
   workers: [],
+  imageWorkers: [],
   config: { adapters: [], canAuth: true, version: '...', assetPrefix: '', selfhosting: false },
 }
 
@@ -55,6 +57,10 @@ export const settingStore = createStore<SettingState>(
         setAssetPrefix(res.result.config.assetPrefix)
         events.emit(EVENTS.init, res.result)
         yield { init: res.result, config: res.result.config }
+      }
+
+      if (res.error) {
+        setTimeout(() => settingStore.init(), 2500)
       }
     },
     menu({ showMenu }) {
@@ -83,6 +89,13 @@ export const settingStore = createStore<SettingState>(
       const json = await res.json()
 
       return { workers: json }
+    },
+
+    async getHordeImageWorkers() {
+      const res = await fetch(`${HORDE_URL}/workers?type=image`)
+      const json = await res.json()
+
+      return { imageWorkers: json }
     },
 
     toggleAnonymize({ anonymize }) {

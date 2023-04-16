@@ -8,7 +8,7 @@
 
 import { v4 } from 'uuid'
 import { errors, StatusError } from '../api/wrap'
-import { publishMany } from '../api/ws/handle'
+import { sendMany } from '../api/ws'
 import { getChat } from './chats'
 import { db } from './client'
 import { AppSchema } from './schema'
@@ -130,7 +130,7 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
       { $set: { memberIds: chat.memberIds.concat(userId) } }
     )
     const profile = await db('profile').findOne({ userId })
-    publishMany([chat.userId, ...chat.memberIds.concat(userId)], {
+    sendMany([chat.userId, ...chat.memberIds.concat(userId)], {
       type: 'member-added',
       chatId: chat._id,
       profile,
@@ -151,7 +151,7 @@ export async function removeMember(chatId: string, requestedBy: string, memberId
   }
 
   if (chat.memberIds.includes(memberId)) {
-    publishMany([requestedBy, ...chat.memberIds], { type: 'member-removed', chatId, memberId })
+    sendMany([requestedBy, ...chat.memberIds], { type: 'member-removed', chatId, memberId })
   }
 
   await db('chat-member').deleteMany({ chatId, userId: memberId })
