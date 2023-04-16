@@ -8,22 +8,24 @@ const KoboldAISettings: Component = () => {
 
   return (
     <>
+      <TextInput
+        fieldName="koboldUrl"
+        label="Kobold-compatible / 3rd-party URL"
+        helperText="Fully qualified URL. Typically for Kobold. This URL must be publicly accessible."
+        placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
+        value={state.user?.koboldUrl}
+      />
+
       <Select
-        fieldName="thirdPartyBackendFormat"
-        label="Third party backend format"
+        fieldName="thirdPartyFormat"
+        label="Kobold / 3rd-party Format"
+        helperText="Re-formats the prompt to the desired output format."
         items={[
           { label: 'Kobold', value: 'kobold' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'Claude', value: 'claude' },
         ]}
-        value={state.user?.thirdPartyBackendFormat}
-      />
-      <TextInput
-        fieldName="koboldUrl"
-        label="Third-party backend URL"
-        helperText="Fully qualified URL. This URL must be publicly accessible."
-        placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
-        value={state.user?.koboldUrl}
+        value={state.user?.thirdPartyFormat}
       />
     </>
   )

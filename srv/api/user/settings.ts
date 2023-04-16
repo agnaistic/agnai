@@ -83,7 +83,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       novelApiKey: 'string?',
       novelModel: 'string?',
       koboldUrl: 'string?',
-      thirdPartyBackendFormat: 'string?',
+      thirdPartyFormat: 'string?',
       hordeUseTrusted: 'boolean?',
       hordeApiKey: 'string?',
       hordeKey: 'string?',
@@ -131,7 +131,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
   }
 
   const validatedThirdPartyUrl =
-    body.thirdPartyBackendFormat === 'kobold'
+    body.thirdPartyFormat === 'kobold'
       ? await verifyKobldUrl(prevUser, body.koboldUrl)
       : body.koboldUrl
 

@@ -3,12 +3,13 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, getPromptParts, SELF_REPLACE } from '../../common/prompt'
+import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
+import { AppSchema } from '../db/schema'
 
-const openAiBaseUrl = `https://api.openai.com`
+const baseUrl = `https://api.openai.com`
 
 type OpenAIMessagePropType = {
   role: 'user' | 'assistant' | 'system'
@@ -28,8 +29,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
-  const baseUrl =
-    user.thirdPartyBackendFormat === 'openai' ? user.koboldUrl || openAiBaseUrl : openAiBaseUrl
+  const base = getBaseUrl(user)
 
   const body: any = {
     model: oaiModel,
@@ -105,15 +105,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const bearer = !!guest ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
 
-  const headers = {
+  const headers: any = {
     'Content-Type': 'application/json',
-    Authorization: bearer,
+  }
+
+  if (!base.changed) {
+    headers.Authorization = bearer
   }
 
   log.debug(body, 'OpenAI payload')
 
-  const url = useChat ? `${baseUrl}/v1/chat/completions` : `${baseUrl}/v1/completions`
-  console.log(body)
+  const url = useChat ? `${base.url}/v1/chat/completions` : `${base.url}/v1/completions`
+
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -153,6 +156,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 }
 
+function getBaseUrl(user: AppSchema.User) {
+  if (user.thirdPartyFormat === 'openai' && user.koboldUrl) {
+    return { url: user.koboldUrl, changed: true }
+  }
+
+  return { url: baseUrl, changed: false }
+}
+
 export type OAIUsage = {
   daily_costs: Array<{ timestamp: number; line_item: Array<{ name: string; cost: number }> }>
   object: string
@@ -175,7 +186,7 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
 
   const res = await needle(
     'get',
-    `${openAiBaseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
+    `${baseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
     { headers }
   )
   if (res.statusCode && res.statusCode >= 400) {
