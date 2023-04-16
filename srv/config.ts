@@ -70,6 +70,7 @@ export const config = {
   },
   horde: {
     maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),
+    imageWaitSecs: +env('HORDE_IMAGE_WAIT_SECS', '320'),
   },
   classifyUrl: env('CLASSIFY_URL', 'http://localhost:5001'),
   init: {

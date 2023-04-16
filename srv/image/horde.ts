@@ -97,7 +97,7 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
   let text = ''
   let checks = 0
 
-  const MAX_WAIT_MS = config.horde.maxWaitSecs * 1000
+  const MAX_WAIT_MS = config.horde.imageWaitSecs * 1000
 
   while (true) {
     const diff = Date.now() - started
