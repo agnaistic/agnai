@@ -33,6 +33,7 @@ import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
 import { AppSchema } from '../../../srv/db/schema'
+import { ImageModal } from './ImageModal'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -298,6 +299,8 @@ const ChatDetail: Component = () => {
         <MemberModal show={true} close={setModal} />
       </Show>
 
+      <ImageModal />
+
       <PromptModal />
       <Show when={modal() === 'ui'}>
         <Modal
@@ -441,7 +444,7 @@ function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
     _id: '',
     chatId: '',
     characterId,
-    msg: message,
+    msg: message || '',
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

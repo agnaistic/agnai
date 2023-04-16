@@ -24,14 +24,37 @@ export function createImagePrompt(opts: ImagePromptOpts) {
   const encoder = getEncoder('main')
 
   // TODO: Verify incoming ordering, it should be ascending
-  for (const { msg, userId } of opts.messages.slice().reverse()) {
-    const handle = userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name
-    const line = `${handle || 'You'}: ${msg}`
-    const size = encoder(line)
-    if (tokens + size > maxTokens) break
 
-    lines.push(line)
-    tokens += size
+  for (const { msg, userId, adapter } of opts.messages.slice().reverse()) {
+    if (adapter === 'image') continue
+    const indexes = tokenizeMessage(msg)
+
+    let last = ''
+    for (const index of indexes.reverse()) {
+      const line = msg.slice(index)
+      const size = encoder(line)
+      tokens += size
+
+      if (tokens > maxTokens) {
+        lines.push(last)
+        break
+      }
+
+      last = line
+    }
+
+    if (tokens > maxTokens) break
+
+    const handle =
+      (userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name) || 'You'
+    tokens += encoder(handle + ':')
+
+    if (tokens > maxTokens) {
+      lines.push(last)
+      break
+    }
+
+    lines.push(`${handle}: ${last}`)
   }
 
   const prompt = lines.join('\n')
@@ -46,10 +69,24 @@ function getMaxTokens(user: AppSchema.User) {
       return 225
 
     case 'sd':
-      return 225
+      return 350
 
     case 'horde':
     default:
-      return 75
+      return 150
   }
+}
+
+function tokenizeMessage(line: string) {
+  const regex = /[\*\"\?\!\.]/g
+
+  const matches: number[] = []
+  let result: RegExpExecArray | null = null
+
+  while ((result = regex.exec(line))) {
+    if (result) matches.push(result.index)
+    else break
+  }
+
+  return matches
 }

@@ -10,12 +10,53 @@ export const NOVEL_IMAGE_MODEL = {
   Furry: 'nai-diffusion-furry',
 } as const
 
-export const NOVEL_SAMPLER = {
-  DPMPP_2M: 'k_dpmpp_2m',
-  DPMPP_SDE: 'k_dpmpp_sde',
-  DPMPP_2S_ANCESTRAL: 'k_dpmpp_2s_ancestral',
-  EULER: 'k_euler',
-  EULER_ANCESTRAL: 'k_euler_ancestral',
-  DPM_FAST: 'k_dpm_fast',
-  DDIM: 'ddim',
+export const NOVEL_SAMPLER_REV = {
+  k_dpmpp_2m: 'DPM++ 2M',
+  k_dpmpp_sde: 'DPM++ SDE',
+  k_dpmpp_2s_ancestral: 'DPM++ 2S Ancestral',
+  k_euler: 'Euler',
+  k_euler_ancestral: 'Euler Ancestral',
+  k_dpm_fast: 'DPM Fast',
+  ddim: 'DDIM',
 } as const
+
+export const NOVEL_SAMPLER = reverseKeyValue(NOVEL_SAMPLER_REV)
+
+export const SD_SAMPLER_REV = {
+  k_euler: 'Euler',
+  k_euler_a: 'Euler a',
+  k_lms: 'LMS',
+  k_heun: 'Huen',
+  k_dpm_2: 'DPM2',
+  k_dpm_2_a: 'DPM2 A',
+  k_dpmpp_2s_a: 'DPM++ 2S a',
+  k_dpmpp_2m: 'DPM++ 2M',
+  k_dpmpp_sde: 'DPM++ SDE',
+  k_dpm_fast: 'DPM Fast',
+  k_dpm_ad: 'DPM Adaptive',
+  k_lms_ka: 'LMS Karras',
+  k_dpm_2_ka: 'DPM2 Karras',
+  k_dpm_2_a_ka: 'DPM2 a Karras',
+  k_dpmpp_2s_a_ka: 'DPM++ 2S a Karras',
+  k_dpmpp_2m_ka: 'DPM++ 2M Karras',
+  k_dpmpp_sde_ka: 'DPM++ SDE Karras',
+  DDIM: 'DDIM',
+  PLMS: 'PLMS',
+  UniPC: 'UniPC',
+} as const
+
+export const SD_SAMPLER = reverseKeyValue(SD_SAMPLER_REV)
+
+type ReverseMap<T extends Record<keyof T, keyof any>> = {
+  [P in T[keyof T]]: {
+    [K in keyof T]: T[K] extends P ? K : never
+  }[keyof T]
+}
+
+function reverseKeyValue<T extends { [key: string]: string }>(obj: T): ReverseMap<T> {
+  const reversed = Object.entries(obj).reduce(
+    (prev, [key, value]) => Object.assign(prev, { [value]: key }),
+    {}
+  )
+  return reversed as any
+}

@@ -21,7 +21,7 @@ const base = {
   length_penalty: 1,
   penalty_alpha: 0,
   no_repeat_ngram_size: 0,
-  max_new_tokens: config.kobold.maxLength,
+  max_new_tokens: 80,
   early_stopping: false,
   min_length: 0,
   num_beams: 1,

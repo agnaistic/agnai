@@ -6,14 +6,16 @@ export type ImageGenerateRequest = {
   user: AppSchema.User
   prompt: string
   chatId: string
+  messageId?: string
 }
 
-export type ImageAdapter<T extends ImageSettings['type'] = ImageSettings['type']> = (
+export type ImageAdapter = (
   opts: {
     user: AppSchema.User
-    settings: Extract<ImageSettings, { type: T }>
     prompt: string
   },
   log: AppLog,
   guestId?: string
-) => Promise<any>
+) => Promise<ImageAdapterResponse>
+
+export type ImageAdapterResponse = { ext: string; content: Buffer }

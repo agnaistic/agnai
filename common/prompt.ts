@@ -41,7 +41,10 @@ export const SELF_REPLACE = /\{\{user\}\}/g
  * @returns
  */
 export function createPrompt(opts: PromptOpts) {
-  const sortedMsgs = opts.messages.slice().sort(sortMessagesDesc)
+  const sortedMsgs = opts.messages
+    .filter((msg) => msg.adapter !== 'image')
+    .slice()
+    .sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
   /**

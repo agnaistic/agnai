@@ -1,11 +1,19 @@
+import Zip from 'adm-zip'
 import needle from 'needle'
 import { ImageAdapter } from './types'
 import { decryptText } from '../db/util'
-import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER, NovelImageModel } from '../../common/image'
+import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER, NOVEL_SAMPLER_REV } from '../../common/image'
+import { NovelSettings } from '../db/image-schema'
 
 const baseUrl = `https://api.novelai.net/ai`
 
 const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
+
+const defaultSettings: NovelSettings = {
+  type: 'novel',
+  model: NOVEL_IMAGE_MODEL.Full,
+  sampler: NOVEL_SAMPLER['DPM++ 2M'],
+}
 
 type NovelImageRequest = {
   action: 'generate'
@@ -29,26 +37,33 @@ type NovelImageRequest = {
   }
 }
 
-export const handleNovelImage: ImageAdapter<'novel'> = async (
-  { user, settings, prompt },
-  log,
-  guestId
-) => {
+export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, guestId) => {
+  const base = user.images
+  const settings = user.images?.novel || defaultSettings
   const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
+  let input = prompt
+
+  if (base?.template) {
+    input = base.template.replace(/\{\{prompt\}\}/g, prompt)
+    if (!input.includes(prompt)) {
+      input = prompt + ' ' + input
+    }
+  }
 
   const payload: NovelImageRequest = {
     action: 'generate',
-    input: prompt,
+    input,
     model: settings.model ?? NOVEL_IMAGE_MODEL.Full,
     parameters: {
-      height: settings.height ?? 512,
-      width: settings.width ?? 512,
+      height: base?.height ?? 384,
+      width: base?.width ?? 384,
       n_samples: 1,
       negative_prompt,
-      sampler: settings.sampler ?? NOVEL_SAMPLER.DPMPP_2M,
-      scale: 9,
+      sampler: settings.sampler ?? NOVEL_SAMPLER['DPM++ 2M'],
+      scale: base?.cfg ?? 9,
       seed: Math.random() * 1_000_000_000,
-      steps: settings.steps ?? 28,
+      steps: base?.steps ?? 28,
+      // Unsure what to do with these two values
       ucPreset: 0,
       qualityToggle: true,
     },
@@ -60,5 +75,20 @@ export const handleNovelImage: ImageAdapter<'novel'> = async (
     },
   })
 
-  return result
+  if (result.statusCode && result.statusCode >= 400) {
+    throw new Error(
+      `Failed to generate image: ${result.body.message || result.statusMessage} (${
+        result.statusCode
+      })`
+    )
+  }
+
+  const zip = new Zip(result.body).getEntries()
+  const entry = zip.find((entry) => entry.entryName.endsWith('.png'))
+
+  if (!entry) {
+    throw new Error(`Failed to generate image: Novel response did not contain an image`)
+  }
+
+  return { ext: 'png', content: entry.getData() }
 }

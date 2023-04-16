@@ -58,7 +58,9 @@ export async function initMessageBus() {
   try {
     await clients.pub.connect()
     await clients.sub.connect()
+
     logger.info('Connected to message bus')
+    handleErrors()
 
     setInterval(() => {
       const count = getAllCount()
@@ -93,6 +95,12 @@ export async function initMessageBus() {
       `Message bus not connected - Running in non-distributed mode. If you are self-hosting you can ignore this warning.`
     )
   }
+}
+
+function handleErrors() {
+  clients.pub.on('error', (error) => {})
+
+  clients.sub.on('error', (error) => {})
 }
 
 function updateMaxCount() {

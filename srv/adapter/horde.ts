@@ -101,7 +101,9 @@ export const handleHorde: ModelAdapter = async function* ({
   while (true) {
     const diff = Date.now() - started
     if (diff > MAX_WAIT_MS) {
-      yield { error: `Horde request failed: Timed out` }
+      yield {
+        error: `Horde request failed: Timed out. Try lowering your max_context and max_context_length.`,
+      }
       return
     }
 

@@ -1,3 +1,4 @@
+import { v4 } from 'uuid'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { api, isLoggedIn } from './api'
@@ -9,16 +10,19 @@ import { toastStore } from './toasts'
 
 export type MsgState = {
   activeChatId: string
+  activeCharId: string
   msgs: AppSchema.ChatMessage[]
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: string
   retries: Record<string, string[]>
   nextLoading: boolean
+  showImage?: AppSchema.ChatMessage
 }
 
 const initState: MsgState = {
   activeChatId: '',
+  activeCharId: '',
   msgs: [],
   retries: {},
   nextLoading: false,
@@ -185,12 +189,16 @@ export const msgStore = createStore<MsgState>(
       }
       return { msgs: msgs.slice(0, index) }
     },
-    async *createImage(_) {
-      const res = await data.image.generateImage()
-      if (res.error) toastStore.error(`Failed to request image: ${res.error}`)
-      if (res.result) {
-        console.log(res.result)
+    async *createImage({ activeChatId }, messageId?: string) {
+      yield { waiting: activeChatId }
+      const res = await data.image.generateImage(messageId)
+      if (res.error) {
+        yield { waiting: undefined }
+        toastStore.error(`Failed to request image: ${res.error}`)
       }
+    },
+    showImage(_, msg?: AppSchema.ChatMessage) {
+      return { showImage: msg }
     },
   }
 })
@@ -258,7 +266,29 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   addMsgToRetries(msg)
 })
 
-subscribe('image-generated', { image: 'any' }, (body) => {})
+subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
+  msgStore.setState({ waiting: undefined })
+  toastStore.error(body.error)
+})
+
+subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
+  const { msgs, activeChatId, activeCharId } = msgStore.getState()
+  if (activeChatId !== body.chatId) return
+
+  const newMsg: AppSchema.ChatMessage = {
+    _id: v4(),
+    chatId: body.chatId,
+    kind: 'chat-message',
+    msg: `${body.image}`,
+    adapter: 'image',
+    characterId: activeCharId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  const nextMsgs = msgs.concat(newMsg)
+  msgStore.setState({ msgs: nextMsgs, waiting: undefined })
+})
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   toastStore.error(`Failed to generate response: ${body.error}`)

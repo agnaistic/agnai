@@ -10,10 +10,12 @@ import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
 import { Show } from 'solid-js'
+import { ImageSettings } from './Image/ImageSettings'
 
 const settingTabs = {
   ai: 'AI Settings',
   ui: 'UI Settings',
+  image: 'Image Settings',
   guest: 'Guest Data',
 }
 
@@ -29,7 +31,7 @@ const Settings: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [workers, setWorkers] = createSignal<string[]>(state.user?.hordeWorkers || [])
 
-  const tabs: Tab[] = ['ai', 'ui']
+  const tabs: Tab[] = ['ai', 'ui', 'image']
   if (!state.loggedIn) tabs.push('guest')
   const currentTab = createMemo(() => tabs[tab()])
 
@@ -83,6 +85,10 @@ const Settings: Component = () => {
 
           <div class={currentTab() === 'ui' ? tabClass : 'hidden'}>
             <UISettings />
+          </div>
+
+          <div class={currentTab() === 'image' ? tabClass : 'hidden'}>
+            <ImageSettings />
           </div>
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>

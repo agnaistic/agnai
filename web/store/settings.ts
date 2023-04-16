@@ -56,6 +56,10 @@ export const settingStore = createStore<SettingState>(
         events.emit(EVENTS.init, res.result)
         yield { init: res.result, config: res.result.config }
       }
+
+      if (res.error) {
+        setTimeout(() => settingStore.init(), 2500)
+      }
     },
     menu({ showMenu }) {
       return { showMenu: !showMenu }

@@ -9,10 +9,14 @@ import { handle } from '../wrap'
  */
 
 export const createImage = handle(async ({ body, userId, socketId, log, params }) => {
-  assertValid({ user: 'any?', prompt: 'string' }, body)
+  assertValid({ user: 'any?', prompt: 'string', messageId: 'string?' }, body)
   const user = userId ? await store.users.getUser(userId) : body.user
 
   const guestId = userId ? undefined : socketId
-  await generateImage({ user, prompt: body.prompt, chatId: params.id }, log, guestId)
+  generateImage(
+    { user, prompt: body.prompt, chatId: params.id, messageId: body.messageId },
+    log,
+    guestId
+  )
   return { success: true }
 })

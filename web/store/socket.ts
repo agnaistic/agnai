@@ -50,7 +50,12 @@ function onMessage(msg: MessageEvent<any>) {
 
     if (!payload.type) continue
     const handlers = listeners.get(payload.type)
-    console.log(JSON.stringify(payload))
+
+    if (payload.type !== 'image-generated') {
+      console.log(JSON.stringify(payload))
+    } else {
+      console.log(JSON.stringify({ ...payload, image: '...' }))
+    }
     if (!handlers || !handlers.length) continue
 
     for (const handler of handlers) {
