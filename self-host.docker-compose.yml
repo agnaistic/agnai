@@ -1,5 +1,8 @@
 version: '2'
 
+networks:
+  backend:
+
 services:
   app:
     image: ghcr.io/luminai-companion/agnaistic:latest
@@ -13,9 +16,11 @@ services:
       - INITIAL_USER=admin
       - INITIAL_PASSWORD=password
       - JWT_SECRET=self-hosting
+    networks: 
+      - backend
     
   mongo:
     image: mongo:6
     restart: always
-    ports:
-      - '27017:27017'
+    networks:
+      - backend
