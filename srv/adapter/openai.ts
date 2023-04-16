@@ -3,10 +3,11 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, getPromptParts, SELF_REPLACE } from '../../common/prompt'
+import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
+import { AppSchema } from '../db/schema'
 
 const baseUrl = `https://api.openai.com`
 
@@ -28,6 +29,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
+  const base = getBaseUrl(user)
 
   const body: any = {
     model: oaiModel,
@@ -103,14 +105,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const bearer = !!guest ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
 
-  const headers = {
+  const headers: any = {
     'Content-Type': 'application/json',
-    Authorization: bearer,
+  }
+
+  if (!base.changed) {
+    headers.Authorization = bearer
   }
 
   log.debug(body, 'OpenAI payload')
 
-  const url = useChat ? `${baseUrl}/v1/chat/completions` : `${baseUrl}/v1/completions`
+  const url = useChat ? `${base.url}/v1/chat/completions` : `${base.url}/v1/completions`
+
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -148,6 +154,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
+}
+
+function getBaseUrl(user: AppSchema.User) {
+  if (user.thirdPartyFormat === 'openai' && user.koboldUrl) {
+    return { url: user.koboldUrl, changed: true }
+  }
+
+  return { url: baseUrl, changed: false }
 }
 
 export type OAIUsage = {

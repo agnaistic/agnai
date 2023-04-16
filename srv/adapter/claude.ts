@@ -6,6 +6,9 @@ import { defaultPresets } from '../../common/presets'
 import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
+import { AppSchema } from '../db/schema'
+
+const baseUrl = `https://api.anthropic.com/v1/complete`
 
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
 const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
@@ -16,7 +19,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
-
+  const base = getBaseUrl(user)
   const claudeModel = settings.claudeModel ?? defaultPresets.claude.claudeModel
   const username = sender.handle || 'You'
 
@@ -35,16 +38,19 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     stop_sequences: Array.from(stops),
   }
 
+  const headers: any = {
+    'Content-Type': 'application/json',
+  }
+
+  if (!base.changed) {
+    headers['x-api-key'] = !!guest ? user.claudeApiKey : decryptText(user.claudeApiKey)
+  }
+
   log.debug(requestBody, 'Claude payload')
 
-  const url = `https://api.anthropic.com/v1/complete`
-
-  const resp = await needle('post', url, JSON.stringify(requestBody), {
+  const resp = await needle('post', base.url, JSON.stringify(requestBody), {
     json: true,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': !!guest ? user.claudeApiKey : decryptText(user.claudeApiKey),
-    },
+    headers,
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
@@ -76,6 +82,14 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     yield { error: `Claude request failed: ${ex.message}` }
     return
   }
+}
+
+function getBaseUrl(user: AppSchema.User) {
+  if (user.thirdPartyFormat === 'claude' && user.koboldUrl) {
+    return { url: user.koboldUrl, changed: true }
+  }
+
+  return { url: baseUrl, changed: false }
 }
 
 function createClaudePrompt(opts: AdapterProps): string {

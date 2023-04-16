@@ -83,6 +83,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       novelApiKey: 'string?',
       novelModel: 'string?',
       koboldUrl: 'string?',
+      thirdPartyFormat: 'string?',
       hordeUseTrusted: 'boolean?',
       hordeApiKey: 'string?',
       hordeKey: 'string?',
@@ -129,9 +130,13 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.hordeKey = encryptText(incomingKey)
   }
 
-  const validKoboldUrl = await verifyKobldUrl(prevUser, body.koboldUrl)
+  const validatedThirdPartyUrl =
+    body.thirdPartyFormat === 'kobold'
+      ? await verifyKobldUrl(prevUser, body.koboldUrl)
+      : body.koboldUrl
 
-  if (validKoboldUrl !== undefined) update.koboldUrl = validKoboldUrl
+  if (validatedThirdPartyUrl) update.koboldUrl = validatedThirdPartyUrl
+
   if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
 
   if (body.hordeModel) {

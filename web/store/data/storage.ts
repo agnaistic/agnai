@@ -78,6 +78,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     hordeModel: 'PygmalionAI/pygmalion-6b',
     defaultAdapter: 'horde',
     koboldUrl: '',
+    thirdPartyFormat: 'kobold',
     luminaiUrl: '',
   },
   profile: { _id: '', kind: 'profile', userId: ID, handle: 'You' },
