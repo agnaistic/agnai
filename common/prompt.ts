@@ -375,17 +375,19 @@ function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
   return l.createdAt > r.createdAt ? -1 : l.createdAt === r.createdAt ? 0 : 1
 }
 
+const ADAPTERS_WITH_THIRD_PARTY_COMPATIBLE_API_SUPPORTED = ['openai', 'claude']
+
 export function getAdapter(
   chat: AppSchema.Chat,
   config: AppSchema.User,
   preset?: Partial<AppSchema.GenSettings>
 ) {
   const configAdapter =
-    !chat.adapter
-      || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
+    !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
   const adapter =
-    configAdapter === 'kobold' && config.thirdPartyBackendFormat === 'openai'
-      ? 'openai'
+    configAdapter === 'kobold' &&
+    ADAPTERS_WITH_THIRD_PARTY_COMPATIBLE_API_SUPPORTED.includes(config.thirdPartyBackendFormat)
+      ? config.thirdPartyBackendFormat
       : configAdapter
   let model = ''
   let presetName = 'Fallback Preset'

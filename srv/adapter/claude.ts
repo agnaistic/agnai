@@ -16,7 +16,9 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
-
+  const officialBaseUrl = `https://api.anthropic.com/v1/complete`
+  const url =
+    user.thirdPartyBackendFormat === 'claude' ? user.koboldUrl || officialBaseUrl : officialBaseUrl
   const claudeModel = settings.claudeModel ?? defaultPresets.claude.claudeModel
   const username = sender.handle || 'You'
 
@@ -35,9 +37,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     stop_sequences: Array.from(stops),
   }
 
+  console.log(requestBody)
   log.debug(requestBody, 'Claude payload')
-
-  const url = `https://api.anthropic.com/v1/complete`
 
   const resp = await needle('post', url, JSON.stringify(requestBody), {
     json: true,

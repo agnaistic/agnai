@@ -36,7 +36,7 @@ const Settings: Component = () => {
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {
       koboldUrl: 'string?',
-      thirdPartyBackendFormat: ['kobold', 'openai'],
+      thirdPartyBackendFormat: ['kobold', 'openai', 'claude'],
       novelApiKey: 'string?',
       novelModel: 'string?',
       hordeUseTrusted: 'boolean?',

@@ -113,6 +113,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   log.debug(body, 'OpenAI payload')
 
   const url = useChat ? `${baseUrl}/v1/chat/completions` : `${baseUrl}/v1/completions`
+  console.log(body)
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
