@@ -1,8 +1,8 @@
 import needle from 'needle'
 import { ImageAdapter } from './types'
-import { decryptText } from '../db/util'
 import { SD_SAMPLER, SD_SAMPLER_REV } from '../../common/image'
 import { SDSettings } from '../db/image-schema'
+import { logger } from '../logger'
 
 const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
 
@@ -32,18 +32,9 @@ type SDRequest = {
 export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId) => {
   const base = user.images
   const settings = user.images?.sd || defaultSettings
-  const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
-  let input = prompt
-
-  if (base?.template) {
-    input = base.template.replace(/\{\{prompt\}\}/g, prompt)
-    if (!input.includes(prompt)) {
-      input = prompt + ' ' + input
-    }
-  }
 
   const payload: SDRequest = {
-    prompt: input.replace(/\s+/g, ' ').trim(),
+    prompt,
     height: base?.height ?? 384,
     width: base?.width ?? 384,
     n_iter: 1,
@@ -57,6 +48,9 @@ export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId
     save_images: false,
     send_images: true,
   }
+
+  logger.debug(payload, 'Image: Stable Diffusion payload')
+
   const result = await needle('post', `${settings.url}/sdapi/v1/txt2img`, payload, {
     json: true,
   })

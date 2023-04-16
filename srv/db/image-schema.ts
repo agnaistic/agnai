@@ -1,16 +1,16 @@
 type ImageType = NovelSettings | HordeSettings | SDSettings
 
 export type ImageSettings = {
-  type?: ImageType['type']
+  type: ImageType['type']
   template?: string
-  width?: number
-  height?: number
-  steps?: number
-  cfg?: number
+  width: number
+  height: number
+  steps: number
+  cfg: number
 
-  novel?: NovelSettings
-  hode?: HordeSettings
-  sd?: SDSettings
+  novel: Omit<NovelSettings, 'type'>
+  horde: Omit<HordeSettings, 'type'>
+  sd: Omit<SDSettings, 'type'>
 }
 
 export type NovelSettings = {
@@ -22,6 +22,7 @@ export type NovelSettings = {
 export type HordeSettings = {
   type: 'horde'
   sampler: string
+  model: string
 }
 
 export type SDSettings = {

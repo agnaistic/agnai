@@ -1,12 +1,7 @@
-// import { createImageStream } from '../../adapter/generate'
 import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { generateImage } from '../../image'
 import { handle } from '../wrap'
-
-/**
- * Storage?
- */
 
 export const createImage = handle(async ({ body, userId, socketId, log, params }) => {
   assertValid({ user: 'any?', prompt: 'string', messageId: 'string?' }, body)

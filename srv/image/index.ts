@@ -36,6 +36,10 @@ export async function generateImage(
     }
   }
 
+  prompt = prompt.trim()
+
+  log.debug({ prompt, type: user.images?.type }, 'Image prompt')
+
   try {
     switch (user.images?.type || 'horde') {
       case 'novel':

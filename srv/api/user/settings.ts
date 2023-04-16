@@ -96,6 +96,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       scaleUrl: 'string?',
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
+      images: 'any?',
     },
     body
   )
@@ -138,6 +139,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
   if (validatedThirdPartyUrl) update.koboldUrl = validatedThirdPartyUrl
 
   if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
+
+  if (body.images) {
+    update.images = body.images
+  }
 
   if (body.hordeModel) {
     update.hordeModel = body.hordeModel!

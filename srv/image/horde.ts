@@ -1,9 +1,8 @@
 import needle from 'needle'
 import { ImageAdapter } from './types'
 import { decryptText } from '../db/util'
-import { SD_SAMPLER, SD_SAMPLER_REV } from '../../common/image'
-import { HordeSettings, SDSettings } from '../db/image-schema'
-import { writeFileSync } from 'fs'
+import { SD_SAMPLER } from '../../common/image'
+import { HordeSettings } from '../db/image-schema'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { logger } from '../logger'
 import { config } from '../config'
@@ -14,6 +13,7 @@ const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, b
 const defaultSettings: HordeSettings = {
   type: 'horde',
   sampler: SD_SAMPLER['DPM++ 2M'],
+  model: 'Deliberate',
 }
 
 const baseUrl = 'https://horde.koboldai.net/api/v2'
@@ -42,7 +42,7 @@ type HordeRequest = {
 
 export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, guestId) => {
   const base = user.images
-  const settings = user.images?.sd || defaultSettings
+  const settings = user.images?.horde || defaultSettings
 
   const payload: HordeRequest = {
     prompt: `${prompt} ### ${negative_prompt}`,
@@ -59,7 +59,7 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
     },
     censor_nsfw: false,
     nsfw: true,
-    models: ['Deliberate'],
+    models: [settings.model || 'stable_diffusion'],
     r2: false,
     replacement_filter: true,
     trusted_workers: user.hordeUseTrusted ?? false,
@@ -163,7 +163,6 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
       }
 
       const buffer = Buffer.from(image, 'base64')
-      writeFileSync('temp.png', buffer)
       return { ext: 'png', content: buffer }
     }
   }

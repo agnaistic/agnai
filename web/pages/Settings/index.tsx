@@ -50,6 +50,21 @@ const Settings: Component = () => {
       scaleUrl: 'string?',
       claudeApiKey: 'string?',
       defaultAdapter: adapterOptions,
+
+      imageType: ['horde', 'sd', 'novel'],
+      imageSteps: 'number',
+      imageCfg: 'number',
+      imageWidth: 'number',
+      imageHeight: 'number',
+
+      novelImageModel: 'string',
+      novelSampler: 'string',
+
+      hordeSampler: 'string',
+      hordeImageModel: 'string',
+
+      sdUrl: 'string',
+      sdSampler: 'string',
     } as const)
 
     const defaultPresets = getFormEntries(evt)
@@ -62,10 +77,44 @@ const Settings: Component = () => {
         return prev
       }, {} as AppSchema.User['defaultPresets'])
 
+    const {
+      imageCfg,
+      imageHeight,
+      imageSteps,
+      imageType,
+      imageWidth,
+      sdSampler,
+      sdUrl,
+      hordeImageModel,
+      hordeSampler,
+      novelImageModel,
+      novelSampler,
+      ...base
+    } = body
+
     userStore.updateConfig({
-      ...body,
+      ...base,
       hordeWorkers: workers(),
       defaultPresets,
+      images: {
+        type: imageType,
+        cfg: imageCfg,
+        height: imageHeight,
+        width: imageWidth,
+        steps: imageSteps,
+        horde: {
+          sampler: hordeSampler,
+          model: hordeImageModel,
+        },
+        novel: {
+          model: novelImageModel,
+          sampler: novelSampler,
+        },
+        sd: {
+          sampler: sdSampler,
+          url: sdUrl,
+        },
+      },
     })
   }
 

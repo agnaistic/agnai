@@ -23,13 +23,12 @@ export function createImagePrompt(opts: ImagePromptOpts) {
 
   const encoder = getEncoder('main')
 
-  // TODO: Verify incoming ordering, it should be ascending
-
-  for (const { msg, userId, adapter } of opts.messages.slice().reverse()) {
+  for (const { msg, userId, adapter } of opts.messages.slice()) {
     if (adapter === 'image') continue
     const indexes = tokenizeMessage(msg)
 
     let last = ''
+
     for (const index of indexes.reverse()) {
       const line = msg.slice(index)
       const size = encoder(line)
@@ -45,19 +44,18 @@ export function createImagePrompt(opts: ImagePromptOpts) {
 
     if (tokens > maxTokens) break
 
-    const handle =
-      (userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name) || 'You'
+    const handle = userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name
     tokens += encoder(handle + ':')
 
     if (tokens > maxTokens) {
-      lines.push(last)
+      lines.push(last.trim())
       break
     }
 
-    lines.push(`${handle}: ${last}`)
+    lines.push(`${handle || 'You'}: ${last}`.trim())
   }
 
-  const prompt = lines.join('\n')
+  const prompt = lines.join('\n').replace(/\s+/g, ' ')
   return prompt
 }
 
@@ -80,11 +78,11 @@ function getMaxTokens(user: AppSchema.User) {
 function tokenizeMessage(line: string) {
   const regex = /[\*\"\?\!\.]/g
 
-  const matches: number[] = []
+  const matches: number[] = [0]
   let result: RegExpExecArray | null = null
 
   while ((result = regex.exec(line))) {
-    if (result) matches.push(result.index)
+    if (result) matches.push(result.index + 1)
     else break
   }
 
