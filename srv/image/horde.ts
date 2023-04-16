@@ -50,7 +50,7 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
       height: base?.height ?? 384,
       width: base?.width ?? 384,
       cfg_scale: base?.cfg ?? 9,
-      seed: (Math.random() * 1_000_000_000).toString(),
+      seed: Math.trunc(Math.random() * 1_000_000_000).toString(),
       karras: false,
       n: 1,
       post_processing: [],

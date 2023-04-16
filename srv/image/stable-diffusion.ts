@@ -42,7 +42,7 @@ export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId
     negative_prompt,
     sampler_name: (SD_SAMPLER_REV as any)[settings.sampler ?? defaultSettings.sampler],
     cfg_scale: base?.cfg ?? 9,
-    seed: Math.random() * 1_000_000_000,
+    seed: Math.trunc(Math.random() * 1_000_000_000),
     steps: base?.steps ?? 28,
     restore_faces: false,
     save_images: false,

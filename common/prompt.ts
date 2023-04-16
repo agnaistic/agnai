@@ -436,6 +436,7 @@ function getContextLimit(
 ): number {
   const configuredMax =
     gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
+
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
   switch (adapter) {

@@ -23,7 +23,7 @@ export function createImagePrompt(opts: ImagePromptOpts) {
 
   const encoder = getEncoder('main')
 
-  for (const { msg, userId, adapter } of opts.messages.slice()) {
+  for (const { msg, userId, adapter } of opts.messages.slice().reverse()) {
     if (adapter === 'image') continue
     const indexes = tokenizeMessage(msg)
 
@@ -55,7 +55,14 @@ export function createImagePrompt(opts: ImagePromptOpts) {
     lines.push(`${handle || 'You'}: ${last}`.trim())
   }
 
-  const prompt = lines.join('\n').replace(/\s+/g, ' ')
+  const profile = opts.members.find((mem) => mem.userId === opts.user._id)
+  const prompt = lines
+    .reverse()
+    .join('\n')
+    .replace(/\s+/g, ' ')
+    .replace(BOT_REPLACE, opts.char.name)
+    .replace(SELF_REPLACE, profile?.handle || 'You')
+
   return prompt
 }
 

@@ -61,7 +61,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, gues
       negative_prompt,
       sampler: settings.sampler ?? NOVEL_SAMPLER['DPM++ 2M'],
       scale: base?.cfg ?? 9,
-      seed: Math.random() * 1_000_000_000,
+      seed: Math.trunc(Math.random() * 1_000_000_000),
       steps: base?.steps ?? 28,
       // Unsure what to do with these two values
       ucPreset: 0,

@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import Modal, { NoTitleModal } from '../../shared/Modal'
+import { NoTitleModal } from '../../shared/Modal'
 import { msgStore } from '../../store'
 
 export const ImageModal: Component = () => {
