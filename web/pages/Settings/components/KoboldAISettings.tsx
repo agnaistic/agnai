@@ -25,7 +25,7 @@ const KoboldAISettings: Component = () => {
           { label: 'OpenAI', value: 'openai' },
           { label: 'Claude', value: 'claude' },
         ]}
-        value={state.user?.thirdPartyFormat}
+        value={state.user?.thirdPartyFormat ?? 'kobold'}
       />
     </>
   )
