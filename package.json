@@ -9,8 +9,12 @@
     "agnai": "./srv/bin.js"
   },
   "files": [
+    "poetry.lock",
+    "pyproject.toml",
     "srv/**",
     "srv/**/*.map",
+    "model/**/*.py",
+    "model/**/*.yml",
     "common/*",
     "dist/index.*",
     "db/.gitkeep"

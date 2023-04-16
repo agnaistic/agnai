@@ -45,7 +45,7 @@ export function getLiveCounts() {
   for (const [hostname, entry] of Object.entries(liveCounts)) {
     const diff = now - entry.date.valueOf()
     if (diff > 15000) continue
-    maxLiveCount += entry.count
+    maxLiveCount += entry.max
     entries.push(entry)
   }
 
