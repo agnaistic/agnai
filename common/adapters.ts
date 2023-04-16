@@ -63,10 +63,12 @@ export const OPENAI_MODELS = {
  * <https://console.anthropic.com/docs/api/reference#-v1-complete>
  */
 export const CLAUDE_MODELS = {
-  ClaudeV1: 'claude-v1.0',
+  ClaudeV1: 'claude-v1 ',
+  ClaudeV1_0: 'claude-v1.0',
   ClaudeV1_2: 'claude-v1.2',
   ClaudeV1_3: 'claude-v1.3',
-  ClaudeInstantV1: 'claude-instant-v1.0',
+  ClaudeInstantV1: 'claude-instant-v1',
+  ClaudeInstantV1_0: 'claude-instant-v1.0',
 } as const
 
 export const NOVEL_MODELS = {

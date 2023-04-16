@@ -163,10 +163,12 @@ const Chats: Component<{ chats: AllChat[] }> = (props) => {
 
 const NoChats: Component<{ character?: string }> = (props) => (
   <div class="mt-4 flex w-full justify-center text-xl">
-    <Show when={!props.character}>You have no conversations yet.</Show>
-    <Show when={props.character}>
-      You have no conversations with <i>{props.character}</i>.
-    </Show>
+    <div>
+      <Show when={!props.character}>You have no conversations yet.</Show>
+      <Show when={props.character}>
+        You have no conversations with <i>{props.character}</i>.
+      </Show>
+    </div>
   </div>
 )
 
