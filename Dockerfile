@@ -12,7 +12,7 @@ ARG SHA=unknown
 ADD package.json pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
 
-ADD public.ts requirements.txt tailwind.config.js tsconfig.json .babelrc .postcssrc .prettierrc srv.tsconfig.json ./
+ADD public.ts pyproject.toml poetry.lock tailwind.config.js tsconfig.json .babelrc .postcssrc .prettierrc srv.tsconfig.json ./
 ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
