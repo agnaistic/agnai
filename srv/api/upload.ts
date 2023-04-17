@@ -2,7 +2,7 @@ import { S3 } from '@aws-sdk/client-s3'
 import mp from 'multiparty'
 import { mkdirpSync } from 'mkdirp'
 import { Request } from 'express'
-import { writeFile } from 'fs/promises'
+import { unlink, writeFile } from 'fs/promises'
 import { extname, resolve } from 'path'
 import { createReadStream, readdirSync } from 'fs'
 import { assertValid, Validator, UnwrapBody } from 'frisker'
@@ -88,10 +88,11 @@ export async function entityUpload(kind: string, id: string, attachment?: Attach
   return upload(attachment, filename)
 }
 
-export async function upload(attachment: Attachment, name: string) {
+export async function upload(attachment: Attachment, name: string, ttl?: number) {
   const filename = `${name}.${attachment.ext}`
   if (config.storage.enabled) {
     await s3.putObject({
+      Expires: ttl ? new Date(Date.now() + ttl * 1000) : undefined,
       Bucket: config.storage.bucket,
       Key: `assets/${name}.${attachment.ext}`,
       Body: attachment.content,
@@ -101,11 +102,26 @@ export async function upload(attachment: Attachment, name: string) {
     return `/assets/` + filename
   }
 
-  await saveFile(filename, attachment.content)
+  await saveFile(filename, attachment.content, ttl)
   return `/assets/` + filename
 }
 
-export async function saveFile(filename: string, content: any) {
+export async function saveFile(filename: string, content: any, ttl?: number) {
+  if (config.storage.enabled) {
+    await s3.putObject({
+      Expires: ttl ? new Date(Date.now() + ttl * 1000) : undefined,
+      Bucket: config.storage.bucket,
+      Key: `assets/${filename}`,
+      Body: content,
+      ContentType: getType(filename),
+      ACL: 'public-read',
+    })
+    return `/assets/` + filename
+  }
+
+  if (ttl) {
+    setTimeout(() => unlink(resolve(config.assetFolder, filename)).catch((err) => err), ttl * 1000)
+  }
   await writeFile(resolve(config.assetFolder, filename), content, { encoding: 'utf8' })
   return `/assets/${filename}`
 }

@@ -80,7 +80,7 @@ export async function generateImage(
         if (msg) return
       }
     } else {
-      output = `data:image/${image.ext};charset=utf-8;base64,${image.content.toString('base64')}`
+      output = await saveFile(`temp-${v4()}.${image.ext}`, image.content, 60)
     }
   }
 
