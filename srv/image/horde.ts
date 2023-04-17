@@ -139,7 +139,7 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
           else sendOne(user._id, message)
         }
       }
-      await wait(2.5)
+      await wait(config.horde.imageLoopSecs || 5)
       continue
     }
 

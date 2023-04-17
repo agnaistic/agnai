@@ -38,6 +38,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
+    top_p: gen.topP ?? 1,
   }
 
   const useChat = !!CHAT_MODELS[oaiModel]
@@ -61,8 +62,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (gen.ultimeJailbreak) {
-      history.push({ role: 'system', content: gen.ultimeJailbreak })
-      tokens += encoder(gen.ultimeJailbreak)
+      const ujb = gen.ultimeJailbreak.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, user)
+      history.push({ role: 'system', content: ujb })
+      tokens += encoder(ujb)
     }
 
     if (kind === 'continue') {
