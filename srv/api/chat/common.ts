@@ -6,41 +6,6 @@ export const personaValidator = {
   attributes: 'any',
 } as const
 
-/**
- * A single response can contain multiple end tokens
- *
- * Find the first occurrence of an end token then return the text preceding it
- */
-export function trimResponse(
-  generated: string,
-  char: AppSchema.Character,
-  members: AppSchema.Profile[],
-  endTokens: string[] = []
-) {
-  const allEndTokens = getEndTokens(char, members)
-
-  let index = -1
-  const trimmed = allEndTokens.concat(...endTokens).reduce((prev, endToken) => {
-    const idx = generated.indexOf(endToken)
-
-    if (idx === -1) return prev
-
-    const text = generated.slice(0, idx)
-    if (index === -1 || idx < index) {
-      index = idx
-      return text
-    }
-
-    return prev
-  }, '')
-
-  if (index === -1) {
-    return sanitise(generated)
-  }
-
-  return sanitise(trimmed)
-}
-
 export function trimResponseV2(
   generated: string,
   char: AppSchema.Character,

@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { config } from '../config'
-import { trimResponse, trimResponseV2 } from '../api/chat/common'
+import { trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 export const handleChai: ModelAdapter = async function* ({ char, members, prompt, settings, log }) {
