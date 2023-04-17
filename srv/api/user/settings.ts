@@ -138,6 +138,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (validatedThirdPartyUrl) update.koboldUrl = validatedThirdPartyUrl
 
+  if (body.thirdPartyFormat) {
+    update.thirdPartyFormat = body.thirdPartyFormat as typeof update.thirdPartyFormat
+  }
+
   if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
 
   if (body.images) {
