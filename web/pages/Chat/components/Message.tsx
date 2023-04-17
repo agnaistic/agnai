@@ -4,7 +4,7 @@ import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
-import { getRootVariable, hexToRgb } from '../../../shared/util'
+import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 
@@ -246,7 +246,7 @@ const SingleMessage: Component<
             <div class="flex justify-start">
               <img
                 class="max-h-32 cursor-pointer rounded-md"
-                src={props.msg.msg}
+                src={getAssetUrl(props.msg.msg)}
                 onClick={() => msgStore.showImage(props.original)}
               />
             </div>
