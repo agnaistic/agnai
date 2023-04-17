@@ -96,6 +96,7 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
 
   let text = ''
   let checks = 0
+  let etaSent = false
 
   const MAX_WAIT_MS = config.horde.imageWaitSecs * 1000
 
@@ -126,21 +127,19 @@ export const handleHordeImage: ImageAdapter = async ({ user, prompt }, log, gues
 
     if (!check.body.done) {
       checks++
-      if (checks === 1) {
-        if (guestId)
-          sendGuest(guestId, {
-            type: 'message-horde-eta',
-            eta: check.body.wait_time,
-            queue: check.body.queue_position,
-          })
-        else
-          sendOne(user._id, {
-            type: 'message-horde-eta',
-            eta: check.body.wait_time,
-            queue: check.body.queue_position,
-          })
+      if (!etaSent) {
+        const message = {
+          type: 'message-horde-eta',
+          eta: check.body.wait_time,
+          queue: check.body.queue_position,
+        }
+        if (message.eta > 0 || message.queue > 0) {
+          etaSent = true
+          if (guestId) sendGuest(guestId, message)
+          else sendOne(user._id, message)
+        }
       }
-      await wait()
+      await wait(2.5)
       continue
     }
 
