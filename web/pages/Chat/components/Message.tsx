@@ -72,7 +72,8 @@ const SingleMessage: Component<
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
 
-  const bgStyles = createMemo(() => {
+
+  const bgStylesBot = createMemo((prev) => {
     user.ui.mode
     const hex = getRootVariable('bg-800')
     if (!hex) return {}
@@ -84,6 +85,20 @@ const SingleMessage: Component<
       background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
     }
   })
+
+  const bgStylesUser = createMemo((prev) => {
+    user.ui.mode
+    const hex = getRootVariable('hl-800')
+    if (!hex) return {}
+
+    const rgb = hexToRgb(hex)
+    if (!rgb) return {}
+
+    return {
+      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
+    }
+  })
+  
   const msgText = createMemo(() => {
     if (props.last && props.swipe) return props.swipe
     if (!props.anonymize) {
@@ -134,8 +149,8 @@ const SingleMessage: Component<
 
   return (
     <div
-      class="flex w-full rounded-md py-2 px-2 pr-2 sm:px-4"
-      style={bgStyles()}
+      class={`flex max-w-[90%] ${(props.msg.characterId ? 'mr-auto' : 'ml-auto text-right')} rounded-md py-2 px-2 pr-2 sm:px-4`}
+      style={props.msg.characterId ? bgStylesBot() : bgStylesUser()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
