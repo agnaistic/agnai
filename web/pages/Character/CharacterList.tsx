@@ -77,7 +77,7 @@ const Character: Component<{
   download: () => void
 }> = (props) => {
   return (
-    <div class="flex w-full gap-2">
+    <div class="flex w-full gap-2" data-cy="character">
       <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-[var(--bg-800)]">
         <A
           class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl  sm:w-9/12"
