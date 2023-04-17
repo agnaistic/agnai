@@ -50,7 +50,9 @@
     "typecheck": "tsc -p tsconfig.json",
     "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d",
-    "deps": "npx --yes pnpm@6 install --lockfile"
+    "deps": "npx --yes pnpm@6 install --lockfile",
+    "cypress:run": "npx cypress run",
+    "cypress:open": "npx cypress open"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.309.0",
@@ -97,6 +99,7 @@
     "buffer": "^5.5.0",
     "chai": "^4.3.7",
     "concurrently": "^7.6.0",
+    "cypress": "^12.9.0",
     "events": "^3.1.0",
     "js-cookie": "^3.0.1",
     "localtunnel": "^2.0.2",

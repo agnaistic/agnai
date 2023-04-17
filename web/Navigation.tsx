@@ -34,7 +34,7 @@ const Navigation: Component = () => {
       data-menu=""
       class={`drawer flex flex-col gap-4 bg-[var(--bg-800)] pt-4 ${hide()} ${fullscreen()}`}
     >
-      <div class="drawer__content flex flex-col gap-2 px-4">
+      <div class="drawer__content flex flex-col gap-2 px-4" data-cy="side-drawer">
         <div class="hidden w-full items-center justify-center sm:flex">
           <A href="/">
             <div class="h-7 w-fit items-center justify-center rounded-lg px-4">
@@ -47,7 +47,7 @@ const Navigation: Component = () => {
         </Show>
       </div>
       <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
-        <div class="mt-2 flex w-full items-center justify-between">
+        <div class="mt-2 flex w-full items-center justify-between" data-cy="side-drawer-user-handle">
           <div class="flex items-center gap-4">
             <AvatarIcon
               avatarUrl={user.profile?.avatar}
