@@ -383,6 +383,46 @@ const THIRD_PARTY_ADAPTERS: { [key in AIAdapter]?: boolean } = {
   claude: true,
 }
 
+export function getChatPreset(
+  chat: AppSchema.Chat,
+  user: AppSchema.User,
+  userPresets: AppSchema.UserGenPreset[]
+) {
+  /**
+   * Order of precedence:
+   * 1. chat.genPreset
+   * 2. chat.genSettings
+   * 3. user.servicePreset
+   * 4. service fallback preset
+   */
+
+  // #1
+  if (chat.genPreset) {
+    if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
+
+    const preset = userPresets.find((preset) => preset._id === chat.genPreset)
+    if (preset) return preset
+  }
+
+  // #2
+  if (chat.genSettings) {
+    return chat.genSettings
+  }
+
+  // #3
+  const { adapter } = getAdapter(chat, user)
+  const fallbackId = user.defaultPresets?.[adapter]
+
+  if (fallbackId) {
+    if (isDefaultPreset(fallbackId)) return defaultPresets[fallbackId]
+    const preset = userPresets.find((preset) => preset._id === fallbackId)
+    if (preset) return preset
+  }
+
+  // #4
+  return getFallbackPreset(adapter)
+}
+
 export function getAdapter(
   chat: AppSchema.Chat,
   config: AppSchema.User,

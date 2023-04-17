@@ -21,6 +21,18 @@ import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter } from '../../common/prompt'
 import { handleScale } from './scale'
 import { getMemoryPrompt } from '../../common/memory'
+import { configure } from '../../common/horde-gen'
+import needle from 'needle'
+import { HORDE_GUEST_KEY } from '../api/horde'
+
+configure(async (opts) => {
+  const res = await needle(opts.method, opts.url, opts.payload, {
+    json: true,
+    headers: { 'Content-Type': 'application/json', apikey: opts.key || HORDE_GUEST_KEY },
+  })
+
+  return { body: res.body, statusCode: res.statusCode, statusMessage: res.statusMessage }
+})
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
   chai: handleChai,

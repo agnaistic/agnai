@@ -191,7 +191,9 @@ export const msgStore = createStore<MsgState>(
     },
     async *createImage({ activeChatId }, messageId?: string) {
       yield { waiting: activeChatId }
-      const res = await data.image.generateImage(messageId)
+      const res = await data.image.generateImage(messageId, (image) =>
+        handleImage(activeChatId, image)
+      )
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
@@ -202,6 +204,38 @@ export const msgStore = createStore<MsgState>(
     },
   }
 })
+
+/**
+ *
+ * @param chatId
+ * @param image base64 encoded image or image url
+ */
+function handleImage(chatId: string, image: string) {
+  const { msgs, activeChatId, activeCharId } = msgStore.getState()
+  if (activeChatId !== chatId) return
+
+  const isImageUrl =
+    image.startsWith('/asset') ||
+    image.startsWith('asset/') ||
+    image.endsWith('png') ||
+    image.endsWith('jpg') ||
+    image.endsWith('jpeg')
+  const msg = isImageUrl ? image : `data:image/png;base64,${image}`
+
+  const newMsg: AppSchema.ChatMessage = {
+    _id: v4(),
+    chatId,
+    kind: 'chat-message',
+    msg,
+    adapter: 'image',
+    characterId: activeCharId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  const nextMsgs = msgs.concat(newMsg)
+  msgStore.setState({ msgs: nextMsgs, waiting: undefined })
+}
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
   const { activeChatId } = msgStore.getState()
@@ -272,22 +306,7 @@ subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
-  const { msgs, activeChatId, activeCharId } = msgStore.getState()
-  if (activeChatId !== body.chatId) return
-
-  const newMsg: AppSchema.ChatMessage = {
-    _id: v4(),
-    chatId: body.chatId,
-    kind: 'chat-message',
-    msg: `${body.image}`,
-    adapter: 'image',
-    characterId: activeCharId,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-
-  const nextMsgs = msgs.concat(newMsg)
-  msgStore.setState({ msgs: nextMsgs, waiting: undefined })
+  handleImage(body.chatId, body.image)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
