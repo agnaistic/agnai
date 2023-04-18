@@ -109,8 +109,8 @@ const ChatDetail: Component = () => {
     if (!chats.chat || !user.user) return ''
     if (chats.chat.userId !== user.user._id) return ''
 
-    const { adapter, preset } = getAdapter(chats.chat!, user.user!)
-    const label = `${ADAPTER_LABELS[adapter]} - ${preset}`
+    const { adapter, preset, isThirdParty } = getAdapter(chats.chat!, user.user!)
+    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${preset}`
     return label
   })
 

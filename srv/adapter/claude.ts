@@ -15,11 +15,11 @@ const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { char, members, user, settings, log, guest, gen, sender } = opts
-  if (!user.claudeApiKey) {
+  const base = getBaseUrl(user)
+  if (!user.claudeApiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
-  const base = getBaseUrl(user)
   const claudeModel = settings.claudeModel ?? defaultPresets.claude.claudeModel
   const username = sender.handle || 'You'
 
@@ -43,7 +43,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 
   if (!base.changed) {
-    headers['x-api-key'] = !!guest ? user.claudeApiKey : decryptText(user.claudeApiKey)
+    headers['x-api-key'] = !!guest ? user.claudeApiKey : decryptText(user.claudeApiKey!)
   }
 
   log.debug(requestBody, 'Claude payload')
