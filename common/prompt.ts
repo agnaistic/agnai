@@ -431,7 +431,7 @@ export function getAdapter(
   const chatAdapter =
     !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
-  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]
+  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && chatAdapter === 'kobold'
 
   const adapter =
     chatAdapter === 'kobold' && isThirdParty
