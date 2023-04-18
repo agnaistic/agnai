@@ -28,12 +28,8 @@ export function getAssetUrl(filename: string) {
 
   if (!isFile) return filename
 
-  if (isLoggedIn()) {
-    const infix = assetPrefix.endsWith('/') || filename.startsWith('/') ? '' : '/'
-    return `${assetPrefix}${infix}${filename}`
-  }
-
-  return filename
+  const infix = assetPrefix.endsWith('/') || filename.startsWith('/') ? '' : '/'
+  return `${assetPrefix}${infix}${filename}`
 }
 
 export function setAssetPrefix(prefix: string) {
