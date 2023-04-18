@@ -24,12 +24,12 @@ const CHAT_MODELS: Record<string, boolean> = {
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, settings, sender, log, guest, lines, parts, gen, kind } =
     opts
-  if (!user.oaiKey) {
+  const base = getBaseUrl(user)
+  if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
-  const base = getBaseUrl(user)
 
   const body: any = {
     model: oaiModel,

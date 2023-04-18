@@ -391,8 +391,10 @@ export function getAdapter(
   const chatAdapter =
     !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
+  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]
+
   const adapter =
-    chatAdapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]
+    chatAdapter === 'kobold' && isThirdParty
       ? config.thirdPartyFormat
       : chatAdapter
 
@@ -423,7 +425,7 @@ export function getAdapter(
 
   const contextLimit = getContextLimit(preset, adapter, model)
 
-  return { adapter, model, preset: presetName, contextLimit }
+  return { adapter, model, preset: presetName, contextLimit, isThirdParty }
 }
 
 /**
