@@ -21,6 +21,8 @@ import Loading from './shared/Loading'
 import Button from './shared/Button'
 import MainLayout from './layouts/MainLayout'
 import { settingStore, userStore } from './store'
+import PolicyGate from "./pages/PolicyGate";
+import SplashLayout from "./layouts/SplashLayout";
 import ChangeLog from './pages/Home/ChangeLog'
 import CharacterList from './pages/Character/CharacterList'
 
@@ -39,8 +41,12 @@ const App: Component = () => {
   return (
     <>
       <Show when={cfg.init}>
-        <Show when={state.isPastPolicyGate}>Policy Failure</Show>
         <Show when={!state.isPastPolicyGate}>
+          <SplashLayout>
+            <PolicyGate />
+          </SplashLayout>
+        </Show>
+        <Show when={state.isPastPolicyGate}>
           <MainLayout>
             <Routes>
               <CharacterRoutes />
