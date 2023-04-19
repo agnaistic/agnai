@@ -169,7 +169,7 @@ async function generate(opts: GenerateOpts) {
   return opts.type === 'text' ? result.generations[0].text : result.generations[0].img
 }
 
-async function poll(url: string, key: string | undefined, interval = 10) {
+async function poll(url: string, key: string | undefined, interval = 6.5) {
   const started = Date.now()
   const threshold = TIMEOUT_SECS * 1000
 
