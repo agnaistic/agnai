@@ -410,8 +410,8 @@ export function getChatPreset(
   }
 
   // #3
-  const { adapter } = getAdapter(chat, user)
-  const fallbackId = user.defaultPresets?.[adapter]
+  const { adapter, isThirdParty } = getAdapter(chat, user)
+  const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
   if (fallbackId) {
     if (isDefaultPreset(fallbackId)) return defaultPresets[fallbackId]
@@ -433,10 +433,7 @@ export function getAdapter(
 
   const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && chatAdapter === 'kobold'
 
-  const adapter =
-    chatAdapter === 'kobold' && isThirdParty
-      ? config.thirdPartyFormat
-      : chatAdapter
+  const adapter = chatAdapter === 'kobold' && isThirdParty ? config.thirdPartyFormat : chatAdapter
 
   let model = ''
   let presetName = 'Fallback Preset'
