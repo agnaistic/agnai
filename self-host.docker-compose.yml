@@ -1,5 +1,8 @@
 version: '2'
 
+volumes:
+  dbdata:
+
 networks:
   backend:
 
@@ -22,5 +25,7 @@ services:
   mongo:
     image: mongo:6
     restart: always
+    volumes:
+      - dbdata:/data/db
     networks:
       - backend
