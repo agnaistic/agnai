@@ -1,6 +1,6 @@
 import * as horde from '../../../common/horde-gen'
 import { createImagePrompt } from '../../../common/image-prompt'
-import { api } from '../api'
+import { api, isLoggedIn } from '../api'
 import { getPromptEntities } from './messages'
 
 export async function generateImage(
@@ -10,7 +10,7 @@ export async function generateImage(
   const entities = await getPromptEntities()
   const prompt = createImagePrompt(entities)
 
-  if (!entities.user.hordeKey && !entities.user.hordeName) {
+  if (!isLoggedIn()) {
     const image = await horde.generateImage(entities.user, prompt)
     onGenerated(image)
   }

@@ -18,6 +18,10 @@ const PREFIX_CACHE_KEY = 'agnai-asset-prefix'
 
 let assetPrefix: string = localStorage.getItem(PREFIX_CACHE_KEY) || ''
 
+export function getAssetPrefix() {
+  return assetPrefix
+}
+
 export function getAssetUrl(filename: string) {
   const isFile =
     filename.startsWith('/assets') ||

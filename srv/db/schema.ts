@@ -211,6 +211,7 @@ export namespace AppSchema {
     adapters: AIAdapter[]
     version: string
     canAuth: boolean
+    imagesSaved: boolean
     assetPrefix: string
     selfhosting: boolean
   }

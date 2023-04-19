@@ -14,6 +14,7 @@ const appConfig: AppSchema.AppConfig = {
   version: '',
   selfhosting: config.jsonStorage,
   canAuth: false,
+  imagesSaved: config.storage.saveImages,
   assetPrefix: config.storage.enabled
     ? `https://${config.storage.bucket}.${config.storage.endpoint}`
     : '',

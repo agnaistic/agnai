@@ -35,7 +35,14 @@ const initState: SettingState = {
   models: [],
   workers: [],
   imageWorkers: [],
-  config: { adapters: [], canAuth: true, version: '...', assetPrefix: '', selfhosting: false },
+  config: {
+    adapters: [],
+    canAuth: true,
+    version: '...',
+    assetPrefix: '',
+    selfhosting: false,
+    imagesSaved: false,
+  },
 }
 
 export const settingStore = createStore<SettingState>(
