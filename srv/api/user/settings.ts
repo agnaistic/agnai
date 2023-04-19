@@ -136,7 +136,11 @@ export const updateConfig = handle(async ({ userId, body }) => {
       ? await verifyKobldUrl(prevUser, body.koboldUrl)
       : body.koboldUrl
 
-  if (validatedThirdPartyUrl) update.koboldUrl = validatedThirdPartyUrl
+  if (validatedThirdPartyUrl) {
+    update.koboldUrl = validatedThirdPartyUrl
+  } else {
+    update.koboldUrl = ''
+  }
 
   if (body.thirdPartyFormat) {
     update.thirdPartyFormat = body.thirdPartyFormat as typeof update.thirdPartyFormat
