@@ -54,7 +54,7 @@ function onMessage(msg: MessageEvent<any>) {
     if (payload.type !== 'image-generated') {
       console.log(JSON.stringify(payload))
     } else {
-      console.log(JSON.stringify({ ...payload, image: '...' }))
+      console.log(JSON.stringify({ ...payload, image: (payload.image || '').slice(0, 25) + '...' }))
     }
     if (!handlers || !handlers.length) continue
 

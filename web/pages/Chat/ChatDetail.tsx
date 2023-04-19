@@ -44,7 +44,7 @@ const ChatDetail: Component = () => {
   const cfg = settingStore()
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.chatProfiles }))
   const msgs = msgStore((s) => ({
-    msgs: s.msgs,
+    msgs: insertImageMessages(s.msgs, s.images[params.id]),
     partial: s.partial,
     waiting: s.waiting,
     retries: s.retries,
@@ -448,4 +448,40 @@ function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }
+}
+
+function insertImageMessages(
+  msgs: AppSchema.ChatMessage[],
+  images: AppSchema.ChatMessage[] | undefined
+) {
+  if (!images?.length) return msgs
+
+  const next: AppSchema.ChatMessage[] = []
+
+  const inserts = images.slice()
+
+  for (const msg of msgs) {
+    if (!inserts.length) {
+      next.push(msg)
+      continue
+    }
+
+    do {
+      if (!inserts.length) break
+      if (msg.createdAt < inserts[0].createdAt) break
+      if (msg._id === inserts[0]._id) {
+        inserts.shift()
+        continue
+      }
+      next.push(inserts.shift()!)
+    } while (true)
+
+    next.push(msg)
+  }
+
+  if (inserts.length) {
+    next.push(...inserts)
+  }
+
+  return next
 }

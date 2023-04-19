@@ -1,12 +1,15 @@
 import { v4 } from 'uuid'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
-import { api, isLoggedIn } from './api'
+import { getAssetPrefix, getAssetUrl } from '../shared/util'
+import { isLoggedIn } from './api'
 import { createStore } from './create'
 import { data } from './data'
-import { local } from './data/storage'
+import { getImageData } from './data/chars'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+
+type ChatId = string
 
 export type MsgState = {
   activeChatId: string
@@ -18,14 +21,24 @@ export type MsgState = {
   retries: Record<string, string[]>
   nextLoading: boolean
   showImage?: AppSchema.ChatMessage
+  imagesSaved: boolean
+
+  /**
+   * Ephemeral image messages
+   *
+   * These will be 'inserted' into chats by 'createdAt' timestamp
+   */
+  images: Record<ChatId, AppSchema.ChatMessage[]>
 }
 
 const initState: MsgState = {
   activeChatId: '',
   activeCharId: '',
   msgs: [],
+  images: {},
   retries: {},
   nextLoading: false,
+  imagesSaved: false,
   waiting: undefined,
   partial: undefined,
   retrying: undefined,
@@ -41,6 +54,10 @@ export const msgStore = createStore<MsgState>(
 
   events.on(EVENTS.loggedIn, () => {
     msgStore.setState({ retries: {} })
+  })
+
+  events.on(EVENTS.init, (init) => {
+    msgStore.setState({ imagesSaved: init.config.imagesSaved })
   })
 
   return {
@@ -191,7 +208,9 @@ export const msgStore = createStore<MsgState>(
     },
     async *createImage({ activeChatId }, messageId?: string) {
       yield { waiting: activeChatId }
-      const res = await data.image.generateImage(messageId)
+      const res = await data.image.generateImage(messageId, (image) =>
+        handleImage(activeChatId, image)
+      )
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
@@ -202,6 +221,56 @@ export const msgStore = createStore<MsgState>(
     },
   }
 })
+
+/**
+ *
+ * @param chatId
+ * @param image base64 encoded image or image url
+ */
+async function handleImage(chatId: string, image: string) {
+  const { msgs, activeChatId, activeCharId, images, imagesSaved } = msgStore.getState()
+
+  const chatImages = images[chatId] || []
+
+  const isImageUrl =
+    image.startsWith('/asset') ||
+    image.startsWith('asset/') ||
+    image.endsWith('png') ||
+    image.endsWith('jpg') ||
+    image.endsWith('jpeg')
+
+  if (!imagesSaved && isImageUrl) {
+    const base64 = await fetch(getAssetUrl(image))
+      .then((res) => res.blob())
+      .then(getImageData)
+
+    image = base64!
+  }
+
+  if (!isImageUrl) {
+    image = `data:image/png;base64,${image}`
+  }
+
+  const newMsg: AppSchema.ChatMessage = {
+    _id: v4(),
+    chatId,
+    kind: 'chat-message',
+    msg: image,
+    adapter: 'image',
+    characterId: activeCharId,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  chatImages.push(newMsg)
+
+  const nextMsgs = msgs.concat(newMsg)
+  msgStore.setState({
+    msgs: nextMsgs,
+    waiting: undefined,
+    images: { ...images, [chatId]: chatImages },
+  })
+}
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
   const { activeChatId } = msgStore.getState()
@@ -260,7 +329,7 @@ subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
   }
 
   if (!isLoggedIn()) {
-    local.saveMessages(body.chatId, nextMsgs)
+    data.local.saveMessages(body.chatId, nextMsgs)
   }
 
   addMsgToRetries(msg)
@@ -272,22 +341,7 @@ subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
-  const { msgs, activeChatId, activeCharId } = msgStore.getState()
-  if (activeChatId !== body.chatId) return
-
-  const newMsg: AppSchema.ChatMessage = {
-    _id: v4(),
-    chatId: body.chatId,
-    kind: 'chat-message',
-    msg: `${body.image}`,
-    adapter: 'image',
-    characterId: activeCharId,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }
-
-  const nextMsgs = msgs.concat(newMsg)
-  msgStore.setState({ msgs: nextMsgs, waiting: undefined })
+  handleImage(body.chatId, body.image)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
@@ -349,9 +403,11 @@ subscribe(
 
     const next = msgs.filter((m) => m._id !== retrying?._id).concat(body.msg)
 
-    const chats = local.loadItem('chats')
-    local.saveChats(local.replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
-    local.saveMessages(body.chatId, next)
+    const chats = data.local.loadItem('chats')
+    data.local.saveChats(
+      data.local.replace(body.chatId, chats, { updatedAt: new Date().toISOString() })
+    )
+    data.local.saveMessages(body.chatId, next)
 
     addMsgToRetries(body.msg)
 

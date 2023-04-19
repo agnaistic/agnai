@@ -107,7 +107,7 @@ export async function createCharacter(char: ImportCharacter) {
   return { result: newChar, error: undefined }
 }
 
-export async function getImageData(file?: File) {
+export async function getImageData(file?: File | Blob) {
   if (!file) return
   const reader = new FileReader()
 
