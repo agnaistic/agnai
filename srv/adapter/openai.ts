@@ -132,7 +132,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (resp.statusCode && resp.statusCode >= 400) {
     log.error({ body: resp.body }, `OpenAI request failed (${resp.statusCode})`)
-    const msg = resp.body.message || resp.statusMessage || 'Unknown error'
+    const msg =
+      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+
     yield {
       error: `OpenAI request failed (${resp.statusCode}): ${msg}`,
     }
