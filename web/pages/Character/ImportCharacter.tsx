@@ -28,9 +28,7 @@ const ImportCharacterModal: Component<{
       importJson(json)
       toastStore.success('Character file accepted')
     } catch (ex) {
-      toastStore.warn(
-        `Invalid file format. Supported formats: ${supportedFormats}`
-      )
+      toastStore.warn(`Invalid file format. Supported formats: ${supportedFormats}`)
     }
   }
 
@@ -40,9 +38,7 @@ const ImportCharacterModal: Component<{
 
       setJson(char)
     } catch (ex) {
-      toastStore.warn(
-        `Invalid file format. Supported formats: ${supportedFormats}`
-      )
+      toastStore.warn(`Invalid file format. Supported formats: ${supportedFormats}`)
     }
   }
 

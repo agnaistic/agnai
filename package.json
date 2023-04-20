@@ -29,7 +29,7 @@
     "build:server": "tsc -p srv.tsconfig.json",
     "build:server:watch": "tsc -p srv.tsconfig.json -w",
     "format": "prettier --check \"web/**/*.tsx\" \"web/**/*.ts\" \"web/**/*.css\" \"web/**/*.html\" && prettier --check \"srv/**/*.ts\"",
-    "format:fix": "prettier web --write && prettier srv --write",
+    "format:fix": "prettier \"web/**/*.ts\" \"web/**/*.tsx\" --write && prettier \"srv/**/*.ts\" --write && prettier \"common/**/*.ts\" --write",
     "model:init": "python3 -m venv ./.model && .model/bin/pip install poetry==1.4.1 && .model/bin/poetry config virtualenvs.in-project true",
     "model:deps": ".model/bin/poetry install --no-interaction --no-ansi",
     "model:start": ".model/bin/poetry run python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
