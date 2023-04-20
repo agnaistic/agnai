@@ -53,7 +53,10 @@ export const characterStore = createStore<CharacterState>(
       const res = await data.chars.getCharacters()
       yield { loading: false }
 
-      if (res.error) toastStore.error('Failed to retrieve characters')
+      if (res.error) {
+        return toastStore.error('Failed to retrieve characters')
+      }
+
       if (res.result) {
         return { characters: { list: res.result.characters, loaded: true } }
       }

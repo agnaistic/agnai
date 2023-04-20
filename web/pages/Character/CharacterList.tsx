@@ -1,4 +1,14 @@
-import { Component, For, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import { NewCharacter, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select from '../../shared/Select'
@@ -31,7 +41,6 @@ const CACHE_KEY = 'agnai-charlist-cache'
 
 const CharacterList: Component = () => {
   setComponentPageTitle('Characters')
-  const chats = chatStore()
 
   const cached = getListCache()
   const [view, setView] = createSignal(cached.view)
@@ -128,7 +137,7 @@ const CharacterList: Component = () => {
 }
 
 const Characters: Component<{ type: string; filter: string; sort: string }> = (props) => {
-  const state = characterStore((s) => s.characters)
+  const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
   const chars = createMemo(() => {
     const list = state.list
@@ -142,45 +151,47 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
   const [download, setDownload] = createSignal<AppSchema.Character>()
   return (
     <>
-      <Show when={!state.loaded}>
-        <div class="flex justify-center">
-          <Loading />
-        </div>
-      </Show>
-      <Show when={state.list.length === 0 && state.loaded}>
-        <NoCharacters />
-      </Show>
-      <Show when={state.list.length > 0}>
-        <Show when={props.type === 'list'}>
-          <div class="flex w-full flex-col gap-2 pb-5">
-            <For each={chars()}>
-              {(char) => (
-                <Character
-                  type={props.type}
-                  char={char}
-                  delete={() => setDelete(char)}
-                  download={() => setDownload(char)}
-                />
-              )}
-            </For>
+      <Switch fallback={<div>Failed to load characters. Refresh to try again.</div>}>
+        <Match when={state.loading}>
+          <div class="flex justify-center">
+            <Loading />
           </div>
-        </Show>
+        </Match>
+        <Match when={state.list.length === 0 && state.loaded}>
+          <NoCharacters />
+        </Match>
+        <Match when={state.loaded}>
+          <Show when={props.type === 'list'}>
+            <div class="flex w-full flex-col gap-2 pb-5">
+              <For each={chars()}>
+                {(char) => (
+                  <Character
+                    type={props.type}
+                    char={char}
+                    delete={() => setDelete(char)}
+                    download={() => setDownload(char)}
+                  />
+                )}
+              </For>
+            </div>
+          </Show>
 
-        <Show when={props.type !== 'list'}>
-          <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
-            <For each={chars()}>
-              {(char) => (
-                <Character
-                  type={props.type}
-                  char={char}
-                  delete={() => setDelete(char)}
-                  download={() => setDownload(char)}
-                />
-              )}
-            </For>
-          </div>
-        </Show>
-      </Show>
+          <Show when={props.type !== 'list'}>
+            <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
+              <For each={chars()}>
+                {(char) => (
+                  <Character
+                    type={props.type}
+                    char={char}
+                    delete={() => setDelete(char)}
+                    download={() => setDownload(char)}
+                  />
+                )}
+              </For>
+            </div>
+          </Show>
+        </Match>
+      </Switch>
 
       <DownloadModal show={!!download()} close={() => setDownload()} char={download()} />
       <DeleteCharacterModal
