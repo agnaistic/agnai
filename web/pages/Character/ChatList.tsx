@@ -54,7 +54,7 @@ const CharacterChats: Component = () => {
           onClick={wrap(() => nav(`/character/${params.id}/edit`))}
         >
           <Edit />
-          Edit Character
+          Edit
         </button>
       </Show>
       <button

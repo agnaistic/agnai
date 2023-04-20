@@ -36,7 +36,7 @@ const Button: Component<{
     class={
       `${kinds[props.schema || 'primary']} select-none items-center ${
         props.alignLeft ? '' : 'justify-center'
-      } ${sizes[props.size || 'md']} ` + props.class
+      } ${sizes[props.size || 'md']} ` + (props.class || '')
     }
     disabled={props.disabled}
     onClick={props.onClick}

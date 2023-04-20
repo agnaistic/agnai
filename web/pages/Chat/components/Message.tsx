@@ -1,5 +1,4 @@
 import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
-import showdown from 'showdown'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
@@ -7,11 +6,7 @@ import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
-
-const showdownConverter = new showdown.Converter()
-// Ensure single newlines are turned into <br> instead of left as plaintext
-// newlines and hence not rendered
-showdownConverter.setOption('simpleLineBreaks', true)
+import { markdown } from '../../../shared/markdown'
 
 type MessageProps = {
   msg: SplitMessage
@@ -256,7 +251,7 @@ const SingleMessage: Component<
               class="rendered-markdown pr-1 sm:pr-3"
               data-bot-message={isBot()}
               data-user-message={isUser()}
-              innerHTML={showdownConverter.makeHtml(
+              innerHTML={markdown.makeHtml(
                 parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
               )}
             />

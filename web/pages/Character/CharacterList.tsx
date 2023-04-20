@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import { Copy, Download, Edit, Import, Plus, Save, Trash, X } from 'lucide-solid'
@@ -23,7 +23,7 @@ const CharacterList: Component = () => {
     characterStore.createCharacter(char, () => setImport(false))
   }
 
-  createEffect(() => {
+  onMount(() => {
     characterStore.getCharacters()
   })
 
@@ -44,7 +44,7 @@ const CharacterList: Component = () => {
             <A href="/character/create">
               <Button>
                 <Plus />
-                Character
+                Create
               </Button>
             </A>
           </div>
@@ -120,9 +120,11 @@ const formats = [
  * WIP: Enable downloading characters in different persona formats for different application targets
  */
 
-const DownloadModal: Component<{ show: boolean; close: () => void; char?: AppSchema.Character }> = (
-  props
-) => {
+export const DownloadModal: Component<{
+  show: boolean
+  close: () => void
+  char?: AppSchema.Character
+}> = (props) => {
   let ref: any
   const opts = createMemo(
     () => {

@@ -34,6 +34,7 @@ const DeleteCharacterModal: Component<{
       }
     >
       <div class="flex flex-col items-center gap-4">
+        <div class="font-bold">This will delete all of this character's chats!</div>
         <div>Are you sure you wish to delete this character?</div>
         <div class="flex justify-center gap-4">
           <AvatarIcon avatarUrl={props.char!.avatar} />

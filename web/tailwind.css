@@ -267,7 +267,7 @@ body {
    * Buttons.
    */
   .btn-base {
-    @apply flex gap-1;
+    @apply flex h-fit gap-1;
     @apply transition-colors duration-100;
     @apply rounded-md px-3;
   }
@@ -421,4 +421,34 @@ body {
       visibility: hidden;
     }
   }
+}
+
+.markdown > * a,
+.markdown > a {
+  @apply cursor-pointer text-[var(--hl-500)] hover:text-[var(--hl-300)];
+}
+
+.markdown > h1 {
+  @apply py-2 text-2xl font-bold text-[var(--hl-400)];
+}
+
+.markdown > h2 {
+  @apply py-2 text-xl font-bold text-[var(--hl-400)];
+}
+
+.markdown > h3 {
+  @apply py-1 text-lg font-bold text-[var(--hl-400)];
+}
+
+.markdown > p {
+  @apply py-1;
+}
+
+.markdown > ul {
+  @apply ml-6;
+  list-style-type: disc;
+}
+
+.markdown > ol {
+  list-style-type: decimal;
 }

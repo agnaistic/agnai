@@ -21,6 +21,7 @@ import MetricsPage from './pages/Admin/Metrics'
 import './dots.css'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
+import Dashboard from './pages/Home/Dashboard'
 
 const App: Component = () => {
   const state = userStore()
@@ -55,6 +56,7 @@ const App: Component = () => {
             <Show when={cfg.init}>
               <Routes>
                 <CharacterRoutes />
+                <Route path="/dashboard" component={Dashboard} />
                 <Route path="/chats" component={CharacterChats} />
                 <Route path="/chat" component={() => <ChatDetail />} />
                 <Route path="/chat/:id" component={() => <ChatDetail />} />
