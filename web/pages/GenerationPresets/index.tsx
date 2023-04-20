@@ -90,7 +90,7 @@ export const GenerationPresetsPage: Component = () => {
 
   return (
     <>
-      <PageHeader title="Generation Presets" subtitle="generation settings presets" />
+      <PageHeader title="Generation Presets" subtitle="Generation presets" />
       <div class="flex flex-col gap-2">
         <div class="flex flex-row justify-between"></div>
         <div class="flex flex-col gap-4 p-2">
