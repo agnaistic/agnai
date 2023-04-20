@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
 import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
@@ -42,6 +42,18 @@ export const GenerationPresetsPage: Component = () => {
         : state.presets.find((p) => p._id === query.preset)
       const preset = template ? { ...template } : { ...emptyPreset }
       setEditing({ ...emptyPreset, ...preset, _id: '', kind: 'gen-setting', userId: '' })
+      return
+    } else if (params.id === 'default') {
+      setEditing()
+      await Promise.resolve()
+      if (!isDefaultPreset(query.preset)) return
+      setEditing({
+        ...emptyPreset,
+        ...defaultPresets[query.preset],
+        _id: '',
+        kind: 'gen-setting',
+        userId: 'SYSTEM',
+      })
       return
     }
 
@@ -92,7 +104,15 @@ export const GenerationPresetsPage: Component = () => {
     <>
       <PageHeader title="Generation Presets" subtitle="Generation presets" />
       <div class="flex flex-col gap-2">
-        <div class="flex flex-row justify-between"></div>
+        <Show when={params.id === 'default'}>
+          <div class="font-bold">
+            This is a default preset and cannot be saved.{' '}
+            <A class="link" href={`/presets/new?preset=${query.preset}`}>
+              Click here
+            </A>{' '}
+            if you'd like to create a copy of this preset.
+          </div>
+        </Show>
         <div class="flex flex-col gap-4 p-2">
           <Show when={editing()}>
             <form ref={ref} onSubmit={onSave}>
