@@ -20,6 +20,7 @@ const valid = {
     attributes: 'any',
   },
   originalAvatar: 'string?',
+  favorite: 'boolean?',
 } as const
 
 const createCharacter = handle(async (req) => {
@@ -35,6 +36,7 @@ const createCharacter = handle(async (req) => {
     scenario: body.scenario,
     greeting: body.greeting,
     avatar: body.originalAvatar,
+    favorite: false,
   })
 
   const filename = await entityUpload(
@@ -105,12 +107,24 @@ const deleteCharacter = handle(async ({ userId, params }) => {
   return { success: true }
 })
 
+const editCharacterFavorite = handle(async (req) => {
+  const id = req.params.id
+  const favorite = req.body.favorite == true
+
+  const char = await store.characters.updateCharacter(id, req.userId!, {
+    favorite: favorite,
+  })
+
+  return char
+})
+
 router.use(loggedIn)
 router.post('/', createCharacter)
 router.get('/', getCharacters)
 router.post('/:id', editCharacter)
 router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)
+router.post('/:id/favorite', editCharacterFavorite)
 router.delete('/:id/avatar', removeAvatar)
 
 export default router

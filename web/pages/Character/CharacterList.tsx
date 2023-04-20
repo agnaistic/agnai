@@ -48,6 +48,12 @@ const CharacterList: Component = () => {
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
 
+
+  
+  const toggleFavorite = (charId: string, favorite: boolean) => {
+    characterStore.setFavorite(charId, favorite)
+  }
+  
   const onImport = (char: NewCharacter) => {
     characterStore.createCharacter(char, () => setImport(false))
   }
@@ -227,6 +233,12 @@ const Character: Component<{
           </A>
         </div>
         <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
+        <Show when={props.character.favorite}>
+          <StarOff class="icon-button" onClick={props.favorite} />
+        </Show>
+        <Show when={!props.character.favorite}>
+          <Star class="icon-button" onClick={props.favorite} />
+        </Show>
           <a onClick={props.download}>
             <Download class="icon-button" />
           </a>
