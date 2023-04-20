@@ -493,7 +493,8 @@ function getContextLimit(
       return Math.min(2048, configuredMax) - genAmount
 
     case 'openai': {
-      if (!model || model === OPENAI_MODELS.Turbo || model === OPENAI_MODELS.DaVinci) return 4080
+      if (!model || model === OPENAI_MODELS.Turbo || model === OPENAI_MODELS.DaVinci)
+        return 4096 - genAmount
       return configuredMax - genAmount
     }
 
