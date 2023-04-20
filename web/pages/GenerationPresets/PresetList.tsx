@@ -1,14 +1,20 @@
 import { A, useNavigate } from '@solidjs/router'
-import { Copy, Edit, Plus, Trash } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
+import { Copy, Plus, Trash } from 'lucide-solid'
+import { Component, createSignal, For, onMount } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
+import { defaultPresets } from '../../../common/presets'
 import { presetStore } from '../../store'
 
 const PresetList: Component = () => {
   const nav = useNavigate()
   const state = presetStore()
+  const defaults = Object.entries(defaultPresets).map(([name, cfg]) => ({
+    name,
+    label: `Default: ${cfg.name}`,
+    cfg,
+  }))
   const [deleting, setDeleting] = createSignal<string>()
 
   const deletePreset = () => {
@@ -25,7 +31,7 @@ const PresetList: Component = () => {
 
   return (
     <>
-      <PageHeader title="Generation Presets" subtitle="Your personal generation presets" />
+      <PageHeader title="Generation Presets" subtitle="generation settings presets" />
       <div class="mb-4 flex w-full justify-end">
         <A href="/presets/new">
           <Button>
@@ -34,15 +40,6 @@ const PresetList: Component = () => {
           </Button>
         </A>
       </div>
-      <Show when={!state.presets.length}>
-        <div class="flex w-full justify-center">
-          You have no personalised presets saved. Create a{' '}
-          <Button class="mx-2" size="sm" onClick={() => nav('/presets/new')}>
-            New Preset
-          </Button>
-          to get started.
-        </div>
-      </Show>
 
       <div class="flex flex-col items-center gap-2">
         <For each={state.presets}>
@@ -69,6 +66,27 @@ const PresetList: Component = () => {
                 class="icon-button"
               >
                 <Trash />
+              </Button>
+            </div>
+          )}
+        </For>
+
+        <For each={defaults}>
+          {(preset) => (
+            <div class="flex w-full items-center gap-2">
+              <A
+                href={`/presets/default?preset=${preset.name}`}
+                class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
+              >
+                <div class="ml-4 flex w-full items-center">{preset.label}</div>
+              </A>
+              <Button
+                schema="clear"
+                size="sm"
+                onClick={() => nav(`/presets/new?preset=${preset.name}`)}
+                class="icon-button"
+              >
+                <Copy />
               </Button>
             </div>
           )}

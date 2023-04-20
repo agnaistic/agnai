@@ -83,7 +83,7 @@ export const ChatGenSettingsModal: Component<{
       <div class="text-sm">
         <div class="mb-2 flex items-center gap-4">
           <div>Use Preset</div>
-          <div class="mb-4">
+          <div>
             <Toggle
               fieldName={'usePreset'}
               onChange={(value) => setUsePreset(value)}

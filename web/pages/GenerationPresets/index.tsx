@@ -1,7 +1,7 @@
-import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
+import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
-import { defaultPresets, presetValidator } from '../../../common/presets'
+import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
@@ -16,7 +16,7 @@ export const GenerationPresetsPage: Component = () => {
   let ref: any
 
   const params = useParams()
-  const [queryParams] = useSearchParams()
+  const [query] = useSearchParams()
 
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
@@ -37,9 +37,23 @@ export const GenerationPresetsPage: Component = () => {
     if (params.id === 'new') {
       setEditing()
       await Promise.resolve()
-      const template = state.presets.find((p) => p._id === queryParams.preset)
+      const template = isDefaultPreset(query.preset)
+        ? defaultPresets[query.preset]
+        : state.presets.find((p) => p._id === query.preset)
       const preset = template ? { ...template } : { ...emptyPreset }
-      setEditing((_) => ({ ...preset, _id: '', kind: 'gen-setting', userId: '' }))
+      setEditing({ ...emptyPreset, ...preset, _id: '', kind: 'gen-setting', userId: '' })
+      return
+    } else if (params.id === 'default') {
+      setEditing()
+      await Promise.resolve()
+      if (!isDefaultPreset(query.preset)) return
+      setEditing({
+        ...emptyPreset,
+        ...defaultPresets[query.preset],
+        _id: '',
+        kind: 'gen-setting',
+        userId: 'SYSTEM',
+      })
       return
     }
 
@@ -88,9 +102,17 @@ export const GenerationPresetsPage: Component = () => {
 
   return (
     <>
-      <PageHeader title="Generation Presets" subtitle="Your personal generation presets" />
+      <PageHeader title="Generation Presets" subtitle="Generation presets" />
       <div class="flex flex-col gap-2">
-        <div class="flex flex-row justify-between"></div>
+        <Show when={params.id === 'default'}>
+          <div class="font-bold">
+            This is a default preset and cannot be saved.{' '}
+            <A class="link" href={`/presets/new?preset=${query.preset}`}>
+              Click here
+            </A>{' '}
+            if you'd like to create a copy of this preset.
+          </div>
+        </Show>
         <div class="flex flex-col gap-4 p-2">
           <Show when={editing()}>
             <form ref={ref} onSubmit={onSave}>
@@ -120,11 +142,13 @@ export const GenerationPresetsPage: Component = () => {
                 />
                 <GenerationSettings showAll={params.id === 'new'} inherit={editing()} />
               </div>
-              <div class="flex flex-row justify-end">
-                <Button type="submit" disabled={state.saving}>
-                  <Save /> Save
-                </Button>
-              </div>
+              <Show when={editing()?.userId !== 'SYSTEM'}>
+                <div class="flex flex-row justify-end">
+                  <Button type="submit" disabled={state.saving}>
+                    <Save /> Save
+                  </Button>
+                </div>
+              </Show>
             </form>
           </Show>
         </div>
