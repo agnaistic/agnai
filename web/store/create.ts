@@ -33,8 +33,6 @@ type HandlerReturn<S> =
 
 type MaybeState<S> = Partial<S> | void
 
-export type Dispatcher<A extends { type: string }> = (action: A) => void
-
 type SetterFunction<S> = (state: S, ...args: any[]) => HandlerReturn<S>
 
 const win: any = window

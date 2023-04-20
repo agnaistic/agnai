@@ -5,8 +5,6 @@ import { getMemoryPrompt, MemoryPrompt, MEMORY_PREFIX } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder, getEncoder } from './tokenize'
 
-const DEFAULT_MAX_TOKENS = 2048
-
 export type Prompt = {
   prompt: string
   lines: string[]
