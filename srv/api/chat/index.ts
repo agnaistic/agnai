@@ -9,6 +9,7 @@ import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages } from './message'
 import { deleteChat, deleteMessages } from './remove'
+import { addCharacter, removeCharacter } from './characters'
 
 const router = Router()
 
@@ -31,6 +32,8 @@ router.post('/:id/invite', createInvite)
 router.post('/:id/uninvite', uninviteMember)
 router.post('/:inviteId/accept', acceptInvite)
 router.post('/:inviteId/reject', rejectInvite)
+router.post('/:id/characters', addCharacter)
+router.delete('/:id/characters/:charId', removeCharacter)
 
 router.get('/:id/chats', getCharacterChats)
 

@@ -9,17 +9,7 @@ import {
   X,
 } from 'lucide-solid'
 import ChatExport from './ChatExport'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  Show,
-  onMount,
-  onCleanup,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { getAdapter, getChatPreset } from '../../../common/prompt'
 import Button from '../../shared/Button'
@@ -27,7 +17,14 @@ import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { chatStore, presetStore, settingStore, UISettings as UI, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  settingStore,
+  UISettings as UI,
+  presetStore,
+  userStore,
+} from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -44,6 +41,7 @@ import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
 import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
+import Select, { Option } from '../../shared/Select'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -311,7 +309,12 @@ const ChatDetail: Component = () => {
       </Show>
 
       <Show when={modal() === 'invite'}>
-        <InviteModal show={true} close={setModal} chatId={chats.chat?._id!} />
+        <InviteModal
+          show={true}
+          close={setModal}
+          charId={chats?.char?._id!}
+          chatId={chats.chat?._id!}
+        />
       </Show>
 
       <Show when={modal() === 'memory'}>
@@ -349,19 +352,67 @@ const ChatDetail: Component = () => {
 
 export default ChatDetail
 
-const InviteModal: Component<{ chatId: string; show: boolean; close: () => void }> = (props) => {
+const InviteModal: Component<{
+  charId: string
+  chatId: string
+  show: boolean
+  close: () => void
+}> = (props) => {
   let ref: any
+  const chars = characterStore()
+  type inviteType = 'user' | 'character'
+  const typeItems: Option<inviteType>[] = [
+    { value: 'user', label: 'User' },
+    { value: 'character', label: 'Character' },
+  ]
+
+  const [type, setType] = createSignal('user')
+  const [characterItems, setCharacterItems] = createSignal<Option[]>([])
+  const [characterError, setCharacterError] = createSignal<string>()
+  const [selectedCharacterId, setSelectedCharacterId] = createSignal<string>()
 
   const save = () => {
-    const body = getStrictForm(ref, { userId: 'string' })
-    chatStore.inviteUser(props.chatId, body.userId, props.close)
+    switch (type()) {
+      case 'user':
+        const body = getStrictForm(ref, { userId: 'string' })
+        chatStore.inviteUser(props.chatId, body.userId, props.close)
+        break
+      case 'character':
+        const charId = selectedCharacterId()
+        if (!charId) throw new Error('No character selected')
+        chatStore.addCharacter(props.chatId, charId, props.close)
+        break
+      default:
+        throw new Error('Unexpected invite type')
+    }
   }
+
+  createEffect(() => {
+    if (type() === 'character' && !chars.characters.loaded) {
+      characterStore.getCharacters()
+    }
+  })
+
+  createEffect(() => {
+    if (chars.characters.loaded) {
+      const availableCharacters = chars.characters.list
+        .filter((c) => c._id != props.charId)
+        .map((c) => ({ value: c._id, label: c.name }))
+      if (availableCharacters.length) {
+        setCharacterError(undefined)
+        setCharacterItems(availableCharacters)
+        setSelectedCharacterId(availableCharacters[0].value)
+      } else {
+        setCharacterError("You don't have any other characters to invite")
+      }
+    }
+  })
 
   return (
     <Modal
       show={props.show}
       close={props.close}
-      title="Invite User to Conversation"
+      title="Invite to Conversation"
       footer={
         <>
           {' '}
@@ -375,11 +426,38 @@ const InviteModal: Component<{ chatId: string; show: boolean; close: () => void 
       }
     >
       <form ref={ref} class="flex flex-col gap-2">
-        <TextInput
-          fieldName="userId"
-          label="User ID"
-          helperText="The ID of the user to invite. The user should provide this to you"
+        <Select
+          fieldName="type"
+          label="Invitation Type"
+          helperText="Whether to invite a user or a character"
+          items={typeItems}
+          value={'user'}
+          onChange={(val) => setType(val.value)}
         />
+
+        <Show when={type() === 'user'}>
+          <TextInput
+            fieldName="userId"
+            label="User ID"
+            helperText="The ID of the user to invite. The user should provide this to you"
+          />
+        </Show>
+
+        <Show when={type() === 'character'}>
+          <Show
+            when={!characterError()}
+            fallback={<div class="text-red-500">{characterError()}</div>}
+          >
+            <Select
+              fieldName="character"
+              label="Character"
+              helperText="The character to invite"
+              items={characterItems()}
+              value={selectedCharacterId()}
+              onChange={setSelectedCharacterId}
+            />
+          </Show>
+        </Show>
       </form>
     </Modal>
   )

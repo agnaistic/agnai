@@ -77,7 +77,7 @@ const ChatOptions: Component<{
           onClick={() => props.show('invite')}
           class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
         >
-          <MailPlus /> Invite User
+          <MailPlus /> Invite
         </Option>
 
         <Option
