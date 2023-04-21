@@ -81,6 +81,7 @@ subscribe(
   'notification-created',
   { notification: { _id: 'string', text: 'string', link: 'string', createdAt: 'string' } },
   (body) => {
+    console.log('OK')
     notificationStore.receiveNotification(body.notification)
   }
 )

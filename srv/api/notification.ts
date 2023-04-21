@@ -3,13 +3,11 @@ import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle } from './wrap'
 import { assertValid } from 'frisker'
-import { sendOne } from './ws'
+import { notificationDispatch } from '../notification-dispatch'
 
 const router = Router()
 
 router.use(loggedIn)
-
-const maxNotifications = 100
 
 const getNotifications = handle(async ({ userId }) => {
   if (!userId) throw errors.Forbidden
@@ -28,19 +26,7 @@ const selfNotifications = handle(async ({ body, userId }) => {
     true
   )
 
-  const count = await store.notifications.getNotificationsCount(userId)
-
-  if (count > maxNotifications) {
-    await store.notifications.trimNotifications(userId, maxNotifications)
-  }
-
-  const notification = await store.notifications.createNotification({
-    userId: userId,
-    text: body.text,
-    link: body.link,
-  })
-
-  sendOne(userId, { type: 'notification-created', notification })
+  notificationDispatch(userId, body)
 
   return { success: true }
 })
