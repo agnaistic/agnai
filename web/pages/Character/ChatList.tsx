@@ -1,8 +1,7 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createSignal, For, onMount, Show } from 'solid-js'
 import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
-import Button from '../../shared/Button'
 import { ChevronLeft, Edit, Import, Menu, Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
@@ -26,7 +25,7 @@ const CharacterChats: Component = () => {
     return { chats: s.all?.chats || [], char: undefined }
   })
 
-  createEffect(() => {
+  onMount(() => {
     if (params.id) {
       chatStore.getBotChats(params.id)
     } else {
