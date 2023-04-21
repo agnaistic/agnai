@@ -84,6 +84,7 @@ export namespace AppSchema {
     memoryId?: string
 
     memberIds: string[]
+    characterIds?: string[]
 
     name: string
     characterId: string

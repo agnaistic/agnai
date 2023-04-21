@@ -1,13 +1,22 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  MailPlus,
+  Menu,
+  X,
+} from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import { getRootRgb, setComponentPageTitle } from '../../shared/util'
-import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
+import TextInput from '../../shared/TextInput'
+import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { characterStore, chatStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -27,6 +36,7 @@ import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import './chat-detail.css'
+import Select, { Option } from '../../shared/Select'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -352,7 +362,7 @@ const ChatDetail: Component = () => {
       </Show>
 
       <Show when={modal() === 'members'}>
-        <MemberModal show={true} close={setModal} />
+        <MemberModal show={true} close={setModal} charId={chats?.char?._id!} />
       </Show>
 
       <ImageModal />
@@ -384,6 +394,115 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
+
+const InviteModal: Component<{
+  charId: string
+  chatId: string
+  show: boolean
+  close: () => void
+}> = (props) => {
+  let ref: any
+  const chars = characterStore()
+  type inviteType = 'user' | 'character'
+  const typeItems: Option<inviteType>[] = [
+    { value: 'user', label: 'User' },
+    { value: 'character', label: 'Character' },
+  ]
+
+  const [type, setType] = createSignal('user')
+  const [characterItems, setCharacterItems] = createSignal<Option[]>([])
+  const [characterError, setCharacterError] = createSignal<string>()
+  const [selectedCharacterId, setSelectedCharacterId] = createSignal<string>()
+
+  const save = () => {
+    switch (type()) {
+      case 'user':
+        const body = getStrictForm(ref, { userId: 'string' })
+        return chatStore.inviteUser(props.chatId, body.userId, props.close)
+
+      case 'character':
+        const charId = selectedCharacterId()
+        if (!charId) throw new Error('No character selected')
+        return chatStore.addCharacter(props.chatId, charId, props.close)
+    }
+  }
+
+  createEffect(() => {
+    if (type() === 'character' && !chars.characters.loaded) {
+      characterStore.getCharacters()
+    }
+  })
+
+  createEffect(() => {
+    if (chars.characters.loaded) {
+      const availableCharacters = chars.characters.list
+        .filter((c) => c._id != props.charId)
+        .map((c) => ({ value: c._id, label: c.name }))
+
+      if (availableCharacters.length) {
+        setCharacterError()
+        setCharacterItems(availableCharacters)
+        setSelectedCharacterId(availableCharacters[0].value)
+      } else {
+        setCharacterError("You don't have any other characters to invite")
+      }
+    }
+  })
+
+  return (
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Invite to Conversation"
+      footer={
+        <>
+          {' '}
+          <Button size="sm" schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button size="sm" onClick={save}>
+            <MailPlus /> Invite
+          </Button>
+        </>
+      }
+    >
+      <form ref={ref} class="flex flex-col gap-2">
+        <Select
+          fieldName="type"
+          label="Invitation Type"
+          helperText="Whether to invite a user or a character"
+          items={typeItems}
+          value={'user'}
+          onChange={(val) => setType(val.value)}
+        />
+
+        <Show when={type() === 'user'}>
+          <TextInput
+            fieldName="userId"
+            label="User ID"
+            helperText="The ID of the user to invite. The user should provide this to you"
+          />
+        </Show>
+
+        <Show when={type() === 'character'}>
+          <Show
+            when={!characterError()}
+            fallback={<div class="text-red-500">{characterError()}</div>}
+          >
+            <Select
+              fieldName="character"
+              label="Character"
+              helperText="The character to invite"
+              items={characterItems()}
+              value={selectedCharacterId()}
+              onChange={setSelectedCharacterId}
+            />
+          </Show>
+        </Show>
+      </form>
+    </Modal>
+  )
+}
 
 const SwipeMessage: Component<{
   chatId: string

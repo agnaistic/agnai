@@ -1,21 +1,42 @@
 import { Trash } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
-import { chatStore, userStore } from '../../store'
+import { characterStore, chatStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
+import Select, { Option } from '/web/shared/Select'
 
-const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => {
+type InviteType = 'user' | 'character'
+
+const MemberModal: Component<{ show: boolean; close: () => void; charId: string }> = (props) => {
   let ref: any
   const self = userStore()
   const state = chatStore()
+  const chars = characterStore()
+
+  const typeItems: Option<InviteType>[] = [
+    { value: 'user', label: 'User' },
+    { value: 'character', label: 'Character' },
+  ]
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
+  const [type, setType] = createSignal('user')
+  const [inviteCharId, setCharId] = createSignal<string>()
+
+  const characters = createMemo(() => {
+    const available = chars.characters.list
+      .filter((c) => c._id != props.charId)
+      .map((c) => ({ value: c._id, label: c.name }))
+
+    setCharId(available[0].value)
+    return available
+  })
+
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
   const remove = () => {
@@ -32,6 +53,19 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
 
   const invite = () => {
     if (!state.active?.chat) return
+    const chatId = state.active.chat._id
+
+    switch (type()) {
+      case 'user':
+        const body = getStrictForm(ref, { userId: 'string' })
+        return chatStore.inviteUser(chatId, body.userId, props.close)
+
+      case 'character':
+        const charId = inviteCharId()
+        if (!charId) throw new Error('No character selected')
+        return chatStore.addCharacter(chatId, charId, props.close)
+    }
+
     const body = getStrictForm(ref, { userId: 'string' })
     chatStore.inviteUser(state.active?.chat._id, body.userId, () => {
       ref.value = ''
@@ -49,14 +83,46 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
     <>
       <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
         <form ref={ref} class="flex flex-col gap-2">
+          <Select
+            fieldName="type"
+            label="Invitation Type"
+            helperText="Whether to invite a user or a character"
+            items={typeItems}
+            value={'user'}
+            onChange={(val) => setType(val.value)}
+          />
+
           <div class="flex items-end gap-2">
-            <TextInput
-              class="text-sm"
-              fieldName="userId"
-              label="Invite User"
-              helperText="The ID of the user to invite. The user should provide this to you"
-              placeholder={`E.g. ${v4()}`}
-            />
+            <Switch>
+              <Match when={type() === 'user'}>
+                <TextInput
+                  class="text-sm"
+                  fieldName="userId"
+                  label="Invite User"
+                  helperText="The ID of the user to invite. The user should provide this to you"
+                  placeholder={`E.g. ${v4()}`}
+                />
+              </Match>
+
+              <Match when={type() === 'character'}>
+                <Show
+                  when={!characters().length}
+                  fallback={
+                    <div class="text-red-500">You don't have any other characters to invite</div>
+                  }
+                >
+                  <Select
+                    fieldName="character"
+                    label="Character"
+                    helperText="The character to invite"
+                    items={characters()}
+                    value={inviteCharId()}
+                    onChange={setCharId}
+                  />
+                </Show>
+              </Match>
+            </Switch>
+
             <Button class="h-[36px]" onClick={invite}>
               Invite
             </Button>

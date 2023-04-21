@@ -292,6 +292,24 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async addCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
+      const res = await api.post(`/chat/${chatId}/characters`, { charId })
+      if (res.error) return toastStore.error(`Failed to invite character: ${res.error}`)
+      if (res.result) {
+        toastStore.success(`Character added`)
+        onSuccess?.()
+      }
+    },
+
+    async removeCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
+      const res = await api.post(`/chat/${chatId}/characters/${charId}`, { charId })
+      if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
+      if (res.result) {
+        toastStore.success(`Character removed from chat`)
+        onSuccess?.()
+      }
+    },
+
     async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
