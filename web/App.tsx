@@ -10,6 +10,7 @@ import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
+import NotificationRoutes from './pages/Notification'
 import './dots.css'
 
 const App: Component = () => {
@@ -100,6 +101,7 @@ const Layout: Component = () => {
           <div class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}>
             <Show when={cfg.init}>
               <Outlet />
+              <NotificationRoutes />
             </Show>
             <Show when={!cfg.init && cfg.initLoading}>
               <div class="flex h-[80vh] items-center justify-center">

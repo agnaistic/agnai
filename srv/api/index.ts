@@ -8,6 +8,7 @@ import admin from './admin'
 import horde from './horde'
 import settings from './settings'
 import memory from './memory'
+import notification from './notification'
 import selfhost from './json'
 import voice from './voice'
 import { config } from '../config'
@@ -24,6 +25,7 @@ router.use('/horde', horde)
 router.use('/settings', settings)
 router.use('/memory', memory)
 router.use('/voice', voice)
+router.use('/notifications', notification)
 
 if (config.jsonStorage) {
   router.use('/json', selfhost)
