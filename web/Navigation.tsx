@@ -16,6 +16,7 @@ import {
 import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { inviteStore, settingStore, userStore } from './store'
+import NotificationsIcon from './shared/NotificationsIcon'
 
 const Navigation: Component = () => {
   const state = settingStore()
@@ -77,6 +78,7 @@ const UserNavigation: Component = () => {
     <>
       <Item href="/profile">
         <User /> Profile
+        <NotificationsIcon />
       </Item>
       <Item href="/character/list">
         <Bot /> Characters

@@ -279,13 +279,13 @@ export namespace AppSchema {
     label: string
     previewUrl?: string
   }
-  
+
   export interface Notification {
     kind: 'notification'
     _id: string
     userId: string
     text: string
-    link?: string
+    link: string
     createdAt: string
   }
 }

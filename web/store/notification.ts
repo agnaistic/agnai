@@ -9,7 +9,11 @@ type NotificationState = {
   list: NotificationData[]
 }
 
-export type NotificationData = Pick<AppSchema.Notification, 'text' | 'link'>
+export type NotificationData = Omit<AppSchema.Notification, 'kind' | 'userId'> & {
+  read?: boolean
+}
+
+export type NewNotification = Pick<NotificationData, 'text' | 'link'>
 
 const initState: NotificationState = {
   loading: true,
@@ -19,7 +23,7 @@ const initState: NotificationState = {
 export const notificationStore = createStore<NotificationState>(
   'notification',
   initState
-)((get, set) => {
+)(() => {
   return {
     async *getNotifications(state) {
       yield { loading: true, notifications: state.list }
@@ -29,18 +33,41 @@ export const notificationStore = createStore<NotificationState>(
         toastStore.error('Failed to retrieve notifications')
         return { loading: false, list: state.list }
       } else if (res.result) {
-        return { loading: false, list: res.result.notifications }
+        const result: NotificationData[] = res.result.notifications
+        const stillExists = new Set(result.map((item: NotificationData) => item._id))
+        for (const item of state.list) {
+          if (!stillExists.has(item._id)) {
+            result.push({ ...item, read: true })
+          }
+        }
+        return { loading: false, list: result }
       } else {
         return { loading: false, list: [] }
       }
     },
 
-    async createNotification(_, notification: NotificationData) {
+    async createNotification(_, notification: NewNotification) {
       const res = await notificationsApi.createNotification(notification)
 
       if (res.error) {
         toastStore.error('Failed to send notification')
       }
+    },
+
+    async readNotification(state, notificationId) {
+      const res = await notificationsApi.deleteNotification(notificationId)
+      if (res.error) {
+        toastStore.error('Failed to mark notification as read')
+      }
+      return { list: state.list.map((n) => (n._id === notificationId ? { ...n, read: true } : n)) }
+    },
+
+    async readAllNotifications(state) {
+      const res = await notificationsApi.deleteAllNotifications()
+      if (res.error) {
+        toastStore.error('Failed to mark all notifications as read')
+      }
+      return { list: state.list.map((n) => ({ ...n, read: true })) }
     },
 
     receiveNotification(state, notification: NotificationData) {
@@ -50,7 +77,10 @@ export const notificationStore = createStore<NotificationState>(
   }
 })
 
-subscribe('notification-created', { notification: { text: 'string', link: 'string?' } }, (body) => {
-  notificationStore.receiveNotification(body.notification)
-  toastStore.normal(`Notification: ${body.notification.text}`)
-})
+subscribe(
+  'notification-created',
+  { notification: { _id: 'string', text: 'string', link: 'string', createdAt: 'string' } },
+  (body) => {
+    notificationStore.receiveNotification(body.notification)
+  }
+)

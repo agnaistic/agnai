@@ -1,10 +1,12 @@
 import { api, isLoggedIn } from '../api'
-import { NotificationData } from '../notification'
+import { NewNotification } from '../notification'
 import { localApi } from './storage'
 
 export const notificationsApi = {
   getNotifications,
   createNotification,
+  deleteNotification,
+  deleteAllNotifications,
 }
 
 async function getNotifications() {
@@ -16,9 +18,27 @@ async function getNotifications() {
   return localApi.result([])
 }
 
-async function createNotification(notification: NotificationData) {
+async function createNotification(notification: NewNotification) {
   if (isLoggedIn()) {
     const res = await api.post('/notifications', notification)
+    return res
+  }
+
+  return localApi.result({ success: false })
+}
+
+async function deleteNotification(notificationId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/notifications/${notificationId}`)
+    return res
+  }
+
+  return localApi.result({ success: false })
+}
+
+async function deleteAllNotifications() {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/notifications`)
     return res
   }
 
