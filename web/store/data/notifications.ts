@@ -1,6 +1,6 @@
 import { api, isLoggedIn } from '../api'
-import { NewNotification } from '../notification'
-import { local } from './storage'
+import { NotificationData } from '../notification'
+import { localApi } from './storage'
 
 export const notificationsApi = {
   getNotifications,
@@ -13,14 +13,14 @@ async function getNotifications() {
     return res
   }
 
-  return local.result([])
+  return localApi.result([])
 }
 
-async function createNotification(notification: NewNotification) {
+async function createNotification(notification: NotificationData) {
   if (isLoggedIn()) {
     const res = await api.post('/notifications', notification)
     return res
   }
 
-  return local.result({ success: false })
+  return localApi.result({ success: false })
 }

@@ -3,7 +3,10 @@ import { db } from './client'
 import { AppSchema } from './schema'
 
 export async function getNotifications(userId: string) {
-  const list = await db('notification').find({ kind: 'notification', userId }).toArray()
+  const list = await db('notification')
+    .find({ kind: 'notification', userId })
+    .sort({ createdAt: -1 })
+    .toArray()
   return list
 }
 
@@ -18,4 +21,5 @@ export async function createNotification(
     kind: 'notification',
   }
   await db('notification').insertOne(body)
+  return body
 }

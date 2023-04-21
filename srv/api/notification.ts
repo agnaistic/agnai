@@ -3,6 +3,7 @@ import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle } from './wrap'
 import { assertValid } from 'frisker'
+import { sendOne } from './ws'
 
 const router = Router()
 
@@ -25,11 +26,13 @@ const selfNotifications = handle(async ({ body, userId }) => {
     true
   )
 
-  await store.notifications.createNotification({
+  const notification = await store.notifications.createNotification({
     userId: userId,
     text: body.text,
     link: body.link,
   })
+
+  sendOne(userId, { type: 'notification-created', notification })
 
   return { success: true }
 })
