@@ -3,7 +3,7 @@ import { defaultPresets } from './presets'
 import { BOT_REPLACE, getAdapter, SELF_REPLACE } from './prompt'
 import { getEncoder } from './tokenize'
 
-type MemoryOpts = {
+export type MemoryOpts = {
   user: AppSchema.User
   chat: AppSchema.Chat
   char: AppSchema.Character
@@ -42,7 +42,7 @@ type Match = {
 
 export const MEMORY_PREFIX = 'Facts: '
 
-export function getMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
+export function buildMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
   const { chat, book, settings, members, char, lines, user } = opts
 
   if (!book?.entries) return

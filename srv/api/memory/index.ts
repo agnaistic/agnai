@@ -1,11 +1,10 @@
-import * as lai from '../../adapter/luminai'
 import { Router } from 'express'
 import { assertValid } from 'frisker'
-import { config } from '../../config'
 import { store } from '../../db'
 import { loggedIn } from '../auth'
 import { handle } from '../wrap'
 import { AppSchema } from '../../db/schema'
+import { FILAMENT_ENABLED, filament } from '../../adapter/luminai'
 
 const router = Router()
 
@@ -24,8 +23,6 @@ const validBook = {
   entries: [validEntry],
 } as const
 
-const USE_LAI_MEMORY = config.adapters.includes('luminai')
-
 const getUserBooks = handle(async ({ userId }) => {
   const books = await store.memory.getBooks(userId!)
   return { books }
@@ -43,8 +40,12 @@ const updateBook = handle(async ({ body, userId, params }) => {
   const id = params.id
   assertValid(validBook, body)
   await store.memory.updateBook(userId!, id!, body)
-  const book = await store.memory.getBook(id)
-  embed(userId, book!)
+
+  if (FILAMENT_ENABLED) {
+    const book = await store.memory.getBook(id)
+    embed(userId, book!)
+  }
+
   return { success: true }
 })
 
@@ -66,9 +67,8 @@ export default router
  * - and the user has a luminai url configured
  */
 async function embed(userId: string, book: AppSchema.MemoryBook) {
-  if (!USE_LAI_MEMORY) return
   const user = await store.users.getUser(userId)
   if (!user || !user.luminaiUrl || !book) return
 
-  setTimeout(() => lai.embedMemory(user, book))
+  filament.embedMemory(user, book)
 }

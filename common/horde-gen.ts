@@ -164,7 +164,7 @@ async function generate(opts: GenerateOpts) {
       ? `${baseUrl}/generate/text/status/${init.body.id}`
       : `${baseUrl}/generate/status/${init.body.id}`
 
-  const result = await poll(url, opts.key)
+  const result = await poll(url, opts.key, opts.type === 'text' ? 2.5 : 6.5)
 
   return opts.type === 'text' ? result.generations[0].text : result.generations[0].img
 }
