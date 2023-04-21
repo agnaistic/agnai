@@ -154,7 +154,16 @@ async function getGuestEntities() {
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
 
-  return { chat, char, user, profile, book, messages, settings, members: [] as AppSchema.Profile[] }
+  return {
+    chat,
+    char,
+    user,
+    profile,
+    book,
+    messages,
+    settings,
+    members: [profile] as AppSchema.Profile[],
+  }
 }
 
 function getAuthedPromptEntities() {

@@ -345,8 +345,10 @@ function getLinesForPrompt({
     profiles.set(member.userId, member)
   }
 
-  const formatMsg = (chat: AppSchema.ChatMessage) =>
-    fillPlaceholders(chat, char.name, profiles.get(chat.userId!)?.handle || 'You').trim()
+  const formatMsg = (chat: AppSchema.ChatMessage) => {
+    const senderId = chat.userId || opts.chat.userId
+    return fillPlaceholders(chat, char.name, profiles.get(senderId)?.handle || 'You').trim()
+  }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
