@@ -42,8 +42,9 @@ export type PromptOpts = {
   book?: AppSchema.MemoryBook
 }
 
-export const BOT_REPLACE = /\{\{char\}\}/g
-export const SELF_REPLACE = /\{\{user\}\}/g
+/** {{user}}, <user>, {{char}}, <bot>, case insensitive */
+export const BOT_REPLACE = /(\{\{char\}\}|<BOT>)/gi
+export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
 
 /**
  * This is only ever invoked client-side

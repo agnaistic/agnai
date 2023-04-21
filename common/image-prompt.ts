@@ -1,9 +1,7 @@
 import { AppSchema } from '../srv/db/schema'
 import { formatCharacter } from './prompt'
 import { getEncoder } from './tokenize'
-
-const BOT_REPLACE = /\{\{char\}\}/g
-const SELF_REPLACE = /\{\{user\}\}/g
+import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 
 export type ImagePromptOpts = {
   user: AppSchema.User
