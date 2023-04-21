@@ -296,6 +296,7 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
         name: char.name,
         first_mes: char.greeting,
         scenario: char.scenario,
+        personality: formatCharacter(char.name, char.persona),
         description: formatCharacter(char.name, char.persona),
         mes_example: char.sampleChat,
       }

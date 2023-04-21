@@ -38,7 +38,7 @@ const Navigation: Component = () => {
     >
       <div class="drawer__content flex flex-col gap-2 px-4">
         <div class="hidden w-full items-center justify-center sm:flex">
-          <A href="/dashboard">
+          <A href="/">
             <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
               Agn<span class="text-[var(--hl-500)]">ai</span>stic
             </div>
