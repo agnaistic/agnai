@@ -4,6 +4,8 @@ import {
   Book,
   Bot,
   Github,
+  Home,
+  Info,
   LogIn,
   LogOut,
   MailPlus,
@@ -36,9 +38,9 @@ const Navigation: Component = () => {
     >
       <div class="drawer__content flex flex-col gap-2 px-4">
         <div class="hidden w-full items-center justify-center sm:flex">
-          <A href="/">
-            <div class="h-7 w-fit items-center justify-center rounded-lg px-4">
-              Agn<span class="font-bold text-[var(--hl-500)]">ai</span>stic
+          <A href="/dashboard">
+            <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
+              Agn<span class="text-[var(--hl-500)]">ai</span>stic
             </div>
           </A>
         </div>
@@ -96,14 +98,10 @@ const UserNavigation: Component = () => {
           <Activity /> Metrics
         </Item>
       </Show>
-      <a
-        class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
-        href="https://github.com/luminai-companion/agn-ai"
-        target="_blank"
-      >
-        <Github />
-        GitHub
-      </a>
+      <Item href="/info">
+        <Info />
+        Infomation
+      </Item>
     </>
   )
 }

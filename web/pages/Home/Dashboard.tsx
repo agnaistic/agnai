@@ -1,21 +1,24 @@
-import { Component, For, Show, createSignal, onMount } from 'solid-js'
+import { Component, For, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { NewCharacter, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../srv/db/schema'
-import { Copy, Download, Edit, Trash, VenetianMask } from 'lucide-solid'
-import { A } from '@solidjs/router'
+import { Copy, Download, Edit, Menu, Trash, VenetianMask } from 'lucide-solid'
+import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import { DownloadModal } from '../Character/CharacterList'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
 import { getAssetUrl } from '../../shared/util'
+import { DropMenu } from '../../shared/DropMenu'
+import Button from '../../shared/Button'
 
 const Dashboard: Component = () => {
   const chats = chatStore()
 
   const [view, setView] = createSignal('card')
+  const [sort, setSort] = createSignal('age-desc')
   const [search, setSearch] = createSignal('')
 
   onMount(() => {
@@ -32,43 +35,52 @@ const Dashboard: Component = () => {
             class="m-1"
             fieldName="search"
             placeholder="Search by name..."
-            onChange={(value) => setSearch(value.currentTarget.value)}
+            onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
           />
         </div>
         <Select
           class="m-1"
           fieldName="viewType"
           items={[
-            { value: 'mod-asc', label: 'Sort: Last modified - ASC' },
-            { value: 'mod-desc', label: 'Sort: Last modified - DESC' },
-            { value: 'age-asc', label: 'Sort: Created - ASC' },
-            { value: 'age-desc', label: 'Sort: Created - DESC' },
-            { value: 'alpha-asc', label: 'Sort: Name - ASC' },
-            { value: 'alpha-desc', label: 'Sort: Name - DESC' },
+            { value: 'mod-asc', label: 'Modified - ASC' },
+            { value: 'mod-desc', label: 'Modified - DESC' },
+            { value: 'age-asc', label: 'Created - ASC' },
+            { value: 'age-desc', label: 'Created - DESC' },
+            { value: 'alpha-asc', label: 'Name - ASC' },
+            { value: 'alpha-desc', label: 'Name - DESC' },
           ]}
-          onChange={(next) => setView(next.value)}
+          value={sort()}
+          onChange={(next) => setSort(next.value)}
         />
 
         <Select
           class="m-1"
           fieldName="viewType"
           items={[
-            { value: 'list', label: 'View: List' },
-            { value: 'card', label: 'View: Card' },
+            { value: 'list', label: 'List' },
+            { value: 'card', label: 'Card' },
           ]}
           onChange={(next) => setView(next.value)}
           value={view()}
         />
       </div>
-      <Characters type={view()} filter={search()} />
+      <Characters type={view()} filter={search()} sort={sort()} />
     </>
   )
 }
 
 export default Dashboard
 
-const Characters: Component<{ type: string; filter: string }> = (props) => {
-  const chars = characterStore((s) => s.characters)
+const Characters: Component<{ type: string; filter: string; sort: string }> = (props) => {
+  const state = characterStore((s) => s.characters)
+
+  const chars = createMemo(() => {
+    const list = state.list
+      .slice()
+      .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
+      .sort(sort(props.sort))
+    return list
+  })
 
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
   const [download, setDownload] = createSignal<AppSchema.Character>()
@@ -82,7 +94,7 @@ const Characters: Component<{ type: string; filter: string }> = (props) => {
     <>
       <Show when={props.type === 'list'}>
         <div class="flex w-full flex-col gap-2">
-          <For each={chars.list}>
+          <For each={chars()}>
             {(char) => (
               <Character
                 type={props.type}
@@ -96,8 +108,8 @@ const Characters: Component<{ type: string; filter: string }> = (props) => {
       </Show>
 
       <Show when={props.type !== 'list'}>
-        <div class="flex w-full flex-row flex-wrap justify-center gap-2">
-          <For each={chars.list}>
+        <div class="grid w-full grid-cols-2 flex-row flex-wrap justify-center gap-2 sm:grid-cols-6">
+          <For each={chars()}>
             {(char) => (
               <Character
                 type={props.type}
@@ -127,9 +139,11 @@ const Character: Component<{
   delete: () => void
   download: () => void
 }> = (props) => {
+  const [opts, setOpts] = createSignal(false)
+  const nav = useNavigate()
   if (props.type === 'list') {
     return (
-      <div class="flex w-full gap-2">
+      <div class="relative flex w-full gap-2">
         <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-[var(--bg-800)]">
           <A
             class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl sm:w-full"
@@ -160,31 +174,64 @@ const Character: Component<{
     )
   }
 
+  const wrap = (fn: Function) => () => {
+    setOpts(false)
+    fn()
+  }
+
   return (
-    <A
-      href={`/character/${props.char._id}/chats`}
-      class="flex w-[calc(50%-8px)] flex-col items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1 sm:w-[calc(25%-8px)]"
-    >
-      <Show when={props.char.avatar}>
-        {/* <div
-          // src={getAssetUrl(props.char.avatar!)}
-          class="m-auto h-full w-full justify-center rounded-lg object-scale-down"
-          style={{
-            'background-size': 'contain',
-            'background-image': `url(${getAssetUrl(props.char.avatar!)})`,
-            'background-repeat': 'no-repeat',
-          }}
-        /> */}
-        <div class="flex max-h-48 justify-center">
-          <img src={getAssetUrl(props.char.avatar!)} class="max-h-full max-w-full rounded-lg" />
+    <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-800)] p-1">
+      <div class="flex w-full justify-end" onClick={() => setOpts(true)}>
+        <div>
+          <Menu size={14} class="icon-button" />
         </div>
+        <DropMenu show={opts()} close={() => setOpts(false)} horz="left" vert="down">
+          <div class="flex flex-col gap-2 p-2">
+            <Button size="sm" onClick={wrap(props.download)}>
+              Download
+            </Button>
+            <Button size="sm" onClick={() => nav(`/character/${props.char._id}/edit`)}>
+              Edit
+            </Button>
+            <Button size="sm" onClick={() => nav(`/character/create/${props.char._id}`)}>
+              Duplicate
+            </Button>
+            <Button size="sm" onClick={wrap(props.delete)}>
+              Delete
+            </Button>
+          </div>
+        </DropMenu>
+      </div>
+
+      <Show when={props.char.avatar}>
+        <A href={`/character/${props.char._id}/chats`} class="flex justify-center">
+          <img src={getAssetUrl(props.char.avatar!)} class="max-h-32 max-w-full rounded-lg" />
+        </A>
       </Show>
       <Show when={!props.char.avatar}>
-        <div class="flex h-48 w-full items-center justify-center rounded-md bg-[var(--bg-700)]">
+        <A
+          href={`/character/${props.char._id}/chats`}
+          class="flex h-32 w-full items-center justify-center rounded-md bg-[var(--bg-700)]"
+        >
           <VenetianMask size={24} />
-        </div>
+        </A>
       </Show>
-      <div class="font-bold">{props.char.name}</div>
-    </A>
+      <div class="flex w-full justify-center text-sm">
+        <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold">
+          {props.char.name}
+        </div>
+      </div>
+    </div>
   )
+}
+
+function sort(direction: string) {
+  return (left: AppSchema.Character, right: AppSchema.Character) => {
+    const [kind, dir] = direction.split('-')
+    const mod = dir === 'asc' ? 1 : -1
+    const l = kind === 'alpha' ? left.name : kind === 'age' ? left.createdAt : left.updatedAt
+    const r = kind === 'alpha' ? right.name : kind === 'age' ? right.createdAt : right.updatedAt
+
+    return l > r ? mod : l === r ? 0 : -mod
+  }
 }

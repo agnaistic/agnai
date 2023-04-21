@@ -452,3 +452,8 @@ body {
 .markdown > ol {
   list-style-type: decimal;
 }
+
+.markdown > blockquote {
+  @apply pl-4;
+  border-left: 0.25em solid var(--bg-300);
+}

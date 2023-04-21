@@ -19,7 +19,7 @@ export async function generateImage(
   if (!guestId) {
     broadcastIds.push(user._id)
     const members = await store.chats.getActiveMembers(chatId)
-    broadcastIds.push(...members)
+    broadcastIds.push(...members, user._id)
   }
 
   let image: ImageAdapterResponse | undefined

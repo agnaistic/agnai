@@ -1,17 +1,11 @@
-import { A } from '@solidjs/router'
 import { Component } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { adaptersToOptions } from '../../shared/util'
 import { settingStore } from '../../store'
 import { markdown } from '../../shared/markdown'
+import { A } from '@solidjs/router'
 
-const homeText = `
-**Useful Links**:
-
-- [Github Repository](https://github.com/luminai-companion/agn-ai)
-- [Feature Roadmap](https://github.com/users/sceuick/projects/1/views/1)
-- [Memory Book Guide](https://github.com/luminai-companion/agn-ai/blob/dev/instructions/memory.md)
-
+const text = `
 Agnaistic is in a fairly early stage of development. Bugs and some rough edges are expected. If you encounter an issue or have an idea you'd like to share you can head over to the [GitHub repository](https://github.com/luminai-companion/agn-ai) and create an issue.
 
 # Registration
@@ -68,7 +62,36 @@ const HomePage: Component = () => {
         subtitle={`Available services: ${cfg.adapters.map((adp) => adp.label).join(', ')}`}
       />
 
-      <div class="markdown" innerHTML={markdown.makeHtml(homeText)} />
+      <div class="markdown">
+        <b>Useful Links</b>
+
+        <ul>
+          <li>
+            <A href="/changelog" target="_blank">
+              Change Log
+            </A>
+          </li>
+          <li>
+            <A href="https://github.com/users/sceuick/projects/1/views/1" target="_blank">
+              Feature Roadmap
+            </A>
+          </li>
+          <li>
+            <A
+              href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/memory.md"
+              target="_blank"
+            >
+              Memory Book Guide
+            </A>
+          </li>
+          <li>
+            <A href="https://github.com/luminai-companion/agn-ai" target="_blank">
+              Github Repository
+            </A>
+          </li>
+        </ul>
+      </div>
+      <div class="markdown" innerHTML={markdown.makeHtml(text)} />
     </div>
   )
 }
