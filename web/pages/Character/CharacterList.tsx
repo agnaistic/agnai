@@ -57,7 +57,29 @@ const CharacterList: Component = () => {
 
   return (
     <>
-      <PageHeader title="Home" />
+      <PageHeader
+        title={
+          <div class="flex w-full justify-between">
+            <div>Characters</div>
+            <div class="flex text-base">
+              <div class="px-1">
+                <Button onClick={() => setImport(true)}>
+                  <Import />
+                  <span class="hidden sm:inline">Import</span>
+                </Button>
+              </div>
+              <div class="px-1">
+                <A href="/character/create">
+                  <Button>
+                    <Plus />
+                    <span class="hidden sm:inline">Create</span>
+                  </Button>
+                </A>
+              </div>
+            </div>
+          </div>
+        }
+      />
 
       <div class="mb-2 flex flex-wrap items-center justify-between">
         <div class="flex flex-wrap items-center">
@@ -95,22 +117,6 @@ const CharacterList: Component = () => {
               onChange={(next) => setView(next.value)}
               value={view()}
             />
-          </div>
-        </div>
-        <div class="flex">
-          <div class="px-1">
-            <Button onClick={() => setImport(true)}>
-              <Import />
-              Import
-            </Button>
-          </div>
-          <div class="px-1">
-            <A href="/character/create">
-              <Button>
-                <Plus />
-                Create
-              </Button>
-            </A>
           </div>
         </div>
       </div>
