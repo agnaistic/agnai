@@ -45,7 +45,13 @@ export const DropMenu: Component<{
   children: any
   horz?: 'left' | 'right'
   vert?: 'up' | 'down'
+  customPosition?: string
 }> = (props) => {
+  const position = createMemo(
+    () =>
+      props.customPosition ??
+      `${props.vert === 'up' ? 'bottom-11' : ''} ${props.horz === 'left' ? 'right-0' : ''}`
+  )
   const vert = createMemo(() => (props.vert === 'up' ? 'bottom-11' : ''))
   const horz = createMemo(() => (props.horz === 'left' ? 'right-0' : ''))
 
@@ -63,7 +69,7 @@ export const DropMenu: Component<{
       </Show>
       <div class="relative text-sm">
         <Show when={props.show}>
-          <div class={`absolute ${vert()} ${horz()} z-20 w-fit rounded-md bg-[var(--bg-800)]`}>
+          <div class={`absolute ${position()} z-20 w-fit rounded-md bg-[var(--bg-800)]`}>
             {props.children}
           </div>
         </Show>

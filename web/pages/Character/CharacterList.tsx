@@ -151,7 +151,7 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
       </Show>
       <Show when={state.list.length > 0}>
         <Show when={props.type === 'list'}>
-          <div class="flex w-full flex-col gap-2">
+          <div class="flex w-full flex-col gap-2 pb-5">
             <For each={chars()}>
               {(char) => (
                 <Character
@@ -166,7 +166,7 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
         </Show>
 
         <Show when={props.type !== 'list'}>
-          <div class="grid w-full grid-cols-2 flex-row flex-wrap justify-center gap-2 sm:grid-cols-6">
+          <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
             <For each={chars()}>
               {(char) => (
                 <Character
@@ -239,44 +239,59 @@ const Character: Component<{
 
   return (
     <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-700)] p-1">
-      <div class="flex w-full justify-end" onClick={() => setOpts(true)}>
-        <div>
-          <Menu size={14} class="icon-button" />
-        </div>
-        <DropMenu show={opts()} close={() => setOpts(false)} horz="left" vert="down">
-          <div class="flex flex-col gap-2 p-2">
-            <Button size="sm" onClick={wrap(props.download)}>
-              Download
-            </Button>
-            <Button size="sm" onClick={() => nav(`/character/${props.char._id}/edit`)}>
-              Edit
-            </Button>
-            <Button size="sm" onClick={() => nav(`/character/create/${props.char._id}`)}>
-              Duplicate
-            </Button>
-            <Button size="sm" onClick={wrap(props.delete)}>
-              Delete
-            </Button>
-          </div>
-        </DropMenu>
+      <div class="w-full">
+        <Show when={props.char.avatar}>
+          <A
+            href={`/character/${props.char._id}/chats`}
+            class="block h-32 w-full justify-center overflow-hidden rounded-lg"
+          >
+            <img src={getAssetUrl(props.char.avatar!)} class="h-full w-full object-cover" />
+          </A>
+        </Show>
+        <Show when={!props.char.avatar}>
+          <A
+            href={`/character/${props.char._id}/chats`}
+            class="flex h-32 w-full items-center justify-center rounded-md bg-[var(--bg-700)]"
+          >
+            <VenetianMask size={24} />
+          </A>
+        </Show>
       </div>
-
-      <Show when={props.char.avatar}>
-        <A href={`/character/${props.char._id}/chats`} class="flex justify-center">
-          <img src={getAssetUrl(props.char.avatar!)} class="max-h-32 max-w-full rounded-lg" />
-        </A>
-      </Show>
-      <Show when={!props.char.avatar}>
-        <A
-          href={`/character/${props.char._id}/chats`}
-          class="flex h-32 w-full items-center justify-center rounded-md bg-[var(--bg-700)]"
-        >
-          <VenetianMask size={24} />
-        </A>
-      </Show>
-      <div class="flex w-full justify-center text-sm">
-        <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold">
+      <div class="w-full text-sm">
+        <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 font-bold">
           {props.char.name}
+        </div>
+        {/* hacky positioning shenanigans are necessary as opposed to using an
+            absolute positioning because if any of the DropMenu parent is
+            positioned, then DropMenu breaks because it relies on the nearest
+            positioned parent to be the sitewide container */}
+        <div
+          class="float-right mt-[-149px] mr-[3px] flex justify-end"
+          onClick={() => setOpts(true)}
+        >
+          <div class=" rounded-md bg-[var(--bg-500)] p-[2px]">
+            <Menu size={24} class="icon-button" color="var(--bg-100)" />
+          </div>
+          <DropMenu
+            show={opts()}
+            close={() => setOpts(false)}
+            customPosition="right-[-6px] top-[-3px]"
+          >
+            <div class="flex flex-col gap-2 p-2">
+              <Button size="sm" onClick={wrap(props.download)}>
+                Download
+              </Button>
+              <Button size="sm" onClick={() => nav(`/character/${props.char._id}/edit`)}>
+                Edit
+              </Button>
+              <Button size="sm" onClick={() => nav(`/character/create/${props.char._id}`)}>
+                Duplicate
+              </Button>
+              <Button size="sm" onClick={wrap(props.delete)}>
+                Delete
+              </Button>
+            </div>
+          </DropMenu>
         </div>
       </div>
     </div>
