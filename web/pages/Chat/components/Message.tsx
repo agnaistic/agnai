@@ -156,7 +156,7 @@ const SingleMessage: Component<
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
             <b
-              class="text-900 mr-2 text-lg leading-none"
+              class="text-900 mr-2 max-w-[200px] overflow-hidden text-ellipsis  whitespace-nowrap text-lg leading-none sm:max-w-[400px]"
               data-bot-name={isBot()}
               data-user-name={isUser()}
             >

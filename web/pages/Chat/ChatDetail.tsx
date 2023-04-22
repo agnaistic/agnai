@@ -160,18 +160,22 @@ const ChatDetail: Component = () => {
       </Show>
       <Show when={chats.chat}>
         <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
-          <div class="flex h-8 items-center justify-between rounded-md" style={headerBg()}>
+          <div class="flex h-9 items-center justify-between rounded-md" style={headerBg()}>
             <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen && isOwner()}>
                 <A href={`/character/${chats.char?._id}/chats`}>
                   <ChevronLeft />
                 </A>
-                {chats.char?.name}
-                <Show when={chats.chat?.name}>
-                  <div class="flex flex-row items-center justify-between gap-4 text-sm">
-                    {chats.chat?.name}
+                <div class="flex flex-col">
+                  <div class="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap leading-5 sm:max-w-[480px]">
+                    {chats.char?.name}
                   </div>
-                </Show>
+                  <Show when={chats.chat?.name}>
+                    <div class="max-w-[200px] flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm sm:max-w-[480px]">
+                      {chats.chat?.name}
+                    </div>
+                  </Show>
+                </div>
               </Show>
             </div>
 
@@ -213,7 +217,7 @@ const ChatDetail: Component = () => {
               </Show>
             </div>
           </div>
-          <div class="flex h-[calc(100%-32px)] flex-col-reverse gap-1">
+          <div class="flex h-[calc(100%-36px)] flex-col-reverse gap-1">
             <InputBar
               chat={chats.chat!}
               swiped={swipe() !== 0}

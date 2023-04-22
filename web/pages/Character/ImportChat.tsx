@@ -8,6 +8,7 @@ import { characterStore, chatStore, ImportChat, toastStore } from '../../store'
 import Divider from '../../shared/Divider'
 import Select from '../../shared/Select'
 import { assertValid } from 'frisker'
+import { sort } from '../../shared/util'
 
 const importValid = {
   name: 'string',
@@ -30,7 +31,7 @@ const ImportChatModal: Component<{
 }> = (props) => {
   const [json, setJson] = createSignal<ImportChat>()
   const [charId, setCharId] = createSignal<string>()
-  const state = characterStore((s) => ({ chars: s.characters.list }))
+  const state = characterStore((s) => ({ chars: s.characters.list.slice().sort(sort('name')) }))
 
   createEffect(() => {
     if (props.char && props.char._id !== charId()) {

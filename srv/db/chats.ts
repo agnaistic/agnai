@@ -142,7 +142,7 @@ export async function getAllChats(userId: string) {
           scenario: 1,
           sampleChat: 1,
           overrides: 1,
-          created: 1,
+          createdAt: 1,
           updatedAt: 1,
           genPreset: 1,
           genSettings: 1,

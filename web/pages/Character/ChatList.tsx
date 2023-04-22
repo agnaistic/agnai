@@ -25,7 +25,6 @@ const CharacterChats: Component = () => {
   const [charId, setCharId] = createSignal(params.id || '')
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
-  const [opts, setOpts] = createSignal(false)
   const [view, setView] = createSignal(cache.view)
   const [allview, setAllview] = createSignal(cache.all)
 
@@ -82,32 +81,27 @@ const CharacterChats: Component = () => {
     chatStore.getAllChats()
   })
 
-  const wrap = (fn: Function) => () => {
-    fn()
-    setOpts(false)
-  }
-
   const Options = () => (
     <>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={wrap(() => setImport(true))}
+        onClick={() => setImport(true)}
       >
-        <Import /> Import
+        <Import /> <span class="hidden sm:inline">Import</span>
       </button>
       <Show when={!!params.id}>
         <button
           class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-          onClick={wrap(() => nav(`/character/${params.id}/edit`))}
+          onClick={() => nav(`/character/${params.id}/edit`)}
         >
-          <Edit /> Edit
+          <Edit /> <span class="hidden sm:inline">Edit</span>
         </button>
       </Show>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={wrap(() => setCreate(true))}
+        onClick={() => setCreate(true)}
       >
-        <Plus /> New
+        <Plus /> <span class="hidden sm:inline">New</span>
       </button>
     </>
   )
@@ -128,7 +122,16 @@ const CharacterChats: Component = () => {
 
   return (
     <div class="flex flex-col gap-2">
-      <PageHeader title={'Chats'} />
+      <PageHeader
+        title={
+          <div class="flex w-full justify-between">
+            <div>Chats</div>
+            <div class="flex gap-1 text-base">
+              <Options />
+            </div>
+          </div>
+        }
+      />
 
       <div class="mx-auto flex h-full w-full flex-col justify-between sm:py-2">
         <div class="flex w-full items-center justify-between rounded-md">
@@ -169,21 +172,6 @@ const CharacterChats: Component = () => {
               />
             </Show>
           </div>
-
-          <div class="hidden gap-3 sm:flex">
-            <Options />
-          </div>
-
-          <div class="sm:hidden" onClick={() => setOpts(true)}>
-            <Menu class="icon-button" />
-            <Show when={opts()}>
-              <DropMenu show={true} close={() => setOpts(false)} horz="left">
-                <div class="flex w-60 flex-col gap-2 p-2">
-                  <Options />
-                </div>
-              </DropMenu>
-            </Show>
-          </div>
         </div>
       </div>
 
@@ -202,13 +190,11 @@ const CharacterChats: Component = () => {
         char={chars.map[charId()]}
         id={params.id}
       />
-      <Show when={charId()}>
-        <ImportChatModal
-          show={showImport()}
-          close={() => setImport(false)}
-          char={chars.map[charId()]}
-        />
-      </Show>
+      <ImportChatModal
+        show={showImport()}
+        close={() => setImport(false)}
+        char={chars.map[charId()]}
+      />
     </div>
   )
 }
@@ -250,31 +236,34 @@ const Chats: Component<{
               </Show>
               <For each={chats}>
                 {(chat) => (
-                  <div class="flex w-full gap-2">
+                  <div class="flex w-full justify-between gap-2 rounded-lg bg-[var(--bg-800)] p-1 hover:bg-[var(--bg-700)]">
                     <div
-                      class="flex h-12 w-full cursor-pointer flex-row items-center gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-700)]"
+                      class="flex w-10/12 cursor-pointer gap-2 sm:w-11/12"
                       onClick={() => nav(`/chat/${chat._id}`)}
                     >
-                      <div class="flex w-1/2 items-center gap-2 sm:w-5/12">
+                      <div class="flex items-center justify-center">
                         <AvatarIcon
                           avatarUrl={props.chars[chat.characterId]?.avatar}
                           class="ml-2"
                         />
-                        <span class="overflow-hidden text-ellipsis whitespace-nowrap">
-                          {props.chars[chat.characterId]?.name}
-                        </span>
                       </div>
-                      <div class="flex w-5/12 justify-end px-4">
-                        <span class="overflow-hidden text-ellipsis whitespace-nowrap">
+
+                      <div class="flex max-w-[90%] flex-col justify-center gap-0">
+                        <Show when={!char}>
+                          <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold leading-5">
+                            {props.chars[chat.characterId]?.name}
+                          </div>
+                        </Show>
+                        <div class="overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-4">
                           {chat.name || 'Untitled'}
-                        </span>
-                      </div>
-                      <div class="hidden w-1/2  justify-between text-sm sm:flex sm:w-2/12">
-                        {toDuration(new Date(chat.updatedAt))} ago
+                        </div>
+                        <div class="flex text-xs italic text-[var(--text-600)]">
+                          Updated {toDuration(new Date(chat.updatedAt))} ago.
+                        </div>
                       </div>
                     </div>
                     <div class="flex items-center" onClick={() => setDelete(chat._id)}>
-                      <Trash size={16} class="icon-button" />
+                      <Trash size={20} class="icon-button" />
                     </div>
                   </div>
                 )}
