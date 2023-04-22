@@ -42,6 +42,7 @@ export type AdapterProps = {
   settings: any
   guest?: string
   log: AppLog
+  isThirdParty?: boolean
 }
 
 export type ModelAdapter = (opts: AdapterProps) => AsyncGenerator<string | { error: any }>
