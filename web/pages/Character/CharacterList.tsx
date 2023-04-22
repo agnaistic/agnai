@@ -151,7 +151,7 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
       </Show>
       <Show when={state.list.length > 0}>
         <Show when={props.type === 'list'}>
-          <div class="flex w-full flex-col gap-2">
+          <div class="flex w-full flex-col gap-2 pb-5">
             <For each={chars()}>
               {(char) => (
                 <Character
@@ -166,7 +166,7 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
         </Show>
 
         <Show when={props.type !== 'list'}>
-          <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2">
+          <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
             <For each={chars()}>
               {(char) => (
                 <Character
