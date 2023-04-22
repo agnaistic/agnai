@@ -166,7 +166,10 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
         </Show>
 
         <Show when={props.type !== 'list'}>
-          <div class="grid w-full grid-cols-2 flex-row flex-wrap justify-center gap-2 sm:grid-cols-6">
+          <div
+            style="grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));"
+            class="grid w-full flex-row flex-wrap justify-center gap-2"
+          >
             <For each={chars()}>
               {(char) => (
                 <Character
