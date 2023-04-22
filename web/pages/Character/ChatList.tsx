@@ -5,7 +5,7 @@ import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Menu, Plus, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
-import { toDuration, toEntityMap, toMap } from '../../shared/util'
+import { setComponentPageTitle, toDuration, toEntityMap, toMap } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { DropMenu } from '../../shared/DropMenu'
@@ -19,6 +19,13 @@ const CACHE_KEY = 'agnai-chatlist-cache'
 const CharacterChats: Component = () => {
   const params = useParams()
   const cache = getListCache()
+  const chars = characterStore((s) => ({
+    map: toMap(s.characters.list),
+    list: s.characters.list,
+    loaded: s.characters.loaded,
+  }))
+  const charName = chars.map[params.id]?.name
+  setComponentPageTitle(charName ? `${charName} chat list` : 'Chat list')
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
@@ -44,12 +51,6 @@ const CharacterChats: Component = () => {
 
     return { list }
   })
-
-  const chars = characterStore((s) => ({
-    map: toMap(s.characters.list),
-    list: s.characters.list,
-    loaded: s.characters.loaded,
-  }))
 
   const chats = createMemo(() => {
     const id = charId()

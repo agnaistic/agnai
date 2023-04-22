@@ -9,7 +9,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { getFormEntries, getStrictForm } from '../../shared/util'
+import { getFormEntries, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { memoryStore } from '../../store'
 
 const newBook: AppSchema.MemoryBook = {
@@ -102,6 +102,7 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
 export default EditMemoryForm
 
 export const EditMemoryPage = () => {
+  const { updateTitle } = setComponentPageTitle('Memory book')
   let ref: any
   const nav = useNavigate()
   const params = useParams()
@@ -110,12 +111,14 @@ export const EditMemoryPage = () => {
 
   createEffect(() => {
     if (params.id === 'new') {
+      updateTitle('Create memory book')
       setEditing({ ...newBook, entries: [{ ...emptyEntry, name: 'New Entry' }] })
       return
     }
 
     const match = state.books.list.find((m) => m._id === params.id)
     if (match) {
+      updateTitle(`Edit ${match.name}`)
       setEditing(match)
     }
   })
@@ -153,7 +156,7 @@ export const EditMemoryPage = () => {
               <div class="text-lg font-bold">Defintitons</div>
               <FormLabel
                 fieldName="priorty"
-                label="Priorty"
+                label="Priority"
                 helperText="When deciding which entries to INCLUDE in the prompt, the higher the priority entries win."
               />
 

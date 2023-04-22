@@ -2,7 +2,7 @@ import { Component, createMemo, createSignal } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { getFormEntries, getStrictForm } from '../../shared/util'
+import { getFormEntries, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { CHAT_ADAPTERS, ChatAdapter, AIAdapter } from '../../../common/adapters'
 import { userStore } from '../../store'
 import { AppSchema } from '../../../srv/db/schema'
@@ -26,6 +26,7 @@ type DefaultAdapter = Exclude<ChatAdapter, 'default'>
 const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
 
 const Settings: Component = () => {
+  setComponentPageTitle('Settings')
   const state = userStore()
 
   const [tab, setTab] = createSignal(0)

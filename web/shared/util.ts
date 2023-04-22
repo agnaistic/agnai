@@ -277,8 +277,14 @@ export const setComponentPageTitle = (newTitle: string) => {
       document.title = 'Agnaistic'
     })
   })
-}
 
-export const updateComponentPageTitle = (newTitle: string) => {
-  document.title = `${newTitle} - Agnaistic`
+  const updateTitle = (newTitle: string) => {
+    document.title = `${newTitle} - Agnaistic`
+  }
+
+  // setComponentPageTitle must be called in order for consumers to
+  // obtain updateComponentPageTitle, to prevent consumers from calling
+  // updateComponentPageTitle on its own which would change the title without
+  // the onCleanup hook.
+  return { updateTitle }
 }

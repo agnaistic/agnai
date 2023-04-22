@@ -6,8 +6,10 @@ import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { defaultPresets } from '../../../common/presets'
 import { presetStore } from '../../store'
+import { setComponentPageTitle } from '../../shared/util'
 
 const PresetList: Component = () => {
+  setComponentPageTitle('Presets')
   const nav = useNavigate()
   const state = presetStore()
   const defaults = Object.entries(defaultPresets).map(([name, cfg]) => ({

@@ -9,10 +9,11 @@ import GenerationSettings from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
+import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore } from '../../store'
 
 export const GenerationPresetsPage: Component = () => {
+  const { updateTitle } = setComponentPageTitle('Preset')
   let ref: any
 
   const params = useParams()
@@ -35,6 +36,12 @@ export const GenerationPresetsPage: Component = () => {
 
   createEffect(async () => {
     if (params.id === 'new') {
+      const copySource = query.preset
+      if (copySource) {
+        updateTitle(`Copy preset ${copySource}`)
+      } else {
+        updateTitle(`Create preset`)
+      }
       setEditing()
       await Promise.resolve()
       const template = isDefaultPreset(query.preset)
@@ -70,6 +77,9 @@ export const GenerationPresetsPage: Component = () => {
       await Promise.resolve()
       const preset = state.presets.find((p) => p._id === params.id)
       setEditing(preset)
+    }
+    if (params.id && preset) {
+      updateTitle(`Edit preset ${preset.name}`)
     }
   })
 

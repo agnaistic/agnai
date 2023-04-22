@@ -16,7 +16,7 @@ import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
-import { getRootRgb, getStrictForm } from '../../shared/util'
+import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
@@ -38,6 +38,7 @@ import { ImageModal } from './ImageModal'
 const EDITING_KEY = 'chat-detail-settings'
 
 const ChatDetail: Component = () => {
+  const { updateTitle } = setComponentPageTitle('Chat')
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
@@ -50,6 +51,10 @@ const ChatDetail: Component = () => {
     retries: s.retries,
   }))
   const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
+  createEffect(() => {
+    const charName = chats.char?.name
+    updateTitle(charName ? `Chat with ${charName}` : 'Chat')
+  })
 
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
