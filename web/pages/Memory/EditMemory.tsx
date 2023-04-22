@@ -7,9 +7,10 @@ import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
 import { FormLabel } from '../../shared/FormLabel'
 import PageHeader from '../../shared/PageHeader'
+import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { getFormEntries, getStrictForm } from '../../shared/util'
+import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
 import { memoryStore } from '../../store'
 
 const newBook: AppSchema.MemoryBook = {
@@ -30,7 +31,42 @@ const emptyEntry: AppSchema.MemoryEntry = {
   enabled: true,
 }
 
-const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean }> = (props) => {
+const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
+  ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
+  ...(entry.name === '' ? ['name' as const] : []),
+  ...(entry.entry === '' ? ['entry' as const] : []),
+]
+
+type EntrySort = 'creationDate' | 'alpha'
+
+const entrySortItems = [
+  { label: 'By creation date', value: 'creationDate' },
+  { label: 'Alphabetically', value: 'alpha' },
+]
+
+const sortEntries = (entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema.MemoryEntry[] => {
+  if (by === 'creationDate') {
+    return entries
+  } else {
+    return [...entries].sort((a, b) => {
+      // ensure newly added entries are at the bottom
+      if (a.name === '') {
+        return 1
+      } else if (b.name === '') {
+        return -1
+      } else {
+        return alphaCaseInsensitiveSort(a.name, b.name)
+      }
+    })
+  }
+}
+
+const EditMemoryForm: Component<{
+  book: AppSchema.MemoryBook
+  hideSave?: boolean
+  updateEntrySort: (opn: Option<string>) => void
+  entrySort: EntrySort
+}> = (props) => {
   const [editing, setEditing] = createSignal(props.book)
   const [search, setSearch] = createSignal('')
 
@@ -48,14 +84,11 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
     setEditing({ ...book, entries: next })
   }
 
+  const entries = () => sortEntries(editing().entries, props.entrySort)
+
   return (
     <>
       <div class="flex flex-col gap-2">
-        <div class="flex w-full justify-end">
-          <Button onClick={addEntry}>
-            <Plus /> Entry
-          </Button>
-        </div>
         <FormLabel
           fieldName="id"
           label="Id"
@@ -77,14 +110,23 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
         />
         <Divider />
         <div class="text-lg font-bold">Entries</div>
-        <div class="max-w-[200px]">
-          <TextInput
-            fieldName="search"
-            placeholder="Filter by entry name..."
-            onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+        <div class="flex items-center">
+          <div class="max-w-[200px]">
+            <TextInput
+              fieldName="search"
+              placeholder="Filter by entry name..."
+              onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+            />
+          </div>
+          <Select
+            fieldName="entry-sort"
+            items={entrySortItems}
+            onChange={props.updateEntrySort}
+            value={props.entrySort}
+            class="mx-1 my-1"
           />
         </div>
-        <For each={editing().entries}>
+        <For each={entries()}>
           {(entry, i) => (
             <EntryCard
               {...entry}
@@ -94,6 +136,9 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
             />
           )}
         </For>
+        <Button onClick={addEntry}>
+          <Plus /> Entry
+        </Button>
       </div>
     </>
   )
@@ -107,6 +152,12 @@ export const EditMemoryPage = () => {
   const params = useParams()
   const state = memoryStore()
   const [editing, setEditing] = createSignal<AppSchema.MemoryBook>()
+  const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
+  const updateEntrySort = (item: Option<string>) => {
+    if (item.value === 'creationDate' || item.value === 'alpha') {
+      setEntrySort(item.value)
+    }
+  }
 
   createEffect(() => {
     if (params.id === 'new') {
@@ -122,6 +173,15 @@ export const EditMemoryPage = () => {
 
   const saveBook = (ev: Event) => {
     ev.preventDefault()
+    // Why do we set the sort to creationDate before saving, then restore the
+    // previous sort? Two reasons:
+    // - Creation date is not actually saved in the DB
+    // - When saving the memory book, the data is taken from the DOM
+    // (This should ideally be improved in a future patch)
+    // Therefore every time we save the memory book we have to ensure the DOM
+    // has the entries in creation order, for now.
+    const oldEntrySort = entrySort()
+    setEntrySort('creationDate')
     const body = getBookUpdate(ref)
     if (!params.id) return
 
@@ -133,6 +193,7 @@ export const EditMemoryPage = () => {
     } else {
       memoryStore.update(params.id, body)
     }
+    setEntrySort(oldEntrySort)
   }
 
   return (
@@ -140,7 +201,11 @@ export const EditMemoryPage = () => {
       <PageHeader title="Edit Memory Book" />
       <Show when={!!editing()}>
         <form ref={ref} onSubmit={saveBook}>
-          <EditMemoryForm book={editing()!} />
+          <EditMemoryForm
+            book={editing()!}
+            entrySort={entrySort()}
+            updateEntrySort={updateEntrySort}
+          />
           <div class="mt-4 flex justify-end">
             <Button type="submit">
               <Save />
@@ -150,10 +215,10 @@ export const EditMemoryPage = () => {
 
           <div class="mt-8 flex flex-col">
             <div class="flex flex-col gap-2">
-              <div class="text-lg font-bold">Defintitons</div>
+              <div class="text-lg font-bold">Definitions</div>
               <FormLabel
                 fieldName="priorty"
-                label="Priorty"
+                label="Priority"
                 helperText="When deciding which entries to INCLUDE in the prompt, the higher the priority entries win."
               />
 
@@ -201,7 +266,7 @@ const EntryCard: Component<
   )
   return (
     <Accordian
-      open={false}
+      open={missingFieldsInEntry(props).length > 0}
       class={cls()}
       title={
         <div class={`mb-1 flex w-full items-center gap-2`}>
