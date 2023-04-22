@@ -251,7 +251,7 @@ const Character: Component<{
         <Show when={!props.char.avatar}>
           <A
             href={`/character/${props.char._id}/chats`}
-            class="w-full items-center flex h-32 justify-center rounded-md bg-[var(--bg-700)]"
+            class="flex h-32 w-full items-center justify-center rounded-md bg-[var(--bg-700)]"
           >
             <VenetianMask size={24} />
           </A>
@@ -266,7 +266,7 @@ const Character: Component<{
             positioned, then DropMenu breaks because it relies on the nearest
             positioned parent to be the sitewide container */}
         <div
-          class="float-right mt-[-150px] mr-[3px] flex justify-end"
+          class="float-right mt-[-149px] mr-[3px] flex justify-end"
           onClick={() => setOpts(true)}
         >
           <div class=" rounded-md bg-[var(--bg-500)] p-[2px]">
