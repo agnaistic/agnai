@@ -15,6 +15,46 @@ export async function getCharacters() {
   return local.result({ characters })
 }
 
+export async function removeAvatar(charId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/character/${charId}/avatar`)
+    return res
+  }
+
+  const chars = loadItem('characters').map((ch) => {
+    if (ch._id !== charId) return ch
+    return { ...ch, avatar: '' }
+  })
+
+  local.saveChars(chars)
+  return local.result(chars.filter((ch) => ch._id === charId))
+}
+
+export async function editAvatar(charId: string, file: File) {
+  if (isLoggedIn()) {
+    const form = new FormData()
+    form.append('avatar', file)
+
+    const res = await api.upload(`/character/${charId}`, form)
+    return res
+  }
+
+  const avatar = await getImageData(file)
+  const chars = loadItem('characters')
+
+  const prev = chars.find((ch) => ch._id === charId)
+
+  if (!prev) {
+    return { result: undefined, error: `Character not found` }
+  }
+
+  const nextChar = { ...prev, avatar: avatar || prev.avatar }
+  const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
+  local.saveChars(next)
+
+  return local.result(nextChar)
+}
+
 export async function deleteCharacter(charId: string) {
   if (isLoggedIn()) {
     const res = api.method('delete', `/character/${charId}`)

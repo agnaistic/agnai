@@ -248,8 +248,12 @@ function placeholderReplace(value: string, charName: string, senderName: string)
   return value.replace(BOT_REPLACE, charName).replace(SELF_REPLACE, senderName)
 }
 
-export function formatCharacter(name: string, persona: AppSchema.Persona) {
-  switch (persona.kind) {
+export function formatCharacter(
+  name: string,
+  persona: AppSchema.Persona,
+  kind?: AppSchema.Persona['kind']
+) {
+  switch (kind || persona.kind) {
     case 'wpp': {
       const attrs = Object.entries(persona.attributes)
         .map(([key, values]) => `${key}(${values.map(quote).join(' + ')})`)

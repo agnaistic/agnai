@@ -207,10 +207,10 @@ export const msgStore = createStore<MsgState>(
       return { msgs: msgs.slice(0, index) }
     },
     async *createImage({ activeChatId }, messageId?: string) {
+      const onDone = (image: string) => handleImage(activeChatId, image)
       yield { waiting: activeChatId }
-      const res = await data.image.generateImage(messageId, (image) =>
-        handleImage(activeChatId, image)
-      )
+
+      const res = await data.image.generateImage({ messageId, onDone })
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)

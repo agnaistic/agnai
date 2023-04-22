@@ -13,6 +13,7 @@ const kinds = {
   success: 'btn-green',
   green: 'btn-green',
   warning: 'btn-orange',
+  hollow: 'btn-hollow',
 } satisfies { [key: string]: string }
 
 const sizes = {
@@ -37,6 +38,28 @@ const Button: Component<{
       `${kinds[props.schema || 'primary']} select-none items-center ${
         props.alignLeft ? '' : 'justify-center'
       } ${sizes[props.size || 'md']} ` + (props.class || '')
+    }
+    disabled={props.disabled}
+    onClick={props.onClick}
+  >
+    {props.children}
+  </button>
+)
+
+export const ToggleButton: Component<{
+  children: JSX.Element
+  onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent>
+  size?: 'sm' | 'md' | 'lg'
+  disabled?: boolean
+  toggled: boolean
+  class?: string
+  alignLeft?: boolean
+}> = (props) => (
+  <button
+    class={
+      `${kinds.hollow} select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
+        sizes[props.size || 'md']
+      } ` + (props.class || '')
     }
     disabled={props.disabled}
     onClick={props.onClick}

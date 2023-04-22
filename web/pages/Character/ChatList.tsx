@@ -46,7 +46,6 @@ const CharacterChats: Component = () => {
         onClick={wrap(() => setImport(true))}
       >
         <Import />
-        Import
       </button>
       <Show when={!!params.id}>
         <button
@@ -62,7 +61,6 @@ const CharacterChats: Component = () => {
         onClick={wrap(() => setCreate(true))}
       >
         <Plus />
-        Chat
       </button>
     </>
   )
@@ -73,14 +71,7 @@ const CharacterChats: Component = () => {
 
       <div class="mx-auto flex h-full w-full flex-col justify-between sm:py-2">
         <div class="flex h-8 items-center justify-between rounded-md">
-          <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
-            <A href={`/character/list`} class="flex items-center gap-2">
-              <ChevronLeft />
-              <Show when={!!params.id} fallback={<span>All Chats</span>}>
-                <span>Chats with {state.char?.name || '...'}</span>
-              </Show>
-            </A>
-          </div>
+          <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"></div>
 
           <div class="hidden gap-3 sm:flex">
             <Options />
@@ -138,11 +129,17 @@ const Chats: Component<{ chats: AllChat[] }> = (props) => {
             >
               <div class="flex w-1/2 items-center gap-2 sm:w-5/12">
                 <AvatarIcon avatarUrl={chars.map[chat.characterId]?.avatar} class="ml-2" />
-                {chat.character?.name || chars.map[chat.characterId]?.name}
+                <span class="overflow-hidden text-ellipsis whitespace-nowrap">
+                  {chat.character?.name || chars.map[chat.characterId]?.name}
+                </span>
               </div>
-              <div class="w-5/12 px-4">{chat.name || 'Untitled'}</div>
-              <div class="hidden w-1/2  justify-between sm:flex sm:w-2/12">
-                <div class="text-sm">{toDuration(new Date(chat.updatedAt))} ago</div>
+              <div class="flex w-5/12 justify-end px-4">
+                <span class="overflow-hidden text-ellipsis whitespace-nowrap">
+                  {chat.name || 'Untitled'}
+                </span>
+              </div>
+              <div class="hidden w-1/2  justify-between text-sm sm:flex sm:w-2/12">
+                {toDuration(new Date(chat.updatedAt))} ago
               </div>
             </div>
             <div class="flex items-center" onClick={() => setDelete(chat._id)}>
