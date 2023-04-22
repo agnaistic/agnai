@@ -202,7 +202,7 @@ const Character: Component<{
   }
 
   return (
-    <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-800)] p-1">
+    <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-700)] p-1">
       <div class="flex w-full justify-end" onClick={() => setOpts(true)}>
         <div>
           <Menu size={14} class="icon-button" />

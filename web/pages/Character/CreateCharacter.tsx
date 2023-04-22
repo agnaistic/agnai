@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -35,7 +35,7 @@ const CreateCharacter: Component = () => {
     }
   })
 
-  createEffect(() => {
+  onMount(() => {
     characterStore.getCharacters()
   })
 

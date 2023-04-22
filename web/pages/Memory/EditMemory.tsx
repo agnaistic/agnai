@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { Plus, Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
@@ -32,6 +32,7 @@ const emptyEntry: AppSchema.MemoryEntry = {
 
 const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean }> = (props) => {
   const [editing, setEditing] = createSignal(props.book)
+  const [search, setSearch] = createSignal('')
 
   const addEntry = () => {
     const book = editing()
@@ -76,8 +77,22 @@ const EditMemoryForm: Component<{ book: AppSchema.MemoryBook; hideSave?: boolean
         />
         <Divider />
         <div class="text-lg font-bold">Entries</div>
+        <div class="max-w-[200px]">
+          <TextInput
+            fieldName="search"
+            placeholder="Filter by entry name..."
+            onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+          />
+        </div>
         <For each={editing().entries}>
-          {(entry, i) => <EntryCard {...entry} index={i()} onRemove={() => onRemoveEntry(i())} />}
+          {(entry, i) => (
+            <EntryCard
+              {...entry}
+              index={i()}
+              onRemove={() => onRemoveEntry(i())}
+              search={search()}
+            />
+          )}
         </For>
       </div>
     </>
@@ -178,14 +193,18 @@ export const EditMemoryPage = () => {
   )
 }
 
-const EntryCard: Component<AppSchema.MemoryEntry & { index: number; onRemove: () => void }> = (
-  props
-) => {
+const EntryCard: Component<
+  AppSchema.MemoryEntry & { index: number; onRemove: () => void; search: string }
+> = (props) => {
+  const cls = createMemo(() =>
+    props.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
+  )
   return (
     <Accordian
       open={false}
+      class={cls()}
       title={
-        <div class="mb-1 flex w-full items-center gap-2">
+        <div class={`mb-1 flex w-full items-center gap-2`}>
           <TextInput
             placeholder="Name of entry"
             required

@@ -25,10 +25,10 @@ const Select: Component<{
   return (
     <div>
       <FormLabel label={props.label} helperText={props.helperText} />
-      <div class={`overflow-hidden bg-transparent ${props.class}`}>
+      <div class={`overflow-hidden rounded-xl bg-transparent`}>
         <select
           name={props.fieldName}
-          class={`form-field rounded-xl bg-[var(--hl-700)] py-2 px-3 shadow-none `}
+          class={`form-field rounded-xl bg-[var(--hl-700)] py-2 px-3 shadow-none ${props.class}`}
           onChange={onChange}
           disabled={props.disabled}
         >

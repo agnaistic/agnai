@@ -252,3 +252,8 @@ export function getRootRgb(name: string) {
   const value = getRootVariable(name)
   return hexToRgb(value)!
 }
+
+export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
+  const map = list.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+  return map
+}

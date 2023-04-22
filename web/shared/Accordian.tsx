@@ -5,11 +5,16 @@ const Accordian: Component<{
   title: string | JSX.Element
   children: JSX.Element
   open?: boolean
+  class?: string
 }> = (props) => {
   const [open, setOpen] = createSignal(props.open ?? true)
   const cls = createMemo(() => (open() ? '' : 'hidden'))
   return (
-    <div class="w-full select-none rounded-md bg-[var(--bg-700)] bg-opacity-50 p-2">
+    <div
+      class={`w-full select-none rounded-md bg-[var(--bg-700)] bg-opacity-50 p-2 ${
+        props.class || ''
+      }`}
+    >
       <div class="flex cursor-pointer items-center gap-2">
         <div class="icon-button" onClick={() => setOpen(!open())}>
           <Show when={open()} fallback={<ChevronUp />}>
