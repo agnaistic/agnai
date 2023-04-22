@@ -4,7 +4,18 @@ import PageHeader from '../../shared/PageHeader'
 import Select from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../srv/db/schema'
-import { Copy, Download, Edit, Menu, Save, Trash, VenetianMask, X } from 'lucide-solid'
+import {
+  Copy,
+  Download,
+  Edit,
+  Menu,
+  Save,
+  Trash,
+  VenetianMask,
+  X,
+  Import,
+  Plus,
+} from 'lucide-solid'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
 import ImportCharacterModal from '../Character/ImportCharacter'
@@ -25,6 +36,11 @@ const CharacterList: Component = () => {
   const [view, setView] = createSignal(cached.view)
   const [sort, setSort] = createSignal(cached.sort)
   const [search, setSearch] = createSignal('')
+  const [showImport, setImport] = createSignal(false)
+
+  const onImport = (char: NewCharacter) => {
+    characterStore.createCharacter(char, () => setImport(false))
+  }
 
   onMount(() => {
     characterStore.getCharacters()
@@ -41,44 +57,71 @@ const CharacterList: Component = () => {
 
   return (
     <>
-      <PageHeader title="Home" />
+      <PageHeader
+        title={
+          <div class="flex w-full justify-between">
+            <div>Characters</div>
+            <div class="flex text-base">
+              <div class="px-1">
+                <Button onClick={() => setImport(true)}>
+                  <Import />
+                  <span class="hidden sm:inline">Import</span>
+                </Button>
+              </div>
+              <div class="px-1">
+                <A href="/character/create">
+                  <Button>
+                    <Plus />
+                    <span class="hidden sm:inline">Create</span>
+                  </Button>
+                </A>
+              </div>
+            </div>
+          </div>
+        }
+      />
 
-      <div class="mb-2 flex flex-wrap items-center">
-        <div class="m-1">
-          <TextInput
-            class="m-1"
-            fieldName="search"
-            placeholder="Search by name..."
-            onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
-          />
+      <div class="mb-2 flex flex-wrap items-center justify-between">
+        <div class="flex flex-wrap items-center">
+          <div class="m-1">
+            <TextInput
+              class="m-1"
+              fieldName="search"
+              placeholder="Search by name..."
+              onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+            />
+          </div>
+          <div class="flex">
+            <Select
+              class="m-1"
+              fieldName="viewType"
+              items={[
+                { value: 'mod-asc', label: 'Modified - ASC' },
+                { value: 'mod-desc', label: 'Modified - DESC' },
+                { value: 'age-asc', label: 'Created - ASC' },
+                { value: 'age-desc', label: 'Created - DESC' },
+                { value: 'alpha-asc', label: 'Name - ASC' },
+                { value: 'alpha-desc', label: 'Name - DESC' },
+              ]}
+              value={sort()}
+              onChange={(next) => setSort(next.value)}
+            />
+
+            <Select
+              class="m-1"
+              fieldName="viewType"
+              items={[
+                { value: 'list', label: 'List' },
+                { value: 'card', label: 'Card' },
+              ]}
+              onChange={(next) => setView(next.value)}
+              value={view()}
+            />
+          </div>
         </div>
-        <Select
-          class="m-1"
-          fieldName="viewType"
-          items={[
-            { value: 'mod-asc', label: 'Modified - ASC' },
-            { value: 'mod-desc', label: 'Modified - DESC' },
-            { value: 'age-asc', label: 'Created - ASC' },
-            { value: 'age-desc', label: 'Created - DESC' },
-            { value: 'alpha-asc', label: 'Name - ASC' },
-            { value: 'alpha-desc', label: 'Name - DESC' },
-          ]}
-          value={sort()}
-          onChange={(next) => setSort(next.value)}
-        />
-
-        <Select
-          class="m-1"
-          fieldName="viewType"
-          items={[
-            { value: 'list', label: 'List' },
-            { value: 'card', label: 'Card' },
-          ]}
-          onChange={(next) => setView(next.value)}
-          value={view()}
-        />
       </div>
       <Characters type={view()} filter={search()} sort={sort()} />
+      <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
     </>
   )
 }
@@ -96,12 +139,6 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
 
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
   const [download, setDownload] = createSignal<AppSchema.Character>()
-  const [showImport, setImport] = createSignal(false)
-
-  const onImport = (char: NewCharacter) => {
-    characterStore.createCharacter(char, () => setImport(false))
-  }
-
   return (
     <>
       <Show when={!state.loaded}>
@@ -144,7 +181,6 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
         </Show>
       </Show>
 
-      <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
       <DownloadModal show={!!download()} close={() => setDownload()} char={download()} />
       <DeleteCharacterModal
         char={showDelete()}
