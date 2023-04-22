@@ -19,7 +19,7 @@ export async function generateImage(
   if (!guestId) {
     broadcastIds.push(user._id)
     const members = await store.chats.getActiveMembers(chatId)
-    broadcastIds.push(...members)
+    broadcastIds.push(...members, user._id)
   }
 
   let image: ImageAdapterResponse | undefined
@@ -64,7 +64,7 @@ export async function generateImage(
    * Otherwise: We will broadcast the image content
    */
   if (image) {
-    if (config.storage.saveImages) {
+    if (!opts.ephemeral && config.storage.saveImages) {
       const name = `${v4()}.${image.ext}`
       output = await saveFile(name, image.content)
 
@@ -80,7 +80,7 @@ export async function generateImage(
         if (msg) return
       }
     } else {
-      output = await saveFile(`temp-${v4()}.${image.ext}`, image.content, 60)
+      output = await saveFile(`temp-${v4()}.${image.ext}`, image.content, 300)
     }
   }
 
@@ -93,6 +93,8 @@ export async function generateImage(
   } else if (guestId) {
     sendGuest(guestId, message)
   }
+
+  return { output }
 }
 
 async function createImageMessage(opts: {

@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -12,6 +12,7 @@ import { useNavigate, useParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { PERSONA_FORMATS } from '../../../common/adapters'
+import { getImageData } from '../../store/data/chars'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
@@ -22,13 +23,19 @@ const options = [
 
 const CreateCharacter: Component = () => {
   const params = useParams<{ editId?: string; duplicateId?: string }>()
-  const srcId = params.editId || params.duplicateId || ''
-  const state = characterStore((s) => ({
-    creating: s.creating,
-    edit: s.characters.list.find((ch) => ch._id === srcId),
-  }))
+  const [image, setImage] = createSignal<string | undefined>()
 
-  createEffect(() => {
+  const srcId = params.editId || params.duplicateId || ''
+  const state = characterStore((s) => {
+    const edit = s.characters.list.find((ch) => ch._id === srcId)
+    setImage(edit?.avatar)
+    return {
+      creating: s.creating,
+      edit,
+    }
+  })
+
+  onMount(() => {
     characterStore.getCharacters()
   })
 
@@ -42,10 +49,17 @@ const CreateCharacter: Component = () => {
     }
   })
 
-  const updateFile = (files: FileInputResult[]) => {
-    if (!files.length) return setAvatar()
+  const updateFile = async (files: FileInputResult[]) => {
+    if (!files.length) {
+      setAvatar()
+      setImage(state.edit?.avatar)
+      return
+    }
+
     const file = files[0].file
     setAvatar(() => file)
+    const data = await getImageData(file)
+    setImage(data)
   }
 
   const onSubmit = (ev: Event) => {
@@ -121,7 +135,7 @@ const CreateCharacter: Component = () => {
         <div class="flex w-full gap-2">
           <Show when={state.edit}>
             <div class="flex items-center">
-              <AvatarIcon avatarUrl={state.edit?.avatar} />
+              <AvatarIcon format={{ corners: 'md', size: '3xl' }} avatarUrl={image()} />
             </div>
           </Show>
           <FileInput
@@ -131,6 +145,7 @@ const CreateCharacter: Component = () => {
             accept="image/png,image/jpeg"
             onUpdate={updateFile}
           />
+          <div class="flex items-end">{/* <Button>Generate</Button> */}</div>
         </div>
 
         <TextInput

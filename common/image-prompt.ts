@@ -1,4 +1,5 @@
 import { AppSchema } from '../srv/db/schema'
+import { formatCharacter } from './prompt'
 import { getEncoder } from './tokenize'
 
 const BOT_REPLACE = /\{\{char\}\}/g
@@ -9,6 +10,32 @@ export type ImagePromptOpts = {
   messages: AppSchema.ChatMessage[]
   members: AppSchema.Profile[]
   char: AppSchema.Character
+}
+
+const appearanceKeys = ['appearance', 'looks']
+
+export function createAppearancePrompt(avatar: AppSchema.Chat | AppSchema.Character) {
+  let visuals = ''
+
+  const persona = avatar.kind === 'character' ? avatar.persona : avatar.overrides
+
+  for (const key of appearanceKeys) {
+    if (persona.kind === 'text') break
+
+    const value = persona.attributes[key]
+    if (!value) continue
+
+    visuals = value.join(', ')
+    break
+  }
+
+  if (!visuals) {
+    visuals = formatCharacter('', persona, 'boostyle').replace(/ \+ /g, ', ')
+  }
+
+  const prompt = `full body portrait, ${visuals}, dramatic lighting`
+  console.log(prompt)
+  return prompt
 }
 
 export function createImagePrompt(opts: ImagePromptOpts) {

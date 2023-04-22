@@ -14,6 +14,7 @@ export { AllChat }
 
 type ChatState = {
   lastChatId: string | null
+  lastFetched: number
   loaded: boolean
   // All user chats a user owns or is a member of
   all?: {
@@ -53,6 +54,7 @@ export type NewChat = {
 }
 
 const initState: ChatState = {
+  lastFetched: 0,
   lastChatId: null,
   loaded: false,
   all: undefined,
@@ -67,6 +69,7 @@ const initState: ChatState = {
 }
 
 export const chatStore = createStore<ChatState>('chat', {
+  lastFetched: 0,
   lastChatId: localStorage.getItem('lastChatId'),
   loaded: false,
   chatProfiles: [],
@@ -199,8 +202,12 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *getAllChats({ all }) {
+    async *getAllChats({ all, lastFetched }) {
+      const diff = Date.now() - lastFetched
+      if (diff < 300000) return
+
       const res = await data.chats.getAllChats()
+      yield { lastFetched: Date.now() }
       if (res.error) {
         toastStore.error(`Could not retrieve chats`)
         return { all }

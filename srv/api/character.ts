@@ -2,10 +2,9 @@ import { Router } from 'express'
 import { assertValid } from 'frisker'
 import { store } from '../db'
 import { loggedIn } from './auth'
-import { handle, StatusError } from './wrap'
+import { errors, handle, StatusError } from './wrap'
 import { entityUpload, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
-import { v4 } from 'uuid'
 
 const router = Router()
 
@@ -84,6 +83,14 @@ const editCharacter = handle(async (req) => {
   return char
 })
 
+const removeAvatar = handle(async ({ userId, params }) => {
+  const char = await store.characters.getCharacter(userId, params.id)
+  if (!char) throw errors.NotFound
+
+  await store.characters.updateCharacter(params.id, userId, { avatar: '' })
+  return { ...char, avatar: '' }
+})
+
 const getCharacter = handle(async ({ userId, params }) => {
   const char = await store.characters.getCharacter(userId!, params.id)
   if (!char) {
@@ -104,5 +111,6 @@ router.get('/', getCharacters)
 router.post('/:id', editCharacter)
 router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)
+router.delete('/:id/avatar', removeAvatar)
 
 export default router

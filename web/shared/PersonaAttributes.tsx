@@ -113,7 +113,7 @@ const Attribute: Component<{
           fieldName={`attr-value.${props.index}`}
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
           value={props.attr.values}
-          onKeyUp={(ev) => props.onKey(ev, props.index)}
+          onKeyUp={(ev) => props.onKey(ev.key, props.index)}
         />
       </div>
       <div class="1/12 flex items-center" onClick={() => props.remove(props.index)}>

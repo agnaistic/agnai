@@ -122,7 +122,7 @@ const LoginForm: Component<FormProps> = (props) => {
     const { username, password } = getStrictForm(evt, { username: 'string', password: 'string' })
     if (!username || !password) return
 
-    userStore.login(username, password, () => navigate('/character/list'))
+    userStore.login(username, password, () => navigate('/dashboard'))
   }
 
   return (

@@ -3,6 +3,22 @@ import { logger } from '../logger'
 import { getEndTokens, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
+import { AppSchema } from '../db/schema'
+import { StatusError } from '../api/wrap'
+import { config } from '../config'
+
+export type LuminAIMemoryEntry = {
+  memory_book_id: string
+  memory_id: number
+  source: string
+  entry: string
+  priority: number
+  weight: number
+  enabled: boolean
+  dist: number
+}
+
+export const FILAMENT_ENABLED = config.adapters.includes('luminai')
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
 
@@ -60,4 +76,41 @@ export const handleLuminAI: ModelAdapter = async function* ({
     yield { error: resp.body }
     return
   }
+}
+
+export const filament = {
+  embedMemory,
+  retrieveMemories,
+}
+
+export async function embedMemory(user: AppSchema.User, book: AppSchema.MemoryBook) {
+  if (!user.luminaiUrl) {
+    throw new Error(`LuminAI URL not set`)
+  }
+
+  const url = `${user.luminaiUrl}/api/memory/${book._id}/embed`
+  const res = await needle('post', url, { memory_book: book })
+
+  if (res.statusCode && res.statusCode >= 400) {
+    throw new StatusError(`Failed memory embedding (${res.statusCode})`, res.statusCode)
+  }
+}
+
+export async function retrieveMemories(user: AppSchema.User, bookId: string, lines: string[]) {
+  if (!user.luminaiUrl) {
+    throw new Error(`LuminAI URL not set`)
+  }
+
+  const url = `${user.luminaiUrl}/api/memory/${bookId}/prompt`
+  const res = await needle('post', url, { prompt: lines, num_memories_per_sentence: 3 })
+
+  if (res.statusCode && res.statusCode >= 400) {
+    throw new StatusError(
+      `Failed to retrieve memories (${res.statusCode}): ${res.body.message || res.statusMessage}`,
+      res.statusCode
+    )
+  }
+
+  const result = res.body as LuminAIMemoryEntry[]
+  return result
 }

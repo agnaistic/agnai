@@ -1,4 +1,3 @@
-import { ImageSettings } from '../db/image-schema'
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 
@@ -7,6 +6,7 @@ export type ImageGenerateRequest = {
   prompt: string
   chatId: string
   messageId?: string
+  ephemeral?: boolean
 }
 
 export type ImageAdapter = (

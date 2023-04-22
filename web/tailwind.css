@@ -270,12 +270,20 @@ body {
     @apply flex h-fit gap-1;
     @apply transition-colors duration-100;
     @apply rounded-md px-3;
+    @apply disabled:cursor-not-allowed;
   }
 
   .btn-primary {
     @apply btn-base;
     @apply bg-[var(--hl-700)] enabled:hover:bg-[var(--hl-500)] enabled:active:bg-[var(--hl-400)];
-    @apply disabled:cursor-not-allowed disabled:bg-[var(--hl-900)] disabled:text-[var(--text-700)];
+    @apply disabled:bg-[var(--hl-900)] disabled:text-[var(--text-700)];
+  }
+
+  .btn-hollow {
+    @apply btn-base;
+    @apply bg-transparent text-[var(--hl-500)] enabled:hover:bg-[var(--hl-900)];
+    border: 1px solid var(--hl-500);
+    @apply border-[var(--hl-800)] disabled:text-[var(--hl-800)];
   }
 
   .btn-secondary {
@@ -451,4 +459,9 @@ body {
 
 .markdown > ol {
   list-style-type: decimal;
+}
+
+.markdown > blockquote {
+  @apply pl-4;
+  border-left: 0.25em solid var(--bg-300);
 }

@@ -1,9 +1,20 @@
 import { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, OPENAI_MODELS } from './adapters'
-import { getMemoryPrompt, MemoryPrompt, MEMORY_PREFIX } from './memory'
+import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder, getEncoder } from './tokenize'
+
+export type PromptParts = {
+  scenario?: string
+  greeting?: string
+  sampleChat?: string[]
+  persona: string
+  gaslight: string
+  post: string[]
+  gaslightHasChat: boolean
+  memory?: string
+}
 
 export type Prompt = {
   prompt: string
@@ -112,8 +123,8 @@ export function buildPrompt(
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
-    if (parts.memory?.prompt) {
-      pre.push(`${MEMORY_PREFIX}${parts.memory.prompt}`)
+    if (parts.memory) {
+      pre.push(`${MEMORY_PREFIX}${parts.memory}`)
     }
 
     if (!hasStart) pre.push('<START>')
@@ -162,17 +173,6 @@ export function buildPrompt(
   }
 }
 
-export type PromptParts = {
-  scenario?: string
-  greeting?: string
-  sampleChat?: string[]
-  persona: string
-  gaslight: string
-  post: string[]
-  gaslightHasChat: boolean
-  memory?: MemoryPrompt
-}
-
 export function getPromptParts(
   opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
   lines: string[]
@@ -206,7 +206,8 @@ export function getPromptParts(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
-  parts.memory = getMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
+  const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
+  if (memory) parts.memory = memory.prompt
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
 
@@ -214,7 +215,7 @@ export function getPromptParts(
   parts.gaslight = gaslight
     .replace(/\{\{example_dialogue\}\}/g, sampleChat)
     .replace(/\{\{scenario\}\}/g, parts.scenario || '')
-    .replace(/\{\{memory\}\}/g, parts.memory?.prompt || '')
+    .replace(/\{\{memory\}\}/g, parts.memory || '')
     .replace(/\{\{name\}\}/g, char.name)
     .replace(/\<BOT\>/g, char.name)
     .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
@@ -247,8 +248,12 @@ function placeholderReplace(value: string, charName: string, senderName: string)
   return value.replace(BOT_REPLACE, charName).replace(SELF_REPLACE, senderName)
 }
 
-export function formatCharacter(name: string, persona: AppSchema.Persona) {
-  switch (persona.kind) {
+export function formatCharacter(
+  name: string,
+  persona: AppSchema.Persona,
+  kind?: AppSchema.Persona['kind']
+) {
+  switch (kind || persona.kind) {
     case 'wpp': {
       const attrs = Object.entries(persona.attributes)
         .map(([key, values]) => `${key}(${values.map(quote).join(' + ')})`)
@@ -295,6 +300,7 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
         name: char.name,
         first_mes: char.greeting,
         scenario: char.scenario,
+        personality: formatCharacter(char.name, char.persona),
         description: formatCharacter(char.name, char.persona),
         mes_example: char.sampleChat,
       }
@@ -512,4 +518,40 @@ function getContextLimit(
     default:
       throw new Error(`Unknown adapter: ${adapter}`)
   }
+}
+
+export type TrimOpts = {
+  input: string | string[]
+
+  /**
+   * Which direction to start counting from.
+   *
+   * I.e.,
+   * - If 'top', the bottom of the text will be trimmed
+   * - If 'bottom', the top of the text will be trimed
+   */
+  start: 'top' | 'bottom'
+  encoder: Encoder
+  tokenLimit: number
+}
+
+/**
+ * Remove lines from a body of text that contains line breaks
+ */
+export function trimTokens(opts: TrimOpts) {
+  const text = Array.isArray(opts.input) ? opts.input.slice() : opts.input.split('\n')
+  if (opts.start === 'bottom') text.reverse()
+
+  let tokens = 0
+  let output: string[] = []
+
+  for (const line of text) {
+    tokens += opts.encoder(line)
+    if (tokens > opts.tokenLimit) break
+
+    if (opts.start === 'top') output.push(line)
+    else output.unshift(line)
+  }
+
+  return output
 }

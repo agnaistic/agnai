@@ -15,7 +15,9 @@ const TextInput: Component<{
   required?: boolean
   class?: string
   pattern?: string
-  onKeyUp?: (key: string) => void
+  onKeyUp?: (
+    ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 }> = (props) => {
   let ref: any
@@ -60,7 +62,7 @@ const TextInput: Component<{
             placeholder={placeholder()}
             value={value()}
             class={'form-field focusable-field w-full rounded-xl px-4 py-2 ' + props.class}
-            onkeyup={(ev) => props.onKeyUp?.(ev.key)}
+            onkeyup={(ev) => props.onKeyUp?.(ev)}
             onchange={(ev) => props.onChange?.(ev)}
             disabled={props.disabled}
             pattern={props.pattern}
@@ -79,6 +81,7 @@ const TextInput: Component<{
             props.class
           }
           disabled={props.disabled}
+          onKeyUp={(ev) => props.onKeyUp?.(ev)}
           onInput={resize}
         />
       </Show>

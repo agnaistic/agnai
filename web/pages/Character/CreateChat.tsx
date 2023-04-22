@@ -37,10 +37,6 @@ const CreateChatModal: Component<{
   })
 
   createEffect(() => {
-    if (!state.loaded) {
-      characterStore.getCharacters()
-    }
-
     if (!selectedChar() && !props.char && state.chars.length) {
       if (props.id) {
         const char = state.chars.find((ch) => ch._id === props.id)
