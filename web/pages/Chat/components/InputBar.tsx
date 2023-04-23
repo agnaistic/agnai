@@ -1,5 +1,5 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
-import { Component, createMemo, createSignal, onMount, Setter, Show } from 'solid-js'
+import { ImagePlus, MailPlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
+import { Component, createMemo, createSignal, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -19,6 +19,7 @@ const InputBar: Component<{
   setOoc: Setter<boolean>
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
+  request: (msg: string) => void
 }> = (props) => {
   let ref: any
 
@@ -108,6 +109,11 @@ const InputBar: Component<{
     setMenu(true)
   }
 
+  const request = () => {
+    props.request(state.lastMsg.msg)
+    setMenu(false)
+  }
+
   return (
     <div class="relative flex items-center justify-center">
       <textarea
@@ -174,6 +180,9 @@ const InputBar: Component<{
                 <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
+            <Button schema="secondary" class="w-full" onClick={request} alignLeft>
+              <MailPlus size={18} /> Generate New
+            </Button>
           </div>
         </DropMenu>
       </div>

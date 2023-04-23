@@ -46,6 +46,10 @@ export type GenerateOpts =
   | { kind: 'send'; text: string }
   | { kind: 'ooc'; text: string }
   /**
+   * A user request a message from a character
+   */
+  | { kind: 'request'; characterId: string }
+  /**
    * Either:
    * - The last message in the chat is a user message so we are going to generate a new response
    * - The last message in the chat is a bot message so we are going to re-generate a response and update the 'replacingId' chat message
@@ -87,7 +91,8 @@ export async function generateResponseV2(opts: GenerateOpts) {
     opts.kind === 'send' ||
     opts.kind === 'continue' ||
     opts.kind === 'ooc' ||
-    opts.kind === 'summary'
+    opts.kind === 'summary' ||
+    opts.kind === 'request'
       ? entities.messages
       : replacing
       ? entities.messages.slice(0, -1)
