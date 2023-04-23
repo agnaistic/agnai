@@ -21,7 +21,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const chatId = params.id
   assertValid(
     {
-      kind: ['send', 'retry', 'continue', 'self'],
+      kind: ['send', 'retry', 'continue', 'self', 'request'],
       char: 'any',
       sender: 'any',
       members: ['any'],
@@ -158,6 +158,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   switch (body.kind) {
     case 'self':
+    case 'request':
     case 'send': {
       const msg = await store.msgs.createChatMessage({
         chatId,

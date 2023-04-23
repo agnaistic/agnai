@@ -1,4 +1,4 @@
-import { ChevronUp, ImagePlus, PlusCircle } from 'lucide-solid'
+import { ChevronUp, ImagePlus, MailPlus, PlusCircle } from 'lucide-solid'
 import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
@@ -12,6 +12,7 @@ const InputBar: Component<{
   swiped: boolean
   send: (msg: string, onSuccess?: () => void) => void
   more: (msg: string) => void
+  request: (msg: string) => void
 }> = (props) => {
   let ref: any
   const user = userStore()
@@ -58,6 +59,11 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const request = () => {
+    props.request(state.lastMsg.msg)
+    setMenu(false)
+  }
+
   return (
     <div class="flex items-center justify-center max-sm:pb-2">
       <textarea
@@ -96,6 +102,9 @@ const InputBar: Component<{
                 <PlusCircle size={18} /> Generate More
               </Button>
             </Show>
+            <Button schema="secondary" class="w-full" onClick={request} alignLeft>
+              <MailPlus size={18} /> Generate New
+            </Button>
           </div>
         </DropMenu>
       </div>

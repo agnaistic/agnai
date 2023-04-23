@@ -157,6 +157,8 @@ const ChatDetail: Component = () => {
 
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
 
+  const requestMessage = () => msgStore.request(chats.chat?._id!, chats.chat?.characterId)
+
   const cancelSwipe = () => setSwipe(0)
 
   const confirmSwipe = (msgId: string) => {
@@ -241,6 +243,7 @@ const ChatDetail: Component = () => {
               swiped={swipe() !== 0}
               send={sendMessage}
               more={moreMessage}
+              request={requestMessage}
             />
             <Show when={isOwner()}>
               <SwipeMessage
