@@ -176,13 +176,13 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
 }
 
 const InviteBadge: Component = () => {
-  const inv = inviteStore()
+  const inv = inviteStore(s => ({ count: s.received.length }))
 
   return (
     <>
-      <Show when={inv.invites.length}>
+      <Show when={inv.count}>
         <div class="flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs">
-          {inv.invites.length}
+          {inv.count}
         </div>
       </Show>
     </>

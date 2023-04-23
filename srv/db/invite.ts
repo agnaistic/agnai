@@ -20,9 +20,13 @@ export type NewInvite = {
 }
 
 export async function list(userId: string) {
-  const invites = await db('chat-invite').find({ kind: 'chat-invite', invitedId: userId }).toArray()
+  const invites = await db('chat-invite')
+    .find({ kind: 'chat-invite', $or: [{ invitedId: userId }, { byUserId: userId }] })
+    .toArray()
 
-  const userIds = Array.from(new Set(invites.map((i) => i.byUserId)))
+  const userIds = Array.from(new Set(invites.flatMap((i) => [i.byUserId, i.invitedId]))).filter(
+    (id) => id !== userId
+  )
   const chatIds = Array.from(new Set(invites.map((i) => i.chatId)))
   const characterIds = Array.from(new Set(invites.map((i) => i.characterId)))
 
@@ -39,7 +43,8 @@ export async function list(userId: string) {
   ])
 
   return {
-    invites,
+    sent: invites.filter((i) => i.byUserId === userId),
+    received: invites.filter((i) => i.invitedId === userId),
     profiles,
     chats,
     characters,

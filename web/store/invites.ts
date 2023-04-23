@@ -6,14 +6,16 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
 type InviteState = {
-  invites: AppSchema.ChatInvite[]
+  sent: AppSchema.ChatInvite[]
+  received: AppSchema.ChatInvite[]
   chars: Record<string, AppSchema.Character>
   profiles: Record<string, AppSchema.Profile>
   chats: AppSchema.Chat[]
 }
 
 const initState: InviteState = {
-  invites: [],
+  sent: [],
+  received: [],
   chars: {},
   profiles: {},
   chats: [],
@@ -30,7 +32,8 @@ export const inviteStore = createStore<InviteState>(
   return {
     async getInvites() {
       const res = await api.get<{
-        invites: AppSchema.ChatInvite[]
+        sent: AppSchema.ChatInvite[]
+        received: AppSchema.ChatInvite[]
         chars: AppSchema.Character[]
         chats: AppSchema.Chat[]
         profiles: AppSchema.Profile[]
@@ -38,7 +41,8 @@ export const inviteStore = createStore<InviteState>(
       if (res.error) return toastStore.error('Failed to retrieve invites')
       if (res.result) {
         return {
-          invites: res.result.invites,
+          sent: res.result.sent,
+          received: res.result.received,
           chars: res.result.chars.reduce(
             (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
             {}
@@ -58,21 +62,29 @@ export const inviteStore = createStore<InviteState>(
         toastStore.success(`Successfully invited user to conversation`)
       }
     },
-    async *accept({ invites }, inviteId: string, onSuccess?: Function) {
+    async *accept({ received }, inviteId: string, onSuccess?: Function) {
       const res = await api.post(`/chat/${inviteId}/accept`)
       if (res.error) return toastStore.error(`Failed to accept invite: ${res.error}`)
       if (res.result) {
         toastStore.success(`Invitation accepted`)
-        yield { invites: invites.filter((inv) => inv._id !== inviteId) }
+        yield { received: received.filter((inv) => inv._id !== inviteId) }
         onSuccess?.()
       }
     },
-    async reject({ invites }, inviteId: string) {
+    async reject({ received }, inviteId: string) {
       const res = await api.post(`/chat/${inviteId}/reject`)
-      if (res.error) return toastStore.error(`Failed to accept invite: ${res.error}`)
+      if (res.error) return toastStore.error(`Failed to reject invite: ${res.error}`)
       if (res.result) {
         toastStore.normal(`Invitation rejected`)
-        return { invites: invites.filter((inv) => inv._id !== inviteId) }
+        return { received: received.filter((inv) => inv._id !== inviteId) }
+      }
+    },
+    async cancel({ sent }, inviteId: string) {
+      const res = await api.post(`/chat/${inviteId}/cancel`)
+      if (res.error) return toastStore.error(`Failed to cancel invite: ${res.error}`)
+      if (res.result) {
+        toastStore.normal(`Invitation cancelled`)
+        return { sent: sent.filter((inv) => inv._id !== inviteId) }
       }
     },
   }

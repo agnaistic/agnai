@@ -5,9 +5,9 @@ import { sendMany, sendOne } from '../ws'
 import { notificationDispatch } from '../../notification-dispatch'
 
 export const getInvites = handle(async (req) => {
-  const { invites, chats, characters, profiles } = await store.invites.list(req.userId!)
+  const { sent, received, chats, characters, profiles } = await store.invites.list(req.userId!)
 
-  return { invites, chats, chars: characters, profiles }
+  return { sent, received, chats, chars: characters, profiles }
 })
 
 export const createInvite = handle(async (req) => {
@@ -45,12 +45,20 @@ export const acceptInvite = handle(async (req) => {
 })
 
 export const rejectInvite = handle(async (req) => {
-  const { invite, userId } = await loadInvite(req)
-  await store.invites.deleteInvite(userId, invite._id)
-  notificationDispatch(invite.byUserId, {
-    text: 'User rejected your invite',
-    link: `/invites`,
-  })
+  const userId = req.userId!
+  const invite = await store.invites.getInvite(userId, req.params.inviteId)
+  if (invite) {
+    await store.invites.deleteInvite(userId, invite._id)
+    notificationDispatch(invite.byUserId, {
+      text: 'User rejected your invite',
+      link: `/invites`,
+    })
+  }
+  return { success: true }
+})
+
+export const cancelInvite = handle(async (req) => {
+  await store.invites.deleteInvite(req.userId, req.params.inviteId)
   return { success: true }
 })
 
