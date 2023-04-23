@@ -10,7 +10,12 @@ import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm, setComponentPageTitle } from '../../shared/util'
+import {
+  alphaCaseInsensitiveSort,
+  getFormEntries,
+  getStrictForm,
+  setComponentPageTitle,
+} from '../../shared/util'
 import { memoryStore } from '../../store'
 
 const newBook: AppSchema.MemoryBook = {
