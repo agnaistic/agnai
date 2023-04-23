@@ -302,8 +302,14 @@ function sort(direction: string) {
   return (left: AppSchema.Character, right: AppSchema.Character) => {
     const [kind, dir] = direction.split('-')
     const mod = dir === 'asc' ? 1 : -1
-    const l = kind === 'alpha' ? left.name.toLowerCase() : kind === 'age' ? left.createdAt : left.updatedAt
-    const r = kind === 'alpha' ? right.name.toLowerCase() : kind === 'age' ? right.createdAt : right.updatedAt
+    const l =
+      kind === 'alpha' ? left.name.toLowerCase() : kind === 'age' ? left.createdAt : left.updatedAt
+    const r =
+      kind === 'alpha'
+        ? right.name.toLowerCase()
+        : kind === 'age'
+        ? right.createdAt
+        : right.updatedAt
 
     return l > r ? mod : l === r ? 0 : -mod
   }
