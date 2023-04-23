@@ -42,8 +42,9 @@ export type PromptOpts = {
   book?: AppSchema.MemoryBook
 }
 
-export const BOT_REPLACE = /\{\{char\}\}/g
-export const SELF_REPLACE = /\{\{user\}\}/g
+/** {{user}}, <user>, {{char}}, <bot>, case insensitive */
+export const BOT_REPLACE = /(\{\{char\}\}|<BOT>)/gi
+export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
 
 /**
  * This is only ever invoked client-side
@@ -222,10 +223,8 @@ export function getPromptParts(
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
       .replace(/\{\{name\}\}/gi, char.name)
       .replace(/\<BOT\>/gi, char.name)
-      .replace(/\<USER\>/gi, char.name)
+      .replace(/\<USER\>/gi, sender)
       .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
-      .replace(/\{\{char\}\}/gi, char.name)
-      .replace(/\{\{user\}\}/gi, sender)
   }
 
   parts.gaslight = gaslight
@@ -234,10 +233,8 @@ export function getPromptParts(
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
     .replace(/\{\{name\}\}/gi, char.name)
     .replace(/\<BOT\>/gi, char.name)
-    .replace(/\<USER\>/gi, char.name)
+    .replace(/\<USER\>/gi, sender)
     .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
-    .replace(/\{\{char\}\}/gi, char.name)
-    .replace(/\{\{user\}\}/gi, sender)
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
