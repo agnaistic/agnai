@@ -1,5 +1,5 @@
 import { ChevronUp, ImagePlus, MailPlus, PlusCircle } from 'lucide-solid'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -12,7 +12,7 @@ const InputBar: Component<{
   swiped: boolean
   send: (msg: string, onSuccess?: () => void) => void
   more: (msg: string) => void
-  request: (msg: string) => void
+  request: (msg: string, charId: string) => void
 }> = (props) => {
   let ref: any
   const user = userStore()
@@ -59,8 +59,8 @@ const InputBar: Component<{
     setMenu(false)
   }
 
-  const request = () => {
-    props.request(state.lastMsg.msg)
+  const request = (charId: string) => {
+    props.request(state.lastMsg.msg, charId)
     setMenu(false)
   }
 
@@ -102,9 +102,13 @@ const InputBar: Component<{
                 <PlusCircle size={18} /> Generate More
               </Button>
             </Show>
-            <Button schema="secondary" class="w-full" onClick={request} alignLeft>
-              <MailPlus size={18} /> Generate New
-            </Button>
+            <For each={props.chat.characterIds?.filter((c) => c != state.lastMsg.characterId)}>
+              {(charId, i) => (
+                <Button schema="secondary" class="w-full" onClick={() => request(charId)} alignLeft>
+                  <MailPlus size={18} /> Generate New: {charId}
+                </Button>
+              )}
+            </For>
           </div>
         </DropMenu>
       </div>
