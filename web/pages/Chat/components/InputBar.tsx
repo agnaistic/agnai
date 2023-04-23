@@ -1,5 +1,5 @@
 import { ImagePlus, MailPlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
-import { Component, createMemo, createSignal, Setter, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -19,7 +19,7 @@ const InputBar: Component<{
   setOoc: Setter<boolean>
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
-  request: (msg: string) => void
+  request: (msg: string, charId: string) => void
 }> = (props) => {
   let ref: any
 
@@ -109,8 +109,8 @@ const InputBar: Component<{
     setMenu(true)
   }
 
-  const request = () => {
-    props.request(state.lastMsg.msg)
+  const request = (charId: string) => {
+    props.request(state.lastMsg.msg, charId)
     setMenu(false)
   }
 
@@ -180,9 +180,13 @@ const InputBar: Component<{
                 <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
-            <Button schema="secondary" class="w-full" onClick={request} alignLeft>
-              <MailPlus size={18} /> Generate New
-            </Button>
+            <For each={props.chat.characterIds?.filter((c) => c != state.lastMsg.characterId)}>
+              {(charId, i) => (
+                <Button schema="secondary" class="w-full" onClick={() => request(charId)} alignLeft>
+                  <MailPlus size={18} /> Generate New: {charId}
+                </Button>
+              )}
+            </For>
           </div>
         </DropMenu>
       </div>
