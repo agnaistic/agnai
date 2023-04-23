@@ -22,9 +22,22 @@ const CHAT_MODELS: Record<string, boolean> = {
 }
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, settings, sender, log, guest, lines, parts, gen, kind } =
-    opts
-  const base = getBaseUrl(user)
+  const {
+    char,
+    members,
+    user,
+    prompt,
+    settings,
+    sender,
+    log,
+    guest,
+    lines,
+    parts,
+    gen,
+    kind,
+    isThirdParty,
+  } = opts
+  const base = getBaseUrl(user, isThirdParty)
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
     return
@@ -163,8 +176,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 }
 
-function getBaseUrl(user: AppSchema.User) {
-  if (user.thirdPartyFormat === 'openai' && user.koboldUrl) {
+function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
+  if (isThirdParty && user.thirdPartyFormat === 'openai' && user.koboldUrl) {
     return { url: user.koboldUrl, changed: true }
   }
 
