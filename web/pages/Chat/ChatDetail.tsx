@@ -11,13 +11,13 @@ import {
 import ChatExport from './ChatExport'
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
-import { getAdapter } from '../../../common/prompt'
+import { getAdapter, getChatPreset } from '../../../common/prompt'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
+import { chatStore, presetStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -42,6 +42,7 @@ const ChatDetail: Component = () => {
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
+  const presets = presetStore()
   const cfg = settingStore()
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.chatProfiles }))
   const msgs = msgStore((s) => ({
@@ -50,6 +51,7 @@ const ChatDetail: Component = () => {
     waiting: s.waiting,
     retries: s.retries,
   }))
+
   const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
   createEffect(() => {
     const charName = chats.char?.name
@@ -111,11 +113,14 @@ const ChatDetail: Component = () => {
   }
 
   const adapter = createMemo(() => {
-    if (!chats.chat || !user.user) return ''
+    if (!chats.chat?.adapter || !user.user) return ''
     if (chats.chat.userId !== user.user._id) return ''
 
-    const { adapter, preset, isThirdParty } = getAdapter(chats.chat!, user.user!)
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${preset}`
+    const { adapter, preset: presetType, isThirdParty } = getAdapter(chats.chat!, user.user!)
+    const preset = getChatPreset(chats.chat, user.user!, presets.presets)
+    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
+      'name' in preset ? preset.name : presetType
+    }`
     return label
   })
 

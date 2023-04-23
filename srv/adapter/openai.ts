@@ -61,10 +61,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       all.push(...lines)
     }
 
-    if (gen.ultimeJailbreak) {
-      const ujb = gen.ultimeJailbreak.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, user)
-      history.push({ role: 'system', content: ujb })
-      tokens += encoder(ujb)
+    if (parts.ujb) {
+      history.push({ role: 'system', content: parts.ujb })
+      tokens += encoder(parts.ujb)
     }
 
     if (kind === 'continue') {

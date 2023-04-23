@@ -140,7 +140,7 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
         toastStore.success('Updated chat settings')
 
-        if (all) {
+        if (all?.chats) {
           yield {
             all: {
               chars: all.chars,
