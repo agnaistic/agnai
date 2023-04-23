@@ -297,7 +297,8 @@ function parseMessage(
   return msg
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, profile?.handle || 'You')
-    .replace(/(<|>)/g, '*')
+    .replace(/(<)/g, '‹')
+    .replace(/(>)/g, '›')
 }
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
