@@ -316,8 +316,8 @@ function groupAndSort(
 
   const groups: ChatGroup[] = []
   const chars = allChars.slice().sort((left, right) => {
-    const l = kind === 'age' ? left.createdAt : left.name
-    const r = kind === 'age' ? right.createdAt : right.name
+    const l = kind === 'age' ? left.createdAt : left.name.toLowerCase()
+    const r = kind === 'age' ? right.createdAt : right.name.toLowerCase()
     return l > r ? mod : l === r ? 0 : -mod
   })
 
