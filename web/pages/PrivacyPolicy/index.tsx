@@ -138,7 +138,7 @@ Please contact us on our [discord server ("https://discord.gg/luminai")](https:/
 const PrivacyPolicyPage: Component = () => {
   return (
     <div>
-      <PageHeader title={<>Privacy Policy</>} />
+      <PageHeader title={<>Agnaistic Privacy Policy</>} />
       <div class="markdown flex flex-col gap-4" innerHTML={markdown.makeHtml(text)}></div>
     </div>
   )
