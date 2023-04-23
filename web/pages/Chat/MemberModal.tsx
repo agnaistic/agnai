@@ -20,9 +20,14 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
     chatStore.uninviteUser(state.active?.chat._id, member.userId)
   }
 
-  const nonOwners = createMemo(() => {
+  const users = createMemo(() => {
     const profiles = state.active?.participantIds.map((id) => state.memberIds[id])
     return profiles || []
+  })
+
+  const characters = createMemo(() => {
+    const chars = state.active?.chat.characterIds
+    return chars || []
   })
 
   const Footer = (
@@ -35,11 +40,14 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
   return (
     <>
       <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
-        <Show when={nonOwners().length === 0}>
+        <Show when={users().length === 0 && characters().length === 0}>
           <div class="flex w-full justify-center">There are no particpants in this chat.</div>
         </Show>
-        <For each={nonOwners()}>
+        <For each={users()}>
           {(member) => <Participant member={member} remove={setDeleting} canRemove={isOwner()} />}
+        </For>
+        <For each={characters()}>
+          {(charId) => <CharacterParticipant charId={charId} />}
         </For>
       </Modal>
 
@@ -74,6 +82,16 @@ const Participant: Component<{
           </Button>
         </Show>
       </div>
+    </div>
+  )
+}
+
+const CharacterParticipant: Component<{
+  charId: string
+}> = (props) => {
+  return (
+    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-2">
+      {props.charId}
     </div>
   )
 }

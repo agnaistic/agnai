@@ -157,7 +157,7 @@ const ChatDetail: Component = () => {
 
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
 
-  const requestMessage = () => msgStore.request(chats.chat?._id!, chats.chat?.characterId)
+  const requestMessage = (charId: string) => msgStore.request(chats.chat?._id!, charId)
 
   const cancelSwipe = () => setSwipe(0)
 
@@ -457,7 +457,7 @@ const InviteModal: Component<{
               helperText="The character to invite"
               items={characterItems()}
               value={selectedCharacterId()}
-              onChange={setSelectedCharacterId}
+              onChange={item => setSelectedCharacterId(item.value)}
             />
           </Show>
         </Show>
