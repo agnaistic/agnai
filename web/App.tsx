@@ -1,4 +1,4 @@
-import {Component, createEffect, Show} from 'solid-js'
+import { Component, createEffect, Show } from 'solid-js'
 import { Route, Routes } from '@solidjs/router'
 import CharacterRoutes from './pages/Character'
 import Settings from './pages/Settings'
@@ -20,10 +20,9 @@ import './dots.css'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
 import MainLayout from './layouts/MainLayout'
-import {settingStore, userStore} from "./store";
+import { settingStore, userStore } from './store'
 import ChangeLog from './pages/Home/ChangeLog'
 import CharacterList from './pages/Character/CharacterList'
-
 
 const App: Component = () => {
   const state = userStore()
@@ -40,9 +39,7 @@ const App: Component = () => {
   return (
     <>
       <Show when={cfg.init}>
-        <Show when={state.isPastPolicyGate}>
-          Policy Failure
-        </Show>
+        <Show when={state.isPastPolicyGate}>Policy Failure</Show>
         <Show when={!state.isPastPolicyGate}>
           <MainLayout>
             <Routes>
