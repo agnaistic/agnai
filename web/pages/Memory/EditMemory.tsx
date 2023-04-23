@@ -114,7 +114,12 @@ const EditMemoryForm: Component<{
           placeholder="(Optional) A description for your memory book"
         />
         <Divider />
-        <div class="text-lg font-bold">Entries</div>
+        <div class="sticky top-0 z-10 flex items-center justify-between bg-[var(--bg-900)] py-2">
+          <div class="text-lg font-bold">Entries</div>
+          <Button onClick={addEntry}>
+            <Plus /> Entry
+          </Button>
+        </div>
         <div class="flex items-center">
           <div class="max-w-[200px]">
             <TextInput

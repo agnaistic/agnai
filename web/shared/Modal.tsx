@@ -52,7 +52,7 @@ const Modal: Component<Props> = (props) => {
 
             {/* 132px is the height of the title + footer*/}
             <div
-              class={`max-h-[calc(80vh-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto p-4 text-lg`}
+              class={`max-h-[calc(80vh-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}
             >
               {props.children}
             </div>
