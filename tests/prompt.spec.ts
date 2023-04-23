@@ -243,10 +243,12 @@ describe('Prompt building', () => {
   })
 
   it('uses the correct replaces for all instances of {{char}}, {{user}}, <BOT>, and <USER>, case insensitive', () => {
-    const input = "{{char}} loves {{user}}, {{CHAR}} hates {{USER}}, {{Char}} eats {{User}}, <BOT> drinks <USER>, <bot> boops <user>, <Bot> kicks <User>"
-    const expectedOutput = "Haruhi loves Chad, Haruhi hates Chad, Haruhi eats Chad, Haruhi drinks Chad, Haruhi boops Chad, Haruhi kicks Chad"
-    const actualOutput = input.replace(BOT_REPLACE, "Haruhi").replace(SELF_REPLACE, "Chad")
-    expect(actualOutput).to.be(expectedOutput)
+    const input =
+      '{{char}} loves {{user}}, {{CHAR}} hates {{USER}}, {{Char}} eats {{User}}, <BOT> drinks <USER>, <bot> boops <user>, <Bot> kicks <User>'
+    const expectedOutput =
+      'Haruhi loves Chad, Haruhi hates Chad, Haruhi eats Chad, Haruhi drinks Chad, Haruhi boops Chad, Haruhi kicks Chad'
+    const actualOutput = input.replace(BOT_REPLACE, 'Haruhi').replace(SELF_REPLACE, 'Chad')
+    expect(actualOutput).to.equal(expectedOutput)
   })
 })
 
