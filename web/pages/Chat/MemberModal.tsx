@@ -46,7 +46,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
     chatStore.uninviteUser(state.active?.chat._id, member.userId)
   }
 
-  const nonOwners = createMemo(() => {
+  const users = createMemo(() => {
     const profiles = state.active?.participantIds.map((id) => state.memberIds[id])
     return profiles || []
   })
@@ -65,12 +65,11 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         if (!charId) throw new Error('No character selected')
         return chatStore.addCharacter(chatId, charId, props.close)
     }
-
-    const body = getStrictForm(ref, { userId: 'string' })
-    chatStore.inviteUser(state.active?.chat._id, body.userId, () => {
-      ref.value = ''
-    })
   }
+  const charMembers = createMemo(() => {
+    const chars = state.active?.chat.characterIds
+    return chars || []
+  })
 
   const Footer = (
     <>
@@ -129,12 +128,13 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
           </div>
         </form>
         <Divider />
-        <Show when={nonOwners().length === 0}>
+        <Show when={users().length === 0 && charMembers().length === 0}>
           <div class="flex w-full justify-center">There are no particpants in this chat.</div>
         </Show>
-        <For each={nonOwners()}>
+        <For each={users()}>
           {(member) => <Participant member={member} remove={setDeleting} canRemove={isOwner()} />}
         </For>
+        <For each={charMembers()}>{(charId) => <CharacterParticipant charId={charId} />}</For>
       </Modal>
 
       <ConfirmModal
@@ -168,6 +168,16 @@ const Participant: Component<{
           </Button>
         </Show>
       </div>
+    </div>
+  )
+}
+
+const CharacterParticipant: Component<{
+  charId: string
+}> = (props) => {
+  return (
+    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-2">
+      {props.charId}
     </div>
   )
 }
