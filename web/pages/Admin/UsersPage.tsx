@@ -4,10 +4,11 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getAssetUrl, getStrictForm } from '../../shared/util'
+import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore } from '../../store'
 
 const UsersPage: Component = () => {
+  setComponentPageTitle('Users')
   const [pw, setPw] = createSignal('')
   const state = adminStore()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()

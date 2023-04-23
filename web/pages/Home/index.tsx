@@ -1,6 +1,6 @@
 import { Component } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
-import { adaptersToOptions } from '../../shared/util'
+import { adaptersToOptions, setComponentPageTitle } from '../../shared/util'
 import { settingStore } from '../../store'
 import { markdown } from '../../shared/markdown'
 import { A } from '@solidjs/router'
@@ -50,6 +50,7 @@ You can provide your API key and choose between Euterpe and Krake in the setting
 `
 
 const HomePage: Component = () => {
+  setComponentPageTitle('Information')
   const cfg = settingStore((cfg) => ({ adapters: adaptersToOptions(cfg.config.adapters) }))
   return (
     <div>

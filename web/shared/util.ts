@@ -2,6 +2,7 @@ import { UnwrapBody, assertValid } from 'frisker'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
 import { isLoggedIn } from '../store/api'
 import { Option } from './Select'
+import { createEffect, onCleanup } from 'solid-js'
 
 type FormRef = {
   [key: string]:
@@ -266,4 +267,24 @@ export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
 export function sort<T>(prop: keyof T, dir?: 'asc' | 'desc') {
   const mod = dir === 'asc' ? 1 : -1
   return (l: T, r: T) => (l[prop] > r[prop] ? mod : l[prop] === r[prop] ? 0 : -mod)
+}
+
+export const setComponentPageTitle = (newTitle: string) => {
+  createEffect(() => {
+    document.title = `${newTitle} - Agnaistic`
+
+    onCleanup(() => {
+      document.title = 'Agnaistic'
+    })
+  })
+
+  const updateTitle = (newTitle: string) => {
+    document.title = `${newTitle} - Agnaistic`
+  }
+
+  // setComponentPageTitle must be called in order for consumers to
+  // obtain updateComponentPageTitle, to prevent consumers from calling
+  // updateComponentPageTitle on its own which would change the title without
+  // the onCleanup hook.
+  return { updateTitle }
 }

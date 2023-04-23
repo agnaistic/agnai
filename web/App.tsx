@@ -58,8 +58,8 @@ const App: Component = () => {
               <Routes>
                 <CharacterRoutes />
                 <Route path="/chats" component={CharacterChats} />
-                <Route path="/chat" component={() => <ChatDetail />} />
-                <Route path="/chat/:id" component={() => <ChatDetail />} />
+                <Route path="/chat" component={ChatDetail} />
+                <Route path="/chat/:id" component={ChatDetail} />
                 <Route path="/" component={CharacterList} />
                 <Route path="/info" component={HomePage} />
                 <Route path="/changelog" component={ChangeLog} />

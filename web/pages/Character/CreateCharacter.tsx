@@ -5,7 +5,7 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
-import { getStrictForm } from '../../shared/util'
+import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import { characterStore } from '../../store'
 import { useNavigate, useParams } from '@solidjs/router'
@@ -23,6 +23,9 @@ const options = [
 
 const CreateCharacter: Component = () => {
   const params = useParams<{ editId?: string; duplicateId?: string }>()
+  setComponentPageTitle(
+    params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
+  )
   const [image, setImage] = createSignal<string | undefined>()
 
   const srcId = params.editId || params.duplicateId || ''

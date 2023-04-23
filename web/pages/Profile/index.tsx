@@ -6,10 +6,11 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm } from '../../shared/util'
+import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { toastStore, userStore } from '../../store'
 
 const ProfilePage: Component = () => {
+  setComponentPageTitle('My profile')
   const state = userStore()
   const [pass, setPass] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()

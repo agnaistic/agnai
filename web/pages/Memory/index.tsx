@@ -7,9 +7,11 @@ import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
+import { setComponentPageTitle } from '../../shared/util'
 import { memoryStore, toastStore } from '../../store'
 
 const MemoryPage: Component = () => {
+  setComponentPageTitle('Memory')
   const state = memoryStore()
   const [showImport, setImport] = createSignal(false)
 

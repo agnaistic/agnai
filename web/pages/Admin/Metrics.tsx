@@ -3,9 +3,11 @@ import { Component, createEffect } from 'solid-js'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
 import PageHeader from '../../shared/PageHeader'
+import { setComponentPageTitle } from '../../shared/util'
 import { adminStore } from '../../store'
 
 const MetricsPage: Component = () => {
+  setComponentPageTitle('Metrics')
   const state = adminStore()
 
   createEffect(() => {

@@ -20,7 +20,7 @@ import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
-import { getAssetUrl } from '../../shared/util'
+import { getAssetUrl, setComponentPageTitle } from '../../shared/util'
 import { DropMenu } from '../../shared/DropMenu'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -30,6 +30,7 @@ import Loading from '../../shared/Loading'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 const CharacterList: Component = () => {
+  setComponentPageTitle('Characters')
   const chats = chatStore()
 
   const cached = getListCache()

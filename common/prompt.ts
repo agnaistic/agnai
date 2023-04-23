@@ -11,6 +11,7 @@ export type PromptParts = {
   sampleChat?: string[]
   persona: string
   gaslight: string
+  ujb?: string
   post: string[]
   gaslightHasChat: boolean
   memory?: string
@@ -210,17 +211,33 @@ export function getPromptParts(
   if (memory) parts.memory = memory.prompt
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
+  const ujb = opts.settings?.ultimeJailbreak
 
   const sampleChat = parts.sampleChat?.join('\n') || ''
+
+  if (ujb) {
+    parts.ujb = ujb
+      .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
+      .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
+      .replace(/\{\{memory\}\}/gi, parts.memory || '')
+      .replace(/\{\{name\}\}/gi, char.name)
+      .replace(/\<BOT\>/gi, char.name)
+      .replace(/\<USER\>/gi, char.name)
+      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
+      .replace(/\{\{char\}\}/gi, char.name)
+      .replace(/\{\{user\}\}/gi, sender)
+  }
+
   parts.gaslight = gaslight
-    .replace(/\{\{example_dialogue\}\}/g, sampleChat)
-    .replace(/\{\{scenario\}\}/g, parts.scenario || '')
-    .replace(/\{\{memory\}\}/g, parts.memory || '')
-    .replace(/\{\{name\}\}/g, char.name)
-    .replace(/\<BOT\>/g, char.name)
-    .replace(/\{\{personality\}\}/g, formatCharacter(char.name, chat.overrides || char.persona))
-    .replace(/\{\{char\}\}/g, char.name)
-    .replace(/\{\{user\}\}/g, sender)
+    .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
+    .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
+    .replace(/\{\{memory\}\}/gi, parts.memory || '')
+    .replace(/\{\{name\}\}/gi, char.name)
+    .replace(/\<BOT\>/gi, char.name)
+    .replace(/\<USER\>/gi, char.name)
+    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
+    .replace(/\{\{char\}\}/gi, char.name)
+    .replace(/\{\{user\}\}/gi, sender)
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
