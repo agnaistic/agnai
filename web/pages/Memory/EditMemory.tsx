@@ -37,7 +37,7 @@ const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.Me
   ...(entry.entry === '' ? ['entry' as const] : []),
 ]
 
-type EntrySort = 'creationDate' | 'alpha'
+export type EntrySort = 'creationDate' | 'alpha'
 
 const entrySortItems = [
   { label: 'By creation date', value: 'creationDate' },

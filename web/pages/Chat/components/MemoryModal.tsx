@@ -3,11 +3,11 @@ import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
-import Select from '../../../shared/Select'
+import Select, { Option } from '../../../shared/Select'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
-import EditMemoryForm, { getBookUpdate } from '../../Memory/EditMemory'
+import EditMemoryForm, { getBookUpdate, EntrySort } from '../../Memory/EditMemory'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
@@ -21,6 +21,12 @@ const ChatMemoryModal: Component<{
 
   const [id, setId] = createSignal(props.chat.memoryId || '')
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
+  const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
+  const updateEntrySort = (item: Option<string>) => {
+    if (item.value === 'creationDate' || item.value === 'alpha') {
+      setEntrySort(item.value)
+    }
+  }
 
   const changeBook = async (id: string) => {
     setId(id)
@@ -90,7 +96,12 @@ const ChatMemoryModal: Component<{
 
         <Show when={book()}>
           <div class="text-sm">
-            <EditMemoryForm hideSave book={book()!} />
+            <EditMemoryForm
+              hideSave
+              book={book()!}
+              entrySort={entrySort()}
+              updateEntrySort={updateEntrySort}
+            />
           </div>
         </Show>
       </div>
