@@ -10,7 +10,7 @@ import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
+import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { memoryStore } from '../../store'
 
 const newBook: AppSchema.MemoryBook = {
@@ -147,6 +147,7 @@ const EditMemoryForm: Component<{
 export default EditMemoryForm
 
 export const EditMemoryPage = () => {
+  const { updateTitle } = setComponentPageTitle('Memory book')
   let ref: any
   const nav = useNavigate()
   const params = useParams()
@@ -161,12 +162,14 @@ export const EditMemoryPage = () => {
 
   createEffect(() => {
     if (params.id === 'new') {
+      updateTitle('Create memory book')
       setEditing({ ...newBook, entries: [{ ...emptyEntry, name: 'New Entry' }] })
       return
     }
 
     const match = state.books.list.find((m) => m._id === params.id)
     if (match) {
+      updateTitle(`Edit ${match.name}`)
       setEditing(match)
     }
   })

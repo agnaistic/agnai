@@ -69,7 +69,7 @@ export async function createTextStreamV2(
     opts.char = entities.char
   }
 
-  const { adapter } = getAdapter(opts.chat, opts.user)
+  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user)
   const handler = handlers[adapter]
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
@@ -90,6 +90,7 @@ export async function createTextStreamV2(
     user: opts.user,
     guest: guestSocketId,
     lines: opts.lines,
+    isThirdParty,
   })
 
   return { stream, adapter }

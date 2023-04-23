@@ -14,8 +14,8 @@ const baseUrl = `https://api.anthropic.com/v1/complete`
 const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
 
 export const handleClaude: ModelAdapter = async function* (opts) {
-  const { char, members, user, settings, log, guest, gen, sender } = opts
-  const base = getBaseUrl(user)
+  const { char, members, user, settings, log, guest, gen, sender, isThirdParty } = opts
+  const base = getBaseUrl(user, isThirdParty)
   if (!user.claudeApiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
@@ -84,8 +84,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 }
 
-function getBaseUrl(user: AppSchema.User) {
-  if (user.thirdPartyFormat === 'claude' && user.koboldUrl) {
+function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
+  if (isThirdParty && user.thirdPartyFormat === 'claude' && user.koboldUrl) {
     return { url: user.koboldUrl, changed: true }
   }
 

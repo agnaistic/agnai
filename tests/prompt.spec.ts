@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
-import { createPrompt } from '../common/prompt'
+import { createPrompt, BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
 import { getEncoder } from '../common/tokenize'
 import { AppSchema } from '../srv/db/schema'
 import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
@@ -240,6 +240,15 @@ describe('Prompt building', () => {
         'Bot:'
       )
     )
+  })
+
+  it('uses the correct replaces for all instances of {{char}}, {{user}}, <BOT>, and <USER>, case insensitive', () => {
+    const input =
+      '{{char}} loves {{user}}, {{CHAR}} hates {{USER}}, {{Char}} eats {{User}}, <BOT> drinks <USER>, <bot> boops <user>, <Bot> kicks <User>'
+    const expectedOutput =
+      'Haruhi loves Chad, Haruhi hates Chad, Haruhi eats Chad, Haruhi drinks Chad, Haruhi boops Chad, Haruhi kicks Chad'
+    const actualOutput = input.replace(BOT_REPLACE, 'Haruhi').replace(SELF_REPLACE, 'Chad')
+    expect(actualOutput).to.equal(expectedOutput)
   })
 })
 

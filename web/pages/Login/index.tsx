@@ -4,11 +4,12 @@ import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
 import { toastStore, userStore } from '../../store'
-import { getStrictForm } from '../../shared/util'
+import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 
 const LoginPage: Component = () => {
+  setComponentPageTitle('Login')
   const store = userStore()
   const [register, setRegister] = createSignal(false)
 

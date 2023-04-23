@@ -156,7 +156,7 @@ const SingleMessage: Component<
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
             <b
-              class="text-900 mr-2 max-w-[200px] overflow-hidden text-ellipsis  whitespace-nowrap text-lg leading-none sm:max-w-[400px]"
+              class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap leading-none sm:max-w-[400px] sm:text-lg"
               data-bot-name={isBot()}
               data-user-name={isUser()}
             >
@@ -297,7 +297,8 @@ function parseMessage(
   return msg
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, profile?.handle || 'You')
-    .replace(/(<|>)/g, '*')
+    .replace(/(<)/g, '‹')
+    .replace(/(>)/g, '›')
 }
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
