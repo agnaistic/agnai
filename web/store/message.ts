@@ -135,6 +135,24 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
+    async *request(_, chatId: string, charactedId: string, onSuccess?: () => void) {
+      if (!chatId) {
+        toastStore.error('Could not send message: No active chat')
+        yield { partial: undefined }
+        return
+      }
+      yield { partial: '', waiting: chatId }
+
+      const res = await data.msg.generateResponseV2({ kind: 'request', characterId: charactedId })
+
+      if (res.error) {
+        toastStore.error(`Generation request failed: ${res.error}`)
+        yield { partial: undefined, waiting: undefined }
+      }
+
+      if (res.result) onSuccess?.()
+    },
+
     async *retry({ msgs }, chatId: string, onSuccess?: () => void) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
