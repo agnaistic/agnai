@@ -9,12 +9,14 @@ import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages } from './message'
 import { deleteChat, deleteMessages } from './remove'
+import { textToSpeech } from './voice'
 
 const router = Router()
 
 router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)
 router.post('/:id/image', createImage)
+router.post('/:id/voice', textToSpeech)
 router.use(loggedIn)
 router.get('/', getAllChats)
 router.get('/invites', getInvites)

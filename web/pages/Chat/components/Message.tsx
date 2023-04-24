@@ -1,11 +1,20 @@
-import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
+import {
+  Check,
+  Megaphone,
+  Pencil,
+  RefreshCw,
+  Terminal,
+  ThumbsDown,
+  ThumbsUp,
+  Trash,
+  X,
+} from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore } from '../../../store'
-import { msgStore } from '../../../store'
+import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 
@@ -60,6 +69,7 @@ const SingleMessage: Component<
 > = (props) => {
   const user = userStore()
   const state = chatStore()
+  const voiceLoadingState = msgStore((x) => ({ voiceLoading: x.voiceLoading }))
 
   const [edit, setEdit] = createSignal(false)
   const isBot = createMemo(() => !!props.msg.characterId)
@@ -67,6 +77,9 @@ const SingleMessage: Component<
   const isImage = createMemo(() => props.original.adapter === 'image')
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
+  const voiceLoading = createMemo(
+    () => props.last && voiceLoadingState.voiceLoading == props.msg._id
+  )
 
   const bgStyles = createMemo(() => {
     user.ui.mode
@@ -112,6 +125,10 @@ const SingleMessage: Component<
       ref.innerText = props.original.msg
     }
     ref?.focus()
+  }
+
+  const textToSpeech = async () => {
+    msgStore.textToSpeech(props.msg._id)
   }
 
   const showPrompt = () => {
@@ -202,6 +219,15 @@ const SingleMessage: Component<
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
+              <Show when={props.last}>
+                <div
+                  class="icon-button"
+                  onClick={textToSpeech}
+                  classList={{ 'animate-pulse': voiceLoading() }}
+                >
+                  <Megaphone size={18} />
+                </div>
+              </Show>
               <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
                 <Show when={!!props.msg.characterId && !isImage()}>
                   <div onClick={showPrompt} class="icon-button">

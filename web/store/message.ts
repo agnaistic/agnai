@@ -24,6 +24,7 @@ export type MsgState = {
   nextLoading: boolean
   showImage?: AppSchema.ChatMessage
   imagesSaved: boolean
+  voiceLoading: string | undefined
 
   /**
    * Ephemeral image messages
@@ -44,6 +45,7 @@ const initState: MsgState = {
   waiting: undefined,
   partial: undefined,
   retrying: undefined,
+  voiceLoading: undefined,
 }
 
 export const msgStore = createStore<MsgState>(
@@ -219,6 +221,22 @@ export const msgStore = createStore<MsgState>(
       }
       return { msgs: msgs.slice(0, index) }
     },
+    async *textToSpeech({ activeChatId, msgs }, messageId?: string) {
+      const msg = msgs.find((m) => m._id === messageId)
+      if (!msg) {
+        return toastStore.error(`Cannot request text to speech: Message not found`)
+      }
+      yield { voiceLoading: messageId }
+
+      const res = await data.voice.textToSpeech({
+        chatId: activeChatId,
+        messageId,
+        text: msg.msg,
+      })
+      if (res.error) {
+        toastStore.error(`Failed to request text to speech: ${res.error}`)
+      }
+    },
     async *createImage({ activeChatId }, messageId?: string) {
       const onDone = (image: string) => handleImage(activeChatId, image)
       yield { waiting: { chatId: activeChatId, mode: 'send' } }
@@ -283,6 +301,11 @@ async function handleImage(chatId: string, image: string) {
     waiting: undefined,
     images: { ...images, [chatId]: chatImages },
   })
+}
+
+async function handleTextToSpeech(chatId: string, url: string) {
+  const audio = new Audio(url)
+  audio.play()
 }
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
@@ -355,6 +378,21 @@ subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
 
 subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
   handleImage(body.chatId, body.image)
+})
+
+subscribe('voice-generating', { chatId: 'string', messageId: 'string' }, (body) => {
+  if (msgStore.getState().activeChatId != body.chatId) return
+  msgStore.setState({ voiceLoading: body.messageId })
+})
+
+subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
+  msgStore.setState({ voiceLoading: undefined })
+  toastStore.error(body.error)
+})
+
+subscribe('voice-generated', { chatId: 'string', url: 'string' }, (body) => {
+  msgStore.setState({ voiceLoading: undefined })
+  handleTextToSpeech(body.chatId, body.url)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
