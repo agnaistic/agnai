@@ -123,7 +123,7 @@ const CharacterList: Component = () => {
 
       <div class="mb-2 flex justify-between">
         <div class="flex flex-wrap">
-          <div class="m-1 ml-0">
+          <div class="m-1 ml-0 mr-1">
             <TextInput
               fieldName="search"
               placeholder="Search by name..."
@@ -131,25 +131,27 @@ const CharacterList: Component = () => {
             />
           </div>
 
-          <Select
-            class="m-1 bg-[var(--bg-600)]"
-            fieldName="sortBy"
-            items={sortOptions}
-            value={sortField()}
-            onChange={(next) => setSortField(next.value as SortFieldTypes)}
-          />
+          <div class="flex flex-wrap">
+            <Select
+              class="m-1 ml-0 bg-[var(--bg-600)]"
+              fieldName="sortBy"
+              items={sortOptions}
+              value={sortField()}
+              onChange={(next) => setSortField(next.value as SortFieldTypes)}
+            />
 
-          <div class="py-1">
-            <Button
-              schema="secondary"
-              class="rounded-xl"
-              onClick={() => {
-                const next = sortDirection() === 'asc' ? 'desc' : 'asc'
-                setSortDirection(next)
-              }}
-            >
-              {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
-            </Button>
+            <div class="py-1">
+              <Button
+                schema="secondary"
+                class="rounded-xl"
+                onClick={() => {
+                  const next = sortDirection() === 'asc' ? 'desc' : 'asc'
+                  setSortDirection(next)
+                }}
+              >
+                {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
+              </Button>
+            </div>
           </div>
         </div>
 
