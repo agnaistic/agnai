@@ -16,8 +16,8 @@ import Button from '../../shared/Button'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
-type SortFieldTypes = 'chat-updated' | 'chat-created' | 'character-name' | 'character-created';
-type SortDirectionTypes = 'asc' | 'desc';
+type SortFieldTypes = 'chat-updated' | 'chat-created' | 'character-name' | 'character-created'
+type SortDirectionTypes = 'asc' | 'desc'
 
 type ListCache = {
   sort: {
@@ -62,14 +62,14 @@ const CharacterChats: Component = () => {
       sort: {
         field: sortField(),
         direction: sortDirection(),
-      }
+      },
     }
 
     saveListCache(next)
   })
 
   createEffect(() => {
-    if (!charId()) return;
+    if (!charId()) return
     if (sortField() == 'character-name' || sortField() == 'character-created') {
       setSortField('chat-updated')
     }
@@ -78,8 +78,7 @@ const CharacterChats: Component = () => {
   createEffect(() => {
     if (charId() && sortOptions() == chatAndCharSortOptions) {
       setSortOptions(chatSortOptions)
-    }
-    else if (!charId() && sortOptions() == chatSortOptions) {
+    } else if (!charId() && sortOptions() == chatSortOptions) {
       setSortOptions(chatAndCharSortOptions)
     }
   })
@@ -176,7 +175,7 @@ const CharacterChats: Component = () => {
             class="my-1 mr-1 max-w-[160px]"
           />
 
-          <div class="flex hidden md:inline-flex">
+          <div class="flex hidden sm:inline-flex">
             <Select
               class="m-1"
               fieldName="sortBy"
@@ -240,12 +239,7 @@ const Chats: Component<{
     if (props.charId) {
       chars = chars.filter((ch) => ch._id === props.charId)
     }
-    return groupAndSort(
-      chars,
-      props.chats,
-      props.sortField,
-      props.sortDirection
-    )
+    return groupAndSort(chars, props.chats, props.sortField, props.sortDirection)
   })
 
   const confirmDelete = () => {
@@ -377,9 +371,7 @@ function groupAndSort(
   const mod = sortDirection === 'asc' ? 1 : -1
 
   if (sortField === 'chat-updated' || sortField == 'chat-created') {
-    const sorted = allChats
-      .slice()
-      .sort(getChatSortFunction(sortField, sortDirection))
+    const sorted = allChats.slice().sort(getChatSortFunction(sortField, sortDirection))
     return [{ char: null, chats: sorted }]
   }
 
@@ -387,7 +379,9 @@ function groupAndSort(
   const chars = allChars.slice().sort(getCharSortFunction(sortField, sortDirection))
 
   for (const char of chars) {
-    const chats = allChats.filter((ch) => ch.characterId === char._id).sort(getChatSortFunction('chat-updated', 'desc'))
+    const chats = allChats
+      .filter((ch) => ch.characterId === char._id)
+      .sort(getChatSortFunction('chat-updated', 'desc'))
     groups.push({ char, chats })
   }
 

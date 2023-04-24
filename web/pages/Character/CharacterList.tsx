@@ -162,10 +162,10 @@ const CharacterList: Component = () => {
             <Button onClick={() => setView(getNextView())}>
               <Switch>
                 <Match when={getNextView() === 'list'}>
-                  <span class="hidden md:block">List View</span> <LayoutList />
+                  <span class="hidden sm:block">List View</span> <LayoutList />
                 </Match>
                 <Match when={getNextView() === 'cards'}>
-                  <span class="hidden md:block">Cards View</span> <Image />
+                  <span class="hidden sm:block">Cards View</span> <Image />
                 </Match>
               </Switch>
             </Button>
