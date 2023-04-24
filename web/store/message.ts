@@ -303,7 +303,11 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function handleTextToSpeech(messageId: string, url: string) {
+async function handleTextToSpeech(chatId: string, messageId: string, url: string) {
+  if (chatId != msgStore.getState().activeChatId) {
+    msgStore.setState({ voice: undefined })
+    return
+  }
   try {
     const audio = new Audio(url)
     audio.addEventListener('error', () => {
@@ -410,7 +414,7 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
-  handleTextToSpeech(body.messageId, body.url)
+  handleTextToSpeech(body.chatId, body.messageId, body.url)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
