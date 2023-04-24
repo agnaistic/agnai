@@ -63,7 +63,7 @@ const AvatarIcon: Component<Props> = (props) => {
           data-user-avatar={!props.bot}
           class={`flex ${
             sizesCircle[format().size]
-          } items-center justify-center rounded-full bg-[var(--black-700)] ${cls()}`}
+          } shrink-0 items-center justify-center rounded-full bg-[var(--black-700)] ${cls()}`}
         >
           <Show when={!props.bot}>
             <VenetianMask data-user-icon />
