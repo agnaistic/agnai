@@ -27,59 +27,23 @@ export type Attachment = {
 }
 
 export function handleForm<T extends Validator>(req: Request, type: T) {
-  const form = new mp.Form()
-
-  const obj: any = {}
   const attachments: Attachment[] = []
 
-  return new Promise<UnwrapBody<T> & { attachments: Attachment[] }>((resolve, reject) => {
-    form.on('part', (part) => {
-      const chunks: Buffer[] = []
-      part.on('data', (chunk) => {
-        chunks.push(chunk)
+  if (Array.isArray(req.files)) {
+    for (const file of req.files) {
+      if (!isAllowedType(file.mimetype)) continue
+      const ext = file.mimetype.split('/').slice(-1)[0]
+      attachments.push({
+        field: file.fieldname,
+        content: file.buffer,
+        ext,
+        original: file.originalname,
+        type: file.mimetype,
       })
+    }
+  }
 
-      part.on('end', async () => {
-        if (!part.filename) {
-          const data = Buffer.concat(chunks).toString()
-          obj[part.name] = data
-          part.resume()
-          return
-        }
-
-        const type = part.headers['content-type']
-        if (!isAllowedType(type)) {
-          part.resume()
-          return
-        }
-
-        const ext = type.split('/').slice(-1)[0]
-        const filename = part.filename
-        const data = Buffer.concat(chunks)
-
-        attachments.push({
-          field: part.name,
-          content: data,
-          type,
-          original: filename,
-          ext,
-        })
-        part.resume()
-      })
-    })
-
-    form.on('close', async () => {
-      try {
-        assertValid(type, obj)
-        resolve({ ...obj, attachments } as any)
-      } catch (ex) {
-        reject(ex)
-      }
-    })
-
-    form.on('error', (err) => reject(err))
-    form.parse(req)
-  })
+  return { ...req.body, attachments }
 }
 
 export async function entityUpload(kind: string, id: string, attachment?: Attachment) {

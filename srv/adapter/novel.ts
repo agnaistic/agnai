@@ -50,7 +50,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   log.debug({ ...body, parameters: { ...body.parameters, bad_word_ids: null } }, 'NovelAI payload')
 
-  const response = await needle('post', novelUrl, body, {
+  const res = await needle('post', novelUrl, body, {
     json: true,
     // timeout: 2000,
     response_timeout: 15000,
@@ -59,32 +59,34 @@ export const handleNovel: ModelAdapter = async function* ({
     },
   }).catch((err) => ({ err }))
 
-  if ('err' in response) {
-    log.error({ err: `Novel request failed: ${response.err?.message || response.err}` })
-    yield { error: response.err.message }
+  if ('err' in res) {
+    log.error({ err: `Novel request failed: ${res.err?.message || res.err}` })
+    yield { error: res.err.message }
     return
   }
 
-  const status = response.statusCode || 0
+  const status = res.statusCode || 0
   if (statuses[status]) {
-    log.error({ error: response.body }, `Novel response failed (${status})`)
-    yield { error: `Novel API returned an error: ${statuses[status]}` }
+    log.error({ error: res.body }, `Novel response failed (${status})`)
+    yield { error: `Novel API returned an error (${statuses[status]}) ${res.body.message}` }
     return
   }
 
   if (status >= 400) {
-    log.error({ error: response.body }, `Novel request failed (${status})`)
-    yield { error: `Novel API returned an error: ${response.statusMessage!}` }
+    log.error({ error: res.body }, `Novel request failed (${status})`)
+    yield {
+      error: `Novel API returned an error (${res.statusMessage!}) ${res.body.message}`,
+    }
     return
   }
 
-  if (response.body.error) {
-    log.error({ error: response.body }, `Novel response failed (${status})`)
-    yield { error: `Novel API returned an error: ${response.body.error}` }
+  if (res.body.error) {
+    log.error({ error: res.body }, `Novel response failed (${status})`)
+    yield { error: `Novel API returned an error: ${res.body.error.message || res.body.error}` }
     return
   }
 
-  const parsed = sanitise(response.body.output)
+  const parsed = sanitise(res.body.output)
   const trimmed = trimResponseV2(parsed, char, members, endTokens)
   yield trimmed || parsed
 }

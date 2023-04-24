@@ -1,4 +1,5 @@
 import express from 'express'
+import multer from 'multer'
 import cors from 'cors'
 import { logMiddleware } from './logger'
 import api from './api'
@@ -8,8 +9,16 @@ import { Server } from 'http'
 import { setupSockets } from './api/ws'
 import { config } from './config'
 
+const upload = multer({ limits: { fileSize: config.limits.upload * 1024 * 1024 } })
+
 const app = express()
 const server = new Server(app)
+
+app.use(express.urlencoded({ limit: `${config.limits.upload}mb`, extended: false }))
+app.use(express.json({ limit: `${config.limits.payload}mb` }))
+app.use(logMiddleware())
+app.use(cors())
+app.use(upload.any())
 
 const baseFolder = resolve(__dirname, '..')
 
@@ -17,12 +26,6 @@ setupSockets(server)
 
 const index = resolve(baseFolder, 'dist', 'index.html')
 
-app.use(
-  express.json({ limit: `${config.limits.payload}mb` }),
-  express.urlencoded({ limit: `${config.limits.upload}mb`, extended: true })
-)
-app.use(logMiddleware())
-app.use(cors())
 app.use('/api', api)
 
 if (!config.storage.enabled) {
