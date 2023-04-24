@@ -9,9 +9,9 @@ import {
   createSignal,
   onMount,
 } from 'solid-js'
-import { NewCharacter, characterStore, chatStore } from '../../store'
+import { NewCharacter, characterStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
-import Select from '../../shared/Select'
+import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../srv/db/schema'
 import {
@@ -25,6 +25,11 @@ import {
   X,
   Import,
   Plus,
+  Star,
+  SortAsc,
+  SortDesc,
+  LayoutList,
+  Image,
 } from 'lucide-solid'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -36,21 +41,43 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { exportCharacter } from '../../../common/prompt'
 import Loading from '../../shared/Loading'
+import Divider from '../../shared/Divider'
 
 const CACHE_KEY = 'agnai-charlist-cache'
+
+type ViewTypes = 'list' | 'cards'
+type SortFieldTypes = 'modified' | 'created' | 'name'
+type SortDirectionTypes = 'asc' | 'desc'
+
+type ListCache = {
+  view: ViewTypes
+  sort: {
+    field: SortFieldTypes
+    direction: SortDirectionTypes
+  }
+}
+
+const sortOptions: Option<SortFieldTypes>[] = [
+  { value: 'modified', label: 'Last Modified' },
+  { value: 'created', label: 'Created' },
+  { value: 'name', label: 'Name' },
+]
 
 const CharacterList: Component = () => {
   setComponentPageTitle('Characters')
 
   const cached = getListCache()
   const [view, setView] = createSignal(cached.view)
-  const [sort, setSort] = createSignal(cached.sort)
+  const [sortField, setSortField] = createSignal(cached.sort.field)
+  const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
 
   const onImport = (char: NewCharacter) => {
     characterStore.createCharacter(char, () => setImport(false))
   }
+
+  const getNextView = () => (view() === 'list' ? 'cards' : 'list')
 
   onMount(() => {
     characterStore.getCharacters()
@@ -59,7 +86,10 @@ const CharacterList: Component = () => {
   createEffect(() => {
     const next = {
       view: view(),
-      sort: sort(),
+      sort: {
+        field: sortField(),
+        direction: sortDirection(),
+      },
     }
 
     saveListCache(next)
@@ -91,61 +121,96 @@ const CharacterList: Component = () => {
         }
       />
 
-      <div class="mb-2 flex flex-wrap items-center justify-between">
-        <div class="flex flex-wrap items-center">
-          <div class="m-1">
+      <div class="mb-2 flex justify-between">
+        <div class="flex flex-wrap">
+          <div class="m-1 ml-0 mr-1">
             <TextInput
-              class="m-1"
               fieldName="search"
               placeholder="Search by name..."
               onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
             />
           </div>
-          <div class="flex">
+
+          <div class="flex flex-wrap">
             <Select
-              class="m-1"
-              fieldName="viewType"
-              items={[
-                { value: 'mod-asc', label: 'Modified - ASC' },
-                { value: 'mod-desc', label: 'Modified - DESC' },
-                { value: 'age-asc', label: 'Created - ASC' },
-                { value: 'age-desc', label: 'Created - DESC' },
-                { value: 'alpha-asc', label: 'Name - ASC' },
-                { value: 'alpha-desc', label: 'Name - DESC' },
-              ]}
-              value={sort()}
-              onChange={(next) => setSort(next.value)}
+              class="m-1 ml-0 bg-[var(--bg-600)]"
+              fieldName="sortBy"
+              items={sortOptions}
+              value={sortField()}
+              onChange={(next) => setSortField(next.value as SortFieldTypes)}
             />
 
-            <Select
-              class="m-1"
-              fieldName="viewType"
-              items={[
-                { value: 'list', label: 'List' },
-                { value: 'card', label: 'Card' },
-              ]}
-              onChange={(next) => setView(next.value)}
-              value={view()}
-            />
+            <div class="py-1">
+              <Button
+                schema="secondary"
+                class="rounded-xl"
+                onClick={() => {
+                  const next = sortDirection() === 'asc' ? 'desc' : 'asc'
+                  setSortDirection(next)
+                }}
+              >
+                {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap">
+          <div class="py-1">
+            <Button schema="secondary" onClick={() => setView(getNextView())}>
+              <Switch>
+                <Match when={getNextView() === 'list'}>
+                  <span class="hidden sm:block">List View</span> <LayoutList />
+                </Match>
+                <Match when={getNextView() === 'cards'}>
+                  <span class="hidden sm:block">Cards View</span> <Image />
+                </Match>
+              </Switch>
+            </Button>
           </div>
         </div>
       </div>
-      <Characters type={view()} filter={search()} sort={sort()} />
+      <Characters
+        type={view()}
+        filter={search()}
+        sortField={sortField()}
+        sortDirection={sortDirection()}
+      />
       <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
     </>
   )
 }
 
-const Characters: Component<{ type: string; filter: string; sort: string }> = (props) => {
+const Characters: Component<{
+  type: ViewTypes
+  filter: string
+  sortField: SortFieldTypes
+  sortDirection: SortDirectionTypes
+}> = (props) => {
   const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
-  const chars = createMemo(() => {
+  const [showGrouping, setShowGrouping] = createSignal(false)
+  const groups = createMemo(() => {
     const list = state.list
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
-      .sort(sort(props.sort))
-    return list
+      .sort(getSortFunction(props.sortField, props.sortDirection))
+
+    const groups = [
+      { label: 'Favorites', list: list.filter((c) => c.favorite) },
+      { label: '', list: list.filter((c) => !c.favorite) },
+    ]
+    if (groups[0].list.length === 0) {
+      setShowGrouping(false)
+      return [groups[1]]
+    }
+    setShowGrouping(true)
+    return groups
   })
+
+  const toggleFavorite = (charId: string, favorite: boolean) => {
+    characterStore.setFavorite(charId, favorite)
+  }
 
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
   const [download, setDownload] = createSignal<AppSchema.Character>()
@@ -163,32 +228,56 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
         <Match when={state.loaded}>
           <Show when={props.type === 'list'}>
             <div class="flex w-full flex-col gap-2 pb-5">
-              <For each={chars()}>
-                {(char) => (
-                  <Character
-                    type={props.type}
-                    char={char}
-                    delete={() => setDelete(char)}
-                    download={() => setDownload(char)}
-                  />
+              <For each={groups()}>
+                {(group) => (
+                  <>
+                    <Show when={showGrouping() && group.label}>
+                      <h2 class="text-xl font-bold">{group.label}</h2>
+                    </Show>
+                    <For each={group.list}>
+                      {(char) => (
+                        <Character
+                          type={props.type}
+                          char={char}
+                          delete={() => setDelete(char)}
+                          download={() => setDownload(char)}
+                          toggleFavorite={(value) => toggleFavorite(char._id, value)}
+                        />
+                      )}
+                    </For>
+                    <Divider />
+                  </>
                 )}
               </For>
             </div>
           </Show>
 
-          <Show when={props.type !== 'list'}>
-            <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
-              <For each={chars()}>
-                {(char) => (
-                  <Character
-                    type={props.type}
-                    char={char}
-                    delete={() => setDelete(char)}
-                    download={() => setDownload(char)}
-                  />
-                )}
-              </For>
-            </div>
+          <Show when={props.type === 'cards'}>
+            <For each={groups()}>
+              {(group) => (
+                <>
+                  <Show when={showGrouping()}>
+                    <h2 class="text-xl font-bold">{group.label}</h2>
+                  </Show>
+                  <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
+                    <For each={group.list}>
+                      {(char) => (
+                        <Character
+                          type={props.type}
+                          char={char}
+                          delete={() => setDelete(char)}
+                          download={() => setDownload(char)}
+                          toggleFavorite={(value) => toggleFavorite(char._id, value)}
+                        />
+                      )}
+                    </For>
+                    <Show when={group.list.length < 4}>
+                      <For each={new Array(4 - group.list.length)}>{() => <div></div>}</For>
+                    </Show>
+                  </div>
+                </>
+              )}
+            </For>
           </Show>
         </Match>
       </Switch>
@@ -208,45 +297,83 @@ const Character: Component<{
   char: AppSchema.Character
   delete: () => void
   download: () => void
+  toggleFavorite: (value: boolean) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)
+  const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
   if (props.type === 'list') {
     return (
-      <div class="relative flex w-full gap-2">
-        <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-[var(--bg-800)]">
-          <A
-            class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl sm:w-full"
-            href={`/character/${props.char._id}/chats`}
+      <div class="flex w-full flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2">
+        <A
+          class="ellipsis flex h-3/4 cursor-pointer items-center"
+          href={`/character/${props.char._id}/chats`}
+        >
+          <AvatarIcon avatarUrl={props.char.avatar} class="mr-4" />
+          <div class="ellipsis flex w-full flex-col">
+            <div class="font-bold">{props.char.name}</div>
+            <div class="">{props.char.description}</div>
+          </div>
+        </A>
+        <div>
+          <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
+            <Show when={props.char.favorite}>
+              <Star
+                class="icon-button fill-[var(--text-900)] text-[var(--text-900)]"
+                onClick={() => props.toggleFavorite(false)}
+              />
+            </Show>
+            <Show when={!props.char.favorite}>
+              <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
+            </Show>
+            <a onClick={props.download}>
+              <Download class="icon-button" />
+            </a>
+            <A href={`/character/${props.char._id}/edit`}>
+              <Edit class="icon-button" />
+            </A>
+            <A href={`/character/create/${props.char._id}`}>
+              <Copy class="icon-button" />
+            </A>
+            <Trash class="icon-button" onClick={props.delete} />
+          </div>
+          <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
+            <Menu class="icon-button" />
+          </div>
+          <DropMenu
+            class="bg-[var(--bg-700)]"
+            show={listOpts()}
+            close={() => setListOpts(false)}
+            customPosition="right-[10px]"
+            // horz="left"
+            vert="down"
           >
-            <AvatarIcon avatarUrl={props.char.avatar} class="mx-4" />
-            <div class="text-lg">
-              <span class="font-bold">{props.char.name}</span>
-              <span class="ml-2">{props.char.description}</span>
+            <div class="flex flex-col gap-2 p-2 font-bold">
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)}>
+                <Show when={props.char.favorite}>
+                  <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+                </Show>
+                <Show when={!props.char.favorite}>
+                  <Star /> Favorite
+                </Show>
+              </Button>
+              <Button alignLeft onClick={props.download}>
+                <Download /> Download
+              </Button>
+              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)}>
+                <Edit /> Edit
+              </Button>
+              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)}>
+                <Copy /> Duplicate
+              </Button>
+              <Button alignLeft onClick={props.delete}>
+                <Trash /> Delete
+              </Button>
             </div>
-          </A>
-        </div>
-        <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
-          <a onClick={props.download}>
-            <Download class="icon-button" />
-          </a>
-          <A href={`/character/${props.char._id}/edit`}>
-            <Edit class="icon-button" />
-          </A>
-
-          <A href={`/character/create/${props.char._id}`}>
-            <Copy class="icon-button" />
-          </A>
-
-          <Trash class="icon-button" onClick={props.delete} />
+          </DropMenu>
         </div>
       </div>
     )
-  }
-
-  const wrap = (fn: Function) => () => {
-    setOpts(false)
-    fn()
   }
 
   return (
@@ -257,7 +384,11 @@ const Character: Component<{
             href={`/character/${props.char._id}/chats`}
             class="block h-32 w-full justify-center overflow-hidden rounded-lg"
           >
-            <img src={getAssetUrl(props.char.avatar!)} class="h-full w-full object-cover" />
+            <img
+              src={getAssetUrl(props.char.avatar!)}
+              class="h-full w-full object-cover"
+              style="object-position: 50% 30%;"
+            />
           </A>
         </Show>
         <Show when={!props.char.avatar}>
@@ -287,20 +418,28 @@ const Character: Component<{
           <DropMenu
             show={opts()}
             close={() => setOpts(false)}
-            customPosition="right-[-6px] top-[-3px]"
+            customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button size="sm" onClick={wrap(props.download)}>
-                Download
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)}>
+                <Show when={props.char.favorite}>
+                  <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+                </Show>
+                <Show when={!props.char.favorite}>
+                  <Star /> Favorite
+                </Show>
               </Button>
-              <Button size="sm" onClick={() => nav(`/character/${props.char._id}/edit`)}>
-                Edit
+              <Button alignLeft onClick={props.download}>
+                <Download /> Download
               </Button>
-              <Button size="sm" onClick={() => nav(`/character/create/${props.char._id}`)}>
-                Duplicate
+              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)}>
+                <Edit /> Edit
               </Button>
-              <Button size="sm" onClick={wrap(props.delete)}>
-                Delete
+              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)}>
+                <Copy /> Duplicate
+              </Button>
+              <Button alignLeft onClick={props.delete}>
+                <Trash /> Delete
               </Button>
             </div>
           </DropMenu>
@@ -310,34 +449,40 @@ const Character: Component<{
   )
 }
 
-function sort(direction: string) {
-  return (left: AppSchema.Character, right: AppSchema.Character) => {
-    const [kind, dir] = direction.split('-')
-    const mod = dir === 'asc' ? 1 : -1
-    const l =
-      kind === 'alpha' ? left.name.toLowerCase() : kind === 'age' ? left.createdAt : left.updatedAt
-    const r =
-      kind === 'alpha'
-        ? right.name.toLowerCase()
-        : kind === 'age'
-        ? right.createdAt
-        : right.updatedAt
+function getSortableValue(char: AppSchema.Character, field: SortFieldTypes) {
+  switch (field) {
+    case 'name':
+      return char.name.toLowerCase()
+    case 'created':
+      return char.createdAt
+    case 'modified':
+      return char.updatedAt
+    default:
+      return 0
+  }
+}
 
+function getSortFunction(field: SortFieldTypes, direction: SortDirectionTypes) {
+  return (left: AppSchema.Character, right: AppSchema.Character) => {
+    const mod = direction === 'asc' ? 1 : -1
+    const l = getSortableValue(left, field)
+    const r = getSortableValue(right, field)
     return l > r ? mod : l === r ? 0 : -mod
   }
 }
 
-function getListCache() {
+function getListCache(): ListCache {
   const existing = localStorage.getItem(CACHE_KEY)
+  const defaultCache: ListCache = { sort: { field: 'modified', direction: 'desc' }, view: 'list' }
 
   if (!existing) {
-    return { sort: 'asc-desc', view: 'list' }
+    return defaultCache
   }
 
-  return JSON.parse(existing)
+  return { ...defaultCache, ...JSON.parse(existing) }
 }
 
-function saveListCache(cache: any) {
+function saveListCache(cache: ListCache) {
   localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
 }
 

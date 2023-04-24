@@ -39,6 +39,7 @@ export const STARTER_CHARACTER: AppSchema.Character = {
   kind: 'character',
   createdAt: '',
   updatedAt: '',
+  favorite: false,
   ...defaultChars.Robot,
 }
 

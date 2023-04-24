@@ -111,6 +111,26 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
   return { result: nextChar, error: undefined }
 }
 
+export async function setFavorite(charId: string, favorite: boolean) {
+  if (isLoggedIn()) {
+    const res = await api.post(`/character/${charId}/favorite`, { favorite: favorite })
+    return res
+  }
+
+  const chars = loadItem('characters')
+  const prev = chars.find((ch) => ch._id === charId)
+
+  if (!prev) {
+    return { result: undefined, error: `Character not found` }
+  }
+
+  const nextChar = { ...prev, favorite: favorite }
+  const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
+  local.saveChars(next)
+
+  return { result: nextChar, error: undefined }
+}
+
 export async function createCharacter(char: ImportCharacter) {
   if (isLoggedIn()) {
     const form = new FormData()

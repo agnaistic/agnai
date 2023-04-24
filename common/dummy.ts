@@ -20,6 +20,7 @@ export function toChar(name: string): AppSchema.Character {
     },
     updatedAt: '',
     userId: '',
+    favorite: false,
   }
 }
 

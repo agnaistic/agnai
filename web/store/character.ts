@@ -98,6 +98,22 @@ export const characterStore = createStore<CharacterState>(
         onSuccess?.()
       }
     },
+    setFavorite: async (
+      { characters: { list, loaded } },
+      characterId: string,
+      favorite: boolean
+    ) => {
+      const res = await data.chars.setFavorite(characterId, favorite)
+      if (res.error) return toastStore.error(`Failed to set favorite character`)
+      if (res.result) {
+        return {
+          characters: {
+            list: list.map((ch) => (ch._id === characterId ? { ...ch, favorite } : ch)),
+            loaded,
+          },
+        }
+      }
+    },
     async *editAvatar({ characters: { list } }, characterId: string, file: File) {
       const res = await data.chars.editAvatar(characterId, file)
       if (res.error) {
