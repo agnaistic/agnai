@@ -126,6 +126,7 @@ async function createImageMessage(opts: {
       message: opts.filename,
       characterId: char._id,
       adapter: 'image',
+      ooc: false,
     })
 
     sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })

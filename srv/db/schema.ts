@@ -111,6 +111,7 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
     first?: boolean
+    ooc?: boolean
   }
 
   /** Description of the character or user */

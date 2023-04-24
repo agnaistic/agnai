@@ -10,12 +10,18 @@ import './Message.css'
 const InputBar: Component<{
   chat: AppSchema.Chat
   swiped: boolean
-  send: (msg: string, onSuccess?: () => void) => void
+  showOocToggle: boolean
+  ooc: boolean
+  setOoc: (b: boolean) => void
+  send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
 }> = (props) => {
   let ref: any
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
+  const toggleOoc = () => {
+    props.setOoc(!props.ooc)
+  }
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
@@ -37,7 +43,7 @@ const InputBar: Component<{
       return toastStore.warn(`Confirm or cancel swiping before sending`)
     }
 
-    props.send(value, () => {
+    props.send(value, props.ooc, () => {
       ref.value = ''
       setText('')
     })
@@ -60,6 +66,16 @@ const InputBar: Component<{
 
   return (
     <div class="flex items-center justify-center max-sm:pb-2">
+      <Show when={props.showOocToggle}>
+        <div class="mr-2 h-full w-14 text-center">
+          <button
+            onClick={toggleOoc}
+            class="block h-full w-full rounded-md bg-[var(--bg-800)] hover:bg-[var(--bg-700)]"
+          >
+            {props.ooc ? 'OOC' : 'RP'}
+          </button>
+        </div>
+      </Show>
       <textarea
         spellcheck
         ref={ref}
@@ -74,7 +90,6 @@ const InputBar: Component<{
           updateText(ev)
         }}
       />
-
       <div>
         <button
           onClick={() => setMenu(true)}

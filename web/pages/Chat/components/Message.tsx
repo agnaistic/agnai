@@ -69,7 +69,7 @@ const SingleMessage: Component<
 
   const bgStyles = createMemo(() => {
     user.ui.mode
-    const hex = getRootVariable('bg-800')
+    const hex = getRootVariable(props.msg.ooc ? 'bg-1000' : 'bg-800')
     if (!hex) return {}
 
     const rgb = hexToRgb(hex)
@@ -127,6 +127,8 @@ const SingleMessage: Component<
 
   let ref: HTMLDivElement | undefined
 
+  const opacityClass = props.msg.ooc ? 'opacity-50' : ''
+
   return (
     <div
       class="flex w-full rounded-md py-2 px-2 pr-2 sm:px-4"
@@ -135,37 +137,42 @@ const SingleMessage: Component<
       data-bot={props.msg.characterId ? props.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
     >
-      <div
-        class="flex items-start justify-center pr-4"
-        data-bot-avatar={isBot()}
-        data-user-avatar={isUser()}
-      >
-        <Show when={props.char && !!props.msg.characterId}>
-          <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
-        </Show>
-        <Show when={!props.msg.characterId}>
-          <AvatarIcon
-            avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
-            format={format()}
-            anonymize={props.anonymize}
-          />
-        </Show>
-      </div>
+      <div class={`flex w-full ${opacityClass}`}>
+        <div
+          class="flex items-start justify-center pr-4"
+          data-bot-avatar={isBot()}
+          data-user-avatar={isUser()}
+        >
+          <Show when={props.char && !!props.msg.characterId}>
+            <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
+          </Show>
+          <Show when={!props.msg.characterId}>
+            <AvatarIcon
+              avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+              format={format()}
+              anonymize={props.anonymize}
+            />
+          </Show>
+        </div>
 
-      <div class="flex w-full select-text flex-col gap-1">
-        <div class="flex w-full flex-row justify-between">
-          <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
-            <b
-              class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
-              // Necessary to override text-md and text-lg's line height, for proper alignment
-              style="line-height: 1;"
-              data-bot-name={isBot()}
-              data-user-name={isUser()}
+        <div class="flex w-full select-text flex-col gap-1">
+          <div class="flex w-full flex-row justify-between">
+            <div
+              class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
+                props.msg.ooc ? 'italic' : ''
+              }`}
             >
-              {props.msg.characterId ? props.char?.name! : handleToShow()}
-            </b>
-            <span
-              class={`
+              <b
+                class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
+                // Necessary to override text-md and text-lg's line height, for proper alignment
+                style="line-height: 1;"
+                data-bot-name={isBot()}
+                data-user-name={isUser()}
+              >
+                {props.msg.characterId ? props.char?.name! : handleToShow()}
+              </b>
+              <span
+                class={`
                 message-date
                 text-600
                 flex
@@ -174,110 +181,111 @@ const SingleMessage: Component<
                 leading-none
                 ${visibilityClass()}
               `}
-              data-bot-time={isBot}
-              data-user-time={isUser()}
-            >
-              {new Date(props.msg.createdAt).toLocaleString()}
-            </span>
+                data-bot-time={isBot}
+                data-user-time={isUser()}
+              >
+                {new Date(props.msg.createdAt).toLocaleString()}
+              </span>
+            </div>
+            <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
+              <div
+                class="flex items-center gap-3 text-sm"
+                data-bot-editing={isBot()}
+                data-user-editing={isUser()}
+              >
+                <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
+                  <Show when={!!props.msg.characterId && !isImage()}>
+                    <div onClick={showPrompt} class="icon-button">
+                      <Terminal size={16} />
+                    </div>
+                  </Show>
+                  <Show when={!isImage()}>
+                    <div class="icon-button" onClick={startEdit}>
+                      <Pencil size={18} />
+                    </div>
+                  </Show>
+                  <div class="icon-button" onClick={props.onRemove}>
+                    <Trash size={18} />
+                  </div>
+                </Show>
+                <Show when={props.last && props.msg.characterId}>
+                  <div class="icon-button" onClick={retryMessage}>
+                    <RefreshCw size={18} />
+                  </div>
+                </Show>
+                <Show when={props.last && !props.msg.characterId}>
+                  <div class="cursor-pointer" onClick={resendMessage}>
+                    <RefreshCw size={18} />
+                  </div>
+                </Show>
+              </div>
+            </Show>
+            <Show when={edit()}>
+              <div class="mr-4 flex items-center gap-4 text-sm">
+                <div class="icon-button text-red-500" onClick={cancelEdit}>
+                  <X size={22} />
+                </div>
+                <div class="icon-button text-green-500" onClick={saveEdit}>
+                  <Check size={22} />
+                </div>
+              </div>
+            </Show>
+            <Show when={props.last && props.swipe}>
+              <div class="mr-4 flex items-center gap-4 text-sm">
+                <X
+                  size={22}
+                  class="cursor-pointer text-red-500"
+                  onClick={() => props.cancelSwipe?.()}
+                />
+                <Check
+                  size={22}
+                  class="cursor-pointer text-green-500"
+                  onClick={() => props.confirmSwipe?.()}
+                />
+              </div>
+            </Show>
           </div>
-          <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
-            <div
-              class="mr-4 flex items-center gap-3 text-sm"
-              data-bot-editing={isBot()}
-              data-user-editing={isUser()}
-            >
-              <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
-                <Show when={!!props.msg.characterId && !isImage()}>
-                  <div onClick={showPrompt} class="icon-button">
-                    <Terminal size={16} />
-                  </div>
-                </Show>
-                <Show when={!isImage()}>
-                  <div class="icon-button" onClick={startEdit}>
-                    <Pencil size={18} />
-                  </div>
-                </Show>
-                <div class="icon-button" onClick={props.onRemove}>
-                  <Trash size={18} />
-                </div>
-              </Show>
-              <Show when={props.last && props.msg.characterId}>
-                <div class="icon-button" onClick={retryMessage}>
-                  <RefreshCw size={18} />
-                </div>
-              </Show>
-              <Show when={props.last && !props.msg.characterId}>
-                <div class="cursor-pointer" onClick={resendMessage}>
-                  <RefreshCw size={18} />
-                </div>
-              </Show>
-            </div>
-          </Show>
-          <Show when={edit()}>
-            <div class="mr-4 flex items-center gap-4 text-sm">
-              <div class="icon-button text-red-500" onClick={cancelEdit}>
-                <X size={22} />
+          <div class="break-words">
+            <Show when={isImage()}>
+              <div class="flex justify-start">
+                <img
+                  class="max-h-32 cursor-pointer rounded-md"
+                  src={getAssetUrl(props.msg.msg)}
+                  onClick={() => msgStore.showImage(props.original)}
+                />
               </div>
-              <div class="icon-button text-green-500" onClick={saveEdit}>
-                <Check size={22} />
+            </Show>
+            <Show when={!edit() && !isImage()}>
+              <div
+                class="rendered-markdown pr-1 sm:pr-3"
+                data-bot-message={isBot()}
+                data-user-message={isUser()}
+                innerHTML={markdown.makeHtml(
+                  parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
+                )}
+              />
+            </Show>
+            <Show when={props.msg._id === ''}>
+              <div class="my-2 ml-4">
+                <div class="dot-flashing bg-[var(--hl-700)]"></div>
               </div>
-            </div>
-          </Show>
-          <Show when={props.last && props.swipe}>
-            <div class="mr-4 flex items-center gap-4 text-sm">
-              <X
-                size={22}
-                class="cursor-pointer text-red-500"
-                onClick={() => props.cancelSwipe?.()}
-              />
-              <Check
-                size={22}
-                class="cursor-pointer text-green-500"
-                onClick={() => props.confirmSwipe?.()}
-              />
-            </div>
-          </Show>
-        </div>
-        <div class="break-words">
-          <Show when={isImage()}>
-            <div class="flex justify-start">
-              <img
-                class="max-h-32 cursor-pointer rounded-md"
-                src={getAssetUrl(props.msg.msg)}
-                onClick={() => msgStore.showImage(props.original)}
-              />
-            </div>
-          </Show>
-          <Show when={!edit() && !isImage()}>
-            <div
-              class="rendered-markdown pr-1 sm:pr-3"
-              data-bot-message={isBot()}
-              data-user-message={isUser()}
-              innerHTML={markdown.makeHtml(
-                parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
-              )}
-            />
-          </Show>
-          <Show when={props.msg._id === ''}>
-            <div class="my-2 ml-4">
-              <div class="dot-flashing bg-[var(--hl-700)]"></div>
-            </div>
-          </Show>
-          <Show when={edit()}>
-            <div
-              ref={ref}
-              contentEditable={true}
-              onKeyUp={(ev) => {
-                if (ev.key === 'Escape') cancelEdit()
-              }}
-            ></div>
-          </Show>
-          <Show when={false}>
-            <div class="text-900 mt-2 flex flex-row items-center gap-2">
-              <ThumbsUp size={14} class="hover:text-600 mt-[-0.15rem] cursor-pointer" />
-              <ThumbsDown size={14} class="hover:text-600 cursor-pointer" />
-            </div>
-          </Show>
+            </Show>
+            <Show when={edit()}>
+              <div
+                ref={ref}
+                contentEditable={true}
+                onKeyUp={(ev) => {
+                  if (ev.key === 'Escape') cancelEdit()
+                }}
+              ></div>
+            </Show>
+            <Show when={false}>
+              <div class="text-900 mt-2 flex flex-row items-center gap-2">
+                <ThumbsUp size={14} class="hover:text-600 mt-[-0.15rem] cursor-pointer" />
+                <ThumbsDown size={14} class="hover:text-600 cursor-pointer" />
+              </div>
+            </Show>
+          </div>
         </div>
       </div>
     </div>

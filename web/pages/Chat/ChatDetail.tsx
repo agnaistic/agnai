@@ -72,6 +72,9 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
+  const isMultiRoom = chats.members.length > 1
+  const [ooc, setOoc] = createSignal(isMultiRoom)
+  const [showOocToggle, setShowOocToggle] = createSignal(isMultiRoom)
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
@@ -133,16 +136,19 @@ const ChatDetail: Component = () => {
     chatStore.getChat(params.id)
   })
 
-  const sendMessage = (message: string, onSuccess?: () => void) => {
+  const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
-      setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, 'send', onSuccess)
+      if (!ooc) setSwipe(0)
+      msgStore.send(chats.chat?._id!, message, ooc ? 'sendOoc' : 'send', onSuccess)
       return
     }
 
     switch (message) {
       case '/devCycleAvatarSettings':
         devCycleAvatarSettings(user)
+        return
+      case '/devShowOocToggle':
+        setShowOocToggle(!showOocToggle())
         return
     }
   }
@@ -160,6 +166,16 @@ const ChatDetail: Component = () => {
   // as white/transparent resulting in unreadable message contents
   // if message background is set to 0 opacity
   const chatBg = () => (screenshotInProgress() ? 'bg-[var(--bg-900)]' : '')
+
+  const indexOfLastRPMessage = () =>
+    msgs.msgs.findIndex((_, i, original) => {
+      const rest = original.slice(i + 1)
+      if (rest.find((msg) => msg.ooc !== true)) {
+        return false
+      } else {
+        return true
+      }
+    })
 
   return (
     <>
@@ -233,6 +249,9 @@ const ChatDetail: Component = () => {
               swiped={swipe() !== 0}
               send={sendMessage}
               more={moreMessage}
+              ooc={ooc()}
+              setOoc={setOoc}
+              showOocToggle={showOocToggle()}
             />
             <Show when={isOwner()}>
               <SwipeMessage
@@ -258,7 +277,7 @@ const ChatDetail: Component = () => {
                       char={chats.char!}
                       editing={editing()}
                       anonymize={cfg.anonymize}
-                      last={i() >= 1 && i() === msgs.msgs.length - 1}
+                      last={i() >= 1 && i() === indexOfLastRPMessage()}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
                         msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
