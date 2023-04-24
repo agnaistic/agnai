@@ -33,7 +33,11 @@ export const Dropdown: Component<{ children: any }> = (props) => {
         <ChevronDown />
       </button>
       <Show when={show()}>
-        <div class="absolute top-11 z-10 w-fit rounded-md bg-[var(--bg-700)]">{props.children}</div>
+        <DropMenu show={show()} close={() => setShow(false)} vert="down" horz="right">
+          <div class="flex w-48 flex-col gap-2 p-2">
+            {props.children}
+          </div>
+        </DropMenu>
       </Show>
     </div>
   )

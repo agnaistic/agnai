@@ -9,9 +9,9 @@ import {
   createSignal,
   onMount,
 } from 'solid-js'
-import { NewCharacter, characterStore, chatStore } from '../../store'
+import { NewCharacter, characterStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
-import Select from '../../shared/Select'
+import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../srv/db/schema'
 import {
@@ -25,6 +25,12 @@ import {
   X,
   Import,
   Plus,
+  StarOff,
+  Star,
+  SortAsc,
+  SortDesc,
+  LayoutList,
+  Image,
 } from 'lucide-solid'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -39,24 +45,39 @@ import Loading from '../../shared/Loading'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
+type ViewTypes = 'list' | 'cards';
+type SortFieldTypes = 'modified' | 'created' | 'name';
+type SortDirectionTypes = 'asc' | 'desc';
+
+type ListCache = {
+  view: ViewTypes
+  sort: {
+    field: SortFieldTypes
+    direction: SortDirectionTypes
+  }
+}
+
+const sortOptions: Option<SortFieldTypes>[] = [
+  { value: 'modified', label: 'Last Modified' },
+  { value: 'created', label: 'Created' },
+  { value: 'name', label: 'Name' },
+]
+
 const CharacterList: Component = () => {
   setComponentPageTitle('Characters')
 
   const cached = getListCache()
   const [view, setView] = createSignal(cached.view)
-  const [sort, setSort] = createSignal(cached.sort)
+  const [sortField, setSortField] = createSignal(cached.sort.field)
+  const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
 
-
-  
-  const toggleFavorite = (charId: string, favorite: boolean) => {
-    characterStore.setFavorite(charId, favorite)
-  }
-  
   const onImport = (char: NewCharacter) => {
     characterStore.createCharacter(char, () => setImport(false))
   }
+
+  const getNextView = () => view() === 'list' ? 'cards' : 'list'
 
   onMount(() => {
     characterStore.getCharacters()
@@ -65,7 +86,10 @@ const CharacterList: Component = () => {
   createEffect(() => {
     const next = {
       view: view(),
-      sort: sort(),
+      sort: {
+        field: sortField(),
+        direction: sortDirection(),
+      }
     }
 
     saveListCache(next)
@@ -97,61 +121,74 @@ const CharacterList: Component = () => {
         }
       />
 
-      <div class="mb-2 flex flex-wrap items-center justify-between">
-        <div class="flex flex-wrap items-center">
-          <div class="m-1">
+      <div class="mb-2 flex justify-between">
+        <div class="flex flex-wrap">
+          <div class="m-1 ml-0">
             <TextInput
-              class="m-1"
               fieldName="search"
               placeholder="Search by name..."
               onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
             />
           </div>
+
           <div class="flex">
             <Select
               class="m-1"
-              fieldName="viewType"
-              items={[
-                { value: 'mod-asc', label: 'Modified - ASC' },
-                { value: 'mod-desc', label: 'Modified - DESC' },
-                { value: 'age-asc', label: 'Created - ASC' },
-                { value: 'age-desc', label: 'Created - DESC' },
-                { value: 'alpha-asc', label: 'Name - ASC' },
-                { value: 'alpha-desc', label: 'Name - DESC' },
-              ]}
-              value={sort()}
-              onChange={(next) => setSort(next.value)}
+              fieldName="sortBy"
+              items={sortOptions}
+              value={sortField()}
+              onChange={(next) => setSortField(next.value as SortFieldTypes)}
             />
 
-            <Select
-              class="m-1"
-              fieldName="viewType"
-              items={[
-                { value: 'list', label: 'List' },
-                { value: 'card', label: 'Card' },
-              ]}
-              onChange={(next) => setView(next.value)}
-              value={view()}
-            />
+            <div class="py-1">
+              <Button
+                class="rounded-xl"
+                onClick={() => {
+                  const next = sortDirection() === 'asc' ? 'desc' : 'asc'
+                  setSortDirection(next as SortDirectionTypes)
+                }}
+              >
+                {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap">
+          <div class="py-1">
+            <Button onClick={() => setView(getNextView())}>
+              <Switch>
+                <Match when={getNextView() === 'list'}>
+                  List View <LayoutList />
+                </Match>
+                <Match when={getNextView() === 'cards'}>
+                  Cards View <Image />
+                </Match>
+              </Switch>
+            </Button>
           </div>
         </div>
       </div>
-      <Characters type={view()} filter={search()} sort={sort()} />
+      <Characters type={view()} filter={search()} sortField={sortField()} sortDirection={sortDirection()} />
       <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
     </>
   )
 }
 
-const Characters: Component<{ type: string; filter: string; sort: string }> = (props) => {
+const Characters: Component<{ type: string; filter: string; sortField: SortFieldTypes, sortDirection: SortDirectionTypes }> = (props) => {
   const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
   const chars = createMemo(() => {
     const list = state.list
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
-      .sort(sort(props.sort))
+      .sort(sort(props.sortField, props.sortDirection))
     return list
   })
+
+  const toggleFavorite = (charId: string, favorite: boolean) => {
+    characterStore.setFavorite(charId, favorite)
+  }
 
   const [showDelete, setDelete] = createSignal<AppSchema.Character>()
   const [download, setDownload] = createSignal<AppSchema.Character>()
@@ -176,6 +213,7 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
                     char={char}
                     delete={() => setDelete(char)}
                     download={() => setDownload(char)}
+                    toggleFavorite={(value) => toggleFavorite(char._id, value)}
                   />
                 )}
               </For>
@@ -191,6 +229,7 @@ const Characters: Component<{ type: string; filter: string; sort: string }> = (p
                     char={char}
                     delete={() => setDelete(char)}
                     download={() => setDownload(char)}
+                    toggleFavorite={(value) => toggleFavorite(char._id, value)}
                   />
                 )}
               </For>
@@ -214,6 +253,7 @@ const Character: Component<{
   char: AppSchema.Character
   delete: () => void
   download: () => void
+  toggleFavorite: (value: boolean) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)
   const nav = useNavigate()
@@ -233,12 +273,12 @@ const Character: Component<{
           </A>
         </div>
         <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
-        <Show when={props.character.favorite}>
-          <StarOff class="icon-button" onClick={props.favorite} />
-        </Show>
-        <Show when={!props.character.favorite}>
-          <Star class="icon-button" onClick={props.favorite} />
-        </Show>
+          <Show when={props.char.favorite}>
+            <StarOff class="icon-button" onClick={() => props.toggleFavorite(false)} />
+          </Show>
+          <Show when={!props.char.favorite}>
+            <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
+          </Show>
           <a onClick={props.download}>
             <Download class="icon-button" />
           </a>
@@ -322,34 +362,43 @@ const Character: Component<{
   )
 }
 
-function sort(direction: string) {
-  return (left: AppSchema.Character, right: AppSchema.Character) => {
-    const [kind, dir] = direction.split('-')
-    const mod = dir === 'asc' ? 1 : -1
-    const l =
-      kind === 'alpha' ? left.name.toLowerCase() : kind === 'age' ? left.createdAt : left.updatedAt
-    const r =
-      kind === 'alpha'
-        ? right.name.toLowerCase()
-        : kind === 'age'
-        ? right.createdAt
-        : right.updatedAt
+function getSortableValue(char: AppSchema.Character, field: SortFieldTypes) {
+  switch (field) {
+    case 'name':
+      return char.name.toLowerCase()
 
+    case 'created':
+      return char.createdAt
+
+    case 'modified':
+      return char.updatedAt
+
+    default:
+      return 0
+  }
+}
+
+function sort(field: SortFieldTypes, direction: SortDirectionTypes) {
+  return (left: AppSchema.Character, right: AppSchema.Character) => {
+    const mod = direction === 'asc' ? 1 : -1
+    const l = getSortableValue(left, field)
+    const r = getSortableValue(right, field)
     return l > r ? mod : l === r ? 0 : -mod
   }
 }
 
-function getListCache() {
+function getListCache(): ListCache {
   const existing = localStorage.getItem(CACHE_KEY)
+  const defaultCache: ListCache = { sort: { field: 'modified', direction: 'desc' }, view: 'list' }
 
   if (!existing) {
-    return { sort: 'asc-desc', view: 'list' }
+    return defaultCache
   }
 
-  return JSON.parse(existing)
+  return { ...defaultCache, ...JSON.parse(existing) }
 }
 
-function saveListCache(cache: any) {
+function saveListCache(cache: ListCache) {
   localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
 }
 
