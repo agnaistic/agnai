@@ -218,7 +218,7 @@ const SingleMessage: Component<
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
-              <Show when={props.msg.characterId && user.user?.voice?.type}>
+              <Show when={props.msg.msg && props.msg.characterId && user.user?.voice?.type}>
                 <div
                   class="icon-button"
                   onClick={textToSpeech}
