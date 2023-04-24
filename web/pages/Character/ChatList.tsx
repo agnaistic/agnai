@@ -26,9 +26,13 @@ type ListCache = {
   }
 }
 
-const sortOptions: Option<SortFieldTypes>[] = [
+const chatSortOptions: Option<SortFieldTypes>[] = [
   { value: 'chat-updated', label: 'Chat Activity' },
   { value: 'chat-created', label: 'Chat Created' },
+]
+
+const chatAndCharSortOptions: Option<SortFieldTypes>[] = [
+  ...chatSortOptions,
   { value: 'character-name', label: 'Character Name' },
   { value: 'character-created', label: 'Character Created' },
 ]
@@ -51,6 +55,7 @@ const CharacterChats: Component = () => {
   const [showImport, setImport] = createSignal(false)
   const [sortField, setSortField] = createSignal(cache.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cache.sort.direction)
+  const [sortOptions, setSortOptions] = createSignal(chatAndCharSortOptions)
 
   createEffect(() => {
     const next = {
@@ -61,6 +66,22 @@ const CharacterChats: Component = () => {
     }
 
     saveListCache(next)
+  })
+
+  createEffect(() => {
+    if (!charId()) return;
+    if (sortField() == 'character-name' || sortField() == 'character-created') {
+      setSortField('chat-updated')
+    }
+  })
+
+  createEffect(() => {
+    if (charId() && sortOptions() == chatAndCharSortOptions) {
+      setSortOptions(chatSortOptions)
+    }
+    else if (!charId() && sortOptions() == chatSortOptions) {
+      setSortOptions(chatAndCharSortOptions)
+    }
   })
 
   const state = chatStore((s) => {
@@ -159,7 +180,7 @@ const CharacterChats: Component = () => {
             <Select
               class="m-1"
               fieldName="sortBy"
-              items={sortOptions}
+              items={sortOptions()}
               value={sortField()}
               onChange={(next) => setSortField(next.value as SortFieldTypes)}
             />
