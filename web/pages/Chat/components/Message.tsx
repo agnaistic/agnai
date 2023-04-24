@@ -14,7 +14,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore, msgStore } from '../../../store'
+import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 
@@ -77,9 +77,7 @@ const SingleMessage: Component<
   const isImage = createMemo(() => props.original.adapter === 'image')
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
-  const voiceLoading = createMemo(
-    () => props.last && voiceLoadingState.voiceLoading == props.msg._id
-  )
+  const voiceLoading = createMemo(() => voiceLoadingState.voiceLoading == props.msg._id)
 
   const bgStyles = createMemo(() => {
     user.ui.mode
@@ -128,6 +126,7 @@ const SingleMessage: Component<
   }
 
   const textToSpeech = async () => {
+    if (voiceLoading()) return
     msgStore.textToSpeech(props.msg._id)
   }
 
@@ -219,7 +218,7 @@ const SingleMessage: Component<
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
-              <Show when={props.last}>
+              <Show when={props.msg.characterId && user.user?.voice?.type}>
                 <div
                   class="icon-button"
                   onClick={textToSpeech}

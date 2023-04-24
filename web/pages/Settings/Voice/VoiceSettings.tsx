@@ -29,7 +29,7 @@ export const VoiceSettings: Component = () => {
         label="Filter actions"
         helperText="Skips text in asterisks and parenthesis."
         fieldName="voiceFilterActions"
-        value={state.user?.voice?.filterActions}
+        value={state.user?.voice?.filterActions ?? true}
       />
 
       <Divider />

@@ -32,9 +32,18 @@ export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
       json: true,
       headers: {
         'x-api-key': key,
+        accept: 'audio/mpeg',
       },
     }
   )
+
+  if (result.statusCode != 200) {
+    throw new Error(result.body.message || `Error ${result.statusCode}`)
+  }
+
+  if (!Buffer.isBuffer(result.body)) {
+    throw new Error(result.body.message || 'Unexpected non-buffer response')
+  }
 
   return {
     content: result.body,

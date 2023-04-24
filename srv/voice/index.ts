@@ -2,12 +2,9 @@ import { TextToSpeechAdapterResponse, TextToSpeechRequest } from './types'
 import { AppLog } from '../logger'
 import { handleElevenLabsTextToSpeech } from './elevenlabs'
 import { store } from '../db'
-import { config } from '../config'
 import { v4 } from 'uuid'
 import { saveFile } from '../api/upload'
 import { sendGuest, sendMany } from '../api/ws'
-import { errors } from '../api/wrap'
-import { StatusError } from '../api/wrap'
 
 export async function generateVoice(
   { user, chatId, messageId, ...opts }: TextToSpeechRequest,
@@ -25,7 +22,7 @@ export async function generateVoice(
   let audio: TextToSpeechAdapterResponse | undefined
   let output: string = ''
   let error: any
-  const text = opts.text.trim()
+  const text = processText(opts.text, user.voice?.filterActions || true)
 
   log.debug({ text, type: user.voice?.type }, 'Text to speech')
 
@@ -54,10 +51,20 @@ export async function generateVoice(
       messageId,
       error,
     })
-    throw new StatusError(`Failed to generate speech: ${error}`, 500)
+    return { output: undefined }
   }
 
-  output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+  try {
+    output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+  } catch (ex: any) {
+    send(broadcastIds, guestId, {
+      type: 'voice-failed',
+      chatId,
+      messageId,
+      error: ex.message,
+    })
+    return { output: undefined }
+  }
 
   send(broadcastIds, guestId, { type: 'voice-generated', chatId, messageId, url: output })
 
@@ -70,4 +77,14 @@ function send(broadcastIds: string[], guestId: string | undefined, message: any)
   } else if (guestId) {
     sendGuest(guestId, message)
   }
+}
+
+const filterActionsRegex = /\*[^*]*\*|\([^)]*\)/g
+function processText(text: string, filterActions: boolean) {
+  if (!text) return ''
+  text = text.trim()
+  if (filterActions) {
+    text = text.replace(filterActionsRegex, '')
+  }
+  return text
 }

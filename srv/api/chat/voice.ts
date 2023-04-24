@@ -8,7 +8,7 @@ export const textToSpeech = handle(async ({ body, userId, socketId, log, params 
   const user = userId ? await store.users.getUser(userId) : body.user
 
   const guestId = userId ? undefined : socketId
-  generateVoice(
+  await generateVoice(
     {
       user,
       text: body.text,
