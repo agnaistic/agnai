@@ -31,6 +31,7 @@ import {
   SortDesc,
   LayoutList,
   Image,
+  StarIcon,
 } from 'lucide-solid'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -46,9 +47,9 @@ import Divider from '../../shared/Divider'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
-type ViewTypes = 'list' | 'cards';
-type SortFieldTypes = 'modified' | 'created' | 'name';
-type SortDirectionTypes = 'asc' | 'desc';
+type ViewTypes = 'list' | 'cards'
+type SortFieldTypes = 'modified' | 'created' | 'name'
+type SortDirectionTypes = 'asc' | 'desc'
 
 type ListCache = {
   view: ViewTypes
@@ -78,7 +79,7 @@ const CharacterList: Component = () => {
     characterStore.createCharacter(char, () => setImport(false))
   }
 
-  const getNextView = () => view() === 'list' ? 'cards' : 'list'
+  const getNextView = () => (view() === 'list' ? 'cards' : 'list')
 
   onMount(() => {
     characterStore.getCharacters()
@@ -90,7 +91,7 @@ const CharacterList: Component = () => {
       sort: {
         field: sortField(),
         direction: sortDirection(),
-      }
+      },
     }
 
     saveListCache(next)
@@ -132,7 +133,7 @@ const CharacterList: Component = () => {
             />
           </div>
 
-          <div class="flex hidden md:inline-flex">
+          <div class="inline-flex">
             <Select
               class="m-1"
               fieldName="sortBy"
@@ -143,10 +144,11 @@ const CharacterList: Component = () => {
 
             <div class="py-1">
               <Button
+                schema="clear"
                 class="rounded-xl"
                 onClick={() => {
                   const next = sortDirection() === 'asc' ? 'desc' : 'asc'
-                  setSortDirection(next as SortDirectionTypes)
+                  setSortDirection(next)
                 }}
               >
                 {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
@@ -170,13 +172,23 @@ const CharacterList: Component = () => {
           </div>
         </div>
       </div>
-      <Characters type={view()} filter={search()} sortField={sortField()} sortDirection={sortDirection()} />
+      <Characters
+        type={view()}
+        filter={search()}
+        sortField={sortField()}
+        sortDirection={sortDirection()}
+      />
       <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
     </>
   )
 }
 
-const Characters: Component<{ type: string; filter: string; sortField: SortFieldTypes, sortDirection: SortDirectionTypes }> = (props) => {
+const Characters: Component<{
+  type: string
+  filter: string
+  sortField: SortFieldTypes
+  sortDirection: SortDirectionTypes
+}> = (props) => {
   const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
   const [showGrouping, setShowGrouping] = createSignal(false)
@@ -185,16 +197,17 @@ const Characters: Component<{ type: string; filter: string; sortField: SortField
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
       .sort(getSortFunction(props.sortField, props.sortDirection))
+
     const groups = [
-      { label: 'Favorite Characters', list: list.filter(c => c.favorite) },
-      { label: 'Other Characters', list: list.filter(c => !c.favorite) }
+      { label: 'Favorites', list: list.filter((c) => c.favorite) },
+      { label: '', list: list.filter((c) => !c.favorite) },
     ]
     if (groups[0].list.length === 0) {
       setShowGrouping(false)
       return [groups[1]]
     }
     setShowGrouping(true)
-    return groups;
+    return groups
   })
 
   const toggleFavorite = (charId: string, favorite: boolean) => {
@@ -220,8 +233,8 @@ const Characters: Component<{ type: string; filter: string; sortField: SortField
               <For each={groups()}>
                 {(group) => (
                   <>
-                    <Show when={showGrouping()}>
-                      <h2 class="font-bold text-xl">{group.label}</h2>
+                    <Show when={showGrouping() && group.label}>
+                      <h2 class="text-xl font-bold">{group.label}</h2>
                     </Show>
                     <For each={group.list}>
                       {(char) => (
@@ -234,6 +247,7 @@ const Characters: Component<{ type: string; filter: string; sortField: SortField
                         />
                       )}
                     </For>
+                    <Divider />
                   </>
                 )}
               </For>
@@ -245,7 +259,7 @@ const Characters: Component<{ type: string; filter: string; sortField: SortField
               {(group) => (
                 <>
                   <Show when={showGrouping()}>
-                    <h2 class="font-bold text-xl">{group.label}</h2>
+                    <h2 class="text-xl font-bold">{group.label}</h2>
                   </Show>
                   <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
                     <For each={group.list}>
@@ -285,47 +299,80 @@ const Character: Component<{
   toggleFavorite: (value: boolean) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)
+  const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
   if (props.type === 'list') {
     return (
-      <div class="relative flex w-full gap-2">
-        <div class="flex h-12 w-full flex-row items-center gap-4 rounded-xl bg-[var(--bg-800)]">
-          <A
-            class="ml-4 flex h-3/4 cursor-pointer items-center rounded-2xl sm:w-full"
-            href={`/character/${props.char._id}/chats`}
+      <div class="flex w-full flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2">
+        <A
+          class="ellipsis flex h-3/4 cursor-pointer items-center"
+          href={`/character/${props.char._id}/chats`}
+        >
+          <AvatarIcon avatarUrl={props.char.avatar} class="mr-4" />
+          <div class="ellipsis flex w-full flex-col">
+            <div class="font-bold">{props.char.name}</div>
+            <div class="">{props.char.description}</div>
+          </div>
+        </A>
+        <div>
+          <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
+            <Show when={props.char.favorite}>
+              <Star
+                class="icon-button fill-[var(--text-900)] text-[var(--text-900)]"
+                onClick={() => props.toggleFavorite(false)}
+              />
+            </Show>
+            <Show when={!props.char.favorite}>
+              <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
+            </Show>
+            <a onClick={props.download}>
+              <Download class="icon-button" />
+            </a>
+            <A href={`/character/${props.char._id}/edit`}>
+              <Edit class="icon-button" />
+            </A>
+            <A href={`/character/create/${props.char._id}`}>
+              <Copy class="icon-button" />
+            </A>
+            <Trash class="icon-button" onClick={props.delete} />
+          </div>
+          <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
+            <Menu class="icon-button" />
+          </div>
+          <DropMenu
+            class="bg-[var(--bg-700)]"
+            show={listOpts()}
+            close={() => setListOpts(false)}
+            customPosition="right-[10px]"
+            // horz="left"
+            vert="down"
           >
-            <AvatarIcon avatarUrl={props.char.avatar} class="mx-4" />
-            <div class="text-lg">
-              <span class="font-bold">{props.char.name}</span>
-              <span class="ml-2">{props.char.description}</span>
+            <div class="flex flex-col gap-2 p-2 font-bold">
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)}>
+                <Show when={props.char.favorite}>
+                  <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+                </Show>
+                <Show when={!props.char.favorite}>
+                  <Star /> Favorite
+                </Show>
+              </Button>
+              <Button alignLeft onClick={props.download}>
+                <Download /> Download
+              </Button>
+              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)}>
+                <Edit /> Edit
+              </Button>
+              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)}>
+                <Copy /> Duplicate
+              </Button>
+              <Button alignLeft onClick={props.delete}>
+                <Trash /> Delete
+              </Button>
             </div>
-          </A>
-        </div>
-        <div class="flex flex-row items-center justify-center gap-2 sm:w-3/12">
-          <Show when={props.char.favorite}>
-            <StarOff class="icon-button" onClick={() => props.toggleFavorite(false)} />
-          </Show>
-          <Show when={!props.char.favorite}>
-            <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
-          </Show>
-          <a onClick={props.download}>
-            <Download class="icon-button" />
-          </a>
-          <A href={`/character/${props.char._id}/edit`}>
-            <Edit class="icon-button" />
-          </A>
-          <A href={`/character/create/${props.char._id}`}>
-            <Copy class="icon-button" />
-          </A>
-          <Trash class="icon-button" onClick={props.delete} />
+          </DropMenu>
         </div>
       </div>
     )
-  }
-
-  const wrap = (fn: Function) => () => {
-    setOpts(false)
-    fn()
   }
 
   return (
@@ -336,7 +383,11 @@ const Character: Component<{
             href={`/character/${props.char._id}/chats`}
             class="block h-32 w-full justify-center overflow-hidden rounded-lg"
           >
-            <img src={getAssetUrl(props.char.avatar!)} class="h-full w-full object-cover" style="object-position: 50% 30%;" />
+            <img
+              src={getAssetUrl(props.char.avatar!)}
+              class="h-full w-full object-cover"
+              style="object-position: 50% 30%;"
+            />
           </A>
         </Show>
         <Show when={!props.char.avatar}>
@@ -369,27 +420,25 @@ const Character: Component<{
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Show when={props.char.favorite}>
-                <Button size="sm" onClick={() => props.toggleFavorite(false)}>
-                  Unfavorite
-                </Button>
-              </Show>
-              <Show when={!props.char.favorite}>
-                <Button size="sm" onClick={() => props.toggleFavorite(true)}>
-                  Favorite
-                </Button>
-              </Show>
-              <Button size="sm" onClick={wrap(props.download)}>
-                Download
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)}>
+                <Show when={props.char.favorite}>
+                  <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
+                </Show>
+                <Show when={!props.char.favorite}>
+                  <Star /> Favorite
+                </Show>
               </Button>
-              <Button size="sm" onClick={() => nav(`/character/${props.char._id}/edit`)}>
-                Edit
+              <Button alignLeft onClick={props.download}>
+                <Download /> Download
               </Button>
-              <Button size="sm" onClick={() => nav(`/character/create/${props.char._id}`)}>
-                Duplicate
+              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)}>
+                <Edit /> Edit
               </Button>
-              <Button size="sm" onClick={wrap(props.delete)}>
-                Delete
+              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)}>
+                <Copy /> Duplicate
+              </Button>
+              <Button alignLeft onClick={props.delete}>
+                <Trash /> Delete
               </Button>
             </div>
           </DropMenu>

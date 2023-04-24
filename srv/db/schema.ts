@@ -138,7 +138,7 @@ export namespace AppSchema {
     createdAt: string
     updatedAt: string
 
-    favorite: boolean
+    favorite?: boolean
   }
 
   export interface ChatInvite {
