@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from '@solidjs/router'
+import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
@@ -267,9 +267,9 @@ const Chats: Component<{
               <For each={chats}>
                 {(chat) => (
                   <div class="flex w-full justify-between gap-2 rounded-lg bg-[var(--bg-800)] p-1 hover:bg-[var(--bg-700)]">
-                    <div
+                    <A
                       class="flex w-10/12 cursor-pointer gap-2 sm:w-11/12"
-                      onClick={() => nav(`/chat/${chat._id}`)}
+                      href={`/chat/${chat._id}`}
                     >
                       <div class="flex items-center justify-center">
                         <AvatarIcon
@@ -291,7 +291,7 @@ const Chats: Component<{
                           Updated {toDuration(new Date(chat.updatedAt))} ago.
                         </div>
                       </div>
-                    </div>
+                    </A>
                     <div class="flex items-center" onClick={() => setDelete(chat._id)}>
                       <Trash size={20} class="icon-button" />
                     </div>
