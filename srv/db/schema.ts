@@ -1,6 +1,7 @@
 import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
 import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
+import { VoiceSettings } from './voice-schema'
 
 export namespace AppSchema {
   export interface Token {
@@ -60,6 +61,11 @@ export namespace AppSchema {
     defaultPreset?: string
 
     createdAt?: string
+
+    voice?: VoiceSettings
+
+    elevenLabsApiKey?: string
+    elevenLabsApiKeySet?: boolean
 
     images?: ImageSettings
     // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
