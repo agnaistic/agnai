@@ -175,7 +175,7 @@ const CharacterChats: Component = () => {
             class="my-1 mr-1 max-w-[160px]"
           />
 
-          <div class="flex hidden sm:inline-flex">
+          <div class="hidden sm:inline-flex">
             <Select
               class="m-1"
               fieldName="sortBy"
