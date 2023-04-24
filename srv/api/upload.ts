@@ -1,5 +1,4 @@
 import { S3 } from '@aws-sdk/client-s3'
-import mp from 'multiparty'
 import { mkdirpSync } from 'mkdirp'
 import { Request } from 'express'
 import { unlink, writeFile } from 'fs/promises'
@@ -26,7 +25,10 @@ export type Attachment = {
   ext: string
 }
 
-export function handleForm<T extends Validator>(req: Request, type: T) {
+export function handleForm<T extends Validator>(
+  req: Request,
+  type: T
+): UnwrapBody<T> & { attachments: Attachment[] } {
   const attachments: Attachment[] = []
 
   if (Array.isArray(req.files)) {
@@ -43,7 +45,9 @@ export function handleForm<T extends Validator>(req: Request, type: T) {
     }
   }
 
-  return { ...req.body, attachments }
+  const result: any = { ...req.body, attachments }
+  assertValid(type, result)
+  return result as any
 }
 
 export async function entityUpload(kind: string, id: string, attachment?: Attachment) {
