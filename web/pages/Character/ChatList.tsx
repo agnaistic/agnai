@@ -172,29 +172,28 @@ const CharacterChats: Component = () => {
             items={charItems()}
             value={charId()}
             onChange={(next) => setCharId(next.value)}
-            class="my-1 mr-1 max-w-[160px]"
+            class="my-1 mr-1 max-w-[160px] bg-[var(--bg-600)]"
           />
 
-          <div class="hidden sm:inline-flex">
-            <Select
-              class="m-1"
-              fieldName="sortBy"
-              items={sortOptions()}
-              value={sortField()}
-              onChange={(next) => setSortField(next.value as SortFieldTypes)}
-            />
+          <Select
+            class="m-1 bg-[var(--bg-600)]"
+            fieldName="sortBy"
+            items={sortOptions()}
+            value={sortField()}
+            onChange={(next) => setSortField(next.value as SortFieldTypes)}
+          />
 
-            <div class="py-1">
-              <Button
-                class="rounded-xl"
-                onClick={() => {
-                  const next = sortDirection() === 'asc' ? 'desc' : 'asc'
-                  setSortDirection(next as SortDirectionTypes)
-                }}
-              >
-                {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
-              </Button>
-            </div>
+          <div class="py-1">
+            <Button
+              schema="secondary"
+              class="rounded-xl"
+              onClick={() => {
+                const next = sortDirection() === 'asc' ? 'desc' : 'asc'
+                setSortDirection(next as SortDirectionTypes)
+              }}
+            >
+              {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
+            </Button>
           </div>
         </div>
       </div>

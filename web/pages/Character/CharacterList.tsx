@@ -25,13 +25,11 @@ import {
   X,
   Import,
   Plus,
-  StarOff,
   Star,
   SortAsc,
   SortDesc,
   LayoutList,
   Image,
-  StarIcon,
 } from 'lucide-solid'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -133,33 +131,31 @@ const CharacterList: Component = () => {
             />
           </div>
 
-          <div class="inline-flex">
-            <Select
-              class="m-1"
-              fieldName="sortBy"
-              items={sortOptions}
-              value={sortField()}
-              onChange={(next) => setSortField(next.value as SortFieldTypes)}
-            />
+          <Select
+            class="m-1 bg-[var(--bg-600)]"
+            fieldName="sortBy"
+            items={sortOptions}
+            value={sortField()}
+            onChange={(next) => setSortField(next.value as SortFieldTypes)}
+          />
 
-            <div class="py-1">
-              <Button
-                schema="clear"
-                class="rounded-xl"
-                onClick={() => {
-                  const next = sortDirection() === 'asc' ? 'desc' : 'asc'
-                  setSortDirection(next)
-                }}
-              >
-                {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
-              </Button>
-            </div>
+          <div class="py-1">
+            <Button
+              schema="secondary"
+              class="rounded-xl"
+              onClick={() => {
+                const next = sortDirection() === 'asc' ? 'desc' : 'asc'
+                setSortDirection(next)
+              }}
+            >
+              {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
+            </Button>
           </div>
         </div>
 
         <div class="flex flex-wrap">
           <div class="py-1">
-            <Button onClick={() => setView(getNextView())}>
+            <Button schema="secondary" onClick={() => setView(getNextView())}>
               <Switch>
                 <Match when={getNextView() === 'list'}>
                   <span class="hidden sm:block">List View</span> <LayoutList />
