@@ -182,7 +182,7 @@ const Characters: Component<{ type: string; filter: string; sortField: SortField
     const list = state.list
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
-      .sort(sort(props.sortField, props.sortDirection))
+      .sort(getSortFunction(props.sortField, props.sortDirection))
     return list
   })
 
@@ -366,19 +366,16 @@ function getSortableValue(char: AppSchema.Character, field: SortFieldTypes) {
   switch (field) {
     case 'name':
       return char.name.toLowerCase()
-
     case 'created':
       return char.createdAt
-
     case 'modified':
       return char.updatedAt
-
     default:
       return 0
   }
 }
 
-function sort(field: SortFieldTypes, direction: SortDirectionTypes) {
+function getSortFunction(field: SortFieldTypes, direction: SortDirectionTypes) {
   return (left: AppSchema.Character, right: AppSchema.Character) => {
     const mod = direction === 'asc' ? 1 : -1
     const l = getSortableValue(left, field)
