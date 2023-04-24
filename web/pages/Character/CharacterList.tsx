@@ -42,6 +42,7 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { exportCharacter } from '../../../common/prompt'
 import Loading from '../../shared/Loading'
+import Divider from '../../shared/Divider'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -178,12 +179,22 @@ const CharacterList: Component = () => {
 const Characters: Component<{ type: string; filter: string; sortField: SortFieldTypes, sortDirection: SortDirectionTypes }> = (props) => {
   const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
-  const chars = createMemo(() => {
+  const [showGrouping, setShowGrouping] = createSignal(false)
+  const groups = createMemo(() => {
     const list = state.list
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
       .sort(getSortFunction(props.sortField, props.sortDirection))
-    return list
+    const groups = [
+      { label: 'Favorite Characters', list: list.filter(c => c.favorite) },
+      { label: 'Other Characters', list: list.filter(c => !c.favorite) }
+    ]
+    if (groups[0].list.length === 0) {
+      setShowGrouping(false)
+      return [groups[1]]
+    }
+    setShowGrouping(true)
+    return groups;
   })
 
   const toggleFavorite = (charId: string, favorite: boolean) => {
@@ -206,34 +217,52 @@ const Characters: Component<{ type: string; filter: string; sortField: SortField
         <Match when={state.loaded}>
           <Show when={props.type === 'list'}>
             <div class="flex w-full flex-col gap-2 pb-5">
-              <For each={chars()}>
-                {(char) => (
-                  <Character
-                    type={props.type}
-                    char={char}
-                    delete={() => setDelete(char)}
-                    download={() => setDownload(char)}
-                    toggleFavorite={(value) => toggleFavorite(char._id, value)}
-                  />
+              <For each={groups()}>
+                {(group) => (
+                  <>
+                    <Show when={showGrouping()}>
+                      <h2 class="font-bold text-xl">{group.label}</h2>
+                    </Show>
+                    <For each={group.list}>
+                      {(char) => (
+                        <Character
+                          type={props.type}
+                          char={char}
+                          delete={() => setDelete(char)}
+                          download={() => setDownload(char)}
+                          toggleFavorite={(value) => toggleFavorite(char._id, value)}
+                        />
+                      )}
+                    </For>
+                  </>
                 )}
               </For>
             </div>
           </Show>
 
           <Show when={props.type !== 'list'}>
-            <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
-              <For each={chars()}>
-                {(char) => (
-                  <Character
-                    type={props.type}
-                    char={char}
-                    delete={() => setDelete(char)}
-                    download={() => setDownload(char)}
-                    toggleFavorite={(value) => toggleFavorite(char._id, value)}
-                  />
-                )}
-              </For>
-            </div>
+            <For each={groups()}>
+              {(group) => (
+                <>
+                  <Show when={showGrouping()}>
+                    <h2 class="font-bold text-xl">{group.label}</h2>
+                  </Show>
+                  <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 pb-5">
+                    <For each={group.list}>
+                      {(char) => (
+                        <Character
+                          type={props.type}
+                          char={char}
+                          delete={() => setDelete(char)}
+                          download={() => setDownload(char)}
+                          toggleFavorite={(value) => toggleFavorite(char._id, value)}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </>
+              )}
+            </For>
           </Show>
         </Match>
       </Switch>
