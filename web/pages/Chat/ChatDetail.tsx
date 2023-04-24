@@ -136,7 +136,7 @@ const ChatDetail: Component = () => {
   const sendMessage = (message: string, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
       setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, false, onSuccess)
+      msgStore.send(chats.chat?._id!, message, 'send', onSuccess)
       return
     }
 
@@ -270,7 +270,14 @@ const ChatDetail: Component = () => {
                 </For>
                 <Show when={msgs.waiting}>
                   <Message
-                    msg={emptyMsg(chats.char?._id!, msgs.partial!)}
+                    msg={emptyMsg({
+                      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
+                      userId:
+                        msgs.waiting?.mode === 'self'
+                          ? msgs.waiting.userId || user.user?._id
+                          : undefined,
+                      message: '',
+                    })}
                     char={chats.char!}
                     chat={chats.chat!}
                     onRemove={() => {}}
@@ -452,13 +459,18 @@ function getHeaderBg(mode: UI['mode']) {
   }
   return styles
 }
-function emptyMsg(characterId: string, message: string): AppSchema.ChatMessage {
+function emptyMsg(opts: {
+  charId?: string
+  userId?: string
+  message: string
+}): AppSchema.ChatMessage {
   return {
     kind: 'chat-message',
     _id: '',
     chatId: '',
-    characterId,
-    msg: message || '',
+    characterId: opts.charId,
+    userId: opts.userId,
+    msg: opts.message || '',
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

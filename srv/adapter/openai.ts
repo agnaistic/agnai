@@ -85,16 +85,16 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       history.push({ role: 'user', content })
     }
 
+    if (kind === 'self') {
+      const content = `(Respond as ${user})`
+      tokens += encoder(content)
+      history.push({ role: 'user', content })
+    }
+
     for (const line of all.reverse()) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
-      const content = isBot
-        ? line
-            .substring(line.indexOf(':') + 1)
-            .trim()
-            .replace(BOT_REPLACE, char.name)
-            .replace(SELF_REPLACE, user)
-        : line
+      const content = line.trim().replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, user)
 
       if (isBot) {
         role = 'assistant'

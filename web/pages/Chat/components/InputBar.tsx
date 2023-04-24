@@ -53,35 +53,28 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const generateSelf = () => {
+    msgStore.selfGenerate()
+    setMenu(false)
+  }
+
   return (
     <div class="flex items-center justify-center max-sm:pb-2">
-      <Show when={user.ui.input === 'single'}>
-        <input
-          spellcheck
-          ref={ref}
-          type="text"
-          placeholder="Send a message..."
-          class="focusable-field w-full rounded-xl rounded-r-none px-4 py-2"
-          onKeyDown={updateText}
-          onKeyUp={(ev) => ev.key === 'Enter' && send()}
-        />
-      </Show>
-      <Show when={!user.ui.input || user.ui.input === 'multi'}>
-        <textarea
-          spellcheck
-          ref={ref}
-          placeholder="Send a message..."
-          class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
-          onKeyPress={(ev) => {
-            if (ev.key === 'Enter') {
-              if (ev.ctrlKey || ev.shiftKey) return
-              return send()
-            }
+      <textarea
+        spellcheck
+        ref={ref}
+        placeholder="Send a message..."
+        class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
+        onKeyPress={(ev) => {
+          if (ev.key === 'Enter') {
+            if (ev.ctrlKey || ev.shiftKey) return
+            return send()
+          }
 
-            updateText(ev)
-          }}
-        />
-      </Show>
+          updateText(ev)
+        }}
+      />
+
       <div>
         <button
           onClick={() => setMenu(true)}
@@ -91,6 +84,10 @@ const InputBar: Component<{
         </button>
         <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
           <div class="flex w-48 flex-col gap-2 p-2">
+            {/* <Button schema="secondary" class="w-full" onClick={generateSelf} alignLeft>
+              <MessageCircle size={18} />
+              Respond as Me
+            </Button> */}
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
               <ImagePlus size={18} /> Generage Image
             </Button>

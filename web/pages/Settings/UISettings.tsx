@@ -6,7 +6,7 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
-import { AVATAR_CORNERS, AVATAR_SIZES, UI_INPUT_TYPE, UI_THEME, userStore } from '../../store'
+import { AVATAR_CORNERS, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 
 const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
@@ -72,22 +72,6 @@ const UISettings: Component = () => {
           onChange={(item) => userStore.updateUI({ avatarCorners: item.value as any })}
         />
       </div>
-
-      <Select
-        fieldName="chatInputType"
-        label="Input Type"
-        helperText={
-          <>
-            <p>Whether to use a single or multi-line input field.</p>
-            <p>
-              To create new lines MULTI-mode, use <code>Shift + Enter</code>.
-            </p>
-          </>
-        }
-        items={toDropdownItems(UI_INPUT_TYPE)}
-        value={state.ui.input}
-        onChange={(item) => userStore.updateUI({ input: item.value as any })}
-      />
 
       <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />
       <div class="my-2 w-full justify-center">

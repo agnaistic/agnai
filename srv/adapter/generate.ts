@@ -18,7 +18,7 @@ import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleClaude } from './claude'
 import { GenerateRequestV2, ModelAdapter } from './type'
-import { createPromptWithParts, getAdapter, trimTokens } from '../../common/prompt'
+import { createPromptWithParts, getAdapter, getPromptParts, trimTokens } from '../../common/prompt'
 import { handleScale } from './scale'
 import { MemoryOpts, buildMemoryPrompt } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
@@ -62,9 +62,12 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId)
-    const memory = await getMemoryPrompt({ ...opts, book: entities.book }, log)
+    opts.parts = getPromptParts(
+      { ...entities, settings: entities.gen, chat: opts.chat, members: opts.members },
+      opts.lines
+    )
+    opts.settings = entities.gen
     opts.user = entities.user
-    opts.parts.memory = memory
     opts.settings = entities.gen
     opts.char = entities.char
   }

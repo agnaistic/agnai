@@ -16,7 +16,6 @@ export type UISettings = {
   mode: ThemeMode
   avatarSize: AvatarSize
   avatarCorners: AvatarCornerRadius
-  input: ChatInputType
   font: FontSetting
 
   /** 0 -> 1. 0 = transparent. 1 = opaque */
@@ -30,7 +29,6 @@ const defaultUIsettings: UISettings = {
   mode: 'dark',
   avatarSize: 'md',
   avatarCorners: 'circle',
-  input: 'single',
   font: 'default',
   msgOpacity: 0.8,
   chatWidth: 'full',
@@ -45,7 +43,6 @@ export const AVATAR_SIZES = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
 export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const UI_MODE = ['light', 'dark'] as const
 export const UI_THEME = ['blue', 'sky', 'teal', 'orange', 'rose', 'pink', 'purple'] as const
-export const UI_INPUT_TYPE = ['single', 'multi'] as const
 export const UI_FONT = ['default', 'lato'] as const
 
 export type UserState = {
@@ -67,7 +64,6 @@ export type ThemeColor = (typeof UI_THEME)[number]
 export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
-export type ChatInputType = (typeof UI_INPUT_TYPE)[number]
 export type FontSetting = (typeof UI_FONT)[number]
 
 export const userStore = createStore<UserState>(

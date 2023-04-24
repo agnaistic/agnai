@@ -27,7 +27,7 @@ export async function getMessages(chatId: string, before: string) {
   return res
 }
 
-type GenerateOpts =
+export type GenerateOpts =
   /**
    * A user sending a new message
    */
@@ -42,6 +42,10 @@ type GenerateOpts =
    * The last message in the chat is a bot message and we want to generate more text for this message.
    */
   | { kind: 'continue' }
+  /**
+   * Generate a message on behalf of the user
+   */
+  | { kind: 'self' }
 
 export async function generateResponseV2(opts: GenerateOpts) {
   const entities = await getPromptEntities()

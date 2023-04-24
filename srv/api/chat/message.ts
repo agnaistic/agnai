@@ -21,7 +21,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const chatId = params.id
   assertValid(
     {
-      kind: ['send', 'retry', 'continue'],
+      kind: ['send', 'retry', 'continue', 'self'],
       char: 'any',
       sender: 'any',
       members: ['any'],
@@ -107,7 +107,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   }
 
   if (userId) {
-    sendMany(members, { type: 'message-creating', chatId })
+    sendMany(members, { type: 'message-creating', chatId, mode: body.kind, senderId: userId })
   }
 
   res.json({ success: true, generating: true, message: 'Generating message' })
@@ -140,55 +140,71 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
   if (guest) {
-    const response = newMessage(chatId, responseText, { characterId: body.char._id })
+    const characterId = body.kind === 'self' ? undefined : body.char._id
+    const senderId = body.kind === 'self' ? userId : undefined
+    const response = newMessage(chatId, responseText, { characterId, userId: senderId })
     sendGuest(socketId, {
       type: 'guest-message-created',
       msg: response,
       chatId,
       adapter,
       continue: body.kind === 'continue',
+      generate: true,
     })
     return
   }
 
   await releaseLock(chatId)
 
-  if (body.kind === 'send') {
-    const msg = await store.msgs.createChatMessage({
-      chatId,
-      characterId: body.char._id,
-      message: generated,
-      adapter,
-    })
-    sendMany(members, { type: 'message-created', msg, chatId, adapter })
-  } else if (body.kind === 'retry') {
-    if (body.replacing) {
-      await store.msgs.editMessage(body.replacing._id, generated, adapter)
-      sendMany(members, {
-        type: 'message-retry',
-        chatId,
-        messageId: body.replacing._id,
-        message: responseText,
-        adapter,
-      })
-    } else {
+  switch (body.kind) {
+    case 'self':
+    case 'send': {
       const msg = await store.msgs.createChatMessage({
         chatId,
-        characterId: body.char._id,
+        characterId: body.kind === 'send' ? body.char._id : undefined,
+        senderId: body.kind === 'self' ? userId : undefined,
         message: generated,
         adapter,
       })
-      sendMany(members, { type: 'message-created', msg, chatId, adapter })
+      sendMany(members, { type: 'message-created', msg, chatId, adapter, generate: true })
+      break
     }
-  } else if (body.kind === 'continue') {
-    await store.msgs.editMessage(body.continuing._id, responseText, adapter)
-    sendMany(members, {
-      type: 'message-retry',
-      chatId,
-      messageId: body.continuing._id,
-      message: responseText,
-      adapter,
-    })
+
+    case 'retry': {
+      if (body.replacing) {
+        await store.msgs.editMessage(body.replacing._id, generated, adapter)
+        sendMany(members, {
+          type: 'message-retry',
+          chatId,
+          messageId: body.replacing._id,
+          message: responseText,
+          adapter,
+          generate: true,
+        })
+      } else {
+        const msg = await store.msgs.createChatMessage({
+          chatId,
+          characterId: body.char._id,
+          message: generated,
+          adapter,
+        })
+        sendMany(members, { type: 'message-created', msg, chatId, adapter, generate: true })
+      }
+      break
+    }
+
+    case 'continue': {
+      await store.msgs.editMessage(body.continuing._id, responseText, adapter)
+      sendMany(members, {
+        type: 'message-retry',
+        chatId,
+        messageId: body.continuing._id,
+        message: responseText,
+        adapter,
+        generate: true,
+      })
+      break
+    }
   }
 
   await store.chats.update(chatId, {})
@@ -197,7 +213,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 function newMessage(
   chatId: string,
   text: string,
-  props: { userId: string } | { characterId: string }
+  props: { userId?: string; characterId?: string }
 ) {
   const userMsg: AppSchema.ChatMessage = {
     _id: v4(),
@@ -210,29 +226,3 @@ function newMessage(
   }
   return userMsg
 }
-
-/**
- * V1 response generation routes
- * To be removed
- */
-
-export const generateMessage = handle(async ({ userId, params, body, log }, res) => {
-  return res
-    .status(400)
-    .json({ message: 'Your browser is running on an old version. Please refresh.' })
-})
-
-export const retryMessage = handle(async ({ body, params, userId, log }, res) => {
-  return res
-    .status(400)
-    .json({ message: 'Your browser is running on an old version. Please refresh.' })
-})
-
-// export const summarizeChat = handle(async (req) => {
-//   const chatId = req.params.id
-//   const entities = await getResponseEntities(chatId, req.userId!)
-//   const prompt = 'TODO' // await createPrompt(entities)
-
-//   const summary = await post({ url: '/summarize', body: { prompt }, host: PY_URL })
-//   return { summary }
-// })

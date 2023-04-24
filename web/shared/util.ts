@@ -1,7 +1,6 @@
 import { UnwrapBody, assertValid } from 'frisker'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
-import { isLoggedIn } from '../store/api'
-import { Option } from './Select'
+import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
 
 type FormRef = {

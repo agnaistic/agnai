@@ -8,6 +8,7 @@ import { data } from './data'
 import { getImageData } from './data/chars'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+import { GenerateOpts } from './data/messages'
 
 type ChatId = string
 
@@ -17,7 +18,7 @@ export type MsgState = {
   msgs: AppSchema.ChatMessage[]
   partial?: string
   retrying?: AppSchema.ChatMessage
-  waiting?: string
+  waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string }
   retries: Record<string, string[]>
   nextLoading: boolean
   showImage?: AppSchema.ChatMessage
@@ -108,7 +109,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       const [_, replace] = msgs.slice(-2)
-      yield { partial: '', waiting: chatId, retrying: replace }
+      yield { partial: '', waiting: { chatId, mode: 'continue' }, retrying: replace }
 
       addMsgToRetries(replace)
 
@@ -135,7 +136,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       const [_, replace] = msgs.slice(-2)
-      yield { partial: '', waiting: chatId, retrying: replace }
+      yield { partial: '', waiting: { chatId, mode: 'retry' }, retrying: replace }
 
       addMsgToRetries(replace)
 
@@ -158,19 +159,35 @@ export const msgStore = createStore<MsgState>(
       }
 
       const msg = msgs[msgIndex]
-      msgStore.send(chatId, msg.msg, true)
+      msgStore.send(chatId, msg.msg, 'retry')
     },
-    async *send({ msgs }, chatId: string, message: string, retry: boolean, onSuccess?: () => void) {
+    async *selfGenerate({ activeChatId }) {
+      msgStore.send(activeChatId, '', 'self')
+    },
+    async *send(
+      { msgs },
+      chatId: string,
+      message: string,
+      mode: 'send' | 'retry' | 'self',
+      onSuccess?: () => void
+    ) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
         return
       }
-      yield { partial: '', waiting: chatId }
+      yield { partial: '', waiting: { chatId, mode } }
 
-      const res = retry
-        ? await data.msg.generateResponseV2({ kind: 'retry' })
-        : await data.msg.generateResponseV2({ kind: 'send', text: message })
+      switch (mode) {
+        case 'self':
+        case 'retry':
+          var res = await data.msg.generateResponseV2({ kind: mode })
+          break
+
+        case 'send':
+          var res = await data.msg.generateResponseV2({ kind: 'send', text: message })
+          break
+      }
 
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
@@ -208,7 +225,7 @@ export const msgStore = createStore<MsgState>(
     },
     async *createImage({ activeChatId }, messageId?: string) {
       const onDone = (image: string) => handleImage(activeChatId, image)
-      yield { waiting: activeChatId }
+      yield { waiting: { chatId: activeChatId, mode: 'send' } }
 
       const res = await data.image.generateImage({ messageId, onDone })
       if (res.error) {
@@ -311,14 +328,14 @@ subscribe(
   }
 )
 
-subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
+subscribe('message-created', { msg: 'any', chatId: 'string', generate: 'boolean?' }, (body) => {
   const { msgs, activeChatId } = msgStore.getState()
   if (activeChatId !== body.chatId) return
   const msg = body.msg as AppSchema.ChatMessage
 
   // If the message is from a user don't clear the "waiting for response" flags
   const nextMsgs = msgs.concat(msg)
-  if (msg.userId) {
+  if (msg.userId && !body.generate) {
     msgStore.setState({ msgs: nextMsgs })
   } else {
     msgStore.setState({
@@ -375,16 +392,23 @@ subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) 
     msgs: msgs.slice(0, -1),
     partial: '',
     retrying: replace,
-    waiting: body.chatId,
+    waiting: { chatId: body.chatId, mode: 'retry' },
   })
 })
 
-subscribe('message-creating', { chatId: 'string' }, (body) => {
-  const { waiting, activeChatId, retries } = msgStore.getState()
-  if (body.chatId !== activeChatId) return
+subscribe(
+  'message-creating',
+  { chatId: 'string', senderId: 'string?', mode: 'string?' },
+  (body) => {
+    const { waiting, activeChatId, retries } = msgStore.getState()
+    if (body.chatId !== activeChatId) return
 
-  msgStore.setState({ waiting: activeChatId, partial: '' })
-})
+    msgStore.setState({
+      waiting: { chatId: activeChatId, mode: body.mode as any, userId: body.senderId },
+      partial: '',
+    })
+  }
+)
 
 subscribe('message-horde-eta', { eta: 'number', queue: 'number' }, (body) => {
   toastStore.normal(`Queue: ${body.queue}`)
