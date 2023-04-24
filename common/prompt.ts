@@ -298,12 +298,7 @@ export function formatCharacter(
 
     case 'text': {
       const text = persona.attributes.text?.[0]
-      if (text === undefined) {
-        throw new Error(
-          `Could not format character: Format is 'text', but the attribute is not defined. This may be due to missing data when importing a character.`
-        )
-      }
-      return text
+      return text || ''
     }
   }
 }
