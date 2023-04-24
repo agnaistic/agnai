@@ -131,7 +131,7 @@ const CharacterList: Component = () => {
             />
           </div>
 
-          <div class="flex">
+          <div class="flex hidden md:inline-flex">
             <Select
               class="m-1"
               fieldName="sortBy"
@@ -159,10 +159,10 @@ const CharacterList: Component = () => {
             <Button onClick={() => setView(getNextView())}>
               <Switch>
                 <Match when={getNextView() === 'list'}>
-                  List View <LayoutList />
+                  <span class="hidden md:block">List View</span> <LayoutList />
                 </Match>
                 <Match when={getNextView() === 'cards'}>
-                  Cards View <Image />
+                  <span class="hidden md:block">Cards View</span> <Image />
                 </Match>
               </Switch>
             </Button>
