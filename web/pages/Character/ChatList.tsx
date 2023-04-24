@@ -5,7 +5,7 @@ import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, SortAsc, SortDesc, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
-import { setComponentPageTitle, toDuration, toMap } from '../../shared/util'
+import { find, setComponentPageTitle, toDuration, toMap } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { AppSchema } from '../../../srv/db/schema'
@@ -16,22 +16,28 @@ import Button from '../../shared/Button'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
-type SortFieldTypes = 'chat-updated' | 'chat-created' | 'character-name' | 'character-created'
-type SortDirectionTypes = 'asc' | 'desc'
+type SortType =
+  | 'chat-updated'
+  | 'chat-created'
+  | 'character-name'
+  | 'character-created'
+  | 'bot-activity'
+type SortDirection = 'asc' | 'desc'
 
 type ListCache = {
   sort: {
-    field: SortFieldTypes
-    direction: SortDirectionTypes
+    field: SortType
+    direction: SortDirection
   }
 }
 
-const chatSortOptions: Option<SortFieldTypes>[] = [
+const chatSortOptions: Option<SortType>[] = [
   { value: 'chat-updated', label: 'Chat Activity' },
+  { value: 'bot-activity', label: 'Bot Activity' },
   { value: 'chat-created', label: 'Chat Created' },
 ]
 
-const chatAndCharSortOptions: Option<SortFieldTypes>[] = [
+const chatAndCharSortOptions: Option<SortType>[] = [
   ...chatSortOptions,
   { value: 'character-name', label: 'Character Name' },
   { value: 'character-created', label: 'Character Created' },
@@ -181,7 +187,7 @@ const CharacterChats: Component = () => {
               fieldName="sortBy"
               items={sortOptions()}
               value={sortField()}
-              onChange={(next) => setSortField(next.value as SortFieldTypes)}
+              onChange={(next) => setSortField(next.value as SortType)}
             />
 
             <div class="py-1">
@@ -190,7 +196,7 @@ const CharacterChats: Component = () => {
                 class="rounded-xl"
                 onClick={() => {
                   const next = sortDirection() === 'asc' ? 'desc' : 'asc'
-                  setSortDirection(next as SortDirectionTypes)
+                  setSortDirection(next as SortDirection)
                 }}
               >
                 {sortDirection() === 'asc' ? <SortAsc /> : <SortDesc />}
@@ -228,11 +234,10 @@ const CharacterChats: Component = () => {
 const Chats: Component<{
   chats: AllChat[]
   chars: Record<string, AppSchema.Character>
-  sortField: SortFieldTypes
-  sortDirection: SortDirectionTypes
+  sortField: SortType
+  sortDirection: SortDirection
   charId: string
 }> = (props) => {
-  const nav = useNavigate()
   const [showDelete, setDelete] = createSignal('')
 
   const groups = createMemo(() => {
@@ -323,7 +328,7 @@ export default CharacterChats
 
 type ChatGroup = { char: AppSchema.Character | null; chats: AppSchema.Chat[] }
 
-function getChatSortableValue(chat: AppSchema.Chat, field: SortFieldTypes) {
+function getChatSortableValue(chat: AppSchema.Chat, field: SortType) {
   switch (field) {
     case 'chat-updated':
       return chat.updatedAt
@@ -334,7 +339,7 @@ function getChatSortableValue(chat: AppSchema.Chat, field: SortFieldTypes) {
   }
 }
 
-function getChatSortFunction(field: SortFieldTypes, direction: SortDirectionTypes) {
+function getChatSortFunction(field: SortType, direction: SortDirection) {
   return (left: AppSchema.Chat, right: AppSchema.Chat) => {
     const mod = direction === 'asc' ? 1 : -1
     const l = getChatSortableValue(left, field)
@@ -343,22 +348,27 @@ function getChatSortFunction(field: SortFieldTypes, direction: SortDirectionType
   }
 }
 
-function getCharacterSortableValue(char: AppSchema.Character, field: SortFieldTypes) {
+function getCharacterSortableValue(char: AppSchema.Character, field: SortType) {
   switch (field) {
     case 'character-name':
       return char.name.toLowerCase()
+
     case 'character-created':
       return char.createdAt
+
+    case 'bot-activity':
+      return char.updatedAt
+
     default:
       return 0
   }
 }
 
-function getCharSortFunction(field: SortFieldTypes, direction: SortDirectionTypes) {
+function getCharSortFunction(type: SortType, direction: SortDirection) {
   return (left: AppSchema.Character, right: AppSchema.Character) => {
     const mod = direction === 'asc' ? 1 : -1
-    const l = getCharacterSortableValue(left, field)
-    const r = getCharacterSortableValue(right, field)
+    const l = getCharacterSortableValue(left, type)
+    const r = getCharacterSortableValue(right, type)
     return l > r ? mod : l === r ? 0 : -mod
   }
 }
@@ -366,18 +376,24 @@ function getCharSortFunction(field: SortFieldTypes, direction: SortDirectionType
 function groupAndSort(
   allChars: AppSchema.Character[],
   allChats: AppSchema.Chat[],
-  sortField: SortFieldTypes,
-  sortDirection: SortDirectionTypes
+  type: SortType,
+  direction: SortDirection
 ): Array<ChatGroup> {
-  const mod = sortDirection === 'asc' ? 1 : -1
-
-  if (sortField === 'chat-updated' || sortField == 'chat-created') {
-    const sorted = allChats.slice().sort(getChatSortFunction(sortField, sortDirection))
+  if (type === 'chat-updated' || type == 'chat-created') {
+    const sorted = allChats.slice().sort(getChatSortFunction(type, direction))
     return [{ char: null, chats: sorted }]
   }
 
   const groups: ChatGroup[] = []
-  const chars = allChars.slice().sort(getCharSortFunction(sortField, sortDirection))
+  const sortedChats = allChats.slice().sort(getChatSortFunction('chat-updated', 'desc'))
+
+  const chars = allChars.slice().map((char) => {
+    if (type !== 'bot-activity') return char
+    const first = find(sortedChats, 'characterId', char._id)
+    return { ...char, updatedAt: first?.updatedAt || new Date(0).toISOString() }
+  })
+
+  chars.sort(getCharSortFunction(type, direction))
 
   for (const char of chars) {
     const chats = allChats

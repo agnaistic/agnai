@@ -302,3 +302,9 @@ export const setComponentPageTitle = (newTitle: string) => {
   // the onCleanup hook.
   return { updateTitle }
 }
+
+export function find<T, K extends keyof T>(values: T[], key: K, val: T[K]): T | undefined {
+  for (const value of values) {
+    if (value[key] === val) return value
+  }
+}
