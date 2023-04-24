@@ -314,11 +314,9 @@ const Character: Component<{
           <A href={`/character/${props.char._id}/edit`}>
             <Edit class="icon-button" />
           </A>
-
           <A href={`/character/create/${props.char._id}`}>
             <Copy class="icon-button" />
           </A>
-
           <Trash class="icon-button" onClick={props.delete} />
         </div>
       </div>
@@ -368,9 +366,19 @@ const Character: Component<{
           <DropMenu
             show={opts()}
             close={() => setOpts(false)}
-            customPosition="right-[-6px] top-[-3px]"
+            customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
+              <Show when={props.char.favorite}>
+                <Button size="sm" onClick={() => props.toggleFavorite(false)}>
+                  Unfavorite
+                </Button>
+              </Show>
+              <Show when={!props.char.favorite}>
+                <Button size="sm" onClick={() => props.toggleFavorite(true)}>
+                  Favorite
+                </Button>
+              </Show>
               <Button size="sm" onClick={wrap(props.download)}>
                 Download
               </Button>
