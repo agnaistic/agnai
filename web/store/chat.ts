@@ -11,6 +11,7 @@ import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+import { userStore } from './user'
 
 export { AllChat }
 
@@ -405,10 +406,24 @@ function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): nu
   return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
 }
 
-subscribe('message-created', { msg: 'any', chatId: 'string' }, (body) => {
-  if (!body.msg.userId) return
-  chatStore.getMemberProfile(body.chatId, body.msg.userId)
-})
+subscribe(
+  'message-created',
+  {
+    msg: { _id: 'string', characterId: 'string?', userId: 'string?', msg: 'string' },
+    chatId: 'string',
+  },
+  (body) => {
+    if (body.msg.userId) {
+      chatStore.getMemberProfile(body.chatId, body.msg.userId)
+    } else if (
+      body.msg.characterId &&
+      userStore.getState().user?.voice?.type &&
+      chatStore.getState().active?.chat?._id === body.chatId
+    ) {
+      msgStore.textToSpeech(body.msg._id, body.msg.msg)
+    }
+  }
+)
 
 subscribe('member-removed', { memberId: 'string', chatId: 'string' }, (body) => {
   const profile = getStore('user').getState().profile

@@ -9,9 +9,12 @@ import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { GenerateOpts, msgsApi } from './data/messages'
 import { imageApi } from './data/image'
+import { userStore } from './user'
 import { localApi } from './data/storage'
 
 type ChatId = string
+
+export type VoiceState = 'generating' | 'loading' | 'playing' | ''
 
 export type MsgState = {
   activeChatId: string
@@ -24,7 +27,7 @@ export type MsgState = {
   nextLoading: boolean
   showImage?: AppSchema.ChatMessage
   imagesSaved: boolean
-  voiceLoading: string | undefined
+  voice: { messageId: string; status: VoiceState } | undefined
 
   /**
    * Ephemeral image messages
@@ -45,7 +48,7 @@ const initState: MsgState = {
   waiting: undefined,
   partial: undefined,
   retrying: undefined,
-  voiceLoading: undefined,
+  voice: undefined,
 }
 
 export const msgStore = createStore<MsgState>(
@@ -221,17 +224,14 @@ export const msgStore = createStore<MsgState>(
       }
       return { msgs: msgs.slice(0, index) }
     },
-    async *textToSpeech({ activeChatId, msgs }, messageId?: string) {
-      const msg = msgs.find((m) => m._id === messageId)
-      if (!msg) {
-        return toastStore.error(`Cannot request text to speech: Message not found`)
-      }
-      yield { voiceLoading: messageId }
+    async *textToSpeech({ activeChatId, voice: currentVoice }, messageId: string, text: string) {
+      if (currentVoice) return
+      yield { voice: { messageId, status: 'generating' } }
 
       const res = await data.voice.textToSpeech({
         chatId: activeChatId,
         messageId,
-        text: msg.msg,
+        text,
       })
       if (res.error) {
         toastStore.error(`Failed to request text to speech: ${res.error}`)
@@ -303,9 +303,24 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function handleTextToSpeech(chatId: string, url: string) {
-  const audio = new Audio(url)
-  audio.play()
+async function handleTextToSpeech(messageId: string, url: string) {
+  try {
+    const audio = new Audio(url)
+    audio.addEventListener('error', () => {
+      msgStore.setState({ voice: { messageId, status: 'generating' } })
+    })
+    audio.addEventListener('playing', () => {
+      msgStore.setState({ voice: { messageId, status: 'playing' } })
+    })
+    audio.addEventListener('ended', () => {
+      msgStore.setState({ voice: undefined })
+    })
+    msgStore.setState({ voice: { messageId, status: 'loading' } })
+    audio.play()
+  } catch (e) {
+    console.error(e)
+    msgStore.setState({ voice: undefined })
+  }
 }
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
@@ -343,6 +358,10 @@ subscribe(
       msgStore.setState({
         msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
       })
+    }
+
+    if (userStore.getState().user?.voice?.type && activeChatId === body.chatId) {
+      msgStore.textToSpeech(body.messageId, body.message)
     }
   }
 )
@@ -382,17 +401,16 @@ subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
 
 subscribe('voice-generating', { chatId: 'string', messageId: 'string' }, (body) => {
   if (msgStore.getState().activeChatId != body.chatId) return
-  msgStore.setState({ voiceLoading: body.messageId })
+  msgStore.setState({ voice: { messageId: body.messageId, status: 'generating' } })
 })
 
 subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
-  msgStore.setState({ voiceLoading: undefined })
+  msgStore.setState({ voice: undefined })
   toastStore.error(body.error)
 })
 
-subscribe('voice-generated', { chatId: 'string', url: 'string' }, (body) => {
-  msgStore.setState({ voiceLoading: undefined })
-  handleTextToSpeech(body.chatId, body.url)
+subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
+  handleTextToSpeech(body.messageId, body.url)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {

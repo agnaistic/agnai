@@ -16,6 +16,7 @@ type ElevenLabsTextToSpeechRequest = {
 
 export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
   { user, text },
+  log,
   guestId
 ) => {
   const settings = user.voice?.elevenlabs || defaultSettings
@@ -31,14 +32,18 @@ export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
     {
       json: true,
       headers: {
-        'x-api-key': key,
+        'xi-api-key': key,
         accept: 'audio/mpeg',
       },
     }
   )
 
   if (result.statusCode != 200) {
-    throw new Error(result.body.message || `Error ${result.statusCode}`)
+    throw new Error(
+      result.body.message ||
+        result.body.details?.message ||
+        `Error ${result.statusCode}: ${JSON.stringify(result.body)}`
+    )
   }
 
   if (!Buffer.isBuffer(result.body)) {

@@ -69,7 +69,9 @@ const SingleMessage: Component<
 > = (props) => {
   const user = userStore()
   const state = chatStore()
-  const voiceLoadingState = msgStore((x) => ({ voiceLoading: x.voiceLoading }))
+  const voiceLoadingState = msgStore((x) => ({
+    status: x.voice?.messageId == props.msg._id ? x.voice.status : undefined,
+  }))
 
   const [edit, setEdit] = createSignal(false)
   const isBot = createMemo(() => !!props.msg.characterId)
@@ -77,7 +79,6 @@ const SingleMessage: Component<
   const isImage = createMemo(() => props.original.adapter === 'image')
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
-  const voiceLoading = createMemo(() => voiceLoadingState.voiceLoading == props.msg._id)
 
   const bgStyles = createMemo(() => {
     user.ui.mode
@@ -126,8 +127,7 @@ const SingleMessage: Component<
   }
 
   const textToSpeech = async () => {
-    if (voiceLoading()) return
-    msgStore.textToSpeech(props.msg._id)
+    msgStore.textToSpeech(props.msg._id, props.msg.msg)
   }
 
   const showPrompt = () => {
@@ -222,7 +222,12 @@ const SingleMessage: Component<
                 <div
                   class="icon-button"
                   onClick={textToSpeech}
-                  classList={{ 'animate-pulse': voiceLoading() }}
+                  classList={{
+                    'animate-pulse':
+                      voiceLoadingState.status === 'generating' ||
+                      voiceLoadingState.status == 'loading',
+                    'animate-ping': voiceLoadingState.status === 'playing',
+                  }}
                 >
                   <Megaphone size={18} />
                 </div>
