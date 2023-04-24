@@ -336,7 +336,7 @@ const Character: Component<{
             href={`/character/${props.char._id}/chats`}
             class="block h-32 w-full justify-center overflow-hidden rounded-lg"
           >
-            <img src={getAssetUrl(props.char.avatar!)} class="h-full w-full object-cover" />
+            <img src={getAssetUrl(props.char.avatar!)} class="h-full w-full object-cover" style="object-position: 50% 30%;" />
           </A>
         </Show>
         <Show when={!props.char.avatar}>
