@@ -30,7 +30,7 @@ const Select: Component<{
         <div class="relative overflow-hidden rounded-xl bg-transparent">
           <select
             name={props.fieldName}
-            class={`form-field appearance-none rounded-xl bg-[var(--hl-700)] py-2 pl-3 pr-8 shadow-none cursor-pointer ${props.class}`}
+            class={`form-field cursor-pointer appearance-none rounded-xl bg-[var(--hl-700)] py-2 pl-3 pr-8 shadow-none ${props.class}`}
             onChange={onChange}
             disabled={props.disabled}
           >

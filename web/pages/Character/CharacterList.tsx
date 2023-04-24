@@ -272,11 +272,7 @@ const Characters: Component<{
                       )}
                     </For>
                     <Show when={group.list.length < 4}>
-                      <For each={new Array(4 - group.list.length)}>
-                        {() => (
-                          <div></div>
-                        )}
-                      </For>
+                      <For each={new Array(4 - group.list.length)}>{() => <div></div>}</For>
                     </Show>
                   </div>
                 </>
