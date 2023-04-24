@@ -74,7 +74,11 @@ const ChatDetail: Component = () => {
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const isMultiRoom = chats.members.length > 1
   const [ooc, setOoc] = createSignal(isMultiRoom)
-  const [showOocToggle, setShowOocToggle] = createSignal(isMultiRoom)
+  const [showOocOptions, setShowOocOptions] = createSignal(isMultiRoom)
+  const [hideOocMessages, setHideOocMessages] = createSignal(false)
+  const toggleHideOocMessages = () => {
+    setHideOocMessages(!hideOocMessages())
+  }
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
@@ -148,7 +152,7 @@ const ChatDetail: Component = () => {
         devCycleAvatarSettings(user)
         return
       case '/devShowOocToggle':
-        setShowOocToggle(!showOocToggle())
+        setShowOocOptions(!showOocOptions())
         return
     }
   }
@@ -176,6 +180,9 @@ const ChatDetail: Component = () => {
         return true
       }
     })
+
+  const msgsToDisplay = () =>
+    hideOocMessages() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs
 
   return (
     <>
@@ -226,6 +233,9 @@ const ChatDetail: Component = () => {
                     toggleEditing={toggleEditing}
                     screenshotInProgress={screenshotInProgress()}
                     setScreenshotInProgress={setScreenshotInProgress}
+                    showHideOocOption={showOocOptions()}
+                    toggleHideOocMessages={toggleHideOocMessages}
+                    hideOocMessages={hideOocMessages()}
                   />
                 </DropMenu>
               </div>
@@ -251,7 +261,7 @@ const ChatDetail: Component = () => {
               more={moreMessage}
               ooc={ooc()}
               setOoc={setOoc}
-              showOocToggle={showOocToggle()}
+              showOocToggle={showOocOptions()}
             />
             <Show when={isOwner()}>
               <SwipeMessage
@@ -269,7 +279,7 @@ const ChatDetail: Component = () => {
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
               <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
-                <For each={msgs.msgs}>
+                <For each={msgsToDisplay()}>
                   {(msg, i) => (
                     <Message
                       msg={msg}
