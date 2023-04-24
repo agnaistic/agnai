@@ -180,7 +180,7 @@ const CharacterList: Component = () => {
 }
 
 const Characters: Component<{
-  type: string
+  type: ViewTypes
   filter: string
   sortField: SortFieldTypes
   sortDirection: SortDirectionTypes
@@ -250,7 +250,7 @@ const Characters: Component<{
             </div>
           </Show>
 
-          <Show when={props.type !== 'list'}>
+          <Show when={props.type === 'cards'}>
             <For each={groups()}>
               {(group) => (
                 <>
@@ -269,6 +269,13 @@ const Characters: Component<{
                         />
                       )}
                     </For>
+                    <Show when={group.list.length < 4}>
+                      <For each={new Array(4 - group.list.length)}>
+                        {() => (
+                          <div></div>
+                        )}
+                      </For>
+                    </Show>
                   </div>
                 </>
               )}
