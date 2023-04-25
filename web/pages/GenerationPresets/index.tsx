@@ -1,7 +1,12 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
-import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
+import {
+  defaultPresets,
+  isDefaultPreset,
+  presetValidator,
+  PresetValidatorOutput,
+} from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
@@ -24,6 +29,7 @@ export const GenerationPresetsPage: Component = () => {
   const [edit, setEdit] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.UserGenPreset>()
   const [deleting, setDeleting] = createSignal(false)
+  const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
 
   const onEdit = (preset: AppSchema.UserGenPreset) => {
     nav(`/presets/${preset._id}`)
@@ -96,7 +102,7 @@ export const GenerationPresetsPage: Component = () => {
     setEditing()
   }
 
-  const onSave = (ev: Event) => {
+  const onSave = (ev: Event, force?: boolean) => {
     ev.preventDefault()
     if (state.saving) return
     const validator = { ...presetValidator, service: ['', ...AI_ADAPTERS] } as const
@@ -106,7 +112,14 @@ export const GenerationPresetsPage: Component = () => {
       toastStore.error(`You must select an AI service before saving`)
       return
     }
+    if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {
+      setMissingPlaceholder(true)
+    } else {
+      savePreset(body)
+    }
+  }
 
+  const savePreset = (body: PresetValidatorOutput) => {
     const prev = editing()
     if (prev?._id) {
       presetStore.updatePreset(prev._id, body as any)
@@ -115,6 +128,7 @@ export const GenerationPresetsPage: Component = () => {
         nav(`/presets/${newPreset._id}`)
       })
     }
+    setMissingPlaceholder(false)
   }
 
   return (
@@ -176,6 +190,21 @@ export const GenerationPresetsPage: Component = () => {
         close={() => setDeleting(false)}
         confirm={deletePreset}
         message="Are you sure you wish to delete this preset?"
+      />
+      <ConfirmModal
+        show={!!missingPlaceholder()}
+        close={() => setMissingPlaceholder(false)}
+        confirm={() => onSave(ref, true)}
+        message={
+          <div class="flex flex-col items-center">
+            <div>
+              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
+              almost never what you want. It is recommended for your gaslight to contain the
+              placeholders <code>{'{{ personality }}, {{ scenario }} and {{ memory }}'}</code>.
+            </div>
+            <div>Are you sure you wish to proceed?"</div>
+          </div>
+        }
       />
     </>
   )
