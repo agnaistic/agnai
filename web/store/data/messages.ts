@@ -91,6 +91,9 @@ export async function generateResponseV2(opts: GenerateOpts) {
     settings: entities.settings,
     messages,
   })
+  // For users' convenience; logged to browser console.
+  console.log(`=== Sending the following prompt: ===`)
+  console.log(`${prompt.parts.gaslight}\n${prompt.lines.join('\n')}\n${prompt.post}`)
 
   const { avatar: _, ...sender } = entities.profile
   const { avatar: __, ...char } = entities.char
