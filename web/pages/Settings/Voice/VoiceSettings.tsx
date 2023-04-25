@@ -1,43 +1,43 @@
-import Select, { Option } from '../../../shared/Select'
 import { userStore } from '../../../store'
-import { Component, createSignal } from 'solid-js'
+import { Component, createMemo, createSignal } from 'solid-js'
 import ElevenLabsSettings from './ElevenLabsSettings'
 import { Toggle } from '../../../shared/Toggle'
-import Divider from '../../../shared/Divider'
-import { AppSchema } from '../../../../srv/db/schema'
+import Tabs from '../../../shared/Tabs'
 
-const voiceTypes: Option<AppSchema.VoiceBackend | ''>[] = [
-  { label: 'None', value: '' },
-  { label: 'ElevenLabs', value: 'elevenlabs' },
-]
+const voiceBackendTabs = {
+  elevenlabs: 'ElevenLabs',
+}
+
+type Tab = keyof typeof voiceBackendTabs
 
 export const VoiceSettings: Component = () => {
   const state = userStore()
 
-  const [currentType, setType] = createSignal(state.user?.voice?.backend)
+  const [tab, setTab] = createSignal(0)
+  const tabs: Tab[] = ['elevenlabs']
+  const currentTab = createMemo(() => tabs[tab()])
   const subclass = 'flex flex-col gap-4'
 
   return (
-    <div class="flex flex-col gap-4">
-      <Select
-        fieldName="voiceType"
-        items={voiceTypes}
-        value={state.user?.voice?.backend || ''}
-        onChange={(value) => setType(value.value as any)}
-      />
+    <>
+      <div class="flex flex-col gap-4">
+        <Toggle
+          label="Filter actions"
+          helperText="Skips text in asterisks and parenthesis."
+          fieldName="voiceFilterActions"
+          value={state.user?.voice?.filterActions ?? true}
+        />
 
-      <Toggle
-        label="Filter actions"
-        helperText="Skips text in asterisks and parenthesis."
-        fieldName="voiceFilterActions"
-        value={state.user?.voice?.filterActions ?? true}
-      />
+        <div class="my-2">
+          <Tabs tabs={tabs.map((t) => voiceBackendTabs[t])} selected={tab} select={setTab} />
+        </div>
 
-      <Divider />
-
-      <div class={currentType() === 'elevenlabs' ? subclass : 'hidden'}>
-        <ElevenLabsSettings />
+        <div class="flex flex-col gap-4">
+          <div class={currentTab() === 'elevenlabs' ? subclass : 'hidden'}>
+            <ElevenLabsSettings />
+          </div>
+        </div>
       </div>
-    </div>
+    </>
   )
 }
