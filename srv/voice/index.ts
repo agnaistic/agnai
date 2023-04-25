@@ -72,6 +72,7 @@ export async function generateVoice(
     }
   } catch (ex: any) {
     error = ex.message || ex
+    log.error({ err: ex }, 'Failed to generate audio')
   }
 
   if (!audio) {

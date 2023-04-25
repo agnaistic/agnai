@@ -378,7 +378,7 @@ subscribe(
     if (chat?.chat._id !== body.chatId) return
 
     const voice = chat.char.voice
-    if (voice) {
+    if (chat.char.userId === userStore().user?._id && voice) {
       msgStore.textToSpeech(body.messageId, body.message, voice.voiceBackend, voice.voiceId)
     }
   }

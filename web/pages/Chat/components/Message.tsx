@@ -14,7 +14,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore, characterStore } from '../../../store'
+import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 
@@ -224,10 +224,17 @@ const SingleMessage: Component<
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
-              <Show when={props.msg.msg && props.msg.characterId && props.char.voice}>
+              <Show
+                when={
+                  props.msg.msg &&
+                  props.msg.characterId &&
+                  props.char.voice &&
+                  (user.user?._id === props.chat?.userId || voiceLoadingState.status)
+                }
+              >
                 <div
                   class="icon-button"
-                  onClick={textToSpeech}
+                  onClick={() => (voiceLoadingState.status ? undefined : textToSpeech())}
                   classList={{
                     'animate-pulse':
                       voiceLoadingState.status === 'generating' ||

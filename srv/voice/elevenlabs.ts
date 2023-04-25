@@ -3,6 +3,7 @@ import { TextToSpeechAdapter, VoiceListResponse } from './types'
 import { ElevenLabsSettings } from '../db/voice-schema'
 import { decryptText } from '../db/util'
 import { AppSchema } from '../db/schema'
+import { errors } from '../api/wrap'
 
 const baseUrl = 'https://api.elevenlabs.io/v1'
 
@@ -23,6 +24,7 @@ export const handleElevenLabsVoicesList = async (
   guestId: string | undefined
 ): Promise<VoiceListResponse['voices']> => {
   const { key } = getSettings(user, guestId)
+  if (!key) throw errors.Forbidden
   const result = await needle('get', `${baseUrl}/voices`, {
     headers: {
       'xi-api-key': key,
@@ -42,7 +44,8 @@ export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
   log,
   guestId
 ) => {
-  const { settings, key } = getSettings(user, guestId)
+  const { key } = getSettings(user, guestId)
+  if (!key) throw errors.Forbidden
 
   const payload: ElevenLabsTextToSpeechRequest = {
     text,
@@ -74,6 +77,8 @@ export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
 }
 function getSettings(user: AppSchema.User, guestId: string | undefined) {
   const settings = user.voice?.elevenlabs || defaultSettings
-  const key = guestId ? user.elevenLabsApiKey : decryptText(user.elevenLabsApiKey!)
+  let key: string | undefined
+  if (guestId) key = user.elevenLabsApiKey
+  else if (user.elevenLabsApiKey) key = decryptText(user.elevenLabsApiKey!)
   return { settings, key }
 }
