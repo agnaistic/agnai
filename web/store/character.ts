@@ -26,6 +26,7 @@ export type NewCharacter = {
   avatar?: File
   persona: AppSchema.Persona
   originalAvatar?: any
+  voice: AppSchema.Character['voice']
 }
 
 const initState: CharacterState = {

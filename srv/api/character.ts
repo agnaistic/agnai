@@ -1,10 +1,11 @@
 import { Router } from 'express'
-import { assertValid } from 'frisker'
+import { assertValid, Validator } from 'frisker'
 import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'
 import { entityUpload, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
+import { AppSchema } from '../db/schema'
 
 const router = Router()
 
@@ -21,12 +22,20 @@ const valid = {
   },
   originalAvatar: 'string?',
   favorite: 'boolean?',
+  voice: {
+    voiceBackend: 'string',
+    voiceId: 'string',
+  },
 } as const
 
 const createCharacter = handle(async (req) => {
-  const body = await handleForm(req, { ...valid, persona: 'string' })
+  const body = await handleForm(req, { ...valid, persona: 'string', voice: 'string?' })
   const persona = JSON.parse(body.persona)
   assertValid(valid.persona, persona)
+  const voice = body.voice ? JSON.parse(body.voice) : undefined
+  if (body.voice) {
+    assertValid(valid.voice, voice)
+  }
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -37,6 +46,7 @@ const createCharacter = handle(async (req) => {
     greeting: body.greeting,
     avatar: body.originalAvatar,
     favorite: false,
+    voice: voice as AppSchema.Character['voice'],
   })
 
   const filename = await entityUpload(
@@ -60,8 +70,12 @@ const getCharacters = handle(async ({ userId }) => {
 
 const editCharacter = handle(async (req) => {
   const id = req.params.id
-  const body = await handleForm(req, { ...valid, persona: 'string' })
+  const body = await handleForm(req, { ...valid, persona: 'string', voice: 'string?' })
   const persona = JSON.parse(body.persona)
+  const voice = body.voice ? JSON.parse(body.voice) : undefined
+  if (body.voice) {
+    assertValid(valid.voice, voice)
+  }
 
   assertValid(valid.persona, persona)
 
@@ -81,6 +95,7 @@ const editCharacter = handle(async (req) => {
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
+    voice: voice as AppSchema.Character['voice'],
   })
 
   return char

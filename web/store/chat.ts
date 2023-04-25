@@ -415,12 +415,14 @@ subscribe(
   (body) => {
     if (body.msg.userId) {
       chatStore.getMemberProfile(body.chatId, body.msg.userId)
-    } else if (
-      body.msg.characterId &&
-      userStore.getState().user?.voice?.type &&
-      chatStore.getState().active?.chat?._id === body.chatId
-    ) {
-      msgStore.textToSpeech(body.msg._id, body.msg.msg)
+    } else if (body.msg.characterId) {
+      const chat = chatStore.getState().active
+      if (chat?.chat._id == body.chatId) {
+        const voice = chat.char.voice
+        if (voice) {
+          msgStore.textToSpeech(body.msg._id, body.msg.msg, voice.voiceBackend, voice.voiceId)
+        }
+      }
     }
   }
 )

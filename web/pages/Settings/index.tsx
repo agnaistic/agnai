@@ -99,7 +99,7 @@ const Settings: Component = () => {
       ...base,
       hordeWorkers: workers(),
       voice: {
-        type: voiceType || undefined,
+        backend: voiceType || undefined,
         filterActions: voiceFilterActions || false,
         elevenlabs: {
           voiceId: elevenLabsVoiceId,

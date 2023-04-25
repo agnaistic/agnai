@@ -1,11 +1,12 @@
-import Select from '../../../shared/Select'
+import Select, { Option } from '../../../shared/Select'
 import { userStore } from '../../../store'
 import { Component, createSignal } from 'solid-js'
 import ElevenLabsSettings from './ElevenLabsSettings'
 import { Toggle } from '../../../shared/Toggle'
 import Divider from '../../../shared/Divider'
+import { AppSchema } from '../../../../srv/db/schema'
 
-const voiceTypes = [
+const voiceTypes: Option<AppSchema.VoiceBackend | ''>[] = [
   { label: 'None', value: '' },
   { label: 'ElevenLabs', value: 'elevenlabs' },
 ]
@@ -13,7 +14,7 @@ const voiceTypes = [
 export const VoiceSettings: Component = () => {
   const state = userStore()
 
-  const [currentType, setType] = createSignal(state.user?.voice?.type)
+  const [currentType, setType] = createSignal(state.user?.voice?.backend)
   const subclass = 'flex flex-col gap-4'
 
   return (
@@ -21,7 +22,7 @@ export const VoiceSettings: Component = () => {
       <Select
         fieldName="voiceType"
         items={voiceTypes}
-        value={state.user?.voice?.type || ''}
+        value={state.user?.voice?.backend || ''}
         onChange={(value) => setType(value.value as any)}
       />
 

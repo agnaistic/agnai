@@ -14,7 +14,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore } from '../../../store'
+import { chatStore, userStore, msgStore, settingStore, characterStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 
@@ -127,7 +127,13 @@ const SingleMessage: Component<
   }
 
   const textToSpeech = async () => {
-    msgStore.textToSpeech(props.msg._id, props.msg.msg)
+    if (!props.char.voice) return
+    msgStore.textToSpeech(
+      props.msg._id,
+      props.msg.msg,
+      props.char.voice?.voiceBackend,
+      props.char.voice?.voiceId
+    )
   }
 
   const showPrompt = () => {
@@ -218,7 +224,7 @@ const SingleMessage: Component<
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
-              <Show when={props.msg.msg && props.msg.characterId && user.user?.voice?.type}>
+              <Show when={props.msg.msg && props.msg.characterId && props.char.voice}>
                 <div
                   class="icon-button"
                   onClick={textToSpeech}

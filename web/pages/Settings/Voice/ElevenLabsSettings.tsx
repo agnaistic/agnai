@@ -21,15 +21,6 @@ const ElevenLabsSettings: Component = () => {
         value={state.user?.elevenLabsApiKey}
       />
 
-      <TextInput
-        fieldName="elevenLabsVoiceId"
-        label="ElevenLabs Default Voice ID"
-        placeholder="E.g. EXAVITQu4vr4xnSDxMaL"
-        helperText="You can get your voice ID from the ElevenLabs API: https://docs.elevenlabs.io/api-reference/voices"
-        type="text"
-        value={state.user?.voice?.elevenlabs?.voiceId}
-      />
-
       <Button schema="red" class="w-max" onClick={() => userStore.deleteKey('elevenlabs')}>
         Delete ElevenLabs API Key
       </Button>

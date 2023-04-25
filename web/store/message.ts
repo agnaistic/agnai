@@ -11,6 +11,8 @@ import { GenerateOpts, msgsApi } from './data/messages'
 import { imageApi } from './data/image'
 import { userStore } from './user'
 import { localApi } from './data/storage'
+import { characterStore } from './character'
+import { chatStore } from './chat'
 
 type ChatId = string
 
@@ -224,7 +226,13 @@ export const msgStore = createStore<MsgState>(
       }
       return { msgs: msgs.slice(0, index) }
     },
-    async *textToSpeech({ activeChatId, voice: currentVoice }, messageId: string, text: string) {
+    async *textToSpeech(
+      { activeChatId, voice: currentVoice },
+      messageId: string,
+      text: string,
+      voiceBackend: AppSchema.VoiceBackend,
+      voiceId: string
+    ) {
       if (currentVoice) return
       yield { voice: { messageId, status: 'generating' } }
 
@@ -232,6 +240,8 @@ export const msgStore = createStore<MsgState>(
         chatId: activeChatId,
         messageId,
         text,
+        voiceBackend,
+        voiceId,
       })
       if (res.error) {
         toastStore.error(`Failed to request text to speech: ${res.error}`)
@@ -364,8 +374,12 @@ subscribe(
       })
     }
 
-    if (userStore.getState().user?.voice?.type && activeChatId === body.chatId) {
-      msgStore.textToSpeech(body.messageId, body.message)
+    const chat = chatStore.getState().active
+    if (chat?.chat._id !== body.chatId) return
+
+    const voice = chat.char.voice
+    if (voice) {
+      msgStore.textToSpeech(body.messageId, body.message, voice.voiceBackend, voice.voiceId)
     }
   }
 )

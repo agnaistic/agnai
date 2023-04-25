@@ -147,7 +147,14 @@ export namespace AppSchema {
     updatedAt: string
 
     favorite?: boolean
+
+    voice?: {
+      voiceBackend: VoiceBackend
+      voiceId: string
+    }
   }
+
+  export type VoiceBackend = 'elevenlabs'
 
   export interface ChatInvite {
     _id: string
@@ -257,6 +264,12 @@ export namespace AppSchema {
     weight: number
 
     enabled: boolean
+  }
+
+  export interface VoiceDefinition {
+    id: string
+    label: string
+    previewUrl?: string
   }
 }
 

@@ -14,6 +14,7 @@ type CharacterUpdate = Partial<
     | 'scenario'
     | 'description'
     | 'favorite'
+    | 'voice'
   >
 >
 
@@ -29,6 +30,7 @@ export async function createCharacter(
     | 'scenario'
     | 'description'
     | 'favorite'
+    | 'voice'
   >
 ) {
   const newChar: AppSchema.Character = {

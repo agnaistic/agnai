@@ -1,13 +1,40 @@
-import { TextToSpeechAdapterResponse, TextToSpeechRequest } from './types'
+import {
+  TextToSpeechAdapterResponse,
+  TextToSpeechRequest,
+  VoiceListResponse,
+  VoicesListRequest,
+} from './types'
 import { AppLog } from '../logger'
-import { handleElevenLabsTextToSpeech } from './elevenlabs'
+import { handleElevenLabsTextToSpeech, handleElevenLabsVoicesList } from './elevenlabs'
 import { store } from '../db'
 import { v4 } from 'uuid'
 import { saveFile } from '../api/upload'
 import { sendGuest, sendMany } from '../api/ws'
+import { StatusError } from '../api/wrap'
+
+export async function getVoicesList(
+  { user, voiceBackend }: VoicesListRequest,
+  log: AppLog,
+  guestId?: string
+): Promise<VoiceListResponse> {
+  let voicesList: VoiceListResponse['voices']
+  try {
+    switch (voiceBackend) {
+      case 'elevenlabs':
+        voicesList = await handleElevenLabsVoicesList(user, guestId)
+        break
+
+      default:
+        throw new StatusError('Voice type not supported', 400)
+    }
+  } catch (ex: any) {
+    throw new StatusError(ex.message, 500)
+  }
+  return { voices: voicesList }
+}
 
 export async function generateVoice(
-  { user, chatId, messageId, ...opts }: TextToSpeechRequest,
+  { user, chatId, messageId, voiceBackend, voiceId, ...opts }: TextToSpeechRequest,
   log: AppLog,
   guestId?: string
 ) {
@@ -24,7 +51,7 @@ export async function generateVoice(
   let error: any
   const text = processText(opts.text, user.voice?.filterActions || true)
 
-  log.debug({ text, type: user.voice?.type }, 'Text to speech')
+  log.debug({ text, voiceBackend, voiceId }, 'Text to speech')
 
   const generatingMessage = { chatId, messageId, type: 'voice-generating' }
   if (broadcastIds.length) {
@@ -34,9 +61,13 @@ export async function generateVoice(
   }
 
   try {
-    switch (user.voice?.type) {
+    switch (voiceBackend) {
       case 'elevenlabs':
-        audio = await handleElevenLabsTextToSpeech({ user, text }, log, guestId)
+        audio = await handleElevenLabsTextToSpeech(
+          { user, text, voiceBackend, voiceId },
+          log,
+          guestId
+        )
         break
     }
   } catch (ex: any) {

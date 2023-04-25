@@ -99,6 +99,7 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
     form.append('persona', JSON.stringify(char.persona))
     form.append('description', char.description || '')
     form.append('sampleChat', char.sampleChat)
+    form.append('voice', JSON.stringify(char.voice))
     if (file) {
       form.append('avatar', file)
     }
@@ -151,6 +152,7 @@ export async function createCharacter(char: ImportCharacter) {
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
     form.append('sampleChat', char.sampleChat)
+    form.append('voice', JSON.stringify(char.voice))
     if (char.avatar) {
       form.append('avatar', char.avatar)
     }
