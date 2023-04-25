@@ -35,6 +35,7 @@ export namespace AppSchema {
 
     koboldUrl: string
     thirdPartyFormat: 'kobold' | 'openai' | 'claude'
+    thirdPartyPassword: string
     luminaiUrl: string
     oobaUrl: string
 

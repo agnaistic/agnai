@@ -9,6 +9,7 @@ import {
   deleteOaiKey,
   deleteScaleKey,
   deleteClaudeKey,
+  deleteThirdPartyPassword,
   getConfig,
   getInitialLoad,
   getProfile,
@@ -31,6 +32,7 @@ router.delete('/config/horde', loggedIn, deleteHordeKey)
 router.delete('/config/novel', loggedIn, deleteNovelKey)
 router.delete('/config/openai', loggedIn, deleteOaiKey)
 router.delete('/config/claude', loggedIn, deleteClaudeKey)
+router.delete('/config/third-party', loggedIn, deleteThirdPartyPassword)
 router.delete('/presets/:id', loggedIn, deleteUserPreset)
 router.post('/password', loggedIn, changePassword)
 router.post('/config', loggedIn, updateConfig)

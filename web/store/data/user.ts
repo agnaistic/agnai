@@ -71,6 +71,10 @@ export async function deleteApiKey(kind: string) {
     user.claudeApiKey = ''
   }
 
+  if (kind === 'third-party') {
+    user.thirdPartyPassword = ''
+  }
+
   local.saveConfig(user)
   return local.result({ success: true })
 }

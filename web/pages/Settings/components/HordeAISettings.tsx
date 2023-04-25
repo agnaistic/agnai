@@ -1,6 +1,6 @@
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
-import { settingStore, userStore } from '../../../store'
+import { settingStore, toastStore, userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import Select, { Option } from '../../../shared/Select'
 import { RefreshCw, Save, X } from 'lucide-solid'
@@ -25,7 +25,12 @@ const HordeAISettings: Component<{
 
   const refreshHorde = () => {
     settingStore.getHordeModels()
-    settingStore.getHordeWorkers()
+    try {
+      settingStore.getHordeWorkers()
+    } catch (e) {
+      console.log(e)
+      toastStore.warn('Error fetching horde workers. Check console for details.')
+    }
   }
 
   const hordeName = createMemo(

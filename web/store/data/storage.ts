@@ -80,6 +80,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     defaultAdapter: 'horde',
     koboldUrl: '',
     thirdPartyFormat: 'kobold',
+    thirdPartyPassword: '',
     luminaiUrl: '',
   },
   profile: { _id: '', kind: 'profile', userId: ID, handle: 'You' },
