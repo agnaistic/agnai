@@ -1,6 +1,6 @@
 import { Save, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import { chatGenSettings, defaultPresets } from '../../../common/presets'
+import { chatGenSettings, defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
@@ -52,7 +52,11 @@ export const ChatGenSettingsModal: Component<{
   const onSave = () => {
     if (usePreset()) {
       const body = getStrictForm(ref, { preset: 'string' })
+      const update = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenPreset(props.chat._id, body.preset, props.close)
+      if (!isDefaultPreset(body.preset)) {
+        presetStore.updatePreset(body.preset, update)
+      }
     } else {
       const body = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenSettings(props.chat._id, body, props.close)
@@ -106,7 +110,11 @@ export const ChatGenSettingsModal: Component<{
               {(preset) => (
                 <Show when={selected() === preset._id!}>
                   <div class="bold text-md">Using: {preset.name}</div>
-                  <GenerationSettings inherit={preset} disabled />
+                  <GenerationSettings
+                    showAll
+                    inherit={preset}
+                    disabled={isDefaultPreset(selected())}
+                  />
                 </Show>
               )}
             </For>
@@ -114,7 +122,7 @@ export const ChatGenSettingsModal: Component<{
 
           <Show when={!usePreset()}>
             <div class="bold text-md">Using: Custom Preset</div>
-            <GenerationSettings inherit={props.chat.genSettings} />
+            <GenerationSettings showAll inherit={props.chat.genSettings} />
           </Show>
         </form>
       </div>

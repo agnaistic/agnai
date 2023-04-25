@@ -35,7 +35,7 @@ export const presetStore = createStore<PresetState>(
     async *updatePreset(
       { presets },
       presetId: string,
-      preset: PresetUpdate,
+      preset: Partial<PresetUpdate>,
       onSuccess?: () => void
     ) {
       yield { saving: true }
@@ -43,7 +43,7 @@ export const presetStore = createStore<PresetState>(
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to update preset: ${res.error}`)
       if (res.result) {
-        toastStore.success('Successfully updated preset!')
+        toastStore.success('Successfully updated preset')
         yield { presets: presets.map((p) => (p._id === presetId ? res.result! : p)) }
         onSuccess?.()
       }
@@ -58,7 +58,7 @@ export const presetStore = createStore<PresetState>(
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to create preset: ${res.error}`)
       if (res.result) {
-        toastStore.success('Successfully created preset!')
+        toastStore.success('Successfully created preset')
         yield { presets: presets.concat(res.result) }
         onSuccess?.(res.result)
       }
@@ -73,7 +73,7 @@ export const presetStore = createStore<PresetState>(
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to delete preset: ${res.error}`)
       if (res.result) {
-        toastStore.success('Successfully deleted preset!')
+        toastStore.success('Successfully deleted preset')
 
         const next = presets.filter((pre) => pre._id !== presetId)
         yield { presets: next }

@@ -25,7 +25,7 @@ export const createUserPreset = handle(async ({ userId, body }) => {
 })
 
 export const updateUserPreset = handle(async ({ params, body, userId }) => {
-  assertValid(presetValidator, body)
+  assertValid(presetValidator, body, true)
 
   const preset = await store.presets.updateUserPreset(userId!, params.id, body)
   return preset

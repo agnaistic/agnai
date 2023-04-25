@@ -34,7 +34,7 @@ export async function createPreset(preset: PresetUpdate) {
   return local.result(newPreset)
 }
 
-export async function editPreset(presetId: string, update: PresetUpdate) {
+export async function editPreset(presetId: string, update: Partial<PresetUpdate>) {
   if (isLoggedIn()) {
     const res = await api.post<AppSchema.UserGenPreset>(`/user/presets/${presetId}`, update)
     return res
