@@ -62,7 +62,6 @@ const VoicePicker: Component<{ edit: AppSchema.Character }> = (props) => {
         setVoiceBackend(currentVoiceBackend)
         const currentVoiceId = props.edit.voice?.voiceId || ''
         setVoice(currentVoiceId)
-        console.log(props.edit.voice, currentVoiceBackend, currentVoiceId)
       }
     )
   )
