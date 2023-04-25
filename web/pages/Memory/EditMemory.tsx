@@ -352,6 +352,10 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
     if (i === undefined) continue
 
     const prev = map.get(i) || { ...emptyEntry }
+    // If an entry is enabled, its value will be `"on"`. If it's disabled, its
+    // value will be omitted from the `inputs` array, so we set it to `false` by
+    // default and it will be changed to `true` if it is enabled.
+    prev.enabled = false
 
     switch (prop) {
       case 'name':
