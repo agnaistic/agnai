@@ -82,6 +82,7 @@ export async function deleteApiKey(kind: string) {
 
   if (kind === 'third-party') {
     user.thirdPartyPassword = ''
+  }
 
   if (kind === 'elevenlabs') {
     user.elevenLabsApiKey = ''

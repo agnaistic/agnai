@@ -3,8 +3,10 @@ import { Component, createMemo, createSignal } from 'solid-js'
 import ElevenLabsSettings from './ElevenLabsSettings'
 import { Toggle } from '../../../shared/Toggle'
 import Tabs from '../../../shared/Tabs'
+import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 
 const voiceBackendTabs = {
+  webspeechsynthesis: 'Web Speech Synthesis',
   elevenlabs: 'ElevenLabs',
 }
 
@@ -14,7 +16,7 @@ export const VoiceSettings: Component = () => {
   const state = userStore()
 
   const [tab, setTab] = createSignal(0)
-  const tabs: Tab[] = ['elevenlabs']
+  const tabs: Tab[] = ['webspeechsynthesis', 'elevenlabs']
   const currentTab = createMemo(() => tabs[tab()])
   const subclass = 'flex flex-col gap-4'
 
@@ -33,6 +35,10 @@ export const VoiceSettings: Component = () => {
         </div>
 
         <div class="flex flex-col gap-4">
+          <div class={currentTab() === 'webspeechsynthesis' ? subclass : 'hidden'}>
+            <WebSpeechSynthesisSettings />
+          </div>
+
           <div class={currentTab() === 'elevenlabs' ? subclass : 'hidden'}>
             <ElevenLabsSettings />
           </div>

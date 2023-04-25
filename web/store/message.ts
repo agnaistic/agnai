@@ -13,6 +13,7 @@ import { userStore } from './user'
 import { localApi } from './data/storage'
 import { characterStore } from './character'
 import { chatStore } from './chat'
+import { playWebSpeechSynthesis, voiceStore } from './voice'
 
 type ChatId = string
 
@@ -234,6 +235,12 @@ export const msgStore = createStore<MsgState>(
       voiceId: string
     ) {
       if (currentVoice) return
+
+      if (voiceBackend === 'webspeechsynthesis') {
+        playWebSpeechSynthesis(voiceId, text)
+        return
+      }
+
       yield { voice: { messageId, status: 'generating' } }
 
       const res = await data.voice.textToSpeech({

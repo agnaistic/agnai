@@ -1,7 +1,7 @@
 import { Component, Show, createEffect, createSignal, on } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Select, { Option } from '../../../shared/Select'
-import { voiceStore } from '../../../store/voice'
+import { playVoicePreview, voiceStore } from '../../../store/voice'
 import { FormLabel } from '../../../shared/FormLabel'
 import Button from '../../../shared/Button'
 import { Play } from 'lucide-solid'
@@ -113,7 +113,7 @@ const VoicePicker: Component<{ edit: AppSchema.Character }> = (props) => {
             <FormLabel label="Preview" />
             <div class="flex items-center">
               <div class="relative overflow-hidden rounded-xl bg-transparent">
-                <Button onClick={() => new Audio(voicePreview()).play()}>
+                <Button onClick={() => playVoicePreview(voicePreview()!)}>
                   <Play /> Preview
                 </Button>
               </div>

@@ -118,7 +118,7 @@ function processText(text: string, filterActions: boolean) {
   if (!text) return ''
   text = text.trim()
   if (filterActions) {
-    text = text.replace(filterActionsRegex, '')
+    text = text.replace(filterActionsRegex, '...')
   }
   return text
 }

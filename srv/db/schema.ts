@@ -154,7 +154,7 @@ export namespace AppSchema {
     }
   }
 
-  export type VoiceBackend = 'elevenlabs'
+  export type VoiceBackend = 'webspeechsynthesis' | 'elevenlabs'
 
   export interface ChatInvite {
     _id: string
