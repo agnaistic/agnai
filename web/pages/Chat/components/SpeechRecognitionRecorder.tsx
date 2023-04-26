@@ -160,7 +160,9 @@ export const SpeechRecognitionRecorder: Component<{
   )
 
   createEffect(() => {
-    props.onText(composedValue())
+    const value = composedValue()
+    if (!value) return
+    props.onText(value)
   })
 
   createEffect(() => {

@@ -286,15 +286,30 @@ export function toDropdownItems(values: string[] | readonly string[]): Option[] 
   return values.map((value) => ({ label: capitalize(value), value }))
 }
 
-export function debounce<T extends Function>(fn: T, secs = 2): T {
-  let timer: any
-
-  const wrapped = (...args: any[]) => {
-    clearTimeout(timer)
-    timer = setTimeout(() => fn.apply(null, args), secs * 1000)
-  }
-
-  return wrapped as any
+export function createDebounce<T extends (...args: any[]) => void>(
+  fn: T,
+  ms: number
+): [fn: (...args: Parameters<T>) => void, dispose: () => void] {
+  let timeoutId: NodeJS.Timeout | null = null
+  let callback: () => void
+  return [
+    (...args: Parameters<T>) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+      }
+      callback = () => {
+        fn.apply(null, args)
+        timeoutId = null
+      }
+      timeoutId = setTimeout(callback, ms)
+    },
+    () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId)
+        callback()
+      }
+    },
+  ]
 }
 
 /**

@@ -1,6 +1,7 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio } from 'lucide-solid'
 import {
   Component,
+  createEffect,
   createMemo,
   createSignal,
   For,
@@ -12,12 +13,13 @@ import {
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
-import { chatStore, toastStore, userStore } from '../../../store'
+import { chatStore, draftStore, toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
+import { createDebounce } from '/web/shared/util'
 // import WizardIcon from '/web/icons/WizardIcon'
 // import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
@@ -38,6 +40,8 @@ const InputBar: Component<{
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
   const chats = chatStore((s) => ({ replyAs: s.active?.replyAs, botMap: s.chatBotMap }))
+  const draft = draftStore((p) => ({ value: p.drafts[props.chat._id] }))
+  let draftRestored = false
 
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
@@ -47,7 +51,6 @@ const InputBar: Component<{
 
   const [text, setText] = createSignal('')
   const [menu, setMenu] = createSignal(false)
-  const [timer, setTimer] = createSignal<any>()
   const [cleared, setCleared] = createSignal(0, { equals: false })
 
   const placeholder = createMemo(() => {
@@ -56,19 +59,25 @@ const InputBar: Component<{
     return `Send a message...`
   })
 
+  const [saveDraft, disposeSaveDraftDebounce] = createDebounce((t: string) => {
+    draftStore.update(props.chat._id, t)
+  }, 500)
+
   onMount(() => {
-    setTimer(
-      setInterval(() => {
-        updateText(ref)
-      }, 50)
-    )
+    draftStore.restore(props.chat._id)
   })
 
-  onCleanup(() => {
-    clearInterval(timer())
+  createEffect(() => {
+    if (draftRestored || !draft.value) return
+    draftRestored = true
+    setText(draft.value)
   })
 
-  const updateText = (ev: Event) => {
+  createEffect(() => {
+    saveDraft(text())
+  })
+
+  const updateText = () => {
     if (!ref) return
     setText(ref.value || '')
   }
@@ -88,6 +97,8 @@ const InputBar: Component<{
       setText('')
       setCleared(0)
     })
+
+    draftStore.clear(props.chat._id)
   }
 
   const createImage = () => {
@@ -142,6 +153,10 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  onCleanup(() => {
+    disposeSaveDraftDebounce()
+  })
+
   return (
     <div class="relative flex items-center justify-center">
       <Show when={props.showOocToggle}>
@@ -163,13 +178,12 @@ const InputBar: Component<{
         placeholder={placeholder()}
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
-          if (ev.key === 'Enter') {
-            if (ev.ctrlKey || ev.shiftKey) return
-            return send()
+          if (ev.key === 'Enter' && !ev.shiftKey) {
+            send()
+            ev.preventDefault()
           }
-
-          updateText(ev)
         }}
+        onInput={updateText}
       />
 
       <SpeechRecognitionRecorder

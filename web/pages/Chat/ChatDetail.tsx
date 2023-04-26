@@ -26,8 +26,8 @@ import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
-import './chat-detail.css'
 import AvatarIcon from '/web/shared/AvatarIcon'
+import './chat-detail.css'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -36,7 +36,7 @@ const ChatDetail: Component = () => {
   const user = userStore()
   const cfg = settingStore()
   const chats = chatStore((s) => ({
-    ...s.active,
+    ...(s.active?.chat._id === params.id ? s.active : undefined),
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.loaded,
@@ -146,7 +146,9 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
-    chatStore.getChat(params.id)
+    if (params.id !== chats.chat?._id) {
+      chatStore.getChat(params.id)
+    }
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
@@ -223,9 +225,9 @@ const ChatDetail: Component = () => {
                   <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
                     {chats.char?.name}
                   </span>
-                  <Show when={chats.chat?.name}>
+                  <Show when={chats.chat!.name}>
                     <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                      {chats.chat?.name}
+                      {chats.chat!.name}
                     </span>
                   </Show>
                 </div>

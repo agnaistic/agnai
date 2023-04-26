@@ -11,6 +11,7 @@ import type { memoryStore } from './memory'
 import type { msgStore } from './message'
 import type { adminStore } from './admin'
 import type { presetStore } from './presets'
+import type { draftStore } from './drafts'
 
 type StoreMap = {
   user: typeof userStore
@@ -23,6 +24,7 @@ type StoreMap = {
   messages: typeof msgStore
   admin: typeof adminStore
   presets: typeof presetStore
+  drafts: typeof draftStore
 }
 
 type HandlerReturn<S> =
