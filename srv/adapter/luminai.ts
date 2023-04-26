@@ -91,7 +91,7 @@ export async function embedMemory(user: AppSchema.User, book: AppSchema.MemoryBo
   }
 
   const url = `${user.luminaiUrl}/api/memory/${book._id}/embed`
-  const res = await needle('post', url, { memory_book: book })
+  const res = await needle('post', url, { memory_book: book }, { json: true })
 
   if (res.statusCode && res.statusCode >= 400) {
     logger.error({ err: res.body }, `Filament memory embedding failed`)
@@ -104,7 +104,12 @@ export async function retrieveMemories(user: AppSchema.User, bookId: string, lin
   }
 
   const url = `${user.luminaiUrl}/api/memory/${bookId}/prompt`
-  const res = await needle('post', url, { prompt: lines, num_memories_per_sentence: 3 })
+  const res = await needle(
+    'post',
+    url,
+    { prompt: lines, num_memories_per_sentence: 3 },
+    { json: true }
+  )
 
   if (res.statusCode && res.statusCode >= 400) {
     logger.error({ err: res.body }, `Filament memory retrieval failed`)
