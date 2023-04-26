@@ -200,9 +200,9 @@ async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
       .retrieveMemories(opts.user, opts.book._id, opts.lines)
       .catch((error) => ({ error }))
 
+    // If we fail, we'll revert to the naive memory retrival
     if ('error' in res) {
-      log.error({ err: res.error }, `Failed to retrieve memories from filament`)
-      throw res.error
+      return
     }
 
     const memories = res.map((res) => res.entry)

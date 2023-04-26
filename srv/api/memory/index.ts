@@ -5,6 +5,7 @@ import { loggedIn } from '../auth'
 import { handle } from '../wrap'
 import { AppSchema } from '../../db/schema'
 import { FILAMENT_ENABLED, filament } from '../../adapter/luminai'
+import { logger } from '../../logger'
 
 const router = Router()
 
@@ -62,7 +63,7 @@ router.delete('/:id', loggedIn, removeBook)
 export default router
 
 /**
- * This will only _try_ to perform  memory embedding when:
+ * This will only _try_ to perform memory embedding when:
  * - luminai is enabled
  * - and the user has a luminai url configured
  */

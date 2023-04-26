@@ -94,7 +94,7 @@ export async function embedMemory(user: AppSchema.User, book: AppSchema.MemoryBo
   const res = await needle('post', url, { memory_book: book })
 
   if (res.statusCode && res.statusCode >= 400) {
-    throw new StatusError(`Failed memory embedding (${res.statusCode})`, res.statusCode)
+    logger.error({ err: res.body }, `Filament memory embedding failed`)
   }
 }
 
@@ -107,6 +107,7 @@ export async function retrieveMemories(user: AppSchema.User, bookId: string, lin
   const res = await needle('post', url, { prompt: lines, num_memories_per_sentence: 3 })
 
   if (res.statusCode && res.statusCode >= 400) {
+    logger.error({ err: res.body }, `Filament memory retrieval failed`)
     throw new StatusError(
       `Failed to retrieve memories (${res.statusCode}): ${res.body.message || res.statusMessage}`,
       res.statusCode
