@@ -18,3 +18,4 @@ version.txt
 settings.json
 .npmrc
 .model/
+pnpm-lock.yaml
