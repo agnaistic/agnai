@@ -195,7 +195,7 @@ async function getGenerationSettings(
 async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getEncoder(adapter, model)
-  if (FILAMENT_ENABLED && adapter === 'luminai' && opts.user.luminaiUrl && opts.book) {
+  if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
     const res = await filament
       .retrieveMemories(opts.user, opts.book._id, opts.lines)
       .catch((error) => ({ error }))
