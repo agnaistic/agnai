@@ -1,5 +1,5 @@
 import { Import, X } from 'lucide-solid'
-import { Component, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createSignal } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
@@ -10,6 +10,7 @@ import { extractTavernData } from './tavern-utils'
 export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
 
 const supportedFormats = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
+const maxShownImports = 3
 
 const ImportCharacterModal: Component<{
   show: boolean
@@ -17,12 +18,12 @@ const ImportCharacterModal: Component<{
   onSave: (chars: ImportCharacter[]) => void
 }> = (props) => {
   const state = characterStore()
-  const imported: ImportCharacter[] = []
-  const [ready, setReady] = createSignal(0)
+  const [imported, setImported] = createSignal<NewCharacter[]>([])
+  const [ready, setReady] = createSignal(false)
 
   const processFiles = async (files: FileInputResult[]) => {
-    setReady(0)
-    imported.length = 0
+    setReady(false)
+    setImported([])
     files.forEach((file) => {
       const extension = file.file.name.split('.').pop()?.toLowerCase() || ''
       const isImg = ['png', 'jpg', 'jpeg'].includes(extension)
@@ -41,14 +42,14 @@ const ImportCharacterModal: Component<{
         `Invalid file format: ${file.file.name}. Supported formats: ${supportedFormats}`
       )
     })
+    setReady(!!imported().length)
   }
 
   const processJSON = async (file: FileInputResult) => {
     try {
       const content = await getFileAsString(file)
       const json = JSON.parse(content)
-      imported.push(jsonToCharacter(json))
-      setReady(ready() + 1)
+      setImported([...imported(), jsonToCharacter(json)])
       toastStore.success('Character file accepted')
     } catch (ex: any) {
       toastStore.warn(`Failed to import ${file.file.name}: ${ex.message}`)
@@ -58,25 +59,30 @@ const ImportCharacterModal: Component<{
   const processImage = async (file: FileInputResult) => {
     const tav = await extractTavernData(file.file)
     if (tav) {
-      imported.push({ ...jsonToCharacter(tav), avatar: file.file })
-      setReady(ready() + 1)
+      setImported([...imported(), jsonToCharacter(tav)])
       toastStore.success('Tavern card accepted')
     }
   }
 
   const onImport = async () => {
     if (!ready()) return
-    props.onSave(imported)
+    props.onSave(imported())
+  }
+
+  const cancel = () => {
+    setReady(false)
+    setImported([])
+    props.close()
   }
 
   return (
     <Modal
       show={props.show}
       title="Import Character"
-      close={props.close}
+      close={cancel}
       footer={
         <>
-          <Button schema="secondary" onClick={props.close}>
+          <Button schema="secondary" onClick={cancel}>
             <X />
             Cancel
           </Button>
@@ -99,6 +105,23 @@ const ImportCharacterModal: Component<{
           onUpdate={processFiles}
         />
       </div>
+
+      <Show when={imported().length}>
+        <div class="mt-2 text-lg">Characters to import:</div>
+        <div class="markdown">
+          <ul>
+            <For each={imported().slice(0, maxShownImports)}>
+              {(i) => <li>{i.name ?? 'Unnamed'}</li>}
+            </For>
+            <Show when={imported().length === maxShownImports + 1}>
+              <li>... and one other</li>
+            </Show>
+            <Show when={imported().length > maxShownImports + 1}>
+              <li>... and {imported().length - maxShownImports} others</li>
+            </Show>
+          </ul>
+        </div>
+      </Show>
     </Modal>
   )
 }
