@@ -20,7 +20,7 @@ import { handleClaude } from './claude'
 import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter, getPromptParts, trimTokens } from '../../common/prompt'
 import { handleScale } from './scale'
-import { MemoryOpts, buildMemoryPrompt } from '../../common/memory'
+import { MemoryOpts } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -70,6 +70,12 @@ export async function createTextStreamV2(
     opts.user = entities.user
     opts.settings = entities.gen
     opts.char = entities.char
+
+    // Use pipeline
+    const memory = await getMemoryPrompt(opts, log)
+    if (memory) {
+      opts.parts.memory = memory
+    }
   }
 
   const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user)
@@ -205,6 +211,5 @@ async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
     return prompt.join('\n')
   }
 
-  const memory = buildMemoryPrompt(opts)
-  return memory?.prompt
+  return
 }

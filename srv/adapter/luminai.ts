@@ -57,12 +57,14 @@ export const handleLuminAI: ModelAdapter = async function* ({
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    yield { error: `LAI.Kobold request failed: ${resp.error?.message || resp.error}` }
+    log.error({ err: resp.error }, `Filamant request failed`)
+    yield { error: `Filament request failed: ${resp.error?.message || resp.error}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `LAI.Kobold request failed: ${resp.statusMessage}` }
+    log.error({ err: resp.body }, `Filament request failed`)
+    yield { error: `Filament request failed: ${resp.statusMessage}` }
     return
   }
 
