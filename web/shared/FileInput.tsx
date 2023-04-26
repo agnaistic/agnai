@@ -11,6 +11,7 @@ const FileInput: Component<{
   label?: string
   helperText?: JSX.Element
   accept?: string
+  multiple?: boolean
   onUpdate?: (files: FileInputResult[]) => void
 }> = (props) => {
   const onFile = async (list: FileList | null) => {
@@ -34,6 +35,8 @@ const FileInput: Component<{
         accept={props.accept}
         class={`w-full rounded-xl bg-[var(--bg-800)] ${props.class}`}
         onChange={(ev) => onFile(ev.currentTarget.files)}
+        {...(props.multiple ? { multiple: true } : {})}
+        {...(props.required ? { required: true } : {})}
       />
     </div>
   )

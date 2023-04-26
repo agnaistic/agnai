@@ -14,49 +14,59 @@ const supportedFormats = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
-  onSave: (char: ImportCharacter) => void
+  onSave: (chars: ImportCharacter[]) => void
 }> = (props) => {
   const state = characterStore()
-  const [json, setJson] = createSignal<any>(undefined)
-  const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
+  const imported: ImportCharacter[] = []
+  const [ready, setReady] = createSignal(0)
 
-  const updateJson = async (files: FileInputResult[]) => {
-    if (!files.length) return setJson()
-    try {
-      const content = await getFileAsString(files[0])
-      const json = JSON.parse(content)
-      importJson(json)
-      toastStore.success('Character file accepted')
-    } catch (ex) {
-      toastStore.warn(`Invalid file format. Supported formats: ${supportedFormats}`)
-    }
-  }
-
-  const importJson = (json: any) => {
-    try {
-      const char = jsonToCharacter(json)
-
-      setJson(char)
-    } catch (ex) {
-      toastStore.warn(`Invalid file format. Supported formats: ${supportedFormats}`)
-    }
-  }
-
-  const updateAvatar = async (files: FileInputResult[]) => {
-    if (!files.length) setAvatar()
-    else {
-      const tav = await extractTavernData(files[0].file)
-      if (tav) {
-        importJson(tav)
-        toastStore.success('Tavern card accepted')
+  const processFiles = async (files: FileInputResult[]) => {
+    setReady(0)
+    imported.length = 0
+    files.forEach((file) => {
+      const extension = file.file.name.split('.').pop()?.toLowerCase() || ''
+      const isImg = ['png', 'jpg', 'jpeg'].includes(extension)
+      if (isImg) {
+        processImage(file)
+        return
       }
-      setAvatar(() => files[0].file)
+
+      const isJSON = ['json'].includes(extension)
+      if (isJSON) {
+        processJSON(file)
+        return
+      }
+
+      toastStore.warn(
+        `Invalid file format: ${file.file.name}. Supported formats: ${supportedFormats}`
+      )
+    })
+  }
+
+  const processJSON = async (file: FileInputResult) => {
+    try {
+      const content = await getFileAsString(file)
+      const json = JSON.parse(content)
+      imported.push(jsonToCharacter(json))
+      setReady(ready() + 1)
+      toastStore.success('Character file accepted')
+    } catch (ex: any) {
+      toastStore.warn(`Failed to import ${file.file.name}: ${ex.message}`)
+    }
+  }
+
+  const processImage = async (file: FileInputResult) => {
+    const tav = await extractTavernData(file.file)
+    if (tav) {
+      imported.push({ ...jsonToCharacter(tav), avatar: file.file })
+      setReady(ready() + 1)
+      toastStore.success('Tavern card accepted')
     }
   }
 
   const onImport = async () => {
-    if (!json()) return
-    props.onSave({ ...json(), avatar: avatar() })
+    if (!ready()) return
+    props.onSave(imported)
   }
 
   return (
@@ -71,7 +81,7 @@ const ImportCharacterModal: Component<{
             Cancel
           </Button>
 
-          <Button onClick={onImport} disabled={state.creating}>
+          <Button onClick={onImport} disabled={state.creating || !ready()}>
             <Import />
             Import
           </Button>
@@ -80,19 +90,13 @@ const ImportCharacterModal: Component<{
     >
       <div class="flex flex-col gap-2">
         <FileInput
-          label="JSON File"
-          fieldName="json"
-          accept="text/json,application/json"
+          label="Avatar or JSON file"
+          fieldName="file"
+          accept="text/json,application/json,image/png,image/jpeg"
           helperText={`Supported formats: ${supportedFormats}`}
           required
-          onUpdate={updateJson}
-        />
-
-        <FileInput
-          fieldName="avatar"
-          label="Image File (Avatar or TavernCard)"
-          accept="image/png,image/jpeg"
-          onUpdate={updateAvatar}
+          multiple
+          onUpdate={processFiles}
         />
       </div>
     </Modal>

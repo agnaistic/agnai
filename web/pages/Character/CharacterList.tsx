@@ -74,9 +74,18 @@ const CharacterList: Component = () => {
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
   const [create, setCreate] = createSignal<AppSchema.Character>()
+  const importQueue: NewCharacter[] = []
 
-  const onImport = (char: NewCharacter) => {
-    characterStore.createCharacter(char, () => setImport(false))
+  const onImport = (chars: NewCharacter[]) => {
+    importQueue.push(...chars)
+    dequeue()
+    setImport(false)
+  }
+
+  const dequeue = () => {
+    const char = importQueue.shift()
+    if (!char) return
+    characterStore.createCharacter(char, dequeue)
   }
 
   const getNextView = () => (view() === 'list' ? 'cards' : 'list')
