@@ -457,7 +457,13 @@ const Character: Component<{
               <Button onClick={createChat} alignLeft size="sm">
                 <MessageCircle /> Chat
               </Button>
-              <Button alignLeft onClick={props.download} size="sm">
+              <Button
+                alignLeft
+                onClick={() => {
+                  setOpts(false)
+                  props.download()
+                }}
+              >
                 <Download /> Download
               </Button>
               <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
@@ -470,7 +476,14 @@ const Character: Component<{
               >
                 <Copy /> Duplicate
               </Button>
-              <Button alignLeft onClick={props.delete} size="sm">
+              <Button
+                alignLeft
+                size="sm"
+                onClick={() => {
+                  setOpts(false)
+                  props.delete()
+                }}
+              >
                 <Trash /> Delete
               </Button>
             </div>
