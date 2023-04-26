@@ -109,7 +109,11 @@ export async function retrieveMemories(user: AppSchema.User, bookId: string, lin
     url,
     { prompt: lines, num_memories_per_sentence: 3 },
     { json: true }
-  )
+  ).catch((error) => ({ error }))
+  if ('error' in res) {
+    logger.error({ err: res.error }, `Filament request failed`)
+    throw res.error
+  }
 
   if (res.statusCode && res.statusCode >= 400) {
     logger.error({ err: res.body }, `Filament memory retrieval failed`)

@@ -5,7 +5,6 @@ import { loggedIn } from '../auth'
 import { handle } from '../wrap'
 import { AppSchema } from '../../db/schema'
 import { FILAMENT_ENABLED, filament } from '../../adapter/luminai'
-import { logger } from '../../logger'
 
 const router = Router()
 
@@ -34,6 +33,7 @@ const createBook = handle(async ({ body, userId }) => {
 
   const newBook = await store.memory.createBook(userId!, body)
   embed(userId, newBook)
+
   return newBook
 })
 
@@ -68,6 +68,8 @@ export default router
  * - and the user has a luminai url configured
  */
 async function embed(userId: string, book: AppSchema.MemoryBook) {
+  if (!FILAMENT_ENABLED) return
+
   const user = await store.users.getUser(userId)
   if (!user || !user.luminaiUrl || !book) return
 
