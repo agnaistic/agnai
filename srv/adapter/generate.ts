@@ -72,7 +72,7 @@ export async function createTextStreamV2(
     opts.char = entities.char
 
     // Use pipeline
-    const memory = await getMemoryPrompt(opts, log)
+    const memory = await getMemoryPrompt({ ...opts, book: entities.book }, log)
     if (memory) {
       opts.parts.memory = memory
     }
