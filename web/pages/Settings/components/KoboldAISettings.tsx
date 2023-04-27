@@ -31,7 +31,7 @@ const KoboldAISettings: Component = () => {
         fieldName="thirdPartyPassword"
         label="3rd-party password if applicable"
         helperText="(NEVER put an OpenAI API key here, this would expose your personal information to third parties)"
-        placeholder={state.user?.thirdPartyPassword ? 'Password is set' : 'E.g. p4ssw0rd123'}
+        placeholder={state.user?.thirdPartyPasswordSet ? 'Password is set' : 'E.g. p4ssw0rd123'}
         type="password"
         value={''}
       />

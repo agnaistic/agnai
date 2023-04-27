@@ -117,15 +117,19 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
 
-  const mustUseThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
-  const key = mustUseThirdPartyPassword ? user.thirdPartyPassword : user.oaiKey
-  const bearer = !!guest ? `Bearer ${key}` : `Bearer ${decryptText(key)}`
+  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const apiKey = useThirdPartyPassword
+    ? user.thirdPartyPassword
+    : !isThirdParty
+    ? user.oaiKey
+    : null
+  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
 
   const headers: any = {
     'Content-Type': 'application/json',
   }
 
-  if (!base.changed || mustUseThirdPartyPassword) {
+  if (bearer) {
     headers.Authorization = bearer
   }
 

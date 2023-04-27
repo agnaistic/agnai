@@ -41,12 +41,15 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     'Content-Type': 'application/json',
   }
 
-  const mustUseThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
-  const potentiallyEncryptedKey = mustUseThirdPartyPassword
+  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const apiKey = useThirdPartyPassword
     ? user.thirdPartyPassword
-    : user.claudeApiKey
-  const key = !!guest ? potentiallyEncryptedKey : decryptText(potentiallyEncryptedKey!)
-  if (!base.changed) {
+    : !isThirdParty
+    ? user.claudeApiKey
+    : null
+
+  const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : null
+  if (key) {
     headers['x-api-key'] = key
   }
 

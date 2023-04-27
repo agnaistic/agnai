@@ -299,6 +299,11 @@ async function getSafeUserConfig(userId: string) {
       user.claudeApiKey = ''
       user.claudeApiKeySet = true
     }
+
+    if (user.thirdPartyPassword) {
+      user.thirdPartyPassword = ''
+      user.thirdPartyPasswordSet = true
+    }
   }
   return user
 }

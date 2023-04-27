@@ -25,12 +25,7 @@ const HordeAISettings: Component<{
 
   const refreshHorde = () => {
     settingStore.getHordeModels()
-    try {
-      settingStore.getHordeWorkers()
-    } catch (e) {
-      console.log(e)
-      toastStore.warn('Error fetching horde workers. Check console for details.')
-    }
+    settingStore.getHordeWorkers()
   }
 
   const hordeName = createMemo(
