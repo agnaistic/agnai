@@ -53,7 +53,7 @@ type BuildPromptOpts = {
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
-export const BOT_REPLACE = /(\{\{char\}\}|<BOT>)/gi
+export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
 export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
 
 /**
@@ -140,11 +140,6 @@ export function buildPrompt(
     pre.push(parts.gaslight)
   }
 
-  if (opts.settings?.ultimeJailbreak)
-    opts.settings.ultimeJailbreak = opts.settings.ultimeJailbreak
-      .replace(BOT_REPLACE, char.name)
-      .replace(SELF_REPLACE, sender)
-
   const post = [`${char.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
@@ -217,22 +212,7 @@ export function getPromptParts(
   const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
   if (memory) parts.memory = memory.prompt
 
-  let gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
-  let gaslightLines = gaslight.split('\n')
-
-  if (!parts.memory || parts.memory === '') {
-    gaslight = gaslightLines.filter((line) => !line.includes('{{memory}}')).join('\n')
-    gaslightLines = gaslight.split('\n')
-  }
-  if (!parts.scenario) {
-    gaslight = gaslightLines.filter((line) => !line.includes('{{scenario}}')).join('\n')
-    gaslightLines = gaslight.split('\n')
-  }
-  if (!parts.sampleChat) {
-    gaslight = gaslightLines.filter((line) => !line.includes('{{example_dialogue}}')).join('\n')
-    gaslightLines = gaslight.split('\n')
-  }
-
+  const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
   const sampleChat = parts.sampleChat?.join('\n') || ''
 
   const ujb = opts.settings?.ultimeJailbreak
@@ -242,20 +222,18 @@ export function getPromptParts(
       .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
       .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(/\{\{name\}\}/gi, char.name)
+      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
       .replace(BOT_REPLACE, char.name)
       .replace(SELF_REPLACE, sender)
-      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
   }
 
   parts.gaslight = gaslight
     .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
     .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(/\{\{name\}\}/gi, char.name)
+    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, sender)
-    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat

@@ -79,7 +79,6 @@ const GeneralSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">General Settings</div>
-      <p class="text-sm text-[var(--text-700)]">These are used for all adapters.</p>
       <RangeInput
         fieldName="maxTokens"
         label="Max New Tokens"
@@ -190,11 +189,7 @@ const PromptSettings: Component<Props> = (props) => {
             How the character definitions are sent to OpenAI. Placeholders:{' '}
             <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
             <code>{'{{memory}}'}</code> <code>{'{{scenario}}'}</code>{' '}
-            <code>{'{{example_dialogue}}'}</code>. Any placeholders not present in the gaslight will
-            not be sent to the model. Lines with placeholders present in the gaslight but not in the
-            character will be removed, for example if a character has no example dialogue the line
-            in the gaslight containing <code>{'{{example_dialogue}}'}</code> will be removed before
-            being sent to the model.
+            <code>{'{{example_dialogue}}'}</code>
           </>
         }
         placeholder="Be sure to include the placeholders above"
@@ -202,9 +197,6 @@ const PromptSettings: Component<Props> = (props) => {
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
         disabled={props.disabled}
       />
-
-      <Divider />
-      <div class="text-2xl"> OpenAI Specific</div>
 
       <Toggle
         fieldName="antiBond"
@@ -264,7 +256,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topP ?? defaultPresets.basic.topP}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai']}
       />
       <RangeInput
         fieldName="topK"
@@ -344,6 +336,28 @@ const GenSettings: Component<Props> = (props) => {
         adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <Divider />
+      <div class="text-2xl"> OpenAI</div>
+      <RangeInput
+        fieldName="frequencyPenalty"
+        label="Frequency Penalty"
+        helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim."
+        min={-2.0}
+        max={2.0}
+        step={0.01}
+        value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
+        disabled={props.disabled}
+      />
+      <RangeInput
+        fieldName="presencePenalty"
+        label="Presence Penalty"
+        helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics."
+        min={-2.0}
+        max={2.0}
+        step={0.01}
+        value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
+        disabled={props.disabled}
+      />
+      <Divider />
       <div class="text-2xl"> Text-Generation-WebUI Specific</div>
       <Toggle
         fieldName="addBosToken"
@@ -377,28 +391,6 @@ const GenSettings: Component<Props> = (props) => {
         max={5}
         step={0.01}
         value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
-        disabled={props.disabled}
-      />
-      <Divider />
-      <div class="text-2xl"> OpenAI Specific</div>
-      <RangeInput
-        fieldName="frequencyPenalty"
-        label="Frequency Penalty"
-        helperText="Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the model's likelihood to repeat the same line verbatim."
-        min={-2.0}
-        max={2.0}
-        step={0.01}
-        value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
-        disabled={props.disabled}
-      />
-      <RangeInput
-        fieldName="presencePenalty"
-        label="Presence Penalty"
-        helperText="Positive values penalize new tokens based on whether they appear in the text so far, increasing the model's likelihood to talk about new topics."
-        min={-2.0}
-        max={2.0}
-        step={0.01}
-        value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
         disabled={props.disabled}
       />
     </>

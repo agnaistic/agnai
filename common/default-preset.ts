@@ -89,7 +89,7 @@ export const defaultPresets = {
     useGaslight: false,
   },
   llama: {
-    name: 'Llama',
+    name: 'Llama (TextGen)',
     maxTokens: MAX_TOKENS,
     maxContextLength: 2048,
     repetitionPenalty: 1.2,

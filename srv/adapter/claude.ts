@@ -93,17 +93,16 @@ function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
 
 function createClaudePrompt(opts: AdapterProps): string {
   const { char, sender, parts, gen } = opts
-  const username = sender.handle || 'You'
   const lines = opts.lines ?? []
 
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
   const gaslightCost = encoder('System: ' + parts.gaslight)
-  let ujbCost = 0
+  const ujb = parts.ujb ? `System: ${parts.ujb}` : ''
 
   const maxBudget =
-    maxContextLength - maxResponseTokens - gaslightCost - ujbCost - encoder(char.name + ':')
+    maxContextLength - maxResponseTokens - gaslightCost - encoder(ujb) - encoder(char.name + ':')
 
   let tokens = 0
   const history: string[] = []
@@ -118,9 +117,8 @@ function createClaudePrompt(opts: AdapterProps): string {
 
   const messages = [`System: ${parts.gaslight}`, ...history.reverse()]
 
-  if (gen.ultimeJailbreak) {
-    ujbCost = encoder('System: ' + gen.ultimeJailbreak)
-    messages.push(`System: ${gen.ultimeJailbreak}`)
+  if (ujb) {
+    messages.push(ujb)
   }
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>

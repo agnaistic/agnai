@@ -3,6 +3,7 @@ import { Component, Show, createSignal, createEffect } from 'solid-js'
 import type { JSX } from 'solid-js'
 import Tooltip from './Tooltip'
 import { CreateTooltip } from './GenerationSettings'
+import { AIAdapter } from '../../common/adapters'
 
 const RangeInput: Component<{
   label: string
@@ -14,7 +15,7 @@ const RangeInput: Component<{
   step: number
   disabled?: boolean
   onChange?: (value: number) => void
-  adapters?: string[]
+  adapters?: AIAdapter[]
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
