@@ -3,6 +3,7 @@ import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
+import { userStore } from '../user'
 import { loadItem, local } from './storage'
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
@@ -48,6 +49,7 @@ export type GenerateOpts =
   | { kind: 'self' }
 
 export async function generateResponseV2(opts: GenerateOpts) {
+  const { ui } = userStore()
   const entities = await getPromptEntities()
   const [message, lastMessage] = entities.messages.slice(-2)
 
@@ -91,6 +93,10 @@ export async function generateResponseV2(opts: GenerateOpts) {
     settings: entities.settings,
     messages,
   })
+  if (ui?.logPromptsToBrowserConsole) {
+    console.log(`=== Sending the following prompt: ===`)
+    console.log(`${prompt.parts.gaslight}\n${prompt.lines.join('\n')}\n${prompt.post}`)
+  }
 
   const { avatar: _, ...sender } = entities.profile
   const { avatar: __, ...char } = entities.char
