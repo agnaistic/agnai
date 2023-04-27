@@ -52,6 +52,7 @@ const Settings: Component = () => {
       scaleUrl: 'string?',
       claudeApiKey: 'string?',
       defaultAdapter: adapterOptions,
+      logPromptsToBrowserConsole: 'boolean?',
 
       imageType: ['horde', 'sd', 'novel'],
       imageSteps: 'number',

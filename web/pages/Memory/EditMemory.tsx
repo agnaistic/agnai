@@ -33,7 +33,7 @@ const emptyEntry: AppSchema.MemoryEntry = {
   keywords: [],
   priority: 0,
   weight: 0,
-  enabled: true,
+  enabled: false,
 }
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [

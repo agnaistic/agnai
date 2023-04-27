@@ -33,6 +33,7 @@ const createBook = handle(async ({ body, userId }) => {
 
   const newBook = await store.memory.createBook(userId!, body)
   embed(userId, newBook)
+
   return newBook
 })
 
@@ -62,11 +63,13 @@ router.delete('/:id', loggedIn, removeBook)
 export default router
 
 /**
- * This will only _try_ to perform  memory embedding when:
+ * This will only _try_ to perform memory embedding when:
  * - luminai is enabled
  * - and the user has a luminai url configured
  */
 async function embed(userId: string, book: AppSchema.MemoryBook) {
+  if (!FILAMENT_ENABLED) return
+
   const user = await store.users.getUser(userId)
   if (!user || !user.luminaiUrl || !book) return
 

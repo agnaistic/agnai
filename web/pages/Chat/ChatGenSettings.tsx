@@ -52,9 +52,9 @@ export const ChatGenSettingsModal: Component<{
   const onSave = () => {
     if (usePreset()) {
       const body = getStrictForm(ref, { preset: 'string' })
-      const update = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenPreset(props.chat._id, body.preset, props.close)
-      if (!isDefaultPreset(body.preset)) {
+      if (body.preset && !isDefaultPreset(body.preset)) {
+        const update = getStrictForm(ref, chatGenSettings)
         presetStore.updatePreset(body.preset, update)
       }
     } else {

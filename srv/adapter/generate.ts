@@ -20,7 +20,7 @@ import { handleClaude } from './claude'
 import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter, getPromptParts, trimTokens } from '../../common/prompt'
 import { handleScale } from './scale'
-import { MemoryOpts, buildMemoryPrompt } from '../../common/memory'
+import { MemoryOpts } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -70,6 +70,12 @@ export async function createTextStreamV2(
     opts.user = entities.user
     opts.settings = entities.gen
     opts.char = entities.char
+
+    // Use pipeline
+    const memory = await getMemoryPrompt({ ...opts, book: entities.book }, log)
+    if (memory) {
+      opts.parts.memory = memory
+    }
   }
 
   const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user)
@@ -189,14 +195,14 @@ async function getGenerationSettings(
 async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getEncoder(adapter, model)
-  if (FILAMENT_ENABLED && adapter === 'luminai' && opts.user.luminaiUrl && opts.book) {
+  if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
     const res = await filament
       .retrieveMemories(opts.user, opts.book._id, opts.lines)
       .catch((error) => ({ error }))
 
+    // If we fail, we'll revert to the naive memory retrival
     if ('error' in res) {
-      log.error({ err: res.error }, `Failed to retrieve memories from filament`)
-      throw res.error
+      return
     }
 
     const memories = res.map((res) => res.entry)
@@ -205,6 +211,5 @@ async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
     return prompt.join('\n')
   }
 
-  const memory = buildMemoryPrompt(opts)
-  return memory?.prompt
+  return
 }

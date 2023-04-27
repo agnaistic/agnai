@@ -22,6 +22,7 @@ export type UISettings = {
   msgOpacity: number
 
   chatWidth?: 'full' | 'narrow'
+  logPromptsToBrowserConsole: boolean
 }
 
 const defaultUIsettings: UISettings = {
@@ -32,6 +33,7 @@ const defaultUIsettings: UISettings = {
   font: 'default',
   msgOpacity: 0.8,
   chatWidth: 'full',
+  logPromptsToBrowserConsole: false,
 }
 
 const fontFaces: { [key in FontSetting]: string } = {
