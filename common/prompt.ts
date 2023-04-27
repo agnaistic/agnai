@@ -140,7 +140,7 @@ export function buildPrompt(
     pre.push(parts.gaslight)
   }
 
-  const post = [`${char.name}:`]
+  const post = [opts.kind === 'self' ? `${sender}:` : `${char.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }
@@ -213,9 +213,8 @@ export function getPromptParts(
   if (memory) parts.memory = memory.prompt
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
-  const sampleChat = parts.sampleChat?.join('\n') || ''
-
   const ujb = opts.settings?.ultimeJailbreak
+  const sampleChat = parts.sampleChat?.join('\n') || ''
 
   if (ujb) {
     parts.ujb = ujb

@@ -1,5 +1,5 @@
 /**
- * The text-generation-webui is extraordinarly inconsistent.
+ * The Textgen is extraordinarly inconsistent.
  * For now this adapter will remain disabled until the API matures.
  *
  * Kobold and Ooba will likely be superseced by our own generation pipeline.
@@ -8,6 +8,7 @@
 import needle from 'needle'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
+import { logger } from '../logger'
 
 const defaultUrl = `http://127.0.0.1:7860`
 
@@ -43,7 +44,7 @@ export const handleOoba: ModelAdapter = async function* ({
 
   const payload = [JSON.stringify([prompt, body])]
 
-  log.debug({ payload }, 'Textgen payload')
+  log.debug({ prompt, body }, 'Textgen payload')
 
   const resp = await needle(
     'post',
@@ -52,12 +53,18 @@ export const handleOoba: ModelAdapter = async function* ({
     { json: true }
   ).catch((err) => ({ error: err }))
   if ('error' in resp) {
-    yield { error: `text-generatuin-webui request failed: ${resp.error?.message || resp.error}` }
+    logger.error({ err: resp.error }, ``)
+    yield { error: `Textgen request failed: ${resp.error?.message || resp.error}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `text-generation-webui request failed: ${resp.statusMessage}` }
+    logger.error({ err: resp.body }, `Textgen request failed {${resp.statusCode}}`)
+    yield {
+      error: `Textgen request failed (${resp.statusCode}) ${
+        resp.body.error || resp.body.message || resp.statusMessage
+      }`,
+    }
     return
   }
 
@@ -65,7 +72,7 @@ export const handleOoba: ModelAdapter = async function* ({
     const text = resp.body.data[0]
     if (!text) {
       yield {
-        error: `text-generation-webui request failed: Received empty response (probably OOM). Try again.`,
+        error: `Textgen request failed: Received empty response (potentially OOM). Try again.`,
       }
       return
     }
@@ -73,7 +80,7 @@ export const handleOoba: ModelAdapter = async function* ({
     const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
-    yield { error: `text-generation-webui request failed: ${ex.message}` }
+    yield { error: `Textgen request failed: ${ex.message}` }
     return
   }
 }
