@@ -35,6 +35,7 @@ type HordeCheck = {
   finished: number
   kudos: number
   wait_time: number
+  message?: string
 }
 
 let TIMEOUT_SECS = Infinity
@@ -60,7 +61,9 @@ async function useFetch<T = any>(opts: FetchOpts) {
   }
 
   if (res.statusCode && res.statusCode >= 400) {
-    throw new Error(`Horde request failed: ${res.statusMessage}`)
+    const error: any = new Error(`Horde request failed: ${res.statusMessage}`)
+    error.body = res.body
+    throw error
   }
 
   return res
@@ -152,12 +155,22 @@ export async function generateText(
 }
 
 async function generate(opts: GenerateOpts) {
-  const init = await useFetch<{ id: string }>({
+  const init = await useFetch<{ id: string; message?: string }>({
     method: 'post',
     url: opts.type === 'image' ? `${baseUrl}/generate/async` : `${baseUrl}/generate/text/async`,
     key: opts.key,
     payload: opts.payload,
   })
+
+  if (init.statusCode && init.statusCode >= 400) {
+    const error: any = new Error(
+      `Failed to create Horde generation ${init.statusCode} ${
+        init.body.message || init.statusMessage
+      }`
+    )
+    error.body = init.body
+    throw error
+  }
 
   const url =
     opts.type === 'text'
@@ -180,6 +193,14 @@ async function poll(url: string, key: string | undefined, interval = 6.5) {
     }
 
     const res = await useFetch<HordeCheck>({ method: 'get', url, key })
+    if (res.statusCode && res.statusCode >= 400) {
+      const error: any = new Error(
+        `Horde request failed (${res.statusCode}) ${res.body.message || res.statusMessage}`
+      )
+      error.body = res.body
+      throw error
+    }
+
     if (res.body.faulted) {
       throw new Error(`Horde request failed: The worker faulted while generating.`)
     }
