@@ -51,6 +51,14 @@ export const deleteClaudeKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteThirdPartyPassword = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    thirdPartyPassword: '',
+  })
+
+  return { success: true }
+})
+
 export const deleteHordeKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     hordeKey: '',
@@ -84,6 +92,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       novelModel: 'string?',
       koboldUrl: 'string?',
       thirdPartyFormat: 'string?',
+      thirdPartyPassword: 'string?',
       hordeUseTrusted: 'boolean?',
       oobaUrl: 'string?',
       hordeApiKey: 'string?',
@@ -187,6 +196,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.claudeApiKey = encryptText(body.claudeApiKey)
   }
 
+  if (body.thirdPartyPassword) {
+    update.thirdPartyPassword = encryptText(body.thirdPartyPassword)
+  }
+
   await store.users.updateUser(userId!, update)
   const user = await getSafeUserConfig(userId!)
   return user
@@ -285,6 +298,11 @@ async function getSafeUserConfig(userId: string) {
     if (user.claudeApiKey) {
       user.claudeApiKey = ''
       user.claudeApiKeySet = true
+    }
+
+    if (user.thirdPartyPassword) {
+      user.thirdPartyPassword = ''
+      user.thirdPartyPasswordSet = true
     }
   }
   return user

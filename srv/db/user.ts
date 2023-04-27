@@ -93,6 +93,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     defaultAdapter: 'horde',
     koboldUrl: '',
     thirdPartyFormat: 'kobold',
+    thirdPartyPassword: '',
     novelModel: NOVEL_MODELS.euterpe,
     luminaiUrl: '',
     oobaUrl: '',

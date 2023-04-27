@@ -41,6 +41,7 @@ const Settings: Component = () => {
       koboldUrl: 'string?',
       thirdPartyFormat: ['kobold', 'openai', 'claude'],
       oobaUrl: 'string?',
+      thirdPartyPassword: 'string?',
       novelApiKey: 'string?',
       novelModel: 'string?',
       hordeUseTrusted: 'boolean?',
