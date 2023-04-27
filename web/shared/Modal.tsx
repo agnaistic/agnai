@@ -41,7 +41,7 @@ const Modal: Component<Props> = (props) => {
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}
-            class={`my-auto max-h-[75vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
+            class={`my-auto max-h-[80vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg bg-[var(--bg-900)] shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
           >
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
