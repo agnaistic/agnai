@@ -1,0 +1,31 @@
+.modal-height {
+  max-height: 80dvh;
+  -moz-max-height: 80vh;
+}
+
+.modal-height-fixed {
+  min-height: calc(80dvh - 132px);
+  -moz-min-height: calc(80vh - 132px);
+}
+
+.modal-content {
+  max-height: calc(80dvh - 132px);
+  -moz-max-height: calc(80vh - 132px);
+}
+
+@media (min-width: 1024px) {
+  .modal-height {
+    max-height: 90dvh;
+    -moz-max-height: 90vh;
+  }
+
+  .modal-content {
+    max-height: calc(90dvh - 132px);
+    -moz-max-height: calc(90vh - 132px);
+  }
+
+  .modal-height-fixed {
+    min-height: calc(90dvh - 132px);
+    -moz-min-height: calc(90vh - 132px);
+  }
+}

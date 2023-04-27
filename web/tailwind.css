@@ -212,8 +212,8 @@ body {
 
 @supports (-webkit-touch-callout: none) {
   .app {
-    height: calc(100dvh-74px);
-    -moz-height: calc(100vh-74px);
+    height: calc(100dvh - 74px);
+    -moz-height: calc(100vh - 74px);
   }
 }
 
