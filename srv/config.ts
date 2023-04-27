@@ -77,7 +77,7 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude')
+  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude,ooba')
     .split(',')
     .filter((i) => !!i) as AIAdapter[],
   storage: {

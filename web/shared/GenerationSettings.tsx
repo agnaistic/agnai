@@ -1,4 +1,4 @@
-import { Component, createSignal, Show } from 'solid-js'
+import { Component, createSignal, For, JSX, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
@@ -8,6 +8,7 @@ import { OPENAI_MODELS, CLAUDE_MODELS } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import Tabs from './Tabs'
+import { Check, X } from 'lucide-solid'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -48,6 +49,31 @@ type SectProps = { show: boolean; children: any }
 const Section: Component<SectProps> = (props) => (
   <div class={`flex-col gap-4 ${props.show ? 'flex' : 'hidden'}`}>{props.children}</div>
 )
+
+export function CreateTooltip(adapters: string[]): JSX.Element {
+  const allAdapaters = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai', 'scale']
+  return (
+    <div>
+      <For each={allAdapaters}>
+        {(adapter) => (
+          <div class="flex flex-row gap-2">
+            <Show when={adapters.includes(adapter)}>
+              <div class="text-green-500">
+                <Check />
+              </div>
+            </Show>
+            <Show when={!adapters.includes(adapter)}>
+              <div class="text-red-500">
+                <X />
+              </div>
+            </Show>
+            {adapter}
+          </div>
+        )}
+      </For>
+    </div>
+  )
+}
 
 const GeneralSettings: Component<Props> = (props) => {
   return (
@@ -114,6 +140,7 @@ const PromptSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">Prompt Settings</div>
+      <p class="text-sm text-[var(--text-700)]">These are used for all adapters.</p>
       <RangeInput
         fieldName="memoryContextLimit"
         label="Memory: Context Limit"
@@ -162,8 +189,7 @@ const PromptSettings: Component<Props> = (props) => {
             How the character definitions are sent to OpenAI. Placeholders:{' '}
             <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
             <code>{'{{memory}}'}</code> <code>{'{{scenario}}'}</code>{' '}
-            <code>{'{{example_dialogue}}'}</code>. If <code>{'{{example_dialogue}}'}</code> is not
-            present then example dialogues will be sent as conversation.
+            <code>{'{{example_dialogue}}'}</code>
           </>
         }
         placeholder="Be sure to include the placeholders above"
@@ -174,7 +200,7 @@ const PromptSettings: Component<Props> = (props) => {
 
       <Toggle
         fieldName="antiBond"
-        label="Anti-Bond (GPT-4)"
+        label="Anti-Bond"
         helperText={
           <>
             If this option is enabled, OpenAI will be prompted with logit biases to discourage the
@@ -218,6 +244,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.temp || defaultPresets.basic.temp}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai']}
       />
 
       <RangeInput
@@ -229,6 +256,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topP ?? defaultPresets.basic.topP}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai']}
       />
       <RangeInput
         fieldName="topK"
@@ -239,6 +267,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.topK ?? defaultPresets.basic.topK}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="topA"
@@ -249,6 +278,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topA ?? defaultPresets.basic.topA}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="tailFreeSampling"
@@ -259,6 +289,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.001}
         value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="typicalP"
@@ -269,6 +300,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="repetitionPenalty"
@@ -279,6 +311,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="repetitionPenaltyRange"
@@ -289,6 +322,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
       <RangeInput
         fieldName="repetitionPenaltySlope"
@@ -299,8 +333,8 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
+        adapters={['kobold', 'novel', 'horde', 'luminai']}
       />
-
       <Divider />
       <div class="text-2xl"> OpenAI</div>
       <RangeInput
@@ -321,6 +355,42 @@ const GenSettings: Component<Props> = (props) => {
         max={2.0}
         step={0.01}
         value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
+        disabled={props.disabled}
+      />
+      <Divider />
+      <div class="text-2xl"> Text-Generation-WebUI Specific</div>
+      <Toggle
+        fieldName="addBosToken"
+        label="Add BOS Token"
+        helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
+        value={props.inherit?.addBosToken ?? false}
+        disabled={props.disabled}
+      />
+      <Toggle
+        fieldName="banEosToken"
+        label="Ban the end of sequence token. This forces the model to never end the generation prematurely."
+        helperText=""
+        value={props.inherit?.banEosToken ?? false}
+        disabled={props.disabled}
+      />
+      <RangeInput
+        fieldName="encoderRepitionPenalty"
+        label="Encoder Repition Penalty"
+        helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge"
+        min={0.8}
+        max={1.5}
+        step={0.01}
+        value={props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
+        disabled={props.disabled}
+      />
+      <RangeInput
+        fieldName="penaltyAlpha"
+        label="Penalty Alpha"
+        helperText="The values balance the model confidence and the degeneration penalty in contrastive search decoding"
+        min={0}
+        max={5}
+        step={0.01}
+        value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
         disabled={props.disabled}
       />
     </>

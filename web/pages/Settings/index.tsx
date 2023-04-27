@@ -40,6 +40,7 @@ const Settings: Component = () => {
     const body = getStrictForm(evt, {
       koboldUrl: 'string?',
       thirdPartyFormat: ['kobold', 'openai', 'claude'],
+      oobaUrl: 'string?',
       novelApiKey: 'string?',
       novelModel: 'string?',
       hordeUseTrusted: 'boolean?',

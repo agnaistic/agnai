@@ -3,7 +3,6 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { AppSchema } from '../db/schema'
@@ -94,18 +93,16 @@ function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
 
 function createClaudePrompt(opts: AdapterProps): string {
   const { char, sender, parts, gen } = opts
-  const username = sender.handle || 'You'
   const lines = opts.lines ?? []
 
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
   const gaslightCost = encoder('System: ' + parts.gaslight)
-  const ujb = gen.ultimeJailbreak?.replace(BOT_REPLACE, char.name)?.replace(SELF_REPLACE, username)
-  const ujbCost = ujb ? encoder('System: ' + gen.ultimeJailbreak) : 0
+  const ujb = parts.ujb ? `System: ${parts.ujb}` : ''
 
   const maxBudget =
-    maxContextLength - maxResponseTokens - gaslightCost - ujbCost - encoder(char.name + ':')
+    maxContextLength - maxResponseTokens - gaslightCost - encoder(ujb) - encoder(char.name + ':')
 
   let tokens = 0
   const history: string[] = []
@@ -121,7 +118,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   const messages = [`System: ${parts.gaslight}`, ...history.reverse()]
 
   if (ujb) {
-    messages.push(`System: ${ujb}`)
+    messages.push(ujb)
   }
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>

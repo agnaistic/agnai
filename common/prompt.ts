@@ -53,7 +53,7 @@ type BuildPromptOpts = {
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
-export const BOT_REPLACE = /(\{\{char\}\}|<BOT>)/gi
+export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
 export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
 
 /**
@@ -214,7 +214,6 @@ export function getPromptParts(
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
   const ujb = opts.settings?.ultimeJailbreak
-
   const sampleChat = parts.sampleChat?.join('\n') || ''
 
   if (ujb) {
@@ -222,20 +221,18 @@ export function getPromptParts(
       .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
       .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(/\{\{name\}\}/gi, char.name)
+      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
       .replace(BOT_REPLACE, char.name)
       .replace(SELF_REPLACE, sender)
-      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
   }
 
   parts.gaslight = gaslight
     .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
     .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(/\{\{name\}\}/gi, char.name)
+    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, sender)
-    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat

@@ -120,7 +120,7 @@ export const ADAPTER_LABELS: Record<AIAdapter, string> = {
   horde: 'Horde',
   kobold: 'Kobold',
   novel: 'NovelAI',
-  ooba: 'Text-Generation-WebUI',
+  ooba: 'TextGen',
   luminai: 'LuminAI',
   openai: 'OpenAI',
   scale: 'Scale',
