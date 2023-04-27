@@ -207,14 +207,14 @@ body {
 
 .app {
   height: 100dvh;
+  /* height: -webkit-fill-available; */
   -moz-height: 100vh;
 }
 
 @supports (-webkit-touch-callout: none) {
-  .app {
+  /* .app {
     height: calc(100dvh - 74px);
-    -moz-height: calc(100vh - 74px);
-  }
+  } */
 }
 
 .ellipsis {
