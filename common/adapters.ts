@@ -54,7 +54,9 @@ export type OpenAIModel = (typeof OPENAI_MODELS)[keyof typeof OPENAI_MODELS]
 export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',
+  Turbo0301: 'gpt-3.5-turbo-0301',
   GPT4: 'gpt-4',
+  GPT40314: 'gpt-4-0314',
 } as const
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
