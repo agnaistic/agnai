@@ -122,25 +122,6 @@ const ChatDetail: Component = () => {
     setSwipe(next)
   }
 
-  onMount(() => {
-    window.onkeydown = (e: KeyboardEvent): any => {
-      const key = e.key
-
-      if (!e.ctrlKey) return
-
-      if (key === 'ArrowRight') {
-        clickSwipe(1)()
-      }
-      if (key === 'ArrowLeft') {
-        clickSwipe(-1)()
-      }
-    }
-  })
-
-  onCleanup(() => {
-    window.onkeydown = null
-  })
-
   const adapter = createMemo(() => {
     if (!chats.chat?.adapter || !user.user) return ''
     if (chats.chat.userId !== user.user._id) return ''

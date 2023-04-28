@@ -11,6 +11,7 @@ import { getAppConfig } from '../settings'
 import { entityUpload, handleForm } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
 import { sendAll } from '../ws'
+import { v4 } from 'uuid'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const [profile, user, presets, config, books] = await Promise.all([
@@ -206,10 +207,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 })
 
 export const updateProfile = handle(async (req) => {
-  const form = await handleForm(req, { handle: 'string' } as const)
+  const form = handleForm(req, { handle: 'string' } as const)
   const filename = await entityUpload(
     'profile',
-    req.userId,
+    v4(),
     form.attachments.find((a) => a.field === 'avatar')
   )
 
@@ -242,7 +243,7 @@ async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
   const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
   if (!url || !url[0]) {
     throw new StatusError(
-      `Kobold URL provided could not be verified: Invalid URL format. Use a fully qualified URL, e.g.: http://127.0.0.1:5000`,
+      `Kobold URL provided could not be verified: Invalid URL format. Use a fully qualified URL. E.g.: https://local-tunnel-url-10-20-30-40.loca.lt`,
       400
     )
   }
@@ -263,10 +264,11 @@ async function verifyOobaUrl(user: AppSchema.User, incomingUrl?: string) {
 
   if (!url || !url[0]) {
     throw new StatusError(
-      `Ooba URL provided could not be verified: Invalid URL format. Use a fully qualified URL, e.g.: http://127.0.0.1:7860`,
+      `Ooba URL provided could not be verified: Invalid URL format. Use a fully qualified URL. E.g.: https://local-tunnel-url-10-20-30-40.loca.lt`,
       400
     )
   }
+
   return url[0]
 }
 async function verifyNovelKey(key: string) {
