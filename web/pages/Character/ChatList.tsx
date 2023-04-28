@@ -52,17 +52,30 @@ const CharacterChats: Component = () => {
     list: s.characters.list,
     loaded: s.characters.loaded,
   }))
-  const charName = chars.map[params.id]?.name
-  setComponentPageTitle(charName ? `${charName} chat list` : 'Chat list')
+  let initializedFromId = false
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
-  const [char, setChar] = createSignal<AppSchema.Character | undefined>()
+  const [char, setChar] = createSignal<AppSchema.Character | undefined>(
+    params.id ? ({ _id: params.id, name: 'Loading' } as AppSchema.Character) : undefined
+  )
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
   const [sortField, setSortField] = createSignal(cache.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cache.sort.direction)
   const [sortOptions, setSortOptions] = createSignal(chatAndCharSortOptions)
+
+  createEffect(() => {
+    if (initializedFromId) return
+    const id = params.id
+    if (!id) return
+    const map = chars.map
+    const char = map[id]
+    if (!char) return
+    setChar(char)
+    setComponentPageTitle(char.name ? `${char.name} chat list` : 'Chat list')
+    initializedFromId = true
+  })
 
   createEffect(() => {
     const next = {
