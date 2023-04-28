@@ -13,6 +13,7 @@ import Select, { Option } from '../../shared/Select'
 import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
+import CharacterSelect from '../../shared/CharacterSelect'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -56,7 +57,7 @@ const CharacterChats: Component = () => {
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
-  const [charId, setCharId] = createSignal(params.id || '')
+  const [char, setChar] = createSignal<AppSchema.Character | undefined>()
   const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
   const [sortField, setSortField] = createSignal(cache.sort.field)
@@ -75,16 +76,16 @@ const CharacterChats: Component = () => {
   })
 
   createEffect(() => {
-    if (!charId()) return
+    if (!char()) return
     if (sortField() == 'character-name' || sortField() == 'character-created') {
       setSortField('chat-updated')
     }
   })
 
   createEffect(() => {
-    if (charId() && sortOptions() == chatAndCharSortOptions) {
+    if (char() && sortOptions() == chatAndCharSortOptions) {
       setSortOptions(chatSortOptions)
-    } else if (!charId() && sortOptions() == chatSortOptions) {
+    } else if (!char() && sortOptions() == chatSortOptions) {
       setSortOptions(chatAndCharSortOptions)
     }
   })
@@ -96,7 +97,7 @@ const CharacterChats: Component = () => {
   })
 
   const chats = createMemo(() => {
-    const id = charId()
+    const id = char()?._id
     return state.list.filter((chat) => {
       const char = chars.map[chat.characterId]
       const trimmed = search().trim().toLowerCase()
@@ -107,14 +108,6 @@ const CharacterChats: Component = () => {
           char?.description?.toLowerCase().includes(trimmed))
       )
     })
-  })
-  const charItems = createMemo(() => {
-    return [{ label: 'All', value: '' }].concat(
-      chars.list
-        .slice()
-        .sort((l, r) => (l.name > r.name ? 1 : l.name === r.name ? 0 : -1))
-        .map((ch) => ({ label: ch.name, value: ch._id }))
-    )
   })
 
   onMount(() => {
@@ -173,11 +166,12 @@ const CharacterChats: Component = () => {
             />
           </div>
 
-          <Select
+          <CharacterSelect
             fieldName="char"
-            items={charItems()}
-            value={charId()}
-            onChange={(next) => setCharId(next.value)}
+            items={chars.list}
+            emptyLabel="All Characters"
+            value={char()}
+            onChange={setChar}
             class="m-1 max-w-[160px] bg-[var(--bg-600)]"
           />
 
@@ -213,20 +207,16 @@ const CharacterChats: Component = () => {
           chars={chars.map}
           sortField={sortField()}
           sortDirection={sortDirection()}
-          charId={charId()}
+          char={char()}
         />
       </Show>
       <CreateChatModal
         show={showCreate()}
         close={() => setCreate(false)}
-        char={chars.map[charId()]}
+        char={char()}
         id={params.id}
       />
-      <ImportChatModal
-        show={showImport()}
-        close={() => setImport(false)}
-        char={chars.map[charId()]}
-      />
+      <ImportChatModal show={showImport()} close={() => setImport(false)} char={char()} />
     </div>
   )
 }
@@ -236,14 +226,14 @@ const Chats: Component<{
   chars: Record<string, AppSchema.Character>
   sortField: SortType
   sortDirection: SortDirection
-  charId: string
+  char?: AppSchema.Character
 }> = (props) => {
   const [showDelete, setDelete] = createSignal('')
 
   const groups = createMemo(() => {
     let chars = Object.values(props.chars)
-    if (props.charId) {
-      chars = chars.filter((ch) => ch._id === props.charId)
+    if (props.char) {
+      chars = [props.char]
     }
     return groupAndSort(chars, props.chats, props.sortField, props.sortDirection)
   })
