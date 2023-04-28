@@ -1,8 +1,10 @@
-import { Component, JSX, For, createMemo } from 'solid-js'
+import { Component, JSX, For, createSignal, Show, createMemo } from 'solid-js'
 import { AppSchema } from '../../srv/db/schema'
-import { characterStore } from '../store'
-import { toMap } from './util'
-import Select from './Select'
+import { DropMenu } from './DropMenu'
+import AvatarIcon from './AvatarIcon'
+import Button from './Button'
+import { ChevronDown, Star, Users } from 'lucide-solid'
+import { FormLabel } from './FormLabel'
 
 export type Option<T extends string = string> = {
   label: string
@@ -16,41 +18,90 @@ const CharacterSelect: Component<{
   items: AppSchema.Character[]
   emptyLabel?: string
   value?: AppSchema.Character
-  class?: string
   disabled?: boolean
   onChange?: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
-  const emptyOption = props.emptyLabel ? [{ label: props.emptyLabel, value: '' }] : []
-  const chars = characterStore((s) => ({
-    map: toMap(s.characters.list),
-    list: s.characters.list,
-    loaded: s.characters.loaded,
-  }))
-
-  const onChange = (charId: string) => {
-    if (!props.onChange) return
-    const item = props.items.find((item) => item._id === charId)
-    props.onChange(item)
-  }
-
-  const charItems = createMemo(() => {
-    return emptyOption.concat(
-      chars.list
-        .slice()
-        .sort((l, r) => (l.name > r.name ? 1 : l.name === r.name ? 0 : -1))
-        .map((ch) => ({ label: ch.name, value: ch._id }))
-    )
+  const [opts, setOpts] = createSignal(false)
+  const sorted = createMemo(() => {
+    const items = props.items.slice()
+    items.sort((a, b) => +!!b.favorite - +!!a.favorite || a.name.localeCompare(b.name))
+    return items
   })
 
+  const onChange = (value?: AppSchema.Character) => {
+    if (!props.onChange) return
+    props.onChange(value)
+    setOpts(false)
+  }
+
   return (
-    <Select
-      fieldName="char"
-      items={charItems()}
-      value={props.value?._id ?? ''}
-      onChange={(o) => onChange(o.value)}
-      {...(props.disabled ? { disabled: true } : {})}
-      class={props.class}
-    />
+    <>
+      <FormLabel label={props.label} helperText={props.helperText} />
+      <div class="py-1">
+        <Button schema="secondary" class="rounded-xl" onClick={() => setOpts(!opts())}>
+          <Show when={!!props.value}>
+            <AvatarIcon
+              avatarUrl={props.value?.avatar}
+              class={`mr-1 ${props.value?.avatar ? '-mt-2' : ''} h-6 w-6 sm:h-6 sm:w-6`}
+              format={{ size: 'sm', corners: 'circle' }}
+            />
+          </Show>
+          <Show when={!props.value}>
+            <div class="mr-1 flex h-6 w-6 shrink-0 items-center justify-center">
+              <Users />
+            </div>
+          </Show>
+          {props.value?.name || props.emptyLabel || 'Select a character'}
+          <ChevronDown />
+        </Button>
+        <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px]">
+          <div class="flex h-[50vh] flex-col">
+            <div class="flex-1 overflow-y-auto">
+              <div class="flex flex-col gap-2 p-2">
+                <Show when={props.emptyLabel}>
+                  <div
+                    class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
+                    onClick={() => onChange()}
+                  >
+                    <div class="ellipsis flex h-3/4 items-center">
+                      <div class="mr-4 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[var(--black-700)] sm:h-10 sm:w-10">
+                        <Users />
+                      </div>
+                      <div class="ellipsis flex w-full flex-col">
+                        <div class="font-bold">{props.emptyLabel}</div>
+                      </div>
+                    </div>
+                  </div>
+                </Show>
+                <For each={sorted()}>
+                  {(item) => (
+                    <div
+                      class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
+                      onClick={() => onChange(item)}
+                    >
+                      <div class="ellipsis flex h-3/4 items-center">
+                        <AvatarIcon avatarUrl={item.avatar} class="mr-4" />
+                        <div class="ellipsis flex w-full flex-col">
+                          <div class="font-bold">{item.name}</div>
+                          <div class="">{item.description}</div>
+                        </div>
+                      </div>
+                      <div>
+                        <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
+                          <Show when={item.favorite}>
+                            <Star class="icon-button fill-[var(--text-900)] text-[var(--text-900)]" />
+                          </Show>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+            </div>
+          </div>
+        </DropMenu>
+      </div>
+    </>
   )
 }
 

@@ -172,7 +172,6 @@ const CharacterChats: Component = () => {
             emptyLabel="All Characters"
             value={char()}
             onChange={setChar}
-            class="m-1 max-w-[160px] bg-[var(--bg-600)]"
           />
 
           <div class="flex flex-wrap">

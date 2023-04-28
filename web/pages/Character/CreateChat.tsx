@@ -86,7 +86,7 @@ const CreateChatModal: Component<{
             Close
           </Button>
 
-          <Button onClick={onCreate}>
+          <Button onClick={onCreate} disabled={!char()}>
             <Check />
             Create
           </Button>
@@ -104,6 +104,7 @@ const CreateChatModal: Component<{
         <Show when={!props.char}>
           <CharacterSelect
             items={state.chars}
+            value={char()}
             fieldName="character"
             label="Character"
             helperText="The conversation's central character"
