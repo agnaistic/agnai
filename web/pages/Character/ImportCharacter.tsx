@@ -19,49 +19,55 @@ const ImportCharacterModal: Component<{
 }> = (props) => {
   const state = characterStore()
   const [imported, setImported] = createSignal<NewCharacter[]>([])
+  const [failed, setFailed] = createSignal<string[]>([])
   const [ready, setReady] = createSignal(false)
 
   const processFiles = async (files: FileInputResult[]) => {
     setReady(false)
     setImported([])
-    files.forEach((file) => {
-      const extension = file.file.name.split('.').pop()?.toLowerCase() || ''
-      const isImg = ['png', 'jpg', 'jpeg'].includes(extension)
-      if (isImg) {
-        processImage(file)
-        return
-      }
+    setFailed([])
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const extension = file.file.name.split('.').pop()?.toLowerCase() || ''
+          const isImg = ['png', 'jpg', 'jpeg'].includes(extension)
+          if (isImg) {
+            await processImage(file)
+            return
+          }
 
-      const isJSON = ['json'].includes(extension)
-      if (isJSON) {
-        processJSON(file)
-        return
-      }
+          const isJSON = ['json'].includes(extension)
+          if (isJSON) {
+            await processJSON(file)
+            return
+          }
 
-      toastStore.warn(
-        `Invalid file format: ${file.file.name}. Supported formats: ${supportedFormats}`
-      )
-    })
+          throw new Error(
+            `Invalid file format: ${file.file.name}. Supported formats: ${supportedFormats}`
+          )
+        } catch (ex: any) {
+          setFailed([...failed(), file.file.name])
+          toastStore.error(`Failed to import ${file.file.name}: ${ex.message}`)
+        }
+      })
+    )
     setReady(!!imported().length)
   }
 
   const processJSON = async (file: FileInputResult) => {
-    try {
-      const content = await getFileAsString(file)
-      const json = JSON.parse(content)
-      setImported([...imported(), jsonToCharacter(json)])
-      toastStore.success('Character file accepted')
-    } catch (ex: any) {
-      toastStore.warn(`Failed to import ${file.file.name}: ${ex.message}`)
-    }
+    const content = await getFileAsString(file)
+    const json = JSON.parse(content)
+    setImported([...imported(), jsonToCharacter(json)])
+    toastStore.success('Character file accepted')
   }
 
   const processImage = async (file: FileInputResult) => {
-    const tav = await extractTavernData(file.file)
-    if (tav) {
-      setImported([...imported(), jsonToCharacter(tav)])
-      toastStore.success('Tavern card accepted')
+    const json = await extractTavernData(file.file)
+    if (!json) {
+      throw new Error('Invalid tavern image')
     }
+    setImported([...imported(), jsonToCharacter(json)])
+    toastStore.success('Tavern card accepted')
   }
 
   const onImport = async () => {
@@ -72,6 +78,7 @@ const ImportCharacterModal: Component<{
   const cancel = () => {
     setReady(false)
     setImported([])
+    setFailed([])
     props.close()
   }
 
@@ -118,6 +125,21 @@ const ImportCharacterModal: Component<{
             </Show>
             <Show when={imported().length > maxShownImports + 1}>
               <li>... and {imported().length - maxShownImports} others</li>
+            </Show>
+          </ul>
+        </div>
+      </Show>
+
+      <Show when={failed().length}>
+        <div class="mt-2 text-lg">Failed character imports:</div>
+        <div class="markdown">
+          <ul>
+            <For each={failed().slice(0, maxShownImports)}>{(i) => <li>{i ?? 'Unnamed'}</li>}</For>
+            <Show when={failed().length === maxShownImports + 1}>
+              <li>... and one other</li>
+            </Show>
+            <Show when={failed().length > maxShownImports + 1}>
+              <li>... and {failed().length - maxShownImports} others</li>
             </Show>
           </ul>
         </div>
