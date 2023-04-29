@@ -1,4 +1,4 @@
-import { Component, Show } from 'solid-js'
+import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { ADAPTER_LABELS, CHAT_ADAPTERS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -7,7 +7,10 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import { chatStore, settingStore, userStore } from '../../store'
+import { chatStore, presetStore, settingStore, userStore } from '../../store'
+import { getChatPreset } from '../../../common/prompt'
+import { FormLabel } from '../../shared/FormLabel'
+import { getInitialPresetValue, getPresetOptions } from '../../shared/adapter'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -19,18 +22,23 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const state = chatStore((s) => ({ chat: s.active?.chat, char: s.active?.char }))
   const user = userStore()
   const cfg = settingStore()
+  const presets = presetStore((s) => s.presets)
+
+  const [preset, setPreset] = createSignal(getInitialPresetValue(state.chat))
+  const presetOptions = createMemo(() => getPresetOptions(presets))
 
   let ref: any
 
   const onSave = () => {
     const body = getStrictForm(ref, {
       name: 'string',
-      adapter: CHAT_ADAPTERS,
       greeting: 'string',
       sampleChat: 'string',
       scenario: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
     } as const)
+
+    const { preset } = getStrictForm(ref, { preset: 'string' })
 
     const attributes = getAttributeMap(ref)
 
@@ -39,7 +47,10 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       attributes,
     }
 
-    chatStore.editChat(state.chat?._id!, { ...body, overrides }, () => {
+    const genPreset = preset === 'chat' ? '' : preset === 'service' ? '' : preset
+    const genSettings = genPreset ? undefined : state.chat?.genSettings
+
+    chatStore.editChat(state.chat?._id!, { ...body, overrides, genPreset, genSettings }, () => {
       props.close()
     })
   }
@@ -74,6 +85,20 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
     </>
   )
 
+  const adapterText = createMemo(() => {
+    if (!state.chat || !user.user) return
+    const preset = getChatPreset(state.chat, user.user, presets)
+    if (!preset.service) return
+    const text = `Currently: ${ADAPTER_LABELS[preset.service]}. Inherited from: ${
+      preset.name || 'Chat'
+    }`
+    return {
+      text,
+      service: preset.service!,
+      preset,
+    }
+  })
+
   return (
     <Modal
       show={props.show}
@@ -84,16 +109,33 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
     >
       <form ref={ref} onSubmit={onSave}>
         <Select
-          class="mb-2"
-          fieldName="adapter"
-          helperText={`Default is set to: ${ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']}`}
-          label="AI Service"
-          value={state.chat?.adapter}
-          items={[
-            { label: 'Default', value: 'default' },
-            ...adaptersToOptions(cfg.config.adapters),
-          ]}
+          fieldName="preset"
+          label="Preset"
+          items={presetOptions()}
+          value={preset()}
+          onChange={(next) => setPreset(next.value)}
         />
+
+        <Show when={adapterText()}>
+          <FormLabel label="AI Service" helperText={adapterText()?.text} />
+        </Show>
+
+        <Show when={!adapterText()}>
+          <Select
+            class={`mb-2 ${adapterText() ? 'hidden' : ''}`}
+            fieldName="adapter"
+            helperText={`Default is set to: ${
+              ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']
+            }`}
+            label="AI Service"
+            value={state.chat?.adapter}
+            items={[
+              { label: 'Default', value: 'default' },
+              ...adaptersToOptions(cfg.config.adapters),
+            ]}
+          />
+        </Show>
+
         <TextInput fieldName="name" class="text-sm" value={state.chat?.name} label="Chat name" />
         <TextInput
           fieldName="greeting"

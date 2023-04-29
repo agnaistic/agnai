@@ -1,43 +1,62 @@
-import { Component, createSignal, For, JSX, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_MODELS, CLAUDE_MODELS, adapterSettings } from '../../common/adapters'
+import {
+  OPENAI_MODELS,
+  CLAUDE_MODELS,
+  adapterSettings,
+  ADAPTER_LABELS,
+  AIAdapter,
+} from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import Tabs from './Tabs'
 import { Check, X } from 'lucide-solid'
+import { settingStore } from '../store'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
   disabled?: boolean
   showAll?: boolean
+  service?: AIAdapter
 }
 
 const GenerationSettings: Component<Props> = (props) => {
-  const tabs = ['General', 'Prompt'] as const
-  const [tab, setTab] = createSignal(0)
+  const state = settingStore((s) => s.config)
+
+  const [service, setService] = createSignal(props.inherit?.service)
+
+  const services = createMemo<Option[]>(() => {
+    return state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+  })
 
   return (
     <>
-      <Show when={!props.showAll}>
-        <Tabs tabs={tabs} select={setTab} selected={tab} />
-      </Show>
       <Divider />
       <div class="flex flex-col gap-4">
-        <Section show={props.showAll || tabs[tab()] === 'General'}>
-          <GeneralSettings disabled={props.disabled} inherit={props.inherit} />
-        </Section>
-
-        <Section show={props.showAll || tabs[tab()] === 'Prompt'}>
-          <PromptSettings disabled={props.disabled} inherit={props.inherit} />
-        </Section>
-
-        <Section show={props.showAll || tabs[tab()] === 'General'}>
-          <GenSettings disabled={props.disabled} inherit={props.inherit} />
-        </Section>
+        <Select
+          fieldName="service"
+          label="AI Service"
+          helperText={
+            <>
+              <Show when={!service()}>
+                <p class="text-red-500">
+                  Warning! Your preset does not currently have a service set.
+                </p>
+              </Show>
+              <p>This will take precedence over the adapter being set anywhere else.</p>
+            </>
+          }
+          value={props.inherit?.service || ''}
+          items={services()}
+          onChange={(ev) => setService(ev.value as any)}
+        />
+        <GeneralSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
+        <PromptSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
+        <GenSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
       </div>
     </>
   )
@@ -45,10 +64,6 @@ const GenerationSettings: Component<Props> = (props) => {
 export default GenerationSettings
 
 type SectProps = { show: boolean; children: any }
-
-const Section: Component<SectProps> = (props) => (
-  <div class={`flex-col gap-4 ${props.show ? 'flex' : 'hidden'}`}>{props.children}</div>
-)
 
 export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
   const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale']
@@ -79,6 +94,29 @@ const GeneralSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">General Settings</div>
+
+      <Select
+        fieldName="oaiModel"
+        label="OpenAI Model"
+        items={modelsToItems(OPENAI_MODELS)}
+        helperText="Which OpenAI model to use"
+        value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
+        disabled={props.disabled}
+        service={props.service}
+        adapters={adapterSettings.oaiModel}
+      />
+
+      <Select
+        fieldName="claudeModel"
+        label="Claude Model"
+        items={modelsToItems(CLAUDE_MODELS)}
+        helperText="Which Claude model to use"
+        value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
+        disabled={props.disabled}
+        service={props.service}
+        adapters={adapterSettings.claudeModel}
+      />
+
       <RangeInput
         fieldName="maxTokens"
         label="Max New Tokens"
@@ -113,24 +151,6 @@ const GeneralSettings: Component<Props> = (props) => {
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}
       />
-      <Select
-        fieldName="oaiModel"
-        label="OpenAI Model"
-        items={modelsToItems(OPENAI_MODELS)}
-        helperText="Which OpenAI model to use"
-        value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
-        disabled={props.disabled}
-        adapters={adapterSettings.oaiModel}
-      />
-      <Select
-        fieldName="claudeModel"
-        label="Claude Model"
-        items={modelsToItems(CLAUDE_MODELS)}
-        helperText="Which Claude model to use"
-        value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
-        disabled={props.disabled}
-        adapters={adapterSettings.claudeModel}
-      />
     </>
   )
 }
@@ -142,7 +162,6 @@ const PromptSettings: Component<Props> = (props) => {
   return (
     <>
       <div class="text-xl font-bold">Prompt Settings</div>
-      <p class="text-sm text-[var(--text-700)]">These are used for all adapters.</p>
       <RangeInput
         fieldName="memoryContextLimit"
         label="Memory: Context Limit"
@@ -181,6 +200,7 @@ const PromptSettings: Component<Props> = (props) => {
         }
         value={props.inherit?.useGaslight ?? false}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.gaslight}
       />
 
@@ -199,6 +219,7 @@ const PromptSettings: Component<Props> = (props) => {
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.gaslight}
       />
 
@@ -214,6 +235,7 @@ const PromptSettings: Component<Props> = (props) => {
         }
         value={props.inherit?.antiBond ?? false}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.antiBond}
       />
 
@@ -231,6 +253,7 @@ const PromptSettings: Component<Props> = (props) => {
         isMultiline
         value={props.inherit?.ultimeJailbreak ?? ''}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.ultimeJailbreak}
       />
     </>
@@ -250,6 +273,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.temp || defaultPresets.basic.temp}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.temp}
       />
 
@@ -262,6 +286,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topP ?? defaultPresets.basic.topP}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.topP}
       />
       <RangeInput
@@ -273,6 +298,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.topK ?? defaultPresets.basic.topK}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.topK}
       />
       <RangeInput
@@ -284,6 +310,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topA ?? defaultPresets.basic.topA}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.topA}
       />
       <RangeInput
@@ -295,6 +322,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.001}
         value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.tailFreeSampling}
       />
       <RangeInput
@@ -306,6 +334,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.typicalP}
       />
       <RangeInput
@@ -317,6 +346,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.repetitionPenalty}
       />
       <RangeInput
@@ -328,6 +358,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.repetitionPenaltyRange}
       />
       <RangeInput
@@ -339,10 +370,13 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.repetitionPenaltySlope}
       />
-      <Divider />
-      <div class="text-2xl"> OpenAI</div>
+      <Show when={!props.service}>
+        <Divider />
+        <div class="text-2xl"> OpenAI</div>
+      </Show>
       <RangeInput
         fieldName="frequencyPenalty"
         label="Frequency Penalty"
@@ -352,6 +386,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.frequencyPenalty}
       />
       <RangeInput
@@ -363,16 +398,20 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.presencePenalty}
       />
-      <Divider />
-      <div class="text-2xl"> TextGen Specific</div>
+      <Show when={!props.service}>
+        <Divider />
+        <div class="text-2xl">TextGen / Ooba</div>
+      </Show>
       <Toggle
         fieldName="addBosToken"
         label="Add BOS Token"
         helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
         value={props.inherit?.addBosToken ?? false}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.addBosToken}
       />
       <Toggle
@@ -381,6 +420,7 @@ const GenSettings: Component<Props> = (props) => {
         helperText=""
         value={props.inherit?.banEosToken ?? false}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.banEosToken}
       />
       <RangeInput
@@ -392,6 +432,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.encoderRepitionPenalty}
       />
       <RangeInput
@@ -403,6 +444,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
         disabled={props.disabled}
+        service={props.service}
         adapters={adapterSettings.penaltyAlpha}
       />
     </>

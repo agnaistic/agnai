@@ -180,7 +180,6 @@ const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
   name: '',
   maxTokens: 80,
-  service: [],
 }
 
 const EditPreset: Component<{

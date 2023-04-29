@@ -44,6 +44,7 @@ import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
 import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
+import { getClientPreset } from '../../shared/adapter'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -122,14 +123,16 @@ const ChatDetail: Component = () => {
     setSwipe(next)
   }
 
-  const adapter = createMemo(() => {
-    if (!chats.chat?.adapter || !user.user) return ''
-    if (chats.chat.userId !== user.user._id) return ''
+  const chatPreset = createMemo(() => getClientPreset(chats.chat))
 
-    const { adapter, preset: presetType, isThirdParty } = getAdapter(chats.chat!, user.user!)
-    const preset = getChatPreset(chats.chat, user.user!, presets.presets)
+  const adapterLabel = createMemo(() => {
+    const data = chatPreset()
+    if (!data) return ''
+
+    const { name, adapter, isThirdParty, presetLabel } = data
+
     const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
-      'name' in preset ? preset.name : presetType
+      name || presetLabel
     }`
     return label
   })
@@ -202,7 +205,7 @@ const ChatDetail: Component = () => {
             <div class="flex flex-row gap-3">
               <Show when={isOwner()}>
                 <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
-                  {adapter()}
+                  {adapterLabel()}
                 </div>
               </Show>
 

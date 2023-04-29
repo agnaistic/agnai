@@ -405,7 +405,7 @@ export function getChatPreset(
   chat: AppSchema.Chat,
   user: AppSchema.User,
   userPresets: AppSchema.UserGenPreset[]
-) {
+): Partial<AppSchema.GenSettings> {
   /**
    * Order of precedence:
    * 1. chat.genPreset
@@ -441,6 +441,13 @@ export function getChatPreset(
   return getFallbackPreset(adapter)
 }
 
+/**
+ * Order of Precedence:
+ * 1. chat.genPreset -> service
+ * 2. chat.genSettings -> service
+ * 3. chat.adapter
+ * 4. user.defaultAdapter
+ */
 export function getAdapter(
   chat: AppSchema.Chat,
   config: AppSchema.User,
@@ -451,7 +458,11 @@ export function getAdapter(
 
   const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && chatAdapter === 'kobold'
 
-  const adapter = chatAdapter === 'kobold' && isThirdParty ? config.thirdPartyFormat : chatAdapter
+  let adapter = preset?.service ? preset.service : chatAdapter
+
+  if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
+    adapter = config.thirdPartyFormat
+  }
 
   let model = ''
   let presetName = 'Fallback Preset'

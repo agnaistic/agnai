@@ -118,7 +118,7 @@ export type HordeWorker = {
   bridge_agent: string
 }
 
-export const ADAPTER_LABELS: Record<AIAdapter, string> = {
+export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   horde: 'Horde',
   kobold: 'Kobold',
   novel: 'NovelAI',

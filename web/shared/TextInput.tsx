@@ -21,7 +21,7 @@ const TextInput: Component<{
   ) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 
-  service?: string
+  service?: AIAdapter
   adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   let ref: any
@@ -38,10 +38,15 @@ const TextInput: Component<{
     ref.style.height = `${next}px`
   }
 
+  const hide = createMemo(() => {
+    if (!props.service || !props.adapters) return ''
+    return props.adapters.includes(props.service) ? '' : ` hidden `
+  })
+
   onMount(resize)
 
   return (
-    <div class="w-full">
+    <div class={`w-full ${hide()}`}>
       <Show when={!!props.label}>
         <label for={props.fieldName}>
           <div class={props.helperText ? '' : 'pb-1'}>

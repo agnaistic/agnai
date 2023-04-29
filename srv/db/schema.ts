@@ -177,7 +177,7 @@ export namespace AppSchema {
 
   export interface GenSettings {
     name: string
-    service?: AIAdapter[]
+    service?: AIAdapter
 
     temp: number
     maxTokens: number

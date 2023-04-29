@@ -1,5 +1,5 @@
 import { AppSchema } from '../srv/db/schema'
-import { AIAdapter, ChatAdapter } from './adapters'
+import { AIAdapter, AI_ADAPTERS, ChatAdapter } from './adapters'
 import { defaultPresets } from './default-preset'
 
 export { defaultPresets }
@@ -9,6 +9,7 @@ export type GenerationPreset = keyof typeof defaultPresets
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
 export const chatGenSettings = {
+  service: AI_ADAPTERS,
   temp: 'number',
   maxTokens: 'number',
   maxContextLength: 'number?',

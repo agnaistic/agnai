@@ -8,8 +8,9 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore } from '../../store'
+import { characterStore, chatStore, presetStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
+import { getPresetOptions } from '../../shared/adapter'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -31,11 +32,16 @@ const CreateChatModal: Component<{
     chars: s.characters?.list || [],
     loaded: s.characters.loaded,
   }))
+  const presets = presetStore((s) => s.presets)
 
   const char = createMemo(() => {
     const curr = selectedChar() || props.char
     return curr
   })
+
+  const presetOptions = createMemo(() =>
+    getPresetOptions(presets).filter((pre) => pre.value !== 'chat')
+  )
 
   createEffect(() => {
     if (!selectedChar() && !props.char && state.chars.length) {
@@ -58,6 +64,7 @@ const CreateChatModal: Component<{
     if (!character) return
 
     const body = getStrictForm(ref, {
+      genPreset: 'string',
       name: 'string',
       greeting: 'string',
       scenario: 'string',
@@ -111,6 +118,8 @@ const CreateChatModal: Component<{
             onChange={(c) => selectChar(c!)}
           />
         </Show>
+
+        <Select fieldName="genPreset" label="Preset" items={presetOptions()} />
 
         <TextInput
           class="text-sm"

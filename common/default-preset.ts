@@ -5,7 +5,7 @@ const MAX_TOKENS = 80
 
 export const defaultPresets = {
   basic: {
-    service: ['kobold', 'ooba', 'horde', 'luminai'],
+    service: 'kobold',
     name: 'Simple',
     maxTokens: MAX_TOKENS,
     maxContextLength: 2048,
@@ -36,7 +36,7 @@ export const defaultPresets = {
   },
   horde: {
     name: 'Horde',
-    service: ['horde'],
+    service: 'horde',
     maxTokens: 80,
     maxContextLength: 1024,
     repetitionPenalty: 1.08,
@@ -62,7 +62,7 @@ export const defaultPresets = {
   },
   novel_20BC: {
     name: 'Novel 20BC+',
-    service: ['novel'],
+    service: 'novel',
     maxTokens: MAX_TOKENS,
     maxContextLength: 2048,
     repetitionPenalty: 1.055,
@@ -77,7 +77,7 @@ export const defaultPresets = {
   },
   novel_blueLighter: {
     name: 'Novel Blue Lighter',
-    service: ['novel'],
+    service: 'novel',
     maxTokens: MAX_TOKENS,
     maxContextLength: 2048,
     repetitionPenalty: 1.05,
@@ -94,7 +94,7 @@ export const defaultPresets = {
   },
   llama: {
     name: 'Llama (TextGen)',
-    service: ['ooba'],
+    service: 'ooba',
     maxTokens: MAX_TOKENS,
     maxContextLength: 2048,
     repetitionPenalty: 1.2,
@@ -108,7 +108,7 @@ export const defaultPresets = {
   },
   openai: {
     name: 'OpenAI - Turbo',
-    service: ['openai'],
+    service: 'openai',
     temp: 0.5,
     oaiModel: OPENAI_MODELS.Turbo,
     maxTokens: 300,
@@ -127,7 +127,7 @@ This is how {{char}} should talk
   },
   openaiAlt: {
     name: 'OpenAI - Turbo (#2)',
-    service: ['openai'],
+    service: 'openai',
     temp: 0.5,
     oaiModel: OPENAI_MODELS.Turbo,
     maxTokens: 300,
@@ -145,7 +145,7 @@ This is how {{char}} should talk
   },
   openaiTurbo: {
     name: 'OpenAI - DaVinci',
-    service: ['openai'],
+    service: 'openai',
     temp: 0.5,
     oaiModel: OPENAI_MODELS.DaVinci,
     maxTokens: 300,
@@ -163,7 +163,7 @@ This is how {{char}} should talk
   },
   scale: {
     name: 'scale',
-    service: ['scale'],
+    service: 'scale',
     maxTokens: 300,
     maxContextLength: 7600,
     // Not providing a default gaslight intentionally as most users have thier gaslight configured within Scale.
@@ -171,7 +171,7 @@ This is how {{char}} should talk
   },
   claude: {
     name: 'Claude V1',
-    service: ['claude'],
+    service: 'claude',
     temp: 1,
     claudeModel: CLAUDE_MODELS.ClaudeV1,
     maxTokens: 500,

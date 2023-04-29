@@ -1,4 +1,4 @@
-import { Component, JSX, Show } from 'solid-js'
+import { Component, JSX, Show, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import './toggle.css'
 import { AIAdapter } from '../../common/adapters'
@@ -12,7 +12,7 @@ export const Toggle: Component<{
   onChange?: (value: boolean) => void
   disabled?: boolean
 
-  service?: string
+  service?: AIAdapter
   adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -20,8 +20,13 @@ export const Toggle: Component<{
     props.onChange?.(ev.currentTarget.checked)
   }
 
+  const hide = createMemo(() => {
+    if (!props.service || !props.adapters) return ''
+    return props.adapters.includes(props.service) ? '' : ` hidden `
+  })
+
   return (
-    <div>
+    <div class={hide()}>
       <Show when={props.label}>
         <FormLabel label={props.label} helperText={props.helperText} />
       </Show>
