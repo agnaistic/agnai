@@ -1,5 +1,6 @@
 import { Component, Show, createMemo, JSX, onMount, createEffect } from 'solid-js'
 import IsVisible from './IsVisible'
+import { AIAdapter } from '../../common/adapters'
 
 const MIN_HEIGHT = 40
 
@@ -19,6 +20,9 @@ const TextInput: Component<{
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
+
+  service?: string
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   let ref: any
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))

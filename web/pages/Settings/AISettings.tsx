@@ -95,11 +95,6 @@ const AISettings: Component<{
         <LuminAISettings />
       </div>
 
-      <div class={currentTab() === 'chai' ? tabClass : 'hidden'}>
-        <AIPreset adapter="chai" />
-        <ChaiSettings />
-      </div>
-
       <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>
         <AIPreset adapter="claude" />
         <ClaudeSettings />

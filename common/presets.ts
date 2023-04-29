@@ -134,19 +134,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: 'top_a',
     order: '',
   },
-  chai: {
-    repetitionPenalty: 'repetition_penalty',
-    maxTokens: 'max_length',
-    temp: 'temperature',
-    topK: 'top_k',
-    topP: 'top_p',
-    repetitionPenaltyRange: '',
-    repetitionPenaltySlope: '',
-    tailFreeSampling: '',
-    typicalP: '',
-    topA: '',
-    order: '',
-  },
   ooba: {
     maxTokens: 'max_new_tokens',
     topP: 'top_p',
@@ -251,7 +238,6 @@ export function getFallbackPreset(adapter: AIAdapter) {
     case 'horde':
       return defaultPresets.horde
 
-    case 'chai':
     case 'kobold':
     case 'luminai':
     case 'ooba':

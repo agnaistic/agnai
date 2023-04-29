@@ -15,7 +15,8 @@ const RangeInput: Component<{
   step: number
   disabled?: boolean
   onChange?: (value: number) => void
-  adapters?: AIAdapter[]
+  service?: string
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined

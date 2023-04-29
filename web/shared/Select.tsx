@@ -1,6 +1,7 @@
 import { Component, JSX, For } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
+import { AIAdapter } from '../../common/adapters'
 
 export type Option<T extends string = string> = {
   label: string
@@ -16,6 +17,9 @@ const Select: Component<{
   class?: string
   disabled?: boolean
   onChange?: (item: Option) => void
+
+  service?: string
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
     if (!props.onChange) return

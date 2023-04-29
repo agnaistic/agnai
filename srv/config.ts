@@ -63,11 +63,6 @@ export const config = {
     payload: +env('JSON_SIZE_LIMIT', '2'),
   },
   noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
-  chai: {
-    url: env('CHAI_URL', ''),
-    uid: env('CHAI_UID', ''),
-    key: env('CHAI_KEY', ''),
-  },
   horde: {
     maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),
     imageWaitSecs: +env('HORDE_IMAGE_WAIT_SECS', '320'),

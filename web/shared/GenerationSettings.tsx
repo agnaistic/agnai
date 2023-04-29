@@ -4,7 +4,7 @@ import TextInput from './TextInput'
 import Select, { Option } from './Select'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_MODELS, CLAUDE_MODELS } from '../../common/adapters'
+import { OPENAI_MODELS, CLAUDE_MODELS, adapterSettings } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import Tabs from './Tabs'
@@ -50,8 +50,8 @@ const Section: Component<SectProps> = (props) => (
   <div class={`flex-col gap-4 ${props.show ? 'flex' : 'hidden'}`}>{props.children}</div>
 )
 
-export function CreateTooltip(adapters: string[]): JSX.Element {
-  const allAdapaters = ['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai', 'scale']
+export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
+  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale']
   return (
     <div>
       <For each={allAdapaters}>
@@ -120,6 +120,7 @@ const GeneralSettings: Component<Props> = (props) => {
         helperText="Which OpenAI model to use"
         value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
         disabled={props.disabled}
+        adapters={adapterSettings.oaiModel}
       />
       <Select
         fieldName="claudeModel"
@@ -128,6 +129,7 @@ const GeneralSettings: Component<Props> = (props) => {
         helperText="Which Claude model to use"
         value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
         disabled={props.disabled}
+        adapters={adapterSettings.claudeModel}
       />
     </>
   )
@@ -179,6 +181,7 @@ const PromptSettings: Component<Props> = (props) => {
         }
         value={props.inherit?.useGaslight ?? false}
         disabled={props.disabled}
+        adapters={adapterSettings.gaslight}
       />
 
       <TextInput
@@ -196,6 +199,7 @@ const PromptSettings: Component<Props> = (props) => {
         isMultiline
         value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
         disabled={props.disabled}
+        adapters={adapterSettings.gaslight}
       />
 
       <Toggle
@@ -210,6 +214,7 @@ const PromptSettings: Component<Props> = (props) => {
         }
         value={props.inherit?.antiBond ?? false}
         disabled={props.disabled}
+        adapters={adapterSettings.antiBond}
       />
 
       <TextInput
@@ -226,6 +231,7 @@ const PromptSettings: Component<Props> = (props) => {
         isMultiline
         value={props.inherit?.ultimeJailbreak ?? ''}
         disabled={props.disabled}
+        adapters={adapterSettings.ultimeJailbreak}
       />
     </>
   )
@@ -244,7 +250,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.temp || defaultPresets.basic.temp}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai']}
+        adapters={adapterSettings.temp}
       />
 
       <RangeInput
@@ -256,7 +262,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topP ?? defaultPresets.basic.topP}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai', 'openai']}
+        adapters={adapterSettings.topP}
       />
       <RangeInput
         fieldName="topK"
@@ -267,7 +273,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.topK ?? defaultPresets.basic.topK}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
+        adapters={adapterSettings.topK}
       />
       <RangeInput
         fieldName="topA"
@@ -278,7 +284,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.topA ?? defaultPresets.basic.topA}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'horde', 'luminai']}
+        adapters={adapterSettings.topA}
       />
       <RangeInput
         fieldName="tailFreeSampling"
@@ -289,7 +295,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.001}
         value={props.inherit?.tailFreeSampling ?? defaultPresets.basic.tailFreeSampling}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'horde', 'luminai']}
+        adapters={adapterSettings.tailFreeSampling}
       />
       <RangeInput
         fieldName="typicalP"
@@ -300,7 +306,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.typicalP ?? defaultPresets.basic.typicalP}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
+        adapters={adapterSettings.typicalP}
       />
       <RangeInput
         fieldName="repetitionPenalty"
@@ -311,7 +317,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenalty ?? defaultPresets.basic.repetitionPenalty}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'chai', 'ooba', 'horde', 'luminai']}
+        adapters={adapterSettings.repetitionPenalty}
       />
       <RangeInput
         fieldName="repetitionPenaltyRange"
@@ -322,7 +328,7 @@ const GenSettings: Component<Props> = (props) => {
         step={1}
         value={props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'horde', 'luminai']}
+        adapters={adapterSettings.repetitionPenaltyRange}
       />
       <RangeInput
         fieldName="repetitionPenaltySlope"
@@ -333,7 +339,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
         disabled={props.disabled}
-        adapters={['kobold', 'novel', 'horde', 'luminai']}
+        adapters={adapterSettings.repetitionPenaltySlope}
       />
       <Divider />
       <div class="text-2xl"> OpenAI</div>
@@ -346,6 +352,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty}
         disabled={props.disabled}
+        adapters={adapterSettings.frequencyPenalty}
       />
       <RangeInput
         fieldName="presencePenalty"
@@ -356,15 +363,17 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.presencePenalty ?? defaultPresets.openai.presencePenalty}
         disabled={props.disabled}
+        adapters={adapterSettings.presencePenalty}
       />
       <Divider />
-      <div class="text-2xl"> Text-Generation-WebUI Specific</div>
+      <div class="text-2xl"> TextGen Specific</div>
       <Toggle
         fieldName="addBosToken"
         label="Add BOS Token"
         helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
         value={props.inherit?.addBosToken ?? false}
         disabled={props.disabled}
+        adapters={adapterSettings.addBosToken}
       />
       <Toggle
         fieldName="banEosToken"
@@ -372,6 +381,7 @@ const GenSettings: Component<Props> = (props) => {
         helperText=""
         value={props.inherit?.banEosToken ?? false}
         disabled={props.disabled}
+        adapters={adapterSettings.banEosToken}
       />
       <RangeInput
         fieldName="encoderRepitionPenalty"
@@ -382,6 +392,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
         disabled={props.disabled}
+        adapters={adapterSettings.encoderRepitionPenalty}
       />
       <RangeInput
         fieldName="penaltyAlpha"
@@ -392,6 +403,7 @@ const GenSettings: Component<Props> = (props) => {
         step={0.01}
         value={props.inherit?.penaltyAlpha ?? defaultPresets.basic.penaltyAlpha}
         disabled={props.disabled}
+        adapters={adapterSettings.penaltyAlpha}
       />
     </>
   )

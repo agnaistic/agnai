@@ -1,6 +1,7 @@
 import { Component, JSX, Show } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import './toggle.css'
+import { AIAdapter } from '../../common/adapters'
 
 export const Toggle: Component<{
   fieldName: string
@@ -10,6 +11,9 @@ export const Toggle: Component<{
   class?: string
   onChange?: (value: boolean) => void
   disabled?: boolean
+
+  service?: string
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
     if (props.disabled) return

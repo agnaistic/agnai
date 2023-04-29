@@ -534,7 +534,7 @@ export const DownloadModal: Component<{
           items={[
             { value: 'native', label: 'Agnaistic' },
             { value: 'tavern', label: 'TavernAI' },
-            { value: 'ooba', label: 'Textgen' },
+            { value: 'ooba', label: 'TextGen' },
           ]}
           onChange={(item) => setFormat(item.value)}
         />

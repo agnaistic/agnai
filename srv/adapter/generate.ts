@@ -9,7 +9,6 @@ import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 import { errors, StatusError } from '../api/wrap'
-import { handleChai } from './chai'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { FILAMENT_ENABLED, filament, handleLuminAI } from './luminai'
@@ -36,7 +35,6 @@ configure(async (opts) => {
 })
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
-  chai: handleChai,
   novel: handleNovel,
   kobold: handleKobold,
   ooba: handleOoba,
