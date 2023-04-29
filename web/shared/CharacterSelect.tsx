@@ -38,12 +38,17 @@ const CharacterSelect: Component<{
     <>
       <FormLabel label={props.label} helperText={props.helperText} />
       <div class="py-1">
-        <Button schema="secondary" class="rounded-xl" onClick={() => setOpts(!opts())}>
-          <Show when={!!props.value}>
+        <Button
+          schema="secondary"
+          class="relative w-48 rounded-xl"
+          onClick={() => setOpts(!opts())}
+          alignLeft
+        >
+          <Show when={props.value}>
             <AvatarIcon
               avatarUrl={props.value?.avatar}
-              class={`mr-1 ${props.value?.avatar ? '-mt-2' : ''} h-6 w-6 sm:h-6 sm:w-6`}
-              format={{ size: 'sm', corners: 'circle' }}
+              format={{ size: 'xs', corners: 'circle' }}
+              class={`mr-1`}
             />
           </Show>
           <Show when={!props.value}>
@@ -51,11 +56,16 @@ const CharacterSelect: Component<{
               <Users />
             </div>
           </Show>
-          {props.value?.name || props.emptyLabel || 'Select a character'}
-          <ChevronDown />
+
+          <span class="ellipsis">
+            {props.value?.name || props.emptyLabel || 'Select a character'}
+          </span>
+          <span class="absolute right-0">
+            <ChevronDown />
+          </span>
         </Button>
-        <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px]">
-          <div class="flex h-[50vh] flex-col">
+        <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
+          <div class="flex max-h-[50vh] max-w-[50vw] flex-col sm:max-w-[30vw]">
             <div class="flex-1 overflow-y-auto">
               <div class="flex flex-col gap-2 p-2">
                 <Show when={props.emptyLabel}>

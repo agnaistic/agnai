@@ -67,7 +67,7 @@ export const DropMenu: Component<{
       <div class="relative text-sm">
         <Show when={props.show}>
           <div
-            class={`absolute ${position()} z-20 w-fit rounded-md bg-[var(--bg-800)] ${
+            class={`absolute ${position()} z-20 w-fit rounded-md border-[1px] border-[var(--bg-600)] bg-[var(--bg-800)] ${
               props.class || ''
             }`}
           >

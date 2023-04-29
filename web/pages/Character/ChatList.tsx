@@ -23,6 +23,7 @@ type SortType =
   | 'character-name'
   | 'character-created'
   | 'bot-activity'
+
 type SortDirection = 'asc' | 'desc'
 
 type ListCache = {
@@ -32,16 +33,12 @@ type ListCache = {
   }
 }
 
-const chatSortOptions: Option<SortType>[] = [
-  { value: 'chat-updated', label: 'Chat Activity' },
-  { value: 'bot-activity', label: 'Bot Activity' },
-  { value: 'chat-created', label: 'Chat Created' },
-]
-
-const chatAndCharSortOptions: Option<SortType>[] = [
-  ...chatSortOptions,
-  { value: 'character-name', label: 'Character Name' },
-  { value: 'character-created', label: 'Character Created' },
+const sortOptions = [
+  { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
+  { value: 'bot-activity', label: 'Bot Activity', kind: 'chat' },
+  { value: 'chat-created', label: 'Chat Created', kind: 'chat' },
+  { value: 'character-name', label: 'Bot Name', kind: 'bot' },
+  { value: 'character-created', label: 'Bot Created', kind: 'bot' },
 ]
 
 const CharacterChats: Component = () => {
@@ -52,7 +49,6 @@ const CharacterChats: Component = () => {
     list: s.characters.list,
     loaded: s.characters.loaded,
   }))
-  let initializedFromId = false
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
@@ -63,18 +59,16 @@ const CharacterChats: Component = () => {
   const [showImport, setImport] = createSignal(false)
   const [sortField, setSortField] = createSignal(cache.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cache.sort.direction)
-  const [sortOptions, setSortOptions] = createSignal(chatAndCharSortOptions)
 
   createEffect(() => {
-    if (initializedFromId) return
-    const id = params.id
-    if (!id) return
-    const map = chars.map
-    const char = map[id]
-    if (!char) return
-    setChar(char)
-    setComponentPageTitle(char.name ? `${char.name} chat list` : 'Chat list')
-    initializedFromId = true
+    if (!params.id) {
+      setComponentPageTitle(`Chats`)
+      return
+    }
+
+    const char = chars.map[params.id]
+    setComponentPageTitle(char ? `${char.name} chats` : 'Chats')
+    if (char) setChar(char)
   })
 
   createEffect(() => {
@@ -90,16 +84,8 @@ const CharacterChats: Component = () => {
 
   createEffect(() => {
     if (!char()) return
-    if (sortField() == 'character-name' || sortField() == 'character-created') {
+    if (sortField() === 'character-name' || sortField() === 'character-created') {
       setSortField('chat-updated')
-    }
-  })
-
-  createEffect(() => {
-    if (char() && sortOptions() == chatAndCharSortOptions) {
-      setSortOptions(chatSortOptions)
-    } else if (!char() && sortOptions() == chatSortOptions) {
-      setSortOptions(chatAndCharSortOptions)
     }
   })
 
@@ -191,7 +177,7 @@ const CharacterChats: Component = () => {
             <Select
               class="m-1 bg-[var(--bg-600)]"
               fieldName="sortBy"
-              items={sortOptions()}
+              items={sortOptions.filter((opt) => (char() ? opt.kind === 'chat' : true))}
               value={sortField()}
               onChange={(next) => setSortField(next.value as SortType)}
             />
