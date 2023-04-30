@@ -6,6 +6,16 @@
   margin-bottom: 0.4em; /* ensure <p> els are visually separated by empty line */
 }
 
+.rendered-markdown pre {
+  @apply rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
+}
+
+.rendered-markdown pre code {
+  background-color: unset;
+  border-radius: unset;
+  padding: unset;
+}
+
 em {
   color: var(--text-600);
 }
