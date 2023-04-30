@@ -7,7 +7,7 @@
 }
 
 .rendered-markdown pre {
-  @apply rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
+  @apply overflow-x-scroll rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
 }
 
 .rendered-markdown pre code {
