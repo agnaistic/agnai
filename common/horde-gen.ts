@@ -179,6 +179,12 @@ async function generate(opts: GenerateOpts) {
 
   const result = await poll(url, opts.key, opts.type === 'text' ? 2.5 : 6.5)
 
+  if (!result.generations || !result.generations.length) {
+    const error: any = new Error(`Horde request failed: No generation received`)
+    error.body = result
+    throw error
+  }
+
   return opts.type === 'text' ? result.generations[0].text : result.generations[0].img
 }
 

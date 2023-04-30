@@ -7,8 +7,9 @@ import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
-import { getForm, getFormEntries, getStrictForm } from '../../shared/util'
+import { getStrictForm } from '../../shared/util'
 import { characterStore, chatStore } from '../../store'
+import CharacterSelect from '../../shared/CharacterSelect'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -48,7 +49,7 @@ const CreateChatModal: Component<{
     }
   })
 
-  const selectChar = async (chr: AppSchema.Character) => {
+  const selectChar = (chr: AppSchema.Character | undefined) => {
     setChar(chr)
   }
 
@@ -85,7 +86,7 @@ const CreateChatModal: Component<{
             Close
           </Button>
 
-          <Button onClick={onCreate}>
+          <Button onClick={onCreate} disabled={!char()}>
             <Check />
             Create
           </Button>
@@ -101,12 +102,13 @@ const CreateChatModal: Component<{
           The information provided here is only applied to the newly created conversation.
         </div>
         <Show when={!props.char}>
-          <Select
-            items={state.chars.map((char) => ({ label: char.name, value: char._id }))}
+          <CharacterSelect
+            items={state.chars}
+            value={char()}
             fieldName="character"
             label="Character"
             helperText="The conversation's central character"
-            onChange={(item) => selectChar(state.chars.find((ch) => ch._id === item.value)!)}
+            onChange={(c) => selectChar(c!)}
           />
         </Show>
 
