@@ -1,6 +1,7 @@
 import { Bot, VenetianMask } from 'lucide-solid'
 import { Component, createMemo, Show } from 'solid-js'
 import { AvatarCornerRadius, AvatarSize } from '../store'
+import { avatarSizes, avatarSizesCircle } from './avatarUtil'
 import { getAssetUrl } from './util'
 
 type Props = {
@@ -25,7 +26,9 @@ const AvatarIcon: Component<Props> = (props) => {
 
   const fmtFit = createMemo(() => fit[format().corners])
   const fmtSize = createMemo(() =>
-    format().corners === 'circle' ? sizesCircle[format().size] : sizes[format().size]
+    format().corners === 'circle'
+      ? avatarSizesCircle[format().size].avatarColumn
+      : avatarSizes[format().size].avatarColumn
   )
   const fmtCorners = createMemo(() => corners[format().corners])
 
@@ -62,7 +65,7 @@ const AvatarIcon: Component<Props> = (props) => {
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}
           class={`flex ${
-            sizesCircle[format().size]
+            avatarSizesCircle[format().size].avatarColumn
           } shrink-0 items-center justify-center rounded-full bg-[var(--black-700)] ${cls()}`}
         >
           <Show when={!props.bot}>
@@ -75,26 +78,6 @@ const AvatarIcon: Component<Props> = (props) => {
       </Show>
     </>
   )
-}
-
-const sizes: Record<AvatarSize, string> = {
-  xs: 'w-6 sm:w-6',
-  sm: 'w-8 sm:w-8',
-  md: 'w-8 sm:w-10',
-  lg: 'w-8 sm:w-12',
-  xl: 'w-10 sm:w-16',
-  '2xl': 'w-12 sm:w-20',
-  '3xl': 'w-16 sm:w-24',
-}
-
-const sizesCircle: Record<AvatarSize, string> = {
-  xs: sizes.xs + ' h-6 sm:h-6',
-  sm: sizes.sm + ' h-8 sm:h-8',
-  md: sizes.md + ' h-8 sm:h-10',
-  lg: sizes.lg + ' h-8 sm:h-12',
-  xl: sizes.xl + ' h-10 sm:h-16',
-  '2xl': sizes['2xl'] + ' h-12 sm:h-20',
-  '3xl': sizes['3xl'] + ' h-16 sm:h-24',
 }
 
 const fit: Record<AvatarCornerRadius, string> = {

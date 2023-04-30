@@ -4,9 +4,10 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore } from '../../../store'
+import { AvatarCornerRadius, AvatarSize, chatStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
+import { avatarSizes, avatarSizesCircle } from '../../../shared/avatarUtil'
 
 type MessageProps = {
   msg: SplitMessage
@@ -125,6 +126,11 @@ const SingleMessage: Component<
     return handle
   }
 
+  const messageColumnWidth = () =>
+    format().corners === 'circle'
+      ? avatarSizesCircle[format().size].messageColumn
+      : avatarSizes[format().size].messageColumn
+
   let ref: HTMLDivElement | undefined
 
   return (
@@ -152,7 +158,7 @@ const SingleMessage: Component<
         </Show>
       </div>
 
-      <div class="flex w-full select-text flex-col gap-1">
+      <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
             <b
@@ -238,7 +244,7 @@ const SingleMessage: Component<
             </div>
           </Show>
         </div>
-        <div class="break-words">
+        <div class="w-full break-words">
           <Show when={isImage()}>
             <div class="flex justify-start">
               <img
