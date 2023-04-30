@@ -91,7 +91,10 @@ const SingleMessage: Component<
 
   const saveEdit = () => {
     if (!ref) return
-    msgStore.editMessage(props.msg._id, ref.innerText)
+    // We ensure duplicate spaces are preserved in the editor by replacing all
+    // spaces with nbsp, and then when saving we replace all nbsps with
+    // regular spaces or they'll show up as &nbsp; in code blocks
+    msgStore.editMessage(props.msg._id, ref.innerText.replace(/\u00A0/g, ' '))
     setEdit(false)
   }
 
@@ -109,7 +112,10 @@ const SingleMessage: Component<
   const startEdit = () => {
     setEdit(true)
     if (ref) {
-      ref.innerText = props.original.msg
+      // We ensure duplicate spaces are preserved in the editor by replacing all
+      // spaces with nbsp, and then when saving we replace all nbsps with
+      // regular spaces or they'll show up as &nbsp; in code blocks
+      ref.innerText = props.original.msg.replace(/ /g, '\u00A0')
     }
     ref?.focus()
   }
