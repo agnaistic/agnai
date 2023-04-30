@@ -4,7 +4,7 @@ import { EVENTS, events } from '../emitter'
 import { setAssetPrefix } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
-import { data } from './data'
+import { usersApi } from './data/user'
 import { toastStore } from './toasts'
 
 type SettingState = {
@@ -58,7 +58,7 @@ export const settingStore = createStore<SettingState>(
   return {
     async *init() {
       yield { initLoading: true }
-      const res = await data.user.getInit()
+      const res = await usersApi.getInit()
       yield { initLoading: false }
 
       if (res.result) {

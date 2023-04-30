@@ -1,5 +1,5 @@
 import { Component, For } from 'solid-js'
-import { Toast, toastStore } from './store'
+import { Toast, toastStore } from './store/toasts'
 
 const bgColor = {
   default: 'bg-[var(--bg-500)]',

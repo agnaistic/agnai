@@ -30,6 +30,7 @@ import {
   SortDesc,
   LayoutList,
   Image,
+  MessageCircle,
 } from 'lucide-solid'
 import { A, useNavigate } from '@solidjs/router'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -42,7 +43,7 @@ import Modal from '../../shared/Modal'
 import { exportCharacter } from '../../../common/prompt'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
-
+import CreateChatModal from './CreateChat'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -72,6 +73,7 @@ const CharacterList: Component = () => {
   const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
+  const [create, setCreate] = createSignal<AppSchema.Character>()
 
   const onImport = (char: NewCharacter) => {
     characterStore.createCharacter(char, () => setImport(false))
@@ -175,8 +177,12 @@ const CharacterList: Component = () => {
         filter={search()}
         sortField={sortField()}
         sortDirection={sortDirection()}
+        createChat={setCreate}
       />
       <ImportCharacterModal show={showImport()} close={() => setImport(false)} onSave={onImport} />
+      <Show when={create()}>
+        <CreateChatModal show={!!create()} close={() => setCreate()} char={create()} />
+      </Show>
     </>
   )
 }
@@ -186,6 +192,7 @@ const Characters: Component<{
   filter: string
   sortField: SortFieldTypes
   sortDirection: SortDirectionTypes
+  createChat: (char?: AppSchema.Character) => void
 }> = (props) => {
   const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
@@ -242,6 +249,7 @@ const Characters: Component<{
                           delete={() => setDelete(char)}
                           download={() => setDownload(char)}
                           toggleFavorite={(value) => toggleFavorite(char._id, value)}
+                          createChat={props.createChat}
                         />
                       )}
                     </For>
@@ -268,6 +276,7 @@ const Characters: Component<{
                           delete={() => setDelete(char)}
                           download={() => setDownload(char)}
                           toggleFavorite={(value) => toggleFavorite(char._id, value)}
+                          createChat={props.createChat}
                         />
                       )}
                     </For>
@@ -299,10 +308,18 @@ const Character: Component<{
   delete: () => void
   download: () => void
   toggleFavorite: (value: boolean) => void
+  createChat: (char?: AppSchema.Character) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
+
+  const createChat = () => {
+    props.createChat(props.char)
+    setOpts(false)
+    setListOpts(false)
+  }
+
   if (props.type === 'list') {
     return (
       <div class="flex w-full flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2">
@@ -350,7 +367,7 @@ const Character: Component<{
             vert="down"
           >
             <div class="flex flex-col gap-2 p-2 font-bold">
-              <Button onClick={() => props.toggleFavorite(!props.char.favorite)}>
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">
                 <Show when={props.char.favorite}>
                   <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
                 </Show>
@@ -358,16 +375,23 @@ const Character: Component<{
                   <Star /> Favorite
                 </Show>
               </Button>
-              <Button alignLeft onClick={props.download}>
+              <Button onClick={createChat} alignLeft size="sm">
+                <MessageCircle /> Chat
+              </Button>
+              <Button alignLeft onClick={props.download} size="sm">
                 <Download /> Download
               </Button>
-              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)}>
+              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
                 <Edit /> Edit
               </Button>
-              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)}>
+              <Button
+                alignLeft
+                onClick={() => nav(`/character/create/${props.char._id}`)}
+                size="sm"
+              >
                 <Copy /> Duplicate
               </Button>
-              <Button alignLeft onClick={props.delete}>
+              <Button alignLeft onClick={props.delete} size="sm">
                 <Trash /> Delete
               </Button>
             </div>
@@ -422,7 +446,7 @@ const Character: Component<{
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button onClick={() => props.toggleFavorite(!props.char.favorite)}>
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">
                 <Show when={props.char.favorite}>
                   <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
                 </Show>
@@ -430,16 +454,23 @@ const Character: Component<{
                   <Star /> Favorite
                 </Show>
               </Button>
-              <Button alignLeft onClick={props.download}>
+              <Button onClick={createChat} alignLeft size="sm">
+                <MessageCircle /> Chat
+              </Button>
+              <Button alignLeft onClick={props.download} size="sm">
                 <Download /> Download
               </Button>
-              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)}>
+              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
                 <Edit /> Edit
               </Button>
-              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)}>
+              <Button
+                alignLeft
+                onClick={() => nav(`/character/create/${props.char._id}`)}
+                size="sm"
+              >
                 <Copy /> Duplicate
               </Button>
-              <Button alignLeft onClick={props.delete}>
+              <Button alignLeft onClick={props.delete} size="sm">
                 <Trash /> Delete
               </Button>
             </div>
@@ -534,7 +565,7 @@ export const DownloadModal: Component<{
           items={[
             { value: 'native', label: 'Agnaistic' },
             { value: 'tavern', label: 'TavernAI' },
-            { value: 'ooba', label: 'TextGen' },
+            { value: 'ooba', label: 'Textgen' },
           ]}
           onChange={(item) => setFormat(item.value)}
         />

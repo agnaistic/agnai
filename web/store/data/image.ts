@@ -11,6 +11,10 @@ type GenerateOpts = {
   onDone: (image: string) => void
 }
 
+export const imageApi = {
+  generateImage,
+}
+
 export async function generateImage({ chatId, messageId, onDone, ...opts }: GenerateOpts) {
   const entities = await getPromptEntities()
   const prompt = opts.prompt ? opts.prompt : createImagePrompt(entities)

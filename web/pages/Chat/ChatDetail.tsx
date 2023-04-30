@@ -9,19 +9,8 @@ import {
   X,
 } from 'lucide-solid'
 import ChatExport from './ChatExport'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  Show,
-  onMount,
-  onCleanup,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
-import { getAdapter, getChatPreset } from '../../../common/prompt'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
@@ -53,7 +42,6 @@ const ChatDetail: Component = () => {
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
-  const presets = presetStore()
   const cfg = settingStore()
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.chatProfiles }))
   const msgs = msgStore((s) => ({

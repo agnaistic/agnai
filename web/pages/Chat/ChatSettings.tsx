@@ -24,9 +24,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const cfg = settingStore()
   const presets = presetStore((s) => s.presets)
 
-  const [preset, setPreset] = createSignal(getInitialPresetValue(state.chat))
-  const presetOptions = createMemo(() => getPresetOptions(presets))
-
   let ref: any
 
   const onSave = () => {
@@ -47,10 +44,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       attributes,
     }
 
-    const genPreset = preset === 'chat' ? '' : preset === 'service' ? '' : preset
-    const genSettings = genPreset ? undefined : state.chat?.genSettings
-
-    chatStore.editChat(state.chat?._id!, { ...body, overrides, genPreset, genSettings }, () => {
+    chatStore.editChat(state.chat?._id!, { ...body, overrides }, () => {
       props.close()
     })
   }
@@ -108,14 +102,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       maxWidth="half"
     >
       <form ref={ref} onSubmit={onSave}>
-        <Select
-          fieldName="preset"
-          label="Preset"
-          items={presetOptions()}
-          value={preset()}
-          onChange={(next) => setPreset(next.value)}
-        />
-
         <Show when={adapterText()}>
           <FormLabel label="AI Service" helperText={adapterText()?.text} />
         </Show>

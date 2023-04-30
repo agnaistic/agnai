@@ -65,7 +65,7 @@ const CharacterSelect: Component<{
           </span>
         </Button>
         <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
-          <div class="flex max-h-[300px] max-w-[50vw] flex-col sm:max-w-[30vw]">
+          <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[30vw]">
             <div class="flex-1 overflow-y-auto">
               <div class="flex flex-col gap-2 p-2">
                 <Show when={props.emptyLabel}>

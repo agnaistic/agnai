@@ -1,7 +1,7 @@
 import { AppSchema, NewBook } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
-import { data } from './data'
+import { memoryApi } from './data/memory'
 import { toastStore } from './toasts'
 
 type MemoryState = {
@@ -43,7 +43,7 @@ export const memoryStore = createStore<MemoryState>(
       if (loadingAll) return
 
       yield { loadingAll: true, books: { loaded: false, list: [] } }
-      const res = await data.memory.getBooks()
+      const res = await memoryApi.getBooks()
       yield { loadingAll: false }
       if (res.result) {
         yield { books: { loaded: true, list: res.result.books } }
@@ -62,7 +62,7 @@ export const memoryStore = createStore<MemoryState>(
     ) {
       if (creating) return
       yield { creating: true }
-      const res = await data.memory.createBook(book)
+      const res = await memoryApi.createBook(book)
       yield { creating: false }
       if (res.error) {
         toastStore.error(`Could not create memory book: ${res.error}`)
@@ -83,7 +83,7 @@ export const memoryStore = createStore<MemoryState>(
     async *update({ books: { list: prev }, updating }, bookId: string, update: NewBook) {
       if (updating) return
       yield { updating: true }
-      const res = await data.memory.updateBook(bookId, update)
+      const res = await memoryApi.updateBook(bookId, update)
       yield { updating: false }
       if (res.error) {
         toastStore.error(`Failed to update book: ${res.error}`)
@@ -97,7 +97,7 @@ export const memoryStore = createStore<MemoryState>(
     },
 
     async *remove({ books: { list: prev } }, bookId: string, onSuccess?: Function) {
-      const res = await data.memory.removeBook(bookId)
+      const res = await memoryApi.removeBook(bookId)
 
       if (res.error) {
         toastStore.error(`Failed to remove book: ${res.error}`)
