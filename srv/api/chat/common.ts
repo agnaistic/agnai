@@ -71,5 +71,5 @@ export function joinParts(parts: string[]) {
 }
 
 export function sanitise(generated: string) {
-  return generated.replace(/  +/g, ' ').trim()
+  return generated.trim()
 }
