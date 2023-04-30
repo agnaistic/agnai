@@ -11,7 +11,7 @@ const OobaAISettings: Component = () => {
         fieldName="oobaUrl"
         label="Text-Generation-WebUI Compatible URL"
         helperText="Fully qualified URL. This URL must be publicly accessible."
-        placeholder="E.g. https://8f41b512420d87f523.gradio.live"
+        placeholder="E.g. https://random-cloudflare-generated-words.trycloudflare.com"
         value={state.user?.oobaUrl}
       />
     </>

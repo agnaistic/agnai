@@ -49,6 +49,7 @@ const builtinPresets = {
     penaltyAlpha: 0,
     addBosToken: true,
     banEosToken: false,
+    skipSpecialTokens: true,
     order: [0, 1, 2, 3, 4, 5, 6],
     frequencyPenalty: 0.7,
     presencePenalty: 0.7,

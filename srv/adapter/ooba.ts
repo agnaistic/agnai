@@ -22,7 +22,7 @@ export const handleOoba: ModelAdapter = async function* ({
   ...opts
 }) {
   const body = {
-    prompt,
+    prompt: prompt,
     max_new_tokens: settings.max_new_tokens,
     do_sample: true,
     temperature: settings.temperature,
@@ -42,7 +42,7 @@ export const handleOoba: ModelAdapter = async function* ({
     custom_stopping_strings: [],
     truncation_length: settings.maxContextLength || 2048,
     ban_eos_token: settings.ban_eos_token || false,
-    skip_special_tokens: true,
+    skip_special_tokens: settings.skipSpecialTokens || true,
     stopping_strings: [],
   }
 

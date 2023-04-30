@@ -242,6 +242,7 @@ export namespace AppSchema {
     addBosToken?: boolean
     banEosToken?: boolean
     order?: number[]
+    skipSpecialTokens?: boolean
 
     gaslight?: string
     useGaslight?: boolean
