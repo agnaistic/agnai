@@ -16,6 +16,7 @@ import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { Option } from '../../shared/Select'
 import { getAdapter } from '../../../common/prompt'
+import { AI_ADAPTERS } from '../../../common/adapters'
 
 const AutoPreset = {
   chat: 'chat',
@@ -99,9 +100,16 @@ export const ChatGenSettingsModal: Component<{
           toastStore.success('Preset changed')
         }
       })
+
       if (!isDefaultPreset(preset)) {
-        const update = getStrictForm(ref, chatGenSettings)
-        presetStore.updatePreset(preset, update)
+        const validator = { ...chatGenSettings, service: ['', ...AI_ADAPTERS] } as const
+        const update = getStrictForm(ref, validator)
+        if (update.service === '') {
+          toastStore.error(`You must select an AI service before saving`)
+          return
+        }
+
+        presetStore.updatePreset(preset, update as any)
       }
     }
   }

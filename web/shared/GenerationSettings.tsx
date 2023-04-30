@@ -13,7 +13,6 @@ import {
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
-import Tabs from './Tabs'
 import { Check, X } from 'lucide-solid'
 import { settingStore } from '../store'
 
@@ -30,7 +29,10 @@ const GenerationSettings: Component<Props> = (props) => {
   const [service, setService] = createSignal(props.inherit?.service)
 
   const services = createMemo<Option[]>(() => {
-    return state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    if (props.inherit?.service) return list
+
+    return [{ value: '', label: 'None' }].concat(list)
   })
 
   return (
@@ -62,8 +64,6 @@ const GenerationSettings: Component<Props> = (props) => {
   )
 }
 export default GenerationSettings
-
-type SectProps = { show: boolean; children: any }
 
 export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
   const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale']

@@ -162,6 +162,10 @@ const ChatDetail: Component = () => {
   // if message background is set to 0 opacity
   const chatBg = () => (screenshotInProgress() ? 'bg-[var(--bg-900)]' : '')
 
+  const generateFirst = () => {
+    msgStore.retry(chats.chat?._id!)
+  }
+
   return (
     <>
       <Show when={!chats.chat || !chats.char || !user.profile}>
@@ -251,6 +255,11 @@ const ChatDetail: Component = () => {
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
+                <Show when={msgs.msgs.length === 0 && !msgs.waiting}>
+                  <div class="flex justify-center">
+                    <Button onClick={generateFirst}>Generate Message</Button>
+                  </div>
+                </Show>
                 <For each={msgs.msgs}>
                   {(msg, i) => (
                     <Message
@@ -301,10 +310,6 @@ const ChatDetail: Component = () => {
         <ChatGenSettingsModal show={true} close={setModal} chat={chats.chat!} />
       </Show>
 
-      <Show when={modal() === 'invite'}>
-        <InviteModal show={true} close={setModal} chatId={chats.chat?._id!} />
-      </Show>
-
       <Show when={modal() === 'memory'}>
         <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={setModal} />
       </Show>
@@ -339,42 +344,6 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
-
-const InviteModal: Component<{ chatId: string; show: boolean; close: () => void }> = (props) => {
-  let ref: any
-
-  const save = () => {
-    const body = getStrictForm(ref, { userId: 'string' })
-    chatStore.inviteUser(props.chatId, body.userId, props.close)
-  }
-
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Invite User to Conversation"
-      footer={
-        <>
-          {' '}
-          <Button size="sm" schema="secondary" onClick={props.close}>
-            <X /> Cancel
-          </Button>
-          <Button size="sm" onClick={save}>
-            <MailPlus /> Invite
-          </Button>
-        </>
-      }
-    >
-      <form ref={ref} class="flex flex-col gap-2">
-        <TextInput
-          fieldName="userId"
-          label="User ID"
-          helperText="The ID of the user to invite. The user should provide this to you"
-        />
-      </form>
-    </Modal>
-  )
-}
 
 const SwipeMessage: Component<{
   chatId: string
