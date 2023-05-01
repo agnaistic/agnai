@@ -39,7 +39,6 @@ export const handleOoba: ModelAdapter = async function* ({
     early_stopping: true,
     seed: -1,
     add_bos_token: settings.add_bos_token || false,
-    custom_stopping_strings: [],
     truncation_length: settings.maxContextLength || 2048,
     ban_eos_token: settings.ban_eos_token || false,
     skip_special_tokens: settings.skipSpecialTokens || true,
