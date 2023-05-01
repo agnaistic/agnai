@@ -7,6 +7,7 @@ import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
+import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 
 type MessageProps = {
   msg: SplitMessage
@@ -90,7 +91,10 @@ const SingleMessage: Component<
 
   const saveEdit = () => {
     if (!ref) return
-    msgStore.editMessage(props.msg._id, ref.innerText)
+    // We ensure duplicate spaces are preserved in the editor by replacing all
+    // spaces with nbsp, and then when saving we replace all nbsps with
+    // regular spaces or they'll show up as &nbsp; in code blocks
+    msgStore.editMessage(props.msg._id, ref.innerText.replace(/\u00A0/g, ' '))
     setEdit(false)
   }
 
@@ -108,7 +112,10 @@ const SingleMessage: Component<
   const startEdit = () => {
     setEdit(true)
     if (ref) {
-      ref.innerText = props.original.msg
+      // We ensure duplicate spaces are preserved in the editor by replacing all
+      // spaces with nbsp, and then when saving we replace all nbsps with
+      // regular spaces or they'll show up as &nbsp; in code blocks
+      ref.innerText = props.original.msg.replace(/ /g, '\u00A0')
     }
     ref?.focus()
   }
@@ -124,6 +131,11 @@ const SingleMessage: Component<
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
   }
+
+  const messageColumnWidth = () =>
+    format().corners === 'circle'
+      ? avatarSizesCircle[format().size].msg
+      : avatarSizes[format().size].msg
 
   let ref: HTMLDivElement | undefined
 
@@ -152,7 +164,7 @@ const SingleMessage: Component<
         </Show>
       </div>
 
-      <div class="flex w-full select-text flex-col gap-1">
+      <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
         <div class="flex w-full flex-row justify-between">
           <div class="flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0">
             <b
@@ -238,7 +250,7 @@ const SingleMessage: Component<
             </div>
           </Show>
         </div>
-        <div class="break-words">
+        <div class={`w-full break-words`}>
           <Show when={isImage()}>
             <div class="flex justify-start">
               <img
