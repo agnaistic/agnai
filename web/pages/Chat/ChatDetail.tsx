@@ -176,19 +176,19 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
           <div class="flex h-9 items-center justify-between rounded-md" style={headerBg()}>
-            <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+            <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen && isOwner()}>
                 <A href={`/character/${chats.char?._id}/chats`}>
                   <ChevronLeft />
                 </A>
-                <div class="flex flex-col">
-                  <div class="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap leading-5 sm:max-w-[480px]">
+                <div class="ellipsis flex flex-col">
+                  <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
                     {chats.char?.name}
-                  </div>
+                  </span>
                   <Show when={chats.chat?.name}>
-                    <div class="max-w-[200px] flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm sm:max-w-[480px]">
+                    <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
                       {chats.chat?.name}
-                    </div>
+                    </span>
                   </Show>
                 </div>
               </Show>
@@ -232,6 +232,7 @@ const ChatDetail: Component = () => {
               </Show>
             </div>
           </div>
+
           <div class="flex h-[calc(100%-36px)] flex-col-reverse gap-1">
             <InputBar
               chat={chats.chat!}
@@ -417,7 +418,7 @@ function getChatWidth(setting: UI['chatWidth']) {
 
     case 'full':
     default:
-      return 'w-full'
+      return 'w-full max-w-full'
   }
 }
 

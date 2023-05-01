@@ -322,15 +322,15 @@ const Character: Component<{
 
   if (props.type === 'list') {
     return (
-      <div class="flex w-full flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2">
+      <div class="flex w-full flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-800)] py-1 px-2 hover:bg-[var(--bg-700)]">
         <A
-          class="ellipsis flex h-3/4 cursor-pointer items-center"
+          class="ellipsis flex h-3/4 grow cursor-pointer items-center"
           href={`/character/${props.char._id}/chats`}
         >
           <AvatarIcon avatarUrl={props.char.avatar} class="mr-4" />
-          <div class="ellipsis flex w-full flex-col">
-            <div class="font-bold">{props.char.name}</div>
-            <div class="">{props.char.description}</div>
+          <div class="flex max-w-full flex-col overflow-hidden">
+            <span class="ellipsis font-bold">{props.char.name}</span>
+            <span class="ellipsis">{props.char.description}</span>
           </div>
         </A>
         <div>
@@ -402,7 +402,7 @@ const Character: Component<{
   }
 
   return (
-    <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-700)] p-1">
+    <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-800)] p-1">
       <div class="w-full">
         <Show when={props.char.avatar}>
           <A

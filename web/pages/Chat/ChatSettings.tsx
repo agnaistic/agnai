@@ -35,8 +35,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
     } as const)
 
-    const { preset } = getStrictForm(ref, { preset: 'string' })
-
     const attributes = getAttributeMap(ref)
 
     const overrides: AppSchema.Persona = {
