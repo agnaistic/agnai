@@ -477,15 +477,14 @@ export function getAdapter(
 
   if (chat.genPreset) {
     if (isDefaultPreset(chat.genPreset)) {
-      presetName = 'Chat, Default Preset'
-    } else presetName = 'Chat, User Preset'
+      presetName = 'System Preset'
+    } else presetName = 'User Preset'
   } else if (chat.genSettings) {
-    presetName = 'Chat, Preset Settings'
+    presetName = 'Chat Settings'
   } else if (config.defaultPresets) {
     const servicePreset = config.defaultPresets[adapter]
     if (servicePreset) {
-      const source = servicePreset in defaultPresets ? 'Default' : 'User'
-      presetName = `Service, ${source} Preset`
+      presetName = `Service Preset`
     }
   }
 

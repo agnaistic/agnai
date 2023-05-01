@@ -19,8 +19,9 @@ import { settingStore } from '../store'
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
   disabled?: boolean
-  showAll?: boolean
   service?: AIAdapter
+  onService?: (service?: AIAdapter) => void
+  disableService?: boolean
 }
 
 const GenerationSettings: Component<Props> = (props) => {
@@ -34,6 +35,11 @@ const GenerationSettings: Component<Props> = (props) => {
 
     return [{ value: '', label: 'None' }].concat(list)
   })
+
+  const onServiceChange = (opt: Option<string>) => {
+    setService(opt.value as any)
+    props.onService?.(opt.value as any)
+  }
 
   return (
     <>
@@ -54,7 +60,8 @@ const GenerationSettings: Component<Props> = (props) => {
           }
           value={props.inherit?.service || ''}
           items={services()}
-          onChange={(ev) => setService(ev.value as any)}
+          onChange={onServiceChange}
+          disabled={props.disableService}
         />
         <GeneralSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
         <PromptSettings disabled={props.disabled} inherit={props.inherit} service={service()} />

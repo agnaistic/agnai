@@ -1,5 +1,5 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
 import {
   chatGenSettings,
   defaultPresets,
@@ -16,7 +16,7 @@ import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { Option } from '../../shared/Select'
 import { getAdapter } from '../../../common/prompt'
-import { AI_ADAPTERS } from '../../../common/adapters'
+import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 
 const AutoPreset = {
   chat: 'chat',
@@ -54,17 +54,18 @@ export const ChatGenSettingsModal: Component<{
     return all.concat(defaults)
   })
 
-  const [selected, setSelected] = createSignal(props.chat?.genPreset)
-
-  createEffect(() => {
-    if (props.chat) {
-      setSelected(props.chat.genPreset)
-    }
-  })
+  const [selected, setSelected] = createSignal<string | undefined>(
+    props.chat?.genPreset
+      ? props.chat.genPreset
+      : props.chat.genSettings
+      ? AutoPreset.chat
+      : AutoPreset.service
+  )
+  const [genAdapter, setAdapter] = createSignal<AIAdapter>()
 
   const servicePreset = createMemo(() => {
     if (!user.user) return
-    const { adapter } = getAdapter(props.chat, user.user)
+    const adapter = genAdapter() || getAdapter(props.chat, user.user).adapter
 
     if (!user.user.defaultPresets) {
       const preset = getFallbackPreset(adapter)
@@ -140,36 +141,41 @@ export const ChatGenSettingsModal: Component<{
           <Select
             fieldName="preset"
             items={autoPresets.concat(state.options).concat(presetList)}
-            value={props.chat.genPreset}
+            value={selected()}
             onChange={(item) => setSelected(item.value)}
           />
 
-          <Show when={selected() === AutoPreset.service && servicePreset()}>
-            <div class="bold text-md">Using: {servicePreset()!.name}</div>
-            <GenerationSettings
-              showAll
-              inherit={servicePreset()!.preset}
-              disabled={servicePreset()?.fallback}
-            />
-          </Show>
+          <Switch>
+            <Match when={selected() === AutoPreset.service && servicePreset()}>
+              <div class="bold text-md">Using: {servicePreset()!.name}</div>
+              <GenerationSettings
+                inherit={servicePreset()!.preset}
+                disabled={servicePreset()?.fallback}
+                onService={setAdapter}
+                disableService
+              />
+            </Match>
 
-          <For each={presets()}>
-            {(preset) => (
-              <Show when={selected() === preset._id!}>
-                <div class="bold text-md">Using: {preset.name} (User Preset)</div>
-                <GenerationSettings
-                  showAll
-                  inherit={preset}
-                  disabled={isDefaultPreset(selected())}
-                />
-              </Show>
-            )}
-          </For>
+            <Match when={selected() === AutoPreset.chat}>
+              <div class="bold text-md">Using: Chat Settings</div>
+              <GenerationSettings inherit={props.chat.genSettings} onService={setAdapter} />
+            </Match>
 
-          <Show when={selected() === AutoPreset.chat}>
-            <div class="bold text-md">Using: Chat Settings</div>
-            <GenerationSettings showAll inherit={props.chat.genSettings} />
-          </Show>
+            <Match when={true}>
+              <For each={presets()}>
+                {(preset) => (
+                  <Show when={selected() === preset._id!}>
+                    <div class="bold text-md">Using: {preset.name} (User Preset)</div>
+                    <GenerationSettings
+                      inherit={preset}
+                      disabled={isDefaultPreset(selected())}
+                      onService={setAdapter}
+                    />
+                  </Show>
+                )}
+              </For>
+            </Match>
+          </Switch>
         </form>
       </div>
     </Modal>

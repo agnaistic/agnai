@@ -101,7 +101,14 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *getChat(_, id: string) {
+      yield { loaded: false }
+      msgStore.setState({
+        msgs: [],
+        activeChatId: id,
+        activeCharId: undefined,
+      })
       const res = await chatsApi.getChat(id)
+      yield { loaded: true }
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {

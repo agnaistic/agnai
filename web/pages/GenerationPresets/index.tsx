@@ -157,7 +157,7 @@ export const GenerationPresetsPage: Component = () => {
                   value={editing()?.name}
                   required
                 />
-                <GenerationSettings showAll={params.id === 'new'} inherit={editing()} />
+                <GenerationSettings inherit={editing()} />
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
                 <div class="flex flex-row justify-end">

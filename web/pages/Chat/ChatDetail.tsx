@@ -1,22 +1,13 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  MailPlus,
-  Menu,
-  X,
-} from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import TextInput from '../../shared/TextInput'
-import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { chatStore, presetStore, settingStore, UISettings as UI, userStore } from '../../store'
+import { getRootRgb, setComponentPageTitle } from '../../shared/util'
+import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -43,7 +34,12 @@ const ChatDetail: Component = () => {
   const nav = useNavigate()
   const user = userStore()
   const cfg = settingStore()
-  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.chatProfiles }))
+  const chats = chatStore((s) => ({
+    ...s.active,
+    lastId: s.lastChatId,
+    members: s.chatProfiles,
+    loaded: s.loaded,
+  }))
   const msgs = msgStore((s) => ({
     msgs: insertImageMessages(s.msgs, s.images[params.id]),
     partial: s.partial,
@@ -61,9 +57,7 @@ const ChatDetail: Component = () => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last) return
 
-    const msgId = last._id
-
-    return { msgId, list: msgs.retries?.[msgId] || [] }
+    return { msgId: last._id, list: msgs.retries?.[last._id] || [] }
   })
 
   const [swipe, setSwipe] = createSignal(0)
@@ -168,7 +162,7 @@ const ChatDetail: Component = () => {
 
   return (
     <>
-      <Show when={!chats.chat || !chats.char || !user.profile}>
+      <Show when={!chats.loaded}>
         <div>
           <div>Loading conversation...</div>
         </div>
@@ -256,7 +250,7 @@ const ChatDetail: Component = () => {
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
-                <Show when={msgs.msgs.length === 0 && !msgs.waiting}>
+                <Show when={chats.loaded && msgs.msgs.length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">
                     <Button onClick={generateFirst}>Generate Message</Button>
                   </div>
