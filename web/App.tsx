@@ -18,11 +18,11 @@ import PresetList from './pages/GenerationPresets/PresetList'
 import MemoryPage from './pages/Memory'
 import { EditMemoryPage } from './pages/Memory/EditMemory'
 import MetricsPage from './pages/Admin/Metrics'
-import './dots.css'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
 import ChangeLog from './pages/Home/ChangeLog'
 import CharacterList from './pages/Character/CharacterList'
+import './dots.css'
 
 const App: Component = () => {
   const state = userStore()

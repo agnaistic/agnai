@@ -29,36 +29,37 @@ em {
 /* hacky bit to prevent code blocks from causing x overflow */
 .msg-with-xs-avatar {
   /* 1rem = the avatars' right padding; added by class pr-4 */
-  max-width: calc(100% - 1rem - theme('width.6'));
+  max-width: calc(100% - 16px - theme('width.6'));
 }
 .msg-with-sm-avatar,
 .msg-with-md-avatar,
 .msg-with-lg-avatar {
-  max-width: calc(100% - 1rem - theme('width.8'));
+  max-width: calc(100% - 16px - theme('width.8'));
 }
 .msg-with-xl-avatar {
-  max-width: calc(100% - 1rem - theme('width.10'));
+  max-width: calc(100% - 16px - theme('width.10'));
 }
 .msg-with-2xl-avatar {
-  max-width: calc(100% - 1rem - theme('width.12'));
+  max-width: calc(100% - 16px - theme('width.12'));
 }
 .msg-with-3xl-avatar {
-  max-width: calc(100% - 1rem - theme('width.16'));
+  max-width: calc(100% - 16px - theme('width.16'));
 }
+
 @media (min-width: theme('screens.sm')) {
   .msg-with-md-avatar {
-    max-width: calc(100% - 1rem - theme('width.10'));
+    max-width: calc(100% - 16px - theme('width.10'));
   }
   .msg-with-lg-avatar {
-    max-width: calc(100% - 1rem - theme('width.12'));
+    max-width: calc(100% - 16px - theme('width.12'));
   }
   .msg-with-xl-avatar {
-    max-width: calc(100% - 1rem - theme('width.16'));
+    max-width: calc(100% - 16px - theme('width.16'));
   }
   .msg-with-2xl-avatar {
-    max-width: calc(100% - 1rem - theme('width.20'));
+    max-width: calc(100% - 16px - theme('width.20'));
   }
   .msg-with-3xl-avatar {
-    max-width: calc(100% - 1rem - theme('width.24'));
+    max-width: calc(100% - 16px - theme('width.24'));
   }
 }

@@ -1,8 +1,8 @@
 import { Bot, VenetianMask } from 'lucide-solid'
 import { Component, createMemo, Show } from 'solid-js'
 import { AvatarCornerRadius, AvatarSize } from '../store'
-import { avatarSizes, avatarSizesCircle } from './avatarUtil'
 import { getAssetUrl } from './util'
+import './avatar.css'
 
 type Props = {
   avatarUrl?: string
@@ -25,11 +25,10 @@ const AvatarIcon: Component<Props> = (props) => {
   const format = createMemo(() => props.format || defaultFormat)
 
   const fmtFit = createMemo(() => fit[format().corners])
-  const fmtSize = createMemo(() =>
-    format().corners === 'circle'
-      ? avatarSizesCircle[format().size].avatarColumn
-      : avatarSizes[format().size].avatarColumn
-  )
+  const fmtSize = createMemo(() => {
+    return `avatar-${format().size} ${format().corners === 'circle' ? 'avatar-circle' : ''}`
+  })
+
   const fmtCorners = createMemo(() => corners[format().corners])
 
   // We don't simply remove or change the image, because
@@ -64,9 +63,9 @@ const AvatarIcon: Component<Props> = (props) => {
         <div
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}
-          class={`flex ${
-            avatarSizesCircle[format().size].avatarColumn
-          } shrink-0 items-center justify-center rounded-full bg-[var(--black-700)] ${cls()}`}
+          class={`avatar-${
+            format().size
+          } avatar-circle flex shrink-0 items-center justify-center rounded-full bg-[var(--black-700)] ${cls()}`}
         >
           <Show when={!props.bot}>
             <VenetianMask data-user-icon />
