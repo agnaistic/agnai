@@ -1,3 +1,4 @@
+import type { OutgoingHttpHeaders } from 'http'
 import needle from 'needle'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
@@ -242,3 +243,78 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
 
   return res.body
 }
+
+interface BaseCompletion {
+  id: string
+  created: number
+  model: string
+}
+interface FullTextCompletion extends BaseCompletion {
+  object: 'text_completion'
+  choices: {
+    text: string
+    index: number
+    finish_reason: string
+  }[]
+}
+interface StreamedTextCompletion extends BaseCompletion {
+  object: 'text_completion.chunk'
+  choices: {
+    delta: { text?: string }
+    index: number
+    finish_reason: string
+  }[]
+}
+interface FullChatCompletion extends BaseCompletion {
+  object: 'chat.completion'
+  choices: {
+    message: { role: string; content: string }
+    finish_reason: string | null
+    index: number
+  }[]
+}
+interface StreamedChatCompletion extends BaseCompletion {
+  object: 'chat.completion.chunk'
+  choices: {
+    delta: { role?: string; content?: string }
+    finish_reason: string | null
+    index: number
+  }[]
+}
+type FullCompletion = FullTextCompletion | FullChatCompletion
+type StreamedCompletion = StreamedTextCompletion | StreamedChatCompletion
+type CompletionGenerator<T extends FullCompletion | StreamedCompletion> = (
+  url: string,
+  headers: OutgoingHttpHeaders,
+  body: any
+) => AsyncGenerator<{ error: string } | { error?: undefined; data: T }, T | undefined>
+
+const getOpenAICompletion: CompletionGenerator<FullCompletion> = async function* (
+  url,
+  body,
+  headers
+) {
+  const resp = await needle('post', url, JSON.stringify(body), {
+    json: true,
+    headers,
+  }).catch((err) => ({ error: err }))
+
+  if ('error' in resp) {
+    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
+    return
+  }
+
+  if (resp.statusCode && resp.statusCode >= 400) {
+    const msg =
+      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+
+    yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
+    return 'error'
+  }
+  return resp.body
+}
+
+const streamOpenAICompletion: CompletionGenerator<StreamedCompletion> =
+  async function* streamOpenAICompletion() {
+    return undefined
+  }
