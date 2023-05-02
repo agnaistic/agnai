@@ -60,7 +60,7 @@ export function buildMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
   const matches: Match[] = []
 
   let id = 0
-  const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLowerCase()
+  const combinedText = lines.slice().slice(0, depth).join(' ').toLowerCase()
 
   for (const entry of book.entries) {
     if (!entry.enabled) continue
@@ -96,7 +96,7 @@ export function buildMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
   const prompt = entries.list
     .map(({ text }) => text)
     .reverse()
-    .join('. ')
+    .join('\n')
 
   return {
     prompt,
