@@ -60,14 +60,14 @@ export const DropMenu: Component<{
     <>
       <Show when={props.show}>
         <div
-          class="absolute top-0 left-0 z-10 h-screen w-screen bg-black bg-opacity-5"
+          class="fixed top-0 left-0 right-0 bottom-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
           onClick={props.close}
         ></div>
       </Show>
       <div class="relative text-sm">
         <Show when={props.show}>
           <div
-            class={`absolute ${position()} z-20 w-fit rounded-md bg-[var(--bg-800)] ${
+            class={`absolute ${position()} z-20 w-fit rounded-md border-[1px] border-[var(--bg-600)] bg-[var(--bg-800)] ${
               props.class || ''
             }`}
           >

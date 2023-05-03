@@ -1,7 +1,14 @@
 import { v4 } from 'uuid'
 import { AppSchema, NewBook } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
-import { local } from './storage'
+import { localApi } from './storage'
+
+export const memoryApi = {
+  getBooks,
+  createBook,
+  updateBook,
+  removeBook,
+}
 
 export async function getBooks() {
   if (isLoggedIn()) {
@@ -9,8 +16,8 @@ export async function getBooks() {
     return res
   }
 
-  const books = local.loadItem('memory')
-  return local.result({ books })
+  const books = localApi.loadItem('memory')
+  return localApi.result({ books })
 }
 
 export async function createBook(book: NewBook) {
@@ -22,13 +29,13 @@ export async function createBook(book: NewBook) {
   const next: AppSchema.MemoryBook = {
     _id: v4(),
     kind: 'memory',
-    userId: local.ID,
+    userId: localApi.ID,
     ...book,
   }
-  const books = local.loadItem('memory').concat(next)
-  local.saveBooks(books)
+  const books = localApi.loadItem('memory').concat(next)
+  localApi.saveBooks(books)
 
-  return local.result(next)
+  return localApi.result(next)
 }
 
 export async function updateBook(bookId: string, update: NewBook) {
@@ -37,12 +44,12 @@ export async function updateBook(bookId: string, update: NewBook) {
     return res
   }
 
-  const books = local
+  const books = localApi
     .loadItem('memory')
     .map((book) => (book._id === bookId ? { ...book, ...update } : book))
-  local.saveBooks(books)
+  localApi.saveBooks(books)
 
-  return local.result({ success: true })
+  return localApi.result({ success: true })
 }
 
 export async function removeBook(bookId: string) {
@@ -51,8 +58,8 @@ export async function removeBook(bookId: string) {
     return res
   }
 
-  const books = local.loadItem('memory').filter((book) => book._id !== bookId)
-  local.saveBooks(books)
+  const books = localApi.loadItem('memory').filter((book) => book._id !== bookId)
+  localApi.saveBooks(books)
 
-  return local.result({ success: true })
+  return localApi.result({ success: true })
 }

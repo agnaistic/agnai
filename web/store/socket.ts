@@ -40,6 +40,8 @@ export function subscribe<T extends string, U extends Validator>(
   listeners.set(type, handlers)
 }
 
+const squelched = new Set('profile-handle-changed')
+
 function onMessage(msg: MessageEvent<any>) {
   if (typeof msg.data !== 'string') return
 
@@ -51,11 +53,16 @@ function onMessage(msg: MessageEvent<any>) {
     if (!payload.type) continue
     const handlers = listeners.get(payload.type)
 
-    if (payload.type !== 'image-generated') {
-      console.log(JSON.stringify(payload))
-    } else {
-      console.log(JSON.stringify({ ...payload, image: (payload.image || '').slice(0, 25) + '...' }))
+    if (!squelched.has(payload.type)) {
+      if (payload.type !== 'image-generated') {
+        console.log(JSON.stringify(payload))
+      } else {
+        console.log(
+          JSON.stringify({ ...payload, image: (payload.image || '').slice(0, 25) + '...' })
+        )
+      }
     }
+
     if (!handlers || !handlers.length) continue
 
     for (const handler of handlers) {

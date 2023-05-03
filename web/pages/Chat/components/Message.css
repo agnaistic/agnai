@@ -6,6 +6,16 @@
   margin-bottom: 0.4em; /* ensure <p> els are visually separated by empty line */
 }
 
+.rendered-markdown pre {
+  @apply overflow-x-scroll rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
+}
+
+.rendered-markdown pre code {
+  background-color: unset;
+  border-radius: unset;
+  padding: unset;
+}
+
 em {
   color: var(--text-600);
 }
@@ -14,4 +24,42 @@ em {
 .message-date {
   position: relative;
   top: -1px;
+}
+
+/* hacky bit to prevent code blocks from causing x overflow */
+.msg-with-xs-avatar {
+  /* 1rem = the avatars' right padding; added by class pr-4 */
+  max-width: calc(100% - 16px - theme('width.6'));
+}
+.msg-with-sm-avatar,
+.msg-with-md-avatar,
+.msg-with-lg-avatar {
+  max-width: calc(100% - 16px - theme('width.8'));
+}
+.msg-with-xl-avatar {
+  max-width: calc(100% - 16px - theme('width.10'));
+}
+.msg-with-2xl-avatar {
+  max-width: calc(100% - 16px - theme('width.12'));
+}
+.msg-with-3xl-avatar {
+  max-width: calc(100% - 16px - theme('width.16'));
+}
+
+@media (min-width: theme('screens.sm')) {
+  .msg-with-md-avatar {
+    max-width: calc(100% - 16px - theme('width.10'));
+  }
+  .msg-with-lg-avatar {
+    max-width: calc(100% - 16px - theme('width.12'));
+  }
+  .msg-with-xl-avatar {
+    max-width: calc(100% - 16px - theme('width.16'));
+  }
+  .msg-with-2xl-avatar {
+    max-width: calc(100% - 16px - theme('width.20'));
+  }
+  .msg-with-3xl-avatar {
+    max-width: calc(100% - 16px - theme('width.24'));
+  }
 }

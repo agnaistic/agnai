@@ -4,7 +4,8 @@ import { EVENTS, events } from '../emitter'
 import { setAssetPrefix } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
-import { data } from './data'
+import { usersApi } from './data/user'
+import { toastStore } from './toasts'
 
 type SettingState = {
   initLoading: boolean
@@ -57,7 +58,7 @@ export const settingStore = createStore<SettingState>(
   return {
     async *init() {
       yield { initLoading: true }
-      const res = await data.user.getInit()
+      const res = await usersApi.getInit()
       yield { initLoading: false }
 
       if (res.result) {
@@ -92,17 +93,27 @@ export const settingStore = createStore<SettingState>(
       }
     },
     async getHordeWorkers() {
-      const res = await fetch(`${HORDE_URL}/workers?type=text`)
-      const json = await res.json()
+      try {
+        const res = await fetch(`${HORDE_URL}/workers?type=text`)
+        const json = await res.json()
 
-      return { workers: json }
+        return { workers: json }
+      } catch (ex) {
+        toastStore.error(`Could not retrieve Horde workers`)
+        console.error(ex)
+      }
     },
 
     async getHordeImageWorkers() {
-      const res = await fetch(`${HORDE_URL}/workers?type=image`)
-      const json = await res.json()
+      try {
+        const res = await fetch(`${HORDE_URL}/workers?type=image`)
+        const json = await res.json()
 
-      return { imageWorkers: json }
+        return { imageWorkers: json }
+      } catch (ex) {
+        toastStore.error(`Could not retrieve Horde workers`)
+        console.error(ex)
+      }
     },
 
     toggleAnonymize({ anonymize }) {

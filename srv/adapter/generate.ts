@@ -9,7 +9,6 @@ import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 import { errors, StatusError } from '../api/wrap'
-import { handleChai } from './chai'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { FILAMENT_ENABLED, filament, handleLuminAI } from './luminai'
@@ -20,11 +19,11 @@ import { handleClaude } from './claude'
 import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter, getPromptParts, trimTokens } from '../../common/prompt'
 import { handleScale } from './scale'
-import { MemoryOpts, buildMemoryPrompt } from '../../common/memory'
+import { MemoryOpts } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
-import { getEncoder } from '../../common/tokenize'
+import { getEncoder } from '../tokenize'
 
 configure(async (opts) => {
   const res = await needle(opts.method, opts.url, opts.payload, {
@@ -36,7 +35,6 @@ configure(async (opts) => {
 })
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
-  chai: handleChai,
   novel: handleNovel,
   kobold: handleKobold,
   ooba: handleOoba,
@@ -62,20 +60,30 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId)
+    const { adapter, isThirdParty, model } = getAdapter(opts.chat, entities.user, entities.settings)
+    const encoder = getEncoder(adapter, model)
     opts.parts = getPromptParts(
       { ...entities, settings: entities.gen, chat: opts.chat, members: opts.members },
-      opts.lines
+      opts.lines,
+      encoder
     )
     opts.settings = entities.gen
     opts.user = entities.user
     opts.settings = entities.gen
     opts.char = entities.char
+
+    // Use pipeline
+    const memory = await getMemoryPrompt({ ...opts, book: entities.book }, log)
+    if (memory) {
+      opts.parts.memory = memory
+    }
   }
 
-  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user)
+  const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
   const handler = handlers[adapter]
 
-  const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
+  const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
 
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)
@@ -189,14 +197,14 @@ async function getGenerationSettings(
 async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getEncoder(adapter, model)
-  if (FILAMENT_ENABLED && adapter === 'luminai' && opts.user.luminaiUrl && opts.book) {
+  if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
     const res = await filament
       .retrieveMemories(opts.user, opts.book._id, opts.lines)
       .catch((error) => ({ error }))
 
+    // If we fail, we'll revert to the naive memory retrival
     if ('error' in res) {
-      log.error({ err: res.error }, `Failed to retrieve memories from filament`)
-      throw res.error
+      return
     }
 
     const memories = res.map((res) => res.entry)
@@ -205,6 +213,5 @@ async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
     return prompt.join('\n')
   }
 
-  const memory = buildMemoryPrompt(opts)
-  return memory?.prompt
+  return
 }

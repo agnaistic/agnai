@@ -1,0 +1,55 @@
+.avatar-xs {
+  @apply w-6 sm:w-6;
+}
+
+.avatar-sm {
+  @apply w-8 sm:w-8;
+}
+
+.avatar-md {
+  @apply w-8 sm:w-10;
+}
+
+.avatar-lg {
+  @apply w-8 sm:w-12;
+}
+
+.avatar-xl {
+  @apply w-10 sm:w-16;
+}
+
+.avatar-2xl {
+  @apply w-12 sm:w-20;
+}
+
+.avatar-3xl {
+  @apply w-16 sm:w-24;
+}
+
+.avatar-xs.avatar-circle {
+  @apply h-6 sm:h-6;
+}
+
+.avatar-sm.avatar-circle {
+  @apply h-8 sm:h-8;
+}
+
+.avatar-md.avatar-circle {
+  @apply h-8 sm:h-10;
+}
+
+.avatar-lg.avatar-circle {
+  @apply h-8 sm:h-12;
+}
+
+.avatar-xl.avatar-circle {
+  @apply h-10 sm:h-16;
+}
+
+.avatar-2xl.avatar-circle {
+  @apply h-12 sm:h-20;
+}
+
+.avatar-3xl.avatar-circle {
+  @apply h-16 sm:h-24;
+}

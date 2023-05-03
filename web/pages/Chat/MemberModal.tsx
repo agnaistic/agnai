@@ -5,8 +5,13 @@ import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import { chatStore, userStore } from '../../store'
+import Divider from '../../shared/Divider'
+import TextInput from '../../shared/TextInput'
+import { v4 } from 'uuid'
+import { getStrictForm } from '../../shared/util'
 
 const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  let ref: any
   const self = userStore()
   const state = chatStore()
 
@@ -25,6 +30,14 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
     return profiles || []
   })
 
+  const invite = () => {
+    if (!state.active?.chat) return
+    const body = getStrictForm(ref, { userId: 'string' })
+    chatStore.inviteUser(state.active?.chat._id, body.userId, () => {
+      ref.value = ''
+    })
+  }
+
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
@@ -35,6 +48,21 @@ const MemberModal: Component<{ show: boolean; close: () => void }> = (props) => 
   return (
     <>
       <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
+        <form ref={ref} class="flex flex-col gap-2">
+          <div class="flex items-end gap-2">
+            <TextInput
+              class="text-sm"
+              fieldName="userId"
+              label="Invite User"
+              helperText="The ID of the user to invite. The user should provide this to you"
+              placeholder={`E.g. ${v4()}`}
+            />
+            <Button class="h-[36px]" onClick={invite}>
+              Invite
+            </Button>
+          </div>
+        </form>
+        <Divider />
         <Show when={nonOwners().length === 0}>
           <div class="flex w-full justify-center">There are no particpants in this chat.</div>
         </Show>

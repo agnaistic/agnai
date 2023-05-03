@@ -2,10 +2,8 @@ import { Component, createMemo, createSignal } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { getFormEntries, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { CHAT_ADAPTERS, ChatAdapter, AIAdapter } from '../../../common/adapters'
+import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { userStore } from '../../store'
-import { AppSchema } from '../../../srv/db/schema'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
@@ -21,10 +19,6 @@ const settingTabs = {
 
 type Tab = keyof typeof settingTabs
 
-type DefaultAdapter = Exclude<ChatAdapter, 'default'>
-
-const adapterOptions = CHAT_ADAPTERS.filter((adp) => adp !== 'default') as DefaultAdapter[]
-
 const Settings: Component = () => {
   setComponentPageTitle('Settings')
   const state = userStore()
@@ -34,12 +28,16 @@ const Settings: Component = () => {
 
   const tabs: Tab[] = ['ai', 'ui', 'image']
   if (!state.loggedIn) tabs.push('guest')
+
   const currentTab = createMemo(() => tabs[tab()])
 
   const onSubmit = (evt: Event) => {
     const body = getStrictForm(evt, {
+      defaultPreset: 'string?',
       koboldUrl: 'string?',
       thirdPartyFormat: ['kobold', 'openai', 'claude'],
+      oobaUrl: 'string?',
+      thirdPartyPassword: 'string?',
       novelApiKey: 'string?',
       novelModel: 'string?',
       hordeUseTrusted: 'boolean?',
@@ -50,7 +48,7 @@ const Settings: Component = () => {
       scaleApiKey: 'string?',
       scaleUrl: 'string?',
       claudeApiKey: 'string?',
-      defaultAdapter: adapterOptions,
+      logPromptsToBrowserConsole: 'boolean?',
 
       imageType: ['horde', 'sd', 'novel'],
       imageSteps: 'number',
@@ -67,16 +65,6 @@ const Settings: Component = () => {
       sdUrl: 'string',
       sdSampler: 'string',
     } as const)
-
-    const defaultPresets = getFormEntries(evt)
-      .filter(([name]) => name.startsWith('preset.'))
-      .map(([name, value]) => {
-        return { adapter: name.replace('preset.', '') as AIAdapter, presetId: value }
-      })
-      .reduce((prev, curr) => {
-        prev![curr.adapter] = curr.presetId
-        return prev
-      }, {} as AppSchema.User['defaultPresets'])
 
     const {
       imageCfg,
@@ -96,7 +84,6 @@ const Settings: Component = () => {
     userStore.updateConfig({
       ...base,
       hordeWorkers: workers(),
-      defaultPresets,
       images: {
         type: imageType,
         cfg: imageCfg,
@@ -124,6 +111,7 @@ const Settings: Component = () => {
   return (
     <>
       <PageHeader title="Settings" subtitle="Configuration" noDivider />
+
       <div class="my-2">
         <Tabs tabs={tabs.map((t) => settingTabs[t])} selected={tab} select={setTab} />
       </div>

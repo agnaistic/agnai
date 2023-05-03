@@ -80,6 +80,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     defaultAdapter: 'horde',
     koboldUrl: '',
     thirdPartyFormat: 'kobold',
+    thirdPartyPassword: '',
     luminaiUrl: '',
   },
   profile: { _id: '', kind: 'profile', userId: ID, handle: 'You' },
@@ -92,7 +93,7 @@ export async function handleGuestInit() {
   const cfg = await api.get<AppSchema.AppConfig>('/settings')
   if (cfg.error) {
     const entities = getGuestInitEntities()
-    return local.result({ ...entities, config: emptyCfg })
+    return localApi.result({ ...entities, config: emptyCfg })
   }
 
   setSelfHosting(!!cfg.result?.selfhosting)
@@ -110,7 +111,7 @@ export async function handleGuestInit() {
     ) {
       const entities = await migrateToJson()
       await api.post('/json', entities)
-      return local.result({ ...entities, config: cfg.result! })
+      return localApi.result({ ...entities, config: cfg.result! })
     }
 
     if (res.result) {
@@ -124,7 +125,7 @@ export async function handleGuestInit() {
     }
   }
 
-  return local.result({
+  return localApi.result({
     ...getGuestInitEntities(),
     config: cfg.result!,
   })
@@ -136,7 +137,7 @@ async function migrateToJson() {
   await api.post('/json', entities)
 
   for (const chat of entities.chats) {
-    const messages = await local.getMessages(chat._id, true)
+    const messages = await localApi.getMessages(chat._id, true)
     await api.post(`/json/messages/${chat._id}`, messages)
   }
 
@@ -144,12 +145,12 @@ async function migrateToJson() {
 }
 
 function getGuestInitEntities() {
-  const user = local.loadItem('config', true)
-  const profile = local.loadItem('profile', true)
-  const presets = local.loadItem('presets', true)
-  const books = local.loadItem('memory', true)
-  const characters = local.loadItem('characters', true)
-  const chats = local.loadItem('chats', true)
+  const user = localApi.loadItem('config', true)
+  const profile = localApi.loadItem('profile', true)
+  const presets = localApi.loadItem('presets', true)
+  const books = localApi.loadItem('memory', true)
+  const characters = localApi.loadItem('characters', true)
+  const chats = localApi.loadItem('chats', true)
 
   return { user, presets, profile, books, characters, chats }
 }
@@ -256,7 +257,7 @@ export function replace<T extends { _id: string }>(id: string, list: T[], item: 
   return list.map((li) => (li._id === id ? { ...li, ...item } : li))
 }
 
-export const local = {
+export const localApi = {
   saveChars,
   saveChats,
   saveConfig,
@@ -272,6 +273,7 @@ export const local = {
   error,
   replace,
   result,
+  handleGuestInit,
 }
 
 type Result<T> = Promise<{ result: T | undefined; error?: string; status: number }>

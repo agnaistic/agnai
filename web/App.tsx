@@ -1,28 +1,16 @@
-import { Component, createEffect, createMemo, JSX, Show, createSignal } from 'solid-js'
+import { Component, createEffect, createMemo, JSX, Show, lazy } from 'solid-js'
 import { Route, Routes } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
-import Settings from './pages/Settings'
-import ChatDetail from './pages/Chat/ChatDetail'
-import { settingStore, userStore } from './store'
+import { settingStore } from './store/settings'
+import { userStore } from './store/user'
 import LoginPage from './pages/Login'
-import ProfilePage from './pages/Profile'
-import UsersPage from './pages/Admin/UsersPage'
-import { InvitesPage } from './pages/Invite/InvitesPage'
 import HomePage from './pages/Home'
 import Navigation from './Navigation'
-import GenerationPresetsPage from './pages/GenerationPresets'
-import CharacterChats from './pages/Character/ChatList'
-import PresetList from './pages/GenerationPresets/PresetList'
-import MemoryPage from './pages/Memory'
-import { EditMemoryPage } from './pages/Memory/EditMemory'
-import MetricsPage from './pages/Admin/Metrics'
-import './dots.css'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
-import ChangeLog from './pages/Home/ChangeLog'
-import CharacterList from './pages/Character/CharacterList'
+import './dots.css'
 
 const App: Component = () => {
   const state = userStore()
@@ -57,23 +45,41 @@ const App: Component = () => {
             <Show when={cfg.init}>
               <Routes>
                 <CharacterRoutes />
-                <Route path="/chats" component={CharacterChats} />
-                <Route path="/chat" component={ChatDetail} />
-                <Route path="/chat/:id" component={ChatDetail} />
-                <Route path="/" component={CharacterList} />
+                <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
+                <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
+                <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
+                <Route path="/" component={lazy(() => import('./pages/Character/CharacterList'))} />
                 <Route path="/info" component={HomePage} />
-                <Route path="/changelog" component={ChangeLog} />
-                <Route path="/presets/:id" component={GenerationPresetsPage} />
-                <Route path="/presets" component={PresetList} />
-                <Route path="/profile" component={ProfilePage} />
-                <Route path="/settings" component={Settings} />
-                <Route path="/memory" component={MemoryPage} />
-                <Route path="/memory/:id" component={EditMemoryPage} />
+                <Route path="/changelog" component={lazy(() => import('./pages/Home/ChangeLog'))} />
+                <Route
+                  path="/presets/:id"
+                  component={lazy(() => import('./pages/GenerationPresets'))}
+                />
+                <Route
+                  path="/presets"
+                  component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
+                />
+                <Route path="/profile" component={lazy(() => import('./pages/Profile'))} />
+                <Route path="/settings" component={lazy(() => import('./pages/Settings'))} />
+                <Route path="/memory" component={lazy(() => import('./pages/Memory'))} />
+                <Route
+                  path="/memory/:id"
+                  component={lazy(() => import('./pages/Memory/EditMemoryPage'))}
+                />
                 <Show when={state.loggedIn}>
-                  <Route path="/invites" component={InvitesPage} />
+                  <Route
+                    path="/invites"
+                    component={lazy(() => import('./pages/Invite/InvitesPage'))}
+                  />
                   <Show when={state.user?.admin}>
-                    <Route path="/admin/metrics" component={MetricsPage} />
-                    <Route path="/admin/users" component={UsersPage} />
+                    <Route
+                      path="/admin/metrics"
+                      component={lazy(() => import('./pages/Admin/Metrics'))}
+                    />
+                    <Route
+                      path="/admin/users"
+                      component={lazy(() => import('./pages/Admin/UsersPage'))}
+                    />
                   </Show>
                 </Show>
                 <Show when={cfg.config.canAuth}>

@@ -1,9 +1,7 @@
-import { adaptersToOptions } from '../../shared/util'
 import Select from '../../shared/Select'
 import { ADAPTER_LABELS } from '../../../common/adapters'
-import { settingStore, userStore } from '../../store'
+import { presetStore, settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
-import { AIPreset } from './components/AIPreset'
 import HordeAISettings from './components/HordeAISettings'
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
@@ -11,14 +9,16 @@ import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
 import LuminAISettings from './components/LuminAISettings'
 import KoboldAISettings from './components/KoboldAISettings'
-import ChaiSettings from './components/ChaiSettings'
+import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
+import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
 }> = (props) => {
   const state = userStore()
   const cfg = settingStore()
+  const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
 
   createEffect(() => {
     setTabs(cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a))
@@ -36,6 +36,13 @@ const AISettings: Component<{
   const [ready, setReady] = createSignal(false)
 
   const currentTab = createMemo(() => cfg.config.adapters[tab()])
+  const presetOptions = createMemo(() =>
+    [{ label: 'None', value: '' }].concat(
+      getPresetOptions(presets).filter(
+        (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
+      )
+    )
+  )
 
   const tabClass = `flex flex-col gap-4`
 
@@ -47,11 +54,11 @@ const AISettings: Component<{
 
       <Show when={ready()}>
         <Select
-          fieldName="defaultAdapter"
-          label="Default AI Service"
-          items={adaptersToOptions(cfg.config.adapters)}
-          helperText="The default service conversations will use unless otherwise configured"
-          value={state.user?.defaultAdapter}
+          fieldName="defaultPreset"
+          items={presetOptions()}
+          label="Default Preset"
+          helperText="The default preset your chats will use. If your preset is not in this list, it needs to be assigned an AI SERVICE."
+          value={state.user?.defaultPreset || ''}
         />
 
         <div class="my-2">
@@ -60,42 +67,34 @@ const AISettings: Component<{
       </Show>
 
       <div class={currentTab() === 'horde' ? tabClass : 'hidden'}>
-        <AIPreset adapter="horde" />
         <HordeAISettings onHordeWorkersChange={props.onHordeWorkersChange} />
       </div>
 
       <div class={currentTab() === 'kobold' ? tabClass : 'hidden'}>
-        <AIPreset adapter="kobold" />
         <KoboldAISettings />
       </div>
 
+      <div class={currentTab() === 'ooba' ? tabClass : 'hidden'}>
+        <OobaAISettings />
+      </div>
+
       <div class={currentTab() === 'openai' ? tabClass : 'hidden'}>
-        <AIPreset adapter="openai" />
         <OpenAISettings />
       </div>
 
       <div class={currentTab() === 'scale' ? tabClass : 'hidden'}>
-        <AIPreset adapter="scale" />
         <ScaleSettings />
       </div>
 
       <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
-        <AIPreset adapter="novel" />
         <NovelAISettings />
       </div>
 
       <div class={currentTab() === 'luminai' ? tabClass : 'hidden'}>
-        <AIPreset adapter="luminai" />
         <LuminAISettings />
       </div>
 
-      <div class={currentTab() === 'chai' ? tabClass : 'hidden'}>
-        <AIPreset adapter="chai" />
-        <ChaiSettings />
-      </div>
-
       <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>
-        <AIPreset adapter="claude" />
         <ClaudeSettings />
       </div>
     </>

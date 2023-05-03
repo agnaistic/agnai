@@ -53,7 +53,7 @@ type BuildPromptOpts = {
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
-export const BOT_REPLACE = /(\{\{char\}\}|<BOT>)/gi
+export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
 export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
 
 /**
@@ -61,7 +61,7 @@ export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
  * @param opts
  * @returns
  */
-export function createPrompt(opts: PromptOpts) {
+export function createPrompt(opts: PromptOpts, encoder: Encoder) {
   const sortedMsgs = opts.messages
     .filter((msg) => msg.adapter !== 'image')
     .slice()
@@ -71,9 +71,9 @@ export function createPrompt(opts: PromptOpts) {
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
-  const lines = getLinesForPrompt(opts)
-  const parts = getPromptParts(opts, lines)
-  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines, 'desc')
+  const lines = getLinesForPrompt(opts, encoder)
+  const parts = getPromptParts(opts, lines, encoder)
+  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines, 'desc', encoder)
   return { prompt, lines: lines.reverse(), pre, post, parts, history }
 }
 
@@ -90,9 +90,10 @@ const START_TEXT = '<START>'
 export function createPromptWithParts(
   opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
   parts: PromptParts,
-  lines: string[]
+  lines: string[],
+  encoder: Encoder
 ) {
-  const { pre, post, history, parts: newParts } = buildPrompt(opts, parts, lines, 'asc')
+  const { pre, post, history, parts: newParts } = buildPrompt(opts, parts, lines, 'asc', encoder)
   const prompt = [pre, history, post].filter(removeEmpty).join('\n')
   return { lines, prompt, parts: newParts, pre, post }
 }
@@ -106,7 +107,8 @@ export function buildPrompt(
   opts: BuildPromptOpts,
   parts: PromptParts,
   incomingLines: string[],
-  order: 'asc' | 'desc'
+  order: 'asc' | 'desc',
+  encoder: Encoder
 ) {
   const lines = order === 'asc' ? incomingLines.slice().reverse() : incomingLines.slice()
   const { chat, char } = opts
@@ -146,8 +148,6 @@ export function buildPrompt(
   }
 
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const encoder = getEncoder(adapter, model)
-
   const maxContext = getContextLimit(opts.settings, adapter, model)
 
   const preamble = pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
@@ -178,7 +178,8 @@ export function buildPrompt(
 
 export function getPromptParts(
   opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
-  lines: string[]
+  lines: string[],
+  encoder: Encoder
 ) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
@@ -209,12 +210,11 @@ export function getPromptParts(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
-  const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
+  const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() }, encoder)
   if (memory) parts.memory = memory.prompt
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
   const ujb = opts.settings?.ultimeJailbreak
-
   const sampleChat = parts.sampleChat?.join('\n') || ''
 
   if (ujb) {
@@ -222,20 +222,18 @@ export function getPromptParts(
       .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
       .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(/\{\{name\}\}/gi, char.name)
+      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
       .replace(BOT_REPLACE, char.name)
       .replace(SELF_REPLACE, sender)
-      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
   }
 
   parts.gaslight = gaslight
     .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
     .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(/\{\{name\}\}/gi, char.name)
+    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, sender)
-    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
@@ -342,19 +340,12 @@ function removeEmpty(value?: string) {
  *
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
-function getLinesForPrompt({
-  settings,
-  char,
-  members,
-  messages,
-  continue: cont,
-  book,
-  ...opts
-}: PromptOpts) {
+function getLinesForPrompt(
+  { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
+  encoder: Encoder
+) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
   const maxContext = getContextLimit(settings, adapter, model)
-
-  const encoder = getEncoder(adapter, model)
 
   const profiles = new Map<string, AppSchema.Profile>()
   for (const member of members) {
@@ -408,13 +399,14 @@ export function getChatPreset(
   chat: AppSchema.Chat,
   user: AppSchema.User,
   userPresets: AppSchema.UserGenPreset[]
-) {
+): Partial<AppSchema.GenSettings> {
   /**
    * Order of precedence:
    * 1. chat.genPreset
    * 2. chat.genSettings
-   * 3. user.servicePreset
-   * 4. service fallback preset
+   * 3. user.defaultPreset
+   * 4. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
+   * 5. built-in fallback preset (horde)
    */
 
   // #1
@@ -431,6 +423,14 @@ export function getChatPreset(
   }
 
   // #3
+  const defaultId = user.defaultPreset
+  if (defaultId) {
+    if (isDefaultPreset(defaultId)) return defaultPresets[defaultId]
+    const preset = userPresets.find((preset) => preset._id === defaultId)
+    if (preset) return preset
+  }
+
+  // #4
   const { adapter, isThirdParty } = getAdapter(chat, user)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
@@ -440,10 +440,17 @@ export function getChatPreset(
     if (preset) return preset
   }
 
-  // #4
+  // #5
   return getFallbackPreset(adapter)
 }
 
+/**
+ * Order of Precedence:
+ * 1. chat.genPreset -> service
+ * 2. chat.genSettings -> service
+ * 3. chat.adapter
+ * 4. user.defaultAdapter
+ */
 export function getAdapter(
   chat: AppSchema.Chat,
   config: AppSchema.User,
@@ -452,9 +459,12 @@ export function getAdapter(
   const chatAdapter =
     !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
-  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && chatAdapter === 'kobold'
+  let adapter = preset?.service ? preset.service : chatAdapter
+  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && adapter === 'kobold'
 
-  const adapter = chatAdapter === 'kobold' && isThirdParty ? config.thirdPartyFormat : chatAdapter
+  if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
+    adapter = config.thirdPartyFormat
+  }
 
   let model = ''
   let presetName = 'Fallback Preset'
@@ -469,15 +479,14 @@ export function getAdapter(
 
   if (chat.genPreset) {
     if (isDefaultPreset(chat.genPreset)) {
-      presetName = 'Chat, Default Preset'
-    } else presetName = 'Chat, User Preset'
+      presetName = 'Built-in Preset'
+    } else presetName = 'User Preset'
   } else if (chat.genSettings) {
-    presetName = 'Chat, Preset Settings'
+    presetName = 'Chat Settings'
   } else if (config.defaultPresets) {
     const servicePreset = config.defaultPresets[adapter]
     if (servicePreset) {
-      const source = servicePreset in defaultPresets ? 'Default' : 'User'
-      presetName = `Service, ${source} Preset`
+      presetName = `Service Preset`
     }
   }
 
@@ -500,9 +509,6 @@ function getContextLimit(
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
   switch (adapter) {
-    case 'chai':
-      return Math.min(2048, configuredMax) - genAmount
-
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
     case 'luminai':

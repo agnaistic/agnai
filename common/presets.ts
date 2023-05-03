@@ -1,5 +1,5 @@
 import { AppSchema } from '../srv/db/schema'
-import { AIAdapter, ChatAdapter } from './adapters'
+import { AIAdapter, AI_ADAPTERS, ChatAdapter } from './adapters'
 import { defaultPresets } from './default-preset'
 
 export { defaultPresets }
@@ -9,6 +9,7 @@ export type GenerationPreset = keyof typeof defaultPresets
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
 export const chatGenSettings = {
+  service: AI_ADAPTERS,
   temp: 'number',
   maxTokens: 'number',
   maxContextLength: 'number?',
@@ -22,6 +23,10 @@ export const chatGenSettings = {
   topK: 'number',
   topA: 'number',
   tailFreeSampling: 'number',
+  encoderRepitionPenalty: 'number?',
+  addBosToken: 'boolean?',
+  banEosToken: 'boolean?',
+  penaltyAlpha: 'number?',
   order: ['number?'],
   frequencyPenalty: 'number',
   presencePenalty: 'number',
@@ -130,31 +135,22 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: 'top_a',
     order: '',
   },
-  chai: {
-    repetitionPenalty: 'repetition_penalty',
-    maxTokens: 'max_length',
-    temp: 'temperature',
-    topK: 'top_k',
-    topP: 'top_p',
-    repetitionPenaltyRange: '',
-    repetitionPenaltySlope: '',
-    tailFreeSampling: '',
-    typicalP: '',
-    topA: '',
-    order: '',
-  },
   ooba: {
-    maxTokens: '',
-    repetitionPenalty: '',
+    maxTokens: 'max_new_tokens',
+    topP: 'top_p',
+    temp: 'temperature',
+    typicalP: 'typical_p',
+    repetitionPenalty: 'repetition_penalty',
+    encoderRepitionPenalty: 'encoder_repetition_penalty',
+    topK: 'top_k',
+    penaltyAlpha: 'penalty_alpha',
+    addBosToken: 'add_bos_token',
+    banEosToken: 'ban_eos_token',
+    topA: '',
+    order: '',
     repetitionPenaltyRange: '',
     repetitionPenaltySlope: '',
     tailFreeSampling: '',
-    temp: '',
-    topK: '',
-    topP: '',
-    typicalP: '',
-    topA: '',
-    order: '',
   },
   horde: {
     maxTokens: 'max_length',
@@ -243,7 +239,6 @@ export function getFallbackPreset(adapter: AIAdapter) {
     case 'horde':
       return defaultPresets.horde
 
-    case 'chai':
     case 'kobold':
     case 'luminai':
     case 'ooba':

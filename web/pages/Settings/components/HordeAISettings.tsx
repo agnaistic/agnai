@@ -1,6 +1,6 @@
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
-import { settingStore, userStore } from '../../../store'
+import { settingStore, toastStore, userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import Select, { Option } from '../../../shared/Select'
 import { RefreshCw, Save, X } from 'lucide-solid'
@@ -59,7 +59,7 @@ const HordeAISettings: Component<{
       <Toggle
         fieldName="hordeUseTrusted"
         label="Use Trusted Workers Only"
-        value={state.user?.hordeUseTrusted ?? false}
+        value={state.user?.hordeUseTrusted ?? true}
         helperText="This may help reduce 'bad responses' by using only 'trusted' workers. Warning: This may increase response times."
       />
       <TextInput

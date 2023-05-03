@@ -97,7 +97,7 @@ const NovelSettings: Component = () => {
   return (
     <>
       <div class="text-xl">NovelAI</div>
-      <Show when={!state.user?.novelVerified}>
+      <Show when={!state.user?.novelVerified && !state.user?.novelApiKey}>
         <div class="font-bold text-red-600">
           You do not have a valid NovelAI key set. You will not be able to generate images using
           Novel.

@@ -1,5 +1,4 @@
 import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
-import { ImageAdapter } from '../../common/image'
 import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
 
@@ -35,6 +34,8 @@ export namespace AppSchema {
 
     koboldUrl: string
     thirdPartyFormat: 'kobold' | 'openai' | 'claude'
+    thirdPartyPassword: string
+    thirdPartyPasswordSet?: boolean
     luminaiUrl: string
     oobaUrl: string
 
@@ -56,6 +57,7 @@ export namespace AppSchema {
 
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
+    defaultPreset?: string
 
     createdAt?: string
 
@@ -177,6 +179,8 @@ export namespace AppSchema {
 
   export interface GenSettings {
     name: string
+    service?: AIAdapter
+
     temp: number
     maxTokens: number
     maxContextLength?: number
@@ -188,6 +192,10 @@ export namespace AppSchema {
     topK: number
     topA: number
     tailFreeSampling: number
+    encoderRepitionPenalty?: number
+    penaltyAlpha?: number
+    addBosToken?: boolean
+    banEosToken?: boolean
     order?: number[]
 
     gaslight?: string

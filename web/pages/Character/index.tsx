@@ -1,16 +1,13 @@
 import { Route } from '@solidjs/router'
-import { Component } from 'solid-js'
-import CharacterChats from './ChatList'
-import CreateCharacter from './CreateCharacter'
-import CharacterList from './CharacterList'
+import { Component, lazy } from 'solid-js'
 
 const CharacterRoutes: Component = () => (
   <Route path="/character">
-    <Route path="/create" component={CreateCharacter} />
-    <Route path="/create/:duplicateId" component={CreateCharacter} />
-    <Route path="/:editId/edit" component={CreateCharacter} />
-    <Route path="/list" component={CharacterList} />
-    <Route path="/:id/chats" component={CharacterChats} />
+    <Route path="/create" component={lazy(() => import('./CreateCharacter'))} />
+    <Route path="/create/:duplicateId" component={lazy(() => import('./CreateCharacter'))} />
+    <Route path="/:editId/edit" component={lazy(() => import('./CreateCharacter'))} />
+    <Route path="/list" component={lazy(() => import('./CharacterList'))} />
+    <Route path="/:id/chats" component={lazy(() => import('./ChatList'))} />
   </Route>
 )
 

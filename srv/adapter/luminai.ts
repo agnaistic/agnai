@@ -57,12 +57,14 @@ export const handleLuminAI: ModelAdapter = async function* ({
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    yield { error: `LAI.Kobold request failed: ${resp.error?.message || resp.error}` }
+    log.error({ err: resp.error }, `Filamant request failed`)
+    yield { error: `Filament request failed: ${resp.error?.message || resp.error}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `LAI.Kobold request failed: ${resp.statusMessage}` }
+    log.error({ err: resp.body }, `Filament request failed`)
+    yield { error: `Filament request failed: ${resp.statusMessage}` }
     return
   }
 
@@ -89,10 +91,10 @@ export async function embedMemory(user: AppSchema.User, book: AppSchema.MemoryBo
   }
 
   const url = `${user.luminaiUrl}/api/memory/${book._id}/embed`
-  const res = await needle('post', url, { memory_book: book })
+  const res = await needle('post', url, { memory_book: book }, { json: true })
 
   if (res.statusCode && res.statusCode >= 400) {
-    throw new StatusError(`Failed memory embedding (${res.statusCode})`, res.statusCode)
+    logger.error({ err: res.body }, `Filament memory embedding failed`)
   }
 }
 
@@ -102,9 +104,19 @@ export async function retrieveMemories(user: AppSchema.User, bookId: string, lin
   }
 
   const url = `${user.luminaiUrl}/api/memory/${bookId}/prompt`
-  const res = await needle('post', url, { prompt: lines, num_memories_per_sentence: 3 })
+  const res = await needle(
+    'post',
+    url,
+    { prompt: lines, num_memories_per_sentence: 3 },
+    { json: true }
+  ).catch((error) => ({ error }))
+  if ('error' in res) {
+    logger.error({ err: res.error }, `Filament request failed`)
+    throw res.error
+  }
 
   if (res.statusCode && res.statusCode >= 400) {
+    logger.error({ err: res.body }, `Filament memory retrieval failed`)
     throw new StatusError(
       `Failed to retrieve memories (${res.statusCode}): ${res.body.message || res.statusMessage}`,
       res.statusCode

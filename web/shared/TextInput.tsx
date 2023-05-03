@@ -1,5 +1,6 @@
 import { Component, Show, createMemo, JSX, onMount, createEffect } from 'solid-js'
 import IsVisible from './IsVisible'
+import { AIAdapter } from '../../common/adapters'
 
 const MIN_HEIGHT = 40
 
@@ -19,6 +20,9 @@ const TextInput: Component<{
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
+
+  service?: AIAdapter
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   let ref: any
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
@@ -34,10 +38,15 @@ const TextInput: Component<{
     ref.style.height = `${next}px`
   }
 
+  const hide = createMemo(() => {
+    if (!props.service || !props.adapters) return ''
+    return props.adapters.includes(props.service) ? '' : ` hidden `
+  })
+
   onMount(resize)
 
   return (
-    <div class="w-full">
+    <div class={`w-full ${hide()}`}>
       <Show when={!!props.label}>
         <label for={props.fieldName}>
           <div class={props.helperText ? '' : 'pb-1'}>

@@ -2,6 +2,7 @@ import { assertValid } from 'frisker'
 import { defaultPresets, presetValidator } from '../../../common/presets'
 import { store } from '../../db'
 import { handle } from '../wrap'
+import { AIAdapter } from '../../../common/adapters'
 
 export const getUserPresets = handle(async ({ userId }) => {
   const presets = await store.presets.getUserPresets(userId!)
@@ -13,9 +14,10 @@ export const getBasePresets = handle(async () => {
 })
 
 export const createUserPreset = handle(async ({ userId, body }) => {
-  assertValid(presetValidator, body)
+  assertValid(presetValidator, body, true)
+  const service = body.service as AIAdapter
 
-  const preset = { ...body }
+  const preset = { ...body, service }
   if (!preset.order?.length) {
     preset.order = undefined
   }
@@ -25,9 +27,10 @@ export const createUserPreset = handle(async ({ userId, body }) => {
 })
 
 export const updateUserPreset = handle(async ({ params, body, userId }) => {
-  assertValid(presetValidator, body)
+  assertValid(presetValidator, body, true)
+  const service = body.service as AIAdapter
 
-  const preset = await store.presets.updateUserPreset(userId!, params.id, body)
+  const preset = await store.presets.updateUserPreset(userId!, params.id, { ...body, service })
   return preset
 })
 

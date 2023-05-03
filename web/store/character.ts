@@ -3,9 +3,10 @@ import { createAppearancePrompt } from '../../common/image-prompt'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
-import { data } from './data'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+import { charsApi } from './data/chars'
+import { imageApi } from './data/image'
 
 type CharacterState = {
   loading?: boolean
@@ -50,7 +51,7 @@ export const characterStore = createStore<CharacterState>(
       if (state.loading) return
 
       yield { loading: true }
-      const res = await data.chars.getCharacters()
+      const res = await charsApi.getCharacters()
       yield { loading: false }
 
       if (res.error) {
@@ -69,7 +70,7 @@ export const characterStore = createStore<CharacterState>(
       if (creating) return
 
       yield { creating: true }
-      const res = await data.chars.createCharacter(char)
+      const res = await charsApi.createCharacter(char)
       yield { creating: false }
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
@@ -84,7 +85,7 @@ export const characterStore = createStore<CharacterState>(
       char: NewCharacter,
       onSuccess?: () => void
     ) {
-      const res = await data.chars.editChracter(characterId, char)
+      const res = await charsApi.editChracter(characterId, char)
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
@@ -103,7 +104,7 @@ export const characterStore = createStore<CharacterState>(
       characterId: string,
       favorite: boolean
     ) => {
-      const res = await data.chars.setFavorite(characterId, favorite)
+      const res = await charsApi.setFavorite(characterId, favorite)
       if (res.error) return toastStore.error(`Failed to set favorite character`)
       if (res.result) {
         return {
@@ -115,7 +116,7 @@ export const characterStore = createStore<CharacterState>(
       }
     },
     async *editAvatar({ characters: { list } }, characterId: string, file: File) {
-      const res = await data.chars.editAvatar(characterId, file)
+      const res = await charsApi.editAvatar(characterId, file)
       if (res.error) {
         toastStore.error(`Failed to update avatar: ${res.error}`)
       }
@@ -130,7 +131,7 @@ export const characterStore = createStore<CharacterState>(
       }
     },
     async *removeAvatar({ characters: { list } }, characterId: string) {
-      const res = await data.chars.removeAvatar(characterId)
+      const res = await charsApi.removeAvatar(characterId)
       if (res.error) {
         toastStore.error(`Failed to remove avatar: ${res.error}`)
       }
@@ -145,7 +146,7 @@ export const characterStore = createStore<CharacterState>(
       }
     },
     deleteCharacter: async ({ characters: { list } }, charId: string, onSuccess?: () => void) => {
-      const res = await data.chars.deleteCharacter(charId)
+      const res = await charsApi.deleteCharacter(charId)
       if (res.error) return toastStore.error(`Failed to delete character`)
       if (res.result) {
         const next = list.filter((char) => char._id !== charId)
@@ -165,7 +166,7 @@ export const characterStore = createStore<CharacterState>(
       const id = v4()
       imageCallbacks[id] = onDone
 
-      const res = await data.image.generateImage({ chatId: id, prompt, ephemeral: true, onDone })
+      const res = await imageApi.generateImage({ chatId: id, prompt, ephemeral: true, onDone })
       if (res.error) {
         delete imageCallbacks[id]
       }

@@ -1,9 +1,16 @@
 import { v4 } from 'uuid'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
-import { loadItem, local } from './storage'
+import { loadItem, localApi } from './storage'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
+
+export const presetApi = {
+  getPresets,
+  createPreset,
+  editPreset,
+  deletePreset,
+}
 
 export async function getPresets() {
   if (isLoggedIn()) {
@@ -12,7 +19,7 @@ export async function getPresets() {
   }
 
   const presets = loadItem('presets')
-  return local.result({ presets })
+  return localApi.result({ presets })
 }
 
 export async function createPreset(preset: PresetUpdate) {
@@ -25,16 +32,16 @@ export async function createPreset(preset: PresetUpdate) {
     ...preset,
     _id: v4(),
     kind: 'gen-setting',
-    userId: local.ID,
+    userId: localApi.ID,
   }
 
   const presets = loadItem('presets').concat(newPreset)
-  local.savePresets(presets)
+  localApi.savePresets(presets)
 
-  return local.result(newPreset)
+  return localApi.result(newPreset)
 }
 
-export async function editPreset(presetId: string, update: PresetUpdate) {
+export async function editPreset(presetId: string, update: Partial<PresetUpdate>) {
   if (isLoggedIn()) {
     const res = await api.post<AppSchema.UserGenPreset>(`/user/presets/${presetId}`, update)
     return res
@@ -42,11 +49,11 @@ export async function editPreset(presetId: string, update: PresetUpdate) {
 
   const presets = loadItem('presets')
   const prev = presets.find((pr) => pr._id === presetId)
-  if (!prev) return local.error(`Preset does not exist`)
+  if (!prev) return localApi.error(`Preset does not exist`)
 
   const preset = { ...prev, ...update }
-  local.savePresets(local.replace(presetId, presets, preset))
-  return local.result(preset)
+  localApi.savePresets(localApi.replace(presetId, presets, preset))
+  return localApi.result(preset)
 }
 
 export async function deletePreset(presetId: string) {
@@ -57,6 +64,6 @@ export async function deletePreset(presetId: string) {
 
   const presets = loadItem('presets')
   const next = presets.filter((pre) => pre._id !== presetId)
-  local.savePresets(next)
-  return local.result({ success: true })
+  localApi.savePresets(next)
+  return localApi.result({ success: true })
 }

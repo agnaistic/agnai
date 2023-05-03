@@ -207,12 +207,15 @@ body {
 
 .app {
   height: 100vh;
+  height: 100dvh;
+  /* height: -webkit-fill-available; */
+  overflow-y: overlay;
 }
 
 @supports (-webkit-touch-callout: none) {
-  .app {
-    @apply h-[calc(100vh-74px)];
-  }
+  /* .app {
+    height: calc(100dvh - 74px);
+  } */
 }
 
 .ellipsis {
@@ -404,13 +407,21 @@ body {
 
   .drawer {
     height: calc(100vh - 58px);
+    height: calc(100dvh - 58px);
     position: absolute;
     top: 58px;
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;
-    @apply w-[calc(100vw-40px)] max-w-[320px] bg-[var(--bg-900)] sm:relative  sm:top-0 sm:clear-none sm:h-[100vh] sm:w-72;
+    @apply w-[calc(100vw-40px)] max-w-[320px] bg-[var(--bg-900)] sm:relative  sm:top-0 sm:clear-none sm:w-72;
     @apply z-10 sm:z-0;
+  }
+
+  @media (min-width: 1024px) {
+    .drawer {
+      height: 100vh;
+      height: 100dvh;
+    }
   }
 
   .drawer--hide {
@@ -471,4 +482,15 @@ body {
 .markdown > blockquote {
   @apply pl-4;
   border-left: 0.25em solid var(--bg-300);
+}
+
+.overlay {
+  position: fixed; /* Sit on top of the page content */
+  display: none; /* Hidden by default */
+  width: 100%; /* Full width (cover the whole page) */
+  height: 100%; /* Full height (cover the whole page) */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }

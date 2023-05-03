@@ -1,11 +1,13 @@
 import { createPrompt, Prompt } from '../../common/prompt'
+import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
-import { data } from './data'
-import { AllChat } from './data/chats'
+import { AllChat, chatsApi } from './data/chats'
+import { msgsApi } from './data/messages'
+import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -92,7 +94,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (!lastChatId || chatId !== lastChatId) return
       if (memberIds[id]) return
 
-      const res = await data.user.getProfile(id)
+      const res = await usersApi.getProfile(id)
       if (res.result) {
         return {
           memberIds: { ...memberIds, [id]: res.result },
@@ -100,7 +102,14 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *getChat(_, id: string) {
-      const res = await data.chats.getChat(id)
+      yield { loaded: false }
+      msgStore.setState({
+        msgs: [],
+        activeChatId: id,
+        activeCharId: undefined,
+      })
+      const res = await chatsApi.getChat(id)
+      yield { loaded: true }
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
@@ -130,7 +139,7 @@ export const chatStore = createStore<ChatState>('chat', {
       update: Partial<AppSchema.Chat>,
       onSuccess?: () => void
     ) {
-      const res = await data.chats.editChat(id, update)
+      const res = await chatsApi.editChat(id, update)
       if (res.error) {
         toastStore.error(`Failed to update chat: ${res.error}`)
         return
@@ -171,10 +180,14 @@ export const chatStore = createStore<ChatState>('chat', {
       settings: AppSchema.Chat['genSettings'],
       onSucces?: () => void
     ) {
-      const res = await data.chats.editChatGenSettings(chatId, settings)
-      if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
+      const res = await chatsApi.editChatGenSettings(chatId, settings)
+      if (res.error) {
+        toastStore.error(`Failed to update generation settings: ${res.error}`)
+        return
+      }
+
       if (res.result) {
-        if (active && active.chat._id === chatId) {
+        if (active?.chat._id === chatId) {
           yield {
             active: {
               ...active,
@@ -187,17 +200,16 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *editChatGenPreset({ active }, chatId: string, preset: string, onSucces?: () => void) {
-      const res = await data.chats.editChatGenPreset(chatId, preset)
+      const res = await chatsApi.editChatGenPreset(chatId, preset)
       if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
       if (res.result) {
-        if (active && active.chat._id === chatId) {
+        if (active?.chat._id === chatId) {
           yield {
             active: {
               ...active,
               chat: { ...active.chat, genSettings: undefined, genPreset: preset },
             },
           }
-          toastStore.success('Updated chat generation settings')
           onSucces?.()
         }
       }
@@ -206,7 +218,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const diff = Date.now() - lastFetched
       if (diff < 300000) return
 
-      const res = await data.chats.getAllChats()
+      const res = await chatsApi.getAllChats()
       yield { lastFetched: Date.now() }
       if (res.error) {
         toastStore.error(`Could not retrieve chats`)
@@ -222,7 +234,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     getBotChats: async (_, characterId: string) => {
-      const res = await data.chats.getBotChats(characterId)
+      const res = await chatsApi.getBotChats(characterId)
       if (res.error) toastStore.error('Failed to retrieve conversations')
       if (res.result) {
         return {
@@ -240,7 +252,7 @@ export const chatStore = createStore<ChatState>('chat', {
       props: NewChat,
       onSuccess?: (id: string) => void
     ) {
-      const res = await data.chats.createChat(characterId, props)
+      const res = await chatsApi.createChat(characterId, props)
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
         const { characters } = characterStore.getState()
@@ -279,7 +291,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
-      const res = await data.chats.deleteChat(chatId)
+      const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {
         toastStore.success('Successfully deleted chat')
@@ -305,7 +317,7 @@ export const chatStore = createStore<ChatState>('chat', {
       imported: ImportChat,
       onSuccess?: (chat: AppSchema.Chat) => void
     ) {
-      const res = await data.chats.importChat(characterId, imported)
+      const res = await chatsApi.importChat(characterId, imported)
       if (res.error) toastStore.error(`Failed to import chat: ${res.error}`)
       if (res.result) {
         if (all?.chats) {
@@ -329,12 +341,16 @@ export const chatStore = createStore<ChatState>('chat', {
       if (!active) return
 
       const { msgs } = msgStore.getState()
-      const entities = await data.msg.getPromptEntities()
+      const entities = await msgsApi.getPromptEntities()
 
-      const prompt = createPrompt({
-        ...entities,
-        messages: msgs.filter((m) => m.createdAt < msg.createdAt),
-      })
+      const encoder = await getEncoder()
+      const prompt = createPrompt(
+        {
+          ...entities,
+          messages: msgs.filter((m) => m.createdAt < msg.createdAt),
+        },
+        encoder
+      )
 
       return { prompt }
     },

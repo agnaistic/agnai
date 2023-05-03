@@ -19,12 +19,12 @@ describe('Response trimming', () => {
   it('will concat bot responses when not interspersed with user text', () => {
     const msg = toBotMsg(bot, `aaa bbb ccc. ${bot.name}: ddd eee fff. ${u1.handle}: ggg hhh`)
     const actual = trimResponseV2(msg.msg, bot, users)
-    expect(actual).to.eq('aaa bbb ccc. ddd eee fff.')
+    expect(actual).to.eq('aaa bbb ccc.  ddd eee fff.')
   })
 
   it('will correctly handle bot name dialogue with space between name and colon', () => {
     const msg = toBotMsg(bot, `aaa bbb ccc. ${bot.name} : ddd eee fff. ${u1.handle} : ggg hhh`)
     const actual = trimResponseV2(msg.msg, bot, users)
-    expect(actual).to.eq('aaa bbb ccc. ddd eee fff.')
+    expect(actual).to.eq('aaa bbb ccc.  ddd eee fff.')
   })
 })

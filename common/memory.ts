@@ -1,7 +1,7 @@
 import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './presets'
 import { BOT_REPLACE, getAdapter, SELF_REPLACE } from './prompt'
-import { getEncoder } from './tokenize'
+import { Encoder, getEncoder, tokenize } from './tokenize'
 
 export type MemoryOpts = {
   user: AppSchema.User
@@ -42,13 +42,10 @@ type Match = {
 
 export const MEMORY_PREFIX = 'Facts: '
 
-export function buildMemoryPrompt(opts: MemoryOpts): MemoryPrompt | undefined {
+export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPrompt | undefined {
   const { chat, book, settings, members, char, lines, user } = opts
 
   if (!book?.entries) return
-  const { adapter, model } = getAdapter(chat, user, settings)
-  const encoder = getEncoder(adapter, model)
-
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity

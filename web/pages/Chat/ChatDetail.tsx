@@ -1,23 +1,13 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  MailPlus,
-  Menu,
-  X,
-} from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
-import { getAdapter, getChatPreset } from '../../../common/prompt'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import TextInput from '../../shared/TextInput'
-import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { chatStore, presetStore, settingStore, UISettings as UI, userStore } from '../../store'
+import { getRootRgb, setComponentPageTitle } from '../../shared/util'
+import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -34,6 +24,8 @@ import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
 import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
+import { getClientPreset } from '../../shared/adapter'
+import ForcePresetModal from './ForcePreset'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -42,9 +34,13 @@ const ChatDetail: Component = () => {
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
-  const presets = presetStore()
   const cfg = settingStore()
-  const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId, members: s.chatProfiles }))
+  const chats = chatStore((s) => ({
+    ...s.active,
+    lastId: s.lastChatId,
+    members: s.chatProfiles,
+    loaded: s.loaded,
+  }))
   const msgs = msgStore((s) => ({
     msgs: insertImageMessages(s.msgs, s.images[params.id]),
     partial: s.partial,
@@ -62,9 +58,7 @@ const ChatDetail: Component = () => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last) return
 
-    const msgId = last._id
-
-    return { msgId, list: msgs.retries?.[msgId] || [] }
+    return { msgId: last._id, list: msgs.retries?.[last._id] || [] }
   })
 
   const [swipe, setSwipe] = createSignal(0)
@@ -119,14 +113,16 @@ const ChatDetail: Component = () => {
     setSwipe(next)
   }
 
-  const adapter = createMemo(() => {
-    if (!chats.chat?.adapter || !user.user) return ''
-    if (chats.chat.userId !== user.user._id) return ''
+  const chatPreset = createMemo(() => getClientPreset(chats.chat))
 
-    const { adapter, preset: presetType, isThirdParty } = getAdapter(chats.chat!, user.user!)
-    const preset = getChatPreset(chats.chat, user.user!, presets.presets)
+  const adapterLabel = createMemo(() => {
+    const data = chatPreset()
+    if (!data) return ''
+
+    const { name, adapter, isThirdParty, presetLabel } = data
+
     const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
-      'name' in preset ? preset.name : presetType
+      name || presetLabel
     }`
     return label
   })
@@ -184,9 +180,13 @@ const ChatDetail: Component = () => {
   const msgsToDisplay = () =>
     hideOocMessages() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs
 
+  const generateFirst = () => {
+    msgStore.retry(chats.chat?._id!)
+  }
+
   return (
     <>
-      <Show when={!chats.chat || !chats.char || !user.profile}>
+      <Show when={!chats.loaded}>
         <div>
           <div>Loading conversation...</div>
         </div>
@@ -194,19 +194,19 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
           <div class="flex h-9 items-center justify-between rounded-md" style={headerBg()}>
-            <div class="flex cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+            <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen && isOwner()}>
                 <A href={`/character/${chats.char?._id}/chats`}>
                   <ChevronLeft />
                 </A>
-                <div class="flex flex-col">
-                  <div class="max-w-[200px] overflow-hidden text-ellipsis whitespace-nowrap leading-5 sm:max-w-[480px]">
+                <div class="ellipsis flex flex-col">
+                  <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
                     {chats.char?.name}
-                  </div>
+                  </span>
                   <Show when={chats.chat?.name}>
-                    <div class="max-w-[200px] flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm sm:max-w-[480px]">
+                    <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
                       {chats.chat?.name}
-                    </div>
+                    </span>
                   </Show>
                 </div>
               </Show>
@@ -215,7 +215,7 @@ const ChatDetail: Component = () => {
             <div class="flex flex-row gap-3">
               <Show when={isOwner()}>
                 <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
-                  {adapter()}
+                  {adapterLabel()}
                 </div>
               </Show>
 
@@ -253,6 +253,7 @@ const ChatDetail: Component = () => {
               </Show>
             </div>
           </div>
+
           <div class="flex h-[calc(100%-36px)] flex-col-reverse gap-1">
             <InputBar
               chat={chats.chat!}
@@ -277,8 +278,13 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
+                <Show when={chats.loaded && msgs.msgs.length === 0 && !msgs.waiting}>
+                  <div class="flex justify-center">
+                    <Button onClick={generateFirst}>Generate Message</Button>
+                  </div>
+                </Show>
                 <For each={msgsToDisplay()}>
                   {(msg, i) => (
                     <Message
@@ -329,10 +335,6 @@ const ChatDetail: Component = () => {
         <ChatGenSettingsModal show={true} close={setModal} chat={chats.chat!} />
       </Show>
 
-      <Show when={modal() === 'invite'}>
-        <InviteModal show={true} close={setModal} chatId={chats.chat?._id!} />
-      </Show>
-
       <Show when={modal() === 'memory'}>
         <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={setModal} />
       </Show>
@@ -351,6 +353,17 @@ const ChatDetail: Component = () => {
 
       <ImageModal />
 
+      <Show
+        when={
+          chats.chat &&
+          !chats.chat.genPreset &&
+          !chats.chat.genSettings &&
+          !user.user?.defaultPreset
+        }
+      >
+        <ForcePresetModal chat={chats.chat!} show={true} close={() => {}} />
+      </Show>
+
       <PromptModal />
       <Show when={modal() === 'ui'}>
         <Modal
@@ -367,42 +380,6 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
-
-const InviteModal: Component<{ chatId: string; show: boolean; close: () => void }> = (props) => {
-  let ref: any
-
-  const save = () => {
-    const body = getStrictForm(ref, { userId: 'string' })
-    chatStore.inviteUser(props.chatId, body.userId, props.close)
-  }
-
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Invite User to Conversation"
-      footer={
-        <>
-          {' '}
-          <Button size="sm" schema="secondary" onClick={props.close}>
-            <X /> Cancel
-          </Button>
-          <Button size="sm" onClick={save}>
-            <MailPlus /> Invite
-          </Button>
-        </>
-      }
-    >
-      <form ref={ref} class="flex flex-col gap-2">
-        <TextInput
-          fieldName="userId"
-          label="User ID"
-          helperText="The ID of the user to invite. The user should provide this to you"
-        />
-      </form>
-    </Modal>
-  )
-}
 
 const SwipeMessage: Component<{
   chatId: string
@@ -476,7 +453,7 @@ function getChatWidth(setting: UI['chatWidth']) {
 
     case 'full':
     default:
-      return 'w-full'
+      return 'w-full max-w-full'
   }
 }
 

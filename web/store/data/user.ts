@@ -1,7 +1,6 @@
-import * as local from './storage'
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../srv/db/schema'
-import { toastStore } from '../toasts'
+import { localApi } from './storage'
 
 type InitEntities = {
   profile: AppSchema.Profile
@@ -11,20 +10,30 @@ type InitEntities = {
   books: AppSchema.MemoryBook[]
 }
 
+export const usersApi = {
+  getInit,
+  deleteApiKey,
+  getConfig,
+  getOpenAIUsage,
+  getProfile,
+  updateConfig,
+  updateProfile,
+}
+
 export async function getInit() {
   if (isLoggedIn()) {
     const res = await api.get<InitEntities>('/user/init')
     return res
   }
 
-  const init = await local.handleGuestInit()
+  const init = await localApi.handleGuestInit()
   return init
 }
 
 export async function getProfile(id?: string) {
   if (!isLoggedIn()) {
     // We never retrieve profiles by 'id' for anonymous users
-    const profile = local.loadItem('profile')
+    const profile = localApi.loadItem('profile')
     return { result: profile, error: undefined }
   }
 
@@ -34,7 +43,7 @@ export async function getProfile(id?: string) {
 
 export async function getConfig() {
   if (!isLoggedIn()) {
-    const config = local.loadItem('config')
+    const config = localApi.loadItem('config')
     return { result: config, error: undefined }
   }
 
@@ -47,7 +56,7 @@ export async function deleteApiKey(kind: string) {
     return res
   }
 
-  const user = local.loadItem('config')
+  const user = localApi.loadItem('config')
   if (kind === 'novel') {
     user.novelApiKey = ''
     user.novelVerified = false
@@ -71,21 +80,25 @@ export async function deleteApiKey(kind: string) {
     user.claudeApiKey = ''
   }
 
-  local.saveConfig(user)
-  return local.result({ success: true })
+  if (kind === 'third-party') {
+    user.thirdPartyPassword = ''
+  }
+
+  localApi.saveConfig(user)
+  return localApi.result({ success: true })
 }
 
 export async function updateProfile(handle: string, file?: File) {
   if (!isLoggedIn()) {
     const avatar = await getImageData(file)
-    const prev = local.loadItem('profile')
+    const prev = localApi.loadItem('profile')
     const next: AppSchema.Profile = {
       ...prev,
       handle,
       avatar: avatar || prev.avatar,
     }
 
-    local.saveProfile(next)
+    localApi.saveProfile(next)
     return { result: next, error: undefined }
   }
 
@@ -99,7 +112,7 @@ export async function updateProfile(handle: string, file?: File) {
 
 export async function updateConfig(config: Partial<AppSchema.User>) {
   if (!isLoggedIn()) {
-    const prev = local.loadItem('config')
+    const prev = localApi.loadItem('config')
     const next: AppSchema.User = { ...prev, ...config }
 
     if (prev.novelApiKey && !next.novelApiKey) {
@@ -110,7 +123,7 @@ export async function updateConfig(config: Partial<AppSchema.User>) {
       next.oaiKey = prev.oaiKey
     }
 
-    local.saveConfig(next)
+    localApi.saveConfig(next)
     return { result: next, error: undefined }
   }
 
@@ -124,9 +137,9 @@ export async function getOpenAIUsage() {
     return res
   }
 
-  const user = local.loadItem('config')
+  const user = localApi.loadItem('config')
   if (!user.oaiKey) {
-    return local.error(`OpenAI key not set`)
+    return localApi.error(`OpenAI key not set`)
   }
 
   return api.post('/user/services/openai-usage', { key: user.oaiKey })

@@ -8,6 +8,7 @@ import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
 import { AVATAR_CORNERS, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
 import Message from '../Chat/components/Message'
+import { Toggle } from '../../shared/Toggle'
 
 const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -99,6 +100,13 @@ const UISettings: Component = () => {
         min={0}
         max={1}
         onChange={(value) => userStore.updateUI({ msgOpacity: value })}
+      />
+      <Divider />
+      <Toggle
+        fieldName="logPromptsToBrowserConsole"
+        label="Log prompts to browser console"
+        value={state.ui?.logPromptsToBrowserConsole ?? false}
+        onChange={(enabled) => userStore.updateUI({ logPromptsToBrowserConsole: enabled })}
       />
       <Divider />
       <div class="text-lg font-bold">Preview</div>

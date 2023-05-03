@@ -5,7 +5,7 @@ import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { inviteStore } from '../../store'
 import { useNavigate } from '@solidjs/router'
 
-export const InvitesPage: Component = () => {
+const InvitesPage: Component = () => {
   setComponentPageTitle('Invites')
   const state = inviteStore()
   const nav = useNavigate()
@@ -71,3 +71,5 @@ export const InvitesPage: Component = () => {
     </div>
   )
 }
+
+export default InvitesPage

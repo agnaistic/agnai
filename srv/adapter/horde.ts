@@ -2,6 +2,7 @@ import * as horde from '../../common/horde-gen'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { decryptText } from '../db/util'
+import { logger } from '../logger'
 import { ModelAdapter } from './type'
 
 export const handleHorde: ModelAdapter = async function* ({
@@ -24,6 +25,7 @@ export const handleHorde: ModelAdapter = async function* ({
     const trimmed = trimResponseV2(sanitised, char, members, ['END_OF_DIALOG'])
     yield trimmed || sanitised
   } catch (ex: any) {
+    logger.error({ err: ex, body: ex.body }, `Horde request failed`)
     yield { error: ex.message }
   }
 }

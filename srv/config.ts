@@ -3,7 +3,7 @@ import { assertValid } from 'frisker'
 import { readFileSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { v4 } from 'uuid'
-import { AIAdapter } from '../common/adapters'
+import { ADAPTER_LABELS, AIAdapter } from '../common/adapters'
 
 export type CustomSettings = {
   baseEndTokens?: string[]
@@ -63,11 +63,6 @@ export const config = {
     payload: +env('JSON_SIZE_LIMIT', '2'),
   },
   noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
-  chai: {
-    url: env('CHAI_URL', ''),
-    uid: env('CHAI_UID', ''),
-    key: env('CHAI_KEY', ''),
-  },
   horde: {
     maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),
     imageWaitSecs: +env('HORDE_IMAGE_WAIT_SECS', '320'),
@@ -77,9 +72,9 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude')
+  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude,ooba')
     .split(',')
-    .filter((i) => !!i) as AIAdapter[],
+    .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],
   storage: {
     enabled: !!env('USE_S3', ''),
     id: env('AWS_ACCESS_KEY_ID', ''),

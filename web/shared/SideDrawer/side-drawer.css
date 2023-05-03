@@ -1,6 +1,8 @@
 .side-drawer {
   height: 100vh;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
   position: fixed;
   right: -1000px;
   transition: opacity 250ms ease;

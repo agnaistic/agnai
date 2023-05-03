@@ -7,6 +7,7 @@ import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
+import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 
 type MessageProps = {
   msg: SplitMessage
@@ -125,6 +126,21 @@ const SingleMessage: Component<
     return handle
   }
 
+  const renderMessage = () => {
+    // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
+    // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
+    // https://github.com/showdownjs/showdown/issues/669
+    const html = markdown
+      .makeHtml(parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter))
+      .replace(/&amp;nbsp;/g, '&nbsp;')
+    return html
+  }
+
+  const messageColumnWidth = () =>
+    format().corners === 'circle'
+      ? avatarSizesCircle[format().size].msg
+      : avatarSizes[format().size].msg
+
   let ref: HTMLDivElement | undefined
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
@@ -155,7 +171,7 @@ const SingleMessage: Component<
           </Show>
         </div>
 
-        <div class="flex w-full select-text flex-col gap-1">
+        <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
           <div class="flex w-full flex-row justify-between">
             <div
               class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
@@ -163,7 +179,7 @@ const SingleMessage: Component<
               }`}
             >
               <b
-                class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
+                class="text-900 text-md mr-2 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
                 // Necessary to override text-md and text-lg's line height, for proper alignment
                 style="line-height: 1;"
                 data-bot-name={isBot()}
@@ -245,7 +261,7 @@ const SingleMessage: Component<
               </div>
             </Show>
           </div>
-          <div class="break-words">
+          <div class="w-full break-words">
             <Show when={isImage()}>
               <div class="flex justify-start">
                 <img
@@ -260,9 +276,7 @@ const SingleMessage: Component<
                 class="rendered-markdown pr-1 sm:pr-3"
                 data-bot-message={isBot()}
                 data-user-message={isUser()}
-                innerHTML={markdown.makeHtml(
-                  parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
-                )}
+                innerHTML={renderMessage()}
               />
             </Show>
             <Show when={props.msg._id === ''}>

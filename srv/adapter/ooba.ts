@@ -1,5 +1,5 @@
 /**
- * The text-generation-webui is extraordinarly inconsistent.
+ * The Textgen is extraordinarly inconsistent.
  * For now this adapter will remain disabled until the API matures.
  *
  * Kobold and Ooba will likely be superseced by our own generation pipeline.
@@ -8,24 +8,7 @@
 import needle from 'needle'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
-
-const base = {
-  do_sample: true,
-  temperature: 0.65,
-  top_a: 0.0,
-  top_p: 0.9,
-  top_k: 0,
-  typical_p: 1,
-  repetition_penalty: 1.08,
-  length_penalty: 1,
-  penalty_alpha: 0,
-  no_repeat_ngram_size: 0,
-  max_new_tokens: 80,
-  early_stopping: false,
-  min_length: 0,
-  num_beams: 1,
-  max_context_length: 2048,
-}
+import { logger } from '../logger'
 
 const defaultUrl = `http://127.0.0.1:7860`
 
@@ -34,60 +17,70 @@ export const handleOoba: ModelAdapter = async function* ({
   members,
   user,
   prompt,
-  sender,
+  settings,
   log,
 }) {
-  const body = [
-    prompt,
-    base.max_new_tokens,
-    base.do_sample,
-    base.temperature,
-    base.top_p,
-    base.typical_p,
-    base.repetition_penalty,
-    base.top_k,
-    base.min_length,
-    base.no_repeat_ngram_size,
-    base.num_beams,
-    base.penalty_alpha,
-    base.length_penalty,
-    base.early_stopping,
-    char.name,
-    sender.handle,
-    true, // Stop at line break
-    base.max_context_length,
-    1,
-  ]
+  const body = {
+    max_new_tokens: settings.max_new_tokens,
+    do_sample: true,
+    temperature: settings.temperature,
+    top_p: settings.top_p,
+    typical_p: settings.typical_p || 1,
+    repetition_penalty: settings.repetition_penalty,
+    encoder_repetition_penalty: settings.encoder_repetition_penalty,
+    top_k: settings.top_k,
+    min_length: 0,
+    no_repeat_ngram_size: 0,
+    num_beams: 1,
+    penalty_alpha: settings.penalty_alpha,
+    length_penalty: 1,
+    early_stopping: true,
+    seed: -1,
+    add_bos_token: settings.add_bos_token || false,
+    custom_stopping_strings: [],
+    truncation_length: 2048,
+    ban_eos_token: settings.ban_eos_token || false,
+  }
 
-  log.debug({ body }, 'Textgen payload')
+  const payload = [JSON.stringify([prompt, body])]
+
+  log.debug({ prompt, body }, 'Textgen payload')
 
   const resp = await needle(
     'post',
     `${user.oobaUrl || defaultUrl}/run/textgen`,
-    { data: body },
-    { json: true, timeout: 2000, response_timeout: 10000 }
+    { data: payload },
+    { json: true }
   ).catch((err) => ({ error: err }))
   if ('error' in resp) {
-    yield { error: `text-generatuin-webui request failed: ${resp.error?.message || resp.error}` }
+    logger.error({ err: resp.error }, ``)
+    yield { error: `Textgen request failed: ${resp.error?.message || resp.error}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    yield { error: `text-generation-webui request failed: ${resp.statusMessage}` }
+    logger.error({ err: resp.body }, `Textgen request failed {${resp.statusCode}}`)
+    yield {
+      error: `Textgen request failed (${resp.statusCode}) ${
+        resp.body.error || resp.body.message || resp.statusMessage
+      }`,
+    }
     return
   }
 
   try {
     const text = resp.body.data[0]
     if (!text) {
-      yield { error: `text-generation-webui request failed: Received empty response. Try again.` }
+      yield {
+        error: `Textgen request failed: Received empty response (potentially OOM). Try again.`,
+      }
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
     const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
-    yield { error: `text-generation-webui request failed: ${ex.message}` }
+    yield { error: `Textgen request failed: ${ex.message}` }
     return
   }
 }

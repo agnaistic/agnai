@@ -1,5 +1,9 @@
-import { Component, Show, createSignal, createEffect } from 'solid-js'
+import { Info } from 'lucide-solid'
+import { Component, Show, createSignal, createEffect, createMemo } from 'solid-js'
 import type { JSX } from 'solid-js'
+import Tooltip from './Tooltip'
+import { CreateTooltip } from './GenerationSettings'
+import { AIAdapter } from '../../common/adapters'
 
 const RangeInput: Component<{
   label: string
@@ -11,6 +15,8 @@ const RangeInput: Component<{
   step: number
   disabled?: boolean
   onChange?: (value: number) => void
+  service?: AIAdapter
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
@@ -29,10 +35,22 @@ const RangeInput: Component<{
 
   createEffect(updateRangeSliders)
 
+  const hide = createMemo(() => {
+    if (!props.service || !props.adapters) return ''
+    return props.adapters.includes(props.service) ? '' : ` hidden `
+  })
+
   return (
-    <div class="relative pt-1">
+    <div class={`relative pt-1 ${hide()}`}>
       <ul class="w-full">
-        <label class="form-label block-block">{props.label}</label>
+        <div class="flex flex-row gap-2">
+          <label class="form-label block-block">{props.label}</label>
+          <Show when={props.adapters}>
+            <Tooltip tip={CreateTooltip(props.adapters!)} position="right">
+              <Info size={20} color={'var(--hl-500)'} />
+            </Tooltip>
+          </Show>
+        </div>
         <input
           id={props.fieldName}
           name={props.fieldName}

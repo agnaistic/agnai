@@ -4,10 +4,10 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
-import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
+import { getEncoder } from '../tokenize'
 
 const baseUrl = `https://api.openai.com`
 
@@ -18,7 +18,9 @@ type OpenAIMessagePropType = {
 
 const CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
+  [OPENAI_MODELS.Turbo0301]: true,
   [OPENAI_MODELS.GPT4]: true,
+  [OPENAI_MODELS.GPT4_0314]: true,
 }
 
 export const handleOAI: ModelAdapter = async function* (opts) {
@@ -39,7 +41,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   } = opts
   const base = getBaseUrl(user, isThirdParty)
   if (!user.oaiKey && !base.changed) {
-    yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
+    yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
@@ -117,13 +119,19 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
 
-  const bearer = !!guest ? `Bearer ${user.oaiKey}` : `Bearer ${decryptText(user.oaiKey)}`
+  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const apiKey = useThirdPartyPassword
+    ? user.thirdPartyPassword
+    : !isThirdParty
+    ? user.oaiKey
+    : null
+  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
 
   const headers: any = {
     'Content-Type': 'application/json',
   }
 
-  if (!base.changed) {
+  if (bearer) {
     headers.Authorization = bearer
   }
 

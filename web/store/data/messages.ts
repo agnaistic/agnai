@@ -1,9 +1,19 @@
 import { createPrompt, getChatPreset } from '../../../common/prompt'
+import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
-import { loadItem, local } from './storage'
+import { userStore } from '../user'
+import { loadItem, localApi } from './storage'
+
+export const msgsApi = {
+  editMessage,
+  getMessages,
+  getPromptEntities,
+  generateResponseV2,
+  deleteMessages,
+}
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
   if (isLoggedIn()) {
@@ -11,15 +21,15 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
     return res
   }
 
-  const messages = await local.getMessages(msg.chatId)
-  const next = local.replace(msg._id, messages, { msg: replace })
-  local.saveMessages(msg.chatId, next)
-  return local.result({ success: true })
+  const messages = await localApi.getMessages(msg.chatId)
+  const next = localApi.replace(msg._id, messages, { msg: replace })
+  localApi.saveMessages(msg.chatId, next)
+  return localApi.result({ success: true })
 }
 
 export async function getMessages(chatId: string, before: string) {
   // Guest users already have their entire chat history
-  if (!isLoggedIn()) return local.result({ messages: [] })
+  if (!isLoggedIn()) return localApi.result({ messages: [] })
 
   const res = await api.get<{ messages: AppSchema.ChatMessage[] }>(`/chat/${chatId}/messages`, {
     before,
@@ -49,6 +59,7 @@ export type GenerateOpts =
   | { kind: 'self' }
 
 export async function generateResponseV2(opts: GenerateOpts) {
+  const { ui } = userStore()
   const entities = await getPromptEntities()
   const [message, lastMessage] = entities.messages.slice(-2)
 
@@ -56,7 +67,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
   let replacing: AppSchema.ChatMessage | undefined
   let continuing: AppSchema.ChatMessage | undefined
 
-  if (opts.kind === 'retry') {
+  if (opts.kind === 'retry' && lastMessage) {
     if (lastMessage.characterId) {
       retry = message
       replacing = lastMessage
@@ -81,17 +92,25 @@ export async function generateResponseV2(opts: GenerateOpts) {
     messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
   }
 
-  const prompt = createPrompt({
-    char: entities.char,
-    chat: entities.chat,
-    user: entities.user,
-    members: entities.members.concat([entities.profile]),
-    continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
-    book: entities.book,
-    retry,
-    settings: entities.settings,
-    messages,
-  })
+  const encoder = await getEncoder()
+  const prompt = createPrompt(
+    {
+      char: entities.char,
+      chat: entities.chat,
+      user: entities.user,
+      members: entities.members.concat([entities.profile]),
+      continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
+      book: entities.book,
+      retry,
+      settings: entities.settings,
+      messages,
+    },
+    encoder
+  )
+  if (ui?.logPromptsToBrowserConsole) {
+    console.log(`=== Sending the following prompt: ===`)
+    console.log(`${prompt.parts.gaslight}\n${prompt.lines.join('\n')}\n${prompt.post}`)
+  }
 
   const { avatar: _, ...sender } = entities.profile
   const { avatar: __, ...char } = entities.char
@@ -121,12 +140,12 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
     return res
   }
 
-  const msgs = await local.getMessages(chatId)
+  const msgs = await localApi.getMessages(chatId)
   const ids = new Set(msgIds)
   const next = msgs.filter((msg) => ids.has(msg._id) === false)
-  local.saveMessages(chatId, next)
+  localApi.saveMessages(chatId, next)
 
-  return local.result({ success: true })
+  return localApi.result({ success: true })
 }
 
 export async function getPromptEntities() {
@@ -155,7 +174,7 @@ async function getGuestEntities() {
     : undefined
 
   const profile = loadItem('profile')
-  const messages = await local.getMessages(chat?._id)
+  const messages = await localApi.getMessages(chat?._id)
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
 
