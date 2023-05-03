@@ -68,10 +68,13 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
     .sort(sortMessagesDesc)
   opts.messages = sortedMsgs
 
+  /**
+   * The lines from `getLinesForPrompt` are returned in time-descending order
+   */
   const lines = getLinesForPrompt(opts, encoder)
   const parts = getPromptParts(opts, lines, encoder)
   const { pre, post, history, prompt } = buildPrompt(opts, parts, lines, 'desc', encoder)
-  return { prompt, lines, pre, post, parts, history }
+  return { prompt, lines: lines.reverse(), pre, post, parts, history }
 }
 
 const START_TEXT = '<START>'
@@ -354,7 +357,7 @@ function getLinesForPrompt(
     return fillPlaceholders(chat, char.name, profiles.get(senderId)?.handle || 'You').trim()
   }
 
-  const history = messages.slice().sort(sortMessagesDesc).reverse().map(formatMsg)
+  const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
   const lines = fillPromptWithLines(encoder, maxContext, '', history)
   return lines
