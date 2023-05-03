@@ -305,8 +305,11 @@ const requestFullCompletion: CompletionGenerator = async function* (url, body, h
  */
 const streamCompletion: CompletionGenerator = async function* (url, body, headers) {
   const resp = await needle('post', url, JSON.stringify(body), {
-    ...headers,
-    Accept: 'text/event-stream, application/json',
+    json: true,
+    headers: {
+      ...headers,
+      Accept: 'text/event-stream, application/json',
+    },
   })
   const tokens = []
   let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
