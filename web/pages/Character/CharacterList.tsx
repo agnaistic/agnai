@@ -233,7 +233,7 @@ const Characters: Component<{
           <NoCharacters />
         </Match>
         <Match when={state.loaded}>
-          <Show when={props.type === 'list'}>
+          <Show when={!props.type || props.type === 'list'}>
             <div class="flex w-full flex-col gap-2 pb-5">
               <For each={groups()}>
                 {(group) => (
