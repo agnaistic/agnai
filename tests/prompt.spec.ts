@@ -93,7 +93,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE. ENTRY TWO',
+        'Facts: ENTRY ONE\nENTRY TWO',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -114,7 +114,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY TWO. ENTRY THREE',
+        'Facts: ENTRY TWO\nENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -137,7 +137,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE',
+        'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -159,7 +159,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY TIE. ENTRY THREE',
+        'Facts: ENTRY TIE\nENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
@@ -205,7 +205,7 @@ describe('Prompt building', () => {
         'GASLIGHT',
         'You',
         'Bot',
-        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE',
+        'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE',
         'Bot: FIRST',
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
@@ -230,7 +230,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE. ENTRY TIE. ENTRY THREE',
+        'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE',
         '<START>',
         'Bot: SAMPLE_CHAT',
         'Bot: FIRST',
