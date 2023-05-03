@@ -60,7 +60,11 @@ export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
 
 type Field = HTMLSelectElement | HTMLInputElement
 
-export function getStrictForm<T extends FormRef>(evt: Event | HTMLFormElement, body: T) {
+export function getStrictForm<T extends FormRef>(
+  evt: Event | HTMLFormElement,
+  body: T,
+  partial?: boolean
+) {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
 
@@ -85,7 +89,7 @@ export function getStrictForm<T extends FormRef>(evt: Event | HTMLFormElement, b
 
   disable()
 
-  assertValid(body, values)
+  assertValid(body, values, partial)
   return values
 }
 

@@ -59,7 +59,7 @@ const HordeAISettings: Component<{
       <Toggle
         fieldName="hordeUseTrusted"
         label="Use Trusted Workers Only"
-        value={state.user?.hordeUseTrusted ?? false}
+        value={state.user?.hordeUseTrusted ?? true}
         helperText="This may help reduce 'bad responses' by using only 'trusted' workers. Warning: This may increase response times."
       />
       <TextInput

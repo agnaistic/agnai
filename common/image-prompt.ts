@@ -99,7 +99,7 @@ function getMaxTokens(user: AppSchema.User) {
       return 225
 
     case 'sd':
-      return 350
+      return 500
 
     case 'horde':
     default:

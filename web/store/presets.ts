@@ -1,8 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
-import { data } from './data'
-import { PresetUpdate } from './data/presets'
+import { PresetUpdate, presetApi } from './data/presets'
 import { toastStore } from './toasts'
 
 type PresetState = {
@@ -26,7 +25,7 @@ export const presetStore = createStore<PresetState>(
 
   return {
     async getPresets() {
-      const res = await data.presets.getPresets()
+      const res = await presetApi.getPresets()
       if (res.error) toastStore.error('Failed to retrieve presets')
       if (res.result) {
         return { presets: res.result.presets }
@@ -39,7 +38,7 @@ export const presetStore = createStore<PresetState>(
       onSuccess?: () => void
     ) {
       yield { saving: true }
-      const res = await data.presets.editPreset(presetId, preset)
+      const res = await presetApi.editPreset(presetId, preset)
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to update preset: ${res.error}`)
       if (res.result) {
@@ -54,7 +53,7 @@ export const presetStore = createStore<PresetState>(
       onSuccess?: (preset: AppSchema.UserGenPreset) => void
     ) {
       yield { saving: true }
-      const res = await data.presets.createPreset(preset)
+      const res = await presetApi.createPreset(preset)
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to create preset: ${res.error}`)
       if (res.result) {
@@ -69,7 +68,7 @@ export const presetStore = createStore<PresetState>(
       onSuccess?: (preset: AppSchema.UserGenPreset) => void
     ) {
       yield { saving: true }
-      const res = await data.presets.deletePreset(presetId)
+      const res = await presetApi.deletePreset(presetId)
       yield { saving: false }
       if (res.error) toastStore.error(`Failed to delete preset: ${res.error}`)
       if (res.result) {

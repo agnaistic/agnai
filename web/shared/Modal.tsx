@@ -12,6 +12,11 @@ interface Props {
   maxWidth?: 'full' | 'half'
   fixedHeight?: boolean
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
+
+  /**
+   * If set to false, the close button 'X' will be omitted
+   */
+  dismissable?: boolean
 }
 
 const H_MOBILE = `80vh`
@@ -32,11 +37,11 @@ const Modal: Component<Props> = (props) => {
 
   return (
     <Show when={props.show}>
-      <div class="fixed inset-x-0 top-0  items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
+      <div class="fixed inset-x-0 top-0 items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="flex h-screen items-center">
+        <div class="flex h-[100vh] h-[100dvh] items-center">
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}
@@ -44,9 +49,11 @@ const Modal: Component<Props> = (props) => {
           >
             <div class="flex flex-row justify-between p-4 text-lg font-bold">
               <div>{props.title}</div>
-              <div onClick={props.close} class="cursor-pointer">
-                <X />
-              </div>
+              <Show when={props.dismissable !== false}>
+                <div onClick={props.close} class="cursor-pointer">
+                  <X />
+                </div>
+              </Show>
             </div>
 
             {/* 132px is the height of the title + footer*/}
@@ -88,7 +95,7 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="flex h-screen items-center">
+        <div class="flex h-[100vh] h-[100dvh] items-center">
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}

@@ -1,7 +1,6 @@
 import { assertValid } from 'frisker'
 import needle from 'needle'
 import { NOVEL_BASEURL } from '../../adapter/novel'
-import { config } from '../../config'
 import { store } from '../../db'
 import { AppSchema } from '../../db/schema'
 import { encryptText } from '../../db/util'
@@ -102,12 +101,11 @@ export const updateConfig = handle(async ({ userId, body }) => {
       luminaiUrl: 'string?',
       hordeWorkers: ['string'],
       oaiKey: 'string?',
-      defaultAdapter: config.adapters,
-      defaultPresets: 'any',
       scaleUrl: 'string?',
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
       images: 'any?',
+      defaultPreset: 'string?',
     },
     body
   )
@@ -118,10 +116,9 @@ export const updateConfig = handle(async ({ userId, body }) => {
   }
 
   const update: Partial<AppSchema.User> = {
-    defaultAdapter: body.defaultAdapter,
     hordeWorkers: body.hordeWorkers,
-    defaultPresets: body.defaultPresets,
     hordeUseTrusted: body.hordeUseTrusted ?? false,
+    defaultPreset: body.defaultPreset || '',
   }
 
   if (body.hordeKey || body.hordeApiKey) {

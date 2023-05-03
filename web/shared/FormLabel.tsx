@@ -5,7 +5,7 @@ export const FormLabel: Component<{
   label?: string | JSX.Element
   helperText?: string | JSX.Element
 }> = (props) => (
-  <Show when={!!props.label}>
+  <Show when={props.label !== undefined}>
     <label for={props.fieldName || ''}>
       <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
       <Show when={!!props.helperText}>

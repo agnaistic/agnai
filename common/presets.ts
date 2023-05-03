@@ -1,5 +1,5 @@
 import { AppSchema } from '../srv/db/schema'
-import { AIAdapter, ChatAdapter } from './adapters'
+import { AIAdapter, AI_ADAPTERS, ChatAdapter } from './adapters'
 import { defaultPresets } from './default-preset'
 
 export { defaultPresets }
@@ -9,6 +9,7 @@ export type GenerationPreset = keyof typeof defaultPresets
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
 export const chatGenSettings = {
+  service: AI_ADAPTERS,
   temp: 'number',
   maxTokens: 'number',
   maxContextLength: 'number?',
@@ -134,19 +135,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: 'top_a',
     order: '',
   },
-  chai: {
-    repetitionPenalty: 'repetition_penalty',
-    maxTokens: 'max_length',
-    temp: 'temperature',
-    topK: 'top_k',
-    topP: 'top_p',
-    repetitionPenaltyRange: '',
-    repetitionPenaltySlope: '',
-    tailFreeSampling: '',
-    typicalP: '',
-    topA: '',
-    order: '',
-  },
   ooba: {
     maxTokens: 'max_new_tokens',
     topP: 'top_p',
@@ -251,7 +239,6 @@ export function getFallbackPreset(adapter: AIAdapter) {
     case 'horde':
       return defaultPresets.horde
 
-    case 'chai':
     case 'kobold':
     case 'luminai':
     case 'ooba':

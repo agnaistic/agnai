@@ -405,13 +405,14 @@ export function getChatPreset(
   chat: AppSchema.Chat,
   user: AppSchema.User,
   userPresets: AppSchema.UserGenPreset[]
-) {
+): Partial<AppSchema.GenSettings> {
   /**
    * Order of precedence:
    * 1. chat.genPreset
    * 2. chat.genSettings
-   * 3. user.servicePreset
-   * 4. service fallback preset
+   * 3. user.defaultPreset
+   * 4. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
+   * 5. built-in fallback preset (horde)
    */
 
   // #1
@@ -428,6 +429,14 @@ export function getChatPreset(
   }
 
   // #3
+  const defaultId = user.defaultPreset
+  if (defaultId) {
+    if (isDefaultPreset(defaultId)) return defaultPresets[defaultId]
+    const preset = userPresets.find((preset) => preset._id === defaultId)
+    if (preset) return preset
+  }
+
+  // #4
   const { adapter, isThirdParty } = getAdapter(chat, user)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
@@ -437,10 +446,17 @@ export function getChatPreset(
     if (preset) return preset
   }
 
-  // #4
+  // #5
   return getFallbackPreset(adapter)
 }
 
+/**
+ * Order of Precedence:
+ * 1. chat.genPreset -> service
+ * 2. chat.genSettings -> service
+ * 3. chat.adapter
+ * 4. user.defaultAdapter
+ */
 export function getAdapter(
   chat: AppSchema.Chat,
   config: AppSchema.User,
@@ -451,7 +467,11 @@ export function getAdapter(
 
   const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && chatAdapter === 'kobold'
 
-  const adapter = chatAdapter === 'kobold' && isThirdParty ? config.thirdPartyFormat : chatAdapter
+  let adapter = preset?.service ? preset.service : chatAdapter
+
+  if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
+    adapter = config.thirdPartyFormat
+  }
 
   let model = ''
   let presetName = 'Fallback Preset'
@@ -466,15 +486,14 @@ export function getAdapter(
 
   if (chat.genPreset) {
     if (isDefaultPreset(chat.genPreset)) {
-      presetName = 'Chat, Default Preset'
-    } else presetName = 'Chat, User Preset'
+      presetName = 'Built-in Preset'
+    } else presetName = 'User Preset'
   } else if (chat.genSettings) {
-    presetName = 'Chat, Preset Settings'
+    presetName = 'Chat Settings'
   } else if (config.defaultPresets) {
     const servicePreset = config.defaultPresets[adapter]
     if (servicePreset) {
-      const source = servicePreset in defaultPresets ? 'Default' : 'User'
-      presetName = `Service, ${source} Preset`
+      presetName = `Service Preset`
     }
   }
 
@@ -497,9 +516,6 @@ function getContextLimit(
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
   switch (adapter) {
-    case 'chai':
-      return Math.min(2048, configuredMax) - genAmount
-
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
     case 'luminai':
