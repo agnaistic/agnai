@@ -154,7 +154,7 @@ const GeneralSettings: Component<Props> = (props) => {
         }
         min={16}
         max={8000}
-        step={4}
+        step={1}
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}
       />
