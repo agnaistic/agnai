@@ -176,7 +176,7 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
 }
 
 const InviteBadge: Component = () => {
-  const inv = inviteStore(s => ({ count: s.received.length }))
+  const inv = inviteStore((s) => ({ count: s.received.length }))
 
   return (
     <>

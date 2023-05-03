@@ -19,5 +19,5 @@ export const store = {
   presets,
   msgs,
   memory,
-  notifications
+  notifications,
 }
