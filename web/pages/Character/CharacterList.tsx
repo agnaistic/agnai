@@ -45,6 +45,7 @@ import { exportCharacter } from '../../../common/prompt'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
 import CreateChatModal from './CreateChat'
+import TagSelect, { TagOption } from '../../shared/TagSelect'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -67,8 +68,25 @@ const sortOptions: Option<SortFieldTypes>[] = [
 
 const CharacterList: Component = () => {
   setComponentPageTitle('Characters')
-
+  
   const [query, setQuery] = useSearchParams()
+
+  const state = characterStore((s) => {
+    const tags = s.characters.list
+      .map((c) => c.tags)
+      .flat()
+      .reduce((acc, tag) => {
+        if (!tag) return acc
+        if (!acc[tag]) acc[tag] = 0
+        acc[tag]++
+        return acc
+      }, {} as Record<string, number>)
+    const tagOptions: TagOption[] = Object.entries(tags)
+      .sort((a, b) => a[1] - b[1])
+      .map(([tag, count]) => ({ tag, count }))
+
+    return { ...s.characters, loading: s.loading, tagOptions }
+  })
 
   const cached = getListCache()
   const [view, setView] = createSignal(cached.view)
@@ -77,6 +95,7 @@ const CharacterList: Component = () => {
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
+  const [tags, setTags] = createSignal<string[]>([])
   const [create, setCreate] = createSignal<AppSchema.Character>()
   const importQueue: NewCharacter[] = []
 
@@ -157,7 +176,7 @@ const CharacterList: Component = () => {
               onChange={(next) => setSortField(next.value as SortFieldTypes)}
             />
 
-            <div class="py-1">
+            <div class="mr-1 py-1">
               <Button
                 schema="secondary"
                 class="rounded-xl"
@@ -170,6 +189,13 @@ const CharacterList: Component = () => {
               </Button>
             </div>
           </div>
+
+          <TagSelect
+            class="m-1"
+            items={state.tagOptions}
+            value={tags()}
+            onChange={(value) => setTags(value)}
+          />
         </div>
 
         <div class="flex flex-wrap">
@@ -188,11 +214,15 @@ const CharacterList: Component = () => {
         </div>
       </div>
       <Characters
+        characters={state.list}
+        loading={state.loading || false}
+        loaded={state.loaded}
         type={view()}
         filter={search()}
         sortField={sortField()}
         sortDirection={sortDirection()}
         createChat={setCreate}
+        tags={tags()}
       />
       <ImportCharacterModal
         charhubPath={importPath()}
@@ -208,19 +238,22 @@ const CharacterList: Component = () => {
 }
 
 const Characters: Component<{
+  characters: AppSchema.Character[]
+  loading: boolean
+  loaded: boolean
   type: ViewTypes
   filter: string
   sortField: SortFieldTypes
   sortDirection: SortDirectionTypes
   createChat: (char?: AppSchema.Character) => void
+  tags: string[]
 }> = (props) => {
-  const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
-
   const [showGrouping, setShowGrouping] = createSignal(false)
   const groups = createMemo(() => {
-    const list = state.list
+    const list = props.characters
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
+      .filter((ch) => props.tags.length === 0 || ch.tags?.some((t) => props.tags.includes(t)))
       .sort(getSortFunction(props.sortField, props.sortDirection))
 
     const groups = [
@@ -244,15 +277,15 @@ const Characters: Component<{
   return (
     <>
       <Switch fallback={<div>Failed to load characters. Refresh to try again.</div>}>
-        <Match when={state.loading}>
+        <Match when={props.loading}>
           <div class="flex justify-center">
             <Loading />
           </div>
         </Match>
-        <Match when={state.list.length === 0 && state.loaded}>
+        <Match when={props.characters.length === 0 && props.loaded}>
           <NoCharacters />
         </Match>
-        <Match when={state.loaded}>
+        <Match when={props.loaded}>
           <Show when={!props.type || props.type === 'list'}>
             <div class="flex w-full flex-col gap-2 pb-5">
               <For each={groups()}>

@@ -1,4 +1,5 @@
 import { Component, For, JSX, Show, createEffect, createSignal } from 'solid-js'
+import { FormLabel } from './FormLabel'
 
 interface TagInputProps {
   availableTags: string[]
@@ -59,14 +60,7 @@ const TagInput: Component<TagInputProps> = (props) => {
 
   return (
     <div class="relative">
-      <Show when={!!props.label}>
-        <label for={props.fieldName}>
-          <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
-          <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
-          </Show>
-        </label>
-      </Show>
+      <FormLabel label={props.label} helperText={props.helperText} />
       <div class="form-field focusable-field flex w-full flex-wrap rounded-xl px-2 py-1">
         <For each={tags()}>
           {(tag) => (
