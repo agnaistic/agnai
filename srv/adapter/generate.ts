@@ -23,7 +23,7 @@ import { MemoryOpts } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
-import { getEncoder } from '../../common/tokenize'
+import { getEncoder } from '../tokenize'
 
 configure(async (opts) => {
   const res = await needle(opts.method, opts.url, opts.payload, {
@@ -76,7 +76,7 @@ export async function createTextStreamV2(
     }
   }
 
-  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user)
+  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user, opts.settings)
   const handler = handlers[adapter]
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
