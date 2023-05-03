@@ -1,24 +1,25 @@
-import { Component, createEffect, createSignal } from 'solid-js'
-import { getAdapter, getChatPreset } from '../../../../common/prompt'
+import { Component, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { Encoder, getEncoder } from '../../../../common/tokenize'
 import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'
-import { chatStore, presetStore, userStore } from '../../../store'
+import { chatStore, userStore } from '../../../store'
 
 const PromptModal: Component = () => {
   const user = userStore()
   const state = chatStore((s) => ({ prompt: s.prompt, chat: s.active?.chat }))
-  const presets = presetStore()
-  const [tokens, setTokens] = createSignal<number>(0)
+  const [encoder, setEncoder] = createSignal<Encoder>()
 
-  createEffect(() => {
-    if (!state.chat) return
-    if (!user.user) return
+  onMount(async () => {
+    const enc = await getEncoder()
+    setEncoder(() => enc)
+  })
 
-    const preset = getChatPreset(state.chat, user.user, presets.presets)
-    const { adapter, model } = getAdapter(state.chat, user.user, preset)
-    const encoder = getEncoder(adapter, model)
-    setTokens(encoder(state.prompt?.prompt || ''))
+  const tokens = createMemo(() => {
+    if (!state.chat) return '...'
+    if (!user.user) return '....'
+    if (!encoder()) return '.....'
+
+    return encoder()!(state.prompt?.prompt || '')
   })
 
   return (

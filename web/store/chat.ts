@@ -1,4 +1,5 @@
 import { createPrompt, Prompt } from '../../common/prompt'
+import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { api } from './api'
@@ -342,10 +343,14 @@ export const chatStore = createStore<ChatState>('chat', {
       const { msgs } = msgStore.getState()
       const entities = await msgsApi.getPromptEntities()
 
-      const prompt = createPrompt({
-        ...entities,
-        messages: msgs.filter((m) => m.createdAt < msg.createdAt),
-      })
+      const encoder = await getEncoder()
+      const prompt = createPrompt(
+        {
+          ...entities,
+          messages: msgs.filter((m) => m.createdAt < msg.createdAt),
+        },
+        encoder
+      )
 
       return { prompt }
     },

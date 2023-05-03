@@ -61,7 +61,7 @@ export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
  * @param opts
  * @returns
  */
-export function createPrompt(opts: PromptOpts) {
+export function createPrompt(opts: PromptOpts, encoder: Encoder) {
   const sortedMsgs = opts.messages
     .filter((msg) => msg.adapter !== 'image')
     .slice()
@@ -71,9 +71,9 @@ export function createPrompt(opts: PromptOpts) {
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
-  const lines = getLinesForPrompt(opts)
-  const parts = getPromptParts(opts, lines)
-  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines, 'desc')
+  const lines = getLinesForPrompt(opts, encoder)
+  const parts = getPromptParts(opts, lines, encoder)
+  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines, 'desc', encoder)
   return { prompt, lines: lines.reverse(), pre, post, parts, history }
 }
 
@@ -90,9 +90,10 @@ const START_TEXT = '<START>'
 export function createPromptWithParts(
   opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
   parts: PromptParts,
-  lines: string[]
+  lines: string[],
+  encoder: Encoder
 ) {
-  const { pre, post, history, parts: newParts } = buildPrompt(opts, parts, lines, 'asc')
+  const { pre, post, history, parts: newParts } = buildPrompt(opts, parts, lines, 'asc', encoder)
   const prompt = [pre, history, post].filter(removeEmpty).join('\n')
   return { lines, prompt, parts: newParts, pre, post }
 }
@@ -106,7 +107,8 @@ export function buildPrompt(
   opts: BuildPromptOpts,
   parts: PromptParts,
   incomingLines: string[],
-  order: 'asc' | 'desc'
+  order: 'asc' | 'desc',
+  encoder: Encoder
 ) {
   const lines = order === 'asc' ? incomingLines.slice().reverse() : incomingLines.slice()
   const { chat, char } = opts
@@ -146,8 +148,6 @@ export function buildPrompt(
   }
 
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const encoder = getEncoder(adapter, model)
-
   const maxContext = getContextLimit(opts.settings, adapter, model)
 
   const preamble = pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
@@ -178,7 +178,8 @@ export function buildPrompt(
 
 export function getPromptParts(
   opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
-  lines: string[]
+  lines: string[],
+  encoder: Encoder
 ) {
   const { chat, char, members } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
@@ -209,7 +210,7 @@ export function getPromptParts(
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
-  const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() })
+  const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() }, encoder)
   if (memory) parts.memory = memory.prompt
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
@@ -339,19 +340,12 @@ function removeEmpty(value?: string) {
  *
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
-function getLinesForPrompt({
-  settings,
-  char,
-  members,
-  messages,
-  continue: cont,
-  book,
-  ...opts
-}: PromptOpts) {
+function getLinesForPrompt(
+  { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
+  encoder: Encoder
+) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
   const maxContext = getContextLimit(settings, adapter, model)
-
-  const encoder = getEncoder(adapter, model)
 
   const profiles = new Map<string, AppSchema.Profile>()
   for (const member of members) {

@@ -266,17 +266,21 @@ function build(
     settings?: Partial<AppSchema.GenSettings>
   } = {}
 ) {
-  return createPrompt({
-    char: opts.char || char,
-    members: [profile],
-    user,
-    chat: opts.chat || chat,
-    messages,
-    book: opts.book || book,
-    settings: opts.settings,
-    continue: opts.continue,
-    retry: opts.retry,
-  })
+  const encoder = getEncoder('main')
+  return createPrompt(
+    {
+      char: opts.char || char,
+      members: [profile],
+      user,
+      chat: opts.chat || chat,
+      messages,
+      book: opts.book || book,
+      settings: opts.settings,
+      continue: opts.continue,
+      retry: opts.retry,
+    },
+    encoder
+  )
 }
 
 function botMsg(text: string) {

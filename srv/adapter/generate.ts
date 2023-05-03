@@ -60,9 +60,12 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId)
+    const { adapter, isThirdParty, model } = getAdapter(opts.chat, entities.user, entities.settings)
+    const encoder = getEncoder(adapter, model)
     opts.parts = getPromptParts(
       { ...entities, settings: entities.gen, chat: opts.chat, members: opts.members },
-      opts.lines
+      opts.lines,
+      encoder
     )
     opts.settings = entities.gen
     opts.user = entities.user
@@ -76,10 +79,11 @@ export async function createTextStreamV2(
     }
   }
 
-  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user, opts.settings)
+  const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
   const handler = handlers[adapter]
 
-  const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
+  const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
 
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)

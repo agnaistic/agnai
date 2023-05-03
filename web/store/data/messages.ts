@@ -1,4 +1,5 @@
 import { createPrompt, getChatPreset } from '../../../common/prompt'
+import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
@@ -90,17 +91,21 @@ export async function generateResponseV2(opts: GenerateOpts) {
     messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
   }
 
-  const prompt = createPrompt({
-    char: entities.char,
-    chat: entities.chat,
-    user: entities.user,
-    members: entities.members.concat([entities.profile]),
-    continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
-    book: entities.book,
-    retry,
-    settings: entities.settings,
-    messages,
-  })
+  const encoder = await getEncoder()
+  const prompt = createPrompt(
+    {
+      char: entities.char,
+      chat: entities.chat,
+      user: entities.user,
+      members: entities.members.concat([entities.profile]),
+      continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
+      book: entities.book,
+      retry,
+      settings: entities.settings,
+      messages,
+    },
+    encoder
+  )
   if (ui?.logPromptsToBrowserConsole) {
     console.log(`=== Sending the following prompt: ===`)
     console.log(`${prompt.parts.gaslight}\n${prompt.lines.join('\n')}\n${prompt.post}`)

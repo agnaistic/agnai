@@ -1,33 +1,11 @@
-import { AIAdapter, OPENAI_MODELS } from './adapters'
-import gpt from 'gpt-3-encoder'
+export type Encoder = (text: string) => number
 
-export type Encoder = (value: string) => number
-
-const main: Encoder = function main(value: string) {
-  return gpt.encode(value).length
+export async function tokenize(text: string) {
+  const encoder = await getEncoder()
+  return encoder(text)
 }
 
-const novel: Encoder = function krake(value: string) {
-  return gpt.encode(value).length + 4
-}
-
-let davinci: Encoder
-let turbo: Encoder
-
-export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
-  if (adapter !== 'openai' && adapter !== 'novel') return main
-
-  if (adapter === 'novel') {
-    return novel
-  }
-
-  if (model === OPENAI_MODELS.DaVinci) {
-    return davinci ?? novel
-  }
-
-  if (model === OPENAI_MODELS.Turbo) {
-    return turbo ?? novel
-  }
-
-  return main
+export async function getEncoder() {
+  const encoder = await import('gpt-3-encoder').then((mod) => mod.encode)
+  return (text: string) => encoder(text).length
 }

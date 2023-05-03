@@ -3,13 +3,12 @@ import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
 import { AIAdapter, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
+import { Encoder } from '../common/tokenize'
 
 const cl100k_base = require('@dqbd/tiktoken/encoders/cl100k_base.json')
 const p50k_base = require('@dqbd/tiktoken/encoders/p50k_base.json')
 
 const wasm = getWasm()
-
-export type Encoder = (value: string) => number
 
 const main: Encoder = function main(value: string) {
   return gpt.encode(value).length
