@@ -206,9 +206,9 @@ body {
 }
 
 .app {
+  height: 100vh;
   height: 100dvh;
   /* height: -webkit-fill-available; */
-  -moz-height: 100vh;
   overflow-y: overlay;
 }
 
@@ -406,20 +406,21 @@ body {
   }
 
   .drawer {
+    height: calc(100vh - 58px);
     height: calc(100dvh - 58px);
-    -moz-height: calc(100vh - 58px);
     position: absolute;
     top: 58px;
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;
-    @apply w-[calc(100vw-40px)] max-w-[320px] bg-[var(--bg-900)] sm:relative  sm:top-0 sm:clear-none sm:h-[100dvh] sm:w-72;
+    @apply w-[calc(100vw-40px)] max-w-[320px] bg-[var(--bg-900)] sm:relative  sm:top-0 sm:clear-none sm:w-72;
     @apply z-10 sm:z-0;
   }
 
   @media (min-width: 1024px) {
     .drawer {
-      -moz-height: 100vh;
+      height: 100vh;
+      height: 100dvh;
     }
   }
 

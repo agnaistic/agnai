@@ -25,6 +25,7 @@ import MemberModal from './MemberModal'
 import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
+import ForcePresetModal from './ForcePreset'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -322,6 +323,17 @@ const ChatDetail: Component = () => {
       </Show>
 
       <ImageModal />
+
+      <Show
+        when={
+          chats.chat &&
+          !chats.chat.genPreset &&
+          !chats.chat.genSettings &&
+          !user.user?.defaultPreset
+        }
+      >
+        <ForcePresetModal chat={chats.chat!} show={true} close={() => {}} />
+      </Show>
 
       <PromptModal />
       <Show when={modal() === 'ui'}>

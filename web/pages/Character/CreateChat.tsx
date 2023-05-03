@@ -8,7 +8,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore } from '../../store'
+import { characterStore, chatStore, presetStore, userStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { getPresetOptions } from '../../shared/adapter'
 
@@ -32,6 +32,8 @@ const CreateChatModal: Component<{
     chars: s.characters?.list || [],
     loaded: s.characters.loaded,
   }))
+
+  const user = userStore((s) => s.user || { defaultPreset: '' })
   const presets = presetStore((s) => s.presets)
 
   const char = createMemo(() => {
@@ -119,7 +121,12 @@ const CreateChatModal: Component<{
           />
         </Show>
 
-        <Select fieldName="genPreset" label="Preset" items={presetOptions()} />
+        <Select
+          fieldName="genPreset"
+          label="Preset"
+          items={presetOptions()}
+          value={user.defaultPreset}
+        />
 
         <TextInput
           class="text-sm"

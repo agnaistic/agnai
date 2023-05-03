@@ -410,8 +410,9 @@ export function getChatPreset(
    * Order of precedence:
    * 1. chat.genPreset
    * 2. chat.genSettings
-   * 3. user.servicePreset
-   * 4. service fallback preset
+   * 3. user.defaultPreset
+   * 4. user.servicePreset -- Deprecated: Service presets are completely removed apart from users that already have them.
+   * 5. built-in fallback preset (horde)
    */
 
   // #1
@@ -428,6 +429,14 @@ export function getChatPreset(
   }
 
   // #3
+  const defaultId = user.defaultPreset
+  if (defaultId) {
+    if (isDefaultPreset(defaultId)) return defaultPresets[defaultId]
+    const preset = userPresets.find((preset) => preset._id === defaultId)
+    if (preset) return preset
+  }
+
+  // #4
   const { adapter, isThirdParty } = getAdapter(chat, user)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
@@ -437,7 +446,7 @@ export function getChatPreset(
     if (preset) return preset
   }
 
-  // #4
+  // #5
   return getFallbackPreset(adapter)
 }
 
@@ -477,7 +486,7 @@ export function getAdapter(
 
   if (chat.genPreset) {
     if (isDefaultPreset(chat.genPreset)) {
-      presetName = 'System Preset'
+      presetName = 'Built-in Preset'
     } else presetName = 'User Preset'
   } else if (chat.genSettings) {
     presetName = 'Chat Settings'

@@ -5,6 +5,16 @@ import { defaultPresets } from '../../common/presets'
 import { Option } from './Select'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
 
+export const AutoPreset = {
+  chat: 'chat',
+  service: 'horde',
+}
+
+export const BasePresetOptions: Option[] = [
+  { label: 'Chat Settings', value: AutoPreset.chat },
+  { label: 'System Built-in Preset (Horde)', value: AutoPreset.service },
+]
+
 export function getClientPreset(chat?: AppSchema.Chat) {
   const user = userStore()
   const presets = presetStore((s) => s.presets)
@@ -25,13 +35,11 @@ export function getClientPreset(chat?: AppSchema.Chat) {
 }
 
 export function getPresetOptions(userPresets: AppSchema.UserGenPreset[]) {
-  const base: Option[] = [
-    { label: 'Chat Settings', value: 'chat' },
-    { label: 'Service or Fallback Preset', value: 'service' },
-  ]
-
+  const user = userStore((u) => u.user || { defaultPreset: '' })
   const presets = userPresets.map((preset) => ({
-    label: `${preset.name} ${getServiceName(preset.service)}`,
+    label: `${user.defaultPreset === preset._id ? 'Your Default - ' : ''}${
+      preset.name
+    } ${getServiceName(preset.service)}`,
     value: preset._id,
   }))
 
@@ -46,14 +54,14 @@ export function getPresetOptions(userPresets: AppSchema.UserGenPreset[]) {
     value: preset._id,
   }))
 
-  return base.concat(presets).concat(defaultsOptions)
+  return BasePresetOptions.concat(presets).concat(defaultsOptions)
 }
 
 export function getInitialPresetValue(chat?: AppSchema.Chat) {
-  if (!chat) return 'service'
-  if (!chat.genPreset && chat.genSettings) return 'chat'
+  if (!chat) return AutoPreset.service
+  if (!chat.genPreset && chat.genSettings) return AutoPreset.chat
 
-  return chat.genPreset || 'service'
+  return chat.genPreset || AutoPreset.service
 }
 
 function getServiceName(service?: AIAdapter) {

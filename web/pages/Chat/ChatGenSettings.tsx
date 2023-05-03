@@ -17,16 +17,7 @@ import { presetStore } from '../../store'
 import { Option } from '../../shared/Select'
 import { getAdapter } from '../../../common/prompt'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
-
-const AutoPreset = {
-  chat: 'chat',
-  service: 'service',
-}
-
-const autoPresets: Option[] = [
-  { label: 'Chat Settings', value: AutoPreset.chat },
-  { label: 'Service or Fallback Preset', value: AutoPreset.service },
-]
+import { AutoPreset, BasePresetOptions } from '../../shared/adapter'
 
 const presetList = Object.entries(defaultPresets).map(([key, preset]) => ({
   label: preset.name,
@@ -140,7 +131,7 @@ export const ChatGenSettingsModal: Component<{
         <form ref={ref} class="flex flex-col gap-2">
           <Select
             fieldName="preset"
-            items={autoPresets.concat(state.options).concat(presetList)}
+            items={BasePresetOptions.concat(state.options).concat(presetList)}
             value={selected()}
             onChange={(item) => setSelected(item.value)}
           />

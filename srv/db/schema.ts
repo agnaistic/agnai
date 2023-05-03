@@ -57,6 +57,7 @@ export namespace AppSchema {
 
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
+    defaultPreset?: string
 
     createdAt?: string
 
