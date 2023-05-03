@@ -66,7 +66,7 @@ const ImportCharacterModal: Component<{
     if (!json) {
       throw new Error('Invalid tavern image')
     }
-    setImported([...imported(), jsonToCharacter(json)])
+    setImported([...imported(), { ...jsonToCharacter(json), avatar: file.file }])
     toastStore.success('Tavern card accepted')
   }
 
