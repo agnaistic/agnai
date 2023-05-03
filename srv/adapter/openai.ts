@@ -318,6 +318,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
     const events = needleToSSE(resp)
     for await (const event of events) {
       // According to OpenAI's docs their SSE stream will only contain `data` events.
+      // The first event for chat completions only contains the message's `role`.
       // The final event is always `data: [DONE]`.
 
       if (event === 'data: [DONE]') {
@@ -330,7 +331,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 
       meta = { ...completionMeta, ...choiceMeta }
 
-      if ('message' in delta && delta.message) {
+      if ('message' in delta && delta.message?.content) {
         const token = delta.message.content
         tokens.push(token)
         yield { token }
