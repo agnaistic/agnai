@@ -10,6 +10,7 @@ import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
 import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
+import { needleToSSE } from './stream'
 
 const baseUrl = `https://api.openai.com`
 
@@ -52,7 +53,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const body: any = {
     model: oaiModel,
-
+    stream: true, // TODO: Get from preset settings
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
@@ -154,40 +155,43 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
-  const resp = await needle('post', url, JSON.stringify(body), {
-    json: true,
-    headers,
-  }).catch((err) => ({ error: err }))
+  const generator = body.stream ? streamCompletion : requestFullCompletion
+  let result: Awaited<ReturnType<ReturnType<typeof generator>['next']>>
+  let responseBody: FullCompletion | null = null
 
-  if ('error' in resp) {
-    log.error({ error: resp.error }, 'OpenAI failed to send')
-    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
-    return
-  }
-
-  if (resp.statusCode && resp.statusCode >= 400) {
-    log.error({ body: resp.body }, `OpenAI request failed (${resp.statusCode})`)
-    const msg =
-      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
-
-    yield {
-      error: `OpenAI request failed (${resp.statusCode}): ${msg}`,
+  while ((result = await generator(url, headers, body).next())) {
+    // Both the streaming and non-streaming generators return a full completion and yield errors.
+    // Only the streaming generator yields tokens.
+    if (result.done) {
+      responseBody = result.value
+      break
     }
-    return
+
+    if (result.value.error) {
+      yield result.value
+      return
+    }
+
+    if ('token' in result.value) {
+      yield result.value.token
+    }
   }
 
   try {
     let text = ''
-    if (!useChat) {
-      text = resp.body.choices[0].text
-    } else {
-      text = resp.body.choices[0].message.content
-    }
-    if (!text) {
-      log.error({ body: resp.body }, 'OpenAI request failed: Empty response')
+    if (!responseBody?.choices?.length) {
+      log.error({ body: responseBody }, 'OpenAI request failed: Empty response')
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
+
+    const completion = responseBody.choices[0]
+    if ('text' in completion) {
+      text = completion.text
+    } else {
+      text = completion.message.content
+    }
+
     const parsed = sanitise(text.replace(prompt, ''))
     const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
     yield trimmed || parsed
@@ -244,56 +248,37 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
   return res.body
 }
 
-interface BaseCompletion {
+type TextCompletionContent = { text: string }
+type ChatCompletionContent = { message: { content: string; role: 'system' | 'assistant' | 'user' } }
+type FullCompletion = {
   id: string
   created: number
   model: string
+  object: string
+  choices:
+    | ({
+        finish_reason: string
+        index: number
+      } & (TextCompletionContent | ChatCompletionContent))[]
 }
-interface FullTextCompletion extends BaseCompletion {
-  object: 'text_completion'
+type StreamedCompletion = {
+  id: string
+  created: number
+  model: string
+  object: string
   choices: {
-    text: string
-    index: number
     finish_reason: string
-  }[]
-}
-interface StreamedTextCompletion extends BaseCompletion {
-  object: 'text_completion.chunk'
-  choices: {
-    delta: { text?: string }
     index: number
-    finish_reason: string
+    delta: Partial<TextCompletionContent | ChatCompletionContent>
   }[]
 }
-interface FullChatCompletion extends BaseCompletion {
-  object: 'chat.completion'
-  choices: {
-    message: { role: string; content: string }
-    finish_reason: string | null
-    index: number
-  }[]
-}
-interface StreamedChatCompletion extends BaseCompletion {
-  object: 'chat.completion.chunk'
-  choices: {
-    delta: { role?: string; content?: string }
-    finish_reason: string | null
-    index: number
-  }[]
-}
-type FullCompletion = FullTextCompletion | FullChatCompletion
-type StreamedCompletion = StreamedTextCompletion | StreamedChatCompletion
-type CompletionGenerator<T extends FullCompletion | StreamedCompletion> = (
+type CompletionGenerator = (
   url: string,
   headers: OutgoingHttpHeaders,
   body: any
-) => AsyncGenerator<{ error: string } | { error?: undefined; data: T }, T | undefined>
+) => AsyncGenerator<{ error: string } | { error?: undefined; token: string }, FullCompletion | null>
 
-const getOpenAICompletion: CompletionGenerator<FullCompletion> = async function* (
-  url,
-  body,
-  headers
-) {
+const requestFullCompletion: CompletionGenerator = async function* (url, body, headers) {
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -301,7 +286,7 @@ const getOpenAICompletion: CompletionGenerator<FullCompletion> = async function*
 
   if ('error' in resp) {
     yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
-    return
+    return null
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
@@ -309,12 +294,67 @@ const getOpenAICompletion: CompletionGenerator<FullCompletion> = async function*
       resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
 
     yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
-    return 'error'
+    return null
   }
   return resp.body
 }
 
-const streamOpenAICompletion: CompletionGenerator<StreamedCompletion> =
-  async function* streamOpenAICompletion() {
-    return undefined
+/**
+ * Yields individual tokens as OpenAI API sends them, and ultimately returns a full completion
+ * object once the stream is finished.
+ */
+const streamCompletion: CompletionGenerator = async function* (url, body, headers) {
+  const resp = await needle('post', url, JSON.stringify(body), {
+    ...headers,
+    Accept: 'text/event-stream, application/json',
+  })
+  const tokens = []
+  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+
+  try {
+    const events = needleToSSE(resp)
+    for await (const event of events) {
+      // According to OpenAI's docs their SSE stream will only contain `data` events.
+      // The final event is always `data: [DONE]`.
+
+      if (event === 'data: [DONE]') {
+        break
+      }
+
+      const parsed: StreamedCompletion = JSON.parse(event.slice('data: '.length))
+      const { choices, ...completionMeta } = parsed
+      const { delta, ...choiceMeta } = choices[0]
+
+      meta = { ...completionMeta, ...choiceMeta }
+
+      if ('message' in delta && delta.message) {
+        const token = delta.message.content
+        tokens.push(token)
+        yield { token }
+      } else if ('text' in delta && delta.text) {
+        const token = delta.text
+        tokens.push(token)
+        yield { token }
+      }
+    }
+  } catch (err: any) {
+    yield { error: `OpenAI streaming request failed: ${err.message}` }
+    return null
+  } finally {
+    resp.destroy()
   }
+
+  return {
+    id: meta.id,
+    created: meta.created,
+    model: meta.model,
+    object: meta.object,
+    choices: [
+      {
+        finish_reason: meta.finish_reason,
+        index: meta.index,
+        text: tokens.join(''),
+      },
+    ],
+  }
+}
