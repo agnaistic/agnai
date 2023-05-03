@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
 import { createPrompt, BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
-import { getEncoder } from '../common/tokenize'
 import { AppSchema } from '../srv/db/schema'
 import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
+import { getEncoder } from '../srv/tokenize'
 
 const char = toChar('Bot')
 const profile = toProfile('You')

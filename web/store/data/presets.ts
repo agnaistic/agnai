@@ -33,7 +33,6 @@ export async function createPreset(preset: PresetUpdate) {
     _id: v4(),
     kind: 'gen-setting',
     userId: localApi.ID,
-    service: undefined,
   }
 
   const presets = loadItem('presets').concat(newPreset)

@@ -3,9 +3,9 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { AppSchema } from '../db/schema'
+import { getEncoder } from '../tokenize'
 
 const baseUrl = `https://api.anthropic.com/v1/complete`
 

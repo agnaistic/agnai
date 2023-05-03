@@ -4,10 +4,10 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
-import { getEncoder } from '../../common/tokenize'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
+import { getEncoder } from '../tokenize'
 
 const baseUrl = `https://api.openai.com`
 
@@ -41,7 +41,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   } = opts
   const base = getBaseUrl(user, isThirdParty)
   if (!user.oaiKey && !base.changed) {
-    yield { error: `OpenAI request failed: Not OpenAI API key not set. Check your settings.` }
+    yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
