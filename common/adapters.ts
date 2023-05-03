@@ -148,7 +148,7 @@ export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AI
   maxContextLength: AI_ADAPTERS,
   gaslight: ['openai', 'scale', 'kobold', 'claude', 'ooba'],
   antiBond: ['openai', 'claude', 'scale'],
-  ultimeJailbreak: ['openai', 'claude'],
+  ultimeJailbreak: ['openai', 'claude', 'kobold'],
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],
 
   repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
@@ -159,11 +159,11 @@ export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AI
   topK: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
   typicalP: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
 
-  claudeModel: ['claude'],
+  claudeModel: ['claude', 'kobold'],
 
-  oaiModel: ['openai'],
-  frequencyPenalty: ['openai'],
-  presencePenalty: ['openai'],
+  oaiModel: ['openai', 'kobold'],
+  frequencyPenalty: ['openai', 'kobold'],
+  presencePenalty: ['openai', 'kobold'],
 
   addBosToken: ['ooba'],
   banEosToken: ['ooba'],
