@@ -146,6 +146,7 @@ export async function createCharacter(char: ImportCharacter) {
   if (isLoggedIn()) {
     const form = new FormData()
     form.append('name', char.name)
+    if (char.description) form.append('description', char.description)
     form.append('greeting', char.greeting)
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
