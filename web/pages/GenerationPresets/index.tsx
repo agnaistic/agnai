@@ -10,7 +10,8 @@ import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { presetStore } from '../../store'
+import { presetStore, toastStore } from '../../store'
+import { AI_ADAPTERS } from '../../../common/adapters'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
@@ -98,13 +99,19 @@ export const GenerationPresetsPage: Component = () => {
   const onSave = (ev: Event) => {
     ev.preventDefault()
     if (state.saving) return
-    const body = getStrictForm(ref, presetValidator)
+    const validator = { ...presetValidator, service: ['', ...AI_ADAPTERS] } as const
+    const body = getStrictForm(ref, validator)
+
+    if (body.service === '') {
+      toastStore.error(`You must select an AI service before saving`)
+      return
+    }
 
     const prev = editing()
     if (prev?._id) {
-      presetStore.updatePreset(prev._id, body)
+      presetStore.updatePreset(prev._id, body as any)
     } else {
-      presetStore.createPreset(body, (newPreset) => {
+      presetStore.createPreset(body as any, (newPreset) => {
         nav(`/presets/${newPreset._id}`)
       })
     }
@@ -150,7 +157,7 @@ export const GenerationPresetsPage: Component = () => {
                   value={editing()?.name}
                   required
                 />
-                <GenerationSettings showAll={params.id === 'new'} inherit={editing()} />
+                <GenerationSettings inherit={editing()} />
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
                 <div class="flex flex-row justify-end">

@@ -1,6 +1,6 @@
 import { AppSchema } from '../srv/db/schema'
 import { formatCharacter } from './prompt'
-import { getEncoder } from './tokenize'
+import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 
 export type ImagePromptOpts = {
@@ -36,7 +36,7 @@ export function createAppearancePrompt(avatar: AppSchema.Chat | AppSchema.Charac
   return prompt
 }
 
-export function createImagePrompt(opts: ImagePromptOpts) {
+export async function createImagePrompt(opts: ImagePromptOpts) {
   const maxTokens = getMaxTokens(opts.user)
 
   /**
@@ -46,8 +46,6 @@ export function createImagePrompt(opts: ImagePromptOpts) {
   const lines: string[] = []
   let tokens = 0
 
-  const encoder = getEncoder('main')
-
   for (const { msg, userId, adapter } of opts.messages.slice().reverse()) {
     if (adapter === 'image') continue
     const indexes = tokenizeMessage(msg)
@@ -56,7 +54,7 @@ export function createImagePrompt(opts: ImagePromptOpts) {
 
     for (const index of indexes.reverse()) {
       const line = msg.slice(index)
-      const size = encoder(line)
+      const size = await tokenize(line)
       tokens += size
 
       if (tokens > maxTokens) {
@@ -70,7 +68,7 @@ export function createImagePrompt(opts: ImagePromptOpts) {
     if (tokens > maxTokens) break
 
     const handle = userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name
-    tokens += encoder(handle + ':')
+    tokens += await tokenize(handle + ':')
 
     if (tokens > maxTokens) {
       lines.push(last.trim())
@@ -99,7 +97,7 @@ function getMaxTokens(user: AppSchema.User) {
       return 225
 
     case 'sd':
-      return 350
+      return 500
 
     case 'horde':
     default:

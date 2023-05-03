@@ -1,3 +1,5 @@
+import { AppSchema } from '../srv/db/schema'
+
 export type AIAdapter = (typeof AI_ADAPTERS)[number]
 export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
 export type PersonaFormat = (typeof PERSONA_FORMATS)[number]
@@ -35,7 +37,6 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
 export const AI_ADAPTERS = [
   'kobold',
   'novel',
-  'chai',
   'ooba',
   'horde',
   'luminai',
@@ -117,8 +118,7 @@ export type HordeWorker = {
   bridge_agent: string
 }
 
-export const ADAPTER_LABELS: Record<AIAdapter, string> = {
-  chai: 'Chai',
+export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   horde: 'Horde',
   kobold: 'Kobold',
   novel: 'NovelAI',
@@ -127,4 +127,46 @@ export const ADAPTER_LABELS: Record<AIAdapter, string> = {
   openai: 'OpenAI',
   scale: 'Scale',
   claude: 'Claude',
+}
+
+export type Preset = Omit<
+  AppSchema.GenSettings,
+  | 'name'
+  | 'service'
+  | 'images'
+  | 'memoryDepth'
+  | 'memoryContextLimit'
+  | 'memoryReverseWeight'
+  | 'src'
+  | 'order'
+  | 'useGaslight'
+>
+
+export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AIAdapter[] } = {
+  temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude'],
+  maxTokens: AI_ADAPTERS,
+  maxContextLength: AI_ADAPTERS,
+  gaslight: ['openai', 'scale', 'kobold', 'claude', 'ooba'],
+  antiBond: ['openai', 'claude', 'scale'],
+  ultimeJailbreak: ['openai', 'claude', 'kobold'],
+  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],
+
+  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
+  repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'luminai'],
+  repetitionPenaltySlope: ['horde', 'novel', 'kobold', 'luminai'],
+  tailFreeSampling: ['horde', 'novel', 'kobold', 'luminai'],
+  topA: ['horde', 'novel', 'kobold', 'luminai'],
+  topK: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
+  typicalP: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
+
+  claudeModel: ['claude', 'kobold'],
+
+  oaiModel: ['openai', 'kobold'],
+  frequencyPenalty: ['openai', 'kobold'],
+  presencePenalty: ['openai', 'kobold'],
+
+  addBosToken: ['ooba'],
+  banEosToken: ['ooba'],
+  encoderRepitionPenalty: ['ooba'],
+  penaltyAlpha: ['ooba'],
 }

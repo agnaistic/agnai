@@ -122,7 +122,7 @@ export async function generateText(
     models: [] as string[],
     prompt,
     workers: [] as string[],
-    trusted_workers: user.hordeUseTrusted ?? false,
+    trusted_workers: user.hordeUseTrusted ?? true,
   }
 
   if (user.hordeModel && user.hordeModel !== 'any') {

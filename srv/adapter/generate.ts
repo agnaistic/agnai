@@ -9,7 +9,6 @@ import { store } from '../db'
 import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 import { errors, StatusError } from '../api/wrap'
-import { handleChai } from './chai'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { FILAMENT_ENABLED, filament, handleLuminAI } from './luminai'
@@ -24,7 +23,7 @@ import { MemoryOpts } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
-import { getEncoder } from '../../common/tokenize'
+import { getEncoder } from '../tokenize'
 
 configure(async (opts) => {
   const res = await needle(opts.method, opts.url, opts.payload, {
@@ -36,7 +35,6 @@ configure(async (opts) => {
 })
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
-  chai: handleChai,
   novel: handleNovel,
   kobold: handleKobold,
   ooba: handleOoba,
@@ -62,9 +60,12 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId)
+    const { adapter, isThirdParty, model } = getAdapter(opts.chat, entities.user, entities.settings)
+    const encoder = getEncoder(adapter, model)
     opts.parts = getPromptParts(
       { ...entities, settings: entities.gen, chat: opts.chat, members: opts.members },
-      opts.lines
+      opts.lines,
+      encoder
     )
     opts.settings = entities.gen
     opts.user = entities.user
@@ -78,10 +79,11 @@ export async function createTextStreamV2(
     }
   }
 
-  const { adapter, isThirdParty } = getAdapter(opts.chat, opts.user)
+  const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const encoder = getEncoder(adapter, model)
   const handler = handlers[adapter]
 
-  const prompt = createPromptWithParts(opts, opts.parts, opts.lines)
+  const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
 
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)

@@ -1,6 +1,7 @@
-import { Component, JSX, For } from 'solid-js'
+import { Component, JSX, For, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
+import { AIAdapter } from '../../common/adapters'
 
 export type Option<T extends string = string> = {
   label: string
@@ -16,6 +17,9 @@ const Select: Component<{
   class?: string
   disabled?: boolean
   onChange?: (item: Option) => void
+
+  service?: AIAdapter
+  adapters?: AIAdapter[] | readonly AIAdapter[]
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
     if (!props.onChange) return
@@ -23,8 +27,13 @@ const Select: Component<{
     props.onChange(item!)
   }
 
+  const hide = createMemo(() => {
+    if (!props.service || !props.adapters) return ''
+    return props.adapters.includes(props.service) ? '' : ` hidden `
+  })
+
   return (
-    <div>
+    <div class={hide()}>
       <FormLabel label={props.label} helperText={props.helperText} />
       <div class="flex items-center">
         <div class="relative overflow-hidden rounded-xl bg-transparent">

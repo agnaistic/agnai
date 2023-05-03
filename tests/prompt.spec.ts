@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
 import { createPrompt, BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
-import { getEncoder } from '../common/tokenize'
 import { AppSchema } from '../srv/db/schema'
 import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
+import { getEncoder } from '../srv/tokenize'
 
 const char = toChar('Bot')
 const profile = toProfile('You')
@@ -266,17 +266,21 @@ function build(
     settings?: Partial<AppSchema.GenSettings>
   } = {}
 ) {
-  return createPrompt({
-    char: opts.char || char,
-    members: [profile],
-    user,
-    chat: opts.chat || chat,
-    messages,
-    book: opts.book || book,
-    settings: opts.settings,
-    continue: opts.continue,
-    retry: opts.retry,
-  })
+  const encoder = getEncoder('main')
+  return createPrompt(
+    {
+      char: opts.char || char,
+      members: [profile],
+      user,
+      chat: opts.chat || chat,
+      messages,
+      book: opts.book || book,
+      settings: opts.settings,
+      continue: opts.continue,
+      retry: opts.retry,
+    },
+    encoder
+  )
 }
 
 function botMsg(text: string) {

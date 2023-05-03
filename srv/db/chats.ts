@@ -40,7 +40,7 @@ export async function create(
   characterId: string,
   props: Pick<
     AppSchema.Chat,
-    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides'
+    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides' | 'genPreset'
   >
 ) {
   const id = `${v4()}`
@@ -62,6 +62,7 @@ export async function create(
     overrides: props.overrides || char.persona,
     createdAt: now(),
     updatedAt: now(),
+    genPreset: props.genPreset,
     messageCount: props.greeting ? 1 : 0,
   }
 

@@ -7,6 +7,7 @@ import { handle, StatusError } from '../wrap'
 export const createChat = handle(async ({ body, user }) => {
   assertValid(
     {
+      genPreset: 'string?',
       characterId: 'string',
       name: 'string',
       greeting: 'string',

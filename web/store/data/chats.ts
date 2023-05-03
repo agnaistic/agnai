@@ -2,9 +2,22 @@ import type { ImportChat, NewChat } from '../chat'
 import { v4 } from 'uuid'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
-import { loadItem, local, saveChats } from './storage'
+import { loadItem, localApi, saveChats } from './storage'
 
 export type AllChat = AppSchema.Chat & { character?: { name: string } }
+
+export const chatsApi = {
+  createChat,
+  createNewChat,
+  editChat,
+  getAllChats,
+  getChat,
+  getBotChats,
+  editChatGenPreset,
+  editChatGenSettings,
+  importChat,
+  deleteChat,
+}
 
 export async function getChat(id: string) {
   if (isLoggedIn()) {
@@ -21,17 +34,17 @@ export async function getChat(id: string) {
   const chat = loadItem('chats').find((ch) => ch._id === id)
   const character = loadItem('characters').find((ch) => ch._id === chat?.characterId)
   const profile = loadItem('profile')
-  const messages = await local.getMessages(id)
+  const messages = await localApi.getMessages(id)
 
   if (!chat) {
-    return local.error(`Chat not found in data`)
+    return localApi.error(`Chat not found in data`)
   }
 
   if (!character) {
-    return local.error(`Character not found in data`)
+    return localApi.error(`Character not found in data`)
   }
 
-  return local.result({ chat, character, messages, members: [profile], active: [] })
+  return localApi.result({ chat, character, messages, members: [profile], active: [] })
 }
 
 export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
@@ -42,11 +55,11 @@ export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
 
   const chats = loadItem('chats')
   const prev = chats.find((ch) => ch._id === id)
-  if (!prev) return local.error(`Chat not found`)
+  if (!prev) return localApi.error(`Chat not found`)
 
   const next = { ...prev, ...update, updatedAt: new Date().toISOString() }
-  local.saveChats(local.replace(id, chats, next))
-  return local.result(next)
+  localApi.saveChats(localApi.replace(id, chats, next))
+  return localApi.result(next)
 }
 
 export async function createChat(characterId: string, props: NewChat) {
@@ -58,13 +71,13 @@ export async function createChat(characterId: string, props: NewChat) {
   const chars = loadItem('characters')
   const chats = loadItem('chats')
   const char = chars.find((ch) => ch._id === characterId)
-  if (!char) return local.error(`Character not found`)
+  if (!char) return localApi.error(`Character not found`)
 
   const { chat, msg } = createNewChat(char, props)
 
-  local.saveChats(chats.concat(chat))
-  if (props.greeting) local.saveMessages(chat._id, [msg])
-  return local.result(chat)
+  localApi.saveChats(chats.concat(chat))
+  if (props.greeting) localApi.saveMessages(chat._id, [msg])
+  return localApi.result(chat)
 }
 
 export async function importChat(characterId: string, props: ImportChat) {
@@ -73,9 +86,9 @@ export async function importChat(characterId: string, props: ImportChat) {
     return res
   }
 
-  const char = local.loadItem('characters').find((char) => char._id === characterId)
+  const char = localApi.loadItem('characters').find((char) => char._id === characterId)
   if (!char) {
-    return local.error(`Character not found`)
+    return localApi.error(`Character not found`)
   }
 
   const { chat } = createNewChat(char, {
@@ -93,15 +106,15 @@ export async function importChat(characterId: string, props: ImportChat) {
     kind: 'chat-message',
     msg: msg.msg,
     characterId: msg.characterId ? char._id : undefined,
-    userId: msg.userId ? local.ID : undefined,
+    userId: msg.userId ? localApi.ID : undefined,
     createdAt: new Date(start + i).toISOString(),
     updatedAt: new Date(start + i).toISOString(),
   }))
 
-  local.saveChats(local.loadItem('chats').concat(chat))
-  local.saveMessages(chat._id, messages)
+  localApi.saveChats(localApi.loadItem('chats').concat(chat))
+  localApi.saveMessages(chat._id, messages)
 
-  return local.result(chat)
+  return localApi.result(chat)
 }
 
 export async function deleteChat(chatId: string) {
@@ -111,8 +124,8 @@ export async function deleteChat(chatId: string) {
   }
 
   const chats = loadItem('chats').filter((ch) => ch._id !== chatId)
-  local.saveChats(chats)
-  return local.result<any>({ success: true })
+  localApi.saveChats(chats)
+  return localApi.result<any>({ success: true })
 }
 
 export async function getAllChats() {
@@ -127,13 +140,13 @@ export async function getAllChats() {
   if (!chats?.length) {
     const [char] = characters
     const { chat, msg } = createNewChat(char, { ...char, overrides: char.persona })
-    local.saveChats([chat])
-    local.saveMessages(chat._id, [msg])
+    localApi.saveChats([chat])
+    localApi.saveMessages(chat._id, [msg])
 
     chats.push(chat)
   }
 
-  return local.result({ chats, characters })
+  return localApi.result({ chats, characters })
 }
 
 export async function getBotChats(characterId: string) {
@@ -145,10 +158,10 @@ export async function getBotChats(characterId: string) {
   }
 
   const character = loadItem('characters').find((ch) => ch._id === characterId)
-  if (!character) return local.error('Character not found')
+  if (!character) return localApi.error('Character not found')
 
   const chats = loadItem('chats').filter((ch) => ch.characterId === characterId)
-  return local.result({ character, chats })
+  return localApi.result({ character, chats })
 }
 
 export async function editChatGenSettings(chatId: string, settings: AppSchema.Chat['genSettings']) {
@@ -159,7 +172,7 @@ export async function editChatGenSettings(chatId: string, settings: AppSchema.Ch
 
   const chats = loadItem('chats')
   const chat = chats.find((ch) => ch._id === chatId)
-  if (!chat) return local.error(`Chat not found`)
+  if (!chat) return localApi.error(`Chat not found`)
 
   const next: AppSchema.Chat = {
     ...chat,
@@ -167,8 +180,8 @@ export async function editChatGenSettings(chatId: string, settings: AppSchema.Ch
     genPreset: undefined,
     updatedAt: new Date().toISOString(),
   }
-  saveChats(local.replace(chatId, chats, next))
-  return local.result(next)
+  saveChats(localApi.replace(chatId, chats, next))
+  return localApi.result(next)
 }
 
 export async function editChatGenPreset(chatId: string, preset: string) {
@@ -179,7 +192,7 @@ export async function editChatGenPreset(chatId: string, preset: string) {
 
   const chats = loadItem('chats')
   const chat = chats.find((ch) => ch._id === chatId)
-  if (!chat) return local.error(`Chat not found`)
+  if (!chat) return localApi.error(`Chat not found`)
 
   const next: AppSchema.Chat = {
     ...chat,
@@ -187,8 +200,8 @@ export async function editChatGenPreset(chatId: string, preset: string) {
     genPreset: preset,
     updatedAt: new Date().toISOString(),
   }
-  saveChats(local.replace(chatId, chats, next))
-  return local.result(next)
+  saveChats(localApi.replace(chatId, chats, next))
+  return localApi.result(next)
 }
 
 export function createNewChat(char: AppSchema.Character, props: NewChat) {
@@ -199,7 +212,7 @@ export function createNewChat(char: AppSchema.Character, props: NewChat) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kind: 'chat',
-    userId: local.ID,
+    userId: localApi.ID,
     memberIds: [],
     messageCount: 1,
   }

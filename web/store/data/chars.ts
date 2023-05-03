@@ -3,7 +3,18 @@ import { AppSchema } from '../../../srv/db/schema'
 import type { ImportCharacter } from '../../pages/Character/ImportCharacter'
 import { api, isLoggedIn } from '../api'
 import { NewCharacter } from '../character'
-import { loadItem, local } from './storage'
+import { loadItem, localApi } from './storage'
+
+export const charsApi = {
+  getCharacters,
+  removeAvatar,
+  editAvatar,
+  deleteCharacter,
+  editChracter,
+  createCharacter,
+  getImageBuffer,
+  setFavorite,
+}
 
 export async function getCharacters() {
   if (isLoggedIn()) {
@@ -11,8 +22,8 @@ export async function getCharacters() {
     return res
   }
 
-  const characters = local.loadItem('characters')
-  return local.result({ characters })
+  const characters = localApi.loadItem('characters')
+  return localApi.result({ characters })
 }
 
 export async function removeAvatar(charId: string) {
@@ -26,8 +37,8 @@ export async function removeAvatar(charId: string) {
     return { ...ch, avatar: '' }
   })
 
-  local.saveChars(chars)
-  return local.result(chars.filter((ch) => ch._id === charId))
+  localApi.saveChars(chars)
+  return localApi.result(chars.filter((ch) => ch._id === charId))
 }
 
 export async function editAvatar(charId: string, file: File) {
@@ -50,9 +61,9 @@ export async function editAvatar(charId: string, file: File) {
 
   const nextChar = { ...prev, avatar: avatar || prev.avatar }
   const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
-  local.saveChars(next)
+  localApi.saveChars(next)
 
-  return local.result(nextChar)
+  return localApi.result(nextChar)
 }
 
 export async function deleteCharacter(charId: string) {
@@ -68,13 +79,13 @@ export async function deleteCharacter(charId: string) {
     chars: chars.filter((ch) => ch._id !== charId),
     chats: chats.filter((ch) => {
       if (ch.characterId !== charId) return true
-      local.deleteChatMessages(ch._id)
+      localApi.deleteChatMessages(ch._id)
       return false
     }),
   }
 
-  local.saveChars(next.chars)
-  local.saveChats(next.chats)
+  localApi.saveChars(next.chars)
+  localApi.saveChats(next.chats)
 
   return { result: true, error: undefined }
 }
@@ -106,7 +117,7 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
 
   const nextChar = { ...prev, ...char, avatar: avatar || prev.avatar }
   const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
-  local.saveChars(next)
+  localApi.saveChars(next)
 
   return { result: nextChar, error: undefined }
 }
@@ -126,7 +137,7 @@ export async function setFavorite(charId: string, favorite: boolean) {
 
   const nextChar = { ...prev, favorite: favorite }
   const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
-  local.saveChars(next)
+  localApi.saveChars(next)
 
   return { result: nextChar, error: undefined }
 }
@@ -135,6 +146,7 @@ export async function createCharacter(char: ImportCharacter) {
   if (isLoggedIn()) {
     const form = new FormData()
     form.append('name', char.name)
+    if (char.description) form.append('description', char.description)
     form.append('greeting', char.greeting)
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
@@ -162,7 +174,7 @@ export async function createCharacter(char: ImportCharacter) {
 
   const chars = loadItem('characters')
   const next = chars.concat(newChar)
-  local.saveChars(next)
+  localApi.saveChars(next)
 
   return { result: newChar, error: undefined }
 }
@@ -197,7 +209,7 @@ export async function getImageBuffer(file?: File) {
 
 function baseChar() {
   return {
-    userId: local.ID,
+    userId: localApi.ID,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kind: 'character' as const,
