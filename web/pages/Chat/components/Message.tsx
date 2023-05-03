@@ -91,10 +91,7 @@ const SingleMessage: Component<
 
   const saveEdit = () => {
     if (!ref) return
-    // We ensure duplicate spaces are preserved in the editor by replacing all
-    // spaces with nbsp, and then when saving we replace all nbsps with
-    // regular spaces or they'll show up as &nbsp; in code blocks
-    msgStore.editMessage(props.msg._id, ref.innerText.replace(/\u00A0/g, ' '))
+    msgStore.editMessage(props.msg._id, ref.innerText)
     setEdit(false)
   }
 
@@ -112,10 +109,7 @@ const SingleMessage: Component<
   const startEdit = () => {
     setEdit(true)
     if (ref) {
-      // We ensure duplicate spaces are preserved in the editor by replacing all
-      // spaces with nbsp, and then when saving we replace all nbsps with
-      // regular spaces or they'll show up as &nbsp; in code blocks
-      ref.innerText = props.original.msg.replace(/ /g, '\u00A0')
+      ref.innerText = props.original.msg
     }
     ref?.focus()
   }
@@ -130,6 +124,16 @@ const SingleMessage: Component<
 
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
+  }
+
+  const renderMessage = () => {
+    // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
+    // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
+    // https://github.com/showdownjs/showdown/issues/669
+    const html = markdown
+      .makeHtml(parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter))
+      .replace(/&amp;nbsp;/g, '&nbsp;')
+    return html
   }
 
   const messageColumnWidth = () =>
@@ -265,9 +269,7 @@ const SingleMessage: Component<
               class="rendered-markdown pr-1 sm:pr-3"
               data-bot-message={isBot()}
               data-user-message={isUser()}
-              innerHTML={markdown.makeHtml(
-                parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
-              )}
+              innerHTML={renderMessage()}
             />
           </Show>
           <Show when={props.msg._id === ''}>
