@@ -36,9 +36,9 @@ const VoicePicker: Component<{ edit: AppSchema.Character }> = (props) => {
 
   createEffect(() => {
     const voicesMap = voices.voices
-    const type = voiceBackend()
-    if (!type) return
-    const voiceDefs = voicesMap[type]
+    const backend = voiceBackend()
+    if (!backend) return
+    const voiceDefs = voicesMap[backend]
     let voicesList: Option[]
     if (!voiceDefs) {
       voicesList = [{ value: '', label: 'Voices loading...' }]
@@ -48,7 +48,11 @@ const VoicePicker: Component<{ edit: AppSchema.Character }> = (props) => {
       voicesList = voiceDefs.map((v) => ({ value: v.id, label: v.label }))
     }
     const currentVoiceId = props.edit.voice?.voiceId || ''
-    if (currentVoiceId && !voicesList.find((v) => v.value === currentVoiceId)) {
+    if (
+      currentVoiceId &&
+      backend === props.edit?.voice?.voiceBackend &&
+      !voicesList.find((v) => v.value === currentVoiceId)
+    ) {
       voicesList.push({ value: currentVoiceId, label: currentVoiceId })
     }
     setVoicesList(voicesList)
@@ -113,7 +117,7 @@ const VoicePicker: Component<{ edit: AppSchema.Character }> = (props) => {
             <FormLabel label="Preview" />
             <div class="flex items-center">
               <div class="relative overflow-hidden rounded-xl bg-transparent">
-                <Button onClick={() => playVoicePreview(voicePreview()!)}>
+                <Button onClick={() => playVoicePreview(voiceBackend()!, voicePreview()!)}>
                   <Play /> Preview
                 </Button>
               </div>

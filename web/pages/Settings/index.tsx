@@ -69,7 +69,6 @@ const Settings: Component = () => {
 
       elevenLabsApiKey: 'string?',
 
-      voiceType: ['', 'elevenlabs'],
       voiceFilterActions: 'boolean?',
 
       elevenLabsVoiceId: 'string?',
@@ -88,7 +87,6 @@ const Settings: Component = () => {
       novelImageModel,
       novelSampler,
 
-      voiceType,
       voiceFilterActions,
       elevenLabsVoiceId,
 
@@ -99,11 +97,7 @@ const Settings: Component = () => {
       ...base,
       hordeWorkers: workers(),
       voice: {
-        backend: voiceType || undefined,
         filterActions: voiceFilterActions || false,
-        elevenlabs: {
-          voiceId: elevenLabsVoiceId,
-        },
       },
       images: {
         type: imageType,

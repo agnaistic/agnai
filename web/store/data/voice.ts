@@ -11,6 +11,11 @@ type GenerateOpts = {
   voiceId: string
 }
 
+export const voiceApi = {
+  voicesList,
+  textToSpeech,
+}
+
 export async function voicesList(voiceBackend: AppSchema.VoiceBackend) {
   const user = getUserEntity()
   const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(

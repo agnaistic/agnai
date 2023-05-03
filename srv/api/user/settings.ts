@@ -210,6 +210,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.thirdPartyPassword) {
     update.thirdPartyPassword = encryptText(body.thirdPartyPassword)
+  }
 
   if (body.elevenLabsApiKey) {
     update.elevenLabsApiKey = encryptText(body.elevenLabsApiKey)
@@ -319,6 +320,7 @@ async function getSafeUserConfig(userId: string) {
     if (user.thirdPartyPassword) {
       user.thirdPartyPassword = ''
       user.thirdPartyPasswordSet = true
+    }
 
     if (user.elevenLabsApiKey) {
       user.elevenLabsApiKey = ''

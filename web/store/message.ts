@@ -13,7 +13,8 @@ import { userStore } from './user'
 import { localApi } from './data/storage'
 import { characterStore } from './character'
 import { chatStore } from './chat'
-import { playWebSpeechSynthesis, voiceStore } from './voice'
+import { playWebSpeechSynthesis, stopCurrentVoice, voiceStore } from './voice'
+import { voiceApi } from './data/voice'
 
 type ChatId = string
 
@@ -234,7 +235,11 @@ export const msgStore = createStore<MsgState>(
       voiceBackend: AppSchema.VoiceBackend,
       voiceId: string
     ) {
-      if (currentVoice) return
+      if (currentVoice) {
+        yield { voice: undefined }
+      }
+
+      stopCurrentVoice()
 
       if (voiceBackend === 'webspeechsynthesis') {
         playWebSpeechSynthesis(voiceId, text)
@@ -243,7 +248,7 @@ export const msgStore = createStore<MsgState>(
 
       yield { voice: { messageId, status: 'generating' } }
 
-      const res = await data.voice.textToSpeech({
+      const res = await voiceApi.textToSpeech({
         chatId: activeChatId,
         messageId,
         text,
