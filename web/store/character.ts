@@ -26,6 +26,7 @@ export type NewCharacter = {
   name: string
   description?: string
   culture?: string
+  tags?: string[]
   greeting: string
   scenario: string
   sampleChat: string

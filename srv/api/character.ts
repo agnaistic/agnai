@@ -27,6 +27,7 @@ const valid = {
   originalAvatar: 'string?',
   favorite: 'boolean?',
   voice: 'string?',
+  tags: 'string?',
 } as const
 
 const createCharacter = handle(async (req) => {
@@ -34,6 +35,9 @@ const createCharacter = handle(async (req) => {
   const persona = JSON.parse(body.persona)
   assertValid(valid.persona, persona)
   const voice = parseAndValidateVoice(body.voice)
+  const tags: string[] = body.tags ? JSON.parse(body.tags) : []
+  if (tags && (!Array.isArray(tags) || tags.findIndex((t) => typeof t !== 'string') > -1))
+    throw new StatusError('Tags must be an array of strings', 400)
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -46,6 +50,7 @@ const createCharacter = handle(async (req) => {
     avatar: body.originalAvatar,
     favorite: false,
     voice,
+    tags,
   })
 
   const filename = await entityUpload(
@@ -72,8 +77,10 @@ const editCharacter = handle(async (req) => {
   const body = await handleForm(req, { ...valid, persona: 'string', voice: 'string?' })
   const persona = JSON.parse(body.persona)
   const voice = parseAndValidateVoice(body.voice)
-
   assertValid(valid.persona, persona)
+  const tags: string[] = body.tags ? JSON.parse(body.tags) : []
+  if (tags && (!Array.isArray(tags) || tags.findIndex((t) => typeof t !== 'string') > -1))
+    throw new StatusError('Tags must be an array of strings', 400)
 
   const filename = await entityUpload(
     'char',
@@ -93,6 +100,7 @@ const editCharacter = handle(async (req) => {
     scenario: body.scenario,
     sampleChat: body.sampleChat,
     voice,
+    tags,
   })
 
   return char

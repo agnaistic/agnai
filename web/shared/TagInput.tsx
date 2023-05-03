@@ -1,0 +1,106 @@
+import { Component, For, JSX, Show, createEffect, createSignal } from 'solid-js'
+
+interface TagInputProps {
+  availableTags: string[]
+  value?: string[]
+  fieldName: string
+  label?: string
+  helperText?: string | JSX.Element
+  onSelect: (selectedTags: string[]) => void
+}
+
+const TagInput: Component<TagInputProps> = (props) => {
+  const [tags, setTags] = createSignal<string[]>([])
+  const [inputValue, setInputValue] = createSignal<string>('')
+  const [suggestions, setSuggestions] = createSignal<string[]>([])
+
+  createEffect(() => {
+    setTags(props.value || [])
+  })
+
+  function updateSuggestions(value: string) {
+    setSuggestions(
+      props.availableTags.filter((tag) => tag.startsWith(value) && !tags().includes(tag))
+    )
+  }
+
+  function addTag(tag: string) {
+    const updatedTags = Array.from(new Set([...tags(), tag]))
+    setTags(updatedTags)
+    setInputValue('')
+    setSuggestions([])
+    props.onSelect(updatedTags)
+  }
+
+  function removeTag(tagToRemove: string) {
+    const updatedTags = tags().filter((tag) => tag !== tagToRemove)
+    setTags(updatedTags)
+    props.onSelect(updatedTags)
+  }
+
+  function handleInputChange(e: Event) {
+    setInputValue((e.target as HTMLInputElement).value)
+    updateSuggestions((e.target as HTMLInputElement).value)
+  }
+
+  function handleInputKeyDown(e: KeyboardEvent) {
+    const lastTag = tags()[tags().length - 1]
+    const value = inputValue()
+    if (e.key === 'Backspace' && value === '' && lastTag) {
+      removeTag(lastTag)
+    } else if (e.key === 'Enter' && value !== '' && suggestions().length > 0) {
+      e.preventDefault()
+      addTag(suggestions()[0])
+    } else if ((e.key === ' ' || e.key == 'Enter') && value !== '') {
+      e.preventDefault()
+      addTag(value)
+    }
+  }
+
+  return (
+    <div class="relative">
+      <Show when={!!props.label}>
+        <label for={props.fieldName}>
+          <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
+          <Show when={!!props.helperText}>
+            <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
+          </Show>
+        </label>
+      </Show>
+      <div class="form-field focusable-field flex w-full flex-wrap rounded-xl px-2 py-1">
+        <For each={tags()}>
+          {(tag) => (
+            <span class="btn-primary m-1 flex items-center rounded px-2 py-1 text-sm text-white">
+              {tag}
+              <button class="ml-1" onClick={() => removeTag(tag)}>
+                &times;
+              </button>
+            </span>
+          )}
+        </For>
+        <input
+          name={props.fieldName}
+          class="my-1 flex-1 bg-transparent outline-none"
+          value={inputValue()}
+          onInput={handleInputChange}
+          onKeyDown={handleInputKeyDown}
+          placeholder="Add tags..."
+        />
+      </div>
+      <ul class="absolute left-0 z-10 mt-1 bg-white text-gray-800 shadow-md">
+        <For each={suggestions()}>
+          {(suggestion) => (
+            <li
+              class="cursor-pointer px-2 py-1 hover:bg-gray-200"
+              onClick={() => addTag(suggestion)}
+            >
+              {suggestion}
+            </li>
+          )}
+        </For>
+      </ul>
+    </div>
+  )
+}
+
+export default TagInput
