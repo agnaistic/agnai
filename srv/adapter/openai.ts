@@ -53,7 +53,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const body: any = {
     model: oaiModel,
-    stream: false, // TODO: Get from preset settings
+    stream: true, // TODO: Get from preset settings
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
@@ -156,12 +156,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
   const generator = body.stream ? streamCompletion : requestFullCompletion
-  let result: Awaited<ReturnType<ReturnType<typeof generator>['next']>>
+  const iter = generator(url, headers, body)
+  let result: Awaited<ReturnType<typeof iter.next>> | undefined
   let responseBody: FullCompletion | null = null
 
-  console.log('starting generator', generator.name)
-  while ((result = await generator(url, headers, body).next())) {
-    console.log('generator tick', result)
+  while ((result = await iter.next())) {
     // Both the streaming and non-streaming generators return a full completion and yield errors.
     // Only the streaming generator yields tokens.
     if (result.done) {
@@ -271,7 +270,7 @@ type StreamedCompletion = {
   choices: {
     finish_reason: string
     index: number
-    delta: Partial<TextCompletionContent | ChatCompletionContent>
+    delta: Partial<TextCompletionContent | ChatCompletionContent['message']>
   }[]
 }
 type CompletionGenerator = (
@@ -307,9 +306,10 @@ const requestFullCompletion: CompletionGenerator = async function* (url, headers
  */
 const streamCompletion: CompletionGenerator = async function* (url, headers, body) {
   const resp = needle.post(url, JSON.stringify(body), {
+    parse: false,
     headers: {
       ...headers,
-      Accept: 'text/event-stream, application/json',
+      Accept: 'text/event-stream',
     },
   })
 
@@ -333,8 +333,8 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
 
       meta = { ...completionMeta, ...choiceMeta }
 
-      if ('message' in delta && delta.message?.content) {
-        const token = delta.message.content
+      if ('content' in delta && delta.content) {
+        const token = delta.content
         tokens.push(token)
         yield { token }
       } else if ('text' in delta && delta.text) {
