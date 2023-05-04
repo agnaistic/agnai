@@ -6,6 +6,7 @@ import { DropMenu } from '../../../shared/DropMenu'
 import { toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
+import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -21,6 +22,7 @@ const InputBar: Component<{
 
   const [text, setText] = createSignal('')
   const [menu, setMenu] = createSignal(false)
+  const [cleared, setCleared] = createSignal(0, { equals: false })
 
   const updateText = (ev: Event) => {
     if (!ref) return
@@ -40,6 +42,7 @@ const InputBar: Component<{
     props.send(value, () => {
       ref.value = ''
       setText('')
+      setCleared(0)
     })
   }
 
@@ -64,10 +67,11 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="flex items-center justify-center max-sm:pb-2">
+    <div class="relative flex items-center justify-center max-sm:pb-2">
       <textarea
         spellcheck
         ref={ref}
+        value={text()}
         placeholder="Send a message..."
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
         onKeyPress={(ev) => {
@@ -78,6 +82,13 @@ const InputBar: Component<{
 
           updateText(ev)
         }}
+      />
+
+      <SpeechRecognitionRecorder
+        class="right-11"
+        onText={(value) => setText(value)}
+        onEnd={() => send()}
+        cleared={cleared}
       />
 
       <div>

@@ -1,9 +1,11 @@
 import {
+  Accessor,
   Component,
   Show,
   createEffect,
   createMemo,
   createSignal,
+  on,
   onCleanup,
   onMount,
 } from 'solid-js'
@@ -30,20 +32,16 @@ interface SpeechRecognitionEvent extends Event {
 }
 
 export const SpeechRecognitionRecorder: Component<{
-  value: string
+  class?: string
   onText: (value: string) => void
   onEnd: () => void
+  cleared: Accessor<number>
 }> = (props) => {
   const [finalValue, setFinalValue] = createSignal('')
   const [interimValue, setInterimValue] = createSignal('')
   const [isListening, setIsListening] = createSignal(false)
   const [isHearing, setIsHearing] = createSignal(false)
   const [speechRecognition, setSpeechRecognition] = createSignal<any>(null)
-
-  createEffect(() => {
-    setFinalValue(props.value)
-    setInterimValue('')
-  })
 
   onMount(() => {
     const w = window as any
@@ -64,7 +62,8 @@ export const SpeechRecognitionRecorder: Component<{
         const transcript = speechEvent.results[i][0].transcript
 
         if (speechEvent.results[i].isFinal) {
-          setFinalValue(composeValues(finalValue(), capitalizeInterim(transcript)) + '.')
+          const final = composeValues(finalValue(), capitalizeInterim(transcript)) + '.'
+          setFinalValue(final)
           interimTranscript = ' '
         } else {
           interimTranscript += transcript
@@ -103,7 +102,40 @@ export const SpeechRecognitionRecorder: Component<{
     return previous + spacing + interim
   }
 
-  const compositeValue = createMemo(() => composeValues(finalValue(), interimValue()))
+  const composedValue = createMemo(() => {
+    return composeValues(finalValue(), interimValue())
+  })
+
+  createEffect(
+    on(
+      () => props.cleared(),
+      () => {
+        const speech = speechRecognition()
+        const listens = isListening()
+        if (listens) {
+          speech.abort()
+        }
+        setFinalValue('')
+        setInterimValue('')
+        if (listens) {
+          setTimeout(() => {
+            speech.start()
+            setIsListening(true)
+          }, 100)
+        }
+      }
+    )
+  )
+
+  createEffect(() => {
+    props.onText(composedValue())
+  })
+
+  createEffect(() => {
+    const final = finalValue()
+    if (!final) return
+    props.onEnd()
+  })
 
   const toggleListening = () => {
     if (isListening()) {
@@ -112,15 +144,6 @@ export const SpeechRecognitionRecorder: Component<{
       speechRecognition().start()
     }
     setIsListening(!isListening())
-  }
-
-  const onInput = (value: string) => {
-    var actualFinal = finalValue()
-    var actualInterim = interimValue()
-    setFinalValue(value)
-    const rec = speechRecognition()
-    if (!rec) return
-    rec.abort()
   }
 
   function capitalizeInterim(interimTranscript: string) {
@@ -132,7 +155,6 @@ export const SpeechRecognitionRecorder: Component<{
       const capitalized = interimTranscript[capitalizeIndex].toLocaleUpperCase()
       const rest = interimTranscript.substring(capitalizeIndex + 1)
       interimTranscript = spacing + capitalized + rest
-      console.log(spacing, capitalized, rest)
     }
     return interimTranscript
   }
@@ -140,26 +162,21 @@ export const SpeechRecognitionRecorder: Component<{
   return (
     <>
       <Show when={speechRecognition()}>
-        <div class="relative">
-          <input
-            type="text"
-            class="w-full rounded-md border-2 p-2 text-black"
-            value={compositeValue()}
-            onInput={(e) => onInput(e.currentTarget.value)}
+        <Button
+          class={`absolute ${
+            props.class
+          } top-1/2 -translate-y-1/2 transform rounded bg-transparent ${
+            isListening() ? 'text-red-500' : 'text-gray-500'
+          }`}
+          onClick={toggleListening}
+        >
+          <Mic
+            size={18}
+            classList={{
+              'animate-pulse': isHearing(),
+            }}
           />
-          <Button
-            class={`absolute right-2 top-1/2 -translate-y-1/2 transform bg-transparent ${
-              isListening() ? 'text-red-500' : 'text-gray-500'
-            }`}
-            onClick={toggleListening}
-          >
-            <Mic
-              classList={{
-                'animate-pulse': isHearing(),
-              }}
-            />
-          </Button>
-        </div>
+        </Button>
       </Show>
     </>
   )
