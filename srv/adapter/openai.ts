@@ -155,9 +155,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
-  const generator = body.stream ? streamCompletion : requestFullCompletion
-  const iter = generator(url, headers, body)
-  let result: Awaited<ReturnType<typeof iter.next>> | undefined
+  const iter = body.stream
+    ? streamCompletion(url, headers, body)
+    : requestFullCompletion(url, headers, body)
+  let result: Awaited<ReturnType<typeof iter.next>>
   let responseBody: FullCompletion | null = null
 
   while ((result = await iter.next())) {

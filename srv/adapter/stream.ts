@@ -8,8 +8,8 @@ export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
   let chunks: string[] = []
   let done = false
 
-  let onDataReceived: () => void
-  let waitForData = new Promise<void>((r) => (onDataReceived = r))
+  let tick: () => void
+  let waitForData = new Promise<void>((resolve) => (tick = resolve))
 
   let error: Error | undefined
 
@@ -30,13 +30,13 @@ export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
 
   needleStream.on('done', () => {
     done = true
-    onDataReceived()
+    tick()
   })
 
   needleStream.on('data', (chunk: Buffer) => {
     chunks.push(chunk.toString())
-    onDataReceived()
-    waitForData = new Promise((r) => (onDataReceived = r))
+    tick()
+    waitForData = new Promise((resolve) => (tick = resolve))
   })
 
   while (!done) {
