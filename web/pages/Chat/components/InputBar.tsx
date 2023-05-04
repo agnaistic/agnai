@@ -10,6 +10,7 @@ import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
+  culture?: string
   swiped: boolean
   send: (msg: string, onSuccess?: () => void) => void
   more: (msg: string) => void
@@ -70,6 +71,7 @@ const InputBar: Component<{
     <div class="relative flex items-center justify-center max-sm:pb-2">
       <textarea
         spellcheck
+        lang={props.culture}
         ref={ref}
         value={text()}
         placeholder="Send a message..."
@@ -85,6 +87,7 @@ const InputBar: Component<{
       />
 
       <SpeechRecognitionRecorder
+        culture={props.culture}
         class="right-11"
         onText={(value) => setText(value)}
         onEnd={() => send()}

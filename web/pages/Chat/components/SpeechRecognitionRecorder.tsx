@@ -32,6 +32,7 @@ interface SpeechRecognitionEvent extends Event {
 }
 
 export const SpeechRecognitionRecorder: Component<{
+  culture?: string
   class?: string
   onText: (value: string) => void
   onEnd: () => void
@@ -41,7 +42,7 @@ export const SpeechRecognitionRecorder: Component<{
   const [interimValue, setInterimValue] = createSignal('')
   const [isListening, setIsListening] = createSignal(false)
   const [isHearing, setIsHearing] = createSignal(false)
-  const [speechRecognition, setSpeechRecognition] = createSignal<any>(null)
+  const [speechRecognition, setSpeechRecognition] = createSignal<SpeechRecognition>()
 
   onMount(() => {
     const w = window as any
@@ -52,7 +53,7 @@ export const SpeechRecognitionRecorder: Component<{
     const recognition = new speechRecognitionCtor() as SpeechRecognition
     recognition.continuous = true
     recognition.interimResults = true
-    recognition.lang = 'en-US'
+    recognition.lang = props.culture ?? 'en-us'
 
     recognition.addEventListener('result', (event) => {
       const speechEvent = event as SpeechRecognitionEvent
@@ -62,8 +63,12 @@ export const SpeechRecognitionRecorder: Component<{
         const transcript = speechEvent.results[i][0].transcript
 
         if (speechEvent.results[i].isFinal) {
-          const final = composeValues(finalValue(), capitalizeInterim(transcript)) + '.'
-          setFinalValue(final)
+          let interim = capitalizeInterim(transcript)
+          if (interim != '') {
+            let final = finalValue()
+            final = composeValues(final, interim) + '.'
+            setFinalValue(final)
+          }
           interimTranscript = ' '
         } else {
           interimTranscript += transcript
@@ -111,6 +116,7 @@ export const SpeechRecognitionRecorder: Component<{
       () => props.cleared(),
       () => {
         const speech = speechRecognition()
+        if (!speech) return
         const listens = isListening()
         if (listens) {
           speech.abort()
@@ -138,10 +144,12 @@ export const SpeechRecognitionRecorder: Component<{
   })
 
   const toggleListening = () => {
+    const speech = speechRecognition()
+    if (!speech) return
     if (isListening()) {
-      speechRecognition().stop()
+      speech.stop()
     } else {
-      speechRecognition().start()
+      speech.start()
     }
     setIsListening(!isListening())
   }

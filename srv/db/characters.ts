@@ -13,6 +13,7 @@ type CharacterUpdate = Partial<
     | 'greeting'
     | 'scenario'
     | 'description'
+    | 'culture'
     | 'favorite'
   >
 >
@@ -28,6 +29,7 @@ export async function createCharacter(
     | 'greeting'
     | 'scenario'
     | 'description'
+    | 'culture'
     | 'favorite'
   >
 ) {

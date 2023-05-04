@@ -130,6 +130,7 @@ export namespace AppSchema {
 
     name: string
     description?: string
+    culture?: string
     persona: Persona
     greeting: string
     scenario: string
