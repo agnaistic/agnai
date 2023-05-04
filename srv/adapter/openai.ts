@@ -53,7 +53,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const body: any = {
     model: oaiModel,
-    stream: true, // TODO: Get from preset settings
+    stream: false, // TODO: Get from preset settings
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
@@ -159,7 +159,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   let result: Awaited<ReturnType<ReturnType<typeof generator>['next']>>
   let responseBody: FullCompletion | null = null
 
+  console.log('starting generator', generator.name)
   while ((result = await generator(url, headers, body).next())) {
+    console.log('generator tick', result)
     // Both the streaming and non-streaming generators return a full completion and yield errors.
     // Only the streaming generator yields tokens.
     if (result.done) {
@@ -278,7 +280,7 @@ type CompletionGenerator = (
   body: any
 ) => AsyncGenerator<{ error: string } | { error?: undefined; token: string }, FullCompletion | null>
 
-const requestFullCompletion: CompletionGenerator = async function* (url, body, headers) {
+const requestFullCompletion: CompletionGenerator = async function* (url, headers, body) {
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -303,14 +305,14 @@ const requestFullCompletion: CompletionGenerator = async function* (url, body, h
  * Yields individual tokens as OpenAI API sends them, and ultimately returns a full completion
  * object once the stream is finished.
  */
-const streamCompletion: CompletionGenerator = async function* (url, body, headers) {
-  const resp = await needle('post', url, JSON.stringify(body), {
-    json: true,
+const streamCompletion: CompletionGenerator = async function* (url, headers, body) {
+  const resp = needle.post(url, JSON.stringify(body), {
     headers: {
       ...headers,
       Accept: 'text/event-stream, application/json',
     },
   })
+
   const tokens = []
   let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
 
@@ -344,8 +346,6 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
   } catch (err: any) {
     yield { error: `OpenAI streaming request failed: ${err.message}` }
     return null
-  } finally {
-    resp.destroy()
   }
 
   return {
