@@ -15,6 +15,8 @@ import { PERSONA_FORMATS } from '../../../common/adapters'
 import { getImageData } from '../../store/data/chars'
 import { voiceStore } from '../../store/voice'
 import { AppSchema } from '../../../srv/db/schema'
+import Select from '../../shared/Select'
+import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 
 const options = [
@@ -74,6 +76,7 @@ const CreateCharacter: Component = () => {
       kind: PERSONA_FORMATS,
       name: 'string',
       description: 'string?',
+      culture: 'string',
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
@@ -90,6 +93,7 @@ const CreateCharacter: Component = () => {
     const payload = {
       name: body.name,
       description: body.description,
+      culture: body.culture,
       scenario: body.scenario,
       avatar: avatar(),
       greeting: body.greeting,
@@ -160,6 +164,19 @@ const CreateCharacter: Component = () => {
           />
           <div class="flex items-end">{/* <Button>Generate</Button> */}</div>
         </div>
+
+        <Select
+          fieldName="culture"
+          label="Language"
+          helperText={`The language this character speaks and understands.${
+            state.edit?.culture?.startsWith('en') ?? true
+              ? ''
+              : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
+          }`}
+          value={state.edit?.culture ?? 'en-us'}
+          items={CultureCodes}
+          onChange={setSchema}
+        />
 
         <TextInput
           fieldName="scenario"

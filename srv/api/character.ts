@@ -12,6 +12,7 @@ const router = Router()
 const valid = {
   name: 'string',
   description: 'string?',
+  culture: 'string?',
   avatar: 'string?',
   scenario: 'string',
   greeting: 'string',
@@ -42,6 +43,7 @@ const createCharacter = handle(async (req) => {
     persona,
     sampleChat: body.sampleChat,
     description: body.description,
+    culture: body.culture,
     scenario: body.scenario,
     greeting: body.greeting,
     avatar: body.originalAvatar,
@@ -92,6 +94,7 @@ const editCharacter = handle(async (req) => {
     persona,
     avatar,
     description: body.description,
+    culture: body.culture,
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
