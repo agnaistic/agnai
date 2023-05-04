@@ -1,9 +1,17 @@
-import type { NeedleResponse } from 'needle'
+/**
+ * Converts a Needle readable stream to an async generator which yields server-sent events.
+ * Operates on Needle events, not NodeJS ReadableStream events.
+ * https://github.com/tomas/needle#events
+ **/
+export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
+  let msgBuffer = ''
+  let chunks: string[] = []
+  let done = false
 
-/** Converts a Needle response stream to an async generator which yields server-sent events. */
-export async function* needleToSSE(needleStream: NeedleResponse) {
-  let buffer = ''
-  let streamEnded = false
+  let onDataReceived: () => void
+  let waitForData = new Promise<void>((r) => (onDataReceived = r))
+
+  let error: Error | undefined
 
   needleStream.on('header', (statusCode, headers) => {
     if (statusCode !== 200) {
@@ -17,23 +25,33 @@ export async function* needleToSSE(needleStream: NeedleResponse) {
   })
 
   needleStream.on('err', (err) => {
-    throw err
+    error = err
   })
 
   needleStream.on('done', () => {
-    streamEnded = true
+    done = true
+    onDataReceived()
   })
 
-  while (!streamEnded) {
-    const chunk = await new Promise<string>((resolve) => {
-      needleStream.once('data', (data) => resolve(data.toString()))
-      needleStream.once('done', () => resolve(''))
-    })
+  needleStream.on('data', (chunk: Buffer) => {
+    chunks.push(chunk.toString())
+    onDataReceived()
+    waitForData = new Promise((r) => (onDataReceived = r))
+  })
 
-    const newMessages = (buffer + chunk).split('\n\n')
-    buffer = newMessages.pop() || ''
+  while (!done) {
+    await waitForData
+    if (error) {
+      // Needle will emit data chunks containing the error body before emitting the error event.
+      const errorPayload = chunks.join('')
+      throw new Error(`${error.message}: ${errorPayload}`)
+    }
 
-    for (const msg of newMessages) {
+    const newMsgs = (msgBuffer + chunks.join('')).split('\n\n')
+    chunks = []
+    msgBuffer = newMsgs.pop() || ''
+
+    for (const msg of newMsgs) {
       yield msg
     }
   }
