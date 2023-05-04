@@ -126,8 +126,13 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   let generated = ''
   let error = false
+  // TODO: Settle on emitting the accumulated message or just individual tokens
+  // TODO: Adapters need to call trimResponseV2 to remove preambles and postambles
   for await (const gen of stream) {
     if (typeof gen === 'string') {
+      // TODO: we probably don't want to send any message-partials for non-streaming adapters
+      if (!guest) sendMany(members, { type: 'message-partial', adapter, partial: gen, chatId })
+      else sendGuest(guest, { type: 'message-partial', adapter, partial: gen, chatId })
       generated = gen
       continue
     }
