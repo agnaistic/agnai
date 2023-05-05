@@ -1,5 +1,6 @@
 import { chubOptions } from '../pages/Chub/Chub'
 import { ChubChar } from '../pages/Chub/ChubChar'
+import { chubPage } from '../pages/Chub/ChubNavigation'
 import { createStore } from './create'
 
 export type ChubOptions = {
@@ -73,7 +74,11 @@ export const chubStore = createStore<ChubState>(
       }
 
       const res = await fetch(
-        `${CHUB_URL}/characters/search?&search=${chubOptions.search}&first=48&nsfw=${chubOptions.nsfw}&tags=${chubOptions.tags}&exclude_tags=${chubOptions.excludeTags}&sort=${sort}`
+        `${CHUB_URL}/characters/search?&search=${chubOptions.search}&first=${
+          48 * chubPage()
+        }&nsfw=${chubOptions.nsfw}&tags=${chubOptions.tags}&exclude_tags=${
+          chubOptions.excludeTags
+        }&sort=${sort}`
       )
       const json = await res.json()
 
@@ -108,7 +113,9 @@ export const chubStore = createStore<ChubState>(
           break
       }
       const res = await fetch(
-        `${CHUB_URL}/lorebooks/search?&search=${chubOptions.search}&first=48&nsfw=${chubOptions.nsfw}&tags=${chubOptions.tags}&exclude_tags=${chubOptions.excludeTags}&sort=${sort}`
+        `${CHUB_URL}/lorebooks/search?&search=${chubOptions.search}&first=${48 * chubPage()}&nsfw=${
+          chubOptions.nsfw
+        }&tags=${chubOptions.tags}&exclude_tags=${chubOptions.excludeTags}&sort=${sort}`
       )
       const json = await res.json()
       return { books: json.nodes }

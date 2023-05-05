@@ -14,13 +14,16 @@ const BookList: Component = () => {
 
   return (
     <>
-      <ChubNavigation />
+      <ChubNavigation buttons={books().length >= 48} />
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
         <For each={books()}>
           {(book) => (
             <ChubChar
               name={book.name}
-              avatar={`https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp`}
+              avatar={
+                `https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp` ||
+                `https://git.characterhub.org/${book.fullPath}/-/raw/main/avatar.webp`
+              }
             />
           )}
         </For>
