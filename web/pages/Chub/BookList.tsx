@@ -1,8 +1,7 @@
 import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { ChubChar } from './ChubChar'
 import { chubStore } from '../../store/chub'
-import TextInput from '../../shared/TextInput'
-import { chubOptions } from './Chub'
+import ChubNavigation from './ChubNavigation'
 
 const BookList: Component = () => {
   createEffect(() => {
@@ -15,22 +14,13 @@ const BookList: Component = () => {
 
   return (
     <>
-      <div class="m-1 mb-2 ml-0 mr-1 flex flex-wrap justify-between">
-        <TextInput
-          fieldName="search"
-          placeholder="Search by name..."
-          onKeyUp={(ev) => {
-            chubOptions.search = ev.currentTarget.value
-            chubStore.getChubBooks()
-          }}
-        />
-      </div>
+      <ChubNavigation />
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
         <For each={books()}>
           {(book) => (
             <ChubChar
               name={book.name}
-              avatar={`https://git.characterhub.org/${book.fullPath}/-/raw/main/avatar.webp`}
+              avatar={`https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp`}
             />
           )}
         </For>

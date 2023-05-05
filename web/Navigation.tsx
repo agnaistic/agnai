@@ -175,6 +175,11 @@ const GuestNavigation: Component = () => {
           <Bot /> Characters
         </Item>
 
+        <Item href="/chub">
+          <ShoppingBag />
+          Character Hub
+        </Item>
+
         <Item href="/chats">
           <MessageCircle /> Chats
         </Item>

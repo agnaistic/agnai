@@ -11,7 +11,7 @@ export const chubOptions: ChubOptions = {
   nsfw: false,
   tags: '',
   excludeTags: '',
-  sort: 'Download Count',
+  sort: 'Rating',
   search: '',
 }
 
