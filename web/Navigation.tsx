@@ -11,6 +11,7 @@ import {
   MailPlus,
   MessageCircle,
   Settings,
+  ShoppingBag,
   Sliders,
   User,
   VenetianMask,
@@ -99,6 +100,11 @@ const UserNavigation: Component = () => {
     <>
       <Item href="/profile">
         <User /> Profile
+      </Item>
+
+      <Item href="/chub">
+        <ShoppingBag />
+        Character Hub
       </Item>
 
       <Item href="/character/list">

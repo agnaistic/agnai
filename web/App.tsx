@@ -14,6 +14,7 @@ import './app.css'
 import './dots.css'
 import Modal from './shared/Modal'
 import ImpersonateModal from './pages/Character/ImpersonateModal'
+import ChubRoutes from './pages/Chub'
 
 const App: Component = () => {
   const state = userStore()
