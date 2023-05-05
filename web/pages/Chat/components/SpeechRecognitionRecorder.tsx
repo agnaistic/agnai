@@ -68,6 +68,7 @@ export const SpeechRecognitionRecorder: Component<{
             let final = finalValue()
             final = composeValues(final, interim) + '.'
             setFinalValue(final)
+            toggleListening()
           }
           interimTranscript = ' '
         } else {
@@ -147,7 +148,7 @@ export const SpeechRecognitionRecorder: Component<{
     const speech = speechRecognition()
     if (!speech) return
     if (isListening()) {
-      speech.stop()
+      speech.abort()
     } else {
       speech.start()
     }

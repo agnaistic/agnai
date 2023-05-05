@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, onMount, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, onMount, Show } from 'solid-js'
 import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -13,11 +13,11 @@ import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttribut
 import AvatarIcon from '../../shared/AvatarIcon'
 import { PERSONA_FORMATS } from '../../../common/adapters'
 import { getImageData } from '../../store/data/chars'
-import { voiceStore } from '../../store/voice'
-import { AppSchema } from '../../../srv/db/schema'
 import Select from '../../shared/Select'
 import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
+import { CharacterVoiceSettings } from '../../../srv/db/texttospeech-schema'
+import { AppSchema } from '../../../srv/db/schema'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
@@ -45,18 +45,21 @@ const CreateCharacter: Component = () => {
 
   onMount(() => {
     characterStore.getCharacters()
-    voiceStore.getBackends()
   })
 
-  const [schema, setSchema] = createSignal(state.edit?.persona.kind)
-  const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
+  const [schema, setSchema] = createSignal<AppSchema.Persona['kind']>()
+  const [avatar, setAvatar] = createSignal<File>()
+  const [voice, setVoice] = createSignal<CharacterVoiceSettings>({ backend: undefined })
+  const edit = createMemo(() => state.edit)
   const nav = useNavigate()
 
-  createEffect(() => {
-    if (!schema() && state.edit?.persona.kind) {
-      setSchema(state.edit?.persona.kind)
-    }
-  })
+  createEffect(
+    on(edit, (edit) => {
+      if (!edit) return
+      setSchema(edit.persona.kind)
+      setVoice(edit.voice || { backend: undefined })
+    })
+  )
 
   const updateFile = async (files: FileInputResult[]) => {
     if (!files.length) {
@@ -80,8 +83,6 @@ const CreateCharacter: Component = () => {
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
-      voiceBackend: 'string?',
-      voiceId: 'string?',
     } as const)
     const attributes = getAttributeMap(ev)
 
@@ -100,10 +101,7 @@ const CreateCharacter: Component = () => {
       sampleChat: body.sampleChat,
       persona,
       originalAvatar: state.edit?.avatar,
-      voice:
-        body.voiceBackend && body.voiceId
-          ? { voiceBackend: body.voiceBackend as AppSchema.VoiceBackend, voiceId: body.voiceId }
-          : undefined,
+      voice: voice().backend ? voice() : undefined,
     }
 
     if (params.editId) {
@@ -246,10 +244,8 @@ const CreateCharacter: Component = () => {
           value={state.edit?.sampleChat}
         />
 
-        <Show when={state.edit}>
-          <h4 class="text-md font-bold">Character Voice</h4>
-          <VoicePicker edit={state.edit!} />
-        </Show>
+        <h4 class="text-md font-bold">Character Voice</h4>
+        <VoicePicker value={voice()} onChange={setVoice} />
 
         <div class="flex justify-end gap-2">
           <Button onClick={() => nav('/character/list')} schema="secondary">

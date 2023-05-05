@@ -5,12 +5,12 @@ import { Toggle } from '../../../shared/Toggle'
 import Tabs from '../../../shared/Tabs'
 import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 
-const voiceBackendTabs = {
+const ttsBackendTabs = {
   webspeechsynthesis: 'Web Speech Synthesis',
   elevenlabs: 'ElevenLabs',
 }
 
-type Tab = keyof typeof voiceBackendTabs
+type Tab = keyof typeof ttsBackendTabs
 
 export const VoiceSettings: Component = () => {
   const state = userStore()
@@ -26,12 +26,12 @@ export const VoiceSettings: Component = () => {
         <Toggle
           label="Filter actions"
           helperText="Skips text in asterisks and parenthesis."
-          fieldName="voiceFilterActions"
-          value={state.user?.voice?.filterActions ?? true}
+          fieldName="textToSpeechFilterActions"
+          value={state.user?.texttospeech?.filterActions ?? true}
         />
 
         <div class="my-2">
-          <Tabs tabs={tabs.map((t) => voiceBackendTabs[t])} selected={tab} select={setTab} />
+          <Tabs tabs={tabs.map((t) => ttsBackendTabs[t])} selected={tab} select={setTab} />
         </div>
 
         <div class="flex flex-col gap-4">

@@ -1,4 +1,5 @@
 import { AppSchema } from '../../../srv/db/schema'
+import { CharacterVoiceSettings, TextToSpeechBackend } from '../../../srv/db/texttospeech-schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { loadItem } from './storage'
@@ -7,8 +8,7 @@ type GenerateOpts = {
   chatId?: string
   messageId?: string
   text: string
-  voiceBackend: AppSchema.VoiceBackend
-  voiceId: string
+  voice: CharacterVoiceSettings
 }
 
 export const voiceApi = {
@@ -16,32 +16,25 @@ export const voiceApi = {
   textToSpeech,
 }
 
-export async function voicesList(voiceBackend: AppSchema.VoiceBackend) {
+export async function voicesList(ttsBackend: TextToSpeechBackend) {
   const user = getUserEntity()
   const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(
-    `/voice/${voiceBackend}/voices`,
+    `/voice/${ttsBackend}/voices`,
     {
       user,
-      voiceBackend,
+      ttsBackend,
     }
   )
   return res
 }
 
-export async function textToSpeech({
-  chatId,
-  messageId,
-  text,
-  voiceBackend,
-  voiceId,
-}: GenerateOpts) {
+export async function textToSpeech({ chatId, messageId, text, voice }: GenerateOpts) {
   const user = getUserEntity()
   const res = await api.post<{ success: boolean }>(`/chat/${chatId}/voice`, {
     user,
     messageId,
     text,
-    voiceBackend,
-    voiceId,
+    voice,
   })
   return res
 }

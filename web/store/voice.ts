@@ -1,20 +1,22 @@
 import { AppSchema } from '../../srv/db/schema'
+import {
+  CharacterVoiceWebSpeechSynthesisSettings,
+  TextToSpeechBackend,
+} from '../../srv/db/texttospeech-schema'
 import { createStore, getStore } from './create'
 import { voiceApi } from './data/voice'
 import { toastStore } from './toasts'
 import { userStore } from './user'
 
 type VoiceState = {
-  types: { type: AppSchema.VoiceBackend; label: string }[]
+  backends: { type: TextToSpeechBackend; label: string }[]
   voices: { [type: string]: AppSchema.VoiceDefinition[] }
 }
 
 const initialState: VoiceState = {
-  types: [],
+  backends: [],
   voices: {},
 }
-
-let currentAudio: HTMLAudioElement | undefined
 
 export const voiceStore = createStore<VoiceState>(
   'voices',
@@ -23,39 +25,33 @@ export const voiceStore = createStore<VoiceState>(
   return {
     getBackends() {
       const user = userStore().user
-      const types: VoiceState['types'] = []
+      const backends: VoiceState['backends'] = []
       if ('speechSynthesis' in window) {
-        types.push({
+        backends.push({
           type: 'webspeechsynthesis',
           label: 'Web Speech Synthesis',
         })
       }
-      if (!user) return { backends: types }
+      if (!user) return { backends: backends }
       if (user.elevenLabsApiKeySet) {
-        types.push({
+        backends.push({
           type: 'elevenlabs',
           label: 'ElevenLabs',
         })
       }
-      return { types }
+      return { backends }
     },
-    async *getVoices({ voices }, type: AppSchema.VoiceBackend | '') {
-      if (!type) {
-        return
-      }
+    async *getVoices({ voices }, type: TextToSpeechBackend | '') {
+      if (!type) return
       let result: AppSchema.VoiceDefinition[] | undefined
       if (type === 'webspeechsynthesis') {
-        result = getWebSpeechSynthesisVoices()
-      } else {
-        if (voices[type]) {
-          return
-        }
-        const res = await voiceApi.voicesList(type)
-        if (res.error) {
-          toastStore.error(`Failed to get voices list: ${res.error}`)
-        }
-        result = res.result?.voices
+        speechSynthesisManager.loadWebSpeechSynthesisVoices()
+        return
       }
+      if (voices[type]) return
+      const res = await voiceApi.voicesList(type)
+      if (res.error) toastStore.error(`Failed to get voices list: ${res.error}`)
+      result = res.result?.voices
       return {
         voices: {
           ...voices,
@@ -67,91 +63,110 @@ export const voiceStore = createStore<VoiceState>(
 })
 
 type onVoicesReadyFunction = (voices: SpeechSynthesisVoice[]) => void
-const onVoicesLoadedCallbacks: onVoicesReadyFunction[] = []
-let voices: SpeechSynthesisVoice[] = []
-let voicesLoadToken: NodeJS.Timeout | undefined
 
-const onVoicesLoaded = (cb: onVoicesReadyFunction) => {
-  if (onVoicesLoadedCallbacks.length) {
-    onVoicesLoadedCallbacks.push(cb)
-    return
+class SpeechSynthesisManager {
+  currentAudio: HTMLAudioElement | undefined
+  onVoicesLoadedCallbacks: onVoicesReadyFunction[] = []
+  voices: SpeechSynthesisVoice[] = []
+  voicesLoadToken: NodeJS.Timeout | undefined
+
+  onVoicesLoaded(cb: onVoicesReadyFunction) {
+    if (this.onVoicesLoadedCallbacks.length) {
+      this.onVoicesLoadedCallbacks.push(cb)
+      return
+    }
+
+    if (!this.voices.length) this.voices = speechSynthesis.getVoices()
+
+    if (this.voices.length) {
+      cb(this.voices)
+      return
+    }
+
+    this.onVoicesLoadedCallbacks.push(cb)
+    speechSynthesis.onvoiceschanged = () => {
+      clearTimeout(this.voicesLoadToken)
+      speechSynthesis.onvoiceschanged = null
+
+      this.voices = speechSynthesis.getVoices()
+
+      this.onVoicesLoadedCallbacks.forEach((cb) => cb(this.voices))
+      this.onVoicesLoadedCallbacks.length = 0
+    }
+    this.voicesLoadToken = setTimeout(() => (speechSynthesis.onvoiceschanged = null), 10000)
   }
 
-  if (!voices.length) voices = speechSynthesis.getVoices()
-
-  if (voices.length) {
-    cb(voices)
-    return
+  loadWebSpeechSynthesisVoices() {
+    var voices = speechSynthesis.getVoices()
+    if (voices.length) {
+      this.setVoices(voices)
+    } else {
+      this.onVoicesLoaded((voices) => {
+        this.setVoices(voices)
+      })
+    }
   }
 
-  onVoicesLoadedCallbacks.push(cb)
-  speechSynthesis.onvoiceschanged = () => {
-    clearTimeout(voicesLoadToken)
-    speechSynthesis.onvoiceschanged = null
-
-    voices = speechSynthesis.getVoices()
-
-    onVoicesLoadedCallbacks.forEach((cb) => cb(voices))
-    onVoicesLoadedCallbacks.length = 0
-  }
-  voicesLoadToken = setTimeout(() => (speechSynthesis.onvoiceschanged = null), 10000)
-}
-
-const getWebSpeechSynthesisVoices = (): AppSchema.VoiceDefinition[] => {
-  var voices = speechSynthesis.getVoices()
-  if (!voices.length) {
-    onVoicesLoaded(() => {
-      voiceStore.getVoices('webspeechsynthesis')
-    })
-    return []
-  } else {
-    return voices.map((voice) => ({
+  setVoices(voices: SpeechSynthesisVoice[]) {
+    const result = voices.map((voice) => ({
       id: voice.voiceURI,
       label: voice.name,
       previewUrl: voice.voiceURI,
     }))
+    voiceStore.setState({
+      voices: {
+        ...voiceStore.getState().voices,
+        ['webspeechsynthesis']: result || [{ id: '', label: 'No voices available' }],
+      },
+    })
   }
-}
 
-export function stopCurrentVoice() {
-  if (currentAudio) {
-    currentAudio.pause()
-    currentAudio = undefined
+  stopCurrentVoice() {
+    if (this.currentAudio) {
+      this.currentAudio.pause()
+      this.currentAudio = undefined
+    }
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel()
+    }
   }
-  if (window.speechSynthesis) {
-    window.speechSynthesis.cancel()
-  }
-}
 
-export function playVoicePreview(backend: AppSchema.VoiceBackend, url: string) {
-  stopCurrentVoice()
-  if (!url) return
-  if (backend === 'webspeechsynthesis') {
-    playWebSpeechSynthesis(url, 'This is how I sound when I speak.')
-  } else {
-    new Audio(url).play()
+  playVoicePreview(backend: TextToSpeechBackend, url: string) {
+    this.stopCurrentVoice()
+    if (!url) return
+    if (backend === 'webspeechsynthesis') {
+      this.playWebSpeechSynthesis(
+        { backend: 'webspeechsynthesis', voiceId: url },
+        'This is how I sound when I speak.'
+      )
+    } else {
+      this.currentAudio = new Audio(url)
+      this.currentAudio.play()
+    }
   }
-}
 
-export function playWebSpeechSynthesis(voiceId: string, text: string) {
-  if (!window.speechSynthesis) {
-    toastStore.error(`Web speech synthesis not supported on this browser`)
-    return
-  }
-  onVoicesLoaded((voices) => {
-    const voice = voices.find((v) => v.voiceURI === voiceId)
-    if (!voice) {
-      toastStore.error(`Voice ${voiceId} not found in web speech synthesis`)
+  playWebSpeechSynthesis(voice: CharacterVoiceWebSpeechSynthesisSettings, text: string) {
+    if (!window.speechSynthesis) {
+      toastStore.error(`Web speech synthesis not supported on this browser`)
       return
     }
-    var speech = new SpeechSynthesisUtterance()
-    const filterAction = getStore('user').getState().user?.voice?.filterActions ?? true
-    if (filterAction) {
-      const filterActionsRegex = /\*[^*]*\*|\([^)]*\)/g
-      text = text.replace(filterActionsRegex, '...')
-    }
-    speech.text = text
-    speech.voice = voice
-    speechSynthesis.speak(speech)
-  })
+    this.stopCurrentVoice()
+    this.onVoicesLoaded((voices) => {
+      const syntheticVoice = voices.find((v) => v.voiceURI === voice.voiceId)
+      if (!syntheticVoice) {
+        toastStore.error(`Voice ${voice.voiceId} not found in web speech synthesis`)
+        return
+      }
+      var speech = new SpeechSynthesisUtterance()
+      const filterAction = getStore('user').getState().user?.texttospeech?.filterActions ?? false
+      if (filterAction) {
+        const filterActionsRegex = /\*[^*]*\*|\([^)]*\)/g
+        text = text.replace(filterActionsRegex, '...')
+      }
+      speech.text = text
+      speech.voice = syntheticVoice
+      speechSynthesis.speak(speech)
+    })
+  }
 }
+export const speechSynthesisManager = new SpeechSynthesisManager()

@@ -1,30 +1,39 @@
 import needle from 'needle'
 import { TextToSpeechAdapter, VoiceListResponse } from './types'
-import { ElevenLabsSettings } from '../db/voice-schema'
 import { decryptText } from '../db/util'
 import { AppSchema } from '../db/schema'
 import { errors } from '../api/wrap'
+import { Validator } from 'frisker'
+import { ElevenLabsModels } from '../db/texttospeech-schema'
 
 const baseUrl = 'https://api.elevenlabs.io/v1'
 
-const defaultSettings: ElevenLabsSettings = {
-  voiceBackend: 'elevenlabs',
+const valid: Validator = {
+  backend: 'string',
+  voiceId: 'string',
+  model: 'string',
+  stability: 'number',
+  similarityBoost: 'number',
 }
 
 type ElevenLabsTextToSpeechRequest = {
   text: string
+  model_id: ElevenLabsModels
+  voice_settings: {
+    stability: number
+    similarity_boost: number
+  }
 }
 
 type ElevenLabsVoicesListResponse = {
   voices: { voice_id: string; name: string; preview_url: string }[]
 }
 
-export const handleElevenLabsVoicesList = async (
+const handleElevenLabsVoicesList = async (
   user: AppSchema.User,
   guestId: string | undefined
 ): Promise<VoiceListResponse['voices']> => {
-  const { key } = getSettings(user, guestId)
-  if (!key) throw errors.Forbidden
+  const key = getKey(user, guestId)
   const result = await needle('get', `${baseUrl}/voices`, {
     headers: {
       'xi-api-key': key,
@@ -39,24 +48,33 @@ export const handleElevenLabsVoicesList = async (
   }))
 }
 
-export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
-  { user, text, voiceId },
+const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
+  { user, text, voice },
   log,
   guestId
 ) => {
-  const { key } = getSettings(user, guestId)
-  if (!key) throw errors.Forbidden
-
+  const key = getKey(user, guestId)
+  if (voice.backend !== 'elevenlabs') throw new Error('Invalid backend')
   const payload: ElevenLabsTextToSpeechRequest = {
     text,
-  }
-  const result = await needle('post', `${baseUrl}/text-to-speech/${voiceId}/stream`, payload, {
-    json: true,
-    headers: {
-      'xi-api-key': key,
-      accept: 'audio/mpeg',
+    model_id: voice.model || 'eleven_multilingual_v1',
+    voice_settings: {
+      stability: voice.stability || 0.75,
+      similarity_boost: voice.similarityBoost || 0.75,
     },
-  })
+  }
+  const result = await needle(
+    'post',
+    `${baseUrl}/text-to-speech/${voice.voiceId}/stream`,
+    payload,
+    {
+      json: true,
+      headers: {
+        'xi-api-key': key,
+        accept: 'audio/mpeg',
+      },
+    }
+  )
 
   if (result.statusCode != 200) {
     throw new Error(
@@ -75,10 +93,17 @@ export const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
     ext: 'mp3',
   }
 }
-function getSettings(user: AppSchema.User, guestId: string | undefined) {
-  const settings = user.voice?.elevenlabs || defaultSettings
+
+function getKey(user: AppSchema.User, guestId: string | undefined) {
   let key: string | undefined
   if (guestId) key = user.elevenLabsApiKey
   else if (user.elevenLabsApiKey) key = decryptText(user.elevenLabsApiKey!)
-  return { settings, key }
+  if (!key) throw errors.Forbidden
+  return key
+}
+
+export const elevenlabsHandler = {
+  valid,
+  getVoices: handleElevenLabsVoicesList,
+  generateVoice: handleElevenLabsTextToSpeech,
 }

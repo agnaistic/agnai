@@ -6,6 +6,7 @@ import { errors, handle, StatusError } from './wrap'
 import { entityUpload, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../db/schema'
+import { getVoiceBackend } from '../voice'
 
 const router = Router()
 
@@ -23,20 +24,14 @@ const valid = {
   },
   originalAvatar: 'string?',
   favorite: 'boolean?',
-  voice: {
-    voiceBackend: 'string',
-    voiceId: 'string',
-  },
+  voice: 'string?',
 } as const
 
 const createCharacter = handle(async (req) => {
-  const body = await handleForm(req, { ...valid, persona: 'string', voice: 'string?' })
+  const body = await handleForm(req, { ...valid, persona: 'string' })
   const persona = JSON.parse(body.persona)
   assertValid(valid.persona, persona)
-  const voice = body.voice ? JSON.parse(body.voice) : undefined
-  if (body.voice) {
-    assertValid(valid.voice, voice)
-  }
+  const voice = parseAndValidateVoice(body.voice)
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -48,7 +43,7 @@ const createCharacter = handle(async (req) => {
     greeting: body.greeting,
     avatar: body.originalAvatar,
     favorite: false,
-    voice: voice as AppSchema.Character['voice'],
+    voice: voice,
   })
 
   const filename = await entityUpload(
@@ -74,10 +69,7 @@ const editCharacter = handle(async (req) => {
   const id = req.params.id
   const body = await handleForm(req, { ...valid, persona: 'string', voice: 'string?' })
   const persona = JSON.parse(body.persona)
-  const voice = body.voice ? JSON.parse(body.voice) : undefined
-  if (body.voice) {
-    assertValid(valid.voice, voice)
-  }
+  const voice = parseAndValidateVoice(body.voice)
 
   assertValid(valid.persona, persona)
 
@@ -98,7 +90,7 @@ const editCharacter = handle(async (req) => {
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
-    voice: voice as AppSchema.Character['voice'],
+    voice: voice,
   })
 
   return char
@@ -136,6 +128,15 @@ const editCharacterFavorite = handle(async (req) => {
 
   return char
 })
+
+function parseAndValidateVoice(json?: string) {
+  if (!json) return undefined
+  const obj = JSON.parse(json)
+  if (!obj || !obj.backend) return undefined
+  const backend = getVoiceBackend(obj.backend)
+  assertValid(backend.valid, obj)
+  return obj as AppSchema.Character['voice']
+}
 
 router.use(loggedIn)
 router.post('/', createCharacter)

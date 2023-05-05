@@ -70,7 +70,7 @@ const SingleMessage: Component<
   const user = userStore()
   const state = chatStore()
   const voiceLoadingState = msgStore((x) => ({
-    status: x.voice?.messageId == props.msg._id ? x.voice.status : undefined,
+    status: x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
   }))
 
   const [edit, setEdit] = createSignal(false)
@@ -128,12 +128,7 @@ const SingleMessage: Component<
 
   const textToSpeech = async () => {
     if (!props.char.voice) return
-    msgStore.textToSpeech(
-      props.msg._id,
-      props.msg.msg,
-      props.char.voice?.voiceBackend,
-      props.char.voice?.voiceId
-    )
+    msgStore.textToSpeech(props.msg._id, props.msg.msg, props.char.voice)
   }
 
   const showPrompt = () => {

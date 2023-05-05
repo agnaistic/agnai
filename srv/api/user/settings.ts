@@ -113,8 +113,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
       elevenLabsApiKey: 'string?',
+      texttospeech: 'any?',
       images: 'any?',
-      voice: 'any?',
       defaultPreset: 'string?',
     },
     body
@@ -172,8 +172,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.images = body.images
   }
 
-  if (body.voice) {
-    update.voice = body.voice
+  if (body.texttospeech) {
+    update.texttospeech = body.texttospeech
   }
 
   if (body.hordeModel) {

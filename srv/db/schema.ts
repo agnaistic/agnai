@@ -1,7 +1,11 @@
 import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
 import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
-import { VoiceSettings } from './voice-schema'
+import {
+  TextToSpeechSettings,
+  TextToSpeechBackend,
+  CharacterVoiceSettings,
+} from './texttospeech-schema'
 
 export namespace AppSchema {
   export interface Token {
@@ -56,16 +60,16 @@ export namespace AppSchema {
     claudeApiKey?: string
     claudeApiKeySet?: boolean
 
+    elevenLabsApiKey?: string
+    elevenLabsApiKeySet?: boolean
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
     defaultPreset?: string
 
     createdAt?: string
 
-    voice?: VoiceSettings
-
-    elevenLabsApiKey?: string
-    elevenLabsApiKeySet?: boolean
+    texttospeech?: TextToSpeechSettings
 
     images?: ImageSettings
     // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
@@ -149,13 +153,8 @@ export namespace AppSchema {
 
     favorite?: boolean
 
-    voice?: {
-      voiceBackend: VoiceBackend
-      voiceId: string
-    }
+    voice?: CharacterVoiceSettings
   }
-
-  export type VoiceBackend = 'webspeechsynthesis' | 'elevenlabs'
 
   export interface ChatInvite {
     _id: string

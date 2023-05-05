@@ -10,6 +10,7 @@ import AISettings from './AISettings'
 import { Show } from 'solid-js'
 import { ImageSettings } from './Image/ImageSettings'
 import { VoiceSettings } from './Voice/VoiceSettings'
+import { ElevenLabsModels } from '../../../srv/db/texttospeech-schema'
 
 const settingTabs = {
   ai: 'AI Settings',
@@ -67,11 +68,9 @@ const Settings: Component = () => {
       sdUrl: 'string',
       sdSampler: 'string',
 
+      textToSpeechFilterActions: 'boolean?',
+
       elevenLabsApiKey: 'string?',
-
-      voiceFilterActions: 'boolean?',
-
-      elevenLabsVoiceId: 'string?',
     } as const)
 
     const {
@@ -87,8 +86,9 @@ const Settings: Component = () => {
       novelImageModel,
       novelSampler,
 
-      voiceFilterActions,
-      elevenLabsVoiceId,
+      textToSpeechFilterActions,
+
+      elevenLabsApiKey,
 
       ...base
     } = body
@@ -96,8 +96,8 @@ const Settings: Component = () => {
     userStore.updateConfig({
       ...base,
       hordeWorkers: workers(),
-      voice: {
-        filterActions: voiceFilterActions || false,
+      texttospeech: {
+        filterActions: textToSpeechFilterActions || false,
       },
       images: {
         type: imageType,

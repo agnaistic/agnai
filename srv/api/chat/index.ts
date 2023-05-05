@@ -9,7 +9,7 @@ import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages } from './message'
 import { deleteChat, deleteMessages } from './remove'
-import { textToSpeech } from './voice'
+import { textToSpeech } from './texttospeech'
 
 const router = Router()
 
