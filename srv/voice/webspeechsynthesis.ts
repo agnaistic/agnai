@@ -4,6 +4,8 @@ import { StatusError } from '../api/wrap'
 const valid: Validator = {
   backend: 'string',
   voiceId: 'string',
+  pitch: 'number?',
+  rate: 'number?',
 }
 
 export const webSpeechSynthesisHandler = {

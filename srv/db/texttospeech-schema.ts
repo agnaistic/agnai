@@ -26,4 +26,6 @@ export type CharacterVoiceElevenLabsSettings = {
 export type CharacterVoiceWebSpeechSynthesisSettings = {
   backend: 'webspeechsynthesis'
   voiceId: string
+  pitch?: number
+  rate?: number
 }

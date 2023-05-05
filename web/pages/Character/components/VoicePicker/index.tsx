@@ -83,15 +83,17 @@ export const VoicePicker: Component<{
       () => [backend(), voiceId(), elevenLabsSettings(), webSpeechSynthesisSettings()],
       () => {
         const settings = getSettings()
+        console.log(settings)
         if (!settings) return
         if (
           previousSettings &&
-          Object.keys(previousSettings).every(
+          Array.from(new Set([...Object.keys(previousSettings), ...Object.keys(settings)])).every(
             (k) => (previousSettings as any)[k] === (settings as any)[k]
           )
         )
           return
         previousSettings = settings
+        console.log('UPDATED', settings)
         props.onChange(settings)
       }
     )
@@ -135,7 +137,12 @@ export const VoicePicker: Component<{
         <VoiceBackendSelect value={backend()} onChange={setBackend} />
         <Show when={!!backend()}>
           <VoiceIdSelect backend={backend()!} value={voiceId()} onChange={setVoiceId} />
-          <VoicePreviewButton backend={backend()!} voiceId={voiceId()} culture={props.culture} />
+          <VoicePreviewButton
+            backend={backend()!}
+            voiceId={voiceId()}
+            culture={props.culture}
+            webSpeechSynthesisSettings={webSpeechSynthesisSettings()}
+          />
         </Show>
       </div>
 

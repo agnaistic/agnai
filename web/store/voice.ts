@@ -1,5 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
 import {
+  CharacterVoiceSettings,
   CharacterVoiceWebSpeechSynthesisSettings,
   TextToSpeechBackend,
 } from '../../srv/db/texttospeech-schema'
@@ -132,16 +133,12 @@ class SpeechSynthesisManager {
     }
   }
 
-  playVoicePreview(backend: TextToSpeechBackend, url: string, culture: string) {
+  playVoicePreview(voice: CharacterVoiceSettings, url: string | undefined, culture: string) {
     this.stopCurrentVoice()
-    if (!url) return
-    if (backend === 'webspeechsynthesis') {
-      this.playWebSpeechSynthesis(
-        { backend: 'webspeechsynthesis', voiceId: url },
-        getSampleText(culture),
-        culture
-      )
-    } else {
+    if (!voice.backend) return
+    if (voice.backend === 'webspeechsynthesis') {
+      this.playWebSpeechSynthesis(voice, getSampleText(culture), culture)
+    } else if (url) {
       this.currentAudio = new Audio(url)
       this.currentAudio.play()
     }
@@ -172,6 +169,8 @@ class SpeechSynthesisManager {
       speech.text = text
       speech.voice = syntheticVoice
       speech.lang = culture
+      speech.pitch = voice.pitch || 1
+      speech.rate = voice.rate || 1
       speechSynthesis.speak(speech)
     })
   }

@@ -135,7 +135,7 @@ function parseAndValidateVoice(json?: string) {
   if (!obj || !obj.backend) return undefined
   const backend = getVoiceBackend(obj.backend)
   assertValid(backend.valid, obj)
-  return obj as AppSchema.Character['voice']
+  return obj as unknown as AppSchema.Character['voice']
 }
 
 router.use(loggedIn)
