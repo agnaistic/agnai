@@ -19,6 +19,7 @@ import {
   Download,
   Edit,
   Menu,
+  MoreHorizontal,
   Save,
   Trash,
   VenetianMask,
@@ -365,7 +366,7 @@ const Character: Component<{
             <Trash class="icon-button" onClick={props.delete} />
           </div>
           <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
-            <Menu class="icon-button" />
+            <MoreHorizontal class="icon-button" />
           </div>
           <DropMenu
             class="bg-[var(--bg-700)]"
