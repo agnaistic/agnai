@@ -120,7 +120,7 @@ export const GenerationPresetsPage: Component = () => {
   return (
     <>
       <PageHeader title="Generation Presets" subtitle="Generation presets" />
-      <div class="flex flex-col gap-2">
+      <div class="flex flex-col gap-2 pb-10">
         <Show when={params.id === 'default'}>
           <div class="font-bold">
             This is a default preset and cannot be saved.{' '}
