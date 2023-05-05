@@ -176,7 +176,6 @@ export const SpeechRecognitionRecorder: Component<{
   })
 
   const toggleListening = () => {
-    setPendingRecord(false)
     const listening = isListening()
     const speech = speechRecognition()
     if (!speech) return
@@ -187,7 +186,7 @@ export const SpeechRecognitionRecorder: Component<{
       speech.start()
       setIsListening(true)
     } else {
-      setPendingRecord(true)
+      setPendingRecord(!pendingRecord())
     }
   }
 

@@ -68,11 +68,12 @@ const Settings: Component = () => {
       sdUrl: 'string',
       sdSampler: 'string',
 
-      speechToTextEnabled: 'boolean?',
-      speechToTextAutoSubmit: 'boolean?',
-      speechToTextAutoRecord: 'boolean?',
+      speechToTextEnabled: 'boolean',
+      speechToTextAutoSubmit: 'boolean',
+      speechToTextAutoRecord: 'boolean',
 
-      textToSpeechFilterActions: 'boolean?',
+      textToSpeechEnabled: 'boolean',
+      textToSpeechFilterActions: 'boolean',
 
       elevenLabsApiKey: 'string?',
     } as const)
@@ -94,6 +95,7 @@ const Settings: Component = () => {
       speechToTextAutoSubmit,
       speechToTextAutoRecord,
 
+      textToSpeechEnabled,
       textToSpeechFilterActions,
 
       elevenLabsApiKey,
@@ -105,12 +107,13 @@ const Settings: Component = () => {
       ...base,
       hordeWorkers: workers(),
       speechtotext: {
-        enabled: speechToTextEnabled || true,
-        autoSubmit: speechToTextAutoSubmit || true,
-        autoRecord: speechToTextAutoRecord || true,
+        enabled: speechToTextEnabled,
+        autoSubmit: speechToTextAutoSubmit,
+        autoRecord: speechToTextAutoRecord,
       },
       texttospeech: {
-        filterActions: textToSpeechFilterActions || false,
+        enabled: textToSpeechEnabled,
+        filterActions: textToSpeechFilterActions,
       },
       images: {
         type: imageType,

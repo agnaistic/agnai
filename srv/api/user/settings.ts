@@ -113,6 +113,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
       elevenLabsApiKey: 'string?',
+      speechtotext: 'any?',
       texttospeech: 'any?',
       images: 'any?',
       defaultPreset: 'string?',
@@ -170,6 +171,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.images) {
     update.images = body.images
+  }
+
+  if (body.speechtotext) {
+    update.speechtotext = body.speechtotext
   }
 
   if (body.texttospeech) {

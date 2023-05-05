@@ -1,6 +1,7 @@
 export type TextToSpeechBackend = 'webspeechsynthesis' | 'elevenlabs'
 
 export type TextToSpeechSettings = {
+  enabled: boolean
   filterActions: boolean
 }
 

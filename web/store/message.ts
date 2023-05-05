@@ -328,7 +328,8 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function handleTextToSpeech(chatId: string, messageId: string, url: string) {
+async function receiveTextToSpeech(chatId: string, messageId: string, url: string) {
+  if (userStore.getState().user?.texttospeech?.enabled === false) return
   if (chatId != msgStore.getState().activeChatId) {
     msgStore.setState({ speaking: undefined })
     return
@@ -393,7 +394,8 @@ subscribe(
     if (chat?.chat._id !== body.chatId) return
 
     const voice = chat.char.voice
-    if (chat.char.userId === userStore().user?._id && voice) {
+    const user = userStore().user
+    if (user && voice && (user.texttospeech?.enabled ?? true) && chat.char.userId === user._id) {
       msgStore.textToSpeech(
         body.messageId,
         body.message,
@@ -448,7 +450,7 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
-  handleTextToSpeech(body.chatId, body.messageId, body.url)
+  receiveTextToSpeech(body.chatId, body.messageId, body.url)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {

@@ -216,7 +216,7 @@ export const userStore = createStore<UserState>(
       if (kind === 'claude') {
         return { user: { ...user, claudeApiKey: '', claudeApiKeySet: false } }
       }
-      
+
       if (kind === 'third-party') {
         return { user: { ...user, thirdPartyPassword: '' } }
       }

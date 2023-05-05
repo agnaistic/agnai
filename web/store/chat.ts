@@ -419,7 +419,13 @@ subscribe(
       const chat = chatStore.getState().active
       if (chat?.chat._id == body.chatId) {
         const voice = chat.char.voice
-        if (chat.char.userId === userStore().user?._id && voice) {
+        const user = userStore().user
+        if (
+          user &&
+          (user.texttospeech?.enabled ?? true) &&
+          chat.char.userId === user._id &&
+          voice
+        ) {
           msgStore.textToSpeech(
             body.msg._id,
             body.msg.msg,
