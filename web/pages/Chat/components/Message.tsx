@@ -17,6 +17,7 @@ import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
+import { defaultCulture } from '../../../shared/CultureCodes'
 
 type MessageProps = {
   msg: SplitMessage
@@ -128,7 +129,12 @@ const SingleMessage: Component<
 
   const textToSpeech = async () => {
     if (!props.char.voice) return
-    msgStore.textToSpeech(props.msg._id, props.msg.msg, props.char.voice)
+    msgStore.textToSpeech(
+      props.msg._id,
+      props.msg.msg,
+      props.char.voice,
+      props.char.culture ?? defaultCulture
+    )
   }
 
   const showPrompt = () => {

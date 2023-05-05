@@ -11,6 +11,7 @@ export const textToSpeech = handle(async ({ body, userId, socketId, log, params 
       text: 'string',
       messageId: 'string?',
       voice: 'any',
+      culture: 'string?',
     },
     body
   )
@@ -24,6 +25,7 @@ export const textToSpeech = handle(async ({ body, userId, socketId, log, params 
       chatId: params.id,
       messageId: body.messageId,
       voice: body.voice as CharacterVoiceSettings,
+      culture: body.culture || 'en-us',
     },
     log,
     guestId

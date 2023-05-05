@@ -18,6 +18,7 @@ export type TextToSpeechRequest = {
   chatId: string
   messageId?: string
   voice: CharacterVoiceSettings
+  culture: string
 }
 
 export type TextToSpeechAdapter = (

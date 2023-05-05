@@ -11,6 +11,7 @@ import {
 } from 'solid-js'
 import { Mic } from 'lucide-solid'
 import Button from '../../../shared/Button'
+import { defaultCulture } from '../../../shared/CultureCodes'
 
 interface SpeechRecognition extends EventTarget {
   continuous: boolean
@@ -53,7 +54,7 @@ export const SpeechRecognitionRecorder: Component<{
     const recognition = new speechRecognitionCtor() as SpeechRecognition
     recognition.continuous = true
     recognition.interimResults = true
-    recognition.lang = props.culture ?? 'en-us'
+    recognition.lang = props.culture ?? defaultCulture
 
     recognition.addEventListener('result', (event) => {
       const speechEvent = event as SpeechRecognitionEvent

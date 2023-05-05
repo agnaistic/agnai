@@ -9,6 +9,7 @@ type GenerateOpts = {
   messageId?: string
   text: string
   voice: CharacterVoiceSettings
+  culture?: string
 }
 
 export const voiceApi = {
@@ -28,13 +29,14 @@ export async function voicesList(ttsBackend: TextToSpeechBackend) {
   return res
 }
 
-export async function textToSpeech({ chatId, messageId, text, voice }: GenerateOpts) {
+export async function textToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
   const user = getUserEntity()
   const res = await api.post<{ success: boolean }>(`/chat/${chatId}/voice`, {
     user,
     messageId,
     text,
     voice,
+    culture,
   })
   return res
 }

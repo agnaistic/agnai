@@ -16,12 +16,12 @@ import {
   WebSpeechSynthesisSettings,
   defaultWebSpeechSynthesisSettings,
 } from './WebSpeechSynthesisSettings'
-import { deepEqual, deepStrictEqual } from 'assert'
-
 export const VoicePicker: Component<{
   value: CharacterVoiceSettings
+  culture: string
   onChange: (value: CharacterVoiceSettings) => void
 }> = (props) => {
+  let previousSettings: CharacterVoiceSettings | undefined
   const [backend, setBackend] = createSignal<TextToSpeechBackend>()
   const [voiceId, setVoiceId] = createSignal<string>()
   const value = createMemo(() => props.value)
@@ -34,6 +34,7 @@ export const VoicePicker: Component<{
   createEffect(
     on(value, (value) => {
       setBackend(value.backend)
+      setVoiceId('voiceId' in props.value ? props.value.voiceId : '')
       updateBackend()
     })
   )
@@ -59,28 +60,53 @@ export const VoicePicker: Component<{
     const b = backend()
     switch (b) {
       case 'elevenlabs':
-        setElevenLabsSettings(props.value.backend === b ? props.value : defaultElevenLabsSettings)
+        if (props.value.backend === b) {
+          const { voiceId, backend, ...previousSettings } = props.value
+          setElevenLabsSettings(previousSettings)
+        } else {
+          setElevenLabsSettings(defaultElevenLabsSettings)
+        }
         break
       case 'webspeechsynthesis':
-        setWebSpeechSynthesisSettings(
-          props.value.backend === b ? props.value : defaultWebSpeechSynthesisSettings
-        )
+        if (props.value.backend === b) {
+          const { voiceId, backend, ...previousSettings } = props.value
+          setWebSpeechSynthesisSettings(previousSettings)
+        } else {
+          setWebSpeechSynthesisSettings(defaultWebSpeechSynthesisSettings)
+        }
         break
     }
   }
 
-  createEffect(() => {
+  createEffect(
+    on(
+      () => [backend(), voiceId(), elevenLabsSettings(), webSpeechSynthesisSettings()],
+      () => {
+        const settings = getSettings()
+        if (!settings) return
+        if (
+          previousSettings &&
+          Object.keys(previousSettings).every(
+            (k) => (previousSettings as any)[k] === (settings as any)[k]
+          )
+        )
+          return
+        previousSettings = settings
+        props.onChange(settings)
+      }
+    )
+  )
+
+  function getSettings(): CharacterVoiceSettings | undefined {
     const b = backend()
     const v = voiceId()
     const elevenlabs = elevenLabsSettings()
     const webspeechsynthesis = webSpeechSynthesisSettings()
 
-    let settings: CharacterVoiceSettings
-
     switch (b) {
       case 'elevenlabs': {
-        if (!v) return
-        settings = {
+        if (!v) return undefined
+        return {
           backend: 'elevenlabs',
           voiceId: v,
           ...elevenlabs,
@@ -88,8 +114,8 @@ export const VoicePicker: Component<{
         break
       }
       case 'webspeechsynthesis': {
-        if (!v) return
-        settings = {
+        if (!v) return undefined
+        return {
           backend: 'webspeechsynthesis',
           voiceId: v,
           ...webspeechsynthesis,
@@ -97,16 +123,11 @@ export const VoicePicker: Component<{
         break
       }
       default:
-        settings = {
+        return {
           backend: undefined,
         }
-        break
     }
-
-    if (Object.keys(props.value).every((k) => (props.value as any)[k] === (settings as any)[k]))
-      return
-    props.onChange(settings)
-  })
+  }
 
   return (
     <>
@@ -114,7 +135,7 @@ export const VoicePicker: Component<{
         <VoiceBackendSelect value={backend()} onChange={setBackend} />
         <Show when={!!backend()}>
           <VoiceIdSelect backend={backend()!} value={voiceId()} onChange={setVoiceId} />
-          <VoicePreviewButton backend={backend()!} voiceId={voiceId()} />
+          <VoicePreviewButton backend={backend()!} voiceId={voiceId()} culture={props.culture} />
         </Show>
       </div>
 

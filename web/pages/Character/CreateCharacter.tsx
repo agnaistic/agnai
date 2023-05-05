@@ -14,7 +14,7 @@ import AvatarIcon from '../../shared/AvatarIcon'
 import { PERSONA_FORMATS } from '../../../common/adapters'
 import { getImageData } from '../../store/data/chars'
 import Select from '../../shared/Select'
-import { CultureCodes } from '../../shared/CultureCodes'
+import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { CharacterVoiceSettings } from '../../../srv/db/texttospeech-schema'
 import { AppSchema } from '../../../srv/db/schema'
@@ -50,6 +50,7 @@ const CreateCharacter: Component = () => {
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind']>()
   const [avatar, setAvatar] = createSignal<File>()
   const [voice, setVoice] = createSignal<CharacterVoiceSettings>({ backend: undefined })
+  const [culture, setCulture] = createSignal(defaultCulture)
   const edit = createMemo(() => state.edit)
   const nav = useNavigate()
 
@@ -58,6 +59,7 @@ const CreateCharacter: Component = () => {
       if (!edit) return
       setSchema(edit.persona.kind)
       setVoice(edit.voice || { backend: undefined })
+      setCulture(edit.culture ?? defaultCulture)
     })
   )
 
@@ -167,13 +169,13 @@ const CreateCharacter: Component = () => {
           fieldName="culture"
           label="Language"
           helperText={`The language this character speaks and understands.${
-            state.edit?.culture?.startsWith('en') ?? true
+            culture().startsWith('en') ?? true
               ? ''
               : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
           }`}
-          value={state.edit?.culture ?? 'en-us'}
+          value={culture()}
           items={CultureCodes}
-          onChange={setSchema}
+          onChange={setCulture}
         />
 
         <TextInput
@@ -245,7 +247,7 @@ const CreateCharacter: Component = () => {
         />
 
         <h4 class="text-md font-bold">Character Voice</h4>
-        <VoicePicker value={voice()} onChange={setVoice} />
+        <VoicePicker value={voice()} culture={culture()} onChange={setVoice} />
 
         <div class="flex justify-end gap-2">
           <Button onClick={() => nav('/character/list')} schema="secondary">

@@ -3,6 +3,7 @@ import {
   CharacterVoiceWebSpeechSynthesisSettings,
   TextToSpeechBackend,
 } from '../../srv/db/texttospeech-schema'
+import { getSampleText, sampleTextPerLanguage } from '../shared/CultureCodes'
 import { createStore, getStore } from './create'
 import { voiceApi } from './data/voice'
 import { toastStore } from './toasts'
@@ -131,13 +132,14 @@ class SpeechSynthesisManager {
     }
   }
 
-  playVoicePreview(backend: TextToSpeechBackend, url: string) {
+  playVoicePreview(backend: TextToSpeechBackend, url: string, culture: string) {
     this.stopCurrentVoice()
     if (!url) return
     if (backend === 'webspeechsynthesis') {
       this.playWebSpeechSynthesis(
         { backend: 'webspeechsynthesis', voiceId: url },
-        'This is how I sound when I speak.'
+        getSampleText(culture),
+        culture
       )
     } else {
       this.currentAudio = new Audio(url)
@@ -145,7 +147,11 @@ class SpeechSynthesisManager {
     }
   }
 
-  playWebSpeechSynthesis(voice: CharacterVoiceWebSpeechSynthesisSettings, text: string) {
+  playWebSpeechSynthesis(
+    voice: CharacterVoiceWebSpeechSynthesisSettings,
+    text: string,
+    culture: string
+  ) {
     if (!window.speechSynthesis) {
       toastStore.error(`Web speech synthesis not supported on this browser`)
       return
@@ -165,6 +171,7 @@ class SpeechSynthesisManager {
       }
       speech.text = text
       speech.voice = syntheticVoice
+      speech.lang = culture
       speechSynthesis.speak(speech)
     })
   }

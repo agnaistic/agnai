@@ -498,3 +498,25 @@ export const CultureCodes: CultureCodeOption[] = [
     label: 'Zulu',
   },
 ]
+
+export const defaultCulture: string = 'en-us'
+
+export function getLanguageFromCulture(culture?: string) {
+  if (!culture) return 'en'
+  return culture.split('-')[0] || 'en'
+}
+
+const sampleTextPerLanguage: { [lang: string]: string } = {
+  en: 'This is how I sound when I speak.',
+  sp: 'Así es como sueno cuando hablo.',
+  pt: 'É assim que eu soando quando falo.',
+  ru: 'Вот как я звучу, когда говорю.',
+  jp: 'これが私が話すときの声です。',
+  zh: '这是我说话时的声音。',
+  de: 'So klinge ich, wenn ich spreche.',
+  fr: 'Voici comment je sonne quand je parle.',
+}
+
+export function getSampleText(culture: string) {
+  return sampleTextPerLanguage[getLanguageFromCulture(culture)] || sampleTextPerLanguage['en']
+}

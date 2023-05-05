@@ -29,7 +29,7 @@ export async function getVoicesList(
 }
 
 export async function generateVoice(
-  { user, chatId, messageId, voice, ...opts }: TextToSpeechRequest,
+  { user, chatId, messageId, voice, culture, ...opts }: TextToSpeechRequest,
   log: AppLog,
   guestId?: string
 ) {

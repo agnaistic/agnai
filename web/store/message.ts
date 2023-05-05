@@ -232,7 +232,8 @@ export const msgStore = createStore<MsgState>(
       { activeChatId, speaking },
       messageId: string,
       text: string,
-      voice: CharacterVoiceSettings
+      voice: CharacterVoiceSettings,
+      culture: string
     ) {
       if (speaking) {
         yield { speaking: undefined }
@@ -245,7 +246,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (voice.backend === 'webspeechsynthesis') {
-        speechSynthesisManager.playWebSpeechSynthesis(voice, text)
+        speechSynthesisManager.playWebSpeechSynthesis(voice, text, culture)
         return
       }
 
@@ -256,6 +257,7 @@ export const msgStore = createStore<MsgState>(
         messageId,
         text,
         voice,
+        culture,
       })
       if (res.error) {
         toastStore.error(`Failed to request text to speech: ${res.error}`)

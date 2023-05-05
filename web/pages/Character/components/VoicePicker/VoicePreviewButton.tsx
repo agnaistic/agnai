@@ -6,8 +6,9 @@ import Button from '../../../../shared/Button'
 import { Play } from 'lucide-solid'
 
 export const VoicePreviewButton: Component<{
-  backend?: TextToSpeechBackend
+  backend: TextToSpeechBackend
   voiceId?: string
+  culture?: string
 }> = (props) => {
   const state = voiceStore((s) => s.voices)
 
@@ -25,7 +26,7 @@ export const VoicePreviewButton: Component<{
     const backend = props.backend
     const preview = voicePreviewUrl()
     if (!backend || !preview) return
-    speechSynthesisManager.playVoicePreview(backend, preview)
+    speechSynthesisManager.playVoicePreview(backend, preview, props.culture)
   }
 
   return (

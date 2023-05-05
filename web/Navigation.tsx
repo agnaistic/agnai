@@ -8,7 +8,6 @@ import {
   LogIn,
   LogOut,
   MailPlus,
-  Megaphone,
   MessageCircle,
   Settings,
   Sliders,
