@@ -47,6 +47,7 @@ const createCharacter = handle(async (req) => {
 
   if (filename) {
     await store.characters.updateCharacter(char._id, req.userId, { avatar: filename })
+    char.avatar = filename
   }
 
   return char

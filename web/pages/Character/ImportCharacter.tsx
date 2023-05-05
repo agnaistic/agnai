@@ -1,5 +1,5 @@
 import { Import, X } from 'lucide-solid'
-import { Component, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createSignal } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
@@ -9,69 +9,104 @@ import { extractTavernData } from './tavern-utils'
 
 export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
 
-const supportedFormats = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
+const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
+const MAX_SHOWN_IMPORTS = 3
+
+const IMAGE_FORMATS: Record<string, boolean> = {
+  png: true,
+  jpg: true,
+  jpeg: true,
+}
+
+const TEXT_FORMATS: Record<string, boolean> = {
+  json: true,
+}
 
 const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
-  onSave: (char: ImportCharacter) => void
+  onSave: (chars: ImportCharacter[]) => void
 }> = (props) => {
   const state = characterStore()
-  const [json, setJson] = createSignal<any>(undefined)
-  const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
+  const [imported, setImported] = createSignal<NewCharacter[]>([])
+  const [failed, setFailed] = createSignal<string[]>([])
+  const [ready, setReady] = createSignal(false)
 
-  const updateJson = async (files: FileInputResult[]) => {
-    if (!files.length) return setJson()
-    try {
-      const content = await getFileAsString(files[0])
-      const json = JSON.parse(content)
-      importJson(json)
-      toastStore.success('Character file accepted')
-    } catch (ex) {
-      toastStore.warn(`Invalid file format. Supported formats: ${supportedFormats}`)
-    }
+  const processFiles = async (files: FileInputResult[]) => {
+    reset()
+
+    await Promise.all(
+      files.map(async (file) => {
+        try {
+          const ext = file.file.name.split('.').slice(-1)[0]
+          if (IMAGE_FORMATS[ext]) {
+            await processImage(file)
+            return
+          }
+
+          if (TEXT_FORMATS[ext]) {
+            await processJSON(file)
+            return
+          }
+
+          throw new Error(
+            `Invalid file format: ${file.file.name}. Supported formats: ${SUPPORTED_FORMATS}`
+          )
+        } catch (ex: any) {
+          setFailed(failed().concat(file.file.name))
+          toastStore.error(`Failed to import ${file.file.name}: ${ex.message}`)
+        }
+      })
+    )
+
+    setReady(imported().length > 0)
   }
 
-  const importJson = (json: any) => {
-    try {
-      const char = jsonToCharacter(json)
-
-      setJson(char)
-    } catch (ex) {
-      toastStore.warn(`Invalid file format. Supported formats: ${supportedFormats}`)
-    }
+  const processJSON = async (file: FileInputResult) => {
+    const content = await getFileAsString(file)
+    const json = JSON.parse(content)
+    setImported(imported().concat(jsonToCharacter(json)))
+    toastStore.success('Character file accepted')
   }
 
-  const updateAvatar = async (files: FileInputResult[]) => {
-    if (!files.length) setAvatar()
-    else {
-      const tav = await extractTavernData(files[0].file)
-      if (tav) {
-        importJson(tav)
-        toastStore.success('Tavern card accepted')
-      }
-      setAvatar(() => files[0].file)
+  const processImage = async (file: FileInputResult) => {
+    const json = await extractTavernData(file.file)
+    if (!json) {
+      throw new Error('Invalid tavern image')
     }
+    setImported(imported().concat(Object.assign(jsonToCharacter(json), { avatar: file.file })))
+    toastStore.success('Tavern card accepted')
   }
 
   const onImport = async () => {
-    if (!json()) return
-    props.onSave({ ...json(), avatar: avatar() })
+    if (!ready()) return
+    props.onSave(imported())
+  }
+
+  const reset = () => {
+    setReady(false)
+    setImported([])
+    setFailed([])
+  }
+
+  const cancel = () => {
+    reset()
+    props.close()
   }
 
   return (
     <Modal
       show={props.show}
       title="Import Character"
-      close={props.close}
+      close={cancel}
       footer={
         <>
-          <Button schema="secondary" onClick={props.close}>
+          <Button schema="secondary" onClick={cancel}>
             <X />
             Cancel
           </Button>
 
-          <Button onClick={onImport} disabled={state.creating}>
+          <Button onClick={onImport} disabled={state.creating || !ready()}>
             <Import />
             Import
           </Button>
@@ -80,21 +115,49 @@ const ImportCharacterModal: Component<{
     >
       <div class="flex flex-col gap-2">
         <FileInput
-          label="JSON File"
-          fieldName="json"
-          accept="text/json,application/json"
-          helperText={`Supported formats: ${supportedFormats}`}
+          label="Avatar or JSON file"
+          fieldName="file"
+          accept="text/json,application/json,image/png,image/jpeg"
+          helperText={`Supported formats: ${SUPPORTED_FORMATS}`}
           required
-          onUpdate={updateJson}
-        />
-
-        <FileInput
-          fieldName="avatar"
-          label="Image File (Avatar or TavernCard)"
-          accept="image/png,image/jpeg"
-          onUpdate={updateAvatar}
+          multiple
+          onUpdate={processFiles}
         />
       </div>
+
+      <Show when={imported().length}>
+        <div class="mt-2 text-lg">Characters to import:</div>
+        <div class="markdown">
+          <ul>
+            <For each={imported().slice(0, MAX_SHOWN_IMPORTS)}>
+              {(i) => <li>{i.name ?? 'Unnamed'}</li>}
+            </For>
+            <Show when={imported().length === MAX_SHOWN_IMPORTS + 1}>
+              <li>... and one other</li>
+            </Show>
+            <Show when={imported().length > MAX_SHOWN_IMPORTS + 1}>
+              <li>... and {imported().length - MAX_SHOWN_IMPORTS} others</li>
+            </Show>
+          </ul>
+        </div>
+      </Show>
+
+      <Show when={failed().length}>
+        <div class="mt-2 text-lg">Failed character imports:</div>
+        <div class="markdown">
+          <ul>
+            <For each={failed().slice(0, MAX_SHOWN_IMPORTS)}>
+              {(i) => <li>{i ?? 'Unnamed'}</li>}
+            </For>
+            <Show when={failed().length === MAX_SHOWN_IMPORTS + 1}>
+              <li>... and one other</li>
+            </Show>
+            <Show when={failed().length > MAX_SHOWN_IMPORTS + 1}>
+              <li>... and {failed().length - MAX_SHOWN_IMPORTS} others</li>
+            </Show>
+          </ul>
+        </div>
+      </Show>
     </Modal>
   )
 }
