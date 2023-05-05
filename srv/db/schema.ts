@@ -69,6 +69,12 @@ export namespace AppSchema {
 
     createdAt?: string
 
+    speechtotext?: {
+      enabled: boolean
+      autoSubmit: boolean
+      autoRecord: boolean
+    }
+
     texttospeech?: TextToSpeechSettings
 
     images?: ImageSettings

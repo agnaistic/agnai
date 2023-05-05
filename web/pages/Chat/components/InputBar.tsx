@@ -18,6 +18,7 @@ const InputBar: Component<{
   let ref: any
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
+  const voiceState = msgStore((x) => ({ speaking: x.speaking }))
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
@@ -90,8 +91,9 @@ const InputBar: Component<{
         culture={props.culture}
         class="right-11"
         onText={(value) => setText(value)}
-        onEnd={() => send()}
+        onSubmit={() => send()}
         cleared={cleared}
+        enabled={!voiceState.speaking}
       />
 
       <div>

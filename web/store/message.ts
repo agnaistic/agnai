@@ -15,11 +15,11 @@ import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
 import { CharacterVoiceSettings, TextToSpeechBackend } from '../../srv/db/texttospeech-schema'
 import { speechSynthesisManager } from './voice'
+import { defaultCulture } from '../shared/CultureCodes'
 
 type ChatId = string
 
-export type VoiceState = 'generating' | 'loading' | 'playing' | ''
-
+export type VoiceState = 'generating' | 'loading' | 'playing'
 export type MsgState = {
   activeChatId: string
   activeCharId: string
@@ -235,32 +235,31 @@ export const msgStore = createStore<MsgState>(
       voice: CharacterVoiceSettings,
       culture: string
     ) {
+      speechSynthesisManager.stopCurrentVoice()
+
       if (speaking) {
+        return
+      }
+
+      if (!voice.backend) {
         yield { speaking: undefined }
       }
 
-      speechSynthesisManager.stopCurrentVoice()
-
-      if (!voice.backend) {
-        return
-      }
+      yield { speaking: { messageId, status: 'generating' } }
 
       if (voice.backend === 'webspeechsynthesis') {
-        speechSynthesisManager.playWebSpeechSynthesis(voice, text, culture)
-        return
-      }
-
-      yield { voice: { messageId, status: 'generating' } }
-
-      const res = await voiceApi.textToSpeech({
-        chatId: activeChatId,
-        messageId,
-        text,
-        voice,
-        culture,
-      })
-      if (res.error) {
-        toastStore.error(`Failed to request text to speech: ${res.error}`)
+        speechSynthesisManager.playWebSpeechSynthesis(voice, text, culture, messageId)
+      } else {
+        const res = await voiceApi.textToSpeech({
+          chatId: activeChatId,
+          messageId,
+          text,
+          voice,
+          culture,
+        })
+        if (res.error) {
+          toastStore.error(`Failed to request text to speech: ${res.error}`)
+        }
       }
     },
     async *createImage({ activeChatId }, messageId?: string) {
@@ -395,7 +394,12 @@ subscribe(
 
     const voice = chat.char.voice
     if (chat.char.userId === userStore().user?._id && voice) {
-      msgStore.textToSpeech(body.messageId, body.message, voice)
+      msgStore.textToSpeech(
+        body.messageId,
+        body.message,
+        voice,
+        chat.char.culture ?? defaultCulture
+      )
     }
   }
 )

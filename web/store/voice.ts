@@ -4,9 +4,10 @@ import {
   CharacterVoiceWebSpeechSynthesisSettings,
   TextToSpeechBackend,
 } from '../../srv/db/texttospeech-schema'
-import { getSampleText, sampleTextPerLanguage } from '../shared/CultureCodes'
+import { getSampleText } from '../shared/CultureCodes'
 import { createStore, getStore } from './create'
 import { voiceApi } from './data/voice'
+import { msgStore } from './message'
 import { toastStore } from './toasts'
 import { userStore } from './user'
 
@@ -144,35 +145,42 @@ class SpeechSynthesisManager {
     }
   }
 
-  playWebSpeechSynthesis(
+  async playWebSpeechSynthesis(
     voice: CharacterVoiceWebSpeechSynthesisSettings,
     text: string,
-    culture: string
+    culture: string,
+    msgId?: string
   ) {
     if (!window.speechSynthesis) {
       toastStore.error(`Web speech synthesis not supported on this browser`)
       return
     }
     this.stopCurrentVoice()
-    this.onVoicesLoaded((voices) => {
-      const syntheticVoice = voices.find((v) => v.voiceURI === voice.voiceId)
-      if (!syntheticVoice) {
-        toastStore.error(`Voice ${voice.voiceId} not found in web speech synthesis`)
-        return
-      }
-      var speech = new SpeechSynthesisUtterance()
-      const filterAction = getStore('user').getState().user?.texttospeech?.filterActions ?? false
-      if (filterAction) {
-        const filterActionsRegex = /\*[^*]*\*|\([^)]*\)/g
-        text = text.replace(filterActionsRegex, '...')
-      }
-      speech.text = text
-      speech.voice = syntheticVoice
-      speech.lang = culture
-      speech.pitch = voice.pitch || 1
-      speech.rate = voice.rate || 1
-      speechSynthesis.speak(speech)
+    if (msgId) msgStore.setState({ speaking: { messageId: msgId, status: 'playing' } })
+    await new Promise((resolve, reject) => {
+      this.onVoicesLoaded((voices) => {
+        const syntheticVoice = voices.find((v) => v.voiceURI === voice.voiceId)
+        if (!syntheticVoice) {
+          toastStore.error(`Voice ${voice.voiceId} not found in web speech synthesis`)
+          return
+        }
+        var speech = new SpeechSynthesisUtterance()
+        const filterAction = getStore('user').getState().user?.texttospeech?.filterActions ?? false
+        if (filterAction) {
+          const filterActionsRegex = /\*[^*]*\*|\([^)]*\)/g
+          text = text.replace(filterActionsRegex, '   ')
+        }
+        speech.text = text
+        speech.voice = syntheticVoice
+        speech.lang = culture
+        speech.pitch = voice.pitch || 1
+        speech.rate = voice.rate || 1
+        speech.addEventListener('end', resolve)
+        speech.addEventListener('error', resolve)
+        speechSynthesis.speak(speech)
+      })
     })
+    if (msgId) msgStore.setState({ speaking: undefined })
   }
 }
 export const speechSynthesisManager = new SpeechSynthesisManager()

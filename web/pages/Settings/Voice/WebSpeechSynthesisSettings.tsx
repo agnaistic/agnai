@@ -1,7 +1,5 @@
 import { Component, Show } from 'solid-js'
 import { userStore } from '../../../store'
-import TextInput from '../../../shared/TextInput'
-import Button from '../../../shared/Button'
 
 const WebSpeechSynthesisSettings: Component = () => {
   const state = userStore()

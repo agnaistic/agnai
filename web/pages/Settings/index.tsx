@@ -68,6 +68,10 @@ const Settings: Component = () => {
       sdUrl: 'string',
       sdSampler: 'string',
 
+      speechToTextEnabled: 'boolean?',
+      speechToTextAutoSubmit: 'boolean?',
+      speechToTextAutoRecord: 'boolean?',
+
       textToSpeechFilterActions: 'boolean?',
 
       elevenLabsApiKey: 'string?',
@@ -86,6 +90,10 @@ const Settings: Component = () => {
       novelImageModel,
       novelSampler,
 
+      speechToTextEnabled,
+      speechToTextAutoSubmit,
+      speechToTextAutoRecord,
+
       textToSpeechFilterActions,
 
       elevenLabsApiKey,
@@ -96,6 +104,11 @@ const Settings: Component = () => {
     userStore.updateConfig({
       ...base,
       hordeWorkers: workers(),
+      speechtotext: {
+        enabled: speechToTextEnabled || true,
+        autoSubmit: speechToTextAutoSubmit || true,
+        autoRecord: speechToTextAutoRecord || true,
+      },
       texttospeech: {
         filterActions: textToSpeechFilterActions || false,
       },

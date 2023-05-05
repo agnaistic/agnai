@@ -83,7 +83,6 @@ export const VoicePicker: Component<{
       () => [backend(), voiceId(), elevenLabsSettings(), webSpeechSynthesisSettings()],
       () => {
         const settings = getSettings()
-        console.log(settings)
         if (!settings) return
         if (
           previousSettings &&
@@ -93,7 +92,6 @@ export const VoicePicker: Component<{
         )
           return
         previousSettings = settings
-        console.log('UPDATED', settings)
         props.onChange(settings)
       }
     )

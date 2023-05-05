@@ -2,6 +2,7 @@ import { createPrompt, Prompt } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
+import { defaultCulture } from '../shared/CultureCodes'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
@@ -419,7 +420,12 @@ subscribe(
       if (chat?.chat._id == body.chatId) {
         const voice = chat.char.voice
         if (chat.char.userId === userStore().user?._id && voice) {
-          msgStore.textToSpeech(body.msg._id, body.msg.msg, voice)
+          msgStore.textToSpeech(
+            body.msg._id,
+            body.msg.msg,
+            voice,
+            chat.char.culture || defaultCulture
+          )
         }
       }
     }

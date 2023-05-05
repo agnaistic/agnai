@@ -12,6 +12,8 @@ import {
 import { Mic } from 'lucide-solid'
 import Button from '../../../shared/Button'
 import { defaultCulture } from '../../../shared/CultureCodes'
+import { userStore } from '../../../store'
+import { AppSchema } from '../../../../srv/db/schema'
 
 interface SpeechRecognition extends EventTarget {
   continuous: boolean
@@ -32,18 +34,28 @@ interface SpeechRecognitionEvent extends Event {
   results: SpeechRecognitionResultList
 }
 
+const defaultSettings: AppSchema.User['speechtotext'] = {
+  enabled: true,
+  autoRecord: true,
+  autoSubmit: true,
+}
+
 export const SpeechRecognitionRecorder: Component<{
   culture?: string
   class?: string
   onText: (value: string) => void
-  onEnd: () => void
+  onSubmit: () => void
   cleared: Accessor<number>
+  enabled: boolean
 }> = (props) => {
+  const settings = userStore((s) => ({ ...defaultSettings, ...s.user?.speechtotext }))
+
   const [finalValue, setFinalValue] = createSignal('')
   const [interimValue, setInterimValue] = createSignal('')
   const [isListening, setIsListening] = createSignal(false)
   const [isHearing, setIsHearing] = createSignal(false)
   const [speechRecognition, setSpeechRecognition] = createSignal<SpeechRecognition>()
+  const [pendingRecord, setPendingRecord] = createSignal(false)
 
   onMount(() => {
     const w = window as any
@@ -57,6 +69,7 @@ export const SpeechRecognitionRecorder: Component<{
     recognition.lang = props.culture ?? defaultCulture
 
     recognition.addEventListener('result', (event) => {
+      setPendingRecord(false)
       const speechEvent = event as SpeechRecognitionEvent
       let interimTranscript = ''
 
@@ -69,7 +82,8 @@ export const SpeechRecognitionRecorder: Component<{
             let final = finalValue()
             final = composeValues(final, interim) + '.'
             setFinalValue(final)
-            toggleListening()
+            recognition.abort()
+            setIsListening(false)
           }
           interimTranscript = ' '
         } else {
@@ -99,8 +113,22 @@ export const SpeechRecognitionRecorder: Component<{
     setSpeechRecognition(recognition)
   })
 
+  createEffect(() => {
+    if (!props.enabled && isListening()) {
+      speechRecognition()?.abort()
+      setIsListening(false)
+    } else if (props.enabled && !isListening() && pendingRecord()) {
+      setTimeout(() => {
+        if (isListening()) return
+        setIsListening(true)
+        speechRecognition()?.start()
+      }, 100)
+    }
+  })
+
   onCleanup(() => {
     speechRecognition()?.abort()
+    setIsListening(false)
   })
 
   const composeValues = (previous: string, interim: string) => {
@@ -127,6 +155,7 @@ export const SpeechRecognitionRecorder: Component<{
         setInterimValue('')
         if (listens) {
           setTimeout(() => {
+            if (isListening()) return
             speech.start()
             setIsListening(true)
           }, 100)
@@ -142,18 +171,24 @@ export const SpeechRecognitionRecorder: Component<{
   createEffect(() => {
     const final = finalValue()
     if (!final) return
-    props.onEnd()
+    if (settings.autoSubmit) props.onSubmit()
+    setPendingRecord(settings.autoRecord)
   })
 
   const toggleListening = () => {
+    setPendingRecord(false)
+    const listening = isListening()
     const speech = speechRecognition()
     if (!speech) return
-    if (isListening()) {
+    if (listening) {
       speech.abort()
-    } else {
+      setIsListening(false)
+    } else if (props.enabled) {
       speech.start()
+      setIsListening(true)
+    } else {
+      setPendingRecord(true)
     }
-    setIsListening(!isListening())
   }
 
   function capitalizeInterim(interimTranscript: string) {
@@ -171,7 +206,7 @@ export const SpeechRecognitionRecorder: Component<{
 
   return (
     <>
-      <Show when={speechRecognition()}>
+      <Show when={speechRecognition() && settings.enabled}>
         <Button
           class={`absolute ${
             props.class
@@ -183,7 +218,7 @@ export const SpeechRecognitionRecorder: Component<{
           <Mic
             size={18}
             classList={{
-              'animate-pulse': isHearing(),
+              'animate-pulse': pendingRecord() || isHearing(),
             }}
           />
         </Button>

@@ -24,7 +24,28 @@ export const VoiceSettings: Component = () => {
     <>
       <div class="flex flex-col gap-4">
         <Toggle
-          label="Filter actions"
+          label="Show Recording Button"
+          helperText="Whether to show the microphone button."
+          fieldName="speechToTextEnabled"
+          value={state.user?.speechtotext?.enabled ?? true}
+        />
+
+        <Toggle
+          label="Submit automatically"
+          helperText="Whether to send the message when a sentence has been completed."
+          fieldName="speechToTextAutoSubmit"
+          value={state.user?.speechtotext?.autoSubmit ?? true}
+        />
+
+        <Toggle
+          label="Record automatically"
+          helperText="Whether to re-start recording after a message has been received."
+          fieldName="speechToTextAutoRecord"
+          value={state.user?.speechtotext?.autoRecord ?? true}
+        />
+
+        <Toggle
+          label="Filter Actions"
           helperText="Skips text in asterisks and parenthesis."
           fieldName="textToSpeechFilterActions"
           value={state.user?.texttospeech?.filterActions ?? true}
