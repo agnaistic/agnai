@@ -135,7 +135,7 @@ export async function createAccessToken(username: string, user: AppSchema.User) 
   }
 
   const token = jwt.sign(payload, config.jwtSecret, {
-    expiresIn: '7d',
+    expiresIn: config.jwtExpiry,
   })
 
   return token

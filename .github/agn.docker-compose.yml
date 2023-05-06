@@ -21,6 +21,7 @@ services:
       DB_PORT: 27017
       NODE_ENV: production
       JWT_SECRET: /run/secrets/jwt_secret
+      JWT_EXPIRY: '30d'
       REDIS_HOST: /run/secrets/redis_host
       REDIS_PORT: 6379
       HORDE_WAIT_SECS: 150

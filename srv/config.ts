@@ -45,6 +45,7 @@ if (!process.env.JWT_SECRET) {
 
 export const config = {
   jwtSecret: env('JWT_SECRET'),
+  jwtExpiry: env('JWT_EXPIRY', '7d'),
   port: +env('PORT', '3001'),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
   db: {
