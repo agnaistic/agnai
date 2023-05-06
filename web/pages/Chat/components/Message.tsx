@@ -19,6 +19,7 @@ import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
+import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 import { defaultCulture } from '../../../shared/CultureCodes'
 import Button from '/web/shared/Button'
 
@@ -127,6 +128,21 @@ const SingleMessage: Component<
     return handle
   }
 
+  const renderMessage = () => {
+    // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
+    // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
+    // https://github.com/showdownjs/showdown/issues/669
+    const html = markdown
+      .makeHtml(parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter))
+      .replace(/&amp;nbsp;/g, '&nbsp;')
+    return html
+  }
+
+  const messageColumnWidth = () =>
+    format().corners === 'circle'
+      ? avatarSizesCircle[format().size].msg
+      : avatarSizes[format().size].msg
+
   let ref: HTMLDivElement | undefined
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
@@ -166,7 +182,7 @@ const SingleMessage: Component<
           </Switch>
         </div>
 
-        <div class="flex w-full select-text flex-col gap-1">
+        <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
           <div class="flex w-full flex-row justify-between">
             <div
               class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
@@ -252,9 +268,7 @@ const SingleMessage: Component<
                 class="rendered-markdown pr-1 sm:pr-3"
                 data-bot-message={isBot()}
                 data-user-message={isUser()}
-                innerHTML={markdown.makeHtml(
-                  parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
-                )}
+                innerHTML={renderMessage()}
               />
             </Show>
             <Show when={props.msg._id === ''}>
