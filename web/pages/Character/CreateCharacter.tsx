@@ -103,7 +103,7 @@ const CreateCharacter: Component = () => {
       sampleChat: body.sampleChat,
       persona,
       originalAvatar: state.edit?.avatar,
-      voice: voice().backend ? voice() : undefined,
+      voice: voice(),
     }
 
     if (params.editId) {

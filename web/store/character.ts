@@ -67,7 +67,7 @@ export const characterStore = createStore<CharacterState>(
     async *createCharacter(
       { creating, characters: { list } },
       char: NewCharacter,
-      onSuccess?: () => void
+      onSuccess?: (result: AppSchema.Character) => void
     ) {
       if (creating) return
 
@@ -78,7 +78,7 @@ export const characterStore = createStore<CharacterState>(
       if (res.result) {
         toastStore.success(`Successfully created character`)
         yield { characters: { list: list.concat(res.result), loaded: true } }
-        onSuccess?.()
+        onSuccess?.(res.result)
       }
     },
     async *editCharacter(

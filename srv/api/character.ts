@@ -132,7 +132,8 @@ const editCharacterFavorite = handle(async (req) => {
 function parseAndValidateVoice(json?: string) {
   if (!json) return undefined
   const obj = JSON.parse(json)
-  if (!obj || !obj.backend) return undefined
+  if (!obj) return undefined
+  if (!obj.backend) return { backend: undefined }
   const backend = getVoiceBackend(obj.backend)
   assertValid(backend.valid, obj)
   return obj as unknown as AppSchema.Character['voice']
