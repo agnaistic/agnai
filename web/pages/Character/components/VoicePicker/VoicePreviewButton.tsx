@@ -1,46 +1,44 @@
 import { Component, Show, createEffect, createSignal } from 'solid-js'
-import { speechSynthesisManager, voiceStore } from '../../../../store/voice'
-import {
-  CharacterVoiceSettings,
-  TextToSpeechBackend,
-} from '../../../../../srv/db/texttospeech-schema'
-import { FormLabel } from '../../../../shared/FormLabel'
-import Button from '../../../../shared/Button'
+import { speechSynthesisManager, voiceStore } from '/web/store/voice'
+import { VoiceSettings, TTSService, VoiceSettingForm } from '/srv/db/texttospeech-schema'
+import { FormLabel } from '/web/shared/FormLabel'
+import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'
-import { defaultCulture } from '../../../../shared/CultureCodes'
-import { CharacterVoiceWebSpeechSynthesisSettingsSpecific } from './WebSpeechSynthesisSettings'
+import { defaultCulture } from '/web/shared/CultureCodes'
 
 export const VoicePreviewButton: Component<{
-  backend: TextToSpeechBackend
+  service: TTSService
   voiceId?: string
   culture?: string
-  webSpeechSynthesisSettings?: CharacterVoiceWebSpeechSynthesisSettingsSpecific
+  webSpeechSynthesisSettings?: VoiceSettingForm<'webspeechsynthesis'>
 }> = (props) => {
   const state = voiceStore((s) => s.voices)
 
   const [voicePreviewUrl, setVoicePreviewUrl] = createSignal<string>()
 
   createEffect(() => {
-    if (!props.backend || !props.voiceId) {
+    if (!props.service || !props.voiceId) {
       setVoicePreviewUrl()
       return
     }
-    setVoicePreviewUrl(state[props.backend]?.find((v) => v.id === props.voiceId)?.previewUrl)
+    setVoicePreviewUrl(state[props.service]?.find((v) => v.id === props.voiceId)?.previewUrl)
   })
 
   const playVoicePreview = () => {
-    const backend = props.backend
+    const service = props.service
     const voiceId = props.voiceId
     const preview = voicePreviewUrl()
-    if (!backend || !voiceId || !preview) return
-    let voice: CharacterVoiceSettings
-    if (backend == 'webspeechsynthesis') {
-      voice = { backend, voiceId, ...props.webSpeechSynthesisSettings }
-    } else if (backend === 'elevenlabs') {
-      voice = { backend, voiceId }
+    if (!service || !voiceId || !preview) return
+
+    let voice: VoiceSettings
+    if (service == 'webspeechsynthesis') {
+      voice = { service: service, voiceId, ...props.webSpeechSynthesisSettings }
+    } else if (service === 'elevenlabs') {
+      voice = { service: service, voiceId }
     } else {
       return
     }
+
     speechSynthesisManager.playVoicePreview(voice, preview, props.culture || defaultCulture)
   }
 

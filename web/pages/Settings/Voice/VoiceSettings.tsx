@@ -6,12 +6,12 @@ import Tabs from '../../../shared/Tabs'
 import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 import Divider from '../../../shared/Divider'
 
-const ttsBackendTabs = {
+const ttsServiceTabs = {
   webspeechsynthesis: 'Web Speech Synthesis',
   elevenlabs: 'ElevenLabs',
 }
 
-type Tab = keyof typeof ttsBackendTabs
+type Tab = keyof typeof ttsServiceTabs
 
 export const VoiceSettings: Component = () => {
   const state = userStore()
@@ -67,10 +67,10 @@ export const VoiceSettings: Component = () => {
 
         <Divider />
 
-        <p class="text-lg font-bold">Voice Backends</p>
+        <p class="text-lg font-bold">Voice Services</p>
 
         <div class="my-2">
-          <Tabs tabs={tabs.map((t) => ttsBackendTabs[t])} selected={tab} select={setTab} />
+          <Tabs tabs={tabs.map((t) => ttsServiceTabs[t])} selected={tab} select={setTab} />
         </div>
 
         <div class="flex flex-col gap-4">

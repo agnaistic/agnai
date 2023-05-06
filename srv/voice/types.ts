@@ -1,6 +1,6 @@
 import { Validator } from 'frisker'
 import { AppSchema } from '../db/schema'
-import { CharacterVoiceSettings, TextToSpeechBackend } from '../db/texttospeech-schema'
+import { VoiceSettings, TTSService } from '../db/texttospeech-schema'
 import { AppLog } from '../logger'
 
 export type TextToSpeechHandler = {
@@ -17,7 +17,7 @@ export type TextToSpeechRequest = {
   text: string
   chatId: string
   messageId?: string
-  voice: CharacterVoiceSettings
+  voice: VoiceSettings
   culture: string
 }
 
@@ -25,7 +25,7 @@ export type TextToSpeechAdapter = (
   opts: {
     user: AppSchema.User
     text: string
-    voice: CharacterVoiceSettings
+    voice: VoiceSettings
   },
   log: AppLog,
   guestId?: string
@@ -35,7 +35,7 @@ export type TextToSpeechAdapterResponse = { ext: string; content: Buffer }
 
 export type VoicesListRequest = {
   user: AppSchema.User
-  ttsBackend: TextToSpeechBackend
+  ttsService: TTSService
 }
 
 export type VoiceListResponse = { voices: AppSchema.VoiceDefinition[] }

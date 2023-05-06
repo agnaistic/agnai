@@ -13,7 +13,7 @@ import { userStore } from './user'
 import { localApi } from './data/storage'
 import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
-import { CharacterVoiceSettings, TextToSpeechBackend } from '../../srv/db/texttospeech-schema'
+import { VoiceSettings } from '../../srv/db/texttospeech-schema'
 import { speechSynthesisManager } from './voice'
 import { defaultCulture } from '../shared/CultureCodes'
 
@@ -232,7 +232,7 @@ export const msgStore = createStore<MsgState>(
       { activeChatId, speaking },
       messageId: string,
       text: string,
-      voice: CharacterVoiceSettings,
+      voice: VoiceSettings,
       culture: string
     ) {
       speechSynthesisManager.stopCurrentVoice()
@@ -241,13 +241,13 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      if (!voice.backend) {
+      if (!voice.service) {
         yield { speaking: undefined }
       }
 
       yield { speaking: { messageId, status: 'generating' } }
 
-      if (voice.backend === 'webspeechsynthesis') {
+      if (voice.service === 'webspeechsynthesis') {
         speechSynthesisManager.playWebSpeechSynthesis(voice, text, culture, messageId)
       } else {
         const res = await voiceApi.textToSpeech({

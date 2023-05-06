@@ -1,19 +1,12 @@
 import { Component } from 'solid-js'
-import { CharacterVoiceWebSpeechSynthesisSettings } from '../../../../../srv/db/texttospeech-schema'
+import { VoiceSettingForm } from '../../../../../srv/db/texttospeech-schema'
 import RangeInput from '../../../../shared/RangeInput'
 
-export type CharacterVoiceWebSpeechSynthesisSettingsSpecific = Omit<
-  CharacterVoiceWebSpeechSynthesisSettings,
-  'backend' | 'voiceId'
->
-export const defaultWebSpeechSynthesisSettings: CharacterVoiceWebSpeechSynthesisSettingsSpecific =
-  {}
-
 export const WebSpeechSynthesisSettings: Component<{
-  settings: CharacterVoiceWebSpeechSynthesisSettingsSpecific
-  onChange: (value: CharacterVoiceWebSpeechSynthesisSettingsSpecific) => void
+  settings: VoiceSettingForm<'webspeechsynthesis'>
+  onChange: (value: VoiceSettingForm<'webspeechsynthesis'>) => void
 }> = (props) => {
-  const update = (diff: Partial<CharacterVoiceWebSpeechSynthesisSettingsSpecific>) => {
+  const update = (diff: Partial<VoiceSettingForm<'webspeechsynthesis'>>) => {
     props.onChange({ ...props.settings, ...diff })
   }
 

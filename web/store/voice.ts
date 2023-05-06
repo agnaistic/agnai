@@ -1,8 +1,8 @@
 import { AppSchema } from '../../srv/db/schema'
 import {
-  CharacterVoiceSettings,
-  CharacterVoiceWebSpeechSynthesisSettings,
-  TextToSpeechBackend,
+  VoiceSettings,
+  VoiceWebSpeechSynthesisSettings,
+  TTSService,
 } from '../../srv/db/texttospeech-schema'
 import { getSampleText } from '../shared/CultureCodes'
 import { createStore, getStore } from './create'
@@ -12,12 +12,12 @@ import { toastStore } from './toasts'
 import { userStore } from './user'
 
 type VoiceState = {
-  backends: { type: TextToSpeechBackend; label: string }[]
+  services: { type: TTSService; label: string }[]
   voices: { [type: string]: AppSchema.VoiceDefinition[] }
 }
 
 const initialState: VoiceState = {
-  backends: [],
+  services: [],
   voices: {},
 }
 
@@ -26,25 +26,26 @@ export const voiceStore = createStore<VoiceState>(
   initialState
 )(() => {
   return {
-    getBackends() {
+    getServices() {
       const user = userStore().user
-      const backends: VoiceState['backends'] = []
+      const services: VoiceState['services'] = []
+
       if ('speechSynthesis' in window) {
-        backends.push({
+        services.push({
           type: 'webspeechsynthesis',
           label: 'Web Speech Synthesis',
         })
       }
-      if (!user) return { backends: backends }
+      if (!user) return { services }
       if (user.elevenLabsApiKeySet) {
-        backends.push({
+        services.push({
           type: 'elevenlabs',
           label: 'ElevenLabs',
         })
       }
-      return { backends }
+      return { services }
     },
-    async *getVoices({ voices }, type: TextToSpeechBackend | '') {
+    async *getVoices({ voices }, type: TTSService | '') {
       if (!type) return
       let result: AppSchema.VoiceDefinition[] | undefined
       if (type === 'webspeechsynthesis') {
@@ -134,10 +135,10 @@ class SpeechSynthesisManager {
     }
   }
 
-  playVoicePreview(voice: CharacterVoiceSettings, url: string | undefined, culture: string) {
+  playVoicePreview(voice: VoiceSettings, url: string | undefined, culture: string) {
     this.stopCurrentVoice()
-    if (!voice.backend) return
-    if (voice.backend === 'webspeechsynthesis') {
+    if (!voice.service) return
+    if (voice.service === 'webspeechsynthesis') {
       this.playWebSpeechSynthesis(voice, getSampleText(culture), culture)
     } else if (url) {
       this.currentAudio = new Audio(url)
@@ -146,7 +147,7 @@ class SpeechSynthesisManager {
   }
 
   async playWebSpeechSynthesis(
-    voice: CharacterVoiceWebSpeechSynthesisSettings,
+    voice: VoiceWebSpeechSynthesisSettings,
     text: string,
     culture: string,
     msgId?: string

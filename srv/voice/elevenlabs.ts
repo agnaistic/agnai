@@ -4,12 +4,12 @@ import { decryptText } from '../db/util'
 import { AppSchema } from '../db/schema'
 import { errors } from '../api/wrap'
 import { Validator } from 'frisker'
-import { ElevenLabsModels } from '../db/texttospeech-schema'
+import { ElevenLabsModel } from '../db/texttospeech-schema'
 
 const baseUrl = 'https://api.elevenlabs.io/v1'
 
 const valid: Validator = {
-  backend: 'string',
+  service: 'string',
   voiceId: 'string',
   model: 'string',
   stability: 'number',
@@ -18,7 +18,7 @@ const valid: Validator = {
 
 type ElevenLabsTextToSpeechRequest = {
   text: string
-  model_id: ElevenLabsModels
+  model_id: ElevenLabsModel
   voice_settings: {
     stability: number
     similarity_boost: number
@@ -54,7 +54,7 @@ const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
   guestId
 ) => {
   const key = getKey(user, guestId)
-  if (voice.backend !== 'elevenlabs') throw new Error('Invalid backend')
+  if (voice.service !== 'elevenlabs') throw new Error('Invalid service')
   const payload: ElevenLabsTextToSpeechRequest = {
     text,
     model_id: voice.model || 'eleven_multilingual_v1',

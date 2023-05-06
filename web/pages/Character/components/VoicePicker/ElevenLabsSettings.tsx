@@ -1,17 +1,9 @@
 import { Component } from 'solid-js'
-import {
-  CharacterVoiceElevenLabsSettings,
-  ElevenLabsModels,
-} from '../../../../../srv/db/texttospeech-schema'
+import { ElevenLabsModel, VoiceSettingForm } from '../../../../../srv/db/texttospeech-schema'
 import RangeInput from '../../../../shared/RangeInput'
 import Select, { Option } from '../../../../shared/Select'
 
-export type CharacterVoiceElevenLabsSettingsSpecific = Omit<
-  CharacterVoiceElevenLabsSettings,
-  'backend' | 'voiceId'
->
-
-const modelOptions: Option<ElevenLabsModels>[] = [
+const modelOptions: Option<ElevenLabsModel>[] = [
   {
     value: 'eleven_monolingual_v1',
     label: 'Eleven Monolingual v1',
@@ -22,17 +14,17 @@ const modelOptions: Option<ElevenLabsModels>[] = [
   },
 ]
 
-export const defaultElevenLabsSettings: CharacterVoiceElevenLabsSettingsSpecific = {
+export const defaultElevenLabsSettings: VoiceSettingForm<'elevenlabs'> = {
   model: 'eleven_monolingual_v1',
   stability: 0.75,
   similarityBoost: 0.75,
 }
 
 export const ElevenLabsSettings: Component<{
-  settings: CharacterVoiceElevenLabsSettingsSpecific
-  onChange: (value: CharacterVoiceElevenLabsSettingsSpecific) => void
+  settings: VoiceSettingForm<'elevenlabs'>
+  onChange: (value: VoiceSettingForm<'elevenlabs'>) => void
 }> = (props) => {
-  const update = (diff: Partial<CharacterVoiceElevenLabsSettingsSpecific>) => {
+  const update = (diff: Partial<VoiceSettingForm<'elevenlabs'>>) => {
     props.onChange({ ...props.settings, ...diff })
   }
 
@@ -43,7 +35,7 @@ export const ElevenLabsSettings: Component<{
         label="ElevenLabs Model"
         items={modelOptions}
         value={props.settings.model}
-        onChange={(item) => update({ model: item.value as ElevenLabsModels })}
+        onChange={(item) => update({ model: item.value as ElevenLabsModel })}
       />
 
       <RangeInput

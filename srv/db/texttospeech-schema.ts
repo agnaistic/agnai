@@ -1,32 +1,42 @@
-export type TextToSpeechBackend = 'webspeechsynthesis' | 'elevenlabs'
+export type TTSService = 'webspeechsynthesis' | 'elevenlabs'
 
-export type TextToSpeechSettings = {
+export type TTSSettings = {
   enabled: boolean
   filterActions: boolean
 }
 
-export type ElevenLabsModels = 'eleven_multilingual_v1' | 'eleven_monolingual_v1'
+export type ElevenLabsModel = 'eleven_multilingual_v1' | 'eleven_monolingual_v1'
 
-export type CharacterVoiceSettings =
-  | CharacterVoiceDisabledSettings
-  | CharacterVoiceElevenLabsSettings
-  | CharacterVoiceWebSpeechSynthesisSettings
+export type VoiceSettings =
+  | VoiceDisabledSettings
+  | VoiceElevenLabsSettings
+  | VoiceWebSpeechSynthesisSettings
 
-export type CharacterVoiceDisabledSettings = {
-  backend: undefined
+export type VoiceDisabledSettings = {
+  service: undefined
 }
 
-export type CharacterVoiceElevenLabsSettings = {
-  backend: 'elevenlabs'
+export type VoiceElevenLabsSettings = {
+  service: 'elevenlabs'
   voiceId: string
-  model?: ElevenLabsModels
+  model?: ElevenLabsModel
   stability?: number
   similarityBoost?: number
 }
 
-export type CharacterVoiceWebSpeechSynthesisSettings = {
-  backend: 'webspeechsynthesis'
+export type VoiceWebSpeechSynthesisSettings = {
+  service: 'webspeechsynthesis'
   voiceId: string
   pitch?: number
   rate?: number
 }
+
+export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<
+  VoiceSettings,
+  { service: T }
+>
+
+export type VoiceSettingForm<T extends VoiceSettings['service']> = Omit<
+  SpecificVoiceSetting<T>,
+  'service' | 'voiceId'
+>

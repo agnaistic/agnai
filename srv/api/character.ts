@@ -6,7 +6,7 @@ import { errors, handle, StatusError } from './wrap'
 import { entityUpload, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../db/schema'
-import { getVoiceBackend } from '../voice'
+import { getVoiceService } from '../voice'
 
 const router = Router()
 
@@ -43,7 +43,7 @@ const createCharacter = handle(async (req) => {
     greeting: body.greeting,
     avatar: body.originalAvatar,
     favorite: false,
-    voice: voice,
+    voice,
   })
 
   const filename = await entityUpload(
@@ -90,7 +90,7 @@ const editCharacter = handle(async (req) => {
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
-    voice: voice,
+    voice,
   })
 
   return char
@@ -130,12 +130,12 @@ const editCharacterFavorite = handle(async (req) => {
 })
 
 function parseAndValidateVoice(json?: string) {
-  if (!json) return undefined
+  if (!json) return
   const obj = JSON.parse(json)
-  if (!obj) return undefined
-  if (!obj.backend) return { backend: undefined }
-  const backend = getVoiceBackend(obj.backend)
-  assertValid(backend.valid, obj)
+  if (!obj) return
+  if (!obj.service) return { service: undefined }
+  const service = getVoiceService(obj.service)
+  assertValid(service.valid, obj)
   return obj as unknown as AppSchema.Character['voice']
 }
 

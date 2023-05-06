@@ -13,16 +13,16 @@ import { sendGuest, sendMany } from '../api/ws'
 import { StatusError } from '../api/wrap'
 import { elevenlabsHandler } from './elevenlabs'
 import { webSpeechSynthesisHandler } from './webspeechsynthesis'
-import { TextToSpeechBackend } from '../db/texttospeech-schema'
+import { TTSService } from '../db/texttospeech-schema'
 
 export async function getVoicesList(
-  { user, ttsBackend }: VoicesListRequest,
+  { user, ttsService }: VoicesListRequest,
   log: AppLog,
   guestId?: string
 ): Promise<VoiceListResponse> {
-  const backend = getVoiceBackend(ttsBackend)
+  const service = getVoiceService(ttsService)
   try {
-    return { voices: await backend.getVoices(user, guestId) }
+    return { voices: await service.getVoices(user, guestId) }
   } catch (ex: any) {
     throw new StatusError(ex.message, 500)
   }
@@ -37,8 +37,7 @@ export async function generateVoice(
     throw new StatusError('Text to speech is disabled', 400)
   }
 
-  const backend = getVoiceBackend(voice.backend)
-
+  const service = getVoiceService(voice.service)
   const broadcastIds: string[] = []
 
   if (!guestId) {
@@ -52,7 +51,7 @@ export async function generateVoice(
   let error: any
   const text = processText(opts.text, user.texttospeech?.filterActions || true)
 
-  log.debug({ text, backend: voice.backend }, 'Text to speech')
+  log.debug({ text, service: voice.service }, 'Text to speech')
 
   const generatingMessage = { chatId, messageId, type: 'voice-generating' }
   if (broadcastIds.length) {
@@ -62,7 +61,7 @@ export async function generateVoice(
   }
 
   try {
-    audio = await backend.generateVoice({ user, text, voice }, log, guestId)
+    audio = await service.generateVoice({ user, text, voice }, log, guestId)
   } catch (ex: any) {
     error = ex.message || ex
     log.error({ err: ex }, 'Failed to generate audio')
@@ -98,14 +97,16 @@ export async function generateVoice(
   return { output }
 }
 
-export function getVoiceBackend(ttsBackend?: TextToSpeechBackend): TextToSpeechHandler {
-  switch (ttsBackend) {
+export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler {
+  switch (ttsService) {
     case 'webspeechsynthesis':
       return webSpeechSynthesisHandler
+
     case 'elevenlabs':
       return elevenlabsHandler
+
     default:
-      throw new StatusError(`Invalid voice backend: ${ttsBackend}`, 400)
+      throw new StatusError(`Invalid voice service: ${ttsService}`, 400)
   }
 }
 

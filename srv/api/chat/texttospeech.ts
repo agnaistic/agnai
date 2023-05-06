@@ -2,7 +2,7 @@ import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { generateVoice } from '../../voice'
 import { handle } from '../wrap'
-import { CharacterVoiceSettings } from '../../db/texttospeech-schema'
+import { VoiceSettings } from '../../db/texttospeech-schema'
 
 export const textToSpeech = handle(async ({ body, userId, socketId, log, params }) => {
   assertValid(
@@ -24,7 +24,7 @@ export const textToSpeech = handle(async ({ body, userId, socketId, log, params 
       text: body.text,
       chatId: params.id,
       messageId: body.messageId,
-      voice: body.voice as CharacterVoiceSettings,
+      voice: body.voice as VoiceSettings,
       culture: body.culture || 'en-us',
     },
     log,

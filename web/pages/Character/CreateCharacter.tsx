@@ -16,7 +16,7 @@ import { getImageData } from '../../store/data/chars'
 import Select from '../../shared/Select'
 import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
-import { CharacterVoiceSettings } from '../../../srv/db/texttospeech-schema'
+import { VoiceSettings } from '../../../srv/db/texttospeech-schema'
 import { AppSchema } from '../../../srv/db/schema'
 
 const options = [
@@ -49,7 +49,7 @@ const CreateCharacter: Component = () => {
 
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind']>()
   const [avatar, setAvatar] = createSignal<File>()
-  const [voice, setVoice] = createSignal<CharacterVoiceSettings>({ backend: undefined })
+  const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
   const edit = createMemo(() => state.edit)
   const nav = useNavigate()
@@ -58,7 +58,7 @@ const CreateCharacter: Component = () => {
     on(edit, (edit) => {
       if (!edit) return
       setSchema(edit.persona.kind)
-      setVoice(edit.voice || { backend: undefined })
+      setVoice(edit.voice || { service: undefined })
       setCulture(edit.culture ?? defaultCulture)
     })
   )

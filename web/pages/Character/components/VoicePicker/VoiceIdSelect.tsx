@@ -1,10 +1,10 @@
-import { TextToSpeechBackend } from '../../../../../srv/db/texttospeech-schema'
+import { TTSService } from '../../../../../srv/db/texttospeech-schema'
 import { voiceStore } from '../../../../store/voice'
 import { Component, createEffect, createMemo, createSignal, on } from 'solid-js'
 import Select, { Option } from '../../../../shared/Select'
 
 export const VoiceIdSelect: Component<{
-  backend: TextToSpeechBackend
+  service: TTSService
   value?: string
   onChange: (id: string) => void
 }> = (props) => {
@@ -13,10 +13,10 @@ export const VoiceIdSelect: Component<{
   const [options, setOptions] = createSignal<Option[]>([])
 
   createEffect(() => {
-    voiceStore.getVoices(props.backend)
+    voiceStore.getVoices(props.service)
   })
 
-  const list = createMemo(() => state.list[props.backend])
+  const list = createMemo(() => state.list[props.service])
 
   createEffect(
     on(list, (list) => {

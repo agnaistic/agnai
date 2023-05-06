@@ -1,11 +1,7 @@
 import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
 import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
-import {
-  TextToSpeechSettings,
-  TextToSpeechBackend,
-  CharacterVoiceSettings,
-} from './texttospeech-schema'
+import { TTSSettings, VoiceSettings } from './texttospeech-schema'
 
 export namespace AppSchema {
   export interface Token {
@@ -75,7 +71,7 @@ export namespace AppSchema {
       autoRecord: boolean
     }
 
-    texttospeech?: TextToSpeechSettings
+    texttospeech?: TTSSettings
 
     images?: ImageSettings
     // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
@@ -159,7 +155,7 @@ export namespace AppSchema {
 
     favorite?: boolean
 
-    voice?: CharacterVoiceSettings
+    voice?: VoiceSettings
   }
 
   export interface ChatInvite {

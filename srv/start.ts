@@ -1,3 +1,4 @@
+import 'module-alias/register'
 import { initMessageBus } from './api/ws'
 import { server } from './app'
 import { config } from './config'

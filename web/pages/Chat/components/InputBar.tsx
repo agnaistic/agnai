@@ -109,9 +109,6 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-            <Button schema="secondary" class="w-full" alignLeft onClick={regenerate}>
-              Regenerate
-            </Button>
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
               <ImagePlus size={18} /> Generage Image
             </Button>

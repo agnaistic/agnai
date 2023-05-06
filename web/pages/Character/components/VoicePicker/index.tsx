@@ -1,54 +1,44 @@
 import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
-import {
-  CharacterVoiceSettings,
-  TextToSpeechBackend,
-} from '../../../../../srv/db/texttospeech-schema'
-import { VoiceBackendSelect } from './VoiceBackendSelect'
+import { VoiceSettings, TTSService, VoiceSettingForm } from '/srv/db/texttospeech-schema'
+import { VoiceServiceSelect } from './VoiceServiceSelect'
 import { VoiceIdSelect } from './VoiceIdSelect'
 import { VoicePreviewButton } from './VoicePreviewButton'
-import {
-  CharacterVoiceElevenLabsSettingsSpecific,
-  ElevenLabsSettings,
-  defaultElevenLabsSettings,
-} from './ElevenLabsSettings'
-import {
-  CharacterVoiceWebSpeechSynthesisSettingsSpecific,
-  WebSpeechSynthesisSettings,
-  defaultWebSpeechSynthesisSettings,
-} from './WebSpeechSynthesisSettings'
+import { ElevenLabsSettings, defaultElevenLabsSettings } from './ElevenLabsSettings'
+import { WebSpeechSynthesisSettings } from './WebSpeechSynthesisSettings'
+import { isDirty } from '/web/shared/util'
+
 export const VoicePicker: Component<{
-  value: CharacterVoiceSettings
+  value: VoiceSettings
   culture: string
-  onChange: (value: CharacterVoiceSettings) => void
+  onChange: (value: VoiceSettings) => void
 }> = (props) => {
-  let previousSettings: CharacterVoiceSettings | undefined
-  const [backend, setBackend] = createSignal<TextToSpeechBackend>()
+  let previousSettings: VoiceSettings | undefined
+  const [service, setService] = createSignal<TTSService>()
   const [voiceId, setVoiceId] = createSignal<string>()
   const value = createMemo(() => props.value)
 
-  const [webSpeechSynthesisSettings, setWebSpeechSynthesisSettings] =
-    createSignal<CharacterVoiceWebSpeechSynthesisSettingsSpecific>()
-  const [elevenLabsSettings, setElevenLabsSettings] =
-    createSignal<CharacterVoiceElevenLabsSettingsSpecific>()
+  const [webSpeechSettings, setWebSpeechSettings] =
+    createSignal<VoiceSettingForm<'webspeechsynthesis'>>()
+  const [elevenLabsSettings, setElevenLabsSettings] = createSignal<VoiceSettingForm<'elevenlabs'>>()
 
   createEffect(
     on(value, (value) => {
-      setBackend(value.backend)
+      setService(value.service)
       setVoiceId('voiceId' in props.value ? props.value.voiceId : '')
-      updateBackend()
+      updateService()
     })
   )
 
   createEffect(() => {
-    const b = backend()
-    if ('voiceId' in props.value && props.value.backend === b) setVoiceId(props.value.voiceId)
+    const b = service()
+    if ('voiceId' in props.value && props.value.service === b) setVoiceId(props.value.voiceId)
     else setVoiceId('')
   })
 
   createEffect(() => {
-    if (props.value.backend !== backend()) {
+    if (props.value.service !== service()) {
       setVoiceId('')
-      updateBackend()
+      updateService()
     } else if ('voiceId' in props.value) {
       setVoiceId(props.value.voiceId)
     } else {
@@ -56,23 +46,23 @@ export const VoicePicker: Component<{
     }
   })
 
-  function updateBackend() {
-    const b = backend()
+  function updateService() {
+    const b = service()
     switch (b) {
       case 'elevenlabs':
-        if (props.value.backend === b) {
-          const { voiceId, backend, ...previousSettings } = props.value
+        if (props.value.service === b) {
+          const { voiceId, service, ...previousSettings } = props.value
           setElevenLabsSettings(previousSettings)
         } else {
           setElevenLabsSettings(defaultElevenLabsSettings)
         }
         break
       case 'webspeechsynthesis':
-        if (props.value.backend === b) {
-          const { voiceId, backend, ...previousSettings } = props.value
-          setWebSpeechSynthesisSettings(previousSettings)
+        if (props.value.service === b) {
+          const { voiceId, service, ...previousSettings } = props.value
+          setWebSpeechSettings(previousSettings)
         } else {
-          setWebSpeechSynthesisSettings(defaultWebSpeechSynthesisSettings)
+          setWebSpeechSettings({})
         }
         break
     }
@@ -80,51 +70,48 @@ export const VoicePicker: Component<{
 
   createEffect(
     on(
-      () => [backend(), voiceId(), elevenLabsSettings(), webSpeechSynthesisSettings()],
+      () => [service(), voiceId(), elevenLabsSettings(), webSpeechSettings()],
       () => {
         const settings = getSettings()
         if (!settings) return
-        if (
-          previousSettings &&
-          Array.from(new Set([...Object.keys(previousSettings), ...Object.keys(settings)])).every(
-            (k) => (previousSettings as any)[k] === (settings as any)[k]
-          )
-        )
-          return
+        if (previousSettings && !isDirty(previousSettings, settings)) return
+
         previousSettings = settings
         props.onChange(settings)
       }
     )
   )
 
-  function getSettings(): CharacterVoiceSettings | undefined {
-    const b = backend()
-    const v = voiceId()
+  function getSettings(): VoiceSettings | undefined {
+    const svc = service()
+    const voice = voiceId()
     const elevenlabs = elevenLabsSettings()
-    const webspeechsynthesis = webSpeechSynthesisSettings()
+    const webspeechsynthesis = webSpeechSettings()
 
-    switch (b) {
+    switch (svc) {
       case 'elevenlabs': {
-        if (!v) return undefined
+        if (!voice) return undefined
         return {
-          backend: 'elevenlabs',
-          voiceId: v,
+          service: 'elevenlabs',
+          voiceId: voice,
           ...elevenlabs,
         }
         break
       }
+
       case 'webspeechsynthesis': {
-        if (!v) return undefined
+        if (!voice) return undefined
         return {
-          backend: 'webspeechsynthesis',
-          voiceId: v,
+          service: 'webspeechsynthesis',
+          voiceId: voice,
           ...webspeechsynthesis,
         }
         break
       }
+
       default:
         return {
-          backend: undefined,
+          service: undefined,
         }
     }
   }
@@ -132,29 +119,29 @@ export const VoicePicker: Component<{
   return (
     <>
       <div class="flex flex-row flex-wrap justify-start gap-4 md:flex-nowrap">
-        <VoiceBackendSelect value={backend()} onChange={setBackend} />
-        <Show when={!!backend()}>
-          <VoiceIdSelect backend={backend()!} value={voiceId()} onChange={setVoiceId} />
+        <VoiceServiceSelect value={service()} onChange={setService} />
+        <Show when={!!service()}>
+          <VoiceIdSelect service={service()!} value={voiceId()} onChange={setVoiceId} />
           <VoicePreviewButton
-            backend={backend()!}
+            service={service()!}
             voiceId={voiceId()}
             culture={props.culture}
-            webSpeechSynthesisSettings={webSpeechSynthesisSettings()}
+            webSpeechSynthesisSettings={webSpeechSettings()}
           />
         </Show>
       </div>
 
-      <Show when={backend() === 'elevenlabs' && !!elevenLabsSettings()}>
+      <Show when={service() === 'elevenlabs' && !!elevenLabsSettings()}>
         <ElevenLabsSettings
           settings={elevenLabsSettings()!}
           onChange={(update) => setElevenLabsSettings(update)}
         />
       </Show>
 
-      <Show when={backend() === 'webspeechsynthesis' && !!webSpeechSynthesisSettings()}>
+      <Show when={service() === 'webspeechsynthesis' && !!webSpeechSettings()}>
         <WebSpeechSynthesisSettings
-          settings={webSpeechSynthesisSettings()!}
-          onChange={(update) => setWebSpeechSynthesisSettings(update)}
+          settings={webSpeechSettings()!}
+          onChange={(update) => setWebSpeechSettings(update)}
         />
       </Show>
     </>

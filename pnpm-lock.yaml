@@ -39,6 +39,7 @@ specifiers:
   minimist: ^1.2.8
   mkdirp: ^2.1.4
   mocha: ^10.2.0
+  module-alias: ^2.2.2
   mongodb: ^5.1.0
   multer: ^1.4.5-lts.1
   needle: ^3.2.0
@@ -76,6 +77,7 @@ dependencies:
   jsonwebtoken: 9.0.0
   minimist: 1.2.8
   mkdirp: 2.1.4
+  module-alias: registry.npmjs.org/module-alias/2.2.2
   mongodb: 5.1.0
   multer: registry.npmjs.org/multer/1.4.5-lts.1
   needle: 3.2.0
@@ -5370,6 +5372,12 @@ packages:
     hasBin: true
     dependencies:
       minimist: registry.npmjs.org/minimist/1.2.8
+    dev: false
+
+  registry.npmjs.org/module-alias/2.2.2:
+    resolution: {integrity: sha512-A/78XjoX2EmNvppVWEhM2oGk3x4lLxnkEA4jTbaK97QKSDjkIoOsKQlfylt/d3kKKi596Qy3NP5XrXJ6fZIC9Q==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/module-alias/-/module-alias-2.2.2.tgz}
+    name: module-alias
+    version: 2.2.2
     dev: false
 
   registry.npmjs.org/msgpackr-extract/2.2.0:

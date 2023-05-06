@@ -2,7 +2,7 @@ import { Validator } from 'frisker'
 import { StatusError } from '../api/wrap'
 
 const valid: Validator = {
-  backend: 'string',
+  service: 'string',
   voiceId: 'string',
   pitch: 'number?',
   rate: 'number?',
