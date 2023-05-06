@@ -1,7 +1,7 @@
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
-import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
@@ -26,6 +26,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
+import { voiceStore } from '/web/store/voice'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -46,6 +47,7 @@ const ChatDetail: Component = () => {
     partial: s.partial,
     waiting: s.waiting,
     retries: s.retries,
+    speaking: s.speaking,
   }))
 
   const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
@@ -77,6 +79,7 @@ const ChatDetail: Component = () => {
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
+  const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
   const isSelfRemoved = createMemo(() => {
     if (!user.profile) return false
@@ -161,11 +164,18 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
-  // When html2canvas grabs this element to make a screenshot out
-  // of it, we need to set the background otherwise it will render
-  // as white/transparent resulting in unreadable message contents
-  // if message background is set to 0 opacity
-  const chatBg = () => (screenshotInProgress() ? 'bg-[var(--bg-900)]' : '')
+  const indexOfLastRPMessage = () =>
+    msgs.msgs.findIndex((_, i, original) => {
+      const rest = original.slice(i + 1)
+      if (rest.find((msg) => msg.ooc !== true)) {
+        return false
+      } else {
+        return true
+      }
+    })
+
+  const msgsToDisplay = () =>
+    hideOocMessages() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs
 
   const indexOfLastRPMessage = () =>
     msgs.msgs.findIndex((_, i, original) => {
@@ -263,6 +273,7 @@ const ChatDetail: Component = () => {
               ooc={ooc()}
               setOoc={setOoc}
               showOocToggle={showOocOptions()}
+              culture={chats.char?.culture}
             />
             <Show when={isOwner()}>
               <SwipeMessage
@@ -278,8 +289,8 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
-              <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
+              <div id="chat-messages" class="flex flex-col gap-2">
                 <Show when={chats.loaded && msgs.msgs.length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">
                     <Button onClick={generateFirst}>Generate Message</Button>
@@ -300,6 +311,7 @@ const ChatDetail: Component = () => {
                       }
                       confirmSwipe={() => confirmSwipe(msg._id)}
                       cancelSwipe={cancelSwipe}
+                      tts={tts()}
                     />
                   )}
                 </For>

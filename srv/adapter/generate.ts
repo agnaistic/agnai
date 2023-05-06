@@ -64,7 +64,7 @@ export async function createTextStreamV2(
     const encoder = getEncoder(adapter, model)
     opts.parts = getPromptParts(
       { ...entities, settings: entities.gen, chat: opts.chat, members: opts.members },
-      opts.lines,
+      [...opts.lines].reverse(),
       encoder
     )
     opts.settings = entities.gen

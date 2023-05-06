@@ -6,9 +6,11 @@ import { DropMenu } from '../../../shared/DropMenu'
 import { toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
+import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
+  culture?: string
   swiped: boolean
   showOocToggle: boolean
   ooc: boolean
@@ -22,11 +24,13 @@ const InputBar: Component<{
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
   }
+  const voiceState = msgStore((x) => ({ speaking: x.speaking }))
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
   const [text, setText] = createSignal('')
   const [menu, setMenu] = createSignal(false)
+  const [cleared, setCleared] = createSignal(0, { equals: false })
 
   const updateText = (ev: Event) => {
     if (!ref) return
@@ -46,6 +50,7 @@ const InputBar: Component<{
     props.send(value, props.ooc, () => {
       ref.value = ''
       setText('')
+      setCleared(0)
     })
   }
 
@@ -70,7 +75,7 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="flex items-center justify-center max-sm:pb-2">
+    <div class="relative flex items-center justify-center max-sm:pb-2">
       <Show when={props.showOocToggle}>
         <div class="mr-2 h-full w-14 text-center">
           <button
@@ -83,7 +88,9 @@ const InputBar: Component<{
       </Show>
       <textarea
         spellcheck
+        lang={props.culture}
         ref={ref}
+        value={text()}
         placeholder="Send a message..."
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
         onKeyPress={(ev) => {
@@ -94,6 +101,15 @@ const InputBar: Component<{
 
           updateText(ev)
         }}
+      />
+
+      <SpeechRecognitionRecorder
+        culture={props.culture}
+        class="right-11"
+        onText={(value) => setText(value)}
+        onSubmit={() => send()}
+        cleared={cleared}
+        enabled={!voiceState.speaking}
       />
       <div>
         <button
@@ -108,9 +124,6 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-            <Button schema="secondary" class="w-full" alignLeft onClick={regenerate}>
-              Regenerate
-            </Button>
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
               <ImagePlus size={18} /> Generage Image
             </Button>

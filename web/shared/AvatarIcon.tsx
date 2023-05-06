@@ -1,8 +1,9 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import { Component, createMemo, Show } from 'solid-js'
+import Solid, { Component, createMemo, JSX, Show } from 'solid-js'
 import { AvatarCornerRadius, AvatarSize } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
+import { LucideProps } from 'lucide-solid/dist/types/types'
 
 type Props = {
   avatarUrl?: string
@@ -10,6 +11,7 @@ type Props = {
   bot?: boolean
   format?: Format
   anonymize?: boolean
+  Icon?: (props: LucideProps) => JSX.Element
 }
 
 type Format = {
@@ -71,7 +73,10 @@ const AvatarIcon: Component<Props> = (props) => {
             <VenetianMask data-user-icon />
           </Show>
           <Show when={props.bot}>
-            <Bot data-bot-icon />
+            <Show when={props.Icon}>{props.Icon && <props.Icon data-bot-icon />}</Show>
+            <Show when={!props.Icon}>
+              <Bot data-bot-icon />
+            </Show>
           </Show>
         </div>
       </Show>

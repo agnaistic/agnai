@@ -53,7 +53,7 @@ export const DropMenu: Component<{
   const position = createMemo(
     () =>
       props.customPosition ??
-      `${props.vert === 'up' ? 'bottom-11' : ''} ${props.horz === 'left' ? 'right-0' : ''}`
+      `${props.vert === 'up' ? 'bottom-6' : ''} ${props.horz === 'left' ? 'right-0' : ''}`
   )
 
   return (
@@ -64,10 +64,10 @@ export const DropMenu: Component<{
           onClick={props.close}
         ></div>
       </Show>
-      <div class="relative text-sm">
+      <div class="relative z-20 text-sm">
         <Show when={props.show}>
           <div
-            class={`absolute ${position()} z-20 w-fit rounded-md border-[1px] border-[var(--bg-600)] bg-[var(--bg-800)] ${
+            class={`absolute ${position()} w-fit rounded-md border-[1px] border-[var(--bg-600)] bg-[var(--bg-800)] ${
               props.class || ''
             }`}
           >

@@ -1,13 +1,26 @@
-import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import {
+  Check,
+  Megaphone,
+  MoreHorizontal,
+  PauseOctagon,
+  Pencil,
+  RefreshCw,
+  StopCircle,
+  Terminal,
+  ThumbsDown,
+  ThumbsUp,
+  Trash,
+  X,
+} from 'lucide-solid'
+import { Accessor, Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore } from '../../../store'
-import { msgStore } from '../../../store'
+import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
-import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
+import { defaultCulture } from '../../../shared/CultureCodes'
+import Button from '/web/shared/Button'
 
 type MessageProps = {
   msg: SplitMessage
@@ -20,18 +33,15 @@ type MessageProps = {
   onRemove: () => void
   editing: boolean
   anonymize?: boolean
+  tts?: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
   const user = userStore()
 
-  const splits = createMemo(
-    () => {
-      const next = splitMessage(props.char, user.profile!, props.msg)
-      return next
-    },
-    { equals: false }
-  )
+  const splits = createMemo(() => splitMessage(props.char, user.profile!, props.msg), {
+    equals: false,
+  })
 
   return (
     <For each={splits()}>
@@ -60,6 +70,10 @@ const SingleMessage: Component<
 > = (props) => {
   const user = userStore()
   const state = chatStore()
+  const voice = msgStore((x) => ({
+    status:
+      props.lastSplit && x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
+  }))
 
   const [edit, setEdit] = createSignal(false)
   const isBot = createMemo(() => !!props.msg.characterId)
@@ -96,15 +110,7 @@ const SingleMessage: Component<
   }
 
   const cancelEdit = () => setEdit(false)
-  const resendMessage = () => msgStore.resend(props.msg.chatId, props.msg._id)
   const visibilityClass = () => (props.anonymize ? 'invisible' : '')
-  const retryMessage = () => {
-    if (props.original.adapter !== 'image') {
-      msgStore.retry(props.msg.chatId)
-    } else {
-      msgStore.createImage(props.msg._id)
-    }
-  }
 
   const startEdit = () => {
     setEdit(true)
@@ -114,32 +120,12 @@ const SingleMessage: Component<
     ref?.focus()
   }
 
-  const showPrompt = () => {
-    if (!user.user) return
-    chatStore.showPrompt(user.user, props.msg)
-  }
-
   const handleToShow = () => {
     if (props.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
 
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
   }
-
-  const renderMessage = () => {
-    // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
-    // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
-    // https://github.com/showdownjs/showdown/issues/669
-    const html = markdown
-      .makeHtml(parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter))
-      .replace(/&amp;nbsp;/g, '&nbsp;')
-    return html
-  }
-
-  const messageColumnWidth = () =>
-    format().corners === 'circle'
-      ? avatarSizesCircle[format().size].msg
-      : avatarSizes[format().size].msg
 
   let ref: HTMLDivElement | undefined
 
@@ -159,19 +145,28 @@ const SingleMessage: Component<
           data-bot-avatar={isBot()}
           data-user-avatar={isUser()}
         >
-          <Show when={props.char && !!props.msg.characterId}>
-            <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
-          </Show>
-          <Show when={!props.msg.characterId}>
-            <AvatarIcon
-              avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
-              format={format()}
-              anonymize={props.anonymize}
-            />
-          </Show>
+          <Switch>
+          <Match when={voice.status === 'playing'}>
+            <div class="cursor-pointer" onClick={msgStore.stopSpeech}>
+              <AvatarIcon bot={true} format={format()} Icon={PauseOctagon} />
+            </div>
+          </Match>
+
+          <Match when={props.char && !!props.msg.characterId}>
+              <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
+            </Match>
+
+            <Match when={!props.msg.characterId}>
+              <AvatarIcon
+                avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                format={format()}
+                anonymize={props.anonymize}
+              />
+          </Match>
+          </Switch>
         </div>
 
-        <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
+        <div class="flex w-full select-text flex-col gap-1">
           <div class="flex w-full flex-row justify-between">
             <div
               class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
@@ -179,7 +174,7 @@ const SingleMessage: Component<
               }`}
             >
               <b
-                class="text-900 text-md mr-2 max-w-[160px] overflow-hidden text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
+                class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
                 // Necessary to override text-md and text-lg's line height, for proper alignment
                 style="line-height: 1;"
                 data-bot-name={isBot()}
@@ -204,37 +199,18 @@ const SingleMessage: Component<
               </span>
             </div>
             <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
-              <div
-                class="flex items-center gap-3 text-sm"
-                data-bot-editing={isBot()}
-                data-user-editing={isUser()}
-              >
-                <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
-                  <Show when={!!props.msg.characterId && !isImage()}>
-                    <div onClick={showPrompt} class="icon-button">
-                      <Terminal size={16} />
-                    </div>
-                  </Show>
-                  <Show when={!isImage()}>
-                    <div class="icon-button" onClick={startEdit}>
-                      <Pencil size={18} />
-                    </div>
-                  </Show>
-                  <div class="icon-button" onClick={props.onRemove}>
-                    <Trash size={18} />
-                  </div>
-                </Show>
-                <Show when={props.last && props.msg.characterId}>
-                  <div class="icon-button" onClick={retryMessage}>
-                    <RefreshCw size={18} />
-                  </div>
-                </Show>
-                <Show when={props.last && !props.msg.characterId}>
-                  <div class="cursor-pointer" onClick={resendMessage}>
-                    <RefreshCw size={18} />
-                  </div>
-                </Show>
-              </div>
+              <MessageOptions
+                char={props.char}
+                original={props.original}
+                msg={props.msg}
+                chatEditing={props.editing}
+                edit={edit}
+                startEdit={startEdit}
+                onRemove={props.onRemove}
+                lastSplit={props.lastSplit}
+                last={props.last}
+                tts={!!props.tts}
+              />
             </Show>
             <Show when={edit()}>
               <div class="mr-4 flex items-center gap-4 text-sm">
@@ -261,7 +237,7 @@ const SingleMessage: Component<
               </div>
             </Show>
           </div>
-          <div class="w-full break-words">
+          <div class="break-words">
             <Show when={isImage()}>
               <div class="flex justify-start">
                 <img
@@ -276,7 +252,9 @@ const SingleMessage: Component<
                 class="rendered-markdown pr-1 sm:pr-3"
                 data-bot-message={isBot()}
                 data-user-message={isUser()}
-                innerHTML={renderMessage()}
+                innerHTML={markdown.makeHtml(
+                  parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter)
+                )}
               />
             </Show>
             <Show when={props.msg._id === ''}>
@@ -398,4 +376,80 @@ function getAnonName(members: AppSchema.Profile[], id: string) {
 
 function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
   return text.replace(new RegExp(profile.handle.trim(), 'gi'), 'User ' + (i + 1))
+}
+
+const MessageOptions: Component<{
+  msg: SplitMessage
+  char: AppSchema.Character
+  original: AppSchema.ChatMessage
+  chatEditing: boolean
+  tts: boolean
+  edit: Accessor<boolean>
+  startEdit: () => void
+  lastSplit: boolean
+  last?: boolean
+  onRemove: () => void
+}> = (props) => {
+  const voice = msgStore((s) => ({
+    status: s.speaking?.messageId == props.msg._id ? s.speaking.status : undefined,
+  }))
+
+  return (
+    <div class="mr-4 flex items-center gap-3 text-sm">
+      <Show when={!!props.char.voice && props.msg.characterId}>
+        <div
+          class="icon-button"
+          onClick={() => (voice.status ? undefined : textToSpeech(props.char, props.msg))}
+        >
+          <Megaphone size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
+        <div onClick={() => chatStore.showPrompt(props.original)} class="icon-button">
+          <Terminal size={16} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing && props.original.adapter !== 'image'}>
+        <div class="icon-button" onClick={props.startEdit}>
+          <Pencil size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing}>
+        <div class="icon-button" onClick={props.onRemove}>
+          <Trash size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.last && props.msg.characterId}>
+        <div class="icon-button" onClick={() => retryMessage(props.original, props.msg)}>
+          <RefreshCw size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.last && !props.msg.characterId}>
+        <div
+          class="cursor-pointer"
+          onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
+        >
+          <RefreshCw size={18} />
+        </div>
+      </Show>
+    </div>
+  )
+}
+
+function textToSpeech(char: AppSchema.Character, msg: SplitMessage) {
+  if (!char.voice) return
+  msgStore.textToSpeech(msg._id, msg.msg, char.voice, char.culture ?? defaultCulture)
+}
+
+function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
+  if (original.adapter !== 'image') {
+    msgStore.retry(split.chatId)
+  } else {
+    msgStore.createImage(split._id)
+  }
 }

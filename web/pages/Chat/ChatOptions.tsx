@@ -3,7 +3,8 @@ import { Component, Show, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, settingStore, toastStore, userStore } from '../../store'
-import html2canvas from 'html2canvas'
+import { domToPng } from 'modern-screenshot'
+import { getRootRgb, getRootVariable } from '../../shared/util'
 
 export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui' | 'members'
 
@@ -30,14 +31,23 @@ const ChatOptions: Component<{
       toastStore.error(`Screenshot failed: Couldn't find messages element`)
       return
     }
-
     props.setScreenshotInProgress(true)
-    const canvas = await html2canvas(ele)
-    window.open()?.document.write(`
-      <div>
-        <img src="${canvas.toDataURL()}" style="display: block;margin: auto"/>
-      </div>`)
-    props.setScreenshotInProgress(false)
+    const bgRgb = getRootRgb('bg-900')
+    domToPng(ele, {
+      backgroundColor: `rgb(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b})`,
+    })
+      .then((dataUrl) => {
+        const link = document.createElement('a')
+        link.download = 'agnai_chat_screenshot.png'
+        link.href = dataUrl
+        link.click()
+        props.setScreenshotInProgress(false)
+      })
+      .catch((err) => {
+        console.log(err)
+        toastStore.error(`Screenshot failed: error logged in console`)
+        props.setScreenshotInProgress(false)
+      })
   }
 
   return (

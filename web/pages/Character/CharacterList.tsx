@@ -19,6 +19,7 @@ import {
   Download,
   Edit,
   Menu,
+  MoreHorizontal,
   Save,
   Trash,
   VenetianMask,
@@ -74,9 +75,18 @@ const CharacterList: Component = () => {
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
   const [create, setCreate] = createSignal<AppSchema.Character>()
+  const importQueue: NewCharacter[] = []
 
-  const onImport = (char: NewCharacter) => {
-    characterStore.createCharacter(char, () => setImport(false))
+  const onImport = (chars: NewCharacter[]) => {
+    importQueue.push(...chars)
+    dequeue()
+    setImport(false)
+  }
+
+  const dequeue = () => {
+    const char = importQueue.shift()
+    if (!char) return
+    characterStore.createCharacter(char, dequeue)
   }
 
   const getNextView = () => (view() === 'list' ? 'cards' : 'list')
@@ -356,7 +366,7 @@ const Character: Component<{
             <Trash class="icon-button" onClick={props.delete} />
           </div>
           <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
-            <Menu class="icon-button" />
+            <MoreHorizontal class="icon-button" />
           </div>
           <DropMenu
             class="bg-[var(--bg-700)]"
@@ -446,7 +456,11 @@ const Character: Component<{
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">
+              <Button
+                onClick={() => props.toggleFavorite(!props.char.favorite)}
+                size="sm"
+                alignLeft
+              >
                 <Show when={props.char.favorite}>
                   <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
                 </Show>
@@ -457,7 +471,14 @@ const Character: Component<{
               <Button onClick={createChat} alignLeft size="sm">
                 <MessageCircle /> Chat
               </Button>
-              <Button alignLeft onClick={props.download} size="sm">
+              <Button
+                alignLeft
+                size="sm"
+                onClick={() => {
+                  setOpts(false)
+                  props.download()
+                }}
+              >
                 <Download /> Download
               </Button>
               <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
@@ -470,7 +491,14 @@ const Character: Component<{
               >
                 <Copy /> Duplicate
               </Button>
-              <Button alignLeft onClick={props.delete} size="sm">
+              <Button
+                alignLeft
+                size="sm"
+                onClick={() => {
+                  setOpts(false)
+                  props.delete()
+                }}
+              >
                 <Trash /> Delete
               </Button>
             </div>

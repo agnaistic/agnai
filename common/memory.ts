@@ -93,7 +93,7 @@ export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPro
   const prompt = entries.list
     .map(({ text }) => text)
     .reverse()
-    .join('. ')
+    .join('\n')
 
   return {
     prompt,

@@ -98,7 +98,9 @@ export async function editChracter(charId: string, { avatar: file, ...char }: Ne
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
     form.append('description', char.description || '')
+    if (char.culture) form.append('culture', char.culture)
     form.append('sampleChat', char.sampleChat)
+    if (char.voice) form.append('voice', JSON.stringify(char.voice))
     if (file) {
       form.append('avatar', file)
     }
@@ -147,10 +149,12 @@ export async function createCharacter(char: ImportCharacter) {
     const form = new FormData()
     form.append('name', char.name)
     if (char.description) form.append('description', char.description)
+    if (char.culture) form.append('culture', char.culture)
     form.append('greeting', char.greeting)
     form.append('scenario', char.scenario)
     form.append('persona', JSON.stringify(char.persona))
     form.append('sampleChat', char.sampleChat)
+    if (char.voice) form.append('voice', JSON.stringify(char.voice))
     if (char.avatar) {
       form.append('avatar', char.avatar)
     }

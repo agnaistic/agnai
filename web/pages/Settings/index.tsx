@@ -9,11 +9,14 @@ import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
 import { Show } from 'solid-js'
 import { ImageSettings } from './Image/ImageSettings'
+import { VoiceSettings } from './Voice/VoiceSettings'
+import { ElevenLabsModel } from '../../../srv/db/texttospeech-schema'
 
 const settingTabs = {
   ai: 'AI Settings',
   ui: 'UI Settings',
   image: 'Image Settings',
+  voice: 'Voice Settings',
   guest: 'Guest Data',
 }
 
@@ -26,7 +29,7 @@ const Settings: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [workers, setWorkers] = createSignal<string[]>(state.user?.hordeWorkers || [])
 
-  const tabs: Tab[] = ['ai', 'ui', 'image']
+  const tabs: Tab[] = ['ai', 'ui', 'image', 'voice']
   if (!state.loggedIn) tabs.push('guest')
 
   const currentTab = createMemo(() => tabs[tab()])
@@ -64,6 +67,15 @@ const Settings: Component = () => {
 
       sdUrl: 'string',
       sdSampler: 'string',
+
+      speechToTextEnabled: 'boolean',
+      speechToTextAutoSubmit: 'boolean',
+      speechToTextAutoRecord: 'boolean',
+
+      textToSpeechEnabled: 'boolean',
+      textToSpeechFilterActions: 'boolean',
+
+      elevenLabsApiKey: 'string?',
     } as const)
 
     const {
@@ -78,12 +90,31 @@ const Settings: Component = () => {
       hordeSampler,
       novelImageModel,
       novelSampler,
+
+      speechToTextEnabled,
+      speechToTextAutoSubmit,
+      speechToTextAutoRecord,
+
+      textToSpeechEnabled,
+      textToSpeechFilterActions,
+
+      elevenLabsApiKey,
+
       ...base
     } = body
 
     userStore.updateConfig({
       ...base,
       hordeWorkers: workers(),
+      speechtotext: {
+        enabled: speechToTextEnabled,
+        autoSubmit: speechToTextAutoSubmit,
+        autoRecord: speechToTextAutoRecord,
+      },
+      texttospeech: {
+        enabled: textToSpeechEnabled,
+        filterActions: textToSpeechFilterActions,
+      },
       images: {
         type: imageType,
         cfg: imageCfg,
@@ -127,6 +158,10 @@ const Settings: Component = () => {
 
           <div class={currentTab() === 'image' ? tabClass : 'hidden'}>
             <ImageSettings />
+          </div>
+
+          <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>
+            <VoiceSettings />
           </div>
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>

@@ -20,12 +20,14 @@ type CharacterState = {
 export type NewCharacter = {
   name: string
   description?: string
+  culture?: string
   greeting: string
   scenario: string
   sampleChat: string
   avatar?: File
   persona: AppSchema.Persona
   originalAvatar?: any
+  voice?: AppSchema.Character['voice']
 }
 
 const initState: CharacterState = {
@@ -65,7 +67,7 @@ export const characterStore = createStore<CharacterState>(
     async *createCharacter(
       { creating, characters: { list } },
       char: NewCharacter,
-      onSuccess?: () => void
+      onSuccess?: (result: AppSchema.Character) => void
     ) {
       if (creating) return
 
@@ -76,7 +78,7 @@ export const characterStore = createStore<CharacterState>(
       if (res.result) {
         toastStore.success(`Successfully created character`)
         yield { characters: { list: list.concat(res.result), loaded: true } }
-        onSuccess?.()
+        onSuccess?.(res.result)
       }
     },
     async *editCharacter(

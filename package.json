@@ -19,6 +19,9 @@
     "dist/index.*",
     "db/.gitkeep"
   ],
+  "_moduleAliases": {
+    "srv": "./srv"
+  },
   "scripts": {
     "build": "parcel build web/index.html --no-optimize --detailed-report",
     "build:prod": "NODE_ENV=production parcel build web/index.html --detailed-report",
@@ -67,6 +70,8 @@
     "jsonwebtoken": "^9.0.0",
     "minimist": "^1.2.8",
     "mkdirp": "^2.1.4",
+    "modern-screenshot": "^4.4.15",
+    "module-alias": "^2.2.2",
     "mongodb": "^5.1.0",
     "multer": "^1.4.5-lts.1",
     "needle": "^3.2.0",
@@ -98,7 +103,6 @@
     "chai": "^4.3.7",
     "concurrently": "^7.6.0",
     "events": "^3.1.0",
-    "html2canvas": "^1.4.1",
     "js-cookie": "^3.0.1",
     "localtunnel": "^2.0.2",
     "lucide-solid": "0.105.0-alpha.9",

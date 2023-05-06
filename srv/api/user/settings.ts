@@ -85,6 +85,14 @@ export const deleteOaiKey = handle(async ({ userId }) => {
   return { success: true }
 })
 
+export const deleteElevenLabsKey = handle(async ({ userId }) => {
+  await store.users.updateUser(userId!, {
+    elevenLabsApiKey: '',
+  })
+
+  return { success: true }
+})
+
 export const updateConfig = handle(async ({ userId, body }) => {
   assertValid(
     {
@@ -104,6 +112,9 @@ export const updateConfig = handle(async ({ userId, body }) => {
       scaleUrl: 'string?',
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
+      elevenLabsApiKey: 'string?',
+      speechtotext: 'any?',
+      texttospeech: 'any?',
       images: 'any?',
       defaultPreset: 'string?',
     },
@@ -162,6 +173,14 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.images = body.images
   }
 
+  if (body.speechtotext) {
+    update.speechtotext = body.speechtotext
+  }
+
+  if (body.texttospeech) {
+    update.texttospeech = body.texttospeech
+  }
+
   if (body.hordeModel) {
     update.hordeModel = body.hordeModel!
   }
@@ -196,6 +215,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.thirdPartyPassword) {
     update.thirdPartyPassword = encryptText(body.thirdPartyPassword)
+  }
+
+  if (body.elevenLabsApiKey) {
+    update.elevenLabsApiKey = encryptText(body.elevenLabsApiKey)
   }
 
   await store.users.updateUser(userId!, update)
@@ -302,6 +325,11 @@ async function getSafeUserConfig(userId: string) {
     if (user.thirdPartyPassword) {
       user.thirdPartyPassword = ''
       user.thirdPartyPasswordSet = true
+    }
+
+    if (user.elevenLabsApiKey) {
+      user.elevenLabsApiKey = ''
+      user.elevenLabsApiKeySet = true
     }
   }
   return user

@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, onMount, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, on, onMount, Show } from 'solid-js'
 import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -13,6 +13,11 @@ import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttribut
 import AvatarIcon from '../../shared/AvatarIcon'
 import { PERSONA_FORMATS } from '../../../common/adapters'
 import { getImageData } from '../../store/data/chars'
+import Select from '../../shared/Select'
+import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
+import VoicePicker from './components/VoicePicker'
+import { VoiceSettings } from '../../../srv/db/texttospeech-schema'
+import { AppSchema } from '../../../srv/db/schema'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
@@ -42,15 +47,21 @@ const CreateCharacter: Component = () => {
     characterStore.getCharacters()
   })
 
-  const [schema, setSchema] = createSignal(state.edit?.persona.kind)
-  const [avatar, setAvatar] = createSignal<File | undefined>(undefined)
+  const [schema, setSchema] = createSignal<AppSchema.Persona['kind']>()
+  const [avatar, setAvatar] = createSignal<File>()
+  const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
+  const [culture, setCulture] = createSignal(defaultCulture)
+  const edit = createMemo(() => state.edit)
   const nav = useNavigate()
 
-  createEffect(() => {
-    if (!schema() && state.edit?.persona.kind) {
-      setSchema(state.edit?.persona.kind)
-    }
-  })
+  createEffect(
+    on(edit, (edit) => {
+      if (!edit) return
+      setSchema(edit.persona.kind)
+      setVoice(edit.voice || { service: undefined })
+      setCulture(edit.culture ?? defaultCulture)
+    })
+  )
 
   const updateFile = async (files: FileInputResult[]) => {
     if (!files.length) {
@@ -70,6 +81,7 @@ const CreateCharacter: Component = () => {
       kind: PERSONA_FORMATS,
       name: 'string',
       description: 'string?',
+      culture: 'string',
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
@@ -84,18 +96,22 @@ const CreateCharacter: Component = () => {
     const payload = {
       name: body.name,
       description: body.description,
+      culture: body.culture,
       scenario: body.scenario,
       avatar: avatar(),
       greeting: body.greeting,
       sampleChat: body.sampleChat,
       persona,
       originalAvatar: state.edit?.avatar,
+      voice: voice(),
     }
 
     if (params.editId) {
-      characterStore.editCharacter(params.editId, payload, () => nav('/character/list'))
+      characterStore.editCharacter(params.editId, payload, () =>
+        nav(`/character/${params.editId}/chats`)
+      )
     } else {
-      characterStore.createCharacter(payload, () => nav('/character/list'))
+      characterStore.createCharacter(payload, (result) => nav(`/character/${result._id}/chats`))
     }
   }
 
@@ -150,6 +166,19 @@ const CreateCharacter: Component = () => {
           />
           <div class="flex items-end">{/* <Button>Generate</Button> */}</div>
         </div>
+
+        <Select
+          fieldName="culture"
+          label="Language"
+          helperText={`The language this character speaks and understands.${
+            culture().startsWith('en') ?? true
+              ? ''
+              : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
+          }`}
+          value={culture()}
+          items={CultureCodes}
+          onChange={setCulture}
+        />
 
         <TextInput
           fieldName="scenario"
@@ -218,6 +247,9 @@ const CreateCharacter: Component = () => {
           placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
           value={state.edit?.sampleChat}
         />
+
+        <h4 class="text-md font-bold">Character Voice</h4>
+        <VoicePicker value={voice()} culture={culture()} onChange={setVoice} />
 
         <div class="flex justify-end gap-2">
           <Button onClick={() => nav('/character/list')} schema="secondary">

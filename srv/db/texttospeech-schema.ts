@@ -1,0 +1,42 @@
+export type TTSService = 'webspeechsynthesis' | 'elevenlabs'
+
+export type TTSSettings = {
+  enabled: boolean
+  filterActions: boolean
+}
+
+export type ElevenLabsModel = 'eleven_multilingual_v1' | 'eleven_monolingual_v1'
+
+export type VoiceSettings =
+  | VoiceDisabledSettings
+  | VoiceElevenLabsSettings
+  | VoiceWebSpeechSynthesisSettings
+
+export type VoiceDisabledSettings = {
+  service: undefined
+}
+
+export type VoiceElevenLabsSettings = {
+  service: 'elevenlabs'
+  voiceId: string
+  model?: ElevenLabsModel
+  stability?: number
+  similarityBoost?: number
+}
+
+export type VoiceWebSpeechSynthesisSettings = {
+  service: 'webspeechsynthesis'
+  voiceId: string
+  pitch?: number
+  rate?: number
+}
+
+export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<
+  VoiceSettings,
+  { service: T }
+>
+
+export type VoiceSettingForm<T extends VoiceSettings['service']> = Omit<
+  SpecificVoiceSetting<T>,
+  'service' | 'voiceId'
+>

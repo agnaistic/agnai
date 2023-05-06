@@ -312,3 +312,16 @@ export function find<T, K extends keyof T>(values: T[], key: K, val: T[K]): T | 
     if (value[key] === val) return value
   }
 }
+
+/**
+ * This only works for shallow objects
+ */
+export function isDirty<T extends {}>(original: T, compare: T): boolean {
+  const keys = new Set<keyof T>(Object.keys(original).concat(Object.keys(compare)) as any)
+
+  for (const key of Array.from(keys)) {
+    if (original[key] !== compare[key]) return true
+  }
+
+  return false
+}
