@@ -107,9 +107,11 @@ const CreateCharacter: Component = () => {
     }
 
     if (params.editId) {
-      characterStore.editCharacter(params.editId, payload, () => nav('/character/list'))
+      characterStore.editCharacter(params.editId, payload, () =>
+        nav(`/character/${params.editId}/chats`)
+      )
     } else {
-      characterStore.createCharacter(payload, () => nav('/character/list'))
+      characterStore.createCharacter(payload, (result) => nav(`/character/${result._id}/chats`))
     }
   }
 
