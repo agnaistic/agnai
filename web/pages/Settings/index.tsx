@@ -111,6 +111,7 @@ const Settings: Component = () => {
         autoSubmit: speechToTextAutoSubmit,
         autoRecord: speechToTextAutoRecord,
       },
+      elevenLabsApiKey,
       texttospeech: {
         enabled: textToSpeechEnabled,
         filterActions: textToSpeechFilterActions,
