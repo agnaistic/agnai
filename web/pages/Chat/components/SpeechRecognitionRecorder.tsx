@@ -12,8 +12,10 @@ import {
 import { Mic } from 'lucide-solid'
 import Button from '../../../shared/Button'
 import { defaultCulture } from '../../../shared/CultureCodes'
-import { userStore } from '../../../store'
+import { toastStore, userStore } from '../../../store'
 import { AppSchema } from '../../../../srv/db/schema'
+
+const win: any = window
 
 interface SpeechRecognition extends EventTarget {
   continuous: boolean
@@ -58,17 +60,23 @@ export const SpeechRecognitionRecorder: Component<{
   const [pendingRecord, setPendingRecord] = createSignal(false)
 
   onMount(() => {
-    const w = window as any
-    const speechRecognitionCtor: SpeechRecognitionCtor =
-      w.SpeechRecognition || w.speechRecognition || w.webkitSpeechRecognition
-    if (!speechRecognitionCtor) return
+    let speech: SpeechRecognition
+    try {
+      const Speech: SpeechRecognitionCtor =
+        win.SpeechRecognition || win.speechRecognition || win.webkitSpeechRecognition
+      if (!Speech) return
 
-    const recognition = new speechRecognitionCtor() as SpeechRecognition
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = props.culture ?? defaultCulture
+      speech = new Speech() as SpeechRecognition
+    } catch (e: any) {
+      toastStore.error(`Could not initialize speech recognition: ${e.message}`)
+      return
+    }
 
-    recognition.addEventListener('result', (event) => {
+    speech.continuous = true
+    speech.interimResults = true
+    speech.lang = props.culture ?? defaultCulture
+
+    speech.addEventListener('result', (event) => {
       setPendingRecord(false)
       const speechEvent = event as SpeechRecognitionEvent
       let interimTranscript = ''
@@ -82,7 +90,7 @@ export const SpeechRecognitionRecorder: Component<{
             let final = finalValue()
             final = composeValues(final, interim) + '.'
             setFinalValue(final)
-            recognition.abort()
+            speech.abort()
             setIsListening(false)
           }
           interimTranscript = ' '
@@ -94,23 +102,23 @@ export const SpeechRecognitionRecorder: Component<{
       setInterimValue(capitalizeInterim(interimTranscript))
     })
 
-    recognition.addEventListener('error', () => {
+    speech.addEventListener('error', () => {
       setIsListening(false)
     })
 
-    recognition.addEventListener('end', () => {
+    speech.addEventListener('end', () => {
       setIsListening(false)
     })
 
-    recognition.addEventListener('speechstart', () => {
+    speech.addEventListener('speechstart', () => {
       setIsHearing(true)
     })
 
-    recognition.addEventListener('speechend', () => {
+    speech.addEventListener('speechend', () => {
       setIsHearing(false)
     })
 
-    setSpeechRecognition(recognition)
+    setSpeechRecognition(speech)
   })
 
   createEffect(() => {
@@ -176,8 +184,10 @@ export const SpeechRecognitionRecorder: Component<{
   })
 
   const toggleListening = () => {
+    const pending = pendingRecord()
     const listening = isListening()
     const speech = speechRecognition()
+    setPendingRecord(false)
     if (!speech) return
     if (listening) {
       speech.abort()
@@ -185,8 +195,8 @@ export const SpeechRecognitionRecorder: Component<{
     } else if (props.enabled) {
       speech.start()
       setIsListening(true)
-    } else {
-      setPendingRecord(!pendingRecord())
+    } else if (!pending) {
+      setPendingRecord(true)
     }
   }
 
