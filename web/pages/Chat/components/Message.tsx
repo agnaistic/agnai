@@ -1,15 +1,18 @@
 import {
   Check,
   Megaphone,
+  MoreHorizontal,
+  PauseOctagon,
   Pencil,
   RefreshCw,
+  StopCircle,
   Terminal,
   ThumbsDown,
   ThumbsUp,
   Trash,
   X,
 } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { Accessor, Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
@@ -18,6 +21,7 @@ import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 import { defaultCulture } from '../../../shared/CultureCodes'
+import Button from '/web/shared/Button'
 
 type MessageProps = {
   msg: SplitMessage
@@ -30,18 +34,15 @@ type MessageProps = {
   onRemove: () => void
   editing: boolean
   anonymize?: boolean
+  tts?: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
   const user = userStore()
 
-  const splits = createMemo(
-    () => {
-      const next = splitMessage(props.char, user.profile!, props.msg)
-      return next
-    },
-    { equals: false }
-  )
+  const splits = createMemo(() => splitMessage(props.char, user.profile!, props.msg), {
+    equals: false,
+  })
 
   return (
     <For each={splits()}>
@@ -70,8 +71,9 @@ const SingleMessage: Component<
 > = (props) => {
   const user = userStore()
   const state = chatStore()
-  const voiceLoadingState = msgStore((x) => ({
-    status: x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
+  const voice = msgStore((x) => ({
+    status:
+      props.lastSplit && x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
   }))
 
   const [edit, setEdit] = createSignal(false)
@@ -109,15 +111,7 @@ const SingleMessage: Component<
   }
 
   const cancelEdit = () => setEdit(false)
-  const resendMessage = () => msgStore.resend(props.msg.chatId, props.msg._id)
   const visibilityClass = () => (props.anonymize ? 'invisible' : '')
-  const retryMessage = () => {
-    if (props.original.adapter !== 'image') {
-      msgStore.retry(props.msg.chatId)
-    } else {
-      msgStore.createImage(props.msg._id)
-    }
-  }
 
   const startEdit = () => {
     setEdit(true)
@@ -125,21 +119,6 @@ const SingleMessage: Component<
       ref.innerText = props.original.msg
     }
     ref?.focus()
-  }
-
-  const textToSpeech = async () => {
-    if (!props.char.voice) return
-    msgStore.textToSpeech(
-      props.msg._id,
-      props.msg.msg,
-      props.char.voice,
-      props.char.culture ?? defaultCulture
-    )
-  }
-
-  const showPrompt = () => {
-    if (!user.user) return
-    chatStore.showPrompt(user.user, props.msg)
   }
 
   const handleToShow = () => {
@@ -179,16 +158,25 @@ const SingleMessage: Component<
         data-bot-avatar={isBot()}
         data-user-avatar={isUser()}
       >
-        <Show when={props.char && !!props.msg.characterId}>
-          <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
-        </Show>
-        <Show when={!props.msg.characterId}>
-          <AvatarIcon
-            avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
-            format={format()}
-            anonymize={props.anonymize}
-          />
-        </Show>
+        <Switch>
+          <Match when={voice.status === 'playing'}>
+            <div class="cursor-pointer" onClick={msgStore.stopSpeech}>
+              <AvatarIcon bot={true} format={format()} Icon={PauseOctagon} />
+            </div>
+          </Match>
+
+          <Match when={props.char && !!props.msg.characterId}>
+            <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
+          </Match>
+
+          <Match when={!props.msg.characterId}>
+            <AvatarIcon
+              avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+              format={format()}
+              anonymize={props.anonymize}
+            />
+          </Match>
+        </Switch>
       </div>
 
       <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
@@ -219,61 +207,22 @@ const SingleMessage: Component<
               {new Date(props.msg.createdAt).toLocaleString()}
             </span>
           </div>
+
           <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
-            <div
-              class="mr-4 flex items-center gap-3 text-sm"
-              data-bot-editing={isBot()}
-              data-user-editing={isUser()}
-            >
-              <Show
-                when={
-                  (user.user?.texttospeech?.enabled ?? true) &&
-                  props.msg.msg &&
-                  props.msg.characterId &&
-                  props.char.voice &&
-                  (user.user?._id === props.chat?.userId || voiceLoadingState.status)
-                }
-              >
-                <div
-                  class="icon-button"
-                  onClick={() => (voiceLoadingState.status ? undefined : textToSpeech())}
-                  classList={{
-                    'animate-pulse':
-                      voiceLoadingState.status === 'generating' ||
-                      voiceLoadingState.status == 'loading',
-                    'animate-ping': voiceLoadingState.status === 'playing',
-                  }}
-                >
-                  <Megaphone size={18} />
-                </div>
-              </Show>
-              <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
-                <Show when={!!props.msg.characterId && !isImage()}>
-                  <div onClick={showPrompt} class="icon-button">
-                    <Terminal size={16} />
-                  </div>
-                </Show>
-                <Show when={!isImage()}>
-                  <div class="icon-button" onClick={startEdit}>
-                    <Pencil size={18} />
-                  </div>
-                </Show>
-                <div class="icon-button" onClick={props.onRemove}>
-                  <Trash size={18} />
-                </div>
-              </Show>
-              <Show when={props.last && props.msg.characterId}>
-                <div class="icon-button" onClick={retryMessage}>
-                  <RefreshCw size={18} />
-                </div>
-              </Show>
-              <Show when={props.last && !props.msg.characterId}>
-                <div class="cursor-pointer" onClick={resendMessage}>
-                  <RefreshCw size={18} />
-                </div>
-              </Show>
-            </div>
+            <MessageOptions
+              char={props.char}
+              original={props.original}
+              msg={props.msg}
+              chatEditing={props.editing}
+              edit={edit}
+              startEdit={startEdit}
+              onRemove={props.onRemove}
+              lastSplit={props.lastSplit}
+              last={props.last}
+              tts={!!props.tts}
+            />
           </Show>
+
           <Show when={edit()}>
             <div class="mr-4 flex items-center gap-4 text-sm">
               <div class="icon-button text-red-500" onClick={cancelEdit}>
@@ -284,6 +233,7 @@ const SingleMessage: Component<
               </div>
             </div>
           </Show>
+
           <Show when={props.last && props.swipe}>
             <div class="mr-4 flex items-center gap-4 text-sm">
               <X
@@ -435,4 +385,80 @@ function getAnonName(members: AppSchema.Profile[], id: string) {
 
 function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
   return text.replace(new RegExp(profile.handle.trim(), 'gi'), 'User ' + (i + 1))
+}
+
+const MessageOptions: Component<{
+  msg: SplitMessage
+  char: AppSchema.Character
+  original: AppSchema.ChatMessage
+  chatEditing: boolean
+  tts: boolean
+  edit: Accessor<boolean>
+  startEdit: () => void
+  lastSplit: boolean
+  last?: boolean
+  onRemove: () => void
+}> = (props) => {
+  const voice = msgStore((s) => ({
+    status: s.speaking?.messageId == props.msg._id ? s.speaking.status : undefined,
+  }))
+
+  return (
+    <div class="mr-4 flex items-center gap-3 text-sm">
+      <Show when={!!props.char.voice && props.msg.characterId}>
+        <div
+          class="icon-button"
+          onClick={() => (voice.status ? undefined : textToSpeech(props.char, props.msg))}
+        >
+          <Megaphone size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
+        <div onClick={() => chatStore.showPrompt(props.original)} class="icon-button">
+          <Terminal size={16} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing && props.original.adapter !== 'image'}>
+        <div class="icon-button" onClick={props.startEdit}>
+          <Pencil size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.chatEditing}>
+        <div class="icon-button" onClick={props.onRemove}>
+          <Trash size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.last && props.msg.characterId}>
+        <div class="icon-button" onClick={() => retryMessage(props.original, props.msg)}>
+          <RefreshCw size={18} />
+        </div>
+      </Show>
+
+      <Show when={props.last && !props.msg.characterId}>
+        <div
+          class="cursor-pointer"
+          onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
+        >
+          <RefreshCw size={18} />
+        </div>
+      </Show>
+    </div>
+  )
+}
+
+function textToSpeech(char: AppSchema.Character, msg: SplitMessage) {
+  if (!char.voice) return
+  msgStore.textToSpeech(msg._id, msg.msg, char.voice, char.culture ?? defaultCulture)
+}
+
+function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
+  if (original.adapter !== 'image') {
+    msgStore.retry(split.chatId)
+  } else {
+    msgStore.createImage(split._id)
+  }
 }

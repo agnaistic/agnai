@@ -214,19 +214,23 @@ export const msgStore = createStore<MsgState>(
       yield { retries: { ...retries, [msgId]: next } }
       msgStore.editMessage(msgId, replacement, onSuccess)
     },
-    async deleteMessages({ msgs, activeChatId }, fromId: string) {
+    async deleteMessages({ msgs, activeChatId }, fromId: string, deleteOne?: boolean) {
       const index = msgs.findIndex((m) => m._id === fromId)
       if (index === -1) {
         return toastStore.error(`Cannot delete message: Message not found`)
       }
 
-      const deleteIds = msgs.slice(index).map((m) => m._id)
+      const deleteIds = deleteOne ? [fromId] : msgs.slice(index).map((m) => m._id)
       const res = await msgsApi.deleteMessages(activeChatId, deleteIds)
 
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
       return { msgs: msgs.slice(0, index) }
+    },
+    stopSpeech() {
+      speechSynthesisManager.stopCurrentVoice()
+      return { speaking: undefined }
     },
     async *textToSpeech(
       { activeChatId, speaking },

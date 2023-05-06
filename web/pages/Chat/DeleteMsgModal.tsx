@@ -1,4 +1,4 @@
-import { Component } from 'solid-js'
+import { Component, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { msgStore } from '../../store'
@@ -6,10 +6,14 @@ import { msgStore } from '../../store'
 const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
   props
 ) => {
-  const state = msgStore()
+  const state = msgStore((s) => ({
+    msgs: s.msgs,
+    msg: s.msgs.find((msg) => msg._id === props.messageId),
+  }))
 
   const confirm = () => {
-    msgStore.deleteMessages(props.messageId)
+    const deleteOne = state.msg?.adapter === 'image'
+    msgStore.deleteMessages(props.messageId, deleteOne)
     props.close()
   }
 
@@ -27,8 +31,14 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
         </>
       }
     >
-      Are you sure wish to delete the last{' '}
-      {state.msgs.length - state.msgs.findIndex(byId(props.messageId))} messages?
+      <Show when={state.msg?.adapter !== 'image'}>
+        Are you sure wish to delete the last{' '}
+        {state.msgs.length - state.msgs.findIndex(byId(props.messageId))} messages?
+      </Show>
+
+      <Show when={state.msg?.adapter === 'image'}>
+        Are you sure wish to delete 1 image message?
+      </Show>
     </Modal>
   )
 }

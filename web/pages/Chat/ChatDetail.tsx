@@ -26,6 +26,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
+import { voiceStore } from '/web/store/voice'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -46,6 +47,7 @@ const ChatDetail: Component = () => {
     partial: s.partial,
     waiting: s.waiting,
     retries: s.retries,
+    speaking: s.speaking,
   }))
 
   const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
@@ -70,6 +72,7 @@ const ChatDetail: Component = () => {
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
+  const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
   const isSelfRemoved = createMemo(() => {
     if (!user.profile) return false
@@ -266,6 +269,7 @@ const ChatDetail: Component = () => {
                       }
                       confirmSwipe={() => confirmSwipe(msg._id)}
                       cancelSwipe={cancelSwipe}
+                      tts={tts()}
                     />
                   )}
                 </For>

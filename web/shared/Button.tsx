@@ -31,6 +31,7 @@ const Button: Component<{
   disabled?: boolean
   class?: string
   alignLeft?: boolean
+  classList?: { [key: string]: boolean }
 }> = (props) => (
   <button
     type={props.type || 'button'}
@@ -39,6 +40,7 @@ const Button: Component<{
         props.alignLeft ? '' : 'justify-center'
       } ${sizes[props.size || 'md']} ` + (props.class || '')
     }
+    classList={props.classList}
     disabled={props.disabled}
     onClick={props.onClick}
   >
