@@ -85,7 +85,7 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="relative flex items-center justify-center max-sm:pb-2">
+    <div class="relative flex items-center justify-center">
       <textarea
         spellcheck
         lang={props.culture}
