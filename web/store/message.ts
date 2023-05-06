@@ -418,9 +418,9 @@ async function playVoiceFromBrowser(
 }
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
-  const { activeChatId, partial: prevPartial } = msgStore.getState()
+  const { activeChatId } = msgStore.getState()
   if (body.chatId !== activeChatId) return
-  msgStore.setState({ partial: prevPartial ? prevPartial + body.partial : body.partial })
+  msgStore.setState({ partial: body.partial })
 })
 
 subscribe(

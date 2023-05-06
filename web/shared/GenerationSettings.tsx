@@ -158,6 +158,16 @@ const GeneralSettings: Component<Props> = (props) => {
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}
       />
+
+      <Toggle
+        fieldName="streamResponse"
+        label="Stream Response"
+        helperText="Whether to stream the AI's response token-by-token instead of waiting for the entire message."
+        value={props.inherit?.streamResponse ?? false}
+        disabled={props.disabled}
+        service={props.service}
+        adapters={adapterSettings.streamResponse}
+      />
     </>
   )
 }

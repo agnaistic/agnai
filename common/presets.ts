@@ -33,6 +33,7 @@ export const chatGenSettings = {
   gaslight: 'string',
   oaiModel: 'string',
   claudeModel: 'string',
+  streamResponse: 'boolean?',
   useGaslight: 'boolean?',
   ultimeJailbreak: 'string?',
   antiBond: 'boolean?',
@@ -195,6 +196,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     presencePenalty: 'presence_penalty',
     gaslight: 'gaslight',
     oaiModel: 'oaiModel',
+    streamResponse: 'stream',
   },
   claude: {
     maxTokens: 'max_tokens_to_sample',
