@@ -68,9 +68,7 @@ const HomePage: Component = () => {
 
         <ul>
           <li>
-            <A href="/changelog" target="_blank">
-              Change Log
-            </A>
+            <A href="/changelog">Change Log</A>
           </li>
           <li>
             <A href="https://github.com/users/sceuick/projects/1/views/1" target="_blank">

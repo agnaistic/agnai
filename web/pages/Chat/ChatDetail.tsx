@@ -1,7 +1,7 @@
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
-import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
@@ -151,12 +151,6 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
-  // When html2canvas grabs this element to make a screenshot out
-  // of it, we need to set the background otherwise it will render
-  // as white/transparent resulting in unreadable message contents
-  // if message background is set to 0 opacity
-  const chatBg = () => (screenshotInProgress() ? 'bg-[var(--bg-900)]' : '')
-
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
   }
@@ -250,8 +244,8 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
-              <div id="chat-messages" class={`flex flex-col gap-2 ${chatBg()}`}>
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
+              <div id="chat-messages" class="flex flex-col gap-2">
                 <Show when={chats.loaded && msgs.msgs.length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">
                     <Button onClick={generateFirst}>Generate Message</Button>
