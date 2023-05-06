@@ -177,19 +177,6 @@ const ChatDetail: Component = () => {
   const msgsToDisplay = () =>
     hideOocMessages() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs
 
-  const indexOfLastRPMessage = () =>
-    msgs.msgs.findIndex((_, i, original) => {
-      const rest = original.slice(i + 1)
-      if (rest.find((msg) => msg.ooc !== true)) {
-        return false
-      } else {
-        return true
-      }
-    })
-
-  const msgsToDisplay = () =>
-    hideOocMessages() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs
-
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
   }

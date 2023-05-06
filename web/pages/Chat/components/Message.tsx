@@ -146,13 +146,13 @@ const SingleMessage: Component<
           data-user-avatar={isUser()}
         >
           <Switch>
-          <Match when={voice.status === 'playing'}>
-            <div class="cursor-pointer" onClick={msgStore.stopSpeech}>
-              <AvatarIcon bot={true} format={format()} Icon={PauseOctagon} />
-            </div>
-          </Match>
+            <Match when={voice.status === 'playing'}>
+              <div class="cursor-pointer" onClick={msgStore.stopSpeech}>
+                <AvatarIcon bot={true} format={format()} Icon={PauseOctagon} />
+              </div>
+            </Match>
 
-          <Match when={props.char && !!props.msg.characterId}>
+            <Match when={props.char && !!props.msg.characterId}>
               <AvatarIcon avatarUrl={props.char?.avatar} bot={true} format={format()} />
             </Match>
 
@@ -162,7 +162,7 @@ const SingleMessage: Component<
                 format={format()}
                 anonymize={props.anonymize}
               />
-          </Match>
+            </Match>
           </Switch>
         </div>
 
