@@ -84,6 +84,10 @@ export async function deleteApiKey(kind: string) {
     user.thirdPartyPassword = ''
   }
 
+  if (kind === 'elevenlabs') {
+    user.elevenLabsApiKey = ''
+  }
+
   localApi.saveConfig(user)
   return localApi.result({ success: true })
 }
@@ -121,6 +125,10 @@ export async function updateConfig(config: Partial<AppSchema.User>) {
 
     if (prev.oaiKey && !next.oaiKey) {
       next.oaiKey = prev.oaiKey
+    }
+
+    if (prev.elevenLabsApiKey && !next.elevenLabsApiKey) {
+      next.elevenLabsApiKey = prev.elevenLabsApiKey
     }
 
     localApi.saveConfig(next)

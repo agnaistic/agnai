@@ -234,6 +234,7 @@ const ChatDetail: Component = () => {
               swiped={swipe() !== 0}
               send={sendMessage}
               more={moreMessage}
+              culture={chats.char?.culture}
             />
             <Show when={isOwner()}>
               <SwipeMessage

@@ -1,13 +1,23 @@
-import { Check, Pencil, RefreshCw, Terminal, ThumbsDown, ThumbsUp, Trash, X } from 'lucide-solid'
+import {
+  Check,
+  Megaphone,
+  Pencil,
+  RefreshCw,
+  Terminal,
+  ThumbsDown,
+  ThumbsUp,
+  Trash,
+  X,
+} from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore } from '../../../store'
-import { msgStore } from '../../../store'
+import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
+import { defaultCulture } from '../../../shared/CultureCodes'
 
 type MessageProps = {
   msg: SplitMessage
@@ -60,6 +70,9 @@ const SingleMessage: Component<
 > = (props) => {
   const user = userStore()
   const state = chatStore()
+  const voiceLoadingState = msgStore((x) => ({
+    status: x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
+  }))
 
   const [edit, setEdit] = createSignal(false)
   const isBot = createMemo(() => !!props.msg.characterId)
@@ -112,6 +125,16 @@ const SingleMessage: Component<
       ref.innerText = props.original.msg
     }
     ref?.focus()
+  }
+
+  const textToSpeech = async () => {
+    if (!props.char.voice) return
+    msgStore.textToSpeech(
+      props.msg._id,
+      props.msg.msg,
+      props.char.voice,
+      props.char.culture ?? defaultCulture
+    )
   }
 
   const showPrompt = () => {
@@ -196,12 +219,41 @@ const SingleMessage: Component<
               {new Date(props.msg.createdAt).toLocaleString()}
             </span>
           </div>
-          <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
+          <Show
+            when={
+              !edit() &&
+              !props.swipe &&
+              user.user?._id === props.chat?.userId &&
+              user.user?.texttospeech?.enabled !== false
+            }
+          >
             <div
               class="mr-4 flex items-center gap-3 text-sm"
               data-bot-editing={isBot()}
               data-user-editing={isUser()}
             >
+              <Show
+                when={
+                  (user.user?.texttospeech?.enabled ?? true) &&
+                  props.msg.msg &&
+                  props.msg.characterId &&
+                  props.char.voice &&
+                  (user.user?._id === props.chat?.userId || voiceLoadingState.status)
+                }
+              >
+                <div
+                  class="icon-button"
+                  onClick={() => (voiceLoadingState.status ? undefined : textToSpeech())}
+                  classList={{
+                    'animate-pulse':
+                      voiceLoadingState.status === 'generating' ||
+                      voiceLoadingState.status == 'loading',
+                    'animate-ping': voiceLoadingState.status === 'playing',
+                  }}
+                >
+                  <Megaphone size={18} />
+                </div>
+              </Show>
               <Show when={props.editing && (!props.msg.split || props.lastSplit)}>
                 <Show when={!!props.msg.characterId && !isImage()}>
                   <div onClick={showPrompt} class="icon-button">

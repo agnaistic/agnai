@@ -19,6 +19,9 @@
     "dist/index.*",
     "db/.gitkeep"
   ],
+  "_moduleAliases": {
+    "srv": "./srv"
+  },
   "scripts": {
     "build": "parcel build web/index.html --no-optimize --detailed-report",
     "build:prod": "NODE_ENV=production parcel build web/index.html --detailed-report",
@@ -67,6 +70,7 @@
     "jsonwebtoken": "^9.0.0",
     "minimist": "^1.2.8",
     "mkdirp": "^2.1.4",
+    "module-alias": "^2.2.2",
     "mongodb": "^5.1.0",
     "multer": "^1.4.5-lts.1",
     "needle": "^3.2.0",

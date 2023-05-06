@@ -4,7 +4,6 @@ import {
   Book,
   Bot,
   Github,
-  Home,
   Info,
   LogIn,
   LogOut,

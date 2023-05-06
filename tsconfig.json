@@ -12,7 +12,13 @@
     "forceConsistentCasingInFileNames": true /* Ensure that casing is correct in imports. */,
     "skipLibCheck": true /* Skip type checking all .d.ts files. */,
     "skipDefaultLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "/srv/*": ["./srv/*"],
+      "/common/*": ["./common/*"],
+      "/web/*": ["./web/*"]
+    }
   },
   "include": ["web", "srv", "common", "tests"]
 }

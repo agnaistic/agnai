@@ -456,7 +456,11 @@ const Character: Component<{
             customPosition="right-[9px] top-[6px]"
           >
             <div class="flex flex-col gap-2 p-2">
-              <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm">
+              <Button
+                onClick={() => props.toggleFavorite(!props.char.favorite)}
+                size="sm"
+                alignLeft
+              >
                 <Show when={props.char.favorite}>
                   <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
                 </Show>
@@ -469,6 +473,7 @@ const Character: Component<{
               </Button>
               <Button
                 alignLeft
+                size="sm"
                 onClick={() => {
                   setOpts(false)
                   props.download()

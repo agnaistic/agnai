@@ -32,7 +32,6 @@ export function createAppearancePrompt(avatar: AppSchema.Chat | AppSchema.Charac
   }
 
   const prompt = `full body portrait, ${visuals}, dramatic lighting`
-  console.log(prompt)
   return prompt
 }
 
