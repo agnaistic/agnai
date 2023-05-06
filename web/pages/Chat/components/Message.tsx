@@ -219,14 +219,7 @@ const SingleMessage: Component<
               {new Date(props.msg.createdAt).toLocaleString()}
             </span>
           </div>
-          <Show
-            when={
-              !edit() &&
-              !props.swipe &&
-              user.user?._id === props.chat?.userId &&
-              user.user?.texttospeech?.enabled !== false
-            }
-          >
+          <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
             <div
               class="mr-4 flex items-center gap-3 text-sm"
               data-bot-editing={isBot()}

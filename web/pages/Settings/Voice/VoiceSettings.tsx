@@ -49,7 +49,7 @@ export const VoiceSettings: Component = () => {
 
         <Divider />
 
-        <p class="text-lg font-bold">Speech To Text (Character Voice)</p>
+        <p class="text-lg font-bold">Text to Speech (Character Voice)</p>
 
         <Toggle
           label="Enabled"
