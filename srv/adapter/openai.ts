@@ -158,50 +158,53 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const iter = body.stream
     ? streamCompletion(url, headers, body)
     : requestFullCompletion(url, headers, body)
-  let result: Awaited<ReturnType<typeof iter.next>>
-  let responseBody: FullCompletion | null = null
+  let accumulated = ''
+  let response: FullCompletion | undefined
 
-  while ((result = await iter.next())) {
+  while (true) {
+    let generated = await iter.next()
+    
     // Both the streaming and non-streaming generators return a full completion and yield errors.
-    // Only the streaming generator yields tokens.
-    if (result.done) {
-      responseBody = result.value
+    if (generated.done) {
+      response = generated.value
       break
     }
-
-    if (result.value.error) {
-      yield result.value
+    
+    if (generated.value.error) {
+      yield generated.value
       return
     }
-
-    if ('token' in result.value) {
-      yield result.value.token
+    
+    // Only the streaming generator yields individual tokens.
+    if ('token' in generated.value) {
+      accumulated += generated.value.token
+      yield { partial: sanitiseAndTrim(accumulated, prompt, char, members) }
     }
   }
 
   try {
-    let text = ''
-    if (!responseBody?.choices?.length) {
-      log.error({ body: responseBody }, 'OpenAI request failed: Empty response')
+    let text = getCompletionContent(response)
+    if (!text?.length) {
+      log.error({ body: response }, 'OpenAI request failed: Empty response')
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
-
-    const completion = responseBody.choices[0]
-    if ('text' in completion) {
-      text = completion.text
-    } else {
-      text = completion.message.content
-    }
-
-    const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
-    yield trimmed || parsed
+    yield sanitiseAndTrim(text, prompt, char, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
+}
+
+function sanitiseAndTrim(
+  text: string,
+  prompt: string,
+  char: AppSchema.Character,
+  members: AppSchema.Profile[]
+) {
+  const parsed = sanitise(text.replace(prompt, ''))
+  return trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
 }
 
 function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
@@ -258,10 +261,7 @@ type FullCompletion = {
   model: string
   object: string
   choices:
-    | ({
-        finish_reason: string
-        index: number
-      } & (TextCompletionContent | ChatCompletionContent))[]
+    | ({ finish_reason: string; index: number } & (TextCompletionContent | ChatCompletionContent))[]
 }
 type StreamedCompletion = {
   id: string
@@ -278,7 +278,10 @@ type CompletionGenerator = (
   url: string,
   headers: OutgoingHttpHeaders,
   body: any
-) => AsyncGenerator<{ error: string } | { error?: undefined; token: string }, FullCompletion | null>
+) => AsyncGenerator<
+  { error: string } | { error?: undefined; token: string },
+  FullCompletion | undefined
+>
 
 const requestFullCompletion: CompletionGenerator = async function* (url, headers, body) {
   const resp = await needle('post', url, JSON.stringify(body), {
@@ -288,7 +291,7 @@ const requestFullCompletion: CompletionGenerator = async function* (url, headers
 
   if ('error' in resp) {
     yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
-    return null
+    return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
@@ -296,14 +299,14 @@ const requestFullCompletion: CompletionGenerator = async function* (url, headers
       resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
 
     yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
-    return null
+    return
   }
   return resp.body
 }
 
 /**
- * Yields individual tokens as OpenAI API sends them, and ultimately returns a full completion
- * object once the stream is finished.
+ * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
+ * once the stream is finished.
  */
 const streamCompletion: CompletionGenerator = async function* (url, headers, body) {
   const resp = needle.post(url, JSON.stringify(body), {
@@ -346,7 +349,7 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
     }
   } catch (err: any) {
     yield { error: `OpenAI streaming request failed: ${err.message}` }
-    return null
+    return
   }
 
   return {
@@ -361,5 +364,17 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
         text: tokens.join(''),
       },
     ],
+  }
+}
+
+function getCompletionContent(completion?: FullCompletion) {
+  if (!completion) {
+    return ''
+  }
+
+  if ('text' in completion.choices[0]) {
+    return completion.choices[0].text
+  } else {
+    return completion.choices[0].message.content
   }
 }
