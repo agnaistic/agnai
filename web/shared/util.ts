@@ -320,8 +320,8 @@ export function isDirty<T extends {}>(original: T, compare: T): boolean {
   const keys = new Set<keyof T>(Object.keys(original).concat(Object.keys(compare)) as any)
 
   for (const key of Array.from(keys)) {
-    if (original[key] !== compare[key]) return false
+    if (original[key] !== compare[key]) return true
   }
 
-  return true
+  return false
 }
