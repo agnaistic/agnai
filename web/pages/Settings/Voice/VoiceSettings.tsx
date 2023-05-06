@@ -24,7 +24,7 @@ export const VoiceSettings: Component = () => {
   return (
     <>
       <div class="flex flex-col gap-4">
-        <p class="text-lg font-bold">Speech to text (Speak With Microphone)</p>
+        <p class="text-lg font-bold">Speech to text (Speak with Microphone)</p>
 
         <Toggle
           label="Enabled"
