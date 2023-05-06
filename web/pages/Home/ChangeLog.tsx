@@ -5,6 +5,13 @@ import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
 # Change Log
+_6 May 2023_
+- Added text-to-speech, speech-to-text
+- Fixed issue with memory books for authed users
+- Reduced bundle size (from 7MB to 1MB)
+
+_5 May 2023_
+- Improve character importing: Allow multiple imports and improve error reporting
 
 _21 Apr 2023_
 - Added dashboard
