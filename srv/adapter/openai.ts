@@ -204,7 +204,8 @@ function sanitiseAndTrim(
   members: AppSchema.Profile[]
 ) {
   const parsed = sanitise(text.replace(prompt, ''))
-  return trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
+  const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
+  return trimmed || parsed
 }
 
 function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
