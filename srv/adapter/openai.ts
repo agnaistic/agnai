@@ -53,7 +53,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const body: any = {
     model: oaiModel,
-    stream: true, // TODO: Get from preset settings
+    stream: gen.streamResponse ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
@@ -256,6 +256,7 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
 
 type TextCompletionContent = { text: string }
 type ChatCompletionContent = { message: { content: string; role: 'system' | 'assistant' | 'user' } }
+type StreamedChatCompletionDelta = { delta: Partial<ChatCompletionContent['message']> }
 type FullCompletion = {
   id: string
   created: number
@@ -269,11 +270,10 @@ type StreamedCompletion = {
   created: number
   model: string
   object: string
-  choices: {
-    finish_reason: string
-    index: number
-    delta: Partial<TextCompletionContent | ChatCompletionContent['message']>
-  }[]
+  choices: ({ finish_reason: string; index: number } & (
+    | TextCompletionContent
+    | StreamedChatCompletionDelta
+  ))[]
 }
 type CompletionGenerator = (
   url: string,
@@ -335,16 +335,16 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
 
       const parsed: StreamedCompletion = JSON.parse(event.slice('data: '.length))
       const { choices, ...completionMeta } = parsed
-      const { delta, ...choiceMeta } = choices[0]
+      const { finish_reason, index, ...choice } = choices[0]
 
-      meta = { ...completionMeta, ...choiceMeta }
+      meta = { ...completionMeta, finish_reason, index }
 
-      if ('content' in delta && delta.content) {
-        const token = delta.content
+      if ('text' in choice) {
+        const token = choice.text
         tokens.push(token)
         yield { token }
-      } else if ('text' in delta && delta.text) {
-        const token = delta.text
+      } else if ('delta' in choice && choice.delta.content) {
+        const token = choice.delta.content
         tokens.push(token)
         yield { token }
       }
