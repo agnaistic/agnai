@@ -163,18 +163,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   while (true) {
     let generated = await iter.next()
-    
+
     // Both the streaming and non-streaming generators return a full completion and yield errors.
     if (generated.done) {
       response = generated.value
       break
     }
-    
+
     if (generated.value.error) {
       yield generated.value
       return
     }
-    
+
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
@@ -323,9 +323,10 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
   try {
     const events = needleToSSE(resp)
     for await (const event of events) {
-      // According to OpenAI's docs their SSE stream will only contain `data` events.
-      // The first event for chat completions only contains the message's `role`.
-      // The final event is always `data: [DONE]`.
+      // According to OpenAI's docs their SSE stream only uses `data` events.
+      if (!event.startsWith('data: ')) {
+        continue
+      }
 
       if (event === 'data: [DONE]') {
         break
