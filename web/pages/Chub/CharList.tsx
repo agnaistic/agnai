@@ -1,5 +1,5 @@
-import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
-import { ChubChar } from './ChubChar'
+import { Component, For, Show, createEffect, createMemo } from 'solid-js'
+import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
 import ChubNavigation, { chubPage } from './ChubNavigation'
 
@@ -18,8 +18,9 @@ const CharList: Component = () => {
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
         <For each={chars().slice(48 * (chubPage() - 1))}>
           {(char) => (
-            <ChubChar
+            <ChubItem
               name={char.name}
+              fullPath={char.fullPath}
               avatar={
                 `https://avatars.charhub.io/avatars/${char.fullPath}/avatar.webp` ||
                 `https://git.characterhub.org/${char.fullPath}/-/raw/main/avatar.webp`

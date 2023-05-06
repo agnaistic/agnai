@@ -189,7 +189,7 @@ export default ImportCharacterModal
 
 type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai'
 
-function jsonToCharacter(json: any): NewCharacter {
+export function jsonToCharacter(json: any): NewCharacter {
   const format = getImportFormat(json)
 
   if (format === 'agnai') {

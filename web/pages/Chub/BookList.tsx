@@ -1,5 +1,5 @@
 import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
-import { ChubChar } from './ChubChar'
+import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
 import ChubNavigation from './ChubNavigation'
 
@@ -18,12 +18,14 @@ const BookList: Component = () => {
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
         <For each={books()}>
           {(book) => (
-            <ChubChar
+            <ChubItem
               name={book.name}
+              fullPath={book.fullPath}
               avatar={
                 `https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp` ||
                 `https://git.characterhub.org/${book.fullPath}/-/raw/main/avatar.webp`
               }
+              book={true}
             />
           )}
         </For>

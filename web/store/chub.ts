@@ -1,5 +1,5 @@
 import { chubOptions } from '../pages/Chub/Chub'
-import { ChubChar } from '../pages/Chub/ChubChar'
+import { ChubItem } from '../pages/Chub/ChubItem'
 import { chubPage } from '../pages/Chub/ChubNavigation'
 import { createStore } from './create'
 
@@ -24,7 +24,7 @@ type ChubState = {
   chubOptions: ChubOptions
 }
 
-const CHUB_URL = `https://api.characterhub.org/api`
+export const CHUB_URL = `https://api.characterhub.org/api`
 
 const initState: ChubState = {
   initLoading: true,
