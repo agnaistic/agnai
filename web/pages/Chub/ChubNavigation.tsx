@@ -25,6 +25,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               chubOptions.search = ev.currentTarget.value
               chubStore.getChubChars()
               chubStore.getChubBooks()
+              setChubPage(1)
             }}
           />
           <Show when={props.buttons}>
