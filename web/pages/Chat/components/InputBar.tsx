@@ -27,7 +27,6 @@ const InputBar: Component<{
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
   }
-  const voiceState = msgStore((x) => ({ speaking: x.speaking }))
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
@@ -123,7 +122,6 @@ const InputBar: Component<{
         onText={(value) => setText(value)}
         onSubmit={() => send()}
         cleared={cleared}
-        enabled={!voiceState.speaking}
       />
       <div>
         <button

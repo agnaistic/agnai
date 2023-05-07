@@ -1,10 +1,12 @@
 import { userStore } from '../../../store'
-import { Component, createMemo, createSignal } from 'solid-js'
+import { Component, Show, createMemo, createSignal } from 'solid-js'
 import ElevenLabsSettings from './ElevenLabsSettings'
 import { Toggle } from '../../../shared/Toggle'
 import Tabs from '../../../shared/Tabs'
 import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 import Divider from '../../../shared/Divider'
+import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
+import { Frown } from 'lucide-solid'
 
 const ttsServiceTabs = {
   webspeechsynthesis: 'Web Speech Synthesis',
@@ -26,26 +28,31 @@ export const VoiceSettings: Component = () => {
       <div class="flex flex-col gap-4">
         <p class="text-lg font-bold">Speech to text (Speak with Microphone)</p>
 
-        <Toggle
-          label="Enabled"
-          helperText="Whether to show the microphone button."
-          fieldName="speechToTextEnabled"
-          value={state.user?.speechtotext?.enabled ?? true}
-        />
+        <Show
+          when={getSpeechRecognition()}
+          fallback={<p class="text-red-800">Speech to text is not available in your browser</p>}
+        >
+          <Toggle
+            label="Enabled"
+            helperText="Whether to show the microphone button."
+            fieldName="speechToTextEnabled"
+            value={state.user?.speechtotext?.enabled ?? true}
+          />
 
-        <Toggle
-          label="Submit Automatically"
-          helperText="Whether to send the message when a sentence has been completed."
-          fieldName="speechToTextAutoSubmit"
-          value={state.user?.speechtotext?.autoSubmit ?? true}
-        />
+          <Toggle
+            label="Submit Automatically"
+            helperText="Whether to send the message when a sentence has been completed."
+            fieldName="speechToTextAutoSubmit"
+            value={state.user?.speechtotext?.autoSubmit ?? true}
+          />
 
-        <Toggle
-          label="Resume Listening Automatically"
-          helperText="Whether to re-start recording after a message has been received."
-          fieldName="speechToTextAutoRecord"
-          value={state.user?.speechtotext?.autoRecord ?? true}
-        />
+          <Toggle
+            label="Resume Listening Automatically"
+            helperText="Whether to re-start recording after a message has been received."
+            fieldName="speechToTextAutoRecord"
+            value={state.user?.speechtotext?.autoRecord ?? true}
+          />
+        </Show>
 
         <Divider />
 

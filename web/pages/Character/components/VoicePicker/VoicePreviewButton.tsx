@@ -10,6 +10,7 @@ import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'
 import { defaultCulture, getSampleText } from '/web/shared/CultureCodes'
 import { speechManager } from '/web/shared/Audio/SpeechManager'
+import { AudioReference } from '/web/shared/Audio/AudioReference'
 
 export const VoicePreviewButton: Component<{
   service: TTSService
@@ -29,12 +30,13 @@ export const VoicePreviewButton: Component<{
     setVoicePreviewUrl(state[props.service]?.find((v) => v.id === props.voiceId)?.previewUrl)
   })
 
-  const playVoicePreview = () => {
+  const playVoicePreview = async () => {
     const service = props.service
     const voiceId = props.voiceId
     const preview = voicePreviewUrl()
     if (!service || !voiceId || !preview) return
 
+    let audio: AudioReference | undefined
     if (service == 'webspeechsynthesis') {
       const culture = props.culture || defaultCulture
       const voice: VoiceWebSpeechSynthesisSettings = {
@@ -42,10 +44,16 @@ export const VoicePreviewButton: Component<{
         voiceId: voiceId,
         ...props.webSpeechSynthesisSettings,
       }
-      speechManager.createSpeechFromBrowser(voice, getSampleText(culture), culture, false)
+      audio = await speechManager.createSpeechFromBrowser(
+        voice,
+        getSampleText(culture),
+        culture,
+        false
+      )
     } else if (preview) {
-      speechManager.createSpeechFromUrl(preview)
+      audio = speechManager.createSpeechFromUrl(preview)
     }
+    audio?.play()
   }
 
   return (

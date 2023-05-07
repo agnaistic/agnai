@@ -7,6 +7,8 @@ export class WebSpeechSynthesisAudioReference extends EventTarget implements Aud
     super()
     this.speech = speech
     speech.addEventListener('error', (e) => {
+      if (e.error === 'interrupted') return
+      if (e.error === 'canceled') return
       this.dispatchEvent(new AudioReferenceEvent('error'))
     })
     speech.addEventListener('start', (e) => {
