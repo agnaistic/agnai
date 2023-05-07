@@ -7,8 +7,8 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore } from '../../store'
-import { useNavigate, useParams } from '@solidjs/router'
+import { characterStore, NewCharacter, toastStore } from '../../store'
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { PERSONA_FORMATS } from '../../../common/adapters'
@@ -18,6 +18,7 @@ import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { VoiceSettings } from '../../../srv/db/texttospeech-schema'
 import { AppSchema } from '../../../srv/db/schema'
+import { downloadCharacterHub } from './ImportCharacter'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
@@ -28,10 +29,12 @@ const options = [
 
 const CreateCharacter: Component = () => {
   const params = useParams<{ editId?: string; duplicateId?: string }>()
+  const [query, setQuery] = useSearchParams()
   setComponentPageTitle(
     params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
   )
   const [image, setImage] = createSignal<string | undefined>()
+  const [downloaded, setDownloaded] = createSignal<NewCharacter>()
 
   const srcId = params.editId || params.duplicateId || ''
   const state = characterStore((s) => {
@@ -43,11 +46,24 @@ const CreateCharacter: Component = () => {
     }
   })
 
-  onMount(() => {
+  onMount(async () => {
     characterStore.getCharacters()
+
+    if (!query.import) return
+    try {
+      const { file, json } = await downloadCharacterHub(query.import)
+      const imageData = await getImageData(file)
+      setDownloaded(json)
+      setImage(imageData)
+      setAvatar(() => file)
+      setSchema('text')
+      toastStore.success(`Successfully downloaded from Character Hub`)
+    } catch (ex: any) {
+      toastStore.error(`Character Hub download failed: ${ex.message}`)
+    }
   })
 
-  const [schema, setSchema] = createSignal<AppSchema.Persona['kind']>()
+  const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [avatar, setAvatar] = createSignal<File>()
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
@@ -73,6 +89,7 @@ const CreateCharacter: Component = () => {
     const file = files[0].file
     setAvatar(() => file)
     const data = await getImageData(file)
+
     setImage(data)
   }
 
@@ -140,7 +157,7 @@ const CreateCharacter: Component = () => {
           label="Character Name"
           helperText="The name of your character."
           placeholder=""
-          value={state.edit?.name}
+          value={downloaded()?.name || state.edit?.name}
         />
 
         <TextInput
@@ -148,15 +165,13 @@ const CreateCharacter: Component = () => {
           label="Description"
           helperText="A description or label for your character. This is will not influence your character in any way."
           placeholder=""
-          value={state.edit?.description}
+          value={downloaded()?.description || state.edit?.description}
         />
 
         <div class="flex w-full gap-2">
-          <Show when={state.edit}>
-            <div class="flex items-center">
-              <AvatarIcon format={{ corners: 'md', size: '3xl' }} avatarUrl={image()} />
-            </div>
-          </Show>
+          <div class="flex items-center">
+            <AvatarIcon format={{ corners: 'md', size: '2xl' }} avatarUrl={image()} />
+          </div>
           <FileInput
             class="w-full"
             fieldName="avatar"
@@ -185,7 +200,7 @@ const CreateCharacter: Component = () => {
           label="Scenario"
           helperText="The current circumstances and context of the conversation and the characters."
           placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
-          value={state.edit?.scenario}
+          value={downloaded()?.scenario || state.edit?.scenario}
           isMultiline
         />
 
@@ -197,7 +212,7 @@ const CreateCharacter: Component = () => {
           placeholder={
             "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
           }
-          value={state.edit?.greeting}
+          value={downloaded()?.greeting || state.edit?.greeting}
         />
 
         <div>
@@ -218,18 +233,21 @@ const CreateCharacter: Component = () => {
             name="kind"
             horizontal
             options={options}
-            value={state.edit?.persona.kind || 'boostyle'}
+            value={state.edit?.persona.kind || schema() || 'boostyle'}
             onChange={(kind) => setSchema(kind as any)}
           />
         </div>
 
         <Show when={!params.editId && !params.duplicateId}>
-          <PersonaAttributes plainText={schema() === 'text'} />
+          <PersonaAttributes
+            value={downloaded()?.persona.attributes}
+            plainText={schema() === 'text'}
+          />
         </Show>
 
         <Show when={(params.editId || params.duplicateId) && state.edit}>
           <PersonaAttributes
-            value={state.edit?.persona.attributes}
+            value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
             plainText={schema() === 'text'}
           />
         </Show>
@@ -245,7 +263,7 @@ const CreateCharacter: Component = () => {
             </span>
           }
           placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
-          value={state.edit?.sampleChat}
+          value={downloaded()?.sampleChat || state.edit?.sampleChat}
         />
 
         <h4 class="text-md font-bold">Character Voice</h4>

@@ -141,7 +141,7 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-            <Show when={props.showOocToggle || true}>
+            <Show when={props.showOocToggle}>
               <Button
                 schema="secondary"
                 size="sm"

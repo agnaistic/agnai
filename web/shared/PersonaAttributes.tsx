@@ -21,7 +21,7 @@ const PersonaAttributes: Component<{
   const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
 
-  createSignal(() => {
+  createEffect(() => {
     if (props.value) {
       setAttrs(toAttrs(props.value))
     }

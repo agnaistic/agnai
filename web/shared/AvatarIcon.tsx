@@ -1,12 +1,13 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import Solid, { Component, createMemo, JSX, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, JSX, Show } from 'solid-js'
 import { AvatarCornerRadius, AvatarSize } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
+import { getImageData } from '../store/data/chars'
 
 type Props = {
-  avatarUrl?: string
+  avatarUrl?: string | File
   class?: string
   bot?: boolean
   format?: Format
@@ -22,6 +23,9 @@ type Format = {
 const defaultFormat: Format = { size: 'md', corners: 'circle' }
 
 const AvatarIcon: Component<Props> = (props) => {
+  const [avatar, setAvatar] = createSignal(
+    typeof props.avatarUrl === 'string' ? props.avatarUrl : null
+  )
   const cls = createMemo(() => props.class || '')
 
   const format = createMemo(() => props.format || defaultFormat)
@@ -33,6 +37,16 @@ const AvatarIcon: Component<Props> = (props) => {
 
   const fmtCorners = createMemo(() => corners[format().corners])
 
+  createEffect(async () => {
+    if (!props.avatarUrl) return
+    if (props.avatarUrl instanceof File) {
+      const data = await getImageData(props.avatarUrl)
+      setAvatar(data!)
+    } else {
+      setAvatar(props.avatarUrl)
+    }
+  })
+
   // We don't simply remove or change the image, because
   // this would cause a DOM shift (bad UX). If the user's avatar is tall,
   // replacing it with the default round avatar would cause long messages to
@@ -41,7 +55,7 @@ const AvatarIcon: Component<Props> = (props) => {
 
   return (
     <>
-      <Show when={props.avatarUrl}>
+      <Show when={avatar()}>
         <div
           class={`${fmtSize()} ${fmtCorners()} shrink-0 ${props.class || ''}`}
           data-bot-avatar={props.bot}
@@ -56,12 +70,12 @@ const AvatarIcon: Component<Props> = (props) => {
               ${fmtFit()} ${fmtCorners()}
               ${visibilityClass()}
             `}
-            src={getAssetUrl(props.avatarUrl!)}
+            src={getAssetUrl(avatar()!)}
             data-bot-avatar={props.bot}
           />
         </div>
       </Show>
-      <Show when={!props.avatarUrl}>
+      <Show when={!avatar()}>
         <div
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}

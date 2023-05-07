@@ -1,11 +1,13 @@
 import { Import, X } from 'lucide-solid'
-import { Component, For, Show, createEffect, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createSignal, onMount } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
-import { extractTavernData } from './tavern-utils'
+import { extractCardData } from './card-utils'
+import AvatarIcon from '/web/shared/AvatarIcon'
+import { getImageData } from '/web/store/data/chars'
 
 export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
 
@@ -26,11 +28,24 @@ const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
   onSave: (chars: ImportCharacter[]) => void
+  charhubPath?: string
 }> = (props) => {
   const state = characterStore()
   const [imported, setImported] = createSignal<NewCharacter[]>([])
   const [failed, setFailed] = createSignal<string[]>([])
   const [ready, setReady] = createSignal(false)
+
+  onMount(async () => {
+    if (!props.charhubPath) return
+    try {
+      const { card, file, json } = await downloadCharacterHub(props.charhubPath)
+      setImported([json])
+      toastStore.success('Successfully downloaded from Character Hub')
+      setReady(true)
+    } catch (ex: any) {
+      toastStore.error(`Character Hub download failed: ${ex.message}`)
+    }
+  })
 
   const processFiles = async (files: FileInputResult[]) => {
     reset()
@@ -70,7 +85,7 @@ const ImportCharacterModal: Component<{
   }
 
   const processImage = async (file: FileInputResult) => {
-    const json = await extractTavernData(file.file)
+    const json = await extractCardData(file.file)
     if (!json) {
       throw new Error('Invalid tavern image')
     }
@@ -130,7 +145,12 @@ const ImportCharacterModal: Component<{
         <div class="markdown">
           <ul>
             <For each={imported().slice(0, MAX_SHOWN_IMPORTS)}>
-              {(i) => <li>{i.name ?? 'Unnamed'}</li>}
+              {(i) => (
+                <li class="flex gap-2">
+                  <AvatarIcon format={{ corners: 'circle', size: 'sm' }} avatarUrl={i.avatar} />
+                  {i.name ?? 'Unnamed'}
+                </li>
+              )}
             </For>
             <Show when={imported().length === MAX_SHOWN_IMPORTS + 1}>
               <li>... and one other</li>
@@ -231,4 +251,34 @@ function getImportFormat(obj: any): ImportFormat {
 
 function isNative(obj: any): obj is AppSchema.Character {
   return !!obj.name && !!obj.persona && !!obj.greeting && !!obj.scenario && !!obj.sampleChat
+}
+
+/**
+ *
+ * @param path Character `fullPath`
+ */
+export async function downloadCharacterHub(path: string) {
+  // const imageUrl = `https://avatars.charhub.io/avatars/${path}/avatar.webp`
+  const apiUrl = `https://api.characterhub.org/api`
+
+  const card = await fetch(`${apiUrl}/characters/download`, {
+    method: 'post',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ format: 'tavern', fullPath: path, version: 'main' }),
+  }).then((res) => res.blob())
+
+  const file = new File([card], `charhub_${slugify(path)}.png`, { type: 'image/png' })
+  const data = await extractCardData(file)
+  const json = jsonToCharacter(data)
+  json.avatar = file
+  return { card, file, json }
+}
+
+function slugify(str: string) {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
 }

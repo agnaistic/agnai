@@ -2,7 +2,7 @@ import extract from 'png-chunks-extract'
 import text from 'png-chunk-text'
 import { getImageBuffer } from '../../store/data/chars'
 
-export type TavernCard = {
+export type ImageCard = {
   name: string
   description: string
   personality: string
@@ -21,7 +21,7 @@ export type TavernCard = {
   }
 }
 
-export async function extractTavernData(file: File) {
+export async function extractCardData(file: File) {
   const buffer = await getImageBuffer(file)
   const extractions = extract(buffer as any)
   if (!extractions.length) {
@@ -41,7 +41,7 @@ export async function extractTavernData(file: File) {
   const data = Buffer.from(extracted.text, 'base64').toString('utf-8')
 
   try {
-    return JSON.parse(data) as TavernCard
+    return JSON.parse(data) as ImageCard
   } catch (ex: any) {
     throw new Error(`Failed parsing tavern data as JSON: ${ex.message}`)
   }
