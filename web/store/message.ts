@@ -13,17 +13,21 @@ import { userStore } from './user'
 import { localApi } from './data/storage'
 import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
-import { VoiceSettings } from '../../srv/db/texttospeech-schema'
-import { speechSynthesisManager } from './voice'
+import { VoiceSettings, VoiceWebSpeechSynthesisSettings } from '../../srv/db/texttospeech-schema'
 import { defaultCulture } from '../shared/CultureCodes'
+import { speechSynthesisManager } from '../shared/Audio/SpeechSynthesisManager'
+import { speechManager } from '../shared/Audio/SpeechManager'
 
 type ChatId = string
 
-export type VoiceState = 'generating' | 'loading' | 'playing'
+export type VoiceState = 'generating' | 'playing'
+
+type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
+
 export type MsgState = {
   activeChatId: string
   activeCharId: string
-  msgs: AppSchema.ChatMessage[]
+  msgs: ChatMessageExt[]
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string }
@@ -234,40 +238,50 @@ export const msgStore = createStore<MsgState>(
       return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
     },
     stopSpeech() {
-      speechSynthesisManager.stopCurrentVoice()
+      speechManager.cancel()
       return { speaking: undefined }
     },
-    async *textToSpeech(
-      { activeChatId, speaking },
+    async textToSpeech(
+      { activeChatId, msgs },
       messageId: string,
       text: string,
       voice: VoiceSettings,
-      culture: string
+      culture?: string
     ) {
-      speechSynthesisManager.stopCurrentVoice()
+      speechManager.cancel()
 
-      if (speaking) {
+      if (!voice.service) {
+        set({ speaking: undefined })
         return
       }
 
-      if (!voice.service) {
-        yield { speaking: undefined }
-      }
-
-      yield { speaking: { messageId, status: 'generating' } }
+      set({ speaking: { messageId, status: 'generating' } })
 
       if (voice.service === 'webspeechsynthesis') {
-        speechSynthesisManager.playWebSpeechSynthesis(voice, text, culture, messageId)
+        if (!speechSynthesisManager.isSupported()) {
+          toastStore.error(`Web speech synthesis not supported on this browser`)
+          return
+        }
+        try {
+          await playVoiceFromBrowser(voice, text, culture ?? defaultCulture, messageId)
+        } catch (e: any) {
+          toastStore.error(`Failed to play web speech synthesis: ${e.message}`)
+        }
       } else {
-        const res = await voiceApi.textToSpeech({
-          chatId: activeChatId,
-          messageId,
-          text,
-          voice,
-          culture,
-        })
-        if (res.error) {
-          toastStore.error(`Failed to request text to speech: ${res.error}`)
+        const msg = msgs.find((m) => m._id === messageId)
+        if (msg?.voiceUrl) {
+          playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl)
+        } else {
+          const res = await voiceApi.textToSpeech({
+            chatId: activeChatId,
+            messageId,
+            text,
+            voice,
+            culture,
+          })
+          if (res.error) {
+            toastStore.error(`Failed to request text to speech: ${res.error}`)
+          }
         }
       }
     },
@@ -337,29 +351,72 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function receiveTextToSpeech(chatId: string, messageId: string, url: string) {
-  if (userStore.getState().user?.texttospeech?.enabled === false) return
+function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
+  const user = userStore.getState().user
+  if (user?.texttospeech?.enabled === false) return
   if (chatId != msgStore.getState().activeChatId) {
     msgStore.setState({ speaking: undefined })
     return
   }
   try {
-    const audio = new Audio(url)
-    audio.addEventListener('error', () => {
-      msgStore.setState({ speaking: { messageId, status: 'generating' } })
+    const audio = speechManager.createSpeechFromUrl(url)
+    audio.addEventListener('error', (e) => {
+      toastStore.error('Error while playing server-generated text to speech')
+      const msgs = msgStore.getState().msgs
+      const msg = msgs.find((m) => m._id === messageId)
+      if (!msg) return
+      const nextMsgs = msgs.map((m) => (m._id === msg._id ? { ...m, voiceUrl: undefined } : m))
+      msgStore.setState({
+        speaking: undefined,
+        msgs: nextMsgs,
+      })
     })
     audio.addEventListener('playing', () => {
-      msgStore.setState({ speaking: { messageId, status: 'playing' } })
+      const msgs = msgStore.getState().msgs
+      const msg = msgs.find((m) => m._id === messageId)
+      if (!msg) return
+      const nextMsgs = msgs.map((m) => (m._id === msg._id ? { ...m, voiceUrl: url } : m))
+      msgStore.setState({
+        speaking: { messageId, status: 'playing' },
+        msgs: nextMsgs,
+      })
     })
     audio.addEventListener('ended', () => {
       msgStore.setState({ speaking: undefined })
     })
-    msgStore.setState({ speaking: { messageId, status: 'loading' } })
+    msgStore.setState({ speaking: { messageId, status: 'generating' } })
     audio.play()
   } catch (e) {
-    console.error(e)
+    toastStore.error('Failed to play text to speech')
     msgStore.setState({ speaking: undefined })
   }
+}
+
+async function playVoiceFromBrowser(
+  voice: VoiceWebSpeechSynthesisSettings,
+  text: string,
+  culture: string,
+  messageId: string
+) {
+  const user = userStore.getState().user
+  if (!user || user?.texttospeech?.enabled === false) return
+  const filterAction = user.texttospeech?.filterActions ?? true
+  const audio = await speechManager.createSpeechFromBrowser(voice, text, culture, filterAction)
+  audio.addEventListener('error', (e) => {
+    toastStore.error('Error while playing browser-generated text to speech')
+    msgStore.setState({
+      speaking: undefined,
+    })
+  })
+  audio.addEventListener('playing', () => {
+    msgStore.setState({
+      speaking: { messageId, status: 'playing' },
+    })
+  })
+  audio.addEventListener('ended', () => {
+    msgStore.setState({ speaking: undefined })
+  })
+  audio.play()
 }
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
@@ -415,29 +472,67 @@ subscribe(
   }
 )
 
-subscribe('message-created', { msg: 'any', chatId: 'string', generate: 'boolean?' }, (body) => {
-  const { msgs, activeChatId } = msgStore.getState()
-  if (activeChatId !== body.chatId) return
-  const msg = body.msg as AppSchema.ChatMessage
+subscribe(
+  'message-created',
+  {
+    msg: 'any',
+    chatId: 'string',
+    generate: 'boolean?',
+  },
+  (body) => {
+    const { msgs, activeChatId } = msgStore.getState()
+    if (activeChatId !== body.chatId) return
+    const msg = body.msg as AppSchema.ChatMessage
+    const user = userStore().user
+    const speech = getMessageSpeechInfo(msg, user)
 
-  // If the message is from a user don't clear the "waiting for response" flags
-  const nextMsgs = msgs.concat(msg)
-  if (msg.userId && !body.generate) {
-    msgStore.setState({ msgs: nextMsgs })
-  } else {
-    msgStore.setState({
-      msgs: nextMsgs,
-      partial: undefined,
-      waiting: undefined,
-    })
+    const nextMsgs = msgs.concat(msg)
+    // If the message is from a user don't clear the "waiting for response" flags
+    if (msg.userId && !body.generate) {
+      msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
+    } else {
+      msgStore.setState({
+        msgs: nextMsgs,
+        partial: undefined,
+        waiting: undefined,
+        speaking: speech?.speaking,
+      })
+    }
+
+    if (!isLoggedIn()) {
+      localApi.saveMessages(body.chatId, nextMsgs)
+    }
+
+    addMsgToRetries(msg)
+
+    if (msg.userId && msg.userId != user?._id) {
+      chatStore.getMemberProfile(body.chatId, msg.userId)
+    }
+
+    if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
   }
+)
 
-  if (!isLoggedIn()) {
-    localApi.saveMessages(body.chatId, nextMsgs)
+function getMessageSpeechInfo(
+  msg: AppSchema.ChatMessage,
+  user: AppSchema.User | undefined
+):
+  | {
+      voice: VoiceSettings
+      culture: string | undefined
+      speaking: MsgState['speaking'] | undefined
+    }
+  | undefined {
+  if (!msg.characterId) return
+  const char = chatStore.getState().active?.char
+  if (!char || char._id !== msg.characterId || !char.voice) return
+  if (user?.texttospeech?.enabled == false) return
+  return {
+    voice: char.voice,
+    culture: char.culture,
+    speaking: char.voice ? { messageId: msg._id, status: 'generating' } : undefined,
   }
-
-  addMsgToRetries(msg)
-})
+}
 
 subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
   msgStore.setState({ waiting: undefined })
@@ -459,7 +554,8 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
-  receiveTextToSpeech(body.chatId, body.messageId, body.url)
+  if (msgStore.getState().speaking?.messageId != body.messageId) return
+  playVoiceFromUrl(body.chatId, body.messageId, body.url)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
@@ -526,7 +622,9 @@ subscribe(
       body.msg._id = retrying._id
     }
 
-    const next = msgs.filter((m) => m._id !== retrying?._id).concat(body.msg)
+    const msg = body.msg as AppSchema.ChatMessage
+    const next = msgs.filter((m) => m._id !== retrying?._id).concat(msg)
+    const speech = getMessageSpeechInfo(msg, userStore().user)
 
     const chats = localApi.loadItem('chats')
     localApi.saveChats(
@@ -534,14 +632,17 @@ subscribe(
     )
     localApi.saveMessages(body.chatId, next)
 
-    addMsgToRetries(body.msg)
+    addMsgToRetries(msg)
 
     msgStore.setState({
       msgs: next,
       retrying: undefined,
       partial: undefined,
       waiting: undefined,
+      speaking: speech?.speaking,
     })
+
+    if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
   }
 )
 

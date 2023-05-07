@@ -12,7 +12,7 @@ import {
 import { Mic } from 'lucide-solid'
 import Button from '../../../shared/Button'
 import { defaultCulture } from '../../../shared/CultureCodes'
-import { toastStore, userStore } from '../../../store'
+import { msgStore, toastStore, userStore } from '../../../store'
 import { AppSchema } from '../../../../srv/db/schema'
 
 const win: any = window
@@ -42,13 +42,16 @@ const defaultSettings: AppSchema.User['speechtotext'] = {
   autoSubmit: true,
 }
 
+export function getSpeechRecognition(): SpeechRecognitionCtor | undefined {
+  return win.SpeechRecognition || win.speechRecognition || win.webkitSpeechRecognition
+}
+
 export const SpeechRecognitionRecorder: Component<{
   culture?: string
   class?: string
   onText: (value: string) => void
   onSubmit: () => void
   cleared: Accessor<number>
-  enabled: boolean
 }> = (props) => {
   const settings = userStore((s) => ({ ...defaultSettings, ...s.user?.speechtotext }))
 
@@ -62,11 +65,9 @@ export const SpeechRecognitionRecorder: Component<{
   onMount(() => {
     let speech: SpeechRecognition
     try {
-      const Speech: SpeechRecognitionCtor =
-        win.SpeechRecognition || win.speechRecognition || win.webkitSpeechRecognition
+      const Speech = getSpeechRecognition()
       if (!Speech) return
-
-      speech = new Speech() as SpeechRecognition
+      speech = new Speech()
     } catch (e: any) {
       toastStore.error(`Could not initialize speech recognition: ${e.message}`)
       return
@@ -77,7 +78,6 @@ export const SpeechRecognitionRecorder: Component<{
     speech.lang = props.culture ?? defaultCulture
 
     speech.addEventListener('result', (event) => {
-      setPendingRecord(false)
       const speechEvent = event as SpeechRecognitionEvent
       let interimTranscript = ''
 
@@ -119,19 +119,6 @@ export const SpeechRecognitionRecorder: Component<{
     })
 
     setSpeechRecognition(speech)
-  })
-
-  createEffect(() => {
-    if (!props.enabled && isListening()) {
-      speechRecognition()?.abort()
-      setIsListening(false)
-    } else if (props.enabled && !isListening() && pendingRecord()) {
-      setTimeout(() => {
-        if (isListening()) return
-        setIsListening(true)
-        speechRecognition()?.start()
-      }, 100)
-    }
   })
 
   onCleanup(() => {
@@ -179,12 +166,46 @@ export const SpeechRecognitionRecorder: Component<{
   createEffect(() => {
     const final = finalValue()
     if (!final) return
-    if (settings.autoSubmit) props.onSubmit()
-    setPendingRecord(settings.autoRecord)
+    if (settings.autoSubmit) {
+      setPendingRecord(settings.autoRecord)
+      setTimeout(() => {
+        props.onSubmit()
+      }, 100)
+    }
+  })
+
+  const unsub = msgStore.subscribe((state) => {
+    if (state.speaking && isListening()) {
+      setPendingRecord(true)
+      speechRecognition()?.abort()
+      setIsListening(false)
+      return
+    }
+
+    if (
+      !settings.enabled ||
+      isListening() ||
+      !pendingRecord() ||
+      state.speaking ||
+      state.partial ||
+      state.waiting ||
+      state.msgs.length === 0
+    ) {
+      return
+    }
+
+    const lastMsg = state.msgs[state.msgs.length - 1]
+    if (!lastMsg?.characterId) return
+    setPendingRecord(false)
+    speechRecognition()?.start()
+    setIsListening(true)
+  })
+
+  onCleanup(() => {
+    unsub()
   })
 
   const toggleListening = () => {
-    const pending = pendingRecord()
     const listening = isListening()
     const speech = speechRecognition()
     setPendingRecord(false)
@@ -192,11 +213,9 @@ export const SpeechRecognitionRecorder: Component<{
     if (listening) {
       speech.abort()
       setIsListening(false)
-    } else if (props.enabled) {
+    } else {
       speech.start()
       setIsListening(true)
-    } else if (!pending) {
-      setPendingRecord(true)
     }
   }
 

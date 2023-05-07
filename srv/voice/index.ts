@@ -53,7 +53,7 @@ export async function generateVoice(
   let audio: TextToSpeechAdapterResponse | undefined
   let output: string = ''
   let error: any
-  const text = processText(opts.text, user.texttospeech?.filterActions || true)
+  const text = processText(opts.text, user.texttospeech?.filterActions ?? true)
 
   log.debug({ text, service: voice.service }, 'Text to speech')
 

@@ -1,5 +1,5 @@
-import { ChevronUp, ImagePlus, PlusCircle, Send } from 'lucide-solid'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { ChevronUp, ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
+import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -8,10 +8,11 @@ import { msgStore } from '../../../store'
 import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
+import { defaultCulture } from '/web/shared/CultureCodes'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
-  culture?: string
+  char?: AppSchema.Character
   swiped: boolean
   showOocToggle: boolean
   ooc: boolean
@@ -20,12 +21,12 @@ const InputBar: Component<{
   more: (msg: string) => void
 }> = (props) => {
   let ref: any
+
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
   }
-  const voiceState = msgStore((x) => ({ speaking: x.speaking }))
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
@@ -35,7 +36,7 @@ const InputBar: Component<{
 
   const updateText = (ev: Event) => {
     if (!ref) return
-    setText(ref.value)
+    setText(ref.value || '')
   }
 
   const send = () => {
@@ -65,6 +66,18 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const playVoice = () => {
+    const voice = props.char?.voice
+    if (!voice) return
+    msgStore.textToSpeech(
+      state.lastMsg._id,
+      state.lastMsg.msg,
+      voice,
+      props.char?.culture || defaultCulture
+    )
+    setMenu(false)
+  }
+
   const regenerate = () => {
     msgStore.retry(props.chat._id)
     setMenu(false)
@@ -85,15 +98,15 @@ const InputBar: Component<{
   }
 
   return (
-    <div class="relative flex items-center justify-center max-sm:pb-2">
+    <div class="relative flex items-center justify-center">
       <textarea
         spellcheck
-        lang={props.culture}
+        lang={props.char?.culture}
         ref={ref}
         value={text()}
-        placeholder="Send a message..."
+        placeholder={props.ooc ? 'Send a message... (Out of character)' : 'Send a message...'}
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
-        onKeyPress={(ev) => {
+        onKeyDown={(ev) => {
           if (ev.key === 'Enter') {
             if (ev.ctrlKey || ev.shiftKey) return
             return send()
@@ -104,22 +117,21 @@ const InputBar: Component<{
       />
 
       <SpeechRecognitionRecorder
-        culture={props.culture}
+        culture={props.char?.culture}
         class="right-11"
         onText={(value) => setText(value)}
         onSubmit={() => send()}
         cleared={cleared}
-        enabled={!voiceState.speaking}
       />
       <div>
         <button
           onClick={onButtonClick}
           class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
         >
-          <Show when={text().length === 0}>
-            <ChevronUp />
+          <Show when={text().trim().length === 0}>
+            <MoreHorizontal />
           </Show>
-          <Show when={text().length > 0}>
+          <Show when={text().trim().length > 0}>
             <Send />
           </Show>
         </button>
@@ -129,7 +141,7 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-            <Show when={props.showOocToggle}>
+            <Show when={props.showOocToggle || true}>
               <Button
                 schema="secondary"
                 size="sm"
@@ -146,6 +158,9 @@ const InputBar: Component<{
             <Show when={!!state.lastMsg?.characterId && isOwner()}>
               <Button schema="secondary" class="w-full" onClick={more} alignLeft>
                 <PlusCircle size={18} /> Generate More
+              </Button>
+              <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
+                <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
           </div>

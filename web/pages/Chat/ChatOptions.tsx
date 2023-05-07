@@ -43,7 +43,7 @@ const ChatOptions: Component<{
         props.setScreenshotInProgress(false)
       })
       .catch((err) => {
-        console.log(err)
+        console.error(err)
         toastStore.error(`Screenshot failed: error logged in console`)
         props.setScreenshotInProgress(false)
       })
