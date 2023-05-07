@@ -1,4 +1,4 @@
-import { ChevronUp, ImagePlus, PlusCircle } from 'lucide-solid'
+import { ChevronUp, ImagePlus, PlusCircle, Send } from 'lucide-solid'
 import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
@@ -68,6 +68,15 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const onButtonClick = () => {
+    if (text().length > 0) {
+      send()
+      return
+    }
+
+    setMenu(true)
+  }
+
   return (
     <div class="relative flex items-center justify-center max-sm:pb-2">
       <textarea
@@ -98,10 +107,15 @@ const InputBar: Component<{
 
       <div>
         <button
-          onClick={() => setMenu(true)}
+          onClick={onButtonClick}
           class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
         >
-          <ChevronUp />
+          <Show when={text().length === 0}>
+            <ChevronUp />
+          </Show>
+          <Show when={text().length > 0}>
+            <Send />
+          </Show>
         </button>
         <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
           <div class="flex w-48 flex-col gap-2 p-2">
