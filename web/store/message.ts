@@ -22,10 +22,12 @@ type ChatId = string
 
 export type VoiceState = 'generating' | 'playing'
 
+type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
+
 export type MsgState = {
   activeChatId: string
   activeCharId: string
-  msgs: AppSchema.ChatMessage[]
+  msgs: ChatMessageExt[]
   partial?: string
   retrying?: AppSchema.ChatMessage
   waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string }
@@ -240,7 +242,7 @@ export const msgStore = createStore<MsgState>(
       return { speaking: undefined }
     },
     async textToSpeech(
-      { activeChatId },
+      { activeChatId, msgs },
       messageId: string,
       text: string,
       voice: VoiceSettings,
@@ -270,15 +272,21 @@ export const msgStore = createStore<MsgState>(
         }
         if (messageId) set({ speaking: undefined })
       } else {
-        const res = await voiceApi.textToSpeech({
-          chatId: activeChatId,
-          messageId,
-          text,
-          voice,
-          culture,
-        })
-        if (res.error) {
-          toastStore.error(`Failed to request text to speech: ${res.error}`)
+        const msg = msgs.find((m) => m._id === messageId)
+        console.log('message ', messageId, msg)
+        if (msg?.voiceUrl) {
+          receiveVoiceGenerated(activeChatId, messageId, msg.voiceUrl)
+        } else {
+          const res = await voiceApi.textToSpeech({
+            chatId: activeChatId,
+            messageId,
+            text,
+            voice,
+            culture,
+          })
+          if (res.error) {
+            toastStore.error(`Failed to request text to speech: ${res.error}`)
+          }
         }
       }
     },
@@ -348,7 +356,7 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function receiveVoiceGenerated(chatId: string, messageId: string, url: string) {
+function receiveVoiceGenerated(chatId: string, messageId: string, url: string) {
   const user = userStore.getState().user
   if (user?.texttospeech?.enabled === false) return
   if (chatId != msgStore.getState().activeChatId) {
@@ -360,10 +368,24 @@ async function receiveVoiceGenerated(chatId: string, messageId: string, url: str
     msgStore.setState({ speaking: { messageId, status: 'generating' } })
     audio.addEventListener('error', (e) => {
       toastStore.error('Error while playing text to speech')
-      msgStore.setState({ speaking: undefined })
+      const msgs = msgStore.getState().msgs
+      const msg = msgs.find((m) => m._id === messageId)
+      if (!msg) return
+      const nextMsgs = msgs.map((m) => (m._id === msg._id ? { ...m, voiceUrl: undefined } : m))
+      msgStore.setState({
+        speaking: undefined,
+        msgs: nextMsgs,
+      })
     })
     audio.addEventListener('playing', () => {
-      msgStore.setState({ speaking: { messageId, status: 'playing' } })
+      const msgs = msgStore.getState().msgs
+      const msg = msgs.find((m) => m._id === messageId)
+      if (!msg) return
+      const nextMsgs = msgs.map((m) => (m._id === msg._id ? { ...m, voiceUrl: url } : m))
+      msgStore.setState({
+        speaking: { messageId, status: 'playing' },
+        msgs: nextMsgs,
+      })
     })
     audio.addEventListener('ended', () => {
       msgStore.setState({ speaking: undefined })
@@ -374,6 +396,8 @@ async function receiveVoiceGenerated(chatId: string, messageId: string, url: str
     msgStore.setState({ speaking: undefined })
   }
 }
+
+function playVoice(url: string) {}
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
   const { activeChatId } = msgStore.getState()
