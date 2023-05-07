@@ -1,11 +1,11 @@
 import { Component, Show, createSignal } from 'solid-js'
 import Button from '/web/shared/Button'
 import { NewCharacter } from '/web/store'
-import { extractTavernData } from '../Character/tavern-utils'
 import { jsonToCharacter } from '../Character/ImportCharacter'
 import ChubImportCharModal from './ChubImportChar'
 import { CHUB_URL } from '/web/store/chub'
 import ChubImportBookModal from './ChubImportBook'
+import { extractCardData } from '../Character/card-utils'
 
 export const ChubItem: Component<{
   name: string
@@ -20,7 +20,7 @@ export const ChubItem: Component<{
   const [memorybook, setMemoryBook] = createSignal<any>({})
 
   const processImage = async (file: File) => {
-    const json = await extractTavernData(file)
+    const json = await extractCardData(file)
     if (!json) {
       throw new Error('Invalid tavern image')
     }
