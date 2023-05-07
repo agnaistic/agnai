@@ -141,9 +141,9 @@ const GeneralSettings: Component<Props> = (props) => {
         helperText={
           <>
             <p>
-              Maximum context length. Typically 2048 for most models. OpenAI supports up to 4K.
-              Scale and Claude support up to 8K. If you set this too high, you may get unexpected
-              results or errors.
+              Maximum context length. Typically 2048 for most models. OpenAI Turbo and Davinci
+              supports up to 4K. Scale and Claude support up to 8K. OpenAI GPT4-32k supports 32k. If
+              you set this too high, you may get unexpected results or errors.
             </p>
             <p>
               We don't have GPT-4 or Claude tokenizers to correctly count tokens for those services.
@@ -153,7 +153,7 @@ const GeneralSettings: Component<Props> = (props) => {
           </>
         }
         min={16}
-        max={8000}
+        max={32000}
         step={1}
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}

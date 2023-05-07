@@ -21,6 +21,8 @@ const CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo0301]: true,
   [OPENAI_MODELS.GPT4]: true,
   [OPENAI_MODELS.GPT4_0314]: true,
+  [OPENAI_MODELS.GPT4_32k]: true,
+  [OPENAI_MODELS.GPT4_32k_0314]: true,
 }
 
 export const handleOAI: ModelAdapter = async function* (opts) {
