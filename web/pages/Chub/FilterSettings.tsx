@@ -5,6 +5,7 @@ import { chubOptions } from './Chub'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
 import { chubStore } from '../../store/chub'
+import { setChubPage } from './ChubNavigation'
 
 const sorts = [
   'Download Count',
@@ -18,6 +19,12 @@ const sorts = [
 ]
 
 const FilterSettings: Component = () => {
+  const update = () => {
+    setChubPage(1)
+    chubStore.getChubChars()
+    chubStore.getChubBooks()
+  }
+
   return (
     <>
       <Toggle
@@ -27,8 +34,7 @@ const FilterSettings: Component = () => {
         value={chubOptions.nsfw}
         onChange={(v) => {
           chubOptions.nsfw = v
-          chubStore.getChubChars()
-          chubStore.getChubBooks()
+          update()
         }}
       />
       <TextInput
@@ -39,8 +45,7 @@ const FilterSettings: Component = () => {
         value={chubOptions.tags}
         onChange={(ev) => {
           chubOptions.tags = ev.currentTarget.value
-          chubStore.getChubChars()
-          chubStore.getChubBooks()
+          update()
         }}
       />
       <TextInput
@@ -51,8 +56,7 @@ const FilterSettings: Component = () => {
         value={chubOptions.excludeTags}
         onChange={(ev) => {
           chubOptions.excludeTags = ev.currentTarget.value
-          chubStore.getChubChars()
-          chubStore.getChubBooks()
+          update()
         }}
       />
       <Select
@@ -62,8 +66,7 @@ const FilterSettings: Component = () => {
         value={chubOptions.sort}
         onChange={(v) => {
           chubOptions.sort = v.value
-          chubStore.getChubChars()
-          chubStore.getChubBooks()
+          update()
         }}
       />
     </>
