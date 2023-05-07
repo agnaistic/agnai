@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For } from 'solid-js'
+import { Component, createMemo, createSignal, For } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
@@ -54,7 +54,7 @@ const EditMemoryForm: Component<{
   hideSave?: boolean
   updateEntrySort: (opn: Option<string>) => void
   entrySort: EntrySort
-  onChange: (book: AppSchema.MemoryBook) => void
+  onChange?: (book: AppSchema.MemoryBook) => void
 }> = (props) => {
   const [editing, setEditing] = createSignal(props.book)
   const [search, setSearch] = createSignal('')
@@ -136,7 +136,7 @@ const EditMemoryForm: Component<{
               search={search()}
               onChange={(e) => {
                 editing().entries[editing().entries.indexOf(e)] = e
-                props.onChange(editing())
+                props.onChange?.(editing())
               }}
             />
           )}

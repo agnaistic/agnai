@@ -4,6 +4,7 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { NewCharacter, characterStore, toastStore } from '../../store'
+import { chubStore } from '/web/store/chub'
 
 const ChubImportCharModal: Component<{
   show: boolean
