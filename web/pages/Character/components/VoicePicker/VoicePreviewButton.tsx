@@ -42,7 +42,7 @@ export const VoicePreviewButton: Component<{
         voiceId: voiceId,
         ...props.webSpeechSynthesisSettings,
       }
-      speechManager.playWebSpeechSynthesis(voice, getSampleText(culture), culture, false)
+      speechManager.createSpeechFromBrowser(voice, getSampleText(culture), culture, false)
     } else if (preview) {
       speechManager.createSpeechFromUrl(preview)
     }

@@ -6,15 +6,22 @@ export class WebSpeechSynthesisAudioReference extends EventTarget implements Aud
   constructor(speech: SpeechSynthesisUtterance) {
     super()
     this.speech = speech
+    speech.addEventListener('error', (e) => {
+      this.dispatchEvent(new AudioReferenceEvent('error'))
+    })
+    speech.addEventListener('start', (e) => {
+      this.dispatchEvent(new AudioReferenceEvent('playing'))
+    })
+    speech.addEventListener('end', (e) => {
+      this.dispatchEvent(new AudioReferenceEvent('ended'))
+    })
   }
 
   play() {
     speechSynthesis.speak(this.speech)
-    this.dispatchEvent(new AudioReferenceEvent('playing'))
   }
 
   pause() {
     speechSynthesis.cancel()
-    this.dispatchEvent(new AudioReferenceEvent('ended'))
   }
 }

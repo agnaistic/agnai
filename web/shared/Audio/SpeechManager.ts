@@ -12,11 +12,10 @@ class SpeechManager {
 
     const audio = new Audio(url)
     this.current = new UrlAudioReference(audio)
-    this.current.play()
     return this.current
   }
 
-  async playWebSpeechSynthesis(
+  async createSpeechFromBrowser(
     voice: VoiceWebSpeechSynthesisSettings,
     text: string,
     culture: string,
@@ -29,7 +28,6 @@ class SpeechManager {
       filterAction
     )
     this.current = new WebSpeechSynthesisAudioReference(utterance)
-    this.current.play()
     return this.current
   }
 
