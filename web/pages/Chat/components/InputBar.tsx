@@ -1,5 +1,5 @@
 import { ChevronUp, ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -21,6 +21,7 @@ const InputBar: Component<{
   more: (msg: string) => void
 }> = (props) => {
   let ref: any
+
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
   const toggleOoc = () => {
@@ -103,7 +104,7 @@ const InputBar: Component<{
         lang={props.char?.culture}
         ref={ref}
         value={text()}
-        placeholder="Send a message..."
+        placeholder={props.ooc ? 'Send a message... (Out of character)' : 'Send a message...'}
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
         onKeyDown={(ev) => {
           if (ev.key === 'Enter') {
@@ -140,7 +141,7 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-            <Show when={props.showOocToggle}>
+            <Show when={props.showOocToggle || true}>
               <Button
                 schema="secondary"
                 size="sm"

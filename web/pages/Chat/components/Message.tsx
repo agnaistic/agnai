@@ -159,11 +159,11 @@ const SingleMessage: Component<
           data-user-avatar={isUser()}
         >
           <Switch>
-          <Match when={voice.status === 'generating'}>
-            <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-              <AvatarIcon bot={true} format={format()} Icon={DownloadCloud} />
-            </div>
-          </Match>
+            <Match when={voice.status === 'generating'}>
+              <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                <AvatarIcon bot={true} format={format()} Icon={DownloadCloud} />
+              </div>
+            </Match>
 
             <Match when={voice.status === 'playing'}>
               <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
