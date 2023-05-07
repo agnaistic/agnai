@@ -20,6 +20,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
           <TextInput
             fieldName="search"
             placeholder="Search by name..."
+            value={chubOptions.search}
             onKeyUp={(ev) => {
               chubOptions.search = ev.currentTarget.value
               chubStore.getChubChars()
