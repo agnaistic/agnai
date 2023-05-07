@@ -1,13 +1,34 @@
-type EVENT_NAMES = 'error' | 'playing' | 'ended'
-
 export class AudioReferenceEvent extends Event {
-  constructor(type: EVENT_NAMES) {
+  constructor(type: 'playing' | 'ended') {
     super(type)
   }
 }
 
-export interface AudioReference extends EventTarget {
-  play(): void
-  pause(): void
-  addEventListener(type: EVENT_NAMES, listener: (e: AudioReferenceEvent) => any): void
+export class AudioReferenceErrorEvent extends ErrorEvent {
+  constructor(type: 'error', message: string) {
+    super(type, { message })
+  }
+}
+
+interface AudioReferenceEventMap extends GlobalEventHandlersEventMap {
+  playing: AudioReferenceEvent
+  ended: AudioReferenceEvent
+  error: AudioReferenceErrorEvent
+}
+
+export abstract class AudioReference extends EventTarget {
+  abstract play(): void
+  abstract pause(): void
+  addEventListener<K extends keyof AudioReferenceEventMap>(
+    type: K,
+    listener: (this: AudioReference, ev: AudioReferenceEventMap[K]) => any,
+    options?: boolean | AddEventListenerOptions
+  ): void
+  addEventListener(
+    type: string,
+    listener: EventListenerOrEventListenerObject,
+    options?: boolean | AddEventListenerOptions
+  ): void {
+    super.addEventListener(type, listener, options)
+  }
 }

@@ -1,6 +1,6 @@
-import { AudioReference, AudioReferenceEvent } from './AudioReference'
+import { AudioReference, AudioReferenceErrorEvent, AudioReferenceEvent } from './AudioReference'
 
-export class WebSpeechSynthesisAudioReference extends EventTarget implements AudioReference {
+export class WebSpeechSynthesisAudioReference extends AudioReference {
   speech: SpeechSynthesisUtterance
 
   constructor(speech: SpeechSynthesisUtterance) {
@@ -9,21 +9,21 @@ export class WebSpeechSynthesisAudioReference extends EventTarget implements Aud
     speech.addEventListener('error', (e) => {
       if (e.error === 'interrupted') return
       if (e.error === 'canceled') return
-      this.dispatchEvent(new AudioReferenceEvent('error'))
+      this.dispatchEvent(new AudioReferenceErrorEvent('error', e.error))
     })
-    speech.addEventListener('start', (e) => {
+    speech.addEventListener('start', () => {
       this.dispatchEvent(new AudioReferenceEvent('playing'))
     })
-    speech.addEventListener('end', (e) => {
+    speech.addEventListener('end', () => {
       this.dispatchEvent(new AudioReferenceEvent('ended'))
     })
   }
 
-  play() {
+  override play() {
     speechSynthesis.speak(this.speech)
   }
 
-  pause() {
+  override pause() {
     speechSynthesis.cancel()
   }
 }

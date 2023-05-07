@@ -361,7 +361,7 @@ function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
   try {
     const audio = speechManager.createSpeechFromUrl(url)
     audio.addEventListener('error', (e) => {
-      toastStore.error('Error while playing server-generated text to speech')
+      toastStore.error(`Error playing speech: ${e.message}`)
       const msgs = msgStore.getState().msgs
       const msg = msgs.find((m) => m._id === messageId)
       if (!msg) return
@@ -386,8 +386,8 @@ function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
     })
     msgStore.setState({ speaking: { messageId, status: 'generating' } })
     audio.play()
-  } catch (e) {
-    toastStore.error('Failed to play text to speech')
+  } catch (e: any) {
+    toastStore.error(`Error playing speech: ${e.message}`)
     msgStore.setState({ speaking: undefined })
   }
 }
@@ -403,7 +403,7 @@ async function playVoiceFromBrowser(
   const filterAction = user.texttospeech?.filterActions ?? true
   const audio = await speechManager.createSpeechFromBrowser(voice, text, culture, filterAction)
   audio.addEventListener('error', (e) => {
-    toastStore.error('Error while playing browser-generated text to speech')
+    toastStore.error(`Error playing speech: ${e.message}`)
     msgStore.setState({
       speaking: undefined,
     })
