@@ -406,38 +406,6 @@ function sortDesc(left: { updatedAt: string }, right: { updatedAt: string }): nu
   return left.updatedAt > right.updatedAt ? -1 : left.updatedAt === right.updatedAt ? 0 : 1
 }
 
-subscribe(
-  'message-created',
-  {
-    msg: { _id: 'string', characterId: 'string?', userId: 'string?', msg: 'string' },
-    chatId: 'string',
-  },
-  (body) => {
-    if (body.msg.userId) {
-      chatStore.getMemberProfile(body.chatId, body.msg.userId)
-    } else if (body.msg.characterId) {
-      const chat = chatStore.getState().active
-      if (chat?.chat._id == body.chatId) {
-        const voice = chat.char.voice
-        const user = userStore().user
-        if (
-          user &&
-          (user.texttospeech?.enabled ?? true) &&
-          chat.char.userId === user._id &&
-          voice
-        ) {
-          msgStore.textToSpeech(
-            body.msg._id,
-            body.msg.msg,
-            voice,
-            chat.char.culture || defaultCulture
-          )
-        }
-      }
-    }
-  }
-)
-
 subscribe('member-removed', { memberId: 'string', chatId: 'string' }, (body) => {
   const profile = getStore('user').getState().profile
   if (!profile) return

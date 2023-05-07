@@ -17,6 +17,7 @@ import { VoiceSettings } from '../../srv/db/texttospeech-schema'
 import { defaultCulture } from '../shared/CultureCodes'
 import { speechSynthesisManager } from '../shared/Audio/SpeechSynthesisManager'
 import { speechManager } from '../shared/Audio/SpeechManager'
+import { characterStore } from './character'
 
 type ChatId = string
 
@@ -397,8 +398,6 @@ function receiveVoiceGenerated(chatId: string, messageId: string, url: string) {
   }
 }
 
-function playVoice(url: string) {}
-
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
   const { activeChatId } = msgStore.getState()
   if (body.chatId !== activeChatId) return
@@ -452,29 +451,53 @@ subscribe(
   }
 )
 
-subscribe('message-created', { msg: 'any', chatId: 'string', generate: 'boolean?' }, (body) => {
-  const { msgs, activeChatId } = msgStore.getState()
-  if (activeChatId !== body.chatId) return
-  const msg = body.msg as AppSchema.ChatMessage
+subscribe(
+  'message-created',
+  {
+    msg: 'any',
+    chatId: 'string',
+    generate: 'boolean?',
+  },
+  (body) => {
+    const { msgs, activeChatId } = msgStore.getState()
+    if (activeChatId !== body.chatId) return
+    const msg = body.msg as AppSchema.ChatMessage
 
-  // If the message is from a user don't clear the "waiting for response" flags
-  const nextMsgs = msgs.concat(msg)
-  if (msg.userId && !body.generate) {
-    msgStore.setState({ msgs: nextMsgs })
-  } else {
-    msgStore.setState({
-      msgs: nextMsgs,
-      partial: undefined,
-      waiting: undefined,
-    })
+    const nextMsgs = msgs.concat(msg)
+    // If the message is from a user don't clear the "waiting for response" flags
+    if (msg.userId && !body.generate) {
+      msgStore.setState({ msgs: nextMsgs })
+    } else {
+      msgStore.setState({
+        msgs: nextMsgs,
+        partial: undefined,
+        waiting: undefined,
+      })
+    }
+
+    if (!isLoggedIn()) {
+      localApi.saveMessages(body.chatId, nextMsgs)
+    }
+
+    addMsgToRetries(msg)
+
+    const user = userStore().user
+
+    if (msg.userId && msg.userId != user?._id) {
+      chatStore.getMemberProfile(body.chatId, msg.userId)
+    }
+
+    playVoiceOnMessageReceived(user, msg)
   }
+)
 
-  if (!isLoggedIn()) {
-    localApi.saveMessages(body.chatId, nextMsgs)
-  }
-
-  addMsgToRetries(msg)
-})
+function playVoiceOnMessageReceived(user: AppSchema.User | undefined, msg: AppSchema.ChatMessage) {
+  if (!msg.characterId) return
+  const char = characterStore.getState().characters.list.find((c) => c._id === msg.characterId)
+  if (!char || !char.voice) return
+  if (user?.texttospeech?.enabled == false) return
+  msgStore.textToSpeech(msg._id, msg.msg, char.voice, char.culture || defaultCulture)
+}
 
 subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
   msgStore.setState({ waiting: undefined })
@@ -563,7 +586,9 @@ subscribe(
       body.msg._id = retrying._id
     }
 
-    const next = msgs.filter((m) => m._id !== retrying?._id).concat(body.msg)
+    const msg = body.msg as AppSchema.ChatMessage
+
+    const next = msgs.filter((m) => m._id !== retrying?._id).concat(msg)
 
     const chats = localApi.loadItem('chats')
     localApi.saveChats(
@@ -571,7 +596,7 @@ subscribe(
     )
     localApi.saveMessages(body.chatId, next)
 
-    addMsgToRetries(body.msg)
+    addMsgToRetries(msg)
 
     msgStore.setState({
       msgs: next,
@@ -579,6 +604,8 @@ subscribe(
       partial: undefined,
       waiting: undefined,
     })
+
+    playVoiceOnMessageReceived(userStore().user, msg)
   }
 )
 
