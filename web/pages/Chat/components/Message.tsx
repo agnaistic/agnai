@@ -413,6 +413,10 @@ const MessageOptions: Component<{
       <Show when={!!props.char.voice && props.msg.characterId}>
         <div
           class="icon-button"
+          classList={{
+            'animate-pulse': voice.status === 'generating',
+            'animate-ping': voice.status === 'playing',
+          }}
           onClick={() => (voice.status ? undefined : textToSpeech(props.char, props.msg))}
         >
           <Megaphone size={18} />

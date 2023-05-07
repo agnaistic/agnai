@@ -1,10 +1,15 @@
 import { Component, Show, createEffect, createSignal } from 'solid-js'
-import { speechSynthesisManager, voiceStore } from '/web/store/voice'
-import { VoiceSettings, TTSService, VoiceSettingForm } from '/srv/db/texttospeech-schema'
+import { voiceStore } from '/web/store/voice'
+import {
+  TTSService,
+  VoiceSettingForm,
+  VoiceWebSpeechSynthesisSettings,
+} from '/srv/db/texttospeech-schema'
 import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'
-import { defaultCulture } from '/web/shared/CultureCodes'
+import { defaultCulture, getSampleText } from '/web/shared/CultureCodes'
+import { speechManager } from '/web/shared/Audio/SpeechManager'
 
 export const VoicePreviewButton: Component<{
   service: TTSService
@@ -30,16 +35,17 @@ export const VoicePreviewButton: Component<{
     const preview = voicePreviewUrl()
     if (!service || !voiceId || !preview) return
 
-    let voice: VoiceSettings
     if (service == 'webspeechsynthesis') {
-      voice = { service: service, voiceId, ...props.webSpeechSynthesisSettings }
-    } else if (service === 'elevenlabs') {
-      voice = { service: service, voiceId }
-    } else {
-      return
+      const culture = props.culture || defaultCulture
+      const voice: VoiceWebSpeechSynthesisSettings = {
+        service: 'webspeechsynthesis',
+        voiceId: voiceId,
+        ...props.webSpeechSynthesisSettings,
+      }
+      speechManager.playWebSpeechSynthesis(voice, getSampleText(culture), culture, false)
+    } else if (preview) {
+      speechManager.createSpeechFromUrl(preview)
     }
-
-    speechSynthesisManager.playVoicePreview(voice, preview, props.culture || defaultCulture)
   }
 
   return (

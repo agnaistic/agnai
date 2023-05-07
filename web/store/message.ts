@@ -14,12 +14,14 @@ import { localApi } from './data/storage'
 import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
 import { VoiceSettings } from '../../srv/db/texttospeech-schema'
-import { speechSynthesisManager } from './voice'
 import { defaultCulture } from '../shared/CultureCodes'
+import { speechSynthesisManager } from '../shared/Audio/SpeechSynthesisManager'
+import { speechManager } from '../shared/Audio/SpeechManager'
 
 type ChatId = string
 
-export type VoiceState = 'generating' | 'loading' | 'playing'
+export type VoiceState = 'generating' | 'playing'
+
 export type MsgState = {
   activeChatId: string
   activeCharId: string
@@ -234,30 +236,39 @@ export const msgStore = createStore<MsgState>(
       return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
     },
     stopSpeech() {
-      speechSynthesisManager.stopCurrentVoice()
+      speechManager.cancel()
       return { speaking: undefined }
     },
-    async *textToSpeech(
-      { activeChatId, speaking },
+    async textToSpeech(
+      { activeChatId },
       messageId: string,
       text: string,
       voice: VoiceSettings,
       culture: string
     ) {
-      speechSynthesisManager.stopCurrentVoice()
+      speechManager.cancel()
 
-      if (speaking) {
+      if (!voice.service) {
+        set({ speaking: undefined })
         return
       }
 
-      if (!voice.service) {
-        yield { speaking: undefined }
-      }
-
-      yield { speaking: { messageId, status: 'generating' } }
+      set({ speaking: { messageId, status: 'generating' } })
 
       if (voice.service === 'webspeechsynthesis') {
-        speechSynthesisManager.playWebSpeechSynthesis(voice, text, culture, messageId)
+        if (!speechSynthesisManager.isSupported()) {
+          toastStore.error(`Web speech synthesis not supported on this browser`)
+          return
+        }
+        if (messageId) set({ speaking: { messageId: messageId, status: 'playing' } })
+        const user = userStore.getState().user
+        const filterAction = user?.texttospeech?.filterActions ?? true
+        try {
+          await speechManager.playWebSpeechSynthesis(voice, text, culture, filterAction)
+        } catch (e: any) {
+          toastStore.error(`Failed to play web speech synthesis: ${e.message}`)
+        }
+        if (messageId) set({ speaking: undefined })
       } else {
         const res = await voiceApi.textToSpeech({
           chatId: activeChatId,
@@ -337,16 +348,19 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function receiveTextToSpeech(chatId: string, messageId: string, url: string) {
-  if (userStore.getState().user?.texttospeech?.enabled === false) return
+async function receiveVoiceGenerated(chatId: string, messageId: string, url: string) {
+  const user = userStore.getState().user
+  if (user?.texttospeech?.enabled === false) return
   if (chatId != msgStore.getState().activeChatId) {
     msgStore.setState({ speaking: undefined })
     return
   }
   try {
-    const audio = new Audio(url)
-    audio.addEventListener('error', () => {
-      msgStore.setState({ speaking: { messageId, status: 'generating' } })
+    const audio = speechManager.createSpeechFromUrl(url)
+    msgStore.setState({ speaking: { messageId, status: 'generating' } })
+    audio.addEventListener('error', (e) => {
+      toastStore.error('Error while playing text to speech')
+      msgStore.setState({ speaking: undefined })
     })
     audio.addEventListener('playing', () => {
       msgStore.setState({ speaking: { messageId, status: 'playing' } })
@@ -354,10 +368,9 @@ async function receiveTextToSpeech(chatId: string, messageId: string, url: strin
     audio.addEventListener('ended', () => {
       msgStore.setState({ speaking: undefined })
     })
-    msgStore.setState({ speaking: { messageId, status: 'loading' } })
     audio.play()
   } catch (e) {
-    console.error(e)
+    toastStore.error('Failed to play text to speech')
     msgStore.setState({ speaking: undefined })
   }
 }
@@ -459,7 +472,7 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
-  receiveTextToSpeech(body.chatId, body.messageId, body.url)
+  receiveVoiceGenerated(body.chatId, body.messageId, body.url)
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
