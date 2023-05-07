@@ -166,8 +166,12 @@ export const SpeechRecognitionRecorder: Component<{
   createEffect(() => {
     const final = finalValue()
     if (!final) return
-    if (settings.autoSubmit) props.onSubmit()
-    setPendingRecord(settings.autoRecord)
+    if (settings.autoSubmit) {
+      setPendingRecord(settings.autoRecord)
+      setTimeout(() => {
+        props.onSubmit()
+      }, 100)
+    }
   })
 
   const unsub = msgStore.subscribe((state) => {

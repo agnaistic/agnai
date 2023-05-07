@@ -1,4 +1,4 @@
-import { ChevronUp, ImagePlus, PlusCircle, Send } from 'lucide-solid'
+import { ChevronUp, ImagePlus, Megaphone, PlusCircle, Send } from 'lucide-solid'
 import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
@@ -19,7 +19,6 @@ const InputBar: Component<{
   setOoc: (b: boolean) => void
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
-  playVoice: () => void
 }> = (props) => {
   let ref: any
   const user = userStore()
