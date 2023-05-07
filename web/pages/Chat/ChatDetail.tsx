@@ -26,7 +26,6 @@ import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
-import { voiceStore } from '/web/store/voice'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -68,6 +67,13 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
+  const [ooc, setOoc] = createSignal(chats.members.length > 1)
+  const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
+  const [hideOOC, setHideOOC] = createSignal(false)
+
+  const toggleHideOocMessages = () => {
+    setHideOOC(!hideOOC())
+  }
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
@@ -132,16 +138,19 @@ const ChatDetail: Component = () => {
     chatStore.getChat(params.id)
   })
 
-  const sendMessage = (message: string, onSuccess?: () => void) => {
+  const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
-      setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, 'send', onSuccess)
+      if (!ooc) setSwipe(0)
+      msgStore.send(chats.chat?._id!, message, ooc ? 'ooc' : 'send', onSuccess)
       return
     }
 
     switch (message) {
       case '/devCycleAvatarSettings':
         devCycleAvatarSettings(user)
+        return
+      case '/devShowOocToggle':
+        setShowOOCOpts(!showOOCOpts())
         return
     }
   }
@@ -153,6 +162,18 @@ const ChatDetail: Component = () => {
   const confirmSwipe = (msgId: string) => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
+
+  const indexOfLastRPMessage = () =>
+    msgs.msgs.findIndex((_, i, original) => {
+      const rest = original.slice(i + 1)
+      if (rest.find((msg) => msg.ooc !== true)) {
+        return false
+      } else {
+        return true
+      }
+    })
+
+  const msgsToDisplay = () => (hideOOC() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs)
 
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
@@ -207,6 +228,8 @@ const ChatDetail: Component = () => {
                     toggleEditing={toggleEditing}
                     screenshotInProgress={screenshotInProgress()}
                     setScreenshotInProgress={setScreenshotInProgress}
+                    toggleOocMessages={showOOCOpts() ? toggleHideOocMessages : undefined}
+                    hideOocMessages={hideOOC()}
                   />
                 </DropMenu>
               </div>
@@ -231,6 +254,9 @@ const ChatDetail: Component = () => {
               swiped={swipe() !== 0}
               send={sendMessage}
               more={moreMessage}
+              ooc={ooc()}
+              setOoc={setOoc}
+              showOocToggle={showOOCOpts()}
               culture={chats.char?.culture}
             />
             <Show when={isOwner()}>
@@ -254,7 +280,7 @@ const ChatDetail: Component = () => {
                     <Button onClick={generateFirst}>Generate Message</Button>
                   </div>
                 </Show>
-                <For each={msgs.msgs}>
+                <For each={msgsToDisplay()}>
                   {(msg, i) => (
                     <Message
                       msg={msg}
@@ -262,7 +288,7 @@ const ChatDetail: Component = () => {
                       char={chats.char!}
                       editing={editing()}
                       anonymize={cfg.anonymize}
-                      last={i() >= 1 && i() === msgs.msgs.length - 1}
+                      last={i() >= 1 && i() === indexOfLastRPMessage()}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
                         msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]

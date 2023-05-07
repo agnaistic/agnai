@@ -14,6 +14,8 @@ const ChatOptions: Component<{
   toggleEditing: () => void
   screenshotInProgress: boolean
   setScreenshotInProgress: (inProgress: boolean) => void
+  hideOocMessages: boolean
+  toggleOocMessages?: () => void
 }> = (props) => {
   const chats = chatStore((s) => ({ ...s.active, lastId: s.lastChatId }))
   const user = userStore()
@@ -49,6 +51,19 @@ const ChatOptions: Component<{
 
   return (
     <div class="flex w-60 flex-col gap-2 p-2">
+      <Show when={props.toggleOocMessages}>
+        <Option onClick={props.toggleOocMessages!}>
+          <div class="flex w-full items-center justify-between">
+            <div>Hide OOC messages</div>
+            <Toggle
+              class="flex items-center"
+              fieldName="editChat"
+              value={props.hideOocMessages}
+              onChange={props.toggleOocMessages!}
+            />
+          </div>
+        </Option>
+      </Show>
       <Show when={isOwner()}>
         <Option onClick={props.toggleEditing}>
           <div class="flex w-full items-center justify-between">

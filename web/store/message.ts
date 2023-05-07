@@ -173,7 +173,7 @@ export const msgStore = createStore<MsgState>(
       { msgs },
       chatId: string,
       message: string,
-      mode: 'send' | 'retry' | 'self',
+      mode: 'send' | 'ooc' | 'retry' | 'self',
       onSuccess?: () => void
     ) {
       if (!chatId) {
@@ -181,7 +181,9 @@ export const msgStore = createStore<MsgState>(
         yield { partial: undefined }
         return
       }
-      yield { partial: '', waiting: { chatId, mode } }
+      if (mode !== 'ooc') {
+        yield { partial: '', waiting: { chatId, mode } }
+      }
 
       switch (mode) {
         case 'self':
@@ -190,7 +192,8 @@ export const msgStore = createStore<MsgState>(
           break
 
         case 'send':
-          var res = await msgsApi.generateResponseV2({ kind: 'send', text: message })
+        case 'ooc':
+          var res = await msgsApi.generateResponseV2({ kind: mode, text: message })
           break
       }
 

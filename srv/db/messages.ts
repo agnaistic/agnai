@@ -12,12 +12,13 @@ export type NewMessage = {
   senderId?: string
   adapter?: string
   handle?: string
+  ooc: boolean
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
 
 export async function createChatMessage(
-  { chatId, message, characterId, senderId, adapter }: NewMessage,
+  { chatId, message, characterId, senderId, adapter, ooc }: NewMessage,
   ephemeral?: boolean
 ) {
   const doc: AppSchema.ChatMessage = {
@@ -31,6 +32,7 @@ export async function createChatMessage(
     adapter,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    ooc,
   }
 
   if (!ephemeral) await db('chat-message').insertOne(doc)

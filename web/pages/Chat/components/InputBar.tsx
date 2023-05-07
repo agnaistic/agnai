@@ -7,17 +7,24 @@ import { toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
+import { Toggle } from '/web/shared/Toggle'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
   culture?: string
   swiped: boolean
-  send: (msg: string, onSuccess?: () => void) => void
+  showOocToggle: boolean
+  ooc: boolean
+  setOoc: (b: boolean) => void
+  send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
 }> = (props) => {
   let ref: any
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
+  const toggleOoc = () => {
+    props.setOoc(!props.ooc)
+  }
   const voiceState = msgStore((x) => ({ speaking: x.speaking }))
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
@@ -41,7 +48,7 @@ const InputBar: Component<{
       return toastStore.warn(`Confirm or cancel swiping before sending`)
     }
 
-    props.send(value, () => {
+    props.send(value, props.ooc, () => {
       ref.value = ''
       setText('')
       setCleared(0)
@@ -104,7 +111,6 @@ const InputBar: Component<{
         cleared={cleared}
         enabled={!voiceState.speaking}
       />
-
       <div>
         <button
           onClick={onButtonClick}
@@ -123,6 +129,17 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
+            <Show when={props.showOocToggle}>
+              <Button
+                schema="secondary"
+                size="sm"
+                class="flex items-center justify-between"
+                onClick={toggleOoc}
+              >
+                <div>Stop Bot Reply</div>
+                <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
+              </Button>
+            </Show>
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
               <ImagePlus size={18} /> Generage Image
             </Button>
