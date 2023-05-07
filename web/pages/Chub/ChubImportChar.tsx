@@ -52,8 +52,7 @@ const ChubImportCharModal: Component<{
     >
       <form ref={ref}>
         <div class="mb-2 text-sm">
-          Optionally modify some of the conversation context. You can override other aspects of the
-          character's persona from the conversation after it is created.
+          Optionally modify all the aspects of the character other than the avatar.
         </div>
         <div class="mb-4 text-sm">
           The information provided here will be saved with the character on import.
