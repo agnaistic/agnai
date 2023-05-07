@@ -67,7 +67,7 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
-  const [ooc, setOoc] = createSignal(chats.members.length > 1)
+  const [ooc, setOoc] = createSignal(false)
   const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
   const [hideOOC, setHideOOC] = createSignal(false)
 
@@ -257,7 +257,7 @@ const ChatDetail: Component = () => {
               char={chats.char}
               ooc={ooc()}
               setOoc={setOoc}
-              showOocToggle={showOOCOpts()}
+              showOocToggle={showOOCOpts() || chats.members.length > 1}
             />
             <Show when={isOwner()}>
               <SwipeMessage
