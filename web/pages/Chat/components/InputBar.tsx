@@ -1,4 +1,4 @@
-import { ChevronUp, ImagePlus, Megaphone, PlusCircle, Send } from 'lucide-solid'
+import { ChevronUp, ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
 import { Component, createMemo, createSignal, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
@@ -35,7 +35,7 @@ const InputBar: Component<{
 
   const updateText = (ev: Event) => {
     if (!ref) return
-    setText(ref.value)
+    setText(ref.value || '')
   }
 
   const send = () => {
@@ -105,7 +105,7 @@ const InputBar: Component<{
         value={text()}
         placeholder="Send a message..."
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
-        onKeyPress={(ev) => {
+        onKeyDown={(ev) => {
           if (ev.key === 'Enter') {
             if (ev.ctrlKey || ev.shiftKey) return
             return send()
@@ -127,10 +127,10 @@ const InputBar: Component<{
           onClick={onButtonClick}
           class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
         >
-          <Show when={text().length === 0}>
-            <ChevronUp />
+          <Show when={text().trim().length === 0}>
+            <MoreHorizontal />
           </Show>
-          <Show when={text().length > 0}>
+          <Show when={text().trim().length > 0}>
             <Send />
           </Show>
         </button>
