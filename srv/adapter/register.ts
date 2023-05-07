@@ -6,7 +6,10 @@ import { AdapterOptions, AIAdapter } from '../../common/adapters'
 import { logger } from '../logger'
 import { ModelAdapter } from './type'
 
-const adapters = new Map<string, { name: string; handler: ModelAdapter; options: AdapterOptions }>()
+const adapters = new Map<
+  string,
+  { name: AIAdapter; handler: ModelAdapter; options: AdapterOptions }
+>()
 
 export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options: AdapterOptions) {
   if (adapters.has(name)) {

@@ -1,4 +1,4 @@
-import { HordeModel, HordeWorker } from '../../common/adapters'
+import { HordeModel, HordeWorker, RegisteredAdapter } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { setAssetPrefix } from '../shared/util'
@@ -37,6 +37,7 @@ const initState: SettingState = {
   workers: [],
   imageWorkers: [],
   config: {
+    registered: [],
     adapters: [],
     canAuth: true,
     version: '...',

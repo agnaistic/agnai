@@ -18,10 +18,11 @@ const appConfig: AppSchema.AppConfig = {
   assetPrefix: config.storage.enabled
     ? `https://${config.storage.bucket}.${config.storage.endpoint}`
     : '',
-  // adapterSettings: getRegisteredAdapters().map((adp) => ({
-  //   name: adp.name,
-  //   settings: adp.options.settings,
-  // })),
+  registered: getRegisteredAdapters().map((adp) => ({
+    name: adp.name,
+    settings: adp.options.settings,
+    options: adp.options.options,
+  })),
 }
 
 const getSettings = handle(async () => {

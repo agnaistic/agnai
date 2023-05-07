@@ -35,48 +35,7 @@ const Settings: Component = () => {
   const currentTab = createMemo(() => tabs[tab()])
 
   const onSubmit = (evt: Event) => {
-    const body = getStrictForm(evt, {
-      defaultPreset: 'string?',
-      koboldUrl: 'string?',
-      thirdPartyFormat: ['kobold', 'openai', 'claude'],
-      oobaUrl: 'string?',
-      thirdPartyPassword: 'string?',
-      novelApiKey: 'string?',
-      novelModel: 'string?',
-      hordeUseTrusted: 'boolean?',
-      hordeKey: 'string?',
-      hordeModel: 'string?',
-      luminaiUrl: 'string?',
-      oaiKey: 'string?',
-      scaleApiKey: 'string?',
-      scaleUrl: 'string?',
-      claudeApiKey: 'string?',
-      logPromptsToBrowserConsole: 'boolean?',
-
-      imageType: ['horde', 'sd', 'novel'],
-      imageSteps: 'number',
-      imageCfg: 'number',
-      imageWidth: 'number',
-      imageHeight: 'number',
-
-      novelImageModel: 'string',
-      novelSampler: 'string',
-
-      hordeSampler: 'string',
-      hordeImageModel: 'string',
-
-      sdUrl: 'string',
-      sdSampler: 'string',
-
-      speechToTextEnabled: 'boolean',
-      speechToTextAutoSubmit: 'boolean',
-      speechToTextAutoRecord: 'boolean',
-
-      textToSpeechEnabled: 'boolean',
-      textToSpeechFilterActions: 'boolean',
-
-      elevenLabsApiKey: 'string?',
-    } as const)
+    const body = getStrictForm(evt, settingsForm)
 
     const {
       imageCfg,
@@ -189,3 +148,46 @@ const Settings: Component = () => {
 }
 
 export default Settings
+
+const settingsForm = {
+  defaultPreset: 'string?',
+  koboldUrl: 'string?',
+  thirdPartyFormat: ['kobold', 'openai', 'claude'],
+  oobaUrl: 'string?',
+  thirdPartyPassword: 'string?',
+  novelApiKey: 'string?',
+  novelModel: 'string?',
+  hordeUseTrusted: 'boolean?',
+  hordeKey: 'string?',
+  hordeModel: 'string?',
+  luminaiUrl: 'string?',
+  oaiKey: 'string?',
+  scaleApiKey: 'string?',
+  scaleUrl: 'string?',
+  claudeApiKey: 'string?',
+  logPromptsToBrowserConsole: 'boolean?',
+
+  imageType: ['horde', 'sd', 'novel'],
+  imageSteps: 'number',
+  imageCfg: 'number',
+  imageWidth: 'number',
+  imageHeight: 'number',
+
+  novelImageModel: 'string',
+  novelSampler: 'string',
+
+  hordeSampler: 'string',
+  hordeImageModel: 'string',
+
+  sdUrl: 'string',
+  sdSampler: 'string',
+
+  speechToTextEnabled: 'boolean',
+  speechToTextAutoSubmit: 'boolean',
+  speechToTextAutoRecord: 'boolean',
+
+  textToSpeechEnabled: 'boolean',
+  textToSpeechFilterActions: 'boolean',
+
+  elevenLabsApiKey: 'string?',
+} as const

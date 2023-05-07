@@ -227,6 +227,23 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     gaslight: '',
     oaiModel: '',
   },
+  goose: {
+    maxTokens: 'max_tokens',
+    repetitionPenalty: 'repetition_penalty',
+    repetitionPenaltyRange: 'repetition_penalty_slope',
+    repetitionPenaltySlope: 'repetition_penalty_range',
+    tailFreeSampling: 'tfs',
+    temp: 'temperature',
+    topK: 'top_k',
+    topP: 'top_p',
+    typicalP: 'typical_p',
+    topA: 'top_a',
+    order: '',
+    frequencyPenalty: 'frequency_penalty',
+    presencePenalty: 'presence_penalty',
+    gaslight: '',
+    oaiModel: '',
+  },
 }
 
 export function isDefaultPreset(value?: string): value is GenerationPreset {

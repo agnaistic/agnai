@@ -16,13 +16,22 @@ export type AdapterSetting = {
 
   /** If this is a secret that should be encrypted */
   secret: boolean
+
+  setting: SettingType
 }
+
+type SettingType =
+  | { type: 'list'; options: Array<{ label: string; value: string }> }
+  | { type: 'text' }
+  | { type: 'boolean' }
+  | { type: '' }
 
 export type AdapterOptions = {
   /** Name of the adapter that will be displayed in the UI */
   label: string
 
   settings: AdapterSetting[]
+  options: Array<keyof AppSchema.GenSettings>
 }
 
 export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'text'] as const
@@ -43,6 +52,7 @@ export const AI_ADAPTERS = [
   'openai',
   'scale',
   'claude',
+  'goose',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -127,6 +137,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   openai: 'OpenAI',
   scale: 'Scale',
   claude: 'Claude',
+  goose: 'Goose AI',
 }
 
 export type Preset = Omit<
@@ -170,3 +181,5 @@ export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AI
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
 }
+
+export type RegisteredAdapter = AppSchema.AppConfig['registered'][number]

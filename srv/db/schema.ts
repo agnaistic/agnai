@@ -1,4 +1,4 @@
-import { AIAdapter, ChatAdapter, PersonaFormat } from '../../common/adapters'
+import { AIAdapter, AdapterSetting, ChatAdapter, PersonaFormat } from '../../common/adapters'
 import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
 import { TTSSettings, VoiceSettings } from './texttospeech-schema'
@@ -74,7 +74,7 @@ export namespace AppSchema {
     texttospeech?: TTSSettings
 
     images?: ImageSettings
-    // adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
+    adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
   }
 
   export interface Chat {
@@ -239,6 +239,11 @@ export namespace AppSchema {
     imagesSaved: boolean
     assetPrefix: string
     selfhosting: boolean
+    registered: Array<{
+      name: AIAdapter
+      settings: AdapterSetting[]
+      options: Array<keyof AppSchema.GenSettings>
+    }>
   }
 
   export interface MemoryBook {
