@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, For } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
@@ -54,6 +54,7 @@ const EditMemoryForm: Component<{
   hideSave?: boolean
   updateEntrySort: (opn: Option<string>) => void
   entrySort: EntrySort
+  onChange: (book: AppSchema.MemoryBook) => void
 }> = (props) => {
   const [editing, setEditing] = createSignal(props.book)
   const [search, setSearch] = createSignal('')
@@ -88,6 +89,9 @@ const EditMemoryForm: Component<{
           value={editing().name}
           placeholder="Name for your memory book"
           required
+          onChange={(e) => {
+            editing().name = e.currentTarget.value
+          }}
         />
 
         <TextInput
@@ -95,6 +99,9 @@ const EditMemoryForm: Component<{
           label="Description"
           value={editing().description}
           placeholder="(Optional) A description for your memory book"
+          onChange={(e) => {
+            editing().description = e.currentTarget.value
+          }}
         />
         <Divider />
         <div class="sticky top-0 z-10 flex items-center justify-between bg-[var(--bg-900)] py-2">
@@ -123,9 +130,14 @@ const EditMemoryForm: Component<{
           {(entry, i) => (
             <EntryCard
               {...entry}
+              entry={entry}
               index={i()}
               onRemove={() => onRemoveEntry(i())}
               search={search()}
+              onChange={(e) => {
+                editing().entries[editing().entries.indexOf(e)] = e
+                props.onChange(editing())
+              }}
             />
           )}
         </For>
@@ -139,15 +151,22 @@ const EditMemoryForm: Component<{
 
 export default EditMemoryForm
 
-const EntryCard: Component<
-  AppSchema.MemoryEntry & { index: number; onRemove: () => void; search: string }
-> = (props) => {
+const EntryCard: Component<{
+  entry: AppSchema.MemoryEntry
+  search: string
+  onRemove: () => void
+  index: number
+  onChange: (e: AppSchema.MemoryEntry) => void
+}> = (props) => {
+  const [entry, setEntry] = createSignal(props.entry)
+
   const cls = createMemo(() =>
-    props.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
+    entry().name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )
+
   return (
     <Accordian
-      open={missingFieldsInEntry(props).length > 0}
+      open={missingFieldsInEntry(entry()).length > 0}
       class={cls()}
       title={
         <div class={`mb-1 flex w-full items-center gap-2`}>
@@ -156,12 +175,20 @@ const EntryCard: Component<
             required
             fieldName={`name.${props.index}`}
             class="w-full border-[1px]"
-            value={props.name}
+            value={entry().name}
+            onChange={(e) => {
+              entry().name = e.currentTarget.value
+              props.onChange(entry())
+            }}
           />
           <Toggle
             fieldName={`enabled.${props.index}`}
-            value={!!props.enabled}
+            value={!!entry().enabled}
             class="flex items-center"
+            onChange={(e) => {
+              entry().enabled = e
+              props.onChange(entry())
+            }}
           />
 
           <Button schema="clear" class="icon-button" onClick={props.onRemove}>
@@ -177,7 +204,11 @@ const EntryCard: Component<
           required
           placeholder="Comma separated words. E.g.: circle, shape, round, cylinder, oval"
           class="border-[1px]"
-          value={props.keywords.join(', ')}
+          value={entry().keywords.join(', ')}
+          onChange={(e) => {
+            entry().keywords = e.currentTarget.value.split(',')
+            props.onChange(entry())
+          }}
         />
         <div class="flex flex-row gap-4">
           <TextInput
@@ -186,7 +217,11 @@ const EntryCard: Component<
             required
             type="number"
             class="border-[1px]"
-            value={props.priority ?? 0}
+            value={entry().priority ?? 0}
+            onChange={(e) => {
+              entry().priority = Number(e.currentTarget.value)
+              props.onChange(entry())
+            }}
           />
           <TextInput
             fieldName={`weight.${props.index}`}
@@ -194,16 +229,24 @@ const EntryCard: Component<
             required
             type="number"
             class="border-[1px]"
-            value={props.weight ?? 0}
+            value={entry().weight ?? 0}
+            onChange={(e) => {
+              entry().weight = Number(e.currentTarget.value)
+              props.onChange(entry())
+            }}
           />
         </div>
         <TextInput
           fieldName={`entry.${props.index}`}
           isMultiline
-          value={props.entry}
+          value={entry().entry}
           placeholder="Memory entry. E.g. {{user}} likes fruit and vegetables"
           class="border-[1px]"
           required
+          onKeyUp={(e) => {
+            entry().entry = e.currentTarget.value
+            props.onChange(entry())
+          }}
         />
       </div>
     </Accordian>

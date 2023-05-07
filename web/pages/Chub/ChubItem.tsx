@@ -3,8 +3,9 @@ import Button from '/web/shared/Button'
 import { NewCharacter } from '/web/store'
 import { extractTavernData } from '../Character/tavern-utils'
 import { jsonToCharacter } from '../Character/ImportCharacter'
-import ChubImportModal from './ChubImport'
+import ChubImportCharModal from './ChubImportChar'
 import { CHUB_URL } from '/web/store/chub'
+import ChubImportBookModal from './ChubImportBook'
 
 export const ChubItem: Component<{
   name: string
@@ -13,15 +14,18 @@ export const ChubItem: Component<{
   book?: boolean
 }> = (props) => {
   const [importChar, setImportChar] = createSignal<NewCharacter>()
-  const [showModal, setShowModal] = createSignal<boolean>(false)
+  const [showCharModal, setShowCharModal] = createSignal<boolean>(false)
+  const [showBookModal, setShowBookModal] = createSignal<boolean>(false)
+
+  const [memorybook, setMemoryBook] = createSignal<any>({})
 
   const processImage = async (file: File) => {
     const json = await extractTavernData(file)
     if (!json) {
       throw new Error('Invalid tavern image')
     }
-    setImportChar(jsonToCharacter(json))
-    setShowModal(true)
+    setImportChar(Object.assign(jsonToCharacter(json), { avatar: file }))
+    setShowCharModal(true)
   }
 
   const processItem = async () => {
@@ -36,15 +40,27 @@ export const ChubItem: Component<{
       version: 'main',
     }
 
-    const res = await fetch(`${CHUB_URL}/characters/download`, {
-      headers: headers,
-      body: JSON.stringify(body),
-      method: 'post',
-    })
+    if (props.book) {
+      body.format = 'AGNAI'
+      const res = await fetch(`${CHUB_URL}/lorebooks/download`, {
+        headers: headers,
+        body: JSON.stringify(body),
+        method: 'post',
+      })
 
-    const blob = await res.blob()
+      const json = await res.json()
+      setMemoryBook(json)
+    } else {
+      const res = await fetch(`${CHUB_URL}/characters/download`, {
+        headers: headers,
+        body: JSON.stringify(body),
+        method: 'post',
+      })
 
-    processImage(new File([blob], `main_${props.fullPath}`))
+      const blob = await res.blob()
+
+      processImage(new File([blob], `main_${props.fullPath}.png`))
+    }
   }
 
   return (
@@ -55,8 +71,8 @@ export const ChubItem: Component<{
             schema="clear"
             class="block h-32 w-full justify-center overflow-hidden rounded-lg"
             onClick={() => {
-              setShowModal(true)
               processItem()
+              props.book ? setShowBookModal(true) : setShowCharModal(true)
             }}
           >
             <img
@@ -70,11 +86,25 @@ export const ChubItem: Component<{
           {props.name}
         </div>
       </div>
-      <Show when={importChar}>
-        <ChubImportModal
-          show={showModal()}
-          close={() => setShowModal(false)}
+      <Show when={showCharModal()}>
+        <ChubImportCharModal
+          show={showCharModal()}
+          close={() => setShowCharModal(false)}
           char={importChar()!}
+        />
+      </Show>
+      <Show when={showBookModal()}>
+        <ChubImportBookModal
+          show={showBookModal()}
+          close={() => setShowBookModal(false)}
+          book={{
+            kind: 'memory',
+            _id: '',
+            name: memorybook().name == 'Exported' ? props.name : memorybook().name,
+            description: memorybook().description,
+            userId: '',
+            entries: memorybook().entries,
+          }}
         />
       </Show>
     </>

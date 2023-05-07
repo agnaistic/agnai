@@ -104,7 +104,7 @@ const UserNavigation: Component = () => {
 
       <Item href="/chub">
         <ShoppingBag />
-        Character Hub
+        CHUB
       </Item>
 
       <Item href="/character/list">

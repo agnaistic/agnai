@@ -432,7 +432,7 @@ const Character: Component<{
               >
                 <Copy /> Duplicate
               </Button>
-              <Button alignLeft onClick={props.delete} size="sm">
+              <Button alignLeft schema="red" onClick={props.delete} size="sm">
                 <Trash /> Delete
               </Button>
             </div>
@@ -525,6 +525,7 @@ const Character: Component<{
               <Button
                 alignLeft
                 size="sm"
+                schema="red"
                 onClick={() => {
                   setOpts(false)
                   props.delete()

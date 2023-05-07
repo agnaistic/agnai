@@ -28,7 +28,7 @@ const Chub: Component = () => {
   const tabs: Tab[] = ['characters', 'lorebooks', 'filter']
 
   const currentTab = createMemo(() => tabs[tab()])
-  setComponentPageTitle('Character Hub')
+  setComponentPageTitle('CHUB')
 
   const tabClass = `flex flex-col gap-4`
 
@@ -37,7 +37,7 @@ const Chub: Component = () => {
       <PageHeader title="Character Hub" />
       Download Characters and Lorebooks from{' '}
       <a href="https://characterhub.org" class="text-[var(--hl-500)]">
-        Character Hub
+        CHUB
       </a>
       <div class="my-2">
         <Tabs tabs={tabs.map((t) => chubTabs[t])} selected={tab} select={setTab} />

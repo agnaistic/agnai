@@ -141,7 +141,7 @@ const Settings: Component = () => {
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>
             <div class="mt-8 mb-4 flex w-full flex-col items-center justify-center">
               <div>This cannot be undone!</div>
-              <Button class="bg-red-600" onClick={userStore.clearGuestState}>
+              <Button schema="red" onClick={userStore.clearGuestState}>
                 <AlertTriangle /> Delete Guest State <AlertTriangle />
               </Button>
             </div>
