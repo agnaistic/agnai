@@ -254,10 +254,10 @@ const ChatDetail: Component = () => {
               swiped={swipe() !== 0}
               send={sendMessage}
               more={moreMessage}
+              char={chats.char}
               ooc={ooc()}
               setOoc={setOoc}
               showOocToggle={showOOCOpts()}
-              culture={chats.char?.culture}
             />
             <Show when={isOwner()}>
               <SwipeMessage

@@ -8,16 +8,18 @@ import { msgStore } from '../../../store'
 import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
+import { defaultCulture } from '/web/shared/CultureCodes'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
-  culture?: string
+  char?: AppSchema.Character
   swiped: boolean
   showOocToggle: boolean
   ooc: boolean
   setOoc: (b: boolean) => void
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
+  playVoice: () => void
 }> = (props) => {
   let ref: any
   const user = userStore()
@@ -65,6 +67,18 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const playVoice = () => {
+    const voice = props.char?.voice
+    if (!voice) return
+    msgStore.textToSpeech(
+      state.lastMsg._id,
+      state.lastMsg.msg,
+      voice,
+      props.char?.culture || defaultCulture
+    )
+    setMenu(false)
+  }
+
   const regenerate = () => {
     msgStore.retry(props.chat._id)
     setMenu(false)
@@ -88,7 +102,7 @@ const InputBar: Component<{
     <div class="relative flex items-center justify-center">
       <textarea
         spellcheck
-        lang={props.culture}
+        lang={props.char?.culture}
         ref={ref}
         value={text()}
         placeholder="Send a message..."
@@ -104,7 +118,7 @@ const InputBar: Component<{
       />
 
       <SpeechRecognitionRecorder
-        culture={props.culture}
+        culture={props.char?.culture}
         class="right-11"
         onText={(value) => setText(value)}
         onSubmit={() => send()}
@@ -146,6 +160,9 @@ const InputBar: Component<{
             <Show when={!!state.lastMsg?.characterId && isOwner()}>
               <Button schema="secondary" class="w-full" onClick={more} alignLeft>
                 <PlusCircle size={18} /> Generate More
+              </Button>
+              <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
+                <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
           </div>

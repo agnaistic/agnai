@@ -1,11 +1,9 @@
 import {
   Check,
-  Megaphone,
-  MoreHorizontal,
-  PauseOctagon,
+  DownloadCloud,
+  PauseCircle,
   Pencil,
   RefreshCw,
-  StopCircle,
   Terminal,
   ThumbsDown,
   ThumbsUp,
@@ -21,7 +19,6 @@ import { chatStore, userStore, msgStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
 import { defaultCulture } from '../../../shared/CultureCodes'
-import Button from '/web/shared/Button'
 
 type MessageProps = {
   msg: SplitMessage
@@ -162,9 +159,15 @@ const SingleMessage: Component<
           data-user-avatar={isUser()}
         >
           <Switch>
+          <Match when={voice.status === 'generating'}>
+            <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+              <AvatarIcon bot={true} format={format()} Icon={DownloadCloud} />
+            </div>
+          </Match>
+
             <Match when={voice.status === 'playing'}>
-              <div class="cursor-pointer" onClick={msgStore.stopSpeech}>
-                <AvatarIcon bot={true} format={format()} Icon={PauseOctagon} />
+              <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                <AvatarIcon bot={true} format={format()} Icon={PauseCircle} />
               </div>
             </Match>
 
@@ -404,25 +407,8 @@ const MessageOptions: Component<{
   last?: boolean
   onRemove: () => void
 }> = (props) => {
-  const voice = msgStore((s) => ({
-    status: s.speaking?.messageId == props.msg._id ? s.speaking.status : undefined,
-  }))
-
   return (
     <div class="mr-4 flex items-center gap-3 text-sm">
-      <Show when={!!props.char.voice && props.msg.characterId}>
-        <div
-          class="icon-button"
-          classList={{
-            'animate-pulse': voice.status === 'generating',
-            'animate-ping': voice.status === 'playing',
-          }}
-          onClick={() => (voice.status ? undefined : textToSpeech(props.char, props.msg))}
-        >
-          <Megaphone size={18} />
-        </div>
-      </Show>
-
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
         <div onClick={() => chatStore.showPrompt(props.original)} class="icon-button">
           <Terminal size={16} />

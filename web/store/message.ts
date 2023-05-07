@@ -542,6 +542,7 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
 })
 
 subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
+  if (msgStore.getState().speaking?.messageId != body.messageId) return
   playVoiceFromUrl(body.chatId, body.messageId, body.url)
 })
 
