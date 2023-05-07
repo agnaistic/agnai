@@ -67,7 +67,7 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
-  const [ooc, setOoc] = createSignal(false)
+  const [ooc, setOoc] = createSignal<boolean>()
   const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
   const [hideOOC, setHideOOC] = createSignal(false)
 
@@ -255,7 +255,7 @@ const ChatDetail: Component = () => {
               send={sendMessage}
               more={moreMessage}
               char={chats.char}
-              ooc={ooc()}
+              ooc={ooc() ?? chats.members.length > 1}
               setOoc={setOoc}
               showOocToggle={showOOCOpts() || chats.members.length > 1}
             />

@@ -1,5 +1,5 @@
-import { ChevronUp, ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
-import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
+import { Component, createMemo, createSignal, onMount, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -16,7 +16,7 @@ const InputBar: Component<{
   swiped: boolean
   showOocToggle: boolean
   ooc: boolean
-  setOoc: (b: boolean) => void
+  setOoc: Setter<boolean>
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
 }> = (props) => {
