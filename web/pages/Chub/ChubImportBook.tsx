@@ -12,6 +12,7 @@ const ChubImportBookModal: Component<{
   close: () => void
   id?: string
   book: AppSchema.MemoryBook
+  fullPath: string
 }> = (props) => {
   let ref: any
   const [book, setBook] = createSignal<AppSchema.MemoryBook>(props.book)
@@ -39,7 +40,15 @@ const ChubImportBookModal: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title={`Preview ${book().name}`}
+      title={
+        <>
+          Preview
+          <a href={`https://characterhub.org/${props.fullPath}`} class="text-[var(--hl-500)]">
+            {' '}
+            {book()?.name}
+          </a>
+        </>
+      }
       maxWidth="half"
       footer={
         <>

@@ -91,12 +91,14 @@ export const ChubItem: Component<{
           show={showCharModal()}
           close={() => setShowCharModal(false)}
           char={importChar()!}
+          fullPath={props.fullPath}
         />
       </Show>
       <Show when={showBookModal()}>
         <ChubImportBookModal
           show={showBookModal()}
           close={() => setShowBookModal(false)}
+          fullPath={props.fullPath}
           book={{
             kind: 'memory',
             _id: '',

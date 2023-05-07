@@ -10,6 +10,7 @@ const ChubImportCharModal: Component<{
   close: () => void
   id?: string
   char: NewCharacter
+  fullPath: string
 }> = (props) => {
   let ref: any
 
@@ -34,7 +35,18 @@ const ChubImportCharModal: Component<{
     <Modal
       show={props.show}
       close={props.close}
-      title={`Preview ${char()?.name}`}
+      title={
+        <>
+          Preview
+          <a
+            href={`https://characterhub.org/characters/${props.fullPath}`}
+            class="text-[var(--hl-500)]"
+          >
+            {' '}
+            {char()?.name}
+          </a>
+        </>
+      }
       maxWidth="half"
       footer={
         <>
