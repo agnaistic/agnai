@@ -7,6 +7,7 @@ import { toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
+import { Toggle } from '/web/shared/Toggle'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -76,16 +77,6 @@ const InputBar: Component<{
 
   return (
     <div class="relative flex items-center justify-center max-sm:pb-2">
-      <Show when={props.showOocToggle}>
-        <div class="mr-2 h-full w-14 text-center">
-          <button
-            onClick={toggleOoc}
-            class="block h-full w-full rounded-md bg-[var(--bg-800)] hover:bg-[var(--bg-700)]"
-          >
-            {props.ooc ? 'OOC' : 'RP'}
-          </button>
-        </div>
-      </Show>
       <textarea
         spellcheck
         lang={props.culture}
@@ -124,6 +115,17 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
+            <Show when={props.showOocToggle}>
+              <Button
+                schema="secondary"
+                size="sm"
+                class="flex items-center justify-between"
+                onClick={toggleOoc}
+              >
+                <div>Stop Bot Reply</div>
+                <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
+              </Button>
+            </Show>
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
               <ImagePlus size={18} /> Generage Image
             </Button>

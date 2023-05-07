@@ -26,7 +26,6 @@ import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
-import { voiceStore } from '/web/store/voice'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -68,12 +67,12 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [modal, setModal] = createSignal<ChatModal>()
   const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
-  const isMultiRoom = chats.members.length > 1
-  const [ooc, setOoc] = createSignal(isMultiRoom)
-  const [showOocOptions, setShowOocOptions] = createSignal(isMultiRoom)
-  const [hideOocMessages, setHideOocMessages] = createSignal(false)
+  const [ooc, setOoc] = createSignal(chats.members.length > 1)
+  const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
+  const [hideOOC, setHideOOC] = createSignal(false)
+
   const toggleHideOocMessages = () => {
-    setHideOocMessages(!hideOocMessages())
+    setHideOOC(!hideOOC())
   }
 
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
@@ -142,7 +141,7 @@ const ChatDetail: Component = () => {
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
       if (!ooc) setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, ooc ? 'sendOoc' : 'send', onSuccess)
+      msgStore.send(chats.chat?._id!, message, ooc ? 'ooc' : 'send', onSuccess)
       return
     }
 
@@ -151,7 +150,7 @@ const ChatDetail: Component = () => {
         devCycleAvatarSettings(user)
         return
       case '/devShowOocToggle':
-        setShowOocOptions(!showOocOptions())
+        setShowOOCOpts(!showOOCOpts())
         return
     }
   }
@@ -174,8 +173,7 @@ const ChatDetail: Component = () => {
       }
     })
 
-  const msgsToDisplay = () =>
-    hideOocMessages() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs
+  const msgsToDisplay = () => (hideOOC() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs)
 
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
@@ -230,9 +228,8 @@ const ChatDetail: Component = () => {
                     toggleEditing={toggleEditing}
                     screenshotInProgress={screenshotInProgress()}
                     setScreenshotInProgress={setScreenshotInProgress}
-                    showHideOocOption={showOocOptions()}
-                    toggleHideOocMessages={toggleHideOocMessages}
-                    hideOocMessages={hideOocMessages()}
+                    toggleOocMessages={showOOCOpts() ? toggleHideOocMessages : undefined}
+                    hideOocMessages={hideOOC()}
                   />
                 </DropMenu>
               </div>
@@ -259,7 +256,7 @@ const ChatDetail: Component = () => {
               more={moreMessage}
               ooc={ooc()}
               setOoc={setOoc}
-              showOocToggle={showOocOptions()}
+              showOocToggle={showOOCOpts()}
               culture={chats.char?.culture}
             />
             <Show when={isOwner()}>

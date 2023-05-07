@@ -3,7 +3,7 @@ import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 
 export type GenerateRequestV2 = {
-  kind: 'send' | 'sendOoc' | 'retry' | 'continue' | 'self'
+  kind: 'send' | 'ooc' | 'retry' | 'continue' | 'self'
   chat: AppSchema.Chat
   user: AppSchema.User
   char: AppSchema.Character

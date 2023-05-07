@@ -21,7 +21,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const chatId = params.id
   assertValid(
     {
-      kind: ['send', 'sendOoc', 'retry', 'continue', 'self'],
+      kind: ['send', 'ooc', 'retry', 'continue', 'self'],
       char: 'any',
       sender: 'any',
       members: ['any'],
@@ -76,11 +76,11 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   }
 
   // For authenticated users we will verify parts of the payload
-  if (body.kind === 'send' || body.kind === 'sendOoc') {
+  if (body.kind === 'send' || body.kind === 'ooc') {
     if (guest) {
       const newMsg = newMessage(chatId, body.text!, {
         userId: 'anon',
-        ooc: body.kind === 'sendOoc',
+        ooc: body.kind === 'ooc',
       })
       sendGuest(socketId, { type: 'message-created', msg: newMsg, chatId })
     }
@@ -90,7 +90,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
         chatId,
         message: body.text!,
         senderId: userId!,
-        ooc: body.kind === 'sendOoc',
+        ooc: body.kind === 'ooc',
       })
 
       await store.chats.update(chatId, {})
@@ -98,8 +98,8 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
   }
 
-  if (body.kind === 'sendOoc') {
-    return { result: {}, status: 200 }
+  if (body.kind === 'ooc') {
+    return { success: true }
   }
 
   /**
