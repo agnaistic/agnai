@@ -21,6 +21,8 @@ export async function getVoicesList(
   guestId?: string
 ): Promise<VoiceListResponse> {
   const service = getVoiceService(ttsService)
+  if (!service) return { voices: [] }
+
   try {
     return { voices: await service.getVoices(user, guestId) }
   } catch (ex: any) {
@@ -38,6 +40,8 @@ export async function generateVoice(
   }
 
   const service = getVoiceService(voice.service)
+  if (!service) return { output: undefined }
+
   const broadcastIds: string[] = []
 
   if (!guestId) {
@@ -97,7 +101,7 @@ export async function generateVoice(
   return { output }
 }
 
-export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler {
+export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler | undefined {
   switch (ttsService) {
     case 'webspeechsynthesis':
       return webSpeechSynthesisHandler
@@ -106,7 +110,7 @@ export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler {
       return elevenlabsHandler
 
     default:
-      throw new StatusError(`Invalid voice service: ${ttsService}`, 400)
+      return
   }
 }
 

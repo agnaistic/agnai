@@ -28,7 +28,7 @@ const valid = {
 } as const
 
 const createCharacter = handle(async (req) => {
-  const body = await handleForm(req, { ...valid, persona: 'string' })
+  const body = handleForm(req, { ...valid, persona: 'string' })
   const persona = JSON.parse(body.persona)
   assertValid(valid.persona, persona)
   const voice = parseAndValidateVoice(body.voice)
@@ -135,6 +135,9 @@ function parseAndValidateVoice(json?: string) {
   if (!obj) return
   if (!obj.service) return { service: undefined }
   const service = getVoiceService(obj.service)
+
+  if (!service) return
+
   assertValid(service.valid, obj)
   return obj as unknown as AppSchema.Character['voice']
 }

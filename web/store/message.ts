@@ -226,7 +226,9 @@ export const msgStore = createStore<MsgState>(
       if (res.error) {
         return toastStore.error(`Failed to delete messages: ${res.error}`)
       }
-      return { msgs: msgs.slice(0, index) }
+
+      const removed = new Set(deleteIds)
+      return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
     },
     stopSpeech() {
       speechSynthesisManager.stopCurrentVoice()
