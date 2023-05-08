@@ -137,7 +137,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   log.debug(body, 'OpenAI payload')
 
-  const url = useChat ? `${base.url}/v1/chat/completions` : `${base.url}/v1/completions`
+  const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
@@ -185,10 +185,13 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
 function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
   if (isThirdParty && user.thirdPartyFormat === 'openai' && user.koboldUrl) {
-    return { url: user.koboldUrl, changed: true }
+    // If the user provides a versioned API URL for their third-party API, use that. Otherwise
+    // fall back to the standard /v1 URL.
+    const version = user.koboldUrl.match(/\/v\d+$/) ? '' : '/v1'
+    return { url: user.koboldUrl + version, changed: true }
   }
 
-  return { url: baseUrl, changed: false }
+  return { url: `${baseUrl}/v1`, changed: false }
 }
 
 export type OAIUsage = {
