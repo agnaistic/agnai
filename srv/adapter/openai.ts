@@ -20,7 +20,7 @@ import { AdapterProps } from './type'
 import { adventureAmble } from '/common/default-preset'
 import { Encoder } from '/common/tokenize'
 
-const baseUrl = `https://api.openai.com/v1`
+const baseUrl = `https://api.openai.com/`
 
 type ContentRole = 'user' | 'assistant' | 'system'
 
