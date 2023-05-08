@@ -77,7 +77,9 @@ const ImportCharacterModal: Component<{
   const processJSON = async (file: FileInputResult) => {
     const content = await getFileAsString(file)
     const json = JSON.parse(content)
-    setImported(imported().concat(jsonToCharacter(json)))
+    const char = jsonToCharacter(json)
+    char.tags = char.tags?.concat('imported') ?? ['imported']
+    setImported(imported().concat(char))
     toastStore.success('Character file accepted')
   }
 
@@ -86,7 +88,9 @@ const ImportCharacterModal: Component<{
     if (!json) {
       throw new Error('Invalid tavern image')
     }
-    setImported(imported().concat(Object.assign(jsonToCharacter(json), { avatar: file.file })))
+    const char = Object.assign(jsonToCharacter(json), { avatar: file.file })
+    char.tags = char.tags?.concat('imported') ?? ['imported']
+    setImported(imported().concat(char))
     toastStore.success('Tavern card accepted')
   }
 

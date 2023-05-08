@@ -1,4 +1,4 @@
-import { Trash, X } from 'lucide-solid'
+import { Archive, Trash, X } from 'lucide-solid'
 import { Component } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -7,13 +7,24 @@ import Modal from '../../shared/Modal'
 import { characterStore } from '../../store'
 
 const DeleteCharacterModal: Component<{
-  char?: Pick<AppSchema.Character, '_id' | 'name' | 'avatar'>
+  char?: Pick<AppSchema.Character, '_id' | 'name' | 'avatar' | 'tags'>
   show: boolean
   close: () => void
 }> = (props) => {
   const onDelete = () => {
     if (!props.char) return
     characterStore.deleteCharacter(props.char._id, props.close)
+  }
+  const onArchive = () => {
+    if (!props.char) return
+    if (props.char.tags?.includes('archived')) return
+    characterStore.editCharacter(
+      props.char._id,
+      {
+        tags: props.char.tags?.concat('archived') ?? ['archived'],
+      },
+      props.close
+    )
   }
   return (
     <Modal
@@ -25,6 +36,10 @@ const DeleteCharacterModal: Component<{
           <Button schema="secondary" onClick={props.close}>
             <X />
             Cancel
+          </Button>
+
+          <Button schema="secondary" onClick={onArchive}>
+            <Archive /> Archive
           </Button>
 
           <Button onClick={onDelete}>

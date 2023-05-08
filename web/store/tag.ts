@@ -49,8 +49,13 @@ export const tagStore = createStore<TagsState>(
       })
 
       const tags = Object.entries(tagCounts)
-        .sort((a, b) => b[1] - a[1])
         .map(([tag, count]) => ({ tag, count }))
+        .sort((a, b) => {
+          if (a.tag === 'archived') return 1
+          if (b.tag === 'archived') return -1
+          if (a.count !== b.count) return b.count - a.count
+          return a.tag.localeCompare(b.tag)
+        })
 
       const filter = prev.filter.filter((tag) => tags.some((t) => t.tag === tag))
       const hidden = prev.hidden.filter((tag) => tags.some((t) => t.tag === tag))

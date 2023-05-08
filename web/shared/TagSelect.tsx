@@ -1,7 +1,7 @@
 import { Component, JSX, For, createSignal, Show, Match, Switch } from 'solid-js'
 import { DropMenu } from './DropMenu'
 import Button from './Button'
-import { CheckSquare, ChevronDown, MinusSquare, Square, X } from 'lucide-solid'
+import { CheckSquare, ChevronDown, Square, X, XSquare } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
 import { tagStore } from '../store'
 
@@ -71,14 +71,16 @@ const TagSelect: Component<{
                             <CheckSquare />
                           </Match>
                           <Match when={state.hidden.includes(option.tag)}>
-                            <MinusSquare />
+                            <XSquare />
                           </Match>
                           <Match when={true}>
                             <Square />
                           </Match>
                         </Switch>
-                        <span class="font-bold">{option.tag}</span>
-                        <span>({option.count})</span>
+                        <span classList={{ 'text-neutral-500': option.tag === 'archived' }}>
+                          <span class="font-bold">{option.tag}</span>
+                          <span>({option.count})</span>
+                        </span>
                       </div>
                     </div>
                   )}
