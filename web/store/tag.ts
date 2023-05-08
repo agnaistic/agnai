@@ -10,12 +10,22 @@ type TagOption = {
 
 type TagsState = {
   tags: TagOption[]
+  filter: Tag[]
+  hidden: Tag[]
 }
 
 const defaultTags: Tag[] = ['nsfw', 'imported', 'archived']
 
+const defaultHidden: Tag[] = ['archived']
+
 const initialState: TagsState = {
-  tags: defaultTags.map((tag) => ({ tag, count: 0 })),
+  tags: [
+    { tag: 'nsfw', count: 0 },
+    { tag: 'imported', count: 0 },
+    { tag: 'archived', count: 0 },
+  ],
+  filter: [],
+  hidden: defaultHidden,
 }
 
 export const tagStore = createStore<TagsState>(
@@ -23,7 +33,7 @@ export const tagStore = createStore<TagsState>(
   initialState
 )((get, set) => {
   return {
-    updateTags(_, characters: AppSchema.Character[]) {
+    updateTags(prev, characters: AppSchema.Character[]) {
       const tagCounts = defaultTags.reduce((acc, tag) => {
         acc[tag] = 0
         return acc
@@ -42,7 +52,22 @@ export const tagStore = createStore<TagsState>(
         .sort((a, b) => b[1] - a[1])
         .map(([tag, count]) => ({ tag, count }))
 
-      return { tags }
+      const filter = prev.filter.filter((tag) => tags.some((t) => t.tag === tag))
+      const hidden = prev.hidden.filter((tag) => tags.some((t) => t.tag === tag))
+
+      return { tags, filter, hidden }
+    },
+    setDefault() {
+      return { filter: [], hidden: defaultHidden }
+    },
+    toggle(prev, tag: Tag) {
+      if (prev.filter.includes(tag)) {
+        return { filter: prev.filter.filter((t) => t !== tag), hidden: prev.hidden.concat(tag) }
+      } else if (prev.hidden.includes(tag)) {
+        return { hidden: prev.hidden.filter((t) => t !== tag) }
+      } else {
+        return { filter: prev.filter.concat(tag) }
+      }
     },
   }
 })

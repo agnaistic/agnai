@@ -82,7 +82,6 @@ const CharacterList: Component = () => {
   const [showImport, setImport] = createSignal(false)
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
   const [create, setCreate] = createSignal<AppSchema.Character>()
-  const [tags, setTags] = createSignal<Tag[]>([])
   const importQueue: NewCharacter[] = []
 
   const onImport = (chars: NewCharacter[]) => {
@@ -180,7 +179,7 @@ const CharacterList: Component = () => {
             </div>
           </div>
 
-          <TagSelect class="m-1" value={tags()} onChange={(value) => setTags(value)} />
+          <TagSelect class="m-1" />
         </div>
 
         <div class="flex flex-wrap">
@@ -207,7 +206,6 @@ const CharacterList: Component = () => {
         sortField={sortField()}
         sortDirection={sortDirection()}
         createChat={setCreate}
-        tags={tags()}
       />
       <ImportCharacterModal
         charhubPath={importPath()}
@@ -231,14 +229,15 @@ const Characters: Component<{
   sortField: SortFieldTypes
   sortDirection: SortDirectionTypes
   createChat: (char?: AppSchema.Character) => void
-  tags: string[]
 }> = (props) => {
+  const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
   const [showGrouping, setShowGrouping] = createSignal(false)
   const groups = createMemo(() => {
     const list = props.characters
       .slice()
       .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
-      .filter((ch) => props.tags.length === 0 || ch.tags?.some((t) => props.tags.includes(t)))
+      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
+      .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
       .sort(getSortFunction(props.sortField, props.sortDirection))
 
     const groups = [

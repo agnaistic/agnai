@@ -1,7 +1,7 @@
-import { Component, JSX, For, createSignal, Show } from 'solid-js'
+import { Component, JSX, For, createSignal, Show, Match, Switch } from 'solid-js'
 import { DropMenu } from './DropMenu'
 import Button from './Button'
-import { CheckSquare, ChevronDown, Square, X } from 'lucide-solid'
+import { CheckSquare, ChevronDown, MinusSquare, Square, X } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
 import { tagStore } from '../store'
 
@@ -15,21 +15,17 @@ const TagSelect: Component<{
   fieldName?: string
   label?: string
   helperText?: string | JSX.Element
-  value: string[]
-  onChange: (item: string[]) => void
 }> = (props) => {
   const state = tagStore()
 
   const [opts, setOpts] = createSignal(false)
 
-  const showAll = () => {
-    props.onChange([])
+  const setDefault = () => {
+    tagStore.setDefault()
   }
 
   const toggle = (value: string) => {
-    props.onChange(
-      props.value.includes(value) ? props.value.filter((v) => v !== value) : [...props.value, value]
-    )
+    tagStore.toggle(value)
   }
 
   return (
@@ -43,8 +39,8 @@ const TagSelect: Component<{
           alignLeft
         >
           <span class="ellipsis">
-            <Show when={props.value.length}>{props.value!.join(', ')}</Show>
-            <Show when={!props.value.length}>All tags</Show>
+            <Show when={state.filter.length}>{state.filter.join(', ')}</Show>
+            <Show when={!state.filter.length}>All tags</Show>
           </span>
           <span class="absolute right-0">
             <ChevronDown />
@@ -56,11 +52,11 @@ const TagSelect: Component<{
               <div class="flex flex-col gap-2 p-2">
                 <div
                   class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
-                  onClick={() => showAll()}
+                  onClick={() => setDefault()}
                 >
                   <div class="ellipsis flex h-3/4 items-center">
                     <X />
-                    <div class="font-bold">Show All Tags</div>
+                    <div class="font-bold">Reset Tag Filters</div>
                   </div>
                 </div>
                 <For each={state.tags}>
@@ -70,12 +66,17 @@ const TagSelect: Component<{
                       onClick={() => toggle(option.tag)}
                     >
                       <div class="ellipsis flex h-3/4 items-center gap-1">
-                        <Show when={props.value.includes(option.tag)}>
-                          <CheckSquare />
-                        </Show>
-                        <Show when={!props.value.includes(option.tag)}>
-                          <Square />
-                        </Show>
+                        <Switch>
+                          <Match when={state.filter.includes(option.tag)}>
+                            <CheckSquare />
+                          </Match>
+                          <Match when={state.hidden.includes(option.tag)}>
+                            <MinusSquare />
+                          </Match>
+                          <Match when={true}>
+                            <Square />
+                          </Match>
+                        </Switch>
                         <span class="font-bold">{option.tag}</span>
                         <span>({option.count})</span>
                       </div>
