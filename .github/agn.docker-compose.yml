@@ -25,7 +25,7 @@ services:
       REDIS_HOST: /run/secrets/redis_host
       REDIS_PORT: 6379
       HORDE_WAIT_SECS: 150
-      ADAPTERS: horde,novel,kobold,openai,scale,claude
+      ADAPTERS: horde,novel,kobold,openai,scale,claude,goose
       USE_S3: 'true'
       AWS_ACCESS_KEY_ID: /run/secrets/aws_id
       AWS_SECRET_ACCESS_KEY: /run/secrets/aws_secret
