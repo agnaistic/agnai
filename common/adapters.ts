@@ -66,6 +66,8 @@ export const OPENAI_MODELS = {
   Turbo0301: 'gpt-3.5-turbo-0301',
   GPT4: 'gpt-4',
   GPT4_0314: 'gpt-4-0314',
+  GPT4_32k: 'gpt-4-32k',
+  GPT4_32k_0314: 'gpt-4-32k-0314',
 } as const
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
