@@ -4,7 +4,7 @@ import { VoiceSettings, TTSService } from '../db/texttospeech-schema'
 import { AppLog } from '../logger'
 
 export type TextToSpeechHandler = {
-  valid: Validator
+  validator: Validator
   getVoices: (
     user: AppSchema.User,
     guestId: string | undefined

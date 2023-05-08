@@ -8,8 +8,6 @@ import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractCardData } from './card-utils'
 import AvatarIcon from '/web/shared/AvatarIcon'
 
-export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
-
 const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 const MAX_SHOWN_IMPORTS = 3
 
@@ -26,7 +24,7 @@ const TEXT_FORMATS: Record<string, boolean> = {
 const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
-  onSave: (chars: ImportCharacter[]) => void
+  onSave: (chars: NewCharacter[]) => void
   charhubPath?: string
 }> = (props) => {
   const state = characterStore()

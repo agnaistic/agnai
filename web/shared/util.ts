@@ -359,3 +359,26 @@ export function applyDotProperty<T>(obj: T, property: string, value: any) {
 
   return obj
 }
+
+export function appendFormOptional(
+  form: FormData,
+  key: string,
+  value: string | File | undefined,
+  stringify: never
+): void
+export function appendFormOptional<T>(
+  form: FormData,
+  key: string,
+  value: T,
+  stringify?: (v: T) => string
+): void
+export function appendFormOptional(
+  form: FormData,
+  key: string,
+  value: any,
+  stringify?: (v: any) => string
+) {
+  if (!value) return
+  if (stringify) form.append(key, stringify(value))
+  else form.append(key, value as string | File)
+}

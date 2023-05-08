@@ -22,19 +22,16 @@ type CharacterState = {
   }
 }
 
-export type NewCharacter = {
-  name: string
-  description?: string
-  culture?: string
-  tags?: string[]
-  greeting: string
-  scenario: string
-  sampleChat: string
-  avatar?: File
-  persona: AppSchema.Persona
-  originalAvatar?: any
-  voice?: AppSchema.Character['voice']
-}
+export type NewCharacter = UpdateCharacter &
+  Pick<AppSchema.Character, 'name' | 'greeting' | 'scenario' | 'sampleChat' | 'persona'> & {
+    originalAvatar: any
+  }
+
+export type UpdateCharacter = Partial<
+  Omit<AppSchema.Character, '_id' | 'kind' | 'userId' | 'createdAt' | 'updatedAt' | 'avatar'> & {
+    avatar?: File
+  }
+>
 
 const initState: CharacterState = {
   creating: false,
@@ -95,10 +92,10 @@ export const characterStore = createStore<CharacterState>(
     async *editCharacter(
       { characters: { list } },
       characterId: string,
-      char: NewCharacter,
+      char: UpdateCharacter,
       onSuccess?: () => void
     ) {
-      const res = await charsApi.editChracter(characterId, char)
+      const res = await charsApi.editCharacter(characterId, char)
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {

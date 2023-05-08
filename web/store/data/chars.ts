@@ -2,15 +2,16 @@ import { v4 } from 'uuid'
 import { AppSchema } from '../../../srv/db/schema'
 import type { ImportCharacter } from '../../pages/Character/ImportCharacter'
 import { api, isLoggedIn } from '../api'
-import { NewCharacter } from '../character'
+import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'
+import { appendFormOptional } from '/web/shared/util'
 
 export const charsApi = {
   getCharacters,
   removeAvatar,
   editAvatar,
   deleteCharacter,
-  editChracter,
+  editCharacter,
   createCharacter,
   getImageBuffer,
   setFavorite,
@@ -90,27 +91,25 @@ export async function deleteCharacter(charId: string) {
   return { result: true, error: undefined }
 }
 
-export async function editChracter(charId: string, { avatar: file, ...char }: NewCharacter) {
+export async function editCharacter(charId: string, { avatar: file, ...char }: UpdateCharacter) {
   if (isLoggedIn()) {
     const form = new FormData()
-    form.append('name', char.name)
-    form.append('greeting', char.greeting)
-    form.append('scenario', char.scenario)
-    form.append('persona', JSON.stringify(char.persona))
-    form.append('description', char.description || '')
-    if (char.culture) form.append('culture', char.culture)
-    form.append('tags', JSON.stringify(char.tags || []))
-    form.append('sampleChat', char.sampleChat)
-    if (char.voice) form.append('voice', JSON.stringify(char.voice))
-    if (file) {
-      form.append('avatar', file)
-    }
+    appendFormOptional(form, 'name', char.name)
+    appendFormOptional(form, 'greeting', char.greeting)
+    appendFormOptional(form, 'scenario', char.scenario)
+    appendFormOptional(form, 'persona', JSON.stringify(char.persona))
+    appendFormOptional(form, 'description', char.description || '')
+    appendFormOptional(form, 'culture', char.culture)
+    appendFormOptional(form, 'tags', JSON.stringify(char.tags || []))
+    appendFormOptional(form, 'sampleChat', char.sampleChat)
+    appendFormOptional(form, 'voice', JSON.stringify(char.voice))
+    appendFormOptional(form, 'avatar', file)
 
     const res = await api.upload(`/character/${charId}`, form)
     return res
   }
 
-  const avatar = await getImageData(file)
+  const avatar = file ? await getImageData(file) : undefined
   const chars = loadItem('characters')
   const prev = chars.find((ch) => ch._id === charId)
 
@@ -145,25 +144,20 @@ export async function setFavorite(charId: string, favorite: boolean) {
   return { result: nextChar, error: undefined }
 }
 
-export async function createCharacter(char: ImportCharacter) {
+export async function createCharacter(char: NewCharacter) {
   if (isLoggedIn()) {
     const form = new FormData()
     form.append('name', char.name)
-    if (char.description) form.append('description', char.description)
-    if (char.culture) form.append('culture', char.culture)
     form.append('greeting', char.greeting)
     form.append('scenario', char.scenario)
-    form.append('persona', JSON.stringify(char.persona))
     form.append('sampleChat', char.sampleChat)
-    if (char.voice) form.append('voice', JSON.stringify(char.voice))
-    form.append('tags', JSON.stringify(char.tags || []))
-    if (char.avatar) {
-      form.append('avatar', char.avatar)
-    }
-
-    if (char.originalAvatar) {
-      form.append('originalAvatar', char.originalAvatar)
-    }
+    appendFormOptional<AppSchema.Persona>(form, 'persona', char.persona, JSON.stringify)
+    appendFormOptional(form, 'description', char.description)
+    appendFormOptional(form, 'culture', char.culture)
+    appendFormOptional<AppSchema.Character['voice']>(form, 'voice', char.voice, JSON.stringify)
+    appendFormOptional(form, 'tags', char.tags, JSON.stringify)
+    appendFormOptional(form, 'avatar', char.avatar)
+    appendFormOptional(form, 'originalAvatar', char.originalAvatar)
 
     const res = await api.upload<AppSchema.Character>(`/character`, form)
     return res
