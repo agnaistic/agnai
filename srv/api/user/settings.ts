@@ -231,7 +231,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       const adapter = adapters.find((adp) => adp.name === service)
       if (!adapter) continue
 
-      for (const opt of adapter.options.settings) {
+      for (const opt of adapter.settings) {
         if (!opt.secret) continue
         const next = body.adapterConfig[svc][opt.field]
         const prev = prevUser.adapterConfig?.[svc]?.[opt.field]
@@ -357,7 +357,7 @@ async function getSafeUserConfig(userId: string) {
       if (!user.adapterConfig) break
       if (!user.adapterConfig[svc.name]) continue
 
-      const secrets = svc.options.settings.filter((opt) => opt.secret)
+      const secrets = svc.settings.filter((opt) => opt.secret)
 
       for (const secret of secrets) {
         if (user.adapterConfig[svc.name]![secret.field]) {

@@ -3,7 +3,7 @@ import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, OPENAI_MODELS } from './adapters'
 import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
-import { Encoder, getEncoder } from './tokenize'
+import { Encoder } from './tokenize'
 
 export type PromptParts = {
   scenario?: string
@@ -517,8 +517,6 @@ function getContextLimit(
 
     case 'novel':
     case 'horde':
-    case 'goose':
-      return Math.min(2048, configuredMax) - genAmount
 
     case 'openai': {
       if (!model || model === OPENAI_MODELS.Turbo || model === OPENAI_MODELS.DaVinci)
@@ -532,7 +530,7 @@ function getContextLimit(
     case 'claude':
       return configuredMax - genAmount
 
-    default:
+    case 'goose':
       return 2048 - genAmount
   }
 }

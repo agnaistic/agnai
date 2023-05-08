@@ -251,7 +251,7 @@ export function isDefaultPreset(value?: string): value is GenerationPreset {
   return value in defaultPresets
 }
 
-export function getFallbackPreset(adapter: AIAdapter) {
+export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSettings> {
   switch (adapter) {
     case 'horde':
       return defaultPresets.horde
@@ -273,7 +273,7 @@ export function getFallbackPreset(adapter: AIAdapter) {
     case 'claude':
       return defaultPresets.claude
 
-    default:
-      throw new Error(`Unknown adapter: ${adapter}`)
+    case 'goose':
+      return { ...defaultPresets.basic, service: 'goose' }
   }
 }

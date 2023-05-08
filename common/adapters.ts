@@ -24,12 +24,10 @@ type SettingType =
   | { type: 'list'; options: Array<{ label: string; value: string }> }
   | { type: 'text'; placeholder?: string }
   | { type: 'boolean' }
-  | { type: '' }
 
 export type AdapterOptions = {
   /** Name of the adapter that will be displayed in the UI */
   label: string
-
   settings: AdapterSetting[]
   options: Array<keyof PresetAISettings>
 }
@@ -184,4 +182,8 @@ export const adapterSettings: {
   penaltyAlpha: ['ooba'],
 }
 
-export type RegisteredAdapter = AppSchema.AppConfig['registered'][number]
+export type RegisteredAdapter = {
+  name: AIAdapter
+  settings: AdapterSetting[]
+  options: Array<keyof PresetAISettings>
+}

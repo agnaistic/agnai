@@ -2,15 +2,12 @@
  * WIP
  */
 
-import { AdapterOptions, AIAdapter } from '../../common/adapters'
+import { AdapterOptions, AIAdapter, RegisteredAdapter } from '../../common/adapters'
 import { config } from '../config'
 import { logger } from '../logger'
 import { ModelAdapter } from './type'
 
-const adapters = new Map<
-  string,
-  { name: AIAdapter; handler: ModelAdapter; options: AdapterOptions }
->()
+const adapters = new Map<AIAdapter, RegisteredAdapter & { handler: ModelAdapter }>()
 
 export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options: AdapterOptions) {
   if (adapters.has(name)) {
@@ -20,7 +17,12 @@ export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options:
   }
 
   logger.info(`Registered adapter: ${name}`)
-  adapters.set(name, { name, handler, options })
+  adapters.set(name, {
+    name,
+    handler,
+    options: options.options,
+    settings: options.settings,
+  })
 }
 
 export function getRegisteredAdapters() {
@@ -28,4 +30,8 @@ export function getRegisteredAdapters() {
     config.adapters.includes(adapter.name)
   )
   return all
+}
+
+export function getRegisteredAdapter(name: AIAdapter): RegisteredAdapter | undefined {
+  return adapters.get(name)
 }
