@@ -17,7 +17,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, NewCharacter, settingStore, toastStore, userStore } from '../../store'
+import { characterStore, NewCharacter, tagStore, settingStore, toastStore, userStore } from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -53,21 +53,16 @@ const CreateCharacter: Component = () => {
   const srcId = params.editId || params.duplicateId || ''
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId)
-    const availableTags: string[] = Array.from(
-      s.characters.list.reduce((acc, ch) => {
-        ch.tags?.forEach((t) => acc.add(t))
-        return acc
-      }, new Set<string>())
-    )
     setImage(edit?.avatar)
     return {
       avatar: s.generate,
       creating: s.creating,
       edit,
-      availableTags,
+      list: s.characters.list,
     }
   })
   const user = userStore((s) => s.user)
+  const tagState = tagStore()
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
@@ -104,6 +99,10 @@ const CreateCharacter: Component = () => {
       setTags(edit.tags)
     })
   )
+
+  createEffect(() => {
+    tagStore.updateTags(state.list)
+  })
 
   const updateFile = async (files: FileInputResult[]) => {
     if (!files.length) {
@@ -216,7 +215,7 @@ const CreateCharacter: Component = () => {
         />
 
         <TagInput
-          availableTags={state.availableTags}
+          availableTags={tagState.tags.map((t) => t.tag)}
           value={tags()}
           fieldName="tags"
           label="Tags"

@@ -10,6 +10,7 @@ import {
   onMount,
 } from 'solid-js'
 import { NewCharacter, characterStore } from '../../store'
+import { Tag, tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
@@ -45,7 +46,7 @@ import { exportCharacter } from '../../../common/prompt'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
 import CreateChatModal from './CreateChat'
-import TagSelect, { TagOption } from '../../shared/TagSelect'
+import TagSelect from '../../shared/TagSelect'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -68,25 +69,10 @@ const sortOptions: Option<SortFieldTypes>[] = [
 
 const CharacterList: Component = () => {
   setComponentPageTitle('Characters')
-  
+
   const [query, setQuery] = useSearchParams()
 
-  const state = characterStore((s) => {
-    const tags = s.characters.list
-      .map((c) => c.tags)
-      .flat()
-      .reduce((acc, tag) => {
-        if (!tag) return acc
-        if (!acc[tag]) acc[tag] = 0
-        acc[tag]++
-        return acc
-      }, {} as Record<string, number>)
-    const tagOptions: TagOption[] = Object.entries(tags)
-      .sort((a, b) => a[1] - b[1])
-      .map(([tag, count]) => ({ tag, count }))
-
-    return { ...s.characters, loading: s.loading, tagOptions }
-  })
+  const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
   const cached = getListCache()
   const [view, setView] = createSignal(cached.view)
@@ -95,8 +81,8 @@ const CharacterList: Component = () => {
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
-  const [tags, setTags] = createSignal<string[]>([])
   const [create, setCreate] = createSignal<AppSchema.Character>()
+  const [tags, setTags] = createSignal<Tag[]>([])
   const importQueue: NewCharacter[] = []
 
   const onImport = (chars: NewCharacter[]) => {
@@ -117,6 +103,10 @@ const CharacterList: Component = () => {
 
   onMount(() => {
     characterStore.getCharacters()
+  })
+
+  createEffect(() => {
+    tagStore.updateTags(state.list)
   })
 
   createEffect(() => {
@@ -190,12 +180,7 @@ const CharacterList: Component = () => {
             </div>
           </div>
 
-          <TagSelect
-            class="m-1"
-            items={state.tagOptions}
-            value={tags()}
-            onChange={(value) => setTags(value)}
-          />
+          <TagSelect class="m-1" value={tags()} onChange={(value) => setTags(value)} />
         </div>
 
         <div class="flex flex-wrap">

@@ -1,10 +1,9 @@
-import { Component, JSX, For, createSignal, Show, createMemo } from 'solid-js'
-import { AppSchema } from '../../srv/db/schema'
+import { Component, JSX, For, createSignal, Show } from 'solid-js'
 import { DropMenu } from './DropMenu'
-import AvatarIcon from './AvatarIcon'
 import Button from './Button'
-import { CheckSquare, ChevronDown, Square, Star, Users, X } from 'lucide-solid'
+import { CheckSquare, ChevronDown, Square, X } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
+import { tagStore } from '../store'
 
 export type TagOption = {
   tag: string
@@ -16,10 +15,11 @@ const TagSelect: Component<{
   fieldName?: string
   label?: string
   helperText?: string | JSX.Element
-  items: TagOption[]
   value: string[]
   onChange: (item: string[]) => void
 }> = (props) => {
+  const state = tagStore()
+
   const [opts, setOpts] = createSignal(false)
 
   const showAll = () => {
@@ -63,7 +63,7 @@ const TagSelect: Component<{
                     <div class="font-bold">Show All Tags</div>
                   </div>
                 </div>
-                <For each={props.items}>
+                <For each={state.tags}>
                   {(option) => (
                     <div
                       class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
