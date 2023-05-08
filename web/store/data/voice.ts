@@ -18,7 +18,8 @@ export const voiceApi = {
 }
 
 export async function voicesList(ttsService: TTSService) {
-  const user = getUserEntity()
+  const user = await getUserEntity()
+  console.log(user)
   const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(
     `/voice/${ttsService}/voices`,
     { user, ttsService }
@@ -27,7 +28,7 @@ export async function voicesList(ttsService: TTSService) {
 }
 
 export async function textToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
-  const user = getUserEntity()
+  const user = await getUserEntity()
   const res = await api.post<{ success: boolean }>(`/chat/${chatId}/voice`, {
     user,
     messageId,
