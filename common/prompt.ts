@@ -517,6 +517,7 @@ function getContextLimit(
 
     case 'novel':
     case 'horde':
+    case 'goose':
       return Math.min(2048, configuredMax) - genAmount
 
     case 'openai': {
@@ -532,7 +533,7 @@ function getContextLimit(
       return configuredMax - genAmount
 
     default:
-      throw new Error(`Unknown adapter: ${adapter}`)
+      return 2048 - genAmount
   }
 }
 
