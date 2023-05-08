@@ -28,10 +28,12 @@ const initialState: TagsState = {
   hidden: defaultHidden,
 }
 
+let restoredFromCache = false
+
 export const tagStore = createStore<TagsState>(
   'tag',
   initialState
-)((get, set) => {
+)(() => {
   return {
     updateTags(prev, characters: AppSchema.Character[]) {
       const tagCounts = defaultTags.reduce((acc, tag) => {
@@ -57,22 +59,49 @@ export const tagStore = createStore<TagsState>(
           return a.tag.localeCompare(b.tag)
         })
 
-      const filter = prev.filter.filter((tag) => tags.some((t) => t.tag === tag))
-      const hidden = prev.hidden.filter((tag) => tags.some((t) => t.tag === tag))
+      let filter = prev.filter
+      let hidden = prev.hidden
+
+      if (!restoredFromCache) {
+        restoredFromCache = true
+        try {
+          const cache = localStorage.getItem('agnai-tag-cache')
+          if (cache) {
+            const { filter: f, hidden: h } = JSON.parse(cache)
+            filter = f
+            hidden = h
+          }
+        } catch (e) {
+          console.warn('Failed to restore tags from local storage', e)
+        }
+      }
 
       return { tags, filter, hidden }
     },
     setDefault() {
-      return { filter: [], hidden: defaultHidden }
+      const next = { filter: [], hidden: defaultHidden }
+      try {
+        localStorage.setItem('agnai-tag-cache', JSON.stringify(next))
+      } catch (e) {
+        console.warn('Failed to save tags in local storage', e)
+      }
+      return next
     },
     toggle(prev, tag: Tag) {
+      let next: Partial<TagsState>
       if (prev.filter.includes(tag)) {
-        return { filter: prev.filter.filter((t) => t !== tag), hidden: prev.hidden.concat(tag) }
+        next = { filter: prev.filter.filter((t) => t !== tag), hidden: prev.hidden.concat(tag) }
       } else if (prev.hidden.includes(tag)) {
-        return { hidden: prev.hidden.filter((t) => t !== tag) }
+        next = { filter: prev.filter, hidden: prev.hidden.filter((t) => t !== tag) }
       } else {
-        return { filter: prev.filter.concat(tag) }
+        next = { filter: prev.filter.concat(tag), hidden: prev.hidden }
       }
+      try {
+        localStorage.setItem('agnai-tag-cache', JSON.stringify(next))
+      } catch (e) {
+        console.warn('Failed to save tags in local storage', e)
+      }
+      return next
     },
   }
 })
