@@ -3,7 +3,7 @@ import { CLAUDE_MODELS, OPENAI_MODELS } from './adapters'
 
 const MAX_TOKENS = 80
 
-export const defaultPresets = {
+const builtinPresets = {
   horde: {
     name: 'Horde',
     service: 'horde',
@@ -185,4 +185,9 @@ Facts: {{memory}}
 This is how {{char}} should talk
 {{example_dialogue}}`,
   },
+} satisfies Record<string, Partial<AppSchema.GenSettings>>
+
+export const defaultPresets = {
+  ...builtinPresets,
+  goose: { ...builtinPresets.basic, service: 'goose' },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
