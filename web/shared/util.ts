@@ -1,7 +1,8 @@
 import { UnwrapBody, assertValid } from 'frisker'
-import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
+import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
+import { settingStore } from '../store'
 
 type FormRef = {
   [key: string]:
@@ -324,4 +325,34 @@ export function isDirty<T extends {}>(original: T, compare: T): boolean {
   }
 
   return false
+}
+
+export function getAISettingServices(prop?: keyof PresetAISettings) {
+  if (!prop) return
+  const cfg = settingStore((s) => s.config)
+  const base = adapterSettings[prop]
+  const services = cfg.registered.filter((reg) => reg.options.includes(prop)).map((reg) => reg.name)
+
+  return base?.concat(services)
+}
+
+export function applyDotProperty<T>(obj: T, property: string, value: any) {
+  const props = property.split('.')
+
+  let ref: any = obj
+
+  for (let i = 0; i < props.length; i++) {
+    const prop = props[i]
+    if (i === props.length - 1) {
+      ref[prop] = value
+      break
+    }
+
+    if (!ref[prop]) {
+      ref[prop] = {}
+    }
+    ref = ref[prop]
+  }
+
+  return obj
 }

@@ -27,6 +27,12 @@ registerAdapter('goose', handleGooseAI, {
   label: 'Goose AI',
   settings: [
     {
+      field: 'apiKey',
+      label: 'API Key',
+      secret: true,
+      setting: { type: 'text', placeholder: 'E.g. sk-tJoOs94T...' },
+    },
+    {
       field: 'engine',
       label: 'Engine',
       helperText: 'GooseAI Engine (Model)',

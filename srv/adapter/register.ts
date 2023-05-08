@@ -3,6 +3,7 @@
  */
 
 import { AdapterOptions, AIAdapter } from '../../common/adapters'
+import { config } from '../config'
 import { logger } from '../logger'
 import { ModelAdapter } from './type'
 
@@ -23,6 +24,8 @@ export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options:
 }
 
 export function getRegisteredAdapters() {
-  const all = Array.from(adapters.values())
+  const all = Array.from(adapters.values()).filter((adapter) =>
+    config.adapters.includes(adapter.name)
+  )
   return all
 }

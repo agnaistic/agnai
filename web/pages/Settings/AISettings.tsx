@@ -3,7 +3,7 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
 import HordeAISettings from './components/HordeAISettings'
-import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
@@ -12,6 +12,7 @@ import KoboldAISettings from './components/KoboldAISettings'
 import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
+import RegisteredSettings from './components/RegisteredSettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -97,6 +98,14 @@ const AISettings: Component<{
       <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>
         <ClaudeSettings />
       </div>
+
+      <For each={cfg.config.registered}>
+        {(each) => (
+          <div class={currentTab() === each.name ? tabClass : 'hidden'}>
+            <RegisteredSettings service={each} />
+          </div>
+        )}
+      </For>
     </>
   )
 }

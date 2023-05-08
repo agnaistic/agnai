@@ -2,7 +2,12 @@ import { Component, createMemo, createSignal } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import {
+  applyDotProperty,
+  getFormEntries,
+  getStrictForm,
+  setComponentPageTitle,
+} from '../../shared/util'
 import { userStore } from '../../store'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
@@ -35,6 +40,7 @@ const Settings: Component = () => {
   const currentTab = createMemo(() => tabs[tab()])
 
   const onSubmit = (evt: Event) => {
+    const adapterConfig = getAdapterConfig(getFormEntries(evt))
     const body = getStrictForm(evt, settingsForm)
 
     const {
@@ -64,6 +70,7 @@ const Settings: Component = () => {
 
     userStore.updateConfig({
       ...base,
+      adapterConfig,
       hordeWorkers: workers(),
       speechtotext: {
         enabled: speechToTextEnabled,
@@ -191,3 +198,16 @@ const settingsForm = {
 
   elevenLabsApiKey: 'string?',
 } as const
+
+function getAdapterConfig(entries: Array<[string, any]>) {
+  let obj: any = {}
+
+  for (const [prop, value] of entries) {
+    if (!prop.startsWith('adapterConfig.')) continue
+    applyDotProperty(obj, prop.replace('adapterConfig.', ''), value)
+    // const name = prop.replace('adapterConfig.', '')
+    // obj[name] = value
+  }
+
+  return obj
+}

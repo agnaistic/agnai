@@ -20,7 +20,10 @@
     "db/.gitkeep"
   ],
   "_moduleAliases": {
-    "srv": "./srv"
+    "srv": "./srv",
+    "/srv": "./srv",
+    "/common": "./common",
+    "common": "./common"
   },
   "scripts": {
     "build": "parcel build web/index.html --no-optimize --detailed-report",
