@@ -2,7 +2,6 @@ import { AppSchema } from '../srv/db/schema'
 import { formatCharacter } from './prompt'
 import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
-import { PromptEntities } from '/web/store/data/messages'
 
 export type ImagePromptOpts = {
   user: AppSchema.User
@@ -36,7 +35,7 @@ export function createAppearancePrompt(avatar: AppSchema.Chat | AppSchema.Charac
   return prompt
 }
 
-export async function createImagePrompt(opts: PromptEntities) {
+export async function createImagePrompt(opts: ImagePromptOpts) {
   const maxTokens = getMaxTokens(opts.user)
 
   /**
