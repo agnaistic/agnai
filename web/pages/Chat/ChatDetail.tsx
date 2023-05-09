@@ -42,7 +42,8 @@ const ChatDetail: Component = () => {
     loaded: s.loaded,
   }))
   const msgs = msgStore((s) => ({
-    msgs: insertImageMessages(s.msgs, s.images[params.id]),
+    msgs: s.msgs,
+    images: s.images,
     partial: s.partial,
     waiting: s.waiting,
     retries: s.retries,
@@ -75,6 +76,12 @@ const ChatDetail: Component = () => {
     setHideOOC(!hideOOC())
   }
 
+  const chatMsgs = createMemo(() => {
+    const hide = hideOOC()
+    return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
+      hide ? !msg.ooc : true
+    )
+  })
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
@@ -172,8 +179,6 @@ const ChatDetail: Component = () => {
         return true
       }
     })
-
-  const msgsToDisplay = () => (hideOOC() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs)
 
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
@@ -275,12 +280,12 @@ const ChatDetail: Component = () => {
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
               <div id="chat-messages" class="flex flex-col gap-2">
-                <Show when={chats.loaded && msgs.msgs.length === 0 && !msgs.waiting}>
+                <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">
                     <Button onClick={generateFirst}>Generate Message</Button>
                   </div>
                 </Show>
-                <For each={msgsToDisplay()}>
+                <For each={chatMsgs()}>
                   {(msg, i) => (
                     <Message
                       msg={msg}
