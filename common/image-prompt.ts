@@ -2,9 +2,7 @@ import { AppSchema } from '../srv/db/schema'
 import { formatCharacter } from './prompt'
 import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
-import { PromptEntities, msgsApi } from '/web/store/data/messages'
-import { AIAdapter } from './adapters'
-import { subscribe } from '/web/store/socket'
+import { PromptEntities } from '/web/store/data/messages'
 
 export type ImagePromptOpts = {
   user: AppSchema.User
@@ -38,32 +36,7 @@ export function createAppearancePrompt(avatar: AppSchema.Chat | AppSchema.Charac
   return prompt
 }
 
-const SUMMARY_BACKENDS: { [key in AIAdapter]?: boolean } = {
-  openai: true,
-}
-
 export async function createImagePrompt(opts: PromptEntities) {
-  if (opts.settings?.service! in SUMMARY_BACKENDS && opts.user.images?.summariseChat) {
-    console.log('Using', opts.settings?.service, 'to summarise')
-    msgsApi.generateResponseV2({ kind: 'summary' })
-
-    return new Promise<string>((resolve, reject) => {
-      let timer = setTimeout(() => {
-        reject(new Error(`Chat summarisation timed out`))
-      }, 45000)
-      subscribe(
-        'chat-summary',
-        { chatId: 'string', summary: 'string' },
-        (body) => {
-          console.log('received summary')
-          clearTimeout(timer)
-          resolve(body.summary)
-        },
-        true
-      )
-    })
-  }
-
   const maxTokens = getMaxTokens(opts.user)
 
   /**
