@@ -1,4 +1,4 @@
-export const DEFAULT_SUMMARY_PROMPT = `(Briefly summarise the scene in vivid detail. Include the appearance of each character and what they are wearing)`
+export const DEFAULT_SUMMARY_PROMPT = `(Briefly visually summarise the scene. Visually describe each character and their appearance)`
 
 export const IMAGE_ADAPTERS = ['novel', 'horde', 'sd'] as const
 

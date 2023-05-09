@@ -52,7 +52,6 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
         'chat-summary',
         { chatId: 'string', summary: 'string' },
         (body) => {
-          console.log('received summary')
           clearTimeout(timer)
           resolve(body.summary)
         },
