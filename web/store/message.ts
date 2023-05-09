@@ -488,7 +488,6 @@ subscribe(
     msg: 'any',
     chatId: 'string',
     generate: 'boolean?',
-    adapter: 'string',
   },
   (body) => {
     const { msgs, activeChatId } = msgStore.getState()
@@ -520,7 +519,7 @@ subscribe(
       chatStore.getMemberProfile(body.chatId, msg.userId)
     }
 
-    if (body.adapter === 'image') return
+    if (body.msg.adapter === 'image') return
     if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
   }
 )
