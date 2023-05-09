@@ -7,6 +7,8 @@ import { getStore } from '../create'
 import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
 
+export type PromptEntities = Awaited<ReturnType<typeof getPromptEntities>>
+
 export const msgsApi = {
   editMessage,
   getMessages,
@@ -57,6 +59,7 @@ export type GenerateOpts =
    * Generate a message on behalf of the user
    */
   | { kind: 'self' }
+  | { kind: 'summary' }
 
 export async function generateResponseV2(opts: GenerateOpts) {
   const { ui } = userStore()
@@ -81,7 +84,10 @@ export async function generateResponseV2(opts: GenerateOpts) {
   }
 
   const messages = (
-    opts.kind === 'send' || opts.kind === 'continue' || opts.kind === 'ooc'
+    opts.kind === 'send' ||
+    opts.kind === 'continue' ||
+    opts.kind === 'ooc' ||
+    opts.kind === 'summary'
       ? entities.messages
       : replacing
       ? entities.messages.slice(0, -1)

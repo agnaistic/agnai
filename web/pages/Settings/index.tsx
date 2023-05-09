@@ -64,6 +64,8 @@ const Settings: Component = () => {
       textToSpeechFilterActions,
 
       elevenLabsApiKey,
+      summariseChat,
+      summaryPrompt,
 
       ...base
     } = body
@@ -88,6 +90,8 @@ const Settings: Component = () => {
         height: imageHeight,
         width: imageWidth,
         steps: imageSteps,
+        summariseChat,
+        summaryPrompt,
         horde: {
           sampler: hordeSampler,
           model: hordeImageModel,
@@ -174,6 +178,8 @@ const settingsForm = {
   claudeApiKey: 'string?',
   logPromptsToBrowserConsole: 'boolean?',
 
+  summariseChat: 'boolean?',
+  summaryPrompt: 'string?',
   imageType: ['horde', 'sd', 'novel'],
   imageSteps: 'number',
   imageCfg: 'number',

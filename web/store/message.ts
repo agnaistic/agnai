@@ -430,7 +430,13 @@ subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => 
 
 subscribe(
   'message-retry',
-  { messageId: 'string', chatId: 'string', message: 'string', continue: 'boolean?' },
+  {
+    messageId: 'string',
+    chatId: 'string',
+    message: 'string',
+    continue: 'boolean?',
+    adapter: 'string',
+  },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
     if (activeChatId !== body.chatId) return
@@ -462,8 +468,10 @@ subscribe(
     if (chat?.chat._id !== body.chatId) return
 
     const voice = chat.char.voice
-    const user = userStore().user
-    if (user && voice && (user.texttospeech?.enabled ?? true) && chat.char.userId === user._id) {
+    const { user } = userStore.getState()
+
+    if (body.adapter === 'image' || !voice || !user) return
+    if ((user?.texttospeech?.enabled ?? true) && chat.char.userId === user._id) {
       msgStore.textToSpeech(
         body.messageId,
         body.message,
@@ -480,6 +488,7 @@ subscribe(
     msg: 'any',
     chatId: 'string',
     generate: 'boolean?',
+    adapter: 'string',
   },
   (body) => {
     const { msgs, activeChatId } = msgStore.getState()
@@ -511,6 +520,7 @@ subscribe(
       chatStore.getMemberProfile(body.chatId, msg.userId)
     }
 
+    if (body.adapter === 'image') return
     if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
   }
 )
