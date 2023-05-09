@@ -38,7 +38,7 @@ export async function textToSpeech({ chatId, messageId, text, voice, culture }: 
   return res
 }
 
-export async function getUserEntity() {
+export function getUserEntity() {
   if (isLoggedIn()) {
     const { user } = getStore('user').getState()
     return user

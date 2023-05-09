@@ -1,21 +1,15 @@
-import { getSampleText } from '../CultureCodes'
-import { speechManager } from './SpeechManager'
 import { AppSchema } from '/srv/db/schema'
-import { VoiceSettings, VoiceWebSpeechSynthesisSettings } from '/srv/db/texttospeech-schema'
+import { VoiceWebSynthesisSettings } from '/srv/db/texttospeech-schema'
 
-type onVoicesReadyFunction = (voices: SpeechSynthesisVoice[]) => void
+type VoiceCallback = (voices: SpeechSynthesisVoice[]) => void
 
 class SpeechSynthesisManager {
-  onVoicesLoadedCallbacks: onVoicesReadyFunction[] = []
+  onVoicesLoadedCallbacks: VoiceCallback[] = []
   voices: SpeechSynthesisVoice[] = []
   voicesLoadToken: NodeJS.Timeout | undefined
 
-  isSupported() {
-    return window.speechSynthesis
-  }
-
-  async loadWebSpeechSynthesisVoices(): Promise<AppSchema.VoiceDefinition[]> {
-    return await new Promise((resolve, reject) => {
+  loadWebSpeechSynthesisVoices(): Promise<AppSchema.VoiceDefinition[]> {
+    return new Promise((resolve, reject) => {
       var voices = speechSynthesis.getVoices()
       if (voices.length) {
         resolve(this.convertToOptions(voices))
@@ -27,7 +21,7 @@ class SpeechSynthesisManager {
     })
   }
 
-  private onVoicesLoaded(cb: onVoicesReadyFunction) {
+  private onVoicesLoaded(cb: VoiceCallback) {
     if (this.onVoicesLoadedCallbacks.length) {
       this.onVoicesLoadedCallbacks.push(cb)
       return
@@ -62,23 +56,24 @@ class SpeechSynthesisManager {
   }
 
   async createSpeechSynthesis(
-    voice: VoiceWebSpeechSynthesisSettings,
+    voice: VoiceWebSynthesisSettings,
     text: string,
     culture: string,
     filterAction: boolean
-  ): Promise<SpeechSynthesisUtterance> {
-    return await new Promise((resolve, reject) => {
+  ) {
+    return new Promise<SpeechSynthesisUtterance>((resolve, reject) => {
       this.onVoicesLoaded((voices) => {
         const syntheticVoice = voices.find((v) => v.voiceURI === voice.voiceId)
         if (!syntheticVoice) {
           reject(new Error(`Voice ${voice.voiceId} not found in web speech synthesis`))
           return
         }
-        var speech = new SpeechSynthesisUtterance()
+        const speech = new SpeechSynthesisUtterance()
         if (filterAction) {
           const filterActionsRegex = /\*[^*]*\*|\([^)]*\)/g
           text = text.replace(filterActionsRegex, '   ')
         }
+
         speech.text = text
         speech.voice = syntheticVoice
         speech.lang = culture

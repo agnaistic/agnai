@@ -32,6 +32,10 @@ export const VoiceSettings: Component = () => {
           when={getSpeechRecognition()}
           fallback={<p class="text-red-800">Speech to text is not available in your browser</p>}
         >
+          <p class="italic">
+            You can use speech recognition by using the microphone icon in the input text box.
+          </p>
+
           <Toggle
             label="Enabled"
             helperText="Whether to show the microphone button."
@@ -57,6 +61,8 @@ export const VoiceSettings: Component = () => {
         <Divider />
 
         <p class="text-lg font-bold">Text to Speech (Character Voice)</p>
+
+        <p class="italic">You need to configure a voice on the character's edit page.</p>
 
         <Toggle
           label="Enabled"

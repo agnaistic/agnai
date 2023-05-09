@@ -27,7 +27,7 @@ const AISettings: Component<{
       var defaultTab = (cfg.config.adapters as (string | undefined)[]).indexOf(
         state.user?.defaultAdapter
       )
-      setTab(defaultTab == -1 ? 0 : defaultTab)
+      setTab(defaultTab === -1 ? 0 : defaultTab)
       setReady(true)
     }
   })

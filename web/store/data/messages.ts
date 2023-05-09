@@ -88,7 +88,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       : entities.messages
   ).slice()
 
-  if (opts.kind === 'send' || opts.kind == 'ooc') {
+  if (opts.kind === 'send' || opts.kind === 'ooc') {
     messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
   }
 

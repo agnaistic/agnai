@@ -23,7 +23,7 @@ const InputBar: Component<{
   let ref: any
 
   const user = userStore()
-  const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0] }))
+  const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
   }
@@ -69,9 +69,20 @@ const InputBar: Component<{
   const playVoice = () => {
     const voice = props.char?.voice
     if (!voice) return
+    const lastTextMsg = state.msgs.reduceRight<AppSchema.ChatMessage | void>((prev, curr) => {
+      if (prev) return prev
+      if (curr.adapter === 'image' || curr.userId) return
+      return curr
+    }, undefined)
+
+    if (!lastTextMsg) {
+      toastStore.warn(`Could not play voice: No character message found`)
+      return
+    }
+
     msgStore.textToSpeech(
-      state.lastMsg._id,
-      state.lastMsg.msg,
+      lastTextMsg._id,
+      lastTextMsg.msg,
       voice,
       props.char?.culture || defaultCulture
     )

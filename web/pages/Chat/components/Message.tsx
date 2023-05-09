@@ -70,7 +70,7 @@ const SingleMessage: Component<
   const state = chatStore()
   const voice = msgStore((x) => ({
     status:
-      props.lastSplit && x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
+      props.lastSplit && x.speaking?.messageId === props.msg._id ? x.speaking.status : undefined,
   }))
 
   const [edit, setEdit] = createSignal(false)

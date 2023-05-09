@@ -76,7 +76,7 @@ const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
     }
   )
 
-  if (result.statusCode != 200) {
+  if (result.statusCode !== 200) {
     throw new Error(
       result.body.message ||
         result.body.details?.message ||
