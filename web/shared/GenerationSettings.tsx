@@ -127,9 +127,9 @@ const GeneralSettings: Component<Props> = (props) => {
       <RangeInput
         fieldName="maxTokens"
         label="Max New Tokens"
-        helperText="Number of tokens the AI should generate. Higher numbers will take longer to generate."
+        helperText="Number of tokens the AI should generate. Higher numbers will take longer to generate. This value is subtracted from your context limit."
         min={16}
-        max={512}
+        max={1024}
         step={1}
         value={props.inherit?.maxTokens || defaultPresets.basic.maxTokens}
         disabled={props.disabled}
