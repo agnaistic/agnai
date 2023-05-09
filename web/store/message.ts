@@ -494,8 +494,8 @@ subscribe(
     if (activeChatId !== body.chatId) return
     const msg = body.msg as AppSchema.ChatMessage
     const user = userStore().user
-    const speech = getMessageSpeechInfo(msg, user)
 
+    const speech = getMessageSpeechInfo(msg, user)
     const nextMsgs = msgs.concat(msg)
     // If the message is from a user don't clear the "waiting for response" flags
     if (msg.userId && !body.generate) {
@@ -524,24 +524,15 @@ subscribe(
   }
 )
 
-function getMessageSpeechInfo(
-  msg: AppSchema.ChatMessage,
-  user: AppSchema.User | undefined
-):
-  | {
-      voice: VoiceSettings
-      culture: string | undefined
-      speaking: MsgState['speaking'] | undefined
-    }
-  | undefined {
-  if (!msg.characterId) return
+function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User | undefined) {
+  if (msg.adapter === 'image' || !msg.characterId) return
   const char = chatStore.getState().active?.char
   if (!char || char._id !== msg.characterId || !char.voice) return
   if (!user?.texttospeech?.enabled) return
   return {
     voice: char.voice,
     culture: char.culture,
-    speaking: char.voice ? { messageId: msg._id, status: 'generating' } : undefined,
+    speaking: char.voice ? ({ messageId: msg._id, status: 'generating' } as const) : undefined,
   }
 }
 
