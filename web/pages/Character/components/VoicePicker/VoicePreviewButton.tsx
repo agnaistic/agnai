@@ -41,7 +41,7 @@ export const VoicePreviewButton: Component<{
       const culture = props.culture || defaultCulture
       const voice: VoiceWebSynthesisSettings = {
         service: 'webspeechsynthesis',
-        voiceId: voiceId,
+        voiceId,
         ...props.webSpeechSynthesisSettings,
       }
       audio = await createSpeech({

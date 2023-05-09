@@ -1,6 +1,6 @@
 import { AppSchema } from '../../srv/db/schema'
 import { TTSService } from '../../srv/db/texttospeech-schema'
-import { speechSynthesisManager } from '../shared/Audio/SpeechSynthesisManager'
+import { getNativeVoices } from '../shared/Audio/speech'
 import { createStore } from './create'
 import { voiceApi } from './data/voice'
 import { toastStore } from './toasts'
@@ -48,7 +48,7 @@ export const voiceStore = createStore<VoiceState>(
 
       let result = undefined
       if (type === 'webspeechsynthesis') {
-        result = await speechSynthesisManager.loadWebSpeechSynthesisVoices()
+        result = await getNativeVoices()
       } else {
         const res = await voiceApi.voicesList(type)
         if (res.error) toastStore.error(`Failed to get voices list: ${res.error}`)
