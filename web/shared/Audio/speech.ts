@@ -1,3 +1,4 @@
+import { getAssetUrl } from '../util'
 import { AudioReference } from './AudioReference'
 import { speechSynthesisManager } from './SpeechSynthesisManager'
 import { VoiceWebSynthesisSettings } from '/srv/db/texttospeech-schema'
@@ -11,7 +12,7 @@ type SpeechOpts =
 export async function createSpeech(opts: SpeechOpts) {
   if ('url' in opts) {
     currentAudio?.pause()
-    currentAudio = new AudioReference({ audio: new Audio(opts.url) })
+    currentAudio = new AudioReference({ audio: new Audio(getAssetUrl(opts.url)) })
     return currentAudio
   }
 

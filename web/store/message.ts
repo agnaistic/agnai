@@ -365,7 +365,8 @@ async function playVoiceFromUrl(chatId: string, messageId: string, url: string) 
   try {
     const audio = await createSpeech({ url })
     audio.addEventListener('error', (e) => {
-      toastStore.error(`Error playing speech: ${e.message}`)
+      console.error(e)
+      toastStore.error(`Error playing URL: ${e.message}`)
       const msgs = msgStore.getState().msgs
       const msg = msgs.find((m) => m._id === messageId)
       if (!msg) return
@@ -391,7 +392,7 @@ async function playVoiceFromUrl(chatId: string, messageId: string, url: string) 
     msgStore.setState({ speaking: { messageId, status: 'generating' } })
     audio.play()
   } catch (e: any) {
-    toastStore.error(`Error playing speech: ${e.message}`)
+    toastStore.error(`Error playing URL: ${e.message}`)
     msgStore.setState({ speaking: undefined })
   }
 }
@@ -408,7 +409,7 @@ async function playVoiceFromBrowser(
   const audio = await createSpeech({ voice, text, culture, filterAction })
 
   audio.addEventListener('error', (e) => {
-    toastStore.error(`Error playing speech: ${e.message}`)
+    toastStore.error(`Error playing web speech: ${e.message}`)
     msgStore.setState({ speaking: undefined })
   })
 
