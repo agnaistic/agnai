@@ -13,10 +13,9 @@ import { userStore } from './user'
 import { localApi } from './data/storage'
 import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
-import { VoiceSettings, VoiceWebSpeechSynthesisSettings } from '../../srv/db/texttospeech-schema'
+import { VoiceSettings, VoiceWebSynthesisSettings } from '../../srv/db/texttospeech-schema'
 import { defaultCulture } from '../shared/CultureCodes'
-import { speechSynthesisManager } from '../shared/Audio/SpeechSynthesisManager'
-import { speechManager } from '../shared/Audio/SpeechManager'
+import { createSpeech, pauseSpeech } from '../shared/Audio/speech'
 
 type ChatId = string
 
@@ -62,7 +61,7 @@ const initState: MsgState = {
 export const msgStore = createStore<MsgState>(
   'messages',
   initState
-)((get, set) => {
+)(() => {
   events.on('logged-out', () => {
     msgStore.setState(initState)
   })
@@ -238,51 +237,56 @@ export const msgStore = createStore<MsgState>(
       return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
     },
     stopSpeech() {
-      speechManager.cancel()
+      pauseSpeech()
       return { speaking: undefined }
     },
-    async textToSpeech(
+    async *textToSpeech(
       { activeChatId, msgs },
       messageId: string,
       text: string,
       voice: VoiceSettings,
       culture?: string
     ) {
-      speechManager.cancel()
+      pauseSpeech()
 
       if (!voice.service) {
-        set({ speaking: undefined })
+        yield { speaking: undefined }
         return
       }
 
-      set({ speaking: { messageId, status: 'generating' } })
+      yield { speaking: { messageId, status: 'generating' } }
 
       if (voice.service === 'webspeechsynthesis') {
-        if (!speechSynthesisManager.isSupported()) {
-          toastStore.error(`Web speech synthesis not supported on this browser`)
+        const isSuported = !!window.speechSynthesis
+        if (!isSuported) {
+          toastStore.error(`Speech synthesis not supported on this browser`)
           return
         }
+
         try {
           await playVoiceFromBrowser(voice, text, culture ?? defaultCulture, messageId)
         } catch (e: any) {
           toastStore.error(`Failed to play web speech synthesis: ${e.message}`)
         }
-      } else {
-        const msg = msgs.find((m) => m._id === messageId)
-        if (msg?.voiceUrl) {
-          playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl)
-        } else {
-          const res = await voiceApi.textToSpeech({
-            chatId: activeChatId,
-            messageId,
-            text,
-            voice,
-            culture,
-          })
-          if (res.error) {
-            toastStore.error(`Failed to request text to speech: ${res.error}`)
-          }
-        }
+
+        return
+      }
+
+      const msg = msgs.find((m) => m._id === messageId)
+      if (msg?.voiceUrl) {
+        playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl)
+        return
+      }
+
+      const res = await voiceApi.textToSpeech({
+        chatId: activeChatId,
+        messageId,
+        text,
+        voice,
+        culture,
+      })
+      if (res.error) {
+        toastStore.error(`Failed to request text to speech: ${res.error}`)
       }
     },
     async *createImage({ activeChatId }, messageId?: string) {
@@ -307,7 +311,7 @@ export const msgStore = createStore<MsgState>(
  * @param image base64 encoded image or image url
  */
 async function handleImage(chatId: string, image: string) {
-  const { msgs, activeChatId, activeCharId, images, imagesSaved } = msgStore.getState()
+  const { msgs, activeCharId, images, imagesSaved } = msgStore.getState()
 
   const chatImages = images[chatId] || []
 
@@ -351,7 +355,7 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
+async function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
   const user = userStore.getState().user
   if (user?.texttospeech?.enabled === false) return
   if (chatId != msgStore.getState().activeChatId) {
@@ -359,7 +363,7 @@ function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
     return
   }
   try {
-    const audio = speechManager.createSpeechFromUrl(url)
+    const audio = await createSpeech({ url })
     audio.addEventListener('error', (e) => {
       toastStore.error(`Error playing speech: ${e.message}`)
       const msgs = msgStore.getState().msgs
@@ -393,7 +397,7 @@ function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
 }
 
 async function playVoiceFromBrowser(
-  voice: VoiceWebSpeechSynthesisSettings,
+  voice: VoiceWebSynthesisSettings,
   text: string,
   culture: string,
   messageId: string
@@ -401,21 +405,18 @@ async function playVoiceFromBrowser(
   const user = userStore.getState().user
   if (!user || user?.texttospeech?.enabled === false) return
   const filterAction = user.texttospeech?.filterActions ?? true
-  const audio = await speechManager.createSpeechFromBrowser(voice, text, culture, filterAction)
+  const audio = await createSpeech({ voice, text, culture, filterAction })
+
   audio.addEventListener('error', (e) => {
     toastStore.error(`Error playing speech: ${e.message}`)
-    msgStore.setState({
-      speaking: undefined,
-    })
-  })
-  audio.addEventListener('playing', () => {
-    msgStore.setState({
-      speaking: { messageId, status: 'playing' },
-    })
-  })
-  audio.addEventListener('ended', () => {
     msgStore.setState({ speaking: undefined })
   })
+
+  audio.addEventListener('playing', () =>
+    msgStore.setState({ speaking: { messageId, status: 'playing' } })
+  )
+  audio.addEventListener('ended', () => msgStore.setState({ speaking: undefined }))
+
   audio.play()
 }
 
@@ -526,7 +527,7 @@ function getMessageSpeechInfo(
   if (!msg.characterId) return
   const char = chatStore.getState().active?.char
   if (!char || char._id !== msg.characterId || !char.voice) return
-  if (user?.texttospeech?.enabled == false) return
+  if (!user?.texttospeech?.enabled) return
   return {
     voice: char.voice,
     culture: char.culture,

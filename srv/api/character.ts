@@ -120,7 +120,7 @@ const deleteCharacter = handle(async ({ userId, params }) => {
 
 const editCharacterFavorite = handle(async (req) => {
   const id = req.params.id
-  const favorite = req.body.favorite == true
+  const favorite = req.body.favorite === true
 
   const char = await store.characters.updateCharacter(id, req.userId!, {
     favorite: favorite,

@@ -28,7 +28,8 @@ export function getAssetUrl(filename: string) {
     filename.startsWith('assets/') ||
     filename.endsWith('.png') ||
     filename.endsWith('.jpg') ||
-    filename.endsWith('.jpeg')
+    filename.endsWith('.jpeg') ||
+    filename.endsWith('.mp3')
 
   if (!isFile) return filename
 
