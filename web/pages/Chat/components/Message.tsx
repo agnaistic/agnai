@@ -445,11 +445,6 @@ const MessageOptions: Component<{
   )
 }
 
-function textToSpeech(char: AppSchema.Character, msg: SplitMessage) {
-  if (!char.voice) return
-  msgStore.textToSpeech(msg._id, msg.msg, char.voice, char.culture ?? defaultCulture)
-}
-
 function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
     msgStore.retry(split.chatId)

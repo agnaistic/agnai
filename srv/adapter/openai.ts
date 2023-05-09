@@ -8,6 +8,7 @@ import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
+import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
 
 const baseUrl = `https://api.openai.com`
 
@@ -62,7 +63,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
-    const user = sender.handle || 'You'
+    const handle = sender.handle || 'You'
 
     const messages: OpenAIMessagePropType[] = [{ role: 'system', content: parts.gaslight }]
     const history: OpenAIMessagePropType[] = []
@@ -83,6 +84,17 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       tokens += encoder(parts.ujb)
     }
 
+    if (kind === 'summary') {
+      // This probably needs to be workshopped
+      let content = user.images?.summaryPrompt || DEFAULT_SUMMARY_PROMPT
+
+      if (!content.startsWith('(')) content = '(' + content
+      if (!content.endsWith(')')) content = content + ')'
+
+      tokens += encoder(content)
+      history.push({ role: 'user', content })
+    }
+
     if (kind === 'continue') {
       const content = '(Continue)'
       tokens += encoder(content)
@@ -90,7 +102,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (kind === 'self') {
-      const content = `(Respond as ${user})`
+      const content = `(Respond as ${handle})`
       tokens += encoder(content)
       history.push({ role: 'user', content })
     }
@@ -98,7 +110,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     for (const line of all.reverse()) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
       const isBot = line.startsWith(char.name)
-      const content = line.trim().replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, user)
+      const content = line.trim().replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, handle)
 
       if (isBot) {
         role = 'assistant'

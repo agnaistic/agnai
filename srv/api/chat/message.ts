@@ -2,7 +2,7 @@ import { assertValid } from 'frisker'
 import { store } from '../../db'
 import { createTextStreamV2 } from '../../adapter/generate'
 import { errors, handle } from '../wrap'
-import { sendGuest, sendMany } from '../ws'
+import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../db/schema'
 import { v4 } from 'uuid'
@@ -21,7 +21,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   const chatId = params.id
   assertValid(
     {
-      kind: ['send', 'ooc', 'retry', 'continue', 'self'],
+      kind: ['send', 'ooc', 'retry', 'continue', 'self', 'summary'],
       char: 'any',
       sender: 'any',
       members: ['any'],
@@ -151,6 +151,7 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     const characterId = body.kind === 'self' ? undefined : body.char._id
     const senderId = body.kind === 'self' ? userId : undefined
     const response = newMessage(chatId, responseText, { characterId, userId: senderId, ooc: false })
+
     sendGuest(socketId, {
       type: 'guest-message-created',
       msg: response,
@@ -165,6 +166,11 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   await releaseLock(chatId)
 
   switch (body.kind) {
+    case 'summary': {
+      sendOne(userId, { type: 'chat-summary', chatId, summary: generated })
+      break
+    }
+
     case 'self':
     case 'send': {
       const msg = await store.msgs.createChatMessage({

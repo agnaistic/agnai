@@ -4,7 +4,10 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
-# Change Log
+_10 May 2023_
+- Add experimental chat summarisation for image prompts. Enable it in IMAGE SETTINGS. Only works if your preset uses OpenAI.
+- Fix issues with Voice playback.
+
 _8 May 2023_
 - Add support to import from characters from CharacterHub.org
 - Added GooseAI support
