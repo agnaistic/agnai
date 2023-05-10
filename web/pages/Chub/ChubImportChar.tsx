@@ -4,7 +4,6 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { NewCharacter, characterStore, toastStore } from '../../store'
-import { AppSchema } from '/srv/db/schema'
 
 const ChubImportCharModal: Component<{
   show: boolean
@@ -17,26 +16,7 @@ const ChubImportCharModal: Component<{
 
   const [char, setChar] = createSignal<NewCharacter>(props.char)
 
-  const dupeChar = (list: AppSchema.Character[]) => {
-    for (const c of list) {
-      if (
-        !!c.name == !!char().name &&
-        !!c.greeting == !!char().greeting &&
-        !!c.scenario == !!char().scenario &&
-        !!c.sampleChat == !!char().sampleChat &&
-        !!c.persona == !!char().persona
-      )
-        return true
-    }
-
-    return false
-  }
-
   const onImport = () => {
-    if (dupeChar(characterStore((s) => ({ ...s.characters, loading: s.loading })).list)) {
-      toastStore.error(`${char()?.name} already exists!`)
-      return
-    }
     try {
       characterStore.createCharacter(char())
     } catch (error) {
@@ -102,8 +82,10 @@ const ChubImportCharModal: Component<{
             }
             value={char().name}
             onChange={(e) => {
-              char().name = e.currentTarget.value
-              setChar(char())
+              setChar({
+                ...char(),
+                name: e.currentTarget.value,
+              })
             }}
           />
           <TextInput
@@ -113,8 +95,10 @@ const ChubImportCharModal: Component<{
             value={char()?.greeting}
             class="text-xs"
             onKeyUp={(e) => {
-              char().greeting = e.currentTarget.value
-              setChar(char())
+              setChar({
+                ...char(),
+                greeting: e.currentTarget.value,
+              })
             }}
           />
 
@@ -125,8 +109,10 @@ const ChubImportCharModal: Component<{
             value={char().scenario}
             class="text-xs"
             onKeyUp={(e) => {
-              char().scenario = e.currentTarget.value
-              setChar(char())
+              setChar({
+                ...char(),
+                scenario: e.currentTarget.value,
+              })
             }}
           />
 
@@ -137,8 +123,10 @@ const ChubImportCharModal: Component<{
             value={char().sampleChat}
             class="text-xs"
             onKeyUp={(e) => {
-              char().sampleChat = e.currentTarget.value
-              setChar(char())
+              setChar({
+                ...char(),
+                sampleChat: e.currentTarget.value,
+              })
             }}
           />
 
@@ -149,8 +137,15 @@ const ChubImportCharModal: Component<{
             value={char().persona.attributes.text[0]! || ''}
             class="text-xs"
             onKeyUp={(e) => {
-              char().persona.attributes.text[0] = e.currentTarget.value
-              setChar(char())
+              setChar({
+                ...char(),
+                persona: {
+                  kind: 'text',
+                  attributes: {
+                    text: [e.currentTarget.value],
+                  },
+                },
+              })
             }}
           />
         </Show>

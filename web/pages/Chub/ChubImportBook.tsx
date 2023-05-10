@@ -27,24 +27,7 @@ const ChubImportBookModal: Component<{
     if (props.book.name) setBook(props.book)
   })
 
-  const dupeBook = (list: AppSchema.MemoryBook[]) => {
-    for (const c of list) {
-      if (
-        !!c.name == !!book().name &&
-        !!c.description == !!book().description &&
-        !!c.entries == !!book().entries
-      )
-        return true
-    }
-
-    return false
-  }
-
   const onImport = () => {
-    if (dupeBook(memoryStore((s) => ({ ...s.books })).list)) {
-      toastStore.error(`${book()?.name} already exists!`)
-      return
-    }
     try {
       memoryStore.create(book())
     } catch (error) {
