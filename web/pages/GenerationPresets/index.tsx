@@ -1,12 +1,7 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
-import {
-  defaultPresets,
-  isDefaultPreset,
-  presetValidator,
-  PresetValidatorOutput,
-} from '../../../common/presets'
+import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
@@ -102,8 +97,7 @@ export const GenerationPresetsPage: Component = () => {
     setEditing()
   }
 
-  const onSave = (ev: Event, force?: boolean) => {
-    ev.preventDefault()
+  const onSave = (_ev: Event, force?: boolean) => {
     if (state.saving) return
     const validator = { ...presetValidator, service: ['', ...AI_ADAPTERS] } as const
     const body = getStrictForm(ref, validator)
@@ -112,14 +106,12 @@ export const GenerationPresetsPage: Component = () => {
       toastStore.error(`You must select an AI service before saving`)
       return
     }
+
     if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {
       setMissingPlaceholder(true)
-    } else {
-      savePreset(body)
+      return
     }
-  }
 
-  const savePreset = (body: PresetValidatorOutput) => {
     const prev = editing()
     if (prev?._id) {
       presetStore.updatePreset(prev._id, body as any)
@@ -175,7 +167,7 @@ export const GenerationPresetsPage: Component = () => {
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
                 <div class="flex flex-row justify-end">
-                  <Button type="submit" disabled={state.saving}>
+                  <Button disabled={state.saving} onClick={onSave}>
                     <Save /> Save
                   </Button>
                 </div>
@@ -196,13 +188,15 @@ export const GenerationPresetsPage: Component = () => {
         close={() => setMissingPlaceholder(false)}
         confirm={() => onSave(ref, true)}
         message={
-          <div class="flex flex-col items-center">
+          <div class="flex flex-col items-center gap-2 text-sm">
             <div>
               Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
               almost never what you want. It is recommended for your gaslight to contain the
-              placeholders <code>{'{{ personality }}, {{ scenario }} and {{ memory }}'}</code>.
+              placeholders:
+              <br /> <code>{'{{personality}}, {{scenario}} and {{memory}}'}</code>
             </div>
-            <div>Are you sure you wish to proceed?"</div>
+
+            <p>Are you sure you wish to proceed?</p>
           </div>
         }
       />
