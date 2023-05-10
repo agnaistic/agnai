@@ -47,10 +47,10 @@ const Navigation: Component = () => {
           <UserNavigation />
         </Show>
       </div>
-      <div class="flex flex-row justify-around text-xs">
+      {/* <div class="flex flex-row justify-around text-xs">
         <Item href="/terms-of-service">Terms</Item>
         <Item href="/privacy-policy">Privacy Policy</Item>
-      </div>
+      </div> */}
       <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
         <div class="mt-2 flex w-full items-center justify-between">
           <div class="flex items-center gap-4">
@@ -142,6 +142,11 @@ const GuestNavigation: Component = () => {
 
       <Item href="/presets">
         <Sliders /> Presets
+      </Item>
+
+      <Item href="/info">
+        <Info />
+        Information
       </Item>
 
       <a
