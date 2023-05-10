@@ -16,7 +16,6 @@ import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
-import './chat-detail.css'
 import { DropMenu } from '../../shared/DropMenu'
 import UISettings from '../Settings/UISettings'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
@@ -26,6 +25,8 @@ import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
+import DeleteChatModal from './components/DeleteChat'
+import './chat-detail.css'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -340,6 +341,10 @@ const ChatDetail: Component = () => {
 
       <Show when={modal() === 'export'}>
         <ChatExport show={true} close={setModal} />
+      </Show>
+
+      <Show when={modal() === 'delete'}>
+        <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={setModal} />
       </Show>
 
       <Show when={!!removeId()}>
