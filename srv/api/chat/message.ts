@@ -126,9 +126,11 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   let generated = ''
   let error = false
+
   const send: <T extends { type: string }>(msg: T) => void = guest
-    ? (msg) => sendGuest(guest, msg)
-    : (msg) => sendMany(members, msg)
+    ? (msg) => (body.kind !== 'summary' ? sendGuest(guest, msg) : null)
+    : (msg) => (body.kind !== 'summary' ? sendMany(members, msg) : null)
+
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
