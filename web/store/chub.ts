@@ -24,7 +24,7 @@ const initState: ChubState = {
   nsfw: false,
   tags: '',
   excludeTags: '',
-  sort: 'Download Count',
+  sort: 'Creation Date',
   search: '',
   chars: [],
   books: [],
