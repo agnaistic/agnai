@@ -2,7 +2,7 @@ import { ChubItem } from '../pages/Chub/ChubItem'
 import { chubPage } from '../pages/Chub/ChubNavigation'
 import { createStore } from './create'
 
-export type ChubItem = {
+type ChubItem = {
   name: string
   description: string
   fullPath: string
@@ -30,39 +30,32 @@ const initState: ChubState = {
   books: [],
 }
 
-export async function getChubChars() {
-  let sort = ''
+const getSort = () => {
   switch (chubStore().sort) {
     case 'Download Count':
-      sort = 'download_count'
-      break
+      return 'download_count'
     case 'ID':
-      sort = 'id'
-      break
+      return 'id'
     case 'Rating':
-      sort = 'rating'
-      break
+      return 'rating'
     case 'Rating Count':
-      sort = 'rating_count'
-      break
+      return 'rating_count'
     case 'Last Activity':
-      sort = 'last_activity_at'
-      break
+      return 'last_activity_at'
     case 'Creation Date':
-      sort = 'created_at'
-      break
+      return 'created_at'
     case 'Name':
-      sort = 'name'
-      break
+      return 'name'
     case 'Token Count':
-      sort = 'n_tokens'
-      break
+      return 'n_tokens'
   }
+}
 
+export async function getChubChars() {
   const res = await fetch(
     `${CHUB_URL}/characters/search?&search=${chubStore().search}&first=${48 * chubPage()}&nsfw=${
       chubStore().nsfw
-    }&tags=${chubStore().tags}&exclude_tags=${chubStore().excludeTags}&sort=${sort}`
+    }&tags=${chubStore().tags}&exclude_tags=${chubStore().excludeTags}&sort=${getSort()}`
   )
   const json = await res.json()
 
@@ -72,38 +65,10 @@ export async function getChubChars() {
   })
 }
 export async function getChubBooks() {
-  let sort = ''
-
-  switch (chubStore().sort) {
-    case 'Download Count':
-      sort = 'download_count'
-      break
-    case 'ID':
-      sort = 'id'
-      break
-    case 'Rating':
-      sort = 'rating'
-      break
-    case 'Rating Count':
-      sort = 'rating_count'
-      break
-    case 'Last Activity':
-      sort = 'last_activity_at'
-      break
-    case 'Creation Date':
-      sort = 'created_at'
-      break
-    case 'Name':
-      sort = 'name'
-      break
-    case 'Token Count':
-      sort = 'n_tokens'
-      break
-  }
   const res = await fetch(
     `${CHUB_URL}/lorebooks/search?&search=${chubStore().search}&first=${48 * chubPage()}&nsfw=${
       chubStore().nsfw
-    }&tags=${chubStore().tags}&exclude_tags=${chubStore().excludeTags}&sort=${sort}`
+    }&tags=${chubStore().tags}&exclude_tags=${chubStore().excludeTags}&sort=${getSort()}`
   )
   const json = await res.json()
   chubStore.setState({

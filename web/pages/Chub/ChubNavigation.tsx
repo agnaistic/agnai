@@ -59,10 +59,11 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               class="w-12"
               value={chubPage()}
               onKeyUp={(ev) => {
-                try {
-                  setChubPage(Number(ev.currentTarget.value))
+                const n = Number(ev.currentTarget.value)
+                if (!Number.isNaN(n) && n != 0) {
+                  setChubPage(n)
                   update()
-                } catch (error) {
+                } else {
                   toastStore.error('Not a valid page number.')
                 }
               }}

@@ -4,6 +4,7 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import TextInput from '../../shared/TextInput'
 import { NewCharacter, characterStore, toastStore } from '../../store'
+import { AppSchema } from '/srv/db/schema'
 
 const ChubImportCharModal: Component<{
   show: boolean
@@ -16,7 +17,26 @@ const ChubImportCharModal: Component<{
 
   const [char, setChar] = createSignal<NewCharacter>(props.char)
 
+  const dupeChar = (list: AppSchema.Character[]) => {
+    for (const c of list) {
+      if (
+        c.name == char().name &&
+        c.greeting == char().greeting &&
+        !!c.scenario == !!char().scenario &&
+        c.sampleChat == char().sampleChat &&
+        !!c.persona == !!char().persona
+      )
+        return true
+    }
+
+    return false
+  }
+
   const onImport = () => {
+    if (dupeChar(characterStore((s) => ({ ...s.characters, loading: s.loading })).list)) {
+      toastStore.error(`${char()?.name} already exists!`)
+      return
+    }
     try {
       characterStore.createCharacter(char())
     } catch (error) {
