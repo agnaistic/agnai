@@ -1,10 +1,9 @@
 import { Component } from 'solid-js'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
-import { chubOptions } from './Chub'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
-import { chubStore } from '../../store/chub'
+import { chubStore, getChubBooks, getChubChars } from '../../store/chub'
 import { setChubPage } from './ChubNavigation'
 
 const sorts = [
@@ -21,8 +20,8 @@ const sorts = [
 const FilterSettings: Component = () => {
   const update = () => {
     setChubPage(1)
-    chubStore.getChubChars()
-    chubStore.getChubBooks()
+    getChubChars()
+    getChubBooks()
   }
 
   return (
@@ -31,9 +30,9 @@ const FilterSettings: Component = () => {
         fieldName="nsfw"
         label="NSFW"
         helperText="Allow NSFW characters/lorebooks to appear in results."
-        value={chubOptions.nsfw}
+        value={chubStore().nsfw}
         onChange={(v) => {
-          chubOptions.nsfw = v
+          chubStore.setNSFW(v)
           update()
         }}
       />
@@ -42,9 +41,9 @@ const FilterSettings: Component = () => {
         label="Query Tags"
         helperText="A comma-separated list of tags to include."
         placeholder="E.g. blue_archive,female,anime"
-        value={chubOptions.tags}
+        value={chubStore().tags}
         onChange={(ev) => {
-          chubOptions.tags = ev.currentTarget.value
+          chubStore.setTags(ev.currentTarget.value)
           update()
         }}
       />
@@ -53,9 +52,9 @@ const FilterSettings: Component = () => {
         label="Exclude Tags"
         helperText="A comma-separated list of tags to exclude."
         placeholder="E.g. furry,incest,loli"
-        value={chubOptions.excludeTags}
+        value={chubStore().excludeTags}
         onChange={(ev) => {
-          chubOptions.excludeTags = ev.currentTarget.value
+          chubStore.setExcludeTags(ev.currentTarget.value)
           update()
         }}
       />
@@ -63,9 +62,9 @@ const FilterSettings: Component = () => {
         fieldName="sort"
         label="Sort By"
         items={toDropdownItems(sorts)}
-        value={chubOptions.sort}
+        value={chubStore().sort}
         onChange={(v) => {
-          chubOptions.sort = v.value
+          chubStore.setSort(v.value)
           update()
         }}
       />

@@ -1,30 +1,21 @@
-import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
 import ChubNavigation from './ChubNavigation'
 
 const BookList: Component = () => {
-  createEffect(() => {
-    chubStore.getChubBooks()
-  })
-
-  const books = createMemo(() => {
-    return chubStore().books
-  })
+  const books = chubStore((s) => s.books)
 
   return (
     <>
-      <ChubNavigation buttons={books().length >= 48} />
+      <ChubNavigation buttons={books.length >= 48} />
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
-        <For each={books()}>
+        <For each={books}>
           {(book) => (
             <ChubItem
               name={book.name}
               fullPath={book.fullPath}
-              avatar={
-                `https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp` ||
-                `https://git.characterhub.org/${book.fullPath}/-/raw/main/avatar.webp`
-              }
+              avatar={`https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp`}
               book={true}
             />
           )}

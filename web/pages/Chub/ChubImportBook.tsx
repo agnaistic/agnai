@@ -78,9 +78,7 @@ const ChubImportBookModal: Component<{
               book={book()}
               entrySort={entrySort()}
               updateEntrySort={updateEntrySort}
-              onChange={(b) => {
-                setBook(b)
-              }}
+              onChange={setBook}
             />
           </div>
         </Show>

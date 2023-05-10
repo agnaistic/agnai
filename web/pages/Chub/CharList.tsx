@@ -1,22 +1,16 @@
-import { Component, For, Show, createEffect, createMemo } from 'solid-js'
+import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
 import ChubNavigation, { chubPage } from './ChubNavigation'
 
 const CharList: Component = () => {
-  createEffect(() => {
-    chubStore.getChubChars()
-  })
-
-  const chars = createMemo(() => {
-    return chubStore().chars
-  })
+  const chars = chubStore((s) => s.chars)
 
   return (
     <>
-      <ChubNavigation buttons={chars()!.length >= 48} />
+      <ChubNavigation buttons={chars.length >= 48} />
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
-        <For each={chars().slice(48 * (chubPage() - 1))}>
+        <For each={chars.slice(48 * (chubPage() - 1))}>
           {(char) => (
             <ChubItem
               name={char.name}

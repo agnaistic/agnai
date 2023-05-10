@@ -83,6 +83,7 @@ const ChubImportCharModal: Component<{
             value={char().name}
             onChange={(e) => {
               char().name = e.currentTarget.value
+              setChar(char())
             }}
           />
           <TextInput
@@ -93,6 +94,7 @@ const ChubImportCharModal: Component<{
             class="text-xs"
             onKeyUp={(e) => {
               char().greeting = e.currentTarget.value
+              setChar(char())
             }}
           />
 
@@ -104,6 +106,7 @@ const ChubImportCharModal: Component<{
             class="text-xs"
             onKeyUp={(e) => {
               char().scenario = e.currentTarget.value
+              setChar(char())
             }}
           />
 
@@ -115,6 +118,7 @@ const ChubImportCharModal: Component<{
             class="text-xs"
             onKeyUp={(e) => {
               char().sampleChat = e.currentTarget.value
+              setChar(char())
             }}
           />
 
@@ -126,6 +130,7 @@ const ChubImportCharModal: Component<{
             class="text-xs"
             onKeyUp={(e) => {
               char().persona.attributes.text[0] = e.currentTarget.value
+              setChar(char())
             }}
           />
         </Show>

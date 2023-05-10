@@ -59,7 +59,7 @@ export const ChubItem: Component<{
 
       const blob = await res.blob()
 
-      processImage(new File([blob], `main_${props.fullPath}.png`))
+      processImage(new File([blob], `main_${props.fullPath}.png`, { type: 'image/png' }))
     }
   }
 

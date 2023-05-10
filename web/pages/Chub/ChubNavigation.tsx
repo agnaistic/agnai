@@ -1,6 +1,5 @@
-import { Component, Show, createEffect, createSignal } from 'solid-js'
-import { chubStore } from '../../store/chub'
-import { chubOptions } from './Chub'
+import { Component, Show, createSignal, onMount } from 'solid-js'
+import { chubStore, getChubBooks, getChubChars } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { ArrowLeft, ArrowRight } from 'lucide-solid'
@@ -9,9 +8,25 @@ import { toastStore } from '../../store'
 export const [chubPage, setChubPage] = createSignal<number>(1)
 
 const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
-  createEffect(() => {
-    chubStore.getChubChars()
+  const update = () => {
+    getChubChars()
+    getChubBooks()
+  }
+
+  onMount(() => {
+    update()
   })
+
+  const onSearch = (
+    ev: KeyboardEvent & {
+      target: Element
+      currentTarget: HTMLInputElement | HTMLTextAreaElement
+    }
+  ) => {
+    chubStore.setSearch(ev.currentTarget.value)
+    update()
+    setChubPage(1)
+  }
 
   return (
     <>
@@ -20,13 +35,8 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
           <TextInput
             fieldName="search"
             placeholder="Search by name..."
-            value={chubOptions.search}
-            onKeyUp={(ev) => {
-              chubOptions.search = ev.currentTarget.value
-              chubStore.getChubChars()
-              chubStore.getChubBooks()
-              setChubPage(1)
-            }}
+            value={chubStore().search}
+            onKeyUp={onSearch}
           />
           <Show when={props.buttons}>
             <Button
@@ -35,8 +45,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               onClick={() => {
                 if (chubPage() > 1) {
                   setChubPage(chubPage() - 1)
-                  chubStore.getChubChars()
-                  chubStore.getChubBooks()
+                  update()
                 } else {
                   toastStore.error('Already on first page!')
                 }
@@ -52,8 +61,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               onKeyUp={(ev) => {
                 try {
                   setChubPage(Number(ev.currentTarget.value))
-                  chubStore.getChubChars()
-                  chubStore.getChubBooks()
+                  update()
                 } catch (error) {
                   toastStore.error('Not a valid page number.')
                 }
@@ -65,8 +73,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               onClick={() => {
                 if (chubStore().chars.length % 48 == 0) {
                   setChubPage(chubPage() + 1)
-                  chubStore.getChubChars()
-                  chubStore.getChubBooks()
+                  update()
                 } else {
                   toastStore.error(`Already on last page!`)
                 }

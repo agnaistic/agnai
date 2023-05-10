@@ -4,16 +4,7 @@ import { setComponentPageTitle } from '../../shared/util'
 import Tabs from '../../shared/Tabs'
 import FilterSettings from './FilterSettings'
 import CharList from './CharList'
-import { ChubOptions } from '../../store/chub'
 import BookList from './BookList'
-
-export const chubOptions: ChubOptions = {
-  nsfw: false,
-  tags: '',
-  excludeTags: '',
-  sort: 'Rating',
-  search: '',
-}
 
 const chubTabs = {
   characters: 'Characters',
