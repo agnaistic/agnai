@@ -222,6 +222,7 @@ export namespace AppSchema {
     presencePenalty?: number
     oaiModel?: string
     claudeModel?: string
+    streamResponse?: boolean
 
     memoryDepth?: number
     memoryContextLimit?: number

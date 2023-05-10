@@ -126,16 +126,25 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   let generated = ''
   let error = false
+
+  const send: <T extends { type: string }>(msg: T) => void = guest
+    ? (msg) => (body.kind !== 'summary' ? sendGuest(guest, msg) : null)
+    : (msg) => (body.kind !== 'summary' ? sendMany(members, msg) : null)
+
   for await (const gen of stream) {
     if (typeof gen === 'string') {
       generated = gen
       continue
     }
 
+    if ('partial' in gen) {
+      send({ type: 'message-partial', partial: gen.partial, adapter, chatId })
+      continue
+    }
+
     if (gen.error) {
       error = true
-      if (!guest) sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
-      else sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
+      send({ type: 'message-error', error: gen.error, adapter, chatId })
       continue
     }
   }

@@ -99,6 +99,16 @@ const ChatDetail: Component = () => {
     return !isMember
   })
 
+  const waitingMsg = createMemo(() => {
+    if (!msgs.waiting) return
+
+    return emptyMsg({
+      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
+      userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
+      message: msgs.partial || '',
+    })
+  })
+
   function toggleEditing() {
     const next = !editing()
     setEditing(next)
@@ -299,16 +309,9 @@ const ChatDetail: Component = () => {
                     />
                   )}
                 </For>
-                <Show when={msgs.waiting}>
+                <Show when={waitingMsg()}>
                   <Message
-                    msg={emptyMsg({
-                      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
-                      userId:
-                        msgs.waiting?.mode === 'self'
-                          ? msgs.waiting.userId || user.user?._id
-                          : undefined,
-                      message: '',
-                    })}
+                    msg={waitingMsg()!}
                     char={chats.char!}
                     chat={chats.chat!}
                     onRemove={() => {}}

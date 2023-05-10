@@ -45,4 +45,6 @@ export type AdapterProps = {
   isThirdParty?: boolean
 }
 
-export type ModelAdapter = (opts: AdapterProps) => AsyncGenerator<string | { error: any }>
+export type ModelAdapter = (
+  opts: AdapterProps
+) => AsyncGenerator<string | { partial: string } | { error: any }>

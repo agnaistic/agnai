@@ -1,3 +1,4 @@
+import type { OutgoingHttpHeaders } from 'http'
 import needle from 'needle'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
@@ -9,13 +10,47 @@ import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
 import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
+import { needleToSSE } from './stream'
 
 const baseUrl = `https://api.openai.com`
 
+type ContentRole = 'user' | 'assistant' | 'system'
+
 type OpenAIMessagePropType = {
-  role: 'user' | 'assistant' | 'system'
+  role: ContentRole
   content: string
 }
+
+type CompletitionContent<T> = Array<
+  { finish_reason: string; index: number } & ({ text: string } | T)
+>
+type ChatCompletionContent = { message: { content: string; role: ContentRole } }
+
+type StreamedChatCompletionDelta = { delta: Partial<ChatCompletionContent['message']> }
+
+type FullCompletion = {
+  id: string
+  created: number
+  model: string
+  object: string
+  choices: CompletitionContent<ChatCompletionContent>
+}
+
+type StreamedCompletion = {
+  id: string
+  created: number
+  model: string
+  object: string
+  choices: CompletitionContent<StreamedChatCompletionDelta>
+}
+type CompletionGenerator = (
+  url: string,
+  headers: OutgoingHttpHeaders,
+  body: any
+) => AsyncGenerator<
+  { error: string } | { error?: undefined; token: string },
+  FullCompletion | undefined
+>
 
 const CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
@@ -51,7 +86,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const body: any = {
     model: oaiModel,
-
+    stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
     max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
@@ -153,48 +188,57 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
-  const resp = await needle('post', url, JSON.stringify(body), {
-    json: true,
-    headers,
-  }).catch((err) => ({ error: err }))
+  const iter = body.stream
+    ? streamCompletion(url, headers, body)
+    : requestFullCompletion(url, headers, body)
+  let accumulated = ''
+  let response: FullCompletion | undefined
 
-  if ('error' in resp) {
-    log.error({ error: resp.error }, 'OpenAI failed to send')
-    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
-    return
-  }
+  while (true) {
+    let generated = await iter.next()
 
-  if (resp.statusCode && resp.statusCode >= 400) {
-    log.error({ body: resp.body }, `OpenAI request failed (${resp.statusCode})`)
-    const msg =
-      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
-
-    yield {
-      error: `OpenAI request failed (${resp.statusCode}): ${msg}`,
+    // Both the streaming and non-streaming generators return a full completion and yield errors.
+    if (generated.done) {
+      response = generated.value
+      break
     }
-    return
+
+    if (generated.value.error) {
+      yield generated.value
+      return
+    }
+
+    // Only the streaming generator yields individual tokens.
+    if ('token' in generated.value) {
+      accumulated += generated.value.token
+      yield { partial: sanitiseAndTrim(accumulated, prompt, char, members) }
+    }
   }
 
   try {
-    let text = ''
-    if (!useChat) {
-      text = resp.body.choices[0].text
-    } else {
-      text = resp.body.choices[0].message.content
-    }
-    if (!text) {
-      log.error({ body: resp.body }, 'OpenAI request failed: Empty response')
+    let text = getCompletionContent(response)
+    if (!text?.length) {
+      log.error({ body: response }, 'OpenAI request failed: Empty response')
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
-    const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
-    yield trimmed || parsed
+    yield sanitiseAndTrim(text, prompt, char, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
+}
+
+function sanitiseAndTrim(
+  text: string,
+  prompt: string,
+  char: AppSchema.Character,
+  members: AppSchema.Profile[]
+) {
+  const parsed = sanitise(text.replace(prompt, ''))
+  const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
+  return trimmed || parsed
 }
 
 function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
@@ -241,4 +285,101 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
   }
 
   return res.body
+}
+
+const requestFullCompletion: CompletionGenerator = async function* (url, headers, body) {
+  const resp = await needle('post', url, JSON.stringify(body), {
+    json: true,
+    headers,
+  }).catch((err) => ({ error: err }))
+
+  if ('error' in resp) {
+    yield { error: `OpenAI request failed: ${resp.error?.message || resp.error}` }
+    return
+  }
+
+  if (resp.statusCode && resp.statusCode >= 400) {
+    const msg =
+      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+
+    yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
+    return
+  }
+  return resp.body
+}
+
+/**
+ * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
+ * once the stream is finished.
+ */
+const streamCompletion: CompletionGenerator = async function* (url, headers, body) {
+  const resp = needle.post(url, JSON.stringify(body), {
+    parse: false,
+    headers: {
+      ...headers,
+      Accept: 'text/event-stream',
+    },
+  })
+
+  const tokens = []
+  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+
+  try {
+    const events = needleToSSE(resp)
+    for await (const event of events) {
+      // According to OpenAI's docs their SSE stream only uses `data` events.
+      if (!event.startsWith('data: ')) {
+        continue
+      }
+
+      if (event === 'data: [DONE]') {
+        break
+      }
+
+      const parsed: StreamedCompletion = JSON.parse(event.slice('data: '.length))
+      const { choices, ...completionMeta } = parsed
+      const { finish_reason, index, ...choice } = choices[0]
+
+      meta = { ...completionMeta, finish_reason, index }
+
+      if ('text' in choice) {
+        const token = choice.text
+        tokens.push(token)
+        yield { token }
+      } else if ('delta' in choice && choice.delta.content) {
+        const token = choice.delta.content
+        tokens.push(token)
+        yield { token }
+      }
+    }
+  } catch (err: any) {
+    yield { error: `OpenAI streaming request failed: ${err.message}` }
+    return
+  }
+
+  return {
+    id: meta.id,
+    created: meta.created,
+    model: meta.model,
+    object: meta.object,
+    choices: [
+      {
+        finish_reason: meta.finish_reason,
+        index: meta.index,
+        text: tokens.join(''),
+      },
+    ],
+  }
+}
+
+function getCompletionContent(completion?: FullCompletion) {
+  if (!completion) {
+    return ''
+  }
+
+  if ('text' in completion.choices[0]) {
+    return completion.choices[0].text
+  } else {
+    return completion.choices[0].message.content
+  }
 }

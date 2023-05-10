@@ -177,6 +177,7 @@ export const adapterSettings: {
   oaiModel: ['openai', 'kobold'],
   frequencyPenalty: ['openai', 'kobold'],
   presencePenalty: ['openai', 'kobold'],
+  streamResponse: ['openai', 'kobold'],
 
   addBosToken: ['ooba'],
   banEosToken: ['ooba'],
