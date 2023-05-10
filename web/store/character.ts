@@ -5,8 +5,9 @@ import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { charsApi } from './data/chars'
+import { charsApi, getImageData } from './data/chars'
 import { imageApi } from './data/image'
+import { getAssetUrl } from '../shared/util'
 
 type CharacterState = {
   loading?: boolean
@@ -15,6 +16,11 @@ type CharacterState = {
     list: AppSchema.Character[]
   }
   creating: boolean
+  generate: {
+    image: any
+    loading: boolean
+    blob?: File | null
+  }
 }
 
 export type NewCharacter = {
@@ -33,6 +39,11 @@ export type NewCharacter = {
 const initState: CharacterState = {
   creating: false,
   characters: { loaded: false, list: [] },
+  generate: {
+    image: null,
+    blob: null,
+    loading: false,
+  },
 }
 
 export const characterStore = createStore<CharacterState>(
@@ -159,18 +170,21 @@ export const characterStore = createStore<CharacterState>(
         }
       }
     },
+    clearGeneratedAvatar() {
+      return { generate: { image: null, loading: false, blob: null } }
+    },
     async *generateAvatar(
-      _,
-      input: AppSchema.Character | AppSchema.Chat,
-      onDone: (image: string) => void
+      { generate: prev },
+      input: AppSchema.Character | AppSchema.Chat | string
     ) {
-      const prompt = createAppearancePrompt(input)
-      const id = v4()
-      imageCallbacks[id] = onDone
-
-      const res = await imageApi.generateImage({ chatId: id, prompt, ephemeral: true, onDone })
+      const prompt = typeof input === 'string' ? input : createAppearancePrompt(input)
+      yield { generate: { image: null, loading: true, blob: null } }
+      const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
+        const file = await dataURLtoFile(image)
+        set({ generate: { image, loading: false, blob: file } })
+      })
       if (res.error) {
-        delete imageCallbacks[id]
+        yield { generate: { image: prev.image, loading: false, blob: prev.blob } }
       }
     },
   }
@@ -178,13 +192,19 @@ export const characterStore = createStore<CharacterState>(
 
 const imageCallbacks: Record<string, (image: string) => void> = {}
 
-subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
-  imageCallbacks[body.chatId]?.(body.image)
-  delete imageCallbacks[body.chatId]
+subscribe('image-generated', { image: 'string' }, async (body) => {
+  const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
+  const file = new File([image], `avatar.png`, { type: 'image/png' })
+  characterStore.setState({ generate: { image: body.image, loading: false, blob: file } })
 })
 
-subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
-  delete imageCallbacks[body.chatId]
-
+subscribe('image-failed', { error: 'string' }, (body) => {
+  characterStore.setState({ generate: { image: null, loading: false, blob: null } })
   toastStore.error(`Failed to generate avatar: ${body.error}`)
 })
+
+async function dataURLtoFile(base64: string) {
+  return fetch(base64)
+    .then((res) => res.arrayBuffer())
+    .then((buf) => new File([buf], 'avatar.png', { type: 'image/png' }))
+}

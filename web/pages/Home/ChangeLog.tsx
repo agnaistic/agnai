@@ -7,6 +7,7 @@ const text = `
 _10 May 2023_
 - Add experimental chat summarisation for image prompts. Enable it in IMAGE SETTINGS. Only works if your preset uses OpenAI.
 - Fix issues with Voice playback.
+- Add AI generated character avatars. Create or Edit your character to generate an avatar.
 
 _8 May 2023_
 - Add support to import from characters from CharacterHub.org

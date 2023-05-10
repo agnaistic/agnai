@@ -12,10 +12,17 @@ export type ImagePromptOpts = {
 
 const appearanceKeys = ['appearance', 'looks']
 
-export function createAppearancePrompt(avatar: AppSchema.Chat | AppSchema.Character) {
+export function createAppearancePrompt(
+  avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona
+) {
   let visuals = ''
 
-  const persona = avatar.kind === 'character' ? avatar.persona : avatar.overrides
+  const persona =
+    avatar.kind === 'character'
+      ? avatar.persona
+      : avatar.kind === 'chat'
+      ? avatar.overrides
+      : avatar
 
   for (const key of appearanceKeys) {
     if (persona.kind === 'text') break

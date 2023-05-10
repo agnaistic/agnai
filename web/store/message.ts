@@ -32,7 +32,6 @@ export type MsgState = {
   waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string }
   retries: Record<string, string[]>
   nextLoading: boolean
-  showImage?: AppSchema.ChatMessage
   imagesSaved: boolean
   speaking: { messageId: string; status: VoiceState } | undefined
 
@@ -298,9 +297,6 @@ export const msgStore = createStore<MsgState>(
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
       }
-    },
-    showImage(_, msg?: AppSchema.ChatMessage) {
-      return { showImage: msg }
     },
   }
 })

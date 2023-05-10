@@ -4,7 +4,7 @@ import { AppLog } from '../logger'
 export type ImageGenerateRequest = {
   user: AppSchema.User
   prompt: string
-  chatId: string
+  chatId?: string
   messageId?: string
   ephemeral?: boolean
 }

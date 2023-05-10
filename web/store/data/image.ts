@@ -1,6 +1,7 @@
 import * as horde from '../../../common/horde-gen'
 import { createImagePrompt } from '../../../common/image-prompt'
 import { api, isLoggedIn } from '../api'
+import { getStore } from '../create'
 import { subscribe } from '../socket'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
 import { AIAdapter } from '/common/adapters'
@@ -15,6 +16,7 @@ type GenerateOpts = {
 
 export const imageApi = {
   generateImage,
+  generateImageWithPrompt,
 }
 
 export async function generateImage({ chatId, messageId, onDone, ...opts }: GenerateOpts) {
@@ -31,6 +33,26 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
     user: entities.user,
     messageId,
     ephemeral: opts.ephemeral,
+  })
+  return res
+}
+
+export async function generateImageWithPrompt(prompt: string, onDone: (image: string) => void) {
+  const user = getStore('user').getState().user
+
+  if (!user) {
+    throw new Error('Could not get user settings')
+  }
+
+  if (!isLoggedIn()) {
+    const image = await horde.generateImage(user, prompt)
+    onDone(image)
+  }
+
+  const res = await api.post<{ success: boolean }>(`/character/image`, {
+    prompt,
+    user,
+    ephemeral: true,
   })
   return res
 }

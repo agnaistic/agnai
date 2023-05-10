@@ -1,4 +1,14 @@
-import { Component, createEffect, createMemo, createSignal, on, onMount, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  Match,
+  on,
+  onMount,
+  Show,
+  Switch,
+} from 'solid-js'
 import { Save, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -7,7 +17,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, NewCharacter, toastStore } from '../../store'
+import { characterStore, NewCharacter, settingStore, toastStore } from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -19,6 +29,9 @@ import VoicePicker from './components/VoicePicker'
 import { VoiceSettings } from '../../../srv/db/texttospeech-schema'
 import { AppSchema } from '../../../srv/db/schema'
 import { downloadCharacterHub } from './ImportCharacter'
+import { createAppearancePrompt } from '/common/image-prompt'
+import { ImageModal } from '../Chat/ImageModal'
+import Loading from '/web/shared/Loading'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
@@ -28,6 +41,7 @@ const options = [
 ]
 
 const CreateCharacter: Component = () => {
+  let ref: any
   const params = useParams<{ editId?: string; duplicateId?: string }>()
   const [query, setQuery] = useSearchParams()
   setComponentPageTitle(
@@ -41,12 +55,14 @@ const CreateCharacter: Component = () => {
     const edit = s.characters.list.find((ch) => ch._id === srcId)
     setImage(edit?.avatar)
     return {
+      avatar: s.generate,
       creating: s.creating,
       edit,
     }
   })
 
   onMount(async () => {
+    characterStore.clearGeneratedAvatar()
     characterStore.getCharacters()
 
     if (!query.import) return
@@ -93,6 +109,16 @@ const CreateCharacter: Component = () => {
     setImage(data)
   }
 
+  const generateAvatar = () => {
+    const attributes = getAttributeMap(ref)
+    const persona: AppSchema.Persona = {
+      kind: 'boostyle',
+      attributes,
+    }
+    const prompt = createAppearancePrompt(persona)
+    characterStore.generateAvatar(prompt)
+  }
+
   const onSubmit = (ev: Event) => {
     const body = getStrictForm(ev, {
       kind: PERSONA_FORMATS,
@@ -115,7 +141,7 @@ const CreateCharacter: Component = () => {
       description: body.description,
       culture: body.culture,
       scenario: body.scenario,
-      avatar: avatar(),
+      avatar: state.avatar.blob || avatar(),
       greeting: body.greeting,
       sampleChat: body.sampleChat,
       persona,
@@ -150,7 +176,7 @@ const CreateCharacter: Component = () => {
         }
       />
 
-      <form class="flex flex-col gap-4" onSubmit={onSubmit}>
+      <form class="flex flex-col gap-4" onSubmit={onSubmit} ref={ref}>
         <TextInput
           fieldName="name"
           required
@@ -169,17 +195,38 @@ const CreateCharacter: Component = () => {
         />
 
         <div class="flex w-full gap-2">
-          <div class="flex items-center">
-            <AvatarIcon format={{ corners: 'md', size: '2xl' }} avatarUrl={image()} />
+          <Switch>
+            <Match when={!state.avatar.loading}>
+              <div
+                class="flex items-center"
+                style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
+                onClick={() => settingStore.showImage(state.avatar.image || image())}
+              >
+                <AvatarIcon
+                  format={{ corners: 'md', size: '2xl' }}
+                  avatarUrl={state.avatar.image || image()}
+                />
+              </div>
+            </Match>
+            <Match when={state.avatar.loading}>
+              <div class="flex w-[80px] items-center justify-center">
+                <Loading />
+              </div>
+            </Match>
+          </Switch>
+          <div class="flex w-full flex-col gap-2">
+            <FileInput
+              class="w-full"
+              fieldName="avatar"
+              label="Avatar"
+              helperText='Use the "appearance" attribute in your persona to influence the generated images'
+              accept="image/png,image/jpeg"
+              onUpdate={updateFile}
+            />
+            <Button class="w-fit" onClick={generateAvatar}>
+              Generate
+            </Button>
           </div>
-          <FileInput
-            class="w-full"
-            fieldName="avatar"
-            label="Avatar"
-            accept="image/png,image/jpeg"
-            onUpdate={updateFile}
-          />
-          <div class="flex items-end">{/* <Button>Generate</Button> */}</div>
         </div>
 
         <Select
@@ -280,6 +327,7 @@ const CreateCharacter: Component = () => {
           </Button>
         </div>
       </form>
+      <ImageModal />
     </div>
   )
 }

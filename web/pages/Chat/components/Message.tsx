@@ -15,10 +15,9 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore, msgStore } from '../../../store'
+import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
-import { defaultCulture } from '../../../shared/CultureCodes'
 
 type MessageProps = {
   msg: SplitMessage
@@ -262,7 +261,7 @@ const SingleMessage: Component<
                 <img
                   class="max-h-32 cursor-pointer rounded-md"
                   src={getAssetUrl(props.msg.msg)}
-                  onClick={() => msgStore.showImage(props.original)}
+                  onClick={() => settingStore.showImage(props.original.msg)}
                 />
               </div>
             </Show>
