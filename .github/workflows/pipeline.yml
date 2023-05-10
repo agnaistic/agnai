@@ -44,9 +44,6 @@ jobs:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
 
-      - name: Restore cached dependencies
-        uses: ./.github/actions/restore-pnpm-cache
-
       - name: Run Prettier
         run: pnpm run format
 
