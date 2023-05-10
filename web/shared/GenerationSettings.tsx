@@ -166,7 +166,7 @@ const GeneralSettings: Component<Props> = (props) => {
         value={props.inherit?.streamResponse ?? false}
         disabled={props.disabled}
         service={props.service}
-        adapters={adapterSettings.streamResponse}
+        aiSetting={'streamResponse'}
       />
     </>
   )

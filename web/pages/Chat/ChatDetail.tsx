@@ -98,7 +98,7 @@ const ChatDetail: Component = () => {
 
     return !isMember
   })
-  
+
   const waitingMsg = createMemo(() => {
     if (!msgs.waiting) return
 
