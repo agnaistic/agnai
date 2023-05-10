@@ -18,12 +18,14 @@ const ChubImportCharModal: Component<{
   const [char, setChar] = createSignal<NewCharacter>(props.char)
 
   const dupeChar = (list: AppSchema.Character[]) => {
+    console.log()
+
     for (const c of list) {
       if (
-        c.name == char().name &&
-        c.greeting == char().greeting &&
+        !!c.name == !!char().name &&
+        !!c.greeting == !!char().greeting &&
         !!c.scenario == !!char().scenario &&
-        c.sampleChat == char().sampleChat &&
+        !!c.sampleChat == !!char().sampleChat &&
         !!c.persona == !!char().persona
       )
         return true
