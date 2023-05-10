@@ -14,10 +14,43 @@ import { needleToSSE } from './stream'
 
 const baseUrl = `https://api.openai.com`
 
+type ContentRole = 'user' | 'assistant' | 'system'
+
 type OpenAIMessagePropType = {
-  role: 'user' | 'assistant' | 'system'
+  role: ContentRole
   content: string
 }
+
+type CompletitionContent<T> = Array<
+  { finish_reason: string; index: number } & ({ text: string } | T)
+>
+type ChatCompletionContent = { message: { content: string; role: ContentRole } }
+
+type StreamedChatCompletionDelta = { delta: Partial<ChatCompletionContent['message']> }
+
+type FullCompletion = {
+  id: string
+  created: number
+  model: string
+  object: string
+  choices: CompletitionContent<ChatCompletionContent>
+}
+
+type StreamedCompletion = {
+  id: string
+  created: number
+  model: string
+  object: string
+  choices: CompletitionContent<StreamedChatCompletionDelta>
+}
+type CompletionGenerator = (
+  url: string,
+  headers: OutgoingHttpHeaders,
+  body: any
+) => AsyncGenerator<
+  { error: string } | { error?: undefined; token: string },
+  FullCompletion | undefined
+>
 
 const CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
@@ -253,36 +286,6 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
 
   return res.body
 }
-
-type TextCompletionContent = { text: string }
-type ChatCompletionContent = { message: { content: string; role: 'system' | 'assistant' | 'user' } }
-type StreamedChatCompletionDelta = { delta: Partial<ChatCompletionContent['message']> }
-type FullCompletion = {
-  id: string
-  created: number
-  model: string
-  object: string
-  choices:
-    | ({ finish_reason: string; index: number } & (TextCompletionContent | ChatCompletionContent))[]
-}
-type StreamedCompletion = {
-  id: string
-  created: number
-  model: string
-  object: string
-  choices: ({ finish_reason: string; index: number } & (
-    | TextCompletionContent
-    | StreamedChatCompletionDelta
-  ))[]
-}
-type CompletionGenerator = (
-  url: string,
-  headers: OutgoingHttpHeaders,
-  body: any
-) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string },
-  FullCompletion | undefined
->
 
 const requestFullCompletion: CompletionGenerator = async function* (url, headers, body) {
   const resp = await needle('post', url, JSON.stringify(body), {
