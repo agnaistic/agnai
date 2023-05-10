@@ -82,6 +82,7 @@ const ChatDetail: Component = () => {
       hide ? !msg.ooc : true
     )
   })
+
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
@@ -170,15 +171,9 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
-  const indexOfLastRPMessage = () =>
-    msgs.msgs.findIndex((_, i, original) => {
-      const rest = original.slice(i + 1)
-      if (rest.find((msg) => msg.ooc !== true)) {
-        return false
-      } else {
-        return true
-      }
-    })
+  const indexOfLastRPMessage = createMemo(() => {
+    return msgs.msgs.reduceRight((prev, curr, i) => (prev > -1 ? prev : !curr.ooc ? i : -1), -1)
+  })
 
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
