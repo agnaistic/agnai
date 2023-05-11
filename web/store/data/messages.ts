@@ -99,6 +99,10 @@ export async function generateResponseV2(opts: GenerateOpts) {
     }
   }
 
+  if (opts.kind === 'send' && entities.autoReplyAs) {
+    replyAs = entities.chatBots.find((ch) => ch._id === entities.autoReplyAs)
+  }
+
   const messages = (
     opts.kind === 'send' ||
     opts.kind === 'continue' ||
@@ -213,6 +217,7 @@ async function getGuestEntities() {
     settings,
     members: [profile] as AppSchema.Profile[],
     chatBots,
+    autoReplyAs: active.replyAs,
   }
 }
 
@@ -233,7 +238,18 @@ function getAuthedPromptEntities() {
   const messages = getStore('messages').getState().msgs
   const settings = getAuthGenSettings(chat, user)
 
-  return { chat, char, user, profile, book, messages, settings, members, chatBots }
+  return {
+    chat,
+    char,
+    user,
+    profile,
+    book,
+    messages,
+    settings,
+    members,
+    chatBots,
+    autoReplyAs: active.replyAs,
+  }
 }
 
 function getAuthGenSettings(

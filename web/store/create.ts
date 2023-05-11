@@ -106,27 +106,27 @@ export function createStore<State extends {}>(name: string, init: State) {
         if (isPromise<State>(result)) {
           const nextState = await result.catch(() => null)
           if (!nextState) return
-          const next = { ...prev, ...nextState }
+          const next = { ...getter(), ...nextState }
           send(`[OUT] ${name}`, { type: key, args }, next)
           setter(next)
           return
         }
 
         if (isGenerator<State>(result)) {
-          let next = { ...prev }
+          let next = { ...getter() }
 
           do {
             const { done, value: nextState } = await result.next()
             if (done === undefined) return
             if (!nextState) return
-            next = { ...next, ...nextState }
+            next = { ...getter(), ...nextState }
             send(`[OUT] ${name}`, { type: key, args }, next)
             setter(next)
             if (done) return
           } while (true)
         }
 
-        const next = { ...prev, ...result }
+        const next = { ...getter(), ...result }
         send(`[OUT] ${name}`, { type: key, args }, next)
         setter(next)
       }

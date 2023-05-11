@@ -3,7 +3,7 @@ import { Component, createMemo, createSignal, For, Setter, Show } from 'solid-js
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
-import { toastStore, userStore } from '../../../store'
+import { chatStore, toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
@@ -26,6 +26,7 @@ const InputBar: Component<{
 
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
+  const chats = chatStore((s) => ({ autoReplyAs: s.active?.replyAs }))
 
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
@@ -116,6 +117,11 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const setAutoReplyAs = (charId: string) => {
+    chatStore.setAutoReplyAs(charId)
+    setMenu(false)
+  }
+
   return (
     <div class="relative flex items-center justify-center">
       <textarea
@@ -161,15 +167,23 @@ const InputBar: Component<{
               Respond as Me
             </Button> */}
             <Show when={props.bots.length > 1}>
-              {/* <div>Auto-reply as</div>
+              <div>Auto-reply as</div>
               <For each={props.bots}>
                 {(char) => (
-                  <Button schema="secondary" size="sm">
+                  <Button
+                    schema="secondary"
+                    size="sm"
+                    onClick={() => setAutoReplyAs(char._id)}
+                    disabled={
+                      chats.autoReplyAs === char._id ||
+                      (!chats.autoReplyAs && props.chat.characterId === char._id)
+                    }
+                  >
                     {char.name}
                   </Button>
                 )}
               </For>
-              <hr /> */}
+              <hr />
               <For each={props.bots}>
                 {(char, i) => (
                   <Button

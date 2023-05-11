@@ -195,17 +195,21 @@ export function getPromptParts(
   const { chat, char, members, replyAs } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const replace = (value: string, bot = char) => placeholderReplace(value, bot.name, sender)
+  const replace = (value: string) =>
+    placeholderReplace(value, opts.replyAs?.name || char.name, sender)
 
   const parts: PromptParts = {
-    persona: formatCharacter(char.name, chat.overrides).replace(/\n+/g, ' '),
+    persona: formatCharacter(
+      replyAs?.name || char.name,
+      replyAs?.persona || chat.overrides
+    ).replace(/\n+/g, ' '),
     post: [],
     gaslight: '',
     gaslightHasChat: false,
   }
 
   if (chat.scenario) {
-    parts.scenario = replace(chat.scenario)
+    parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
   if (chat.sampleChat) {
@@ -213,7 +217,7 @@ export function getPromptParts(
       .split('\n')
       .filter(removeEmpty)
       // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-      .map((line) => replace(line, replyAs))
+      .map(replace)
   }
 
   if (chat.greeting) {
@@ -237,8 +241,14 @@ export function getPromptParts(
       .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
       .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
-      .replace(BOT_REPLACE, char.name)
+      .replace(
+        /\{\{personality\}\}/gi,
+        formatCharacter(
+          replyAs?.name || char.name,
+          replyAs?.persona || chat.overrides || char.persona
+        )
+      )
+      .replace(BOT_REPLACE, opts.replyAs?.name || char.name)
       .replace(SELF_REPLACE, sender)
   }
 
@@ -246,16 +256,15 @@ export function getPromptParts(
     .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
     .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
-    .replace(BOT_REPLACE, char.name)
+    .replace(
+      /\{\{personality\}\}/gi,
+      formatCharacter(
+        replyAs?.name || char.name,
+        replyAs?.persona || chat.overrides || char.persona
+      )
+    )
+    .replace(BOT_REPLACE, replyAs?.name || char.name)
     .replace(SELF_REPLACE, sender)
-
-  if (replyAs) {
-    parts.gaslight += `Description of ${replyAs.name}: ${formatCharacter(
-      replyAs.name,
-      replyAs.persona
-    )}`
-  }
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
@@ -274,7 +283,7 @@ export function getPromptParts(
     parts.sampleChat = undefined
   }
 
-  parts.post = post.map((line) => replace(line, replyAs))
+  parts.post = post.map(replace)
 
   return parts
 }
