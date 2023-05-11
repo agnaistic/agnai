@@ -36,7 +36,7 @@ const Select: Component<{
   })
 
   return (
-    <div class={hide()}>
+    <div class={`${hide()} max-w-full`}>
       <FormLabel label={props.label} helperText={props.helperText} />
       <div class="flex items-center">
         <div class="relative overflow-hidden rounded-xl bg-transparent">
