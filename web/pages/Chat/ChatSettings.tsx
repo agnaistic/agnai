@@ -148,7 +148,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             fieldName="schema"
             label="Persona"
             items={options}
-            value={state.chat?.overrides.kind || state.char?.persona.kind}
+            value={state.chat?.overrides?.kind || state.char?.persona?.kind}
           />
         </Show>
         <Show when={state.char?.persona.kind === 'text'}>

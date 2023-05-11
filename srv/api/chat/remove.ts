@@ -7,7 +7,7 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
   const chatId = params.id
   assertValid({ ids: ['string'] }, body)
 
-  const chat = await store.chats.getChat(chatId)
+  const chat = await store.chats.getChatOnly(chatId)
   if (!chat) {
     throw errors.NotFound
   }
@@ -22,7 +22,7 @@ export const deleteMessages = handle(async ({ body, params, userId }) => {
 })
 
 export const deleteChat = handle(async ({ params, userId }) => {
-  const chat = await store.chats.getChat(params.id)
+  const chat = await store.chats.getChatOnly(params.id)
   if (!chat) {
     throw errors.NotFound
   }

@@ -22,7 +22,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
   )
 
   const id = params.id
-  const prev = await store.chats.getChat(id)
+  const prev = await store.chats.getChatOnly(id)
   if (prev?.userId !== user?.userId) throw errors.Forbidden
 
   const chat = await store.chats.update(id, body)
@@ -51,7 +51,7 @@ export const updateChatGenSettings = handle(async ({ params, userId, body }) => 
   const chatId = params.id
   assertValid(chatGenSettings, body)
 
-  const chat = await store.chats.getChat(chatId)
+  const chat = await store.chats.getChatOnly(chatId)
   if (chat?.userId !== userId) {
     throw errors.Forbidden
   }
@@ -64,7 +64,7 @@ export const updateChatGenPreset = handle(async ({ params, userId, body }) => {
   const chatId = params.id
   assertValid({ preset: 'string' }, body)
 
-  const chat = await store.chats.getChat(chatId)
+  const chat = await store.chats.getChatOnly(chatId)
   if (chat?.userId !== userId) {
     throw errors.Forbidden
   }

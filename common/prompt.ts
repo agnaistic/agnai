@@ -40,12 +40,14 @@ export type PromptOpts = {
   retry?: AppSchema.ChatMessage
   continue?: string
   book?: AppSchema.MemoryBook
+  replyAs: AppSchema.Character | undefined
 }
 
 type BuildPromptOpts = {
   kind?: GenerateRequestV2['kind']
   chat: AppSchema.Chat
   char: AppSchema.Character
+  replyAs?: AppSchema.Character
   user: AppSchema.User
   continue?: string
   members: AppSchema.Profile[]
@@ -88,7 +90,7 @@ const START_TEXT = '<START>'
  * @returns
  */
 export function createPromptWithParts(
-  opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
+  opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs'>,
   parts: PromptParts,
   lines: string[],
   encoder: Encoder
@@ -124,7 +126,11 @@ export function buildPrompt(
 
   // If the gaslight is empty or useGaslight is disabled, proceed without it
   if (!opts.settings?.useGaslight || !opts.settings.gaslight || !parts.gaslight) {
-    pre.push(`${char.name}'s Persona: ${parts.persona}`)
+    if (opts.replyAs) {
+      pre.push(`${opts.replyAs.name}'s Persona: ${opts.replyAs.persona}`)
+    } else {
+      pre.push(`${char.name}'s Persona: ${parts.persona}`)
+    }
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
@@ -142,7 +148,9 @@ export function buildPrompt(
     pre.push(parts.gaslight)
   }
 
-  const post = [opts.kind === 'self' ? `${sender}:` : `${char.name}:`]
+  const post = [
+    opts.replyAs ? opts.replyAs.name : opts.kind === 'self' ? `${sender}:` : `${char.name}:`,
+  ]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }
@@ -177,14 +185,17 @@ export function buildPrompt(
 }
 
 export function getPromptParts(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
+  opts: Pick<
+    PromptOpts,
+    'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book' | 'replyAs'
+  >,
   lines: string[],
   encoder: Encoder
 ) {
-  const { chat, char, members } = opts
+  const { chat, char, members, replyAs } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const replace = (value: string) => placeholderReplace(value, char.name, sender)
+  const replace = (value: string, bot = char) => placeholderReplace(value, bot.name, sender)
 
   const parts: PromptParts = {
     persona: formatCharacter(char.name, chat.overrides).replace(/\n+/g, ' '),
@@ -198,14 +209,18 @@ export function getPromptParts(
   }
 
   if (chat.sampleChat) {
-    parts.sampleChat = chat.sampleChat.split('\n').filter(removeEmpty).map(replace)
+    parts.sampleChat = (replyAs?.sampleChat || chat.sampleChat)
+      .split('\n')
+      .filter(removeEmpty)
+      // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
+      .map((line) => replace(line, replyAs))
   }
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
   }
 
-  const post = [`${char.name}:`]
+  const post = [`${replyAs?.name || char.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }
@@ -235,6 +250,13 @@ export function getPromptParts(
     .replace(BOT_REPLACE, char.name)
     .replace(SELF_REPLACE, sender)
 
+  if (replyAs) {
+    parts.gaslight += `Description of ${replyAs.name}: ${formatCharacter(
+      replyAs.name,
+      replyAs.persona
+    )}`
+  }
+
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat
    * then will be adding it to the prompt _after_ the gaslight.
@@ -252,7 +274,7 @@ export function getPromptParts(
     parts.sampleChat = undefined
   }
 
-  parts.post = post.map(replace)
+  parts.post = post.map((line) => replace(line, replyAs))
 
   return parts
 }

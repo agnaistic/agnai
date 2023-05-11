@@ -25,14 +25,19 @@ export async function getChat(id: string) {
       chat: AppSchema.Chat
       messages: AppSchema.ChatMessage[]
       character: AppSchema.Character
+      characters: AppSchema.Character[]
       members: AppSchema.Profile[]
       active: string[]
     }>(`/chat/${id}`)
     return res
   }
 
+  const allChars = loadItem('characters')
   const chat = loadItem('chats').find((ch) => ch._id === id)
-  const character = loadItem('characters').find((ch) => ch._id === chat?.characterId)
+  const character = allChars.find((ch) => ch._id === chat?.characterId)
+
+  const charIds = new Set(chat?.characterIds || [])
+  const characters = allChars.filter((ch) => ch._id === chat?.characterId || charIds.has(ch._id))
   const profile = loadItem('profile')
   const messages = await localApi.getMessages(id)
 
@@ -44,7 +49,7 @@ export async function getChat(id: string) {
     return localApi.error(`Character not found in data`)
   }
 
-  return localApi.result({ chat, character, messages, members: [profile], active: [] })
+  return localApi.result({ chat, character, messages, members: [profile], active: [], characters })
 }
 
 export async function editChat(id: string, update: Partial<AppSchema.Chat>) {

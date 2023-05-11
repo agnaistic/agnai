@@ -9,9 +9,21 @@ export async function list() {
   return docs
 }
 
-export async function getChat(id: string) {
+export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id, kind: 'chat' })
   return chat
+}
+
+export async function getChat(id: string) {
+  const chat = await db('chat').findOne({ _id: id, kind: 'chat' })
+  if (!chat) return
+
+  const charIds = chat.characterIds || []
+  const characters = await db('character')
+    .find({ _id: { $in: charIds.concat(chat.characterId) } })
+    .toArray()
+
+  return { chat, characters }
 }
 
 export async function listByCharacter(userId: string, characterId: string) {
@@ -27,7 +39,7 @@ export async function getMessageAndChat(msgId: string) {
   const msg = await db('chat-message').findOne({ _id: msgId, kind: 'chat-message' })
   if (!msg) return
 
-  const chat = await getChat(msg.chatId)
+  const chat = await getChatOnly(msg.chatId)
   return { msg, chat }
 }
 

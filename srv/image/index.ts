@@ -106,10 +106,11 @@ async function createImageMessage(opts: {
   messageId?: string
   memberIds: string[]
 }) {
-  const chat = opts.chatId ? await store.chats.getChat(opts.chatId) : undefined
-  const char = chat ? await store.characters.getCharacter(opts.userId, chat.characterId) : undefined
+  const chat = opts.chatId ? await store.chats.getChatOnly(opts.chatId) : undefined
+  if (!chat) return
 
-  if (!chat || !char) return
+  const char = await store.characters.getCharacter(chat.userId, chat.characterId)
+  if (!char) return
 
   if (opts.messageId) {
     const msg = await store.msgs.editMessage(opts.messageId, opts.filename, 'image')

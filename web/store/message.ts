@@ -29,7 +29,7 @@ export type MsgState = {
   msgs: ChatMessageExt[]
   partial?: string
   retrying?: AppSchema.ChatMessage
-  waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string }
+  waiting?: { chatId: string; mode?: GenerateOpts['kind']; userId?: string; characterId: string }
   retries: Record<string, string[]>
   nextLoading: boolean
   imagesSaved: boolean
@@ -121,7 +121,11 @@ export const msgStore = createStore<MsgState>(
       }
 
       const [_, replace] = msgs.slice(-2)
-      yield { partial: '', waiting: { chatId, mode: 'continue' }, retrying: replace }
+      yield {
+        partial: '',
+        waiting: { chatId, mode: 'continue', characterId: replace.characterId! },
+        retrying: replace,
+      }
 
       addMsgToRetries(replace)
 
@@ -135,15 +139,15 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
-    async *request(_, chatId: string, charactedId: string, onSuccess?: () => void) {
+    async *request(_, chatId: string, characterId: string, onSuccess?: () => void) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
         return
       }
-      yield { partial: undefined, waiting: { chatId, mode: 'request' } }
+      yield { partial: undefined, waiting: { chatId, mode: 'request', characterId } }
 
-      const res = await msgsApi.generateResponseV2({ kind: 'request', characterId: charactedId })
+      const res = await msgsApi.generateResponseV2({ kind: 'request', characterId })
 
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
@@ -161,7 +165,11 @@ export const msgStore = createStore<MsgState>(
       }
 
       const [_, replace] = msgs.slice(-2)
-      yield { partial: '', waiting: { chatId, mode: 'retry' }, retrying: replace }
+      yield {
+        partial: '',
+        waiting: { chatId, mode: 'retry', characterId: replace.characterId! },
+        retrying: replace,
+      }
 
       addMsgToRetries(replace)
 
@@ -190,7 +198,7 @@ export const msgStore = createStore<MsgState>(
       msgStore.send(activeChatId, '', 'self')
     },
     async *send(
-      { msgs },
+      { msgs, activeCharId },
       chatId: string,
       message: string,
       mode: 'send' | 'ooc' | 'retry' | 'self',
@@ -202,7 +210,7 @@ export const msgStore = createStore<MsgState>(
         return
       }
       if (mode !== 'ooc') {
-        yield { partial: '', waiting: { chatId, mode } }
+        yield { partial: '', waiting: { chatId, mode, characterId: activeCharId } }
       }
 
       switch (mode) {
@@ -306,9 +314,9 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request text to speech: ${res.error}`)
       }
     },
-    async *createImage({ activeChatId }, messageId?: string) {
+    async *createImage({ activeChatId, activeCharId }, messageId?: string) {
       const onDone = (image: string) => handleImage(activeChatId, image)
-      yield { waiting: { chatId: activeChatId, mode: 'send' } }
+      yield { waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId } }
 
       const res = await imageApi.generateImage({ messageId, onDone })
       if (res.error) {
@@ -605,19 +613,24 @@ subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) 
     msgs: msgs.slice(0, -1),
     partial: '',
     retrying: replace,
-    waiting: { chatId: body.chatId, mode: 'retry' },
+    waiting: { chatId: body.chatId, mode: 'retry', characterId: '' },
   })
 })
 
 subscribe(
   'message-creating',
-  { chatId: 'string', senderId: 'string?', mode: 'string?' },
+  { chatId: 'string', senderId: 'string?', mode: 'string?', characterId: 'string' },
   (body) => {
     const { waiting, activeChatId, retries } = msgStore.getState()
     if (body.chatId !== activeChatId) return
 
     msgStore.setState({
-      waiting: { chatId: activeChatId, mode: body.mode as any, userId: body.senderId },
+      waiting: {
+        chatId: activeChatId,
+        mode: body.mode as any,
+        userId: body.senderId,
+        characterId: body.characterId,
+      },
       partial: '',
     })
   }

@@ -10,7 +10,7 @@ type Attr = { key: string; values: string }
 const defaultAttrs = [
   { key: 'species', values: 'human' },
   { key: 'mind', values: '' },
-  { key: 'personality', values: '' },
+  { key: 'appearance', values: '' },
 ]
 
 const PersonaAttributes: Component<{
