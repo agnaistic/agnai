@@ -15,6 +15,7 @@ export type ChatModal =
   | 'ui'
   | 'members'
   | 'delete'
+  | 'none'
 
 const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props) => {
   const chats = chatStore((s) => ({

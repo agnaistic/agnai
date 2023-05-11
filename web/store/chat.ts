@@ -33,6 +33,7 @@ type ChatState = {
   active?: {
     chat: AppSchema.Chat
     char: AppSchema.Character
+    replyAs?: string
     participantIds: string[]
   }
   chatProfiles: AppSchema.Profile[]
@@ -123,7 +124,9 @@ export const chatStore = createStore<ChatState>('chat', {
       value: ChatState['opts'][Prop]
     ) {
       const next = { ...prev.opts, [key]: value }
+      next[key] = value
       saveOptsCache(next)
+      console.log({ next })
       return { opts: next }
     },
     async getMemberProfile({ memberIds, lastChatId }, chatId: string, id: string) {
@@ -173,6 +176,12 @@ export const chatStore = createStore<ChatState>('chat', {
           chatBots: bots,
           chatBotMap: botMap,
         }
+      }
+    },
+    setAutoReplyAs({ active }, charId: string) {
+      if (!active) return
+      return {
+        active: { ...active, replyAs: active.chat.characterId === charId ? undefined : charId },
       }
     },
     async *editChat(
@@ -515,7 +524,7 @@ function getOptsCache(): ChatOptCache {
   const prev =
     localStorage.getItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
   const body = JSON.parse(prev)
-  return { editing: false, hideOoc: false, ...body }
+  return { editing: false, hideOoc: false, ...body, modal: undefined }
 }
 
 subscribe('chat-character-added', { chatId: 'string', character: 'any' }, (body) => {

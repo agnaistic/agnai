@@ -165,7 +165,11 @@ export const generateMessageV2 = handle(async (req, res) => {
       const msg = await store.msgs.createChatMessage({
         chatId,
         characterId:
-          body.kind === 'request' ? replyAs?._id : body.kind === 'send' ? body.char._id : undefined,
+          body.kind === 'request'
+            ? replyAs?._id
+            : body.kind === 'send'
+            ? replyAs?._id || body.char._id
+            : undefined,
         senderId: body.kind === 'self' ? userId : undefined,
         message: generated,
         adapter,

@@ -45,7 +45,7 @@ export async function getMessageAndChat(msgId: string) {
 
 export async function update(id: string, props: Partial<AppSchema.Chat>) {
   await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
-  return getChat(id)
+  return getChatOnly(id)
 }
 
 export async function create(

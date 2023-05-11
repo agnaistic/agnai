@@ -109,7 +109,7 @@ const ChatDetail: Component = () => {
 
   const clearModal = () => {
     setShowOpts(false)
-    chatStore.option('modal', undefined)
+    chatStore.option('modal', 'none')
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
