@@ -141,9 +141,9 @@ export const msgStore = createStore<MsgState>(
         yield { partial: undefined }
         return
       }
-      yield { partial: '', waiting: chatId }
+      yield { partial: undefined, waiting: { chatId, mode: 'request' } }
 
-      const res = await data.msg.generateResponseV2({ kind: 'request', characterId: charactedId })
+      const res = await msgsApi.generateResponseV2({ kind: 'request', characterId: charactedId })
 
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
