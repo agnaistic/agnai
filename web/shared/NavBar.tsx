@@ -27,7 +27,9 @@ const NavBar: Component = () => {
 
   const Title = (
     <A href="/">
-      Agn<span class="rounded-xl text-[var(--hl-500)]">ai</span>stic
+      <div class="flex w-full justify-center">
+        Agn<span class="text-[var(--hl-500)]">ai</span>stic
+      </div>
     </A>
   )
 
@@ -41,9 +43,12 @@ const NavBar: Component = () => {
           <div class="w-8 sm:hidden" onClick={settingStore.menu}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
-          <div class="ellipsis">
+          <div class="ellipsis flex w-full flex-col">
             <Show when={isChat()} fallback={Title}>
-              <span class="overflow-hidden text-ellipsis whitespace-nowrap">
+              <span class="w-full text-center text-[0.6rem]">
+                Agn<span class="text-[var(--hl-500)]">ai</span>stic
+              </span>
+              <span class="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center">
                 {chats.loaded ? chats.char?.name : '...'}
               </span>
             </Show>
