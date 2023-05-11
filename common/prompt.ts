@@ -212,7 +212,7 @@ export function getPromptParts(
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  if (chat.sampleChat) {
+  if (replyAs?.sampleChat || chat.sampleChat) {
     parts.sampleChat = (replyAs?.sampleChat || chat.sampleChat)
       .split('\n')
       .filter(removeEmpty)
