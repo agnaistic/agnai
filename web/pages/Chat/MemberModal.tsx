@@ -1,5 +1,5 @@
 import { Trash } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
+import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
@@ -24,19 +24,26 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
     { value: 'character', label: 'Character' },
   ]
 
+  onMount(() => {
+    if (!chars.characters.loaded) {
+      characterStore.getCharacters()
+    }
+  })
+
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
   const [type, setType] = createSignal('user')
   const [inviteCharId, setCharId] = createSignal<string>()
 
   const characters = createMemo(() => {
     const available = chars.characters.list
-      .filter((c) => c._id != props.charId)
+      .filter((c) => c._id !== props.charId)
       .map((c) => ({ value: c._id, label: c.name }))
 
-    setCharId(available[0].value)
+    setCharId(available[0]?.value)
     return available
   })
 
+  const charMembers = createMemo(() => state.active?.chat.characterIds || [])
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
   const remove = () => {
@@ -66,10 +73,6 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         return chatStore.addCharacter(chatId, charId, props.close)
     }
   }
-  const charMembers = createMemo(() => {
-    const chars = state.active?.chat.characterIds
-    return chars || []
-  })
 
   const Footer = (
     <>
@@ -81,7 +84,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   return (
     <>
       <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
-        <form ref={ref} class="flex flex-col gap-2">
+        <form ref={ref} class="flex w-full max-w-full flex-col gap-2">
           <Select
             fieldName="type"
             label="Invitation Type"
@@ -91,7 +94,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
             onChange={(val) => setType(val.value)}
           />
 
-          <div class="flex items-end gap-2">
+          <div class="flex max-w-full flex-col gap-2">
             <Switch>
               <Match when={type() === 'user'}>
                 <TextInput
@@ -105,7 +108,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
               <Match when={type() === 'character'}>
                 <Show
-                  when={!characters().length}
+                  when={characters().length}
                   fallback={
                     <div class="text-red-500">You don't have any other characters to invite</div>
                   }
@@ -116,7 +119,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
                     helperText="The character to invite"
                     items={characters()}
                     value={inviteCharId()}
-                    onChange={setCharId}
+                    onChange={(val) => setCharId(val.value)}
                   />
                 </Show>
               </Match>
