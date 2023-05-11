@@ -183,7 +183,7 @@ const InputBar: Component<{
             <For each={props.chat.characterIds?.filter((c) => c != state.lastMsg.characterId)}>
               {(charId, i) => (
                 <Button schema="secondary" class="w-full" onClick={() => request(charId)} alignLeft>
-                  <MailPlus size={18} /> Generate New: {charId}
+                  <MailPlus size={18} /> Generate New: {charId.slice(0, 4)}
                 </Button>
               )}
             </For>

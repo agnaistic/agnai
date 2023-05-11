@@ -1,10 +1,35 @@
-import { Menu } from 'lucide-solid'
-import { Component, Show } from 'solid-js'
-import { A } from '@solidjs/router'
-import { settingStore } from '../store'
+import { Menu, MoreHorizontal } from 'lucide-solid'
+import { Component, Show, createMemo, createSignal } from 'solid-js'
+import { A, useLocation } from '@solidjs/router'
+import { chatStore, settingStore } from '../store'
+import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
+import { DropMenu } from './DropMenu'
 
 const NavBar: Component = () => {
   const cfg = settingStore()
+  const location = useLocation()
+  const chats = chatStore((s) => ({
+    chat: s.active?.chat,
+    char: s.active?.char,
+    loaded: s.loaded,
+  }))
+
+  const [showOpts, setShowOpts] = createSignal(false)
+
+  const isChat = createMemo(() => {
+    return location.pathname.startsWith('/chat/')
+  })
+
+  const setModal = (modal: ChatModal) => {
+    setShowOpts(false)
+    chatStore.option('modal', modal)
+  }
+
+  const Title = (
+    <A href="/">
+      Agn<span class="rounded-xl text-[var(--hl-500)]">ai</span>stic
+    </A>
+  )
 
   return (
     <Show when={!cfg.fullscreen}>
@@ -16,12 +41,21 @@ const NavBar: Component = () => {
           <div class="w-8 sm:hidden" onClick={settingStore.menu}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
-          <div>
-            <A href="/">
-              Agn<span class="rounded-xl text-[var(--hl-500)]">ai</span>stic
-            </A>
+          <div class="ellipsis">
+            <Show when={isChat()} fallback={Title}>
+              <span class="overflow-hidden text-ellipsis whitespace-nowrap">
+                {chats.loaded ? chats.char?.name : '...'}
+              </span>
+            </Show>
           </div>
-          <div class="w-8 sm:hidden"></div>
+          <Show when={isChat()} fallback={<div class="w-8 sm:hidden"></div>}>
+            <div class="" onClick={() => setShowOpts(true)}>
+              <MoreHorizontal class="icon-button" />
+              <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
+                <ChatOptions setModal={setModal} />
+              </DropMenu>
+            </div>
+          </Show>
         </span>
       </span>
     </Show>
