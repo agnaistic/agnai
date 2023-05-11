@@ -126,7 +126,6 @@ export const chatStore = createStore<ChatState>('chat', {
       const next = { ...prev.opts, [key]: value }
       next[key] = value
       saveOptsCache(next)
-      console.log({ next })
       return { opts: next }
     },
     async getMemberProfile({ memberIds, lastChatId }, chatId: string, id: string) {

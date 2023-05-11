@@ -114,7 +114,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       all.push(...lines)
     }
 
-    if (parts.ujb) {
+    if (kind !== 'summary' && parts.ujb) {
       history.push({ role: 'system', content: parts.ujb })
       tokens += encoder(parts.ujb)
     }
