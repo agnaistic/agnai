@@ -498,7 +498,7 @@ const InviteModal: Component<{
               helperText="The character to invite"
               items={characterItems()}
               value={selectedCharacterId()}
-              onChange={item => setSelectedCharacterId(item.value)}
+              onChange={(item) => setSelectedCharacterId(item.value)}
             />
           </Show>
         </Show>
