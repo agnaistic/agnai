@@ -131,15 +131,21 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (kind === 'continue') {
-      const content = '(Continue)'
+      let content = `Continue ${opts.replyAs?.name || opts.char.name}'s response`
       tokens += encoder(content)
-      history.push({ role: 'user', content })
+      history.push({ role: 'system', content })
     }
 
     if (kind === 'self') {
-      const content = `(Respond as ${handle})`
+      const content = `Respond as ${handle}`
       tokens += encoder(content)
-      history.push({ role: 'user', content })
+      history.push({ role: 'system', content })
+    }
+
+    if (kind !== 'continue' && opts.replyAs) {
+      const content = `Respond as ${opts.replyAs.name}`
+      tokens += encoder(content)
+      history.push({ role: 'system', content })
     }
 
     for (const line of all.reverse()) {

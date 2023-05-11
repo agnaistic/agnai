@@ -36,6 +36,8 @@ type ChatState = {
     participantIds: string[]
   }
   chatProfiles: AppSchema.Profile[]
+  chatBots: AppSchema.Character[]
+  chatBotMap: Record<string, AppSchema.Character>
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt
   opts: {
@@ -73,6 +75,10 @@ const initState: ChatState = {
   /** All profiles that have ever participated in the active chat */
   chatProfiles: [],
 
+  /** All characters currently in the chat */
+  chatBots: [],
+  chatBotMap: {},
+
   /** Map of all profiles that have ever participated in the chat */
   memberIds: {},
   opts: {
@@ -90,6 +96,8 @@ export const chatStore = createStore<ChatState>('chat', {
   lastChatId: localStorage.getItem('lastChatId'),
   loaded: false,
   chatProfiles: [],
+  chatBots: [],
+  chatBotMap: {},
   memberIds: {},
   opts: {
     ...getOptsCache(),
@@ -150,6 +158,9 @@ export const chatStore = createStore<ChatState>('chat', {
           activeCharId: res.result.character._id,
         })
 
+        const bots = res.result.characters || []
+        const botMap = bots.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+
         yield {
           lastChatId: id,
           active: {
@@ -159,6 +170,8 @@ export const chatStore = createStore<ChatState>('chat', {
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
+          chatBots: bots,
+          chatBotMap: botMap,
         }
       }
     },
@@ -393,6 +406,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const prompt = createPrompt(
         {
           ...entities,
+          replyAs: undefined,
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
         },
         encoder
@@ -503,3 +517,26 @@ function getOptsCache(): ChatOptCache {
   const body = JSON.parse(prev)
   return { editing: false, hideOoc: false, ...body }
 }
+
+subscribe('chat-character-added', { chatId: 'string', character: 'any' }, (body) => {
+  const { active, chatBotMap, chatBots } = chatStore.getState()
+  if (!active || active.chat._id !== body.chatId) return
+
+  chatStore.setState({
+    chatBots: chatBots.concat(body.character),
+    chatBotMap: Object.assign(chatBotMap, { [body.character._id]: body.character }),
+  })
+})
+
+subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
+  const { active, chatBotMap, chatBots } = chatStore.getState()
+  if (!active || active.chat._id !== body.chatId) return
+
+  const nextMap = { ...chatBotMap }
+  delete nextMap[body.characterId]
+
+  chatStore.setState({
+    chatBots: chatBots.filter((ch) => ch._id !== body.characterId),
+    chatBotMap: nextMap,
+  })
+})

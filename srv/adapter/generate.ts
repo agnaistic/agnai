@@ -62,10 +62,16 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId)
-    const { adapter, isThirdParty, model } = getAdapter(opts.chat, entities.user, entities.settings)
+    const { adapter, model } = getAdapter(opts.chat, entities.user, entities.settings)
     const encoder = getEncoder(adapter, model)
     opts.parts = getPromptParts(
-      { ...entities, settings: entities.gen, chat: opts.chat, members: opts.members },
+      {
+        ...entities,
+        settings: entities.gen,
+        chat: opts.chat,
+        members: opts.members,
+        replyAs: opts.replyAs,
+      },
       [...opts.lines].reverse(),
       encoder
     )
@@ -104,6 +110,7 @@ export async function createTextStreamV2(
     guest: guestSocketId,
     lines: opts.lines,
     isThirdParty,
+    replyAs: opts.replyAs,
   })
 
   return { stream, adapter }

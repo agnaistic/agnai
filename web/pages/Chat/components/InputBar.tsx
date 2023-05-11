@@ -12,6 +12,7 @@ import { defaultCulture } from '/web/shared/CultureCodes'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
+  bots: AppSchema.Character[]
   char?: AppSchema.Character
   swiped: boolean
   showOocToggle: boolean
@@ -19,12 +20,13 @@ const InputBar: Component<{
   setOoc: Setter<boolean>
   send: (msg: string, ooc: boolean, onSuccess?: () => void) => void
   more: (msg: string) => void
-  request: (msg: string, charId: string) => void
+  request: (charId: string) => void
 }> = (props) => {
   let ref: any
 
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
+
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
   }
@@ -110,7 +112,7 @@ const InputBar: Component<{
   }
 
   const request = (charId: string) => {
-    props.request(state.lastMsg.msg, charId)
+    props.request(charId)
     setMenu(false)
   }
 
@@ -158,6 +160,30 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
+            <Show when={props.bots.length > 1}>
+              {/* <div>Auto-reply as</div>
+              <For each={props.bots}>
+                {(char) => (
+                  <Button schema="secondary" size="sm">
+                    {char.name}
+                  </Button>
+                )}
+              </For>
+              <hr /> */}
+              <For each={props.bots}>
+                {(char, i) => (
+                  <Button
+                    schema="secondary"
+                    class="w-full"
+                    onClick={() => request(char._id)}
+                    alignLeft
+                  >
+                    <MailPlus size={18} /> Generate: {char.name}
+                  </Button>
+                )}
+              </For>
+              <hr />
+            </Show>
             <Show when={props.showOocToggle}>
               <Button
                 schema="secondary"
@@ -180,13 +206,6 @@ const InputBar: Component<{
                 <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
-            <For each={props.chat.characterIds?.filter((c) => c != state.lastMsg.characterId)}>
-              {(charId, i) => (
-                <Button schema="secondary" class="w-full" onClick={() => request(charId)} alignLeft>
-                  <MailPlus size={18} /> Generate New: {charId.slice(0, 4)}
-                </Button>
-              )}
-            </For>
           </div>
         </DropMenu>
       </div>

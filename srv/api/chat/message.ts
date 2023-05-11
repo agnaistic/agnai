@@ -1,11 +1,39 @@
-import { assertValid } from 'frisker'
+import { UnwrapBody, assertValid } from 'frisker'
 import { store } from '../../db'
 import { createTextStreamV2 } from '../../adapter/generate'
-import { errors, handle } from '../wrap'
+import { AppRequest, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../db/schema'
 import { v4 } from 'uuid'
+import { Response } from 'express'
+
+type GenRequest = UnwrapBody<typeof genValidator>
+
+const genValidator = {
+  kind: ['send', 'ooc', 'retry', 'continue', 'self', 'summary', 'request'],
+  char: 'any',
+  sender: 'any',
+  members: ['any'],
+  user: 'any',
+  chat: 'any',
+  replacing: 'any?',
+  replyAs: 'any?',
+  continuing: 'any?',
+  parts: {
+    scenario: 'string?',
+    persona: 'string',
+    greeting: 'string?',
+    memory: 'any?',
+    sampleChat: ['string?'],
+    gaslight: 'string',
+    gaslightHasChat: 'boolean',
+    post: ['string'],
+  },
+  lines: ['string'],
+  text: 'string?',
+  settings: 'any?',
+} as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {
   const chatId = params.id
@@ -17,85 +45,53 @@ export const getMessages = handle(async ({ userId, params, query }) => {
   return { messages }
 })
 
-export const generateMessageV2 = handle(async ({ userId, body, socketId, params, log }, res) => {
+export const generateMessageV2 = handle(async (req, res) => {
+  const { userId, body, params, log } = req
+
   const chatId = params.id
-  assertValid(
-    {
-      kind: ['send', 'ooc', 'retry', 'continue', 'self', 'summary', 'request'],
-      char: 'any',
-      sender: 'any',
-      members: ['any'],
-      user: 'any',
-      chat: 'any',
-      replacing: 'any?',
-      continuing: 'any?',
-      parts: {
-        scenario: 'string?',
-        persona: 'string',
-        greeting: 'string?',
-        memory: 'any?',
-        sampleChat: ['string?'],
-        gaslight: 'string',
-        gaslightHasChat: 'boolean',
-        post: ['string'],
-      },
-      lines: ['string'],
-      text: 'string?',
-      settings: 'any?',
-    },
-    body
-  )
+  assertValid(genValidator, body)
 
-  if (userId) {
-    const user = await store.users.getUser(userId!)
-    body.user = user
+  if (!userId) {
+    return handleGuestGenerate(body, req, res)
   }
 
-  const guest = userId ? undefined : socketId
+  const user = await store.users.getUser(userId)
+  body.user = user
 
-  const chat: AppSchema.Chat = guest ? body.chat : await store.chats.getChat(chatId)
-  if (!chat) {
-    throw errors.NotFound
-  }
+  const chat = await store.chats.getChatOnly(chatId)
+  if (!chat) throw errors.NotFound
 
-  if (userId && chat.userId !== userId) {
+  const replyAs =
+    body.replyAs?._id && body.replyAs._id !== chat.characterId
+      ? await store.characters.getCharacter(userId, body.replyAs._id)
+      : undefined
+
+  if (chat.userId !== userId) {
     const isAllowed = await store.chats.canViewChat(userId, chat)
     if (!isAllowed) throw errors.Forbidden
   }
 
-  const members = guest ? [chat.userId] : chat.memberIds.concat(chat.userId)
+  const members = chat.memberIds.concat(chat.userId)
 
-  if (userId) {
-    if (body.kind === 'retry' && userId !== chat.userId) {
-      throw errors.Forbidden
-    }
+  if (body.kind === 'retry' && userId !== chat.userId) {
+    throw errors.Forbidden
+  }
 
-    if (body.kind === 'continue' && userId !== chat.userId) {
-      throw errors.Forbidden
-    }
+  if (body.kind === 'continue' && userId !== chat.userId) {
+    throw errors.Forbidden
   }
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send' || body.kind === 'ooc') {
-    if (guest) {
-      const newMsg = newMessage(chatId, body.text!, {
-        userId: 'anon',
-        ooc: body.kind === 'ooc',
-      })
-      sendGuest(socketId, { type: 'message-created', msg: newMsg, chatId })
-    }
+    const userMsg = await store.msgs.createChatMessage({
+      chatId,
+      message: body.text!,
+      senderId: userId!,
+      ooc: body.kind === 'ooc',
+    })
 
-    if (userId) {
-      const userMsg = await store.msgs.createChatMessage({
-        chatId,
-        message: body.text!,
-        senderId: userId!,
-        ooc: body.kind === 'ooc',
-      })
-
-      await store.chats.update(chatId, {})
-      sendMany(members, { type: 'message-created', msg: userMsg, chatId })
-    }
+    await store.chats.update(chatId, {})
+    sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
   if (body.kind === 'ooc') {
@@ -108,28 +104,27 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
    * but if there is a lock in place do not attempt to generate a message.
    */
   try {
-    if (userId) await obtainLock(chatId)
+    await obtainLock(chatId)
   } catch (ex) {
     if (members.length === 1) throw ex
     return res.json({ success: true, generating: false, message: 'User message created' })
   }
 
-  if (userId) {
-    sendMany(members, { type: 'message-creating', chatId, mode: body.kind, senderId: userId })
-  }
-
+  sendMany(members, {
+    type: 'message-creating',
+    chatId,
+    mode: body.kind,
+    senderId: userId,
+    characterId: replyAs?._id || chat.characterId,
+  })
   res.json({ success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter } = await createTextStreamV2({ ...body, chat }, log, guest)
+  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs }, log)
 
   log.setBindings({ adapter })
 
   let generated = ''
   let error = false
-
-  const send: <T extends { type: string }>(msg: T) => void = guest
-    ? (msg) => (body.kind !== 'summary' ? sendGuest(guest, msg) : null)
-    : (msg) => (body.kind !== 'summary' ? sendMany(members, msg) : null)
 
   for await (const gen of stream) {
     if (typeof gen === 'string') {
@@ -138,13 +133,13 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     }
 
     if ('partial' in gen) {
-      send({ type: 'message-partial', partial: gen.partial, adapter, chatId })
+      sendOne(userId, { type: 'message-partial', partial: gen.partial, adapter, chatId })
       continue
     }
 
     if (gen.error) {
       error = true
-      send({ type: 'message-error', error: gen.error, adapter, chatId })
+      sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
       continue
     }
   }
@@ -155,22 +150,6 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
   }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
-
-  if (guest) {
-    const characterId = body.kind === 'self' ? undefined : body.char._id
-    const senderId = body.kind === 'self' ? userId : undefined
-    const response = newMessage(chatId, responseText, { characterId, userId: senderId, ooc: false })
-
-    sendGuest(socketId, {
-      type: 'guest-message-created',
-      msg: response,
-      chatId,
-      adapter,
-      continue: body.kind === 'continue',
-      generate: true,
-    })
-    return
-  }
 
   await releaseLock(chatId)
 
@@ -185,7 +164,8 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
     case 'send': {
       const msg = await store.msgs.createChatMessage({
         chatId,
-        characterId: body.kind === 'send' ? body.char._id : undefined,
+        characterId:
+          body.kind === 'request' ? replyAs?._id : body.kind === 'send' ? body.char._id : undefined,
         senderId: body.kind === 'self' ? userId : undefined,
         message: generated,
         adapter,
@@ -235,6 +215,74 @@ export const generateMessageV2 = handle(async ({ userId, body, socketId, params,
 
   await store.chats.update(chatId, {})
 })
+
+async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Response) {
+  const chatId = req.params.id
+  const guest = req.socketId
+  const log = req.log
+
+  const chat: AppSchema.Chat = body.chat
+  if (!chat) throw errors.NotFound
+
+  const replyAs: AppSchema.Character = body.replyAs
+
+  // For authenticated users we will verify parts of the payload
+  if (body.kind === 'send' || body.kind === 'ooc') {
+    const newMsg = newMessage(chatId, body.text!, {
+      userId: 'anon',
+      ooc: body.kind === 'ooc',
+    })
+    sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
+  }
+
+  if (body.kind === 'ooc') {
+    return { success: true }
+  }
+
+  res.json({ success: true, generating: true, message: 'Generating message' })
+
+  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs }, log, guest)
+
+  log.setBindings({ adapter })
+
+  let generated = ''
+  let error = false
+
+  for await (const gen of stream) {
+    if (typeof gen === 'string') {
+      generated = gen
+      continue
+    }
+
+    if ('partial' in gen) {
+      sendGuest(guest, { type: 'message-partial', partial: gen.partial, adapter, chatId })
+      continue
+    }
+
+    if (gen.error) {
+      error = true
+      sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
+      continue
+    }
+  }
+
+  if (error) return
+
+  const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+
+  const characterId = body.kind === 'self' ? undefined : body.char._id
+  const senderId = body.kind === 'self' ? 'anon' : undefined
+  const response = newMessage(chatId, responseText, { characterId, userId: senderId, ooc: false })
+
+  sendGuest(guest, {
+    type: 'guest-message-created',
+    msg: response,
+    chatId,
+    adapter,
+    continue: body.kind === 'continue',
+    generate: true,
+  })
+}
 
 function newMessage(
   chatId: string,

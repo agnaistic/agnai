@@ -13,24 +13,25 @@ export const getCharacterChats = handle(async (req) => {
 
 export const getChatDetail = handle(async ({ userId, params }) => {
   const id = params.id
-  const chat = await store.chats.getChat(id)
+  const detail = await store.chats.getChat(id)
 
-  if (!chat) throw errors.NotFound
+  if (!detail) throw errors.NotFound
 
-  const canView = await store.chats.canViewChat(userId, chat)
+  const canView = await store.chats.canViewChat(userId, detail.chat)
   if (!canView) {
     throw errors.Forbidden
   }
 
-  const [character, members, active] = await Promise.all([
-    store.characters.getCharacter(chat.userId, chat.characterId),
-    store.users.getProfiles(chat.userId, chat.memberIds),
-    store.chats.getActiveMembers(chat._id),
+  const [members, active] = await Promise.all([
+    store.users.getProfiles(detail.chat.userId, detail.chat.memberIds),
+    store.chats.getActiveMembers(detail.chat._id),
   ])
+
+  const character = detail.characters.find((ch) => ch._id === detail.chat.characterId)
 
   const messages = await store.msgs.getMessages(id)
 
-  return { chat, messages, character, members, active }
+  return { messages, character, members, active, ...detail }
 })
 
 export const getAllChats = handle(async (req) => {

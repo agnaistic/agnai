@@ -40,6 +40,8 @@ const ChatDetail: Component = () => {
     members: s.chatProfiles,
     loaded: s.loaded,
     opts: s.opts,
+    chatBots: s.chatBots,
+    botMap: s.chatBotMap,
   }))
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
@@ -94,7 +96,7 @@ const ChatDetail: Component = () => {
     if (!msgs.waiting) return
 
     return emptyMsg({
-      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
+      charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
       userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
       message: msgs.partial || '',
     })
@@ -256,6 +258,7 @@ const ChatDetail: Component = () => {
               setOoc={setOoc}
               showOocToggle={showOOCOpts() || chats.members.length > 1}
               request={requestMessage}
+              bots={chats.chatBots}
             />
             <Show when={isOwner()}>
               <SwipeMessage
@@ -300,7 +303,7 @@ const ChatDetail: Component = () => {
                 <Show when={waitingMsg()}>
                   <Message
                     msg={waitingMsg()!}
-                    char={chats.char!}
+                    char={chats.botMap[waitingMsg()?.characterId!]}
                     chat={chats.chat!}
                     onRemove={() => {}}
                     editing={chats.opts.editing}

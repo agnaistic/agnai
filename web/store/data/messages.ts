@@ -74,10 +74,19 @@ export async function generateResponseV2(opts: GenerateOpts) {
   let replacing: AppSchema.ChatMessage | undefined
   let continuing: AppSchema.ChatMessage | undefined
 
+  let replyAs: AppSchema.Character | undefined
+
+  if (opts.kind === 'request') {
+    replyAs = entities.chatBots.find((ch) => ch._id === opts.characterId)
+  }
+
   if (opts.kind === 'retry' && lastMessage) {
     if (lastMessage.characterId) {
       retry = message
       replacing = lastMessage
+      if (lastMessage.characterId !== entities.chat.characterId) {
+        replyAs = entities.chatBots.find((ch) => ch._id === lastMessage.characterId)
+      }
     } else {
       retry = lastMessage
     }
@@ -85,6 +94,9 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   if (opts.kind === 'continue') {
     continuing = lastMessage
+    if (lastMessage.characterId !== entities.chat.characterId) {
+      replyAs = entities.chatBots.find((ch) => ch._id === lastMessage.characterId)
+    }
   }
 
   const messages = (
@@ -115,6 +127,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       retry,
       settings: entities.settings,
       messages,
+      replyAs,
     },
     encoder
   )
@@ -139,6 +152,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     settings: entities.settings,
     replacing,
     continuing,
+    replyAs,
   }
 
   const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
@@ -172,7 +186,7 @@ export async function getPromptEntities() {
 }
 
 async function getGuestEntities() {
-  const active = getStore('chat').getState().active
+  const { active, chatBots } = getStore('chat').getState()
   if (!active) return
 
   const chat = active.chat
@@ -198,11 +212,12 @@ async function getGuestEntities() {
     messages,
     settings,
     members: [profile] as AppSchema.Profile[],
+    chatBots,
   }
 }
 
 function getAuthedPromptEntities() {
-  const { active, chatProfiles: members } = getStore('chat').getState()
+  const { active, chatProfiles: members, chatBots } = getStore('chat').getState()
   if (!active) return
 
   const { profile, user } = getStore('user').getState()
@@ -218,7 +233,7 @@ function getAuthedPromptEntities() {
   const messages = getStore('messages').getState().msgs
   const settings = getAuthGenSettings(chat, user)
 
-  return { chat, char, user, profile, book, messages, settings, members }
+  return { chat, char, user, profile, book, messages, settings, members, chatBots }
 }
 
 function getAuthGenSettings(
