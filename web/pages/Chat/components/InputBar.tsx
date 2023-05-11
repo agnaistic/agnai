@@ -190,15 +190,16 @@ const InputBar: Component<{
                 )}
               </For>
               <hr />
+              <div>Generate reply</div>
               <For each={props.bots}>
                 {(char, i) => (
                   <Button
                     schema="secondary"
-                    class="w-full"
+                    class="ellipsis flex w-full"
                     onClick={() => request(char._id)}
-                    alignLeft
+                    size="sm"
                   >
-                    <MailPlus size={18} /> Generate: {char.name}
+                    <span class="ellipsis">{char.name}</span>
                   </Button>
                 )}
               </For>
