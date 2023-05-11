@@ -26,7 +26,7 @@ const InputBar: Component<{
 
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
-  const chats = chatStore((s) => ({ autoReplyAs: s.active?.replyAs }))
+  const chats = chatStore((s) => ({ autoReplyAs: s.active?.replyAs, botMap: s.chatBotMap }))
 
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
@@ -129,7 +129,13 @@ const InputBar: Component<{
         lang={props.char?.culture}
         ref={ref}
         value={text()}
-        placeholder={props.ooc ? 'Send a message... (Out of character)' : 'Send a message...'}
+        placeholder={
+          props.ooc
+            ? 'Send a message... (Out of character)'
+            : `Send a message to ${
+                chats.botMap[chats.autoReplyAs || props.chat.characterId].name
+              }...`
+        }
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
         onKeyDown={(ev) => {
           if (ev.key === 'Enter') {
