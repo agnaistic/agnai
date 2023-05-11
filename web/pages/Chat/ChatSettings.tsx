@@ -64,7 +64,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       <div class="flex w-full justify-between">
         <div>
           <Button schema="secondary" onClick={revert}>
-            Reset to Character
+            Reset Character
           </Button>
         </div>
         <div class="flex gap-4">

@@ -3,10 +3,6 @@ import { render } from 'solid-js/web'
 import { Router } from '@solidjs/router'
 import App from './App'
 
-const AppContainer: Component = () => (
-  <Router>
-    <App />
-  </Router>
-)
+const AppContainer: Component = () => <App />
 
 render(() => <AppContainer />, document.getElementById('root') as HTMLElement)

@@ -2,6 +2,7 @@ import { createPrompt, Prompt } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
+import type { ChatModal } from '../pages/Chat/ChatOptions'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
@@ -37,6 +38,12 @@ type ChatState = {
   chatProfiles: AppSchema.Profile[]
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt
+  opts: {
+    modal?: ChatModal
+    editing: boolean
+    screenshot: boolean
+    hideOoc: boolean
+  }
 }
 
 export type ImportChat = {
@@ -68,7 +75,15 @@ const initState: ChatState = {
 
   /** Map of all profiles that have ever participated in the chat */
   memberIds: {},
+  opts: {
+    editing: false,
+    screenshot: false,
+    hideOoc: false,
+    modal: undefined,
+  },
 }
+
+const EDITING_KEY = 'chat-detail-settings'
 
 export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
@@ -76,6 +91,11 @@ export const chatStore = createStore<ChatState>('chat', {
   loaded: false,
   chatProfiles: [],
   memberIds: {},
+  opts: {
+    ...getOptsCache(),
+    modal: undefined,
+    screenshot: false,
+  },
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
     chatStore.setState(initState)
@@ -89,6 +109,15 @@ export const chatStore = createStore<ChatState>('chat', {
      * If a user accepts an invite to a chat, their profile has not been fetched and cached
      * To fix this, we'll lazy load them when they send a message and their profile isn't already present
      */
+    option<Prop extends keyof ChatState['opts']>(
+      prev: ChatState,
+      key: Prop,
+      value: ChatState['opts'][Prop]
+    ) {
+      const next = { ...prev.opts, [key]: value }
+      saveOptsCache(next)
+      return { opts: next }
+    },
     async getMemberProfile({ memberIds, lastChatId }, chatId: string, id: string) {
       // Only retrieve profiles if the chat is _active_ to avoid unnecessary profile retrieval
       if (!lastChatId || chatId !== lastChatId) return
@@ -460,3 +489,17 @@ subscribe(
     })
   }
 )
+
+type ChatOptCache = { editing: boolean; hideOoc: boolean }
+
+function saveOptsCache(cache: ChatOptCache) {
+  const prev = getOptsCache()
+  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
+}
+
+function getOptsCache(): ChatOptCache {
+  const prev =
+    localStorage.getItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
+  const body = JSON.parse(prev)
+  return { editing: false, hideOoc: false, ...body }
+}

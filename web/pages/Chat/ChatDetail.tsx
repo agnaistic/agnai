@@ -1,22 +1,13 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import {
-  ArrowDownLeft,
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  MailPlus,
-  Menu,
-  X,
-} from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import TextInput from '../../shared/TextInput'
-import { getRootRgb, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { characterStore, chatStore, settingStore, UISettings as UI, userStore } from '../../store'
+import { getRootRgb, setComponentPageTitle } from '../../shared/util'
+import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -36,9 +27,6 @@ import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import './chat-detail.css'
-import Select, { Option } from '../../shared/Select'
-
-const EDITING_KEY = 'chat-detail-settings'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -51,6 +39,7 @@ const ChatDetail: Component = () => {
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.loaded,
+    opts: s.opts,
   }))
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
@@ -61,7 +50,6 @@ const ChatDetail: Component = () => {
     speaking: s.speaking,
   }))
 
-  const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
   createEffect(() => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName}` : 'Chat')
@@ -77,20 +65,12 @@ const ChatDetail: Component = () => {
   const [swipe, setSwipe] = createSignal(0)
   const [removeId, setRemoveId] = createSignal('')
   const [showOpts, setShowOpts] = createSignal(false)
-  const [modal, setModal] = createSignal<ChatModal>()
-  const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const [ooc, setOoc] = createSignal<boolean>()
   const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
-  const [hideOOC, setHideOOC] = createSignal(false)
-
-  const toggleHideOocMessages = () => {
-    setHideOOC(!hideOOC())
-  }
 
   const chatMsgs = createMemo(() => {
-    const hide = hideOOC()
     return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
-      hide ? !msg.ooc : true
+      chats.opts.hideOoc ? !msg.ooc : true
     )
   })
 
@@ -120,15 +100,14 @@ const ChatDetail: Component = () => {
     })
   })
 
-  function toggleEditing() {
-    const next = !editing()
-    setEditing(next)
-    saveEditingState(next)
+  const setModal = (modal: ChatModal) => {
+    setShowOpts(false)
+    chatStore.option('modal', modal)
   }
 
-  const showModal = (modal: ChatModal) => {
-    setModal(modal)
+  const clearModal = () => {
     setShowOpts(false)
+    chatStore.option('modal', undefined)
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
@@ -211,7 +190,10 @@ const ChatDetail: Component = () => {
       </Show>
       <Show when={chats.chat}>
         <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
-          <div class="flex h-9 items-center justify-between rounded-md" style={headerBg()}>
+          <div
+            class="hidden h-9 items-center justify-between rounded-md sm:flex"
+            style={headerBg()}
+          >
             <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen && isOwner()}>
                 <A href={`/character/${chats.char?._id}/chats`}>
@@ -245,15 +227,7 @@ const ChatDetail: Component = () => {
                   horz="left"
                   vert="down"
                 >
-                  <ChatOptions
-                    show={showModal}
-                    editing={editing()}
-                    toggleEditing={toggleEditing}
-                    screenshotInProgress={screenshotInProgress()}
-                    setScreenshotInProgress={setScreenshotInProgress}
-                    toggleOocMessages={showOOCOpts() ? toggleHideOocMessages : undefined}
-                    hideOocMessages={hideOOC()}
-                  />
+                  <ChatOptions setModal={setModal} />
                 </DropMenu>
               </div>
 
@@ -271,7 +245,7 @@ const ChatDetail: Component = () => {
             </div>
           </div>
 
-          <div class="flex h-[calc(100%-36px)] flex-col-reverse gap-1">
+          <div class="flex h-[calc(100%-8px)] flex-col-reverse gap-1 sm:h-[calc(100%-36px)]">
             <InputBar
               chat={chats.chat!}
               swiped={swipe() !== 0}
@@ -310,7 +284,7 @@ const ChatDetail: Component = () => {
                       msg={msg}
                       chat={chats.chat!}
                       char={chats.char!}
-                      editing={editing()}
+                      editing={chats.opts.editing}
                       anonymize={cfg.anonymize}
                       last={i() >= 1 && i() === indexOfLastRPMessage()}
                       onRemove={() => setRemoveId(msg._id)}
@@ -329,7 +303,7 @@ const ChatDetail: Component = () => {
                     char={chats.char!}
                     chat={chats.chat!}
                     onRemove={() => {}}
-                    editing={editing()}
+                    editing={chats.opts.editing}
                     anonymize={cfg.anonymize}
                   />
                 </Show>
@@ -340,32 +314,32 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
 
-      <Show when={modal() === 'settings'}>
-        <ChatSettingsModal show={true} close={setModal} />
+      <Show when={chats.opts.modal === 'settings'}>
+        <ChatSettingsModal show={true} close={clearModal} />
       </Show>
 
-      <Show when={modal() === 'gen'}>
-        <ChatGenSettingsModal show={true} close={setModal} chat={chats.chat!} />
+      <Show when={chats.opts.modal === 'gen'}>
+        <ChatGenSettingsModal show={true} close={clearModal} chat={chats.chat!} />
       </Show>
 
-      <Show when={modal() === 'memory'}>
-        <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={setModal} />
+      <Show when={chats.opts.modal === 'memory'}>
+        <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={clearModal} />
       </Show>
 
-      <Show when={modal() === 'export'}>
-        <ChatExport show={true} close={setModal} />
+      <Show when={chats.opts.modal === 'export'}>
+        <ChatExport show={true} close={clearModal} />
       </Show>
 
-      <Show when={modal() === 'delete'}>
-        <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={setModal} />
+      <Show when={chats.opts.modal === 'delete'}>
+        <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={clearModal} />
       </Show>
 
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
       </Show>
 
-      <Show when={modal() === 'members'}>
-        <MemberModal show={true} close={setModal} charId={chats?.char?._id!} />
+      <Show when={chats.opts.modal === 'members'}>
+        <MemberModal show={true} close={clearModal} charId={chats?.char?._id!} />
       </Show>
 
       <ImageModal />
@@ -382,12 +356,12 @@ const ChatDetail: Component = () => {
       </Show>
 
       <PromptModal />
-      <Show when={modal() === 'ui'}>
+      <Show when={chats.opts.modal === 'ui'}>
         <Modal
           show={true}
-          close={setModal}
+          close={clearModal}
           title="UI Settings"
-          footer={<Button onClick={setModal}>Close</Button>}
+          footer={<Button onClick={clearModal}>Close</Button>}
         >
           <UISettings />
         </Modal>
@@ -397,115 +371,6 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
-
-const InviteModal: Component<{
-  charId: string
-  chatId: string
-  show: boolean
-  close: () => void
-}> = (props) => {
-  let ref: any
-  const chars = characterStore()
-  type inviteType = 'user' | 'character'
-  const typeItems: Option<inviteType>[] = [
-    { value: 'user', label: 'User' },
-    { value: 'character', label: 'Character' },
-  ]
-
-  const [type, setType] = createSignal('user')
-  const [characterItems, setCharacterItems] = createSignal<Option[]>([])
-  const [characterError, setCharacterError] = createSignal<string>()
-  const [selectedCharacterId, setSelectedCharacterId] = createSignal<string>()
-
-  const save = () => {
-    switch (type()) {
-      case 'user':
-        const body = getStrictForm(ref, { userId: 'string' })
-        return chatStore.inviteUser(props.chatId, body.userId, props.close)
-
-      case 'character':
-        const charId = selectedCharacterId()
-        if (!charId) throw new Error('No character selected')
-        return chatStore.addCharacter(props.chatId, charId, props.close)
-    }
-  }
-
-  createEffect(() => {
-    if (type() === 'character' && !chars.characters.loaded) {
-      characterStore.getCharacters()
-    }
-  })
-
-  createEffect(() => {
-    if (chars.characters.loaded) {
-      const availableCharacters = chars.characters.list
-        .filter((c) => c._id != props.charId)
-        .map((c) => ({ value: c._id, label: c.name }))
-
-      if (availableCharacters.length) {
-        setCharacterError()
-        setCharacterItems(availableCharacters)
-        setSelectedCharacterId(availableCharacters[0].value)
-      } else {
-        setCharacterError("You don't have any other characters to invite")
-      }
-    }
-  })
-
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Invite to Conversation"
-      footer={
-        <>
-          {' '}
-          <Button size="sm" schema="secondary" onClick={props.close}>
-            <X /> Cancel
-          </Button>
-          <Button size="sm" onClick={save}>
-            <MailPlus /> Invite
-          </Button>
-        </>
-      }
-    >
-      <form ref={ref} class="flex flex-col gap-2">
-        <Select
-          fieldName="type"
-          label="Invitation Type"
-          helperText="Whether to invite a user or a character"
-          items={typeItems}
-          value={'user'}
-          onChange={(val) => setType(val.value)}
-        />
-
-        <Show when={type() === 'user'}>
-          <TextInput
-            fieldName="userId"
-            label="User ID"
-            helperText="The ID of the user to invite. The user should provide this to you"
-          />
-        </Show>
-
-        <Show when={type() === 'character'}>
-          <Show
-            when={!characterError()}
-            fallback={<div class="text-red-500">{characterError()}</div>}
-          >
-            <Select
-              fieldName="character"
-              label="Character"
-              helperText="The character to invite"
-              items={characterItems()}
-              value={selectedCharacterId()}
-              onChange={(item) => setSelectedCharacterId(item.value)}
-            />
-          </Show>
-        </Show>
-      </form>
-    </Modal>
-  )
-}
 
 const SwipeMessage: Component<{
   chatId: string
@@ -557,19 +422,6 @@ const InfiniteScroll: Component = () => {
       </div>
     </Show>
   )
-}
-
-type DetailSettings = { editing?: boolean }
-
-function saveEditingState(value: boolean) {
-  const prev = getEditingState()
-  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, editing: value }))
-}
-
-function getEditingState() {
-  const prev = localStorage.getItem(EDITING_KEY) || '{}'
-  const body = JSON.parse(prev) as DetailSettings
-  return body
 }
 
 function getChatWidth(setting: UI['chatWidth']) {
