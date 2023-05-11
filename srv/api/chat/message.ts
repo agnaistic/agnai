@@ -166,7 +166,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         characterId:
           body.kind === 'request'
-            ? replyAs?._id
+            ? replyAs?._id || chat.characterId
             : body.kind === 'send'
             ? replyAs?._id || body.char._id
             : undefined,
