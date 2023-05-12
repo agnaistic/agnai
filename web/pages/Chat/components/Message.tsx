@@ -31,6 +31,7 @@ type MessageProps = {
   editing: boolean
   anonymize?: boolean
   tts?: boolean
+  children?: any
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -41,24 +42,27 @@ const Message: Component<MessageProps> = (props) => {
   })
 
   return (
-    <For each={splits()}>
-      {(msg, i) => (
-        <SingleMessage
-          msg={msg}
-          chat={props.chat}
-          char={props.char}
-          onRemove={props.onRemove}
-          last={props.last && i() === splits().length - 1}
-          lastSplit={i() === splits().length - 1}
-          swipe={props.swipe}
-          confirmSwipe={props.confirmSwipe}
-          cancelSwipe={props.cancelSwipe}
-          original={props.msg}
-          editing={props.editing}
-          anonymize={props.anonymize}
-        />
-      )}
-    </For>
+    <>
+      <For each={splits()}>
+        {(msg, i) => (
+          <SingleMessage
+            msg={msg}
+            chat={props.chat}
+            char={props.char}
+            onRemove={props.onRemove}
+            last={props.last && i() === splits().length - 1}
+            lastSplit={i() === splits().length - 1}
+            swipe={props.swipe}
+            confirmSwipe={props.confirmSwipe}
+            cancelSwipe={props.cancelSwipe}
+            original={props.msg}
+            editing={props.editing}
+            anonymize={props.anonymize}
+            children={props.children}
+          />
+        )}
+      </For>
+    </>
   )
 }
 
@@ -300,6 +304,7 @@ const SingleMessage: Component<
               </div>
             </Show>
           </div>
+          {props.last && props.lastSplit && props.children}
         </div>
       </div>
     </div>

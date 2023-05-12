@@ -77,7 +77,7 @@ const ChatDetail: Component = () => {
     )
   })
 
-  const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
+  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
@@ -192,10 +192,6 @@ const ChatDetail: Component = () => {
     return [chats.char._id, ...active]
   })
 
-  const activeChars = createMemo(() =>
-    chats.chatBots.filter((c) => activeCharIds().includes(c._id))
-  )
-
   return (
     <>
       <Show when={!chats.loaded}>
@@ -274,30 +270,19 @@ const ChatDetail: Component = () => {
               bots={chats.chatBots}
             />
             <Show when={isOwner() && chats.chatBots.length > 1}>
-              <div class={`flex justify-center ${msgs.waiting ? 'opacity-70 saturate-0' : ''}`}>
-                <For each={activeChars()}>
-                  {(char) => (
-                    <GenerateMsgForCharacterBtn
-                      char={char}
-                      requestMessage={requestMessage}
+              <div
+                class={`flex justify-center gap-2 ${msgs.waiting ? 'opacity-70 saturate-0' : ''}`}
+              >
+                <For each={activeCharIds()}>
+                  {(id) => (
+                    <CharacterResponseBtn
+                      char={chats.botMap[id]}
+                      request={requestMessage}
                       waiting={!!msgs.waiting}
                     />
                   )}
                 </For>
               </div>
-            </Show>
-            <Show
-              when={
-                isOwner() && ((retries()?.list || []).length > 1 || chats.chatBots.length === 1)
-              }
-            >
-              <SwipeMessage
-                chatId={chats.chat?._id!}
-                pos={swipe()}
-                prev={clickSwipe(-1)}
-                next={clickSwipe(1)}
-                list={retries()?.list || []}
-              />
             </Show>
             <Show when={isSelfRemoved()}>
               <div class="flex w-full justify-center">
@@ -327,7 +312,20 @@ const ChatDetail: Component = () => {
                       confirmSwipe={() => confirmSwipe(msg._id)}
                       cancelSwipe={cancelSwipe}
                       tts={tts()}
-                    />
+                    >
+                      {isOwner() &&
+                        retries()?.list?.length! > 1 &&
+                        i() >= 1 &&
+                        i() === indexOfLastRPMessage() && (
+                          <SwipeMessage
+                            chatId={chats.chat?._id!}
+                            pos={swipe()}
+                            prev={clickSwipe(-1)}
+                            next={clickSwipe(1)}
+                            list={retries()?.list || []}
+                          />
+                        )}
+                    </Message>
                   )}
                 </For>
                 <Show when={waitingMsg()}>
@@ -405,29 +403,33 @@ const ChatDetail: Component = () => {
 
 export default ChatDetail
 
-const GenerateMsgForCharacterBtn: Component<{
+const CharacterResponseBtn: Component<{
   char: AppSchema.Character
   waiting: boolean
-  requestMessage: (s: string) => void
-}> = (props) => (
-  <div
-    class={`flex max-w-[200px] overflow-hidden px-1 py-1 ${
-      props.waiting ? 'cursor-default' : 'cursor-pointer'
-    }`}
-    onclick={() => !props.waiting && props.requestMessage(props.char._id)}
-  >
-    <div class="px-1">
-      <AvatarIcon
-        bot={true}
-        format={{ size: 'xs', corners: 'circle' }}
-        avatarUrl={props.char.avatar}
-      />
-    </div>
-    <strong class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
-      {props.char.name}
-    </strong>
-  </div>
-)
+  request: (charId: string) => void
+}> = (props) => {
+  const cursor = createMemo(() => (props.waiting ? 'cursor-default' : 'cursor-pointer'))
+
+  return (
+    <Show when={props.char}>
+      <div
+        class={`flex max-w-[200px] overflow-hidden px-1 py-1 ${cursor()} rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
+        onclick={() => !props.waiting && props.request(props.char._id)}
+      >
+        <div class="px-1">
+          <AvatarIcon
+            bot={true}
+            format={{ size: 'xs', corners: 'circle' }}
+            avatarUrl={props.char.avatar}
+          />
+        </div>
+        <strong class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+          {props.char.name}
+        </strong>
+      </div>
+    </Show>
+  )
+}
 
 const SwipeMessage: Component<{
   chatId: string
