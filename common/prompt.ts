@@ -41,6 +41,7 @@ export type PromptOpts = {
   continue?: string
   book?: AppSchema.MemoryBook
   replyAs: AppSchema.Character | undefined
+  characters: GenerateRequestV2['characters']
 }
 
 type BuildPromptOpts = {
@@ -90,7 +91,10 @@ const START_TEXT = '<START>'
  * @returns
  */
 export function createPromptWithParts(
-  opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs'>,
+  opts: Pick<
+    GenerateRequestV2,
+    'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters'
+  >,
   parts: PromptParts,
   lines: string[],
   encoder: Encoder
@@ -385,7 +389,11 @@ function getLinesForPrompt(
 
   const formatMsg = (chat: AppSchema.ChatMessage) => {
     const senderId = chat.userId || opts.chat.userId
-    return fillPlaceholders(chat, char.name, profiles.get(senderId)?.handle || 'You').trim()
+    return fillPlaceholders(
+      chat,
+      opts.characters[chat.characterId!]?.name || char.name,
+      profiles.get(senderId)?.handle || 'You'
+    ).trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)

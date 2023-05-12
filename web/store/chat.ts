@@ -276,10 +276,10 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
-        const chars = res.result.characters.reduce<any>((prev, curr) => {
-          prev[curr._id] = curr
-          return prev
-        }, {})
+        const chars = res.result.characters.reduce<any>(
+          (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+          {}
+        )
         return { all: { chats: res.result.chats.sort(sortDesc), chars } }
       }
     },

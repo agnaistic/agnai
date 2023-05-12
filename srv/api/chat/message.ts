@@ -20,6 +20,7 @@ const genValidator = {
   replacing: 'any?',
   replyAs: 'any?',
   continuing: 'any?',
+  characters: 'any?',
   parts: {
     scenario: 'string?',
     persona: 'string',
@@ -63,7 +64,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   const replyAs =
     body.replyAs?._id && body.replyAs._id !== chat.characterId
-      ? await store.characters.getCharacter(userId, body.replyAs._id)
+      ? await store.characters.getCharacter(chat.userId, body.replyAs._id)
       : undefined
 
   if (chat.userId !== userId) {
@@ -133,7 +134,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     if ('partial' in gen) {
-      sendOne(userId, { type: 'message-partial', partial: gen.partial, adapter, chatId })
+      sendMany(members, { type: 'message-partial', partial: gen.partial, adapter, chatId })
       continue
     }
 

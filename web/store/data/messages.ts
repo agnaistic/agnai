@@ -132,6 +132,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       settings: entities.settings,
       messages,
       replyAs,
+      characters: entities.characters,
     },
     encoder
   )
@@ -157,6 +158,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     replacing,
     continuing,
     replyAs,
+    characters: entities.characters,
   }
 
   const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
@@ -190,7 +192,7 @@ export async function getPromptEntities() {
 }
 
 async function getGuestEntities() {
-  const { active, chatBots } = getStore('chat').getState()
+  const { active, chatBots, chatBotMap } = getStore('chat').getState()
   if (!active) return
 
   const chat = active.chat
@@ -218,11 +220,12 @@ async function getGuestEntities() {
     members: [profile] as AppSchema.Profile[],
     chatBots,
     autoReplyAs: active.replyAs,
+    characters: chatBotMap,
   }
 }
 
 function getAuthedPromptEntities() {
-  const { active, chatProfiles: members, chatBots } = getStore('chat').getState()
+  const { active, chatProfiles: members, chatBots, chatBotMap } = getStore('chat').getState()
   if (!active) return
 
   const { profile, user } = getStore('user').getState()
@@ -249,6 +252,7 @@ function getAuthedPromptEntities() {
     members,
     chatBots,
     autoReplyAs: active.replyAs,
+    characters: chatBotMap,
   }
 }
 

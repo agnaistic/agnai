@@ -1,5 +1,14 @@
 import { ImagePlus, MailPlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Setter, Show } from 'solid-js'
+import {
+  Component,
+  createMemo,
+  createSignal,
+  For,
+  onCleanup,
+  onMount,
+  Setter,
+  Show,
+} from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -36,7 +45,20 @@ const InputBar: Component<{
 
   const [text, setText] = createSignal('')
   const [menu, setMenu] = createSignal(false)
+  const [timer, setTimer] = createSignal<any>()
   const [cleared, setCleared] = createSignal(0, { equals: false })
+
+  onMount(() => {
+    setTimer(
+      setInterval(() => {
+        updateText(ref)
+      }, 50)
+    )
+  })
+
+  onCleanup(() => {
+    clearInterval(timer())
+  })
 
   const updateText = (ev: Event) => {
     if (!ref) return
@@ -133,7 +155,7 @@ const InputBar: Component<{
           props.ooc
             ? 'Send a message... (Out of character)'
             : `Send a message to ${
-                chats.botMap[chats.autoReplyAs || props.chat.characterId].name
+                chats.botMap[chats.autoReplyAs || props.chat.characterId]?.name || props.char?.name
               }...`
         }
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"

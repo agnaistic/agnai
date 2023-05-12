@@ -16,6 +16,7 @@ export type GenerateRequestV2 = {
   settings?: Partial<AppSchema.GenSettings>
   replacing?: AppSchema.ChatMessage
   continuing?: AppSchema.ChatMessage
+  characters: Record<string, { name: string }>
 }
 
 export type GenerateOptions = {
