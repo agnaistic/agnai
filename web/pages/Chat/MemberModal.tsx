@@ -4,12 +4,13 @@ import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, userStore } from '../../store'
+import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
 import Select, { Option } from '/web/shared/Select'
+import CharacterSelect from '/web/shared/CharacterSelect'
 
 type InviteType = 'user' | 'character'
 
@@ -40,7 +41,10 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
     return available
   })
 
-  const charMembers = createMemo(() => state.active?.chat.characterIds || [])
+  const charMembers = createMemo(() => {
+    if (!state.active?.char) return []
+    return [state.active.char._id, ...(state.active?.chat.characterIds ?? [])]
+  })
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
   const remove = () => {
@@ -51,8 +55,8 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   }
 
   const users = createMemo(() => {
-    const profiles = state.active?.participantIds.map((id) => state.memberIds[id])
-    return profiles || []
+    if (!self.profile) return []
+    return [self.profile, ...(state.active?.participantIds.map((id) => state.memberIds[id]) ?? [])]
   })
 
   const invite = () => {
@@ -66,7 +70,10 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
       case 'character':
         const char = inviteChar()
-        if (!char) throw new Error('No character selected')
+        if (!char) {
+          toastStore.error('No character selected')
+          return
+        }
         return chatStore.addCharacter(chatId, char._id, props.close)
     }
   }
@@ -129,13 +136,18 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
           </div>
         </form>
         <Divider />
-        <Show when={users().length === 0 && charMembers().length === 0}>
-          <div class="flex w-full justify-center">There are no particpants in this chat.</div>
-        </Show>
-        <For each={users()}>
-          {(member) => <Participant member={member} remove={setDeleting} canRemove={isOwner()} />}
-        </For>
-        <For each={charMembers()}>{(charId) => <CharacterParticipant charId={charId} />}</For>
+        <div class="space-y-2">
+          <For each={users()}>
+            {(member) => (
+              <Participant
+                member={member}
+                remove={setDeleting}
+                canRemove={isOwner() && member._id !== self.profile?._id}
+              />
+            )}
+          </For>
+          <For each={charMembers()}>{(charId) => <CharacterParticipant charId={charId} />}</For>
+        </div>
       </Modal>
 
       <ConfirmModal
