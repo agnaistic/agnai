@@ -37,7 +37,7 @@ const NavBar: Component = () => {
     <Show when={!cfg.fullscreen}>
       <span
         data-header=""
-        class="flex justify-between gap-4 border-b-2 border-[var(--bg-800)] bg-[var(--bg-900)] px-4 py-5 max-sm:p-3 sm:hidden"
+        class="flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] bg-[var(--bg-900)] px-4 py-3 max-sm:p-1 sm:hidden"
       >
         <span class="flex w-full items-center justify-between gap-2 font-semibold sm:justify-start">
           <div class="w-8 sm:hidden" onClick={settingStore.menu}>

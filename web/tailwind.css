@@ -407,10 +407,10 @@ body {
   }
 
   .drawer {
-    height: calc(100vh - 58px);
-    height: calc(100dvh - 58px);
+    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
     position: absolute;
-    top: 58px;
+    top: 48px;
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;

@@ -271,7 +271,9 @@ const ChatDetail: Component = () => {
             />
             <Show when={isOwner() && chats.chatBots.length > 1}>
               <div
-                class={`flex justify-center gap-2 ${msgs.waiting ? 'opacity-70 saturate-0' : ''}`}
+                class={`flex justify-center gap-2 py-1 ${
+                  msgs.waiting ? 'opacity-70 saturate-0' : ''
+                }`}
               >
                 <For each={activeCharIds()}>
                   {(id) => (
@@ -413,17 +415,15 @@ const CharacterResponseBtn: Component<{
   return (
     <Show when={props.char}>
       <div
-        class={`flex max-w-[200px] overflow-hidden px-1 py-1 ${cursor()} rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
+        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
         onclick={() => !props.waiting && props.request(props.char._id)}
       >
-        <div class="px-1">
-          <AvatarIcon
-            bot={true}
-            format={{ size: 'xs', corners: 'circle' }}
-            avatarUrl={props.char.avatar}
-          />
-        </div>
-        <strong class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <AvatarIcon
+          bot={true}
+          format={{ size: 'xs', corners: 'circle' }}
+          avatarUrl={props.char.avatar}
+        />
+        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
           {props.char.name}
         </strong>
       </div>

@@ -212,23 +212,6 @@ const InputBar: Component<{
                 )}
               </For>
               <hr />
-
-              <Show when={props.chat.userId === user.user?._id}>
-                <div>Generate reply</div>
-                <For each={props.bots}>
-                  {(char, i) => (
-                    <Button
-                      schema="secondary"
-                      class="ellipsis flex w-full"
-                      onClick={() => request(char._id)}
-                      size="sm"
-                    >
-                      <span class="ellipsis">{char.name}</span>
-                    </Button>
-                  )}
-                </For>
-                <hr />
-              </Show>
             </Show>
             <Show when={props.showOocToggle}>
               <Button

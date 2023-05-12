@@ -216,7 +216,7 @@ export function getPromptParts(
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  parts.sampleChat = (replyAs?.sampleChat || chat.sampleChat || '')
+  parts.sampleChat = (replyAs ? replyAs?.sampleChat || '' : chat.sampleChat)
     .split('\n')
     .filter(removeEmpty)
     // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
