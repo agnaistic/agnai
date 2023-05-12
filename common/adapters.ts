@@ -77,11 +77,16 @@ export const OPENAI_MODELS = {
  */
 export const CLAUDE_MODELS = {
   ClaudeV1: 'claude-v1',
+  ClaudeV1_100k: 'claude-v1-100k',
   ClaudeV1_0: 'claude-v1.0',
   ClaudeV1_2: 'claude-v1.2',
   ClaudeV1_3: 'claude-v1.3',
+  ClaudeV1_3_100k: 'claude-v1.3-100k',
   ClaudeInstantV1: 'claude-instant-v1',
+  ClaudeInstantV1_100k: 'claude-instant-v1-100k',
   ClaudeInstantV1_0: 'claude-instant-v1.0',
+  ClaudeInstantV1_1: 'claude-instant-v1.1',
+  ClaudeInstantV1_1_100k: 'claude-instant-v1.1-100k',
 } as const
 
 export const NOVEL_MODELS = {
