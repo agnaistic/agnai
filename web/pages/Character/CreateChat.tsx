@@ -112,6 +112,7 @@ const CreateChatModal: Component<{
         </div>
         <Show when={!props.char}>
           <CharacterSelect
+            class="w-48"
             items={state.chars}
             value={char()}
             fieldName="character"

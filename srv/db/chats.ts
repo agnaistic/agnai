@@ -18,7 +18,7 @@ export async function getChat(id: string) {
   const chat = await db('chat').findOne({ _id: id, kind: 'chat' })
   if (!chat) return
 
-  const charIds = chat.characterIds || []
+  const charIds = Object.keys(chat.characters || {})
   const characters = await db('character')
     .find({ _id: { $in: charIds.concat(chat.characterId) } })
     .toArray()
@@ -174,4 +174,11 @@ export async function getActiveMembers(chatId: string) {
     .toArray()
     .then((list) => list.map((member) => member.userId))
   return members
+}
+
+export async function setChatCharacter(chatId: string, charId: string, state: boolean) {
+  await db('chat').updateOne(
+    { _id: chatId },
+    { $set: { updatedAt: now(), [`characters.${charId}`]: state } }
+  )
 }

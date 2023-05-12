@@ -4,12 +4,13 @@ import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, userStore } from '../../store'
+import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
 import Select, { Option } from '/web/shared/Select'
+import CharacterSelect from '/web/shared/CharacterSelect'
 
 type InviteType = 'user' | 'character'
 
@@ -32,18 +33,28 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
   const [type, setType] = createSignal('user')
-  const [inviteCharId, setCharId] = createSignal<string>()
+  const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
+
+  const charMemberIds = createMemo(() => {
+    if (!state.active?.char) return []
+    const active = Object.entries(state.active.chat.characters || {})
+      .filter((pair) => pair[1])
+      .map((pair) => pair[0])
+    return [state.active.char._id, ...active]
+  })
+
+  const charMembers = createMemo(() => {
+    return state.chatBots.filter((bot) => charMemberIds().includes(bot._id))
+  })
 
   const characters = createMemo(() => {
-    const available = chars.characters.list
-      .filter((c) => c._id !== props.charId)
-      .map((c) => ({ value: c._id, label: c.name }))
-
-    setCharId(available[0]?.value)
+    const available = chars.characters.list.filter(
+      (c) => c._id !== props.charId && !charMemberIds().includes(c._id)
+    )
+    if (available.length) setInviteChar(available[0])
     return available
   })
 
-  const charMembers = createMemo(() => state.active?.chat.characterIds || [])
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
   const remove = () => {
@@ -54,8 +65,9 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   }
 
   const users = createMemo(() => {
-    const profiles = state.active?.participantIds.map((id) => state.memberIds[id])
-    return profiles || []
+    if (!self.profile) return []
+    const participants = state.active?.participantIds?.map((id) => state.memberIds[id]) || []
+    return [self.profile].concat(participants)
   })
 
   const invite = () => {
@@ -68,10 +80,18 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         return chatStore.inviteUser(chatId, body.userId, props.close)
 
       case 'character':
-        const charId = inviteCharId()
-        if (!charId) throw new Error('No character selected')
-        return chatStore.addCharacter(chatId, charId, props.close)
+        const char = inviteChar()
+        if (!char) {
+          toastStore.error('No character selected')
+          return
+        }
+        return chatStore.addCharacter(chatId, char._id, props.close)
     }
+  }
+
+  const removeChar = (charId: string) => {
+    if (!state.active?.chat) return
+    chatStore.removeCharacter(state.active.chat._id, charId)
   }
 
   const Footer = (
@@ -113,13 +133,14 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
                     <div class="text-red-500">You don't have any other characters to invite</div>
                   }
                 >
-                  <Select
+                  <CharacterSelect
+                    class="w-full"
                     fieldName="character"
                     label="Character"
                     helperText="The character to invite"
                     items={characters()}
-                    value={inviteCharId()}
-                    onChange={(val) => setCharId(val.value)}
+                    value={inviteChar()}
+                    onChange={(val) => setInviteChar(val)}
                   />
                 </Show>
               </Match>
@@ -131,13 +152,26 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
           </div>
         </form>
         <Divider />
-        <Show when={users().length === 0 && charMembers().length === 0}>
-          <div class="flex w-full justify-center">There are no particpants in this chat.</div>
-        </Show>
-        <For each={users()}>
-          {(member) => <Participant member={member} remove={setDeleting} canRemove={isOwner()} />}
-        </For>
-        <For each={charMembers()}>{(charId) => <CharacterParticipant charId={charId} />}</For>
+        <div class="space-y-2 text-sm">
+          <For each={users()}>
+            {(member) => (
+              <Participant
+                member={member}
+                remove={setDeleting}
+                canRemove={isOwner() && member._id !== self.profile?._id}
+              />
+            )}
+          </For>
+          <For each={charMembers()}>
+            {(char) => (
+              <CharacterParticipant
+                char={char}
+                remove={removeChar}
+                canRemove={props.charId !== char._id}
+              />
+            )}
+          </For>
+        </div>
       </Modal>
 
       <ConfirmModal
@@ -158,16 +192,18 @@ const Participant: Component<{
   canRemove: boolean
 }> = (props) => {
   return (
-    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-2">
+    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
       <div class="flex items-center gap-2">
-        <AvatarIcon avatarUrl={props.member.avatar} format={{ size: 'md', corners: 'circle' }} />
-        <div>{props.member.handle}</div>
-        <div class="text-sm italic text-[var(--text-600)]">{props.member.userId.slice(0, 8)}</div>
+        <AvatarIcon avatarUrl={props.member.avatar} format={{ size: 'sm', corners: 'circle' }} />
+        <div class="ellipsis flex flex-col">
+          <div class="ellipsis">{props.member.handle}</div>
+          <div class="text-xs italic text-[var(--text-600)]">{props.member.userId.slice(0, 8)}</div>
+        </div>
       </div>
-      <div class="flex gap-2">
+      <div class="flex">
         <Show when={props.canRemove}>
-          <Button schema="clear">
-            <Trash onClick={() => props.remove(props.member)} />
+          <Button schema="clear" onClick={() => props.remove(props.member)}>
+            <Trash size={16} />
           </Button>
         </Show>
       </div>
@@ -176,11 +212,21 @@ const Participant: Component<{
 }
 
 const CharacterParticipant: Component<{
-  charId: string
+  char: AppSchema.Character
+  canRemove: boolean
+  remove: (charId: string) => void
 }> = (props) => {
   return (
-    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-2">
-      {props.charId}
+    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
+      <div class="ellipsis flex items-center gap-2">
+        <AvatarIcon format={{ corners: 'circle', size: 'sm' }} avatarUrl={props.char.avatar} />
+        <div class="ellipsis">{props.char.name}</div>
+      </div>
+      <Show when={props.canRemove}>
+        <Button schema="clear" onClick={() => props.remove(props.char._id)}>
+          <Trash size={16} />
+        </Button>
+      </Show>
     </div>
   )
 }

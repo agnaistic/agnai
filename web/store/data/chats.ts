@@ -36,7 +36,7 @@ export async function getChat(id: string) {
   const chat = loadItem('chats').find((ch) => ch._id === id)
   const character = allChars.find((ch) => ch._id === chat?.characterId)
 
-  const charIds = new Set(chat?.characterIds || [])
+  const charIds = new Set(Object.keys(chat?.characters || {}))
   const characters = allChars.filter((ch) => ch._id === chat?.characterId || charIds.has(ch._id))
   const profile = loadItem('profile')
   const messages = await localApi.getMessages(id)

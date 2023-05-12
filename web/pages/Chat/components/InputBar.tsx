@@ -1,4 +1,4 @@
-import { ImagePlus, MailPlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
 import {
   Component,
   createMemo,

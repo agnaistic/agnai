@@ -160,6 +160,7 @@ const CharacterChats: Component = () => {
           </div>
 
           <CharacterSelect
+            class="w-48"
             fieldName="char"
             items={chars.list}
             emptyLabel="All Characters"

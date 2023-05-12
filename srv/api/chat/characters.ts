@@ -1,7 +1,6 @@
 import { assertValid } from 'frisker'
-import { db, store } from '../../db'
+import { store } from '../../db'
 import { errors, handle } from '../wrap'
-import { now } from '../../db/util'
 import { sendMany } from '../ws'
 
 export const addCharacter = handle(async ({ body, params, userId }) => {
@@ -9,25 +8,26 @@ export const addCharacter = handle(async ({ body, params, userId }) => {
   const chatId = params.id
   const charId = body.charId
 
-  const prev = await store.chats.getChatOnly(params.id)
+  const chat = await store.chats.getChatOnly(params.id)
+  if (!chat) throw errors.NotFound
 
-  if (!prev) throw errors.NotFound
-  if (prev.userId !== userId) throw errors.Forbidden
-  if (!prev.characterIds) prev.characterIds = []
-  if (prev.characterIds.includes(charId)) throw errors.BadRequest
-  if (charId === prev.characterId) throw errors.BadRequest
+  if (chat.userId !== userId) throw errors.Forbidden
+  if (!chat.characters) {
+    chat.characters = {}
+  }
+
+  if (chat.characters[charId]) {
+    return { success: true }
+  }
+  if (charId === chat.characterId) throw errors.BadRequest
 
   const character = await store.characters.getCharacter(userId, charId)
   if (!character) throw errors.Forbidden
 
   // TODO: Move query to store module
-  await db('chat').updateOne(
-    { _id: chatId },
-    { $push: { characterIds: charId }, $set: { updatedAt: now() } }
-  )
-
+  await store.chats.setChatCharacter(chatId, charId, true)
   const members = await store.chats.getActiveMembers(chatId)
-  sendMany(members, { type: 'chat-character-added', character, chatId })
+  sendMany(members.concat(userId), { type: 'chat-character-added', character, chatId })
 
   return { success: true }
 })
@@ -39,17 +39,17 @@ export const removeCharacter = handle(async ({ params, userId }, _) => {
   const chat = await store.chats.getChatOnly(params.id)
 
   if (!chat) throw errors.NotFound
-  if (chat.userId !== userId) throw errors.Forbidden
-  if (!chat.characterIds?.includes(charId)) return { success: true }
+  if (!chat.characters) {
+    chat.characters = {}
+  }
 
-  // TODO: Move query to store module
-  await db('chat').updateOne(
-    { _id: chatId, userId },
-    { $pull: { characterIds: charId }, $set: { updatedAt: now() } }
-  )
+  if (chat.userId !== userId) throw errors.Forbidden
+  if (!chat.characters[charId]) return { success: true }
+
+  await store.chats.setChatCharacter(chatId, charId, false)
 
   const members = await store.chats.getActiveMembers(chatId)
 
-  sendMany(members, { type: 'chat-character-removed', chatId, characterId: charId })
+  sendMany(members.concat(userId), { type: 'chat-character-removed', chatId, characterId: charId })
   return { success: true }
 })
