@@ -150,10 +150,14 @@ const GeneralSettings: Component<Props> = (props) => {
               Therefore we can't precisely count tokens when generating a prompt. Keep this well
               below 8K to ensure you don't exceed the limit.
             </p>
+            <p>
+              Claude models with "100k" in the name support up to 100k tokens, but the same caveats
+              apply, we recommend setting a 80k limit.
+            </p>
           </>
         }
         min={16}
-        max={32000}
+        max={props.service === 'claude' ? 100000 : 32000}
         step={1}
         value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
         disabled={props.disabled}
