@@ -62,6 +62,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   const chat = await store.chats.getChatOnly(chatId)
   if (!chat) throw errors.NotFound
 
+  if (body.kind === 'request' && chat.userId !== userId) {
+    throw errors.Forbidden
+  }
+
   const replyAs =
     body.replyAs?._id && body.replyAs._id !== chat.characterId
       ? await store.characters.getCharacter(chat.userId, body.replyAs._id)

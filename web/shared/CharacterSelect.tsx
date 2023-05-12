@@ -66,7 +66,7 @@ const CharacterSelect: Component<{
           </span>
         </Button>
         <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
-          <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[30vw]">
+          <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[280px]">
             <div class="flex-1 overflow-y-auto">
               <div class="flex flex-col gap-2 p-2">
                 <Show when={props.emptyLabel}>
@@ -91,10 +91,14 @@ const CharacterSelect: Component<{
                       onClick={() => onChange(item)}
                     >
                       <div class="ellipsis flex h-3/4 items-center">
-                        <AvatarIcon avatarUrl={item.avatar} class="mr-4" />
+                        <AvatarIcon
+                          avatarUrl={item.avatar}
+                          class="mr-4"
+                          format={{ size: 'xs', corners: 'circle' }}
+                        />
                         <div class="ellipsis flex w-full flex-col">
-                          <div class="font-bold">{item.name}</div>
-                          <div class="">{item.description}</div>
+                          <div class="ellipsis font-bold">{item.name}</div>
+                          <div class="ellipsis">{item.description}</div>
                         </div>
                       </div>
                       <div>

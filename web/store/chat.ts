@@ -340,18 +340,27 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async *addCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
-      const res = await api.post(`/chat/${chatId}/characters`, { charId })
+    async *addCharacter(
+      { active, chatBots, chatBotMap },
+      chatId: string,
+      charId: string,
+      onSuccess?: () => void
+    ) {
+      const res = await chatsApi.addCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to invite character: ${res.error}`)
-      if (res.result && active) {
-        yield {
-          active: {
-            ...active,
-            chat: {
-              ...active.chat,
-              characters: Object.assign(active.chat.characters || {}, { [charId]: true }),
-            },
-          },
+      if (!active) return
+      if (res.result) {
+        const chat = {
+          ...active.chat,
+          characters: Object.assign(active.chat.characters || {}, { [charId]: true }),
+        }
+
+        yield { active: { ...active, chat } }
+        if (res.result.char) {
+          yield {
+            chatBots: chatBots.concat(res.result.char),
+            chatBotMap: { ...chatBotMap, [charId]: res.result.char },
+          }
         }
         toastStore.success(`Character added`)
         onSuccess?.()
@@ -359,18 +368,17 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *removeCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
-      const res = await api.method('delete', `/chat/${chatId}/characters/${charId}`, { charId })
+      const res = await chatsApi.removeCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
-      if (res.result && active) {
-        yield {
-          active: {
-            ...active,
-            chat: {
-              ...active.chat,
-              characters: Object.assign(active.chat.characters || {}, { [charId]: false }),
-            },
-          },
+
+      if (!active) return
+      if (res.result) {
+        const chat = {
+          ...active.chat,
+          characters: Object.assign(active.chat.characters || {}, { [charId]: false }),
         }
+
+        yield { active: { ...active, chat } }
         toastStore.success(`Character removed from chat`)
         onSuccess?.()
       }

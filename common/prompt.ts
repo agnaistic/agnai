@@ -130,11 +130,11 @@ export function buildPrompt(
 
   // If the gaslight is empty or useGaslight is disabled, proceed without it
   if (!opts.settings?.useGaslight || !opts.settings.gaslight || !parts.gaslight) {
-    if (opts.replyAs) {
-      pre.push(`${opts.replyAs.name}'s Persona: ${opts.replyAs.persona}`)
-    } else {
-      pre.push(`${char.name}'s Persona: ${parts.persona}`)
-    }
+    // if (opts.replyAs) {
+    //   pre.push(`${opts.replyAs.name}'s Persona: ${opts.replyAs.persona}`)
+    // } else {
+    // }
+    pre.push(`${opts.replyAs?.name || char.name}'s Persona: ${parts.persona}`)
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
@@ -216,13 +216,11 @@ export function getPromptParts(
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  if (replyAs?.sampleChat || chat.sampleChat) {
-    parts.sampleChat = (replyAs?.sampleChat || chat.sampleChat)
-      .split('\n')
-      .filter(removeEmpty)
-      // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-      .map(replace)
-  }
+  parts.sampleChat = (replyAs?.sampleChat || chat.sampleChat || '')
+    .split('\n')
+    .filter(removeEmpty)
+    // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
+    .map(replace)
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)

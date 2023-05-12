@@ -11,6 +11,7 @@ import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
 import Select, { Option } from '/web/shared/Select'
 import CharacterSelect from '/web/shared/CharacterSelect'
+import { isLoggedIn } from '/web/store/api'
 
 type InviteType = 'user' | 'character'
 
@@ -20,10 +21,11 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   const state = chatStore()
   const chars = characterStore()
 
-  const typeItems: Option<InviteType>[] = [
-    { value: 'user', label: 'User' },
-    { value: 'character', label: 'Character' },
-  ]
+  const typeItems: Option<InviteType>[] = [{ value: 'character', label: 'Character' }]
+
+  if (isLoggedIn()) {
+    typeItems.unshift({ value: 'user', label: 'User' })
+  }
 
   onMount(() => {
     if (!chars.characters.loaded) {
@@ -32,7 +34,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   })
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
-  const [type, setType] = createSignal('user')
+  const [type, setType] = createSignal(typeItems[0].value)
   const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
 
   const charMemberIds = createMemo(() => {
@@ -110,7 +112,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
             label="Invitation Type"
             helperText="Whether to invite a user or a character"
             items={typeItems}
-            value={'user'}
+            value={typeItems[0].value}
             onChange={(val) => setType(val.value)}
           />
 
