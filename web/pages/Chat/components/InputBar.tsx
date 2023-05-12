@@ -198,17 +198,21 @@ const InputBar: Component<{
               <div>Auto-reply as</div>
               <For each={props.bots}>
                 {(char) => (
-                  <Button
-                    schema="secondary"
-                    size="sm"
-                    onClick={() => setAutoReplyAs(char._id)}
-                    disabled={
-                      chats.autoReplyAs === char._id ||
-                      (!chats.autoReplyAs && props.chat.characterId === char._id)
-                    }
+                  <Show
+                    when={props.chat.characters?.[char._id] || char._id === props.chat.characterId}
                   >
-                    {char.name}
-                  </Button>
+                    <Button
+                      schema="secondary"
+                      size="sm"
+                      onClick={() => setAutoReplyAs(char._id)}
+                      disabled={
+                        chats.autoReplyAs === char._id ||
+                        (!chats.autoReplyAs && props.chat.characterId === char._id)
+                      }
+                    >
+                      {char.name}
+                    </Button>
+                  </Show>
                 )}
               </For>
               <hr />

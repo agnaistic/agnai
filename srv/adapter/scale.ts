@@ -10,6 +10,7 @@ export const handleScale: ModelAdapter = async function* ({
   prompt,
   guest,
   log,
+  ...opts
 }) {
   if (!user.scaleApiKey) {
     yield { error: 'Scale API key not set' }
@@ -56,6 +57,6 @@ export const handleScale: ModelAdapter = async function* ({
   }
 
   const parsed = sanitise(response.body.output)
-  const trimmed = trimResponseV2(parsed, char, members, [])
+  const trimmed = trimResponseV2(parsed, opts.replyAs || char, members, [])
   yield trimmed || parsed
 }

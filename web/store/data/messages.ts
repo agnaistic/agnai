@@ -3,6 +3,7 @@ import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
+import { chatStore } from '../chat'
 import { getStore } from '../create'
 import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
@@ -67,6 +68,7 @@ export type GenerateOpts =
 
 export async function generateResponseV2(opts: GenerateOpts) {
   const { ui } = userStore()
+  const { active } = chatStore()
   const entities = await getPromptEntities()
   const [message, lastMessage] = entities.messages.slice(-2)
 
@@ -84,10 +86,17 @@ export async function generateResponseV2(opts: GenerateOpts) {
     if (lastMessage.characterId) {
       retry = message
       replacing = lastMessage
-      if (lastMessage.characterId !== entities.chat.characterId) {
-        replyAs = entities.chatBots.find((ch) => ch._id === lastMessage.characterId)
+
+      const replyAsId =
+        lastMessage.characterId !== entities.chat._id ? lastMessage.characterId : null
+
+      if (replyAsId) {
+        replyAs = entities.chatBots.find((ch) => ch._id === replyAsId)
       }
     } else {
+      if (active?.replyAs) {
+        replyAs = entities.chatBots.find((ch) => ch._id === active.replyAs)
+      }
       retry = lastMessage
     }
   }

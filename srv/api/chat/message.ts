@@ -198,7 +198,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       } else {
         const msg = await store.msgs.createChatMessage({
           chatId,
-          characterId: body.char._id,
+          characterId: replyAs?._id || body.char._id,
           message: generated,
           adapter,
           ooc: false,

@@ -228,7 +228,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
-    yield sanitiseAndTrim(text, prompt, char, members)
+    yield sanitiseAndTrim(text, prompt, opts.replyAs || char, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
