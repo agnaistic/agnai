@@ -27,6 +27,7 @@ import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import './chat-detail.css'
+import AvatarIcon from '/web/shared/AvatarIcon'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -183,6 +184,18 @@ const ChatDetail: Component = () => {
     msgStore.retry(chats.chat?._id!)
   }
 
+  const activeCharIds = createMemo(() => {
+    if (!chats.char) return []
+    const active = Object.entries(chats.chat?.characters || {})
+      .filter((pair) => pair[1])
+      .map((pair) => pair[0])
+    return [chats.char._id, ...active]
+  })
+
+  const activeChars = createMemo(() =>
+    chats.chatBots.filter((c) => activeCharIds().includes(c._id))
+  )
+
   return (
     <>
       <Show when={!chats.loaded}>
@@ -260,7 +273,24 @@ const ChatDetail: Component = () => {
               request={requestMessage}
               bots={chats.chatBots}
             />
-            <Show when={isOwner()}>
+            <Show when={isOwner() && chats.chatBots.length > 1}>
+              <div class={`flex justify-center ${msgs.waiting ? 'opacity-70 saturate-0' : ''}`}>
+                <For each={activeChars()}>
+                  {(char) => (
+                    <GenerateMsgForCharacterBtn
+                      char={char}
+                      requestMessage={requestMessage}
+                      waiting={!!msgs.waiting}
+                    />
+                  )}
+                </For>
+              </div>
+            </Show>
+            <Show
+              when={
+                isOwner() && ((retries()?.list || []).length > 1 || chats.chatBots.length === 1)
+              }
+            >
               <SwipeMessage
                 chatId={chats.chat?._id!}
                 pos={swipe()}
@@ -374,6 +404,30 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
+
+const GenerateMsgForCharacterBtn: Component<{
+  char: AppSchema.Character
+  waiting: boolean
+  requestMessage: (s: string) => void
+}> = (props) => (
+  <div
+    class={`flex max-w-[200px] overflow-hidden px-1 py-1 ${
+      props.waiting ? 'cursor-default' : 'cursor-pointer'
+    }`}
+    onclick={() => !props.waiting && props.requestMessage(props.char._id)}
+  >
+    <div class="px-1">
+      <AvatarIcon
+        bot={true}
+        format={{ size: 'xs', corners: 'circle' }}
+        avatarUrl={props.char.avatar}
+      />
+    </div>
+    <strong class="min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+      {props.char.name}
+    </strong>
+  </div>
+)
 
 const SwipeMessage: Component<{
   chatId: string
