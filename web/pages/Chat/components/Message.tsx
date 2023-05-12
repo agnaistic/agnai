@@ -172,7 +172,10 @@ const SingleMessage: Component<
 
             <Match when={props.char && !!props.msg.characterId}>
               <AvatarIcon
-                avatarUrl={state.chatBotMap[props.msg.characterId!].avatar || props.char?.avatar}
+                avatarUrl={
+                  state.chatBotMap[props.msg.characterId!]?.avatar ??
+                  (props.msg.characterId === props.char?._id ? props.char?.avatar : undefined)
+                }
                 bot={true}
                 format={format()}
               />
@@ -203,7 +206,8 @@ const SingleMessage: Component<
                 data-user-name={isUser()}
               >
                 {props.msg.characterId
-                  ? state.chatBotMap[props.msg.characterId!].name || props.char?.name!
+                  ? state.chatBotMap[props.msg.characterId!]?.name ??
+                    (props.msg.characterId === props.char?._id ? props.char?.name! : '...')
                   : handleToShow()}
               </b>
               <span
