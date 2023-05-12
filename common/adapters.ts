@@ -22,16 +22,14 @@ export type AdapterSetting = {
 
 type SettingType =
   | { type: 'list'; options: Array<{ label: string; value: string }> }
-  | { type: 'text' }
+  | { type: 'text'; placeholder?: string }
   | { type: 'boolean' }
-  | { type: '' }
 
 export type AdapterOptions = {
   /** Name of the adapter that will be displayed in the UI */
   label: string
-
   settings: AdapterSetting[]
-  options: Array<keyof AppSchema.GenSettings>
+  options: Array<keyof PresetAISettings>
 }
 
 export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'text'] as const
@@ -68,6 +66,8 @@ export const OPENAI_MODELS = {
   Turbo0301: 'gpt-3.5-turbo-0301',
   GPT4: 'gpt-4',
   GPT4_0314: 'gpt-4-0314',
+  GPT4_32k: 'gpt-4-32k',
+  GPT4_32k_0314: 'gpt-4-32k-0314',
 } as const
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
@@ -145,7 +145,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   goose: 'Goose AI',
 }
 
-export type Preset = Omit<
+export type PresetAISettings = Omit<
   AppSchema.GenSettings,
   | 'name'
   | 'service'
@@ -158,10 +158,12 @@ export type Preset = Omit<
   | 'useGaslight'
 >
 
-export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AIAdapter[] } = {
+export const adapterSettings: {
+  [key in keyof PresetAISettings]: AIAdapter[]
+} = {
   temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude'],
-  maxTokens: AI_ADAPTERS,
-  maxContextLength: AI_ADAPTERS,
+  maxTokens: AI_ADAPTERS.slice(),
+  maxContextLength: AI_ADAPTERS.slice(),
   gaslight: ['openai', 'scale', 'kobold', 'claude', 'ooba'],
   antiBond: ['openai', 'claude', 'scale'],
   ultimeJailbreak: ['openai', 'claude', 'kobold'],
@@ -180,6 +182,7 @@ export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AI
   oaiModel: ['openai', 'kobold'],
   frequencyPenalty: ['openai', 'kobold'],
   presencePenalty: ['openai', 'kobold'],
+  streamResponse: ['openai', 'kobold'],
 
   addBosToken: ['ooba'],
   banEosToken: ['ooba'],
@@ -187,4 +190,8 @@ export const adapterSettings: { [key in keyof Preset]: AIAdapter[] | readonly AI
   penaltyAlpha: ['ooba'],
 }
 
-export type RegisteredAdapter = AppSchema.AppConfig['registered'][number]
+export type RegisteredAdapter = {
+  name: AIAdapter
+  settings: AdapterSetting[]
+  options: Array<keyof PresetAISettings>
+}

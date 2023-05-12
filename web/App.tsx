@@ -67,6 +67,14 @@ const App: Component = () => {
                   path="/memory/:id"
                   component={lazy(() => import('./pages/Memory/EditMemoryPage'))}
                 />
+                <Route
+                  path="/terms-of-service"
+                  component={lazy(() => import('./pages/TermsOfService'))}
+                />
+                <Route
+                  path="/privacy-policy"
+                  component={lazy(() => import('./pages/PrivacyPolicy'))}
+                />
                 <Show when={state.loggedIn}>
                   <Route
                     path="/invites"

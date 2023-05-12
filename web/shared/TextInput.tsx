@@ -1,6 +1,7 @@
 import { Component, Show, createMemo, JSX, onMount, createEffect } from 'solid-js'
 import IsVisible from './IsVisible'
-import { AIAdapter } from '../../common/adapters'
+import { AIAdapter, PresetAISettings } from '../../common/adapters'
+import { getAISettingServices } from './util'
 
 const MIN_HEIGHT = 40
 
@@ -22,10 +23,11 @@ const TextInput: Component<{
   onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
 
   service?: AIAdapter
-  adapters?: AIAdapter[] | readonly AIAdapter[]
+  aiSetting?: keyof PresetAISettings
 }> = (props) => {
   let ref: any
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
+  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
 
   const value = createMemo(() =>
     props.value !== undefined ? props.value : (null as unknown as undefined)
@@ -39,8 +41,8 @@ const TextInput: Component<{
   }
 
   const hide = createMemo(() => {
-    if (!props.service || !props.adapters) return ''
-    return props.adapters.includes(props.service) ? '' : ` hidden `
+    if (!props.service || !adapters()) return ''
+    return adapters()!.includes(props.service) ? '' : ` hidden `
   })
 
   onMount(resize)

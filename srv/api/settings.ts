@@ -20,8 +20,8 @@ const appConfig: AppSchema.AppConfig = {
     : '',
   registered: getRegisteredAdapters().map((adp) => ({
     name: adp.name,
-    settings: adp.options.settings,
-    options: adp.options.options,
+    settings: adp.settings,
+    options: adp.options,
   })),
 }
 

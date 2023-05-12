@@ -4,6 +4,7 @@ import { baseUrl, getAuth, setSocketId } from './api'
 type Handler = { validator: Validator; fn: (body: any) => void }
 
 const listeners = new Map<string, Handler[]>()
+const onceListners = new Map<string, Handler[]>()
 
 const BASE_RETRY = 100
 const MAX_RETRY = 1000
@@ -33,14 +34,21 @@ export function publish<T extends { type: string }>(payload: T) {
 export function subscribe<T extends string, U extends Validator>(
   type: string,
   validator: U,
-  handler: (body: UnwrapBody<U> & { type: T }) => void
+  handler: (body: UnwrapBody<U> & { type: T }) => void,
+  once?: boolean
 ) {
+  if (once) {
+    const handlers = onceListners.get(type) || []
+    handlers.push({ validator, fn: handler })
+    onceListners.set(type, handlers)
+    return
+  }
   const handlers = listeners.get(type) || []
   handlers.push({ validator, fn: handler })
   listeners.set(type, handlers)
 }
 
-const squelched = new Set('profile-handle-changed')
+const squelched = new Set(['profile-handle-changed'])
 
 function onMessage(msg: MessageEvent<any>) {
   if (typeof msg.data !== 'string') return
@@ -51,7 +59,8 @@ function onMessage(msg: MessageEvent<any>) {
     if (!payload) continue
 
     if (!payload.type) continue
-    const handlers = listeners.get(payload.type)
+    const handlers = listeners.get(payload.type) || []
+    const onceHandlers = onceListners.get(payload.type) || []
 
     if (!squelched.has(payload.type)) {
       if (payload.type !== 'image-generated') {
@@ -63,12 +72,19 @@ function onMessage(msg: MessageEvent<any>) {
       }
     }
 
-    if (!handlers || !handlers.length) continue
-
     for (const handler of handlers) {
       if (!isValid(handler.validator, payload)) continue
       handler.fn(payload)
     }
+
+    for (const handler of onceHandlers) {
+      if (!isValid(handler.validator, payload)) continue
+      handler.fn(payload)
+      const i = onceHandlers.findIndex((h) => h === handler)
+      onceHandlers.splice(i, 1)
+    }
+
+    onceListners.set(payload.type, onceHandlers)
   }
 }
 

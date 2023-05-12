@@ -2,6 +2,10 @@ type ImageType = NovelSettings | HordeSettings | SDSettings
 
 export type ImageSettings = {
   type: ImageType['type']
+
+  summaryPrompt?: string
+  summariseChat?: boolean
+
   template?: string
   width: number
   height: number

@@ -1,4 +1,14 @@
-import { Book, Download, MailPlus, Palette, Settings, Sliders, Users, Camera } from 'lucide-solid'
+import {
+  Book,
+  Download,
+  MailPlus,
+  Palette,
+  Settings,
+  Sliders,
+  Trash,
+  Users,
+  Camera,
+} from 'lucide-solid'
 import { Component, Show, createMemo } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
@@ -6,7 +16,15 @@ import { chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
 import { getRootRgb, getRootVariable } from '../../shared/util'
 
-export type ChatModal = 'export' | 'settings' | 'invite' | 'memory' | 'gen' | 'ui' | 'members'
+export type ChatModal =
+  | 'export'
+  | 'settings'
+  | 'invite'
+  | 'memory'
+  | 'gen'
+  | 'ui'
+  | 'members'
+  | 'delete'
 
 const ChatOptions: Component<{
   show: (modal: ChatModal) => void
@@ -141,6 +159,15 @@ const ChatOptions: Component<{
       >
         <Download /> Export Chat
       </Option>
+
+      <Show when={isOwner()}>
+        <Option
+          onClick={() => props.show('delete')}
+          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+        >
+          <Trash /> Delete Chat
+        </Option>
+      </Show>
     </div>
   )
 }

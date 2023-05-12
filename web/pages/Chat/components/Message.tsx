@@ -15,10 +15,9 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore, msgStore } from '../../../store'
+import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
-import { defaultCulture } from '../../../shared/CultureCodes'
 
 type MessageProps = {
   msg: SplitMessage
@@ -70,7 +69,7 @@ const SingleMessage: Component<
   const state = chatStore()
   const voice = msgStore((x) => ({
     status:
-      props.lastSplit && x.speaking?.messageId == props.msg._id ? x.speaking.status : undefined,
+      props.lastSplit && x.speaking?.messageId === props.msg._id ? x.speaking.status : undefined,
   }))
 
   const [edit, setEdit] = createSignal(false)
@@ -262,7 +261,7 @@ const SingleMessage: Component<
                 <img
                   class="max-h-32 cursor-pointer rounded-md"
                   src={getAssetUrl(props.msg.msg)}
-                  onClick={() => msgStore.showImage(props.original)}
+                  onClick={() => settingStore.showImage(props.original.msg)}
                 />
               </div>
             </Show>
@@ -443,11 +442,6 @@ const MessageOptions: Component<{
       </Show>
     </div>
   )
-}
-
-function textToSpeech(char: AppSchema.Character, msg: SplitMessage) {
-  if (!char.voice) return
-  msgStore.textToSpeech(msg._id, msg.msg, char.voice, char.culture ?? defaultCulture)
 }
 
 function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {

@@ -1,7 +1,8 @@
 import { Component, JSX, Show, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import './toggle.css'
-import { AIAdapter } from '../../common/adapters'
+import { AIAdapter, PresetAISettings } from '../../common/adapters'
+import { getAISettingServices } from './util'
 
 export const Toggle: Component<{
   fieldName: string
@@ -13,16 +14,18 @@ export const Toggle: Component<{
   disabled?: boolean
 
   service?: AIAdapter
-  adapters?: AIAdapter[] | readonly AIAdapter[]
+  aiSetting?: keyof PresetAISettings
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
     if (props.disabled) return
     props.onChange?.(ev.currentTarget.checked)
   }
 
+  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
+
   const hide = createMemo(() => {
-    if (!props.service || !props.adapters) return ''
-    return props.adapters.includes(props.service) ? '' : ` hidden `
+    if (!props.service || !adapters()) return ''
+    return adapters()!.includes(props.service) ? '' : ` hidden `
   })
 
   return (

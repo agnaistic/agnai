@@ -1,6 +1,6 @@
 {
   "name": "agnai",
-  "version": "0.1.0-alpha-19",
+  "version": "0.1.0-alpha-24",
   "description": "Agnostic AI Chat",
   "keywords": [],
   "license": "AGPL-3.0",
@@ -17,12 +17,21 @@
     "model/**/*.yml",
     "common/*",
     "dist/index.*",
-    "db/.gitkeep"
+    "db/.gitkeep",
+    "dist/*.js",
+    "dist/*.css",
+    "dist/*.map"
   ],
   "_moduleAliases": {
-    "srv": "./srv"
+    "srv": "./srv",
+    "/srv": "./srv",
+    "/common": "./common",
+    "common": "./common"
   },
   "scripts": {
+    "clean": "npx rimraf@5 --glob \"dist/*.js\" \"dist/*.css\" \"dist/*.map\"",
+    "prepublishOnly": "npm run clean && npm run build",
+    "prebuild": "npm run clean",
     "build": "parcel build web/index.html --no-optimize --detailed-report",
     "build:prod": "NODE_ENV=production parcel build web/index.html --detailed-report",
     "build:win": "parcel build web/index.html --no-optimize --detailed-report",

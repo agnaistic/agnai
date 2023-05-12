@@ -74,18 +74,22 @@ export async function deleteApiKey(kind: string) {
 
   if (kind === 'scale') {
     user.scaleApiKey = ''
+    user.scaleApiKeySet = false
   }
 
   if (kind === 'claude') {
     user.claudeApiKey = ''
+    user.claudeApiKeySet = false
   }
 
   if (kind === 'third-party') {
     user.thirdPartyPassword = ''
+    user.thirdPartyPasswordSet = false
   }
 
   if (kind === 'elevenlabs') {
     user.elevenLabsApiKey = ''
+    user.elevenLabsApiKeySet = false
   }
 
   localApi.saveConfig(user)

@@ -10,7 +10,7 @@ export type ElevenLabsModel = 'eleven_multilingual_v1' | 'eleven_monolingual_v1'
 export type VoiceSettings =
   | VoiceDisabledSettings
   | VoiceElevenLabsSettings
-  | VoiceWebSpeechSynthesisSettings
+  | VoiceWebSynthesisSettings
 
 export type VoiceDisabledSettings = {
   service: undefined
@@ -24,7 +24,7 @@ export type VoiceElevenLabsSettings = {
   similarityBoost?: number
 }
 
-export type VoiceWebSpeechSynthesisSettings = {
+export type VoiceWebSynthesisSettings = {
   service: 'webspeechsynthesis'
   voiceId: string
   pitch?: number

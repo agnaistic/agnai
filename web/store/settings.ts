@@ -24,6 +24,7 @@ type SettingState = {
     config: AppSchema.AppConfig
     books: AppSchema.MemoryBook[]
   }
+  showImage?: string
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -119,6 +120,9 @@ export const settingStore = createStore<SettingState>(
 
     toggleAnonymize({ anonymize }) {
       return { anonymize: !anonymize }
+    },
+    showImage(_, image?: string) {
+      return { showImage: image }
     },
   }
 })

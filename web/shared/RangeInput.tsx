@@ -3,7 +3,8 @@ import { Component, Show, createSignal, createEffect, createMemo } from 'solid-j
 import type { JSX } from 'solid-js'
 import Tooltip from './Tooltip'
 import { CreateTooltip } from './GenerationSettings'
-import { AIAdapter } from '../../common/adapters'
+import { AIAdapter, PresetAISettings } from '../../common/adapters'
+import { getAISettingServices } from './util'
 
 const RangeInput: Component<{
   label: string
@@ -16,8 +17,9 @@ const RangeInput: Component<{
   disabled?: boolean
   onChange?: (value: number) => void
   service?: AIAdapter
-  adapters?: AIAdapter[] | readonly AIAdapter[]
+  aiSetting?: keyof PresetAISettings
 }> = (props) => {
+  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
 
@@ -36,8 +38,8 @@ const RangeInput: Component<{
   createEffect(updateRangeSliders)
 
   const hide = createMemo(() => {
-    if (!props.service || !props.adapters) return ''
-    return props.adapters.includes(props.service) ? '' : ` hidden `
+    if (!props.service || !adapters()) return ''
+    return adapters()!.includes(props.service) ? '' : ` hidden `
   })
 
   return (
@@ -45,8 +47,8 @@ const RangeInput: Component<{
       <ul class="w-full">
         <div class="flex flex-row gap-2">
           <label class="form-label block-block">{props.label}</label>
-          <Show when={props.adapters}>
-            <Tooltip tip={CreateTooltip(props.adapters!)} position="right">
+          <Show when={adapters()}>
+            <Tooltip tip={CreateTooltip(adapters()!)} position="right">
               <Info size={20} color={'var(--hl-500)'} />
             </Tooltip>
           </Show>

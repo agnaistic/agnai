@@ -10,6 +10,9 @@ import RangeInput from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
+import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
+import { ToggleButton } from '/web/shared/Button'
+import { Toggle } from '/web/shared/Toggle'
 
 const imageTypes = [
   { label: 'Horde', value: 'horde' },
@@ -67,6 +70,21 @@ export const ImageSettings: Component = () => {
         value={state.user?.images?.cfg ?? 9}
         label="CFG Scale"
         helperText="Prompt Guidance. Classifier Free Guidance Scale - how strongly the image should conform to prompt - lower values produce more creative results."
+      />
+
+      <TextInput
+        fieldName="summaryPrompt"
+        value={state.user?.images?.summaryPrompt}
+        label="Summary Prompt"
+        helperText='If you use OpenAI, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
+        placeholder={`Default: ${DEFAULT_SUMMARY_PROMPT}`}
+      />
+
+      <Toggle
+        fieldName="summariseChat"
+        label="Summarise Chat"
+        helperText="EXPERIMENTAL: When available use your AI service to summarise the chat into an image prompt. Currently only available with OpenAI."
+        value={state.user?.images?.summariseChat}
       />
 
       <Divider />
