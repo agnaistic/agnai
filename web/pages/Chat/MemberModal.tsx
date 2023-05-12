@@ -113,7 +113,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
             helperText="Whether to invite a user or a character"
             items={typeItems}
             value={typeItems[0].value}
-            onChange={(val) => setType(val.value)}
+            onChange={(val) => setType(val.value as any)}
           />
 
           <div class="flex max-w-full flex-col gap-2">
