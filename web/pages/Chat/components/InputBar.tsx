@@ -133,7 +133,7 @@ const InputBar: Component<{
           props.ooc
             ? 'Send a message... (Out of character)'
             : `Send a message to ${
-                chats.botMap[chats.autoReplyAs || props.chat.characterId].name
+                chats.botMap[chats.autoReplyAs || props.chat.characterId]?.name
               }...`
         }
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
