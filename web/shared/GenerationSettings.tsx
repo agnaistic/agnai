@@ -150,7 +150,10 @@ const GeneralSettings: Component<Props> = (props) => {
               Therefore we can't precisely count tokens when generating a prompt. Keep this well
               below 8K to ensure you don't exceed the limit.
             </p>
-            <p>Claude models with "100k" in the name support up to 100k tokens, but the same caveats apply, we recommend setting a 80k limit.</p>
+            <p>
+              Claude models with "100k" in the name support up to 100k tokens, but the same caveats
+              apply, we recommend setting a 80k limit.
+            </p>
           </>
         }
         min={16}
