@@ -340,19 +340,34 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async addCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
+    async *addCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
       const res = await api.post(`/chat/${chatId}/characters`, { charId })
       if (res.error) return toastStore.error(`Failed to invite character: ${res.error}`)
-      if (res.result) {
+      if (res.result && active) {
+        yield {
+          active: {
+            ...active,
+            chat: { ...active.chat, characterIds: [...(active.chat.characterIds ?? []), charId] },
+          },
+        }
         toastStore.success(`Character added`)
         onSuccess?.()
       }
     },
 
-    async removeCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
-      const res = await api.post(`/chat/${chatId}/characters/${charId}`, { charId })
+    async *removeCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
+      const res = await api.method('delete', `/chat/${chatId}/characters/${charId}`, { charId })
       if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
-      if (res.result) {
+      if (res.result && active) {
+        yield {
+          active: {
+            ...active,
+            chat: {
+              ...active.chat,
+              characterIds: (active.chat.characterIds ?? []).filter((c) => c != charId),
+            },
+          },
+        }
         toastStore.success(`Character removed from chat`)
         onSuccess?.()
       }

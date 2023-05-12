@@ -35,18 +35,23 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   const [type, setType] = createSignal('user')
   const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
 
+  const charMemberIds = createMemo(() => {
+    if (!state.active?.char) return []
+    return [state.active.char._id, ...(state.active?.chat.characterIds ?? [])]
+  })
+
+  const charMembers = createMemo(() => {
+    return state.chatBots.filter((bot) => charMemberIds().includes(bot._id))
+  })
+
   const characters = createMemo(() => {
     const available = chars.characters.list.filter(
-      (c) => c._id !== props.charId && !charMembers().includes(c._id)
+      (c) => c._id !== props.charId && !charMemberIds().includes(c._id)
     )
     if (available.length) setInviteChar(available[0])
     return available
   })
 
-  const charMembers = createMemo(() => {
-    if (!state.active?.char) return []
-    return [state.active.char._id, ...(state.active?.chat.characterIds ?? [])]
-  })
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
   const remove = () => {
@@ -58,7 +63,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
   const users = createMemo(() => {
     if (!self.profile) return []
-    return [self.profile, ...(state.active?.participantIds.map((id) => state.memberIds[id]) ?? [])]
+    return [self.profile, ...(state.active?.participantIds?.map((id) => state.memberIds[id]) ?? [])]
   })
 
   const invite = () => {
@@ -78,6 +83,11 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         }
         return chatStore.addCharacter(chatId, char._id, props.close)
     }
+  }
+
+  const removeChar = (charId: string) => {
+    if (!state.active?.chat) return
+    chatStore.removeCharacter(state.active.chat._id, charId)
   }
 
   const Footer = (
@@ -148,7 +158,15 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
               />
             )}
           </For>
-          <For each={charMembers()}>{(charId) => <CharacterParticipant charId={charId} />}</For>
+          <For each={charMembers()}>
+            {(char) => (
+              <CharacterParticipant
+                char={char}
+                remove={removeChar}
+                canRemove={props.charId !== char._id}
+              />
+            )}
+          </For>
         </div>
       </Modal>
 
@@ -188,11 +206,24 @@ const Participant: Component<{
 }
 
 const CharacterParticipant: Component<{
-  charId: string
+  char: AppSchema.Character
+  canRemove: boolean
+  remove: (charId: string) => void
 }> = (props) => {
   return (
     <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-2">
-      {props.charId}
+      <div class="flex items-center gap-2">
+        <AvatarIcon avatarUrl={props.char.avatar} />
+        <div>{props.char.name}</div>
+        <Show when={props.canRemove}>
+          <div
+            class="hidden cursor-pointer flex-row items-center justify-center gap-2 sm:flex"
+            onClick={() => props.remove(props.char._id)}
+          >
+            <Trash />
+          </div>
+        </Show>
+      </div>
     </div>
   )
 }
