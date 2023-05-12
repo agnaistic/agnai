@@ -13,6 +13,7 @@ import { sendAll } from '../ws'
 import { v4 } from 'uuid'
 import { getRegisteredAdapters } from '/srv/adapter/register'
 import { AIAdapter } from '/common/adapters'
+import { config } from '/srv/config'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const [profile, user, presets, config, books] = await Promise.all([
@@ -298,6 +299,7 @@ async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
 }
 
 async function verifyOobaUrl(user: AppSchema.User, incomingUrl?: string) {
+  if (!config.adapters.includes('ooba')) return
   if (!incomingUrl) return incomingUrl
   if (user.oobaUrl === incomingUrl) return
 

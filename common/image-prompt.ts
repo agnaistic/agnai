@@ -1,5 +1,4 @@
 import { AppSchema } from '../srv/db/schema'
-import { formatCharacter } from './prompt'
 import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 
@@ -12,10 +11,14 @@ export type ImagePromptOpts = {
 
 const appearanceKeys = ['appearance', 'looks']
 
-export function createAppearancePrompt(
+export async function createAppearancePrompt(
+  user: AppSchema.User,
   avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona
 ) {
-  let visuals = ''
+  let visuals: string[] = []
+
+  const max = getMaxImageContext(user)
+  let size = await tokenize(`full body portrait, dramatic lighting`)
 
   const persona =
     avatar.kind === 'character'
@@ -30,20 +33,25 @@ export function createAppearancePrompt(
     const value = persona.attributes[key]
     if (!value) continue
 
-    visuals = value.join(', ')
+    for (const visual of value) {
+      size += await tokenize(visual)
+      if (size > max) break
+      visuals.push(visual)
+    }
+
     break
   }
 
-  if (!visuals) {
-    visuals = formatCharacter('', persona, 'boostyle').replace(/ \+ /g, ', ')
+  if (!visuals.length) {
+    throw new Error(`Your character does not have an "appearance" or "looks" attribute.`)
   }
 
-  const prompt = `full body portrait, ${visuals}, dramatic lighting`
+  const prompt = `full body portrait, ${visuals.join(', ')}, dramatic lighting`
   return prompt
 }
 
 export async function createImagePrompt(opts: ImagePromptOpts) {
-  const maxTokens = getMaxTokens(opts.user)
+  const maxTokens = getMaxImageContext(opts.user)
 
   /**
    * TODO: Use chat summarization when available
@@ -95,7 +103,7 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
   return prompt
 }
 
-function getMaxTokens(user: AppSchema.User) {
+export function getMaxImageContext(user: AppSchema.User) {
   const type = user.images?.type || 'horde'
 
   switch (type) {
@@ -103,11 +111,11 @@ function getMaxTokens(user: AppSchema.User) {
       return 225
 
     case 'sd':
-      return 500
+      return 512
 
     case 'horde':
     default:
-      return 150
+      return 512
   }
 }
 

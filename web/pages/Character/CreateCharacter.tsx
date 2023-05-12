@@ -17,7 +17,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, NewCharacter, settingStore, toastStore } from '../../store'
+import { characterStore, NewCharacter, settingStore, toastStore, userStore } from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -29,7 +29,6 @@ import VoicePicker from './components/VoicePicker'
 import { VoiceSettings } from '../../../srv/db/texttospeech-schema'
 import { AppSchema } from '../../../srv/db/schema'
 import { downloadCharacterHub } from './ImportCharacter'
-import { createAppearancePrompt } from '/common/image-prompt'
 import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 
@@ -60,6 +59,7 @@ const CreateCharacter: Component = () => {
       edit,
     }
   })
+  const user = userStore((s) => s.user)
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
@@ -109,14 +109,23 @@ const CreateCharacter: Component = () => {
     setImage(data)
   }
 
-  const generateAvatar = () => {
+  const generateAvatar = async () => {
+    if (!user) {
+      toastStore.error(`Image generation settings missing`)
+      return
+    }
+
     const attributes = getAttributeMap(ref)
     const persona: AppSchema.Persona = {
       kind: 'boostyle',
       attributes,
     }
-    const prompt = createAppearancePrompt(persona)
-    characterStore.generateAvatar(prompt)
+
+    try {
+      characterStore.generateAvatar(user, persona)
+    } catch (ex: any) {
+      toastStore.error(ex.message)
+    }
   }
 
   const onSubmit = (ev: Event) => {

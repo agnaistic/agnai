@@ -5,7 +5,7 @@ import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { charsApi, getImageData } from './data/chars'
+import { charsApi } from './data/chars'
 import { imageApi } from './data/image'
 import { getAssetUrl } from '../shared/util'
 
@@ -175,16 +175,21 @@ export const characterStore = createStore<CharacterState>(
     },
     async *generateAvatar(
       { generate: prev },
-      input: AppSchema.Character | AppSchema.Chat | string
+      user: AppSchema.User,
+      input: AppSchema.Character | AppSchema.Chat | AppSchema.Persona | string
     ) {
-      const prompt = typeof input === 'string' ? input : createAppearancePrompt(input)
-      yield { generate: { image: null, loading: true, blob: null } }
-      const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
-        const file = await dataURLtoFile(image)
-        set({ generate: { image, loading: false, blob: file } })
-      })
-      if (res.error) {
-        yield { generate: { image: prev.image, loading: false, blob: prev.blob } }
+      try {
+        const prompt = typeof input === 'string' ? input : await createAppearancePrompt(user, input)
+        yield { generate: { image: null, loading: true, blob: null } }
+        const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
+          const file = await dataURLtoFile(image)
+          set({ generate: { image, loading: false, blob: file } })
+        })
+        if (res.error) {
+          yield { generate: { image: prev.image, loading: false, blob: prev.blob } }
+        }
+      } catch (ex: any) {
+        toastStore.error(ex.message)
       }
     },
   }
