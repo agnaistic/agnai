@@ -32,14 +32,11 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
   const [type, setType] = createSignal('user')
-  const [inviteCharId, setCharId] = createSignal<string>()
+  const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
 
   const characters = createMemo(() => {
-    const available = chars.characters.list
-      .filter((c) => c._id !== props.charId)
-      .map((c) => ({ value: c._id, label: c.name }))
-
-    setCharId(available[0]?.value)
+    const available = chars.characters.list.filter((c) => c._id !== props.charId)
+    setInviteChar(available[0])
     return available
   })
 
@@ -68,9 +65,9 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         return chatStore.inviteUser(chatId, body.userId, props.close)
 
       case 'character':
-        const charId = inviteCharId()
-        if (!charId) throw new Error('No character selected')
-        return chatStore.addCharacter(chatId, charId, props.close)
+        const char = inviteChar()
+        if (!char) throw new Error('No character selected')
+        return chatStore.addCharacter(chatId, char._id, props.close)
     }
   }
 
@@ -113,13 +110,14 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
                     <div class="text-red-500">You don't have any other characters to invite</div>
                   }
                 >
-                  <Select
+                  <CharacterSelect
+                    class="w-full"
                     fieldName="character"
                     label="Character"
                     helperText="The character to invite"
                     items={characters()}
-                    value={inviteCharId()}
-                    onChange={(val) => setCharId(val.value)}
+                    value={inviteChar()}
+                    onChange={(val) => setInviteChar(val)}
                   />
                 </Show>
               </Match>

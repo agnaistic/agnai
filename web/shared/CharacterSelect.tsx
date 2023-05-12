@@ -19,6 +19,7 @@ const CharacterSelect: Component<{
   emptyLabel?: string
   value?: AppSchema.Character
   disabled?: boolean
+  class?: string
   onChange?: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)
@@ -40,7 +41,7 @@ const CharacterSelect: Component<{
       <div class="py-1">
         <Button
           schema="secondary"
-          class="relative w-48 rounded-xl"
+          class={`relative rounded-xl ${props.class}`}
           onClick={() => setOpts(!opts())}
           alignLeft
         >
