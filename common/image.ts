@@ -1,3 +1,5 @@
+export const DEFAULT_SUMMARY_PROMPT = `(Briefly visually summarise the scene. Visually describe each character and their appearance)`
+
 export const IMAGE_ADAPTERS = ['novel', 'horde', 'sd'] as const
 
 export type ImageAdapter = (typeof IMAGE_ADAPTERS)[number]

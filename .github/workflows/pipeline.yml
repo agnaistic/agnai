@@ -11,8 +11,8 @@ env:
   pnpm-version: 7.2.1
 
 jobs:
-  dependencies:
-    name: Install dependencies
+  checks:
+    name: Checks
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
@@ -38,62 +38,17 @@ jobs:
           echo $NODE_ENV
           pnpm install --frozen-lockfile
 
-  style:
-    name: Code style
-    needs: dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
       - name: Install Node and PNPM
         uses: ./.github/actions/install-node-pnpm
         with:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
-
-      - name: Restore cached dependencies
-        uses: ./.github/actions/restore-pnpm-cache
 
       - name: Run Prettier
         run: pnpm run format
 
-  typecheck:
-    name: Typecheck
-    needs: dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install Node and PNPM
-        uses: ./.github/actions/install-node-pnpm
-        with:
-          node-version: ${{  env.node-version  }}
-          pnpm-version: ${{  env.pnpm-version  }}
-
-      - name: Restore cached dependencies
-        uses: ./.github/actions/restore-pnpm-cache
-
-      - name: Run TypeScript checks
+      - name: Run compiler
         run: pnpm run typecheck
-
-  tests:
-    name: Tests
-    needs: dependencies
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v3
-
-      - name: Install Node and PNPM
-        uses: ./.github/actions/install-node-pnpm
-        with:
-          node-version: ${{  env.node-version  }}
-          pnpm-version: ${{  env.pnpm-version  }}
-
-      - name: Restore cached dependencies
-        uses: ./.github/actions/restore-pnpm-cache
 
       - name: Run tests
         run: |

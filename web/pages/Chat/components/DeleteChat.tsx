@@ -4,15 +4,22 @@ import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
+import { Navigate, useNavigate } from '@solidjs/router'
 
 const DeleteChatModal: Component<{
   chat?: AppSchema.Chat
   show: boolean
+  redirect?: boolean
   close: () => void
 }> = (props) => {
+  const nav = useNavigate()
+
   const onDelete = () => {
     if (!props.chat) return
     chatStore.deleteChat(props.chat?._id, props.close)
+    if (props.redirect) {
+      nav(`/character/${props.chat?.characterId}/chats`)
+    }
   }
   return (
     <Modal

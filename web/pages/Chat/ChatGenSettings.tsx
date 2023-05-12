@@ -56,6 +56,13 @@ export const ChatGenSettingsModal: Component<{
 
   const servicePreset = createMemo(() => {
     if (!user.user) return
+
+    const current = selected()
+    if (isDefaultPreset(current)) {
+      const preset = defaultPresets[current]
+      return { name: preset.name, preset, fallback: true }
+    }
+
     const adapter = genAdapter() || getAdapter(props.chat, user.user).adapter
 
     if (!user.user.defaultPresets) {
@@ -84,7 +91,7 @@ export const ChatGenSettingsModal: Component<{
       const body = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenSettings(props.chat._id, body, props.close)
     } else if (preset === AutoPreset.service) {
-      chatStore.editChat(props.chat._id, { genPreset: '', genSettings: undefined })
+      chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined })
     } else {
       chatStore.editChatGenPreset(props.chat._id, preset, () => {
         props.close()

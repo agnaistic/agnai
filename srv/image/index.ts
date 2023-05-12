@@ -18,8 +18,10 @@ export async function generateImage(
 
   if (!guestId) {
     broadcastIds.push(user._id)
-    const members = await store.chats.getActiveMembers(chatId)
-    broadcastIds.push(...members, user._id)
+    if (chatId) {
+      const members = await store.chats.getActiveMembers(chatId)
+      broadcastIds.push(...members, user._id)
+    }
   }
 
   let image: ImageAdapterResponse | undefined
@@ -68,7 +70,7 @@ export async function generateImage(
       const name = `${v4()}.${image.ext}`
       output = await saveFile(name, image.content)
 
-      if (!guestId) {
+      if (!guestId && chatId) {
         const msg = await createImageMessage({
           chatId,
           userId: user._id,
@@ -104,11 +106,10 @@ async function createImageMessage(opts: {
   messageId?: string
   memberIds: string[]
 }) {
-  const chat = await store.chats.getChat(opts.chatId)
-  if (!chat) return
+  const chat = opts.chatId ? await store.chats.getChat(opts.chatId) : undefined
+  const char = chat ? await store.characters.getCharacter(opts.userId, chat.characterId) : undefined
 
-  const char = await store.characters.getCharacter(opts.userId, chat.characterId)
-  if (!char) return
+  if (!chat || !char) return
 
   if (opts.messageId) {
     const msg = await store.msgs.editMessage(opts.messageId, opts.filename, 'image')
@@ -122,7 +123,7 @@ async function createImageMessage(opts: {
     return msg
   } else {
     const msg = await store.msgs.createChatMessage({
-      chatId: opts.chatId,
+      chatId: opts.chatId!,
       message: opts.filename,
       characterId: char._id,
       adapter: 'image',

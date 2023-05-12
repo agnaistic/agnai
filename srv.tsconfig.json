@@ -10,7 +10,12 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
-    "sourceMap": true
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "/srv/*": ["./srv/*"],
+      "/common/*": ["./common/*"]
+    }
   },
   "include": ["srv", "common", "tests"]
 }

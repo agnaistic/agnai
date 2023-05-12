@@ -24,6 +24,7 @@ export const GenerationPresetsPage: Component = () => {
   const [edit, setEdit] = createSignal(false)
   const [editing, setEditing] = createSignal<AppSchema.UserGenPreset>()
   const [deleting, setDeleting] = createSignal(false)
+  const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
 
   const onEdit = (preset: AppSchema.UserGenPreset) => {
     nav(`/presets/${preset._id}`)
@@ -96,14 +97,18 @@ export const GenerationPresetsPage: Component = () => {
     setEditing()
   }
 
-  const onSave = (ev: Event) => {
-    ev.preventDefault()
+  const onSave = (_ev: Event, force?: boolean) => {
     if (state.saving) return
     const validator = { ...presetValidator, service: ['', ...AI_ADAPTERS] } as const
     const body = getStrictForm(ref, validator)
 
     if (body.service === '') {
       toastStore.error(`You must select an AI service before saving`)
+      return
+    }
+
+    if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {
+      setMissingPlaceholder(true)
       return
     }
 
@@ -115,6 +120,7 @@ export const GenerationPresetsPage: Component = () => {
         nav(`/presets/${newPreset._id}`)
       })
     }
+    setMissingPlaceholder(false)
   }
 
   return (
@@ -161,7 +167,7 @@ export const GenerationPresetsPage: Component = () => {
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
                 <div class="flex flex-row justify-end">
-                  <Button type="submit" disabled={state.saving}>
+                  <Button disabled={state.saving} onClick={onSave}>
                     <Save /> Save
                   </Button>
                 </div>
@@ -176,6 +182,23 @@ export const GenerationPresetsPage: Component = () => {
         close={() => setDeleting(false)}
         confirm={deletePreset}
         message="Are you sure you wish to delete this preset?"
+      />
+      <ConfirmModal
+        show={!!missingPlaceholder()}
+        close={() => setMissingPlaceholder(false)}
+        confirm={() => onSave(ref, true)}
+        message={
+          <div class="flex flex-col items-center gap-2 text-sm">
+            <div>
+              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
+              almost never what you want. It is recommended for your gaslight to contain the
+              placeholders:
+              <br /> <code>{'{{personality}}, {{scenario}} and {{memory}}'}</code>
+            </div>
+
+            <p>Are you sure you wish to proceed?</p>
+          </div>
+        }
       />
     </>
   )

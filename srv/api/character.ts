@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { assertValid, Validator } from 'frisker'
+import { assertValid } from 'frisker'
 import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'
@@ -7,6 +7,8 @@ import { entityUpload, handleForm } from './upload'
 import { PERSONA_FORMATS } from '../../common/adapters'
 import { AppSchema } from '../db/schema'
 import { getVoiceService } from '../voice'
+import { generateImage } from '../image'
+import { v4 } from 'uuid'
 
 const router = Router()
 
@@ -79,7 +81,7 @@ const editCharacter = handle(async (req) => {
     body.attachments.find((a) => a.field === 'avatar')
   )
 
-  const avatar = filename ? filename : undefined
+  const avatar = filename ? filename + `?v=${v4().slice(0, 4)}` : undefined
 
   const char = await store.characters.updateCharacter(id, req.userId!, {
     name: body.name,
@@ -120,7 +122,7 @@ const deleteCharacter = handle(async ({ userId, params }) => {
 
 const editCharacterFavorite = handle(async (req) => {
   const id = req.params.id
-  const favorite = req.body.favorite == true
+  const favorite = req.body.favorite === true
 
   const char = await store.characters.updateCharacter(id, req.userId!, {
     favorite: favorite,
@@ -142,9 +144,27 @@ function parseAndValidateVoice(json?: string) {
   return obj as unknown as AppSchema.Character['voice']
 }
 
+export const createImage = handle(async ({ body, userId, socketId, log }) => {
+  assertValid({ user: 'any?', prompt: 'string', ephemeral: 'boolean?' }, body)
+  const user = userId ? await store.users.getUser(userId) : body.user
+
+  const guestId = userId ? undefined : socketId
+  generateImage(
+    {
+      user,
+      prompt: body.prompt,
+      ephemeral: body.ephemeral,
+    },
+    log,
+    guestId
+  )
+  return { success: true }
+})
+
 router.use(loggedIn)
 router.post('/', createCharacter)
 router.get('/', getCharacters)
+router.post('/image', createImage)
 router.post('/:id', editCharacter)
 router.get('/:id', getCharacter)
 router.delete('/:id', deleteCharacter)

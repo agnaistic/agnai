@@ -11,6 +11,9 @@ import { entityUpload, handleForm } from '../upload'
 import { errors, handle, StatusError } from '../wrap'
 import { sendAll } from '../ws'
 import { v4 } from 'uuid'
+import { getRegisteredAdapters } from '/srv/adapter/register'
+import { AIAdapter } from '/common/adapters'
+import { config } from '/srv/config'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const [profile, user, presets, config, books] = await Promise.all([
@@ -117,6 +120,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       texttospeech: 'any?',
       images: 'any?',
       defaultPreset: 'string?',
+      adapterConfig: 'any?',
     },
     body
   )
@@ -221,6 +225,24 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.elevenLabsApiKey = encryptText(body.elevenLabsApiKey)
   }
 
+  if (body.adapterConfig) {
+    const adapters = getRegisteredAdapters()
+    for (const service in body.adapterConfig) {
+      const svc = service as AIAdapter
+      const adapter = adapters.find((adp) => adp.name === service)
+      if (!adapter) continue
+
+      for (const opt of adapter.settings) {
+        if (!opt.secret) continue
+        const next = body.adapterConfig[svc][opt.field]
+        const prev = prevUser.adapterConfig?.[svc]?.[opt.field]
+        if (!next && prev) body.adapterConfig[svc][opt.field] = prev
+        else if (next) body.adapterConfig[svc][opt.field] = encryptText(next)
+      }
+    }
+    update.adapterConfig = body.adapterConfig
+  }
+
   await store.users.updateUser(userId!, update)
   const user = await getSafeUserConfig(userId!)
   return user
@@ -277,6 +299,7 @@ async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
 }
 
 async function verifyOobaUrl(user: AppSchema.User, incomingUrl?: string) {
+  if (!config.adapters.includes('ooba')) return
   if (!incomingUrl) return incomingUrl
   if (user.oobaUrl === incomingUrl) return
 
@@ -330,6 +353,20 @@ async function getSafeUserConfig(userId: string) {
     if (user.elevenLabsApiKey) {
       user.elevenLabsApiKey = ''
       user.elevenLabsApiKeySet = true
+    }
+
+    for (const svc of getRegisteredAdapters()) {
+      if (!user.adapterConfig) break
+      if (!user.adapterConfig[svc.name]) continue
+
+      const secrets = svc.settings.filter((opt) => opt.secret)
+
+      for (const secret of secrets) {
+        if (user.adapterConfig[svc.name]![secret.field]) {
+          user.adapterConfig[svc.name]![secret.field] = ''
+          user.adapterConfig[svc.name]![secret.field + 'Set'] = true
+        }
+      }
     }
   }
   return user

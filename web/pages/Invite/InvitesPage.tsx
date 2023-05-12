@@ -11,7 +11,7 @@ const InvitesPage: Component = () => {
   const nav = useNavigate()
 
   const accept = (inviteId: string) => {
-    const invite = state.invites.find((i) => i._id == inviteId)
+    const invite = state.invites.find((i) => i._id === inviteId)
     if (!invite) return
 
     inviteStore.accept(inviteId, () => nav(`/chat/${invite.chatId}`))

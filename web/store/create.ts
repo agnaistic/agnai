@@ -136,9 +136,9 @@ export function createStore<State extends {}>(name: string, init: State) {
       [key in keyof Handler]: (...args: HandlerArgs<Handler[key]>) => void
     }
 
-    const useStore = <T extends object = State>(selector?: (state: State) => T) => {
+    const useStore = <T = State>(selector?: (state: State) => T) => {
       const init = selector ? selector(store.getState()) : store.getState()
-      const [solid, setSolid] = solidstore.createStore<T>(init as any)
+      const [solid, setSolid] = solidstore.createStore(init as any)
 
       const unsub = store.subscribe((next) => {
         const nextState = selector ? selector(next) : next
@@ -146,7 +146,7 @@ export function createStore<State extends {}>(name: string, init: State) {
       })
 
       onCleanup(unsub)
-      return solid
+      return solid as T
     }
 
     type PatchedStore = typeof useStore & Wrapped & typeof store

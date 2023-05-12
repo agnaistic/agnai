@@ -367,7 +367,7 @@ function groupAndSort(
   type: SortType,
   direction: SortDirection
 ): Array<ChatGroup> {
-  if (type === 'chat-updated' || type == 'chat-created') {
+  if (type === 'chat-updated' || type === 'chat-created') {
     const sorted = allChats.slice().sort(getChatSortFunction(type, direction))
     return [{ char: null, chats: sorted }]
   }

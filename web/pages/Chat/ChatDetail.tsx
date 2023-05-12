@@ -16,7 +16,6 @@ import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
-import './chat-detail.css'
 import { DropMenu } from '../../shared/DropMenu'
 import UISettings from '../Settings/UISettings'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
@@ -26,6 +25,8 @@ import { AppSchema } from '../../../srv/db/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
+import DeleteChatModal from './components/DeleteChat'
+import './chat-detail.css'
 
 const EDITING_KEY = 'chat-detail-settings'
 
@@ -42,7 +43,8 @@ const ChatDetail: Component = () => {
     loaded: s.loaded,
   }))
   const msgs = msgStore((s) => ({
-    msgs: insertImageMessages(s.msgs, s.images[params.id]),
+    msgs: s.msgs,
+    images: s.images,
     partial: s.partial,
     waiting: s.waiting,
     retries: s.retries,
@@ -75,6 +77,13 @@ const ChatDetail: Component = () => {
     setHideOOC(!hideOOC())
   }
 
+  const chatMsgs = createMemo(() => {
+    const hide = hideOOC()
+    return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
+      hide ? !msg.ooc : true
+    )
+  })
+
   const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
@@ -89,6 +98,16 @@ const ChatDetail: Component = () => {
       chats.members.some((mem) => mem.userId === user.profile?.userId)
 
     return !isMember
+  })
+
+  const waitingMsg = createMemo(() => {
+    if (!msgs.waiting) return
+
+    return emptyMsg({
+      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
+      userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
+      message: msgs.partial || '',
+    })
   })
 
   function toggleEditing() {
@@ -163,17 +182,9 @@ const ChatDetail: Component = () => {
     msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
   }
 
-  const indexOfLastRPMessage = () =>
-    msgs.msgs.findIndex((_, i, original) => {
-      const rest = original.slice(i + 1)
-      if (rest.find((msg) => msg.ooc !== true)) {
-        return false
-      } else {
-        return true
-      }
-    })
-
-  const msgsToDisplay = () => (hideOOC() ? msgs.msgs.filter((msg) => msg.ooc !== true) : msgs.msgs)
+  const indexOfLastRPMessage = createMemo(() => {
+    return msgs.msgs.reduceRight((prev, curr, i) => (prev > -1 ? prev : !curr.ooc ? i : -1), -1)
+  })
 
   const generateFirst = () => {
     msgStore.retry(chats.chat?._id!)
@@ -275,12 +286,12 @@ const ChatDetail: Component = () => {
             </Show>
             <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
               <div id="chat-messages" class="flex flex-col gap-2">
-                <Show when={chats.loaded && msgs.msgs.length === 0 && !msgs.waiting}>
+                <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">
                     <Button onClick={generateFirst}>Generate Message</Button>
                   </div>
                 </Show>
-                <For each={msgsToDisplay()}>
+                <For each={chatMsgs()}>
                   {(msg, i) => (
                     <Message
                       msg={msg}
@@ -299,16 +310,9 @@ const ChatDetail: Component = () => {
                     />
                   )}
                 </For>
-                <Show when={msgs.waiting}>
+                <Show when={waitingMsg()}>
                   <Message
-                    msg={emptyMsg({
-                      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
-                      userId:
-                        msgs.waiting?.mode === 'self'
-                          ? msgs.waiting.userId || user.user?._id
-                          : undefined,
-                      message: '',
-                    })}
+                    msg={waitingMsg()!}
                     char={chats.char!}
                     chat={chats.chat!}
                     onRemove={() => {}}
@@ -337,6 +341,10 @@ const ChatDetail: Component = () => {
 
       <Show when={modal() === 'export'}>
         <ChatExport show={true} close={setModal} />
+      </Show>
+
+      <Show when={modal() === 'delete'}>
+        <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={setModal} />
       </Show>
 
       <Show when={!!removeId()}>
