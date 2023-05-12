@@ -36,8 +36,10 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
 
   const characters = createMemo(() => {
-    const available = chars.characters.list.filter((c) => c._id !== props.charId)
-    setInviteChar(available[0])
+    const available = chars.characters.list.filter(
+      (c) => c._id !== props.charId && !charMembers().includes(c._id)
+    )
+    if (available.length) setInviteChar(available[0])
     return available
   })
 
