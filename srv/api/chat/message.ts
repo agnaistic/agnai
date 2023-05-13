@@ -98,7 +98,11 @@ export const generateMessageV2 = handle(async (req, res) => {
     throw errors.Forbidden
   }
 
-  const replyAs = await store.characters.getCharacter(chat.userId, body.replyAs._id)
+  // Coalesce for backwards compatibly while new UI rolls out
+  const replyAs = await store.characters.getCharacter(
+    chat.userId,
+    body.replyAs._id || body.char._id
+  )
 
   if (chat.userId !== userId) {
     const isAllowed = await store.chats.canViewChat(userId, chat)
@@ -257,7 +261,8 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const chat: AppSchema.Chat = body.chat
   if (!chat) throw errors.NotFound
 
-  const replyAs: AppSchema.Character = body.replyAs
+  // Coalesce for backwards compatibly while new UI rolls out
+  const replyAs: AppSchema.Character = body.replyAs || body.char
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send' || body.kind === 'ooc') {
@@ -303,7 +308,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
-  const characterId = body.kind === 'self' ? undefined : body.char._id
+  const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
   const response = newMessage(chatId, responseText, { characterId, userId: senderId, ooc: false })
 
