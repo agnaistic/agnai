@@ -27,7 +27,7 @@ export const addCharacter = handle(async ({ body, params, userId }) => {
   // TODO: Move query to store module
   await store.chats.setChatCharacter(chatId, charId, true)
   const members = await store.chats.getActiveMembers(chatId)
-  sendMany(members.concat(userId), { type: 'chat-character-added', character, chatId })
+  sendMany(members.concat(chat.userId), { type: 'chat-character-added', character, chatId })
 
   return { success: true }
 })
@@ -50,6 +50,10 @@ export const removeCharacter = handle(async ({ params, userId }, _) => {
 
   const members = await store.chats.getActiveMembers(chatId)
 
-  sendMany(members.concat(userId), { type: 'chat-character-removed', chatId, characterId: charId })
+  sendMany(members.concat(chat.userId), {
+    type: 'chat-character-removed',
+    chatId,
+    characterId: charId,
+  })
   return { success: true }
 })

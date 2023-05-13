@@ -201,7 +201,7 @@ export function getPromptParts(
     persona: formatCharacter(
       replyAs.name,
       replyAs._id === char._id ? chat.overrides : replyAs.persona
-    ).replace(/\n+/g, ' '),
+    ),
     post: [],
     gaslight: '',
     gaslightHasChat: false,

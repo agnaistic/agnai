@@ -559,9 +559,11 @@ subscribe('chat-character-added', { chatId: 'string', character: 'any' }, (body)
   const { active, chatBotMap, chatBots } = chatStore.getState()
   if (!active || active.chat._id !== body.chatId) return
 
+  const characters = Object.assign(active.chat.characters || {}, { [body.character._id]: true })
   chatStore.setState({
     chatBots: chatBots.concat(body.character),
     chatBotMap: Object.assign(chatBotMap, { [body.character._id]: body.character }),
+    active: { ...active, chat: { ...active.chat, characters } },
   })
 })
 
@@ -569,11 +571,13 @@ subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' },
   const { active, chatBotMap, chatBots } = chatStore.getState()
   if (!active || active.chat._id !== body.chatId) return
 
+  const characters = Object.assign(active.chat.characters || {}, { [body.characterId]: false })
   const nextMap = { ...chatBotMap }
   delete nextMap[body.characterId]
 
   chatStore.setState({
     chatBots: chatBots.filter((ch) => ch._id !== body.characterId),
     chatBotMap: nextMap,
+    active: { ...active, chat: { ...active.chat, characters } },
   })
 })

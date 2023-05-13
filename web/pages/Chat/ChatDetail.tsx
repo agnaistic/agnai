@@ -190,9 +190,9 @@ const ChatDetail: Component = () => {
 
   const activeCharIds = createMemo(() => {
     if (!chats.char) return []
-    const active = Object.entries(chats.chat?.characters || {})
-      .filter((pair) => pair[1])
-      .map((pair) => pair[0])
+    const active = chats.chatBots
+      .filter((bot) => chats.chat?.characters?.[bot._id])
+      .map((ch) => ch._id)
     return [chats.char._id, ...active]
   })
 
