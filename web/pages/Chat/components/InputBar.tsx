@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio, Send } from 'lucide-solid'
 import {
   Component,
   createMemo,
@@ -18,8 +18,8 @@ import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
-import WizardIcon from '/web/icons/WizardIcon'
-import NoCharacterIcon from '/web/icons/NoCharacterIcon'
+// import WizardIcon from '/web/icons/WizardIcon'
+// import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -147,10 +147,10 @@ const InputBar: Component<{
       <Show when={props.showOocToggle}>
         <div class="cursor-pointer p-2" onClick={toggleOoc}>
           <Show when={props.ooc}>
-            <NoCharacterIcon class="icon-button" />
+            <Radio class="icon-button" />
           </Show>
           <Show when={!props.ooc}>
-            <WizardIcon color="var(--bg-100)" />
+            <Radio color="var(--bg-100)" />
           </Show>
         </div>
       </Show>
