@@ -29,6 +29,7 @@ const App: Component = () => {
             path="/discord"
             component={() => <Redirect external="https://discord.gg/luminai" />}
           />
+          <ChubRoutes />
           <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
           <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
           <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
