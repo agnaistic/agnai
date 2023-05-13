@@ -6,6 +6,12 @@ import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg
 import { getEncoder } from '../srv/tokenize'
 
 const char = toChar('Bot')
+const main = toChar('Main', { scenario: 'MAIN {{char}}', sampleChat: 'SAMPLECHAT {{char}}' })
+
+const replyAs = toChar('Reply', {
+  sampleChat: 'SAMPLECHAT {{char}}',
+  scenario: 'REPLYSCENARIO {{char}}',
+})
 const profile = toProfile('You')
 const chat = toChat(char, {})
 const user = toUser('anon')
@@ -250,6 +256,30 @@ describe('Prompt building', () => {
     const actualOutput = input.replace(BOT_REPLACE, 'Haruhi').replace(SELF_REPLACE, 'Chad')
     expect(actualOutput).to.equal(expectedOutput)
   })
+
+  it('will use correct placeholders in scenario and sample chat', () => {
+    const actual = build([], { replyAs, char: main, chat: toChat(main) })
+    expect(actual.prompt).to.equal(
+      expected(
+        `Reply's Persona: PERSONA`,
+        `Scenario: MAIN Main`,
+        `<START>`,
+        'SAMPLECHAT Reply',
+        'Reply:'
+      )
+    )
+  })
+
+  it('will omit sample chat when replyAs has no samplechat', () => {
+    const actual = build([], {
+      replyAs: { ...replyAs, sampleChat: '' },
+      char: main,
+      chat: toChat(main),
+    })
+    expect(actual.prompt).to.equal(
+      expected(`Reply's Persona: PERSONA`, `Scenario: MAIN Main`, `<START>`, 'Reply:')
+    )
+  })
 })
 
 function build(
@@ -264,6 +294,7 @@ function build(
     book?: AppSchema.MemoryBook
     continue?: string
     settings?: Partial<AppSchema.GenSettings>
+    replyAs?: AppSchema.Character
   } = {}
 ) {
   const encoder = getEncoder('main')
@@ -278,7 +309,7 @@ function build(
       settings: opts.settings,
       continue: opts.continue,
       retry: opts.retry,
-      replyAs: undefined,
+      replyAs: opts.replyAs,
       characters: {},
     },
     encoder
