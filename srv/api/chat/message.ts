@@ -10,6 +10,11 @@ import { Response } from 'express'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
+const sendValidator = {
+  kind: ['send', 'ooc'],
+  text: 'string',
+} as const
+
 const genValidator = {
   kind: ['send', 'ooc', 'retry', 'continue', 'self', 'summary', 'request'],
   char: 'any',
@@ -46,9 +51,36 @@ export const getMessages = handle(async ({ userId, params, query }) => {
   return { messages }
 })
 
+export const sendMessage = handle(async (req) => {
+  const { userId, body, params } = req
+  const chatId = params.id
+  assertValid(sendValidator, body)
+
+  if (!userId) {
+    const guest = req.socketId
+    const newMsg = newMessage(chatId, body.text!, {
+      userId: 'anon',
+      ooc: body.kind === 'ooc',
+    })
+    sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
+  } else {
+    const chat = await store.chats.update(chatId, {})
+    if (!chat) throw errors.NotFound
+    const members = chat.memberIds.concat(userId)
+    const userMsg = await store.msgs.createChatMessage({
+      chatId,
+      message: body.text!,
+      senderId: userId!,
+      ooc: body.kind === 'ooc',
+    })
+    sendMany(members, { type: 'message-created', msg: userMsg, chatId })
+  }
+
+  return { success: true }
+})
+
 export const generateMessageV2 = handle(async (req, res) => {
   const { userId, body, params, log } = req
-
   const chatId = params.id
   assertValid(genValidator, body)
 
@@ -66,10 +98,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     throw errors.Forbidden
   }
 
-  const replyAs =
-    body.replyAs?._id && body.replyAs._id !== chat.characterId
-      ? await store.characters.getCharacter(chat.userId, body.replyAs._id)
-      : undefined
+  const replyAs = await store.characters.getCharacter(chat.userId, body.replyAs._id)
 
   if (chat.userId !== userId) {
     const isAllowed = await store.chats.canViewChat(userId, chat)
@@ -99,7 +128,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
-  if (body.kind === 'ooc') {
+  if (body.kind === 'ooc' || !replyAs) {
     return { success: true }
   }
 
@@ -120,7 +149,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     chatId,
     mode: body.kind,
     senderId: userId,
-    characterId: replyAs?._id || chat.characterId,
+    characterId: replyAs._id,
   })
   res.json({ success: true, generating: true, message: 'Generating message' })
 
@@ -169,12 +198,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     case 'send': {
       const msg = await store.msgs.createChatMessage({
         chatId,
-        characterId:
-          body.kind === 'request'
-            ? replyAs?._id || chat.characterId
-            : body.kind === 'send'
-            ? replyAs?._id || body.char._id
-            : undefined,
+        characterId: replyAs._id,
         senderId: body.kind === 'self' ? userId : undefined,
         message: generated,
         adapter,
@@ -198,7 +222,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       } else {
         const msg = await store.msgs.createChatMessage({
           chatId,
-          characterId: replyAs?._id || body.char._id,
+          characterId: replyAs._id,
           message: generated,
           adapter,
           ooc: false,

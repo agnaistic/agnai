@@ -162,6 +162,8 @@ export const chatStore = createStore<ChatState>('chat', {
 
         const bots = res.result.characters || []
         const botMap = bots.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+        const isMultiChars =
+          res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
         yield {
           lastChatId: id,
@@ -169,6 +171,7 @@ export const chatStore = createStore<ChatState>('chat', {
             chat: res.result.chat,
             char: res.result.character,
             participantIds: res.result.active,
+            replyAs: isMultiChars ? undefined : res.result.character._id,
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
@@ -177,10 +180,10 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    setAutoReplyAs({ active }, charId: string) {
+    setAutoReplyAs({ active }, charId: string | undefined) {
       if (!active) return
       return {
-        active: { ...active, replyAs: active.chat.characterId === charId ? undefined : charId },
+        active: { ...active, replyAs: charId },
       }
     },
     async *editChat(
@@ -440,7 +443,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const prompt = createPrompt(
         {
           ...entities,
-          replyAs: undefined,
+          replyAs: entities.characters[active.replyAs ?? active.char._id],
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
         },
         encoder

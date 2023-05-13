@@ -309,7 +309,7 @@ function build(
       settings: opts.settings,
       continue: opts.continue,
       retry: opts.retry,
-      replyAs: opts.replyAs,
+      replyAs: opts.replyAs || char,
       characters: {},
     },
     encoder

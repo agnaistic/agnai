@@ -57,6 +57,6 @@ export const handleScale: ModelAdapter = async function* ({
   }
 
   const parsed = sanitise(response.body.output)
-  const trimmed = trimResponseV2(parsed, opts.replyAs || char, members, [])
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, [])
   yield trimmed || parsed
 }

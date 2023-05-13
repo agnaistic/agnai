@@ -180,9 +180,9 @@ export const msgStore = createStore<MsgState>(
       if (res.error) {
         toastStore.error(`Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
+      } else if (res.result) {
+        onSuccess?.()
       }
-
-      if (res.result) onSuccess?.()
     },
     async resend({ msgs }, chatId: string, msgId: string) {
       const msgIndex = msgs.findIndex((m) => m._id === msgId)
@@ -192,16 +192,17 @@ export const msgStore = createStore<MsgState>(
       }
 
       const msg = msgs[msgIndex]
-      msgStore.send(chatId, msg.msg, 'retry')
+      msgStore.send(chatId, msg.msg, 'retry', undefined)
     },
     async *selfGenerate({ activeChatId }) {
-      msgStore.send(activeChatId, '', 'self')
+      msgStore.send(activeChatId, '', 'self', undefined)
     },
     async *send(
-      { msgs, activeCharId },
+      { activeCharId },
       chatId: string,
       message: string,
       mode: 'send' | 'ooc' | 'retry' | 'self',
+      replyAs: string | undefined,
       onSuccess?: () => void
     ) {
       if (!chatId) {
@@ -209,28 +210,42 @@ export const msgStore = createStore<MsgState>(
         yield { partial: undefined }
         return
       }
-      if (mode !== 'ooc') {
-        yield { partial: '', waiting: { chatId, mode, characterId: activeCharId } }
+
+      let res: { result?: any; error?: string }
+
+      if (mode === 'ooc' || (mode === 'send' && !replyAs)) {
+        res = await msgsApi.sendMessage(chatId, { kind: mode, text: message })
+        if (res.error) {
+          toastStore.error(`Sending message failed: ${res?.error ?? 'Unknown error'}`)
+          yield { partial: undefined }
+        } else {
+          onSuccess?.()
+        }
+        return
       }
+
+      yield { partial: '', waiting: { chatId, mode, characterId: activeCharId } }
 
       switch (mode) {
         case 'self':
         case 'retry':
-          var res = await msgsApi.generateResponseV2({ kind: mode })
+          res = await msgsApi.generateResponseV2({ kind: mode })
           break
 
         case 'send':
-        case 'ooc':
-          var res = await msgsApi.generateResponseV2({ kind: mode, text: message })
+          res = await msgsApi.generateResponseV2({ kind: mode, text: message })
           break
+
+        default:
+          res = { error: `Unknown mode ${mode}`, result: undefined }
       }
 
       if (res.error) {
-        toastStore.error(`Generation request failed: ${res.error}`)
+        toastStore.error(`Generation request failed: ${res?.error ?? 'Unknown error'}`)
         yield { partial: undefined, waiting: undefined }
+      } else if (res.result) {
+        onSuccess?.()
       }
-
-      if (res.result) onSuccess?.()
     },
     async *confirmSwipe({ retries }, msgId: string, position: number, onSuccess?: Function) {
       const replacement = retries[msgId]?.[position]
@@ -548,8 +563,8 @@ subscribe(
 
 function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User | undefined) {
   if (msg.adapter === 'image' || !msg.characterId) return
-  const char = chatStore.getState().active?.char
-  if (!char || char._id !== msg.characterId || !char.voice) return
+  const char = chatStore.getState().chatBotMap[msg.characterId]
+  if (!char?.voice) return
   if (!user?.texttospeech?.enabled) return
   return {
     voice: char.voice,
