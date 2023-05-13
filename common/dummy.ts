@@ -3,7 +3,10 @@ import { AppSchema } from '../srv/db/schema'
 
 let counter = Date.now()
 
-export function toChar(name: string): AppSchema.Character {
+export function toChar(
+  name: string,
+  overrides?: Partial<AppSchema.Character>
+): AppSchema.Character {
   return {
     _id: name,
     kind: 'character',
@@ -21,6 +24,7 @@ export function toChar(name: string): AppSchema.Character {
     updatedAt: '',
     userId: '',
     favorite: false,
+    ...overrides,
   }
 }
 
@@ -89,7 +93,7 @@ export function toUserMsg(
   }
 }
 
-export function toChat(char: AppSchema.Character, props: Partial<AppSchema.Chat>): AppSchema.Chat {
+export function toChat(char: AppSchema.Character, props?: Partial<AppSchema.Chat>): AppSchema.Chat {
   return {
     _id: '',
     characterId: char._id,

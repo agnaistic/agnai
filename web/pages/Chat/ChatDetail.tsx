@@ -1,6 +1,6 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu, Radio } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
@@ -27,8 +27,7 @@ import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import './chat-detail.css'
-
-const EDITING_KEY = 'chat-detail-settings'
+import AvatarIcon from '/web/shared/AvatarIcon'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -41,6 +40,9 @@ const ChatDetail: Component = () => {
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.loaded,
+    opts: s.opts,
+    chatBots: s.chatBots,
+    botMap: s.chatBotMap,
   }))
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
@@ -51,7 +53,6 @@ const ChatDetail: Component = () => {
     speaking: s.speaking,
   }))
 
-  const [screenshotInProgress, setScreenshotInProgress] = createSignal(false)
   createEffect(() => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName}` : 'Chat')
@@ -67,24 +68,16 @@ const ChatDetail: Component = () => {
   const [swipe, setSwipe] = createSignal(0)
   const [removeId, setRemoveId] = createSignal('')
   const [showOpts, setShowOpts] = createSignal(false)
-  const [modal, setModal] = createSignal<ChatModal>()
-  const [editing, setEditing] = createSignal(getEditingState().editing ?? false)
   const [ooc, setOoc] = createSignal<boolean>()
   const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
-  const [hideOOC, setHideOOC] = createSignal(false)
-
-  const toggleHideOocMessages = () => {
-    setHideOOC(!hideOOC())
-  }
 
   const chatMsgs = createMemo(() => {
-    const hide = hideOOC()
     return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
-      hide ? !msg.ooc : true
+      chats.opts.hideOoc ? !msg.ooc : true
     )
   })
 
-  const isOwner = createMemo(() => chats.chat?.userId === user.profile?.userId)
+  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
@@ -104,21 +97,20 @@ const ChatDetail: Component = () => {
     if (!msgs.waiting) return
 
     return emptyMsg({
-      charId: msgs.waiting?.mode !== 'self' ? chats.char?._id : undefined,
+      charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
       userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
       message: msgs.partial || '',
     })
   })
 
-  function toggleEditing() {
-    const next = !editing()
-    setEditing(next)
-    saveEditingState(next)
+  const setModal = (modal: ChatModal) => {
+    setShowOpts(false)
+    chatStore.option('modal', modal)
   }
 
-  const showModal = (modal: ChatModal) => {
-    setModal(modal)
+  const clearModal = () => {
     setShowOpts(false)
+    chatStore.option('modal', 'none')
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
@@ -159,22 +151,28 @@ const ChatDetail: Component = () => {
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
+      const kind = ooc ? 'ooc' : chats.replyAs ? 'send' : 'send-noreply'
       if (!ooc) setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, ooc ? 'ooc' : 'send', onSuccess)
+      msgStore.send(chats.chat?._id!, message, kind, onSuccess)
       return
     }
 
     switch (message) {
       case '/devCycleAvatarSettings':
         devCycleAvatarSettings(user)
+        onSuccess?.()
         return
+
       case '/devShowOocToggle':
         setShowOOCOpts(!showOOCOpts())
+        onSuccess?.()
         return
     }
   }
 
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
+
+  const requestMessage = (charId: string) => msgStore.request(chats.chat?._id!, charId)
 
   const cancelSwipe = () => setSwipe(0)
 
@@ -190,6 +188,14 @@ const ChatDetail: Component = () => {
     msgStore.retry(chats.chat?._id!)
   }
 
+  const activeCharIds = createMemo(() => {
+    if (!chats.char) return []
+    const active = chats.chatBots
+      .filter((bot) => chats.chat?.characters?.[bot._id])
+      .map((ch) => ch._id)
+    return [chats.char._id, ...active]
+  })
+
   return (
     <>
       <Show when={!chats.loaded}>
@@ -199,7 +205,10 @@ const ChatDetail: Component = () => {
       </Show>
       <Show when={chats.chat}>
         <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
-          <div class="flex h-9 items-center justify-between rounded-md" style={headerBg()}>
+          <div
+            class="hidden h-9 items-center justify-between rounded-md sm:flex"
+            style={headerBg()}
+          >
             <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
               <Show when={!cfg.fullscreen && isOwner()}>
                 <A href={`/character/${chats.char?._id}/chats`}>
@@ -233,15 +242,7 @@ const ChatDetail: Component = () => {
                   horz="left"
                   vert="down"
                 >
-                  <ChatOptions
-                    show={showModal}
-                    editing={editing()}
-                    toggleEditing={toggleEditing}
-                    screenshotInProgress={screenshotInProgress()}
-                    setScreenshotInProgress={setScreenshotInProgress}
-                    toggleOocMessages={showOOCOpts() ? toggleHideOocMessages : undefined}
-                    hideOocMessages={hideOOC()}
-                  />
+                  <ChatOptions setModal={setModal} />
                 </DropMenu>
               </div>
 
@@ -259,7 +260,7 @@ const ChatDetail: Component = () => {
             </div>
           </div>
 
-          <div class="flex h-[calc(100%-36px)] flex-col-reverse gap-1">
+          <div class="flex h-[calc(100%-8px)] flex-col-reverse gap-1 sm:h-[calc(100%-36px)]">
             <InputBar
               chat={chats.chat!}
               swiped={swipe() !== 0}
@@ -269,15 +270,26 @@ const ChatDetail: Component = () => {
               ooc={ooc() ?? chats.members.length > 1}
               setOoc={setOoc}
               showOocToggle={showOOCOpts() || chats.members.length > 1}
+              request={requestMessage}
+              bots={chats.chatBots}
             />
-            <Show when={isOwner()}>
-              <SwipeMessage
-                chatId={chats.chat?._id!}
-                pos={swipe()}
-                prev={clickSwipe(-1)}
-                next={clickSwipe(1)}
-                list={retries()?.list || []}
-              />
+            <Show when={isOwner() && chats.chatBots.length > 1}>
+              <div
+                class={`flex justify-center gap-2 py-1 ${
+                  msgs.waiting ? 'opacity-70 saturate-0' : ''
+                }`}
+              >
+                <For each={activeCharIds()}>
+                  {(id) => (
+                    <CharacterResponseBtn
+                      char={chats.botMap[id]}
+                      request={requestMessage}
+                      waiting={!!msgs.waiting}
+                      replying={chats.replyAs === id}
+                    />
+                  )}
+                </For>
+              </div>
             </Show>
             <Show when={isSelfRemoved()}>
               <div class="flex w-full justify-center">
@@ -297,7 +309,7 @@ const ChatDetail: Component = () => {
                       msg={msg}
                       chat={chats.chat!}
                       char={chats.char!}
-                      editing={editing()}
+                      editing={chats.opts.editing}
                       anonymize={cfg.anonymize}
                       last={i() >= 1 && i() === indexOfLastRPMessage()}
                       onRemove={() => setRemoveId(msg._id)}
@@ -307,16 +319,29 @@ const ChatDetail: Component = () => {
                       confirmSwipe={() => confirmSwipe(msg._id)}
                       cancelSwipe={cancelSwipe}
                       tts={tts()}
-                    />
+                    >
+                      {isOwner() &&
+                        retries()?.list?.length! > 1 &&
+                        i() >= 1 &&
+                        i() === indexOfLastRPMessage() && (
+                          <SwipeMessage
+                            chatId={chats.chat?._id!}
+                            pos={swipe()}
+                            prev={clickSwipe(-1)}
+                            next={clickSwipe(1)}
+                            list={retries()?.list || []}
+                          />
+                        )}
+                    </Message>
                   )}
                 </For>
                 <Show when={waitingMsg()}>
                   <Message
                     msg={waitingMsg()!}
-                    char={chats.char!}
+                    char={chats.botMap[waitingMsg()?.characterId!]}
                     chat={chats.chat!}
                     onRemove={() => {}}
-                    editing={editing()}
+                    editing={chats.opts.editing}
                     anonymize={cfg.anonymize}
                   />
                 </Show>
@@ -327,32 +352,32 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
 
-      <Show when={modal() === 'settings'}>
-        <ChatSettingsModal show={true} close={setModal} />
+      <Show when={chats.opts.modal === 'settings'}>
+        <ChatSettingsModal show={true} close={clearModal} />
       </Show>
 
-      <Show when={modal() === 'gen'}>
-        <ChatGenSettingsModal show={true} close={setModal} chat={chats.chat!} />
+      <Show when={chats.opts.modal === 'gen'}>
+        <ChatGenSettingsModal show={true} close={clearModal} chat={chats.chat!} />
       </Show>
 
-      <Show when={modal() === 'memory'}>
-        <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={setModal} />
+      <Show when={chats.opts.modal === 'memory'}>
+        <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={clearModal} />
       </Show>
 
-      <Show when={modal() === 'export'}>
-        <ChatExport show={true} close={setModal} />
+      <Show when={chats.opts.modal === 'export'}>
+        <ChatExport show={true} close={clearModal} />
       </Show>
 
-      <Show when={modal() === 'delete'}>
-        <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={setModal} />
+      <Show when={chats.opts.modal === 'delete'}>
+        <DeleteChatModal show={true} chat={chats.chat!} redirect={true} close={clearModal} />
       </Show>
 
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
       </Show>
 
-      <Show when={modal() === 'members'}>
-        <MemberModal show={true} close={setModal} />
+      <Show when={chats.opts.modal === 'members'}>
+        <MemberModal show={true} close={clearModal} charId={chats?.char?._id!} />
       </Show>
 
       <ImageModal />
@@ -369,12 +394,12 @@ const ChatDetail: Component = () => {
       </Show>
 
       <PromptModal />
-      <Show when={modal() === 'ui'}>
+      <Show when={chats.opts.modal === 'ui'}>
         <Modal
           show={true}
-          close={setModal}
+          close={clearModal}
           title="UI Settings"
-          footer={<Button onClick={setModal}>Close</Button>}
+          footer={<Button onClick={clearModal}>Close</Button>}
         >
           <UISettings />
         </Modal>
@@ -384,6 +409,36 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
+
+const CharacterResponseBtn: Component<{
+  char: AppSchema.Character
+  waiting: boolean
+  replying?: boolean
+  request: (charId: string) => void
+}> = (props) => {
+  const cursor = createMemo(() => (props.waiting ? 'cursor-default' : 'cursor-pointer'))
+
+  return (
+    <Show when={props.char}>
+      <div
+        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
+        onclick={() => !props.waiting && props.request(props.char._id)}
+      >
+        <AvatarIcon
+          bot={true}
+          format={{ size: 'xs', corners: 'circle' }}
+          avatarUrl={props.char.avatar}
+        />
+        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">
+          {props.char.name}
+        </strong>
+        <Show when={props.replying}>
+          <Radio size={16} />
+        </Show>
+      </div>
+    </Show>
+  )
+}
 
 const SwipeMessage: Component<{
   chatId: string
@@ -435,19 +490,6 @@ const InfiniteScroll: Component = () => {
       </div>
     </Show>
   )
-}
-
-type DetailSettings = { editing?: boolean }
-
-function saveEditingState(value: boolean) {
-  const prev = getEditingState()
-  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, editing: value }))
-}
-
-function getEditingState() {
-  const prev = localStorage.getItem(EDITING_KEY) || '{}'
-  const body = JSON.parse(prev) as DetailSettings
-  return body
 }
 
 function getChatWidth(setting: UI['chatWidth']) {

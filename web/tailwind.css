@@ -299,6 +299,7 @@ body {
   .btn-secondary {
     @apply btn-base;
     @apply bg-[var(--bg-600)] hover:bg-[var(--bg-500)] active:bg-[var(--bg-400)];
+    @apply disabled:bg-[var(--bg-700)] disabled:text-[var(--text-400)];
   }
 
   .btn-red {
@@ -406,10 +407,10 @@ body {
   }
 
   .drawer {
-    height: calc(100vh - 58px);
-    height: calc(100dvh - 58px);
+    height: calc(100vh - 48px);
+    height: calc(100dvh - 48px);
     position: absolute;
-    top: 58px;
+    top: 48px;
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;
@@ -447,6 +448,13 @@ body {
       visibility: hidden;
     }
   }
+}
+
+textarea::placeholder,
+textarea:placeholder-shown {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 
 .markdown > * a,

@@ -9,9 +9,21 @@ export async function list() {
   return docs
 }
 
-export async function getChat(id: string) {
+export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id, kind: 'chat' })
   return chat
+}
+
+export async function getChat(id: string) {
+  const chat = await db('chat').findOne({ _id: id, kind: 'chat' })
+  if (!chat) return
+
+  const charIds = Object.keys(chat.characters || {})
+  const characters = await db('character')
+    .find({ _id: { $in: charIds.concat(chat.characterId) } })
+    .toArray()
+
+  return { chat, characters }
 }
 
 export async function listByCharacter(userId: string, characterId: string) {
@@ -27,13 +39,13 @@ export async function getMessageAndChat(msgId: string) {
   const msg = await db('chat-message').findOne({ _id: msgId, kind: 'chat-message' })
   if (!msg) return
 
-  const chat = await getChat(msg.chatId)
+  const chat = await getChatOnly(msg.chatId)
   return { msg, chat }
 }
 
 export async function update(id: string, props: Partial<AppSchema.Chat>) {
   await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
-  return getChat(id)
+  return getChatOnly(id)
 }
 
 export async function create(
@@ -162,4 +174,11 @@ export async function getActiveMembers(chatId: string) {
     .toArray()
     .then((list) => list.map((member) => member.userId))
   return members
+}
+
+export async function setChatCharacter(chatId: string, charId: string, state: boolean) {
+  await db('chat').updateOne(
+    { _id: chatId },
+    { $set: { updatedAt: now(), [`characters.${charId}`]: state } }
+  )
 }

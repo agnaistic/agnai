@@ -40,12 +40,15 @@ export type PromptOpts = {
   retry?: AppSchema.ChatMessage
   continue?: string
   book?: AppSchema.MemoryBook
+  replyAs: AppSchema.Character
+  characters: GenerateRequestV2['characters']
 }
 
 type BuildPromptOpts = {
   kind?: GenerateRequestV2['kind']
   chat: AppSchema.Chat
   char: AppSchema.Character
+  replyAs: AppSchema.Character
   user: AppSchema.User
   continue?: string
   members: AppSchema.Profile[]
@@ -88,7 +91,10 @@ const START_TEXT = '<START>'
  * @returns
  */
 export function createPromptWithParts(
-  opts: Pick<GenerateRequestV2, 'chat' | 'char' | 'members' | 'settings' | 'user'>,
+  opts: Pick<
+    GenerateRequestV2,
+    'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters'
+  >,
   parts: PromptParts,
   lines: string[],
   encoder: Encoder
@@ -124,7 +130,7 @@ export function buildPrompt(
 
   // If the gaslight is empty or useGaslight is disabled, proceed without it
   if (!opts.settings?.useGaslight || !opts.settings.gaslight || !parts.gaslight) {
-    pre.push(`${char.name}'s Persona: ${parts.persona}`)
+    pre.push(`${opts.replyAs?.name || char.name}'s Persona: ${parts.persona}`)
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
 
@@ -142,7 +148,9 @@ export function buildPrompt(
     pre.push(parts.gaslight)
   }
 
-  const post = [opts.kind === 'self' ? `${sender}:` : `${char.name}:`]
+  const post = [
+    opts.replyAs ? opts.replyAs.name : opts.kind === 'self' ? `${sender}:` : `${char.name}:`,
+  ]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }
@@ -177,35 +185,43 @@ export function buildPrompt(
 }
 
 export function getPromptParts(
-  opts: Pick<PromptOpts, 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book'>,
+  opts: Pick<
+    PromptOpts,
+    'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book' | 'replyAs'
+  >,
   lines: string[],
   encoder: Encoder
 ) {
-  const { chat, char, members } = opts
+  const { chat, char, members, replyAs } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const replace = (value: string) => placeholderReplace(value, char.name, sender)
+  const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
 
   const parts: PromptParts = {
-    persona: formatCharacter(char.name, chat.overrides).replace(/\n+/g, ' '),
+    persona: formatCharacter(
+      replyAs.name,
+      replyAs._id === char._id ? chat.overrides : replyAs.persona
+    ),
     post: [],
     gaslight: '',
     gaslightHasChat: false,
   }
 
   if (chat.scenario) {
-    parts.scenario = replace(chat.scenario)
+    parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  if (chat.sampleChat) {
-    parts.sampleChat = chat.sampleChat.split('\n').filter(removeEmpty).map(replace)
-  }
+  parts.sampleChat = (replyAs._id === char._id ? chat.sampleChat : replyAs.sampleChat)
+    .split('\n')
+    .filter(removeEmpty)
+    // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
+    .map(replace)
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
   }
 
-  const post = [`${char.name}:`]
+  const post = [`${replyAs.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }
@@ -222,8 +238,8 @@ export function getPromptParts(
       .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
       .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
-      .replace(BOT_REPLACE, char.name)
+      .replace(/\{\{personality\}\}/gi, parts.persona)
+      .replace(BOT_REPLACE, replyAs.name)
       .replace(SELF_REPLACE, sender)
   }
 
@@ -231,8 +247,8 @@ export function getPromptParts(
     .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
     .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(/\{\{personality\}\}/gi, formatCharacter(char.name, chat.overrides || char.persona))
-    .replace(BOT_REPLACE, char.name)
+    .replace(/\{\{personality\}\}/gi, parts.persona)
+    .replace(BOT_REPLACE, replyAs.name)
     .replace(SELF_REPLACE, sender)
 
   /**
@@ -354,7 +370,11 @@ function getLinesForPrompt(
 
   const formatMsg = (chat: AppSchema.ChatMessage) => {
     const senderId = chat.userId || opts.chat.userId
-    return fillPlaceholders(chat, char.name, profiles.get(senderId)?.handle || 'You').trim()
+    return fillPlaceholders(
+      chat,
+      opts.characters[chat.characterId!]?.name || char.name,
+      profiles.get(senderId)?.handle || 'You'
+    ).trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)

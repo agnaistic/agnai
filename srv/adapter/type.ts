@@ -3,10 +3,11 @@ import { AppSchema } from '../db/schema'
 import { AppLog } from '../logger'
 
 export type GenerateRequestV2 = {
-  kind: 'send' | 'ooc' | 'retry' | 'continue' | 'self' | 'summary'
+  kind: 'send' | 'ooc' | 'retry' | 'continue' | 'self' | 'summary' | 'request'
   chat: AppSchema.Chat
   user: AppSchema.User
   char: AppSchema.Character
+  replyAs: AppSchema.Character
   sender: AppSchema.Profile
   members: AppSchema.Profile[]
   parts: PromptParts
@@ -15,6 +16,7 @@ export type GenerateRequestV2 = {
   settings?: Partial<AppSchema.GenSettings>
   replacing?: AppSchema.ChatMessage
   continuing?: AppSchema.ChatMessage
+  characters: Record<string, { name: string }>
 }
 
 export type GenerateOptions = {
@@ -30,6 +32,7 @@ export type AdapterProps = {
   kind: GenerateRequestV2['kind']
   chat: AppSchema.Chat
   char: AppSchema.Character
+  replyAs: AppSchema.Character
   user: AppSchema.User
   members: AppSchema.Profile[]
   sender: AppSchema.Profile

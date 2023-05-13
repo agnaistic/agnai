@@ -9,7 +9,7 @@
 import { v4 } from 'uuid'
 import { errors, StatusError } from '../api/wrap'
 import { sendMany } from '../api/ws'
-import { getChat } from './chats'
+import { getChatOnly } from './chats'
 import { db } from './client'
 import { AppSchema } from './schema'
 
@@ -47,7 +47,7 @@ export async function list(userId: string) {
 }
 
 export async function create(invite: NewInvite) {
-  const chat = await getChat(invite.chatId)
+  const chat = await getChatOnly(invite.chatId)
   if (chat?.userId !== invite.byUserId) {
     throw errors.Forbidden
   }

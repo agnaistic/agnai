@@ -1,5 +1,5 @@
-import { Component, Show, createMemo, createSignal } from 'solid-js'
-import { ADAPTER_LABELS, CHAT_ADAPTERS } from '../../../common/adapters'
+import { Component, Show, createMemo } from 'solid-js'
+import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
@@ -10,7 +10,6 @@ import { adaptersToOptions, getStrictForm } from '../../shared/util'
 import { chatStore, presetStore, settingStore, userStore } from '../../store'
 import { getChatPreset } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
-import { getInitialPresetValue, getPresetOptions } from '../../shared/adapter'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -64,7 +63,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       <div class="flex w-full justify-between">
         <div>
           <Button schema="secondary" onClick={revert}>
-            Reset to Character
+            Reset Character
           </Button>
         </div>
         <div class="flex gap-4">
@@ -148,7 +147,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             fieldName="schema"
             label="Persona"
             items={options}
-            value={state.chat?.overrides.kind || state.char?.persona.kind}
+            value={state.chat?.overrides?.kind || state.char?.persona?.kind}
           />
         </Show>
         <Show when={state.char?.persona.kind === 'text'}>
@@ -161,7 +160,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         </Show>
         <div class="mt-4 flex flex-col gap-2 text-sm">
           <PersonaAttributes
-            value={state.chat?.overrides.attributes || state.char?.persona.attributes}
+            value={state.chat?.overrides?.attributes || state.char?.persona?.attributes}
             hideLabel
             plainText={state.char?.persona.kind === 'text'}
           />

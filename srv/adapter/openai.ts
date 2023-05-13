@@ -114,7 +114,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       all.push(...lines)
     }
 
-    if (parts.ujb) {
+    if (kind !== 'summary' && parts.ujb) {
       history.push({ role: 'system', content: parts.ujb })
       tokens += encoder(parts.ujb)
     }
@@ -131,15 +131,21 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (kind === 'continue') {
-      const content = '(Continue)'
+      let content = `Continue ${opts.replyAs.name}'s response`
       tokens += encoder(content)
-      history.push({ role: 'user', content })
+      history.push({ role: 'system', content })
     }
 
     if (kind === 'self') {
-      const content = `(Respond as ${handle})`
+      const content = `Respond as ${handle}`
       tokens += encoder(content)
-      history.push({ role: 'user', content })
+      history.push({ role: 'system', content })
+    }
+
+    if (kind !== 'continue') {
+      const content = `Respond as ${opts.replyAs.name}`
+      tokens += encoder(content)
+      history.push({ role: 'system', content })
     }
 
     for (const line of all.reverse()) {
@@ -222,7 +228,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
-    yield sanitiseAndTrim(text, prompt, char, members)
+    yield sanitiseAndTrim(text, prompt, opts.replyAs, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }

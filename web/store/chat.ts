@@ -2,7 +2,7 @@ import { createPrompt, Prompt } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
-import { defaultCulture } from '../shared/CultureCodes'
+import type { ChatModal } from '../pages/Chat/ChatOptions'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
@@ -12,11 +12,10 @@ import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { userStore } from './user'
 
 export { AllChat }
 
-type ChatState = {
+export type ChatState = {
   lastChatId: string | null
   lastFetched: number
   loaded: boolean
@@ -34,11 +33,20 @@ type ChatState = {
   active?: {
     chat: AppSchema.Chat
     char: AppSchema.Character
+    replyAs?: string
     participantIds: string[]
   }
   chatProfiles: AppSchema.Profile[]
+  chatBots: AppSchema.Character[]
+  chatBotMap: Record<string, AppSchema.Character>
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt
+  opts: {
+    modal?: ChatModal
+    editing: boolean
+    screenshot: boolean
+    hideOoc: boolean
+  }
 }
 
 export type ImportChat = {
@@ -68,16 +76,35 @@ const initState: ChatState = {
   /** All profiles that have ever participated in the active chat */
   chatProfiles: [],
 
+  /** All characters currently in the chat */
+  chatBots: [],
+  chatBotMap: {},
+
   /** Map of all profiles that have ever participated in the chat */
   memberIds: {},
+  opts: {
+    editing: false,
+    screenshot: false,
+    hideOoc: false,
+    modal: undefined,
+  },
 }
+
+const EDITING_KEY = 'chat-detail-settings'
 
 export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
   lastChatId: localStorage.getItem('lastChatId'),
   loaded: false,
   chatProfiles: [],
+  chatBots: [],
+  chatBotMap: {},
   memberIds: {},
+  opts: {
+    ...getOptsCache(),
+    modal: undefined,
+    screenshot: false,
+  },
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
     chatStore.setState(initState)
@@ -91,6 +118,16 @@ export const chatStore = createStore<ChatState>('chat', {
      * If a user accepts an invite to a chat, their profile has not been fetched and cached
      * To fix this, we'll lazy load them when they send a message and their profile isn't already present
      */
+    option<Prop extends keyof ChatState['opts']>(
+      prev: ChatState,
+      key: Prop,
+      value: ChatState['opts'][Prop]
+    ) {
+      const next = { ...prev.opts, [key]: value }
+      next[key] = value
+      saveOptsCache(next)
+      return { opts: next }
+    },
     async getMemberProfile({ memberIds, lastChatId }, chatId: string, id: string) {
       // Only retrieve profiles if the chat is _active_ to avoid unnecessary profile retrieval
       if (!lastChatId || chatId !== lastChatId) return
@@ -123,16 +160,30 @@ export const chatStore = createStore<ChatState>('chat', {
           activeCharId: res.result.character._id,
         })
 
+        const bots = res.result.characters || []
+        const botMap = bots.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+        const isMultiChars =
+          res.result.chat.characters && Object.keys(res.result.chat.characters).length
+
         yield {
           lastChatId: id,
           active: {
             chat: res.result.chat,
             char: res.result.character,
             participantIds: res.result.active,
+            replyAs: isMultiChars ? undefined : res.result.character._id,
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
+          chatBots: bots,
+          chatBotMap: botMap,
         }
+      }
+    },
+    setAutoReplyAs({ active }, charId: string | undefined) {
+      if (!active) return
+      return {
+        active: { ...active, replyAs: charId },
       }
     },
     async *editChat(
@@ -228,10 +279,10 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
-        const chars = res.result.characters.reduce<any>((prev, curr) => {
-          prev[curr._id] = curr
-          return prev
-        }, {})
+        const chars = res.result.characters.reduce<any>(
+          (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+          {}
+        )
         return { all: { chats: res.result.chats.sort(sortDesc), chars } }
       }
     },
@@ -292,6 +343,50 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async *addCharacter(
+      { active, chatBots, chatBotMap },
+      chatId: string,
+      charId: string,
+      onSuccess?: () => void
+    ) {
+      const res = await chatsApi.addCharacter(chatId, charId)
+      if (res.error) return toastStore.error(`Failed to invite character: ${res.error}`)
+      if (!active) return
+      if (res.result) {
+        const chat = {
+          ...active.chat,
+          characters: Object.assign(active.chat.characters || {}, { [charId]: true }),
+        }
+
+        yield { active: { ...active, chat } }
+        if (res.result.char) {
+          yield {
+            chatBots: chatBots.concat(res.result.char),
+            chatBotMap: { ...chatBotMap, [charId]: res.result.char },
+          }
+        }
+        toastStore.success(`Character added`)
+        onSuccess?.()
+      }
+    },
+
+    async *removeCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
+      const res = await chatsApi.removeCharacter(chatId, charId)
+      if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
+
+      if (!active) return
+      if (res.result) {
+        const chat = {
+          ...active.chat,
+          characters: Object.assign(active.chat.characters || {}, { [charId]: false }),
+        }
+
+        yield { active: { ...active, chat } }
+        toastStore.success(`Character removed from chat`)
+        onSuccess?.()
+      }
+    },
+
     async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
@@ -348,6 +443,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const prompt = createPrompt(
         {
           ...entities,
+          replyAs: entities.characters[active.replyAs ?? active.char._id],
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
         },
         encoder
@@ -444,3 +540,44 @@ subscribe(
     })
   }
 )
+
+type ChatOptCache = { editing: boolean; hideOoc: boolean }
+
+function saveOptsCache(cache: ChatOptCache) {
+  const prev = getOptsCache()
+  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
+}
+
+function getOptsCache(): ChatOptCache {
+  const prev =
+    localStorage.getItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
+  const body = JSON.parse(prev)
+  return { editing: false, hideOoc: false, ...body, modal: undefined }
+}
+
+subscribe('chat-character-added', { chatId: 'string', character: 'any' }, (body) => {
+  const { active, chatBotMap, chatBots } = chatStore.getState()
+  if (!active || active.chat._id !== body.chatId) return
+
+  const characters = Object.assign(active.chat.characters || {}, { [body.character._id]: true })
+  chatStore.setState({
+    chatBots: chatBots.concat(body.character),
+    chatBotMap: Object.assign(chatBotMap, { [body.character._id]: body.character }),
+    active: { ...active, chat: { ...active.chat, characters } },
+  })
+})
+
+subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
+  const { active, chatBotMap, chatBots } = chatStore.getState()
+  if (!active || active.chat._id !== body.chatId) return
+
+  const characters = Object.assign(active.chat.characters || {}, { [body.characterId]: false })
+  const nextMap = { ...chatBotMap }
+  delete nextMap[body.characterId]
+
+  chatStore.setState({
+    chatBots: chatBots.filter((ch) => ch._id !== body.characterId),
+    chatBotMap: nextMap,
+    active: { ...active, chat: { ...active.chat, characters } },
+  })
+})

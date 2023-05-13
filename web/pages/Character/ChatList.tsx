@@ -44,8 +44,8 @@ const sortOptions = [
 const CharacterChats: Component = () => {
   const params = useParams()
   const cache = getListCache()
+  const state = chatStore((s) => ({ list: s.all?.chats || [], chars: s.all?.chars || {} }))
   const chars = characterStore((s) => ({
-    map: toMap(s.characters.list),
     list: s.characters.list,
     loaded: s.characters.loaded,
   }))
@@ -66,7 +66,7 @@ const CharacterChats: Component = () => {
       return
     }
 
-    const char = chars.map[params.id]
+    const char = state.chars[params.id]
     setComponentPageTitle(char ? `${char.name} chats` : 'Chats')
     if (char) setChar(char)
   })
@@ -89,16 +89,10 @@ const CharacterChats: Component = () => {
     }
   })
 
-  const state = chatStore((s) => {
-    const list = s.all?.chats || []
-
-    return { list }
-  })
-
   const chats = createMemo(() => {
     const id = char()?._id
     return state.list.filter((chat) => {
-      const char = chars.map[chat.characterId]
+      const char = state.chars[chat.characterId]
       const trimmed = search().trim().toLowerCase()
       return (
         (chat.characterId === id || !id) &&
@@ -166,6 +160,7 @@ const CharacterChats: Component = () => {
           </div>
 
           <CharacterSelect
+            class="w-48"
             fieldName="char"
             items={chars.list}
             emptyLabel="All Characters"
@@ -198,11 +193,11 @@ const CharacterChats: Component = () => {
         </div>
       </div>
 
-      {chats().length === 0 && <NoChats character={chars.map[params.id]?.name} />}
+      {chats().length === 0 && <NoChats character={state.chars[params.id]?.name} />}
       <Show when={chats().length}>
         <Chats
           chats={chats()}
-          chars={chars.map}
+          chars={state.chars}
           sortField={sortField()}
           sortDirection={sortDirection()}
           char={char()}

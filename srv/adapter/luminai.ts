@@ -36,6 +36,7 @@ export const handleLuminAI: ModelAdapter = async function* ({
   prompt,
   settings,
   log,
+  ...opts
 }) {
   const stopTokens = getEndTokens(char, members, ['END_OF_DIALOG'])
   const body = { koboldUrl: user.koboldUrl, stopTokens, ...base, ...settings, prompt }
@@ -70,7 +71,7 @@ export const handleLuminAI: ModelAdapter = async function* ({
 
   const text = resp.body.results?.[0]?.text as string
   if (text) {
-    const trimmed = trimResponseV2(text, char, members, stopTokens)
+    const trimmed = trimResponseV2(text, opts.replyAs, members, stopTokens)
     yield trimmed || text
     return
   } else {

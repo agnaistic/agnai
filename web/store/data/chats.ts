@@ -17,6 +17,8 @@ export const chatsApi = {
   editChatGenSettings,
   importChat,
   deleteChat,
+  addCharacter,
+  removeCharacter,
 }
 
 export async function getChat(id: string) {
@@ -25,14 +27,17 @@ export async function getChat(id: string) {
       chat: AppSchema.Chat
       messages: AppSchema.ChatMessage[]
       character: AppSchema.Character
+      characters: AppSchema.Character[]
       members: AppSchema.Profile[]
       active: string[]
     }>(`/chat/${id}`)
     return res
   }
 
+  const allChars = loadItem('characters')
   const chat = loadItem('chats').find((ch) => ch._id === id)
-  const character = loadItem('characters').find((ch) => ch._id === chat?.characterId)
+  const character = allChars.find((ch) => ch._id === chat?.characterId)
+
   const profile = loadItem('profile')
   const messages = await localApi.getMessages(id)
 
@@ -40,11 +45,14 @@ export async function getChat(id: string) {
     return localApi.error(`Chat not found in data`)
   }
 
+  const charIds = new Set(Object.keys(chat?.characters || {}).concat(chat?.characterId))
+  const characters = allChars.filter((ch) => ch._id === chat?.characterId || charIds.has(ch._id))
+
   if (!character) {
     return localApi.error(`Character not found in data`)
   }
 
-  return localApi.result({ chat, character, messages, members: [profile], active: [] })
+  return localApi.result({ chat, character, messages, members: [profile], active: [], characters })
 }
 
 export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
@@ -228,4 +236,50 @@ export function createNewChat(char: AppSchema.Character, props: NewChat) {
   }
 
   return { chat, msg }
+}
+
+export async function addCharacter(chatId: string, charId: string) {
+  if (isLoggedIn()) {
+    const res = await api.post(`/chat/${chatId}/characters`, { charId })
+    return res
+  }
+
+  const chats = localApi.loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+  const char = localApi.loadItem('characters').find((ch) => ch._id === charId)
+
+  if (!chat || !char) {
+    return localApi.error(`Chat or Character not found`)
+  }
+
+  const next: AppSchema.Chat = {
+    ...chat,
+    characters: Object.assign(chat?.characters || {}, { [charId]: true }),
+  }
+
+  localApi.saveChats(localApi.replace(chatId, chats, next))
+  return localApi.result({ success: true, char })
+}
+
+export async function removeCharacter(chatId: string, charId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('delete', `/chat/${chatId}/characters/${charId}`, { charId })
+    return res
+  }
+
+  const chats = localApi.loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+  const char = localApi.loadItem('characters').find((ch) => ch._id === charId)
+
+  if (!chat || !char) {
+    return localApi.error(`Chat or Character not found`)
+  }
+
+  const next: AppSchema.Chat = {
+    ...chat,
+    characters: Object.assign(chat?.characters || {}, { [charId]: false }),
+  }
+
+  localApi.saveChats(localApi.replace(chatId, chats, next))
+  return localApi.result({ success: true })
 }
