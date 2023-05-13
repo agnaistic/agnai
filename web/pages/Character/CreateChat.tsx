@@ -1,7 +1,6 @@
 import { useNavigate } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import { AppSchema } from '../../../srv/db/schema'
+import { Component, createMemo, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'
@@ -21,48 +20,31 @@ const options = [
 const CreateChatModal: Component<{
   show: boolean
   close: () => void
-  id?: string
-  char?: AppSchema.Character
+  charId?: string
 }> = (props) => {
   let ref: any
 
   const nav = useNavigate()
-  const [selectedChar, setChar] = createSignal<AppSchema.Character>()
   const state = characterStore((s) => ({
     chars: s.characters?.list || [],
     loaded: s.characters.loaded,
   }))
 
+  const [selectedId, setSelected] = createSignal<string>()
+
+  const char = createMemo(() =>
+    state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
+  )
+
   const user = userStore((s) => s.user || { defaultPreset: '' })
   const presets = presetStore((s) => s.presets)
-
-  const char = createMemo(() => {
-    const curr = selectedChar() || props.char
-    return curr
-  })
 
   const presetOptions = createMemo(() =>
     getPresetOptions(presets).filter((pre) => pre.value !== 'chat')
   )
 
-  createEffect(() => {
-    if (!selectedChar() && !props.char && state.chars.length) {
-      if (props.id) {
-        const char = state.chars.find((ch) => ch._id === props.id)
-        if (char) setChar(char)
-        return
-      }
-
-      setChar(state.chars[0])
-    }
-  })
-
-  const selectChar = (chr: AppSchema.Character | undefined) => {
-    setChar(chr)
-  }
-
   const onCreate = () => {
-    const character = selectedChar() || props.char
+    const character = char()
     if (!character) return
 
     const body = getStrictForm(ref, {
@@ -110,7 +92,7 @@ const CreateChatModal: Component<{
         <div class="mb-4 text-sm">
           The information provided here is only applied to the newly created conversation.
         </div>
-        <Show when={!props.char}>
+        <Show when={char()}>
           <CharacterSelect
             class="w-48"
             items={state.chars}
@@ -118,7 +100,7 @@ const CreateChatModal: Component<{
             fieldName="character"
             label="Character"
             helperText="The conversation's central character"
-            onChange={(c) => selectChar(c!)}
+            onChange={(c) => setSelected(c?._id)}
           />
         </Show>
 
@@ -164,17 +146,17 @@ const CreateChatModal: Component<{
           class="text-xs"
         ></TextInput>
 
-        <Show when={(props.char?.persona.kind || char()?.persona.kind) !== 'text'}>
+        <Show when={char()?.persona.kind !== 'text'}>
           <Select
             class="mb-2 text-sm"
             fieldName="schema"
             label="Persona"
             items={options}
-            value={props.char?.persona.kind || char()?.persona.kind}
+            value={char()?.persona.kind}
           />
         </Show>
 
-        <Show when={(props.char?.persona.kind || char()?.persona.kind) === 'text'}>
+        <Show when={char()?.persona.kind === 'text'}>
           <Select
             class="mb-2 text-sm"
             fieldName="schema"
@@ -185,22 +167,17 @@ const CreateChatModal: Component<{
         </Show>
 
         <div class="w-full text-sm">
-          <Show when={props.char}>
+          <Show when={char()}>
             <PersonaAttributes
-              value={props.char!.persona.attributes}
+              value={char()!.persona.attributes}
               hideLabel
-              plainText={props.char?.persona.kind === 'text'}
+              plainText={char()?.persona?.kind === 'text'}
             />
           </Show>
-          <Show when={!props.char && !!selectedChar()}>
-            {/* <PersonaAttributes
-              value={selectedChar()?.persona.attributes}
-              hideLabel
-              plainText={selectedChar()?.persona.kind === 'text'}
-            /> */}
+          <Show when={!char()}>
             <For each={state.chars}>
               {(item) => (
-                <Show when={selectedChar()?._id === item._id}>
+                <Show when={char()?._id === item._id}>
                   <PersonaAttributes
                     value={item.persona.attributes}
                     hideLabel
