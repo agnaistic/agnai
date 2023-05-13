@@ -200,17 +200,6 @@ async function getGenerateProps(
 
   if (!props.replyAs) throw new Error(`Could not find character to reply as`)
 
-  props.messages = (
-    opts.kind === 'send' ||
-    opts.kind === 'continue' ||
-    opts.kind === 'summary' ||
-    opts.kind === 'request'
-      ? entities.messages
-      : props.replacing
-      ? entities.messages.slice(0, -1)
-      : entities.messages
-  ).slice()
-
   // Remove avatar from generate requests
   entities.char = { ...entities.char, avatar: undefined }
   props.replyAs = { ...props.replyAs, avatar: undefined }

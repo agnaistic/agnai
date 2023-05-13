@@ -201,7 +201,7 @@ const CharacterList: Component = () => {
         onSave={onImport}
       />
       <Show when={create()}>
-        <CreateChatModal show={!!create()} close={() => setCreate()} char={create()} />
+        <CreateChatModal show={!!create()} close={() => setCreate()} charId={create()?._id} />
       </Show>
     </>
   )

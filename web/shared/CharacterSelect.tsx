@@ -17,7 +17,7 @@ const CharacterSelect: Component<{
   helperText?: string | JSX.Element
   items: AppSchema.Character[]
   emptyLabel?: string
-  value?: AppSchema.Character
+  value?: AppSchema.Character | string
   disabled?: boolean
   class?: string
   onChange?: (item: AppSchema.Character | undefined) => void
@@ -28,6 +28,10 @@ const CharacterSelect: Component<{
     items.sort((a, b) => +!!b.favorite - +!!a.favorite || a.name.localeCompare(b.name))
     return items
   })
+
+  const match = createMemo(() =>
+    typeof props.value === 'string' ? props.items.find((ch) => ch._id === props.value) : props.value
+  )
 
   const onChange = (value?: AppSchema.Character) => {
     if (!props.onChange) return
@@ -47,7 +51,7 @@ const CharacterSelect: Component<{
         >
           <Show when={props.value}>
             <AvatarIcon
-              avatarUrl={props.value?.avatar}
+              avatarUrl={match()?.avatar}
               format={{ size: 'xs', corners: 'circle' }}
               class={`mr-1`}
             />
@@ -58,9 +62,7 @@ const CharacterSelect: Component<{
             </div>
           </Show>
 
-          <span class="ellipsis">
-            {props.value?.name || props.emptyLabel || 'Select a character'}
-          </span>
+          <span class="ellipsis">{match()?.name || props.emptyLabel || 'Select a character'}</span>
           <span class="absolute right-0">
             <ChevronDown />
           </span>
