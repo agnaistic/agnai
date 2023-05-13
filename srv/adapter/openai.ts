@@ -142,7 +142,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       history.push({ role: 'system', content })
     }
 
-    if (kind !== 'continue') {
+    if (kind !== 'continue' && kind !== 'summary') {
       const content = `Respond as ${opts.replyAs.name}`
       tokens += encoder(content)
       history.push({ role: 'system', content })
