@@ -1,6 +1,6 @@
 import { Bot, VenetianMask } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, JSX, Show } from 'solid-js'
-import { AvatarCornerRadius, AvatarSize } from '../store'
+import { AvatarCornerRadius, AvatarSize, settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
@@ -13,6 +13,7 @@ type Props = {
   format?: Format
   anonymize?: boolean
   Icon?: (props: LucideProps) => JSX.Element
+  openable?: boolean
 }
 
 type Format = {
@@ -53,6 +54,13 @@ const AvatarIcon: Component<Props> = (props) => {
   // shrink.
   const visibilityClass = () => (props.anonymize ? 'invisible' : '')
 
+  const onImageClick = () => {
+    if (!props.openable) return
+    const img = avatar()
+    if (!img) return
+    settingStore.showImage(img)
+  }
+
   return (
     <>
       <Show when={avatar()}>
@@ -60,6 +68,7 @@ const AvatarIcon: Component<Props> = (props) => {
           class={`${fmtSize()} ${fmtCorners()} shrink-0 ${props.class || ''}`}
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}
+          onClick={onImageClick}
         >
           <img
             data-bot-image={props.bot}

@@ -4,7 +4,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, toastStore, userStore } from '../../store'
+import { characterStore, chatStore, settingStore, toastStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
@@ -193,10 +193,18 @@ const Participant: Component<{
   remove: (profile: AppSchema.Profile) => void
   canRemove: boolean
 }> = (props) => {
+  const showImage = () => {
+    settingStore.showImage(props.member.avatar)
+  }
+
   return (
     <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
       <div class="flex items-center gap-2">
-        <AvatarIcon avatarUrl={props.member.avatar} format={{ size: 'sm', corners: 'circle' }} />
+        <AvatarIcon
+          avatarUrl={props.member.avatar}
+          format={{ size: 'sm', corners: 'circle' }}
+          openable
+        />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.member.handle}</div>
           <div class="text-xs italic text-[var(--text-600)]">{props.member.userId.slice(0, 8)}</div>
@@ -221,7 +229,11 @@ const CharacterParticipant: Component<{
   return (
     <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
       <div class="ellipsis flex items-center gap-2">
-        <AvatarIcon format={{ corners: 'circle', size: 'sm' }} avatarUrl={props.char.avatar} />
+        <AvatarIcon
+          format={{ corners: 'circle', size: 'sm' }}
+          avatarUrl={props.char.avatar}
+          openable
+        />
         <div class="ellipsis">{props.char.name}</div>
       </div>
       <Show when={props.canRemove}>

@@ -66,7 +66,7 @@ export const createMessage = handle(async (req) => {
   } else {
     const chat = await store.chats.update(chatId, {})
     if (!chat) throw errors.NotFound
-    const members = chat.memberIds.concat(userId)
+    const members = chat.memberIds.concat(chat.userId)
     const userMsg = await store.msgs.createChatMessage({
       chatId,
       message: body.text,
