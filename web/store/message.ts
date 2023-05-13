@@ -563,8 +563,8 @@ subscribe(
 
 function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User | undefined) {
   if (msg.adapter === 'image' || !msg.characterId) return
-  const char = chatStore.getState().active?.char
-  if (!char || char._id !== msg.characterId || !char.voice) return
+  const char = chatStore.getState().chatBotMap[msg.characterId]
+  if (!char?.voice) return
   if (!user?.texttospeech?.enabled) return
   return {
     voice: char.voice,
