@@ -211,6 +211,10 @@ async function getGenerateProps(
       : entities.messages
   ).slice()
 
+  // Remove avatar from generate requests
+  entities.char = { ...entities.char, avatar: undefined }
+  props.replyAs = { ...props.replyAs, avatar: undefined }
+
   return props
 }
 
