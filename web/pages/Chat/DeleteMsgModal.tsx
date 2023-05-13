@@ -29,7 +29,9 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
           <Button schema="secondary" onClick={props.close}>
             Cancel
           </Button>
-          <Button onClick={() => confirm(true)}>Delete One</Button>
+          <Show when={count() > 1}>
+            <Button onClick={() => confirm(true)}>Delete One</Button>
+          </Show>
           <Button onClick={() => confirm(false)}>Delete {count()}</Button>
         </>
       }
