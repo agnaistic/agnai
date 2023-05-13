@@ -1,6 +1,6 @@
-import { useNavigate } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'
@@ -35,6 +35,15 @@ const CreateChatModal: Component<{
   const char = createMemo(() =>
     state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
   )
+
+  createEffect(() => {
+    if (props.charId) return
+    const curr = selectedId()
+    if (curr) return
+
+    if (!state.chars.length) return
+    setSelected(state.chars[0]._id)
+  })
 
   const user = userStore((s) => s.user || { defaultPreset: '' })
   const presets = presetStore((s) => s.presets)
@@ -92,7 +101,7 @@ const CreateChatModal: Component<{
         <div class="mb-4 text-sm">
           The information provided here is only applied to the newly created conversation.
         </div>
-        <Show when={char()}>
+        <Show when={!props.charId}>
           <CharacterSelect
             class="w-48"
             items={state.chars}

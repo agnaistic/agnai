@@ -25,7 +25,9 @@ export const Toggle: Component<{
 
   const hide = createMemo(() => {
     if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : ` hidden `
+    return adapters()!.includes(props.service) || shouldShow(props.aiSetting, props.value)
+      ? ''
+      : ` hidden `
   })
 
   return (
@@ -47,4 +49,10 @@ export const Toggle: Component<{
       </label>
     </div>
   )
+}
+
+function shouldShow(setting?: keyof PresetAISettings, value?: boolean) {
+  if (!setting) return false
+  if (setting === 'gaslight' && value === true) return true
+  return false
 }
