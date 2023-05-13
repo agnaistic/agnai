@@ -54,7 +54,6 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 
   log.debug(requestBody, 'Claude payload')
-  console.log(requestBody)
 
   const resp = await needle('post', base.url, JSON.stringify(requestBody), {
     json: true,
