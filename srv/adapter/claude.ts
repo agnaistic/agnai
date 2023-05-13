@@ -54,6 +54,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 
   log.debug(requestBody, 'Claude payload')
+  console.log(requestBody)
 
   const resp = await needle('post', base.url, JSON.stringify(requestBody), {
     json: true,
@@ -100,7 +101,7 @@ function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
 }
 
 function createClaudePrompt(opts: AdapterProps): string {
-  const { char, sender, parts, gen } = opts
+  const { char, sender, parts, gen, replyAs } = opts
   const lines = opts.lines ?? []
 
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
@@ -129,6 +130,9 @@ function createClaudePrompt(opts: AdapterProps): string {
     messages.push(ujb)
   }
 
+  const continueAddon =
+    opts.kind === 'continue' ? `\n\nSystem: Continue ${replyAs.name}'s reply.` : ''
+
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
-  return '\n\n' + messages.join('\n\n') + '\n\n' + char.name + ':'
+  return '\n\n' + messages.join('\n\n') + continueAddon + '\n\n' + replyAs.name + ':'
 }
