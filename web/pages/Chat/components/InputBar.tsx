@@ -37,7 +37,7 @@ const InputBar: Component<{
 
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
-  const chats = chatStore((s) => ({ autoReplyAs: s.active?.replyAs, botMap: s.chatBotMap }))
+  const chats = chatStore((s) => ({ replyAs: s.active?.replyAs, botMap: s.chatBotMap }))
 
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
@@ -49,6 +49,12 @@ const InputBar: Component<{
   const [menu, setMenu] = createSignal(false)
   const [timer, setTimer] = createSignal<any>()
   const [cleared, setCleared] = createSignal(0, { equals: false })
+
+  const placeholder = createMemo(() => {
+    if (props.ooc) return 'Send a message... (OOC)'
+    if (chats.replyAs) return `Send a message to ${chats.botMap[chats.replyAs]?.name}...`
+    return `Send a message...`
+  })
 
   onMount(() => {
     setTimer(
@@ -154,13 +160,7 @@ const InputBar: Component<{
         lang={props.char?.culture}
         ref={ref}
         value={text()}
-        placeholder={
-          props.ooc
-            ? 'Send a message... (OOC)'
-            : `Send a message to ${
-                chats.botMap[chats.autoReplyAs || props.chat.characterId]?.name || props.char?.name
-              }...`
-        }
+        placeholder={placeholder()}
         class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === 'Enter') {
@@ -193,7 +193,15 @@ const InputBar: Component<{
               Respond as Me
             </Button> */}
             <Show when={props.bots.length > 1}>
-              <div>Auto-reply as</div>
+              <div>Auto-reply</div>
+              <Button
+                schema="secondary"
+                size="sm"
+                onClick={() => setAutoReplyAs('')}
+                disabled={!chats.replyAs}
+              >
+                None
+              </Button>
               <For each={props.bots}>
                 {(char) => (
                   <Show
@@ -203,10 +211,7 @@ const InputBar: Component<{
                       schema="secondary"
                       size="sm"
                       onClick={() => setAutoReplyAs(char._id)}
-                      disabled={
-                        chats.autoReplyAs === char._id ||
-                        (!chats.autoReplyAs && props.chat.characterId === char._id)
-                      }
+                      disabled={chats.replyAs === char._id}
                     >
                       {char.name}
                     </Button>

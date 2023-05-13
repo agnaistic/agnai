@@ -278,7 +278,7 @@ function build(
       settings: opts.settings,
       continue: opts.continue,
       retry: opts.retry,
-      replyAs: undefined,
+      replyAs: char,
       characters: {},
     },
     encoder

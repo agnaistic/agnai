@@ -14,6 +14,7 @@ export const msgsApi = {
   editMessage,
   getMessages,
   getPromptEntities,
+  sendMessage,
   generateResponseV2,
   deleteMessages,
 }
@@ -66,56 +67,69 @@ export type GenerateOpts =
   | { kind: 'self' }
   | { kind: 'summary' }
 
+export async function sendMessage(chatId: string, opts: { kind: 'ooc' | 'send'; text: string }) {
+  return await api.post(`/chat/${chatId}/send`, { text: opts.text, kind: opts.kind })
+}
+
 export async function generateResponseV2(opts: GenerateOpts) {
+  const entities = await getPromptEntities()
+
   const { ui } = userStore()
   const { active } = chatStore()
-  const entities = await getPromptEntities()
   const [message, lastMessage] = entities.messages.slice(-2)
 
   let retry: AppSchema.ChatMessage | undefined
   let replacing: AppSchema.ChatMessage | undefined
   let continuing: AppSchema.ChatMessage | undefined
 
-  let replyAs: AppSchema.Character | undefined
+  let replyAsId: string
 
   if (opts.kind === 'request') {
-    replyAs = entities.chatBots.find((ch) => ch._id === opts.characterId)
+    replyAsId = opts.characterId
   }
 
-  if (opts.kind === 'retry' && lastMessage) {
+  if (opts.kind === 'retry') {
+    if (!lastMessage) {
+      return { error: 'No message to retry', result: undefined }
+    }
+
     if (lastMessage.characterId) {
       retry = message
       replacing = lastMessage
-
-      const replyAsId =
-        lastMessage.characterId !== entities.chat._id ? lastMessage.characterId : null
-
-      if (replyAsId) {
-        replyAs = entities.chatBots.find((ch) => ch._id === replyAsId)
-      }
+      replyAsId = lastMessage.characterId
     } else {
-      if (active?.replyAs) {
-        replyAs = entities.chatBots.find((ch) => ch._id === active.replyAs)
-      }
       retry = lastMessage
+      const charId = active?.replyAs ?? active?.char._id
+      if (!charId) {
+        return { error: 'No character to retry with', result: undefined }
+      }
+      replyAsId = charId
     }
   }
 
   if (opts.kind === 'continue') {
     continuing = lastMessage
-    if (lastMessage.characterId !== entities.chat.characterId) {
-      replyAs = entities.chatBots.find((ch) => ch._id === lastMessage.characterId)
+    if (!lastMessage.characterId) {
+      return { error: 'No character to continue with', result: undefined }
     }
+    replyAsId = lastMessage.characterId
   }
 
-  if (opts.kind === 'send' && entities.autoReplyAs) {
-    replyAs = entities.chatBots.find((ch) => ch._id === entities.autoReplyAs)
+  if (opts.kind === 'send') {
+    if (!entities.autoReplyAs) {
+      return { error: 'No character to continue with', result: undefined }
+    }
+    replyAsId = entities.autoReplyAs
+  }
+
+  let replyAs = entities.chatBots.find((ch) => ch._id === replyAsId)
+  if (!replyAs) {
+    return { error: 'Could not find the character to reply as', result: undefined }
   }
 
   const messages = (
     opts.kind === 'send' ||
     opts.kind === 'continue' ||
-    opts.kind === 'ooc' ||
     opts.kind === 'summary' ||
     opts.kind === 'request'
       ? entities.messages
@@ -124,7 +138,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       : entities.messages
   ).slice()
 
-  if (opts.kind === 'send' || opts.kind === 'ooc') {
+  if (opts.kind === 'send') {
     messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
   }
 
@@ -162,7 +176,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     members: entities.members,
     parts: prompt.parts,
     lines: prompt.lines,
-    text: opts.kind === 'send' || opts.kind === 'ooc' ? opts.text : undefined,
+    text: opts.kind === 'send' ? opts.text : undefined,
     settings: entities.settings,
     replacing,
     continuing,

@@ -1,4 +1,4 @@
-import type { GenerateRequestV2 } from '../srv/adapter/type'
+import type { GenerateRequestV2WithReply } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, OPENAI_MODELS } from './adapters'
 import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
@@ -40,15 +40,15 @@ export type PromptOpts = {
   retry?: AppSchema.ChatMessage
   continue?: string
   book?: AppSchema.MemoryBook
-  replyAs: AppSchema.Character | undefined
-  characters: GenerateRequestV2['characters']
+  replyAs: AppSchema.Character
+  characters: GenerateRequestV2WithReply['characters']
 }
 
 type BuildPromptOpts = {
-  kind?: GenerateRequestV2['kind']
+  kind?: GenerateRequestV2WithReply['kind']
   chat: AppSchema.Chat
   char: AppSchema.Character
-  replyAs?: AppSchema.Character
+  replyAs: AppSchema.Character
   user: AppSchema.User
   continue?: string
   members: AppSchema.Profile[]
@@ -92,7 +92,7 @@ const START_TEXT = '<START>'
  */
 export function createPromptWithParts(
   opts: Pick<
-    GenerateRequestV2,
+    GenerateRequestV2WithReply,
     'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters'
   >,
   parts: PromptParts,
@@ -130,10 +130,6 @@ export function buildPrompt(
 
   // If the gaslight is empty or useGaslight is disabled, proceed without it
   if (!opts.settings?.useGaslight || !opts.settings.gaslight || !parts.gaslight) {
-    // if (opts.replyAs) {
-    //   pre.push(`${opts.replyAs.name}'s Persona: ${opts.replyAs.persona}`)
-    // } else {
-    // }
     pre.push(`${opts.replyAs?.name || char.name}'s Persona: ${parts.persona}`)
 
     if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
@@ -199,13 +195,12 @@ export function getPromptParts(
   const { chat, char, members, replyAs } = opts
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
-  const replace = (value: string) =>
-    placeholderReplace(value, opts.replyAs?.name || char.name, sender)
+  const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
 
   const parts: PromptParts = {
     persona: formatCharacter(
-      replyAs?.name || char.name,
-      replyAs?.persona || chat.overrides
+      replyAs.name,
+      replyAs._id === char._id ? chat.overrides : replyAs.persona
     ).replace(/\n+/g, ' '),
     post: [],
     gaslight: '',
@@ -216,7 +211,7 @@ export function getPromptParts(
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  parts.sampleChat = (replyAs ? replyAs?.sampleChat || '' : chat.sampleChat)
+  parts.sampleChat = (replyAs._id === char._id ? chat.sampleChat : replyAs.sampleChat)
     .split('\n')
     .filter(removeEmpty)
     // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
@@ -226,7 +221,7 @@ export function getPromptParts(
     parts.greeting = replace(chat.greeting)
   }
 
-  const post = [`${replyAs?.name || char.name}:`]
+  const post = [`${replyAs.name}:`]
   if (opts.continue) {
     post.unshift(`${char.name}: ${opts.continue}`)
   }
@@ -243,14 +238,8 @@ export function getPromptParts(
       .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
       .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
       .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(
-        /\{\{personality\}\}/gi,
-        formatCharacter(
-          replyAs?.name || char.name,
-          replyAs?.persona || chat.overrides || char.persona
-        )
-      )
-      .replace(BOT_REPLACE, opts.replyAs?.name || char.name)
+      .replace(/\{\{personality\}\}/gi, parts.persona)
+      .replace(BOT_REPLACE, replyAs.name)
       .replace(SELF_REPLACE, sender)
   }
 
@@ -258,14 +247,8 @@ export function getPromptParts(
     .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
     .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
     .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(
-      /\{\{personality\}\}/gi,
-      formatCharacter(
-        replyAs?.name || char.name,
-        replyAs?.persona || chat.overrides || char.persona
-      )
-    )
-    .replace(BOT_REPLACE, replyAs?.name || char.name)
+    .replace(/\{\{personality\}\}/gi, parts.persona)
+    .replace(BOT_REPLACE, replyAs.name)
     .replace(SELF_REPLACE, sender)
 
   /**

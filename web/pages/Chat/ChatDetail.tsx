@@ -152,7 +152,7 @@ const ChatDetail: Component = () => {
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
       if (!ooc) setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, ooc ? 'ooc' : 'send', onSuccess)
+      msgStore.send(chats.chat?._id!, message, ooc ? 'ooc' : 'send', chats.replyAs, onSuccess)
       return
     }
 
