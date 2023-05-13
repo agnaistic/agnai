@@ -3,7 +3,7 @@ import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
-import { chatStore } from '../chat'
+import { ChatState, chatStore } from '../chat'
 import { getStore } from '../create'
 import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
@@ -14,7 +14,6 @@ export const msgsApi = {
   editMessage,
   getMessages,
   getPromptEntities,
-  sendMessage,
   generateResponseV2,
   deleteMessages,
 }
@@ -46,6 +45,7 @@ export type GenerateOpts =
    * A user sending a new message
    */
   | { kind: 'send'; text: string }
+  | { kind: 'send-noreply'; text: string }
   | { kind: 'ooc'; text: string }
   /**
    * A user request a message from a character
@@ -67,80 +67,24 @@ export type GenerateOpts =
   | { kind: 'self' }
   | { kind: 'summary' }
 
-export async function sendMessage(chatId: string, opts: { kind: 'ooc' | 'send'; text: string }) {
-  return await api.post(`/chat/${chatId}/send`, { text: opts.text, kind: opts.kind })
-}
-
 export async function generateResponseV2(opts: GenerateOpts) {
-  const entities = await getPromptEntities()
-
   const { ui } = userStore()
   const { active } = chatStore()
-  const [message, lastMessage] = entities.messages.slice(-2)
 
-  let retry: AppSchema.ChatMessage | undefined
-  let replacing: AppSchema.ChatMessage | undefined
-  let continuing: AppSchema.ChatMessage | undefined
-
-  let replyAsId: string
-
-  if (opts.kind === 'request') {
-    replyAsId = opts.characterId
+  if (!active) {
+    return localApi.error('No active chat. Try refreshing.')
   }
 
-  if (opts.kind === 'retry') {
-    if (!lastMessage) {
-      return { error: 'No message to retry', result: undefined }
-    }
-
-    if (lastMessage.characterId) {
-      retry = message
-      replacing = lastMessage
-      replyAsId = lastMessage.characterId
-    } else {
-      retry = lastMessage
-      const charId = active?.replyAs ?? active?.char._id
-      if (!charId) {
-        return { error: 'No character to retry with', result: undefined }
-      }
-      replyAsId = charId
-    }
+  if (opts.kind === 'ooc' || opts.kind === 'send-noreply') {
+    return createMessage(active.chat._id, opts)
   }
 
-  if (opts.kind === 'continue') {
-    continuing = lastMessage
-    if (!lastMessage.characterId) {
-      return { error: 'No character to continue with', result: undefined }
-    }
-    replyAsId = lastMessage.characterId
+  const props = await getGenerateProps(opts, active).catch((err: Error) => err)
+  if (props instanceof Error) {
+    return localApi.error(props.message)
   }
 
-  if (opts.kind === 'send') {
-    if (!entities.autoReplyAs) {
-      return { error: 'No character to continue with', result: undefined }
-    }
-    replyAsId = entities.autoReplyAs
-  }
-
-  let replyAs = entities.chatBots.find((ch) => ch._id === replyAsId)
-  if (!replyAs) {
-    return { error: 'Could not find the character to reply as', result: undefined }
-  }
-
-  const messages = (
-    opts.kind === 'send' ||
-    opts.kind === 'continue' ||
-    opts.kind === 'summary' ||
-    opts.kind === 'request'
-      ? entities.messages
-      : replacing
-      ? entities.messages.slice(0, -1)
-      : entities.messages
-  ).slice()
-
-  if (opts.kind === 'send') {
-    messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
-  }
+  const entities = props.entities
 
   const encoder = await getEncoder()
   const prompt = createPrompt(
@@ -149,12 +93,12 @@ export async function generateResponseV2(opts: GenerateOpts) {
       chat: entities.chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
-      continue: opts.kind === 'continue' ? lastMessage.msg : undefined,
+      continue: props?.continue,
       book: entities.book,
-      retry,
+      retry: props?.retry,
       settings: entities.settings,
-      messages,
-      replyAs,
+      messages: props.messages,
+      replyAs: props.replyAs,
       characters: entities.characters,
     },
     encoder
@@ -178,14 +122,103 @@ export async function generateResponseV2(opts: GenerateOpts) {
     lines: prompt.lines,
     text: opts.kind === 'send' ? opts.text : undefined,
     settings: entities.settings,
-    replacing,
-    continuing,
-    replyAs,
+    replacing: props.replacing,
+    continuing: props.continuing,
+    replyAs: props.replyAs,
     characters: entities.characters,
   }
 
   const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
   return res
+}
+
+type GenerateProps = {
+  retry?: AppSchema.ChatMessage
+  continuing?: AppSchema.ChatMessage
+  replacing?: AppSchema.ChatMessage
+  lastMessage?: AppSchema.ChatMessage
+  entities: GenerateEntities
+  replyAs: AppSchema.Character
+  messages: AppSchema.ChatMessage[]
+  continue?: string
+}
+
+async function getGenerateProps(
+  opts: Exclude<GenerateOpts, { kind: 'ooc' } | { kind: 'send-noreply' }>,
+  active: NonNullable<ChatState['active']>
+): Promise<GenerateProps> {
+  const entities = await getPromptEntities()
+  const [message, lastMessage] = entities.messages.slice(-2)
+
+  const props: GenerateProps = {
+    entities,
+    replyAs: entities.char,
+    messages: entities.messages.slice(),
+  }
+
+  const getBot = (id: string) => entities.chatBots.find((ch) => ch._id === id)!
+
+  switch (opts.kind) {
+    case 'retry': {
+      if (!lastMessage) throw new Error(`No message to retry`)
+      if (lastMessage.characterId) {
+        props.retry = message
+        props.replacing = lastMessage
+        props.replyAs = getBot(lastMessage.characterId)
+        props.messages = entities.messages.slice(0, -1)
+      } else {
+        props.retry = lastMessage
+        props.replyAs = getBot(active.replyAs || active.char._id)
+      }
+
+      break
+    }
+
+    case 'continue': {
+      if (!lastMessage.characterId) throw new Error(`Cannot continue user message`)
+      props.continuing = lastMessage
+      props.replyAs = getBot(lastMessage.characterId)
+      props.continue = lastMessage.msg
+      break
+    }
+
+    case 'send': {
+      if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
+      props.replyAs = getBot(entities.autoReplyAs)
+      props.messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
+      break
+    }
+
+    case 'summary': {
+      break
+    }
+
+    case 'request': {
+      props.replyAs = getBot(opts.characterId)
+    }
+  }
+
+  if (!props.replyAs) throw new Error(`Could not find character to reply as`)
+
+  props.messages = (
+    opts.kind === 'send' ||
+    opts.kind === 'continue' ||
+    opts.kind === 'summary' ||
+    opts.kind === 'request'
+      ? entities.messages
+      : props.replacing
+      ? entities.messages.slice(0, -1)
+      : entities.messages
+  ).slice()
+
+  return props
+}
+
+/**
+ * Create a user message that does not generate a bot response
+ */
+async function createMessage(chatId: string, opts: { kind: 'ooc' | 'send-noreply'; text: string }) {
+  return api.post(`/chat/${chatId}/send`, { text: opts.text, kind: opts.kind })
 }
 
 export async function deleteMessages(chatId: string, msgIds: string[]) {
@@ -201,6 +234,8 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
 
   return localApi.result({ success: true })
 }
+
+type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
 export async function getPromptEntities() {
   if (isLoggedIn()) {

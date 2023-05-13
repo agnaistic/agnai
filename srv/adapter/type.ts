@@ -7,7 +7,7 @@ export type GenerateRequestV2 = {
   chat: AppSchema.Chat
   user: AppSchema.User
   char: AppSchema.Character
-  replyAs?: AppSchema.Character
+  replyAs: AppSchema.Character
   sender: AppSchema.Profile
   members: AppSchema.Profile[]
   parts: PromptParts
@@ -17,10 +17,6 @@ export type GenerateRequestV2 = {
   replacing?: AppSchema.ChatMessage
   continuing?: AppSchema.ChatMessage
   characters: Record<string, { name: string }>
-}
-
-export type GenerateRequestV2WithReply = GenerateRequestV2 & {
-  replyAs: AppSchema.Character
 }
 
 export type GenerateOptions = {

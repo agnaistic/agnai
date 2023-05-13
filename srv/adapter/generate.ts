@@ -16,7 +16,7 @@ import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleClaude } from './claude'
-import { GenerateRequestV2WithReply, ModelAdapter } from './type'
+import { GenerateRequestV2, ModelAdapter } from './type'
 import { createPromptWithParts, getAdapter, getPromptParts, trimTokens } from '../../common/prompt'
 import { handleScale } from './scale'
 import { MemoryOpts } from '../../common/memory'
@@ -48,7 +48,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
 }
 
 export async function createTextStreamV2(
-  opts: GenerateRequestV2WithReply,
+  opts: GenerateRequestV2,
   log: AppLog,
   guestSocketId?: string
 ) {

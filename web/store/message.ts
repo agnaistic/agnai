@@ -201,8 +201,7 @@ export const msgStore = createStore<MsgState>(
       { activeCharId },
       chatId: string,
       message: string,
-      mode: 'send' | 'ooc' | 'retry' | 'self',
-      replyAs: string | undefined,
+      mode: 'send' | 'ooc' | 'retry' | 'self' | 'send-noreply',
       onSuccess?: () => void
     ) {
       if (!chatId) {
@@ -212,17 +211,6 @@ export const msgStore = createStore<MsgState>(
       }
 
       let res: { result?: any; error?: string }
-
-      if (mode === 'ooc' || (mode === 'send' && !replyAs)) {
-        res = await msgsApi.sendMessage(chatId, { kind: mode, text: message })
-        if (res.error) {
-          toastStore.error(`Sending message failed: ${res?.error ?? 'Unknown error'}`)
-          yield { partial: undefined }
-        } else {
-          onSuccess?.()
-        }
-        return
-      }
 
       yield { partial: '', waiting: { chatId, mode, characterId: activeCharId } }
 
@@ -234,6 +222,12 @@ export const msgStore = createStore<MsgState>(
 
         case 'send':
           res = await msgsApi.generateResponseV2({ kind: mode, text: message })
+          break
+
+        case 'ooc':
+        case 'send-noreply':
+          res = await msgsApi.generateResponseV2({ kind: mode, text: message })
+          yield { partial: undefined, waiting: undefined }
           break
 
         default:

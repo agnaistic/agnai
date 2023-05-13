@@ -15,7 +15,7 @@ import { toastStore } from './toasts'
 
 export { AllChat }
 
-type ChatState = {
+export type ChatState = {
   lastChatId: string | null
   lastFetched: number
   loaded: boolean

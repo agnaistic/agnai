@@ -6,14 +6,14 @@ import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
 import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
-import { generateMessageV2, getMessages, sendMessage } from './message'
+import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, removeCharacter } from './characters'
 
 const router = Router()
 
-router.post('/:id/send', sendMessage)
+router.post('/:id/send', createMessage)
 router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)
 router.post('/:id/image', createImage)

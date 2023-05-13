@@ -11,7 +11,7 @@ import { Response } from 'express'
 type GenRequest = UnwrapBody<typeof genValidator>
 
 const sendValidator = {
-  kind: ['send', 'ooc'],
+  kind: ['send-noreply', 'ooc'],
   text: 'string',
 } as const
 
@@ -51,14 +51,14 @@ export const getMessages = handle(async ({ userId, params, query }) => {
   return { messages }
 })
 
-export const sendMessage = handle(async (req) => {
+export const createMessage = handle(async (req) => {
   const { userId, body, params } = req
   const chatId = params.id
   assertValid(sendValidator, body)
 
   if (!userId) {
     const guest = req.socketId
-    const newMsg = newMessage(chatId, body.text!, {
+    const newMsg = newMessage(chatId, body.text, {
       userId: 'anon',
       ooc: body.kind === 'ooc',
     })
@@ -69,7 +69,7 @@ export const sendMessage = handle(async (req) => {
     const members = chat.memberIds.concat(userId)
     const userMsg = await store.msgs.createChatMessage({
       chatId,
-      message: body.text!,
+      message: body.text,
       senderId: userId!,
       ooc: body.kind === 'ooc',
     })

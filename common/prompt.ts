@@ -1,4 +1,4 @@
-import type { GenerateRequestV2WithReply } from '../srv/adapter/type'
+import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, OPENAI_MODELS } from './adapters'
 import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
@@ -41,11 +41,11 @@ export type PromptOpts = {
   continue?: string
   book?: AppSchema.MemoryBook
   replyAs: AppSchema.Character
-  characters: GenerateRequestV2WithReply['characters']
+  characters: GenerateRequestV2['characters']
 }
 
 type BuildPromptOpts = {
-  kind?: GenerateRequestV2WithReply['kind']
+  kind?: GenerateRequestV2['kind']
   chat: AppSchema.Chat
   char: AppSchema.Character
   replyAs: AppSchema.Character
@@ -92,7 +92,7 @@ const START_TEXT = '<START>'
  */
 export function createPromptWithParts(
   opts: Pick<
-    GenerateRequestV2WithReply,
+    GenerateRequestV2,
     'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters'
   >,
   parts: PromptParts,

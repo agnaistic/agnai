@@ -151,8 +151,9 @@ const ChatDetail: Component = () => {
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (!isDevCommand(message)) {
+      const kind = ooc ? 'ooc' : chats.replyAs ? 'send' : 'send-noreply'
       if (!ooc) setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, ooc ? 'ooc' : 'send', chats.replyAs, onSuccess)
+      msgStore.send(chats.chat?._id!, message, kind, onSuccess)
       return
     }
 
@@ -284,9 +285,7 @@ const ChatDetail: Component = () => {
                       char={chats.botMap[id]}
                       request={requestMessage}
                       waiting={!!msgs.waiting}
-                      replying={
-                        chats.replyAs === id || (!chats.replyAs && id === chats.chat?.characterId)
-                      }
+                      replying={chats.replyAs === id}
                     />
                   )}
                 </For>
