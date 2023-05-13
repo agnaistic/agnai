@@ -238,7 +238,7 @@ export const SpeechRecognitionRecorder: Component<{
         <Button
           class={`absolute ${
             props.class
-          } top-1/2 -translate-y-1/2 transform rounded bg-transparent ${
+          } top-1/2 -translate-y-1/2 transform rounded bg-[var(--bg-800)] ${
             isListening() ? 'text-red-500' : 'text-gray-500'
           }`}
           onClick={toggleListening}

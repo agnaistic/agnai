@@ -1,6 +1,6 @@
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu, Radio } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
@@ -159,9 +159,12 @@ const ChatDetail: Component = () => {
     switch (message) {
       case '/devCycleAvatarSettings':
         devCycleAvatarSettings(user)
+        onSuccess?.()
         return
+
       case '/devShowOocToggle':
         setShowOOCOpts(!showOOCOpts())
+        onSuccess?.()
         return
     }
   }
@@ -281,6 +284,9 @@ const ChatDetail: Component = () => {
                       char={chats.botMap[id]}
                       request={requestMessage}
                       waiting={!!msgs.waiting}
+                      replying={
+                        chats.replyAs === id || (!chats.replyAs && id === chats.chat?.characterId)
+                      }
                     />
                   )}
                 </For>
@@ -408,6 +414,7 @@ export default ChatDetail
 const CharacterResponseBtn: Component<{
   char: AppSchema.Character
   waiting: boolean
+  replying?: boolean
   request: (charId: string) => void
 }> = (props) => {
   const cursor = createMemo(() => (props.waiting ? 'cursor-default' : 'cursor-pointer'))
@@ -415,7 +422,7 @@ const CharacterResponseBtn: Component<{
   return (
     <Show when={props.char}>
       <div
-        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
+        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
         onclick={() => !props.waiting && props.request(props.char._id)}
       >
         <AvatarIcon
@@ -423,9 +430,12 @@ const CharacterResponseBtn: Component<{
           format={{ size: 'xs', corners: 'circle' }}
           avatarUrl={props.char.avatar}
         />
-        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">
           {props.char.name}
         </strong>
+        <Show when={props.replying}>
+          <Radio size={16} />
+        </Show>
       </div>
     </Show>
   )

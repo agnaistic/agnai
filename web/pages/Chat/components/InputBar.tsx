@@ -18,6 +18,8 @@ import './Message.css'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
+import WizardIcon from '/web/icons/WizardIcon'
+import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -120,23 +122,13 @@ const InputBar: Component<{
     setMenu(false)
   }
 
-  const generateSelf = () => {
-    msgStore.selfGenerate()
-    setMenu(false)
-  }
-
   const onButtonClick = () => {
-    if (text().length > 0) {
-      send()
-      return
-    }
+    // if (text().length > 0) {
+    //   send()
+    //   return
+    // }
 
     setMenu(true)
-  }
-
-  const request = (charId: string) => {
-    props.request(charId)
-    setMenu(false)
   }
 
   const setAutoReplyAs = (charId: string) => {
@@ -146,6 +138,17 @@ const InputBar: Component<{
 
   return (
     <div class="relative flex items-center justify-center">
+      <Show when={props.showOocToggle}>
+        <div class="p-2" onClick={toggleOoc}>
+          <Show when={props.ooc}>
+            <NoCharacterIcon class="icon-button" />
+          </Show>
+          <Show when={!props.ooc}>
+            <WizardIcon class="icon-button" />
+          </Show>
+        </div>
+      </Show>
+
       <textarea
         spellcheck
         lang={props.char?.culture}
@@ -153,12 +156,12 @@ const InputBar: Component<{
         value={text()}
         placeholder={
           props.ooc
-            ? 'Send a message... (Out of character)'
+            ? 'Send a message... (OOC)'
             : `Send a message to ${
                 chats.botMap[chats.autoReplyAs || props.chat.characterId]?.name || props.char?.name
               }...`
         }
-        class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2"
+        class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === 'Enter') {
             if (ev.ctrlKey || ev.shiftKey) return
@@ -181,12 +184,7 @@ const InputBar: Component<{
           onClick={onButtonClick}
           class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
         >
-          <Show when={text().trim().length === 0}>
-            <MoreHorizontal />
-          </Show>
-          <Show when={text().trim().length > 0}>
-            <Send />
-          </Show>
+          <MoreHorizontal />
         </button>
         <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
           <div class="flex w-48 flex-col gap-2 p-2">
