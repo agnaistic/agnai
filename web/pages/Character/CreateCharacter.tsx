@@ -242,7 +242,7 @@ const CreateCharacter: Component = () => {
           fieldName="culture"
           label="Language"
           helperText={`The language this character speaks and understands.${
-            culture().startsWith('en') ?? true
+            culture()?.startsWith('en') ?? true
               ? ''
               : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
           }`}
