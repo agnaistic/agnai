@@ -5,8 +5,6 @@ import {
   Pencil,
   RefreshCw,
   Terminal,
-  ThumbsDown,
-  ThumbsUp,
   Trash,
   X,
 } from 'lucide-solid'
@@ -17,7 +15,7 @@ import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
-import { avatarSizes, avatarSizesCircle } from '../../../shared/avatar-util'
+import Loading from '/web/shared/Loading'
 
 type MessageProps = {
   msg: SplitMessage
@@ -95,6 +93,7 @@ const SingleMessage: Component<
       background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
     }
   })
+
   const msgText = createMemo(() => {
     if (props.last && props.swipe) return props.swipe
     if (!props.anonymize) {
@@ -111,7 +110,6 @@ const SingleMessage: Component<
   }
 
   const cancelEdit = () => setEdit(false)
-  const visibilityClass = () => (props.anonymize ? 'invisible' : '')
 
   const startEdit = () => {
     setEdit(true)
@@ -138,14 +136,10 @@ const SingleMessage: Component<
     return html
   }
 
-  const messageColumnWidth = () =>
-    format().corners === 'circle'
-      ? avatarSizesCircle[format().size].msg
-      : avatarSizes[format().size].msg
-
   let ref: HTMLDivElement | undefined
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
+  const imageHeight = createMemo(() => (user.ui.imageWrap ? '' : 'h-full'))
 
   return (
     <div
@@ -156,62 +150,64 @@ const SingleMessage: Component<
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
     >
       <div class={`flex w-full ${opacityClass}`}>
-        <div
-          class="flex items-start justify-center pr-4"
-          data-bot-avatar={isBot()}
-          data-user-avatar={isUser()}
-        >
-          <Switch>
-            <Match when={voice.status === 'generating'}>
-              <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                <AvatarIcon bot={true} format={format()} Icon={DownloadCloud} />
-              </div>
-            </Match>
-
-            <Match when={voice.status === 'playing'}>
-              <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                <AvatarIcon bot={true} format={format()} Icon={PauseCircle} />
-              </div>
-            </Match>
-
-            <Match when={props.char && !!props.msg.characterId}>
-              <AvatarIcon
-                avatarUrl={state.chatBotMap[props.msg.characterId!]?.avatar || props.char?.avatar}
-                bot={true}
-                format={format()}
-              />
-            </Match>
-
-            <Match when={!props.msg.characterId}>
-              <AvatarIcon
-                avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
-                format={format()}
-                anonymize={props.anonymize}
-              />
-            </Match>
-          </Switch>
-        </div>
-
-        <div class={`${messageColumnWidth()} flex w-full select-text flex-col gap-1`}>
-          <div class="flex w-full flex-row justify-between">
-            <div
-              class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
-                props.msg.ooc ? 'italic' : ''
-              }`}
+        <div class={`flex w-full select-text flex-col gap-1`}>
+          <div class="break-words">
+            <span
+              class={`${imageHeight()} float-left pr-2`}
+              data-bot-avatar={isBot()}
+              data-user-avatar={isUser()}
             >
-              <b
-                class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
-                // Necessary to override text-md and text-lg's line height, for proper alignment
-                style="line-height: 1;"
-                data-bot-name={isBot()}
-                data-user-name={isUser()}
-              >
-                {props.msg.characterId
-                  ? state.chatBotMap[props.msg.characterId!]?.name || props.char?.name!
-                  : handleToShow()}
-              </b>
+              <Switch>
+                <Match when={voice.status === 'generating'}>
+                  <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                    <AvatarIcon bot={true} format={format()} Icon={DownloadCloud} />
+                  </div>
+                </Match>
+
+                <Match when={voice.status === 'playing'}>
+                  <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
+                    <AvatarIcon bot={true} format={format()} Icon={PauseCircle} />
+                  </div>
+                </Match>
+
+                <Match when={props.char && !!props.msg.characterId}>
+                  <AvatarIcon
+                    avatarUrl={
+                      state.chatBotMap[props.msg.characterId!]?.avatar || props.char?.avatar
+                    }
+                    bot={true}
+                    format={format()}
+                  />
+                </Match>
+
+                <Match when={!props.msg.characterId}>
+                  <AvatarIcon
+                    avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                    format={format()}
+                    anonymize={props.anonymize}
+                  />
+                </Match>
+              </Switch>
+            </span>
+            <span class="flex flex-row justify-between">
               <span
-                class={`
+                class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
+                  props.msg.ooc ? 'italic' : ''
+                }`}
+              >
+                <b
+                  class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
+                  // Necessary to override text-md and text-lg's line height, for proper alignment
+                  style="line-height: 1;"
+                  data-bot-name={isBot()}
+                  data-user-name={isUser()}
+                >
+                  {props.msg.characterId
+                    ? state.chatBotMap[props.msg.characterId!]?.name || props.char?.name!
+                    : handleToShow()}
+                </b>
+                {/* <span
+                  class={`
                 message-date
                 text-600
                 flex
@@ -220,89 +216,86 @@ const SingleMessage: Component<
                 leading-none
                 ${visibilityClass()}
               `}
-                data-bot-time={isBot}
-                data-user-time={isUser()}
-              >
-                {new Date(props.msg.createdAt).toLocaleString()}
+                  data-bot-time={isBot}
+                  data-user-time={isUser()}
+                >
+                  {new Date(props.msg.createdAt).toLocaleString()}
+                </span> */}
               </span>
-            </div>
-            <Show when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
-              <MessageOptions
-                char={props.char}
-                original={props.original}
-                msg={props.msg}
-                chatEditing={props.editing}
-                edit={edit}
-                startEdit={startEdit}
-                onRemove={props.onRemove}
-                lastSplit={props.lastSplit}
-                last={props.last}
-                tts={!!props.tts}
-              />
-            </Show>
-            <Show when={edit()}>
-              <div class="mr-4 flex items-center gap-4 text-sm">
-                <div class="icon-button text-red-500" onClick={cancelEdit}>
-                  <X size={22} />
-                </div>
-                <div class="icon-button text-green-500" onClick={saveEdit}>
-                  <Check size={22} />
-                </div>
-              </div>
-            </Show>
-            <Show when={props.last && props.swipe}>
-              <div class="mr-4 flex items-center gap-4 text-sm">
-                <X
-                  size={22}
-                  class="cursor-pointer text-red-500"
-                  onClick={() => props.cancelSwipe?.()}
-                />
-                <Check
-                  size={22}
-                  class="cursor-pointer text-green-500"
-                  onClick={() => props.confirmSwipe?.()}
-                />
-              </div>
-            </Show>
-          </div>
-          <div class="break-words">
-            <Show when={isImage()}>
-              <div class="flex justify-start">
+              <Switch>
+                <Match when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
+                  <MessageOptions
+                    char={props.char}
+                    original={props.original}
+                    msg={props.msg}
+                    chatEditing={props.editing}
+                    edit={edit}
+                    startEdit={startEdit}
+                    onRemove={props.onRemove}
+                    lastSplit={props.lastSplit}
+                    last={props.last}
+                    tts={!!props.tts}
+                  />
+                </Match>
+
+                <Match when={edit()}>
+                  <div class="mr-4 flex items-center gap-4 text-sm">
+                    <div class="icon-button text-red-500" onClick={cancelEdit}>
+                      <X size={22} />
+                    </div>
+                    <div class="icon-button text-green-500" onClick={saveEdit}>
+                      <Check size={22} />
+                    </div>
+                  </div>
+                </Match>
+
+                <Match when={props.last && props.swipe}>
+                  <div class="mr-4 flex items-center gap-4 text-sm">
+                    <X
+                      size={22}
+                      class="cursor-pointer text-red-500"
+                      onClick={() => props.cancelSwipe?.()}
+                    />
+                    <Check
+                      size={22}
+                      class="cursor-pointer text-green-500"
+                      onClick={() => props.confirmSwipe?.()}
+                    />
+                  </div>
+                </Match>
+              </Switch>
+            </span>
+            <Switch>
+              <Match when={isImage()}>
                 <img
-                  class="max-h-32 cursor-pointer rounded-md"
+                  class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
                   src={getAssetUrl(props.msg.msg)}
                   onClick={() => settingStore.showImage(props.original.msg)}
                 />
-              </div>
-            </Show>
-            <Show when={!edit() && !isImage()}>
-              <div
-                class="rendered-markdown pr-1 sm:pr-3"
-                data-bot-message={isBot()}
-                data-user-message={isUser()}
-                innerHTML={renderMessage()}
-              />
-            </Show>
-            <Show when={props.msg._id === ''}>
-              <div class="my-2 ml-4">
-                <div class="dot-flashing bg-[var(--hl-700)]"></div>
-              </div>
-            </Show>
-            <Show when={edit()}>
-              <div
-                ref={ref}
-                contentEditable={true}
-                onKeyUp={(ev) => {
-                  if (ev.key === 'Escape') cancelEdit()
-                }}
-              ></div>
-            </Show>
-            <Show when={false}>
-              <div class="text-900 mt-2 flex flex-row items-center gap-2">
-                <ThumbsUp size={14} class="hover:text-600 mt-[-0.15rem] cursor-pointer" />
-                <ThumbsDown size={14} class="hover:text-600 cursor-pointer" />
-              </div>
-            </Show>
+              </Match>
+              <Match when={!edit() && !isImage() && props.msg._id !== ''}>
+                <p
+                  class="rendered-markdown"
+                  data-bot-message={isBot()}
+                  data-user-message={isUser()}
+                  innerHTML={renderMessage()}
+                />
+              </Match>
+              <Match when={props.msg._id === ''}>
+                <div class="flex h-8 w-12 items-center justify-center">
+                  <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                </div>
+              </Match>
+              <Match when={edit()}>
+                <div
+                  ref={ref}
+                  contentEditable={true}
+                  onKeyUp={(ev) => {
+                    if (ev.key === 'Escape') cancelEdit()
+                  }}
+                ></div>
+              </Match>
+            </Switch>
           </div>
           {props.last && props.lastSplit && props.children}
         </div>
@@ -418,7 +411,7 @@ const MessageOptions: Component<{
   onRemove: () => void
 }> = (props) => {
   return (
-    <div class="mr-4 flex items-center gap-3 text-sm">
+    <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
         <div onClick={() => chatStore.showPrompt(props.original)} class="icon-button">
           <Terminal size={16} />

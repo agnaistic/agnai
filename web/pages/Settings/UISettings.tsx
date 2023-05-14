@@ -101,6 +101,13 @@ const UISettings: Component = () => {
         max={1}
         onChange={(value) => userStore.updateUI({ msgOpacity: value })}
       />
+
+      <Toggle
+        fieldName="imageWrap"
+        label="Avatar Wrap Around"
+        helperText='Allow text in messages to "wrap around" avatars'
+        onChange={(value) => userStore.updateUI({ imageWrap: value })}
+      />
       <Divider />
       <Toggle
         fieldName="logPromptsToBrowserConsole"

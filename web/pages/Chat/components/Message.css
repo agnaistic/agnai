@@ -7,7 +7,19 @@
 }
 
 .rendered-markdown pre {
-  @apply overflow-x-scroll rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
+  @apply mt-2 overflow-x-scroll rounded-md bg-[var(--bg-600)] p-1 text-sm text-[var(--text-900)];
+}
+
+.rendered-markdown pre::-webkit-scrollbar-thumb {
+  @apply bg-[var(--bg-500)];
+}
+
+.rendered-markdown pre::-webkit-scrollbar-thumb:hover {
+  @apply bg-[var(--bg-300)];
+}
+
+.rendered-markdown pre::-webkit-scrollbar-track {
+  @apply bg-[var(--bg-800)];
 }
 
 .rendered-markdown pre code {
