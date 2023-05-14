@@ -41,6 +41,8 @@ const MetricsPage: Component = () => {
           label="Registered Users"
           helperText={state.metrics?.totalUsers || '...'}
         />
+
+        <FormLabel fieldName="services" label="Services" helperText={state.metrics?.each.length} />
       </div>
     </>
   )

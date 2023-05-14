@@ -107,6 +107,7 @@ const UISettings: Component = () => {
         label="Avatar Wrap Around"
         helperText='Allow text in messages to "wrap around" avatars'
         onChange={(value) => userStore.updateUI({ imageWrap: value })}
+        value={state.ui.imageWrap}
       />
       <Divider />
       <Toggle

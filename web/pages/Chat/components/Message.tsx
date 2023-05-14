@@ -110,6 +110,7 @@ const SingleMessage: Component<
   }
 
   const cancelEdit = () => setEdit(false)
+  const visibilityClass = () => (props.anonymize ? 'invisible' : '')
 
   const startEdit = () => {
     setEdit(true)
@@ -206,7 +207,7 @@ const SingleMessage: Component<
                     ? state.chatBotMap[props.msg.characterId!]?.name || props.char?.name!
                     : handleToShow()}
                 </b>
-                {/* <span
+                <span
                   class={`
                 message-date
                 text-600
@@ -220,7 +221,7 @@ const SingleMessage: Component<
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                </span> */}
+                </span>
               </span>
               <Switch>
                 <Match when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
