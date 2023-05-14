@@ -40,12 +40,21 @@ const handleElevenLabsVoicesList = async (
       accept: 'application/json',
     },
   })
+  if (result.statusCode !== 200) {
+    throw new Error(
+      result.body.message ||
+        result.body.details?.message ||
+        `Error ${result.statusCode}: ${JSON.stringify(result.body)}`
+    )
+  }
   const body = result.body as ElevenLabsVoicesListResponse
-  return body.voices.map((voice) => ({
-    id: voice.voice_id,
-    label: voice.name,
-    previewUrl: voice.preview_url,
-  }))
+  return (
+    body.voices?.map((voice) => ({
+      id: voice.voice_id,
+      label: voice.name,
+      previewUrl: voice.preview_url,
+    })) ?? []
+  )
 }
 
 const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
