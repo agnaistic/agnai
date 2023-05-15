@@ -8,7 +8,18 @@ import {
   Trash,
   X,
 } from 'lucide-solid'
-import { Accessor, Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
+import {
+  Accessor,
+  Component,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  onMount,
+  Show,
+  Switch,
+} from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
@@ -33,7 +44,6 @@ type MessageProps = {
 
 const Message: Component<MessageProps> = (props) => {
   const user = userStore()
-
   const splits = createMemo(() => splitMessage(props.char, user.profile!, props.msg), {
     equals: false,
   })
@@ -66,6 +76,7 @@ const Message: Component<MessageProps> = (props) => {
 const SingleMessage: Component<
   MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
 > = (props) => {
+  let avatarRef: any
   const user = userStore()
   const state = chatStore()
   const voice = msgStore((x) => ({
@@ -77,6 +88,16 @@ const SingleMessage: Component<
   const isBot = createMemo(() => !!props.msg.characterId)
   const isUser = createMemo(() => !!props.msg.userId)
   const isImage = createMemo(() => props.original.adapter === 'image')
+  const [img, setImg] = createSignal('h-full')
+  const [obs] = createSignal(new ResizeObserver(() => setImg(avatarRef?.clientHeight + 'px')))
+
+  onMount(() => {
+    obs().observe(avatarRef)
+  })
+
+  onCleanup(() => {
+    obs().disconnect()
+  })
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
 
@@ -139,7 +160,6 @@ const SingleMessage: Component<
   let ref: HTMLDivElement | undefined
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
-  const imageHeight = createMemo(() => (user.ui.imageWrap ? '' : 'h-full'))
 
   return (
     <div
@@ -151,9 +171,10 @@ const SingleMessage: Component<
     >
       <div class={`flex w-full ${opacityClass}`}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
-          <div class="break-words">
+          <div ref={avatarRef} class="break-words">
             <span
-              class={`${imageHeight()} float-left pr-3`}
+              class={`float-left pr-3`}
+              style={{ height: user.ui.imageWrap ? '' : img() }}
               data-bot-avatar={isBot()}
               data-user-avatar={isUser()}
             >
