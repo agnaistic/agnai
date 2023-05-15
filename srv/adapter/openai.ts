@@ -4,7 +4,7 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
+import { BOT_REPLACE, SELF_REPLACE, formatCharacter } from '../../common/prompt'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
@@ -125,6 +125,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
       if (!content.startsWith('(')) content = '(' + content
       if (!content.endsWith(')')) content = content + ')'
+
+      const looks = Object.values(opts.characters || {})
+        .map(getCharLooks)
+        .filter((v) => !!v)
+        .join('\n')
+      if (looks) {
+        messages[0].content += '\n' + looks
+        tokens += encoder(looks)
+      }
 
       tokens += encoder(content)
       history.push({ role: 'user', content })
@@ -388,4 +397,16 @@ function getCompletionContent(completion?: FullCompletion) {
   } else {
     return completion.choices[0].message.content
   }
+}
+
+function getCharLooks(char: AppSchema.Character) {
+  if (char.persona?.kind === 'text') return
+
+  const visuals = [
+    char.persona?.attributes?.looks || '',
+    char.persona?.attributes?.appearance || '',
+  ].filter((v) => !!v)
+
+  if (!visuals.length) return
+  return `${char.name}'s appearance: ${visuals.join(', ')}`
 }

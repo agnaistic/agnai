@@ -132,7 +132,7 @@ export const msgStore = createStore<MsgState>(
       const res = await msgsApi.generateResponseV2({ kind: 'continue' })
 
       if (res.error) {
-        toastStore.error(`Generation request failed: ${res.error}`)
+        toastStore.error(`(Continue) Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -150,7 +150,7 @@ export const msgStore = createStore<MsgState>(
       const res = await msgsApi.generateResponseV2({ kind: 'request', characterId })
 
       if (res.error) {
-        toastStore.error(`Generation request failed: ${res.error}`)
+        toastStore.error(`(Bot) Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
       }
 
@@ -178,7 +178,7 @@ export const msgStore = createStore<MsgState>(
       yield { msgs: msgs.slice(0, -1) }
 
       if (res.error) {
-        toastStore.error(`Generation request failed: ${res.error}`)
+        toastStore.error(`(Retry) Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
       } else if (res.result) {
         onSuccess?.()
@@ -235,7 +235,7 @@ export const msgStore = createStore<MsgState>(
       }
 
       if (res.error) {
-        toastStore.error(`Generation request failed: ${res?.error ?? 'Unknown error'}`)
+        toastStore.error(`(Send) Generation request failed: ${res?.error ?? 'Unknown error'}`)
         yield { partial: undefined, waiting: undefined }
       } else if (res.result) {
         onSuccess?.()

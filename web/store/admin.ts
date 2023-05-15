@@ -18,6 +18,7 @@ type AdminState = {
     totalUsers: number
     connected: number
     maxLiveCount: number
+    each: Array<{ count: number; date: string; hostname: string; max: number }>
   }
 }
 

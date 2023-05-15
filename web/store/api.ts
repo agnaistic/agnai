@@ -28,7 +28,7 @@ async function method<T = any>(
   method: 'get' | 'post' | 'delete' | 'put',
   path: string,
   body = {},
-  opts?: RequestInit
+  opts?: RequestInit & { noAuth?: boolean }
 ) {
   if (method === 'get') {
     return get<T>(path, body)
@@ -86,11 +86,12 @@ async function streamPost<T = any>(path: string, body: any) {
 
 async function callApi<T = any>(
   path: string,
-  opts: RequestInit
+  opts: RequestInit & { noAuth?: boolean }
 ): Promise<{ result: T | undefined; status: number; error?: string }> {
   const prefix = path.startsWith('/') ? '/api' : '/api'
-  const res = await fetch(`${baseUrl}${prefix}${path}`, {
-    ...headers(),
+  const fullUrl = path.startsWith('http') ? path : `${baseUrl}${prefix}${path}`
+  const res = await fetch(fullUrl, {
+    ...headers(opts?.noAuth),
     ...opts,
   }).catch((err) => ({ error: err }))
 
@@ -117,7 +118,7 @@ async function callApi<T = any>(
   return { result: json, status: res.status, error: res.status >= 400 ? res.statusText : undefined }
 }
 
-function headers() {
+function headers(noAuth?: boolean) {
   const jwt = getAuth()
   const headers: any = {
     Accept: 'application/json',
@@ -125,7 +126,7 @@ function headers() {
     'Socket-ID': socketId,
   }
 
-  if (jwt) {
+  if (!noAuth && jwt) {
     headers.Authorization = `Bearer ${jwt}`
   }
 
