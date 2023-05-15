@@ -150,24 +150,26 @@ const ChatDetail: Component = () => {
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
-    if (!isDevCommand(message)) {
-      const kind = ooc ? 'ooc' : chats.replyAs ? 'send' : 'send-noreply'
-      if (!ooc) setSwipe(0)
-      msgStore.send(chats.chat?._id!, message, kind, onSuccess)
-      return
+    if (isDevCommand(message)) {
+      switch (message) {
+        case '/devCycleAvatarSettings':
+          devCycleAvatarSettings(user)
+          onSuccess?.()
+          return
+
+        case '/devShowOocToggle':
+          setShowOOCOpts(!showOOCOpts())
+          onSuccess?.()
+          return
+      }
     }
 
-    switch (message) {
-      case '/devCycleAvatarSettings':
-        devCycleAvatarSettings(user)
-        onSuccess?.()
-        return
-
-      case '/devShowOocToggle':
-        setShowOOCOpts(!showOOCOpts())
-        onSuccess?.()
-        return
-    }
+    // If the number of active bots is 1 or fewer then always request a response
+    const isOneBot = Object.values(chats.chat?.characters || {}).filter((val) => val).length <= 1
+    const kind = ooc ? 'ooc' : chats.replyAs || isOneBot ? 'send' : 'send-noreply'
+    if (!ooc) setSwipe(0)
+    msgStore.send(chats.chat?._id!, message, kind, onSuccess)
+    return
   }
 
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)

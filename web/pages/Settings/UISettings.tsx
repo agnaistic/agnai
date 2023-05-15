@@ -12,6 +12,11 @@ import { Toggle } from '../../shared/Toggle'
 
 const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
 
+function noop() {}
+
+const bot = toChar('Robot')
+const chat = toChat(bot, { _id: '1', name: 'Example Chat' })
+
 const UISettings: Component = () => {
   const state = userStore()
 
@@ -144,8 +149,3 @@ const UISettings: Component = () => {
 }
 
 export default UISettings
-
-function noop() {}
-
-const bot = toChar('Robot')
-const chat = toChat(bot, { _id: '1', name: 'Example Chat' })

@@ -111,6 +111,11 @@ export async function generateResponseV2(opts: GenerateOpts) {
   const { avatar: _, ...sender } = entities.profile
   const { avatar: __, ...char } = entities.char
 
+  // Prevent sending the avatar due to guests have avatars base64 encoded
+  for (const charId in entities.characters) {
+    entities.characters[charId] = { ...entities.characters[charId], avatar: '' }
+  }
+
   const request: GenerateRequestV2 = {
     kind: opts.kind,
     chat: entities.chat,
@@ -183,8 +188,12 @@ async function getGenerateProps(
     }
 
     case 'send': {
+      const isMulti = Object.keys(entities.characters).length > 1
+      if (!isMulti) entities.autoReplyAs = entities.char._id
+
+      // if (!entities.autoReplyAs && entities.)
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
-      props.replyAs = getBot(entities.autoReplyAs)
+      // props.replyAs = getBot(entities.autoReplyAs)
       props.messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
       break
     }

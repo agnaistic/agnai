@@ -171,7 +171,7 @@ export const chatStore = createStore<ChatState>('chat', {
             chat: res.result.chat,
             char: res.result.character,
             participantIds: res.result.active,
-            replyAs: isMultiChars ? undefined : res.result.character._id,
+            replyAs: undefined, //isMultiChars ? undefined : res.result.character._id,
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
@@ -222,7 +222,12 @@ export const chatStore = createStore<ChatState>('chat', {
 
         if (active && active.chat._id === id) {
           yield {
-            active: { chat: res.result!, char: active.char, participantIds: active.participantIds },
+            active: {
+              ...active,
+              chat: res.result!,
+              char: active.char,
+              participantIds: active.participantIds,
+            },
           }
         }
       }
@@ -319,7 +324,9 @@ export const chatStore = createStore<ChatState>('chat', {
           yield { char: { ...char, chats: [res.result, ...char.chats] } }
         }
 
-        yield { active: { chat: res.result, char: character!, participantIds: [] } }
+        yield {
+          active: { chat: res.result, char: character!, participantIds: [], replyAs: characterId },
+        }
 
         onSuccess?.(res.result._id)
       }

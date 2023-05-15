@@ -154,7 +154,7 @@ const SingleMessage: Component<
         <div class={`flex w-full select-text flex-col gap-1`}>
           <div class="break-words">
             <span
-              class={`${imageHeight()} float-left pr-2`}
+              class={`${imageHeight()} float-left pr-3`}
               data-bot-avatar={isBot()}
               data-user-avatar={isUser()}
             >
@@ -190,7 +190,7 @@ const SingleMessage: Component<
                 </Match>
               </Switch>
             </span>
-            <span class="flex flex-row justify-between">
+            <span class="flex flex-row justify-between pb-1">
               <span
                 class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
                   props.msg.ooc ? 'italic' : ''
@@ -274,18 +274,18 @@ const SingleMessage: Component<
                   onClick={() => settingStore.showImage(props.original.msg)}
                 />
               </Match>
-              <Match when={!edit() && !isImage() && props.msg._id !== ''}>
+              <Match when={props.msg._id === '' && !props.msg.msg.length}>
+                <div class="flex h-8 w-12 items-center justify-center">
+                  <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                </div>
+              </Match>
+              <Match when={!edit() && !isImage()}>
                 <p
-                  class="rendered-markdown"
+                  class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage()}
                 />
-              </Match>
-              <Match when={props.msg._id === ''}>
-                <div class="flex h-8 w-12 items-center justify-center">
-                  <div class="dot-flashing bg-[var(--hl-700)]"></div>
-                </div>
               </Match>
               <Match when={edit()}>
                 <div
