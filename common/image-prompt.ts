@@ -9,7 +9,6 @@ export type ImagePromptOpts = {
   char: AppSchema.Character
   characters: Record<string, AppSchema.Character>
   chatBots: AppSchema.Character[]
-  noThrow?: boolean
 }
 
 const appearanceKeys = ['appearance', 'looks']
