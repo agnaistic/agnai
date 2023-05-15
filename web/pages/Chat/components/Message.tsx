@@ -150,7 +150,7 @@ const SingleMessage: Component<
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
     >
       <div class={`flex w-full ${opacityClass}`}>
-        <div class={`flex w-full select-text flex-col gap-1`}>
+        <div class={`flex h-fit w-full select-text flex-col gap-1`}>
           <div class="break-words">
             <span
               class={`${imageHeight()} float-left pr-3`}
@@ -280,7 +280,7 @@ const SingleMessage: Component<
               </Match>
               <Match when={!edit() && !isImage()}>
                 <p
-                  class="rendered-markdown h-fit px-1"
+                  class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage()}
