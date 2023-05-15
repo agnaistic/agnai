@@ -280,7 +280,7 @@ const SingleMessage: Component<
               </Match>
               <Match when={!edit() && !isImage()}>
                 <p
-                  class="rendered-markdown px-1"
+                  class="rendered-markdown h-fit px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage()}
