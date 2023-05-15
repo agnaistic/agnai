@@ -15,7 +15,6 @@ import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
-import Loading from '/web/shared/Loading'
 
 type MessageProps = {
   msg: SplitMessage
