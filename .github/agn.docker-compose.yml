@@ -8,7 +8,13 @@ services:
         aliases:
           - agnaistic
     deploy:
+      restart_policy:
+        condition: any
+        delay: 5s
       replicas: 3
+      placement:
+        constraints:
+          - "node.role!=manager"
     ports:
       - '3001:3001'
     volumes:
