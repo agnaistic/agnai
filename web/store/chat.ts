@@ -171,7 +171,7 @@ export const chatStore = createStore<ChatState>('chat', {
             chat: res.result.chat,
             char: res.result.character,
             participantIds: res.result.active,
-            replyAs: undefined, //isMultiChars ? undefined : res.result.character._id,
+            replyAs: isMultiChars ? undefined : res.result.character._id,
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
