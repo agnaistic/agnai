@@ -165,8 +165,11 @@ const ChatDetail: Component = () => {
     }
 
     // If the number of active bots is 1 or fewer then always request a response
-    const isOneBot = Object.values(chats.chat?.characters || {}).filter((val) => val).length <= 1
-    const kind = ooc ? 'ooc' : chats.replyAs || isOneBot ? 'send' : 'send-noreply'
+    const botMembers = Object.entries(chats.chat?.characters || {}).reduce(
+      (prev, [id, active]) => (active && id !== chats.chat?.characterId ? prev + 1 : prev),
+      0
+    )
+    const kind = ooc ? 'ooc' : chats.replyAs || botMembers === 0 ? 'send' : 'send-noreply'
     if (!ooc) setSwipe(0)
     msgStore.send(chats.chat?._id!, message, kind, onSuccess)
     return
