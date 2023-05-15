@@ -7,13 +7,17 @@ export type ImagePromptOpts = {
   messages: AppSchema.ChatMessage[]
   members: AppSchema.Profile[]
   char: AppSchema.Character
+  characters: Record<string, AppSchema.Character>
+  chatBots: AppSchema.Character[]
+  noThrow?: boolean
 }
 
 const appearanceKeys = ['appearance', 'looks']
 
 export async function createAppearancePrompt(
   user: AppSchema.User,
-  avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona
+  avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona,
+  noThrow?: boolean
 ) {
   let visuals: string[] = []
 
@@ -42,7 +46,7 @@ export async function createAppearancePrompt(
     break
   }
 
-  if (!visuals.length) {
+  if (!visuals.length && !noThrow) {
     throw new Error(`Your character does not have an "appearance" or "looks" attribute.`)
   }
 
