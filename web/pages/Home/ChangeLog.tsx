@@ -4,6 +4,11 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_15 May 2023_
+- Add 'avatar wrap-around'. Enable this in the UI settings will allow text to wrap around avatars in messages.
+- Fix 'failing to send a message' after editing the chat.
+- Include character appearances in OpenAI chat summarisations for image prompts.
+
 _13 May 2023_
 - Introduce "multiple character" capability. Add characters to your chats using the 'Participants' option.
   - Multi-user + Multi-character is supported.

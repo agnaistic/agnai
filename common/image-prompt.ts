@@ -16,8 +16,7 @@ const appearanceKeys = ['appearance', 'looks']
 
 export async function createAppearancePrompt(
   user: AppSchema.User,
-  avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona,
-  noThrow?: boolean
+  avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona
 ) {
   let visuals: string[] = []
 
@@ -46,7 +45,7 @@ export async function createAppearancePrompt(
     break
   }
 
-  if (!visuals.length && !noThrow) {
+  if (!visuals.length) {
     throw new Error(`Your character does not have an "appearance" or "looks" attribute.`)
   }
 

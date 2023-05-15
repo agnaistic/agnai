@@ -26,7 +26,7 @@ export const handleHorde: ModelAdapter = async function* ({
     const trimmed = trimResponseV2(sanitised, opts.replyAs, members, ['END_OF_DIALOG'])
     yield trimmed || sanitised
   } catch (ex: any) {
-    logger.error({ err: ex, body: ex.body }, `Horde request failed`)
-    yield { error: ex.message }
+    logger.error({ err: ex, body: ex.body }, `Horde request failed.`)
+    yield { error: `${ex.message}. ${ex?.body?.message}` }
   }
 }
