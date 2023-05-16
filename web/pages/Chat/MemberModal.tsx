@@ -87,7 +87,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
           toastStore.error('No character selected')
           return
         }
-        return chatStore.addCharacter(chatId, char._id, props.close)
+        return chatStore.addCharacter(chatId, char._id)
     }
   }
 
