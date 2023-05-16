@@ -1,4 +1,4 @@
-import { ArrowBigLeft, Bot, Crown, Mail, Plus, Trash, User } from 'lucide-solid'
+import { ArrowBigLeft, Bot, Crown, Mail, Trash, User } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -8,12 +8,10 @@ import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
-import CharacterSelect from '/web/shared/CharacterSelect'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
-import { FormLabel } from '/web/shared/FormLabel'
 
-type View = 'list' | 'invite_user' | 'invite_character'
+type View = 'list' | 'invite_user' | 'add_character'
 
 const MemberModal: Component<{ show: boolean; close: () => void; charId: string }> = (props) => {
   const [view, setView] = createSignal<View>('list')
@@ -24,7 +22,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         <Button schema="secondary" onClick={props.close}>
           Close
         </Button>
-        <Button schema="primary" onClick={() => setView('invite_character')}>
+        <Button schema="primary" onClick={() => setView('add_character')}>
           <Bot size={16} /> Add Character
         </Button>
         <Show when={isLoggedIn()}>
@@ -43,17 +41,19 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   return (
     <>
       <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
-        <Switch>
-          <Match when={view() === 'list'}>
-            <ParticipantsList setView={setView} charId={props.charId} />
-          </Match>
-          <Match when={view() === 'invite_character'}>
-            <InviteCharacter setView={setView} />
-          </Match>
-          <Match when={view() === 'invite_user'}>
-            <InviteUser setView={setView} />
-          </Match>
-        </Switch>
+        <div class="space-y-2 text-sm">
+          <Switch>
+            <Match when={view() === 'list'}>
+              <ParticipantsList setView={setView} charId={props.charId} />
+            </Match>
+            <Match when={view() === 'add_character'}>
+              <AddCharacter setView={setView} />
+            </Match>
+            <Match when={view() === 'invite_user'}>
+              <InviteUser setView={setView} />
+            </Match>
+          </Switch>
+        </div>
       </Modal>
     </>
   )
@@ -66,10 +66,12 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
 
   const charMembers = createMemo<AppSchema.Character[]>(() => {
-    if (!state.active?.char) return []
+    const characters = state.active?.chat.characters || {}
+    const mainChar = state.active?.char
+    if (!mainChar) return []
     return [
-      state.active.char,
-      ...Object.entries(state.active.chat.characters || {})
+      mainChar,
+      ...Object.entries(characters)
         .filter((pair) => pair[1])
         .map((pair) => pair[0])
         .map(
@@ -77,7 +79,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
             state.chatBots.find((bot) => bot._id === charId) ??
             ({
               _id: charId,
-              name: 'Character not found',
+              name: charId,
             } as AppSchema.Character)
         )
         .sort((a, b) => a.name.localeCompare(b.name)),
@@ -106,28 +108,26 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
 
   return (
     <>
-      <div class="space-y-2 text-sm">
-        <For each={users()}>
-          {(member) => (
-            <UserParticipant
-              member={member}
-              remove={setDeleting}
-              canRemove={isOwner() && member._id !== self.profile?._id}
-              isOwner={isOwner()}
-            />
-          )}
-        </For>
-        <For each={charMembers()}>
-          {(char) => (
-            <CharacterParticipant
-              char={char}
-              remove={removeChar}
-              canRemove={props.charId !== char._id}
-              isMain={props.charId === char._id}
-            />
-          )}
-        </For>
-      </div>
+      <For each={users()}>
+        {(member) => (
+          <UserParticipant
+            member={member}
+            remove={setDeleting}
+            canRemove={isOwner() && member._id !== self.profile?._id}
+            isOwner={isOwner()}
+          />
+        )}
+      </For>
+      <For each={charMembers()}>
+        {(char) => (
+          <CharacterParticipant
+            char={char}
+            remove={removeChar}
+            canRemove={props.charId !== char._id}
+            isMain={props.charId === char._id}
+          />
+        )}
+      </For>
 
       <ConfirmModal
         show={!!deleting()}
@@ -139,7 +139,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
   )
 }
 
-const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
+const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
   const state = chatStore()
   const chars = characterStore()
 
@@ -150,17 +150,22 @@ const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
   })
 
   const characters = createMemo(() => {
-    if (!state.active?.char) return []
-    const members = [
-      state.active.char._id,
-      Object.entries(state.active.chat.characters || {})
-        .filter((pair) => pair[1])
-        .map((pair) => pair[0]),
-    ]
+    const characters = state.active?.chat.characters || {}
+    const mainCharId = state.active?.char._id
+    if (!mainCharId) return []
+    const members = Array.from(
+      new Set([
+        mainCharId,
+        ...Object.entries(characters)
+          .filter((pair) => pair[1])
+          .map((pair) => pair[0])
+          .flat(),
+      ])
+    )
     return chars.characters.list.filter((c) => !members.includes(c._id))
   })
 
-  const invite = (char: AppSchema.Character | undefined) => {
+  const add = (char: AppSchema.Character | undefined) => {
     if (!state.active?.chat || !char) return
     const chatId = state.active.chat._id
     chatStore.addCharacter(chatId, char._id, () => props.setView('list'))
@@ -172,8 +177,13 @@ const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
         when={characters().length}
         fallback={<div class="text-red-500">You don't have any other characters to invite</div>}
       >
-        <FormLabel label="Character" helperText="Select a character to add to the chat" />
-        <CharacterSelectList items={characters()} onSelect={invite} />
+        <p class="pb-1 text-sm text-[var(--text-700)]">Select a character to add to the chat</p>
+        <Show
+          when={!!characters().length}
+          fallback={<p>You don't have any characters available to add</p>}
+        >
+          <CharacterSelectList items={characters()} onSelect={add} />
+        </Show>
       </Show>
     </>
   )

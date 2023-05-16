@@ -1,7 +1,8 @@
-import { Component, For, Show, createMemo } from 'solid-js'
+import { Component, For, Show, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '../../srv/db/schema'
 import AvatarIcon from './AvatarIcon'
 import { Star, Users } from 'lucide-solid'
+import TextInput from './TextInput'
 
 export type Option<T extends string = string> = {
   label: string
@@ -13,10 +14,24 @@ const CharacterSelectList: Component<{
   emptyLabel?: string
   onSelect: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
+  const [filter, setFilter] = createSignal('')
+
   const sorted = createMemo(() => {
-    const items = props.items.slice()
-    items.sort((a, b) => +!!b.favorite - +!!a.favorite || a.name.localeCompare(b.name))
-    return items
+    const words = filter()
+      .trim()
+      .toLowerCase()
+      .split(' ')
+      .filter((w) => !!w)
+    return props.items
+      .slice()
+      .filter((i) => {
+        if (!words.length) return true
+        for (let word of words) {
+          if (!wordMatch(i, word)) return false
+        }
+        return true
+      })
+      .sort((a, b) => +!!b.favorite - +!!a.favorite || a.name.localeCompare(b.name))
   })
 
   const onChange = (value: AppSchema.Character | undefined) => {
@@ -27,6 +42,11 @@ const CharacterSelectList: Component<{
     <>
       <div class="flex-1 overflow-y-auto">
         <div class="flex flex-col gap-2 p-2">
+          <TextInput
+            fieldName="__filter"
+            placeholder="Type to filter characters..."
+            onKeyUp={(e) => setFilter(e.currentTarget.value)}
+          />
           <Show when={props.emptyLabel}>
             <div
               class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
@@ -52,7 +72,7 @@ const CharacterSelectList: Component<{
                   <AvatarIcon
                     avatarUrl={item.avatar}
                     class="mr-4"
-                    format={{ size: 'xs', corners: 'circle' }}
+                    format={{ size: 'md', corners: 'circle' }}
                   />
                   <div class="ellipsis flex w-full flex-col">
                     <div class="ellipsis font-bold">{item.name}</div>
@@ -73,6 +93,12 @@ const CharacterSelectList: Component<{
       </div>
     </>
   )
+}
+
+function wordMatch(char: AppSchema.Character, word: string) {
+  if (char.name.toLowerCase().includes(word)) return true
+  if (char.description && char.description.toLowerCase().includes(word)) return true
+  return false
 }
 
 export default CharacterSelectList

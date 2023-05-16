@@ -65,7 +65,11 @@ const CharacterSelect: Component<{
         </Button>
         <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
           <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[280px]">
-            <CharacterSelectList items={props.items} onSelect={onChange} />
+            <CharacterSelectList
+              items={props.items}
+              onSelect={onChange}
+              emptyLabel={props.emptyLabel}
+            />
           </div>
         </DropMenu>
       </div>
