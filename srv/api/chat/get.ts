@@ -36,7 +36,16 @@ export const getChatDetail = handle(async ({ userId, params }) => {
 
 export const getAllChats = handle(async (req) => {
   const chats = await store.chats.getAllChats(req.userId!)
-  const charIds = new Set(chats.map((ch) => ch.characterId))
+  const charIds = new Set(
+    [
+      ...chats.map((ch) => [
+        ch.characterId,
+        ...Object.entries(ch.characters || {})
+          .filter((ch) => ch[1])
+          .flatMap((ch) => ch[0]),
+      ]),
+    ].flat()
+  )
   const characters = await store.characters.getCharacterList(Array.from(charIds))
   return { chats, characters }
 })

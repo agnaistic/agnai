@@ -373,7 +373,14 @@ export const chatStore = createStore<ChatState>('chat', {
           }
         })
 
-        yield { active: { ...active, chat }, all: { ...all, chats: list } }
+        yield {
+          active: { ...active, chat },
+          all: {
+            ...all,
+            chats: list,
+            chars: Object.assign(all?.chars || {}, { [charId]: res.result.char }),
+          },
+        }
         if (res.result.char) {
           yield {
             chatBots: chatBots.concat(res.result.char),
