@@ -351,7 +351,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *addCharacter(
-      { active, chatBots, chatBotMap },
+      { active, chatBots, chatBotMap, all },
       chatId: string,
       charId: string,
       onSuccess?: () => void
@@ -364,8 +364,16 @@ export const chatStore = createStore<ChatState>('chat', {
           ...active.chat,
           characters: Object.assign(active.chat.characters || {}, { [charId]: true }),
         }
+        const list = all?.chats.map((c) => {
+          if (c._id !== chatId) return c
+          return {
+            ...c,
+            characters: Object.assign(c.characters || {}, { [charId]: true }),
+            updatedAt: new Date().toISOString(),
+          }
+        })
 
-        yield { active: { ...active, chat } }
+        yield { active: { ...active, chat }, all: { ...all, chats: list } }
         if (res.result.char) {
           yield {
             chatBots: chatBots.concat(res.result.char),
@@ -377,7 +385,12 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async *removeCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
+    async *removeCharacter(
+      { active, all },
+      chatId: string,
+      charId: string,
+      onSuccess?: () => void
+    ) {
       const res = await chatsApi.removeCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
 
@@ -387,8 +400,16 @@ export const chatStore = createStore<ChatState>('chat', {
           ...active.chat,
           characters: Object.assign(active.chat.characters || {}, { [charId]: false }),
         }
+        const list = all?.chats.map((c) => {
+          if (c._id !== chatId) return c
+          return {
+            ...c,
+            characters: Object.assign(c.characters || {}, { [charId]: false }),
+            updatedAt: new Date().toISOString(),
+          }
+        })
 
-        yield { active: { ...active, chat } }
+        yield { active: { ...active, chat }, all: { ...all, chats: list } }
         toastStore.success(`Character removed from chat`)
         onSuccess?.()
       }
