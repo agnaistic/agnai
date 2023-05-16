@@ -1,41 +1,67 @@
-import { Trash } from 'lucide-solid'
+import { ArrowBigLeft, Bot, Crown, Mail, Plus, Trash, User } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import { characterStore, chatStore, toastStore, userStore } from '../../store'
-import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
-import Select, { Option } from '/web/shared/Select'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import { isLoggedIn } from '/web/store/api'
 
-type InviteType = 'user' | 'character'
+type View = 'list' | 'invite_user' | 'invite_character'
 
 const MemberModal: Component<{ show: boolean; close: () => void; charId: string }> = (props) => {
-  let ref: any
+  const [view, setView] = createSignal<View>('list')
+
+  const Footer = (
+    <>
+      <Show when={view() === 'list'}>
+        <Button schema="secondary" onClick={props.close}>
+          Close
+        </Button>
+        <Button schema="primary" onClick={() => setView('invite_character')}>
+          <Bot size={16} /> Add Character
+        </Button>
+        <Show when={isLoggedIn()}>
+          <Button schema="primary" onClick={() => setView('invite_user')}>
+            <User size={16} /> Add User
+          </Button>
+        </Show>
+      </Show>
+      <Show when={view() !== 'list'}>
+        <Button schema="secondary" onClick={() => setView('list')}>
+          <ArrowBigLeft size={16} /> Back
+        </Button>
+      </Show>
+    </>
+  )
+  return (
+    <>
+      <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
+        <Switch>
+          <Match when={view() === 'list'}>
+            <ParticipantsList setView={setView} charId={props.charId} />
+          </Match>
+          <Match when={view() === 'invite_character'}>
+            <InviteCharacter setView={setView} />
+          </Match>
+          <Match when={view() === 'invite_user'}>
+            <InviteUser setView={setView} />
+          </Match>
+        </Switch>
+      </Modal>
+    </>
+  )
+}
+
+const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string }> = (props) => {
   const self = userStore()
   const state = chatStore()
-  const chars = characterStore()
-
-  const typeItems: Option<InviteType>[] = [{ value: 'character', label: 'Character' }]
-
-  if (isLoggedIn()) {
-    typeItems.unshift({ value: 'user', label: 'User' })
-  }
-
-  onMount(() => {
-    if (!chars.characters.loaded) {
-      characterStore.getCharacters()
-    }
-  })
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
-  const [type, setType] = createSignal(typeItems[0].value)
-  const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
 
   const charMemberIds = createMemo(() => {
     if (!state.active?.char) return []
@@ -47,14 +73,6 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
   const charMembers = createMemo(() => {
     return state.chatBots.filter((bot) => charMemberIds().includes(bot._id))
-  })
-
-  const characters = createMemo(() => {
-    const available = chars.characters.list.filter(
-      (c) => c._id !== props.charId && !charMemberIds().includes(c._id)
-    )
-    if (available.length) setInviteChar(available[0])
-    return available
   })
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
@@ -72,109 +90,34 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
     return [self.profile].concat(participants)
   })
 
-  const invite = () => {
-    if (!state.active?.chat) return
-    const chatId = state.active.chat._id
-
-    switch (type()) {
-      case 'user':
-        const body = getStrictForm(ref, { userId: 'string' })
-        return chatStore.inviteUser(chatId, body.userId, props.close)
-
-      case 'character':
-        const char = inviteChar()
-        if (!char) {
-          toastStore.error('No character selected')
-          return
-        }
-        return chatStore.addCharacter(chatId, char._id)
-    }
-  }
-
   const removeChar = (charId: string) => {
     if (!state.active?.chat) return
     chatStore.removeCharacter(state.active.chat._id, charId)
   }
 
-  const Footer = (
-    <>
-      <Button schema="secondary" onClick={props.close}>
-        Close
-      </Button>
-    </>
-  )
   return (
     <>
-      <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
-        <form ref={ref} class="flex w-full max-w-full flex-col gap-2">
-          <Select
-            fieldName="type"
-            label="Invitation Type"
-            helperText="Whether to invite a user or a character"
-            items={typeItems}
-            value={typeItems[0].value}
-            onChange={(val) => setType(val.value as any)}
-          />
-
-          <div class="flex max-w-full flex-col gap-2">
-            <Switch>
-              <Match when={type() === 'user'}>
-                <TextInput
-                  class="text-sm"
-                  fieldName="userId"
-                  label="Invite User"
-                  helperText="The ID of the user to invite. The user should provide this to you"
-                  placeholder={`E.g. ${v4()}`}
-                />
-              </Match>
-
-              <Match when={type() === 'character'}>
-                <Show
-                  when={characters().length}
-                  fallback={
-                    <div class="text-red-500">You don't have any other characters to invite</div>
-                  }
-                >
-                  <CharacterSelect
-                    class="w-full"
-                    fieldName="character"
-                    label="Character"
-                    helperText="The character to invite"
-                    items={characters()}
-                    value={inviteChar()}
-                    onChange={(val) => setInviteChar(val)}
-                  />
-                </Show>
-              </Match>
-            </Switch>
-
-            <Button class="h-[36px]" onClick={invite}>
-              Invite
-            </Button>
-          </div>
-        </form>
-        <Divider />
-        <div class="space-y-2 text-sm">
-          <For each={users()}>
-            {(member) => (
-              <Participant
-                member={member}
-                remove={setDeleting}
-                canRemove={isOwner() && member._id !== self.profile?._id}
-              />
-            )}
-          </For>
-          <For each={charMembers()}>
-            {(char) => (
-              <CharacterParticipant
-                char={char}
-                remove={removeChar}
-                canRemove={props.charId !== char._id}
-              />
-            )}
-          </For>
-        </div>
-      </Modal>
+      <div class="space-y-2 text-sm">
+        <For each={users()}>
+          {(member) => (
+            <UserParticipant
+              member={member}
+              remove={setDeleting}
+              canRemove={isOwner() && member._id !== self.profile?._id}
+              isOwner={isOwner()}
+            />
+          )}
+        </For>
+        <For each={charMembers()}>
+          {(char) => (
+            <CharacterParticipant
+              char={char}
+              remove={removeChar}
+              canRemove={props.charId !== char._id}
+            />
+          )}
+        </For>
+      </div>
 
       <ConfirmModal
         show={!!deleting()}
@@ -186,12 +129,112 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   )
 }
 
-export default MemberModal
+const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
+  const state = chatStore()
+  const chars = characterStore()
 
-const Participant: Component<{
+  onMount(() => {
+    if (!chars.characters.loaded) {
+      characterStore.getCharacters()
+    }
+  })
+
+  const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
+
+  const charMemberIds = createMemo(() => {
+    if (!state.active?.char) return []
+    const active = Object.entries(state.active.chat.characters || {})
+      .filter((pair) => pair[1])
+      .map((pair) => pair[0])
+    return [state.active.char._id, ...active]
+  })
+
+  const characters = createMemo(() => {
+    const available = chars.characters.list.filter((c) => !charMemberIds().includes(c._id))
+    if (available.length) setInviteChar(available[0])
+    return available
+  })
+
+  const invite = () => {
+    if (!state.active?.chat) return
+    const chatId = state.active.chat._id
+
+    const char = inviteChar()
+    if (!char) {
+      toastStore.error('No character selected')
+      return
+    }
+    return chatStore.addCharacter(chatId, char._id)
+  }
+
+  return (
+    <>
+      <Show
+        when={characters().length}
+        fallback={<div class="text-red-500">You don't have any other characters to invite</div>}
+      >
+        <CharacterSelect
+          class="w-full"
+          fieldName="character"
+          label="Character"
+          helperText="The character to invite"
+          items={characters()}
+          value={inviteChar()}
+          onChange={(val) => setInviteChar(val)}
+        />
+      </Show>
+
+      <div class="mt-4">
+        <Button class="h-[36px] w-full" onClick={invite}>
+          <Plus /> Add Character
+        </Button>
+      </div>
+    </>
+  )
+}
+
+const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
+  let ref: any
+  const state = chatStore()
+
+  const invite = () => {
+    if (!state.active?.chat) return
+    const chatId = state.active.chat._id
+    const body = getStrictForm(ref, { userId: 'string' })
+    if (body.userId) {
+      toastStore.warn('No user ID provided')
+      return
+    }
+    return chatStore.inviteUser(chatId, body.userId, () => props.setView('list'))
+  }
+
+  return (
+    <>
+      <form ref={ref} class="flex w-full max-w-full flex-col gap-2">
+        <TextInput
+          class="text-sm"
+          fieldName="userId"
+          label="Invite User"
+          helperText="The ID of the user to invite. The user should provide this to you"
+          placeholder={`E.g. ${v4()}`}
+        />
+
+        <div class="mt-4">
+          <Button class="h-[36px] w-full" onClick={invite}>
+            <Mail />
+            Send Invite
+          </Button>
+        </div>
+      </form>
+    </>
+  )
+}
+
+const UserParticipant: Component<{
   member: AppSchema.Profile
   remove: (profile: AppSchema.Profile) => void
   canRemove: boolean
+  isOwner: boolean
 }> = (props) => {
   return (
     <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
@@ -207,6 +250,11 @@ const Participant: Component<{
         </div>
       </div>
       <div class="flex">
+        <Show when={props.isOwner}>
+          <Button schema="clear" onClick={() => {}} disabled>
+            <Crown size={16} class="opacity-50" />
+          </Button>
+        </Show>
         <Show when={props.canRemove}>
           <Button schema="clear" onClick={() => props.remove(props.member)}>
             <Trash size={16} />
@@ -232,6 +280,11 @@ const CharacterParticipant: Component<{
         />
         <div class="ellipsis">{props.char.name}</div>
       </div>
+      <Show when={!props.canRemove}>
+        <Button schema="clear" onClick={() => {}} disabled>
+          <Trash size={16} class="opacity-50" />
+        </Button>
+      </Show>
       <Show when={props.canRemove}>
         <Button schema="clear" onClick={() => props.remove(props.char._id)}>
           <Trash size={16} />
@@ -240,3 +293,5 @@ const CharacterParticipant: Component<{
     </div>
   )
 }
+
+export default MemberModal
