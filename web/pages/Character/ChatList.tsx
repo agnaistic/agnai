@@ -302,7 +302,7 @@ const Chats: Component<{
                                 positionStyle = ''
                               } else if (chat.characters.length === 2) {
                                 positionStyle = i() === 0 ? 'translate-x-1/4 ' : '-translate-x-1/4 '
-                              } else if (chat.characters.length === 3) {
+                              } else if (chat.characters.length >= 3) {
                                 positionStyle =
                                   i() === 0
                                     ? 'translate-x-1/4 '
