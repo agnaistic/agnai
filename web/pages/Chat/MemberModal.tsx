@@ -10,6 +10,8 @@ import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import { isLoggedIn } from '/web/store/api'
+import CharacterSelectList from '/web/shared/CharacterSelectList'
+import { FormLabel } from '/web/shared/FormLabel'
 
 type View = 'list' | 'invite_user' | 'invite_character'
 
@@ -139,8 +141,6 @@ const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
     }
   })
 
-  const [inviteChar, setInviteChar] = createSignal<AppSchema.Character>()
-
   const charMemberIds = createMemo(() => {
     if (!state.active?.char) return []
     const active = Object.entries(state.active.chat.characters || {})
@@ -149,22 +149,14 @@ const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
     return [state.active.char._id, ...active]
   })
 
-  const characters = createMemo(() => {
-    const available = chars.characters.list.filter((c) => !charMemberIds().includes(c._id))
-    if (available.length) setInviteChar(available[0])
-    return available
-  })
+  const characters = createMemo(() =>
+    chars.characters.list.filter((c) => !charMemberIds().includes(c._id))
+  )
 
-  const invite = () => {
-    if (!state.active?.chat) return
+  const invite = (char: AppSchema.Character | undefined) => {
+    if (!state.active?.chat || !char) return
     const chatId = state.active.chat._id
-
-    const char = inviteChar()
-    if (!char) {
-      toastStore.error('No character selected')
-      return
-    }
-    return chatStore.addCharacter(chatId, char._id)
+    chatStore.addCharacter(chatId, char._id, () => props.setView('list'))
   }
 
   return (
@@ -173,22 +165,9 @@ const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
         when={characters().length}
         fallback={<div class="text-red-500">You don't have any other characters to invite</div>}
       >
-        <CharacterSelect
-          class="w-full"
-          fieldName="character"
-          label="Character"
-          helperText="The character to invite"
-          items={characters()}
-          value={inviteChar()}
-          onChange={(val) => setInviteChar(val)}
-        />
+        <FormLabel label="Character" helperText="Select a character to add to the chat" />
+        <CharacterSelectList items={characters()} onSelect={invite} />
       </Show>
-
-      <div class="mt-4">
-        <Button class="h-[36px] w-full" onClick={invite}>
-          <Plus /> Add Character
-        </Button>
-      </div>
     </>
   )
 }
