@@ -225,7 +225,9 @@ const UserParticipant: Component<{
         />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.member.handle}</div>
-          <div class="text-xs italic text-[var(--text-600)]">{props.member.userId.slice(0, 8)}</div>
+          <div class="text-xs italic text-[var(--text-600)]">
+            User {props.member.userId.slice(0, 8)}
+          </div>
         </div>
       </div>
       <div class="flex">
@@ -257,7 +259,10 @@ const CharacterParticipant: Component<{
           avatarUrl={props.char.avatar}
           openable
         />
-        <div class="ellipsis">{props.char.name}</div>
+        <div class="ellipsis flex flex-col">
+          <div class="ellipsis">{props.char.name}</div>
+          <div class="text-xs italic text-[var(--text-600)]">Character</div>
+        </div>
       </div>
       <Show when={!props.canRemove}>
         <Button schema="clear" onClick={() => {}} disabled>
