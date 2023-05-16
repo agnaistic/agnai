@@ -65,16 +65,23 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
 
-  const charMemberIds = createMemo(() => {
+  const charMembers = createMemo<AppSchema.Character[]>(() => {
     if (!state.active?.char) return []
-    const active = Object.entries(state.active.chat.characters || {})
-      .filter((pair) => pair[1])
-      .map((pair) => pair[0])
-    return [state.active.char._id, ...active]
-  })
-
-  const charMembers = createMemo(() => {
-    return state.chatBots.filter((bot) => charMemberIds().includes(bot._id))
+    return [
+      state.active.char,
+      ...Object.entries(state.active.chat.characters || {})
+        .filter((pair) => pair[1])
+        .map((pair) => pair[0])
+        .map(
+          (charId) =>
+            state.chatBots.find((bot) => bot._id === charId) ??
+            ({
+              _id: charId,
+              name: 'Character not found',
+            } as AppSchema.Character)
+        )
+        .sort((a, b) => a.name.localeCompare(b.name)),
+    ]
   })
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
@@ -89,7 +96,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
   const users = createMemo(() => {
     if (!self.profile) return []
     const participants = state.active?.participantIds?.map((id) => state.memberIds[id]) || []
-    return [self.profile].concat(participants)
+    return [self.profile].concat(participants.sort((a, b) => a.handle.localeCompare(b.handle)))
   })
 
   const removeChar = (charId: string) => {
@@ -116,6 +123,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
               char={char}
               remove={removeChar}
               canRemove={props.charId !== char._id}
+              isMain={props.charId === char._id}
             />
           )}
         </For>
@@ -141,17 +149,16 @@ const InviteCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
     }
   })
 
-  const charMemberIds = createMemo(() => {
+  const characters = createMemo(() => {
     if (!state.active?.char) return []
-    const active = Object.entries(state.active.chat.characters || {})
-      .filter((pair) => pair[1])
-      .map((pair) => pair[0])
-    return [state.active.char._id, ...active]
+    const members = [
+      state.active.char._id,
+      Object.entries(state.active.chat.characters || {})
+        .filter((pair) => pair[1])
+        .map((pair) => pair[0]),
+    ]
+    return chars.characters.list.filter((c) => !members.includes(c._id))
   })
-
-  const characters = createMemo(() =>
-    chars.characters.list.filter((c) => !charMemberIds().includes(c._id))
-  )
 
   const invite = (char: AppSchema.Character | undefined) => {
     if (!state.active?.chat || !char) return
@@ -226,7 +233,7 @@ const UserParticipant: Component<{
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.member.handle}</div>
           <div class="text-xs italic text-[var(--text-600)]">
-            User {props.member.userId.slice(0, 8)}
+            {props.isOwner ? 'Chat Owner' : 'User'} {props.member.userId.slice(0, 8)}
           </div>
         </div>
       </div>
@@ -249,6 +256,7 @@ const UserParticipant: Component<{
 const CharacterParticipant: Component<{
   char: AppSchema.Character
   canRemove: boolean
+  isMain: boolean
   remove: (charId: string) => void
 }> = (props) => {
   return (
@@ -261,7 +269,9 @@ const CharacterParticipant: Component<{
         />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.char.name}</div>
-          <div class="text-xs italic text-[var(--text-600)]">Character</div>
+          <div class="text-xs italic text-[var(--text-600)]">
+            {props.isMain ? 'Main Character' : 'Character'}
+          </div>
         </div>
       </div>
       <Show when={!props.canRemove}>
