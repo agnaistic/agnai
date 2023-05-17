@@ -22,6 +22,7 @@ const App: Component = () => {
       <Routes>
         <Route path="" component={Layout}>
           <CharacterRoutes />
+          <NotificationRoutes />
           <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
           <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
           <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
@@ -101,7 +102,6 @@ const Layout: Component = () => {
           <div class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}>
             <Show when={cfg.init}>
               <Outlet />
-              <NotificationRoutes />
             </Show>
             <Show when={!cfg.init && cfg.initLoading}>
               <div class="flex h-[80vh] items-center justify-center">

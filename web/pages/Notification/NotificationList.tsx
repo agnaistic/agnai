@@ -24,23 +24,32 @@ const NotificationList: Component = () => {
 
   return (
     <>
-      <PageHeader title="Notifications" subtitle="" />
-
-      <div class="flex w-full justify-end gap-2">
-        <Button
-          onClick={() =>
-            notificationStore.createNotification({
-              text: 'Ping!',
-              link: '/',
-            })
-          }
-        >
-          <BellRing /> Ping!
-        </Button>
-        <Button onClick={() => setAllRead()}>
-          <ListChecks /> Mark all as read
-        </Button>
-      </div>
+      <PageHeader
+        title={
+          <div class="flex w-full justify-between">
+            <div>Notifications</div>
+            <div class="flex text-base">
+              <div class="px-1">
+                <Button
+                  onClick={() =>
+                    notificationStore.createNotification({
+                      text: 'Ping!',
+                      link: '/',
+                    })
+                  }
+                >
+                  <BellRing /> Ping!
+                </Button>
+              </div>
+              <div class="px-1">
+                <Button onClick={() => setAllRead()}>
+                  <ListChecks /> Mark all as read
+                </Button>
+              </div>
+            </div>
+          </div>
+        }
+      />
 
       <Show when={!notifications.loading} fallback={<Loading />}>
         <div class="flex w-full flex-col gap-2">
