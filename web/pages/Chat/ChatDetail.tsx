@@ -161,6 +161,12 @@ const ChatDetail: Component = () => {
           setShowOOCOpts(!showOOCOpts())
           onSuccess?.()
           return
+
+        case '/devMode':
+          const wasDevModeOnBefore = () => userStore().devMode ?? false
+          userStore.setDevMode(!wasDevModeOnBefore())
+          onSuccess?.()
+          return
       }
     }
 

@@ -48,6 +48,12 @@ const options = [
 ]
 
 const CreateCharacter: Component = () => {
+  const user = userStore()
+  const devModeOn = createMemo(() => user.devMode ?? false)
+  return devModeOn() ? <CreateCharacterV2 /> : <CreateCharacterV1 />
+}
+
+const CreateCharacterV1: Component = () => {
   let ref: any
   const params = useParams<{ editId?: string; duplicateId?: string }>()
   const [query] = useSearchParams()
@@ -372,6 +378,10 @@ const CreateCharacter: Component = () => {
       <ImageModal />
     </div>
   )
+}
+
+const CreateCharacterV2 = () => {
+  return <div>dev</div>
 }
 
 export default CreateCharacter

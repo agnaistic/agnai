@@ -5,6 +5,7 @@ import { AvatarCornerRadius, AVATAR_SIZES, UserState, userStore } from '../../st
 const devCommands = {
   '/devCycleAvatarSettings': true,
   '/devShowOocToggle': true,
+  '/devMode': true,
 }
 
 type DevCommand = keyof typeof devCommands

@@ -22,6 +22,7 @@ const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
   const nav = useNavigate()
+  const devModeOn = createMemo(() => user.devMode ?? false)
 
   const logout = () => {
     nav('/')
@@ -59,7 +60,10 @@ const Navigation: Component = () => {
               avatarUrl={user.profile?.avatar}
               format={{ corners: 'circle', size: 'md' }}
             />
-            <span class="ellipsis">{user.profile?.handle}</span>
+            <span class="ellipsis">
+              {user.profile?.handle}
+              {devModeOn() ? ' (dev)' : ''}
+            </span>
           </div>
           <div onClick={logout} class="icon-button cursor-pointer ">
             <LogOut />
