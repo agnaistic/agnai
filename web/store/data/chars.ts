@@ -1,6 +1,5 @@
 import { v4 } from 'uuid'
 import { AppSchema } from '../../../srv/db/schema'
-import type { ImportCharacter } from '../../pages/Character/ImportCharacter'
 import { api, isLoggedIn } from '../api'
 import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'

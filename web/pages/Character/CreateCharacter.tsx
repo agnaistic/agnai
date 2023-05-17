@@ -17,7 +17,14 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, NewCharacter, tagStore, settingStore, toastStore, userStore } from '../../store'
+import {
+  characterStore,
+  NewCharacter,
+  tagStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'

@@ -9,7 +9,7 @@ import { AppSchema } from '../db/schema'
 import { CharacterUpdate } from '../db/characters'
 import { getVoiceService } from '../voice'
 import { generateImage } from '../image'
-import { Reference } from 'frisker/dist/types'
+import { Reference, Validator } from 'frisker/dist/types'
 import { v4 } from 'uuid'
 
 const router = Router()
@@ -93,14 +93,6 @@ const getCharacters = handle(async ({ userId }) => {
 const editCharacter = handle(async (req) => {
   const id = req.params.id
   const body = await handleForm(req, characterValidator)
-  
-  const filename = await entityUpload(
-    'char',
-    id,
-    body.attachments.find((a) => a.field === 'avatar')
-  )
-  const avatar = filename ? filename + `?v=${v4().slice(0, 4)}` : undefined
-
 
   const update: CharacterUpdate = {
     name: body.name,
@@ -109,7 +101,6 @@ const editCharacter = handle(async (req) => {
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
-    avatar,
   }
 
   if (body.persona) {
@@ -127,6 +118,15 @@ const editCharacter = handle(async (req) => {
     if (tags && (!Array.isArray(tags) || tags.findIndex((t) => typeof t !== 'string') > -1))
       throw new StatusError('Tags must be an array of strings', 400)
     update.tags = tags
+  }
+
+  const filename = await entityUpload(
+    'char',
+    id,
+    body.attachments.find((a) => a.field === 'avatar')
+  )
+  if (filename) {
+    update.avatar = filename + `?v=${v4().slice(0, 4)}`
   }
 
   const char = await store.characters.updateCharacter(id, req.userId!, update)
