@@ -35,12 +35,17 @@ export const handleKobold: ModelAdapter = async function* ({
     }
   }
 
-  const endTokens = ['END_OF_DIALOG', 'You:']
+  const endTokens = new Set(['END_OF_DIALOG', 'You:']);
 
-  Object.entries(characters!).forEach(([_, character]) => {
+  for (const character of Object.values(characters!)) {
     const endTokenToAdd = `${character.name}:`
-    if (!endTokens.includes(endTokenToAdd)) endTokens.push(endTokenToAdd);
-  })
+
+    if (opts.replyAs === character) {
+      endTokens.delete(endTokenToAdd);
+    } else if (!endTokens.has(endTokenToAdd)) {
+      endTokens.add(endTokenToAdd);
+    }
+  }
 
   log.debug(body, 'Kobold payload')
 
@@ -61,7 +66,7 @@ export const handleKobold: ModelAdapter = async function* ({
 
   const text = resp.body.results?.[0]?.text as string
   if (text) {
-    const trimmed = trimResponseV2(text, opts.replyAs, members, endTokens)
+    const trimmed = trimResponseV2(text, opts.replyAs, members, Array.from(endTokens))
     yield trimmed || text
   } else {
     logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')

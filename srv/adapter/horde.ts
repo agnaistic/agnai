@@ -22,16 +22,21 @@ export const handleHorde: ModelAdapter = async function* ({
         : decryptText(user.hordeKey)
       : HORDE_GUEST_KEY
 
-    const endTokens = ['END_OF_DIALOG']
+    const endTokens = new Set(['END_OF_DIALOG'])
 
-    Object.entries(characters!).forEach(([_, character]) => {
+    for (const character of Object.values(characters!)) {
       const endTokenToAdd = `${character.name}:`
-      if (!endTokens.includes(endTokenToAdd)) endTokens.push(endTokenToAdd);
-    })
+  
+      if (opts.replyAs === character) {
+        endTokens.delete(endTokenToAdd);
+      } else if (!endTokens.has(endTokenToAdd)) {
+        endTokens.add(endTokenToAdd);
+      }
+    }
 
     const text = await horde.generateText({ ...user, hordeKey: key }, gen, prompt)
     const sanitised = sanitise(text)
-    const trimmed = trimResponseV2(sanitised, opts.replyAs, members, endTokens)
+    const trimmed = trimResponseV2(sanitised, opts.replyAs, members, Array.from(endTokens))
     yield trimmed || sanitised
   } catch (ex: any) {
     logger.error({ err: ex, body: ex.body }, `Horde request failed.`)
