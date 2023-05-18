@@ -16,6 +16,7 @@ const base = {
 export const handleKobold: ModelAdapter = async function* ({
   char,
   members,
+  characters,
   user,
   prompt,
   settings,
@@ -35,6 +36,11 @@ export const handleKobold: ModelAdapter = async function* ({
   }
 
   const endTokens = ['END_OF_DIALOG', 'You:']
+
+  Object.entries(characters!).forEach(([_, character]) => {
+    const endTokenToAdd = `${character.name}:`
+    if (!endTokens.includes(endTokenToAdd)) endTokens.push(endTokenToAdd);
+  })
 
   log.debug(body, 'Kobold payload')
 
