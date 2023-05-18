@@ -16,6 +16,7 @@ const base = {
 export const handleKobold: ModelAdapter = async function* ({
   char,
   members,
+  characters,
   user,
   prompt,
   settings,
@@ -33,8 +34,6 @@ export const handleKobold: ModelAdapter = async function* ({
       body.sampler_order.push(sampler)
     }
   }
-
-  const endTokens = ['END_OF_DIALOG', 'You:']
 
   log.debug(body, 'Kobold payload')
 
@@ -55,7 +54,10 @@ export const handleKobold: ModelAdapter = async function* ({
 
   const text = resp.body.results?.[0]?.text as string
   if (text) {
-    const trimmed = trimResponseV2(text, opts.replyAs, members, endTokens)
+    const trimmed = trimResponseV2(text, opts.replyAs, members, characters, [
+      'END_OF_DIALOG',
+      'You:',
+    ])
     yield trimmed || text
   } else {
     logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')

@@ -78,7 +78,9 @@ export const handleOoba: ModelAdapter = async function* ({
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, [
+      'END_OF_DIALOG',
+    ])
     yield trimmed || parsed
   } catch (ex: any) {
     yield { error: `Textgen request failed: ${ex.message}` }

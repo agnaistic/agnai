@@ -8,6 +8,7 @@ import { ModelAdapter } from './type'
 
 export const handleHorde: ModelAdapter = async function* ({
   char,
+  characters,
   members,
   prompt,
   user,
@@ -24,7 +25,7 @@ export const handleHorde: ModelAdapter = async function* ({
 
     const text = await horde.generateText({ ...user, hordeKey: key }, gen, prompt)
     const sanitised = sanitise(text)
-    const trimmed = trimResponseV2(sanitised, opts.replyAs, members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(sanitised, opts.replyAs, members, characters, ['END_OF_DIALOG'])
 
     // This is a temporary measure to help users provide more info when reporting instances of 'cut off' responses
     publishOne(user._id, { type: 'temp-horde-gen', original: sanitised, chatId: opts.chat._id })

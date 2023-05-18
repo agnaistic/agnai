@@ -104,7 +104,7 @@ export const handleNovel: ModelAdapter = async function* ({
   }
 
   const parsed = sanitise(res.body.output)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, endTokens)
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, endTokens)
   yield trimmed || parsed
 }
 

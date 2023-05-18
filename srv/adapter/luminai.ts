@@ -71,7 +71,7 @@ export const handleLuminAI: ModelAdapter = async function* ({
 
   const text = resp.body.results?.[0]?.text as string
   if (text) {
-    const trimmed = trimResponseV2(text, opts.replyAs, members, stopTokens)
+    const trimmed = trimResponseV2(text, opts.replyAs, members, opts.characters, stopTokens)
     yield trimmed || text
     return
   } else {
