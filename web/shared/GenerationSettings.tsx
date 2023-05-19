@@ -4,13 +4,7 @@ import TextInput from './TextInput'
 import Select, { Option } from './Select'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
-import {
-  OPENAI_MODELS,
-  CLAUDE_MODELS,
-  adapterSettings,
-  ADAPTER_LABELS,
-  AIAdapter,
-} from '../../common/adapters'
+import { OPENAI_MODELS, CLAUDE_MODELS, ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'

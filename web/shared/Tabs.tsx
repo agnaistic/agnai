@@ -1,4 +1,4 @@
-import { Component, For, JSX } from 'solid-js'
+import { Component, For } from 'solid-js'
 
 const Tabs: Component<{
   tabs: string[] | readonly string[]

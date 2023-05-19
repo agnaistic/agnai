@@ -11,7 +11,6 @@ import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
-import { ToggleButton } from '/web/shared/Button'
 import { Toggle } from '/web/shared/Toggle'
 
 const imageTypes = [

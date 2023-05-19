@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio, Send } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio } from 'lucide-solid'
 import {
   Component,
   createMemo,
@@ -123,10 +123,10 @@ const InputBar: Component<{
     setMenu(false)
   }
 
-  const regenerate = () => {
-    msgStore.retry(props.chat._id)
-    setMenu(false)
-  }
+  // const regenerate = () => {
+  //   msgStore.retry(props.chat._id)
+  //   setMenu(false)
+  // }
 
   const onButtonClick = () => {
     // if (text().length > 0) {

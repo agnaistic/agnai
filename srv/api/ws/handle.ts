@@ -97,9 +97,8 @@ function logout(client: AppSocket) {
 
 export function publishMany<T extends { type: string }>(userIds: string[], data: T) {
   const unique = Array.from(new Set(userIds))
-  let count = 0
   for (const userId of unique) {
-    count += publishOne(userId, data)
+    publishOne(userId, data)
   }
 }
 

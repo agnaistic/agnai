@@ -14,7 +14,6 @@ export async function changePassword(opts: { username: string; password: string 
 
 export async function getUserInfo(userId: string) {
   const profile = await db('profile').findOne({ userId })
-  const user = await db('user').findOne({ _id: userId })
   const chats = await db('chat').countDocuments({ userId })
   const characters = await db('character').countDocuments({ userId })
 

@@ -4,7 +4,7 @@ import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
-import { Navigate, useNavigate } from '@solidjs/router'
+import { useNavigate } from '@solidjs/router'
 
 const DeleteChatModal: Component<{
   chat?: AppSchema.Chat

@@ -1,9 +1,6 @@
 import { Component, Show } from 'solid-js'
-import { userStore } from '../../../store'
 
 const WebSpeechSynthesisSettings: Component = () => {
-  const state = userStore()
-
   return (
     <>
       <div class="text-xl">Web Speech Synthesis</div>

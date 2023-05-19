@@ -19,8 +19,6 @@ interface Props {
   dismissable?: boolean
 }
 
-const H_MOBILE = `80vh`
-
 const Modal: Component<Props> = (props) => {
   let ref: any
   const width = createMemo(() => {

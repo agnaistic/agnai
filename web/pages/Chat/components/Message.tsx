@@ -174,7 +174,7 @@ const SingleMessage: Component<
           <div ref={avatarRef} class="break-words">
             <span
               class={`float-left pr-3`}
-              style={{ height: user.ui.imageWrap ? '' : img() }}
+              style={{ 'min-height': user.ui.imageWrap ? '' : img() }}
               data-bot-avatar={isBot()}
               data-user-avatar={isUser()}
             >

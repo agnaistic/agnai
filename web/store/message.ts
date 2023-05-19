@@ -618,7 +618,7 @@ subscribe('message-edited', { messageId: 'string', message: 'string' }, (body) =
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
   const { msgs, activeChatId, retrying } = msgStore.getState()
 
-  const [message, replace] = msgs.slice(-2)
+  const [_message, replace] = msgs.slice(-2)
 
   if (activeChatId !== body.chatId) return
   if (retrying) return
@@ -636,7 +636,7 @@ subscribe(
   'message-creating',
   { chatId: 'string', senderId: 'string?', mode: 'string?', characterId: 'string' },
   (body) => {
-    const { waiting, activeChatId, retries } = msgStore.getState()
+    const { activeChatId } = msgStore.getState()
     if (body.chatId !== activeChatId) return
 
     msgStore.setState({

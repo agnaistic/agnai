@@ -6,7 +6,6 @@ import Tabs from '../../../shared/Tabs'
 import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 import Divider from '../../../shared/Divider'
 import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
-import { Frown } from 'lucide-solid'
 
 const ttsServiceTabs = {
   webspeechsynthesis: 'Web Speech Synthesis',

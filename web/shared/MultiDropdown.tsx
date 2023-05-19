@@ -1,4 +1,4 @@
-import { Component, JSX, For, Show } from 'solid-js'
+import { Component, JSX, For } from 'solid-js'
 import { FormLabel } from './FormLabel'
 
 export type DropdownItem = {

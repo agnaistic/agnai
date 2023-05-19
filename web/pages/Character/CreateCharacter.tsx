@@ -42,7 +42,7 @@ const options = [
 const CreateCharacter: Component = () => {
   let ref: any
   const params = useParams<{ editId?: string; duplicateId?: string }>()
-  const [query, setQuery] = useSearchParams()
+  const [query] = useSearchParams()
   setComponentPageTitle(
     params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
   )
