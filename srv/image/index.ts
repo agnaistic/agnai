@@ -77,6 +77,7 @@ export async function generateImage(
           filename: output,
           memberIds: broadcastIds,
           messageId,
+          imagePrompt: opts.prompt,
         })
 
         if (msg) return
@@ -105,6 +106,7 @@ async function createImageMessage(opts: {
   filename: string
   messageId?: string
   memberIds: string[]
+  imagePrompt: string
 }) {
   const chat = opts.chatId ? await store.chats.getChatOnly(opts.chatId) : undefined
   if (!chat) return
@@ -129,6 +131,7 @@ async function createImageMessage(opts: {
       characterId: char._id,
       adapter: 'image',
       ooc: false,
+      imagePrompt: opts.imagePrompt,
     })
 
     sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })

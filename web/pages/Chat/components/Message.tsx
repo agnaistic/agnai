@@ -196,6 +196,7 @@ const SingleMessage: Component<
                     avatarUrl={
                       state.chatBotMap[props.msg.characterId!]?.avatar || props.char?.avatar
                     }
+                    openable
                     bot={true}
                     format={format()}
                   />
@@ -204,6 +205,7 @@ const SingleMessage: Component<
                 <Match when={!props.msg.characterId}>
                   <AvatarIcon
                     avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                    openable
                     format={format()}
                     anonymize={props.anonymize}
                   />

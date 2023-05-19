@@ -13,12 +13,13 @@ export type NewMessage = {
   adapter?: string
   handle?: string
   ooc: boolean
+  imagePrompt?: string
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
 
 export async function createChatMessage(
-  { chatId, message, characterId, senderId, adapter, ooc }: NewMessage,
+  { chatId, message, characterId, senderId, adapter, ooc, imagePrompt }: NewMessage,
   ephemeral?: boolean
 ) {
   const doc: AppSchema.ChatMessage = {
@@ -33,6 +34,10 @@ export async function createChatMessage(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ooc,
+  }
+
+  if (imagePrompt) {
+    doc.imagePrompt = imagePrompt
   }
 
   if (!ephemeral) await db('chat-message').insertOne(doc)

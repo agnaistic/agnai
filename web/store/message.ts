@@ -157,10 +157,15 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
-    async *retry({ msgs }, chatId: string, onSuccess?: () => void) {
+    async *retry({ msgs, activeCharId }, chatId: string, onSuccess?: () => void) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
+        return
+      }
+
+      if (msgs.length === 0) {
+        msgStore.request(chatId, activeCharId, onSuccess)
         return
       }
 
@@ -323,11 +328,12 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request text to speech: ${res.error}`)
       }
     },
-    async *createImage({ activeChatId, activeCharId }, messageId?: string) {
+    async *createImage({ msgs, activeChatId, activeCharId }, messageId?: string) {
       const onDone = (image: string) => handleImage(activeChatId, image)
       yield { waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId } }
 
-      const res = await imageApi.generateImage({ messageId, onDone })
+      const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
+      const res = await imageApi.generateImage({ messageId, prompt: prev?.imagePrompt, onDone })
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
