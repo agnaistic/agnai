@@ -281,10 +281,12 @@ export namespace AppSchema {
 
   export interface ApiKey {
     kind: 'api-key'
+    _id: string
     key: string
     userId: string
     name: string
     scopes: string[]
+    createdAt: string
   }
 }
 

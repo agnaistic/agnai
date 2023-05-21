@@ -33,3 +33,5 @@ const deleteApiKey = handle(async ({ userId, params }) => {
 router.get('/', getApiKeys)
 router.post('/', createApiKey)
 router.delete('/:id', deleteApiKey)
+
+export default router

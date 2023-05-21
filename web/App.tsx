@@ -33,6 +33,7 @@ const App: Component = () => {
             component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
           />
           <Route path="/profile" component={lazy(() => import('./pages/Profile'))} />
+          <Route path="/api-keys" component={lazy(() => import('./pages/ApiKeys'))} />
           <Route path="/settings" component={lazy(() => import('./pages/Settings'))} />
           <Route path="/memory" component={lazy(() => import('./pages/Memory'))} />
           <Route

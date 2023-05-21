@@ -1,5 +1,5 @@
-import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal } from 'solid-js'
+import { Key, Lock, Save, X } from 'lucide-solid'
+import { Component, Show, createEffect, createSignal } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -8,6 +8,7 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { toastStore, userStore } from '../../store'
+import { A } from '@solidjs/router'
 
 const ProfilePage: Component = () => {
   setComponentPageTitle('My profile')
@@ -76,8 +77,17 @@ const ProfilePage: Component = () => {
             onUpdate={onAvatar}
           />
 
-          <div>
-            <Button onClick={() => setPass(true)}>Change Password</Button>
+          <div class="flex flex-row gap-2">
+            <Button onClick={() => setPass(true)}>
+              <Lock size={16} /> Change Password
+            </Button>
+            <Show when={state.loggedIn}>
+              <A href="/api-keys">
+                <Button>
+                  <Key size={16} /> Manage API Keys
+                </Button>
+              </A>
+            </Show>
           </div>
 
           <div class="mt-4 flex w-full justify-end">

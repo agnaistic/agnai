@@ -5,6 +5,7 @@ import classify from './classify'
 import { authMiddleware } from './auth'
 import { authApiKeyMiddleware } from './auth-api-key'
 import user from './user'
+import apiKeys from './api-keys'
 import admin from './admin'
 import horde from './horde'
 import settings from './settings'
@@ -18,6 +19,7 @@ const router = Router()
 router.use(authMiddleware)
 router.use(authApiKeyMiddleware)
 router.use('/user', user)
+router.use('/apiKeys', apiKeys)
 router.use('/chat', chat)
 router.use('/character', character)
 router.use('/classify', classify)
