@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import * as proc from 'child_process'
 import * as path from 'path'
 import * as os from 'os'
 import { mkdirpSync } from 'mkdirp'
@@ -19,6 +20,7 @@ const disableJson = flag(
 
 const debug = flag(`Enable debug logging. This will print payloads sent to the AI`, 'd', 'debug')
 const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'port')
+const pipeline = flag(`Run the extra pipeline features`, 'pipeline')
 
 if (argv.help || argv.h) {
   help()
@@ -104,12 +106,16 @@ function help(code = 0) {
 
 require('./start')
 
+runPipeline()
+
 function getFolders() {
   const home = path.resolve(os.homedir(), '.agnai')
   const assets = path.resolve(home, 'assets')
   const json = path.resolve(home, 'json')
+  const pipeline = path.resolve(home, 'pipeline')
+  const root = path.resolve(__dirname, '..')
 
-  if (argv.files || argv.f) return { assets, json }
+  if (argv.files || argv.f) return { root, assets, json, pipeline }
 
   try {
     readdirSync(home)
@@ -119,10 +125,8 @@ function getFolders() {
     mkdirpSync(json)
   }
 
-  const oldBase = path.resolve(__dirname, '..')
-
-  const oldAssets = path.resolve(oldBase, 'dist/assets')
-  const oldJson = path.resolve(oldBase, 'db')
+  const oldAssets = path.resolve(root, 'dist/assets')
+  const oldJson = path.resolve(root, 'db')
 
   const files = {
     assets: {
@@ -152,7 +156,7 @@ function getFolders() {
     console.log('JSON files copied.')
   }
 
-  return { assets, json }
+  return { root, assets, json, pipeline }
 }
 
 function getFileList(dir: string) {
@@ -162,4 +166,56 @@ function getFileList(dir: string) {
   } catch (ex) {
     return []
   }
+}
+
+function pathExists(path: string) {
+  try {
+    readdirSync(path)
+    return true
+  } catch (ex) {
+    return false
+  }
+}
+
+async function runPipeline() {
+  console.log({ pipeline, root: folders.root })
+  if (!pipeline) return
+
+  const pip = path.resolve(folders.pipeline, 'bin/pip')
+  const poetry = path.resolve(folders.pipeline, 'bin/poetry')
+  const pipelineExists = pathExists(folders.pipeline)
+
+  if (!pipelineExists) {
+    console.log('Installing pipeline features... This may take some time')
+    await execAsync(`python3 -m venv ${folders.pipeline}`)
+    await execAsync(`${pip} install poetry==1.4.1`)
+  }
+
+  console.log('Ensuring pipeline dependencies are up to date...')
+  // await execAsync(`${poetry} show`)
+  await execAsync(`${poetry} install --no-interaction --no-ansi`)
+
+  console.log('starting API...')
+  execAsync(`${poetry} run python -m flask --app ${folders.root}/model/app.py run -p 5001`)
+}
+
+async function execAsync(command: string) {
+  console.log(command)
+  const cmd = proc.exec(command, { cwd: folders.root })
+
+  cmd.stdout?.on('data', console.log)
+  cmd.stderr?.on('data', console.error)
+  cmd.stderr?.on('error', console.error)
+
+  return new Promise((resolve, reject) => {
+    cmd.on('error', (err) => {
+      console.error(err)
+      reject(err)
+    })
+
+    cmd.on('exit', (code) => {
+      if (code !== 0 && code !== 1) reject(code)
+      else resolve(code)
+    })
+  })
 }

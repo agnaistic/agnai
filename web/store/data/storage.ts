@@ -87,6 +87,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     thirdPartyFormat: 'kobold',
     thirdPartyPassword: '',
     luminaiUrl: '',
+    useLocalPipeline: false,
   },
   profile: { _id: '', kind: 'profile', userId: ID, handle: 'You' },
   lastChatId: '',

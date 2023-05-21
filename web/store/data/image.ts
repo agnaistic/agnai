@@ -5,6 +5,7 @@ import { getStore } from '../create'
 import { subscribe } from '../socket'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
 import { AIAdapter, NOVEL_MODELS } from '/common/adapters'
+import { pipelineApi } from './pipeline'
 import { decode, encode } from '/common/tokenize'
 
 type GenerateOpts = {
@@ -89,6 +90,26 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
     })
   }
 
-  const prompt = await createImagePrompt(opts)
-  return prompt
+  if (opts.settings?.service! in SUMMARY_BACKENDS || !opts.user.images?.summariseChat) {
+    const prompt = await createImagePrompt(opts)
+    return prompt
+  }
+
+  console.log('Using', opts.settings?.service, 'to summarise')
+  msgsApi.generateResponseV2({ kind: 'summary' })
+
+  return new Promise<string>((resolve, reject) => {
+    let timer = setTimeout(() => {
+      reject(new Error(`Chat summarisation timed out`))
+    }, 45000)
+    subscribe(
+      'chat-summary',
+      { chatId: 'string', summary: 'string' },
+      (body) => {
+        clearTimeout(timer)
+        resolve(body.summary)
+      },
+      true
+    )
+  })
 }

@@ -1,6 +1,6 @@
 import { api } from '../api'
 
-export const modelApi = {
+export const pipelineApi = {
   isAvailable,
   summarize,
   textToSpeech,
@@ -14,6 +14,9 @@ function isAvailable() {
   return online
 }
 
+/**
+ * Not yet implemented
+ */
 async function textToSpeech(text: string) {
   const res = await method('post', '/tts', { text })
   return res

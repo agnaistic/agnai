@@ -14,6 +14,7 @@ import ClaudeSettings from './components/ClaudeSettings'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import RegisteredSettings from './components/RegisteredSettings'
 import { useSearchParams } from '@solidjs/router'
+import { Toggle } from '/web/shared/Toggle'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -64,6 +65,13 @@ const AISettings: Component<{
           label="Default Preset"
           helperText="The default preset your chats will use. If your preset is not in this list, it needs to be assigned an AI SERVICE."
           value={state.user?.defaultPreset || ''}
+        />
+
+        <Toggle
+          fieldName="useLocalPipeline"
+          label="Use Local Pipeline"
+          helperText="If available, use local Agnaistic pipeline features (summarization for images). This is extremely new and experimental. Expect this to change and improve in the near future."
+          value={state.user?.useLocalPipeline}
         />
 
         <div class="my-2">

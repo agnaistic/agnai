@@ -109,6 +109,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     hordeKey: '',
     oaiKey: '',
     defaultPresets: {},
+    useLocalPipeline: false,
     createdAt: new Date().toISOString(),
   }
 

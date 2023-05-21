@@ -130,12 +130,12 @@ export async function generateResponseV2(opts: GenerateOpts) {
     return createMessage(active.chat._id, opts)
   }
 
-  const props = await getGenerateProps(opts, active).catch((err: Error) => err)
-  if (props instanceof Error) {
-    return localApi.error(props.message)
+  const activePrompt = await createActiveChatPrompt(opts).catch((err) => err)
+  if (activePrompt instanceof Error) {
+    return localApi.error(activePrompt.message)
   }
 
-  const entities = props.entities
+  const { prompt, props, entities } = activePrompt
 
   const chat = {
     ...entities.chat,
@@ -196,6 +196,41 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)
   return res
+}
+
+async function createActiveChatPrompt(
+  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>,
+  maxContext?: number
+) {
+  const { active } = chatStore()
+
+  if (!active) {
+    throw new Error('No active chat. Try refreshing')
+  }
+
+  const props = await getGenerateProps(opts, active)
+
+  const entities = props.entities
+
+  const encoder = await getEncoder()
+  const prompt = createPrompt(
+    {
+      char: entities.char,
+      chat: entities.chat,
+      user: entities.user,
+      members: entities.members.concat([entities.profile]),
+      continue: props?.continue,
+      book: entities.book,
+      retry: props?.retry,
+      settings: entities.settings,
+      messages: props.messages,
+      replyAs: props.replyAs,
+      characters: entities.characters,
+    },
+    encoder,
+    maxContext
+  )
+  return { prompt, props, entities }
 }
 
 type GenerateProps = {

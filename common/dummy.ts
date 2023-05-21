@@ -55,6 +55,7 @@ export function toUser(name: string): AppSchema.User {
     novelModel: NOVEL_MODELS.krake,
     oaiKey: '',
     oobaUrl: '',
+    useLocalPipeline: false,
   }
   return user
 }

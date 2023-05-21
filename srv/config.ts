@@ -38,7 +38,10 @@ if (!process.env.JWT_SECRET) {
     )
   } else {
     const newSecret = v4()
-    writeFileSync('.token_secret', newSecret)
+    const secretPath = process.env.JSON_FOLDER
+      ? resolve(process.env.JSON_FOLDER, '.token_secret')
+      : '.token_secret'
+    writeFileSync(secretPath, newSecret)
     process.env.JWT_SECRET = newSecret
   }
 }
@@ -141,6 +144,9 @@ function env(key: string, fallback?: string): string {
 
 function readSecret() {
   const locations = ['.token_secret', '/run/secrets/jwt_secret']
+  if (process.env.JSON_FOLDER) {
+    locations.unshift(resolve(process.env.JSON_FOLDER, '.token_secret'))
+  }
 
   for (const loc of locations) {
     try {

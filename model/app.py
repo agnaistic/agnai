@@ -29,3 +29,8 @@ def summarizePost():
     prompt = payload.get("prompt", False) or "None"
     resp = summarize(prompt)
     return {"success": True, "summary": resp}
+
+
+print(
+    'Pipeline API started: Remember to enable "USE LOCAL PIPELINE" in your Agnaistic account settings'
+)
