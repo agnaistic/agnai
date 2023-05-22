@@ -285,9 +285,11 @@ export namespace AppSchema {
     key: string
     userId: string
     name: string
-    scopes: string[]
+    scopes: ApiKeyScope[]
     createdAt: string
   }
+
+  export type ApiKeyScope = 'read:profile' | 'read:chars' | 'read:chats' | 'write:chats'
 }
 
 export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { kind: T }>
