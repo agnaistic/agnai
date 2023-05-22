@@ -21,7 +21,7 @@ export const chatsApi = {
   removeCharacter,
 }
 
-export async function getChat(id: string) {
+export async function getChat(id: string, isAbsurdContextSize: boolean) {
   if (isLoggedIn()) {
     const res = await api.get<{
       chat: AppSchema.Chat
@@ -30,7 +30,7 @@ export async function getChat(id: string) {
       characters: AppSchema.Character[]
       members: AppSchema.Profile[]
       active: string[]
-    }>(`/chat/${id}`)
+    }>(`/chat/${id}`, { isAbsurdContextSize: String(isAbsurdContextSize) })
     return res
   }
 

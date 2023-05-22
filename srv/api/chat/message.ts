@@ -47,7 +47,7 @@ export const getMessages = handle(async ({ userId, params, query }) => {
   assertValid({ before: 'string' }, query)
   const before = query.before
 
-  const messages = await store.msgs.getMessages(chatId, before)
+  const messages = await store.msgs.getMessages({ chatId, before, everySingleMessage: false })
   return { messages }
 })
 

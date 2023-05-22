@@ -11,8 +11,9 @@ export const getCharacterChats = handle(async (req) => {
   return { character, chats: list }
 })
 
-export const getChatDetail = handle(async ({ userId, params }) => {
+export const getChatDetail = handle(async ({ userId, params, query }) => {
   const id = params.id
+  const isAbsurdContextSize = query.isAbsurdContextSize === 'true'
   const detail = await store.chats.getChat(id)
 
   if (!detail) throw errors.NotFound
@@ -29,7 +30,7 @@ export const getChatDetail = handle(async ({ userId, params }) => {
 
   const character = detail.characters.find((ch) => ch._id === detail.chat.characterId)
 
-  const messages = await store.msgs.getMessages(id)
+  const messages = await store.msgs.getMessages({ chatId: id, everySingleMessage: isAbsurdContextSize })
 
   return { messages, character, members, active, ...detail }
 })

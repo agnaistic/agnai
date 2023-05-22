@@ -145,8 +145,11 @@ const ChatDetail: Component = () => {
       if (!chats.lastId) return nav('/character/list')
       return nav(`/chat/${chats.lastId}`)
     }
-
-    chatStore.getChat(params.id)
+    const isAbsurdContextSize = createMemo(() => {
+      const ctxLimit = chatPreset()?.contextLimit
+      return !!ctxLimit && ctxLimit > 10000
+    })
+    chatStore.getChat(params.id, isAbsurdContextSize())
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {

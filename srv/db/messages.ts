@@ -4,6 +4,7 @@ import { AppSchema } from './schema'
 import { now } from './util'
 
 const PAGE_SIZE = 50
+const UNLIMITED_PAGE_SIZE = 9999999
 
 export type NewMessage = {
   chatId: string
@@ -92,13 +93,24 @@ export async function editMessage(id: string, content: string, adapter?: string)
   return msg
 }
 
-export async function getMessages(chatId: string, before?: string) {
+export async function getMessages({
+  chatId,
+  before,
+  everySingleMessage,
+}: {
+  chatId: string
+  before?: string
+  everySingleMessage: boolean
+}) {
   // The initial fetch will retrieve 100 messages.
   // This is to ensure that users have sufficient messages in their application state to build prompts with enough context.
-  let pageSize = PAGE_SIZE
+  // Exception: currently, as a workaround for unloaded messages not being
+  // included in the prompt, absurdly-high-context models (claude 100k) load
+  // every message from the get go.
+  let pageSize = everySingleMessage ? UNLIMITED_PAGE_SIZE : PAGE_SIZE
   if (!before) {
     before = now()
-    pageSize = 100
+    pageSize = everySingleMessage ? UNLIMITED_PAGE_SIZE : 100
   }
 
   const docs = await db('chat-message')
