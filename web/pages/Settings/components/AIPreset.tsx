@@ -1,4 +1,4 @@
-import { Component, createMemo, For } from 'solid-js'
+import { Component, createMemo } from 'solid-js'
 import { ADAPTER_LABELS, AIAdapter } from '../../../../common/adapters'
 import { defaultPresets } from '../../../../common/presets'
 import Select from '../../../shared/Select'

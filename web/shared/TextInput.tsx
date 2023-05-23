@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, JSX, onMount, createEffect } from 'solid-js'
+import { Component, Show, createMemo, JSX, onMount } from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices } from './util'

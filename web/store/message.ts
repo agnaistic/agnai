@@ -108,7 +108,7 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to update message: ${res.error}`)
       }
       if (res.result) {
-        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg } : m)) }
+        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)) }
         onSuccess?.()
       }
     },
@@ -157,10 +157,15 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
-    async *retry({ msgs }, chatId: string, onSuccess?: () => void) {
+    async *retry({ msgs, activeCharId }, chatId: string, onSuccess?: () => void) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
+        return
+      }
+
+      if (msgs.length === 0) {
+        msgStore.request(chatId, activeCharId, onSuccess)
         return
       }
 
@@ -323,11 +328,12 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request text to speech: ${res.error}`)
       }
     },
-    async *createImage({ activeChatId, activeCharId }, messageId?: string) {
+    async *createImage({ msgs, activeChatId, activeCharId }, messageId?: string) {
       const onDone = (image: string) => handleImage(activeChatId, image)
       yield { waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId } }
 
-      const res = await imageApi.generateImage({ messageId, onDone })
+      const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
+      const res = await imageApi.generateImage({ messageId, prompt: prev?.imagePrompt, onDone })
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
@@ -491,7 +497,9 @@ subscribe(
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
-        msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
+        msgs: msgs.map((msg) =>
+          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+        ),
       })
     }
 
@@ -605,14 +613,16 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 subscribe('message-edited', { messageId: 'string', message: 'string' }, (body) => {
   const { msgs } = msgStore.getState()
   msgStore.setState({
-    msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
+    msgs: msgs.map((msg) =>
+      msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+    ),
   })
 })
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
   const { msgs, activeChatId, retrying } = msgStore.getState()
 
-  const [message, replace] = msgs.slice(-2)
+  const [_message, replace] = msgs.slice(-2)
 
   if (activeChatId !== body.chatId) return
   if (retrying) return
@@ -630,7 +640,7 @@ subscribe(
   'message-creating',
   { chatId: 'string', senderId: 'string?', mode: 'string?', characterId: 'string' },
   (body) => {
-    const { waiting, activeChatId, retries } = msgStore.getState()
+    const { activeChatId } = msgStore.getState()
     if (body.chatId !== activeChatId) return
 
     msgStore.setState({

@@ -46,7 +46,16 @@ const fontFaces: { [key in FontSetting]: string } = {
 export const AVATAR_SIZES = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
 export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const UI_MODE = ['light', 'dark'] as const
-export const UI_THEME = ['blue', 'sky', 'teal', 'orange', 'rose', 'pink', 'purple'] as const
+export const UI_THEME = [
+  'blue',
+  'sky',
+  'teal',
+  'orange',
+  'rose',
+  'pink',
+  'purple',
+  'premium',
+] as const
 export const UI_FONT = ['default', 'lato'] as const
 
 export type UserState = {

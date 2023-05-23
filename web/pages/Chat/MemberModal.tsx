@@ -4,7 +4,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
-import { characterStore, chatStore, settingStore, toastStore, userStore } from '../../store'
+import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
@@ -193,10 +193,6 @@ const Participant: Component<{
   remove: (profile: AppSchema.Profile) => void
   canRemove: boolean
 }> = (props) => {
-  const showImage = () => {
-    settingStore.showImage(props.member.avatar)
-  }
-
   return (
     <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
       <div class="flex items-center gap-2">

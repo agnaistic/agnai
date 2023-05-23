@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, createMemo, createSignal, onMount } from 'solid-js'
 import { Encoder, getEncoder } from '../../../../common/tokenize'
 import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'

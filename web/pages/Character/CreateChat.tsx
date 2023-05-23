@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from '@solidjs/router'
+import { useNavigate } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'

@@ -6,7 +6,6 @@ import Tabs from '../../../shared/Tabs'
 import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
 import Divider from '../../../shared/Divider'
 import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
-import { Frown } from 'lucide-solid'
 
 const ttsServiceTabs = {
   webspeechsynthesis: 'Web Speech Synthesis',
@@ -66,7 +65,7 @@ export const VoiceSettings: Component = () => {
 
         <Toggle
           label="Enabled"
-          helperText="Characters with a configured voice will speak."
+          helperText="Characters with a configured voice will speak automatically."
           fieldName="textToSpeechEnabled"
           value={state.user?.texttospeech?.enabled ?? true}
         />

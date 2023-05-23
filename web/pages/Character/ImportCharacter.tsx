@@ -1,5 +1,5 @@
 import { Import, X } from 'lucide-solid'
-import { Component, For, Show, createEffect, createSignal, onMount } from 'solid-js'
+import { Component, For, Show, createSignal, onMount } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
@@ -7,7 +7,6 @@ import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractCardData } from './card-utils'
 import AvatarIcon from '/web/shared/AvatarIcon'
-import { getImageData } from '/web/store/data/chars'
 
 export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
 
@@ -38,7 +37,7 @@ const ImportCharacterModal: Component<{
   onMount(async () => {
     if (!props.charhubPath) return
     try {
-      const { card, file, json } = await downloadCharacterHub(props.charhubPath)
+      const { json } = await downloadCharacterHub(props.charhubPath)
       setImported([json])
       toastStore.success('Successfully downloaded from Character Hub')
       setReady(true)

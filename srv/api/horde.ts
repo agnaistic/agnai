@@ -11,7 +11,6 @@ const CACHE_TTL_MS = 120000
 
 let TEXT_CACHE: HordeModel[] = []
 let WORKER_CACHE: HordeWorker[] = []
-let IMAGE_CACHE: HordeModel[] = []
 
 updateModelCache()
 setInterval(updateModelCache, CACHE_TTL_MS)

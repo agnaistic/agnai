@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio, Send } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio } from 'lucide-solid'
 import {
   Component,
   createMemo,
@@ -123,10 +123,10 @@ const InputBar: Component<{
     setMenu(false)
   }
 
-  const regenerate = () => {
-    msgStore.retry(props.chat._id)
-    setMenu(false)
-  }
+  // const regenerate = () => {
+  //   msgStore.retry(props.chat._id)
+  //   setMenu(false)
+  // }
 
   const onButtonClick = () => {
     // if (text().length > 0) {
@@ -232,15 +232,17 @@ const InputBar: Component<{
               </Button>
             </Show>
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
-              <ImagePlus size={18} /> Generage Image
+              <ImagePlus size={18} /> Generate Image
             </Button>
             <Show when={!!state.lastMsg?.characterId && isOwner()}>
               <Button schema="secondary" class="w-full" onClick={more} alignLeft>
                 <PlusCircle size={18} /> Generate More
               </Button>
-              <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
-                <Megaphone size={18} /> Play Voice
-              </Button>
+              <Show when={!!props.char?.voice}>
+                <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
+                  <Megaphone size={18} /> Play Voice
+                </Button>
+              </Show>
             </Show>
           </div>
         </DropMenu>

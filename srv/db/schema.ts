@@ -122,6 +122,7 @@ export namespace AppSchema {
     // Only chat owners can rate messages for now
     rating?: 'y' | 'n' | 'none'
     adapter?: string
+    imagePrompt?: string
 
     createdAt: string
     updatedAt: string

@@ -4,6 +4,11 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_19 May 2023_
+- Image retry uses previous prompt (only applies to new images)
+- Clicking an avatar in chat opens the avatar in the image viewer modal
+- Allow using a custom prompt to generate a character avatar
+
 _15 May 2023_
 - Add 'avatar wrap-around'. Enable this in the UI settings will allow text to wrap around avatars in messages.
 - Fix 'failing to send a message' after editing the chat.

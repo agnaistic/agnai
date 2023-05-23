@@ -124,20 +124,6 @@ const ImportChatModal: Component<{
 
 export default ImportChatModal
 
-type LogImportKeys = {
-  timestamp: string
-  sender: string
-  text: string
-}
-
-const formatMaps = {
-  tavern: {
-    timestamp: 'send_date',
-    sender: 'is_user',
-    text: 'mes',
-  } as const,
-} satisfies Record<string, LogImportKeys>
-
 function parseContent(content: string) {
   /**
    * Agnaistic format

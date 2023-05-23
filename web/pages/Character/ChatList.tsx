@@ -58,8 +58,6 @@ const CharacterChats: Component = () => {
   const [sortField, setSortField] = createSignal(cache.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cache.sort.direction)
 
-  const character = createMemo(() => chars.list.find((ch) => ch._id === charId()))
-
   createEffect(() => {
     if (!params.id) {
       setComponentPageTitle(`Chats`)

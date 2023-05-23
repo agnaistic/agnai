@@ -38,7 +38,6 @@ function parentLogger(name: string) {
 }
 
 export function logMiddleware() {
-  const toRedact = new Set<string>(['password', 'token', 'history'])
   const middleware = (req: any, res: Response, next: NextFunction) => {
     const log = logger.child({ requestId: uuid.v4(), url: req.url, method: req.method })
 

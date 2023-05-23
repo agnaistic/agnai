@@ -1,4 +1,3 @@
-import { v4 } from 'uuid'
 import { createAppearancePrompt } from '../../common/image-prompt'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
@@ -194,8 +193,6 @@ export const characterStore = createStore<CharacterState>(
     },
   }
 })
-
-const imageCallbacks: Record<string, (image: string) => void> = {}
 
 subscribe('image-generated', { image: 'string' }, async (body) => {
   const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())

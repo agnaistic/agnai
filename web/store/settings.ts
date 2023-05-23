@@ -1,4 +1,4 @@
-import { HordeModel, HordeWorker, RegisteredAdapter } from '../../common/adapters'
+import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { setAssetPrefix } from '../shared/util'
@@ -70,6 +70,11 @@ export const settingStore = createStore<SettingState>(
       }
 
       if (res.error) {
+        if (res.status === 500) {
+          toastStore.error(`Could not get settings from server. Logging out to use guest mode...`)
+          events.emit(EVENTS.sessionExpired)
+          return
+        }
         setTimeout(() => settingStore.init(), 2500)
       }
     },

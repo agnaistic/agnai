@@ -1,7 +1,7 @@
 import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './presets'
-import { BOT_REPLACE, getAdapter, SELF_REPLACE } from './prompt'
-import { Encoder, getEncoder, tokenize } from './tokenize'
+import { BOT_REPLACE, SELF_REPLACE } from './prompt'
+import { Encoder } from './tokenize'
 
 export type MemoryOpts = {
   user: AppSchema.User
@@ -43,14 +43,14 @@ type Match = {
 export const MEMORY_PREFIX = 'Facts: '
 
 export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPrompt | undefined {
-  const { chat, book, settings, members, char, lines, user } = opts
+  const { chat, book, settings, members, char, lines } = opts
 
   if (!book?.entries) return
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
   const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
-  const reveseWeight = settings?.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
+  // const reveseWeight = settings?.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
 
   if (isNaN(depth) || depth <= 0) return
 
