@@ -65,7 +65,7 @@ export const VoiceSettings: Component = () => {
 
         <Toggle
           label="Enabled"
-          helperText="Characters with a configured voice will speak."
+          helperText="Characters with a configured voice will speak automatically."
           fieldName="textToSpeechEnabled"
           value={state.user?.texttospeech?.enabled ?? true}
         />

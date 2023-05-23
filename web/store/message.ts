@@ -108,7 +108,7 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to update message: ${res.error}`)
       }
       if (res.result) {
-        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg } : m)) }
+        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)) }
         onSuccess?.()
       }
     },
@@ -497,7 +497,9 @@ subscribe(
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
-        msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
+        msgs: msgs.map((msg) =>
+          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+        ),
       })
     }
 
@@ -611,7 +613,9 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 subscribe('message-edited', { messageId: 'string', message: 'string' }, (body) => {
   const { msgs } = msgStore.getState()
   msgStore.setState({
-    msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message } : msg)),
+    msgs: msgs.map((msg) =>
+      msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+    ),
   })
 })
 
