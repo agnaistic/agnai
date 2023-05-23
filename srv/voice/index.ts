@@ -35,10 +35,6 @@ export async function generateVoice(
   log: AppLog,
   guestId?: string
 ) {
-  if (user.texttospeech?.enabled === false) {
-    throw new StatusError('Text to speech is disabled', 400)
-  }
-
   const service = getVoiceService(voice.service)
   if (!service) return { output: undefined }
 

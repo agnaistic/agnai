@@ -238,9 +238,11 @@ const InputBar: Component<{
               <Button schema="secondary" class="w-full" onClick={more} alignLeft>
                 <PlusCircle size={18} /> Generate More
               </Button>
-              <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
-                <Megaphone size={18} /> Play Voice
-              </Button>
+              <Show when={!!props.char?.voice}>
+                <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
+                  <Megaphone size={18} /> Play Voice
+                </Button>
+              </Show>
             </Show>
           </div>
         </DropMenu>
