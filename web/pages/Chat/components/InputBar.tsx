@@ -232,7 +232,7 @@ const InputBar: Component<{
               </Button>
             </Show>
             <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
-              <ImagePlus size={18} /> Generage Image
+              <ImagePlus size={18} /> Generate Image
             </Button>
             <Show when={!!state.lastMsg?.characterId && isOwner()}>
               <Button schema="secondary" class="w-full" onClick={more} alignLeft>
