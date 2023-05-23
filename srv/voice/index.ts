@@ -14,6 +14,7 @@ import { StatusError } from '../api/wrap'
 import { elevenlabsHandler } from './elevenlabs'
 import { webSpeechSynthesisHandler } from './webspeechsynthesis'
 import { TTSService } from '../db/texttospeech-schema'
+import { sileroApiServerHandler } from './sileroApiServer'
 
 export async function getVoicesList(
   { user, ttsService }: VoicesListRequest,
@@ -104,6 +105,9 @@ export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler | 
 
     case 'elevenlabs':
       return elevenlabsHandler
+
+    case 'silero-api-server':
+      return sileroApiServerHandler
 
     default:
       return

@@ -59,6 +59,8 @@ export namespace AppSchema {
     elevenLabsApiKey?: string
     elevenLabsApiKeySet?: boolean
 
+    sileroApiServerUrl?: string
+
     defaultAdapter: AIAdapter
     defaultPresets?: { [key in AIAdapter]?: string }
     defaultPreset?: string

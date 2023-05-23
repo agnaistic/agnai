@@ -116,6 +116,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
       elevenLabsApiKey: 'string?',
+      sileroApiServerUrl: 'string?',
       speechtotext: 'any?',
       texttospeech: 'any?',
       images: 'any?',
@@ -223,6 +224,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.elevenLabsApiKey) {
     update.elevenLabsApiKey = encryptText(body.elevenLabsApiKey)
+  }
+
+  if (body.sileroApiServerUrl) {
+    update.sileroApiServerUrl = body.sileroApiServerUrl
   }
 
   if (body.adapterConfig) {

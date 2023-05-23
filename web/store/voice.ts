@@ -40,6 +40,14 @@ export const voiceStore = createStore<VoiceState>(
           label: 'ElevenLabs',
         })
       }
+
+      if (user.sileroApiServerUrl) {
+        services.push({
+          type: 'silero-api-server',
+          label: 'Silero API Server',
+        })
+      }
+
       return { services }
     },
     async getVoices({ voices }, type: TTSService | '') {
