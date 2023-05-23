@@ -20,7 +20,9 @@ const disableJson = flag(
 
 const debug = flag(`Enable debug logging. This will print payloads sent to the AI`, 'd', 'debug')
 const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'port')
-const pipeline = flag(`Run the extra pipeline features`, 'pipeline')
+const summarizer = flag(`Run the summarizer pipeline feature`, 's', 'summary')
+const memory = flag(`Run the long-term memory pipeline feature`, 'm', 'memory')
+const pipeline = flag('Enable all pipeline features', 'pipeline')
 
 if (argv.help || argv.h) {
   help()
@@ -178,8 +180,7 @@ function pathExists(path: string) {
 }
 
 async function runPipeline() {
-  console.log({ pipeline, root: folders.root })
-  if (!pipeline) return
+  if (!pipeline || !memory || !summarizer) return
 
   const pip = path.resolve(folders.pipeline, 'bin/pip')
   const poetry = path.resolve(folders.pipeline, 'bin/poetry')

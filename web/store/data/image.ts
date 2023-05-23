@@ -90,7 +90,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
     })
   }
 
-  if (opts.settings?.service! in SUMMARY_BACKENDS || !opts.user.images?.summariseChat) {
+  if (opts.settings?.service! in SUMMARY_BACKENDS === false || !opts.user.images?.summariseChat) {
     const prompt = await createImagePrompt(opts)
     return prompt
   }

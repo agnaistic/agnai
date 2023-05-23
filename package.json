@@ -47,6 +47,7 @@
     "model:deps": ".model/bin/poetry install --no-interaction --no-ansi",
     "model:start": ".model/bin/poetry run python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
     "model:watch": "nodemon -e py --watch model --exec \"python -m flask --app model/app.py run --host 0.0.0.0 -p 5001\"",
+    "model": "npm run model:start",
     "server": "node srv/start.js",
     "server:watch": "nodemon -e js --delay 1 --watch srv --watch common --exec \"node --inspect srv/start.js\" --watch \".env\"",
     "start:all": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
