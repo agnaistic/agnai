@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
-import { characterStore, chatStore } from '../../store'
+import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, SortAsc, SortDesc, Trash } from 'lucide-solid'
 import CreateChatModal from './CreateChat'
@@ -14,24 +14,15 @@ import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import CharacterSelect from '../../shared/CharacterSelect'
-
-const CACHE_KEY = 'agnai-chatlist-cache'
-
-type SortType =
-  | 'chat-updated'
-  | 'chat-created'
-  | 'character-name'
-  | 'character-created'
-  | 'bot-activity'
-
-type SortDirection = 'asc' | 'desc'
-
-type ListCache = {
-  sort: {
-    field: SortType
-    direction: SortDirection
-  }
-}
+import {
+  ChatCharacter,
+  ChatLine,
+  SortDirection,
+  SortType,
+  getListCache,
+  groupAndSort,
+  saveListCache,
+} from './util'
 
 const sortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
@@ -41,47 +32,17 @@ const sortOptions = [
   { value: 'character-created', label: 'Bot Created', kind: 'bot' },
 ]
 
-type ChatCharacter = { _id: string; name: string; description: string; avatar: string | undefined }
-
-type ChatLine = {
-  _id: string
-  characters: ChatCharacter[]
-  name: string
-  createdAt: string
-  updatedAt: string
-}
-
 const CharacterChats: Component = () => {
   const params = useParams()
   const cache = getListCache()
-  const state = chatStore(
-    (s) =>
-      s.all?.chats?.map(
-        (chat) =>
-          ({
-            _id: chat._id,
-            name: chat.name,
-            createdAt: chat.createdAt,
-            updatedAt: chat.updatedAt,
-            characters: [
-              chat.characterId,
-              ...(chat.characters
-                ? Object.entries(chat.characters)
-                    .filter((c) => c[1])
-                    .map((c) => c[0])
-                : []),
-            ].map((charId) => {
-              const char = s.all?.chars[charId]
-              if (!char) return { name: 'Unknown', avatarUrl: '' }
-              return {
-                _id: char._id,
-                name: char.name,
-                description: char.description,
-                avatar: char.avatar,
-              }
-            }),
-          } as ChatLine)
-      ) ?? []
+  const state = chatStore((s) =>
+    (s.all?.chats || [])?.map((chat) => ({
+      _id: chat._id,
+      name: chat.name,
+      createdAt: chat.createdAt,
+      updatedAt: chat.updatedAt,
+      characters: toChatListState(s.all?.chars || {}, chat),
+    }))
   )
   const chars = characterStore((s) => ({
     list: s.characters.list,
@@ -297,21 +258,8 @@ const Chats: Component<{
                         <div class="relative flex-shrink-0">
                           <For each={chat.characters.slice(0, 3).reverse()}>
                             {(char, i) => {
-                              let positionStyle
-                              if (chat.characters.length === 1) {
-                                positionStyle = ''
-                              } else if (chat.characters.length === 2) {
-                                positionStyle = i() === 0 ? 'translate-x-1/4 ' : '-translate-x-1/4 '
-                              } else if (chat.characters.length >= 3) {
-                                positionStyle =
-                                  i() === 0
-                                    ? 'translate-x-1/4 '
-                                    : i() === 1
-                                    ? ''
-                                    : '-translate-x-1/4 '
-                              } else {
-                                return
-                              }
+                              const positionStyle = getAvatarPositionStyle(chat, i)
+                              if (positionStyle === undefined) return
 
                               return (
                                 <div
@@ -371,96 +319,47 @@ const NoChats: Component<{ character?: string }> = (props) => (
 
 export default CharacterChats
 
-type ChatGroup = { char: AppSchema.Character | null; chats: ChatLine[] }
-
-function getChatSortableValue(chat: ChatLine, field: SortType) {
-  switch (field) {
-    case 'chat-updated':
-      return chat.updatedAt
-    case 'chat-created':
-      return chat.createdAt
-    default:
-      return 0
+function getAvatarPositionStyle(chat: ChatLine, i: () => number) {
+  if (chat.characters.length === 1) {
+    return ''
   }
+  if (chat.characters.length === 2) {
+    return i() === 0 ? 'translate-x-1/4 ' : '-translate-x-1/4 '
+  }
+  if (chat.characters.length >= 3) {
+    return i() === 0 ? 'translate-x-1/4 ' : i() === 1 ? '' : '-translate-x-1/4 '
+  }
+  return
 }
 
-function getChatSortFunction(field: SortType, direction: SortDirection) {
-  return (left: ChatLine, right: ChatLine) => {
-    const mod = direction === 'asc' ? 1 : -1
-    const l = getChatSortableValue(left, field)
-    const r = getChatSortableValue(right, field)
-    return l > r ? mod : l === r ? 0 : -mod
+function toCharacterIds(characters?: Record<string, boolean>) {
+  if (!characters) return []
+
+  const ids: string[] = []
+  for (const [id, enabled] of Object.entries(characters)) {
+    if (enabled) ids.push(id)
   }
+  return ids
 }
 
-function getCharacterSortableValue(char: AppSchema.Character, field: SortType) {
-  switch (field) {
-    case 'character-name':
-      return char.name.toLowerCase()
+function toChatListState(chars: Record<string, AppSchema.Character>, chat: AllChat) {
+  const charIds = [chat.characterId].concat(toCharacterIds(chat.characters))
 
-    case 'character-created':
-      return char.createdAt
+  const rows: ChatCharacter[] = []
+  for (const id of charIds) {
+    const char = chars[id]
+    if (!char) {
+      rows.push({ _id: '', name: 'Unknown', description: '', avatar: '' })
+      continue
+    }
 
-    case 'bot-activity':
-      return char.updatedAt
-
-    default:
-      return 0
-  }
-}
-
-function getCharSortFunction(type: SortType, direction: SortDirection) {
-  return (left: AppSchema.Character, right: AppSchema.Character) => {
-    const mod = direction === 'asc' ? 1 : -1
-    const l = getCharacterSortableValue(left, type)
-    const r = getCharacterSortableValue(right, type)
-    return l > r ? mod : l === r ? 0 : -mod
-  }
-}
-
-function groupAndSort(
-  allChars: AppSchema.Character[],
-  allChats: ChatLine[],
-  type: SortType,
-  direction: SortDirection
-): Array<ChatGroup> {
-  if (type === 'chat-updated' || type === 'chat-created') {
-    const sorted = allChats.slice().sort(getChatSortFunction(type, direction))
-    return [{ char: null, chats: sorted }]
+    rows.push({
+      _id: char._id,
+      name: char.name,
+      description: char.description || '',
+      avatar: char.avatar,
+    })
   }
 
-  const groups: ChatGroup[] = []
-  const sortedChats = allChats.slice().sort(getChatSortFunction('chat-updated', 'desc'))
-
-  const chars = allChars.slice().map((char) => {
-    if (type !== 'bot-activity') return char
-    const first = sortedChats.find((c) => c.characters.some((char) => char._id === char._id))
-    return { ...char, updatedAt: first?.updatedAt || new Date(0).toISOString() }
-  })
-
-  chars.sort(getCharSortFunction(type, direction))
-
-  for (const char of chars) {
-    const chats = allChats
-      .filter((ch) => ch.characters.some((c) => c._id === char._id))
-      .sort(getChatSortFunction('chat-updated', 'desc'))
-    groups.push({ char, chats })
-  }
-
-  return groups
-}
-
-function getListCache(): ListCache {
-  const existing = localStorage.getItem(CACHE_KEY)
-  const defaultCache: ListCache = { sort: { field: 'chat-updated', direction: 'desc' } }
-
-  if (!existing) {
-    return defaultCache
-  }
-
-  return { ...defaultCache, ...JSON.parse(existing) }
-}
-
-function saveListCache(cache: ListCache) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+  return rows
 }
