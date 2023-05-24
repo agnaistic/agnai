@@ -1,7 +1,8 @@
 from flask import Flask, request
 from flask_cors import CORS
 from summary import summarize
-from args import args
+
+# from args import args
 
 app = Flask("agnai-pipeline")
 CORS(app)
@@ -9,9 +10,9 @@ CORS(app)
 
 @app.get("/status")
 def statusGet():
-    memory = True if args.memory or args.all else False
-    summary = True if args.summary or args.all else False
-    return {"status": "ok", "memory": memory, "summary": summary}
+    # memory = True if args.memory or args.all else False
+    # summary = True if args.summary or args.all else False
+    return {"status": "ok"}
 
 
 @app.post("/status")
