@@ -5,8 +5,15 @@ import { updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage }
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
-import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } from './invite'
 import { generateMessageV2, getMessages, createMessage } from './message'
+import {
+  createInvite,
+  acceptInvite,
+  rejectInvite,
+  getInvites,
+  uninviteMember,
+  cancelInvite,
+} from './invite'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, removeCharacter } from './characters'
@@ -34,6 +41,7 @@ router.post('/:id/invite', createInvite)
 router.post('/:id/uninvite', uninviteMember)
 router.post('/:inviteId/accept', acceptInvite)
 router.post('/:inviteId/reject', rejectInvite)
+router.post('/:inviteId/cancel', cancelInvite)
 router.post('/:id/characters', addCharacter)
 router.delete('/:id/characters/:charId', removeCharacter)
 

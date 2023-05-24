@@ -10,6 +10,7 @@ import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
+import NotificationRoutes from './pages/Notification'
 import './dots.css'
 
 const App: Component = () => {
@@ -21,6 +22,7 @@ const App: Component = () => {
       <Routes>
         <Route path="" component={Layout}>
           <CharacterRoutes />
+          <NotificationRoutes />
           <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
           <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
           <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />

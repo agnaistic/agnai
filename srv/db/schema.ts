@@ -1,4 +1,5 @@
 import { AIAdapter, ChatAdapter, PersonaFormat, RegisteredAdapter } from '../../common/adapters'
+import { ImageAdapter } from '../../common/image'
 import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
 import { TTSSettings, VoiceSettings } from './texttospeech-schema'
@@ -278,6 +279,15 @@ export namespace AppSchema {
     label: string
     previewUrl?: string
   }
+
+  export interface Notification {
+    kind: 'notification'
+    _id: string
+    userId: string
+    text: string
+    link: string
+    createdAt: string
+  }
 }
 
 export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { kind: T }>
@@ -293,6 +303,7 @@ export type AllDoc =
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
   | AppSchema.MemoryBook
+  | AppSchema.Notification
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []
 

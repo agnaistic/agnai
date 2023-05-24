@@ -20,9 +20,13 @@ export type NewInvite = {
 }
 
 export async function list(userId: string) {
-  const invites = await db('chat-invite').find({ kind: 'chat-invite', invitedId: userId }).toArray()
+  const invites = await db('chat-invite')
+    .find({ kind: 'chat-invite', $or: [{ invitedId: userId }, { byUserId: userId }] })
+    .toArray()
 
-  const userIds = Array.from(new Set(invites.map((i) => i.byUserId)))
+  const userIds = Array.from(new Set(invites.flatMap((i) => [i.byUserId, i.invitedId]))).filter(
+    (id) => id !== userId
+  )
   const chatIds = Array.from(new Set(invites.map((i) => i.chatId)))
   const characterIds = Array.from(new Set(invites.map((i) => i.characterId)))
 
@@ -39,7 +43,8 @@ export async function list(userId: string) {
   ])
 
   return {
-    invites,
+    sent: invites.filter((i) => i.byUserId === userId),
+    received: invites.filter((i) => i.invitedId === userId),
     profiles,
     chats,
     characters,
@@ -94,52 +99,34 @@ export async function create(invite: NewInvite) {
   return inv
 }
 
-export async function answer(userId: string, inviteId: string, accept: boolean) {
-  const prev = await db('chat-invite').findOne({
+export async function getInvite(userId: string, inviteId: string) {
+  return await db('chat-invite').findOne({
     _id: inviteId,
     kind: 'chat-invite',
     invitedId: userId,
   })
-  if (!prev) {
-    throw errors.NotFound
-  }
+}
 
-  if (prev.state !== 'pending') {
-    // Non-pending invites should be deleted and/or not displayed to the user
-    throw new StatusError('Invitation already actioned', 400)
-  }
+export async function deleteInvite(userId: string, inviteId: string) {
+  await db('chat-invite').deleteOne(
+    { _id: inviteId, kind: 'chat-invite', $or: [{ invitedId: userId }, { byUserId: userId }] },
+    {}
+  )
+}
 
-  const chat = await db('chat').findOne({ _id: prev.chatId })
-  if (!chat) {
-    await db('chat-invite').deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
-    throw new StatusError('Chat no longer exists', 400)
-  }
-
+export async function addMember(chatId: string, invitedId: string) {
   const member: AppSchema.ChatMember = {
     _id: v4(),
     kind: 'chat-member',
-    chatId: prev.chatId,
+    chatId: chatId,
     createdAt: new Date().toISOString(),
-    userId: prev.invitedId,
+    userId: invitedId,
   }
 
-  if (accept) {
-    await db('chat-member').insertOne(member)
-    await db('chat').updateOne(
-      { _id: chat._id, kind: 'chat' },
-      { $set: { memberIds: chat.memberIds.concat(userId) } }
-    )
-    const profile = await db('profile').findOne({ userId })
-    sendMany([chat.userId, ...chat.memberIds.concat(userId)], {
-      type: 'member-added',
-      chatId: chat._id,
-      profile,
-    })
-  }
+  await db('chat-member').insertOne(member)
+  await db('chat').updateOne({ _id: chatId, kind: 'chat' }, { $addToSet: { memberIds: invitedId } })
 
-  await db('chat-invite').deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
-
-  return accept ? member : undefined
+  return member
 }
 
 export async function removeMember(chatId: string, requestedBy: string, memberId: string) {

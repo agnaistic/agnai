@@ -17,7 +17,7 @@ export const voiceApi = {
   textToSpeech,
 }
 
-export async function voicesList(ttsService: TTSService) {
+async function voicesList(ttsService: TTSService) {
   const user = getUserEntity()
   const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(
     `/voice/${ttsService}/voices`,
@@ -26,7 +26,7 @@ export async function voicesList(ttsService: TTSService) {
   return res
 }
 
-export async function textToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
+async function textToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
   const user = getUserEntity()
   const res = await api.post<{ success: boolean }>(`/chat/${chatId}/voice`, {
     user,
@@ -38,7 +38,7 @@ export async function textToSpeech({ chatId, messageId, text, voice, culture }: 
   return res
 }
 
-export function getUserEntity() {
+function getUserEntity() {
   if (isLoggedIn()) {
     const { user } = getStore('user').getState()
     return user

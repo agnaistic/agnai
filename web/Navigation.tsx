@@ -16,6 +16,7 @@ import {
 import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { inviteStore, settingStore, userStore } from './store'
+import NotificationsIcon from './shared/NotificationsIcon'
 
 const Navigation: Component = () => {
   const state = settingStore()
@@ -77,6 +78,7 @@ const UserNavigation: Component = () => {
     <>
       <Item href="/profile">
         <User /> Profile
+        <NotificationsIcon />
       </Item>
       <Item href="/character/list">
         <Bot /> Characters
@@ -174,13 +176,13 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
 }
 
 const InviteBadge: Component = () => {
-  const inv = inviteStore()
+  const inv = inviteStore((s) => ({ count: s.received.length }))
 
   return (
     <>
-      <Show when={inv.invites.length}>
+      <Show when={inv.count}>
         <div class="flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs">
-          {inv.invites.length}
+          {inv.count}
         </div>
       </Show>
     </>
