@@ -14,7 +14,7 @@ export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
   let error: Error | undefined
 
   needleStream.on('header', (statusCode, headers) => {
-    if (statusCode !== 200) {
+    if (statusCode > 201) {
       needleStream.emit('err', new Error(`SSE request failed with status code ${statusCode}`))
     } else if (headers['content-type'] !== 'text/event-stream') {
       needleStream.emit(

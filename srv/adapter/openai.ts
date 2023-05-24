@@ -1,6 +1,6 @@
 import type { OutgoingHttpHeaders } from 'http'
 import needle from 'needle'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
+import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
@@ -243,18 +243,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
-}
-
-function sanitiseAndTrim(
-  text: string,
-  prompt: string,
-  char: AppSchema.Character,
-  characters: Record<string, AppSchema.Character> | undefined,
-  members: AppSchema.Profile[]
-) {
-  const parsed = sanitise(text.replace(prompt, ''))
-  const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
-  return trimmed || parsed
 }
 
 function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {

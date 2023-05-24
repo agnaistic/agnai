@@ -51,6 +51,18 @@ export function trimResponseV2(
   return sanitise(trimmed.split(`${char.name}:`).join(''))
 }
 
+export function sanitiseAndTrim(
+  text: string,
+  prompt: string,
+  char: AppSchema.Character,
+  characters: Record<string, AppSchema.Character> | undefined,
+  members: AppSchema.Profile[]
+) {
+  const parsed = sanitise(text.replace(prompt, ''))
+  const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
+  return trimmed || parsed
+}
+
 export function getEndTokens(
   char: AppSchema.Character | null,
   members: AppSchema.Profile[],
