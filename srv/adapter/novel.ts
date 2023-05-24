@@ -1,17 +1,32 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
-import { badWordIds } from './novel-bad-words'
+import { badWordIds, clioBadWordsId } from './novel-bad-words'
 import { ModelAdapter } from './type'
+import { AppSchema } from '../db/schema'
+import { NOVEL_MODELS } from '/common/adapters'
+import { defaultPresets } from '/common/default-preset'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = `${NOVEL_BASEURL}/ai/generate`
+
+/**
+ * Samplers:
+ * 0. Temperature
+ * 1. Top K
+ * 2. Nucleus Sampling
+ * 3. Tail Free Sampling
+ * 4. Top A Sampling
+ * 5. Typical Sampling
+ */
 
 const statuses: Record<number, string> = {
   400: 'Invalid payload',
   401: 'Invalid API key',
   402: 'You need an active subscription',
 }
+
+const newModelPresets = new Set([defaultPresets.novel_clio.name])
 
 const base = {
   generate_until_sentence: true,
@@ -40,10 +55,12 @@ export const handleNovel: ModelAdapter = async function* ({
     return
   }
 
+  const model = newModelPresets.has(opts.gen.name || '') ? NOVEL_MODELS.clio_v1 : user.novelModel
+
   const body = {
-    model: user.novelModel,
+    model,
     input: prompt,
-    parameters: { ...base, ...settings },
+    parameters: model === NOVEL_MODELS.clio_v1 ? getClioParams(opts.gen) : { ...base, ...settings },
   }
 
   const endTokens = ['***', 'Scenario:', '----']
@@ -89,4 +106,27 @@ export const handleNovel: ModelAdapter = async function* ({
   const parsed = sanitise(res.body.output)
   const trimmed = trimResponseV2(parsed, opts.replyAs, members, endTokens)
   yield trimmed || parsed
+}
+
+function getClioParams(gen: Partial<AppSchema.GenSettings>) {
+  return {
+    temperature: gen.temp,
+    max_length: gen.maxTokens,
+    min_length: 8,
+    top_k: gen.topK,
+    top_p: gen.topP,
+    top_a: gen.topA,
+    tail_free_sampling: gen.tailFreeSampling,
+    repetition_penalty: gen.repetitionPenalty,
+    repetition_penalty_range: gen.repetitionPenaltyRange,
+    repetition_penalty_frequency: gen.frequencyPenalty,
+    repetition_penalty_presence: gen.presencePenalty,
+    generate_until_sentence: true,
+    use_cache: false,
+    use_string: true,
+    return_full_text: false,
+    prefix: 'vanilla',
+    order: gen.order,
+    bad_word_ids: clioBadWordsId,
+  }
 }

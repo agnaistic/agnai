@@ -92,6 +92,7 @@ export const CLAUDE_MODELS = {
 export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',
   krake: 'krake-v2',
+  clio_v1: 'clio-v1',
 } satisfies { [key: string]: string }
 
 export type HordeModel = {

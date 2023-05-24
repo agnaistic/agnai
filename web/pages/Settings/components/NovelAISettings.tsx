@@ -20,6 +20,7 @@ const NovelAISettings: Component = () => {
         items={[
           { label: 'Euterpe', value: 'euterpe-v2' },
           { label: 'Krake', value: 'krake-v2' },
+          { label: 'Clio', value: 'clio-v1' },
         ]}
         value={state.user?.novelModel}
       />
