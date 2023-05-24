@@ -46,9 +46,9 @@ function getCharacterIds(chats: Document[]) {
   const charIds = new Set<string>()
 
   for (const chat of chats) {
-    charIds.add(chat._id)
+    charIds.add(chat.characterId)
 
-    for (const [id, enabled] of Object.entries(chat)) {
+    for (const [id, enabled] of Object.entries(chat.characters || {})) {
       if (enabled) charIds.add(id)
     }
   }
