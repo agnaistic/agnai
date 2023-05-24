@@ -78,7 +78,7 @@ const builtinPresets = {
     topA: 0.075,
     order: [1, 3, 4, 0, 2],
     useGaslight: false,
-    streamResponse: true,
+    streamResponse: false,
   },
   novel_20BC: {
     name: 'Novel 20BC+',
