@@ -10,6 +10,7 @@ export function trimResponseV2(
   generated: string,
   char: AppSchema.Character,
   members: AppSchema.Profile[],
+  bots: Record<string, AppSchema.Character> | undefined,
   endTokens: string[] = []
 ) {
   const allEndTokens = getEndTokens(null, members)
@@ -19,6 +20,13 @@ export function trimResponseV2(
   for (const member of members) {
     if (!member.handle) continue
     generated = generated.split(`${member.handle} :`).join(`${member.handle}:`)
+  }
+
+  if (bots) {
+    for (const bot of Object.values(bots)) {
+      if (bot._id === char._id) continue
+      endTokens.push(`${bot.name}:`)
+    }
   }
 
   let index = -1
@@ -41,6 +49,18 @@ export function trimResponseV2(
   }
 
   return sanitise(trimmed.split(`${char.name}:`).join(''))
+}
+
+export function sanitiseAndTrim(
+  text: string,
+  prompt: string,
+  char: AppSchema.Character,
+  characters: Record<string, AppSchema.Character> | undefined,
+  members: AppSchema.Profile[]
+) {
+  const parsed = sanitise(text.replace(prompt, ''))
+  const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
+  return trimmed || parsed
 }
 
 export function getEndTokens(

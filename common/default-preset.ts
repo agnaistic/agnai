@@ -47,7 +47,7 @@ const builtinPresets = {
     tailFreeSampling: 0.9,
     encoderRepitionPenalty: 1.0,
     penaltyAlpha: 0,
-    addBosToken: false,
+    addBosToken: true,
     banEosToken: false,
     order: [0, 1, 2, 3, 4, 5, 6],
     frequencyPenalty: 0.7,
@@ -78,6 +78,7 @@ const builtinPresets = {
     topA: 0.075,
     order: [1, 3, 4, 0, 2],
     useGaslight: false,
+    streamResponse: false,
   },
   novel_20BC: {
     name: 'Novel 20BC+',

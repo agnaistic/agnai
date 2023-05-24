@@ -80,7 +80,9 @@ export const handleClaude: ModelAdapter = async function* (opts) {
       return
     } else {
       const sanitised = sanitise(completion)
-      const trimmed = trimResponseV2(sanitised, opts.replyAs, members, ['END_OF_DIALOG'])
+      const trimmed = trimResponseV2(sanitised, opts.replyAs, members, opts.characters, [
+        'END_OF_DIALOG',
+      ])
       yield trimmed || sanitised
       return
     }

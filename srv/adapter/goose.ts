@@ -67,7 +67,9 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
       return
     }
     const parsed = sanitise(text.replace(opts.prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, [
+      'END_OF_DIALOG',
+    ])
     yield trimmed || parsed
   } catch (ex: any) {
     log.error({ err: ex }, 'GooseAI failed to parse')

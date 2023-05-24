@@ -1,6 +1,6 @@
 import type { OutgoingHttpHeaders } from 'http'
 import needle from 'needle'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
+import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
@@ -226,7 +226,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
-      yield { partial: sanitiseAndTrim(accumulated, prompt, char, members) }
+      yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
     }
   }
 
@@ -237,23 +237,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
-    yield sanitiseAndTrim(text, prompt, opts.replyAs, members)
+    yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
     return
   }
-}
-
-function sanitiseAndTrim(
-  text: string,
-  prompt: string,
-  char: AppSchema.Character,
-  members: AppSchema.Profile[]
-) {
-  const parsed = sanitise(text.replace(prompt, ''))
-  const trimmed = trimResponseV2(parsed, char, members, ['END_OF_DIALOG'])
-  return trimmed || parsed
 }
 
 function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {

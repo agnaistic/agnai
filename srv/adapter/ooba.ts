@@ -22,6 +22,7 @@ export const handleOoba: ModelAdapter = async function* ({
   ...opts
 }) {
   const body = {
+    prompt,
     max_new_tokens: settings.max_new_tokens,
     do_sample: true,
     temperature: settings.temperature,
@@ -39,20 +40,18 @@ export const handleOoba: ModelAdapter = async function* ({
     seed: -1,
     add_bos_token: settings.add_bos_token || false,
     custom_stopping_strings: [],
-    truncation_length: 2048,
+    truncation_length: settings.maxContextLength || 2048,
     ban_eos_token: settings.ban_eos_token || false,
+    skip_special_tokens: true,
+    stopping_strings: [],
   }
 
-  const payload = [JSON.stringify([prompt, body])]
+  log.debug(body, 'Textgen payload')
 
-  log.debug({ prompt, body }, 'Textgen payload')
+  const resp = await needle('post', `${user.oobaUrl || defaultUrl}/api/v1/generate`, body, {
+    json: true,
+  }).catch((err) => ({ error: err }))
 
-  const resp = await needle(
-    'post',
-    `${user.oobaUrl || defaultUrl}/run/textgen`,
-    { data: payload },
-    { json: true }
-  ).catch((err) => ({ error: err }))
   if ('error' in resp) {
     logger.error({ err: resp.error }, ``)
     yield { error: `Textgen request failed: ${resp.error?.message || resp.error}` }
@@ -70,7 +69,7 @@ export const handleOoba: ModelAdapter = async function* ({
   }
 
   try {
-    const text = resp.body.data[0]
+    const text = resp.body.results?.[0]?.text
     if (!text) {
       yield {
         error: `Textgen request failed: Received empty response (potentially OOM). Try again.`,
@@ -78,7 +77,9 @@ export const handleOoba: ModelAdapter = async function* ({
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, members, ['END_OF_DIALOG'])
+    const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, [
+      'END_OF_DIALOG',
+    ])
     yield trimmed || parsed
   } catch (ex: any) {
     yield { error: `Textgen request failed: ${ex.message}` }
