@@ -161,7 +161,7 @@ export const chatStore = createStore<ChatState>('chat', {
         })
 
         const bots = res.result.characters || []
-        const botMap = bots.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
+        const botMap = bots.reduce((prev, curr) => ({ ...prev, [curr._id]: curr }), {})
         const isMultiChars =
           res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
@@ -285,7 +285,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
       if (res.result) {
         const chars = res.result.characters.reduce<any>(
-          (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+          (prev, curr) => ({ ...prev, [curr._id]: curr }),
           {}
         )
         return { all: { chats: res.result.chats.sort(sortDesc), chars } }
@@ -350,45 +350,20 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async *addCharacter(
-      { active, chatBots, chatBotMap },
-      chatId: string,
-      charId: string,
-      onSuccess?: () => void
-    ) {
+    async *addCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
       const res = await chatsApi.addCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to invite character: ${res.error}`)
-      if (!active) return
       if (res.result) {
-        const chat = {
-          ...active.chat,
-          characters: Object.assign(active.chat.characters || {}, { [charId]: true }),
-        }
-
-        yield { active: { ...active, chat } }
-        if (res.result.char) {
-          yield {
-            chatBots: chatBots.concat(res.result.char),
-            chatBotMap: { ...chatBotMap, [charId]: res.result.char },
-          }
-        }
         toastStore.success(`Character added`)
         onSuccess?.()
       }
     },
 
-    async *removeCharacter({ active }, chatId: string, charId: string, onSuccess?: () => void) {
+    async *removeCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
       const res = await chatsApi.removeCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
 
-      if (!active) return
       if (res.result) {
-        const chat = {
-          ...active.chat,
-          characters: Object.assign(active.chat.characters || {}, { [charId]: false }),
-        }
-
-        yield { active: { ...active, chat } }
         toastStore.success(`Character removed from chat`)
         onSuccess?.()
       }
@@ -563,28 +538,77 @@ function getOptsCache(): ChatOptCache {
 }
 
 subscribe('chat-character-added', { chatId: 'string', character: 'any' }, (body) => {
-  const { active, chatBotMap, chatBots } = chatStore.getState()
+  const { active, chatBotMap, chatBots, all } = chatStore.getState()
+
+  if (all?.chats) {
+    const nextChats = all.chats?.map((c) => {
+      if (c._id !== body.chatId) return c
+      return {
+        ...c,
+        characters: { ...(c.characters || {}), [body.character._id]: true },
+      }
+    })
+    chatStore.setState({
+      all: {
+        ...all,
+        chats: nextChats,
+        chars: { ...(all.chars || {}), [body.character._id]: body.character },
+      },
+    })
+  }
+
   if (!active || active.chat._id !== body.chatId) return
 
-  const characters = Object.assign(active.chat.characters || {}, { [body.character._id]: true })
+  const nextChatBots = chatBots.concat(body.character)
+  const nextChatBotMap = { ...chatBotMap, [body.character._id]: body.character }
+  const nextChatCharacters = { ...(active.chat.characters || {}), [body.character._id]: true }
   chatStore.setState({
-    chatBots: chatBots.concat(body.character),
-    chatBotMap: Object.assign(chatBotMap, { [body.character._id]: body.character }),
-    active: { ...active, chat: { ...active.chat, characters } },
+    chatBots: nextChatBots,
+    chatBotMap: nextChatBotMap,
+    active: {
+      ...active,
+      chat: {
+        ...active.chat,
+        characters: nextChatCharacters,
+      },
+    },
   })
 })
 
 subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
-  const { active, chatBotMap, chatBots } = chatStore.getState()
+  const { active, chatBotMap, chatBots, all } = chatStore.getState()
+
+  if (all?.chats) {
+    const nextChats = all.chats.map((c) => {
+      if (c._id !== body.chatId) return c
+      return {
+        ...c,
+        characters: { ...(c.characters || {}), [body.characterId]: false },
+      }
+    })
+    chatStore.setState({
+      all: {
+        ...all,
+        chats: nextChats,
+      },
+    })
+  }
+
   if (!active || active.chat._id !== body.chatId) return
 
-  const characters = Object.assign(active.chat.characters || {}, { [body.characterId]: false })
-  const nextMap = { ...chatBotMap }
-  delete nextMap[body.characterId]
-
+  const nextChatBots = chatBots.filter((ch) => ch._id !== body.characterId)
+  const nextChatBotMap = { ...chatBotMap }
+  delete nextChatBotMap[body.characterId]
+  const nextChatCharacters = { ...(active.chat.characters || {}), [body.characterId]: false }
   chatStore.setState({
-    chatBots: chatBots.filter((ch) => ch._id !== body.characterId),
-    chatBotMap: nextMap,
-    active: { ...active, chat: { ...active.chat, characters } },
+    chatBots: nextChatBots,
+    chatBotMap: nextChatBotMap,
+    active: {
+      ...active,
+      chat: {
+        ...active.chat,
+        characters: nextChatCharacters,
+      },
+    },
   })
 })

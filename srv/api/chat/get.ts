@@ -1,3 +1,4 @@
+import { Document } from 'mongodb'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
 
@@ -36,7 +37,21 @@ export const getChatDetail = handle(async ({ userId, params }) => {
 
 export const getAllChats = handle(async (req) => {
   const chats = await store.chats.getAllChats(req.userId!)
-  const charIds = new Set(chats.map((ch) => ch.characterId))
+  const charIds = getCharacterIds(chats)
   const characters = await store.characters.getCharacterList(Array.from(charIds))
   return { chats, characters }
 })
+
+function getCharacterIds(chats: Document[]) {
+  const charIds = new Set<string>()
+
+  for (const chat of chats) {
+    charIds.add(chat._id)
+
+    for (const [id, enabled] of Object.entries(chat)) {
+      if (enabled) charIds.add(id)
+    }
+  }
+
+  return Array.from(charIds)
+}

@@ -65,7 +65,9 @@ const AvatarIcon: Component<Props> = (props) => {
     <>
       <Show when={avatar()}>
         <div
-          class={`${fmtSize()} ${fmtCorners()} shrink-0 ${props.class || ''}`}
+          class={`overflow-hidden border-2 border-[var(--bg-800)] bg-[var(--bg-700)] ${fmtSize()} ${fmtCorners()} shrink-0 ${
+            props.class || ''
+          }`}
           data-bot-avatar={props.bot}
           data-user-avatar={!props.bot}
           onClick={onImageClick}
@@ -90,7 +92,7 @@ const AvatarIcon: Component<Props> = (props) => {
           data-user-avatar={!props.bot}
           class={`avatar-${
             format().size
-          } avatar-circle flex shrink-0 items-center justify-center rounded-full bg-[var(--black-700)] ${cls()}`}
+          } avatar-circle flex shrink-0 items-center justify-center rounded-full border-2 border-[var(--bg-800)] bg-[var(--bg-700)] ${cls()}`}
         >
           <Show when={!props.bot}>
             <VenetianMask data-user-icon />

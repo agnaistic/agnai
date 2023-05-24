@@ -150,6 +150,7 @@ export async function getAllChats(userId: string) {
           memberIds: 1,
           name: 1,
           characterId: 1,
+          characters: 1,
           adapter: 1,
           greeting: 1,
           scenario: 1,
