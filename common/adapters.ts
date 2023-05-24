@@ -181,8 +181,8 @@ export const adapterSettings: {
   claudeModel: ['claude', 'kobold'],
 
   oaiModel: ['openai', 'kobold'],
-  frequencyPenalty: ['openai', 'kobold'],
-  presencePenalty: ['openai', 'kobold'],
+  frequencyPenalty: ['openai', 'kobold', 'novel'],
+  presencePenalty: ['openai', 'kobold', 'novel'],
   streamResponse: ['openai', 'kobold'],
 
   addBosToken: ['ooba'],

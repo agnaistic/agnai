@@ -42,7 +42,7 @@ export type AdapterProps = {
   characters?: Record<string, AppSchema.Character>
 
   /** GenSettings mapped to an object for the target adapter */
-  gen: Partial<AppSchema.GenSettings> & { _id: string }
+  gen: Partial<AppSchema.GenSettings>
   settings: any
   guest?: string
   log: AppLog
