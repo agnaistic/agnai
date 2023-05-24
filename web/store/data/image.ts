@@ -4,7 +4,7 @@ import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { subscribe } from '../socket'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
-import { AIAdapter } from '/common/adapters'
+import { AIAdapter, NOVEL_MODELS } from '/common/adapters'
 import { decode, encode } from '/common/tokenize'
 
 type GenerateOpts = {
@@ -63,12 +63,18 @@ export async function generateImageWithPrompt(prompt: string, onDone: (image: st
   return res
 }
 
-const SUMMARY_BACKENDS: { [key in AIAdapter]?: boolean } = {
-  openai: true,
+const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean } = {
+  openai: () => true,
+  novel: (opts) => opts.user.novelModel === NOVEL_MODELS.clio_v1,
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
-  if (opts.settings?.service! in SUMMARY_BACKENDS && opts.user.images?.summariseChat) {
+  const handler = opts.settings?.service
+    ? SUMMARY_BACKENDS[opts.settings?.service]
+    : (_opts: any) => false
+
+  const canUseService = handler?.(opts) ?? false
+  if (canUseService && opts.user.images?.summariseChat) {
     console.log('Using', opts.settings?.service, 'to summarise')
     msgsApi.generateResponseV2({ kind: 'summary' })
 

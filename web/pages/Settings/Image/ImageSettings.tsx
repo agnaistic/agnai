@@ -10,7 +10,7 @@ import RangeInput from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
-import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
+import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { Toggle } from '/web/shared/Toggle'
 
 const imageTypes = [
@@ -75,8 +75,8 @@ export const ImageSettings: Component = () => {
         fieldName="summaryPrompt"
         value={state.user?.images?.summaryPrompt}
         label="Summary Prompt"
-        helperText='If you use OpenAI, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
-        placeholder={`Default: ${DEFAULT_SUMMARY_PROMPT}`}
+        helperText='If you use OpenAI or NovelAI, this is the "prompt" sent to OpenAI to summarise your conversation into an image prompt.'
+        placeholder={`Default: ${IMAGE_SUMMARY_PROMPT.other}`}
       />
 
       <Toggle

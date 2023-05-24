@@ -9,7 +9,7 @@ import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
-import { DEFAULT_SUMMARY_PROMPT } from '/common/image'
+import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { needleToSSE } from './stream'
 
 const baseUrl = `https://api.openai.com`
@@ -121,7 +121,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
     if (kind === 'summary') {
       // This probably needs to be workshopped
-      let content = user.images?.summaryPrompt || DEFAULT_SUMMARY_PROMPT
+      let content = user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
 
       if (!content.startsWith('(')) content = '(' + content
       if (!content.endsWith(')')) content = content + ')'
