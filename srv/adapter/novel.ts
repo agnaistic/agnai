@@ -75,7 +75,7 @@ export const handleNovel: ModelAdapter = async function* ({
   }
 
   const stream = opts.gen.streamResponse
-    ? streamCompletition(headers, body)
+    ? streamCompletition(headers, body, log)
     : fullCompletition(headers, body, log)
 
   let accum = ''
@@ -128,7 +128,7 @@ function getClioParams(gen: Partial<AppSchema.GenSettings>) {
   }
 }
 
-const streamCompletition = async function* (headers: any, body: any) {
+const streamCompletition = async function* (headers: any, body: any, _log: AppLog) {
   const resp = needle.post(streamUrl, body, {
     parse: false,
     json: true,
@@ -148,7 +148,17 @@ const streamCompletition = async function* (headers: any, body: any) {
 
       for (const line of lines) {
         if (!line.startsWith('data:')) continue
-        const data = JSON.parse(line.slice(5)) as { token: string; final: boolean; ptr: number }
+        const data = JSON.parse(line.slice(5)) as {
+          token: string
+          final: boolean
+          ptr: number
+          error?: string
+        }
+        if (data.error) {
+          yield { error: `NovelAI streaming request failed: ${data.error}` }
+          return
+        }
+
         tokens.push(data.token)
         yield { token: data.token }
       }
