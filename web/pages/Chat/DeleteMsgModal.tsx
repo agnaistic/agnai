@@ -32,7 +32,9 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
           <Show when={count() > 1}>
             <Button onClick={() => confirm(true)}>Delete One</Button>
           </Show>
-          <Button onClick={() => confirm(false)}>Delete {count()}</Button>
+          <Show when={state.msg?.adapter !== 'image'}>
+            <Button onClick={() => confirm(false)}>Delete {count()}</Button>
+          </Show>
         </>
       }
     >
