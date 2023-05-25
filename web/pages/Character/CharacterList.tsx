@@ -10,7 +10,7 @@ import {
   onMount,
 } from 'solid-js'
 import { NewCharacter, characterStore } from '../../store'
-import { Tag, tagStore } from '../../store'
+import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'

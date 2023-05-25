@@ -9,17 +9,11 @@ import { AppSchema } from '../db/schema'
 import { CharacterUpdate } from '../db/characters'
 import { getVoiceService } from '../voice'
 import { generateImage } from '../image'
-import { Reference, Validator } from 'frisker/dist/types'
 import { v4 } from 'uuid'
 
 const router = Router()
 
-type CharacterValidatorType = Omit<
-  { [K in keyof AppSchema.Character]: Reference },
-  '_id' | 'kind' | 'userId' | 'createdAt' | 'updatedAt'
->
-
-const characterValidator: CharacterValidatorType = {
+const characterValidator = {
   name: 'string?',
   description: 'string?',
   culture: 'string?',
@@ -33,7 +27,7 @@ const characterValidator: CharacterValidatorType = {
   tags: 'string?',
 } as const
 
-const newCharacterValidator: CharacterValidatorType & { originalAvatar: Reference } = {
+const newCharacterValidator = {
   ...characterValidator,
   name: 'string',
   scenario: 'string',
@@ -41,9 +35,9 @@ const newCharacterValidator: CharacterValidatorType & { originalAvatar: Referenc
   sampleChat: 'string',
   persona: 'string',
   originalAvatar: 'string?',
-}
+} as const
 
-const personaValidator: Validator = {
+const personaValidator = {
   kind: PERSONA_FORMATS,
   attributes: 'any',
 } as const
@@ -53,9 +47,7 @@ const createCharacter = handle(async (req) => {
   const persona = JSON.parse(body.persona) as AppSchema.Persona
   assertValid(personaValidator, persona)
   const voice = parseAndValidateVoice(body.voice)
-  const tags: string[] = body.tags ? JSON.parse(body.tags) : []
-  if (tags && (!Array.isArray(tags) || tags.findIndex((t) => typeof t !== 'string') > -1))
-    throw new StatusError('Tags must be an array of strings', 400)
+  const tags = toArray(body.tags)
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -92,7 +84,7 @@ const getCharacters = handle(async ({ userId }) => {
 
 const editCharacter = handle(async (req) => {
   const id = req.params.id
-  const body = await handleForm(req, characterValidator)
+  const body = handleForm(req, characterValidator)
 
   const update: CharacterUpdate = {
     name: body.name,
@@ -114,10 +106,7 @@ const editCharacter = handle(async (req) => {
   }
 
   if (body.tags) {
-    const tags: string[] = JSON.parse(body.tags)
-    if (tags && (!Array.isArray(tags) || tags.findIndex((t) => typeof t !== 'string') > -1))
-      throw new StatusError('Tags must be an array of strings', 400)
-    update.tags = tags
+    update.tags = toArray(body.tags)
   }
 
   const filename = await entityUpload(
@@ -208,3 +197,19 @@ router.post('/:id/favorite', editCharacterFavorite)
 router.delete('/:id/avatar', removeAvatar)
 
 export default router
+
+function toArray(value?: string) {
+  const parsed = tryParse(value)
+  if (!parsed) return
+
+  assertValid({ parsed: ['string'] }, { parsed })
+  return parsed
+}
+
+function tryParse(value?: any) {
+  if (!value) return
+  try {
+    const obj = JSON.parse(value)
+    return obj
+  } catch (ex) {}
+}

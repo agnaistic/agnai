@@ -77,7 +77,10 @@ const TagSelect: Component<{
                             <Square />
                           </Match>
                         </Switch>
-                        <span classList={{ 'text-neutral-500': option.tag === 'archived' }}>
+                        <span
+                          classList={{ 'text-neutral-500': option.tag === 'archived' }}
+                          class="select-none"
+                        >
                           <span class="font-bold">{option.tag}</span>
                           <span>({option.count})</span>
                         </span>

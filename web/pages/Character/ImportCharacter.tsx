@@ -237,6 +237,7 @@ function jsonToCharacter(json: any): NewCharacter {
     },
     sampleChat: json[map.sampleChat],
     scenario: json[map.scenario],
+    originalAvatar: undefined,
   }
 
   return char

@@ -3,6 +3,8 @@ import { AppSchema } from '/srv/db/schema'
 
 export type Tag = string
 
+const TAG_CACHE_KEY = 'agnai-tag-cache'
+
 type TagOption = {
   tag: Tag
   count: number
@@ -15,7 +17,6 @@ type TagsState = {
 }
 
 const defaultTags: Tag[] = ['nsfw', 'imported', 'archived']
-
 const defaultHidden: Tag[] = ['archived']
 
 const initialState: TagsState = {
@@ -36,28 +37,19 @@ export const tagStore = createStore<TagsState>(
 )(() => {
   return {
     updateTags(prev, characters: AppSchema.Character[]) {
-      const tagCounts = defaultTags.reduce((acc, tag) => {
-        acc[tag] = 0
-        return acc
-      }, {} as Record<string, number>)
+      const tagCounts = defaultTags.reduce(toEmptyTagCounts, {})
 
-      characters.forEach((c) => {
-        if (!c.tags) return
-        c.tags.forEach((tag) => {
-          if (!tag) return
+      for (const char of characters) {
+        if (!char.tags) continue
+
+        for (const tag of char.tags) {
+          if (!tag) continue
           if (!tagCounts[tag]) tagCounts[tag] = 0
           tagCounts[tag]++
-        })
-      })
+        }
+      }
 
-      const tags = Object.entries(tagCounts)
-        .map(([tag, count]) => ({ tag, count }))
-        .sort((a, b) => {
-          if (a.tag === 'archived') return 1
-          if (b.tag === 'archived') return -1
-          if (a.count !== b.count) return b.count - a.count
-          return a.tag.localeCompare(b.tag)
-        })
+      const tags = Object.entries(tagCounts).map(toTagOption).sort(sortTags)
 
       let filter = prev.filter
       let hidden = prev.hidden
@@ -65,7 +57,7 @@ export const tagStore = createStore<TagsState>(
       if (!restoredFromCache) {
         restoredFromCache = true
         try {
-          const cache = localStorage.getItem('agnai-tag-cache')
+          const cache = localStorage.getItem(TAG_CACHE_KEY)
           if (cache) {
             const { filter: f, hidden: h } = JSON.parse(cache)
             filter = f
@@ -81,7 +73,7 @@ export const tagStore = createStore<TagsState>(
     setDefault() {
       const next = { filter: [], hidden: defaultHidden }
       try {
-        localStorage.setItem('agnai-tag-cache', JSON.stringify(next))
+        localStorage.setItem(TAG_CACHE_KEY, JSON.stringify(next))
       } catch (e) {
         console.warn('Failed to save tags in local storage', e)
       }
@@ -97,7 +89,7 @@ export const tagStore = createStore<TagsState>(
         next = { filter: prev.filter.concat(tag), hidden: prev.hidden }
       }
       try {
-        localStorage.setItem('agnai-tag-cache', JSON.stringify(next))
+        localStorage.setItem(TAG_CACHE_KEY, JSON.stringify(next))
       } catch (e) {
         console.warn('Failed to save tags in local storage', e)
       }
@@ -105,3 +97,18 @@ export const tagStore = createStore<TagsState>(
     },
   }
 })
+
+function toTagOption([tag, count]: [string, number]) {
+  return { tag, count }
+}
+
+function toEmptyTagCounts(acc: Record<string, number>, tag: string) {
+  return Object.assign(acc, { [tag]: 0 })
+}
+
+function sortTags(a: TagOption, b: TagOption) {
+  if (a.tag === 'archived') return 1
+  if (b.tag === 'archived') return -1
+  if (a.count !== b.count) return b.count - a.count
+  return a.tag.localeCompare(b.tag)
+}

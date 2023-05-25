@@ -1,4 +1,4 @@
-import { Component, For, JSX, Show, createEffect, createSignal } from 'solid-js'
+import { Component, For, JSX, createEffect, createSignal } from 'solid-js'
 import { FormLabel } from './FormLabel'
 
 interface TagInputProps {
