@@ -6,6 +6,6 @@
 }
 
 .app .content-background {
-  background-color: rgba(var(--rgb-bg-900), 0.8);
+  background-color: rgba(var(--rgb-bg-900), 0.9);
   @apply my-2 rounded-lg;
 }
