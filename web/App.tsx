@@ -10,6 +10,7 @@ import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
+import './app.css'
 import './dots.css'
 
 const App: Component = () => {
@@ -105,10 +106,7 @@ const Layout: Component = () => {
         <div class="w-full overflow-y-auto" data-background style={bg()}>
           <div
             class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}
-            style={{
-              'background-color': isChat() ? undefined : 'var(--bg-900)',
-              'border-radius': isChat() ? undefined : '8px',
-            }}
+            classList={{ 'content-background': !isChat() }}
           >
             <Show when={cfg.init}>
               <Outlet />

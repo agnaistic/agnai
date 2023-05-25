@@ -215,13 +215,6 @@ body {
   height: -webkit-fill-available;
 }
 
-.app {
-  height: 100vh;
-  height: 100dvh;
-  /* height: -webkit-fill-available; */
-  overflow-y: overlay;
-}
-
 @supports (-webkit-touch-callout: none) {
   /* .app {
     height: calc(100dvh - 74px);

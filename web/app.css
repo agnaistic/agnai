@@ -1,0 +1,11 @@
+.app {
+  height: 100vh;
+  height: 100dvh;
+  /* height: -webkit-fill-available; */
+  overflow-y: overlay;
+}
+
+.app .content-background {
+  background-color: rgba(var(--rgb-bg-900), 0.8);
+  @apply my-2 rounded-lg;
+}

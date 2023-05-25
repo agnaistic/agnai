@@ -1,6 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
+import { hexToRgb } from '../shared/util'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -310,13 +311,19 @@ function updateTheme(ui: UISettings) {
     const num = ui.mode === 'light' ? 1000 - shade : shade
 
     const color = getComputedStyle(root).getPropertyValue(`--${ui.theme}-${num}`)
+    const colorRgb = hexToRgb(color)
     root.style.setProperty(`--hl-${shade}`, color)
+    root.style.setProperty(`--rgb-hl-${shade}`, `${colorRgb?.rgb}`)
 
     const bg = getComputedStyle(root).getPropertyValue(`--dark-${num}`)
+    const bgRgb = hexToRgb(bg)
     root.style.setProperty(`--bg-${shade}`, bg)
+    root.style.setProperty(`--rgb-bg-${shade}`, `${bgRgb?.rgb}`)
 
     const text = getComputedStyle(root).getPropertyValue(`--dark-${900 - (num - 100)}`)
+    const textRgb = hexToRgb(text)
     root.style.setProperty(`--text-${shade}`, text)
+    root.style.setProperty(`--rgb-text-${shade}`, `${textRgb?.rgb}`)
   }
 
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
