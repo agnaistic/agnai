@@ -1,5 +1,5 @@
 import { Component, createEffect, createMemo, JSX, Show, lazy } from 'solid-js'
-import { Outlet, Route, Router, Routes } from '@solidjs/router'
+import { Outlet, Route, Router, Routes, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
@@ -10,6 +10,7 @@ import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
+import './app.css'
 import './dots.css'
 
 const App: Component = () => {
@@ -70,6 +71,7 @@ const App: Component = () => {
 const Layout: Component = () => {
   const state = userStore()
   const cfg = settingStore()
+  const location = useLocation()
 
   const reload = () => {
     settingStore.init()
@@ -80,6 +82,10 @@ const Layout: Component = () => {
     settingStore.getConfig()
   })
 
+  const isChat = createMemo(() => {
+    return location.pathname.startsWith('/chat/')
+  })
+
   const bg = createMemo(() => {
     const styles: JSX.CSSProperties = {
       'background-image':
@@ -87,6 +93,7 @@ const Layout: Component = () => {
       'background-repeat': 'no-repeat',
       'background-size': 'cover',
       'background-position': 'center',
+      'background-color': isChat() ? undefined : '',
     }
     return styles
   })
@@ -97,7 +104,10 @@ const Layout: Component = () => {
       <div class="flex w-full grow flex-row overflow-y-hidden">
         <Navigation />
         <div class="w-full overflow-y-auto" data-background style={bg()}>
-          <div class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}>
+          <div
+            class={`mx-auto h-full w-full max-w-5xl px-2 pt-2 sm:px-3 sm:pt-4`}
+            classList={{ 'content-background': !isChat() }}
+          >
             <Show when={cfg.init}>
               <Outlet />
             </Show>

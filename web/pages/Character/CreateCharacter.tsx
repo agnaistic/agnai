@@ -17,13 +17,21 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, NewCharacter, settingStore, toastStore, userStore } from '../../store'
+import {
+  characterStore,
+  NewCharacter,
+  tagStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { PERSONA_FORMATS } from '../../../common/adapters'
 import { getImageData } from '../../store/data/chars'
 import Select from '../../shared/Select'
+import TagInput from '../../shared/TagInput'
 import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { VoiceSettings } from '../../../srv/db/texttospeech-schema'
@@ -57,9 +65,11 @@ const CreateCharacter: Component = () => {
       avatar: s.generate,
       creating: s.creating,
       edit,
+      list: s.characters.list,
     }
   })
   const user = userStore((s) => s.user)
+  const tagState = tagStore()
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
@@ -80,6 +90,7 @@ const CreateCharacter: Component = () => {
   })
 
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
+  const [tags, setTags] = createSignal(state.edit?.tags)
   const [avatar, setAvatar] = createSignal<File>()
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
@@ -92,8 +103,13 @@ const CreateCharacter: Component = () => {
       setSchema(edit.persona.kind)
       setVoice(edit.voice || { service: undefined })
       setCulture(edit.culture ?? defaultCulture)
+      setTags(edit.tags)
     })
   )
+
+  createEffect(() => {
+    tagStore.updateTags(state.list)
+  })
 
   const updateFile = async (files: FileInputResult[]) => {
     if (!files.length) {
@@ -150,6 +166,7 @@ const CreateCharacter: Component = () => {
       name: body.name,
       description: body.description,
       culture: body.culture,
+      tags: tags(),
       scenario: body.scenario,
       avatar: state.avatar.blob || avatar(),
       greeting: body.greeting,
@@ -202,6 +219,15 @@ const CreateCharacter: Component = () => {
           helperText="A description or label for your character. This is will not influence your character in any way."
           placeholder=""
           value={downloaded()?.description || state.edit?.description}
+        />
+
+        <TagInput
+          availableTags={tagState.tags.map((t) => t.tag)}
+          value={tags()}
+          fieldName="tags"
+          label="Tags"
+          helperText="Used to help you organize and filter your characters."
+          onSelect={setTags}
         />
 
         <div class="flex w-full gap-2">

@@ -3,7 +3,7 @@ import { db } from './client'
 import { AppSchema } from './schema'
 import { now } from './util'
 
-type CharacterUpdate = Partial<
+export type CharacterUpdate = Partial<
   Pick<
     AppSchema.Character,
     | 'name'
@@ -14,6 +14,7 @@ type CharacterUpdate = Partial<
     | 'scenario'
     | 'description'
     | 'culture'
+    | 'tags'
     | 'favorite'
     | 'voice'
   >
@@ -31,6 +32,7 @@ export async function createCharacter(
     | 'scenario'
     | 'description'
     | 'culture'
+    | 'tags'
     | 'favorite'
     | 'voice'
   >

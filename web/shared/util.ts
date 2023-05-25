@@ -249,6 +249,7 @@ export function hexToRgb(hex: string) {
         r: parseInt(result[1], 16),
         g: parseInt(result[2], 16),
         b: parseInt(result[3], 16),
+        rgb: `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`,
       }
     : null
 }
@@ -358,4 +359,27 @@ export function applyDotProperty<T>(obj: T, property: string, value: any) {
   }
 
   return obj
+}
+
+export function appendFormOptional(
+  form: FormData,
+  key: string,
+  value: string | File | undefined,
+  stringify: never
+): void
+export function appendFormOptional<T>(
+  form: FormData,
+  key: string,
+  value: T,
+  stringify?: (v: T) => string
+): void
+export function appendFormOptional(
+  form: FormData,
+  key: string,
+  value: any,
+  stringify?: (v: any) => string
+) {
+  if (!value) return
+  if (stringify) form.append(key, stringify(value))
+  else form.append(key, value as string | File)
 }

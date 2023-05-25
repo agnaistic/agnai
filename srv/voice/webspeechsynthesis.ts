@@ -1,7 +1,7 @@
 import { Validator } from 'frisker'
 import { StatusError } from '../api/wrap'
 
-const valid: Validator = {
+const validator: Validator = {
   service: 'string',
   voiceId: 'string',
   pitch: 'number?',
@@ -9,7 +9,7 @@ const valid: Validator = {
 }
 
 export const webSpeechSynthesisHandler = {
-  valid,
+  validator,
   getVoices: () => {
     throw new StatusError('Web Speech Synthesis can only be generated in the browser', 400)
   },

@@ -8,8 +8,6 @@ import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractCardData } from './card-utils'
 import AvatarIcon from '/web/shared/AvatarIcon'
 
-export type ImportCharacter = NewCharacter & { avatar?: File; originalAvatar?: any }
-
 const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 const MAX_SHOWN_IMPORTS = 3
 
@@ -26,7 +24,7 @@ const TEXT_FORMATS: Record<string, boolean> = {
 const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
-  onSave: (chars: ImportCharacter[]) => void
+  onSave: (chars: NewCharacter[]) => void
   charhubPath?: string
 }> = (props) => {
   const state = characterStore()
@@ -79,7 +77,9 @@ const ImportCharacterModal: Component<{
   const processJSON = async (file: FileInputResult) => {
     const content = await getFileAsString(file)
     const json = JSON.parse(content)
-    setImported(imported().concat(jsonToCharacter(json)))
+    const char = jsonToCharacter(json)
+    char.tags = char.tags?.concat('imported') ?? ['imported']
+    setImported(imported().concat(char))
     toastStore.success('Character file accepted')
   }
 
@@ -88,7 +88,9 @@ const ImportCharacterModal: Component<{
     if (!json) {
       throw new Error('Invalid tavern image')
     }
-    setImported(imported().concat(Object.assign(jsonToCharacter(json), { avatar: file.file })))
+    const char = Object.assign(jsonToCharacter(json), { avatar: file.file })
+    char.tags = char.tags?.concat('imported') ?? ['imported']
+    setImported(imported().concat(char))
     toastStore.success('Tavern card accepted')
   }
 
@@ -235,6 +237,7 @@ function jsonToCharacter(json: any): NewCharacter {
     },
     sampleChat: json[map.sampleChat],
     scenario: json[map.scenario],
+    originalAvatar: undefined,
   }
 
   return char
