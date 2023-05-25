@@ -1,4 +1,7 @@
-export const DEFAULT_SUMMARY_PROMPT = `(Briefly visually summarise the scene. Visually describe each character and their appearance)`
+export const IMAGE_SUMMARY_PROMPT = {
+  openai: `(Briefly visually summarise the scene. Visually describe each character and their appearance)`,
+  other: `(Summarise the scene at this moment in time. Include descriptions of scene, each character, their appearance, age, weight, and their state of dress. Infer the characters state of dress from the conversation)`,
+}
 
 export const IMAGE_ADAPTERS = ['novel', 'horde', 'sd'] as const
 

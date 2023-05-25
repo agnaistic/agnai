@@ -11,7 +11,11 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
     msg: s.msgs.find((msg) => msg._id === props.messageId),
   }))
 
-  const count = createMemo(() => state.msgs.length - state.msgs.findIndex(byId(props.messageId)))
+  const count = createMemo(() =>
+    state.msg?.adapter === 'image'
+      ? 1
+      : state.msgs.length - state.msgs.findIndex(byId(props.messageId))
+  )
 
   const confirm = (one?: boolean) => {
     const deleteOne = one || state.msg?.adapter === 'image'
@@ -29,7 +33,7 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
           <Button schema="secondary" onClick={props.close}>
             Cancel
           </Button>
-          <Show when={count() > 1}>
+          <Show when={count() > 1 && state.msg?.adapter !== 'image'}>
             <Button onClick={() => confirm(true)}>Delete One</Button>
           </Show>
           <Button onClick={() => confirm(false)}>Delete {count()}</Button>
@@ -43,7 +47,6 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
           Deleteing "one" will delete the selected message only.
         </Show>
       </Show>
-
       <Show when={state.msg?.adapter === 'image'}>
         Are you sure wish to delete 1 image message?
       </Show>

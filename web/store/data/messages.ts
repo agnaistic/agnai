@@ -89,6 +89,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
   const encoder = await getEncoder()
   const prompt = createPrompt(
     {
+      kind: opts.kind,
       char: entities.char,
       chat: entities.chat,
       user: entities.user,

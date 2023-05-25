@@ -74,9 +74,10 @@ export const handleNovel: ModelAdapter = async function* ({
     Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
   }
 
-  const stream = opts.gen.streamResponse
-    ? streamCompletition(headers, body, log)
-    : fullCompletition(headers, body, log)
+  const stream =
+    opts.kind !== 'summary' && opts.gen.streamResponse
+      ? streamCompletition(headers, body, log)
+      : fullCompletition(headers, body, log)
 
   let accum = ''
   while (true) {

@@ -67,6 +67,7 @@ export async function createTextStreamV2(
     opts.parts = getPromptParts(
       {
         ...entities,
+        kind: opts.kind,
         settings: entities.gen,
         chat: opts.chat,
         members: opts.members,

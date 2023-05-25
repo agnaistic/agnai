@@ -43,6 +43,10 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, gues
   const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
   let input = prompt
 
+  if (!prompt.includes('nsfw')) {
+    input = 'nsfw, ' + prompt
+  }
+
   if (base?.template) {
     input = base.template.replace(/\{\{prompt\}\}/g, prompt)
     if (!input.includes(prompt)) {
@@ -65,7 +69,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, gues
       steps: base?.steps ?? 28,
       // Unsure what to do with these two values
       ucPreset: 0,
-      qualityToggle: true,
+      qualityToggle: false,
     },
   }
   const result = await needle('post', `${baseUrl}/generate-image`, payload, {
