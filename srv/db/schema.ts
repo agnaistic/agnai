@@ -278,6 +278,18 @@ export namespace AppSchema {
     label: string
     previewUrl?: string
   }
+
+  export interface ApiKey {
+    kind: 'api-key'
+    _id: string
+    key: string
+    userId: string
+    name: string
+    scopes: ApiKeyScope[]
+    createdAt: string
+  }
+
+  export type ApiKeyScope = 'read:profile' | 'read:chars' | 'read:chats' | 'write:chats'
 }
 
 export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { kind: T }>
@@ -293,6 +305,7 @@ export type AllDoc =
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
   | AppSchema.MemoryBook
+  | AppSchema.ApiKey
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []
 

@@ -86,6 +86,7 @@ export const config = {
   },
   jsonStorage: !!env('JSON_STORAGE', ''),
   jsonFolder: env('JSON_FOLDER', resolve(__dirname, '..', 'db')),
+  apiKeySalt: env('API_KEY_SALT'),
 }
 
 function env(key: string, fallback?: string): string {
