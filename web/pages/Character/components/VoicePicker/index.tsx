@@ -5,6 +5,7 @@ import { VoiceIdSelect } from './VoiceIdSelect'
 import { VoicePreviewButton } from './VoicePreviewButton'
 import { ElevenLabsSettings, defaultElevenLabsSettings } from './ElevenLabsSettings'
 import { WebSpeechSynthesisSettings } from './WebSpeechSynthesisSettings'
+import { SileroApiServerSettings } from './SileroApiServerSettings'
 import { isDirty } from '/web/shared/util'
 
 export const VoicePicker: Component<{
@@ -20,6 +21,8 @@ export const VoicePicker: Component<{
   const [webSpeechSettings, setWebSpeechSettings] =
     createSignal<VoiceSettingForm<'webspeechsynthesis'>>()
   const [elevenLabsSettings, setElevenLabsSettings] = createSignal<VoiceSettingForm<'elevenlabs'>>()
+  const [sileroApiServerSettings, setSileroApiServerSettings] =
+    createSignal<VoiceSettingForm<'silero-api-server'>>()
 
   createEffect(
     on(value, (value) => {
@@ -65,12 +68,26 @@ export const VoicePicker: Component<{
           setWebSpeechSettings({})
         }
         break
+      case 'silero-api-server':
+        if (props.value.service === b) {
+          const { voiceId, service, ...previousSettings } = props.value
+          setSileroApiServerSettings(previousSettings)
+        } else {
+          setSileroApiServerSettings({})
+        }
+        break
     }
   }
 
   createEffect(
     on(
-      () => [service(), voiceId(), elevenLabsSettings(), webSpeechSettings()],
+      () => [
+        service(),
+        voiceId(),
+        elevenLabsSettings(),
+        webSpeechSettings(),
+        sileroApiServerSettings(),
+      ],
       () => {
         const settings = getSettings()
         if (!settings) return
@@ -87,6 +104,7 @@ export const VoicePicker: Component<{
     const voice = voiceId()
     const elevenlabs = elevenLabsSettings()
     const webspeechsynthesis = webSpeechSettings()
+    const sileroApiServer = sileroApiServerSettings()
 
     switch (svc) {
       case 'elevenlabs': {
@@ -105,6 +123,16 @@ export const VoicePicker: Component<{
           service: 'webspeechsynthesis',
           voiceId: voice,
           ...webspeechsynthesis,
+        }
+        break
+      }
+
+      case 'silero-api-server': {
+        if (!voice) return undefined
+        return {
+          service: 'silero-api-server',
+          voiceId: voice,
+          ...sileroApiServer,
         }
         break
       }
@@ -142,6 +170,13 @@ export const VoicePicker: Component<{
         <WebSpeechSynthesisSettings
           settings={webSpeechSettings()!}
           onChange={(update) => setWebSpeechSettings(update)}
+        />
+      </Show>
+
+      <Show when={service() === 'silero-api-server' && !!sileroApiServerSettings()}>
+        <SileroApiServerSettings
+          settings={sileroApiServerSettings()!}
+          onChange={(update) => setSileroApiServerSettings(update)}
         />
       </Show>
     </>

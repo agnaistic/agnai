@@ -63,6 +63,9 @@ const Settings: Component = () => {
       textToSpeechFilterActions,
 
       elevenLabsApiKey,
+
+      sileroApiServerUrl,
+
       summariseChat,
       summaryPrompt,
 
@@ -79,6 +82,7 @@ const Settings: Component = () => {
         autoRecord: speechToTextAutoRecord,
       },
       elevenLabsApiKey,
+      sileroApiServerUrl,
       texttospeech: {
         enabled: textToSpeechEnabled,
         filterActions: textToSpeechFilterActions,
@@ -202,6 +206,8 @@ const settingsForm = {
   textToSpeechFilterActions: 'boolean',
 
   elevenLabsApiKey: 'string?',
+
+  sileroApiServerUrl: 'string?',
 } as const
 
 function getAdapterConfig(entries: Array<[string, any]>) {
