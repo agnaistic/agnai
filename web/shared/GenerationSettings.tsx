@@ -117,7 +117,7 @@ const GeneralSettings: Component<Props> = (props) => {
         fieldName="novelModel"
         label="NovelAI Model"
         items={[...modelsToItems(NOVEL_MODELS), { value: '', label: 'Use service default' }]}
-        helperText="Which NovelaI model to use"
+        helperText="Which NovelAI model to use"
         value={props.inherit?.novelModel || ''}
         disabled={props.disabled}
         service={props.service}
