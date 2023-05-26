@@ -164,5 +164,6 @@ function processText(text: string, filterActions: boolean) {
   if (filterActions) {
     text = text.replace(filterActionsRegex, '...')
   }
+  text.replace(/~/g, ' ')
   return text
 }
