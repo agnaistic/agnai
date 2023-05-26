@@ -44,9 +44,10 @@ export async function generateTextToSpeech(
 
   let audio: TextToSpeechAdapterResponse | undefined
   let output: string = ''
+  const processedText = processText(text, user.texttospeech?.filterActions ?? true)
 
   try {
-    audio = await service.generateVoice({ user, text, voice }, log, guestId)
+    audio = await service.generateVoice({ user, text: processedText, voice }, log, guestId)
   } catch (ex: any) {
     log.error({ err: ex }, 'Failed to generate audio')
   }
@@ -163,6 +164,6 @@ function processText(text: string, filterActions: boolean) {
   if (filterActions) {
     text = text.replace(filterActionsRegex, '...')
   }
-  text.replace(/~/g, ' ')
+  text = text.replace(/[~]/g, ' ')
   return text
 }
