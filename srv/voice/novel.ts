@@ -10,6 +10,7 @@ const novelBaseUrl = 'https://api.novelai.net/ai/generate-voice'
 const validator: Validator = {
   service: 'string',
   voiceId: 'string',
+  seed: 'string?',
 }
 
 const handleNovelVoicesList = async (
@@ -46,7 +47,7 @@ const handleNovelTextToSpeech: TextToSpeechAdapter = async (
   const token = getToken(user, guestId)
   //https://api.novelai.net/ai/generate-voice?text=This%20is%20a%20test%20for%20text%20to%20speech.%20A%20little%20harsh%2C%20a%20little%20slow%2C%20but%20always%20on%20point.&voice=-1&seed=Aini&opus=true&version=v2
   const url = `${novelBaseUrl}?text=${encodeURIComponent(text)}&voice=-1&seed=${
-    voice.voiceId
+    voice.seed || voice.voiceId
   }&opus=true&version=v2`
   const result = await needle('get', url, null, {
     json: true,

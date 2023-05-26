@@ -35,6 +35,7 @@ export type VoiceWebSynthesisSettings = {
 export type NovelTtsSettings = {
   service: 'novel'
   voiceId: string
+  seed?: string
 }
 
 export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<
