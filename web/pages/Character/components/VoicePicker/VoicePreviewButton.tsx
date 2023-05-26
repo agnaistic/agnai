@@ -4,6 +4,8 @@ import {
   TTSService,
   VoiceSettingForm,
   VoiceWebSynthesisSettings,
+  VoiceSettings,
+  NovelTtsSettings,
 } from '/srv/db/texttospeech-schema'
 import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'
@@ -11,6 +13,7 @@ import { Play } from 'lucide-solid'
 import { defaultCulture, getSampleText } from '/web/shared/CultureCodes'
 import { AudioReference } from '/web/shared/Audio/AudioReference'
 import { createSpeech } from '/web/shared/Audio/speech'
+import { voiceApi } from '/web/store/data/voice'
 
 export const VoicePreviewButton: Component<{
   service: TTSService
@@ -34,7 +37,7 @@ export const VoicePreviewButton: Component<{
     const service = props.service
     const voiceId = props.voiceId
     const preview = voicePreviewUrl()
-    if (!service || !voiceId || !preview) return
+    if (!service || !voiceId) return
 
     let audio: AudioReference | undefined
     if (service === 'webspeechsynthesis') {
@@ -52,24 +55,30 @@ export const VoicePreviewButton: Component<{
       })
     } else if (preview) {
       audio = await createSpeech({ url: preview })
+    } else {
+      const culture = props.culture || defaultCulture
+      const voice = {
+        service,
+        voiceId,
+      } as VoiceSettings
+      const { output } = await voiceApi.textToSpeech(getSampleText(culture), voice)
+      audio = await createSpeech({ url: output })
     }
     audio?.play()
   }
 
   return (
     <>
-      <Show when={voicePreviewUrl()}>
-        <div>
-          <FormLabel label="Preview" />
-          <div class="flex items-center">
-            <div class="relative overflow-hidden rounded-xl bg-transparent">
-              <Button onClick={playVoicePreview}>
-                <Play /> Preview
-              </Button>
-            </div>
+      <div>
+        <FormLabel label="Preview" />
+        <div class="flex items-center">
+          <div class="relative overflow-hidden rounded-xl bg-transparent">
+            <Button onClick={playVoicePreview}>
+              <Play /> Preview
+            </Button>
           </div>
         </div>
-      </Show>
+      </div>
     </>
   )
 }

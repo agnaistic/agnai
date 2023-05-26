@@ -5,6 +5,7 @@ import { VoiceIdSelect } from './VoiceIdSelect'
 import { VoicePreviewButton } from './VoicePreviewButton'
 import { ElevenLabsSettings, defaultElevenLabsSettings } from './ElevenLabsSettings'
 import { WebSpeechSynthesisSettings } from './WebSpeechSynthesisSettings'
+import { NovelTtsSettings } from './NovelTtsSettings'
 import { isDirty } from '/web/shared/util'
 
 export const VoicePicker: Component<{
@@ -20,6 +21,7 @@ export const VoicePicker: Component<{
   const [webSpeechSettings, setWebSpeechSettings] =
     createSignal<VoiceSettingForm<'webspeechsynthesis'>>()
   const [elevenLabsSettings, setElevenLabsSettings] = createSignal<VoiceSettingForm<'elevenlabs'>>()
+  const [novelTtsSettings, setNovelTtsSettings] = createSignal<VoiceSettingForm<'novel'>>()
 
   createEffect(
     on(value, (value) => {
@@ -65,12 +67,20 @@ export const VoicePicker: Component<{
           setWebSpeechSettings({})
         }
         break
+      case 'novel':
+        if (props.value.service === b) {
+          const { voiceId, service, ...previousSettings } = props.value
+          setNovelTtsSettings(previousSettings)
+        } else {
+          setNovelTtsSettings({})
+        }
+        break
     }
   }
 
   createEffect(
     on(
-      () => [service(), voiceId(), elevenLabsSettings(), webSpeechSettings()],
+      () => [service(), voiceId(), elevenLabsSettings(), webSpeechSettings(), novelTtsSettings()],
       () => {
         const settings = getSettings()
         if (!settings) return
@@ -87,6 +97,7 @@ export const VoicePicker: Component<{
     const voice = voiceId()
     const elevenlabs = elevenLabsSettings()
     const webspeechsynthesis = webSpeechSettings()
+    const novelTts = novelTtsSettings()
 
     switch (svc) {
       case 'elevenlabs': {
@@ -105,6 +116,16 @@ export const VoicePicker: Component<{
           service: 'webspeechsynthesis',
           voiceId: voice,
           ...webspeechsynthesis,
+        }
+        break
+      }
+
+      case 'novel': {
+        if (!voice) return undefined
+        return {
+          service: 'novel',
+          voiceId: voice,
+          ...novelTts,
         }
         break
       }
@@ -142,6 +163,13 @@ export const VoicePicker: Component<{
         <WebSpeechSynthesisSettings
           settings={webSpeechSettings()!}
           onChange={(update) => setWebSpeechSettings(update)}
+        />
+      </Show>
+
+      <Show when={service() === 'novel' && !!novelTtsSettings()}>
+        <NovelTtsSettings
+          settings={novelTtsSettings()!}
+          onChange={(update) => setNovelTtsSettings(update)}
         />
       </Show>
     </>

@@ -317,7 +317,7 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      const res = await voiceApi.textToSpeech({
+      const res = await voiceApi.chatTextToSpeech({
         chatId: activeChatId,
         messageId,
         text,
