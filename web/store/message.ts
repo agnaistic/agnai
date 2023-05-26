@@ -169,7 +169,7 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      const [_, replace] = msgs.slice(-2)
+      const replace = { ...msgs[msgs.length - 1], voiceUrl: undefined }
       yield {
         partial: '',
         waiting: { chatId, mode: 'retry', characterId: replace.characterId! },

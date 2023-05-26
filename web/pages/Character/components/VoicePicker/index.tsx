@@ -78,21 +78,16 @@ export const VoicePicker: Component<{
     }
   }
 
-  createEffect(
-    on(
-      () => [service(), voiceId(), elevenLabsSettings(), webSpeechSettings(), novelTtsSettings()],
-      () => {
-        const settings = getSettings()
-        if (!settings) return
-        if (previousSettings && !isDirty(previousSettings, settings)) return
+  createEffect(() => {
+    const currentSettings = voiceSettings()
+    if (!currentSettings) return
+    if (previousSettings && !isDirty(previousSettings, currentSettings)) return
 
-        previousSettings = settings
-        props.onChange(settings)
-      }
-    )
-  )
+    previousSettings = currentSettings
+    props.onChange(currentSettings)
+  })
 
-  function getSettings(): VoiceSettings | undefined {
+  const voiceSettings = createMemo<VoiceSettings | undefined>(() => {
     const svc = service()
     const voice = voiceId()
     const elevenlabs = elevenLabsSettings()
@@ -107,7 +102,6 @@ export const VoicePicker: Component<{
           voiceId: voice,
           ...elevenlabs,
         }
-        break
       }
 
       case 'webspeechsynthesis': {
@@ -117,7 +111,6 @@ export const VoicePicker: Component<{
           voiceId: voice,
           ...webspeechsynthesis,
         }
-        break
       }
 
       case 'novel': {
@@ -127,7 +120,6 @@ export const VoicePicker: Component<{
           voiceId: voice,
           ...novelTts,
         }
-        break
       }
 
       default:
@@ -135,7 +127,7 @@ export const VoicePicker: Component<{
           service: undefined,
         }
     }
-  }
+  })
 
   return (
     <>
@@ -147,7 +139,7 @@ export const VoicePicker: Component<{
             service={service()!}
             voiceId={voiceId()}
             culture={props.culture}
-            webSpeechSynthesisSettings={webSpeechSettings()}
+            voiceSettings={voiceSettings()}
           />
         </Show>
       </div>

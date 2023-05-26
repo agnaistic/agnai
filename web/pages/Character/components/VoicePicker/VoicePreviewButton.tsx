@@ -1,11 +1,6 @@
 import { Component, createEffect, createSignal } from 'solid-js'
 import { voiceStore } from '/web/store/voice'
-import {
-  TTSService,
-  VoiceSettingForm,
-  VoiceWebSynthesisSettings,
-  VoiceSettings,
-} from '/srv/db/texttospeech-schema'
+import { TTSService, VoiceWebSynthesisSettings, VoiceSettings } from '/srv/db/texttospeech-schema'
 import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'
@@ -18,7 +13,7 @@ export const VoicePreviewButton: Component<{
   service: TTSService
   voiceId?: string
   culture?: string
-  webSpeechSynthesisSettings?: VoiceSettingForm<'webspeechsynthesis'>
+  voiceSettings?: any
 }> = (props) => {
   const state = voiceStore((s) => s.voices)
 
@@ -44,7 +39,7 @@ export const VoicePreviewButton: Component<{
       const voice: VoiceWebSynthesisSettings = {
         service: 'webspeechsynthesis',
         voiceId,
-        ...props.webSpeechSynthesisSettings,
+        ...props.voiceSettings,
       }
       audio = await createSpeech({
         voice,
@@ -59,6 +54,7 @@ export const VoicePreviewButton: Component<{
       const voice = {
         service,
         voiceId,
+        ...props.voiceSettings,
       } as VoiceSettings
       const { output } = await voiceApi.textToSpeech(getSampleText(culture), voice)
       audio = await createSpeech({ url: output })
