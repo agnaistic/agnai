@@ -32,7 +32,7 @@ export const chatGenSettings = {
   presencePenalty: 'number',
   gaslight: 'string',
   oaiModel: 'string',
-  novelModel: 'string',
+  novelModel: 'string?',
   claudeModel: 'string',
   streamResponse: 'boolean?',
   useGaslight: 'boolean?',
