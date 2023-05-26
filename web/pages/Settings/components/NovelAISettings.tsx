@@ -16,7 +16,7 @@ const NovelAISettings: Component = () => {
     <>
       <Select
         fieldName="novelModel"
-        label="NovelAI Model"
+        label="Default NovelAI Model"
         items={[
           { label: 'Euterpe', value: 'euterpe-v2' },
           { label: 'Krake', value: 'krake-v2' },

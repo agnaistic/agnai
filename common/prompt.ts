@@ -1,6 +1,6 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
-import { AIAdapter, OPENAI_MODELS } from './adapters'
+import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
@@ -555,7 +555,11 @@ function getContextLimit(
     case 'ooba':
       return configuredMax - genAmount
 
-    case 'novel':
+    case 'novel': {
+      if (model === NOVEL_MODELS.clio_v1) return 8000 - genAmount
+      return configuredMax - genAmount
+    }
+
     case 'horde':
 
     case 'openai': {

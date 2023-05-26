@@ -4,7 +4,13 @@ import TextInput from './TextInput'
 import Select, { Option } from './Select'
 import { AppSchema } from '../../srv/db/schema'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_MODELS, CLAUDE_MODELS, ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
+import {
+  OPENAI_MODELS,
+  CLAUDE_MODELS,
+  ADAPTER_LABELS,
+  AIAdapter,
+  NOVEL_MODELS,
+} from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
@@ -105,6 +111,17 @@ const GeneralSettings: Component<Props> = (props) => {
         disabled={props.disabled}
         service={props.service}
         aiSetting={'oaiModel'}
+      />
+
+      <Select
+        fieldName="novelModel"
+        label="NovelAI Model"
+        items={[...modelsToItems(NOVEL_MODELS), { value: '', label: 'Use service default' }]}
+        helperText="Which NovelAI model to use"
+        value={props.inherit?.novelModel || ''}
+        disabled={props.disabled}
+        service={props.service}
+        aiSetting={'novelModel'}
       />
 
       <Select

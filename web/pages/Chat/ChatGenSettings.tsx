@@ -129,7 +129,7 @@ export const ChatGenSettingsModal: Component<{
       show={props.show}
       close={props.close}
       footer={Footer}
-      title="Chat Generation Settings"
+      title="Generation Settings"
       fixedHeight
       maxWidth="half"
     >

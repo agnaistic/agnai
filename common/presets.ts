@@ -32,6 +32,7 @@ export const chatGenSettings = {
   presencePenalty: 'number',
   gaslight: 'string',
   oaiModel: 'string',
+  novelModel: 'string?',
   claudeModel: 'string',
   streamResponse: 'boolean?',
   useGaslight: 'boolean?',
@@ -135,6 +136,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical_p',
     topA: 'top_a',
     order: '',
+    novelModel: 'novelModel',
   },
   ooba: {
     maxTokens: 'max_new_tokens',

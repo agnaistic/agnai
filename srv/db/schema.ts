@@ -224,6 +224,7 @@ export namespace AppSchema {
     frequencyPenalty?: number
     presencePenalty?: number
     oaiModel?: string
+    novelModel?: string
     claudeModel?: string
     streamResponse?: boolean
 

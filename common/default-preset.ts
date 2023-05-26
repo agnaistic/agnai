@@ -1,5 +1,5 @@
 import { AppSchema } from '../srv/db/schema'
-import { CLAUDE_MODELS, OPENAI_MODELS } from './adapters'
+import { CLAUDE_MODELS, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
 
 const MAX_TOKENS = 80
 
@@ -65,6 +65,7 @@ const builtinPresets = {
   novel_clio: {
     name: 'Novel Clio - Talker C',
     service: 'novel',
+    novelModel: NOVEL_MODELS.clio_v1,
     maxTokens: 300,
     maxContextLength: 8000,
     repetitionPenalty: 1.5,
