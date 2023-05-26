@@ -49,7 +49,7 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
 
 1. Clone the project
 2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
-3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 ghcr.io/luminai-companion/agnaistic:latest`
+3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 ghcr.io/agnaistic/agnaistic:latest`
    - `-dt` Run the container detached
    - `--restart=always` Restart at start up or if the server crashes
    - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`
@@ -60,7 +60,7 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
 4. Install [MongoDB](https://www.mongodb.com/docs/manual/installation/) **Optional**
    - The database is optional. Agnaistic will run in `anonymous-only` mode if there is no database available.
    - `Anonymous` users have their data saved to the browser's local storage. Your data will "persist", but not be shareable between devices or other browsers. Clearing your browser's application data/cookies will delete this data.
-5. Download the project: `git clone https://github.com/luminai-companion/agn-ai` or [download it](https://github.com/luminai-companion/agn-ai/archive/refs/heads/dev.zip)
+5. Download the project: `git clone https://github.com/agnaistic/agnai` or [download it](https://github.com/agnaistic/agnai/archive/refs/heads/dev.zip)
 6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm run deps`
      - **Do this every time you update AgnAI, just in case.**

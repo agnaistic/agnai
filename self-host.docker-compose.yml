@@ -8,7 +8,7 @@ networks:
 
 services:
   app:
-    image: ghcr.io/luminai-companion/agnaistic:latest
+    image: ghcr.io/agnaistic/agnaistic:latest
     restart: always
     ports:
       - '3001:3001'
