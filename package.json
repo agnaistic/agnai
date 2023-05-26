@@ -8,6 +8,7 @@
     "agnaistic": "./srv/bin.js",
     "agnai": "./srv/bin.js"
   },
+  "homepage": "https://github.com/agnaistic/agnai/issues",
   "files": [
     "poetry.lock",
     "pyproject.toml",

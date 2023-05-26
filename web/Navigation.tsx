@@ -151,7 +151,7 @@ const GuestNavigation: Component = () => {
 
       <a
         class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
-        href="https://github.com/luminai-companion/agn-ai"
+        href="https://github.com/agnaistic/agnai"
         target="_blank"
       >
         <Github />

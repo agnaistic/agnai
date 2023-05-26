@@ -6,7 +6,7 @@ import { markdown } from '../../shared/markdown'
 import { A } from '@solidjs/router'
 
 const text = `
-Agnaistic is in a fairly early stage of development. Bugs and some rough edges are expected. If you encounter an issue or have an idea you'd like to share you can head over to the [GitHub repository](https://github.com/luminai-companion/agn-ai) and create an issue.
+Agnaistic is in a fairly early stage of development. Bugs and some rough edges are expected. If you encounter an issue or have an idea you'd like to share you can head over to the [GitHub repository](https://github.com/agnaistic/agnai) and create an issue.
 
 # Registration
 
@@ -46,7 +46,7 @@ If you're self-hosting KoboldAI or using Colab, you can use the LocalTunnel URL 
 
 ## NovelAI
 
-You can provide your API key and choose between Euterpe and Krake in the settings page. Visit the [instructions page](https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md) to learn how to retrieve your API key.
+You can provide your API key and choose between Euterpe and Krake in the settings page. Visit the [instructions page](https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md) to learn how to retrieve your API key.
 `
 
 const HomePage: Component = () => {
@@ -77,14 +77,14 @@ const HomePage: Component = () => {
           </li>
           <li>
             <A
-              href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/memory.md"
+              href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
               target="_blank"
             >
               Memory Book Guide
             </A>
           </li>
           <li>
-            <A href="https://github.com/luminai-companion/agn-ai" target="_blank">
+            <A href="https://github.com/agnaistic/agnai" target="_blank">
               Github Repository
             </A>
           </li>

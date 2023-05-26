@@ -31,7 +31,7 @@ const MemoryPage: Component = () => {
           <>
             {' '}
             <a
-              href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/memory.md"
+              href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
               target="_blank"
               class="link"
             >

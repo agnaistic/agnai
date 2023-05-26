@@ -36,7 +36,7 @@ const NovelAISettings: Component = () => {
             <a
               class="link"
               target="_blank"
-              href="https://github.com/luminai-companion/agn-ai/blob/dev/instructions/novel.md"
+              href="https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md"
             >
               Instructions
             </a>
