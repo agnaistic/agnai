@@ -12,8 +12,10 @@ import { saveFile } from '../api/upload'
 import { sendGuest, sendMany } from '../api/ws'
 import { StatusError } from '../api/wrap'
 import { elevenlabsHandler } from './elevenlabs'
+import { novelTtsHandler } from './novel'
 import { webSpeechSynthesisHandler } from './webspeechsynthesis'
-import { TTSService } from '../db/texttospeech-schema'
+import { TTSService, VoiceSettings } from '../db/texttospeech-schema'
+import { AppSchema } from '../db/schema'
 
 export async function getVoicesList(
   { user, ttsService }: VoicesListRequest,
@@ -28,6 +30,39 @@ export async function getVoicesList(
   } catch (ex: any) {
     throw new StatusError(ex.message, 500)
   }
+}
+
+export async function generateTextToSpeech(
+  user: AppSchema.User,
+  log: AppLog,
+  guestId: string | undefined,
+  text: string,
+  voice: VoiceSettings
+) {
+  const service = getVoiceService(voice.service)
+  if (!service) return { output: undefined }
+
+  let audio: TextToSpeechAdapterResponse | undefined
+  let output: string = ''
+
+  try {
+    audio = await service.generateVoice({ user, text, voice }, log, guestId)
+  } catch (ex: any) {
+    log.error({ err: ex }, 'Failed to generate audio')
+  }
+
+  if (!audio) {
+    return { output }
+  }
+
+  try {
+    output = await saveFile(`temp-${v4()}.${audio.ext}`, audio.content, 300)
+  } catch (ex: any) {
+    log.error({ err: ex }, 'Failed to generate audio')
+    return { output }
+  }
+
+  return { output }
 }
 
 export async function generateVoice(
@@ -105,6 +140,9 @@ export function getVoiceService(ttsService?: TTSService): TextToSpeechHandler | 
     case 'elevenlabs':
       return elevenlabsHandler
 
+    case 'novel':
+      return novelTtsHandler
+
     default:
       return
   }
@@ -125,5 +163,6 @@ function processText(text: string, filterActions: boolean) {
   if (filterActions) {
     text = text.replace(filterActionsRegex, '...')
   }
+  text.replace(/~/g, ' ')
   return text
 }

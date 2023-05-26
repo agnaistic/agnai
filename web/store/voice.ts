@@ -40,6 +40,14 @@ export const voiceStore = createStore<VoiceState>(
           label: 'ElevenLabs',
         })
       }
+
+      if (user.novelVerified || user.novelApiKey) {
+        services.push({
+          type: 'novel',
+          label: 'NovelAI Text To Speech',
+        })
+      }
+
       return { services }
     },
     async getVoices({ voices }, type: TTSService | '') {

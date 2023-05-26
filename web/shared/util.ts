@@ -32,7 +32,9 @@ export function getAssetUrl(filename: string) {
     filename.endsWith('.png') ||
     filename.endsWith('.jpg') ||
     filename.endsWith('.jpeg') ||
-    filename.endsWith('.mp3')
+    filename.endsWith('.mp3') ||
+    filename.endsWith('.wav') ||
+    filename.endsWith('.webm')
 
   if (!isFile) return filename
 

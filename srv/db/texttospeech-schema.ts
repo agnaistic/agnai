@@ -1,4 +1,4 @@
-export type TTSService = 'webspeechsynthesis' | 'elevenlabs'
+export type TTSService = 'webspeechsynthesis' | 'elevenlabs' | 'novel'
 
 export type TTSSettings = {
   enabled: boolean
@@ -11,6 +11,7 @@ export type VoiceSettings =
   | VoiceDisabledSettings
   | VoiceElevenLabsSettings
   | VoiceWebSynthesisSettings
+  | NovelTtsSettings
 
 export type VoiceDisabledSettings = {
   service: undefined
@@ -29,6 +30,11 @@ export type VoiceWebSynthesisSettings = {
   voiceId: string
   pitch?: number
   rate?: number
+}
+
+export type NovelTtsSettings = {
+  service: 'novel'
+  voiceId: string
 }
 
 export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<

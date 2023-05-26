@@ -14,10 +14,11 @@ type GenerateOpts = {
 
 export const voiceApi = {
   voicesList,
+  chatTextToSpeech,
   textToSpeech,
 }
 
-export async function voicesList(ttsService: TTSService) {
+async function voicesList(ttsService: TTSService) {
   const user = getUserEntity()
   const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(
     `/voice/${ttsService}/voices`,
@@ -26,7 +27,7 @@ export async function voicesList(ttsService: TTSService) {
   return res
 }
 
-export async function textToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
+async function chatTextToSpeech({ chatId, messageId, text, voice, culture }: GenerateOpts) {
   const user = getUserEntity()
   const res = await api.post<{ success: boolean }>(`/chat/${chatId}/voice`, {
     user,
@@ -38,7 +39,19 @@ export async function textToSpeech({ chatId, messageId, text, voice, culture }: 
   return res
 }
 
-export function getUserEntity() {
+async function textToSpeech(text: string, voice: VoiceSettings) {
+  const user = getUserEntity()
+  const res = await api.post<{ output: string }>(`/voice/tts`, {
+    user,
+    text,
+    voice,
+  })
+  if (res.result) return res.result
+  else
+    throw new Error(res.error ?? `An error occured generating text to speech with ${voice.service}`)
+}
+
+function getUserEntity() {
   if (isLoggedIn()) {
     const { user } = getStore('user').getState()
     return user

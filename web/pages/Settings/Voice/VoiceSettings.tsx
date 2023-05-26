@@ -1,15 +1,17 @@
 import { userStore } from '../../../store'
 import { Component, Show, createMemo, createSignal } from 'solid-js'
-import ElevenLabsSettings from './ElevenLabsSettings'
 import { Toggle } from '../../../shared/Toggle'
 import Tabs from '../../../shared/Tabs'
+import ElevenLabsSettings from './ElevenLabsSettings'
 import WebSpeechSynthesisSettings from './WebSpeechSynthesisSettings'
+import NovelTtsSettings from './NovelTtsSettings'
 import Divider from '../../../shared/Divider'
 import { getSpeechRecognition } from '../../Chat/components/SpeechRecognitionRecorder'
 
 const ttsServiceTabs = {
   webspeechsynthesis: 'Web Speech Synthesis',
   elevenlabs: 'ElevenLabs',
+  novel: 'NovelAI Text To Speech',
 }
 
 type Tab = keyof typeof ttsServiceTabs
@@ -18,7 +20,7 @@ export const VoiceSettings: Component = () => {
   const state = userStore()
 
   const [tab, setTab] = createSignal(0)
-  const tabs: Tab[] = ['webspeechsynthesis', 'elevenlabs']
+  const tabs: Tab[] = ['webspeechsynthesis', 'elevenlabs', 'novel']
   const currentTab = createMemo(() => tabs[tab()])
   const subclass = 'flex flex-col gap-4'
 
@@ -92,6 +94,10 @@ export const VoiceSettings: Component = () => {
 
           <div class={currentTab() === 'elevenlabs' ? subclass : 'hidden'}>
             <ElevenLabsSettings />
+          </div>
+
+          <div class={currentTab() === 'novel' ? subclass : 'hidden'}>
+            <NovelTtsSettings />
           </div>
         </div>
       </div>

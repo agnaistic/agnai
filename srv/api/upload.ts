@@ -133,6 +133,12 @@ function getType(filename: string) {
 
     case '.gif':
       return 'image/gif'
+
+    case '.mp3':
+      return 'audio/mp3'
+
+    case '.wav':
+      return 'audio/wav'
   }
 
   return 'octet-stream'

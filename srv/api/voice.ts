@@ -1,10 +1,20 @@
 import { Router } from 'express'
 import { handle } from './wrap'
-import { getVoicesList } from '../voice'
+import { getVoicesList, generateTextToSpeech } from '../voice'
 import { store } from '../db'
 import { TTSService } from '../db/texttospeech-schema'
+import { assertValid } from 'frisker'
 
 const router = Router()
+
+const textToSpeechValid = { text: 'string', voice: 'any' } as const
+
+const textToSpeech = handle(async ({ body, userId, socketId, log, params }) => {
+  const user = userId ? await store.users.getUser(userId) : body.user
+  const guestId = userId ? undefined : socketId
+  assertValid(textToSpeechValid, body)
+  return generateTextToSpeech(user, log, guestId, body.text, body.voice)
+})
 
 const getVoices = handle(async ({ body, userId, socketId, log, params }) => {
   const ttsService = params.id as TTSService
@@ -13,6 +23,7 @@ const getVoices = handle(async ({ body, userId, socketId, log, params }) => {
   return getVoicesList({ ttsService: ttsService, user }, log, guestId)
 })
 
+router.post('/tts', textToSpeech)
 router.post('/:id/voices', getVoices)
 
 export default router
