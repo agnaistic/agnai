@@ -32,8 +32,8 @@ export const VoicePicker: Component<{
   )
 
   createEffect(() => {
-    const b = service()
-    if ('voiceId' in props.value && props.value.service === b) setVoiceId(props.value.voiceId)
+    const svc = service()
+    if ('voiceId' in props.value && props.value.service === svc) setVoiceId(props.value.voiceId)
     else setVoiceId('')
   })
 
@@ -49,10 +49,10 @@ export const VoicePicker: Component<{
   })
 
   function updateService() {
-    const b = service()
-    switch (b) {
+    const svc = service()
+    switch (svc) {
       case 'elevenlabs':
-        if (props.value.service === b) {
+        if (props.value.service === svc) {
           const { voiceId, service, ...previousSettings } = props.value
           setElevenLabsSettings(previousSettings)
         } else {
@@ -60,7 +60,7 @@ export const VoicePicker: Component<{
         }
         break
       case 'webspeechsynthesis':
-        if (props.value.service === b) {
+        if (props.value.service === svc) {
           const { voiceId, service, ...previousSettings } = props.value
           setWebSpeechSettings(previousSettings)
         } else {
@@ -68,7 +68,7 @@ export const VoicePicker: Component<{
         }
         break
       case 'novel':
-        if (props.value.service === b) {
+        if (props.value.service === svc) {
           const { voiceId, service, ...previousSettings } = props.value
           setNovelTtsSettings(previousSettings)
         } else {

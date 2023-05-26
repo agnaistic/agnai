@@ -103,11 +103,10 @@ async function callApi<T = any>(
 
   if (res.status === 401) {
     events.emit(EVENTS.sessionExpired)
-    toastStore.error(`Your session has expired. Please login again.`)
     return {
       result: undefined,
       status: 401,
-      error: 'Unauthorized',
+      error: 'Your session has expired. Please login again.',
     }
   }
 
