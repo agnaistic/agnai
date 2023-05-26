@@ -67,8 +67,6 @@ export const handleNovel: ModelAdapter = async function* ({
 
   log.debug({ ...body, parameters: { ...body.parameters, bad_word_ids: null } }, 'NovelAI payload')
 
-  console.log('NovelAI payload', JSON.stringify(body, null, 2))
-
   const headers = {
     Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
   }
