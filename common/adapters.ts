@@ -179,7 +179,7 @@ export const adapterSettings: {
   typicalP: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
 
   claudeModel: ['claude', 'kobold'],
-
+  novelModel: ['novel'],
   oaiModel: ['openai', 'kobold'],
   frequencyPenalty: ['openai', 'kobold', 'novel'],
   presencePenalty: ['openai', 'kobold', 'novel'],

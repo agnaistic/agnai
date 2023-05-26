@@ -5,7 +5,6 @@ import { badWordIds, clioBadWordsId } from './novel-bad-words'
 import { ModelAdapter } from './type'
 import { AppSchema } from '../db/schema'
 import { NOVEL_MODELS } from '/common/adapters'
-import { defaultPresets } from '/common/default-preset'
 import { needleToSSE } from './stream'
 import { AppLog } from '../logger'
 
@@ -28,8 +27,6 @@ const statuses: Record<number, string> = {
   401: 'Invalid API key',
   402: 'You need an active subscription',
 }
-
-const newModelPresets = new Set([defaultPresets.novel_clio.name])
 
 const base = {
   generate_until_sentence: true,
@@ -58,7 +55,7 @@ export const handleNovel: ModelAdapter = async function* ({
     return
   }
 
-  const model = newModelPresets.has(opts.gen.name || '') ? NOVEL_MODELS.clio_v1 : user.novelModel
+  const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.euterpe
 
   const body = {
     model,
@@ -69,6 +66,8 @@ export const handleNovel: ModelAdapter = async function* ({
   const endTokens = ['***', 'Scenario:', '----']
 
   log.debug({ ...body, parameters: { ...body.parameters, bad_word_ids: null } }, 'NovelAI payload')
+
+  console.log('NovelAI payload', JSON.stringify(body, null, 2))
 
   const headers = {
     Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
