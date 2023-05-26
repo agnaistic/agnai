@@ -1,11 +1,10 @@
-import { Component, Show, createEffect, createSignal } from 'solid-js'
+import { Component, createEffect, createSignal } from 'solid-js'
 import { voiceStore } from '/web/store/voice'
 import {
   TTSService,
   VoiceSettingForm,
   VoiceWebSynthesisSettings,
   VoiceSettings,
-  NovelTtsSettings,
 } from '/srv/db/texttospeech-schema'
 import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'

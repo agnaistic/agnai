@@ -1,6 +1,5 @@
 import Cookies from 'js-cookie'
 import { EVENTS, events } from '../emitter'
-import { toastStore } from './toasts'
 
 let socketId = ''
 

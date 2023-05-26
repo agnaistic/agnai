@@ -44,11 +44,10 @@ export async function generateTextToSpeech(
 
   let audio: TextToSpeechAdapterResponse | undefined
   let output: string = ''
-  let error: any
+
   try {
     audio = await service.generateVoice({ user, text, voice }, log, guestId)
   } catch (ex: any) {
-    error = ex.message || ex
     log.error({ err: ex }, 'Failed to generate audio')
   }
 
