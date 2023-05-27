@@ -246,6 +246,7 @@ export namespace AppSchema {
     assetPrefix: string
     selfhosting: boolean
     registered: Array<Omit<RegisteredAdapter, 'contextLimit'>>
+    maintenance?: string
   }
 
   export interface MemoryBook {

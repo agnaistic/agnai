@@ -23,6 +23,7 @@ const appConfig: AppSchema.AppConfig = {
     settings: adp.settings,
     options: adp.options,
   })),
+  maintenance: config.maintenance,
 }
 
 const getSettings = handle(async () => {

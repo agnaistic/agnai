@@ -107,7 +107,11 @@ export const chatStore = createStore<ChatState>('chat', {
   },
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
-    chatStore.setState(initState)
+    const { opts } = get()
+    chatStore.setState({
+      ...initState,
+      opts: { ...opts, editing: opts.editing, hideOoc: opts.hideOoc },
+    })
   })
 
   events.on(EVENTS.init, (init) => {

@@ -31,6 +31,11 @@ process.on('SIGTERM', () => {
 })
 
 async function initDb() {
+  if (config.maintenance) {
+    logger.warn(`Maintenance mode enabled: Will not connect to database`)
+    return
+  }
+
   const db = await connect()
   if (db) {
     await createIndexes()

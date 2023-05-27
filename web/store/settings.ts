@@ -6,6 +6,7 @@ import { api } from './api'
 import { createStore } from './create'
 import { usersApi } from './data/user'
 import { toastStore } from './toasts'
+import { subscribe } from './socket'
 
 type SettingState = {
   initLoading: boolean
@@ -58,7 +59,7 @@ export const settingStore = createStore<SettingState>(
   })
 
   return {
-    async *init() {
+    async *init({ config: prev }) {
       yield { initLoading: true }
       const res = await usersApi.getInit()
       yield { initLoading: false }
@@ -67,6 +68,16 @@ export const settingStore = createStore<SettingState>(
         setAssetPrefix(res.result.config.assetPrefix)
         events.emit(EVENTS.init, res.result)
         yield { init: res.result, config: res.result.config }
+
+        const maint = res.result.config?.maintenance
+
+        if (!maint && prev.maintenance) {
+          toastStore.success(`Agnaistic is no longer in maintenance mode`, 10)
+        }
+
+        if (maint && !prev.maintenance) {
+          toastStore.warn(`Agnaistic is in maintenance mode`, 20)
+        }
       }
 
       if (res.error) {
@@ -130,4 +141,11 @@ export const settingStore = createStore<SettingState>(
       return { showImage: image }
     },
   }
+})
+
+subscribe('connected', { uid: 'string' }, (body) => {
+  const { initLoading } = settingStore.getState()
+  if (initLoading) return
+
+  settingStore.init()
 })

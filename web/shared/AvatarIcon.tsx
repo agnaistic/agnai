@@ -65,7 +65,7 @@ const AvatarIcon: Component<Props> = (props) => {
     <>
       <Show when={avatar()}>
         <div
-          class={`overflow-hidden border-2 border-[var(--bg-800)] bg-[var(--bg-700)] ${fmtSize()} ${fmtCorners()} shrink-0 ${
+          class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
             props.class || ''
           }`}
           data-bot-avatar={props.bot}

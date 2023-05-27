@@ -84,11 +84,11 @@ export const userStore = createStore<UserState>(
   'user',
   init()
 )((get, set) => {
-  events.on('session-expired', () => {
+  events.on(EVENTS.sessionExpired, () => {
     userStore.logout()
   })
 
-  events.on('init', (init) => {
+  events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile })
   })
 
