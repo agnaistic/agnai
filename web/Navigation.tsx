@@ -4,6 +4,7 @@ import {
   Book,
   Bot,
   Github,
+  HeartHandshake,
   Info,
   LogIn,
   LogOut,
@@ -72,35 +73,50 @@ const Navigation: Component = () => {
 
 const UserNavigation: Component = () => {
   const user = userStore()
+  const cfg = settingStore()
 
   return (
     <>
       <Item href="/profile">
         <User /> Profile
       </Item>
+
       <Item href="/character/list">
         <Bot /> Characters
       </Item>
+
       <Item href="/chats">
         <MessageCircle /> Chats
       </Item>
+
       <Item href="/memory">
         <Book /> Memory
       </Item>
+
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
       </Item>
+
       <Item href="/settings">
         <Settings /> Settings
       </Item>
+
       <Item href="/presets">
         <Sliders /> Presets
       </Item>
+
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics">
           <Activity /> Metrics
         </Item>
       </Show>
+
+      <Show when={cfg.config.patreon}>
+        <ExternalLink href="https://patreon.com/Agnaistic" newtab>
+          <HeartHandshake /> Patreon
+        </ExternalLink>
+      </Show>
+
       <Item href="/info">
         <Info />
         Information
@@ -144,19 +160,21 @@ const GuestNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
 
+      <Show when={menu.config.patreon}>
+        <ExternalLink href="https://patreon.com/Agnaistic" newtab>
+          <HeartHandshake /> Patreon
+        </ExternalLink>
+      </Show>
+
       <Item href="/info">
         <Info />
         Information
       </Item>
 
-      <a
-        class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
-        href="https://github.com/agnaistic/agnai"
-        target="_blank"
-      >
+      <ExternalLink href="https://github.com/agnaistic/agnai" newtab>
         <Github />
         GitHub
-      </a>
+      </ExternalLink>
     </>
   )
 }
@@ -188,3 +206,13 @@ const InviteBadge: Component = () => {
 }
 
 export default Navigation
+
+const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
+  <a
+    class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
+    href={props.href}
+    target={props.newtab ? '_blank' : ''}
+  >
+    {props.children}
+  </a>
+)

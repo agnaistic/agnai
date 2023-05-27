@@ -31,7 +31,7 @@ process.on('SIGTERM', () => {
 })
 
 async function initDb() {
-  if (config.maintenance) {
+  if (config.ui.maintenance) {
     logger.warn(`Maintenance mode enabled: Will not connect to database`)
     return
   }

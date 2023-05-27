@@ -247,6 +247,7 @@ export namespace AppSchema {
     selfhosting: boolean
     registered: Array<Omit<RegisteredAdapter, 'contextLimit'>>
     maintenance?: string
+    patreon?: boolean
   }
 
   export interface MemoryBook {
