@@ -197,7 +197,7 @@ const InviteUser: Component<{ setView: (view: View) => {} }> = (props) => {
     if (!state.active?.chat) return
     const chatId = state.active.chat._id
     const body = getStrictForm(ref, { userId: 'string' })
-    if (body.userId) {
+    if (!body.userId) {
       toastStore.warn('No user ID provided')
       return
     }
