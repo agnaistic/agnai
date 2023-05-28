@@ -47,6 +47,10 @@ import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
 import CreateChatModal from './CreateChat'
 import TagSelect from '../../shared/TagSelect'
+import { Accessor } from 'solid-js'
+import extract from 'png-chunks-extract'
+import encode from 'png-chunks-encode'
+import text from 'png-chunk-text'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -581,6 +585,8 @@ const formats = [
   { value: 'sbf', label: 'Square Bracket Format' },
 ]
 
+type CharacterFileType = 'png' | 'json'
+
 /**
  * WIP: Enable downloading characters in different persona formats for different application targets
  */
@@ -599,8 +605,13 @@ export const DownloadModal: Component<{
   )
 
   const [format, setFormat] = createSignal('native')
+  const [fileType, setFileType] = createSignal<CharacterFileType>('png')
   const [schema, setSchema] = createSignal(opts()[0].value)
 
+  const fileTypeItems: Accessor<{ value: CharacterFileType; label: string }[]> = createMemo(() => [
+    ...(props.char?.avatar ? [{ value: 'png' as const, label: 'PNG' }] : []),
+    { value: 'json' as const, label: 'JSON' },
+  ])
   return (
     <Modal
       show={props.show && !!props.char}
@@ -613,17 +624,26 @@ export const DownloadModal: Component<{
       }
     >
       <form ref={ref} class="flex flex-col gap-4">
-        <Select
-          label="Output Format"
-          fieldName="app"
-          value={format()}
-          items={[
-            { value: 'native', label: 'Agnaistic' },
-            { value: 'tavern', label: 'TavernAI' },
-            { value: 'ooba', label: 'Textgen' },
-          ]}
-          onChange={(item) => setFormat(item.value)}
-        />
+        <div class="flex flex-row gap-3">
+          <Select
+            label="Output Format"
+            fieldName="app"
+            value={format()}
+            items={[
+              { value: 'native', label: 'Agnaistic' },
+              { value: 'tavern', label: 'TavernAI' },
+              { value: 'ooba', label: 'Textgen' },
+            ]}
+            onChange={(item) => setFormat(item.value)}
+          />
+          <Select
+            label="File type"
+            fieldName="fileType"
+            value={fileType()}
+            items={fileTypeItems()}
+            onChange={(item) => setFileType(item.value as CharacterFileType)}
+          />
+        </div>
         <div class="flex">
           <Select
             label="Persona Format"
@@ -636,21 +656,69 @@ export const DownloadModal: Component<{
           />
         </div>
         <div class="flex w-full justify-center">
-          <a
-            href={`data:text/json:charset=utf-8,${encodeURIComponent(
-              charToJson(props.char!, format(), schema())
-            )}`}
-            download={`${props.char!.name}.json`}
-          >
-            <Button>
-              <Save />
-              Download
-            </Button>
-          </a>
+          {(() => {
+            const charJson = charToJson(props.char!, format(), schema())
+            switch (fileType()) {
+              case 'json':
+                return (
+                  <a
+                    href={`data:text/json:charset=utf-8,${encodeURIComponent(charJson)}`}
+                    download={`${props.char!.name}.json`}
+                  >
+                    <Button>
+                      <Save /> Download
+                    </Button>
+                  </a>
+                )
+
+              case 'png':
+                return (
+                  <Button
+                    onClick={() => downloadPng(charJson, props.char!.avatar!, props.char!.name)}
+                  >
+                    <Save /> Download
+                  </Button>
+                )
+            }
+          })()}
         </div>
       </form>
     </Modal>
   )
+}
+
+function downloadPng(charJson: string, charImgUrl: string, charName: string) {
+  // Create a new image element
+  const imgElement = document.createElement('img')
+  imgElement.src = charImgUrl
+  imgElement.onload = () => {
+    const imgDataUrl = imgToPngDataUrl(imgElement)
+    const imgBase64Data = imgDataUrl.split(',')[1]
+    const imgBuffer = Buffer.from(atob(imgBase64Data), 'binary')
+    const chunksNo_tEXt = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
+    const base64EncodedJson = Buffer.from(charJson, 'utf8').toString('base64')
+    const lastChunkIndex = chunksNo_tEXt.length - 1
+    const chunksToExport = [
+      ...chunksNo_tEXt.slice(0, lastChunkIndex),
+      text.encode('chara', base64EncodedJson),
+      chunksNo_tEXt[lastChunkIndex],
+    ]
+    const downloadLink = document.createElement('a')
+    downloadLink.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
+    downloadLink.download = charName + '.card.png'
+    downloadLink.click()
+    URL.revokeObjectURL(downloadLink.href)
+  }
+}
+
+function imgToPngDataUrl(imgElement: HTMLImageElement) {
+  const canvas = document.createElement('canvas')
+  canvas.width = imgElement.naturalWidth
+  canvas.height = imgElement.naturalHeight
+  const ctx = canvas.getContext('2d')
+  ctx?.drawImage(imgElement, 0, 0)
+  const dataUrl = canvas.toDataURL('image/png')
+  return dataUrl
 }
 
 function charToJson(char: AppSchema.Character, format: string, schema: string) {

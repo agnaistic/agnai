@@ -59,7 +59,10 @@ const Navigation: Component = () => {
               avatarUrl={user.profile?.avatar}
               format={{ corners: 'circle', size: 'md' }}
             />
-            <span class="ellipsis">{user.profile?.handle}</span>
+            <span class="ellipsis">
+              {user.profile?.handle}
+              {state.flags.charv2 ? ' (dev)' : ''}
+            </span>
           </div>
           <div onClick={logout} class="icon-button cursor-pointer ">
             <LogOut />
