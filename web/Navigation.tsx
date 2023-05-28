@@ -22,7 +22,6 @@ const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
   const nav = useNavigate()
-  const devModeOn = createMemo(() => user.devMode ?? false)
 
   const logout = () => {
     nav('/')
@@ -62,7 +61,7 @@ const Navigation: Component = () => {
             />
             <span class="ellipsis">
               {user.profile?.handle}
-              {devModeOn() ? ' (dev)' : ''}
+              {state.flags.charv2 ? ' (dev)' : ''}
             </span>
           </div>
           <div onClick={logout} class="icon-button cursor-pointer ">

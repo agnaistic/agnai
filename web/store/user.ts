@@ -11,7 +11,6 @@ import { toastStore } from './toasts'
 
 const UI_KEY = 'ui-settings'
 const BACKGROUND_KEY = 'ui-bg'
-const DEVMODE_KEY = 'dev-mode'
 
 export type UISettings = {
   theme: ThemeColor
@@ -73,7 +72,6 @@ export type UserState = {
     openaiUsage?: number
   }
   oaiUsageLoading: boolean
-  devMode?: boolean
 }
 
 export type ThemeColor = (typeof UI_THEME)[number]
@@ -211,11 +209,6 @@ export const userStore = createStore<UserState>(
       return { background: file.content }
     },
 
-    setDevMode(_, devMode: boolean) {
-      setDevMode(devMode)
-      return { devMode }
-    },
-
     async deleteKey(
       { user },
       kind: 'novel' | 'horde' | 'openai' | 'scale' | 'claude' | 'third-party' | 'elevenlabs'
@@ -285,7 +278,6 @@ function init(): UserState {
   const existing = getAuth()
   const ui = getUIsettings()
   const background = localStorage.getItem(BACKGROUND_KEY) || undefined
-  const devMode = loadDevMode()
 
   updateTheme(ui)
 
@@ -298,7 +290,6 @@ function init(): UserState {
       background,
       oaiUsageLoading: false,
       metadata: {},
-      devMode,
     }
   }
 
@@ -358,24 +349,4 @@ function setBackground(content: any) {
   }
 
   localStorage.setItem(BACKGROUND_KEY, content)
-}
-
-function setDevMode(devMode: boolean) {
-  localStorage.setItem(DEVMODE_KEY, JSON.stringify(devMode))
-}
-
-function loadDevMode() {
-  const storedVal = localStorage.getItem(DEVMODE_KEY) || 'false'
-  try {
-    const devModeVal = JSON.parse(storedVal)
-    if (typeof devModeVal === 'boolean') {
-      return devModeVal
-    } else {
-      console.log(`Unexpected devMode value: `, devModeVal)
-      return false
-    }
-  } catch (err) {
-    console.log(`Error loading devMode value [${storedVal}]: `, err)
-    return false
-  }
 }

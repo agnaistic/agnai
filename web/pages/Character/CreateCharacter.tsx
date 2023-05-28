@@ -48,9 +48,19 @@ const options = [
 ]
 
 const CreateCharacter: Component = () => {
-  const user = userStore()
-  const devModeOn = createMemo(() => user.devMode ?? false)
-  return devModeOn() ? <CreateCharacterV2 /> : <CreateCharacterV1 />
+  const state = settingStore()
+
+  return (
+    <>
+      <Show when={state.flags.charv2}>
+        <CreateCharacterV2 />
+      </Show>
+
+      <Show when={!state.flags.charv2}>
+        <CreateCharacterV1 />
+      </Show>
+    </>
+  )
 }
 
 const CreateCharacterV1: Component = () => {
