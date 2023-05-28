@@ -69,7 +69,6 @@ const ChatDetail: Component = () => {
   const [removeId, setRemoveId] = createSignal('')
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
-  const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
 
   const chatMsgs = createMemo(() => {
     return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
@@ -156,11 +155,6 @@ const ChatDetail: Component = () => {
       switch (message) {
         case '/devCycleAvatarSettings':
           devCycleAvatarSettings(user)
-          onSuccess?.()
-          return
-
-        case '/devShowOocToggle':
-          setShowOOCOpts(!showOOCOpts())
           onSuccess?.()
           return
       }
@@ -276,7 +270,7 @@ const ChatDetail: Component = () => {
               char={chats.char}
               ooc={ooc() ?? chats.members.length > 1}
               setOoc={setOoc}
-              showOocToggle={showOOCOpts() || chats.members.length > 1}
+              showOocToggle={chats.members.length > 1}
               request={requestMessage}
               bots={chats.chatBots}
             />
