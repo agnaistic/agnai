@@ -89,7 +89,9 @@ const SingleMessage: Component<
   const isUser = createMemo(() => !!props.msg.userId)
   const isImage = createMemo(() => props.original.adapter === 'image')
   const [img, setImg] = createSignal('h-full')
-  const [obs] = createSignal(new ResizeObserver(() => setImg(avatarRef?.clientHeight + 'px')))
+  const [obs] = createSignal(
+    new ResizeObserver(() => setImg(Math.min(avatarRef?.clientHeight, 10000) + 'px'))
+  )
 
   onMount(() => {
     obs().observe(avatarRef)
