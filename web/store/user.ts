@@ -364,7 +364,7 @@ function setDevMode(devMode: boolean) {
   localStorage.setItem(DEVMODE_KEY, JSON.stringify(devMode))
 }
 
-function loadDevMode () {
+function loadDevMode() {
   const storedVal = localStorage.getItem(DEVMODE_KEY) || 'false'
   try {
     const devModeVal = JSON.parse(storedVal)
