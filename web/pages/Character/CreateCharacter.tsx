@@ -283,6 +283,12 @@ const CreateCharacter: Component = () => {
                 <TextInput
                   fieldName="imagePrompt"
                   placeholder='Image prompt: Leave empty to use "looks / "appearance"'
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter') {
+                      ev.preventDefault()
+                      generateAvatar()
+                    }
+                  }}
                 />
                 <Button class="w-fit" onClick={generateAvatar}>
                   Generate
