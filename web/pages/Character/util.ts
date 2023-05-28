@@ -1,4 +1,5 @@
 import { AppSchema } from '/srv/db/schema'
+import { safeLocalStorage } from '/web/shared/util'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -108,7 +109,7 @@ export function groupAndSort(
 }
 
 export function getListCache(): ListCache {
-  const existing = localStorage.getItem(CACHE_KEY)
+  const existing = safeLocalStorage.getItem(CACHE_KEY)
   const defaultCache: ListCache = { sort: { field: 'chat-updated', direction: 'desc' } }
 
   if (!existing) {
@@ -119,5 +120,5 @@ export function getListCache(): ListCache {
 }
 
 export function saveListCache(cache: ListCache) {
-  localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+  safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cache))
 }

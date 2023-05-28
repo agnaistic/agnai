@@ -3,6 +3,7 @@ import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
+import { safeLocalStorage } from '../shared/util'
 import { api } from './api'
 import { characterStore } from './character'
 import { createStore, getStore } from './create'
@@ -94,7 +95,7 @@ const EDITING_KEY = 'chat-detail-settings'
 
 export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
-  lastChatId: localStorage.getItem('lastChatId'),
+  lastChatId: safeLocalStorage.getItem('lastChatId'),
   loaded: false,
   chatProfiles: [],
   chatBots: [],
@@ -156,7 +157,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
-        localStorage.setItem('lastChatId', id)
+        safeLocalStorage.setItem('lastChatId', id)
 
         msgStore.setState({
           msgs: res.result.messages,
@@ -531,12 +532,12 @@ type ChatOptCache = { editing: boolean; hideOoc: boolean }
 
 function saveOptsCache(cache: ChatOptCache) {
   const prev = getOptsCache()
-  localStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
+  safeLocalStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
 }
 
 function getOptsCache(): ChatOptCache {
   const prev =
-    localStorage.getItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
+    safeLocalStorage.getItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
   const body = JSON.parse(prev)
   return { editing: false, hideOoc: false, ...body, modal: undefined }
 }
