@@ -2,21 +2,42 @@ import { Component, Show, createEffect, createMemo, createSignal } from 'solid-j
 import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import Button from '../../../shared/Button'
-import Select, { Option } from '../../../shared/Select'
-import { RefreshCw, Save, X } from 'lucide-solid'
+import { Option } from '../../../shared/Select'
+import { Save, X } from 'lucide-solid'
 import Modal from '../../../shared/Modal'
 import MultiDropdown from '../../../shared/MultiDropdown'
 import { HordeModel, HordeWorker } from '../../../../common/adapters'
 import { Toggle } from '../../../shared/Toggle'
+import { toArray } from '/common/util'
 
 const HordeAISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
+  onHordeModelsChange: (models: string[]) => void
 }> = (props) => {
-  const state = userStore()
-  const cfg = settingStore()
+  const state = userStore((s) => ({
+    workers: toArray(s.user?.hordeWorkers),
+    models: toArray(s.user?.hordeModel),
+    user: s.user,
+  }))
 
   const [workers, setWorkers] = createSignal<Option[]>()
+  const [models, setModels] = createSignal<Option[]>()
+  const [showModels, setShowModels] = createSignal(false)
   const [show, setShow] = createSignal(false)
+
+  const selectedModels = createMemo(() => {
+    const selected = models()
+    if (selected?.length) {
+      return selected.map((m) => m.value).join(', ')
+    }
+
+    return state.models.join(', ')
+  })
+
+  const onSaveHordeModels = (options: Option[]) => {
+    setModels(options)
+    props.onHordeModelsChange(options.map((o) => o.value))
+  }
 
   const onSaveHordeWorkers = (options: Option[]) => {
     setWorkers(options)
@@ -79,31 +100,79 @@ const HordeAISettings: Component<{
         </Button>
       </Show>
 
-      <div class="flex justify-between">
-        <div class="w-fit">
-          <Select
-            fieldName="hordeModel"
-            helperText={<span>Currently set to: {state.user?.hordeModel || 'None'}</span>}
-            label="Horde Model"
-            value={state.user?.hordeModel}
-            items={[{ label: 'Any', value: 'any' }].concat(...cfg.models.map(toItem))}
-          />
-        </div>
-        <div class="icon-button flex items-center" onClick={refreshHorde}>
-          <RefreshCw />
-        </div>
+      <div class="flex items-center gap-4">
+        <Button onClick={() => setShowModels(true)}>Select Horde Models</Button>
+        <div>Models selected: {selectedModels()}</div>
       </div>
       <div class="flex items-center gap-4">
         <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
-        <div>Workers selected: {workers()?.length ?? state.user?.hordeWorkers?.length ?? '0'}</div>
+        <div>Workers selected: {workers()?.length ?? state.workers.length}</div>
       </div>
 
+      <ModelModal show={showModels()} close={() => setShowModels(false)} save={onSaveHordeModels} />
       <WorkerModal show={show()} close={() => setShow(false)} save={onSaveHordeWorkers} />
     </>
   )
 }
 
 export default HordeAISettings
+
+const ModelModal: Component<{
+  show: boolean
+  close: () => void
+  save: (items: Option[]) => void
+}> = (props) => {
+  const cfg = settingStore((s) => ({
+    models: s.models.slice().map(toItem),
+  }))
+
+  const state = userStore((s) => ({
+    models: toArray(s.user?.hordeModel),
+  }))
+
+  const [selected, setSelected] = createSignal<Option[]>()
+
+  const save = () => {
+    if (selected()) {
+      props.save(selected()!)
+    }
+    props.close()
+  }
+
+  return (
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Specify AI Horde Models"
+      footer={
+        <>
+          <Button schema="secondary" onClick={props.close}>
+            <X /> Cancel
+          </Button>
+          <Button onClick={save}>
+            <Save /> Select Model(s)
+          </Button>
+        </>
+      }
+    >
+      <div class="flex flex-col gap-4 text-sm">
+        <MultiDropdown
+          fieldName="workers"
+          items={cfg.models}
+          label="Select Model(s)"
+          onChange={setSelected}
+          values={selected()?.map((s) => s.value) || state.models}
+        />
+        <div class="flex items-center justify-between gap-4">
+          <div>Models selected: {selected()?.length || state.models.length || '0'}</div>
+          <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
+            De-select All
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  )
+}
 
 const WorkerModal: Component<{
   show: boolean

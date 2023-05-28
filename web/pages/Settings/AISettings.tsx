@@ -16,6 +16,7 @@ import RegisteredSettings from './components/RegisteredSettings'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
+  onHordeModelsChange: (models: string[]) => void
 }> = (props) => {
   const state = userStore()
   const cfg = settingStore()
@@ -68,7 +69,10 @@ const AISettings: Component<{
       </Show>
 
       <div class={currentTab() === 'horde' ? tabClass : 'hidden'}>
-        <HordeAISettings onHordeWorkersChange={props.onHordeWorkersChange} />
+        <HordeAISettings
+          onHordeWorkersChange={props.onHordeWorkersChange}
+          onHordeModelsChange={props.onHordeModelsChange}
+        />
       </div>
 
       <div class={currentTab() === 'kobold' ? tabClass : 'hidden'}>

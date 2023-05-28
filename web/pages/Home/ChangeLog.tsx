@@ -4,6 +4,12 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_20-28 May 2023_
+- Remember chat input "drafts"
+- Add PNG character card export format
+- Add NovelAI Clio, text-to-speech and chat summarisation for images
+- Allow multiple horde models to be selected
+
 _19 May 2023_
 - Image retry uses previous prompt (only applies to new images)
 - Clicking an avatar in chat opens the avatar in the image viewer modal

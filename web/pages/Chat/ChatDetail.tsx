@@ -303,7 +303,7 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
               <div id="chat-messages" class="flex flex-col gap-2">
                 <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">

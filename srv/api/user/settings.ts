@@ -14,6 +14,7 @@ import { v4 } from 'uuid'
 import { getRegisteredAdapters } from '/srv/adapter/register'
 import { AIAdapter } from '/common/adapters'
 import { config } from '/srv/config'
+import { toArray } from '/common/util'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const [profile, user, presets, config, books] = await Promise.all([
@@ -109,6 +110,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       hordeApiKey: 'string?',
       hordeKey: 'string?',
       hordeModel: 'string?',
+      hordeModels: ['string?'],
       luminaiUrl: 'string?',
       hordeWorkers: ['string'],
       oaiKey: 'string?',
@@ -134,6 +136,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
     hordeWorkers: body.hordeWorkers,
     hordeUseTrusted: body.hordeUseTrusted ?? false,
     defaultPreset: body.defaultPreset || '',
+    hordeModel: body.hordeModels || toArray(body.hordeModel),
   }
 
   if (body.hordeKey || body.hordeApiKey) {
