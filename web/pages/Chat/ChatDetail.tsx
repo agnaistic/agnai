@@ -53,6 +53,11 @@ const ChatDetail: Component = () => {
     speaking: s.speaking,
   }))
 
+  const isGroupChat = createMemo(() => {
+    if (!chats.participantIds?.length) return false
+    return true
+  })
+
   createEffect(() => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName}` : 'Chat')
@@ -268,9 +273,9 @@ const ChatDetail: Component = () => {
               send={sendMessage}
               more={moreMessage}
               char={chats.char}
-              ooc={ooc() ?? chats.members.length > 1}
+              ooc={ooc() ?? isGroupChat()}
               setOoc={setOoc}
-              showOocToggle={chats.members.length > 1}
+              showOocToggle={isGroupChat()}
               request={requestMessage}
               bots={chats.chatBots}
             />
@@ -297,7 +302,7 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll">
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
               <div id="chat-messages" class="flex flex-col gap-2">
                 <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">
