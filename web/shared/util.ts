@@ -15,9 +15,71 @@ type FormRef = {
     | 'boolean?'
 }
 
+export const safeLocalStorage = {
+  getItem(key: string) {
+    try {
+      return localStorage.getItem(key)
+    } catch {
+      return null
+    }
+  },
+
+  key(index: number) {
+    try {
+      return localStorage.key(index)
+    } catch {
+      return null
+    }
+  },
+
+  setItem(key: string, value: string) {
+    try {
+      localStorage.setItem(key, value)
+    } catch (e: any) {
+      console.warn('Failed to set local storage item', key, value, e)
+    }
+  },
+
+  setItemUnsafe(key: string, value: string) {
+    localStorage.setItem(key, value)
+  },
+
+  removeItem(key: string) {
+    try {
+      localStorage.removeItem(key)
+    } catch (e: any) {
+      console.warn('Failed to remove local storage item', key, e)
+    }
+  },
+
+  removeItemUnsafe(key: string) {
+    localStorage.removeItem(key)
+  },
+
+  clear() {
+    try {
+      localStorage.clear()
+    } catch (e: any) {
+      console.warn('Failed to clear local storage item', e)
+    }
+  },
+
+  clearUnsafe() {
+    localStorage.clear()
+  },
+
+  test() {
+    const TEST_KEY = '___TEST'
+    localStorage.setItem(TEST_KEY, 'ok')
+    const value = localStorage.getItem(TEST_KEY)
+    localStorage.removeItem(TEST_KEY)
+    if (value !== 'ok') throw new Error('Failed to retreive set local storage item')
+  },
+}
+
 const PREFIX_CACHE_KEY = 'agnai-asset-prefix'
 
-let assetPrefix: string = localStorage.getItem(PREFIX_CACHE_KEY) || ''
+let assetPrefix: string = safeLocalStorage.getItem(PREFIX_CACHE_KEY) || ''
 
 export function getAssetPrefix() {
   return assetPrefix
@@ -43,7 +105,7 @@ export function getAssetUrl(filename: string) {
 }
 
 export function setAssetPrefix(prefix: string) {
-  localStorage.setItem(PREFIX_CACHE_KEY, prefix)
+  safeLocalStorage.setItem(PREFIX_CACHE_KEY, prefix)
   assetPrefix = prefix
 }
 

@@ -1,7 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
-import { hexToRgb } from '../shared/util'
+import { hexToRgb, safeLocalStorage } from '../shared/util'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -195,18 +195,26 @@ export const userStore = createStore<UserState>(
 
     updateUI({ ui }, update: Partial<UISettings>) {
       const next = { ...ui, ...update }
-      updateTheme(next)
+      try {
+        updateTheme(next)
+      } catch (e: any) {
+        toastStore.error(`Failed to save UI settings: ${e.message}`)
+      }
       return { ui: next }
     },
 
     setBackground(_, file: FileInputResult | null) {
-      if (!file) {
-        setBackground(null)
-        return { background: undefined }
-      }
+      try {
+        if (!file) {
+          setBackground(null)
+          return { background: undefined }
+        }
 
-      setBackground(file.content)
-      return { background: file.content }
+        setBackground(file.content)
+        return { background: file.content }
+      } catch (e: any) {
+        toastStore.error(`Failed to set background: ${e.message}`)
+      }
     },
 
     async deleteKey(
@@ -239,18 +247,22 @@ export const userStore = createStore<UserState>(
     },
 
     clearGuestState() {
-      const chats = localApi.loadItem('chats')
-      for (const chat of chats) {
-        localStorage.removeItem(`messages-${chat._id}`)
-      }
+      try {
+        const chats = localApi.loadItem('chats')
+        for (const chat of chats) {
+          safeLocalStorage.removeItem(`messages-${chat._id}`)
+        }
 
-      for (const key in localApi.KEYS) {
-        localStorage.removeItem(key)
-        localApi.loadItem(key as any)
-      }
+        for (const key in localApi.KEYS) {
+          safeLocalStorage.removeItem(key)
+          localApi.loadItem(key as any)
+        }
 
-      toastStore.error(`Guest state successfully reset`)
-      userStore.logout()
+        toastStore.error(`Guest state successfully reset`)
+        userStore.logout()
+      } catch (e: any) {
+        toastStore.error(`Failed to reset guest state: ${e.message}`)
+      }
     },
     async *openaiUsage({ metadata, user }) {
       yield { oaiUsageLoading: true }
@@ -276,8 +288,15 @@ export const userStore = createStore<UserState>(
 
 function init(): UserState {
   const existing = getAuth()
+
+  try {
+    safeLocalStorage.test()
+  } catch (e: any) {
+    toastStore.error(`localStorage unavailable: ${e.message}`)
+  }
+
   const ui = getUIsettings()
-  const background = localStorage.getItem(BACKGROUND_KEY) || undefined
+  const background = safeLocalStorage.getItem(BACKGROUND_KEY) || undefined
 
   updateTheme(ui)
 
@@ -305,7 +324,7 @@ function init(): UserState {
 }
 
 function updateTheme(ui: UISettings) {
-  localStorage.setItem(UI_KEY, JSON.stringify(ui))
+  safeLocalStorage.setItem(UI_KEY, JSON.stringify(ui))
   const root = document.documentElement
   for (let shade = 100; shade <= 900; shade += 100) {
     const num = ui.mode === 'light' ? 1000 - shade : shade
@@ -330,10 +349,10 @@ function updateTheme(ui: UISettings) {
 }
 
 function getUIsettings() {
-  const json = localStorage.getItem(UI_KEY) || JSON.stringify(defaultUIsettings)
+  const json = safeLocalStorage.getItem(UI_KEY) || JSON.stringify(defaultUIsettings)
   const settings: UISettings = JSON.parse(json)
-  const theme = (localStorage.getItem('theme') || settings.theme) as ThemeColor
-  localStorage.removeItem('theme')
+  const theme = (safeLocalStorage.getItem('theme') || settings.theme) as ThemeColor
+  safeLocalStorage.removeItem('theme')
 
   if (theme && UI_THEME.includes(theme)) {
     settings.theme = theme
@@ -344,9 +363,9 @@ function getUIsettings() {
 
 function setBackground(content: any) {
   if (content === null) {
-    localStorage.removeItem(BACKGROUND_KEY)
+    safeLocalStorage.removeItemUnsafe(BACKGROUND_KEY)
     return
   }
 
-  localStorage.setItem(BACKGROUND_KEY, content)
+  safeLocalStorage.setItemUnsafe(BACKGROUND_KEY, content)
 }
