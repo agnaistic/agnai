@@ -467,3 +467,18 @@ export function appendFormOptional(
   if (stringify) form.append(key, stringify(value))
   else form.append(key, value as string | File)
 }
+
+/**
+ * Like `appendFormOptional`, but does append the value if it is an empty string.
+ * This might be what we want `appendFormOptional` to be, but I'm scared of breaking things.
+ */
+export function appendFormOptional_<T>(
+  form: FormData,
+  key: string,
+  value: T,
+  stringify?: (v: T) => string
+) {
+  if (value === null || value === undefined) return
+  if (stringify) form.append(key, stringify(value))
+  else form.append(key, value as string | File)
+}

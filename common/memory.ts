@@ -122,3 +122,92 @@ function prep(str: string, safe?: boolean) {
   if (!safe) return next
   return next.toLowerCase().replace(/\-/g, '\\-')
 }
+
+export const BUNDLED_CHARACTER_BOOK_ID = 'characterBook3872489385'
+
+export const characterBookToAgnaiMemory = (cb: CharacterBook): AppSchema.MemoryBook => ({
+  kind: 'memory',
+  _id: BUNDLED_CHARACTER_BOOK_ID,
+  name: cb.name ?? 'Character book',
+  description: cb.description ?? '',
+  userId: 'characterBook',
+  entries: cb.entries.map((cbEntry) => ({
+    name: cbEntry.name ?? 'Unnamed',
+    entry: cbEntry.content,
+    keywords: cbEntry.keys,
+    priority: cbEntry.priority ?? 100,
+    weight: cbEntry.insertion_order ?? 100,
+    enabled: cbEntry.enabled,
+
+    // currently unsupported V2 fields which are here so that we don't destroy them
+    id: cbEntry.id,
+    comment: cbEntry.comment,
+    selective: cbEntry.selective,
+    secondaryKeys: cbEntry.secondary_keys,
+    constant: cbEntry.constant,
+    position: cbEntry.position,
+  })),
+
+  // currently unsupported V2 fields which are here so that we don't destroy them
+  scanDepth: cb.scan_depth,
+  tokenBudget: cb.token_budget,
+  recursiveScanning: cb.recursive_scanning,
+  extensions: cb.extensions,
+})
+
+export const agnaiMemoryToCharacterBook = (memory: AppSchema.MemoryBook): CharacterBook => ({
+  name: memory.name,
+  description: memory.description,
+  entries: memory.entries.map((memoryEntry) => ({
+    keys: memoryEntry.keywords,
+    content: memoryEntry.entry,
+    extensions: {},
+    enabled: memoryEntry.enabled,
+    insertion_order: memoryEntry.weight,
+    name: memoryEntry.name,
+    priority: memoryEntry.priority,
+
+    // currently unsupported V2 fields which are here so that we don't destroy them
+    id: memoryEntry.id,
+    comment: memoryEntry.comment,
+    selective: memoryEntry.selective,
+    secondary_keys: memoryEntry.secondaryKeys,
+    constant: memoryEntry.constant,
+    position: memoryEntry.position,
+  })),
+
+  // currently unsupported V2 fields which are here so that we don't destroy them
+  extensions: memory.extensions ?? {},
+  scan_depth: memory.scanDepth,
+  token_budget: memory.tokenBudget,
+  recursive_scanning: memory.recursiveScanning,
+})
+
+export type CharacterBook = {
+  name?: string
+  description?: string
+  scan_depth?: number // agnai: "Memory: Chat History Depth"
+  token_budget?: number // agnai: "Memory: Context Limit"
+  recursive_scanning?: boolean // no agnai equivalent. whether entry content can trigger other entries
+  extensions: Record<string, any>
+  entries: Array<{
+    keys: Array<string>
+    content: string
+    extensions: Record<string, any>
+    enabled: boolean
+    insertion_order: number // if two entries inserted, lower "insertion order" = inserted higher
+    case_sensitive?: boolean
+
+    // FIELDS WITH NO CURRENT EQUIVALENT IN SILLY
+    name?: string // not used in prompt engineering
+    priority?: number // if token budget reached, lower priority value = discarded first
+
+    // FIELDS WITH NO CURRENT EQUIVALENT IN AGNAI
+    id?: number // not used in prompt engineering
+    comment?: string // not used in prompt engineering
+    selective?: boolean // if `true`, require a key from both `keys` and `secondary_keys` to trigger the entry
+    secondary_keys?: Array<string> // see field `selective`. ignored if selective == false
+    constant?: boolean // if true, always inserted in the prompt (within budget limit)
+    position?: 'before_char' | 'after_char' // whether the entry is placed before or after the character defs
+  }>
+}

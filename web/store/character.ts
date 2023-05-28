@@ -26,7 +26,21 @@ type CharacterState = {
 }
 
 export type NewCharacter = UpdateCharacter &
-  Pick<AppSchema.Character, 'name' | 'greeting' | 'scenario' | 'sampleChat' | 'persona'> & {
+  Pick<
+    AppSchema.Character,
+    | 'name'
+    | 'greeting'
+    | 'scenario'
+    | 'sampleChat'
+    | 'persona'
+    | 'alternateGreetings'
+    | 'characterBook'
+    | 'extensions'
+    | 'systemPrompt'
+    | 'postHistoryInstructions'
+    | 'creator'
+    | 'characterVersion'
+  > & {
     originalAvatar: any
   }
 

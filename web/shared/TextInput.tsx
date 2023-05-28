@@ -20,7 +20,9 @@ const TextInput: Component<{
   onKeyUp?: (
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
-  onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
+  onChange?: (
+    ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
 
   service?: AIAdapter
   aiSetting?: keyof PresetAISettings
@@ -93,6 +95,7 @@ const TextInput: Component<{
           }
           disabled={props.disabled}
           onKeyUp={(ev) => props.onKeyUp?.(ev)}
+          onchange={(ev) => props.onChange?.(ev)}
           onInput={resize}
         />
       </Show>

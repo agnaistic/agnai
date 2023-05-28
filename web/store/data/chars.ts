@@ -3,7 +3,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import { api, isLoggedIn } from '../api'
 import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'
-import { appendFormOptional } from '/web/shared/util'
+import { appendFormOptional, appendFormOptional_ } from '/web/shared/util'
 
 export const charsApi = {
   getCharacters,
@@ -103,6 +103,14 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
     appendFormOptional(form, 'sampleChat', char.sampleChat)
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
     appendFormOptional(form, 'avatar', file)
+    // v2 fields start here
+    appendFormOptional(form, 'alternateGreetings', char.alternateGreetings, JSON.stringify)
+    appendFormOptional(form, 'characterBook', char.characterBook, JSON.stringify)
+    appendFormOptional(form, 'extensions', char.extensions, JSON.stringify)
+    appendFormOptional_(form, 'systemPrompt', char.systemPrompt)
+    appendFormOptional_(form, 'postHistoryInstructions', char.postHistoryInstructions)
+    appendFormOptional_(form, 'creator', char.creator)
+    appendFormOptional_(form, 'characterVersion', char.characterVersion)
 
     const res = await api.upload(`/character/${charId}`, form)
     return res
@@ -158,6 +166,14 @@ export async function createCharacter(char: NewCharacter) {
     appendFormOptional(form, 'avatar', char.avatar)
     appendFormOptional(form, 'originalAvatar', char.originalAvatar)
 
+    // v2 fields start here
+    appendFormOptional(form, 'alternateGreetings', char.alternateGreetings, JSON.stringify)
+    appendFormOptional(form, 'characterBook', char.characterBook, JSON.stringify)
+    appendFormOptional(form, 'extensions', char.extensions, JSON.stringify)
+    appendFormOptional(form, 'systemPrompt', char.systemPrompt)
+    appendFormOptional(form, 'postHistoryInstructions', char.postHistoryInstructions)
+    appendFormOptional(form, 'creator', char.creator)
+    appendFormOptional(form, 'characterVersion', char.characterVersion)
     const res = await api.upload<AppSchema.Character>(`/character`, form)
     return res
   }

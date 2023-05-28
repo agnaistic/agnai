@@ -3,7 +3,7 @@ import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS } from './adapters'
 import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
-import { buildMemoryPrompt } from './memory'
+import { agnaiMemoryToCharacterBook, buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
 
@@ -435,12 +435,46 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
   switch (target) {
     case 'tavern': {
       return {
+        // Backfilled V1 fields
+        // TODO: 2 months after V2 adoption, change every field with "This is
+        // a V2 card, update your frontend <link_with_more_details_goes_here>"
         name: char.name,
         first_mes: char.greeting,
         scenario: char.scenario,
-        personality: formatCharacter(char.name, char.persona),
         description: formatCharacter(char.name, char.persona),
+        personality: '',
         mes_example: char.sampleChat,
+
+        // V2 data
+        spec: 'chara_card_v2',
+        spec_version: '2.0',
+        data: {
+          name: char.name,
+          first_mes: char.greeting,
+          scenario: char.scenario,
+          description: formatCharacter(char.name, char.persona),
+          personality: '',
+          mes_example: char.sampleChat,
+
+          // new v2 fields
+          creator_notes: char.description ?? '',
+          system_prompt: char.systemPrompt ?? '',
+          post_history_instructions: char.postHistoryInstructions ?? '',
+          alternate_greetings: char.alternateGreetings ?? [],
+          character_book: char.characterBook
+            ? agnaiMemoryToCharacterBook(char.characterBook)
+            : undefined,
+          tags: char.tags ?? [],
+          creator: char.creator ?? '',
+          character_version: char.characterVersion ?? '',
+          extensions: {
+            ...(char.extensions ?? {}),
+            agnai: {
+              voice: char.voice,
+              persona: char.persona,
+            },
+          },
+        },
       }
     }
 

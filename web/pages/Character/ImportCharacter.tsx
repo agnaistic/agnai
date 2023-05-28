@@ -6,6 +6,8 @@ import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileIn
 import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractCardData } from './card-utils'
+import { characterBookToAgnaiMemory } from '/common/memory'
+import { formatCharacter } from '/common/prompt'
 import AvatarIcon from '/web/shared/AvatarIcon'
 
 const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
@@ -185,32 +187,7 @@ const ImportCharacterModal: Component<{
 
 export default ImportCharacterModal
 
-type ImportFormat = keyof typeof formatMaps | 'agnai'
-
-const formatMaps = {
-  tavern: {
-    name: 'name',
-    persona: ['description', 'personality'],
-    scenario: 'scenario',
-    greeting: 'first_mes',
-    sampleChat: 'mes_example',
-  },
-  ooba: {
-    name: 'char_name',
-    persona: ['char_persona'],
-    scenario: 'world_scenario',
-    greeting: 'char_greeting',
-    sampleChat: 'example_dialogue',
-  },
-} satisfies Record<string, ImportKeys>
-
-type ImportKeys = {
-  name: string
-  persona: string[]
-  greeting: string
-  scenario: string
-  sampleChat: string
-}
+type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai'
 
 function jsonToCharacter(json: any): NewCharacter {
   const format = getImportFormat(json)
@@ -219,33 +196,79 @@ function jsonToCharacter(json: any): NewCharacter {
     return json
   }
 
-  const map = formatMaps[format]
-
-  const persona = map.persona
-    .map((key) => json[key])
-    .filter((text) => !!text)
-    .join('\n')
-
-  const char: NewCharacter = {
-    name: json[map.name],
-    greeting: json[map.greeting],
-    persona: {
-      kind: 'text',
-      attributes: {
-        text: [persona],
+  if (format === 'ooba') {
+    return {
+      name: json.char_name,
+      greeting: json.char_greeting,
+      persona: {
+        kind: 'text',
+        attributes: {
+          text: [json.char_persona],
+        },
       },
-    },
-    sampleChat: json[map.sampleChat],
-    scenario: json[map.scenario],
-    originalAvatar: undefined,
+      sampleChat: json.example_dialogue,
+      scenario: json.world_scenario,
+      originalAvatar: undefined,
+    }
   }
 
-  return char
+  if (format === 'tavern') {
+    return {
+      name: json.name,
+      greeting: json.first_mes,
+      persona: {
+        kind: 'text',
+        attributes: {
+          text: [[json.description, json.personality].filter((text) => !!text).join('\n')],
+        },
+      },
+      sampleChat: json.mes_example,
+      scenario: json.scenario,
+      originalAvatar: undefined,
+    }
+  }
+
+  // format === 'tavernV2'
+  /** Tests, in the case we previously saved the lossless Agnai "Persona" data, whether the card has been edited in another application since then, causing the saved "Persona" data to be obsolete. */
+  const isSavedPersonaMissingOrOutdated =
+    json.data.extensions.agnai?.persona === undefined ||
+    formatCharacter(json.data.name, json.data.extensions.agnai?.persona) !== json.data.description
+
+  return {
+    name: json.data.name,
+    greeting: json.data.first_mes,
+    persona: isSavedPersonaMissingOrOutdated
+      ? {
+          kind: 'text',
+          attributes: {
+            text: [
+              [json.data.description, json.data.personality].filter((text) => !!text).join('\n'),
+            ],
+          },
+        }
+      : json.data.extensions.agnai.persona,
+    sampleChat: json.data.mes_example,
+    scenario: json.data.scenario,
+    originalAvatar: undefined,
+    alternateGreetings: json.data.alternate_greetings,
+    characterBook: json.data.character_book
+      ? characterBookToAgnaiMemory(json.data.character_book)
+      : undefined,
+    extensions: json.data.extensions,
+    systemPrompt: json.data.system_prompt,
+    postHistoryInstructions: json.data.post_history_instructions,
+    creator: json.data.creator,
+    characterVersion: json.data.character_version,
+    tags: json.data.tags,
+    description: json.data.creator_notes,
+    voice: json.data.extensions.agnai?.voice,
+  }
 }
 
 function getImportFormat(obj: any): ImportFormat {
   if (obj.kind === 'character' || isNative(obj)) return 'agnai'
   if ('char_name' in obj) return 'ooba'
+  if (obj.spec === 'chara_card_v2') return 'tavernV2'
   if ('mes_example' in obj) return 'tavern'
 
   throw new Error('Unknown import format')

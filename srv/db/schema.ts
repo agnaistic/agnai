@@ -178,6 +178,15 @@ export namespace AppSchema {
     favorite?: boolean
 
     voice?: VoiceSettings
+
+    // v2 stuff
+    alternateGreetings?: string[]
+    characterBook?: MemoryBook
+    extensions?: Record<string, any>
+    systemPrompt?: string
+    postHistoryInstructions?: string
+    creator?: string
+    characterVersion?: string
   }
 
   export interface ChatInvite {
@@ -276,6 +285,12 @@ export namespace AppSchema {
     description?: string
     userId: string
     entries: MemoryEntry[]
+
+    // currently unsupported V2 fields which are here so that we don't destroy them
+    scanDepth?: number
+    tokenBudget?: number
+    recursiveScanning?: boolean
+    extensions?: Record<string, any>
   }
 
   export interface MemoryEntry {
@@ -294,6 +309,14 @@ export namespace AppSchema {
     weight: number
 
     enabled: boolean
+
+    // currently unsupported V2 fields which are here so that we don't destroy them
+    id?: number
+    comment?: string
+    selective?: boolean
+    secondaryKeys?: Array<string>
+    constant?: boolean
+    position?: 'before_char' | 'after_char'
   }
 
   export interface VoiceDefinition {
