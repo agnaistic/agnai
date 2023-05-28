@@ -9,17 +9,17 @@ const Tabs: Component<{
   return (
     <div
       class={
-        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto ' + props.class ||
-        ''
+        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm ' +
+          props.class || ''
       }
     >
       <For each={props.tabs}>
         {(tab, i) => (
           <div
             onClick={() => props.select(i())}
-            class={`flex cursor-pointer items-center justify-center border-b-2 py-2 ${border(
+            class={`flex min-w-max cursor-pointer items-center justify-center border-b-2 py-2 ${border(
               props.selected() === i()
-            )} text-md rounded-t-md px-4`}
+            )} rounded-t-md px-4`}
           >
             {tab}
           </div>
