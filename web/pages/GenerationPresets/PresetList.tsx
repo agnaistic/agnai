@@ -18,8 +18,8 @@ const PresetList: Component = () => {
       .sort(sortByLabel),
   }))
 
-  const defaults = Object.values(defaultPresets)
-    .map((cfg) => ({ ...cfg, label: `[${cfg.service}] ${cfg.name}` }))
+  const defaults = Object.entries(defaultPresets)
+    .map(([id, cfg]) => ({ ...cfg, label: `[${cfg.service}] ${cfg.name}`, _id: id }))
     .sort(sortByLabel)
   const [deleting, setDeleting] = createSignal<string>()
 
@@ -89,7 +89,7 @@ const PresetList: Component = () => {
           {(preset) => (
             <div class="flex w-full items-center gap-2">
               <A
-                href={`/presets/default?preset=${preset.name}`}
+                href={`/presets/default?preset=${preset._id}`}
                 class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
               >
                 <div class="ml-4 flex w-full items-center">
@@ -103,7 +103,7 @@ const PresetList: Component = () => {
               <Button
                 schema="clear"
                 size="sm"
-                onClick={() => nav(`/presets/new?preset=${preset.name}`)}
+                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
                 class="icon-button"
               >
                 <Copy />
