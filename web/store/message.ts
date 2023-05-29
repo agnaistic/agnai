@@ -608,13 +608,10 @@ subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'stri
 })
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
-  const { retrying, msgs } = msgStore.getState()
+  const { msgs } = msgStore.getState()
   toastStore.error(`Failed to generate response: ${body.error}`)
 
   let nextMsgs = msgs
-  if (retrying) {
-    nextMsgs = msgs.concat(retrying)
-  }
 
   msgStore.setState({ partial: undefined, waiting: undefined, msgs: nextMsgs, retrying: undefined })
 })
