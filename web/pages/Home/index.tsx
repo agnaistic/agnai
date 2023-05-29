@@ -1,9 +1,10 @@
-import { Component } from 'solid-js'
+import { Component, Show } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { adaptersToOptions, setComponentPageTitle } from '../../shared/util'
 import { settingStore } from '../../store'
 import { markdown } from '../../shared/markdown'
 import { A } from '@solidjs/router'
+import { AlertTriangle } from 'lucide-solid'
 
 const text = `
 Agnaistic is in a fairly early stage of development. Bugs and some rough edges are expected. If you encounter an issue or have an idea you'd like to share you can head over to the [GitHub repository](https://github.com/agnaistic/agnai) and create an issue.
@@ -51,7 +52,10 @@ You can provide your API key and choose between Euterpe and Krake in the setting
 
 const HomePage: Component = () => {
   setComponentPageTitle('Information')
-  const cfg = settingStore((cfg) => ({ adapters: adaptersToOptions(cfg.config.adapters) }))
+  const cfg = settingStore((cfg) => ({
+    adapters: adaptersToOptions(cfg.config.adapters),
+    guest: cfg.guestAccessAllowed,
+  }))
   return (
     <div>
       <PageHeader
@@ -62,6 +66,14 @@ const HomePage: Component = () => {
         }
         subtitle={`Available services: ${cfg.adapters.map((adp) => adp.label).join(', ')}`}
       />
+
+      <Show when={!cfg.guest}>
+        <div class="flex text-orange-500">
+          <AlertTriangle class="mr-2 mb-2" />
+          Your browser does not support local storage. You will need to login/register to use
+          Agnaistic.
+        </div>
+      </Show>
 
       <div class="markdown">
         <b>Useful Links</b>

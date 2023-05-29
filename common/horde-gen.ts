@@ -1,6 +1,7 @@
 import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './default-preset'
 import { SD_SAMPLER } from './image'
+import { toArray } from './util'
 
 const HORDE_GUEST_KEY = '0000000000'
 const baseUrl = 'https://horde.koboldai.net/api/v2'
@@ -126,7 +127,8 @@ export async function generateText(
   }
 
   if (user.hordeModel && user.hordeModel !== 'any') {
-    body.models.push(user.hordeModel)
+    const models = toArray(user.hordeModel)
+    body.models.push(...models)
   }
 
   if (user.hordeWorkers?.length) {

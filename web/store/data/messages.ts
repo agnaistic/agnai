@@ -109,21 +109,13 @@ export async function generateResponseV2(opts: GenerateOpts) {
     console.log(`${prompt.parts.gaslight}\n${prompt.lines.join('\n')}\n${prompt.post}`)
   }
 
-  const { avatar: _, ...sender } = entities.profile
-  const { avatar: __, ...char } = entities.char
-
-  // Prevent sending the avatar due to guests have avatars base64 encoded
-  for (const charId in entities.characters) {
-    entities.characters[charId] = { ...entities.characters[charId], avatar: '' }
-  }
-
   const request: GenerateRequestV2 = {
     kind: opts.kind,
     chat: entities.chat,
     user: entities.user,
-    char,
-    sender,
-    members: entities.members,
+    char: removeAvatar(entities.char),
+    sender: removeAvatar(entities.profile),
+    members: entities.members.map(removeAvatar),
     parts: prompt.parts,
     lines: prompt.lines,
     text: opts.kind === 'send' ? opts.text : undefined,
@@ -131,7 +123,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     replacing: props.replacing,
     continuing: props.continuing,
     replyAs: props.replyAs,
-    characters: entities.characters,
+    characters: removeAvatars(entities.characters),
   }
 
   const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
@@ -346,4 +338,18 @@ function emptyMsg(
     msg: '',
     ...props,
   }
+}
+
+function removeAvatar<T extends AppSchema.Character | AppSchema.Profile>(char: T): T {
+  return { ...char, avatar: undefined }
+}
+
+function removeAvatars(chars: Record<string, AppSchema.Character>) {
+  const next: Record<string, AppSchema.Character> = {}
+
+  for (const id in chars) {
+    next[id] = { ...chars[id], avatar: undefined }
+  }
+
+  return next
 }

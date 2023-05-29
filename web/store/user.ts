@@ -12,6 +12,8 @@ import { toastStore } from './toasts'
 const UI_KEY = 'ui-settings'
 const BACKGROUND_KEY = 'ui-bg'
 
+type ConfigUpdate = Partial<AppSchema.User & { hordeModels?: string[] }>
+
 export type UISettings = {
   theme: ThemeColor
   mode: ThemeMode
@@ -118,7 +120,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateConfig(_, config: Partial<AppSchema.User>) {
+    async updateConfig(_, config: ConfigUpdate) {
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {

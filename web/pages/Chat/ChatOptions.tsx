@@ -20,7 +20,6 @@ export type ChatModal =
 const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props) => {
   const chats = chatStore((s) => ({
     ...s.active,
-    lastId: s.lastChatId,
     opts: s.opts,
     members: s.chatProfiles,
   }))

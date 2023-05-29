@@ -114,7 +114,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
             member={member}
             remove={setDeleting}
             canRemove={isOwner() && member._id !== self.profile?._id}
-            isOwner={isOwner()}
+            isOwner={isOwner() && member._id === self.profile?._id}
           />
         )}
       </For>

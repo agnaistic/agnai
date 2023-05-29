@@ -26,8 +26,8 @@ import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
-import './chat-detail.css'
 import AvatarIcon from '/web/shared/AvatarIcon'
+import './chat-detail.css'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -36,7 +36,7 @@ const ChatDetail: Component = () => {
   const user = userStore()
   const cfg = settingStore()
   const chats = chatStore((s) => ({
-    ...s.active,
+    ...(s.active?.chat._id === params.id ? s.active : undefined),
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.loaded,
@@ -52,6 +52,11 @@ const ChatDetail: Component = () => {
     retries: s.retries,
     speaking: s.speaking,
   }))
+
+  const isGroupChat = createMemo(() => {
+    if (!chats.participantIds?.length) return false
+    return true
+  })
 
   createEffect(() => {
     const charName = chats.char?.name
@@ -69,7 +74,6 @@ const ChatDetail: Component = () => {
   const [removeId, setRemoveId] = createSignal('')
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
-  const [showOOCOpts, setShowOOCOpts] = createSignal(chats.members.length > 1)
 
   const chatMsgs = createMemo(() => {
     return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
@@ -146,7 +150,9 @@ const ChatDetail: Component = () => {
       return nav(`/chat/${chats.lastId}`)
     }
 
-    chatStore.getChat(params.id)
+    if (params.id !== chats.chat?._id) {
+      chatStore.getChat(params.id)
+    }
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
@@ -154,11 +160,6 @@ const ChatDetail: Component = () => {
       switch (message) {
         case '/devCycleAvatarSettings':
           devCycleAvatarSettings(user)
-          onSuccess?.()
-          return
-
-        case '/devShowOocToggle':
-          setShowOOCOpts(!showOOCOpts())
           onSuccess?.()
           return
       }
@@ -223,9 +224,9 @@ const ChatDetail: Component = () => {
                   <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
                     {chats.char?.name}
                   </span>
-                  <Show when={chats.chat?.name}>
+                  <Show when={chats.chat!.name}>
                     <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                      {chats.chat?.name}
+                      {chats.chat!.name}
                     </span>
                   </Show>
                 </div>
@@ -272,9 +273,9 @@ const ChatDetail: Component = () => {
               send={sendMessage}
               more={moreMessage}
               char={chats.char}
-              ooc={ooc() ?? chats.members.length > 1}
+              ooc={ooc() ?? isGroupChat()}
               setOoc={setOoc}
-              showOocToggle={showOOCOpts() || chats.members.length > 1}
+              showOocToggle={isGroupChat()}
               request={requestMessage}
               bots={chats.chatBots}
             />
@@ -301,7 +302,7 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll pr-2 sm:pr-4">
+            <div class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
               <div id="chat-messages" class="flex flex-col gap-2">
                 <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
                   <div class="flex justify-center">

@@ -49,7 +49,7 @@ const CreateChatModal: Component<{
   const presets = presetStore((s) => s.presets)
 
   const presetOptions = createMemo(() =>
-    getPresetOptions(presets).filter((pre) => pre.value !== 'chat')
+    getPresetOptions(presets, { base: true }).filter((pre) => pre.value !== 'chat')
   )
 
   const onCreate = () => {

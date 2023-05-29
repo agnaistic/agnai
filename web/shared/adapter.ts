@@ -11,7 +11,7 @@ export const AutoPreset = {
 }
 
 export const BasePresetOptions: Option[] = [
-  { label: 'Chat Settings', value: AutoPreset.chat },
+  { label: 'Chat Settings (Advanced)', value: AutoPreset.chat },
   { label: 'System Built-in Preset (Horde)', value: AutoPreset.service },
 ]
 
@@ -34,27 +34,40 @@ export function getClientPreset(chat?: AppSchema.Chat) {
   return { preset, adapter, model, isThirdParty, contextLimit, presetLabel, name }
 }
 
-export function getPresetOptions(userPresets: AppSchema.UserGenPreset[]) {
+export function getPresetOptions(
+  userPresets: AppSchema.UserGenPreset[],
+  includes: { builtin?: boolean; base?: boolean }
+) {
   const user = userStore((u) => u.user || { defaultPreset: '' })
-  const presets = userPresets.map((preset) => ({
-    label: `${user.defaultPreset === preset._id ? 'Your Default - ' : ''}${
-      preset.name
-    } ${getServiceName(preset.service)}`,
-    value: preset._id,
-  }))
+  const presets = userPresets
+    .slice()
+    .map((preset) => ({
+      label: `[${getServiceName(preset.service)}] ${preset.name} ${
+        user.defaultPreset === preset._id ? '(*) ' : ''
+      }`,
+      value: preset._id,
+    }))
+    .sort(sortByLabel)
 
   const defaults = Object.entries(defaultPresets).map(([_id, preset]) => ({
     ...preset,
     _id,
-    name: `Default - ${preset.name} ${getServiceName(preset.service)}`,
+    name: preset.name,
   }))
 
-  const defaultsOptions = defaults.map((preset) => ({
-    label: preset.name,
-    value: preset._id,
-  }))
+  if (includes.builtin) {
+    const builtinOptions = defaults
+      .map((preset) => ({
+        label: `[Built-in, ${getServiceName(preset.service)}] ${preset.name} `,
+        value: preset._id,
+      }))
+      .sort(sortByLabel)
 
-  return BasePresetOptions.concat(presets).concat(defaultsOptions)
+    presets.push(...builtinOptions)
+  }
+
+  if (includes.base) return BasePresetOptions.concat(presets)
+  return presets
 }
 
 export function getInitialPresetValue(chat?: AppSchema.Chat) {
@@ -64,7 +77,15 @@ export function getInitialPresetValue(chat?: AppSchema.Chat) {
   return chat.genPreset || AutoPreset.service
 }
 
-function getServiceName(service?: AIAdapter) {
-  if (!service) return ''
-  return `(${ADAPTER_LABELS[service]})`
+export function getServiceName(service?: AIAdapter) {
+  if (!service) return 'Unset'
+  return `${ADAPTER_LABELS[service]}`
+}
+
+export function sortByName(left: { name: string }, right: { name: string }) {
+  return left.name.toLowerCase().localeCompare(right.name.toLowerCase())
+}
+
+export function sortByLabel(left: { label: string }, right: { label: string }) {
+  return left.label.toLowerCase().localeCompare(right.label.toLowerCase())
 }

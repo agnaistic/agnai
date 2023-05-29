@@ -10,6 +10,7 @@ import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
 import { usersApi } from './data/user'
+import { draftStore } from './drafts'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -146,7 +147,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *getChat(_, id: string) {
-      yield { loaded: false }
+      yield { loaded: false, active: undefined }
       msgStore.setState({
         msgs: [],
         activeChatId: id,
@@ -375,6 +376,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
+      draftStore.clear(chatId)
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {

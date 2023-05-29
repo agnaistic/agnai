@@ -31,10 +31,9 @@ const MultiDropdown: Component<{
   return (
     <div>
       <FormLabel label={props.label} helperText={props.helperText} />
-      {/* <div class={`h-max bg-[var(--hl-700)] ${props.class || ''} rounded-xl py-4 px-2`}> */}
       <select
         name={props.fieldName}
-        class={`form-field h-max rounded-sm bg-[var(--hl-700)] p-2 shadow-none`}
+        class={`form-field h-max max-w-full rounded-sm bg-[var(--hl-700)] p-2 shadow-none`}
         multiple
         onChange={onChange}
         disabled={props.disabled}
@@ -42,7 +41,7 @@ const MultiDropdown: Component<{
         <For each={props.items}>
           {(item) => (
             <option
-              class="border-0 border-none bg-[var(--hl-700)] "
+              class="h-6 border-0 border-none bg-[var(--hl-700)]"
               value={item.value}
               selected={props.values?.includes(item.value)}
             >

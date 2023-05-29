@@ -26,8 +26,7 @@ const App: Component = () => {
           <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
           <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
           <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
-          <Route path="/" component={lazy(() => import('./pages/Character/CharacterList'))} />
-          <Route path="/info" component={HomePage} />
+          <Route path={['/info', '/']} component={HomePage} />
           <Route path="/changelog" component={lazy(() => import('./pages/Home/ChangeLog'))} />
           <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
           <Route

@@ -15,7 +15,9 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
   let ref: any
   const presets = presetStore((s) => s.presets)
   const adapters = settingStore((s) => s.config.adapters)
-  const options = createMemo(() => getPresetOptions(presets).filter((pre) => pre.value !== 'chat'))
+  const options = createMemo(() =>
+    getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
+  )
 
   const [presetId, setPresetId] = createSignal(props.chat.genPreset || options()[0].value)
   const [preset, setPreset] = createSignal<AppSchema.UserGenPreset>()

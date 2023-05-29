@@ -44,7 +44,7 @@ export namespace AppSchema {
     oaiKeySet?: boolean
 
     hordeKey: string
-    hordeModel: string
+    hordeModel: string | string[]
     hordeName?: string
     hordeUseTrusted?: boolean
     hordeWorkers?: string[]
