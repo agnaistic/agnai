@@ -1,3 +1,4 @@
+require('module-alias/register')
 import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
 import { createPrompt, BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
