@@ -161,8 +161,9 @@ async function getGenerateProps(
       if (opts.messageId) {
         // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
-        props.replyAs = getBot(active.replyAs || active.char._id)
-        props.replacing = entities.messages[index]
+        const replacing = entities.messages[index]
+        props.replyAs = getBot(replacing.characterId || active.char._id)
+        props.replacing = replacing
         props.messages = entities.messages.slice(0, index)
       } else if (!lastMessage && message.characterId) {
         // Case: Replacing the first message (i.e. the greeting)
