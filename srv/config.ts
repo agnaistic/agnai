@@ -96,12 +96,15 @@ export const config = {
 }
 
 if (config.ui.inject) {
-  const inject = '<meta inject="">'
-  const indexFile = resolve(__dirname, '../dist/index.html')
-  const index = readFileSync(indexFile).toString()
-  console.log(index, index.includes(inject))
-  if (index.includes(inject)) {
-    writeFileSync(indexFile, index.replace(inject, config.ui.inject))
+  const tags = ['<meta inject="">', '<meta inject>']
+
+  for (const tag of tags) {
+    const indexFile = resolve(__dirname, '../dist/index.html')
+    const index = readFileSync(indexFile).toString()
+    if (index.includes(tag)) {
+      writeFileSync(indexFile, index.replace(tag, config.ui.inject))
+      break
+    }
   }
 }
 
