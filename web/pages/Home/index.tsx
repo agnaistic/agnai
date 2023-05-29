@@ -48,6 +48,7 @@ If you're self-hosting KoboldAI or using Colab, you can use the LocalTunnel URL 
 ## NovelAI
 
 You can provide your API key and choose between Euterpe and Krake in the settings page. Visit the [instructions page](https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md) to learn how to retrieve your API key.
+
 `
 
 const HomePage: Component = () => {
@@ -55,6 +56,7 @@ const HomePage: Component = () => {
   const cfg = settingStore((cfg) => ({
     adapters: adaptersToOptions(cfg.config.adapters),
     guest: cfg.guestAccessAllowed,
+    config: cfg.config,
   }))
   return (
     <div>
@@ -100,6 +102,18 @@ const HomePage: Component = () => {
               Github Repository
             </A>
           </li>
+          <Show when={cfg.config.policies}>
+            <li>
+              <A class="link" href="/terms-of-service">
+                Terms of Service
+              </A>{' '}
+              and{' '}
+              <A class="link" href="/privacy-policy">
+                Privacy Policy
+              </A>
+              .
+            </li>
+          </Show>
         </ul>
       </div>
       <div class="markdown" innerHTML={markdown.makeHtml(text)} />

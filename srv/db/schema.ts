@@ -248,6 +248,7 @@ export namespace AppSchema {
     registered: Array<Omit<RegisteredAdapter, 'contextLimit'>>
     maintenance?: string
     patreon?: boolean
+    policies?: boolean
   }
 
   export interface MemoryBook {

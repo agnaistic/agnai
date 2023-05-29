@@ -90,6 +90,7 @@ export const config = {
   ui: {
     maintenance: env('MAINTENANCE', ''),
     patreon: !!env('PATREON', ''),
+    policies: !!env('SHOW_POLICIES', ''),
   },
 }
 

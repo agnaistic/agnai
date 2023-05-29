@@ -1,9 +1,9 @@
 import { Component, createMemo, createSignal, Show } from 'solid-js'
-import { useNavigate } from '@solidjs/router'
+import { A, useNavigate } from '@solidjs/router'
 import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
-import { toastStore, userStore } from '../../store'
+import { settingStore, toastStore, userStore } from '../../store'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
@@ -11,6 +11,7 @@ import Button from '../../shared/Button'
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
   const store = userStore()
+  const cfg = settingStore()
   const [register, setRegister] = createSignal(false)
 
   /** Friendly error message passed out of the mutation, if it exists. */
@@ -55,6 +56,21 @@ const LoginPage: Component = () => {
           </Alert>
         </Show>
       </div>
+
+      <Show when={cfg.config.policies}>
+        <div class="mt-2">
+          By logging in or registering, you agree that are 18 years or older and agree to the{' '}
+          <A class="link" href="/terms-of-service">
+            Terms
+          </A>{' '}
+          and{' '}
+          <A class="link" href="/privacy-policy">
+            Privacy Policy
+          </A>
+          .
+        </div>
+      </Show>
+
       <div class="mt-8 w-full gap-4">
         <p class="flex justify-center text-xl text-[var(--hl-400)]">Why register?</p>
         <div class="flex flex-col items-center">
