@@ -37,7 +37,7 @@ services:
       AWS_SECRET_ACCESS_KEY: /run/secrets/aws_secret
       BUCKET_NAME: /run/secrets/bucket_name
       BUCKET_ENDPOINT: /run/secrets/bucket_endpoint
-      PATREON: true
+      PATREON: 'true'
     secrets:
       - jwt_secret
       - aws_id
