@@ -58,11 +58,6 @@ const ChatDetail: Component = () => {
     return true
   })
 
-  createEffect(() => {
-    const charName = chats.char?.name
-    updateTitle(charName ? `Chat with ${charName}` : 'Chat')
-  })
-
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last) return
@@ -145,6 +140,9 @@ const ChatDetail: Component = () => {
   })
 
   createEffect(() => {
+    const charName = chats.char?.name
+    updateTitle(charName ? `Chat with ${charName}` : 'Chat')
+
     if (!params.id) {
       if (!chats.lastId) return nav('/character/list')
       return nav(`/chat/${chats.lastId}`)
@@ -317,7 +315,7 @@ const ChatDetail: Component = () => {
                       char={chats.char!}
                       editing={chats.opts.editing}
                       anonymize={cfg.anonymize}
-                      last={i() >= 1 && i() === indexOfLastRPMessage()}
+                      last={i() === indexOfLastRPMessage()}
                       onRemove={() => setRemoveId(msg._id)}
                       swipe={
                         msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]

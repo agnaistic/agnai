@@ -158,8 +158,10 @@ async function getGenerateProps(
 
   switch (opts.kind) {
     case 'retry': {
-      if (!lastMessage) throw new Error(`No message to retry`)
-      if (lastMessage.characterId) {
+      if (!lastMessage && message.characterId) {
+        props.replyAs = getBot(active.replyAs || active.char._id)
+        props.replacing = message
+      } else if (lastMessage?.characterId) {
         props.retry = message
         props.replacing = lastMessage
         props.replyAs = getBot(lastMessage.characterId)
