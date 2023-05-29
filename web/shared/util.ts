@@ -16,71 +16,81 @@ type FormRef = {
 }
 
 export const safeLocalStorage = {
-  getItem(key: string) {
-    try {
-      return localStorage.getItem(key)
-    } catch {
-      return null
-    }
-  },
+  getItem,
+  key,
+  setItem,
+  setItemUnsafe,
+  removeItem,
+  removeItemUnsafe,
+  clear,
+  clearUnsafe,
+  test,
+}
 
-  key(index: number) {
-    try {
-      return localStorage.key(index)
-    } catch {
-      return null
-    }
-  },
+function getItem(key: string) {
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
 
-  setItem(key: string, value: string) {
-    try {
-      localStorage.setItem(key, value)
-    } catch (e: any) {
-      console.warn('Failed to set local storage item', key, value, e)
-    }
-  },
+function key(index: number) {
+  try {
+    return localStorage.key(index)
+  } catch {
+    return null
+  }
+}
 
-  setItemUnsafe(key: string, value: string) {
+function setItem(key: string, value: string) {
+  try {
     localStorage.setItem(key, value)
-  },
+  } catch (e: any) {
+    console.warn('Failed to set local storage item', key, value, e)
+  }
+}
 
-  removeItem(key: string) {
-    try {
-      localStorage.removeItem(key)
-    } catch (e: any) {
-      console.warn('Failed to remove local storage item', key, e)
-    }
-  },
+function setItemUnsafe(key: string, value: string) {
+  localStorage.setItem(key, value)
+}
 
-  removeItemUnsafe(key: string) {
+function removeItem(key: string) {
+  try {
     localStorage.removeItem(key)
-  },
+  } catch (e: any) {
+    console.warn('Failed to remove local storage item', key, e)
+  }
+}
 
-  clear() {
-    try {
-      localStorage.clear()
-    } catch (e: any) {
-      console.warn('Failed to clear local storage item', e)
-    }
-  },
+function removeItemUnsafe(key: string) {
+  localStorage.removeItem(key)
+}
 
-  clearUnsafe() {
+function clear() {
+  try {
     localStorage.clear()
-  },
+  } catch (e: any) {
+    console.warn('Failed to clear local storage item', e)
+  }
+}
 
-  test(noThrow?: boolean) {
-    const TEST_KEY = '___TEST'
-    localStorage.setItem(TEST_KEY, 'ok')
-    const value = localStorage.getItem(TEST_KEY)
-    localStorage.removeItem(TEST_KEY)
+function clearUnsafe() {
+  localStorage.clear()
+}
 
-    if (value !== 'ok') {
-      if (!noThrow) throw new Error('Failed to retreive set local storage item')
-      return false
-    }
+function test(noThrow?: boolean) {
+  const TEST_KEY = '___TEST'
+  localStorage.setItem(TEST_KEY, 'ok')
+  const value = localStorage.getItem(TEST_KEY)
+  localStorage.removeItem(TEST_KEY)
 
-    return true
-  },
+  if (value !== 'ok') {
+    if (!noThrow) throw new Error('Failed to retreive set local storage item')
+    return false
+  }
+
+  return true
 }
 
 const PREFIX_CACHE_KEY = 'agnai-asset-prefix'
