@@ -114,7 +114,7 @@ By using our Service, you understand and acknowledge that your Personal Informat
 
 For EEA, UK or Swiss users:
 
-- Legal Basis for Processing. Our legal bases for processing your Personal Information include: Performance of a contract with you when we provide and maintain our Services. This may include the processing of Account Information, Content, and Technical Information.{' '}
+- Legal Basis for Processing. Our legal bases for processing your Personal Information include: Performance of a contract with you when we provide and maintain our Services. This may include the processing of Account Information, Content, and Technical Information.
 - Our legitimate interests in protecting our Services from abuse, fraud, or security risks, or when we develop, improve, or promote our Services. This may include the processing of Account Information, Content, Social Information, and Technical Information.
 - Your consent when we ask for your consent to process your Personal Information for a specific purpose that we communicate to you. You have the right to withdraw your consent at any time.
 - Compliance with our legal obligations when we use your Personal Information to comply with applicable law or when we protect our or our affiliates' or users' rights, safety and property.
