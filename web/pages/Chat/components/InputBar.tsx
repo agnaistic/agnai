@@ -134,17 +134,7 @@ const InputBar: Component<{
     setMenu(false)
   }
 
-  // const regenerate = () => {
-  //   msgStore.retry(props.chat._id)
-  //   setMenu(false)
-  // }
-
   const onButtonClick = () => {
-    // if (text().length > 0) {
-    //   send()
-    //   return
-    // }
-
     setMenu(true)
   }
 

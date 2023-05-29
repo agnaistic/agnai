@@ -56,7 +56,7 @@ export type GenerateOpts =
    * - The last message in the chat is a user message so we are going to generate a new response
    * - The last message in the chat is a bot message so we are going to re-generate a response and update the 'replacingId' chat message
    */
-  | { kind: 'retry' }
+  | { kind: 'retry'; messageId?: string }
   /**
    * The last message in the chat is a bot message and we want to generate more text for this message.
    */
@@ -158,15 +158,23 @@ async function getGenerateProps(
 
   switch (opts.kind) {
     case 'retry': {
-      if (!lastMessage && message.characterId) {
+      if (opts.messageId) {
+        // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
+        const message = entities.messages.find((msg) => msg._id === opts.messageId)
+        props.replyAs = getBot(active.replyAs || active.char._id)
+        props.replacing = message
+      } else if (!lastMessage && message.characterId) {
+        // Case: Replacing the first message (i.e. the greeting)
         props.replyAs = getBot(active.replyAs || active.char._id)
         props.replacing = message
       } else if (lastMessage?.characterId) {
+        // Case: When the user clicked on their own message. Probably after deleting a bot response
         props.retry = message
         props.replacing = lastMessage
         props.replyAs = getBot(lastMessage.characterId)
         props.messages = entities.messages.slice(0, -1)
       } else {
+        // Case: Clicked on a bot response to regenerate
         props.retry = lastMessage
         props.replyAs = getBot(active.replyAs || active.char._id)
       }

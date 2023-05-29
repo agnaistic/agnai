@@ -157,7 +157,12 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
-    async *retry({ msgs, activeCharId }, chatId: string, onSuccess?: () => void) {
+    async *retry(
+      { msgs, activeCharId },
+      chatId: string,
+      messageId?: string,
+      onSuccess?: () => void
+    ) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -169,7 +174,8 @@ export const msgStore = createStore<MsgState>(
         return
       }
 
-      const replace = { ...msgs[msgs.length - 1], voiceUrl: undefined }
+      const msg = messageId ? msgs.find((msg) => msg._id === messageId)! : msgs[msgs.length - 1]
+      const replace = { ...msg, voiceUrl: undefined }
       yield {
         partial: '',
         waiting: { chatId, mode: 'retry', characterId: replace.characterId! },
@@ -178,9 +184,7 @@ export const msgStore = createStore<MsgState>(
 
       addMsgToRetries(replace)
 
-      const res = await msgsApi.generateResponseV2({ kind: 'retry' })
-
-      yield { msgs: msgs.slice(0, -1) }
+      const res = await msgsApi.generateResponseV2({ kind: 'retry', messageId })
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
@@ -481,21 +485,23 @@ subscribe(
     if (activeChatId !== body.chatId) return
 
     const prev = msgs.find((msg) => msg._id === body.messageId)
-    const next = msgs.filter((msg) => msg._id !== body.messageId)
 
     msgStore.setState({
       partial: undefined,
       retrying: undefined,
       waiting: undefined,
-      msgs: next,
     })
 
     await Promise.resolve()
 
     addMsgToRetries({ _id: body.messageId, msg: body.message })
 
-    if (retrying) {
-      msgStore.setState({ msgs: next.concat({ ...retrying, msg: body.message }) })
+    if (retrying?._id === body.messageId) {
+      msgStore.setState({
+        msgs: msgs.map((msg) =>
+          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+        ),
+      })
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
@@ -631,14 +637,13 @@ subscribe('message-edited', { messageId: 'string', message: 'string' }, (body) =
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
   const { msgs, activeChatId, retrying } = msgStore.getState()
 
-  const [_message, replace] = msgs.slice(-2)
+  const replace = msgs.find((msg) => msg._id === body.messageId)
 
   if (activeChatId !== body.chatId) return
   if (retrying) return
-  if (replace._id !== body.messageId) return
+  if (!replace) return
 
   msgStore.setState({
-    msgs: msgs.slice(0, -1),
     partial: '',
     retrying: replace,
     waiting: { chatId: body.chatId, mode: 'retry', characterId: '' },

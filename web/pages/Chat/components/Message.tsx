@@ -40,6 +40,8 @@ type MessageProps = {
   anonymize?: boolean
   tts?: boolean
   children?: any
+  retrying?: AppSchema.ChatMessage
+  partial?: string
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -66,6 +68,8 @@ const Message: Component<MessageProps> = (props) => {
             editing={props.editing}
             anonymize={props.anonymize}
             children={props.children}
+            retrying={props.retrying}
+            partial={props.partial}
           />
         )}
       </For>
@@ -145,16 +149,6 @@ const SingleMessage: Component<
 
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
-  }
-
-  const renderMessage = () => {
-    // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
-    // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
-    // https://github.com/showdownjs/showdown/issues/669
-    const html = markdown
-      .makeHtml(parseMessage(msgText(), props.char!, user.profile!, props.msg.adapter))
-      .replace(/&amp;nbsp;/g, '&nbsp;')
-    return html
   }
 
   let ref: HTMLDivElement | undefined
@@ -296,9 +290,32 @@ const SingleMessage: Component<
                   onClick={() => settingStore.showImage(props.original.msg)}
                 />
               </Match>
-              <Match when={props.msg._id === '' && !props.msg.msg.length}>
+              <Match when={props.retrying?._id === props.original._id && props.partial}>
+                <p
+                  class="rendered-markdown px-1"
+                  data-bot-message={isBot()}
+                  data-user-message={isUser()}
+                  innerHTML={renderMessage(
+                    props.char!,
+                    user.profile!,
+                    props.partial!,
+                    props.msg.adapter
+                  )}
+                />
+              </Match>
+              <Match
+                when={
+                  props.retrying?._id == props.original._id ||
+                  (props.msg._id === '' && !props.msg.msg.length)
+                }
+              >
                 <div class="flex h-8 w-12 items-center justify-center">
-                  <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                  <Show
+                    when={props.partial}
+                    fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
+                  >
+                    {props.partial}
+                  </Show>
                 </div>
               </Match>
               <Match when={!edit() && !isImage()}>
@@ -306,7 +323,12 @@ const SingleMessage: Component<
                   class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
-                  innerHTML={renderMessage()}
+                  innerHTML={renderMessage(
+                    props.char!,
+                    user.profile!,
+                    msgText(),
+                    props.msg.adapter
+                  )}
                 />
               </Match>
               <Match when={edit()}>
@@ -453,7 +475,12 @@ const MessageOptions: Component<{
         </div>
       </Show>
 
-      <Show when={props.last && props.msg.characterId}>
+      <Show
+        when={
+          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
+          props.msg.characterId
+        }
+      >
         <div class="icon-button" onClick={() => retryMessage(props.original, props.msg)}>
           <RefreshCw size={18} />
         </div>
@@ -473,8 +500,23 @@ const MessageOptions: Component<{
 
 function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   if (original.adapter !== 'image') {
-    msgStore.retry(split.chatId)
+    msgStore.retry(split.chatId, original._id)
   } else {
     msgStore.createImage(split._id)
   }
+}
+
+function renderMessage(
+  char: AppSchema.Character,
+  profile: AppSchema.Profile,
+  text: string,
+  adapter?: string
+) {
+  // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
+  // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
+  // https://github.com/showdownjs/showdown/issues/669
+  const html = markdown
+    .makeHtml(parseMessage(text, char, profile!, adapter))
+    .replace(/&amp;nbsp;/g, '&nbsp;')
+  return html
 }

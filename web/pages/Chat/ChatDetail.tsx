@@ -51,6 +51,7 @@ const ChatDetail: Component = () => {
     waiting: s.waiting,
     retries: s.retries,
     speaking: s.speaking,
+    retrying: s.retrying,
   }))
 
   const isGroupChat = createMemo(() => {
@@ -94,6 +95,7 @@ const ChatDetail: Component = () => {
 
   const waitingMsg = createMemo(() => {
     if (!msgs.waiting) return
+    if (msgs.retrying) return
 
     return emptyMsg({
       charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
@@ -185,7 +187,10 @@ const ChatDetail: Component = () => {
   }
 
   const indexOfLastRPMessage = createMemo(() => {
-    return msgs.msgs.reduceRight((prev, curr, i) => (prev > -1 ? prev : !curr.ooc ? i : -1), -1)
+    return msgs.msgs.reduceRight(
+      (prev, curr, i) => (prev > -1 ? prev : !curr.ooc && curr.adapter !== 'image' ? i : -1),
+      -1
+    )
   })
 
   const generateFirst = () => {
@@ -323,6 +328,8 @@ const ChatDetail: Component = () => {
                       confirmSwipe={() => confirmSwipe(msg._id)}
                       cancelSwipe={cancelSwipe}
                       tts={tts()}
+                      retrying={msgs.retrying}
+                      partial={msgs.partial}
                     >
                       {isOwner() &&
                         retries()?.list?.length! > 1 &&
