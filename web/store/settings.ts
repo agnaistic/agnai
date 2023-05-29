@@ -1,7 +1,7 @@
 import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
-import { safeLocalStorage, setAssetPrefix } from '../shared/util'
+import { setAssetPrefix } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
 import { usersApi } from './data/user'
@@ -43,7 +43,7 @@ const defaultFlags: Flags = {
 
 const initState: SettingState = {
   anonymize: false,
-  guestAccessAllowed: safeLocalStorage.test(true),
+  guestAccessAllowed: canUseStorage(),
   initLoading: true,
   showMenu: false,
   fullscreen: false,
@@ -223,4 +223,18 @@ function saveFlags(flags: {}) {
     const cache: FlagCache = { user: flags as any, default: defaultFlags }
     localStorage.setItem(FLAG_KEY, JSON.stringify(cache))
   } catch (ex) {}
+}
+
+function canUseStorage(noThrow?: boolean) {
+  const TEST_KEY = '___TEST'
+  localStorage.setItem(TEST_KEY, 'ok')
+  const value = localStorage.getItem(TEST_KEY)
+  localStorage.removeItem(TEST_KEY)
+
+  if (value !== 'ok') {
+    if (!noThrow) throw new Error('Failed to retreive set local storage item')
+    return false
+  }
+
+  return true
 }
