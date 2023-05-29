@@ -16,12 +16,7 @@ import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { getAdapter } from '../../../common/prompt'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
-import { AutoPreset, BasePresetOptions } from '../../shared/adapter'
-
-const presetList = Object.entries(defaultPresets).map(([key, preset]) => ({
-  label: preset.name,
-  value: key,
-}))
+import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 
 export const ChatGenSettingsModal: Component<{
   chat: AppSchema.Chat
@@ -34,6 +29,10 @@ export const ChatGenSettingsModal: Component<{
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
+
+  const presetOptions = createMemo(() =>
+    getPresetOptions(state.presets, { builtin: true, base: true })
+  )
 
   const presets = createMemo(() => {
     const all: Partial<AppSchema.UserGenPreset>[] = state.presets
@@ -137,7 +136,7 @@ export const ChatGenSettingsModal: Component<{
         <form ref={ref} class="flex flex-col gap-2">
           <Select
             fieldName="preset"
-            items={BasePresetOptions.concat(state.options).concat(presetList)}
+            items={presetOptions()}
             value={selected()}
             onChange={(item) => setSelected(item.value)}
           />

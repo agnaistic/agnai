@@ -40,7 +40,7 @@ const AISettings: Component<{
   const currentTab = createMemo(() => cfg.config.adapters[tab()])
   const presetOptions = createMemo(() =>
     [{ label: 'None', value: '' }].concat(
-      getPresetOptions(presets).filter(
+      getPresetOptions(presets, { builtin: true }).filter(
         (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
       )
     )

@@ -7,16 +7,20 @@ import PageHeader from '../../shared/PageHeader'
 import { defaultPresets } from '../../../common/presets'
 import { presetStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
+import { getServiceName, sortByLabel } from '/web/shared/adapter'
 
 const PresetList: Component = () => {
   setComponentPageTitle('Presets')
   const nav = useNavigate()
-  const state = presetStore()
-  const defaults = Object.entries(defaultPresets).map(([name, cfg]) => ({
-    name,
-    label: `Default: ${cfg.name}`,
-    cfg,
+  const state = presetStore((s) => ({
+    presets: s.presets
+      .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
+      .sort(sortByLabel),
   }))
+
+  const defaults = Object.values(defaultPresets)
+    .map((cfg) => ({ ...cfg, label: `[${cfg.service}] ${cfg.name}` }))
+    .sort(sortByLabel)
   const [deleting, setDeleting] = createSignal<string>()
 
   const deletePreset = () => {
@@ -51,7 +55,14 @@ const PresetList: Component = () => {
                 href={`/presets/${preset._id}`}
                 class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
               >
-                <div class="ml-4 flex w-full items-center">{preset.name}</div>
+                <div class="ml-4 flex w-full items-center">
+                  <div>
+                    <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                      {getServiceName(preset.service)}
+                    </span>
+                    {preset.name}
+                  </div>
+                </div>
               </A>
               <Button
                 schema="clear"
@@ -73,6 +84,7 @@ const PresetList: Component = () => {
           )}
         </For>
 
+        <div>Built-in Presets</div>
         <For each={defaults}>
           {(preset) => (
             <div class="flex w-full items-center gap-2">
@@ -80,7 +92,13 @@ const PresetList: Component = () => {
                 href={`/presets/default?preset=${preset.name}`}
                 class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
               >
-                <div class="ml-4 flex w-full items-center">{preset.label}</div>
+                <div class="ml-4 flex w-full items-center">
+                  {' '}
+                  <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                    {getServiceName(preset.service)}
+                  </span>
+                  {preset.name}
+                </div>
               </A>
               <Button
                 schema="clear"
