@@ -120,7 +120,9 @@ export const chatStore = createStore<ChatState>('chat', {
       chatStore.setState({ all: { chats: init.chats, chars: init.characters } })
     } else {
       const { all: prev } = get()
-      chatStore.setState({ all: { chats: prev?.chats || [], chars: init.characters } })
+      chatStore.setState({
+        all: { chats: prev?.chats || [], chars: prev?.chars || init.characters },
+      })
     }
   })
   return {
