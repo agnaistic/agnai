@@ -1,5 +1,5 @@
 import { A } from '@solidjs/router'
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { Download, Plus, Trash, Upload, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'

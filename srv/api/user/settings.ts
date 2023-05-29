@@ -1,4 +1,4 @@
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import needle from 'needle'
 import { NOVEL_BASEURL } from '../../adapter/novel'
 import { store } from '../../db'

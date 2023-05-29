@@ -1,4 +1,4 @@
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { store } from '../../db'
 import { generateImage } from '../../image'
 import { handle } from '../wrap'

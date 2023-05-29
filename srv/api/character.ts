@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { loggedIn } from './auth'
 import { errors, handle, StatusError } from './wrap'

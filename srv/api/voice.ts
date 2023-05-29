@@ -3,7 +3,7 @@ import { handle } from './wrap'
 import { getVoicesList, generateTextToSpeech } from '../voice'
 import { store } from '../db'
 import { TTSService } from '../db/texttospeech-schema'
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 
 const router = Router()
 

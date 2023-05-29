@@ -1,4 +1,4 @@
-import { UnwrapBody, Validator, isValid } from 'frisker'
+import { UnwrapBody, Validator, isValid } from '/common/valid'
 import { baseUrl, getAuth, setSocketId } from './api'
 
 type Handler = { validator: Validator; fn: (body: any) => void }

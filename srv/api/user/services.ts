@@ -1,4 +1,4 @@
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { getOpenAIUsage } from '../../adapter/openai'
 import { store } from '../../db'
 import { handle, StatusError } from '../wrap'

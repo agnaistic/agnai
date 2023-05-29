@@ -1,4 +1,4 @@
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { defaultPresets, presetValidator } from '../../../common/presets'
 import { store } from '../../db'
 import { handle } from '../wrap'

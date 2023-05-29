@@ -3,7 +3,7 @@ import { TextToSpeechAdapter, VoiceListResponse } from './types'
 import { decryptText } from '../db/util'
 import { AppSchema } from '../db/schema'
 import { errors } from '../api/wrap'
-import { Validator } from 'frisker'
+import { Validator } from '/common/valid'
 import { ElevenLabsModel } from '../db/texttospeech-schema'
 
 const baseUrl = 'https://api.elevenlabs.io/v1'

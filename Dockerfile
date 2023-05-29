@@ -8,6 +8,7 @@ VOLUME [ "/app/dist/assets" ]
 RUN npm install pnpm@6 -g
 
 ARG SHA=unknown
+ARG INJECT=
 
 ADD package.json pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile
@@ -17,7 +18,10 @@ ADD common/ ./common/
 ADD srv/ ./srv/
 ADD web/ ./web
 
-RUN pnpm run build:server && pnpm run build && mkdir -p /app/assets && echo "${SHA}" > /app/version.txt
+RUN pnpm run build:server && \
+  sed -i 's/{{unknown}}/${SHA}' /app/web/index.html && \
+  pnpm run build && mkdir -p /app/assets && \
+  echo "${SHA}" > /app/version.txt
 
 ENV LOG_LEVEL=info \
   INITIAL_USER=administrator \

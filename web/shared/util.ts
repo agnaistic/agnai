@@ -1,4 +1,4 @@
-import { UnwrapBody, assertValid } from 'frisker'
+import { UnwrapBody, assertValid } from '/common/valid'
 import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'

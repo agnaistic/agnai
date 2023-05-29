@@ -2,7 +2,7 @@ import needle from 'needle'
 import { TextToSpeechAdapter, VoiceListResponse } from './types'
 import { AppSchema } from '../db/schema'
 import { errors } from '../api/wrap'
-import { Validator } from 'frisker'
+import { Validator } from '/common/valid'
 import { decryptText } from '../db/util'
 
 const novelBaseUrl = 'https://api.novelai.net/ai/generate-voice'

@@ -30,7 +30,6 @@ specifiers:
   dotenv: ^16.0.3
   events: ^3.1.0
   express: ^4.18.2
-  frisker: 1.6.2
   gpt-3-encoder: ^1.1.4
   js-cookie: ^3.0.1
   jsonwebtoken: ^9.0.0
@@ -73,7 +72,6 @@ dependencies:
   cors: 2.8.5
   dotenv: 16.0.3
   express: 4.18.2
-  frisker: 1.6.2
   gpt-3-encoder: 1.1.4
   jsonwebtoken: 9.0.0
   minimist: 1.2.8
@@ -1723,10 +1721,6 @@ packages:
       '@types/node': 18.13.0
     dev: true
 
-  /@types/node/15.14.9:
-    resolution: {integrity: sha512-qjd88DrCxupx/kJD5yQgZdcYKZKSIGBVDIBE1/LTGcNm3d2Np/jxojkdePDdfnBHJc5W7vSMpbJ1aB7p/Py69A==}
-    dev: false
-
   /@types/node/18.13.0:
     resolution: {integrity: sha512-gC3TazRzGoOnoKAhUx+Q0t8S9Tzs74z7m0ipwGpSqQrleP14hKxP4/JUeEQcD3W1/aIpnWl8pHowI7WokuZpXg==}
 
@@ -2508,12 +2502,6 @@ packages:
   /fresh/0.5.2:
     resolution: {integrity: sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q==}
     engines: {node: '>= 0.6'}
-    dev: false
-
-  /frisker/1.6.2:
-    resolution: {integrity: sha512-rn1G4CB+QbZXl35/a4ZTUNDZw34dVWN+ttExOmaTyDWoD9Zs7PfjX5xR84X/NV44U/okNdCR5njwR9Xqhi2S3w==}
-    dependencies:
-      '@types/node': 15.14.9
     dev: false
 
   /fs.realpath/1.0.0:

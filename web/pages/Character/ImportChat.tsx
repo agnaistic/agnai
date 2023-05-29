@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import { characterStore, chatStore, ImportChat, toastStore } from '../../store'
 import Divider from '../../shared/Divider'
 import Select from '../../shared/Select'
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { sort } from '../../shared/util'
 
 const importValid = {

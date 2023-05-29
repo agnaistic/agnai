@@ -39,6 +39,7 @@ services:
       BUCKET_ENDPOINT: /run/secrets/bucket_endpoint
       PATREON: 'true'
       SHOW_POLICIES: 'true'
+      INJECT: /run/secrets/inject_script
     secrets:
       - jwt_secret
       - aws_id
@@ -47,6 +48,7 @@ services:
       - bucket_endpoint
       - db_host
       - redis_host
+      - inject_script
 
 networks:
   storage_swarm:

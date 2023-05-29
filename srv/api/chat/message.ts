@@ -1,4 +1,4 @@
-import { UnwrapBody, assertValid } from 'frisker'
+import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
 import { createTextStreamV2 } from '../../adapter/generate'
 import { AppRequest, errors, handle } from '../wrap'

@@ -1,5 +1,5 @@
 import dotenv from 'dotenv'
-import { assertValid } from 'frisker'
+import { assertValid } from '/common/valid'
 import { readFileSync, writeFileSync } from 'fs'
 import { resolve } from 'path'
 import { v4 } from 'uuid'
@@ -91,7 +91,18 @@ export const config = {
     maintenance: env('MAINTENANCE', ''),
     patreon: !!env('PATREON', ''),
     policies: !!env('SHOW_POLICIES', ''),
+    inject: env('INJECT', ''),
   },
+}
+
+if (config.ui.inject) {
+  const inject = '<meta inject="">'
+  const indexFile = resolve(__dirname, '../dist/index.html')
+  const index = readFileSync(indexFile).toString()
+  console.log(index, index.includes(inject))
+  if (index.includes(inject)) {
+    writeFileSync(indexFile, index.replace(inject, config.ui.inject))
+  }
 }
 
 function env(key: string, fallback?: string): string {

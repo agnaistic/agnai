@@ -1,4 +1,4 @@
-import { Validator } from 'frisker'
+import { Validator } from '/common/valid'
 import { AppSchema } from '../db/schema'
 import { VoiceSettings, TTSService } from '../db/texttospeech-schema'
 import { AppLog } from '../logger'

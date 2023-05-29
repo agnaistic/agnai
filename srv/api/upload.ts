@@ -4,7 +4,7 @@ import { Request } from 'express'
 import { unlink, writeFile } from 'fs/promises'
 import { extname, resolve } from 'path'
 import { createReadStream, readdirSync } from 'fs'
-import { assertValid, Validator, UnwrapBody } from 'frisker'
+import { assertValid, Validator, UnwrapBody } from '/common/valid'
 import { config } from '../config'
 
 const s3 = new S3({

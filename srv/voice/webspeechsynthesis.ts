@@ -1,4 +1,4 @@
-import { Validator } from 'frisker'
+import { Validator } from '/common/valid'
 import { StatusError } from '../api/wrap'
 
 const validator: Validator = {
