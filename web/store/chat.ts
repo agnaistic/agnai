@@ -116,7 +116,12 @@ export const chatStore = createStore<ChatState>('chat', {
   })
 
   events.on(EVENTS.init, (init) => {
-    chatStore.setState({ all: { chats: init.chats, chars: init.characters } })
+    if (init.chats) {
+      chatStore.setState({ all: { chats: init.chats, chars: init.characters } })
+    } else {
+      const { all: prev } = get()
+      chatStore.setState({ all: { chats: prev?.chats || [], chars: init.characters } })
+    }
   })
   return {
     /**
@@ -279,7 +284,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
     async *getAllChats({ all, lastFetched }) {
       const diff = Date.now() - lastFetched
-      if (diff < 300000) return
+      if (diff < 30000) return
 
       const res = await chatsApi.getAllChats()
       yield { lastFetched: Date.now() }

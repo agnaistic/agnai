@@ -3,3 +3,7 @@ export function toArray<T>(values?: T | T[]): T[] {
   if (Array.isArray(values)) return values
   return [values]
 }
+
+export function wait(secs: number) {
+  return new Promise((res) => setTimeout(res, secs * 1000))
+}
