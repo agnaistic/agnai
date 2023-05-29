@@ -69,6 +69,8 @@ secrets:
     external: true
   redis_host:
     external: true
+  inject_script:
+    external: true
 
 volumes:
   agn-data:
