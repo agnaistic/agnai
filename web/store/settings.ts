@@ -1,7 +1,7 @@
 import { HordeModel, HordeWorker } from '../../common/adapters'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
-import { setAssetPrefix } from '../shared/util'
+import { safeLocalStorage, setAssetPrefix } from '../shared/util'
 import { api } from './api'
 import { createStore } from './create'
 import { usersApi } from './data/user'
@@ -9,6 +9,7 @@ import { toastStore } from './toasts'
 import { subscribe } from './socket'
 
 type SettingState = {
+  guestAccessAllowed: boolean
   initLoading: boolean
   showMenu: boolean
   fullscreen: boolean
@@ -42,6 +43,7 @@ const defaultFlags: Flags = {
 
 const initState: SettingState = {
   anonymize: false,
+  guestAccessAllowed: safeLocalStorage.test(true),
   initLoading: true,
   showMenu: false,
   fullscreen: false,

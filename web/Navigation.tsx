@@ -129,7 +129,11 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
-  const menu = settingStore((s) => ({ showMenu: s.showMenu, config: s.config }))
+  const menu = settingStore((s) => ({
+    showMenu: s.showMenu,
+    config: s.config,
+    guest: s.guestAccessAllowed,
+  }))
 
   return (
     <>
@@ -139,29 +143,31 @@ const GuestNavigation: Component = () => {
         </Item>
       </Show>
 
-      <Item href="/profile">
-        <User /> Profile
-      </Item>
+      <Show when={menu.guest}>
+        <Item href="/profile">
+          <User /> Profile
+        </Item>
 
-      <Item href="/character/list">
-        <Bot /> Characters
-      </Item>
+        <Item href="/character/list">
+          <Bot /> Characters
+        </Item>
 
-      <Item href="/chats">
-        <MessageCircle /> Chats
-      </Item>
+        <Item href="/chats">
+          <MessageCircle /> Chats
+        </Item>
 
-      <Item href="/memory">
-        <Book /> Memory
-      </Item>
+        <Item href="/memory">
+          <Book /> Memory
+        </Item>
 
-      <Item href="/settings">
-        <Settings /> Settings
-      </Item>
+        <Item href="/settings">
+          <Settings /> Settings
+        </Item>
 
-      <Item href="/presets">
-        <Sliders /> Presets
-      </Item>
+        <Item href="/presets">
+          <Sliders /> Presets
+        </Item>
+      </Show>
 
       <Show when={menu.config.patreon}>
         <ExternalLink href="https://patreon.com/Agnaistic" newtab>
