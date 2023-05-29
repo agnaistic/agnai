@@ -31,6 +31,10 @@ const HordeAISettings: Component<{
       return selected.map((m) => m.value).join(', ')
     }
 
+    if (!state.models.length) {
+      return 'Any'
+    }
+
     return state.models.join(', ')
   })
 

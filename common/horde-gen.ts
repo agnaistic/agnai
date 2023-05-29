@@ -127,7 +127,8 @@ export async function generateText(
   }
 
   if (user.hordeModel && user.hordeModel !== 'any') {
-    body.models.push(...toArray(user.hordeModel))
+    const models = toArray(user.hordeModel)
+    body.models.push(...models)
   }
 
   if (user.hordeWorkers?.length) {
