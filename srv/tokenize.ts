@@ -22,12 +22,14 @@ const main: Encoder = function main(value: string) {
 }
 
 const novel: Encoder = function krake(value: string) {
-  return gpt.encode(value).length + 4
+  const cleaned = sp.cleanText(value)
+  const tokens = nerdstash.encodeIds(cleaned)
+  return tokens.length
 }
 
 const novelClio: Encoder = function clio(value: string) {
   const cleaned = sp.cleanText(value)
-  const tokens = nerdstash.encodeIds(cleaned)
+  const tokens = nerdstashV2.encodeIds(cleaned)
   return tokens.length
 }
 
