@@ -1,5 +1,6 @@
 import { customSettings } from '../../config'
 import { AppSchema } from '../../db/schema'
+import { logger } from '/srv/logger'
 
 export const personaValidator = {
   kind: ['wpp', 'sbf', 'boostyle', 'text'],
@@ -8,7 +9,24 @@ export const personaValidator = {
 
 export function extractActions(text: string) {
   const [split, rawActions] = text.split('ACTIONS:')
-  if (!rawActions || !rawActions.trim()) return { text, actions: [] }
+  if (!rawActions || !rawActions.trim()) {
+    let responses: string[] = []
+    const actions: AppSchema.ChatMessage['actions'] = []
+    const splits = text.split('\n')
+
+    for (const split of splits) {
+      const [emote, action] = split.split('->')
+      if (!action) {
+        responses.push(emote)
+        continue
+      }
+
+      actions.push({ emote: emote.trim().replace('{', '').replace('}', ''), action: action.trim() })
+    }
+
+    logger.debug({ text, actions }, 'Action extraction')
+    return { text: responses.join('\n'), actions }
+  }
 
   const actions = rawActions
     .split('\n')

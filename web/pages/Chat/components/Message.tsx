@@ -43,7 +43,7 @@ type MessageProps = {
   children?: any
   retrying?: AppSchema.ChatMessage
   partial?: string
-  actions?: Array<{ emote: string; action: string }>
+  actions?: AppSchema.ChatMessage['actions']
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -72,7 +72,6 @@ const Message: Component<MessageProps> = (props) => {
             children={props.children}
             retrying={props.retrying}
             partial={props.partial}
-            actions={props.actions}
           />
         )}
       </For>
@@ -299,6 +298,7 @@ const SingleMessage: Component<
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage(
+                    props.chat,
                     props.char!,
                     user.profile!,
                     props.partial!,
@@ -327,15 +327,16 @@ const SingleMessage: Component<
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage(
+                    props.chat,
                     props.char!,
                     user.profile!,
                     msgText(),
                     props.msg.adapter
                   )}
                 />
-                <Show when={props.actions}>
+                <Show when={props.original.actions && props.last && props.lastSplit}>
                   <div class="flex items-center justify-center gap-2">
-                    <For each={props.actions!}>
+                    <For each={props.original.actions}>
                       {(item) => (
                         <Button
                           size="sm"
@@ -368,28 +369,6 @@ const SingleMessage: Component<
 }
 
 export default Message
-
-function parseMessage(
-  msg: string,
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  adapter?: string
-) {
-  if (adapter === 'image') {
-    return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
-  }
-
-  const splits = msg.split('ACTIONS:')
-  if (splits.length > 1) {
-    msg = splits[0].trim()
-  }
-
-  return msg
-    .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, profile?.handle || 'You')
-    .replace(/(<)/g, '‹')
-    .replace(/(>)/g, '›')
-}
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
@@ -530,6 +509,7 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
 }
 
 function renderMessage(
+  chat: AppSchema.Chat,
   char: AppSchema.Character,
   profile: AppSchema.Profile,
   text: string,
@@ -539,7 +519,7 @@ function renderMessage(
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
   const html = markdown
-    .makeHtml(parseMessage(text, char, profile!, adapter))
+    .makeHtml(parseMessage(chat, text, char, profile!, adapter))
     .replace(/&amp;nbsp;/g, '&nbsp;')
   return html
 }
@@ -549,6 +529,34 @@ function sendAction(
   action: { emote: string; action: string },
   onSuccess?: () => void
 ) {
-  msgStore.send(chatId, action.action, 'send', onSuccess)
+  msgStore.send(chatId, action.action, 'send-noreply', onSuccess)
   msgStore.setState({ actions: undefined })
+}
+
+function parseMessage(
+  chat: AppSchema.Chat,
+  msg: string,
+  char: AppSchema.Character,
+  profile: AppSchema.Profile,
+  adapter?: string
+) {
+  if (adapter === 'image') {
+    return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
+  }
+
+  if (chat.mode === 'adventure') {
+    const nonActions: string[] = []
+    const splits = msg.split('\n')
+    for (const split of splits) {
+      if (!split.includes('->')) nonActions.push(split)
+    }
+
+    msg = nonActions.join('\n')
+  }
+
+  return msg
+    .replace(BOT_REPLACE, char.name)
+    .replace(SELF_REPLACE, profile?.handle || 'You')
+    .replace(/(<)/g, '‹')
+    .replace(/(>)/g, '›')
 }

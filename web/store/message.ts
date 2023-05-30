@@ -502,7 +502,9 @@ subscribe(
       msgStore.setState({
         actions: body.actions ? { messageId: body.messageId, list: body.actions } : undefined,
         msgs: msgs.map((msg) =>
-          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+          msg._id === body.messageId
+            ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
+            : msg
         ),
       })
     } else {
@@ -510,7 +512,9 @@ subscribe(
       msgStore.setState({
         actions: body.actions ? { messageId: body.messageId, list: body.actions } : undefined,
         msgs: msgs.map((msg) =>
-          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+          msg._id === body.messageId
+            ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
+            : msg
         ),
       })
     }

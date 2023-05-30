@@ -14,12 +14,13 @@ export type NewMessage = {
   handle?: string
   ooc: boolean
   imagePrompt?: string
+  actions?: AppSchema.ChatMessage['actions']
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
 
 export async function createChatMessage(
-  { chatId, message, characterId, senderId, adapter, ooc, imagePrompt }: NewMessage,
+  { chatId, message, characterId, senderId, adapter, ooc, imagePrompt, actions }: NewMessage,
   ephemeral?: boolean
 ) {
   const doc: AppSchema.ChatMessage = {
@@ -31,6 +32,7 @@ export async function createChatMessage(
     userId: senderId,
     msg: message,
     adapter,
+    actions,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ooc,
@@ -80,11 +82,11 @@ export async function deleteMessages(messageIds: string[]) {
   await db('chat-message').deleteMany({ _id: { $in: messageIds } })
 }
 
-export async function editMessage(id: string, content: string, adapter?: string) {
-  const edit: any = { msg: content, updatedAt: now() }
-  if (adapter) {
-    edit.adapter = adapter
-  }
+export async function editMessage(
+  id: string,
+  update: Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter'>
+) {
+  const edit: any = { ...update, updatedAt: now() }
 
   await db('chat-message').updateOne({ _id: id }, { $set: edit })
 

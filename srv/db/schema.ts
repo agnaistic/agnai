@@ -126,6 +126,7 @@ export namespace AppSchema {
     rating?: 'y' | 'n' | 'none'
     adapter?: string
     imagePrompt?: string
+    actions?: Array<{ emote: string; action: string }>
 
     createdAt: string
     updatedAt: string

@@ -32,6 +32,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       sampleChat: 'string',
       scenario: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
+      mode: ['standard', 'adventure', null],
     } as const)
 
     const attributes = getAttributeMap(ref)
@@ -116,6 +117,19 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
               { label: 'Default', value: 'default' },
               ...adaptersToOptions(cfg.config.adapters),
             ]}
+          />
+        </Show>
+
+        <Show when={cfg.flags.cyoa}>
+          <Select
+            fieldName="mode"
+            label="Chat Mode"
+            helperText="Only available for instruct-capable models. I.e: OpenAI, Claude"
+            items={[
+              { label: 'Conversation', value: 'standard' },
+              { label: 'Adventure (Experimental)', value: 'adventure' },
+            ]}
+            value={state.chat?.mode || 'standard'}
           />
         </Show>
 

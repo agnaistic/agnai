@@ -152,14 +152,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (kind !== 'continue' && kind !== 'summary') {
-      // const content = `Respond as ${opts.replyAs.name}`
-      const botName = opts.replyAs.name
-      const content = `Respond as ${botName}. In addition provide 3 possible response that ${handle} could give to ${opts.replyAs.name}'s response. Respond in this strict format:
-${botName}: ${botName}'s response to the previous message
-ACTIONS:
-Emotion of response 1 - Possible response 1
-Emotion of response 2 - Possible response 2
-Emotion of response 3 - Possible response 3`
+      const content = getInstruction(opts.chat, opts.replyAs.name, handle)
       tokens += encoder(content)
       history.push({ role: 'system', content })
     }
@@ -406,4 +399,18 @@ function getCharLooks(char: AppSchema.Character) {
 
   if (!visuals.length) return
   return `${char.name}'s appearance: ${visuals.join(', ')}`
+}
+
+function getInstruction(chat: AppSchema.Chat, bot: string, handle: string) {
+  if (chat.mode !== 'adventure') {
+    return `Respond as ${bot}`
+  }
+
+  // This is experimental and probably needs to be workshopped to get better responses
+  const content = `Respond as ${bot}. In addition provide 3 possible response that ${handle} could give to ${bot}'s response that drive the story forward. Respond in this strict format:
+${bot}: ${bot}'s response and actions to the previous message
+{Emotion of ${handle}'s response 1} -> {Possible response 1}
+{Emotion of ${handle}'s response 2} -> {Possible response 2}
+{Emotion of ${handle}'s response 3} -> {Possible response 3}`
+  return content
 }

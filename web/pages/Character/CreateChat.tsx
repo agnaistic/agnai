@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, userStore } from '../../store'
+import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { getPresetOptions } from '../../shared/adapter'
 
@@ -47,6 +47,7 @@ const CreateChatModal: Component<{
 
   const user = userStore((s) => s.user || { defaultPreset: '' })
   const presets = presetStore((s) => s.presets)
+  const flags = settingStore((s) => s.flags)
 
   const presetOptions = createMemo(() =>
     getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
@@ -63,7 +64,11 @@ const CreateChatModal: Component<{
       scenario: 'string',
       sampleChat: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
+      mode: ['standard', 'adventure', null],
     } as const)
+
+    body.mode
+    body.schema
 
     const attributes = getAttributeMap(ref)
 
@@ -119,6 +124,19 @@ const CreateChatModal: Component<{
           items={presetOptions()}
           value={user.defaultPreset}
         />
+
+        <Show when={flags.cyoa}>
+          <Select
+            fieldName="mode"
+            label="Chat Mode"
+            helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment."
+            items={[
+              { label: 'Conversation', value: 'standard' },
+              { label: 'Adventure (Experimental)', value: 'adventure' },
+            ]}
+            value={'standard'}
+          />
+        </Show>
 
         <TextInput
           class="text-sm"

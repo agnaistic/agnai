@@ -7,6 +7,7 @@ import { createStore } from './create'
 import { usersApi } from './data/user'
 import { toastStore } from './toasts'
 import { subscribe } from './socket'
+import { FeatureFlags, defaultFlags } from './flags'
 
 type SettingState = {
   guestAccessAllowed: boolean
@@ -27,19 +28,12 @@ type SettingState = {
     books: AppSchema.MemoryBook[]
   }
   showImage?: string
-  flags: Flags
-}
-
-type Flags = {
-  charv2: boolean
+  flags: FeatureFlags
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
 
 const FLAG_KEY = 'agnai-flags'
-const defaultFlags: Flags = {
-  charv2: false,
-}
 
 const initState: SettingState = {
   anonymize: false,
@@ -152,7 +146,7 @@ export const settingStore = createStore<SettingState>(
     showImage(_, image?: string) {
       return { showImage: image }
     },
-    flag({ flags }, flag: keyof Flags, value: boolean) {
+    flag({ flags }, flag: keyof FeatureFlags, value: boolean) {
       const nextFlags = { ...flags, [flag]: value }
       saveFlags(nextFlags)
       return { flags: nextFlags }
@@ -167,7 +161,7 @@ subscribe('connected', { uid: 'string' }, (body) => {
   settingStore.init()
 })
 
-window.flag = (flag: keyof Flags, value) => {
+window.flag = (flag: keyof FeatureFlags, value) => {
   if (!flag) {
     console.log('Available flags:')
     for (const key in defaultFlags) console.log(key)
@@ -183,9 +177,9 @@ window.flag = (flag: keyof Flags, value) => {
   settingStore.flag(flag as any, value)
 }
 
-type FlagCache = { user: Flags; default: Flags }
+type FlagCache = { user: FeatureFlags; default: FeatureFlags }
 
-function getFlags(): Flags {
+function getFlags(): FeatureFlags {
   try {
     const cache = localStorage.getItem(FLAG_KEY)
     if (!cache) return defaultFlags

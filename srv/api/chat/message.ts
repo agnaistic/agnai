@@ -209,6 +209,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         message: actioned.text,
         adapter,
         ooc: false,
+        actions: actioned.actions,
       })
       sendMany(members, {
         type: 'message-created',
@@ -223,7 +224,11 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     case 'retry': {
       if (body.replacing) {
-        await store.msgs.editMessage(body.replacing._id, actioned.text, adapter)
+        await store.msgs.editMessage(body.replacing._id, {
+          msg: actioned.text,
+          actions: actioned.actions,
+          adapter,
+        })
         sendMany(members, {
           type: 'message-retry',
           chatId,
@@ -239,6 +244,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           characterId: replyAs._id,
           message: generated,
           adapter,
+          actions: actioned.actions,
           ooc: false,
         })
         sendMany(members, {
@@ -254,7 +260,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     case 'continue': {
-      await store.msgs.editMessage(body.continuing._id, responseText, adapter)
+      await store.msgs.editMessage(body.continuing._id, { msg: responseText, adapter })
       sendMany(members, {
         type: 'message-retry',
         chatId,
