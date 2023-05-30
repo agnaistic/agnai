@@ -24,7 +24,6 @@ export function extractActions(text: string) {
       actions.push({ emote: emote.trim().replace('{', '').replace('}', ''), action: action.trim() })
     }
 
-    logger.debug({ text, actions }, 'Action extraction')
     return { text: responses.join('\n'), actions }
   }
 
