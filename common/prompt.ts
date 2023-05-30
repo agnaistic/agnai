@@ -3,7 +3,7 @@ import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
 import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
-import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
+import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
 

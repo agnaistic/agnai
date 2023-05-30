@@ -6,5 +6,5 @@ export type FeatureFlags = { [key in Flag]: boolean }
 
 export const defaultFlags: FeatureFlags = {
   charv2: false,
-  cyoa: true,
+  cyoa: false,
 }
