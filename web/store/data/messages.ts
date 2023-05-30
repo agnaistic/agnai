@@ -106,7 +106,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
   )
   if (ui?.logPromptsToBrowserConsole) {
     console.log(`=== Sending the following prompt: ===`)
-    console.log(`${prompt.parts.gaslight}\n${prompt.lines.join('\n')}\n${prompt.post}`)
+    console.log(`${prompt.template}`)
   }
 
   const request: GenerateRequestV2 = {

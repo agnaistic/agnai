@@ -37,7 +37,7 @@ const base = {
   use_string: true,
   repetition_penalty_frequency: 0,
   repetition_penalty_presence: 0,
-  bad_word_ids: badWordIds,
+  bad_words_ids: badWordIds,
 }
 
 export const handleNovel: ModelAdapter = async function* ({
@@ -65,7 +65,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const endTokens = ['***', 'Scenario:', '----']
 
-  log.debug({ ...body, parameters: { ...body.parameters, bad_word_ids: null } }, 'NovelAI payload')
+  log.debug({ ...body, parameters: { ...body.parameters, bad_words_ids: null } }, 'NovelAI payload')
 
   const headers = {
     Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,
@@ -114,6 +114,7 @@ function getClioParams(gen: Partial<AppSchema.GenSettings>) {
     tail_free_sampling: gen.tailFreeSampling,
     repetition_penalty: gen.repetitionPenalty,
     repetition_penalty_range: gen.repetitionPenaltyRange,
+    repetition_penalty_slope: gen.repetitionPenaltySlope,
     repetition_penalty_frequency: gen.frequencyPenalty,
     repetition_penalty_presence: gen.presencePenalty,
     generate_until_sentence: true,
@@ -122,7 +123,7 @@ function getClioParams(gen: Partial<AppSchema.GenSettings>) {
     return_full_text: false,
     prefix: 'vanilla',
     order: gen.order,
-    bad_word_ids: clioBadWordsId,
+    bad_words_ids: clioBadWordsId,
   }
 }
 
@@ -205,7 +206,4 @@ const fullCompletition = async function* (headers: any, body: any, log: AppLog) 
   }
 
   return { tokens: res.body.output }
-  // const parsed = sanitise(res.body.output)
-  // const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, endTokens)
-  // yield trimmed || parsed
 }

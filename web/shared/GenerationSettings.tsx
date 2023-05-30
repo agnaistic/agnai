@@ -15,7 +15,7 @@ import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
 import { settingStore } from '../store'
-import PromptEditor from './PromptEditor'
+// import PromptEditor from './PromptEditor'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -103,7 +103,7 @@ const GeneralSettings: Component<Props> = (props) => {
     <>
       <div class="text-xl font-bold">General Settings</div>
 
-      <PromptEditor preset={props.inherit} />
+      {/* <PromptEditor preset={props.inherit} /> */}
 
       <Select
         fieldName="oaiModel"
