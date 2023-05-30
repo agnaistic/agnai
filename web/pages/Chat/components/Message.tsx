@@ -26,6 +26,7 @@ import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
+import Button from '/web/shared/Button'
 
 type MessageProps = {
   msg: SplitMessage
@@ -42,6 +43,7 @@ type MessageProps = {
   children?: any
   retrying?: AppSchema.ChatMessage
   partial?: string
+  actions?: Array<{ emote: string; action: string }>
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -70,6 +72,7 @@ const Message: Component<MessageProps> = (props) => {
             children={props.children}
             retrying={props.retrying}
             partial={props.partial}
+            actions={props.actions}
           />
         )}
       </For>
@@ -330,6 +333,21 @@ const SingleMessage: Component<
                     props.msg.adapter
                   )}
                 />
+                <Show when={props.actions}>
+                  <div class="flex items-center justify-center gap-2">
+                    <For each={props.actions!}>
+                      {(item) => (
+                        <Button
+                          size="sm"
+                          schema="gray"
+                          onClick={() => sendAction(props.chat._id, item)}
+                        >
+                          {item.emote}
+                        </Button>
+                      )}
+                    </For>
+                  </div>
+                </Show>
               </Match>
               <Match when={edit()}>
                 <div
@@ -359,6 +377,11 @@ function parseMessage(
 ) {
   if (adapter === 'image') {
     return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
+  }
+
+  const splits = msg.split('ACTIONS:')
+  if (splits.length > 1) {
+    msg = splits[0].trim()
   }
 
   return msg
@@ -519,4 +542,13 @@ function renderMessage(
     .makeHtml(parseMessage(text, char, profile!, adapter))
     .replace(/&amp;nbsp;/g, '&nbsp;')
   return html
+}
+
+function sendAction(
+  chatId: string,
+  action: { emote: string; action: string },
+  onSuccess?: () => void
+) {
+  msgStore.send(chatId, action.action, 'send', onSuccess)
+  msgStore.setState({ actions: undefined })
 }

@@ -19,7 +19,7 @@ ADD srv/ ./srv/
 ADD web/ ./web
 
 RUN pnpm run build:server && \
-  sed -i 's/{{unknown}}/${SHA}/g' /app/web/index.html && \
+  sed -i "s/{{unknown}}/${SHA}/g" /app/web/index.html && \
   pnpm run build && mkdir -p /app/assets && \
   echo "${SHA}" > /app/version.txt
 

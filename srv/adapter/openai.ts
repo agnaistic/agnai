@@ -152,7 +152,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (kind !== 'continue' && kind !== 'summary') {
-      const content = `Respond as ${opts.replyAs.name}`
+      // const content = `Respond as ${opts.replyAs.name}`
+      const botName = opts.replyAs.name
+      const content = `Respond as ${botName}. In addition provide 3 possible response that ${handle} could give to ${opts.replyAs.name}'s response. Respond in this strict format:
+${botName}: ${botName}'s response to the previous message
+ACTIONS:
+Emotion of response 1 - Possible response 1
+Emotion of response 2 - Possible response 2
+Emotion of response 3 - Possible response 3`
       tokens += encoder(content)
       history.push({ role: 'system', content })
     }
@@ -237,6 +244,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
+
     yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')

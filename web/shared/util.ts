@@ -1,19 +1,8 @@
-import { UnwrapBody, assertValid } from '/common/valid'
+import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
 import { settingStore } from '../store'
-
-type FormRef = {
-  [key: string]:
-    | 'string'
-    | 'string?'
-    | readonly string[]
-    | 'boolean'
-    | 'number'
-    | 'number?'
-    | 'boolean?'
-}
 
 export const safeLocalStorage = {
   getItem,
@@ -144,7 +133,7 @@ export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
 
 type Field = HTMLSelectElement | HTMLInputElement
 
-export function getStrictForm<T extends FormRef>(
+export function getStrictForm<T extends Validator>(
   evt: Event | HTMLFormElement,
   body: T,
   partial?: boolean

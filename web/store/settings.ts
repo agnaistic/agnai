@@ -95,8 +95,7 @@ export const settingStore = createStore<SettingState>(
 
       if (res.error) {
         if (res.status === 500) {
-          toastStore.error(`Could not get settings from server. Logging out to use guest mode...`)
-          events.emit(EVENTS.sessionExpired)
+          toastStore.error(`Could not get settings from server.`)
           return
         }
         setTimeout(() => settingStore.init(), 2500)

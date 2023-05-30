@@ -34,6 +34,7 @@ export type MsgState = {
   nextLoading: boolean
   imagesSaved: boolean
   speaking: { messageId: string; status: VoiceState } | undefined
+  actions?: { messageId: string; list: Array<{ emote: string; action: string }> }
 
   /**
    * Ephemeral image messages
@@ -479,6 +480,7 @@ subscribe(
     message: 'string',
     continue: 'boolean?',
     adapter: 'string',
+    actions: [{ emote: 'string', action: 'string' }, '?'],
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
@@ -498,6 +500,7 @@ subscribe(
 
     if (retrying?._id === body.messageId) {
       msgStore.setState({
+        actions: body.actions ? { messageId: body.messageId, list: body.actions } : undefined,
         msgs: msgs.map((msg) =>
           msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
         ),
@@ -505,6 +508,7 @@ subscribe(
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
+        actions: body.actions ? { messageId: body.messageId, list: body.actions } : undefined,
         msgs: msgs.map((msg) =>
           msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
         ),
@@ -535,10 +539,12 @@ subscribe(
     msg: 'any',
     chatId: 'string',
     generate: 'boolean?',
-  },
+    actions: [{ emote: 'string', action: 'string' }, '?'],
+  } as const,
   (body) => {
     const { msgs, activeChatId } = msgStore.getState()
     if (activeChatId !== body.chatId) return
+
     const msg = body.msg as AppSchema.ChatMessage
     const user = userStore().user
 
@@ -546,13 +552,14 @@ subscribe(
     const nextMsgs = msgs.concat(msg)
     // If the message is from a user don't clear the "waiting for response" flags
     if (msg.userId && !body.generate) {
-      msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
+      msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking, actions: undefined })
     } else {
       msgStore.setState({
         msgs: nextMsgs,
         partial: undefined,
         waiting: undefined,
         speaking: speech?.speaking,
+        actions: body.actions ? { messageId: body.msg._id, list: body.actions } : undefined,
       })
     }
 

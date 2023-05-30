@@ -52,6 +52,7 @@ const ChatDetail: Component = () => {
     retries: s.retries,
     speaking: s.speaking,
     retrying: s.retrying,
+    actions: s.actions,
   }))
 
   const isGroupChat = createMemo(() => {
@@ -330,6 +331,7 @@ const ChatDetail: Component = () => {
                       tts={tts()}
                       retrying={msgs.retrying}
                       partial={msgs.partial}
+                      actions={msg._id === msgs.actions?.messageId ? msgs.actions.list : undefined}
                     >
                       {isOwner() &&
                         retries()?.list?.length! > 1 &&
