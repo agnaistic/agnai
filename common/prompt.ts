@@ -90,7 +90,7 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
   const lines = getLinesForPrompt(opts, encoder)
   const parts = getPromptParts(opts, lines, encoder)
   const template = injectPlaceholders(opts, parts, lines, 'desc', encoder)
-  return { prompt, lines: lines.reverse(), parts, history, template }
+  return { lines: lines.reverse(), parts, template }
 }
 
 /**
@@ -113,6 +113,43 @@ export function createPromptWithParts(
   const post = createPostPrompt(opts)
   const template = injectPlaceholders(opts, parts, lines, 'asc', encoder)
   return { lines, prompt: template, parts, post }
+}
+
+export function injectPlaceholders(
+  opts: BuildPromptOpts,
+  parts: PromptParts,
+  lines: string[],
+  order: 'asc' | 'desc',
+  encoder: Encoder
+) {
+  const template =
+    opts.settings?.useGaslight && opts.settings.gaslight
+      ? opts.settings.gaslight
+      : opts.chat.mode === 'adventure'
+      ? adventureTemplate
+      : defaultTemplate
+  const sampleChat = parts.sampleChat?.join('\n') || ''
+  const sender = opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle || 'You'
+
+  let prompt = template
+    // UJB must be first to replace placeholders within the UJB
+    .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
+    .replace(HOLDERS.sampleChat, sampleChat)
+    .replace(HOLDERS.scenario, parts.scenario || '')
+    .replace(HOLDERS.memory, parts.memory || '')
+    .replace(HOLDERS.persona, parts.persona)
+    .replace(HOLDERS.post, parts.post.join('\n'))
+    // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
+    .replace(BOT_REPLACE, opts.replyAs.name)
+    .replace(SELF_REPLACE, sender)
+
+  const messages = order === 'asc' ? lines.slice().reverse() : lines.slice()
+  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+  const maxContext = getContextLimit(opts.settings, adapter, model)
+  const history = fillPromptWithLines(encoder, maxContext, prompt, messages).reverse()
+
+  prompt = prompt.replace(HOLDERS.history, history.join('\n'))
+  return prompt
 }
 
 export function getPromptParts(
@@ -543,36 +580,4 @@ export function trimTokens(opts: TrimOpts) {
   }
 
   return output
-}
-
-export function injectPlaceholders(
-  opts: BuildPromptOpts,
-  parts: PromptParts,
-  lines: string[],
-  order: 'asc' | 'desc',
-  encoder: Encoder
-) {
-  const template = opts.chat.mode === 'adventure' ? adventureTemplate : defaultTemplate
-  const sampleChat = parts.sampleChat?.join('\n') || ''
-  const sender = opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle || 'You'
-
-  let prompt = template
-    // UJB must be first to replace placeholders within the UJB
-    .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
-    .replace(HOLDERS.sampleChat, sampleChat)
-    .replace(HOLDERS.scenario, parts.scenario || '')
-    .replace(HOLDERS.memory, parts.memory || '')
-    .replace(HOLDERS.persona, parts.persona)
-    .replace(HOLDERS.post, parts.post.join('\n'))
-    // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
-    .replace(BOT_REPLACE, opts.replyAs.name)
-    .replace(SELF_REPLACE, sender)
-
-  const messages = order === 'asc' ? lines.slice().reverse() : lines.slice()
-  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const maxContext = getContextLimit(opts.settings, adapter, model)
-  const history = fillPromptWithLines(encoder, maxContext, prompt, messages).reverse()
-
-  prompt = prompt.replace(HOLDERS.history, history.join('\n'))
-  return prompt
 }

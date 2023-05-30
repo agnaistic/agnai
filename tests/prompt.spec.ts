@@ -26,30 +26,34 @@ const book = toBook('book', [
 describe('Prompt building', () => {
   it('will build a basic prompt', () => {
     const actual = build([botMsg('FIRST'), toMsg('SECOND')])
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        '<START>',
+        'Facts:',
+        `\nExample of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        'Bot:'
+        '\nBot:'
       )
     )
   })
 
   it('will build a continue prompt', () => {
     const actual = build([botMsg('FIRST'), toMsg('SECOND')], { continue: 'ORIGINAL' })
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        '<START>',
+        'Facts:\n',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        'Bot: ORIGINAL',
+        '\nBot: ORIGINAL',
         'Bot:'
       )
     )
@@ -61,14 +65,16 @@ describe('Prompt building', () => {
       chat: { ...chat, adapter: 'openai' },
       settings: { oaiModel: OPENAI_MODELS.Turbo },
     })
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        '<START>',
+        'Facts:\n',
+        `Example of Bot's dialogue:\n`,
+        '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        'Bot: ORIGINAL',
+        '\nBot: ORIGINAL',
         'Bot:'
       )
     )
@@ -80,15 +86,17 @@ describe('Prompt building', () => {
       chat: { ...chat, adapter: 'openai' },
       settings: { oaiModel: OPENAI_MODELS.Turbo, gaslight: 'Gaslight' },
     })
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        '<START>',
+        'Facts:\n',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        'Bot: ORIGINAL',
+        '\nBot: ORIGINAL',
         'Bot:'
       )
     )
@@ -96,17 +104,18 @@ describe('Prompt building', () => {
 
   it('will include will two memories by weight when triggered', () => {
     const actual = build([botMsg('FIRST'), toMsg('10-TRIGGER'), toMsg('1-TRIGGER')])
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE\nENTRY TWO',
-        '<START>',
+        'Facts:\nENTRY ONE\nENTRY TWO',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: 10-TRIGGER',
         'You: 1-TRIGGER',
-        'Bot:'
+        '\nBot:'
       )
     )
   })
@@ -117,18 +126,19 @@ describe('Prompt building', () => {
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
       { settings: { memoryContextLimit: limit } }
     )
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY TWO\nENTRY THREE',
-        '<START>',
+        'Facts:\nENTRY TWO\nENTRY THREE',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: 1-TRIGGER',
         'You: 10-TRIGGER',
         'You: 20-TRIGGER',
-        'Bot:'
+        '\nBot:'
       )
     )
   })
@@ -140,18 +150,19 @@ describe('Prompt building', () => {
       toMsg('TIE-TRIGGER'),
       toMsg('20-TRIGGER'),
     ])
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE',
-        '<START>',
+        'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
-        'Bot:'
+        '\nBot:'
       )
     )
   })
@@ -162,18 +173,19 @@ describe('Prompt building', () => {
       { settings: { memoryDepth: 2 } }
     )
 
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY TIE\nENTRY THREE',
-        '<START>',
+        'Facts:\nENTRY TIE\nENTRY THREE',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
-        'Bot:'
+        '\nBot:'
       )
     )
   })
@@ -184,16 +196,7 @@ describe('Prompt building', () => {
       { settings: { gaslight: 'GASLIGHT {{user}}', useGaslight: true } }
     )
 
-    expect(actual.prompt).to.equal(
-      expected(
-        'GASLIGHT You',
-        'Bot: FIRST',
-        'You: 1-TRIGGER',
-        'You: TIE-TRIGGER',
-        'You: 20-TRIGGER',
-        'Bot:'
-      )
-    )
+    expect(actual.template).to.equal(expected('GASLIGHT You'))
   })
 
   it('will include placeholders in the gaslight', () => {
@@ -207,18 +210,8 @@ describe('Prompt building', () => {
       }
     )
 
-    expect(actual.prompt).to.equal(
-      expected(
-        'GASLIGHT',
-        'You',
-        'Bot',
-        'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE',
-        'Bot: FIRST',
-        'You: 1-TRIGGER',
-        'You: TIE-TRIGGER',
-        'You: 20-TRIGGER',
-        'Bot:'
-      )
+    expect(actual.template).to.equal(
+      expected('GASLIGHT', 'You', 'Bot', 'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE')
     )
   })
 
@@ -233,18 +226,19 @@ describe('Prompt building', () => {
       }
     )
 
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE',
-        '<START>',
+        'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
+        '\n<START>',
         'Bot: FIRST',
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
-        'Bot:'
+        '\nBot:'
       )
     )
   })
@@ -260,12 +254,15 @@ describe('Prompt building', () => {
 
   it('will use correct placeholders in scenario and sample chat', () => {
     const actual = build([], { replyAs, char: main, chat: toChat(main) })
-    expect(actual.prompt).to.equal(
+    expect(actual.template).to.equal(
       expected(
         `Reply's Persona: PERSONA`,
         `Scenario: MAIN Main`,
-        `<START>`,
+        `Facts:\n`,
+        `Example of Reply's dialogue:`,
         'SAMPLECHAT Reply',
+        `\n<START>\n`,
+        '',
         'Reply:'
       )
     )
@@ -277,8 +274,15 @@ describe('Prompt building', () => {
       char: main,
       chat: toChat(main),
     })
-    expect(actual.prompt).to.equal(
-      expected(`Reply's Persona: PERSONA`, `Scenario: MAIN Main`, `<START>`, 'Reply:')
+    expect(actual.template).to.equal(
+      expected(
+        `Reply's Persona: PERSONA`,
+        `Scenario: MAIN Main`,
+        'Facts:\n',
+        `Example of Reply's dialogue:\n`,
+        '\n<START>\n\n',
+        'Reply:'
+      )
     )
   })
 })

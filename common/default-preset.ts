@@ -220,9 +220,7 @@ export const defaultPresets = {
 
 export const defaultTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
-
 Facts:\n{{memory}}
-
 Example of {{char}}'s dialogue:\n{{example_dialogue}}
 
 <START>
@@ -232,9 +230,7 @@ Example of {{char}}'s dialogue:\n{{example_dialogue}}
 
 export const adventureTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
-
 Facts:\n{{memory}}
-
 Example of {{char}}'s dialogue:\n{{example_dialogue}}
 
 <START>
