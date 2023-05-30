@@ -11,15 +11,14 @@ export const updateChat = handle(async ({ params, body, user }) => {
     {
       name: 'string',
       mode: ['standard', 'adventure', null],
-      adapter: ['default', ...config.adapters] as const,
+      adapter: ['default', ...config.adapters, null] as const,
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
       memoryId: 'string?',
       overrides: personaValidator,
     },
-    body,
-    true
+    body
   )
 
   const id = params.id
