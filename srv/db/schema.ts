@@ -114,6 +114,8 @@ export namespace AppSchema {
     createdAt: string
   }
 
+  export type ChatAction = { emote: string; action: string }
+
   export interface ChatMessage {
     _id: string
     kind: 'chat-message'
@@ -126,7 +128,7 @@ export namespace AppSchema {
     rating?: 'y' | 'n' | 'none'
     adapter?: string
     imagePrompt?: string
-    actions?: Array<{ emote: string; action: string }>
+    actions?: ChatAction[]
 
     createdAt: string
     updatedAt: string

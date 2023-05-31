@@ -63,7 +63,6 @@ export const config = {
     upload: +env('IMAGE_SIZE_LIMIT', '2'),
     payload: +env('JSON_SIZE_LIMIT', '2'),
   },
-  noRequestLogs: env('DISABLE_REQUEST_LOGGING', 'false') === 'true',
   horde: {
     maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),
     imageWaitSecs: +env('HORDE_IMAGE_WAIT_SECS', '320'),

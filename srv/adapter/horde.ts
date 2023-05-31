@@ -28,7 +28,11 @@ export const handleHorde: ModelAdapter = async function* ({
     const trimmed = trimResponseV2(sanitised, opts.replyAs, members, characters, ['END_OF_DIALOG'])
 
     // This is a temporary measure to help users provide more info when reporting instances of 'cut off' responses
-    publishOne(user._id, { type: 'temp-horde-gen', original: sanitised, chatId: opts.chat._id })
+    publishOne(guest || user._id, {
+      type: 'temp-horde-gen',
+      original: sanitised,
+      chatId: opts.chat._id,
+    })
 
     yield trimmed || sanitised
   } catch (ex: any) {

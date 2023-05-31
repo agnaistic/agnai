@@ -34,7 +34,6 @@ export type MsgState = {
   nextLoading: boolean
   imagesSaved: boolean
   speaking: { messageId: string; status: VoiceState } | undefined
-  actions?: { messageId: string; list: Array<{ emote: string; action: string }> }
 
   /**
    * Ephemeral image messages
@@ -500,7 +499,6 @@ subscribe(
 
     if (retrying?._id === body.messageId) {
       msgStore.setState({
-        actions: body.actions ? { messageId: body.messageId, list: body.actions } : undefined,
         msgs: msgs.map((msg) =>
           msg._id === body.messageId
             ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
@@ -510,7 +508,6 @@ subscribe(
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
-        actions: body.actions ? { messageId: body.messageId, list: body.actions } : undefined,
         msgs: msgs.map((msg) =>
           msg._id === body.messageId
             ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
@@ -556,14 +553,13 @@ subscribe(
     const nextMsgs = msgs.concat(msg)
     // If the message is from a user don't clear the "waiting for response" flags
     if (msg.userId && !body.generate) {
-      msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking, actions: undefined })
+      msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
     } else {
       msgStore.setState({
         msgs: nextMsgs,
         partial: undefined,
         waiting: undefined,
         speaking: speech?.speaking,
-        actions: body.actions ? { messageId: body.msg._id, list: body.actions } : undefined,
       })
     }
 

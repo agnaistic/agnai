@@ -44,6 +44,7 @@ type MessageProps = {
   retrying?: AppSchema.ChatMessage
   partial?: string
   actions?: AppSchema.ChatMessage['actions']
+  sendMessage: (msg: string, ooc: boolean) => void
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -72,6 +73,7 @@ const Message: Component<MessageProps> = (props) => {
             children={props.children}
             retrying={props.retrying}
             partial={props.partial}
+            sendMessage={props.sendMessage}
           />
         )}
       </For>
@@ -254,6 +256,7 @@ const SingleMessage: Component<
                     lastSplit={props.lastSplit}
                     last={props.last}
                     tts={!!props.tts}
+                    partial={props.partial}
                   />
                 </Match>
 
@@ -309,7 +312,7 @@ const SingleMessage: Component<
               <Match
                 when={
                   props.retrying?._id == props.original._id ||
-                  (props.msg._id === '' && !props.msg.msg.length)
+                  (props.msg._id === 'partial' && !props.msg.msg.length)
                 }
               >
                 <div class="flex h-8 w-12 items-center justify-center">
@@ -334,14 +337,16 @@ const SingleMessage: Component<
                     props.msg.adapter
                   )}
                 />
-                <Show when={props.original.actions && props.last && props.lastSplit}>
+                <Show
+                  when={!props.partial && props.original.actions && props.last && props.lastSplit}
+                >
                   <div class="flex items-center justify-center gap-2">
                     <For each={props.original.actions}>
                       {(item) => (
                         <Button
                           size="sm"
                           schema="gray"
-                          onClick={() => sendAction(props.chat._id, item)}
+                          onClick={() => sendAction(props.sendMessage, item)}
                         >
                           {item.emote}
                         </Button>
@@ -455,12 +460,17 @@ const MessageOptions: Component<{
   startEdit: () => void
   lastSplit: boolean
   last?: boolean
+  partial?: string
   onRemove: () => void
 }> = (props) => {
   return (
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
-        <div onClick={() => chatStore.showPrompt(props.original)} class="icon-button">
+        <div
+          onClick={() => !props.partial && chatStore.showPrompt(props.original)}
+          class="icon-button"
+          classList={{ disabled: !!props.partial }}
+        >
           <Terminal size={16} />
         </div>
       </Show>
@@ -483,15 +493,18 @@ const MessageOptions: Component<{
           props.msg.characterId
         }
       >
-        <div class="icon-button" onClick={() => retryMessage(props.original, props.msg)}>
+        <div
+          class="icon-button"
+          onClick={() => !props.partial && retryMessage(props.original, props.msg)}
+        >
           <RefreshCw size={18} />
         </div>
       </Show>
 
       <Show when={props.last && !props.msg.characterId}>
         <div
-          class="cursor-pointer"
-          onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
+          class="icon-button"
+          onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}
         >
           <RefreshCw size={18} />
         </div>
@@ -524,13 +537,8 @@ function renderMessage(
   return html
 }
 
-function sendAction(
-  chatId: string,
-  action: { emote: string; action: string },
-  onSuccess?: () => void
-) {
-  msgStore.send(chatId, action.action, 'send-noreply', onSuccess)
-  msgStore.setState({ actions: undefined })
+function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
+  send(`*${emote}* ${action}`, false)
 }
 
 function parseMessage(
@@ -548,7 +556,7 @@ function parseMessage(
     const nonActions: string[] = []
     const splits = msg.split('\n')
     for (const split of splits) {
-      if (!split.includes('->')) nonActions.push(split)
+      if (!split.startsWith('{') && !split.includes('->')) nonActions.push(split)
     }
 
     msg = nonActions.join('\n')

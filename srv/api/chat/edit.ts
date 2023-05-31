@@ -10,15 +10,16 @@ export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
       name: 'string',
-      mode: ['standard', 'adventure', null],
-      adapter: ['default', ...config.adapters, null] as const,
+      mode: ['standard', 'adventure'],
+      adapter: ['default', ...config.adapters] as const,
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
-      memoryId: 'string?',
+      memoryId: 'string',
       overrides: personaValidator,
     },
-    body
+    body,
+    true
   )
 
   const id = params.id

@@ -35,7 +35,9 @@ export const GenerationPresetsPage: Component = () => {
     saving,
     presets,
     items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
-    editing: presets.find((pre) => pre._id === params.id),
+    editing: isDefaultPreset(query.preset)
+      ? defaultPresets[query.preset]
+      : presets.find((pre) => pre._id === query.preset || params.id),
   }))
 
   createEffect(async () => {

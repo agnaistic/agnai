@@ -1,7 +1,6 @@
 import * as uuid from 'uuid'
 import pino from 'pino'
-import { NextFunction, Response } from 'express'
-import { config } from './config'
+import type { NextFunction, Response } from 'express'
 
 const transport =
   process.env.NODE_ENV !== 'production'
@@ -43,7 +42,7 @@ export function logMiddleware() {
 
     req.log = log
 
-    const canLog = req.method !== 'OPTIONS' && req.url.startsWith('/api') && !config.noRequestLogs
+    const canLog = req.method !== 'OPTIONS' && req.url.startsWith('/api')
     if (canLog) req.log.info('start request')
 
     const start = Date.now()

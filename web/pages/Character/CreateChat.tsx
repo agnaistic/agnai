@@ -10,6 +10,7 @@ import { getStrictForm } from '../../shared/util'
 import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { getPresetOptions } from '../../shared/adapter'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -31,6 +32,7 @@ const CreateChatModal: Component<{
   }))
 
   const [selectedId, setSelected] = createSignal<string>()
+  const [presetId, setPresetId] = createSignal('')
 
   const char = createMemo(() =>
     state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
@@ -52,6 +54,13 @@ const CreateChatModal: Component<{
   const presetOptions = createMemo(() =>
     getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
   )
+
+  const selectedPreset = createMemo(() => {
+    const id = presetId()
+    if (!id) return
+    if (isDefaultPreset(id)) return defaultPresets[id]
+    return presets.find((pre) => pre._id === id)
+  })
 
   const onCreate = () => {
     const character = char()
@@ -123,13 +132,14 @@ const CreateChatModal: Component<{
           label="Preset"
           items={presetOptions()}
           value={user.defaultPreset}
+          onChange={(ev) => setPresetId(ev.value)}
         />
 
-        <Show when={flags.cyoa}>
+        <Show when={flags.cyoa && selectedPreset()?.service === 'openai'}>
           <Select
             fieldName="mode"
             label="Chat Mode"
-            helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment."
+            helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment. This feature may not work "
             items={[
               { label: 'Conversation', value: 'standard' },
               { label: 'Adventure (Experimental)', value: 'adventure' },

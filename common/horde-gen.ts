@@ -2,6 +2,7 @@ import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './default-preset'
 import { SD_SAMPLER } from './image'
 import { toArray } from './util'
+import { AppLog } from '/srv/logger'
 
 const HORDE_GUEST_KEY = '0000000000'
 const baseUrl = 'https://horde.koboldai.net/api/v2'
@@ -41,6 +42,7 @@ type HordeCheck = {
 
 let TIMEOUT_SECS = Infinity
 let fetcher: Fetcher
+let logger: AppLog
 
 if (typeof window !== 'undefined') {
   fetcher = async (opts) => {
@@ -70,10 +72,12 @@ async function useFetch<T = any>(opts: FetchOpts) {
   return res
 }
 
-export function configure(fn: Fetcher, timeoutSecs?: number) {
+export function configure(fn: Fetcher, log: AppLog, timeoutSecs?: number) {
   if (timeoutSecs) {
     TIMEOUT_SECS = timeoutSecs
   }
+
+  logger = log
   fetcher = fn
 }
 
@@ -108,6 +112,8 @@ export async function generateImage(user: AppSchema.User, prompt: string) {
     replacement_filter: true,
     trusted_workers: user.hordeUseTrusted ?? false,
   }
+
+  logger?.debug(payload, 'Horde payload')
 
   const image = await generate({ type: 'image', payload, key: user.hordeKey || HORDE_GUEST_KEY })
   return image

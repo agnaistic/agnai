@@ -30,13 +30,12 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts:',
-        `\nExample of Bot's dialogue:`,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        '\nBot:'
+        'Bot:'
       )
     )
   })
@@ -47,13 +46,12 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts:\n',
         `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        '\nBot: ORIGINAL',
+        'Bot: ORIGINAL',
         'Bot:'
       )
     )
@@ -69,12 +67,10 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts:\n',
-        `Example of Bot's dialogue:\n`,
         '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        '\nBot: ORIGINAL',
+        'Bot: ORIGINAL',
         'Bot:'
       )
     )
@@ -90,13 +86,12 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        'Facts:\n',
         `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
         'You: SECOND',
-        '\nBot: ORIGINAL',
+        'Bot: ORIGINAL',
         'Bot:'
       )
     )
@@ -115,7 +110,7 @@ describe('Prompt building', () => {
         'Bot: FIRST',
         'You: 10-TRIGGER',
         'You: 1-TRIGGER',
-        '\nBot:'
+        'Bot:'
       )
     )
   })
@@ -138,7 +133,7 @@ describe('Prompt building', () => {
         'You: 1-TRIGGER',
         'You: 10-TRIGGER',
         'You: 20-TRIGGER',
-        '\nBot:'
+        'Bot:'
       )
     )
   })
@@ -162,7 +157,7 @@ describe('Prompt building', () => {
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
-        '\nBot:'
+        'Bot:'
       )
     )
   })
@@ -185,7 +180,7 @@ describe('Prompt building', () => {
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
-        '\nBot:'
+        'Bot:'
       )
     )
   })
@@ -196,7 +191,9 @@ describe('Prompt building', () => {
       { settings: { gaslight: 'GASLIGHT {{user}}', useGaslight: true } }
     )
 
-    expect(actual.template).to.equal(expected('GASLIGHT You'))
+    expect(actual.template).to.equal(
+      expected('GASLIGHT You', `Scenario: SCENARIO`, `Bot's persona: PERSONA`, 'Bot:')
+    )
   })
 
   it('will include placeholders in the gaslight', () => {
@@ -204,14 +201,22 @@ describe('Prompt building', () => {
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
       {
         settings: {
-          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts:{{memory}}',
           useGaslight: true,
         },
       }
     )
 
     expect(actual.template).to.equal(
-      expected('GASLIGHT', 'You', 'Bot', 'Facts: ENTRY ONE\nENTRY TIE\nENTRY THREE')
+      expected(
+        'GASLIGHT',
+        'You',
+        'Bot',
+        'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
+        'Scenario: SCENARIO',
+        `Bot's persona: PERSONA`,
+        'Bot:'
+      )
     )
   })
 
@@ -238,7 +243,7 @@ describe('Prompt building', () => {
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
-        '\nBot:'
+        'Bot:'
       )
     )
   })
@@ -258,11 +263,9 @@ describe('Prompt building', () => {
       expected(
         `Reply's Persona: PERSONA`,
         `Scenario: MAIN Main`,
-        `Facts:\n`,
         `Example of Reply's dialogue:`,
         'SAMPLECHAT Reply',
         `\n<START>\n`,
-        '',
         'Reply:'
       )
     )
@@ -275,14 +278,7 @@ describe('Prompt building', () => {
       chat: toChat(main),
     })
     expect(actual.template).to.equal(
-      expected(
-        `Reply's Persona: PERSONA`,
-        `Scenario: MAIN Main`,
-        'Facts:\n',
-        `Example of Reply's dialogue:\n`,
-        '\n<START>\n\n',
-        'Reply:'
-      )
+      expected(`Reply's Persona: PERSONA`, `Scenario: MAIN Main`, '\n<START>\n', 'Reply:')
     )
   })
 })

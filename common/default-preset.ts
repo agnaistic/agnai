@@ -220,25 +220,27 @@ export const defaultPresets = {
 
 export const defaultTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
-Facts:\n{{memory}}
-Example of {{char}}'s dialogue:\n{{example_dialogue}}
+Facts:{{memory}}
+Example of {{char}}'s dialogue:{{example_dialogue}}
 
 <START>
 {{history}}
 {{ujb}}
 {{post}}`
 
+export const adventureAmble = `[System note: In addition provide 3 possible responses that {{user}} could give to {{char}}'s response that drive the story forward. Respond in this strict format:
+{{char}}: {{char}}'s response
+{Emotion of {{user}}'s response 1} -> {Possible response 1}
+{Emotion of {{user}}'s response 2} -> {Possible response 2}
+{Emotion of {{user}}'s response 3} -> {Possible response 3}]`
+
 export const adventureTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
-Facts:\n{{memory}}
-Example of {{char}}'s dialogue:\n{{example_dialogue}}
+Facts:{{memory}}
+Example of {{char}}'s dialogue:{{example_dialogue}}
 
 <START>
 {{history}}
 {{ujb}}
-[System note: Respond as {{char}}. In addition provide 3 possible response that {{user}} could give to {{char}}'s response that drive the story forward. Respond in this strict format:
-{{char}}: {{char}}'s response and actions to the previous message
-{Emotion of {{user}}'s response 1} -> {Possible response 1}
-{Emotion of {{user}}'s response 2} -> {Possible response 2}
-{Emotion of {{user}}'s response 3} -> {Possible response 3}]
+${adventureAmble}
 {{post}}`
