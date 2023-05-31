@@ -30,7 +30,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -46,7 +46,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -86,7 +86,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -104,7 +104,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE\nENTRY TWO',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -126,7 +126,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY TWO\nENTRY THREE',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -150,7 +150,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -173,7 +173,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY TIE\nENTRY THREE',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -192,7 +192,16 @@ describe('Prompt building', () => {
     )
 
     expect(actual.template).to.equal(
-      expected('GASLIGHT You', `Scenario: SCENARIO`, `Bot's persona: PERSONA`, 'Bot:')
+      expected(
+        'GASLIGHT You',
+        `Scenario: SCENARIO`,
+        `Bot's persona: PERSONA`,
+        'Bot: FIRST',
+        'You: 1-TRIGGER',
+        'You: TIE-TRIGGER',
+        'You: 20-TRIGGER',
+        'Bot:'
+      )
     )
   })
 
@@ -215,6 +224,10 @@ describe('Prompt building', () => {
         'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
         'Scenario: SCENARIO',
         `Bot's persona: PERSONA`,
+        'Bot: FIRST',
+        'You: 1-TRIGGER',
+        'You: TIE-TRIGGER',
+        'You: 20-TRIGGER',
         'Bot:'
       )
     )
@@ -236,7 +249,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
-        `Example of Bot's dialogue:`,
+        `Example of Bot's dialogue: `,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -263,7 +276,7 @@ describe('Prompt building', () => {
       expected(
         `Reply's Persona: PERSONA`,
         `Scenario: MAIN Main`,
-        `Example of Reply's dialogue:`,
+        `Example of Reply's dialogue: `,
         'SAMPLECHAT Reply',
         `\n<START>\n`,
         'Reply:'
