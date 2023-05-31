@@ -52,7 +52,7 @@ export async function create(
   characterId: string,
   props: Pick<
     AppSchema.Chat,
-    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides' | 'genPreset'
+    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides' | 'genPreset' | 'mode'
   >
 ) {
   const id = `${v4()}`
@@ -64,6 +64,7 @@ export async function create(
   const doc: AppSchema.Chat = {
     _id: id,
     kind: 'chat',
+    mode: props.mode,
     characterId,
     userId: props.userId,
     memberIds: [],

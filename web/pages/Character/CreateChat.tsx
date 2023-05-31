@@ -76,9 +76,6 @@ const CreateChatModal: Component<{
       mode: ['standard', 'adventure', null],
     } as const)
 
-    body.mode
-    body.schema
-
     const attributes = getAttributeMap(ref)
 
     const characterId = character._id

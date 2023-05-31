@@ -64,6 +64,7 @@ export type NewChat = {
   scenario: string
   sampleChat: string
   overrides: AppSchema.Chat['overrides']
+  mode?: AppSchema.Chat['mode']
 }
 
 const initState: ChatState = {
