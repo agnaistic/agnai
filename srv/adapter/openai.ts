@@ -5,7 +5,7 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { BOT_REPLACE, SELF_REPLACE, injectPlaceholders } from '../../common/prompt'
-import { OPENAI_MODELS } from '../../common/adapters'
+import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
@@ -55,15 +55,6 @@ type CompletionGenerator = (
   FullCompletion | undefined
 >
 
-const CHAT_MODELS: Record<string, boolean> = {
-  [OPENAI_MODELS.Turbo]: true,
-  [OPENAI_MODELS.Turbo0301]: true,
-  [OPENAI_MODELS.GPT4]: true,
-  [OPENAI_MODELS.GPT4_0314]: true,
-  [OPENAI_MODELS.GPT4_32k]: true,
-  [OPENAI_MODELS.GPT4_32k_0314]: true,
-}
-
 export const handleOAI: ModelAdapter = async function* (opts) {
   const {
     char,
@@ -97,7 +88,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     top_p: gen.topP ?? 1,
   }
 
-  const useChat = !!CHAT_MODELS[oaiModel]
+  const useChat = !!OPENAI_CHAT_MODELS[oaiModel]
 
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)

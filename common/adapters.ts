@@ -70,6 +70,15 @@ export const OPENAI_MODELS = {
   GPT4_32k_0314: 'gpt-4-32k-0314',
 } as const
 
+export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
+  [OPENAI_MODELS.Turbo]: true,
+  [OPENAI_MODELS.Turbo0301]: true,
+  [OPENAI_MODELS.GPT4]: true,
+  [OPENAI_MODELS.GPT4_0314]: true,
+  [OPENAI_MODELS.GPT4_32k]: true,
+  [OPENAI_MODELS.GPT4_32k_0314]: true,
+}
+
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
  * to different models in the future. New models may be less appropriate
  * for roleplaying so they should be updated to manually

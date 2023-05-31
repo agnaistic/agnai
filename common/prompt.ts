@@ -1,6 +1,6 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
-import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
+import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS } from './adapters'
 import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
@@ -144,12 +144,15 @@ export function getTemplate(
   opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
   parts: PromptParts
 ) {
-  const template =
-    opts.settings?.useGaslight && opts.settings.gaslight
-      ? opts.settings.gaslight
-      : opts.chat.mode === 'adventure'
-      ? adventureTemplate
-      : defaultTemplate
+  const isChat = OPENAI_CHAT_MODELS[opts.settings?.oaiModel || ''] ?? false
+  const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
+  const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
+
+  const template = useGaslight
+    ? gaslight
+    : opts.chat.mode === 'adventure'
+    ? adventureTemplate
+    : defaultTemplate
 
   return ensureValidTemplate(template, parts)
 }
@@ -225,18 +228,12 @@ function ensureValidTemplate(template: string, parts: PromptParts) {
     modified += `\n{{char}}'s persona: {{${HOLDER_NAMES.persona}}}`
   }
 
-  if (!hasHistory && hasPost) {
-    hasHistory = true
-    modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{${HOLDER_NAMES.post}}}`)
-  }
-
-  if (!hasPost) {
-    hasPost = true
-    modified += '\n{{post}}'
-  }
-
   if (!hasHistory && !hasPost) {
-    modified += `\{{history}}\n{{post}}`
+    modified += `\n{{history}}\n{{post}}`
+  } else if (!hasHistory && hasPost) {
+    modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{${HOLDER_NAMES.post}}}`)
+  } else if (hasHistory && !hasPost) {
+    modified += '\n{{post}}'
   }
 
   return modified

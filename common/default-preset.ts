@@ -145,8 +145,7 @@ Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
 Facts: {{memory}}
-This is how {{char}} should talk
-{{example_dialogue}}`,
+This is how {{char}} should talk: {{example_dialogue}}`,
   },
   openaiAlt: {
     name: 'Turbo (#2)',
@@ -164,8 +163,7 @@ Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
 Facts: {{memory}}
-This is how {{char}} should talk
-{{example_dialogue}}`,
+This is how {{char}} should talk: {{example_dialogue}}`,
   },
   openaiTurbo: {
     name: 'DaVinci',
@@ -183,8 +181,7 @@ Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
 Facts: {{memory}}
-This is how {{char}} should talk
-{{example_dialogue}}`,
+This is how {{char}} should talk: {{example_dialogue}}`,
   },
   scale: {
     name: 'Scale',
@@ -208,8 +205,7 @@ Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
 Facts: {{memory}}
-This is how {{char}} should talk
-{{example_dialogue}}`,
+This is how {{char}} should talk: {{example_dialogue}}`,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
 
@@ -221,7 +217,7 @@ export const defaultPresets = {
 export const defaultTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
 Facts:{{memory}}
-Example of {{char}}'s dialogue:{{example_dialogue}}
+Example of {{char}}'s dialogue: {{example_dialogue}}
 
 <START>
 {{history}}
