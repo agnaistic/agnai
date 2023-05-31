@@ -7,9 +7,10 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, userStore } from '../../store'
+import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { getPresetOptions } from '../../shared/adapter'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -31,6 +32,7 @@ const CreateChatModal: Component<{
   }))
 
   const [selectedId, setSelected] = createSignal<string>()
+  const [presetId, setPresetId] = createSignal('')
 
   const char = createMemo(() =>
     state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
@@ -47,10 +49,18 @@ const CreateChatModal: Component<{
 
   const user = userStore((s) => s.user || { defaultPreset: '' })
   const presets = presetStore((s) => s.presets)
+  const flags = settingStore((s) => s.flags)
 
   const presetOptions = createMemo(() =>
     getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
   )
+
+  const selectedPreset = createMemo(() => {
+    const id = presetId()
+    if (!id) return
+    if (isDefaultPreset(id)) return defaultPresets[id]
+    return presets.find((pre) => pre._id === id)
+  })
 
   const onCreate = () => {
     const character = char()
@@ -63,7 +73,11 @@ const CreateChatModal: Component<{
       scenario: 'string',
       sampleChat: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
+      mode: ['standard', 'adventure', null],
     } as const)
+
+    body.mode
+    body.schema
 
     const attributes = getAttributeMap(ref)
 
@@ -118,7 +132,21 @@ const CreateChatModal: Component<{
           label="Preset"
           items={presetOptions()}
           value={user.defaultPreset}
+          onChange={(ev) => setPresetId(ev.value)}
         />
+
+        <Show when={flags.cyoa && selectedPreset()?.service === 'openai'}>
+          <Select
+            fieldName="mode"
+            label="Chat Mode"
+            helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment. This feature may not work "
+            items={[
+              { label: 'Conversation', value: 'standard' },
+              { label: 'Adventure (Experimental)', value: 'adventure' },
+            ]}
+            value={'standard'}
+          />
+        </Show>
 
         <TextInput
           class="text-sm"

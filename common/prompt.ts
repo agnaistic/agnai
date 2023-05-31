@@ -1,8 +1,9 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
+import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
-import { buildMemoryPrompt, MEMORY_PREFIX } from './memory'
+import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
 
@@ -18,8 +19,12 @@ export type PromptParts = {
   memory?: string
 }
 
+type Placeholder =
+  | Exclude<keyof PromptParts, 'gaslightHasChat' | 'gaslight' | 'greeting'>
+  | 'history'
+
 export type Prompt = {
-  prompt: string
+  template: string
   lines: string[]
   parts: PromptParts
 }
@@ -61,6 +66,35 @@ type BuildPromptOpts = {
 export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
 export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
 
+const HOLDER_NAMES = {
+  ujb: 'ujb',
+  sampleChat: 'example_dialogue',
+  persona: 'personality',
+  memory: 'memory',
+  post: 'post',
+  scenario: 'scenario',
+  history: 'history',
+} satisfies Record<Placeholder, string>
+
+const HOLDERS = {
+  ujb: /\{\{ujb\}\}/gi,
+  sampleChat: /\{\{example_dialogue\}\}/gi,
+  scenario: /\{\{scenario\}\}/gi,
+  memory: /\{\{memory\}\}/gi,
+  persona: /\{\{personality\}\}/gi,
+  post: /\{\{post\}\}/gi,
+  history: /\{\{history\}\}/gi,
+} satisfies Record<Placeholder, RegExp>
+
+const ALL_HOLDERS = new RegExp(
+  '(' +
+    Object.values(HOLDER_NAMES)
+      .map((key) => `\{\{${key}\}\}`)
+      .join('|') +
+    ')',
+  'gi'
+)
+
 /**
  * This is only ever invoked client-side
  * @param opts
@@ -78,11 +112,10 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
    */
   const lines = getLinesForPrompt(opts, encoder)
   const parts = getPromptParts(opts, lines, encoder)
-  const { pre, post, history, prompt } = buildPrompt(opts, parts, lines, 'desc', encoder)
-  return { prompt, lines: lines.reverse(), pre, post, parts, history }
+  const template = getTemplate(opts, parts)
+  const prompt = injectPlaceholders(template, opts, parts, lines, 'desc', encoder)
+  return { lines: lines.reverse(), parts, template: prompt }
 }
-
-const START_TEXT = '<START>'
 
 /**
  * This is only ever invoked server-side
@@ -101,88 +134,112 @@ export function createPromptWithParts(
   lines: string[],
   encoder: Encoder
 ) {
-  const { pre, post, history, parts: newParts } = buildPrompt(opts, parts, lines, 'asc', encoder)
-  const prompt = [pre, history, post].filter(removeEmpty).join('\n')
-  return { lines, prompt, parts: newParts, pre, post }
+  const post = createPostPrompt(opts)
+  const template = getTemplate(opts, parts)
+  const prompt = injectPlaceholders(template, opts, parts, lines, 'asc', encoder)
+  return { lines, prompt, parts, post }
 }
 
-/**
- * @param lines
- * @param order The incoming order of the lines by time. asc = time oldest->newest, desc = newest->oldest. This affects whether the history is reversed before being returned
- * @returns
- */
-export function buildPrompt(
+export function getTemplate(
+  opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
+  parts: PromptParts
+) {
+  const template =
+    opts.settings?.useGaslight && opts.settings.gaslight
+      ? opts.settings.gaslight
+      : opts.chat.mode === 'adventure'
+      ? adventureTemplate
+      : defaultTemplate
+
+  return ensureValidTemplate(template, parts)
+}
+
+export function injectPlaceholders(
+  template: string,
   opts: BuildPromptOpts,
   parts: PromptParts,
-  incomingLines: string[],
+  lines: string[],
   order: 'asc' | 'desc',
   encoder: Encoder
 ) {
-  const lines = order === 'asc' ? incomingLines.slice().reverse() : incomingLines.slice()
-  const { chat, char } = opts
-  const user = opts.members.find((mem) => mem.userId === chat.userId)
-  const sender = user?.handle || 'You'
+  const sampleChat = parts.sampleChat?.join('\n')
+  const sender = opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle || 'You'
 
-  const hasStart =
-    parts.greeting?.includes(START_TEXT) ||
-    chat.sampleChat?.includes(START_TEXT) ||
-    chat.scenario?.includes(START_TEXT)
+  let prompt = template
+    // UJB must be first to replace placeholders within the UJB
+    .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
+    .replace(HOLDERS.sampleChat, newline(sampleChat))
+    .replace(HOLDERS.scenario, parts.scenario || '')
+    .replace(HOLDERS.memory, newline(parts.memory))
+    .replace(HOLDERS.persona, parts.persona)
+    .replace(HOLDERS.post, parts.post.join('\n'))
+    // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
+    .replace(BOT_REPLACE, opts.replyAs.name)
+    .replace(SELF_REPLACE, sender)
 
-  const pre: string[] = []
-
-  // If the gaslight is empty or useGaslight is disabled, proceed without it
-  if (!opts.settings?.useGaslight || !opts.settings.gaslight || !parts.gaslight) {
-    pre.push(`${opts.replyAs?.name || char.name}'s Persona: ${parts.persona}`)
-
-    if (parts.scenario) pre.push(`Scenario: ${parts.scenario}`)
-
-    if (parts.memory) {
-      pre.push(`${MEMORY_PREFIX}${parts.memory}`)
-    }
-
-    if (!hasStart) pre.push('<START>')
-
-    if (parts.sampleChat) pre.push(...parts.sampleChat)
-  }
-
-  // Only use the gaslight if specifically configured to and when it exists.
-  if (opts.settings?.useGaslight && opts.settings?.gaslight && parts.gaslight) {
-    pre.push(parts.gaslight)
-  }
-
-  const post = createPostPrompt(opts)
-
-  if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
-  }
-
+  const messages = order === 'asc' ? lines.slice().reverse() : lines.slice()
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const maxContext = getContextLimit(opts.settings, adapter, model)
+  const history = fillPromptWithLines(encoder, maxContext, prompt, messages).reverse()
 
-  const preamble = pre.join('\n').replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
-  const postamble = parts.post.join('\n')
-  const history = fillPromptWithLines(
-    encoder,
-    maxContext,
-    preamble + '\n' + postamble,
-    lines
-  ).reverse()
+  prompt = prompt.replace(HOLDERS.history, history.join('\n'))
+  return prompt
+}
 
-  /**
-   * TODO: This is doubling up on memory a fair bit
-   * This is left like this for 'prompt re-ordering'
-   * However the prompt re-ordering should probably occur earlier
-   */
+function ensureValidTemplate(template: string, parts: PromptParts) {
+  let hasScenario = !!template.match(HOLDERS.scenario)
+  let hasPersona = !!template.match(HOLDERS.persona)
+  let hasHistory = !!template.match(HOLDERS.history)
+  let hasPost = !!template.match(HOLDERS.post)
 
-  const prompt = [preamble, ...history, postamble].filter(removeEmpty).join('\n')
+  const useUjb = !!parts.ujb
+  const useSampleChat = !!parts.sampleChat?.join('\n')
+  const useMemory = !!parts.memory
+  const useScenario = !!parts.scenario
+  const usePersona = !!parts.persona
 
-  return {
-    pre: preamble,
-    post: postamble,
-    history: history.join('\n'),
-    parts,
-    prompt,
+  let modified = template
+    .split('\n')
+    .filter((line) => {
+      const match = line.match(ALL_HOLDERS)
+      const hasMultiple = (match?.length ?? 0) > 1
+      if (hasMultiple) {
+        return true
+      }
+
+      if (!useUjb && line.match(HOLDERS.ujb)) return false
+      if (!useSampleChat && line.match(HOLDERS.sampleChat)) return false
+      if (!useMemory && line.match(HOLDERS.memory)) return false
+      if (!useScenario && line.match(HOLDERS.scenario)) return false
+      return true
+    })
+    .join('\n')
+
+  if (!hasScenario && useScenario) {
+    hasScenario = true
+    modified += `\nScenario: {{${HOLDER_NAMES.scenario}}}`
   }
+
+  if (!hasPersona && usePersona) {
+    hasScenario = true
+    modified += `\n{{char}}'s persona: {{${HOLDER_NAMES.persona}}}`
+  }
+
+  if (!hasHistory && hasPost) {
+    hasHistory = true
+    modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{${HOLDER_NAMES.post}}}`)
+  }
+
+  if (!hasPost) {
+    hasPost = true
+    modified += '\n{{post}}'
+  }
+
+  if (!hasHistory && !hasPost) {
+    modified += `\{{history}}\n{{post}}`
+  }
+
+  return modified
 }
 
 export function getPromptParts(
@@ -613,4 +670,9 @@ export function trimTokens(opts: TrimOpts) {
   }
 
   return output
+}
+
+function newline(value: string | undefined) {
+  if (!value) return ''
+  return '\n' + value
 }

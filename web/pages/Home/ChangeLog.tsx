@@ -4,6 +4,11 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_31 May 2023_
+- Experimental release: "Adventure" (aka Choose your own adventure or CYOA) mode for OpenAI Turbo
+- Migrate to "prompt templates" - More to come on this functionality soon
+- Use the correct NovelAI tokenizers when required
+
 _20-28 May 2023_
 - Remember chat input "drafts"
 - Add PNG character card export format

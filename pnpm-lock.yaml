@@ -56,6 +56,7 @@ specifiers:
   prettier-plugin-tailwindcss: ^0.2.1
   process: ^0.11.10
   redis: ^4.6.5
+  sentencepiece-js: ^1.1.0
   showdown: ^2.1.0
   solid-js: 1.6.9
   tailwindcss: ^3.2.4
@@ -84,6 +85,7 @@ dependencies:
   pino: 8.10.0
   pino-pretty: 9.2.0
   redis: 4.6.5
+  sentencepiece-js: registry.npmjs.org/sentencepiece-js/1.1.0
   uuid: 9.0.0
   ws: 8.12.1
 
@@ -5005,6 +5007,13 @@ packages:
       color-convert: registry.npmjs.org/color-convert/2.0.1
     dev: true
 
+  registry.npmjs.org/app-root-path/3.1.0:
+    resolution: {integrity: sha512-biN3PwB2gUtjaYy/isrU3aNWI5w+fAfvHkSvCKeQGxhmYpwKFUxudR3Yya+KqVRHBmEDYh+/lTozYCFbmzX4nA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/app-root-path/-/app-root-path-3.1.0.tgz}
+    name: app-root-path
+    version: 3.1.0
+    engines: {node: '>= 6.0.0'}
+    dev: false
+
   registry.npmjs.org/balanced-match/1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/balanced-match/-/balanced-match-1.0.2.tgz}
     name: balanced-match
@@ -5846,6 +5855,14 @@ packages:
     version: 5.7.1
     hasBin: true
     dev: true
+
+  registry.npmjs.org/sentencepiece-js/1.1.0:
+    resolution: {integrity: sha512-HN6teKCRO9tz37zbaNI3i+vMZ/JRWDt6kmZ7OVpzQv1jZHyYNmf5tE7CFpIYN86+y9TLB0cuscMdA3OHhT/MhQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/sentencepiece-js/-/sentencepiece-js-1.1.0.tgz}
+    name: sentencepiece-js
+    version: 1.1.0
+    dependencies:
+      app-root-path: registry.npmjs.org/app-root-path/3.1.0
+    dev: false
 
   registry.npmjs.org/source-map-support/0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.21.tgz}

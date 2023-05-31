@@ -10,6 +10,7 @@ export const createChat = handle(async ({ body, user }) => {
       genPreset: 'string?',
       characterId: 'string',
       name: 'string',
+      mode: ['standard', 'adventure', null],
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',

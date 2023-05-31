@@ -1,9 +1,16 @@
+import * as sp from 'sentencepiece-js'
 import fs from 'fs'
 import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
-import { AIAdapter, OPENAI_MODELS } from '../common/adapters'
+import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 import { Encoder } from '../common/tokenize'
+
+const nerdstash = new sp.SentencePieceProcessor()
+nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
+
+const nerdstashV2 = new sp.SentencePieceProcessor()
+nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
 
 const cl100k_base = require('@dqbd/tiktoken/encoders/cl100k_base.json')
 const p50k_base = require('@dqbd/tiktoken/encoders/p50k_base.json')
@@ -15,7 +22,15 @@ const main: Encoder = function main(value: string) {
 }
 
 const novel: Encoder = function krake(value: string) {
-  return gpt.encode(value).length + 4
+  const cleaned = sp.cleanText(value)
+  const tokens = nerdstash.encodeIds(cleaned)
+  return tokens.length
+}
+
+const novelClio: Encoder = function clio(value: string) {
+  const cleaned = sp.cleanText(value)
+  const tokens = nerdstashV2.encodeIds(cleaned)
+  return tokens.length
 }
 
 let davinci: Encoder
@@ -25,6 +40,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
   if (adapter === 'novel') {
+    if (model === NOVEL_MODELS.clio_v1) return novelClio
     return novel
   }
 

@@ -87,6 +87,7 @@
     "pino": "^8.10.0",
     "pino-pretty": "^9.2.0",
     "redis": "^4.6.5",
+    "sentencepiece-js": "^1.1.0",
     "uuid": "^9.0.0",
     "ws": "^8.12.1"
   },

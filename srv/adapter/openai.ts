@@ -4,13 +4,16 @@ import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, SELF_REPLACE } from '../../common/prompt'
+import { BOT_REPLACE, SELF_REPLACE, injectPlaceholders } from '../../common/prompt'
 import { OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { needleToSSE } from './stream'
+import { AdapterProps } from './type'
+import { adventureAmble } from '/common/default-preset'
+import { Encoder } from '/common/tokenize'
 
 const baseUrl = `https://api.openai.com`
 
@@ -152,7 +155,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (kind !== 'continue' && kind !== 'summary') {
-      const content = `Respond as ${opts.replyAs.name}`
+      const content = getInstruction(opts, encoder)
       tokens += encoder(content)
       history.push({ role: 'system', content })
     }
@@ -237,6 +240,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
     }
+
     yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
@@ -398,4 +402,14 @@ function getCharLooks(char: AppSchema.Character) {
 
   if (!visuals.length) return
   return `${char.name}'s appearance: ${visuals.join(', ')}`
+}
+
+function getInstruction(opts: AdapterProps, encoder: Encoder) {
+  if (opts.chat.mode !== 'adventure') {
+    return `Respond as ${opts.replyAs.name}`
+  }
+
+  // This is experimental and probably needs to be workshopped to get better responses
+  const content = injectPlaceholders(adventureAmble, opts, opts.parts, [], 'asc', encoder)
+  return content
 }

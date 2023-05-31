@@ -26,6 +26,7 @@ import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
+import Button from '/web/shared/Button'
 
 type MessageProps = {
   msg: SplitMessage
@@ -42,6 +43,8 @@ type MessageProps = {
   children?: any
   retrying?: AppSchema.ChatMessage
   partial?: string
+  actions?: AppSchema.ChatMessage['actions']
+  sendMessage: (msg: string, ooc: boolean) => void
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -70,6 +73,7 @@ const Message: Component<MessageProps> = (props) => {
             children={props.children}
             retrying={props.retrying}
             partial={props.partial}
+            sendMessage={props.sendMessage}
           />
         )}
       </For>
@@ -252,6 +256,7 @@ const SingleMessage: Component<
                     lastSplit={props.lastSplit}
                     last={props.last}
                     tts={!!props.tts}
+                    partial={props.partial}
                   />
                 </Match>
 
@@ -296,6 +301,7 @@ const SingleMessage: Component<
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage(
+                    props.chat,
                     props.char!,
                     user.profile!,
                     props.partial!,
@@ -306,7 +312,7 @@ const SingleMessage: Component<
               <Match
                 when={
                   props.retrying?._id == props.original._id ||
-                  (props.msg._id === '' && !props.msg.msg.length)
+                  (props.msg._id === 'partial' && !props.msg.msg.length)
                 }
               >
                 <div class="flex h-8 w-12 items-center justify-center">
@@ -324,12 +330,30 @@ const SingleMessage: Component<
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
                   innerHTML={renderMessage(
+                    props.chat,
                     props.char!,
                     user.profile!,
                     msgText(),
                     props.msg.adapter
                   )}
                 />
+                <Show
+                  when={!props.partial && props.original.actions && props.last && props.lastSplit}
+                >
+                  <div class="flex items-center justify-center gap-2">
+                    <For each={props.original.actions}>
+                      {(item) => (
+                        <Button
+                          size="sm"
+                          schema="gray"
+                          onClick={() => sendAction(props.sendMessage, item)}
+                        >
+                          {item.emote}
+                        </Button>
+                      )}
+                    </For>
+                  </div>
+                </Show>
               </Match>
               <Match when={edit()}>
                 <div
@@ -350,23 +374,6 @@ const SingleMessage: Component<
 }
 
 export default Message
-
-function parseMessage(
-  msg: string,
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  adapter?: string
-) {
-  if (adapter === 'image') {
-    return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
-  }
-
-  return msg
-    .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, profile?.handle || 'You')
-    .replace(/(<)/g, '‹')
-    .replace(/(>)/g, '›')
-}
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
@@ -453,12 +460,17 @@ const MessageOptions: Component<{
   startEdit: () => void
   lastSplit: boolean
   last?: boolean
+  partial?: string
   onRemove: () => void
 }> = (props) => {
   return (
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
-        <div onClick={() => chatStore.showPrompt(props.original)} class="icon-button">
+        <div
+          onClick={() => !props.partial && chatStore.showPrompt(props.original)}
+          class="icon-button"
+          classList={{ disabled: !!props.partial }}
+        >
           <Terminal size={16} />
         </div>
       </Show>
@@ -481,15 +493,18 @@ const MessageOptions: Component<{
           props.msg.characterId
         }
       >
-        <div class="icon-button" onClick={() => retryMessage(props.original, props.msg)}>
+        <div
+          class="icon-button"
+          onClick={() => !props.partial && retryMessage(props.original, props.msg)}
+        >
           <RefreshCw size={18} />
         </div>
       </Show>
 
       <Show when={props.last && !props.msg.characterId}>
         <div
-          class="cursor-pointer"
-          onClick={() => msgStore.resend(props.msg.chatId, props.msg._id)}
+          class="icon-button"
+          onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}
         >
           <RefreshCw size={18} />
         </div>
@@ -507,6 +522,7 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
 }
 
 function renderMessage(
+  chat: AppSchema.Chat,
   char: AppSchema.Character,
   profile: AppSchema.Profile,
   text: string,
@@ -516,7 +532,39 @@ function renderMessage(
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
   const html = markdown
-    .makeHtml(parseMessage(text, char, profile!, adapter))
+    .makeHtml(parseMessage(chat, text, char, profile!, adapter))
     .replace(/&amp;nbsp;/g, '&nbsp;')
   return html
+}
+
+function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
+  send(`*${emote}* ${action}`, false)
+}
+
+function parseMessage(
+  chat: AppSchema.Chat,
+  msg: string,
+  char: AppSchema.Character,
+  profile: AppSchema.Profile,
+  adapter?: string
+) {
+  if (adapter === 'image') {
+    return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
+  }
+
+  if (chat.mode === 'adventure') {
+    const nonActions: string[] = []
+    const splits = msg.split('\n')
+    for (const split of splits) {
+      if (!split.startsWith('{') && !split.includes('->')) nonActions.push(split)
+    }
+
+    msg = nonActions.join('\n')
+  }
+
+  return msg
+    .replace(BOT_REPLACE, char.name)
+    .replace(SELF_REPLACE, profile?.handle || 'You')
+    .replace(/(<)/g, '‹')
+    .replace(/(>)/g, '›')
 }

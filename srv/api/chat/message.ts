@@ -7,6 +7,7 @@ import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../db/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
+import { extractActions } from './common'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -188,6 +189,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
+  const actioned = extractActions(responseText)
 
   await releaseLock(chatId)
 
@@ -204,22 +206,35 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         characterId: replyAs._id,
         senderId: body.kind === 'self' ? userId : undefined,
-        message: generated,
+        message: actioned.text,
         adapter,
         ooc: false,
+        actions: actioned.actions,
       })
-      sendMany(members, { type: 'message-created', msg, chatId, adapter, generate: true })
+      sendMany(members, {
+        type: 'message-created',
+        msg,
+        chatId,
+        adapter,
+        generate: true,
+        actions: actioned.actions,
+      })
       break
     }
 
     case 'retry': {
       if (body.replacing) {
-        await store.msgs.editMessage(body.replacing._id, generated, adapter)
+        await store.msgs.editMessage(body.replacing._id, {
+          msg: actioned.text,
+          actions: actioned.actions,
+          adapter,
+        })
         sendMany(members, {
           type: 'message-retry',
           chatId,
           messageId: body.replacing._id,
-          message: responseText,
+          message: actioned.text,
+          actions: actioned.actions,
           adapter,
           generate: true,
         })
@@ -229,15 +244,23 @@ export const generateMessageV2 = handle(async (req, res) => {
           characterId: replyAs._id,
           message: generated,
           adapter,
+          actions: actioned.actions,
           ooc: false,
         })
-        sendMany(members, { type: 'message-created', msg, chatId, adapter, generate: true })
+        sendMany(members, {
+          type: 'message-created',
+          msg,
+          chatId,
+          adapter,
+          generate: true,
+          actions: actioned.actions,
+        })
       }
       break
     }
 
     case 'continue': {
-      await store.msgs.editMessage(body.continuing._id, responseText, adapter)
+      await store.msgs.editMessage(body.continuing._id, { msg: responseText, adapter })
       sendMany(members, {
         type: 'message-retry',
         chatId,

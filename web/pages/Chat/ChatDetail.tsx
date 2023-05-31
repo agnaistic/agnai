@@ -98,6 +98,7 @@ const ChatDetail: Component = () => {
     if (msgs.retrying) return
 
     return emptyMsg({
+      id: 'partial',
       charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
       userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
       message: msgs.partial || '',
@@ -330,6 +331,7 @@ const ChatDetail: Component = () => {
                       tts={tts()}
                       retrying={msgs.retrying}
                       partial={msgs.partial}
+                      sendMessage={sendMessage}
                     >
                       {isOwner() &&
                         retries()?.list?.length! > 1 &&
@@ -354,6 +356,7 @@ const ChatDetail: Component = () => {
                     onRemove={() => {}}
                     editing={chats.opts.editing}
                     anonymize={cfg.anonymize}
+                    sendMessage={sendMessage}
                   />
                 </Show>
               </div>
@@ -523,13 +526,14 @@ function getHeaderBg(mode: UI['mode']) {
   return styles
 }
 function emptyMsg(opts: {
+  id?: string
   charId?: string
   userId?: string
   message: string
 }): AppSchema.ChatMessage {
   return {
     kind: 'chat-message',
-    _id: '',
+    _id: opts.id || '',
     chatId: '',
     characterId: opts.charId,
     userId: opts.userId,

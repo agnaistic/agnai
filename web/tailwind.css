@@ -276,6 +276,10 @@ body {
     @apply text-100;
   }
 
+  .icon-button.disabled {
+    @apply cursor-not-allowed;
+  }
+
   /**
    * Buttons.
    */

@@ -10,11 +10,12 @@ export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
       name: 'string',
+      mode: ['standard', 'adventure'],
       adapter: ['default', ...config.adapters] as const,
       greeting: 'string',
       scenario: 'string',
       sampleChat: 'string',
-      memoryId: 'string?',
+      memoryId: 'string',
       overrides: personaValidator,
     },
     body,
@@ -36,7 +37,7 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const message = await store.msgs.editMessage(params.id, body.message)
+  const message = await store.msgs.editMessage(params.id, { msg: body.message })
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',

@@ -7,7 +7,7 @@ import {
 } from '../../common/presets'
 import { store } from '../db'
 import { AppSchema } from '../db/schema'
-import { AppLog } from '../logger'
+import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
@@ -33,7 +33,7 @@ configure(async (opts) => {
   })
 
   return { body: res.body, statusCode: res.statusCode, statusMessage: res.statusMessage }
-})
+}, logger)
 
 const handlers: { [key in AIAdapter]: ModelAdapter } = {
   novel: handleNovel,

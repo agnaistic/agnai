@@ -56,6 +56,16 @@ export function isTupleBody(
   return typeof value[0] === 'object'
 }
 
+export function isOptionalUnion<T extends string>(
+  value: any
+): value is T[] | readonly string[] | undefined {
+  if (!Array.isArray(value)) return false
+  if (value.length < 1) return false
+  if (isPrimitive(value[0])) return false
+  if (value.includes(null)) return true
+  return false
+}
+
 export function isUnion<T extends string>(value: any): value is [T] | string[] | readonly string[] {
   if (Array.isArray(value) === false) return false
   if (value.length < 1) return false

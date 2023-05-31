@@ -17,6 +17,7 @@ import { presetStore } from '../../store'
 import { getAdapter } from '../../../common/prompt'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
+import { A } from '@solidjs/router'
 
 export const ChatGenSettingsModal: Component<{
   chat: AppSchema.Chat
@@ -140,6 +141,20 @@ export const ChatGenSettingsModal: Component<{
             value={selected()}
             onChange={(item) => setSelected(item.value)}
           />
+
+          <Show when={isDefaultPreset(selected())}>
+            <span class="text-[var(--hl-100)]">
+              You are using a built-in preset which cannot be modified. Head to the{' '}
+              <A href="/presets" class="link">
+                Presets
+              </A>{' '}
+              page to create a preset or{' '}
+              <A href={`/presets/new?preset=${selected()}`} class="link">
+                Duplicate
+              </A>{' '}
+              this one.
+            </span>
+          </Show>
 
           <Switch>
             <Match when={selected() === AutoPreset.service && servicePreset()}>

@@ -1,10 +1,16 @@
-export type FromTupleLiteral<T> = T extends [...infer U] | readonly [...infer U]
-  ? U extends Primitive
-    ? never
-    : T[number] extends string
-    ? T[number]
-    : never
+export type FromTupleLiteral<T> = T extends [...string[], null] | readonly [...string[], null]
+  ? Exclude<T[number], null> | undefined
+  : T extends [...string[]] | readonly [...string[]]
+  ? T[number]
   : never
+
+// export type FromTupleLiteral<T> = T extends [...infer U] | readonly [...infer U]
+//   ? U extends Primitive
+//     ? never
+//     : T[number] extends string
+//     ? T[number]
+//     : never
+//   : never
 
 export type OptionalToPrimitive<T extends OptionalPrimitive> = T extends 'string?'
   ? string
@@ -14,7 +20,7 @@ export type OptionalToPrimitive<T extends OptionalPrimitive> = T extends 'string
   ? boolean
   : never
 export type OptionalPrimitive = 'string?' | 'number?' | 'boolean?' | 'any?' | 'unknown?'
-export type Primitive = 'string' | 'number' | 'boolean' | 'any' | 'unknown' | '?'
+export type Primitive = 'string' | 'number' | 'boolean' | 'any' | 'unknown'
 
 export type Reference =
   | OptionalPrimitive
@@ -28,11 +34,10 @@ export type Reference =
   | Validator
   | [...string[]]
   | readonly [...string[]]
+  | [...string[], null]
+  | readonly [...string[], null]
 
-export type Validator = RequiredValidator
-
-type RequiredValidator = { [key: string]: Reference }
-// type OptionalValidator = { [key: string]: Reference } & OptionalMarker
+export type Validator = { [key: string]: Reference } | { readonly [key: string]: Reference }
 
 export type FromOptional<T extends OptionalPrimitive> = T extends 'string?'
   ? string | undefined
@@ -101,6 +106,8 @@ export type UnwrapBody<T extends Validator> = {
     ? FromTuple<T[key]>
     : T[key] extends [OptionalPrimitive] | readonly [OptionalPrimitive]
     ? FromOptionalTuple<T[key]>
+    : T[key] extends [Validator, '?'] | readonly [Validator, '?']
+    ? Array<UnwrapBody<T[key][0]>> | undefined
     : T[key] extends [Validator] | readonly [Validator]
     ? FromTupleBody<T[key]>
     : T[key] extends Validator & { '?': '?' }

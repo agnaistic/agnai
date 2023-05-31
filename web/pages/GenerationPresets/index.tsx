@@ -12,6 +12,7 @@ import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore, toastStore } from '../../store'
 import { AI_ADAPTERS } from '../../../common/adapters'
+import Loading from '/web/shared/Loading'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
@@ -34,6 +35,9 @@ export const GenerationPresetsPage: Component = () => {
     saving,
     presets,
     items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
+    editing: isDefaultPreset(query.preset)
+      ? defaultPresets[query.preset]
+      : presets.find((pre) => pre._id === query.preset || params.id),
   }))
 
   createEffect(async () => {
@@ -80,6 +84,7 @@ export const GenerationPresetsPage: Component = () => {
       const preset = state.presets.find((p) => p._id === params.id)
       setEditing(preset)
     }
+
     if (params.id && preset) {
       updateTitle(`Edit preset ${preset.name}`)
     }
@@ -121,6 +126,15 @@ export const GenerationPresetsPage: Component = () => {
       })
     }
     setMissingPlaceholder(false)
+  }
+
+  if (params.id && !state.editing) {
+    return (
+      <>
+        <PageHeader title="Generation Presets" subtitle="Generation presets" />
+        <Loading />
+      </>
+    )
   }
 
   return (

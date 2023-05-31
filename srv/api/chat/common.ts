@@ -6,6 +6,35 @@ export const personaValidator = {
   attributes: 'any',
 } as const
 
+export function extractActions(text: string) {
+  const [split, rawActions] = text.split('ACTIONS:')
+  if (!rawActions || !rawActions.trim()) {
+    let responses: string[] = []
+    const actions: AppSchema.ChatMessage['actions'] = []
+    const splits = text.split('\n')
+
+    for (const split of splits) {
+      const [emote, action] = split.split('->')
+      if (!action) {
+        responses.push(emote)
+        continue
+      }
+
+      actions.push({ emote: emote.trim().replace('{', '').replace('}', ''), action: action.trim() })
+    }
+
+    return { text: responses.join('\n'), actions }
+  }
+
+  const actions = rawActions
+    .split('\n')
+    .filter((line) => !!line.trim())
+    .map((line) => line.trim().split('-'))
+    .map(([emote, action]) => ({ emote, action }))
+
+  return { text: split.trim(), actions }
+}
+
 export function trimResponseV2(
   generated: string,
   char: AppSchema.Character,

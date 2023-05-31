@@ -479,6 +479,7 @@ subscribe(
     message: 'string',
     continue: 'boolean?',
     adapter: 'string',
+    actions: [{ emote: 'string', action: 'string' }, '?'],
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
@@ -499,14 +500,18 @@ subscribe(
     if (retrying?._id === body.messageId) {
       msgStore.setState({
         msgs: msgs.map((msg) =>
-          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+          msg._id === body.messageId
+            ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
+            : msg
         ),
       })
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
         msgs: msgs.map((msg) =>
-          msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg
+          msg._id === body.messageId
+            ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
+            : msg
         ),
       })
     }
@@ -535,10 +540,12 @@ subscribe(
     msg: 'any',
     chatId: 'string',
     generate: 'boolean?',
-  },
+    actions: [{ emote: 'string', action: 'string' }, '?'],
+  } as const,
   (body) => {
     const { msgs, activeChatId } = msgStore.getState()
     if (activeChatId !== body.chatId) return
+
     const msg = body.msg as AppSchema.ChatMessage
     const user = userStore().user
 

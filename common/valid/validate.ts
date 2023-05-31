@@ -3,6 +3,7 @@ import {
   isObjectOptional,
   isOptionalArray,
   isOptionalPrimitive,
+  isOptionalUnion,
   isPrimitive,
   isTupleBody,
   isTupleOptional,
@@ -61,6 +62,7 @@ export function validateBody<T extends Validator>(
       if (isTupleOptional(bodyType)) continue
       if (isOptionalArray(bodyType)) continue
       if (isObjectOptional(bodyType)) continue
+      if (isOptionalUnion(bodyType)) continue
       if ((key as any) === '?' && (bodyType as any) === '?') continue
       if (!opts.partial) errors.push(`.${prop} is undefined`)
       continue
@@ -154,6 +156,29 @@ export function validateBody<T extends Validator>(
       continue
     }
 
+    if (isOptionalUnion(bodyType)) {
+      if (value === null || value === undefined) continue
+
+      if (typeof value !== 'string') {
+        errors.push(
+          `.${prop} is ${typeof value}, expected undefined or literal of ${bodyType
+            .filter((v) => v !== null)
+            .join(' | ')}`
+        )
+        continue start
+      }
+
+      if (bodyType.includes(value) === false) {
+        errors.push(
+          `.${prop} value is invalid, expected undefined or literal of ${bodyType
+            .filter((v) => v !== null)
+            .join(' | ')}`
+        )
+        continue start
+      }
+
+      continue
+    }
     if (isUnion(bodyType)) {
       if (typeof value !== 'string') {
         errors.push(`.${prop} is ${typeof value}, expected literal of ${bodyType.join(' | ')}`)

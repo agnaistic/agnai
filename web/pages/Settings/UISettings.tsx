@@ -130,6 +130,7 @@ const UISettings: Component = () => {
           editing={false}
           msg={toBotMsg(bot, '*I wave excitedly* Hello world!\nHow are you today?', { _id: '1' })}
           onRemove={noop}
+          sendMessage={() => {}}
         />
 
         <Show when={state.profile}>
@@ -141,6 +142,7 @@ const UISettings: Component = () => {
               _id: '2',
             })}
             onRemove={noop}
+            sendMessage={() => {}}
           />
         </Show>
       </div>

@@ -4,6 +4,8 @@ import { ImageSettings } from './image-schema'
 import { TTSSettings, VoiceSettings } from './texttospeech-schema'
 
 export namespace AppSchema {
+  export type ChatMode = 'standard' | 'adventure'
+
   export interface Token {
     userId: string
     username: string
@@ -80,6 +82,7 @@ export namespace AppSchema {
   export interface Chat {
     _id: string
     kind: 'chat'
+    mode?: 'standard' | 'adventure'
     userId: string
     memoryId?: string
 
@@ -111,6 +114,8 @@ export namespace AppSchema {
     createdAt: string
   }
 
+  export type ChatAction = { emote: string; action: string }
+
   export interface ChatMessage {
     _id: string
     kind: 'chat-message'
@@ -123,6 +128,7 @@ export namespace AppSchema {
     rating?: 'y' | 'n' | 'none'
     adapter?: string
     imagePrompt?: string
+    actions?: ChatAction[]
 
     createdAt: string
     updatedAt: string

@@ -82,7 +82,7 @@ export const ImageSettings: Component = () => {
       <Toggle
         fieldName="summariseChat"
         label="Summarise Chat"
-        helperText="EXPERIMENTAL: When available use your AI service to summarise the chat into an image prompt. Currently only available with OpenAI and NovelAI."
+        helperText="When available use your AI service to summarise the chat into an image prompt. Currently only available with OpenAI and NovelAI Clio."
         value={state.user?.images?.summariseChat}
       />
 

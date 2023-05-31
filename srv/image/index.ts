@@ -115,7 +115,10 @@ async function createImageMessage(opts: {
   if (!char) return
 
   if (opts.messageId) {
-    const msg = await store.msgs.editMessage(opts.messageId, opts.filename, 'image')
+    const msg = await store.msgs.editMessage(opts.messageId, {
+      msg: opts.filename,
+      adapter: 'image',
+    })
     sendMany(opts.memberIds, {
       type: 'message-retry',
       chatId: opts.chatId,

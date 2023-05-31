@@ -10,6 +10,7 @@ import { adaptersToOptions, getStrictForm } from '../../shared/util'
 import { chatStore, presetStore, settingStore, userStore } from '../../store'
 import { getChatPreset } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -23,6 +24,14 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const cfg = settingStore()
   const presets = presetStore((s) => s.presets)
 
+  const activePreset = createMemo(() => {
+    const presetId = state.chat?.genPreset
+    if (!presetId) return
+
+    if (isDefaultPreset(presetId)) return defaultPresets[presetId]
+    return presets.find((pre) => pre._id === presetId)
+  })
+
   let ref: any
 
   const onSave = () => {
@@ -32,6 +41,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       sampleChat: 'string',
       scenario: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
+      mode: ['standard', 'adventure', null],
     } as const)
 
     const attributes = getAttributeMap(ref)
@@ -116,6 +126,19 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
               { label: 'Default', value: 'default' },
               ...adaptersToOptions(cfg.config.adapters),
             ]}
+          />
+        </Show>
+
+        <Show when={cfg.flags.cyoa && activePreset()?.service === 'openai'}>
+          <Select
+            fieldName="mode"
+            label="Chat Mode"
+            helperText="Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo"
+            items={[
+              { label: 'Conversation', value: 'standard' },
+              { label: 'Adventure (Experimental)', value: 'adventure' },
+            ]}
+            value={state.chat?.mode || 'standard'}
           />
         </Show>
 
