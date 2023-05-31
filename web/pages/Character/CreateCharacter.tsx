@@ -24,6 +24,7 @@ import {
   settingStore,
   toastStore,
   userStore,
+  presetStore,
 } from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
@@ -39,6 +40,7 @@ import { AppSchema } from '../../../srv/db/schema'
 import { downloadCharacterHub } from './ImportCharacter'
 import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 const options = [
   { id: 'boostyle', label: 'Boostyle' },
@@ -84,8 +86,19 @@ const CreateCharacterV1: Component = () => {
       list: s.characters.list,
     }
   })
+
+  const cfg = userStore((u) => u.user)
+  const presets = presetStore((s) => s.presets)
   const user = userStore((s) => s.user)
   const tagState = tagStore()
+
+  const canGenerateChar = createMemo(() => {
+    const id = cfg?.defaultPreset
+    if (!id) return
+
+    const preset = isDefaultPreset(id) ? defaultPresets[id] : presets.find((pre) => pre._id === id)
+    return preset?.service === 'openai'
+  })
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()

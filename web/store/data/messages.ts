@@ -222,6 +222,10 @@ async function getGenerateProps(
   return props
 }
 
+async function generatePlainResponse(prompt: string) {
+  const entities = await getPromptEntities()
+}
+
 /**
  * Create a user message that does not generate a bot response
  */

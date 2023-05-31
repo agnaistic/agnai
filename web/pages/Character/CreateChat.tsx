@@ -186,7 +186,7 @@ const CreateChatModal: Component<{
             fieldName="schema"
             label="Persona"
             items={options}
-            value={char()?.persona.kind}
+            value={char()?.persona.kind || 'wpp'}
           />
         </Show>
 
