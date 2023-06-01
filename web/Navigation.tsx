@@ -13,15 +13,19 @@ import {
   Settings,
   Sliders,
   User,
+  VenetianMask,
 } from 'lucide-solid'
-import { Component, createMemo, JSX, Show } from 'solid-js'
+import { Component, createMemo, createSignal, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
-import { inviteStore, settingStore, userStore } from './store'
+import { characterStore, inviteStore, settingStore, userStore } from './store'
+import ImpersonateModal from './pages/Character/ImpersonateModal'
 
 const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
+  const imperson = characterStore((s) => s.impersonating)
   const nav = useNavigate()
+  const [impersonate, setImpersonate] = createSignal(false)
 
   const logout = () => {
     nav('/')
@@ -32,45 +36,58 @@ const Navigation: Component = () => {
   const fullscreen = createMemo(() => (state.fullscreen ? 'hidden' : ''))
 
   return (
-    <div
-      data-menu=""
-      class={`drawer flex flex-col gap-4 bg-[var(--bg-800)] pt-4 ${hide()} ${fullscreen()}`}
-    >
-      <div class="drawer__content flex flex-col gap-2 px-4">
-        <div class="hidden w-full items-center justify-center sm:flex">
-          <A href="/">
-            <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
-              Agn<span class="text-[var(--hl-500)]">ai</span>stic
-            </div>
-          </A>
+    <>
+      <div
+        data-menu=""
+        class={`drawer flex flex-col gap-4 bg-[var(--bg-800)] pt-4 ${hide()} ${fullscreen()}`}
+      >
+        <div class="drawer__content flex flex-col gap-2 px-4">
+          <div class="hidden w-full items-center justify-center sm:flex">
+            <A href="/">
+              <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
+                Agn<span class="text-[var(--hl-500)]">ai</span>stic
+              </div>
+            </A>
+          </div>
+          <Show when={user.loggedIn} fallback={<GuestNavigation />}>
+            <UserNavigation />
+          </Show>
         </div>
-        <Show when={user.loggedIn} fallback={<GuestNavigation />}>
-          <UserNavigation />
-        </Show>
-      </div>
-      {/* <div class="flex flex-row justify-around text-xs">
+        {/* <div class="flex flex-row justify-around text-xs">
         <Item href="/terms-of-service">Terms</Item>
         <Item href="/privacy-policy">Privacy Policy</Item>
       </div> */}
-      <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
-        <div class="ellipsis my-auto flex w-full items-center justify-between">
-          <div class="flex max-w-[calc(100%-32px)] items-center gap-4">
-            <AvatarIcon
-              avatarUrl={user.profile?.avatar}
-              format={{ corners: 'circle', size: 'md' }}
-            />
-            <span class="ellipsis">
-              {user.profile?.handle}
-              {state.flags.charv2 ? ' (dev)' : ''}
-            </span>
+        <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
+          <div class="ellipsis my-auto flex w-full items-center justify-between">
+            <div
+              class="flex max-w-[calc(100%-32px)] items-center gap-2"
+              onClick={() => {
+                setImpersonate(true)
+                settingStore.closeMenu()
+              }}
+            >
+              <AvatarIcon
+                avatarUrl={imperson?.avatar || user.profile?.avatar}
+                format={{ corners: 'circle', size: 'md' }}
+              />
+              <div class="ellipsis flex cursor-pointer items-center justify-end rounded-lg bg-[var(--bg-700)] px-2 py-1">
+                <div class="ellipsis flex flex-col">
+                  <span>{imperson?.name || user.profile?.handle}</span>
+                </div>
+                <Show when={!!imperson}>
+                  <VenetianMask size={16} class="ml-2" />
+                </Show>
+              </div>
+            </div>
+            <div onClick={logout} class="icon-button cursor-pointer ">
+              <LogOut />
+            </div>
           </div>
-          <div onClick={logout} class="icon-button cursor-pointer ">
-            <LogOut />
-          </div>
+          <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
         </div>
-        <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
       </div>
-    </div>
+      <ImpersonateModal show={impersonate()} close={() => setImpersonate(false)} />
+    </>
   )
 }
 

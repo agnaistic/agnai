@@ -224,8 +224,8 @@ Example of {{char}}'s dialogue: {{example_dialogue}}
 {{ujb}}
 {{post}}`
 
-export const adventureAmble = `[System note: In addition provide 3 possible responses that {{user}} could give to {{char}}'s response that drive the story forward. Respond in this strict format:
-{{char}}: {{char}}'s response
+export const adventureAmble = `[System note: In addition provide 3 possible consistent responses that {{user}} could give to {{char}}'s response that drive the story forward. Respond in this strict format:
+{{char}}: {{{char}}'s response. Provide at least two paragraphs}
 {Emotion of {{user}}'s response 1} -> {Possible response 1}
 {Emotion of {{user}}'s response 2} -> {Possible response 2}
 {Emotion of {{user}}'s response 3} -> {Possible response 3}]`

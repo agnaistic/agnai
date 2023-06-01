@@ -78,11 +78,14 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
 
+  const maxResponseLength =
+    opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
+
   const body: any = {
     model: oaiModel,
     stream: (gen.streamResponse && kind !== 'summary') ?? defaultPresets.openai.streamResponse,
     temperature: gen.temp ?? defaultPresets.openai.temp,
-    max_tokens: gen.maxTokens ?? defaultPresets.openai.maxTokens,
+    max_tokens: maxResponseLength,
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
     top_p: gen.topP ?? 1,
@@ -92,7 +95,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
-    const handle = sender.handle || 'You'
+    const handle = opts.impersonate?.name || sender.handle || 'You'
 
     const messages: OpenAIMessagePropType[] = [{ role: 'system', content: parts.gaslight }]
     const history: OpenAIMessagePropType[] = []

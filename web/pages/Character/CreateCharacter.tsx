@@ -84,6 +84,7 @@ const CreateCharacterV1: Component = () => {
       list: s.characters.list,
     }
   })
+
   const user = userStore((s) => s.user)
   const tagState = tagStore()
 
