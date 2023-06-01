@@ -9,7 +9,6 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
   const chars = characterStore((s) => s.characters)
 
   const onSelect = (char?: AppSchema.Character) => {
-    if (!char) return
     characterStore.impersonate(char)
     props.close()
   }
@@ -19,7 +18,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
       Instead of updating your profile to speak as somebody else, you can <b>impersonate</b> a
       character.
       <div class="flex w-full justify-center">
-        <Button>Use My Profile</Button>
+        <Button onClick={() => onSelect()}>Use My Profile</Button>
       </div>
       <CharacterSelectList items={chars.list} onSelect={onSelect} />
     </Modal>

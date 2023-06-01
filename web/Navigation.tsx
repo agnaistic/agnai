@@ -23,7 +23,7 @@ import ImpersonateModal from './pages/Character/ImpersonateModal'
 const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
-  const imperson = characterStore((s) => s.impersonating)
+  const chars = characterStore()
   const nav = useNavigate()
   const [impersonate, setImpersonate] = createSignal(false)
 
@@ -67,14 +67,14 @@ const Navigation: Component = () => {
               }}
             >
               <AvatarIcon
-                avatarUrl={imperson?.avatar || user.profile?.avatar}
+                avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
                 format={{ corners: 'circle', size: 'md' }}
               />
               <div class="ellipsis flex cursor-pointer items-center justify-end rounded-lg bg-[var(--bg-700)] px-2 py-1">
                 <div class="ellipsis flex flex-col">
-                  <span>{imperson?.name || user.profile?.handle}</span>
+                  <span>{chars.impersonating?.name || user.profile?.handle}</span>
                 </div>
-                <Show when={!!imperson}>
+                <Show when={!!chars.impersonating}>
                   <VenetianMask size={16} class="ml-2" />
                 </Show>
               </div>

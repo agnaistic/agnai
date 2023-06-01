@@ -155,6 +155,7 @@ async function getGenerateProps(
     entities,
     replyAs: entities.char,
     messages: entities.messages.slice(),
+    impersonate: entities.impersonating,
   }
 
   const getBot = (id: string) => entities.chatBots.find((ch) => ch._id === id)!

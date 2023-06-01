@@ -47,6 +47,37 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   goose: handleGooseAI,
 }
 
+type PlainRequest = {
+  prompt: string
+  settings: Partial<AppSchema.GenSettings>
+  guest?: string
+  user: AppSchema.User
+  log: AppLog
+}
+
+export async function createPlainStream(opts: PlainRequest) {
+  const handler = handlers[opts.settings.service!]
+  const stream = handler({
+    kind: 'request',
+    char: {} as any,
+    chat: {} as any,
+    gen: opts.settings,
+    log: opts.log,
+    lines: [],
+    members: [],
+    guest: opts.guest,
+    user: opts.user,
+    replyAs: {} as any,
+    parts: {} as any,
+    prompt: opts.prompt,
+    sender: {} as any,
+    settings: mapPresetsToAdapter(opts.settings, opts.settings.service!),
+    impersonate: undefined,
+  })
+
+  return { stream }
+}
+
 export async function createTextStreamV2(
   opts: GenerateRequestV2,
   log: AppLog,

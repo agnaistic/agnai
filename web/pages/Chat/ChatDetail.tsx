@@ -43,6 +43,7 @@ const ChatDetail: Component = () => {
     opts: s.opts,
     chatBots: s.chatBots,
     botMap: s.chatBotMap,
+    activeBots: Object.values(s.active?.chat.characters || {}).filter((bot) => !!bot).length,
   }))
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
@@ -283,7 +284,7 @@ const ChatDetail: Component = () => {
               request={requestMessage}
               bots={chats.chatBots}
             />
-            <Show when={isOwner() && chats.chatBots.length > 1}>
+            <Show when={isOwner() && chats.activeBots > 1}>
               <div
                 class={`flex justify-center gap-2 py-1 ${
                   msgs.waiting ? 'opacity-70 saturate-0' : ''

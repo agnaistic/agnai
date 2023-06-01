@@ -96,7 +96,7 @@ export const characterStore = createStore<CharacterState>(
 
     impersonate(_, char?: AppSchema.Character) {
       safeLocalStorage.setItem(IMPERSONATE_KEY, char?._id || '')
-      return { impersonating: char }
+      return { impersonating: char || undefined }
     },
 
     async *createCharacter(

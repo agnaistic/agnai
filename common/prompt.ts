@@ -469,6 +469,7 @@ function getLinesForPrompt(
     const sender = opts.impersonate
       ? opts.impersonate.name
       : profiles.get(chat.userId || opts.chat.userId)?.handle || 'You'
+
     return fillPlaceholders(
       chat,
       opts.characters[chat.characterId!]?.name || char.name,
