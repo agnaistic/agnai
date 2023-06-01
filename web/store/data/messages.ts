@@ -118,6 +118,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     sender: removeAvatar(entities.profile),
     members: entities.members.map(removeAvatar),
     parts: prompt.parts,
+    text: opts.kind === 'send' ? opts.text : undefined,
     lines: prompt.lines,
     settings: entities.settings,
     replacing: props.replacing,

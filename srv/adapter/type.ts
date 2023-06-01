@@ -12,6 +12,7 @@ export type GenerateRequestV2 = {
   members: AppSchema.Profile[]
   parts: PromptParts
   lines: string[]
+  text?: string
   settings?: Partial<AppSchema.GenSettings>
   replacing?: AppSchema.ChatMessage
   continuing?: AppSchema.ChatMessage
