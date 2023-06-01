@@ -544,43 +544,51 @@ function getOptsCache(): ChatOptCache {
   return { editing: false, hideOoc: false, ...body, modal: undefined }
 }
 
-subscribe('chat-character-added', { chatId: 'string', character: 'any' }, (body) => {
-  const { active, chatBotMap, chatBots, all } = chatStore.getState()
+subscribe(
+  'chat-character-added',
+  { chatId: 'string', active: 'boolean?', character: 'any' },
+  (body) => {
+    const { active, chatBotMap, chatBots, all } = chatStore.getState()
 
-  if (all?.chats) {
-    const nextChats = all.chats?.map((c) => {
-      if (c._id !== body.chatId) return c
-      return {
-        ...c,
-        characters: { ...(c.characters || {}), [body.character._id]: true },
-      }
-    })
+    if (all?.chats) {
+      const nextChats = all.chats?.map((c) => {
+        if (c._id !== body.chatId) return c
+        return {
+          ...c,
+          characters: { ...(c.characters || {}), [body.character._id]: true },
+        }
+      })
+      chatStore.setState({
+        all: {
+          ...all,
+          chats: nextChats,
+          chars: { ...(all.chars || {}), [body.character._id]: body.character },
+        },
+      })
+    }
+
+    if (!active || active.chat._id !== body.chatId) return
+
+    const nextBots = chatBots.concat(body.character)
+    const nextMap = { ...chatBotMap, [body.character._id]: body.character }
+    const nextActive = {
+      ...(active.chat.characters || {}),
+      [body.character._id]: body.active ?? true,
+    }
+
     chatStore.setState({
-      all: {
-        ...all,
-        chats: nextChats,
-        chars: { ...(all.chars || {}), [body.character._id]: body.character },
+      chatBots: nextBots,
+      chatBotMap: nextMap,
+      active: {
+        ...active,
+        chat: {
+          ...active.chat,
+          characters: nextActive,
+        },
       },
     })
   }
-
-  if (!active || active.chat._id !== body.chatId) return
-
-  const nextChatBots = chatBots.concat(body.character)
-  const nextChatBotMap = { ...chatBotMap, [body.character._id]: body.character }
-  const nextChatCharacters = { ...(active.chat.characters || {}), [body.character._id]: true }
-  chatStore.setState({
-    chatBots: nextChatBots,
-    chatBotMap: nextChatBotMap,
-    active: {
-      ...active,
-      chat: {
-        ...active.chat,
-        characters: nextChatCharacters,
-      },
-    },
-  })
-})
+)
 
 subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
   const { active, chatBotMap, chatBots, all } = chatStore.getState()

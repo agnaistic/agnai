@@ -49,6 +49,7 @@ export type PromptOpts = {
   book?: AppSchema.MemoryBook
   replyAs: AppSchema.Character
   characters: GenerateRequestV2['characters']
+  impersonate?: AppSchema.Character
 }
 
 type BuildPromptOpts = {
@@ -60,6 +61,7 @@ type BuildPromptOpts = {
   continue?: string
   members: AppSchema.Profile[]
   settings?: Partial<AppSchema.GenSettings>
+  impersonate?: AppSchema.Character
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
@@ -128,7 +130,7 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
 export function createPromptWithParts(
   opts: Pick<
     GenerateRequestV2,
-    'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters'
+    'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters' | 'impersonate'
   >,
   parts: PromptParts,
   lines: string[],
@@ -166,7 +168,10 @@ export function injectPlaceholders(
   encoder: Encoder
 ) {
   const sampleChat = parts.sampleChat?.join('\n')
-  const sender = opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle || 'You'
+  const sender =
+    opts.impersonate?.name ||
+    opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle ||
+    'You'
 
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
@@ -239,16 +244,25 @@ function ensureValidTemplate(template: string, parts: PromptParts) {
   return modified
 }
 
-export function getPromptParts(
-  opts: Pick<
-    PromptOpts,
-    'kind' | 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book' | 'replyAs'
-  >,
-  lines: string[],
-  encoder: Encoder
-) {
+type PromptPartsOptions = Pick<
+  PromptOpts,
+  | 'kind'
+  | 'chat'
+  | 'char'
+  | 'members'
+  | 'continue'
+  | 'settings'
+  | 'user'
+  | 'book'
+  | 'replyAs'
+  | 'impersonate'
+>
+
+export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
   const { chat, char, members, replyAs } = opts
-  const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+  const sender = opts.impersonate
+    ? opts.impersonate.name
+    : members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
 
@@ -332,7 +346,16 @@ export function getPromptParts(
 function createPostPrompt(
   opts: Pick<
     PromptOpts,
-    'kind' | 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book' | 'replyAs'
+    | 'kind'
+    | 'chat'
+    | 'char'
+    | 'members'
+    | 'continue'
+    | 'settings'
+    | 'user'
+    | 'book'
+    | 'replyAs'
+    | 'impersonate'
   >
 ) {
   const post = []
@@ -443,11 +466,13 @@ function getLinesForPrompt(
   }
 
   const formatMsg = (chat: AppSchema.ChatMessage) => {
-    const senderId = chat.userId || opts.chat.userId
+    const sender = opts.impersonate
+      ? opts.impersonate.name
+      : profiles.get(chat.userId || opts.chat.userId)?.handle || 'You'
     return fillPlaceholders(
       chat,
       opts.characters[chat.characterId!]?.name || char.name,
-      profiles.get(senderId)?.handle || 'You'
+      sender
     ).trim()
   }
 

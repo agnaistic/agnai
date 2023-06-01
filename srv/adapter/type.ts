@@ -12,11 +12,11 @@ export type GenerateRequestV2 = {
   members: AppSchema.Profile[]
   parts: PromptParts
   lines: string[]
-  text?: string
   settings?: Partial<AppSchema.GenSettings>
   replacing?: AppSchema.ChatMessage
   continuing?: AppSchema.ChatMessage
   characters: Record<string, AppSchema.Character>
+  impersonate?: AppSchema.Character
 }
 
 export type GenerateOptions = {
@@ -40,6 +40,7 @@ export type AdapterProps = {
   parts: PromptParts
   lines: string[]
   characters?: Record<string, AppSchema.Character>
+  impersonate: AppSchema.Character | undefined
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>

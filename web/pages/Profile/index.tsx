@@ -38,7 +38,6 @@ const ProfilePage: Component = () => {
       <form onSubmit={submit}>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
-            <div class="text-xl">How you appear</div>
             <div class="flex flex-row gap-2">
               <AvatarIcon avatarUrl={state.profile?.avatar} />
               <div class="flex items-center">{state.profile?.handle}</div>

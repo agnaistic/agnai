@@ -101,6 +101,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       messages: props.messages,
       replyAs: props.replyAs,
       characters: entities.characters,
+      impersonate: props.impersonate,
     },
     encoder
   )
@@ -118,11 +119,11 @@ export async function generateResponseV2(opts: GenerateOpts) {
     members: entities.members.map(removeAvatar),
     parts: prompt.parts,
     lines: prompt.lines,
-    text: opts.kind === 'send' ? opts.text : undefined,
     settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,
     replyAs: props.replyAs,
+    impersonate: props.impersonate,
     characters: removeAvatars(entities.characters),
   }
 
@@ -139,6 +140,7 @@ type GenerateProps = {
   replyAs: AppSchema.Character
   messages: AppSchema.ChatMessage[]
   continue?: string
+  impersonate?: AppSchema.Character
 }
 
 async function getGenerateProps(
@@ -195,10 +197,12 @@ async function getGenerateProps(
     case 'send': {
       // If the chat is a single-user chat, it is always in 'auto-reply' mode
       // Ensure the autoReplyAs parameter is set for single-bot chats
-      const isMulti = Object.keys(entities.characters).length > 1
+      const isMulti =
+        Object.values(entities.chat.characters || {}).filter((val) => !!val).length > 1
       if (!isMulti) entities.autoReplyAs = entities.char._id
 
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
+      props.impersonate = entities.impersonating
       props.replyAs = getBot(entities.autoReplyAs)
       props.messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
       break
@@ -222,15 +226,13 @@ async function getGenerateProps(
   return props
 }
 
-async function generatePlainResponse(prompt: string) {
-  const entities = await getPromptEntities()
-}
-
 /**
  * Create a user message that does not generate a bot response
  */
 async function createMessage(chatId: string, opts: { kind: 'ooc' | 'send-noreply'; text: string }) {
-  return api.post(`/chat/${chatId}/send`, { text: opts.text, kind: opts.kind })
+  const { impersonating } = getStore('character').getState()
+  const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
+  return api.post(`/chat/${chatId}/send`, { text: opts.text, kind: opts.kind, impersonate })
 }
 
 export async function deleteMessages(chatId: string, msgIds: string[]) {
@@ -279,6 +281,8 @@ async function getGuestEntities() {
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
 
+  const { impersonating } = getStore('character').getState()
+
   return {
     chat,
     char,
@@ -291,6 +295,7 @@ async function getGuestEntities() {
     chatBots,
     autoReplyAs: active.replyAs,
     characters: chatBotMap,
+    impersonating,
   }
 }
 
@@ -311,6 +316,8 @@ function getAuthedPromptEntities() {
   const messages = getStore('messages').getState().msgs
   const settings = getAuthGenSettings(chat, user)
 
+  const { impersonating } = getStore('character').getState()
+
   return {
     chat,
     char,
@@ -323,6 +330,7 @@ function getAuthedPromptEntities() {
     chatBots,
     autoReplyAs: active.replyAs,
     characters: chatBotMap,
+    impersonating,
   }
 }
 

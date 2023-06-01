@@ -72,6 +72,7 @@ export async function createTextStreamV2(
         chat: opts.chat,
         members: opts.members,
         replyAs: opts.replyAs,
+        impersonate: opts.impersonate,
       },
       [...opts.lines].reverse(),
       encoder
@@ -113,6 +114,7 @@ export async function createTextStreamV2(
     isThirdParty,
     replyAs: opts.replyAs,
     characters: opts.characters,
+    impersonate: opts.impersonate,
   })
 
   return { stream, adapter }

@@ -3,6 +3,18 @@ import { GenerationPreset } from '../../common/presets'
 import { ImageSettings } from './image-schema'
 import { TTSSettings, VoiceSettings } from './texttospeech-schema'
 
+export type AllDoc =
+  | AppSchema.Chat
+  | AppSchema.ChatMessage
+  | AppSchema.Character
+  | AppSchema.User
+  | AppSchema.Profile
+  | AppSchema.ChatLock
+  | AppSchema.ChatMember
+  | AppSchema.ChatInvite
+  | AppSchema.UserGenPreset
+  | AppSchema.MemoryBook
+
 export namespace AppSchema {
   export type ChatMode = 'standard' | 'adventure'
 
@@ -292,18 +304,6 @@ export namespace AppSchema {
 }
 
 export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { kind: T }>
-
-export type AllDoc =
-  | AppSchema.Chat
-  | AppSchema.ChatMessage
-  | AppSchema.Character
-  | AppSchema.User
-  | AppSchema.Profile
-  | AppSchema.ChatLock
-  | AppSchema.ChatMember
-  | AppSchema.ChatInvite
-  | AppSchema.UserGenPreset
-  | AppSchema.MemoryBook
 
 export const defaultGenPresets: AppSchema.GenSettings[] = []
 

@@ -8,12 +8,14 @@ import { AppSchema } from '../../db/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { extractActions } from './common'
+import { publishMany } from '../ws/handle'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
 const sendValidator = {
   kind: ['send-noreply', 'ooc'],
   text: 'string',
+  impersonate: 'any?',
 } as const
 
 const genValidator = {
@@ -27,6 +29,7 @@ const genValidator = {
   replyAs: 'any?',
   continuing: 'any?',
   characters: 'any?',
+  impersonate: 'any?',
   parts: {
     scenario: 'string?',
     persona: 'string',
@@ -57,21 +60,30 @@ export const createMessage = handle(async (req) => {
   const chatId = params.id
   assertValid(sendValidator, body)
 
+  const impersonate: AppSchema.Character | undefined = body.impersonate
+
   if (!userId) {
     const guest = req.socketId
     const newMsg = newMessage(chatId, body.text, {
-      userId: 'anon',
+      userId: impersonate ? undefined : 'anon',
+      characterId: impersonate?._id,
       ooc: body.kind === 'ooc',
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
     const chat = await store.chats.update(chatId, {})
     if (!chat) throw errors.NotFound
+    const char = impersonate
+      ? await store.characters.getCharacter(userId, impersonate?._id)
+      : undefined
+    if (impersonate && !char) throw errors.Forbidden
+
     const members = chat.memberIds.concat(chat.userId)
     const userMsg = await store.msgs.createChatMessage({
       chatId,
       message: body.text,
-      senderId: userId!,
+      characterId: impersonate?._id,
+      senderId: impersonate ? undefined : userId!,
       ooc: body.kind === 'ooc',
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
@@ -89,6 +101,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     return handleGuestGenerate(body, req, res)
   }
 
+  const impersonate: AppSchema.Character | undefined = body.impersonate
   const user = await store.users.getUser(userId)
   body.user = user
 
@@ -122,14 +135,37 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send' || body.kind === 'ooc') {
+    const update: Partial<AppSchema.Chat> = {}
+    if (impersonate) {
+      const nextChars = { ...chat.characters }
+      if (impersonate._id in nextChars === false) {
+        const char = await store.characters.getCharacter(userId, impersonate._id)
+        if (!char) throw errors.Forbidden
+
+        // Ensure the character is update to date for authorized users
+        Object.assign(impersonate, char)
+
+        nextChars[impersonate._id] = false
+        publishMany(members, {
+          type: 'chat-character-added',
+          chatId,
+          character: char,
+          active: false,
+        })
+      }
+
+      update.characters = nextChars
+    }
+
     const userMsg = await store.msgs.createChatMessage({
       chatId,
       message: body.text!,
-      senderId: userId!,
+      characterId: impersonate?._id,
+      senderId: impersonate ? undefined : userId!,
       ooc: body.kind === 'ooc',
     })
 
-    await store.chats.update(chatId, {})
+    await store.chats.update(chatId, update)
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
@@ -158,7 +194,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   })
   res.json({ success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs }, log)
+  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs, impersonate }, log)
 
   log.setBindings({ adapter })
 

@@ -4,6 +4,9 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_1 June 2023_
+- Character impersonation! You can now speak as characters that you create. Click on your avatar/name in the menu.
+
 _31 May 2023_
 - Experimental release: "Adventure" (aka Choose your own adventure or CYOA) mode for OpenAI Turbo
 - Migrate to "prompt templates" - More to come on this functionality soon
