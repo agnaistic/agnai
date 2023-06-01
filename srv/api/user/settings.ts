@@ -136,7 +136,6 @@ export const updateConfig = handle(async ({ userId, body }) => {
     hordeWorkers: body.hordeWorkers,
     hordeUseTrusted: body.hordeUseTrusted ?? false,
     defaultPreset: body.defaultPreset || '',
-    hordeModel: body.hordeModels || toArray(body.hordeModel),
   }
 
   if (body.hordeKey || body.hordeApiKey) {
@@ -188,8 +187,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.texttospeech = body.texttospeech
   }
 
-  if (body.hordeModel) {
-    update.hordeModel = body.hordeModel!
+  if (body.hordeModels) {
+    update.hordeModel = toArray(body.hordeModels)
   }
 
   if (body.novelModel) {

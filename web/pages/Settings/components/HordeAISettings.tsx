@@ -105,11 +105,13 @@ const HordeAISettings: Component<{
       </Show>
 
       <div class="flex items-center gap-4">
-        <Button onClick={() => setShowModels(true)}>Select Horde Models</Button>
+        <Button onClick={() => setShowModels(true)} class="min-w-max">
+          Select Models
+        </Button>
         <div>Models selected: {selectedModels()}</div>
       </div>
       <div class="flex items-center gap-4">
-        <Button onClick={() => setShow(true)}>Select Specific Workers</Button>
+        <Button onClick={() => setShow(true)}>Select Workers</Button>
         <div>Workers selected: {workers()?.length ?? state.workers.length}</div>
       </div>
 
