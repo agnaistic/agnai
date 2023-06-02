@@ -57,13 +57,15 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.euterpe
 
+  const processedPrompt = processNovelAIPrompt(prompt)
+
   const body = {
     model,
-    input: prompt,
+    input: processedPrompt,
     parameters: model === NOVEL_MODELS.clio_v1 ? getClioParams(opts.gen) : { ...base, ...settings },
   }
 
-  const endTokens = ['***', 'Scenario:', '----']
+  const endTokens = ['***', 'Scenario:', '----', '⁂']
 
   log.debug({ ...body, parameters: { ...body.parameters, bad_words_ids: null } }, 'NovelAI payload')
 
@@ -107,7 +109,7 @@ function getClioParams(gen: Partial<AppSchema.GenSettings>) {
   return {
     temperature: gen.temp,
     max_length: gen.maxTokens,
-    min_length: 8,
+    min_length: 1,
     top_k: gen.topK,
     top_p: gen.topP,
     top_a: gen.topA,
@@ -206,4 +208,8 @@ const fullCompletition = async function* (headers: any, body: any, log: AppLog) 
   }
 
   return { tokens: res.body.output }
+}
+
+function processNovelAIPrompt(prompt: string) {
+  return prompt.replace(/^\<START\>$/gm, '***')
 }
