@@ -399,8 +399,6 @@ async function handleImage(chatId: string, image: string) {
 }
 
 async function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
-  const user = userStore.getState().user
-  if (user?.texttospeech?.enabled === false) return
   if (chatId != msgStore.getState().activeChatId) {
     msgStore.setState({ speaking: undefined })
     return
@@ -600,11 +598,16 @@ subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
 })
 
 subscribe('voice-generating', { chatId: 'string', messageId: 'string' }, (body) => {
-  if (msgStore.getState().activeChatId != body.chatId) return
+  const activeChatId = msgStore.getState().activeChatId
+  if (activeChatId != body.chatId) return
+  const user = userStore.getState().user
+  if (user?.texttospeech?.enabled === false) return
   msgStore.setState({ speaking: { messageId: body.messageId, status: 'generating' } })
 })
 
 subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
+  const activeChatId = msgStore.getState().activeChatId
+  if (activeChatId != body.chatId) return
   msgStore.setState({ speaking: undefined })
   toastStore.error(body.error)
 })
