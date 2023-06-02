@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { logger } from '../logger'
-import { trimResponseV2 } from '../api/chat/common'
+import { normalizeUrl, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
@@ -37,7 +37,7 @@ export const handleKobold: ModelAdapter = async function* ({
 
   log.debug(body, 'Kobold payload')
 
-  const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
+  const resp = await needle('post', `${normalizeUrl(user.koboldUrl)}/api/v1/generate`, body, {
     headers: { 'Bypass-Tunnel-Reminder': 'true' },
     json: true,
   }).catch((err) => ({ error: err }))

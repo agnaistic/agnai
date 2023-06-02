@@ -6,7 +6,7 @@
  */
 
 import needle from 'needle'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
+import { normalizeUrl, sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { logger } from '../logger'
 
@@ -48,15 +48,22 @@ export const handleOoba: ModelAdapter = async function* ({
 
   log.debug(body, 'Textgen payload')
 
-  const resp = await needle('post', `${user.oobaUrl || defaultUrl}/api/v1/generate`, body, {
-    json: true,
-  }).catch((err) => ({ error: err }))
+  const resp = await needle(
+    'post',
+    `${normalizeUrl(user.oobaUrl, defaultUrl)}/api/v1/generate`,
+    body,
+    {
+      json: true,
+    }
+  ).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
     logger.error({ err: resp.error }, ``)
     yield { error: `Textgen request failed: ${resp.error?.message || resp.error}` }
     return
   }
+
+  console.log(JSON.stringify(resp.body, null, 2))
 
   if (resp.statusCode && resp.statusCode >= 400) {
     logger.error({ err: resp.body }, `Textgen request failed {${resp.statusCode}}`)
