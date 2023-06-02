@@ -4,7 +4,12 @@ import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { BOT_REPLACE, SELF_REPLACE, injectPlaceholders } from '../../common/prompt'
+import {
+  BOT_REPLACE,
+  SELF_REPLACE,
+  ensureValidTemplate,
+  injectPlaceholders,
+} from '../../common/prompt'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
@@ -97,7 +102,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
     const handle = opts.impersonate?.name || sender.handle || 'You'
 
-    const messages: OpenAIMessagePropType[] = [{ role: 'system', content: parts.gaslight }]
+    const gaslight = injectPlaceholders(
+      ensureValidTemplate(parts.gaslight, opts.parts, ['history', 'post']),
+      {
+        opts,
+        parts: opts.parts,
+        encoder,
+      }
+    )
+    const messages: OpenAIMessagePropType[] = [{ role: 'system', content: gaslight }]
     const history: OpenAIMessagePropType[] = []
 
     const all = []
@@ -105,7 +118,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     let maxBudget =
       (gen.maxContextLength || defaultPresets.openai.maxContextLength) - body.max_tokens
 
-    let tokens = encoder(parts.gaslight)
+    let tokens = encoder(gaslight)
 
     if (lines) {
       all.push(...lines)
