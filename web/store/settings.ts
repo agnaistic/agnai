@@ -13,6 +13,7 @@ type SettingState = {
   guestAccessAllowed: boolean
   initLoading: boolean
   showMenu: boolean
+  showImpersonate: boolean
   fullscreen: boolean
   config: AppSchema.AppConfig
   models: HordeModel[]
@@ -40,6 +41,7 @@ const initState: SettingState = {
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
   showMenu: false,
+  showImpersonate: false,
   fullscreen: false,
   models: [],
   workers: [],
@@ -100,6 +102,9 @@ export const settingStore = createStore<SettingState>(
     },
     closeMenu: () => {
       return { showMenu: false }
+    },
+    toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
+      return { showImpersonate: show ?? !showImpersonate }
     },
     fullscreen(_, next: boolean) {
       return { fullscreen: next }

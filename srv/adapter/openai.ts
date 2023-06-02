@@ -404,6 +404,6 @@ function getInstruction(opts: AdapterProps, encoder: Encoder) {
   }
 
   // This is experimental and probably needs to be workshopped to get better responses
-  const content = injectPlaceholders(adventureAmble, opts, opts.parts, [], 'asc', encoder)
+  const content = injectPlaceholders(adventureAmble, { opts, parts: opts.parts, encoder })
   return content
 }

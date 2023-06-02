@@ -338,7 +338,13 @@ const SingleMessage: Component<
                   )}
                 />
                 <Show
-                  when={!props.partial && props.original.actions && props.last && props.lastSplit}
+                  when={
+                    !props.partial &&
+                    props.original.actions &&
+                    props.last &&
+                    props.lastSplit &&
+                    props.chat.mode === 'adventure'
+                  }
                 >
                   <div class="flex items-center justify-center gap-2">
                     <For each={props.original.actions}>

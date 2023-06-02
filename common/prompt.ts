@@ -115,7 +115,12 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
   const lines = getLinesForPrompt(opts, encoder)
   const parts = getPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
-  const prompt = injectPlaceholders(template, opts, parts, lines, 'desc', encoder)
+  const prompt = injectPlaceholders(template, {
+    opts,
+    parts,
+    history: { lines, order: 'desc' },
+    encoder,
+  })
   return { lines: lines.reverse(), parts, template: prompt }
 }
 
@@ -138,7 +143,12 @@ export function createPromptWithParts(
 ) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
-  const prompt = injectPlaceholders(template, opts, parts, lines, 'asc', encoder)
+  const prompt = injectPlaceholders(template, {
+    opts,
+    parts,
+    history: { lines, order: 'asc' },
+    encoder,
+  })
   return { lines, prompt, parts, post }
 }
 
@@ -159,13 +169,16 @@ export function getTemplate(
   return ensureValidTemplate(template, parts)
 }
 
+type InjectOpts = {
+  opts: BuildPromptOpts
+  parts: PromptParts
+  history?: { lines: string[]; order: 'asc' | 'desc' }
+  encoder: Encoder
+}
+
 export function injectPlaceholders(
   template: string,
-  opts: BuildPromptOpts,
-  parts: PromptParts,
-  lines: string[],
-  order: 'asc' | 'desc',
-  encoder: Encoder
+  { opts, parts, history: hist, encoder }: InjectOpts
 ) {
   const sampleChat = parts.sampleChat?.join('\n')
   const sender =
@@ -185,26 +198,22 @@ export function injectPlaceholders(
     .replace(BOT_REPLACE, opts.replyAs.name)
     .replace(SELF_REPLACE, sender)
 
-  const messages = order === 'asc' ? lines.slice().reverse() : lines.slice()
-  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const maxContext = getContextLimit(opts.settings, adapter, model)
-  const history = fillPromptWithLines(encoder, maxContext, prompt, messages).reverse()
+  if (hist) {
+    const messages = hist.order === 'asc' ? hist.lines.slice().reverse() : hist.lines.slice()
+    const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+    const maxContext = getContextLimit(opts.settings, adapter, model)
+    const history = fillPromptWithLines(encoder, maxContext, prompt, messages).reverse()
+    prompt = prompt.replace(HOLDERS.history, history.join('\n'))
+  }
 
-  prompt = prompt.replace(HOLDERS.history, history.join('\n'))
   return prompt
 }
 
-function ensureValidTemplate(template: string, parts: PromptParts) {
-  let hasScenario = !!template.match(HOLDERS.scenario)
-  let hasPersona = !!template.match(HOLDERS.persona)
-  let hasHistory = !!template.match(HOLDERS.history)
-  let hasPost = !!template.match(HOLDERS.post)
-
+function removeUnusedPlaceholders(template: string, parts: PromptParts) {
   const useUjb = !!parts.ujb
   const useSampleChat = !!parts.sampleChat?.join('\n')
   const useMemory = !!parts.memory
   const useScenario = !!parts.scenario
-  const usePersona = !!parts.persona
 
   let modified = template
     .split('\n')
@@ -222,6 +231,20 @@ function ensureValidTemplate(template: string, parts: PromptParts) {
       return true
     })
     .join('\n')
+
+  return modified
+}
+
+function ensureValidTemplate(template: string, parts: PromptParts) {
+  let hasScenario = !!template.match(HOLDERS.scenario)
+  let hasPersona = !!template.match(HOLDERS.persona)
+  let hasHistory = !!template.match(HOLDERS.history)
+  let hasPost = !!template.match(HOLDERS.post)
+
+  const useScenario = !!parts.scenario
+  const usePersona = !!parts.persona
+
+  let modified = removeUnusedPlaceholders(template, parts)
 
   if (!hasScenario && useScenario) {
     hasScenario = true
@@ -301,25 +324,14 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
   const ujb = opts.settings?.ultimeJailbreak
-  const sampleChat = parts.sampleChat?.join('\n') || ''
+
+  const injectOpts = { opts, parts, encoder }
 
   if (ujb) {
-    parts.ujb = ujb
-      .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
-      .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
-      .replace(/\{\{memory\}\}/gi, parts.memory || '')
-      .replace(/\{\{personality\}\}/gi, parts.persona)
-      .replace(BOT_REPLACE, replyAs.name)
-      .replace(SELF_REPLACE, sender)
+    parts.ujb = injectPlaceholders(removeUnusedPlaceholders(ujb, parts), injectOpts)
   }
 
-  parts.gaslight = gaslight
-    .replace(/\{\{example_dialogue\}\}/gi, sampleChat)
-    .replace(/\{\{scenario\}\}/gi, parts.scenario || '')
-    .replace(/\{\{memory\}\}/gi, parts.memory || '')
-    .replace(/\{\{personality\}\}/gi, parts.persona)
-    .replace(BOT_REPLACE, replyAs.name)
-    .replace(SELF_REPLACE, sender)
+  parts.gaslight = injectPlaceholders(removeUnusedPlaceholders(gaslight, parts), injectOpts)
 
   /**
    * If the gaslight does not have a sample chat placeholder, but we do have sample chat

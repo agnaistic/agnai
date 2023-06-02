@@ -15,17 +15,15 @@ import {
   User,
   VenetianMask,
 } from 'lucide-solid'
-import { Component, createMemo, createSignal, JSX, Show } from 'solid-js'
+import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { characterStore, inviteStore, settingStore, userStore } from './store'
-import ImpersonateModal from './pages/Character/ImpersonateModal'
 
 const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
   const chars = characterStore()
   const nav = useNavigate()
-  const [impersonate, setImpersonate] = createSignal(false)
 
   const logout = () => {
     nav('/')
@@ -62,7 +60,7 @@ const Navigation: Component = () => {
             <div
               class="flex max-w-[calc(100%-32px)] items-center gap-2"
               onClick={() => {
-                setImpersonate(true)
+                settingStore.toggleImpersonate(true)
                 settingStore.closeMenu()
               }}
             >
@@ -86,7 +84,6 @@ const Navigation: Component = () => {
           <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
         </div>
       </div>
-      <ImpersonateModal show={impersonate()} close={() => setImpersonate(false)} />
     </>
   )
 }

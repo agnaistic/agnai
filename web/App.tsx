@@ -13,6 +13,7 @@ import Button from './shared/Button'
 import './app.css'
 import './dots.css'
 import Modal from './shared/Modal'
+import ImpersonateModal from './pages/Character/ImpersonateModal'
 
 const App: Component = () => {
   const state = userStore()
@@ -130,6 +131,10 @@ const Layout: Component = () => {
         </div>
       </div>
       <Toasts />
+      <ImpersonateModal
+        show={cfg.showImpersonate}
+        close={() => settingStore.toggleImpersonate(false)}
+      />
     </div>
   )
 }
