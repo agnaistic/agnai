@@ -200,7 +200,7 @@ async function getGenerateProps(
       // If the chat is a single-user chat, it is always in 'auto-reply' mode
       // Ensure the autoReplyAs parameter is set for single-bot chats
       const isMulti =
-        Object.values(entities.chat.characters || {}).filter((val) => !!val).length > 1
+        Object.values(entities.chat.characters || {}).filter((val) => !!val).length >= 1
       if (!isMulti) entities.autoReplyAs = entities.char._id
 
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
