@@ -206,18 +206,6 @@ const CreateCharacterV1: Component = () => {
     <div>
       <PageHeader
         title={`${params.editId ? 'Edit' : params.duplicateId ? 'Copy' : 'Create'} a Character`}
-        subtitle={
-          <span>
-            For character information tips and information visit{' '}
-            <a
-              class="link"
-              href="https://rentry.org/pygtips#character-creation-tips"
-              target="_blank"
-            >
-              https://rentry.org/pygtips#character-creation-tips
-            </a>
-          </span>
-        }
       />
 
       <form class="flex flex-col gap-4" onSubmit={onSubmit} ref={ref}>

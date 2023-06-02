@@ -21,6 +21,7 @@ const book = toBook('book', [
   toEntry(['10-TRIGGER'], 'ENTRY TWO', 10, 10),
   toEntry(['20-TRIGGER'], 'ENTRY THREE', 20, 20),
   toEntry(['TIE-TRIGGER'], 'ENTRY TIE', 20, 20),
+  toEntry(['LONGWORD'], 'ENTRY LONG', 20, 20),
 ])
 
 describe('Prompt building', () => {
@@ -157,6 +158,26 @@ describe('Prompt building', () => {
         'You: 1-TRIGGER',
         'You: TIE-TRIGGER',
         'You: 20-TRIGGER',
+        'Bot:'
+      )
+    )
+  })
+
+  it('will exclude matches that are not a whole word match', () => {
+    const actual = build([botMsg('LONGWOR A'), toMsg('1-TRIGGER')], {
+      settings: { memoryDepth: 2 },
+    })
+
+    expect(actual.template).to.equal(
+      expected(
+        `Bot's Persona: PERSONA`,
+        'Scenario: SCENARIO',
+        'Facts:\nENTRY ONE',
+        `Example of Bot's dialogue: `,
+        'Bot: SAMPLE_CHAT',
+        '\n<START>',
+        'Bot: LONGWOR A',
+        'You: 1-TRIGGER',
         'Bot:'
       )
     )

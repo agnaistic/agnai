@@ -58,15 +58,19 @@ export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPro
 
   let id = 0
   const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLowerCase()
+  const reversed = prep(combinedText)
 
   for (const entry of book.entries) {
     if (!entry.enabled) continue
 
     let index = -1
     for (const keyword of entry.keywords) {
-      const match = combinedText.lastIndexOf(keyword.toLowerCase())
-      if (match === -1 || match < index) continue
-      index = match
+      const txt = `\\b(${prep(keyword)})\\b`
+      const re = new RegExp(txt, 'gi')
+      const result = re.exec(reversed)
+      if (index === -1 && result !== null) {
+        index = result.index
+      }
     }
 
     if (index > -1) {
@@ -107,6 +111,13 @@ function byPriorityThenIndex(
   { id: rid, index: ri, entry: r }: Match
 ) {
   if (l.weight !== r.weight) return l.weight < r.weight ? 1 : -1
-  if (li !== ri) return li > ri ? 1 : -1
+  if (li !== ri) return li > ri ? -1 : 1
   return lid > rid ? 1 : lid === rid ? 0 : -1
+}
+
+function prep(str: string, safe?: boolean) {
+  let next = ''
+  for (let i = str.length - 1; i >= 0; i--) next += str[i]
+  if (!safe) return next
+  return next.toLowerCase().replace(/\-/g, '\\-')
 }
