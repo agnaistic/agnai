@@ -119,6 +119,7 @@ const SingleMessage: Component<
 
     return {
       background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
+      'backdrop-filter': 'blur(5px)',
     }
   })
 
