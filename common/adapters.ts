@@ -164,7 +164,6 @@ export type PresetAISettings = Omit<
   | 'memoryContextLimit'
   | 'memoryReverseWeight'
   | 'src'
-  | 'order'
   | 'useGaslight'
 >
 
@@ -198,6 +197,8 @@ export const adapterSettings: {
   banEosToken: ['ooba'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
+
+  order: ['horde', 'novel', 'kobold'],
 }
 
 export type RegisteredAdapter = {

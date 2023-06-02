@@ -11,7 +11,7 @@ import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import GenerationSettings from '../../shared/GenerationSettings'
 import Modal from '../../shared/Modal'
-import { getStrictForm } from '../../shared/util'
+import { getStrictForm, parseGenSettingsOrder } from '../../shared/util'
 import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { getAdapter } from '../../../common/prompt'
@@ -87,8 +87,16 @@ export const ChatGenSettingsModal: Component<{
   const onSave = () => {
     const { preset } = getStrictForm(ref, { preset: 'string' })
     if (preset === AutoPreset.chat) {
-      const body = getStrictForm(ref, chatGenSettings)
-      chatStore.editChatGenSettings(props.chat._id, body, props.close)
+      const body = getStrictForm(ref, { ...chatGenSettings, order: 'string?' })
+      const { order, ...rest } = body
+      const result: AppSchema.Chat['genSettings'] = rest
+      try {
+        result.order = parseGenSettingsOrder(order)
+      } catch (e: any) {
+        toastStore.error(`Invalid order: ${e.message}`)
+        return
+      }
+      chatStore.editChatGenSettings(props.chat._id, result, props.close)
     } else if (preset === AutoPreset.service) {
       chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined })
     } else {
@@ -100,14 +108,25 @@ export const ChatGenSettingsModal: Component<{
       })
 
       if (!isDefaultPreset(preset)) {
-        const validator = { ...chatGenSettings, service: ['', ...AI_ADAPTERS] } as const
-        const update = getStrictForm(ref, validator)
-        if (update.service === '') {
+        const validator = {
+          ...chatGenSettings,
+          service: ['', ...AI_ADAPTERS],
+          order: 'string?',
+        } as const
+        const body = getStrictForm(ref, validator)
+        const { order, service, ...rest } = body
+        if (!service) {
           toastStore.error(`You must select an AI service before saving`)
           return
         }
-
-        presetStore.updatePreset(preset, update as any)
+        const result: AppSchema.Chat['genSettings'] = { ...rest, service }
+        try {
+          result.order = parseGenSettingsOrder(order)
+        } catch (e: any) {
+          toastStore.error(`Invalid order: ${e.message}`)
+          return
+        }
+        presetStore.updatePreset(preset, result)
       }
     }
   }

@@ -9,7 +9,7 @@ import GenerationSettings from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
-import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { getStrictForm, parseGenSettingsOrder, setComponentPageTitle } from '../../shared/util'
 import { presetStore, toastStore } from '../../store'
 import { AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
@@ -104,24 +104,39 @@ export const GenerationPresetsPage: Component = () => {
 
   const onSave = (_ev: Event, force?: boolean) => {
     if (state.saving) return
-    const validator = { ...presetValidator, service: ['', ...AI_ADAPTERS] } as const
+    const validator = {
+      ...presetValidator,
+      service: ['', ...AI_ADAPTERS],
+      order: 'string?',
+    } as const
     const body = getStrictForm(ref, validator)
 
-    if (body.service === '') {
+    const { order, service, ...rest } = body
+
+    if (service === '') {
       toastStore.error(`You must select an AI service before saving`)
       return
     }
 
-    if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {
+    const preset: Partial<AppSchema.UserGenPreset> = { ...rest, service }
+    try {
+      preset.order = parseGenSettingsOrder(order)
+    } catch (e: any) {
+      console.error(e)
+      toastStore.error(`Invalid order: ${e.message}`)
+      return
+    }
+
+    if (!force && preset.gaslight && !preset.gaslight.includes('{{personality}}')) {
       setMissingPlaceholder(true)
       return
     }
 
     const prev = editing()
     if (prev?._id) {
-      presetStore.updatePreset(prev._id, body as any)
+      presetStore.updatePreset(prev._id, preset)
     } else {
-      presetStore.createPreset(body as any, (newPreset) => {
+      presetStore.createPreset(preset as any, (newPreset) => {
         nav(`/presets/${newPreset._id}`)
       })
     }
@@ -180,7 +195,7 @@ export const GenerationPresetsPage: Component = () => {
                 <GenerationSettings inherit={editing()} />
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
-                <div class="flex flex-row justify-end">
+                <div class="mt-2 flex flex-row justify-end">
                   <Button disabled={state.saving} onClick={onSave}>
                     <Save /> Save
                   </Button>

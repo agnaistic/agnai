@@ -73,31 +73,6 @@ const GenerationSettings: Component<Props> = (props) => {
 }
 export default GenerationSettings
 
-export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
-  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale']
-  return (
-    <div>
-      <For each={allAdapaters}>
-        {(adapter) => (
-          <div class="flex flex-row gap-2">
-            <Show when={adapters.includes(adapter)}>
-              <div class="text-green-500">
-                <Check />
-              </div>
-            </Show>
-            <Show when={!adapters.includes(adapter)}>
-              <div class="text-red-500">
-                <X />
-              </div>
-            </Show>
-            {adapter}
-          </div>
-        )}
-      </For>
-    </div>
-  )
-}
-
 const GeneralSettings: Component<Props> = (props) => {
   return (
     <>
@@ -438,6 +413,15 @@ const GenSettings: Component<Props> = (props) => {
         disabled={props.disabled}
         service={props.service}
         aiSetting={'presencePenalty'}
+      />
+      <TextInput
+        fieldName="order"
+        label="Sampler Order"
+        helperText="The order in which different sampling methods are applied. Specific to the AI service."
+        value={JSON.stringify(props.inherit?.order ?? defaultPresets.basic.order)}
+        disabled={props.disabled}
+        service={props.service}
+        aiSetting="order"
       />
       <Show when={!props.service}>
         <Divider />

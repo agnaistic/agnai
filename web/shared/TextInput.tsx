@@ -2,6 +2,7 @@ import { Component, Show, createMemo, JSX, onMount } from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices } from './util'
+import { SupportedAdaptersTooltip } from './SupportedAdaptersTooltip'
 
 const MIN_HEIGHT = 40
 
@@ -50,17 +51,20 @@ const TextInput: Component<{
   return (
     <div class={`w-full ${hide()}`}>
       <Show when={!!props.label}>
-        <label for={props.fieldName}>
-          <div class={props.helperText ? '' : 'pb-1'}>
-            {props.label}
-            <Show when={props.isMultiline}>
-              <IsVisible onEnter={resize} />
-            </Show>
-          </div>
-          <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
-          </Show>
-        </label>
+        <div class="flex flex-row gap-2">
+          <label for={props.fieldName} class="form-label">
+            <div class={props.helperText ? '' : 'pb-1'}>
+              {props.label}
+              <Show when={props.isMultiline}>
+                <IsVisible onEnter={resize} />
+              </Show>
+            </div>
+          </label>
+          <SupportedAdaptersTooltip service={props.service} adapters={adapters()} />
+        </div>
+      </Show>
+      <Show when={props.helperText}>
+        <p class="mt-[-0.125rem] pb-2 text-sm text-[var(--text-700)]">{props.helperText}</p>
       </Show>
       <Show
         when={props.isMultiline}

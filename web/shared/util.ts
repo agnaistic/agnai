@@ -467,3 +467,16 @@ export function appendFormOptional(
   if (stringify) form.append(key, stringify(value))
   else form.append(key, value as string | File)
 }
+
+export function parseGenSettingsOrder(order: string | undefined): number[] | undefined {
+  if (!order) return undefined
+
+  const orderJson: number[] = JSON.parse(order)
+  if (!orderJson) {
+    throw new Error('The order field must be a valid JSON')
+  }
+  if (!Array.isArray(orderJson) || !orderJson.every((n) => typeof n === 'number')) {
+    throw new Error('The order field must be an array of numbers')
+  }
+  return orderJson
+}

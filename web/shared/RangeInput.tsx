@@ -1,10 +1,8 @@
-import { Info } from 'lucide-solid'
 import { Component, Show, createSignal, createEffect, createMemo } from 'solid-js'
 import type { JSX } from 'solid-js'
-import Tooltip from './Tooltip'
-import { CreateTooltip } from './GenerationSettings'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices } from './util'
+import { SupportedAdaptersTooltip } from './SupportedAdaptersTooltip'
 
 const RangeInput: Component<{
   label: string
@@ -47,11 +45,7 @@ const RangeInput: Component<{
       <ul class="w-full">
         <div class="flex flex-row gap-2">
           <label class="form-label block-block">{props.label}</label>
-          <Show when={adapters()}>
-            <Tooltip tip={CreateTooltip(adapters()!)} position="right">
-              <Info size={20} color={'var(--hl-500)'} />
-            </Tooltip>
-          </Show>
+          <SupportedAdaptersTooltip service={props.service} adapters={adapters()} />
         </div>
         <input
           id={props.fieldName}
