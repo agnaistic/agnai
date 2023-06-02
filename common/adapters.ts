@@ -174,7 +174,7 @@ export const adapterSettings: {
   temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
-  gaslight: ['openai', 'scale', 'kobold', 'claude', 'ooba'],
+  gaslight: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba'],
   antiBond: ['openai', 'claude', 'scale'],
   ultimeJailbreak: ['openai', 'claude', 'kobold'],
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],

@@ -79,8 +79,15 @@ const builtinPresets = {
     topP: 0.95,
     topA: 0.075,
     order: [1, 3, 4, 0, 2],
-    useGaslight: false,
     streamResponse: false,
+    useGaslight: true,
+    gaslight: `{{char}} Memory: {{memory}}
+Description of {{char}}: {{personality}}
+[ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
+This is how the character speaks:
+{{example_dialogue}}
+***
+Summary: {{scenario}}`,
   },
   novel_20BC: {
     name: '20BC+',
