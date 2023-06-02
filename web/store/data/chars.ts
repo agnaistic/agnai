@@ -103,6 +103,7 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
     appendFormOptional(form, 'sampleChat', char.sampleChat)
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
     appendFormOptional(form, 'avatar', file)
+    appendFormOptional(form, 'clearAvatar', char.clearAvatar)
 
     const res = await api.upload(`/character/${charId}`, form)
     return res

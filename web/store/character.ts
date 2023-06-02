@@ -33,6 +33,7 @@ export type NewCharacter = UpdateCharacter &
 export type UpdateCharacter = Partial<
   Omit<AppSchema.Character, '_id' | 'kind' | 'userId' | 'createdAt' | 'updatedAt' | 'avatar'> & {
     avatar?: File
+    clearAvatar?: boolean
   }
 >
 
@@ -129,7 +130,7 @@ export const characterStore = createStore<CharacterState>(
         toastStore.success(`Successfully updated character`)
         yield {
           characters: {
-            list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
+            list: list.map((ch) => (ch._id === characterId ? res.result : ch)),
             loaded: true,
           },
         }
@@ -220,6 +221,7 @@ export const characterStore = createStore<CharacterState>(
 })
 
 subscribe('image-generated', { image: 'string' }, async (body) => {
+  if (!characterStore.getState().generate.loading) return
   const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
   const file = new File([image], `avatar.png`, { type: 'image/png' })
   characterStore.setState({ generate: { image: body.image, loading: false, blob: file } })

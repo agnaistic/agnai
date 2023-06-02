@@ -9,7 +9,7 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { Save, X } from 'lucide-solid'
+import { Save, Trash, X } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -76,9 +76,8 @@ const CreateCharacterV1: Component = () => {
   const srcId = params.editId || params.duplicateId || ''
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId)
-    setImage(edit?.avatar)
     return {
-      avatar: s.generate,
+      generatedAvatar: s.generate,
       creating: s.creating,
       edit,
       list: s.characters.list,
@@ -109,10 +108,20 @@ const CreateCharacterV1: Component = () => {
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
   const [avatar, setAvatar] = createSignal<File>()
+  const [clearAvatarFlag, setClearAvatarFlag] = createSignal(false)
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
   const edit = createMemo(() => state.edit)
   const nav = useNavigate()
+
+  createEffect(
+    on(
+      () => edit()?.avatar,
+      (avatar) => {
+        setImage(avatar)
+      }
+    )
+  )
 
   createEffect(
     on(edit, (edit) => {
@@ -129,6 +138,7 @@ const CreateCharacterV1: Component = () => {
   })
 
   const updateFile = async (files: FileInputResult[]) => {
+    setClearAvatarFlag(false)
     if (!files.length) {
       setAvatar()
       setImage(state.edit?.avatar)
@@ -142,7 +152,15 @@ const CreateCharacterV1: Component = () => {
     setImage(data)
   }
 
+  const clearAvatar = () => {
+    setClearAvatarFlag(true)
+    setAvatar(undefined)
+    setImage(undefined)
+    characterStore.clearGeneratedAvatar()
+  }
+
   const generateAvatar = async () => {
+    setClearAvatarFlag(false)
     const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
     if (!user) {
       toastStore.error(`Image generation settings missing`)
@@ -179,17 +197,18 @@ const CreateCharacterV1: Component = () => {
       attributes,
     }
 
-    const payload = {
+    const payload: NewCharacter = {
       name: body.name,
       description: body.description,
       culture: body.culture,
       tags: tags(),
       scenario: body.scenario,
-      avatar: state.avatar.blob || avatar(),
+      avatar: state.generatedAvatar.blob || avatar(),
       greeting: body.greeting,
       sampleChat: body.sampleChat,
       persona,
       originalAvatar: state.edit?.avatar,
+      clearAvatar: clearAvatarFlag(),
       voice: voice(),
     }
 
@@ -237,43 +256,59 @@ const CreateCharacterV1: Component = () => {
 
         <div class="flex w-full gap-2">
           <Switch>
-            <Match when={!state.avatar.loading}>
+            <Match when={!state.generatedAvatar.loading}>
               <div
                 class="flex items-center"
-                style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                onClick={() => settingStore.showImage(state.avatar.image || image())}
+                style={{ cursor: state.generatedAvatar.image || image() ? 'pointer' : 'unset' }}
+                onClick={() => settingStore.showImage(state.generatedAvatar.image || image())}
               >
                 <AvatarIcon
                   format={{ corners: 'md', size: '2xl' }}
-                  avatarUrl={state.avatar.image || image()}
+                  avatarUrl={state.generatedAvatar.image || image()}
                 />
               </div>
             </Match>
-            <Match when={state.avatar.loading}>
+            <Match when={state.generatedAvatar.loading}>
               <div class="flex w-[80px] items-center justify-center">
                 <Loading />
               </div>
             </Match>
           </Switch>
-          <div class="flex w-full flex-col gap-2">
-            <FileInput
-              class="w-full"
-              fieldName="avatar"
-              label="Avatar"
-              helperText='Use the "appearance" attribute in your persona to influence the generated images'
-              accept="image/png,image/jpeg"
-              onUpdate={updateFile}
-            />
-            <div class="flex gap-2">
-              <TextInput
-                fieldName="imagePrompt"
-                placeholder='Image prompt: Leave empty to use "looks / "appearance"'
+          <Show when={!image()}>
+            <div class="flex w-full flex-col gap-2">
+              <FileInput
+                class="w-full"
+                fieldName="avatar"
+                label="Avatar"
+                helperText='Use the "appearance" attribute in your persona to influence the generated images'
+                accept="image/png,image/jpeg"
+                onUpdate={updateFile}
               />
-              <Button class="w-fit" onClick={generateAvatar}>
-                Generate
+              <div class="flex gap-2">
+                <TextInput
+                  fieldName="imagePrompt"
+                  placeholder='Image prompt: Leave empty to use "looks / "appearance"'
+                  onKeyDown={(ev) => {
+                    if (ev.key === 'Enter') {
+                      ev.preventDefault()
+                      generateAvatar()
+                    }
+                  }}
+                />
+                <Button class="w-fit" onClick={generateAvatar}>
+                  Generate
+                </Button>
+              </div>
+            </div>
+          </Show>
+          <Show when={image()}>
+            <div class="py-5 pl-4">
+              <Button schema="secondary" onClick={() => clearAvatar()}>
+                <Trash />
+                Remove Avatar
               </Button>
             </div>
-          </div>
+          </Show>
         </div>
 
         <Select

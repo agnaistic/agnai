@@ -39,12 +39,11 @@ const AvatarIcon: Component<Props> = (props) => {
   const fmtCorners = createMemo(() => corners[format().corners])
 
   createEffect(async () => {
-    if (!props.avatarUrl) return
     if (props.avatarUrl instanceof File) {
       const data = await getImageData(props.avatarUrl)
       setAvatar(data!)
     } else {
-      setAvatar(props.avatarUrl)
+      setAvatar(props.avatarUrl || null)
     }
   })
 

@@ -52,10 +52,14 @@ export async function createCharacter(
 
 export async function updateCharacter(id: string, userId: string, char: CharacterUpdate) {
   const edit = { ...char, updatedAt: now() }
-  if (edit.avatar === undefined) {
+  const clearAvatar = edit.avatar === ''
+  if (!edit.avatar) {
     delete edit.avatar
   }
-  await db('character').updateOne({ _id: id, userId, kind: 'character' }, { $set: edit })
+  await db('character').updateOne(
+    { _id: id, userId, kind: 'character' },
+    { $set: edit, $unset: clearAvatar ? { avatar: 1 } : {} }
+  )
   return getCharacter(userId, id)
 }
 
