@@ -25,9 +25,7 @@ const AISettings: Component<{
   createEffect(() => {
     setTabs(cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a))
     if (!ready() && cfg.config.adapters?.length) {
-      var defaultTab = (cfg.config.adapters as (string | undefined)[]).indexOf(
-        state.user?.defaultAdapter
-      )
+      const defaultTab = cfg.config.adapters.indexOf(state.user?.defaultAdapter!)
       setTab(defaultTab === -1 ? 0 : defaultTab)
       setReady(true)
     }

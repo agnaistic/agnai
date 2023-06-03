@@ -11,8 +11,8 @@ const KoboldAISettings: Component = () => {
     <>
       <TextInput
         fieldName="koboldUrl"
-        label="Kobold-compatible / 3rd-party URL"
-        helperText="Fully qualified URL. Typically for Kobold. This URL must be publicly accessible."
+        label="Kobold-compatible or 3rd-party URL"
+        helperText="Fully qualified URL. Typically for Kobold, Oobabooga Textgen, or OpenAI compatible APIs. This URL must be publicly accessible."
         placeholder="E.g. https://local-tunnel-url-10-20-30-40.loca.lt"
         value={state.user?.koboldUrl}
       />

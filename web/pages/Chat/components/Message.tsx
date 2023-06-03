@@ -110,8 +110,10 @@ const SingleMessage: Component<
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
 
   const bgStyles = createMemo(() => {
-    user.ui.mode
-    const hex = getRootVariable(props.msg.ooc ? 'bg-1000' : 'bg-800')
+    user.ui.mode // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
+
+    const hex = user.ui.msgBackground || getRootVariable(props.msg.ooc ? 'bg-1000' : 'bg-800')
+
     if (!hex) return {}
 
     const rgb = hexToRgb(hex)

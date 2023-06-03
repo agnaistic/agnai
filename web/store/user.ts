@@ -1,7 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
-import { hexToRgb, safeLocalStorage } from '../shared/util'
+import { hexToRgb, safeLocalStorage, setRootVariable } from '../shared/util'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -25,6 +25,10 @@ export type UISettings = {
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
 
+  msgBackground: string
+  chatTextColor: string
+  chatEmphasisColor: string
+
   chatWidth?: 'full' | 'narrow'
   logPromptsToBrowserConsole: boolean
 }
@@ -36,6 +40,9 @@ const defaultUIsettings: UISettings = {
   avatarCorners: 'circle',
   font: 'default',
   msgOpacity: 0.8,
+  msgBackground: '',
+  chatTextColor: '',
+  chatEmphasisColor: '',
   chatWidth: 'full',
   logPromptsToBrowserConsole: false,
   imageWrap: false,
@@ -199,6 +206,14 @@ export const userStore = createStore<UserState>(
       const next = { ...ui, ...update }
       try {
         updateTheme(next)
+
+        if (update.chatTextColor !== undefined) {
+          setRootVariable('text-chatcolor', update.chatTextColor || 'unset')
+        }
+
+        if (update.chatEmphasisColor !== undefined) {
+          setRootVariable('text-emphasis-color', update.chatEmphasisColor || 'unset')
+        }
       } catch (e: any) {
         toastStore.error(`Failed to save UI settings: ${e.message}`)
       }

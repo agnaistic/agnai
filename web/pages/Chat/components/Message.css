@@ -1,5 +1,6 @@
 .rendered-markdown {
   color: var(--text-800);
+  color: var(--text-chatcolor);
 }
 
 .rendered-markdown p:not(:last-child) {
@@ -30,6 +31,7 @@
 
 em {
   color: var(--text-600);
+  color: var(--text-emphasis-color);
 }
 
 /* This small manual adjustment is unfortunately necessary for harmony */

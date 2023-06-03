@@ -9,6 +9,7 @@ import { toDropdownItems } from '../../shared/util'
 import { AVATAR_CORNERS, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
+import ColorPicker from '/web/shared/ColorPicker'
 
 const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -78,6 +79,42 @@ const UISettings: Component = () => {
           onChange={(item) => userStore.updateUI({ avatarCorners: item.value as any })}
         />
       </div>
+
+      <ColorPicker
+        label="Message Background Color"
+        fieldName="messageColor"
+        helperText={
+          <span class="link" onClick={() => userStore.updateUI({ msgBackground: '' })}>
+            Reset to Default
+          </span>
+        }
+        onChange={(color) => userStore.updateUI({ msgBackground: color })}
+        value={state.ui.msgBackground}
+      />
+
+      <ColorPicker
+        label="Chat Text Color"
+        fieldName="chatTextColor"
+        helperText={
+          <span class="link" onClick={() => userStore.updateUI({ chatTextColor: '' })}>
+            Reset to Default
+          </span>
+        }
+        onChange={(color) => userStore.updateUI({ chatTextColor: color })}
+        value={state.ui.chatTextColor}
+      />
+
+      <ColorPicker
+        label="Chat Emphasis Color"
+        fieldName="chatEmphasisColor"
+        helperText={
+          <span class="link" onClick={() => userStore.updateUI({ chatEmphasisColor: '' })}>
+            Reset to Default
+          </span>
+        }
+        onChange={(color) => userStore.updateUI({ chatEmphasisColor: color })}
+        value={state.ui.chatEmphasisColor}
+      />
 
       <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />
       <div class="my-2 w-full justify-center">

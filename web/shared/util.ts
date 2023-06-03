@@ -326,6 +326,11 @@ export function getRootVariable(name: string) {
   return value
 }
 
+export function setRootVariable(name: string, value: string) {
+  const root = document.documentElement
+  root.style.setProperty(`--${name}`, value)
+}
+
 export function hexToRgb(hex: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim())
   return result

@@ -4,6 +4,9 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_3 June 2023_
+- Add "message background color", "chat text color", and "chat emphasis color" to UI settings
+
 _1 June 2023_
 - Character impersonation! You can now speak as characters that you create. Click on your avatar/name in the menu.
 
