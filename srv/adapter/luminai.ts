@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { logger } from '../logger'
-import { getEndTokens, trimResponseV2 } from '../api/chat/common'
+import { getEndTokens, normalizeUrl, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
 import { AppSchema } from '../db/schema'
@@ -53,7 +53,7 @@ export const handleLuminAI: ModelAdapter = async function* ({
 
   log.debug(body, 'LuminAI payload')
 
-  const resp = await needle('post', `${user.luminaiUrl}/api/v1/generate`, body, {
+  const resp = await needle('post', `${normalizeUrl(user.luminaiUrl)}/api/v1/generate`, body, {
     json: true,
   }).catch((err) => ({ error: err }))
 

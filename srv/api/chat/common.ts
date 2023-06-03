@@ -123,3 +123,8 @@ export function sanitise(generated: string) {
   // If want to support code blocks we need to remove the excess whitespace removal as it breaks indents
   return generated.trim()
 }
+
+export function normalizeUrl(url: string, defaultUrl?: string) {
+  if (!url) return defaultUrl
+  return url.replace(/\/$/, '')
+}
