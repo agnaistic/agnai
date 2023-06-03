@@ -52,9 +52,7 @@ export const handleOoba: ModelAdapter = async function* ({
     'post',
     `${normalizeUrl(user.oobaUrl, defaultUrl)}/api/v1/generate`,
     body,
-    {
-      json: true,
-    }
+    { json: true }
   ).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
@@ -62,8 +60,6 @@ export const handleOoba: ModelAdapter = async function* ({
     yield { error: `Textgen request failed: ${resp.error?.message || resp.error}` }
     return
   }
-
-  console.log(JSON.stringify(resp.body, null, 2))
 
   if (resp.statusCode && resp.statusCode >= 400) {
     logger.error({ err: resp.body }, `Textgen request failed {${resp.statusCode}}`)
