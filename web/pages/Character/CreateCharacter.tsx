@@ -535,8 +535,10 @@ const MemoryBookPicker: Component<{
   setCharacterBook: (newVal: AppSchema.MemoryBook | undefined) => void
 }> = (props) => {
   const memory = memoryStore()
-  const bookOptions = () => memory.books.list.map((book) => ({ label: book.name, value: book._id }))
-  const NONE_VALUE = 'noneValue786845648'
+  const bookOptions = createMemo(() =>
+    memory.books.list.map((book) => ({ label: book.name, value: book._id }))
+  )
+  const NONE_VALUE = '__bundled__none__'
   const onChange = (option: Option) => {
     if (option.value == NONE_VALUE) {
       props.setCharacterBook(undefined)
