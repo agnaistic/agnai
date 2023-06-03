@@ -252,6 +252,14 @@ export const msgStore = createStore<MsgState>(
         onSuccess?.()
       }
     },
+    async *setGreetingSwipes({ retries }, msgId: string, allGreetings: string[]) {
+      if (!retries) {
+        return toastStore.error(`Failed to load alternate greetings.`)
+      }
+      if ((retries[msgId] ?? []).length > 1) return // already been set
+      console.log(allGreetings)
+      yield { retries: { ...retries, [msgId]: allGreetings } }
+    },
     async *confirmSwipe({ retries }, msgId: string, position: number, onSuccess?: Function) {
       const replacement = retries[msgId]?.[position]
       if (!retries || !replacement) {

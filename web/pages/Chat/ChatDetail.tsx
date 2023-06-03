@@ -28,6 +28,7 @@ import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import './chat-detail.css'
+import { cycleArray } from '/common/util'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -60,9 +61,13 @@ const ChatDetail: Component = () => {
     return true
   })
 
+  const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
+  const botGreeting = createMemo(() => chats.chatBots[0]?.greeting)
+  const altGreetings = createMemo(() => chats.chatBots[0]?.alternateGreetings ?? [])
+
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
-    if (!last) return
+    if (!last && !isGreetingOnlyMsg()) return
 
     return { msgId: last._id, list: msgs.retries?.[last._id] || [] }
   })
@@ -142,6 +147,16 @@ const ChatDetail: Component = () => {
       name || presetLabel
     }`
     return label
+  })
+
+  createEffect(() => {
+    if (isGreetingOnlyMsg() && botGreeting() && altGreetings().length > 0) {
+      const currentChoice = msgs.msgs[0].msg
+      const allGreetings = [botGreeting(), ...altGreetings()]
+      const currentChoiceIndex = allGreetings.findIndex((greeting) => greeting === currentChoice)
+      const greetingsWithCurrentChoiceFirst = cycleArray(allGreetings, currentChoiceIndex)
+      msgStore.setGreetingSwipes(msgs.msgs[0]._id, greetingsWithCurrentChoiceFirst)
+    }
   })
 
   createEffect(() => {
@@ -337,7 +352,6 @@ const ChatDetail: Component = () => {
                     >
                       {isOwner() &&
                         retries()?.list?.length! > 1 &&
-                        i() >= 1 &&
                         i() === indexOfLastRPMessage() && (
                           <SwipeMessage
                             chatId={chats.chat?._id!}
