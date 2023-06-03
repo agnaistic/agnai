@@ -208,14 +208,6 @@ export const userStore = createStore<UserState>(
       const next = { ...ui, ...update }
       try {
         updateTheme(next)
-
-        if (update.chatTextColor !== undefined) {
-          setRootVariable('text-chatcolor', update.chatTextColor || 'unset')
-        }
-
-        if (update.chatEmphasisColor !== undefined) {
-          setRootVariable('text-emphasis-color', update.chatEmphasisColor || 'unset')
-        }
       } catch (e: any) {
         toastStore.error(`Failed to save UI settings: ${e.message}`)
       }
@@ -364,6 +356,9 @@ function updateTheme(ui: UISettings) {
     root.style.setProperty(`--rgb-text-${shade}`, `${textRgb?.rgb}`)
   }
 
+  setRootVariable('text-chatcolor', ui.chatTextColor || 'unset')
+  setRootVariable('text-emphasis-color', ui.chatEmphasisColor || 'unset')
+  setRootVariable('bot-background', ui.botBackground || 'unset')
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
 
