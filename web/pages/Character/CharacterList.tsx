@@ -42,7 +42,7 @@ import { getAssetUrl, safeLocalStorage, setComponentPageTitle } from '../../shar
 import { DropMenu } from '../../shared/DropMenu'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
-import { exportCharacter } from '../../../common/prompt'
+import { exportCharacter } from '../../../common/characters'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
 import CreateChatModal from './CreateChat'
@@ -604,7 +604,7 @@ export const DownloadModal: Component<{
     { equals: false }
   )
 
-  const [format, setFormat] = createSignal('native')
+  const [format, setFormat] = createSignal('tavern')
   const [fileType, setFileType] = createSignal<CharacterFileType>('png')
   const [schema, setSchema] = createSignal(opts()[0].value)
 
@@ -630,8 +630,11 @@ export const DownloadModal: Component<{
             fieldName="app"
             value={format()}
             items={[
-              { value: 'native', label: 'Agnaistic' },
               { value: 'tavern', label: 'TavernAI' },
+              // TODO: We don't need to support exporting in Agnaistic format
+              // once we fully support Chara Card V2. We just need to put
+              // Agnai-specific fields in the `extensions` prop.
+              { value: 'native', label: 'Agnaistic' },
               { value: 'ooba', label: 'Textgen' },
             ]}
             onChange={(item) => setFormat(item.value)}

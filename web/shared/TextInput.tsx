@@ -20,7 +20,9 @@ const TextInput: Component<{
   onKeyUp?: (
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
-  onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement }) => void
+  onChange?: (
+    ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
 
   service?: AIAdapter
   aiSetting?: keyof PresetAISettings
@@ -74,7 +76,7 @@ const TextInput: Component<{
             value={value()}
             class={'form-field focusable-field w-full rounded-xl px-4 py-2 ' + props.class}
             onkeyup={(ev) => props.onKeyUp?.(ev)}
-            onchange={(ev) => props.onChange?.(ev)}
+            onChange={(ev) => props.onChange?.(ev)}
             disabled={props.disabled}
             pattern={props.pattern}
           />
@@ -93,6 +95,7 @@ const TextInput: Component<{
           }
           disabled={props.disabled}
           onKeyUp={(ev) => props.onKeyUp?.(ev)}
+          onchange={(ev) => props.onChange?.(ev)}
           onInput={resize}
         />
       </Show>

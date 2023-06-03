@@ -17,6 +17,13 @@ export type CharacterUpdate = Partial<
     | 'tags'
     | 'favorite'
     | 'voice'
+    | 'alternateGreetings'
+    | 'characterBook'
+    | 'extensions'
+    | 'systemPrompt'
+    | 'postHistoryInstructions'
+    | 'creator'
+    | 'characterVersion'
   >
 >
 
@@ -35,6 +42,13 @@ export async function createCharacter(
     | 'tags'
     | 'favorite'
     | 'voice'
+    | 'alternateGreetings'
+    | 'characterBook'
+    | 'extensions'
+    | 'systemPrompt'
+    | 'postHistoryInstructions'
+    | 'creator'
+    | 'characterVersion'
   >
 ) {
   const newChar: AppSchema.Character = {

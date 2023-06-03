@@ -1,6 +1,7 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS } from './adapters'
+import { formatCharacter } from './characters'
 import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
@@ -389,75 +390,6 @@ function createPostPrompt(
 
 function placeholderReplace(value: string, charName: string, senderName: string) {
   return value.replace(BOT_REPLACE, charName).replace(SELF_REPLACE, senderName)
-}
-
-export function formatCharacter(
-  name: string,
-  persona: AppSchema.Persona,
-  kind?: AppSchema.Persona['kind']
-) {
-  switch (kind || persona.kind) {
-    case 'wpp': {
-      const attrs = Object.entries(persona.attributes)
-        .map(([key, values]) => `${key}(${values.map(quote).join(' + ')})`)
-        .join('\n')
-
-      return [`[character("${name}") {`, attrs, '}]'].join('\n')
-    }
-
-    case 'sbf': {
-      const attrs = Object.entries(persona.attributes).map(
-        ([key, values]) => `${key}: ${values.map(quote).join(', ')}`
-      )
-
-      return `[ character: "${name}"; ${attrs.join('; ')} ]`
-    }
-
-    case 'boostyle': {
-      const attrs = Object.values(persona.attributes).reduce(
-        (prev, curr) => {
-          prev.push(...curr)
-          return prev
-        },
-        [name]
-      )
-      return attrs.join(' + ')
-    }
-
-    case 'text': {
-      const text = persona.attributes.text?.[0]
-      return text || ''
-    }
-  }
-}
-
-export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'ooba') {
-  switch (target) {
-    case 'tavern': {
-      return {
-        name: char.name,
-        first_mes: char.greeting,
-        scenario: char.scenario,
-        personality: formatCharacter(char.name, char.persona),
-        description: formatCharacter(char.name, char.persona),
-        mes_example: char.sampleChat,
-      }
-    }
-
-    case 'ooba': {
-      return {
-        char_name: char.name,
-        char_greeting: char.greeting,
-        world_scenario: char.scenario,
-        char_persona: formatCharacter(char.name, char.persona),
-        example_dialogue: char.sampleChat,
-      }
-    }
-  }
-}
-
-function quote(str: string) {
-  return `"${str}"`
 }
 
 function removeEmpty(value?: string) {

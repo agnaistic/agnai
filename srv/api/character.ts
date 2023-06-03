@@ -10,6 +10,8 @@ import { CharacterUpdate } from '../db/characters'
 import { getVoiceService } from '../voice'
 import { generateImage } from '../image'
 import { v4 } from 'uuid'
+import { validBook } from './memory'
+import { isObject } from '/common/util'
 
 const router = Router()
 
@@ -25,6 +27,15 @@ const characterValidator = {
   favorite: 'boolean?',
   voice: 'string?',
   tags: 'string?',
+
+  // v2 fields start here
+  alternateGreetings: 'string?',
+  characterBook: 'string?',
+  extensions: 'string?',
+  systemPrompt: 'string?',
+  postHistoryInstructions: 'string?',
+  creator: 'string?',
+  characterVersion: 'string?',
 } as const
 
 const newCharacterValidator = {
@@ -46,8 +57,20 @@ const createCharacter = handle(async (req) => {
   const body = handleForm(req, newCharacterValidator)
   const persona = JSON.parse(body.persona) as AppSchema.Persona
   assertValid(personaValidator, persona)
+
   const voice = parseAndValidateVoice(body.voice)
   const tags = toArray(body.tags)
+  const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
+
+  const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
+  if (characterBook !== undefined) {
+    assertValid(validBook, characterBook)
+  }
+
+  const extensions = body.extensions ? JSON.parse(body.extensions) : undefined
+  if (!isObject(extensions) && extensions !== undefined) {
+    throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
+  }
 
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
@@ -61,6 +84,12 @@ const createCharacter = handle(async (req) => {
     favorite: false,
     voice,
     tags,
+    alternateGreetings,
+    characterBook,
+    systemPrompt: body.systemPrompt,
+    postHistoryInstructions: body.postHistoryInstructions,
+    creator: body.creator,
+    characterVersion: body.characterVersion,
   })
 
   const filename = await entityUpload(
@@ -86,6 +115,16 @@ const editCharacter = handle(async (req) => {
   const id = req.params.id
   const body = handleForm(req, characterValidator)
 
+  const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
+  const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
+  if (characterBook !== undefined) {
+    assertValid(validBook, characterBook)
+  }
+  const extensions = body.extensions ? JSON.parse(body.extensions) : undefined
+  if (!isObject(extensions) && extensions !== undefined) {
+    throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
+  }
+
   const update: CharacterUpdate = {
     name: body.name,
     description: body.description,
@@ -93,6 +132,12 @@ const editCharacter = handle(async (req) => {
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
+    alternateGreetings,
+    characterBook: characterBook ?? null,
+    systemPrompt: body.systemPrompt,
+    postHistoryInstructions: body.postHistoryInstructions,
+    creator: body.creator,
+    characterVersion: body.characterVersion,
   }
 
   if (body.persona) {

@@ -17,7 +17,7 @@ const validEntry = {
   keywords: ['string'],
 } as const
 
-const validBook = {
+export const validBook = {
   name: 'string',
   description: 'string?',
   entries: [validEntry],
