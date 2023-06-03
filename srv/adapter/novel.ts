@@ -26,6 +26,7 @@ const statuses: Record<number, string> = {
   400: 'Invalid payload',
   401: 'Invalid API key',
   402: 'You need an active subscription',
+  409: "You have a model selected that your subscription tier isn't eligible for",
 }
 
 const base = {
