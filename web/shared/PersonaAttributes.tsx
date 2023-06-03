@@ -69,7 +69,12 @@ const PersonaAttributes: Component<{
       <Show when={props.plainText}>
         <div>
           <TextInput fieldName="attr-key.0" value="text" class="hidden" />
-          <TextInput fieldName="attr-value.0" value={props.value?.text?.[0]} isMultiline />
+          <TextInput
+            fieldName="attr-value.0"
+            value={props.value?.text?.[0]}
+            isMultiline
+            placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."
+          />
         </div>
       </Show>
       <Show when={!props.plainText}>
