@@ -51,16 +51,18 @@ const TextInput: Component<{
 
   return (
     <div class={`w-full ${hide()}`}>
-      <Show when={!!props.label}>
+      <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
-          <div class={props.helperText ? '' : 'pb-1'}>
-            {props.label}
-            <Show when={props.isMultiline}>
-              <IsVisible onEnter={resize} />
-            </Show>
-          </div>
+          <Show when={!!props.label}>
+            <div class={props.helperText ? '' : 'pb-1'}>
+              {props.label}
+              <Show when={props.isMultiline}>
+                <IsVisible onEnter={resize} />
+              </Show>
+            </div>
+          </Show>
           <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
+            <p class="mt-[-0.125rem] pb-2 text-sm text-[var(--text-700)]">{props.helperText}</p>
           </Show>
         </label>
       </Show>

@@ -228,12 +228,12 @@ const PromptSettings: Component<Props> = (props) => {
         label="Use Gaslight"
         helperText={
           <>
+            If this option is enabled, the Gaslight text will be included in the prompt sent to the
+            AI service.
             <p class="font-bold">
               CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble". If
               you do not include the placeholders, they will not be included in the prompt at all.
             </p>
-            If this option is enabled, the Gaslight text will be included in the prompt sent to the
-            AI service. Particularly useful for Scale.
           </>
         }
         value={props.inherit?.useGaslight ?? false}
@@ -244,13 +244,11 @@ const PromptSettings: Component<Props> = (props) => {
 
       <TextInput
         fieldName="gaslight"
-        label="Gaslight Prompt (OpenAI, Scale, Alpaca, LLaMa, Claude)"
         helperText={
           <>
-            How the character definitions are sent to OpenAI. Placeholders:{' '}
-            <code>{'{{char}}'}</code> <code>{'{{user}}'}</code> <code>{'{{personality}}'}</code>{' '}
-            <code>{'{{memory}}'}</code> <code>{'{{scenario}}'}</code>{' '}
-            <code>{'{{example_dialogue}}'}</code>
+            Placeholders: <code>{'{{char}}'}</code> <code>{'{{user}}'}</code>{' '}
+            <code>{'{{personality}}'}</code> <code>{'{{memory}}'}</code>{' '}
+            <code>{'{{scenario}}'}</code> <code>{'{{example_dialogue}}'}</code>
           </>
         }
         placeholder="Be sure to include the placeholders above"

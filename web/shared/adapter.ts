@@ -38,15 +38,12 @@ export function getPresetOptions(
   includes: { builtin?: boolean; base?: boolean }
 ) {
   const user = userStore((u) => u.user || { defaultPreset: '' })
-  const presets = userPresets
-    .slice()
-    .map((preset) => ({
-      label: `[${getServiceName(preset.service)}] ${preset.name} ${
-        user.defaultPreset === preset._id ? '(*) ' : ''
-      }`,
-      value: preset._id,
-    }))
-    .sort(sortByLabel)
+  const presets = userPresets.slice().map((preset) => ({
+    label: `[${getServiceName(preset.service)}, Custom] ${preset.name} ${
+      user.defaultPreset === preset._id ? '(*) ' : ''
+    }`,
+    value: preset._id,
+  }))
 
   const defaults = Object.entries(defaultPresets).map(([_id, preset]) => ({
     ...preset,
@@ -55,18 +52,17 @@ export function getPresetOptions(
   }))
 
   if (includes.builtin) {
-    const builtinOptions = defaults
-      .map((preset) => ({
-        label: `[Built-in, ${getServiceName(preset.service)}] ${preset.name} `,
-        value: preset._id,
-      }))
-      .sort(sortByLabel)
+    const builtinOptions = defaults.map((preset) => ({
+      label: `[${getServiceName(preset.service)}, Built-in] ${preset.name}`,
+      value: preset._id,
+    }))
 
     presets.push(...builtinOptions)
   }
 
-  if (includes.base) return BasePresetOptions.concat(presets)
-  return presets
+  if (includes.base) presets.unshift(...BasePresetOptions)
+
+  return presets.sort(sortByLabel)
 }
 
 export function getInitialPresetValue(chat?: AppSchema.Chat) {
@@ -82,9 +78,9 @@ export function getServiceName(service?: AIAdapter) {
 }
 
 export function sortByName(left: { name: string }, right: { name: string }) {
-  return left.name.toLowerCase().localeCompare(right.name.toLowerCase())
+  return left.name.localeCompare(right.name)
 }
 
 export function sortByLabel(left: { label: string }, right: { label: string }) {
-  return left.label.toLowerCase().localeCompare(right.label.toLowerCase())
+  return left.label.localeCompare(right.label)
 }
