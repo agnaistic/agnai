@@ -38,6 +38,7 @@ export const handleKobold: ModelAdapter = async function* ({
   log.debug(body, 'Kobold payload')
 
   const resp = await needle('post', `${user.koboldUrl}/api/v1/generate`, body, {
+    headers: { 'Bypass-Tunnel-Reminder': 'true' },
     json: true,
   }).catch((err) => ({ error: err }))
 

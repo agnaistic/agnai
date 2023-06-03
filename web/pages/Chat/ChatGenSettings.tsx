@@ -18,6 +18,7 @@ import { getAdapter } from '../../../common/prompt'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
+import ServiceWarning from '/web/shared/ServiceWarning'
 
 export const ChatGenSettingsModal: Component<{
   chat: AppSchema.Chat
@@ -141,6 +142,8 @@ export const ChatGenSettingsModal: Component<{
             value={selected()}
             onChange={(item) => setSelected(item.value)}
           />
+
+          <ServiceWarning service={servicePreset()?.preset.service} />
 
           <Show when={isDefaultPreset(selected())}>
             <span class="text-[var(--hl-100)]">

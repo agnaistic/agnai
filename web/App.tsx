@@ -1,5 +1,5 @@
 import { Component, createEffect, createMemo, JSX, Show, lazy, createSignal } from 'solid-js'
-import { Outlet, Route, Router, Routes, useLocation } from '@solidjs/router'
+import { Outlet, Route, Router, Routes, useLocation, useNavigate } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
@@ -24,6 +24,10 @@ const App: Component = () => {
       <Routes>
         <Route path="" component={Layout}>
           <CharacterRoutes />
+          <Route
+            path="/discord"
+            component={() => <Redirect external="https://discord.gg/luminai" />}
+          />
           <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
           <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
           <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
@@ -156,4 +160,16 @@ const Maintenance: Component = () => {
       </div>
     </Modal>
   )
+}
+
+const Redirect: Component<{ internal?: string; external?: string }> = (props) => {
+  const nav = useNavigate()
+
+  if (props.external) {
+    window.location.href = props.external
+  }
+
+  nav(props.internal || '/')
+
+  return <>Redirecting...</>
 }

@@ -29,7 +29,11 @@ import { handleGooseAI } from './goose'
 configure(async (opts) => {
   const res = await needle(opts.method, opts.url, opts.payload, {
     json: true,
-    headers: { 'Content-Type': 'application/json', apikey: opts.key || HORDE_GUEST_KEY },
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: opts.key || HORDE_GUEST_KEY,
+      'User-Agent': 'Agnaistic',
+    },
   })
 
   return { body: res.body, statusCode: res.statusCode, statusMessage: res.statusMessage }

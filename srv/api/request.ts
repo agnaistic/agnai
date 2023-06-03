@@ -35,7 +35,7 @@ export async function post<T = any>({ url, apikey, body, ...opts }: PostReq): Re
 }
 
 export async function get<T = any>({ url, apikey, ...opts }: Omit<PostReq, 'body'>): Result<T> {
-  const headers: any = {}
+  const headers: any = { 'Bypass-Tunnel-Reminder': 'true' }
   if (apikey) {
     headers.apikey = apikey
   }

@@ -7,10 +7,11 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, settingStore, userStore } from '../../store'
+import { characterStore, chatStore, presetStore, userStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
-import { getPresetOptions } from '../../shared/adapter'
+import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
+import ServiceWarning from '/web/shared/ServiceWarning'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -47,17 +48,18 @@ const CreateChatModal: Component<{
     setSelected(state.chars[0]._id)
   })
 
-  const user = userStore((s) => s.user || { defaultPreset: '' })
+  const user = userStore((s) => ({ ...s.user }))
   const presets = presetStore((s) => s.presets)
-  const flags = settingStore((s) => s.flags)
 
-  const presetOptions = createMemo(() =>
-    getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
-  )
+  const presetOptions = createMemo(() => {
+    const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
+    return [{ label: 'System Built-in Preset (Horde)', value: AutoPreset.service }].concat(opts)
+  })
 
   const selectedPreset = createMemo(() => {
     const id = presetId()
-    if (!id) return
+    console.log('pre', id)
+    if (!id) return defaultPresets.horde
     if (isDefaultPreset(id)) return defaultPresets[id]
     return presets.find((pre) => pre._id === id)
   })
@@ -128,11 +130,16 @@ const CreateChatModal: Component<{
           fieldName="genPreset"
           label="Preset"
           items={presetOptions()}
-          value={user.defaultPreset}
+          value={user.defaultPreset || ''}
+          helperText={
+            <>
+              <ServiceWarning service={selectedPreset()?.service} />
+            </>
+          }
           onChange={(ev) => setPresetId(ev.value)}
         />
 
-        <Show when={flags.cyoa && selectedPreset()?.service === 'openai'}>
+        <Show when={selectedPreset()?.service === 'openai'}>
           <Select
             fieldName="mode"
             label="Chat Mode"

@@ -11,7 +11,6 @@ export const AutoPreset = {
 }
 
 export const BasePresetOptions: Option[] = [
-  { label: 'Chat Settings (Advanced)', value: AutoPreset.chat },
   { label: 'System Built-in Preset (Horde)', value: AutoPreset.service },
 ]
 

@@ -635,6 +635,7 @@ export function getAdapter(
 /**
  * When we know the maximum context limit for a particular LLM, ensure that the context limit we use does not exceed it.
  */
+
 function getContextLimit(
   gen: Partial<AppSchema.GenSettings> | undefined,
   adapter: AIAdapter,
@@ -660,8 +661,13 @@ function getContextLimit(
     case 'horde':
 
     case 'openai': {
-      if (!model || model === OPENAI_MODELS.Turbo || model === OPENAI_MODELS.DaVinci)
-        return 4096 - genAmount
+      const models = new Set<string>([
+        OPENAI_MODELS.Turbo,
+        OPENAI_MODELS.Turbo0301,
+        OPENAI_MODELS.DaVinci,
+      ])
+
+      if (!model || models.has(model)) return 4095 - genAmount
       return configuredMax - genAmount
     }
 
