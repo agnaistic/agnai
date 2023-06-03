@@ -628,6 +628,9 @@ function getContextLimit(
       return configuredMax - genAmount
     }
 
+    case 'replicate':
+      return configuredMax - genAmount
+
     case 'scale':
       return configuredMax - genAmount
 

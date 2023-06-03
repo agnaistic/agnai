@@ -25,6 +25,7 @@ import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getEncoder } from '../tokenize'
 import { handleGooseAI } from './goose'
+import { handleReplicate } from './replicate'
 
 configure(async (opts) => {
   const res = await needle(opts.method, opts.url, opts.payload, {
@@ -49,6 +50,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   scale: handleScale,
   claude: handleClaude,
   goose: handleGooseAI,
+  replicate: handleReplicate,
 }
 
 type PlainRequest = {
