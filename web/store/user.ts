@@ -26,6 +26,7 @@ export type UISettings = {
   msgOpacity: number
 
   msgBackground: string
+  botBackground: string
   chatTextColor: string
   chatEmphasisColor: string
 
@@ -41,6 +42,7 @@ const defaultUIsettings: UISettings = {
   font: 'default',
   msgOpacity: 0.8,
   msgBackground: '',
+  botBackground: '',
   chatTextColor: '',
   chatEmphasisColor: '',
   chatWidth: 'full',

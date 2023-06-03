@@ -93,6 +93,23 @@ const UISettings: Component = () => {
       />
 
       <ColorPicker
+        label="Bot Message Background Color"
+        fieldName="botMessageColor"
+        helperText={
+          <>
+            <span>
+              This will override the <b>Message Background</b>.{' '}
+            </span>
+            <span class="link" onClick={() => userStore.updateUI({ botBackground: '' })}>
+              Reset to Default
+            </span>
+          </>
+        }
+        onChange={(color) => userStore.updateUI({ botBackground: color })}
+        value={state.ui.botBackground}
+      />
+
+      <ColorPicker
         label="Chat Text Color"
         fieldName="chatTextColor"
         helperText={

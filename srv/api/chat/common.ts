@@ -53,7 +53,8 @@ export function trimResponseV2(
 
   if (bots) {
     for (const bot of Object.values(bots)) {
-      if (bot._id === char._id) continue
+      if (!bot) continue
+      if (bot?._id === char._id) continue
       endTokens.push(`${bot.name}:`)
     }
   }
