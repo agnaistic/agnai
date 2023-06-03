@@ -6,8 +6,8 @@ import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileIn
 import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
 import { extractCardData } from './card-utils'
-import { characterBookToAgnaiMemory } from '/common/memory'
-import { formatCharacter } from '/common/prompt'
+import { characterBookToNative } from '/common/memory'
+import { formatCharacter } from '/common/characters'
 import AvatarIcon from '/web/shared/AvatarIcon'
 
 const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
@@ -252,7 +252,7 @@ function jsonToCharacter(json: any): NewCharacter {
     originalAvatar: undefined,
     alternateGreetings: json.data.alternate_greetings,
     characterBook: json.data.character_book
-      ? characterBookToAgnaiMemory(json.data.character_book)
+      ? characterBookToNative(json.data.character_book)
       : undefined,
     extensions: json.data.extensions,
     systemPrompt: json.data.system_prompt,

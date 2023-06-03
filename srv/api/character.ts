@@ -57,17 +57,21 @@ const createCharacter = handle(async (req) => {
   const body = handleForm(req, newCharacterValidator)
   const persona = JSON.parse(body.persona) as AppSchema.Persona
   assertValid(personaValidator, persona)
+
   const voice = parseAndValidateVoice(body.voice)
   const tags = toArray(body.tags)
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
+
   const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
   if (characterBook !== undefined) {
     assertValid(validBook, characterBook)
   }
+
   const extensions = body.extensions ? JSON.parse(body.extensions) : undefined
   if (!isObject(extensions) && extensions !== undefined) {
     throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
   }
+
   const char = await store.characters.createCharacter(req.user?.userId!, {
     name: body.name,
     persona,

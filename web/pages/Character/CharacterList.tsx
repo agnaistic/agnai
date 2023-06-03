@@ -42,7 +42,7 @@ import { getAssetUrl, safeLocalStorage, setComponentPageTitle } from '../../shar
 import { DropMenu } from '../../shared/DropMenu'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
-import { exportCharacter } from '../../../common/prompt'
+import { exportCharacter } from '../../../common/characters'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
 import CreateChatModal from './CreateChat'

@@ -52,16 +52,12 @@ const PersonaAttributes: Component<{
     <>
       <Show when={!props.hideLabel}>
         <FormLabel
-          label="Persona Attributes"
+          label="Personality"
           helperText={
             <>
               <span>
-                The attributes of your persona. See the link at the top of the page for more
-                information.
-                <br />
                 <Show when={!props.plainText}>
-                  It is highly recommended to always include the attributes <b>mind</b> and{' '}
-                  <b>personality</b>.<br />
+                  It is highly recommended to always include the <b>personality</b> attribute.
                   <b>Example attributes</b>: mind, personality, appearance, likes, dislikes, hates,
                   loves.
                 </Show>

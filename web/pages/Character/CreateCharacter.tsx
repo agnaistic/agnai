@@ -44,24 +44,20 @@ import { For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID } from '/common/memory'
 
 const options = [
-  { id: 'text', label: 'Plain Text' },
-  { id: 'boostyle', label: 'Boostyle' },
   { id: 'wpp', label: 'W++' },
+  { id: 'boostyle', label: 'Boostyle' },
   { id: 'sbf', label: 'SBF' },
+  { id: 'text', label: 'Plain Text' },
 ]
 
 const CreateCharacter: Component = () => {
   let ref: any
-  const flags = settingStore((s) => s.flags)
-  const params = useParams<{ editId?: string; duplicateId?: string }>()
-  const [query] = useSearchParams()
-  setComponentPageTitle(
-    params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
-  )
-  const [image, setImage] = createSignal<string | undefined>()
-  const [downloaded, setDownloaded] = createSignal<NewCharacter>()
+  const nav = useNavigate()
 
-  const srcId = params.editId || params.duplicateId || ''
+  const memory = memoryStore()
+  const flags = settingStore((s) => s.flags)
+  const user = userStore((s) => s.user)
+  const tagState = tagStore()
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId)
     setImage(edit?.avatar)
@@ -72,14 +68,35 @@ const CreateCharacter: Component = () => {
       list: s.characters.list,
     }
   })
-  const memory = memoryStore()
-  const initialBook = () => state.edit?.characterBook
-  const isExternalBook = () =>
-    memory.books.list.find((book) => book._id === initialBook()?._id) == undefined
-  const bundledBook = () => (isExternalBook() ? initialBook() : undefined)
 
-  const user = userStore((s) => s.user)
-  const tagState = tagStore()
+  const params = useParams<{ editId?: string; duplicateId?: string }>()
+  const [query] = useSearchParams()
+  setComponentPageTitle(
+    params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
+  )
+
+  const [image, setImage] = createSignal<string | undefined>()
+  const [downloaded, setDownloaded] = createSignal<NewCharacter>()
+  const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
+  const [tags, setTags] = createSignal(state.edit?.tags)
+  const [characterBook, setCharacterBook] = createSignal(state.edit?.characterBook)
+  const [extensions] = createSignal(state.edit?.extensions ?? {})
+  const [avatar, setAvatar] = createSignal<File>()
+  const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
+  const [culture, setCulture] = createSignal(defaultCulture)
+  const [alternateGreetings, setAlternateGreetings] = createSignal(
+    state.edit?.alternateGreetings ?? []
+  )
+
+  const edit = createMemo(() => state.edit)
+
+  const srcId = params.editId || params.duplicateId || ''
+
+  const isExternalBook = createMemo(() =>
+    memory.books.list.every((book) => book._id !== state.edit?.characterBook?._id)
+  )
+
+  const bundledBook = createMemo(() => (isExternalBook() ? state.edit?.characterBook : undefined))
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
@@ -98,19 +115,6 @@ const CreateCharacter: Component = () => {
       toastStore.error(`Character Hub download failed: ${ex.message}`)
     }
   })
-
-  const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
-  const [tags, setTags] = createSignal(state.edit?.tags)
-  const [alternateGreetings, setAlternateGreetings] = createSignal(
-    state.edit?.alternateGreetings ?? []
-  )
-  const [characterBook, setCharacterBook] = createSignal(state.edit?.characterBook)
-  const [extensions] = createSignal(state.edit?.extensions ?? {})
-  const [avatar, setAvatar] = createSignal<File>()
-  const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
-  const [culture, setCulture] = createSignal(defaultCulture)
-  const edit = createMemo(() => state.edit)
-  const nav = useNavigate()
 
   createEffect(
     on(edit, (edit) => {
@@ -154,7 +158,7 @@ const CreateCharacter: Component = () => {
     }
 
     try {
-      characterStore.generateAvatar(user, imagePrompt || persona)
+      characterStore.generateAvatar(user!, imagePrompt || persona)
     } catch (ex: any) {
       toastStore.error(ex.message)
     }
@@ -422,7 +426,7 @@ const CreateCharacter: Component = () => {
         <h4 class="text-md font-bold">Character Voice</h4>
         <VoicePicker value={voice()} culture={culture()} onChange={setVoice} />
         <Show when={flags.charv2}>
-          <h2 class="mt-3 text-lg font-bold">Advanced options (Character card V2)</h2>
+          <h2 class="mt-3 text-lg font-bold">Advanced options</h2>
           <TextInput
             isMultiline
             fieldName="systemPrompt"
@@ -438,12 +442,9 @@ const CreateCharacter: Component = () => {
           <TextInput
             isMultiline
             fieldName="postHistoryInstructions"
-            label="Post-conversation-history instructions/UJB (optional)"
+            label="Post-conversation history instructions(optional)"
             helperText={
-              <span>
-                Post-conversation-history instructions (UJB) to bundle with your character. Leave
-                empty if you aren't sure.
-              </span>
+              <span>Prompt to bundle with your character. Leave empty if you aren't sure.</span>
             }
             placeholder="Write at least four paragraphs."
             value={state.edit?.postHistoryInstructions}

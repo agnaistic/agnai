@@ -1,9 +1,10 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from '../srv/db/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS } from './adapters'
+import { formatCharacter } from './characters'
 import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
-import { agnaiMemoryToCharacterBook, buildMemoryPrompt } from './memory'
+import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
 
@@ -389,109 +390,6 @@ function createPostPrompt(
 
 function placeholderReplace(value: string, charName: string, senderName: string) {
   return value.replace(BOT_REPLACE, charName).replace(SELF_REPLACE, senderName)
-}
-
-export function formatCharacter(
-  name: string,
-  persona: AppSchema.Persona,
-  kind?: AppSchema.Persona['kind']
-) {
-  switch (kind || persona.kind) {
-    case 'wpp': {
-      const attrs = Object.entries(persona.attributes)
-        .map(([key, values]) => `${key}(${values.map(quote).join(' + ')})`)
-        .join('\n')
-
-      return [`[character("${name}") {`, attrs, '}]'].join('\n')
-    }
-
-    case 'sbf': {
-      const attrs = Object.entries(persona.attributes).map(
-        ([key, values]) => `${key}: ${values.map(quote).join(', ')}`
-      )
-
-      return `[ character: "${name}"; ${attrs.join('; ')} ]`
-    }
-
-    case 'boostyle': {
-      const attrs = Object.values(persona.attributes).reduce(
-        (prev, curr) => {
-          prev.push(...curr)
-          return prev
-        },
-        [name]
-      )
-      return attrs.join(' + ')
-    }
-
-    case 'text': {
-      const text = persona.attributes.text?.[0]
-      return text || ''
-    }
-  }
-}
-
-export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'ooba') {
-  switch (target) {
-    case 'tavern': {
-      return {
-        // Backfilled V1 fields
-        // TODO: 2 months after V2 adoption, change every field with "This is
-        // a V2 card, update your frontend <link_with_more_details_goes_here>"
-        name: char.name,
-        first_mes: char.greeting,
-        scenario: char.scenario,
-        description: formatCharacter(char.name, char.persona),
-        personality: '',
-        mes_example: char.sampleChat,
-
-        // V2 data
-        spec: 'chara_card_v2',
-        spec_version: '2.0',
-        data: {
-          name: char.name,
-          first_mes: char.greeting,
-          scenario: char.scenario,
-          description: formatCharacter(char.name, char.persona),
-          personality: '',
-          mes_example: char.sampleChat,
-
-          // new v2 fields
-          creator_notes: char.description ?? '',
-          system_prompt: char.systemPrompt ?? '',
-          post_history_instructions: char.postHistoryInstructions ?? '',
-          alternate_greetings: char.alternateGreetings ?? [],
-          character_book: char.characterBook
-            ? agnaiMemoryToCharacterBook(char.characterBook)
-            : undefined,
-          tags: char.tags ?? [],
-          creator: char.creator ?? '',
-          character_version: char.characterVersion ?? '',
-          extensions: {
-            ...(char.extensions ?? {}),
-            agnai: {
-              voice: char.voice,
-              persona: char.persona,
-            },
-          },
-        },
-      }
-    }
-
-    case 'ooba': {
-      return {
-        char_name: char.name,
-        char_greeting: char.greeting,
-        world_scenario: char.scenario,
-        char_persona: formatCharacter(char.name, char.persona),
-        example_dialogue: char.sampleChat,
-      }
-    }
-  }
-}
-
-function quote(str: string) {
-  return `"${str}"`
 }
 
 function removeEmpty(value?: string) {
