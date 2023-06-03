@@ -53,13 +53,21 @@ const options = [
 const CreateCharacter: Component = () => {
   let ref: any
   const nav = useNavigate()
+  const params = useParams<{ editId?: string; duplicateId?: string }>()
+  const [query] = useSearchParams()
+  setComponentPageTitle(
+    params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
+  )
+
+  const srcId = createMemo(() => params.editId || params.duplicateId || '')
+  const [image, setImage] = createSignal<string | undefined>()
 
   const memory = memoryStore()
   const flags = settingStore((s) => s.flags)
   const user = userStore((s) => s.user)
   const tagState = tagStore()
   const state = characterStore((s) => {
-    const edit = s.characters.list.find((ch) => ch._id === srcId)
+    const edit = s.characters.list.find((ch) => ch._id === srcId())
     setImage(edit?.avatar)
     return {
       avatar: s.generate,
@@ -69,13 +77,6 @@ const CreateCharacter: Component = () => {
     }
   })
 
-  const params = useParams<{ editId?: string; duplicateId?: string }>()
-  const [query] = useSearchParams()
-  setComponentPageTitle(
-    params.editId ? 'Edit character' : params.duplicateId ? 'Copy character' : 'Create character'
-  )
-
-  const [image, setImage] = createSignal<string | undefined>()
   const [downloaded, setDownloaded] = createSignal<NewCharacter>()
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
@@ -89,8 +90,6 @@ const CreateCharacter: Component = () => {
   )
 
   const edit = createMemo(() => state.edit)
-
-  const srcId = params.editId || params.duplicateId || ''
 
   const isExternalBook = createMemo(() =>
     memory.books.list.every((book) => book._id !== state.edit?.characterBook?._id)

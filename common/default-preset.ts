@@ -84,8 +84,7 @@ const builtinPresets = {
     gaslight: `{{char}} Memory: {{memory}}
 Description of {{char}}: {{personality}}
 [ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
-This is how the character speaks:
-{{example_dialogue}}
+This is how the character speaks:{{example_dialogue}}
 ***
 Summary: {{scenario}}`,
   },

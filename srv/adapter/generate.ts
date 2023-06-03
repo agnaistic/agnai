@@ -148,7 +148,7 @@ export async function createTextStreamV2(
     lines: opts.lines,
     isThirdParty,
     replyAs: opts.replyAs,
-    characters: opts.characters,
+    characters: Object.assign(opts.characters, { impersonated: opts.impersonate }),
     impersonate: opts.impersonate,
   })
 
