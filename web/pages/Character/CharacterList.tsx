@@ -79,7 +79,7 @@ const CharacterList: Component = () => {
   const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
 
   const cached = getListCache()
-  const [view, setView] = createSignal(cached.view)
+  const [view, setView] = createSignal(cached.view || 'list')
   const [sortField, setSortField] = createSignal(cached.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
   const [search, setSearch] = createSignal('')

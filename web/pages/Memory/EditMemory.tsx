@@ -32,23 +32,6 @@ const entrySortItems = [
   { label: 'Alphabetically', value: 'alpha' },
 ]
 
-const sortEntries = (entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema.MemoryEntry[] => {
-  if (by === 'creationDate') {
-    return entries
-  } else {
-    return [...entries].sort((a, b) => {
-      // ensure newly added entries are at the bottom
-      if (a.name === '') {
-        return 1
-      } else if (b.name === '') {
-        return -1
-      } else {
-        return alphaCaseInsensitiveSort(a.name, b.name)
-      }
-    })
-  }
-}
-
 const EditMemoryForm: Component<{
   book: AppSchema.MemoryBook
   hideSave?: boolean
@@ -90,7 +73,7 @@ const EditMemoryForm: Component<{
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
-            editing().name = e.currentTarget.value
+            setEditing({ ...editing(), name: e.currentTarget.value })
           }}
         />
 
@@ -100,7 +83,7 @@ const EditMemoryForm: Component<{
           value={editing().description}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
-            editing().description = e.currentTarget.value
+            setEditing({ ...editing(), description: e.currentTarget.value })
           }}
         />
         <Divider />
@@ -135,8 +118,13 @@ const EditMemoryForm: Component<{
               onRemove={() => onRemoveEntry(i())}
               search={search()}
               onChange={(e) => {
-                editing().entries[editing().entries.indexOf(e)] = e
-                props.onChange?.(editing())
+                const prev = editing()
+                const entries = prev.entries.map((entry, idx) =>
+                  idx === i() ? Object.assign(entry, e) : entry
+                )
+                const next = { ...prev, entries }
+                setEditing(next)
+                props.onChange?.(next)
               }}
             />
           )}
@@ -158,15 +146,15 @@ const EntryCard: Component<{
   index: number
   onChange: (e: AppSchema.MemoryEntry) => void
 }> = (props) => {
-  const [entry, _setEntry] = createSignal(props.entry)
+  // const [entry, _setEntry] = createSignal(props.entry)
 
   const cls = createMemo(() =>
-    entry().name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
+    props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )
 
   return (
     <Accordian
-      open={missingFieldsInEntry(entry()).length > 0}
+      open={missingFieldsInEntry(props.entry).length > 0}
       class={cls()}
       title={
         <div class={`mb-1 flex w-full items-center gap-2`}>
@@ -175,19 +163,17 @@ const EntryCard: Component<{
             required
             fieldName={`name.${props.index}`}
             class="w-full border-[1px]"
-            value={entry().name}
+            value={props.entry.name}
             onChange={(e) => {
-              entry().name = e.currentTarget.value
-              props.onChange(entry())
+              props.onChange({ ...props.entry, name: e.currentTarget.value })
             }}
           />
           <Toggle
             fieldName={`enabled.${props.index}`}
-            value={!!entry().enabled}
+            value={!!props.entry.enabled}
             class="flex items-center"
             onChange={(e) => {
-              entry().enabled = e
-              props.onChange(entry())
+              props.onChange({ ...props.entry, enabled: e })
             }}
           />
 
@@ -204,10 +190,9 @@ const EntryCard: Component<{
           required
           placeholder="Comma separated words. E.g.: circle, shape, round, cylinder, oval"
           class="border-[1px]"
-          value={entry().keywords.join(', ')}
+          value={props.entry.keywords.join(', ')}
           onChange={(e) => {
-            entry().keywords = e.currentTarget.value.split(',')
-            props.onChange(entry())
+            props.onChange({ ...props.entry, keywords: e.currentTarget.value.split(',') })
           }}
         />
         <div class="flex flex-row gap-4">
@@ -217,10 +202,9 @@ const EntryCard: Component<{
             required
             type="number"
             class="border-[1px]"
-            value={entry().priority ?? 0}
+            value={props.entry.priority ?? 0}
             onChange={(e) => {
-              entry().priority = Number(e.currentTarget.value)
-              props.onChange(entry())
+              props.onChange({ ...props.entry, priority: +e.currentTarget.value })
             }}
           />
           <TextInput
@@ -229,23 +213,21 @@ const EntryCard: Component<{
             required
             type="number"
             class="border-[1px]"
-            value={entry().weight ?? 0}
+            value={props.entry.weight ?? 0}
             onChange={(e) => {
-              entry().weight = Number(e.currentTarget.value)
-              props.onChange(entry())
+              props.onChange({ ...props.entry, weight: +e.currentTarget.value })
             }}
           />
         </div>
         <TextInput
           fieldName={`entry.${props.index}`}
           isMultiline
-          value={entry().entry}
+          value={props.entry.entry}
           placeholder="Memory entry. E.g. {{user}} likes fruit and vegetables"
-          class="border-[1px]"
+          class="min-h-[64px] border-[1px]"
           required
           onKeyUp={(e) => {
-            entry().entry = e.currentTarget.value
-            props.onChange(entry())
+            props.onChange({ ...props.entry, entry: e.currentTarget.value })
           }}
         />
       </div>
@@ -294,4 +276,15 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
 
   const book = { name, description, entries }
   return book
+}
+
+function sortEntries(entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema.MemoryEntry[] {
+  if (by === 'creationDate') {
+    return entries
+  }
+
+  return entries.slice().sort((a, b) => {
+    // ensure newly added entries are at the bottom
+    return a.name === '' ? 1 : b.name === '' ? -1 : alphaCaseInsensitiveSort(a.name, b.name)
+  })
 }

@@ -13,6 +13,11 @@ const BookList: Component<{
   return (
     <>
       <ChubNavigation buttons={state.books.length >= 48} />
+      <Show when={state.booksLoading}>
+        <div class="flex w-full justify-center">
+          <Loading />
+        </div>
+      </Show>
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
         <For each={state.books}>
           {(book) => (
@@ -25,9 +30,6 @@ const BookList: Component<{
             />
           )}
         </For>
-        <Show when={state.booksLoading}>
-          <Loading />
-        </Show>
         <Show when={state.books.length < 4}>
           <For each={new Array(4 - state.books.length)}>{() => <div></div>}</For>
         </Show>

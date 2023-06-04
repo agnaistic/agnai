@@ -11,7 +11,7 @@ export const register = handle(async (req) => {
 
 export const login = handle(async (req) => {
   assertValid({ username: 'string', password: 'string' }, req.body)
-  const result = await store.users.authenticate(req.body.username, req.body.password)
+  const result = await store.users.authenticate(req.body.username.trim(), req.body.password)
 
   if (!result) {
     throw new StatusError('Unauthorized', 401)
