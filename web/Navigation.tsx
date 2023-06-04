@@ -11,6 +11,7 @@ import {
   MailPlus,
   MessageCircle,
   Settings,
+  ShoppingBag,
   Sliders,
   User,
   VenetianMask,
@@ -101,6 +102,13 @@ const UserNavigation: Component = () => {
         <User /> Profile
       </Item>
 
+      <Show when={cfg.flags.chub}>
+        <Item href="/chub">
+          <ShoppingBag />
+          CHUB
+        </Item>
+      </Show>
+
       <Item href="/character/list">
         <Bot /> Characters
       </Item>
@@ -150,6 +158,7 @@ const GuestNavigation: Component = () => {
     showMenu: s.showMenu,
     config: s.config,
     guest: s.guestAccessAllowed,
+    flags: s.flags,
   }))
 
   return (
@@ -168,6 +177,13 @@ const GuestNavigation: Component = () => {
         <Item href="/character/list">
           <Bot /> Characters
         </Item>
+
+        <Show when={menu.flags.chub}>
+          <Item href="/chub">
+            <ShoppingBag />
+            CHUB
+          </Item>
+        </Show>
 
         <Item href="/chats">
           <MessageCircle /> Chats

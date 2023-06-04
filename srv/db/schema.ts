@@ -16,6 +16,19 @@ export type AllDoc =
   | AppSchema.MemoryBook
 
 export namespace AppSchema {
+  export interface AppConfig {
+    adapters: AIAdapter[]
+    version: string
+    canAuth: boolean
+    imagesSaved: boolean
+    assetPrefix: string
+    selfhosting: boolean
+    registered: Array<Omit<RegisteredAdapter, 'contextLimit'>>
+    maintenance?: string
+    patreon?: boolean
+    policies?: boolean
+  }
+
   export type ChatMode = 'standard' | 'adventure'
 
   export interface Token {
@@ -242,6 +255,7 @@ export namespace AppSchema {
     addBosToken?: boolean
     banEosToken?: boolean
     order?: number[]
+    skipSpecialTokens?: boolean
 
     gaslight?: string
     useGaslight?: boolean
@@ -263,19 +277,6 @@ export namespace AppSchema {
     images?: {
       adapter: string
     }
-  }
-
-  export interface AppConfig {
-    adapters: AIAdapter[]
-    version: string
-    canAuth: boolean
-    imagesSaved: boolean
-    assetPrefix: string
-    selfhosting: boolean
-    registered: Array<Omit<RegisteredAdapter, 'contextLimit'>>
-    maintenance?: string
-    patreon?: boolean
-    policies?: boolean
   }
 
   export interface MemoryBook {

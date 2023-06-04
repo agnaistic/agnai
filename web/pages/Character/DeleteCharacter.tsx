@@ -42,7 +42,7 @@ const DeleteCharacterModal: Component<{
             <Archive /> Archive
           </Button>
 
-          <Button onClick={onDelete}>
+          <Button schema="red" onClick={onDelete}>
             <Trash /> Delete
           </Button>
         </>

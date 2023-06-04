@@ -33,7 +33,7 @@ const DeleteChatModal: Component<{
             Cancel
           </Button>
 
-          <Button onClick={onDelete}>
+          <Button schema="red" onClick={onDelete}>
             <Trash /> Delete
           </Button>
         </>

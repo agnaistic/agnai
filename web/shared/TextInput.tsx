@@ -17,6 +17,7 @@ const TextInput: Component<{
   required?: boolean
   class?: string
   pattern?: string
+
   onKeyUp?: (
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
@@ -50,7 +51,7 @@ const TextInput: Component<{
   onMount(resize)
 
   return (
-    <div class={`w-full ${hide()}`}>
+    <div class={`${hide()}`}>
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>

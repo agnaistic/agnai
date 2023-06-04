@@ -445,19 +445,26 @@ const GenSettings: Component<Props> = (props) => {
         fieldName="addBosToken"
         label="Add BOS Token"
         helperText="Add begining of sequence token to the start of prompt. Disabling makes the replies more creative."
-        value={props.inherit?.addBosToken ?? false}
+        value={props.inherit?.addBosToken ?? true}
         disabled={props.disabled}
         service={props.service}
         aiSetting={'addBosToken'}
       />
       <Toggle
         fieldName="banEosToken"
-        label="Ban the end of sequence token. This forces the model to never end the generation prematurely."
-        helperText=""
+        label="Ban EOS Token"
+        helperText="Ban the end of sequence token. This forces the model to never end the generation prematurely."
         value={props.inherit?.banEosToken ?? false}
         disabled={props.disabled}
         service={props.service}
         aiSetting={'banEosToken'}
+      />
+      <Toggle
+        fieldName="skipSpecialTokens"
+        label="Skip Special Tokens"
+        helperText="Some specific models need this unset."
+        value={props.inherit?.skipSpecialTokens ?? true}
+        disabled={props.disabled}
       />
       <RangeInput
         fieldName="encoderRepitionPenalty"

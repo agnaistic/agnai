@@ -74,7 +74,7 @@ export async function authenticate(username: string, password: string) {
 }
 
 export async function createUser(newUser: NewUser, admin?: boolean) {
-  const username = newUser.username.toLowerCase()
+  const username = newUser.username.toLowerCase().trim()
   const existing = await db('user').findOne({ kind: 'user', username })
 
   if (existing) {

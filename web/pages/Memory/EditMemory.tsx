@@ -32,28 +32,12 @@ const entrySortItems = [
   { label: 'Alphabetically', value: 'alpha' },
 ]
 
-const sortEntries = (entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema.MemoryEntry[] => {
-  if (by === 'creationDate') {
-    return entries
-  } else {
-    return [...entries].sort((a, b) => {
-      // ensure newly added entries are at the bottom
-      if (a.name === '') {
-        return 1
-      } else if (b.name === '') {
-        return -1
-      } else {
-        return alphaCaseInsensitiveSort(a.name, b.name)
-      }
-    })
-  }
-}
-
 const EditMemoryForm: Component<{
   book: AppSchema.MemoryBook
   hideSave?: boolean
   updateEntrySort: (opn: Option<string>) => void
   entrySort: EntrySort
+  onChange?: (book: AppSchema.MemoryBook) => void
 }> = (props) => {
   const [editing, setEditing] = createSignal(props.book)
   const [search, setSearch] = createSignal('')
@@ -88,6 +72,9 @@ const EditMemoryForm: Component<{
           value={editing().name}
           placeholder="Name for your memory book"
           required
+          onChange={(e) => {
+            setEditing({ ...editing(), name: e.currentTarget.value })
+          }}
         />
 
         <TextInput
@@ -95,6 +82,9 @@ const EditMemoryForm: Component<{
           label="Description"
           value={editing().description}
           placeholder="(Optional) A description for your memory book"
+          onChange={(e) => {
+            setEditing({ ...editing(), description: e.currentTarget.value })
+          }}
         />
         <Divider />
         <div class="sticky top-0 z-10 flex items-center justify-between bg-[var(--bg-900)] py-2">
@@ -123,9 +113,19 @@ const EditMemoryForm: Component<{
           {(entry, i) => (
             <EntryCard
               {...entry}
+              entry={entry}
               index={i()}
               onRemove={() => onRemoveEntry(i())}
               search={search()}
+              onChange={(e) => {
+                const prev = editing()
+                const entries = prev.entries.map((entry, idx) =>
+                  idx === i() ? Object.assign(entry, e) : entry
+                )
+                const next = { ...prev, entries }
+                setEditing(next)
+                props.onChange?.(next)
+              }}
             />
           )}
         </For>
@@ -139,15 +139,22 @@ const EditMemoryForm: Component<{
 
 export default EditMemoryForm
 
-const EntryCard: Component<
-  AppSchema.MemoryEntry & { index: number; onRemove: () => void; search: string }
-> = (props) => {
+const EntryCard: Component<{
+  entry: AppSchema.MemoryEntry
+  search: string
+  onRemove: () => void
+  index: number
+  onChange: (e: AppSchema.MemoryEntry) => void
+}> = (props) => {
+  // const [entry, _setEntry] = createSignal(props.entry)
+
   const cls = createMemo(() =>
-    props.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
+    props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )
+
   return (
     <Accordian
-      open={missingFieldsInEntry(props).length > 0}
+      open={missingFieldsInEntry(props.entry).length > 0}
       class={cls()}
       title={
         <div class={`mb-1 flex w-full items-center gap-2`}>
@@ -156,12 +163,18 @@ const EntryCard: Component<
             required
             fieldName={`name.${props.index}`}
             class="w-full border-[1px]"
-            value={props.name}
+            value={props.entry.name}
+            onChange={(e) => {
+              props.onChange({ ...props.entry, name: e.currentTarget.value })
+            }}
           />
           <Toggle
             fieldName={`enabled.${props.index}`}
-            value={!!props.enabled}
+            value={!!props.entry.enabled}
             class="flex items-center"
+            onChange={(e) => {
+              props.onChange({ ...props.entry, enabled: e })
+            }}
           />
 
           <Button schema="clear" class="icon-button" onClick={props.onRemove}>
@@ -177,7 +190,10 @@ const EntryCard: Component<
           required
           placeholder="Comma separated words. E.g.: circle, shape, round, cylinder, oval"
           class="border-[1px]"
-          value={props.keywords.join(', ')}
+          value={props.entry.keywords.join(', ')}
+          onChange={(e) => {
+            props.onChange({ ...props.entry, keywords: e.currentTarget.value.split(',') })
+          }}
         />
         <div class="flex flex-row gap-4">
           <TextInput
@@ -186,7 +202,10 @@ const EntryCard: Component<
             required
             type="number"
             class="border-[1px]"
-            value={props.priority ?? 0}
+            value={props.entry.priority ?? 0}
+            onChange={(e) => {
+              props.onChange({ ...props.entry, priority: +e.currentTarget.value })
+            }}
           />
           <TextInput
             fieldName={`weight.${props.index}`}
@@ -194,16 +213,22 @@ const EntryCard: Component<
             required
             type="number"
             class="border-[1px]"
-            value={props.weight ?? 0}
+            value={props.entry.weight ?? 0}
+            onChange={(e) => {
+              props.onChange({ ...props.entry, weight: +e.currentTarget.value })
+            }}
           />
         </div>
         <TextInput
           fieldName={`entry.${props.index}`}
           isMultiline
-          value={props.entry}
+          value={props.entry.entry}
           placeholder="Memory entry. E.g. {{user}} likes fruit and vegetables"
-          class="border-[1px]"
+          class="min-h-[64px] border-[1px]"
           required
+          onKeyUp={(e) => {
+            props.onChange({ ...props.entry, entry: e.currentTarget.value })
+          }}
         />
       </div>
     </Accordian>
@@ -251,4 +276,15 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
 
   const book = { name, description, entries }
   return book
+}
+
+function sortEntries(entries: AppSchema.MemoryEntry[], by: EntrySort): AppSchema.MemoryEntry[] {
+  if (by === 'creationDate') {
+    return entries
+  }
+
+  return entries.slice().sort((a, b) => {
+    // ensure newly added entries are at the bottom
+    return a.name === '' ? 1 : b.name === '' ? -1 : alphaCaseInsensitiveSort(a.name, b.name)
+  })
 }

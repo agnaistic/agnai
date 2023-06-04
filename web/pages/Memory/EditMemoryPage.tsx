@@ -77,6 +77,12 @@ const EditMemoryPage = () => {
       <PageHeader title="Edit Memory Book" />
       <Show when={!!editing()}>
         <form ref={ref} onSubmit={saveBook}>
+          <div class="mt-4 flex justify-end">
+            <Button type="submit">
+              <Save />
+              {!editing()?._id ? 'Create Book' : 'Update Book'}
+            </Button>
+          </div>
           <EditMemoryForm
             book={editing()!}
             entrySort={entrySort()}
