@@ -1,16 +1,20 @@
 import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
-import ChubNavigation, { chubPage } from './ChubNavigation'
+import ChubNavigation from './ChubNavigation'
+import type { NewCharacter } from '/web/store/character'
+import Loading from '/web/shared/Loading'
 
-const CharList: Component = () => {
-  const chars = chubStore((s) => s.chars)
+const CharList: Component<{ setChar: (char: NewCharacter, fullPath: string) => void }> = (
+  props
+) => {
+  const state = chubStore()
 
   return (
     <>
-      <ChubNavigation buttons={chars.length >= 48} />
+      <ChubNavigation buttons={state.chars.length >= 48} />
       <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
-        <For each={chars.slice(48 * (chubPage() - 1))}>
+        <For each={state.chars.slice(48 * (state.page - 1))}>
           {(char) => (
             <ChubItem
               name={char.name}
@@ -19,11 +23,15 @@ const CharList: Component = () => {
                 `https://avatars.charhub.io/avatars/${char.fullPath}/avatar.webp` ||
                 `https://git.chub.ai/${char.fullPath}/-/raw/main/avatar.webp`
               }
+              setChar={props.setChar}
             />
           )}
         </For>
-        <Show when={chars.length < 4}>
-          <For each={new Array(4 - chars.length)}>{() => <div></div>}</For>
+        <Show when={state.charsLoading}>
+          <Loading />
+        </Show>
+        <Show when={state.chars.length < 4}>
+          <For each={new Array(4 - state.chars.length)}>{() => <div></div>}</For>
         </Show>
       </div>
     </>

@@ -1,66 +1,45 @@
-import { Component, Show, createSignal } from 'solid-js'
+import { Component, createSignal } from 'solid-js'
 import Button from '/web/shared/Button'
 import { NewCharacter } from '/web/store'
 import { jsonToCharacter } from '../Character/ImportCharacter'
-import ChubImportCharModal from './ChubImportChar'
-import { CHUB_URL } from '/web/store/chub'
-import ChubImportBookModal from './ChubImportBook'
 import { extractCardData } from '../Character/card-utils'
+import { processBook, processChar } from './util'
+import { AppSchema } from '/srv/db/schema'
 
 export const ChubItem: Component<{
   name: string
   fullPath: string
   avatar: string
   book?: boolean
+  setBook?: (book: AppSchema.MemoryBook, fullPath: string) => void
+  setChar?: (char: NewCharacter, fullPath: string) => void
 }> = (props) => {
-  const [importChar, setImportChar] = createSignal<NewCharacter>()
-  const [showCharModal, setShowCharModal] = createSignal<boolean>(false)
-  const [showBookModal, setShowBookModal] = createSignal<boolean>(false)
-
   const [memorybook, setMemoryBook] = createSignal<any>({})
 
-  const processImage = async (file: File) => {
+  const processItem = async () => {
+    if (props.book) {
+      const book = await processBook(props.fullPath)
+      setMemoryBook(book)
+      props.setBook?.(
+        {
+          kind: 'memory',
+          _id: '',
+          name: memorybook().name == 'Exported' ? props.name : memorybook().name,
+          description: memorybook().description,
+          userId: '',
+          entries: memorybook().entries,
+        },
+        props.fullPath
+      )
+      return
+    }
+
+    const file = await processChar(props.fullPath)
     const json = await extractCardData(file)
     if (!json) {
       throw new Error('Invalid tavern image')
     }
-    setImportChar(Object.assign(jsonToCharacter(json), { avatar: file }))
-    setShowCharModal(true)
-  }
-
-  const processItem = async () => {
-    const headers = {
-      'Content-Type': 'application/json',
-      accept: '/',
-    }
-
-    const body = {
-      format: 'tavern',
-      fullPath: props.fullPath,
-      version: 'main',
-    }
-
-    if (props.book) {
-      body.format = 'AGNAI'
-      const res = await fetch(`${CHUB_URL}/lorebooks/download`, {
-        headers: headers,
-        body: JSON.stringify(body),
-        method: 'post',
-      })
-
-      const json = await res.json()
-      setMemoryBook(json)
-    } else {
-      const res = await fetch(`${CHUB_URL}/characters/download`, {
-        headers: headers,
-        body: JSON.stringify(body),
-        method: 'post',
-      })
-
-      const blob = await res.blob()
-
-      processImage(new File([blob], `main_${props.fullPath}.png`, { type: 'image/png' }))
-    }
+    props.setChar?.(Object.assign(jsonToCharacter(json), { avatar: file }), props.fullPath)
   }
 
   return (
@@ -70,14 +49,11 @@ export const ChubItem: Component<{
           <Button
             schema="clear"
             class="block h-32 w-full justify-center overflow-hidden rounded-lg"
-            onClick={() => {
-              processItem()
-              props.book ? setShowBookModal(true) : setShowCharModal(true)
-            }}
+            onClick={processItem}
           >
             <img
               src={props.avatar}
-              class="h-full w-full object-cover"
+              class="h-full w-full rounded-md object-cover"
               style="object-position: 50% 30%;"
             />
           </Button>
@@ -86,29 +62,6 @@ export const ChubItem: Component<{
           {props.name}
         </div>
       </div>
-      <Show when={showCharModal()}>
-        <ChubImportCharModal
-          show={showCharModal()}
-          close={() => setShowCharModal(false)}
-          char={importChar()!}
-          fullPath={props.fullPath}
-        />
-      </Show>
-      <Show when={showBookModal()}>
-        <ChubImportBookModal
-          show={showBookModal()}
-          close={() => setShowBookModal(false)}
-          fullPath={props.fullPath}
-          book={{
-            kind: 'memory',
-            _id: '',
-            name: memorybook().name == 'Exported' ? props.name : memorybook().name,
-            description: memorybook().description,
-            userId: '',
-            entries: memorybook().entries,
-          }}
-        />
-      </Show>
     </>
   )
 }

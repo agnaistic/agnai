@@ -277,6 +277,7 @@ export namespace AppSchema {
     maintenance?: string
     patreon?: boolean
     policies?: boolean
+    characters: boolean
   }
 
   export interface MemoryBook {

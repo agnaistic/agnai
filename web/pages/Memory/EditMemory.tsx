@@ -158,7 +158,7 @@ const EntryCard: Component<{
   index: number
   onChange: (e: AppSchema.MemoryEntry) => void
 }> = (props) => {
-  const [entry, setEntry] = createSignal(props.entry)
+  const [entry, _setEntry] = createSignal(props.entry)
 
   const cls = createMemo(() =>
     entry().name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'

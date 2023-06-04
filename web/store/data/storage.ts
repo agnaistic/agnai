@@ -18,6 +18,7 @@ const emptyCfg: AppSchema.AppConfig = {
   imagesSaved: false,
   selfhosting: false,
   registered: [],
+  characters: false,
 }
 
 let SELF_HOSTING = false

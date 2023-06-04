@@ -1,5 +1,4 @@
 import { ChubItem } from '../pages/Chub/ChubItem'
-import { chubPage } from '../pages/Chub/ChubNavigation'
 import { createStore } from './create'
 
 type ChubItem = {
@@ -16,9 +15,12 @@ type ChubState = {
   search: string
   chars: ChubItem[]
   books: ChubItem[]
+  page: number
+  booksLoading: boolean
+  charsLoading: boolean
 }
 
-export const CHUB_URL = `https://api.chub.ai/api`
+export const CHUB_URL = `https://api.characterhub.org/api`
 
 const initState: ChubState = {
   nsfw: false,
@@ -28,10 +30,65 @@ const initState: ChubState = {
   search: '',
   chars: [],
   books: [],
+  page: 1,
+  booksLoading: false,
+  charsLoading: false,
 }
 
-const getSort = () => {
-  switch (chubStore().sort) {
+export const chubStore = createStore<ChubState>(
+  'chub',
+  initState
+)((_) => {
+  return {
+    setSearch(_, query: string) {
+      return { search: query }
+    },
+    setNSFW(_, nsfw: boolean) {
+      return { nsfw }
+    },
+    setTags(_, tags: string) {
+      return { tags }
+    },
+    setExcludeTags(_, tags: string) {
+      return { excludeTags: tags }
+    },
+    setSort(_, sort: string) {
+      return { sort }
+    },
+    setPage(_, page: number) {
+      return { page }
+    },
+    async *getBooks(state) {
+      const { nsfw, tags, sort, excludeTags, search, page } = state
+      yield { booksLoading: true }
+      const res = await fetch(
+        `${CHUB_URL}/lorebooks/search?&search=${search}&first=${
+          48 * page
+        }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(sort)}`
+      )
+      yield { booksLoading: false }
+
+      const json = await res.json()
+      yield { books: json.nodes }
+    },
+    async *getChars(state) {
+      const { search, page, tags, excludeTags, nsfw, sort } = state
+      yield { charsLoading: true }
+      const res = await fetch(
+        `${CHUB_URL}/characters/search?&search=${search}&first=${
+          48 * page
+        }&nsfw=${nsfw}&tags=${tags}&exclude_tags=${excludeTags}&sort=${getSort(sort)}`
+      )
+      yield { charsLoading: false }
+
+      const json = await res.json()
+      yield { chars: json.nodes }
+    },
+  }
+})
+
+function getSort(sort: string) {
+  switch (sort) {
     case 'Download Count':
       return 'download_count'
     case 'ID':
@@ -50,67 +107,3 @@ const getSort = () => {
       return 'n_tokens'
   }
 }
-
-export async function getChubChars() {
-  const res = await fetch(
-    `${CHUB_URL}/characters/search?&search=${chubStore().search}&first=${48 * chubPage()}&nsfw=${
-      chubStore().nsfw
-    }&tags=${chubStore().tags}&exclude_tags=${chubStore().excludeTags}&sort=${getSort()}`
-  )
-  const json = await res.json()
-
-  chubStore.setState({
-    ...chubStore(),
-    chars: json.nodes,
-  })
-}
-export async function getChubBooks() {
-  const res = await fetch(
-    `${CHUB_URL}/lorebooks/search?&search=${chubStore().search}&first=${48 * chubPage()}&nsfw=${
-      chubStore().nsfw
-    }&tags=${chubStore().tags}&exclude_tags=${chubStore().excludeTags}&sort=${getSort()}`
-  )
-  const json = await res.json()
-  chubStore.setState({
-    ...chubStore(),
-    books: json.nodes,
-  })
-}
-
-export const chubStore = createStore<ChubState>(
-  'chub',
-  initState
-)((_) => {
-  return {
-    async setSearch(_, query: string) {
-      chubStore.setState({
-        ...chubStore(),
-        search: query,
-      })
-    },
-    async setNSFW(_, nsfw: boolean) {
-      chubStore.setState({
-        ...chubStore(),
-        nsfw: nsfw,
-      })
-    },
-    async setTags(_, tags: string) {
-      chubStore.setState({
-        ...chubStore(),
-        tags: tags,
-      })
-    },
-    async setExcludeTags(_, tags: string) {
-      chubStore.setState({
-        ...chubStore(),
-        excludeTags: tags,
-      })
-    },
-    async setSort(_, sort: string) {
-      chubStore.setState({
-        ...chubStore(),
-        sort: sort,
-      })
-    },
-  }
-})

@@ -1,21 +1,19 @@
-import { Component, Show, createSignal, onMount } from 'solid-js'
-import { chubStore, getChubBooks, getChubChars } from '../../store/chub'
+import { Component, Show, onMount } from 'solid-js'
+import { chubStore } from '../../store/chub'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { ArrowLeft, ArrowRight } from 'lucide-solid'
 import { toastStore } from '../../store'
 
-export const [chubPage, setChubPage] = createSignal<number>(1)
-
 const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
+  const state = chubStore()
+
   const update = () => {
-    getChubChars()
-    getChubBooks()
+    chubStore.getBooks()
+    chubStore.getChars()
   }
 
-  onMount(() => {
-    update()
-  })
+  onMount(update)
 
   const onSearch = (
     ev: KeyboardEvent & {
@@ -25,7 +23,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
   ) => {
     chubStore.setSearch(ev.currentTarget.value)
     update()
-    setChubPage(1)
+    chubStore.setPage(1)
   }
 
   return (
@@ -43,8 +41,8 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               schema="secondary"
               class="rounded-xl"
               onClick={() => {
-                if (chubPage() > 1) {
-                  setChubPage(chubPage() - 1)
+                if (state.page > 1) {
+                  chubStore.setPage(state.page - 1)
                   update()
                 } else {
                   toastStore.error('Already on first page!')
@@ -57,11 +55,11 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
             <TextInput
               fieldName="number"
               class="w-12"
-              value={chubPage()}
+              value={state.page}
               onKeyUp={(ev) => {
                 const n = Number(ev.currentTarget.value)
-                if (!Number.isNaN(n) && n != 0) {
-                  setChubPage(n)
+                if (!isNaN(n) && n !== 0) {
+                  chubStore.setPage(n)
                   update()
                 } else {
                   toastStore.error('Not a valid page number.')
@@ -73,7 +71,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               class="rounded-xl"
               onClick={() => {
                 if (chubStore().chars.length % 48 == 0) {
-                  setChubPage(chubPage() + 1)
+                  chubStore.setPage(state.page + 1)
                   update()
                 } else {
                   toastStore.error(`Already on last page!`)

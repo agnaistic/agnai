@@ -1,10 +1,9 @@
-const flags = ['charv2', 'cyoa'] as const
+export type Flag = keyof typeof defaultFlags
 
-type Flag = (typeof flags)[number]
+export type FeatureFlags = typeof defaultFlags
 
-export type FeatureFlags = { [key in Flag]: boolean }
-
-export const defaultFlags: FeatureFlags = {
+export const defaultFlags = {
   charv2: false,
   cyoa: true,
-}
+  chub: false,
+} satisfies { [key: string]: boolean }

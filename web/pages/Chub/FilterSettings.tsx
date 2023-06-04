@@ -3,8 +3,7 @@ import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
-import { chubStore, getChubBooks, getChubChars } from '../../store/chub'
-import { setChubPage } from './ChubNavigation'
+import { chubStore } from '../../store/chub'
 
 const sorts = [
   'Download Count',
@@ -18,10 +17,12 @@ const sorts = [
 ]
 
 const FilterSettings: Component = () => {
+  const state = chubStore()
+
   const update = () => {
-    setChubPage(1)
-    getChubChars()
-    getChubBooks()
+    chubStore.setPage(1)
+    chubStore.getChars()
+    chubStore.getBooks()
   }
 
   return (
@@ -30,7 +31,7 @@ const FilterSettings: Component = () => {
         fieldName="nsfw"
         label="NSFW"
         helperText="Allow NSFW characters/lorebooks to appear in results."
-        value={chubStore().nsfw}
+        value={state.nsfw}
         onChange={(v) => {
           chubStore.setNSFW(v)
           update()
@@ -41,7 +42,7 @@ const FilterSettings: Component = () => {
         label="Query Tags"
         helperText="A comma-separated list of tags to include."
         placeholder="E.g. blue_archive,female,anime"
-        value={chubStore().tags}
+        value={state.tags}
         onChange={(ev) => {
           chubStore.setTags(ev.currentTarget.value)
           update()
@@ -51,8 +52,7 @@ const FilterSettings: Component = () => {
         fieldName="excludeTags"
         label="Exclude Tags"
         helperText="A comma-separated list of tags to exclude."
-        placeholder="E.g. furry,incest,loli"
-        value={chubStore().excludeTags}
+        value={state.excludeTags}
         onChange={(ev) => {
           chubStore.setExcludeTags(ev.currentTarget.value)
           update()
@@ -62,7 +62,7 @@ const FilterSettings: Component = () => {
         fieldName="sort"
         label="Sort By"
         items={toDropdownItems(sorts)}
-        value={chubStore().sort}
+        value={state.sort}
         onChange={(v) => {
           chubStore.setSort(v.value)
           update()

@@ -9,6 +9,7 @@ import { extractCardData } from './card-utils'
 import { characterBookToNative } from '/common/memory'
 import { formatCharacter } from '/common/characters'
 import AvatarIcon from '/web/shared/AvatarIcon'
+import { CHUB_URL } from '/web/store/chub'
 
 const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 const MAX_SHOWN_IMPORTS = 3
@@ -284,9 +285,8 @@ function isNative(obj: any): obj is AppSchema.Character {
  */
 export async function downloadCharacterHub(path: string) {
   // const imageUrl = `https://avatars.charhub.io/avatars/${path}/avatar.webp`
-  const apiUrl = `https://api.chub.ai/api`
 
-  const card = await fetch(`${apiUrl}/characters/download`, {
+  const card = await fetch(`${CHUB_URL}/characters/download`, {
     method: 'post',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ format: 'tavern', fullPath: path, version: 'main' }),

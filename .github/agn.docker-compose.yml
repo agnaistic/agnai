@@ -14,7 +14,7 @@ services:
       replicas: 3
       placement:
         constraints:
-          - "node.role!=manager"
+          - 'node.role!=manager'
     ports:
       - '3001:3001'
     volumes:
@@ -39,7 +39,7 @@ services:
       BUCKET_ENDPOINT: /run/secrets/bucket_endpoint
       PATREON: 'true'
       SHOW_POLICIES: 'true'
-      INJECT: /run/secrets/inject_script
+      INJECT: /run/secrets/inject_script_v2
     secrets:
       - jwt_secret
       - aws_id
@@ -48,7 +48,7 @@ services:
       - bucket_endpoint
       - db_host
       - redis_host
-      - inject_script
+      - inject_script_v2
 
 networks:
   storage_swarm:
@@ -69,7 +69,7 @@ secrets:
     external: true
   redis_host:
     external: true
-  inject_script:
+  inject_script_v2:
     external: true
 
 volumes:

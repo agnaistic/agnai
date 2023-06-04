@@ -91,6 +91,7 @@ export const config = {
     patreon: !!env('PATREON', ''),
     policies: !!env('SHOW_POLICIES', ''),
     inject: env('INJECT', ''),
+    characters: !!env('CHARACTER_HUB', ''),
   },
 }
 

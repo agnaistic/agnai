@@ -102,10 +102,12 @@ const UserNavigation: Component = () => {
         <User /> Profile
       </Item>
 
-      <Item href="/chub">
-        <ShoppingBag />
-        CHUB
-      </Item>
+      <Show when={cfg.flags.chub}>
+        <Item href="/chub">
+          <ShoppingBag />
+          CHUB
+        </Item>
+      </Show>
 
       <Item href="/character/list">
         <Bot /> Characters
@@ -156,6 +158,7 @@ const GuestNavigation: Component = () => {
     showMenu: s.showMenu,
     config: s.config,
     guest: s.guestAccessAllowed,
+    flags: s.flags,
   }))
 
   return (
@@ -175,10 +178,12 @@ const GuestNavigation: Component = () => {
           <Bot /> Characters
         </Item>
 
-        <Item href="/chub">
-          <ShoppingBag />
-          Character Hub
-        </Item>
+        <Show when={menu.flags.chub}>
+          <Item href="/chub">
+            <ShoppingBag />
+            CHUB
+          </Item>
+        </Show>
 
         <Item href="/chats">
           <MessageCircle /> Chats

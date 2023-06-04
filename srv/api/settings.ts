@@ -26,6 +26,7 @@ const appConfig: AppSchema.AppConfig = {
   maintenance: config.ui.maintenance,
   patreon: config.ui.patreon,
   policies: config.ui.policies,
+  characters: config.ui.characters,
 }
 
 const getSettings = handle(async () => {
