@@ -27,7 +27,7 @@ const Chub: Component = () => {
     <>
       <PageHeader title="Character Hub" />
       Download Characters and Lorebooks from{' '}
-      <a href="https://characterhub.org" class="text-[var(--hl-500)]">
+      <a href="https://chub.ai" class="text-[var(--hl-500)]">
         CHUB
       </a>
       <div class="my-2">

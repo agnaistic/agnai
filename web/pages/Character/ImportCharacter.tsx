@@ -284,7 +284,7 @@ function isNative(obj: any): obj is AppSchema.Character {
  */
 export async function downloadCharacterHub(path: string) {
   // const imageUrl = `https://avatars.charhub.io/avatars/${path}/avatar.webp`
-  const apiUrl = `https://api.characterhub.org/api`
+  const apiUrl = `https://api.chub.ai/api`
 
   const card = await fetch(`${apiUrl}/characters/download`, {
     method: 'post',

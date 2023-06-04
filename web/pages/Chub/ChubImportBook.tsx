@@ -43,7 +43,7 @@ const ChubImportBookModal: Component<{
       title={
         <>
           Preview
-          <a href={`https://characterhub.org/${props.fullPath}`} class="text-[var(--hl-500)]">
+          <a href={`https://chub.ai/${props.fullPath}`} class="text-[var(--hl-500)]">
             {' '}
             {book()?.name}
           </a>

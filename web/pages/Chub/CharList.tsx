@@ -17,7 +17,7 @@ const CharList: Component = () => {
               fullPath={char.fullPath}
               avatar={
                 `https://avatars.charhub.io/avatars/${char.fullPath}/avatar.webp` ||
-                `https://git.characterhub.org/${char.fullPath}/-/raw/main/avatar.webp`
+                `https://git.chub.ai/${char.fullPath}/-/raw/main/avatar.webp`
               }
             />
           )}

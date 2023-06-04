@@ -38,10 +38,7 @@ const ChubImportCharModal: Component<{
       title={
         <>
           Preview
-          <a
-            href={`https://characterhub.org/characters/${props.fullPath}`}
-            class="text-[var(--hl-500)]"
-          >
+          <a href={`https://chub.ai/characters/${props.fullPath}`} class="text-[var(--hl-500)]">
             {' '}
             {char()?.name}
           </a>
