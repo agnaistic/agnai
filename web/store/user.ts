@@ -206,7 +206,6 @@ export const userStore = createStore<UserState>(
 
     updateUI({ ui }, update: Partial<UISettings>) {
       const next = { ...ui, ...update }
-      console.log(update)
       try {
         updateTheme(next)
       } catch (e: any) {
