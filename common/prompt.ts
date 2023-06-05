@@ -238,7 +238,7 @@ export function ensureValidTemplate(
   parts: PromptParts,
   skip?: Array<'history' | 'post' | 'persona' | 'scenario'>
 ) {
-  const bypass = new Set(skip || [])
+  const skips = new Set(skip || [])
   let hasScenario = !!template.match(HOLDERS.scenario)
   let hasPersona = !!template.match(HOLDERS.persona)
   let hasHistory = !!template.match(HOLDERS.history)
@@ -249,21 +249,21 @@ export function ensureValidTemplate(
 
   let modified = removeUnusedPlaceholders(template, parts)
 
-  if (!bypass.has('scenario') && !hasScenario && useScenario) {
+  if (!skips.has('scenario') && !hasScenario && useScenario) {
     hasScenario = true
     modified += `\nScenario: {{${HOLDER_NAMES.scenario}}}`
   }
 
-  if (!bypass.has('persona') && !hasPersona && usePersona) {
+  if (!skips.has('persona') && !hasPersona && usePersona) {
     hasScenario = true
     modified += `\n{{char}}'s persona: {{${HOLDER_NAMES.persona}}}`
   }
 
-  if (!bypass.has('post') && !bypass.has('history') && !hasHistory && !hasPost) {
+  if (!skips.has('post') && !skips.has('history') && !hasHistory && !hasPost) {
     modified += `\n{{history}}\n{{post}}`
-  } else if (!bypass.has('history') && !hasHistory && hasPost) {
+  } else if (!skips.has('history') && !hasHistory && hasPost) {
     modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{${HOLDER_NAMES.post}}}`)
-  } else if (!bypass.has('post') && hasHistory && !hasPost) {
+  } else if (!skips.has('post') && hasHistory && !hasPost) {
     modified += '\n{{post}}'
   }
 

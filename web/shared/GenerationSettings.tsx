@@ -246,7 +246,7 @@ const PromptSettings: Component<Props> = (props) => {
       <PromptEditor
         fieldName="gaslight"
         value={props.inherit?.gaslight}
-        exclude={['post', 'history']}
+        exclude={['post', 'history', 'ujb']}
         disabled={props.disabled}
       />
 
