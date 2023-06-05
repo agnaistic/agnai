@@ -13,6 +13,7 @@ export type MemoryOpts = {
   book?: AppSchema.MemoryBook
   lines: string[]
   members: AppSchema.Profile[]
+  tokensAlreadyConsumed?: number
 }
 
 export type MemoryPrompt = {
@@ -76,12 +77,15 @@ export const MEMORY_PREFIX = 'Facts: '
 
 export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPrompt | undefined {
   const { chat, book, settings, members, char, lines } = opts
+  const tokensAlreadyConsumed = opts.tokensAlreadyConsumed ?? 0
 
   if (!book?.entries) return
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
-  const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
+  const memoryBudget =
+    (settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit) -
+    tokensAlreadyConsumed
   // const reveseWeight = settings?.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
 
   if (isNaN(depth) || depth <= 0) return

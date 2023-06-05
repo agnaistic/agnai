@@ -367,8 +367,20 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     post.unshift(`${char.name}: ${opts.continue}`)
   }
 
-  const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() }, encoder)
-  if (memory) parts.memory = memory.prompt
+  const linesForMemory = [...lines].reverse()
+  const charMemory = char.characterBook
+    ? buildMemoryPrompt({ ...opts, book: char.characterBook, lines: linesForMemory }, encoder)
+    : undefined
+  const worldMemory = buildMemoryPrompt(
+    { ...opts, lines: linesForMemory, tokensAlreadyConsumed: charMemory?.tokens },
+    encoder
+  )
+  parts.memory =
+    worldMemory && charMemory
+      ? worldMemory.prompt + '\n' + charMemory.prompt
+      : worldMemory
+      ? worldMemory.prompt
+      : charMemory?.prompt
 
   const ujb = opts.settings?.ultimeJailbreak
 
