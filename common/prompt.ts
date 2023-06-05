@@ -329,10 +329,9 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   const injectOpts = { opts, parts, encoder }
 
-  if (ujb) {
-    parts.ujb = injectPlaceholders(removeUnusedPlaceholders(ujb, parts), injectOpts)
+  if (char.postHistoryInstructions || ujb) {
+    parts.ujb = injectPlaceholders(removeUnusedPlaceholders(char.postHistoryInstructions || ujb!, parts), injectOpts)
   }
-
   parts.gaslight = injectPlaceholders(removeUnusedPlaceholders(gaslight, parts), injectOpts)
 
   /**

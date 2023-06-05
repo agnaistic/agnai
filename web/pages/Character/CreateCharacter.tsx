@@ -501,7 +501,7 @@ const CreateCharacter: Component = () => {
           <TextInput
             isMultiline
             fieldName="postHistoryInstructions"
-            label="Post-conversation history instructions(optional)"
+            label="Post-conversation history instructions (optional)"
             helperText={
               <span>Prompt to bundle with your character. Leave empty if you aren't sure.</span>
             }
