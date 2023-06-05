@@ -152,8 +152,9 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
     return
   }
 
-  let attempts = 0
-  const timeout = 60 * 5 // Model cold boots can take 3 to 5 minutes
+  let secondsSinceStart = 0
+  const timeoutInSeconds = 60 * 5 // Model cold boots can take 3 to 5 minutes
+  const coldBootNotificationInSeconds = 20
   let hasDispatchedStartingMessage = false
 
   predictionWaitLoop: while (true) {
@@ -172,7 +173,11 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
         break predictionWaitLoop
       case 'starting':
       case 'processing':
-        if (!hasDispatchedStartingMessage && status === 'starting') {
+        if (
+          !hasDispatchedStartingMessage &&
+          status === 'starting' &&
+          secondsSinceStart > coldBootNotificationInSeconds
+        ) {
           hasDispatchedStartingMessage = true
           // TODO: Dispatching to ws here is not ideal
           sendMany(opts.guest ? [opts.guest] : opts.members.map((m) => m.userId), {
@@ -181,7 +186,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
             text: 'The Replicate model is starting up. This can take 3-5 minutes.',
           })
         }
-        if (attempts++ < timeout) {
+        if (secondsSinceStart++ < timeoutInSeconds) {
           await sleep(1000)
           continue
         }
