@@ -9,15 +9,7 @@ import Select, { Option } from '../../shared/Select'
 import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
-
-export const emptyEntry: AppSchema.MemoryEntry = {
-  name: '',
-  entry: '',
-  keywords: [],
-  priority: 0,
-  weight: 0,
-  enabled: false,
-}
+import { emptyEntry } from '/common/memory'
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
   ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
@@ -244,7 +236,7 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
     const [prop, i] = key.split('.')
     if (i === undefined) continue
 
-    const prev = map.get(i) || { ...emptyEntry }
+    const prev = map.get(i) || { ...emptyEntry() }
 
     switch (prop) {
       case 'name':

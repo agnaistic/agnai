@@ -42,11 +42,13 @@ import { downloadCharacterHub } from './ImportCharacter'
 import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 import { For } from 'solid-js'
-import { BUNDLED_CHARACTER_BOOK_ID } from '/common/memory'
+import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { characterGenTemplate } from '/common/default-preset'
 import { toNewCharacter } from './util'
+import Modal from '/web/shared/Modal'
+import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -68,7 +70,6 @@ const CreateCharacter: Component = () => {
   const [image, setImage] = createSignal<string | undefined>()
 
   const presets = presetStore()
-  const memory = memoryStore()
   const flags = settingStore((s) => s.flags)
   const user = userStore((s) => s.user)
   const tagState = tagStore()
@@ -86,7 +87,7 @@ const CreateCharacter: Component = () => {
   const [downloaded, setDownloaded] = createSignal<NewCharacter>()
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
-  const [characterBook, setCharacterBook] = createSignal(state.edit?.characterBook)
+  const [bundledBook, setBundledBook] = createSignal(state.edit?.characterBook)
   const [extensions] = createSignal(state.edit?.extensions ?? {})
   const [avatar, setAvatar] = createSignal<File>()
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
@@ -97,12 +98,6 @@ const CreateCharacter: Component = () => {
   )
 
   const edit = createMemo(() => state.edit)
-
-  const isExternalBook = createMemo(() =>
-    memory.books.list.every((book) => book._id !== state.edit?.characterBook?._id)
-  )
-
-  const bundledBook = createMemo(() => (isExternalBook() ? state.edit?.characterBook : undefined))
 
   const preferredPreset = createMemo(() => {
     const id = user?.defaultPreset
@@ -291,7 +286,7 @@ const CreateCharacter: Component = () => {
       systemPrompt: body.systemPrompt ?? '',
       postHistoryInstructions: body.postHistoryInstructions ?? '',
       alternateGreetings: alternateGreetings() ?? '',
-      characterBook: characterBook(),
+      characterBook: bundledBook(),
       creator: body.creator ?? '',
       extensions: extensions(),
       characterVersion: body.characterVersion ?? '',
@@ -522,11 +517,7 @@ const CreateCharacter: Component = () => {
             placeholder="Write at least four paragraphs."
             value={state.edit?.postHistoryInstructions}
           />
-          <MemoryBookPicker
-            characterBook={characterBook()}
-            setCharacterBook={setCharacterBook}
-            bundledBook={bundledBook()}
-          />
+          <MemoryBookPicker setBundledBook={setBundledBook} bundledBook={bundledBook()} />
           <TextInput
             fieldName="creator"
             label="Creator (optional)"
@@ -605,44 +596,94 @@ const AlternateGreetingsInput: Component<{
 // TODO: Character Book can only be imported from Agnai Memory books. It is not possible yet to edit a Character Book that was bundled with a downloaded character card.
 const MemoryBookPicker: Component<{
   bundledBook: AppSchema.MemoryBook | undefined
-  characterBook: AppSchema.MemoryBook | undefined
-  setCharacterBook: (newVal: AppSchema.MemoryBook | undefined) => void
+  setBundledBook: (newVal: AppSchema.MemoryBook | undefined) => void
 }> = (props) => {
   const memory = memoryStore()
-  const bookOptions = createMemo(() =>
-    memory.books.list.map((book) => ({ label: book.name, value: book._id }))
-  )
-  const NONE_VALUE = '__bundled__none__'
-  const onChange = (option: Option) => {
-    if (option.value == NONE_VALUE) {
-      props.setCharacterBook(undefined)
-    } else {
-      const isBundledMemoryBook = props.characterBook?._id === BUNDLED_CHARACTER_BOOK_ID
-      const newBook = isBundledMemoryBook
-        ? props.bundledBook
-        : memory.books.list.find((book) => book._id === option.value)
-      console.log(newBook)
-      props.setCharacterBook(newBook)
+  const [isModalShown, setIsModalShown] = createSignal(false)
+  const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
+  const updateEntrySort = (item: Option<string>) => {
+    if (item.value === 'creationDate' || item.value === 'alpha') {
+      setEntrySort(item.value)
     }
   }
-  const dropdownItems = () => [
-    { label: 'None', value: NONE_VALUE },
-    ...(props.bundledBook
-      ? [{ label: 'Imported with card', value: BUNDLED_CHARACTER_BOOK_ID }]
-      : []),
-    ...bookOptions(),
-  ]
+
+  const NONE_VALUE = '__none_character_book__'
+  const internalMemoryBookOptions = createMemo(() => [
+    { label: 'Import Memory Book', value: NONE_VALUE },
+    ...memory.books.list.map((book) => ({ label: book.name, value: book._id })),
+  ])
+  const pickInternalMemoryBook = (option: Option) => {
+    const newBook = memory.books.list.find((book) => book._id === option.value)
+    props.setBundledBook(newBook ? { ...newBook, _id: BUNDLED_CHARACTER_BOOK_ID } : undefined)
+  }
+  const initBlankCharacterBook = () => {
+    props.setBundledBook(emptyBookWithEmptyEntry())
+  }
+  const deleteBook = () => {
+    props.setBundledBook(undefined)
+  }
+  const ModalFooter = () => (
+    <>
+      <Button schema="secondary" onClick={() => setIsModalShown(false)}>
+        Close
+      </Button>
+      <Button type="submit">
+        <Save />
+        Save Character Book
+      </Button>
+    </>
+  )
+  const onSubmitCharacterBookChanges = (ev: Event) => {
+    console.log('test')
+    ev.preventDefault()
+    const update = getBookUpdate(ev)
+    if (props.bundledBook) {
+      props.setBundledBook({ ...props.bundledBook, ...update })
+    }
+    setIsModalShown(false)
+  }
+
   return (
-    <Select
-      fieldName="memoryBook"
-      label="Character Memory Book"
-      helperText="Memory book to bundle with this character."
-      value={
-        props.characterBook?._id ?? (props.bundledBook ? BUNDLED_CHARACTER_BOOK_ID : NONE_VALUE)
-      }
-      items={dropdownItems()}
-      onChange={onChange}
-    />
+    <div>
+      <h4 class="text-lg">Character Book</h4>
+      <Show when={!props.bundledBook}>
+        <span class="text-sm"> This character doesn't have a Character Book. </span>
+        <div class="flex gap-3">
+          <Select
+            fieldName="memoryBook"
+            value={NONE_VALUE}
+            items={internalMemoryBookOptions()}
+            onChange={pickInternalMemoryBook}
+          />
+          <Button onClick={initBlankCharacterBook}>Create New Book</Button>
+        </div>
+      </Show>
+      <Show when={props.bundledBook}>
+        <span class="text-sm">This character has a Character Book.</span>
+        <div class="mt-2 flex gap-3">
+          <Button onClick={() => setIsModalShown(true)}>Edit Book</Button>
+          <Button onClick={deleteBook}>Delete Book</Button>
+        </div>
+      </Show>
+      <Modal
+        title="Chat Memory"
+        show={isModalShown()}
+        close={() => setIsModalShown(false)}
+        footer={<ModalFooter />}
+        onSubmit={onSubmitCharacterBookChanges}
+        maxWidth="half"
+        fixedHeight
+      >
+        <div class="text-sm">
+          <EditMemoryForm
+            hideSave
+            book={props.bundledBook!}
+            entrySort={entrySort()}
+            updateEntrySort={updateEntrySort}
+          />
+        </div>
+      </Modal>
+    </div>
   )
 }
 

@@ -228,3 +228,26 @@ function nativeToMemoryEntry(memoryEntry: AppSchema.MemoryEntry): CharacterBookE
     position: memoryEntry.position,
   }
 }
+
+export const emptyEntry = (): AppSchema.MemoryEntry => ({
+  name: '',
+  entry: '',
+  keywords: [],
+  priority: 0,
+  weight: 0,
+  enabled: true,
+})
+
+export const emptyBook = (): AppSchema.MemoryBook => ({
+  _id: '',
+  name: '',
+  description: '',
+  entries: [],
+  kind: 'memory',
+  userId: '',
+})
+
+export const emptyBookWithEmptyEntry = (): AppSchema.MemoryBook => ({
+  ...emptyBook(),
+  entries: [{ ...emptyEntry(), name: 'New Entry' }],
+})
