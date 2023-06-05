@@ -77,7 +77,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
     return
   }
 
-  const key = config.apiToken ? decryptText(config.apiToken) : null
+  const key = config.apiToken ? (opts.guest ? config.apiToken : decryptText(config.apiToken)) : null
   if (!key) {
     yield { error: `Replicate request failed: No API Token set` }
     return
