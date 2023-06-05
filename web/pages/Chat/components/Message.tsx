@@ -113,9 +113,11 @@ const SingleMessage: Component<
     user.ui.mode // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
 
     const hex =
-      (props.msg.characterId && props.msg.adapter
+      props.msg.characterId && props.msg.adapter
         ? user.ui.botBackground
-        : user.ui.msgBackground) || getRootVariable(props.msg.ooc ? 'bg-1000' : 'bg-800')
+        : props.msg.ooc
+        ? getRootVariable('bg-1000')
+        : user.ui.msgBackground || 'bg-800'
 
     if (!hex) return {}
 

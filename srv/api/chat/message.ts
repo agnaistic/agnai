@@ -37,7 +37,6 @@ const genValidator = {
     memory: 'any?',
     sampleChat: ['string?'],
     gaslight: 'string',
-    gaslightHasChat: 'boolean',
     post: ['string'],
   },
   lines: ['string'],
@@ -83,7 +82,7 @@ export const createMessage = handle(async (req) => {
       chatId,
       message: body.text,
       characterId: impersonate?._id,
-      senderId: impersonate ? undefined : userId!,
+      senderId: userId,
       ooc: body.kind === 'ooc',
     })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })

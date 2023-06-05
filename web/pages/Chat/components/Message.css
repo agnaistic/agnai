@@ -3,6 +3,11 @@
   color: var(--text-chatcolor);
 }
 
+em {
+  color: var(--text-600);
+  color: var(--text-emphasis-color);
+}
+
 .rendered-markdown p:not(:last-child) {
   margin-bottom: 0.4em; /* ensure <p> els are visually separated by empty line */
 }
@@ -27,11 +32,6 @@
   background-color: unset;
   border-radius: unset;
   padding: unset;
-}
-
-em {
-  color: var(--text-600);
-  color: var(--text-emphasis-color);
 }
 
 /* This small manual adjustment is unfortunately necessary for harmony */

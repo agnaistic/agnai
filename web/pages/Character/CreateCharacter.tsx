@@ -25,6 +25,7 @@ import {
   toastStore,
   userStore,
   memoryStore,
+  presetStore,
 } from '../../store'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
@@ -42,6 +43,10 @@ import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 import { For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID } from '/common/memory'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { msgsApi } from '/web/store/data/messages'
+import { characterGenTemplate } from '/common/default-preset'
+import { toNewCharacter } from './util'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -62,6 +67,7 @@ const CreateCharacter: Component = () => {
   const srcId = createMemo(() => params.editId || params.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
 
+  const presets = presetStore()
   const memory = memoryStore()
   const flags = settingStore((s) => s.flags)
   const user = userStore((s) => s.user)
@@ -85,6 +91,7 @@ const CreateCharacter: Component = () => {
   const [avatar, setAvatar] = createSignal<File>()
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
+  const [creating, setCreating] = createSignal(false)
   const [alternateGreetings, setAlternateGreetings] = createSignal(
     state.edit?.alternateGreetings ?? []
   )
@@ -96,6 +103,47 @@ const CreateCharacter: Component = () => {
   )
 
   const bundledBook = createMemo(() => (isExternalBook() ? state.edit?.characterBook : undefined))
+
+  const preferredPreset = createMemo(() => {
+    const id = user?.defaultPreset
+    if (!id) return
+
+    const preset = isDefaultPreset(id)
+      ? defaultPresets[id]
+      : presets.presets.find((pre) => pre._id === id)
+
+    return preset
+  })
+
+  const canPopulatFields = createMemo(() => {
+    return preferredPreset()?.service === 'openai' && !!user?.oaiKeySet
+  })
+
+  const generateCharacter = () => {
+    if (!canPopulatFields()) return
+
+    const preset = preferredPreset()
+    if (!preset) return
+
+    const { description } = getStrictForm(ref, { description: 'string' })
+    if (!description) return
+
+    const prompt = characterGenTemplate.replace('{{description}}', description)
+    setCreating(true)
+
+    msgsApi.generatePlain({ prompt, settings: preset }, (err, response) => {
+      setCreating(false)
+      if (err) {
+        toastStore.error(`Could not create character: ${err}`)
+        return
+      }
+
+      const char = toNewCharacter(response!, description)
+
+      setSchema('wpp')
+      setDownloaded(char)
+    })
+  }
 
   onMount(async () => {
     characterStore.clearGeneratedAvatar()
@@ -274,13 +322,24 @@ const CreateCharacter: Component = () => {
           value={downloaded()?.name || state.edit?.name}
         />
 
-        <TextInput
-          fieldName="description"
-          label="Description"
-          helperText="A description or label for your character. This is will not influence your character in any way."
-          placeholder=""
-          value={downloaded()?.description || state.edit?.description}
-        />
+        <div class="flex w-full flex-col">
+          <FormLabel
+            label="Description"
+            helperText="A description or label for your character. This is will not influence your character in any way."
+          />
+          <div class="flex w-full gap-2">
+            <TextInput
+              fieldName="description"
+              parentClass="w-full"
+              value={downloaded()?.description || state.edit?.description}
+            />
+            <Show when={flags.chargen && canPopulatFields()}>
+              <Button onClick={generateCharacter} disabled={creating()}>
+                {creating() ? 'Generating...' : 'Generate'}
+              </Button>
+            </Show>
+          </div>
+        </div>
 
         <TagInput
           availableTags={tagState.tags.map((t) => t.tag)}
@@ -320,8 +379,9 @@ const CreateCharacter: Component = () => {
               accept="image/png,image/jpeg"
               onUpdate={updateFile}
             />
-            <div class="flex gap-2">
+            <div class="flex w-full gap-2">
               <TextInput
+                parentClass="w-full"
                 fieldName="imagePrompt"
                 placeholder='Image prompt: Leave empty to use "looks / "appearance"'
               />
@@ -366,8 +426,8 @@ const CreateCharacter: Component = () => {
         />
         <Show when={flags.charv2}>
           <AlternateGreetingsInput
-            alternateGreetings={alternateGreetings()}
-            setAlternateGreetings={setAlternateGreetings}
+            greetings={alternateGreetings()}
+            setGreetings={setAlternateGreetings}
           />
         </Show>
 
@@ -484,24 +544,23 @@ const CreateCharacter: Component = () => {
 }
 
 const AlternateGreetingsInput: Component<{
-  alternateGreetings: string[]
-  setAlternateGreetings: (newVal: string[]) => void
+  greetings: string[]
+  setGreetings: (next: string[]) => void
 }> = (props) => {
-  const addGreeting = () => props.setAlternateGreetings([...props.alternateGreetings, ''])
-  const removeGreeting = (i: number) =>
-    props.setAlternateGreetings([
-      ...props.alternateGreetings.slice(0, i),
-      ...props.alternateGreetings.slice(i + 1),
-    ])
-  const onChange = (i: number, ev: { currentTarget: HTMLInputElement | HTMLTextAreaElement }) =>
-    props.setAlternateGreetings(
-      props.alternateGreetings.map((oldVal, currentI) =>
-        currentI === i ? ev.currentTarget?.value ?? '' : oldVal
-      )
+  const addGreeting = () => props.setGreetings([...props.greetings, ''])
+  const removeGreeting = (i: number) => {
+    return props.setGreetings(props.greetings.slice(0, i).concat(props.greetings.slice(i + 1)))
+  }
+
+  const onChange = (ev: { currentTarget: HTMLInputElement | HTMLTextAreaElement }, i: number) => {
+    props.setGreetings(
+      props.greetings.map((orig, j) => (j === i ? ev.currentTarget?.value ?? '' : orig))
     )
+  }
+
   return (
     <>
-      <For each={props.alternateGreetings}>
+      <For each={props.greetings}>
         {(altGreeting, i) => (
           <div class="flex gap-2">
             <TextInput
@@ -509,7 +568,7 @@ const AlternateGreetingsInput: Component<{
               fieldName={`alternateGreeting${i() + 1}`}
               placeholder="An alternate greeting for your character"
               value={altGreeting}
-              onChange={(ev) => onChange(i(), ev)}
+              onChange={(ev) => onChange(ev, i())}
             />
             <div class="1/12 flex items-center" onClick={() => removeGreeting(i())}>
               <MinusCircle size={16} class="focusable-icon-button" />

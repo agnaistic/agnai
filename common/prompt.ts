@@ -16,13 +16,10 @@ export type PromptParts = {
   gaslight: string
   ujb?: string
   post: string[]
-  gaslightHasChat: boolean
   memory?: string
 }
 
-type Placeholder =
-  | Exclude<keyof PromptParts, 'gaslightHasChat' | 'gaslight' | 'greeting'>
-  | 'history'
+type Placeholder = Exclude<keyof PromptParts, 'gaslight' | 'greeting'> | 'history'
 
 export type Prompt = {
   template: string
@@ -302,7 +299,6 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     ),
     post: [],
     gaslight: '',
-    gaslightHasChat: false,
   }
 
   if (chat.scenario) {
@@ -421,7 +417,7 @@ function getLinesForPrompt(
 
     return fillPlaceholders(
       chat,
-      opts.characters[chat.characterId!]?.name || char.name,
+      opts.characters[chat.characterId!]?.name || opts.replyAs?.name || char.name,
       sender
     ).trim()
   }

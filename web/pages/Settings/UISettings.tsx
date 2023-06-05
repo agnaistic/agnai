@@ -5,7 +5,7 @@ import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
-import { toDropdownItems } from '../../shared/util'
+import { getRootVariable, toDropdownItems } from '../../shared/util'
 import { AVATAR_CORNERS, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
@@ -84,7 +84,10 @@ const UISettings: Component = () => {
         label="Message Background Color"
         fieldName="messageColor"
         helperText={
-          <span class="link" onClick={() => userStore.updateUI({ msgBackground: '' })}>
+          <span
+            class="link"
+            onClick={() => userStore.updateUI({ msgBackground: getRootVariable('bg-800') })}
+          >
             Reset to Default
           </span>
         }
@@ -97,11 +100,14 @@ const UISettings: Component = () => {
         fieldName="botMessageColor"
         helperText={
           <>
+            <span
+              class="link"
+              onClick={() => userStore.updateUI({ botBackground: getRootVariable('bg-800') })}
+            >
+              Reset to Default
+            </span>
             <span>
               This will override the <b>Message Background</b>.{' '}
-            </span>
-            <span class="link" onClick={() => userStore.updateUI({ botBackground: '' })}>
-              Reset to Default
             </span>
           </>
         }
@@ -113,7 +119,10 @@ const UISettings: Component = () => {
         label="Chat Text Color"
         fieldName="chatTextColor"
         helperText={
-          <span class="link" onClick={() => userStore.updateUI({ chatTextColor: '' })}>
+          <span
+            class="link"
+            onClick={() => userStore.updateUI({ chatTextColor: getRootVariable('text-800') })}
+          >
             Reset to Default
           </span>
         }
@@ -125,7 +134,10 @@ const UISettings: Component = () => {
         label="Chat Emphasis Color"
         fieldName="chatEmphasisColor"
         helperText={
-          <span class="link" onClick={() => userStore.updateUI({ chatEmphasisColor: '' })}>
+          <span
+            class="link"
+            onClick={() => userStore.updateUI({ chatEmphasisColor: getRootVariable('text-600') })}
+          >
             Reset to Default
           </span>
         }

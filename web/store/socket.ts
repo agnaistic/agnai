@@ -4,7 +4,7 @@ import { baseUrl, getAuth, setSocketId } from './api'
 type Handler = { validator: Validator; fn: (body: any) => void }
 
 const listeners = new Map<string, Handler[]>()
-const onceListners = new Map<string, Handler[]>()
+const onceListners = new Map<string, Array<Handler & { predicate: (body: any) => boolean }>>()
 
 const BASE_RETRY = 100
 const MAX_RETRY = 1000
@@ -35,11 +35,11 @@ export function subscribe<T extends string, U extends Validator>(
   type: string,
   validator: U,
   handler: (body: UnwrapBody<U> & { type: T }) => void,
-  once?: boolean
+  once?: (body: UnwrapBody<U> & { type: T }) => boolean
 ) {
   if (once) {
     const handlers = onceListners.get(type) || []
-    handlers.push({ validator, fn: handler })
+    handlers.push({ validator, fn: handler, predicate: once })
     onceListners.set(type, handlers)
     return
   }
@@ -79,6 +79,8 @@ function onMessage(msg: MessageEvent<any>) {
 
     for (const handler of onceHandlers) {
       if (!isValid(handler.validator, payload)) continue
+      if (!handler.predicate(payload)) continue
+
       handler.fn(payload)
       const i = onceHandlers.findIndex((h) => h === handler)
       onceHandlers.splice(i, 1)

@@ -80,7 +80,6 @@ const HomePage: Component = () => {
             Welcome to Agn<span class="text-[var(--hl-500)]">ai</span>stic
           </>
         }
-        subtitle={`Available services: ${cfg.adapters.map((adp) => adp.label).join(', ')}`}
       />
 
       <Show when={!cfg.guest}>

@@ -10,9 +10,11 @@ import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, removeCharacter } from './characters'
+import { inference } from './plain-generate'
 
 const router = Router()
 
+router.post('/inference', inference)
 router.post('/:id/send', createMessage)
 router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)

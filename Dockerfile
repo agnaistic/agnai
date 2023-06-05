@@ -4,11 +4,11 @@ WORKDIR /app
 VOLUME [ "/app/db" ]
 VOLUME [ "/app/assets" ]
 VOLUME [ "/app/dist/assets" ]
+VOLUME [ "/app/extras" ]
 
 RUN npm install pnpm@6 -g
 
 ARG SHA=unknown
-ARG INJECT=
 
 ADD package.json pnpm-lock.yaml ./
 RUN pnpm i --frozen-lockfile

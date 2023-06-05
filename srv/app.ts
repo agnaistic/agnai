@@ -35,6 +35,10 @@ if (!config.storage.enabled) {
 }
 
 app.use('/', express.static(resolve(baseFolder, 'dist')))
+app.use('/', express.static(resolve(baseFolder, 'extras')))
+if (config.extraFolder) {
+  app.use('/', express.static(config.extraFolder))
+}
 
 app.use((req, res, next) => {
   if (req.url.startsWith('/api')) {

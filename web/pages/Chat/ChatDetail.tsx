@@ -103,6 +103,7 @@ const ChatDetail: Component = () => {
       charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
       userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
       message: msgs.partial || '',
+      adapter: 'partial',
     })
   })
 
@@ -530,6 +531,7 @@ function emptyMsg(opts: {
   id?: string
   charId?: string
   userId?: string
+  adapter?: string
   message: string
 }): AppSchema.ChatMessage {
   return {
@@ -539,6 +541,7 @@ function emptyMsg(opts: {
     characterId: opts.charId,
     userId: opts.userId,
     msg: opts.message || '',
+    adapter: opts.adapter,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

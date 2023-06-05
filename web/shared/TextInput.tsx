@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, JSX, onMount } from 'solid-js'
+import { Component, Show, createMemo, JSX, onMount, createEffect } from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices } from './util'
@@ -17,6 +17,8 @@ const TextInput: Component<{
   required?: boolean
   class?: string
   pattern?: string
+  parentClass?: string
+  ref?: (ref: any) => void
 
   onKeyUp?: (
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
@@ -36,6 +38,11 @@ const TextInput: Component<{
     props.value !== undefined ? props.value : (null as unknown as undefined)
   )
 
+  createEffect(() => {
+    if (props.value === undefined) return
+    if (ref.value !== props.value) ref.value = props.value.toString()
+  })
+
   const resize = () => {
     if (!ref) return
 
@@ -48,10 +55,13 @@ const TextInput: Component<{
     return adapters()!.includes(props.service) ? '' : ` hidden `
   })
 
-  onMount(resize)
+  onMount(() => {
+    resize()
+    props.ref?.(ref)
+  })
 
   return (
-    <div class={`${hide()}`}>
+    <div class={`${hide()} ${props.parentClass || ''}`}>
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>
@@ -82,6 +92,7 @@ const TextInput: Component<{
             onChange={(ev) => props.onChange?.(ev)}
             disabled={props.disabled}
             pattern={props.pattern}
+            ref={ref}
           />
         }
       >

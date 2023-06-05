@@ -27,6 +27,7 @@ export namespace AppSchema {
     maintenance?: string
     patreon?: boolean
     policies?: boolean
+    flags?: string
   }
 
   export type ChatMode = 'standard' | 'adventure'

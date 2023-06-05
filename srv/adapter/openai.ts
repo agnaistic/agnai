@@ -161,7 +161,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       history.push({ role: 'system', content })
     }
 
-    if (kind !== 'continue' && kind !== 'summary') {
+    if (kind !== 'continue' && kind !== 'summary' && kind !== 'plain') {
       const content = getInstruction(opts, encoder)
       tokens += encoder(content)
       history.push({ role: 'system', content })

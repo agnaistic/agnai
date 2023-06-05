@@ -89,7 +89,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
           clearTimeout(timer)
           resolve(body.summary)
         },
-        true
+        () => true
       )
     })
   }

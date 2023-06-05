@@ -1,5 +1,6 @@
 import { AppSchema } from '/srv/db/schema'
 import { safeLocalStorage } from '/web/shared/util'
+import { NewCharacter } from '/web/store'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -121,4 +122,44 @@ export function getListCache(): ListCache {
 
 export function saveListCache(cache: ListCache) {
   safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+}
+
+export function toNewCharacter(response: string, description: string): NewCharacter {
+  const lines = response.split('\n')
+  const char: NewCharacter = {
+    originalAvatar: undefined,
+    description,
+    scenario: extract(lines, 'Scenario'),
+    greeting: extract(lines, 'Greeting'),
+    name: extract(lines, 'FirstName'),
+    sampleChat: extract(lines, 'ExampleSpeech1', 'ExampleSpeech2', 'ExampleSpeech3')
+      .split('\n')
+      .map((line) => `{{char}}: ${line}`)
+      .join('\n'),
+    persona: {
+      kind: 'wpp',
+      attributes: {
+        personality: extract(lines, 'Personality').split(', '),
+        behaviours: extract(lines, 'Behaviours', 'Behaviors').split(', '),
+        appearance: extract(lines, 'Appearance').split(','),
+      },
+    },
+  }
+  return char
+}
+
+function extract(from: string[], ...match: string[]) {
+  const matches: string[] = []
+  for (const search of match) {
+    for (const line of from) {
+      const start = line.indexOf(`${search}:`)
+      if (start === -1) continue
+
+      const text = line.slice(start + search.length + 1).trim()
+      if (match.length === 1) return text
+      matches.push(text)
+    }
+  }
+
+  return matches.join('\n')
 }

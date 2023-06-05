@@ -1,3 +1,4 @@
+import { v4 } from 'uuid'
 import { createPrompt, getChatPreset } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -7,6 +8,8 @@ import { ChatState, chatStore } from '../chat'
 import { getStore } from '../create'
 import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
+import { toastStore } from '../toasts'
+import { subscribe } from '../socket'
 
 export type PromptEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
@@ -16,6 +19,34 @@ export const msgsApi = {
   getPromptEntities,
   generateResponseV2,
   deleteMessages,
+  generatePlain: basicInference,
+}
+
+type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
+
+export async function basicInference(
+  { prompt, settings }: PlainOpts,
+  onComplete: (err?: any, response?: string) => void
+) {
+  const requestId = v4()
+  const { user } = userStore()
+
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return
+  }
+
+  const res = await api.method('post', `/chat/inference`, { requestId, user, prompt, settings })
+  if (res.error) {
+    toastStore.error(`Failed to generate`)
+  }
+
+  subscribe(
+    'plain-generate-complete',
+    { requestId: 'string', response: 'string?', error: 'string?' },
+    (body) => onComplete(body.error, body.response),
+    (body) => body.requestId === requestId
+  )
 }
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
@@ -149,7 +180,7 @@ async function getGenerateProps(
   active: NonNullable<ChatState['active']>
 ): Promise<GenerateProps> {
   const entities = await getPromptEntities()
-  const [message, lastMessage] = entities.messages.slice(-2)
+  const [secondLastMsg, lastMsg] = entities.messages.slice(-2)
 
   const props: GenerateProps = {
     entities,
@@ -169,19 +200,19 @@ async function getGenerateProps(
         props.replyAs = getBot(replacing.characterId || active.char._id)
         props.replacing = replacing
         props.messages = entities.messages.slice(0, index)
-      } else if (!lastMessage && message.characterId) {
+      } else if (!lastMsg && secondLastMsg.characterId) {
         // Case: Replacing the first message (i.e. the greeting)
         props.replyAs = getBot(active.replyAs || active.char._id)
-        props.replacing = message
-      } else if (lastMessage?.characterId) {
+        props.replacing = secondLastMsg
+      } else if (lastMsg?.characterId && !lastMsg.userId) {
         // Case: When the user clicked on their own message. Probably after deleting a bot response
-        props.retry = message
-        props.replacing = lastMessage
-        props.replyAs = getBot(lastMessage.characterId)
+        props.retry = secondLastMsg
+        props.replacing = lastMsg
+        props.replyAs = getBot(lastMsg.characterId)
         props.messages = entities.messages.slice(0, -1)
       } else {
         // Case: Clicked on a bot response to regenerate
-        props.retry = lastMessage
+        props.retry = lastMsg
         props.replyAs = getBot(active.replyAs || active.char._id)
       }
 
@@ -189,10 +220,10 @@ async function getGenerateProps(
     }
 
     case 'continue': {
-      if (!lastMessage.characterId) throw new Error(`Cannot continue user message`)
-      props.continuing = lastMessage
-      props.replyAs = getBot(lastMessage.characterId)
-      props.continue = lastMessage.msg
+      if (!lastMsg.characterId) throw new Error(`Cannot continue user message`)
+      props.continuing = lastMsg
+      props.replyAs = getBot(lastMsg.characterId)
+      props.continue = lastMsg.msg
       break
     }
 

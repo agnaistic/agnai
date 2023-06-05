@@ -48,6 +48,7 @@ export const config = {
   jwtExpiry: env('JWT_EXPIRY', '7d'),
   port: +env('PORT', '3001'),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
+  extraFolder: env('EXTRA_FOLDER', ''),
   db: {
     name: env('DB_NAME', 'agnai'),
     host: env('DB_HOST', '127.0.0.1'),

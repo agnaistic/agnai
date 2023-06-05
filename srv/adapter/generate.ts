@@ -60,9 +60,15 @@ type PlainRequest = {
 }
 
 export async function createPlainStream(opts: PlainRequest) {
+  opts.settings.maxTokens = 500
+  opts.settings.temp = 1
+  opts.settings.topP = 1
+  opts.settings.frequencyPenalty = 0
+  opts.settings.presencePenalty = 0
+
   const handler = handlers[opts.settings.service!]
   const stream = handler({
-    kind: 'request',
+    kind: 'plain',
     char: {} as any,
     chat: {} as any,
     gen: opts.settings,
@@ -72,7 +78,7 @@ export async function createPlainStream(opts: PlainRequest) {
     guest: opts.guest,
     user: opts.user,
     replyAs: {} as any,
-    parts: {} as any,
+    parts: { gaslight: opts.prompt, persona: '', post: [] },
     prompt: opts.prompt,
     sender: {} as any,
     settings: mapPresetsToAdapter(opts.settings, opts.settings.service!),

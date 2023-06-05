@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo, createSignal } from 'solid-js'
+import { Component, For, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { AppSchema } from '../../srv/db/schema'
 import AvatarIcon from './AvatarIcon'
 import { Star, Users } from 'lucide-solid'
@@ -14,6 +14,7 @@ const CharacterSelectList: Component<{
   emptyLabel?: string
   onSelect: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
+  const [_ref, setRef] = createSignal<any>()
   const [filter, setFilter] = createSignal('')
 
   const sorted = createMemo(() => {
@@ -22,6 +23,7 @@ const CharacterSelectList: Component<{
       .toLowerCase()
       .split(' ')
       .filter((w) => !!w)
+
     return props.items
       .slice()
       .filter((i) => {
@@ -38,6 +40,11 @@ const CharacterSelectList: Component<{
     props.onSelect(value)
   }
 
+  const assignRef = (ref: any) => {
+    setRef(ref)
+    ref.focus()
+  }
+
   return (
     <>
       <div class="flex-1 overflow-y-auto">
@@ -46,6 +53,7 @@ const CharacterSelectList: Component<{
             fieldName="__filter"
             placeholder="Type to filter characters..."
             onKeyUp={(e) => setFilter(e.currentTarget.value)}
+            ref={assignRef}
           />
           <Show when={props.emptyLabel}>
             <div

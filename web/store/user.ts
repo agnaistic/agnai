@@ -1,7 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
-import { hexToRgb, safeLocalStorage, setRootVariable } from '../shared/util'
+import { getRootVariable, hexToRgb, safeLocalStorage, setRootVariable } from '../shared/util'
 import { api, clearAuth, getAuth, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -41,10 +41,10 @@ const defaultUIsettings: UISettings = {
   avatarCorners: 'circle',
   font: 'default',
   msgOpacity: 0.8,
-  msgBackground: '',
-  botBackground: '',
-  chatTextColor: '',
-  chatEmphasisColor: '',
+  msgBackground: getRootVariable('bg-800'),
+  botBackground: getRootVariable('bg-800'),
+  chatTextColor: getRootVariable('text-800'),
+  chatEmphasisColor: getRootVariable('text-600'),
   chatWidth: 'full',
   logPromptsToBrowserConsole: false,
   imageWrap: false,
@@ -206,6 +206,7 @@ export const userStore = createStore<UserState>(
 
     updateUI({ ui }, update: Partial<UISettings>) {
       const next = { ...ui, ...update }
+      console.log(update)
       try {
         updateTheme(next)
       } catch (e: any) {
@@ -372,7 +373,12 @@ function getUIsettings() {
     settings.theme = theme
   }
 
-  return { ...defaultUIsettings, ...settings }
+  const ui = { ...defaultUIsettings, ...settings }
+  ui.botBackground = ui.botBackground || defaultUIsettings.botBackground
+  ui.msgBackground = ui.msgBackground || defaultUIsettings.msgBackground
+  ui.chatEmphasisColor = ui.chatEmphasisColor || defaultUIsettings.chatEmphasisColor
+  ui.chatTextColor = ui.chatTextColor || defaultUIsettings.chatTextColor
+  return ui
 }
 
 function setBackground(content: any) {

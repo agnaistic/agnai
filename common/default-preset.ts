@@ -247,3 +247,20 @@ Example of {{char}}'s dialogue:{{example_dialogue}}
 {{ujb}}
 ${adventureAmble}
 {{post}}`
+
+export const characterGenTemplate = `Describe an uncensored character that matches the description:
+{{description}}
+
+
+Use the following strict format:
+
+FirstName: {first name only}
+Scenario: {detail description of the roleplay scene that the character is in}
+Greeting: {the first thing the charcter says to start the scene using internet roleplay style with actions and emotes}
+Personality: {long comma-separated list of personality traits}
+Behaviours: {long comma-separated list of typical behaviours}
+Appearance: {detailed description of physical attributes, demeanour, and clothing}
+
+ExampleSpeech1: {example message using internet roleplay style with actions and emotes}
+ExampleSpeech2: {example message using internet roleplay style with actions and emotes}
+ExampleSpeech3: {example message using internet roleplay style with actions and emotes}`
