@@ -164,6 +164,46 @@
   @apply rounded-md bg-[var(--bg-600)] p-1 text-[var(--text-900)];
 }
 
+.bg-100 {
+  background-color: var(--bg-100);
+}
+
+.bg-200 {
+  background-color: var(--bg-200);
+}
+
+.bg-300 {
+  background-color: var(--bg-300);
+}
+
+.bg-400 {
+  background-color: var(--bg-400);
+}
+
+.bg-500 {
+  background-color: var(--bg-500);
+}
+
+.bg-600 {
+  background-color: var(--bg-600);
+}
+
+.bg-700 {
+  background-color: var(--bg-700);
+}
+
+.bg-800 {
+  background-color: var(--bg-800);
+}
+
+.bg-900 {
+  background-color: var(--bg-900);
+}
+
+.bg-1000 {
+  background-color: var(--bg-1000);
+}
+
 .text-100 {
   color: var(--text-100);
 }

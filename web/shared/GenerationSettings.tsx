@@ -15,6 +15,7 @@ import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
 import { settingStore } from '../store'
+import PromptEditor from './PromptEditor'
 // import PromptEditor from './PromptEditor'
 
 type Props = {
@@ -242,21 +243,11 @@ const PromptSettings: Component<Props> = (props) => {
         aiSetting={'gaslight'}
       />
 
-      <TextInput
+      <PromptEditor
         fieldName="gaslight"
-        helperText={
-          <>
-            Placeholders: <code>{'{{char}}'}</code> <code>{'{{user}}'}</code>{' '}
-            <code>{'{{personality}}'}</code> <code>{'{{memory}}'}</code>{' '}
-            <code>{'{{scenario}}'}</code> <code>{'{{example_dialogue}}'}</code>
-          </>
-        }
-        placeholder="Be sure to include the placeholders above"
-        isMultiline
-        value={props.inherit?.gaslight ?? defaultPresets.openai.gaslight}
+        value={props.inherit?.gaslight}
+        exclude={['post', 'history', 'ujb']}
         disabled={props.disabled}
-        service={props.service}
-        aiSetting={'gaslight'}
       />
 
       <Toggle
