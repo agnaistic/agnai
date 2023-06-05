@@ -578,7 +578,7 @@ const AlternateGreetingsInput: Component<{
         {(altGreeting, i) => (
           <div class="flex gap-2">
             <TextInput
-              parentClass='grow'
+              parentClass="grow"
               isMultiline
               fieldName={`alternateGreeting${i() + 1}`}
               placeholder="An alternate greeting for your character"
@@ -621,6 +621,7 @@ const MemoryBookPicker: Component<{
       const newBook = isBundledMemoryBook
         ? props.bundledBook
         : memory.books.list.find((book) => book._id === option.value)
+      console.log(newBook)
       props.setCharacterBook(newBook)
     }
   }
@@ -636,7 +637,9 @@ const MemoryBookPicker: Component<{
       fieldName="memoryBook"
       label="Character Memory Book"
       helperText="Memory book to bundle with this character."
-      value={props.characterBook?._id ?? props.bundledBook ? BUNDLED_CHARACTER_BOOK_ID : NONE_VALUE}
+      value={
+        props.characterBook?._id ?? (props.bundledBook ? BUNDLED_CHARACTER_BOOK_ID : NONE_VALUE)
+      }
       items={dropdownItems()}
       onChange={onChange}
     />
