@@ -578,6 +578,7 @@ const AlternateGreetingsInput: Component<{
         {(altGreeting, i) => (
           <div class="flex gap-2">
             <TextInput
+              parentClass='grow'
               isMultiline
               fieldName={`alternateGreeting${i() + 1}`}
               placeholder="An alternate greeting for your character"
