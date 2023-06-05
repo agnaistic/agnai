@@ -330,7 +330,10 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const injectOpts = { opts, parts, encoder }
 
   if (char.postHistoryInstructions || ujb) {
-    parts.ujb = injectPlaceholders(removeUnusedPlaceholders(char.postHistoryInstructions || ujb!, parts), injectOpts)
+    parts.ujb = injectPlaceholders(
+      removeUnusedPlaceholders(char.postHistoryInstructions || ujb!, parts),
+      injectOpts
+    )
   }
   parts.gaslight = injectPlaceholders(removeUnusedPlaceholders(gaslight, parts), injectOpts)
 
@@ -605,7 +608,7 @@ function getContextLimit(
       return configuredMax - genAmount
 
     case 'goose':
-      return 2048 - genAmount
+      return Math.min(configuredMax, 2048) - genAmount
   }
 }
 

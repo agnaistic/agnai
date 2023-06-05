@@ -569,6 +569,7 @@ const AlternateGreetingsInput: Component<{
               placeholder="An alternate greeting for your character"
               value={altGreeting}
               onChange={(ev) => onChange(ev, i())}
+              parentClass="w-full"
             />
             <div class="1/12 flex items-center" onClick={() => removeGreeting(i())}>
               <MinusCircle size={16} class="focusable-icon-button" />
