@@ -1,4 +1,4 @@
-import { Component, For, Show, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, For, Show, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '../../srv/db/schema'
 import AvatarIcon from './AvatarIcon'
 import { Star, Users } from 'lucide-solid'
