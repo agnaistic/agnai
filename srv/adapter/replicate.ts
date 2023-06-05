@@ -3,7 +3,8 @@ import { decryptText } from '../db/util'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
-import { encode, tokenize } from '/common/tokenize'
+import { tokenize } from '/common/tokenize'
+import { sendMany } from '../api/ws'
 
 const publicApiV1 = 'https://api.replicate.com/v1'
 
@@ -153,6 +154,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
 
   let attempts = 0
   const timeout = 60 * 5 // Model cold boots can take 3 to 5 minutes
+  let hasDispatchedStartingMessage = false
 
   predictionWaitLoop: while (true) {
     try {
@@ -170,6 +172,15 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
         break predictionWaitLoop
       case 'starting':
       case 'processing':
+        if (!hasDispatchedStartingMessage && status === 'starting') {
+          hasDispatchedStartingMessage = true
+          // TODO: Dispatching to ws here is not ideal
+          sendMany(opts.guest ? [opts.guest] : opts.members.map((m) => m.userId), {
+            type: 'chat-server-notification',
+            chatId: opts.chat._id,
+            text: 'The Replicate model is starting up. This can take 3-5 minutes.',
+          })
+        }
         if (attempts++ < timeout) {
           await sleep(1000)
           continue

@@ -546,6 +546,12 @@ function getOptsCache(): ChatOptCache {
   return { editing: false, hideOoc: false, ...body, modal: undefined }
 }
 
+subscribe('chat-server-notification', { chatId: 'string', text: 'string' }, (body) => {
+  const { active } = chatStore.getState()
+  if (body.chatId !== active?.chat._id) return
+  toastStore.warn(body.text)
+})
+
 subscribe(
   'chat-character-added',
   { chatId: 'string', active: 'boolean?', character: 'any' },
