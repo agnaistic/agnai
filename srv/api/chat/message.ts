@@ -38,6 +38,7 @@ const genValidator = {
     sampleChat: ['string?'],
     gaslight: 'string',
     post: ['string'],
+    allPersonas: 'any?',
   },
   lines: ['string'],
   text: 'string?',
@@ -70,14 +71,34 @@ export const createMessage = handle(async (req) => {
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
-    const chat = await store.chats.update(chatId, {})
+    const chat = await store.chats.getChatOnly(chatId)
     if (!chat) throw errors.NotFound
-    const char = impersonate
-      ? await store.characters.getCharacter(userId, impersonate?._id)
-      : undefined
-    if (impersonate && !char) throw errors.Forbidden
-
     const members = chat.memberIds.concat(chat.userId)
+
+    const update: Partial<AppSchema.Chat> = {}
+    if (impersonate) {
+      const nextChars = { ...chat.characters }
+      if (impersonate._id in nextChars === false) {
+        const char = await store.characters.getCharacter(userId, impersonate._id)
+        if (!char) throw errors.Forbidden
+
+        // Ensure the character is update to date for authorized users
+        Object.assign(impersonate, char)
+
+        nextChars[impersonate._id] = false
+        publishMany(members, {
+          type: 'chat-character-added',
+          chatId,
+          character: char,
+          active: false,
+        })
+      }
+
+      update.characters = nextChars
+    }
+
+    await store.chats.update(chatId, update)
+
     const userMsg = await store.msgs.createChatMessage({
       chatId,
       message: body.text,

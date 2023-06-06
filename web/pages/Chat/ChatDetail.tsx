@@ -220,7 +220,7 @@ const ChatDetail: Component = () => {
     const active = chats.chatBots
       .filter((bot) => chats.chat?.characters?.[bot._id])
       .map((ch) => ch._id)
-    return [chats.char._id, ...active]
+    return new Set([chats.char._id, ...active])
   })
 
   return (
@@ -306,7 +306,7 @@ const ChatDetail: Component = () => {
                   msgs.waiting ? 'opacity-70 saturate-0' : ''
                 }`}
               >
-                <For each={activeCharIds()}>
+                <For each={Array.from(activeCharIds())}>
                   {(id) => (
                     <CharacterResponseBtn
                       char={chats.botMap[id]}

@@ -79,7 +79,7 @@ export async function createInferenceStream(opts: PlainRequest) {
     guest: opts.guest,
     user: opts.user,
     replyAs: {} as any,
-    parts: { gaslight: opts.prompt, persona: '', post: [] },
+    parts: { gaslight: opts.prompt, persona: '', post: [], allPersonas: [] },
     prompt: opts.prompt,
     sender: {} as any,
     settings: mapPresetsToAdapter(opts.settings, opts.settings.service!),
@@ -115,6 +115,7 @@ export async function createTextStreamV2(
         members: opts.members,
         replyAs: opts.replyAs,
         impersonate: opts.impersonate,
+        characters: opts.characters,
       },
       [...opts.lines].reverse(),
       encoder

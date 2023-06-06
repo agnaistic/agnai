@@ -118,7 +118,10 @@ export const chatStore = createStore<ChatState>('chat', {
 
   events.on(EVENTS.init, (init) => {
     if (init.chats) {
-      chatStore.setState({ all: { chats: init.chats, chars: init.characters } })
+      chatStore.setState({
+        all: { chats: init.chats, chars: init.characters },
+        chatBots: init.characters,
+      })
     } else {
       const { all: prev } = get()
       chatStore.setState({
@@ -153,7 +156,7 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *getChat(_, id: string) {
+    async *getChat(prev, id: string) {
       yield { loaded: false, active: undefined }
       msgStore.setState({
         msgs: [],
@@ -174,7 +177,7 @@ export const chatStore = createStore<ChatState>('chat', {
         })
 
         const bots = res.result.characters || []
-        const botMap = bots.reduce((prev, curr) => ({ ...prev, [curr._id]: curr }), {})
+        const nextChars = toChatBots(prev.chatBotMap, prev.chatBots, bots)
         const isMultiChars =
           res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
@@ -188,8 +191,7 @@ export const chatStore = createStore<ChatState>('chat', {
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
-          chatBots: bots,
-          chatBotMap: botMap,
+          ...nextChars,
         }
       }
     },
@@ -549,6 +551,7 @@ subscribe(
   { chatId: 'string', active: 'boolean?', character: 'any' },
   (body) => {
     const { active, chatBotMap, chatBots, all } = chatStore.getState()
+    const nextBots = toChatBots(chatBotMap, chatBots, [body.character])
 
     if (all?.chats) {
       const nextChats = all.chats?.map((c) => {
@@ -559,6 +562,7 @@ subscribe(
         }
       })
       chatStore.setState({
+        ...nextBots,
         all: {
           ...all,
           chats: nextChats,
@@ -569,16 +573,12 @@ subscribe(
 
     if (!active || active.chat._id !== body.chatId) return
 
-    const nextBots = chatBots.concat(body.character)
-    const nextMap = { ...chatBotMap, [body.character._id]: body.character }
     const nextActive = {
       ...(active.chat.characters || {}),
       [body.character._id]: body.active ?? true,
     }
 
     chatStore.setState({
-      chatBots: nextBots,
-      chatBotMap: nextMap,
       active: {
         ...active,
         chat: {
@@ -586,6 +586,7 @@ subscribe(
           characters: nextActive,
         },
       },
+      ...nextBots,
     })
   }
 )
@@ -627,3 +628,19 @@ subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' },
     },
   })
 })
+
+function toChatBots(
+  map: Record<string, AppSchema.Character>,
+  list: AppSchema.Character[],
+  incoming: AppSchema.Character[]
+) {
+  const chatBotMap = { ...map }
+  const chatBots = list.slice()
+  for (const char of incoming) {
+    if (char._id in chatBotMap) continue
+    chatBotMap[char._id] = char
+    chatBots.push(char)
+  }
+
+  return { chatBotMap, chatBots }
+}

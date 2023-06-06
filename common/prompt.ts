@@ -13,13 +13,12 @@ export type PromptParts = {
   greeting?: string
   sampleChat?: string[]
   persona: string
+  allPersonas: string[]
   gaslight: string
   ujb?: string
   post: string[]
   memory?: string
 }
-
-type Placeholder = Exclude<keyof PromptParts, 'gaslight' | 'greeting'> | 'history'
 
 export type Prompt = {
   template: string
@@ -70,11 +69,12 @@ const HOLDER_NAMES = {
   ujb: 'ujb',
   sampleChat: 'example_dialogue',
   persona: 'personality',
+  allPersonas: 'all_personalities',
   memory: 'memory',
   post: 'post',
   scenario: 'scenario',
   history: 'history',
-} satisfies Record<Placeholder, string>
+}
 
 const HOLDERS = {
   ujb: /\{\{ujb\}\}/gi,
@@ -82,9 +82,10 @@ const HOLDERS = {
   scenario: /\{\{scenario\}\}/gi,
   memory: /\{\{memory\}\}/gi,
   persona: /\{\{personality\}\}/gi,
+  allPersonas: /\{\{all_personalities\}\}/gi,
   post: /\{\{post\}\}/gi,
   history: /\{\{history\}\}/gi,
-} satisfies Record<Placeholder, RegExp>
+}
 
 const ALL_HOLDERS = new RegExp(
   '(' +
@@ -191,6 +192,7 @@ export function injectPlaceholders(
     .replace(HOLDERS.scenario, parts.scenario || '')
     .replace(HOLDERS.memory, newline(parts.memory))
     .replace(HOLDERS.persona, parts.persona)
+    .replace(HOLDERS.allPersonas, parts.allPersonas?.join('\n') || '')
     .replace(HOLDERS.post, parts.post.join('\n'))
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
     .replace(BOT_REPLACE, opts.replyAs.name)
@@ -282,6 +284,7 @@ type PromptPartsOptions = Pick<
   | 'book'
   | 'replyAs'
   | 'impersonate'
+  | 'characters'
 >
 
 export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
@@ -298,7 +301,31 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
       replyAs._id === char._id ? chat.overrides : replyAs.persona
     ),
     post: [],
+    allPersonas: [],
     gaslight: '',
+  }
+
+  const personalities = new Set(replyAs._id)
+
+  const botKind = opts.chat.overrides?.kind || opts.char.persona.kind
+  if (opts.impersonate && !personalities.has(opts.impersonate._id)) {
+    personalities.add(opts.impersonate._id)
+    parts.allPersonas.push(
+      `${opts.impersonate.name}'s personality: ${formatCharacter(
+        opts.impersonate.name,
+        opts.impersonate.persona,
+        botKind
+      )}`
+    )
+  }
+
+  for (const bot of Object.values(opts.characters || {})) {
+    if (!bot) continue
+    if (personalities.has(bot._id)) continue
+    personalities.add(bot._id)
+    parts.allPersonas.push(
+      `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, botKind)}`
+    )
   }
 
   if (chat.scenario) {

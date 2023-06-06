@@ -18,6 +18,7 @@ const placeholders: Record<string, Placeholder> = {
   ujb: { required: false, limit: 1 },
   post: { required: true, limit: 1 },
   example_dialogue: { required: false, limit: 1 },
+  all_personalities: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
 type HolderName = keyof typeof placeholders
