@@ -38,7 +38,9 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     `\n\n${char.name}:`,
     `\n\n${username}:`,
     `\n\nSystem:`,
-    ...Object.values(characters || {}).map((ch) => `\n\n${ch.name}:`),
+    ...Object.values(characters || {})
+      .filter((ch) => !!ch)
+      .map((ch) => `\n\n${ch.name}:`),
     ...members.map((member) => `\n\n${member.handle}:`),
   ])
 
