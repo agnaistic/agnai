@@ -87,7 +87,7 @@ const EditMemoryForm: Component<{
           }}
         />
         <Divider />
-        <div class="sticky top-0 z-10 flex items-center justify-between bg-[var(--bg-900)] py-2">
+        <div class="sticky top-0 z-10 flex items-center justify-between  py-2">
           <div class="text-lg font-bold">Entries</div>
           <Button onClick={addEntry}>
             <Plus /> Entry

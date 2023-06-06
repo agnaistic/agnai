@@ -1,0 +1,185 @@
+:root {
+  --sitewide-font: unset;
+
+  --text-bot-background: unset;
+  --text-chatcolor: unset;
+  --text-emphasis-color: unset;
+
+  --hl-100: #e0f2fe;
+  --hl-200: #bae6fd;
+  --hl-300: #7dd3fc;
+  --hl-400: #38bdf8;
+  --hl-500: #0ea5e9;
+  --hl-600: #0284c7;
+  --hl-700: #0369a1;
+  --hl-800: #075985;
+  --hl-900: #0c4a6e;
+
+  --sky-100: #e0f2fe;
+  --sky-200: #bae6fd;
+  --sky-300: #7dd3fc;
+  --sky-400: #38bdf8;
+  --sky-500: #0ea5e9;
+  --sky-600: #0284c7;
+  --sky-700: #0369a1;
+  --sky-800: #075985;
+  --sky-900: #0c4a6e;
+
+  --teal-100: #ccfbf1;
+  --teal-200: #99f6e4;
+  --teal-300: #5eead4;
+  --teal-400: #2dd4bf;
+  --teal-500: #10b981;
+  --teal-600: #0d9488;
+  --teal-700: #0f766e;
+  --teal-800: #115e59;
+  --teal-900: #134e4a;
+
+  --cyan-100: #cffafe;
+  --cyan-200: #a5f3fc;
+  --cyan-300: #67e8f9;
+  --cyan-400: #22d3ee;
+  --cyan-500: #06b6d4;
+  --cyan-600: #0891b2;
+  --cyan-700: #0e7490;
+  --cyan-800: #155e75;
+  --cyan-900: #164e63;
+
+  --orange-100: #ffedd5;
+  --orange-200: #fed7aa;
+  --orange-300: #fdba74;
+  --orange-400: #fb923c;
+  --orange-500: #f97316;
+  --orange-600: #ea580c;
+  --orange-700: #c2410c;
+  --orange-800: #9a3412;
+  --orange-900: #7c2d12;
+
+  --blue-100: #dbeafe;
+  --blue-200: #bfdbfe;
+  --blue-300: #93c5fd;
+  --blue-400: #60a5fa;
+  --blue-500: #3b82f6;
+  --blue-600: #2563eb;
+  --blue-700: #1d4ed8;
+  --blue-800: #1e40af;
+  --blue-900: #1e3a8a;
+
+  --pink-100: #fce7f3;
+  --pink-200: #fbcfe8;
+  --pink-300: #f9a8d4;
+  --pink-400: #f472b6;
+  --pink-500: #ec4899;
+  --pink-600: #db2777;
+  --pink-700: #be185d;
+  --pink-800: #9d174d;
+  --pink-900: #831843;
+
+  --rose-100: #ffe4e6;
+  --rose-200: #fecdd3;
+  --rose-300: #fda4af;
+  --rose-400: #fb7185;
+  --rose-500: #f43f5e;
+  --rose-600: #e11d48;
+  --rose-700: #be123c;
+  --rose-800: #9f1239;
+  --rose-900: #881337;
+
+  --purple-100: #f3e8ff;
+  --purple-200: #e9d5ff;
+  --purple-300: #d8b4fe;
+  --purple-400: #c084fc;
+  --purple-500: #a855f7;
+  --purple-600: #9333ea;
+  --purple-700: #7e22ce;
+  --purple-800: #6b21a8;
+  --purple-900: #581c87;
+
+  --premium-100: #fef9c3;
+  --premium-200: #fef08a;
+  --premium-300: #fde047;
+  --premium-400: #facc15;
+  --premium-500: #eab308;
+  --premium-600: #ca8a04;
+  --premium-700: #a16207;
+  --premium-800: #854d0e;
+  --premium-900: #713f12;
+
+  --truegray-100: #f5f5f5;
+  --truegray-200: #e5e5e5;
+  --truegray-300: #d4d4d4;
+  --truegray-400: #a3a3a3;
+  --truegray-500: #737373;
+  --truegray-600: #525252;
+  --truegray-700: #404040;
+  --truegray-800: #262626;
+  --truegray-900: #171717;
+  --truegray-1000: #131313;
+
+  --bg-100: #f5f5f5;
+  --bg-200: #e5e5e5;
+  --bg-300: #d4d4d4;
+  --bg-400: #a3a3a3;
+  --bg-500: #737373;
+  --bg-600: #525252;
+  --bg-700: #404040;
+  --bg-800: #262626;
+  --bg-900: #171717;
+  --bg-1000: #131313;
+
+  --gradient-100: #f5f5f5;
+  --gradient-200: #e5e5e5;
+  --gradient-300: #d4d4d4;
+  --gradient-400: #a3a3a3;
+  --gradient-500: #737373;
+  --gradient-600: #525252;
+  --gradient-700: #404040;
+  --gradient-800: #262626;
+  --gradient-900: #171717;
+  --gradient-1000: #131313;
+
+  --black-100: #000000;
+  --black-200: #111827;
+  --black-300: #1f2937;
+  --black-400: #374151;
+  --black-500: #4b5563;
+  --black-600: #6b7280;
+  --black-700: #9ca3af;
+  --black-800: #d1d5db;
+  --black-900: #ffffff;
+
+  /** Uses --dark-* values */
+  --text-100: #171717;
+  --text-200: #262626;
+  --text-300: #404040;
+  --text-400: #525252;
+  --text-500: #737373;
+  --text-600: #a3a3a3;
+  --text-700: #d4d4d4;
+  --text-800: #e5e5e5;
+  --text-900: #f5f5f5;
+
+  --bluegray-100: #f1f5f9;
+  --bluegray-200: #e2e8f0;
+  --bluegray-300: #cbd5e1;
+  --bluegray-400: #94a3b8;
+  --bluegray-500: #64748b;
+  --bluegray-600: #475569;
+  --bluegray-700: #334155;
+  --bluegray-800: #1e293b;
+  --bluegray-900: #0f172a;
+  --bluegray-1000: #080f1f;
+
+  --coolgray-100: #f3f4f6;
+  --coolgray-200: #e5e7eb;
+  --coolgray-300: #d1d5db;
+  --coolgray-400: #9ca3af;
+  --coolgray-500: #6b7280;
+  --coolgray-600: #4b5563;
+  --coolgray-700: #374151;
+  --coolgray-800: #1f2937;
+  --coolgray-900: #111827;
+  --coolgray-1000: #0b111f;
+
+  --highlight: rgb(14 165 233);
+}

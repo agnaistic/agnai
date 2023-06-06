@@ -51,7 +51,7 @@ const TagSelect: Component<{
             <div class="flex-1 overflow-y-auto">
               <div class="flex flex-col gap-2 p-2">
                 <div
-                  class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
+                  class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl py-1 px-2"
                   onClick={() => setDefault()}
                 >
                   <div class="ellipsis flex h-3/4 items-center">
@@ -62,7 +62,7 @@ const TagSelect: Component<{
                 <For each={state.tags}>
                   {(option) => (
                     <div
-                      class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
+                      class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl py-1 px-2"
                       onClick={() => toggle(option.tag)}
                     >
                       <div class="ellipsis flex h-3/4 items-center gap-1">

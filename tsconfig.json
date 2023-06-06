@@ -18,8 +18,9 @@
     "paths": {
       "/srv/*": ["./srv/*"],
       "/common/*": ["./common/*"],
-      "/web/*": ["./web/*"]
+      "/web/*": ["./web/*"],
+      "/hub/*": ["./hub/*"]
     }
   },
-  "include": ["web", "srv", "common", "tests"]
+  "include": ["web", "srv", "common", "tests", "hub"]
 }

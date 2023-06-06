@@ -1,5 +1,8 @@
-import { Component, createEffect, createMemo, JSX, Show, lazy, createSignal } from 'solid-js'
-import { Outlet, Route, Router, Routes, useLocation, useNavigate } from '@solidjs/router'
+import './tailwind.css'
+import './app.css'
+import './dots.css'
+import { Component, createEffect, createMemo, JSX, Show, lazy } from 'solid-js'
+import { Outlet, Route, Router, Routes, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
@@ -10,11 +13,10 @@ import HomePage from './pages/Home'
 import Navigation from './Navigation'
 import Loading from './shared/Loading'
 import Button from './shared/Button'
-import './app.css'
-import './dots.css'
-import Modal from './shared/Modal'
 import ImpersonateModal from './pages/Character/ImpersonateModal'
 import ChubRoutes from './pages/Chub'
+import Redirect from './shared/Redirect'
+import Maintenance from './shared/Maintenance'
 
 const App: Component = () => {
   const state = userStore()
@@ -146,32 +148,3 @@ const Layout: Component = () => {
 }
 
 export default App
-
-const Maintenance: Component = () => {
-  const state = settingStore((s) => ({ init: s.init, loading: s.initLoading }))
-  const [show, setShow] = createSignal(!!state.init?.config.maintenance)
-
-  return (
-    <Modal show={show()} close={() => setShow(false)} title="Maintenance Mode">
-      <div class="flex flex-col gap-4">
-        <div>Agnaistic is currently down for maintenance</div>
-
-        <div>You can continue to use the site as a guest.</div>
-
-        <div>Reason: {state.init?.config.maintenance}</div>
-      </div>
-    </Modal>
-  )
-}
-
-const Redirect: Component<{ internal?: string; external?: string }> = (props) => {
-  const nav = useNavigate()
-
-  if (props.external) {
-    window.location.href = props.external
-  }
-
-  nav(props.internal || '/')
-
-  return <>Redirecting...</>
-}

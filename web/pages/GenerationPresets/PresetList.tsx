@@ -53,7 +53,7 @@ const PresetList: Component = () => {
             <div class="flex w-full items-center gap-2">
               <A
                 href={`/presets/${preset._id}`}
-                class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
+                class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
               >
                 <div class="ml-4 flex w-full items-center">
                   <div>
@@ -90,7 +90,7 @@ const PresetList: Component = () => {
             <div class="flex w-full items-center gap-2">
               <A
                 href={`/presets/default?preset=${preset._id}`}
-                class="flex h-12 w-full gap-2 rounded-xl bg-[var(--bg-800)] hover:bg-[var(--bg-600)]"
+                class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
               >
                 <div class="ml-4 flex w-full items-center">
                   {' '}

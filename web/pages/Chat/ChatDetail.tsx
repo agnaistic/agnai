@@ -451,7 +451,7 @@ const CharacterResponseBtn: Component<{
   return (
     <Show when={props.char}>
       <div
-        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} items-center rounded-md border-[1px] border-[var(--bg-800)] bg-[var(--bg-900)] hover:bg-[var(--bg-800)]`}
+        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} bg-900 items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
         onclick={() => !props.waiting && props.request(props.char._id)}
       >
         <AvatarIcon
@@ -537,7 +537,7 @@ function getHeaderBg(mode: UI['mode']) {
   mode
   const rgb = getRootRgb('bg-900')
   const styles: JSX.CSSProperties = {
-    background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)`,
+    background: rgb ? `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.7)` : 'bg-900',
   }
   return styles
 }

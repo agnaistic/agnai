@@ -32,7 +32,7 @@ const UsersPage: Component = () => {
         </div>
         <For each={state.users}>
           {(user) => (
-            <div class="flex h-12 flex-row items-center gap-2 rounded-xl bg-[var(--bg-800)]">
+            <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl">
               <div class="w-4/12 px-4 text-xs">{user._id}</div>
               <div class="w-2/12 px-4">{user.username}</div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">

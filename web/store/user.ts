@@ -16,7 +16,12 @@ type ConfigUpdate = Partial<AppSchema.User & { hordeModels?: string[] }>
 
 export type UISettings = {
   theme: ThemeColor
+  themeBg: ThemeBGColor
   mode: ThemeMode
+
+  bgCustom: string
+  bgCustomGradient: string
+
   avatarSize: AvatarSize
   avatarCorners: AvatarCornerRadius
   font: FontSetting
@@ -36,6 +41,11 @@ export type UISettings = {
 
 const defaultUIsettings: UISettings = {
   theme: 'sky',
+  themeBg: 'truegray',
+
+  bgCustom: '',
+  bgCustomGradient: '',
+
   mode: 'dark',
   avatarSize: 'md',
   avatarCorners: 'circle',
@@ -68,6 +78,8 @@ export const UI_THEME = [
   'purple',
   'premium',
 ] as const
+export const BG_THEME = ['truegray', 'coolgray', 'bluegray'] as const
+
 export const UI_FONT = ['default', 'lato'] as const
 
 export type UserState = {
@@ -86,6 +98,7 @@ export type UserState = {
 }
 
 export type ThemeColor = (typeof UI_THEME)[number]
+export type ThemeBGColor = (typeof BG_THEME)[number]
 export type ThemeMode = (typeof UI_MODE)[number]
 export type AvatarSize = (typeof AVATAR_SIZES)[number]
 export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
@@ -337,23 +350,40 @@ function init(): UserState {
 function updateTheme(ui: UISettings) {
   safeLocalStorage.setItem(UI_KEY, JSON.stringify(ui))
   const root = document.documentElement
+
+  const colors = ui.bgCustom ? getColorShades(ui.bgCustom) : []
+
+  if (ui.mode === 'dark') {
+    colors.reverse()
+  }
+
+  const gradients = ui.bgCustomGradient ? getColorShades(ui.bgCustomGradient) : []
+
   for (let shade = 100; shade <= 900; shade += 100) {
+    const index = shade / 100 - 1
     const num = ui.mode === 'light' ? 1000 - shade : shade
 
-    const color = getComputedStyle(root).getPropertyValue(`--${ui.theme}-${num}`)
-    const colorRgb = hexToRgb(color)
-    root.style.setProperty(`--hl-${shade}`, color)
-    root.style.setProperty(`--rgb-hl-${shade}`, `${colorRgb?.rgb}`)
+    if (shade <= 900) {
+      const color = getComputedStyle(root).getPropertyValue(`--${ui.theme}-${num}`)
+      const colorRgb = hexToRgb(color)
+      root.style.setProperty(`--hl-${shade}`, color)
+      root.style.setProperty(`--rgb-hl-${shade}`, `${colorRgb?.rgb}`)
 
-    const bg = getComputedStyle(root).getPropertyValue(`--dark-${num}`)
-    const bgRgb = hexToRgb(bg)
-    root.style.setProperty(`--bg-${shade}`, bg)
+      const text = getComputedStyle(root).getPropertyValue(`--dark-${900 - (num - 100)}`)
+      const textRgb = hexToRgb(text)
+      root.style.setProperty(`--text-${shade}`, text)
+      root.style.setProperty(`--rgb-text-${shade}`, `${textRgb?.rgb}`)
+    }
+
+    const bg = getComputedStyle(root).getPropertyValue(`--${ui.themeBg}-${num}`)
+    const bgValue = colors.length ? colors[index] : bg
+    const bgRgb = hexToRgb(bgValue)
+    const gradient = gradients.length ? colors[index] : bg
+
+    root.style.setProperty(`--bg-${shade}`, bgValue)
+    root.style.setProperty(`--gradient-${shade}`, gradient)
+    root.style.setProperty(`--gradient-bg-${shade}`, `linear-gradient(${bgValue}, ${gradient})`)
     root.style.setProperty(`--rgb-bg-${shade}`, `${bgRgb?.rgb}`)
-
-    const text = getComputedStyle(root).getPropertyValue(`--dark-${900 - (num - 100)}`)
-    const textRgb = hexToRgb(text)
-    root.style.setProperty(`--text-${shade}`, text)
-    root.style.setProperty(`--rgb-text-${shade}`, `${textRgb?.rgb}`)
   }
 
   setRootVariable('text-chatcolor', ui.chatTextColor || 'unset')
@@ -387,4 +417,38 @@ function setBackground(content: any) {
   }
 
   safeLocalStorage.setItemUnsafe(BACKGROUND_KEY, content)
+}
+
+function adjustColor(color: string, percent: number, target = 0) {
+  if (!color.startsWith('#')) {
+    color = '#' + color
+  }
+
+  const step = [0, 0, 0]
+
+  const hex = [1, 3, 5]
+    .map((v, i) => {
+      const val = parseInt(color.substring(v, v + 2), 16)
+      step[i] = target !== 0 ? (val + target) / 100 : 0
+      return val
+    })
+    .map((v, i) => {
+      if (target !== 0) return v + percent * step[i]
+      return (v * (100 + percent)) / 100
+    })
+    .map((v) => Math.min(v, 255))
+    .map((v) => Math.round(v))
+    .map((v) => v.toString(16).padStart(2, '0'))
+    .join('')
+
+  return '#' + hex
+}
+
+export function getColorShades(color: string) {
+  const colors: string[] = [adjustColor(color, -10), color]
+  for (let i = 2; i <= 9; i++) {
+    const next = adjustColor(color, i * 50)
+    colors.push(next)
+  }
+  return colors
 }

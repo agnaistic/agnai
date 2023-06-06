@@ -233,7 +233,7 @@ const UserParticipant: Component<{
   isOwner: boolean
 }> = (props) => {
   return (
-    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
+    <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div class="flex items-center gap-2">
         <AvatarIcon
           avatarUrl={props.member.avatar}
@@ -270,7 +270,7 @@ const CharacterParticipant: Component<{
   remove: (charId: string) => void
 }> = (props) => {
   return (
-    <div class="flex items-center justify-between gap-2 rounded-md bg-[var(--bg-800)] p-1">
+    <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div class="ellipsis flex items-center gap-2">
         <AvatarIcon
           format={{ corners: 'circle', size: 'sm' }}

@@ -36,10 +36,7 @@ const Navigation: Component = () => {
 
   return (
     <>
-      <div
-        data-menu=""
-        class={`drawer flex flex-col gap-4 bg-[var(--bg-800)] pt-4 ${hide()} ${fullscreen()}`}
-      >
+      <div data-menu="" class={`drawer bg-800 flex flex-col gap-4 pt-4 ${hide()} ${fullscreen()}`}>
         <div class="drawer__content flex flex-col gap-2 px-4">
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">

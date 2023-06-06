@@ -57,7 +57,7 @@ const CharacterSelectList: Component<{
           />
           <Show when={props.emptyLabel}>
             <div
-              class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
+              class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl py-1 px-2"
               onClick={() => onChange(undefined)}
             >
               <div class="ellipsis flex h-3/4 items-center">
@@ -73,7 +73,7 @@ const CharacterSelectList: Component<{
           <For each={sorted()}>
             {(item) => (
               <div
-                class="flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-700)] py-1 px-2"
+                class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl py-1 px-2"
                 onClick={() => onChange(item)}
               >
                 <div class="ellipsis flex h-3/4 items-center">

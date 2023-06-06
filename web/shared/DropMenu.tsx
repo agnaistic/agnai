@@ -8,14 +8,12 @@ export const Dropup: Component<{ children: any }> = (props) => {
     <div class="relative text-sm">
       <button
         onClick={() => setShow(!show())}
-        class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
+        class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] py-2 px-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronUp />
       </button>
       <Show when={show()}>
-        <div class="absolute bottom-11 z-10 w-fit rounded-md bg-[var(--bg-700)]">
-          {props.children}
-        </div>
+        <div class="bg-700 absolute bottom-11 z-10 w-fit rounded-md">{props.children}</div>
       </Show>
     </div>
   )
@@ -28,7 +26,7 @@ export const Dropdown: Component<{ children: any }> = (props) => {
     <div class="relative text-sm">
       <button
         onClick={() => setShow(!show())}
-        class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
+        class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] py-2 px-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronDown />
       </button>
@@ -67,7 +65,7 @@ export const DropMenu: Component<{
       <div class="relative z-20 text-sm">
         <Show when={props.show}>
           <div
-            class={`absolute ${position()} w-fit rounded-md border-[1px] border-[var(--bg-600)] bg-[var(--bg-800)] ${
+            class={`absolute ${position()} bg-800 w-fit rounded-md border-[1px] border-[var(--bg-600)] ${
               props.class || ''
             }`}
           >

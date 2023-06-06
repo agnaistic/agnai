@@ -363,7 +363,7 @@ const Character: Component<{
 
   if (props.type === 'list') {
     return (
-      <div class="flex w-full flex-row items-center justify-between gap-4 rounded-xl bg-[var(--bg-800)] py-1 px-2 hover:bg-[var(--bg-700)]">
+      <div class="bg-800 flex w-full flex-row items-center justify-between gap-4 rounded-xl py-1 px-2 hover:bg-[var(--bg-700)]">
         <A
           class="ellipsis flex h-3/4 grow cursor-pointer items-center"
           href={`/character/${props.char._id}/chats`}
@@ -443,7 +443,7 @@ const Character: Component<{
   }
 
   return (
-    <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-800)] p-1">
+    <div class="bg-800 flex flex-col items-center justify-between gap-1 rounded-md p-1">
       <div class="w-full">
         <Show when={props.char.avatar}>
           <A
@@ -460,7 +460,7 @@ const Character: Component<{
         <Show when={!props.char.avatar}>
           <A
             href={`/character/${props.char._id}/chats`}
-            class="flex h-32 w-full items-center justify-center rounded-md bg-[var(--bg-700)]"
+            class="bg-700 flex h-32 w-full items-center justify-center rounded-md"
           >
             <VenetianMask size={24} />
           </A>
@@ -478,7 +478,7 @@ const Character: Component<{
           class="float-right mt-[-149px] mr-[3px] flex justify-end"
           onClick={() => setOpts(true)}
         >
-          <div class=" rounded-md bg-[var(--bg-500)] p-[2px]">
+          <div class="rounded-md bg-[var(--bg-500)] p-[2px]">
             <Menu size={24} class="icon-button" color="var(--bg-100)" />
           </div>
           <DropMenu

@@ -6,12 +6,16 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { getRootVariable, toDropdownItems } from '../../shared/util'
-import { AVATAR_CORNERS, AVATAR_SIZES, UI_THEME, userStore } from '../../store'
+import { AVATAR_CORNERS, AVATAR_SIZES, BG_THEME, UI_THEME, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
+import { FormLabel } from '/web/shared/FormLabel'
 
 const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
+const themeBgOptions = [{ label: 'Custom', value: '' }].concat(
+  ...BG_THEME.map((color) => ({ label: color, value: color }))
+)
 
 function noop() {}
 
@@ -50,6 +54,43 @@ const UISettings: Component = () => {
           value={state.ui.mode}
           onChange={(item) => userStore.updateUI({ mode: item.value as any })}
         />
+      </div>
+      <div class="flex flex-col">
+        <FormLabel
+          label="Backgrounds"
+          helperText={
+            <>
+              <span
+                class="link"
+                onClick={() =>
+                  userStore.updateUI({ bgCustom: '', bgCustomGradient: '', themeBg: BG_THEME[0] })
+                }
+              >
+                Reset to Default
+              </span>
+            </>
+          }
+        />
+        <div class="flex items-center gap-2">
+          <Select
+            fieldName="themeBg"
+            items={themeBgOptions}
+            value={state.ui.themeBg}
+            onChange={(item) =>
+              userStore.updateUI({ themeBg: item.value as any, bgCustom: undefined })
+            }
+          />
+          <ColorPicker
+            fieldName="customBg"
+            onChange={(color) => userStore.updateUI({ bgCustom: color, themeBg: undefined })}
+            value={state.ui.bgCustom}
+          />
+          {/* <ColorPicker
+          fieldName="customBgGradient"
+          onChange={(color) => userStore.updateUI({ bgCustomGradient: color })}
+          value={state.ui.bgCustomGradient}
+        /> */}
+        </div>
       </div>
       <Select
         fieldName="font"
@@ -107,7 +148,7 @@ const UISettings: Component = () => {
               Reset to Default
             </span>
             <span>
-              This will override the <b>Message Background</b>.{' '}
+              . This will override the <b>Message Background</b>.{' '}
             </span>
           </>
         }
@@ -189,7 +230,7 @@ const UISettings: Component = () => {
       />
       <Divider />
       <div class="text-lg font-bold">Preview</div>
-      <div class="flex w-full flex-col gap-2 rounded-md bg-[var(--bg-100)] p-2">
+      <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
         <Message
           char={bot}
           chat={chat}

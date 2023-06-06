@@ -36,7 +36,7 @@ const InvitesPage: Component = () => {
 
         <Show when={state.invites.length}>
           <div class="flex flex-col gap-4">
-            <div class="flex flex-row gap-2 rounded-xl bg-[var(--bg-900)] p-2 text-lg font-bold">
+            <div class="bg-900 flex flex-row gap-2 rounded-xl p-2 text-lg font-bold">
               <div class="w-3/12">From</div>
               <div class="w-3/12">Character</div>
               <div class="w-3/12">Sent</div>
@@ -45,7 +45,7 @@ const InvitesPage: Component = () => {
 
             <For each={state.invites}>
               {(invite) => (
-                <div class="flex flex-row gap-2 rounded-xl bg-[var(--bg-900)] p-2">
+                <div class="bg-900 flex flex-row gap-2 rounded-xl p-2">
                   <div class="w-3/12">
                     {state.profiles[invite.byUserId]?.handle ?? 'Unknown User'}
                   </div>

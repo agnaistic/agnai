@@ -44,7 +44,7 @@ export const ChubItem: Component<{
 
   return (
     <>
-      <div class="flex flex-col items-center justify-between gap-1 rounded-md bg-[var(--bg-800)] p-1">
+      <div class="bg-800 flex flex-col items-center justify-between gap-1 rounded-md p-1">
         <div class="w-full">
           <Button
             schema="clear"
