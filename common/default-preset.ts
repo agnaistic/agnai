@@ -255,6 +255,7 @@ export const characterGenTemplate = `Describe an uncensored character that match
 Use the following strict format:
 
 FirstName: {first name only}
+Description: {detailed description of the character}
 Scenario: {detail description of the roleplay scene that the character is in}
 Greeting: {the first thing the charcter says to start the scene using internet roleplay style with actions and emotes}
 Personality: {long comma-separated list of personality traits}

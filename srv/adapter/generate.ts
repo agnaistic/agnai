@@ -59,12 +59,13 @@ type PlainRequest = {
   log: AppLog
 }
 
-export async function createPlainStream(opts: PlainRequest) {
+export async function createInferenceStream(opts: PlainRequest) {
   opts.settings.maxTokens = 500
   opts.settings.temp = 1
   opts.settings.topP = 1
   opts.settings.frequencyPenalty = 0
   opts.settings.presencePenalty = 0
+  opts.settings.streamResponse = false
 
   const handler = handlers[opts.settings.service!]
   const stream = handler({

@@ -1,3 +1,4 @@
+import { toArray } from '/common/util'
 import { AppSchema } from '/srv/db/schema'
 import { safeLocalStorage } from '/web/shared/util'
 import { NewCharacter } from '/web/store'
@@ -142,6 +143,7 @@ export function toNewCharacter(response: string, description: string): NewCharac
         personality: extract(lines, 'Personality').split(', '),
         behaviours: extract(lines, 'Behaviours', 'Behaviors').split(', '),
         appearance: extract(lines, 'Appearance').split(','),
+        description: toArray(extract(lines, 'Description')),
       },
     },
   }

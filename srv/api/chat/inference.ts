@@ -2,7 +2,7 @@ import { StatusError, errors, wrap } from '../wrap'
 import { sendGuest, sendOne } from '../ws'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { assertValid } from '/common/valid'
-import { createPlainStream } from '/srv/adapter/generate'
+import { createInferenceStream } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/srv/db/schema'
 
@@ -17,7 +17,11 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
   let settings = body.settings as Partial<AppSchema.GenSettings> | null
   if (userId) {
     const id = body.settings._id as string
-    settings = isDefaultPreset(id) ? defaultPresets[id] : await store.presets.getUserPreset(id)
+    settings = !id
+      ? body.settings
+      : isDefaultPreset(id)
+      ? defaultPresets[id]
+      : await store.presets.getUserPreset(id)
     body.user = await store.users.getUser(userId)
   }
 
@@ -34,7 +38,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
 
   res.json({ success: true, generating: true, message: 'Generating response' })
 
-  const { stream } = await createPlainStream({
+  const { stream } = await createInferenceStream({
     user: body.user,
     settings,
     log,
@@ -58,7 +62,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     if (gen.error) {
       error = true
       const payload = {
-        type: 'plain-generate-complete',
+        type: 'inference-complete',
         requestId: body.requestId,
         error: gen.error,
       }
@@ -71,7 +75,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
   if (error) return
 
   const payload = {
-    type: 'plain-generate-complete',
+    type: 'inference-complete',
     requestId: body.requestId,
     response: generated,
   }

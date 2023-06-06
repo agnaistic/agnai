@@ -10,7 +10,7 @@ import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, removeCharacter } from './characters'
-import { inference } from './plain-generate'
+import { inference } from './inference'
 
 const router = Router()
 

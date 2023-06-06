@@ -36,17 +36,18 @@ export async function basicInference(
     return
   }
 
-  const res = await api.method('post', `/chat/inference`, { requestId, user, prompt, settings })
-  if (res.error) {
-    toastStore.error(`Failed to generate`)
-  }
-
   subscribe(
-    'plain-generate-complete',
+    'inference-complete',
     { requestId: 'string', response: 'string?', error: 'string?' },
     (body) => onComplete(body.error, body.response),
     (body) => body.requestId === requestId
   )
+
+  const res = await api.method('post', `/chat/inference`, { requestId, user, prompt, settings })
+  if (res.error) {
+    onComplete(res.error)
+    return
+  }
 }
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
