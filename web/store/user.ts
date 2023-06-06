@@ -359,7 +359,7 @@ function updateTheme(ui: UISettings) {
 
   const gradients = ui.bgCustomGradient ? getColorShades(ui.bgCustomGradient) : []
 
-  for (let shade = 100; shade <= 900; shade += 100) {
+  for (let shade = 100; shade <= 1000; shade += 100) {
     const index = shade / 100 - 1
     const num = ui.mode === 'light' ? 1000 - shade : shade
 
@@ -369,8 +369,9 @@ function updateTheme(ui: UISettings) {
       root.style.setProperty(`--hl-${shade}`, color)
       root.style.setProperty(`--rgb-hl-${shade}`, `${colorRgb?.rgb}`)
 
-      const text = getComputedStyle(root).getPropertyValue(`--dark-${900 - (num - 100)}`)
+      const text = getComputedStyle(root).getPropertyValue(`--truegray-${900 - (num - 100)}`)
       const textRgb = hexToRgb(text)
+      console.log(shade, text, textRgb)
       root.style.setProperty(`--text-${shade}`, text)
       root.style.setProperty(`--rgb-text-${shade}`, `${textRgb?.rgb}`)
     }
@@ -386,8 +387,8 @@ function updateTheme(ui: UISettings) {
     root.style.setProperty(`--rgb-bg-${shade}`, `${bgRgb?.rgb}`)
   }
 
-  setRootVariable('text-chatcolor', ui.chatTextColor || 'unset')
-  setRootVariable('text-emphasis-color', ui.chatEmphasisColor || 'unset')
+  setRootVariable('text-chatcolor', ui.chatTextColor || 'var(--text-800)')
+  setRootVariable('text-emphasis-color', ui.chatEmphasisColor || 'var(--text-600)')
   setRootVariable('bot-background', ui.botBackground || 'unset')
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
