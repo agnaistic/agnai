@@ -166,3 +166,11 @@ function extract(from: string[], ...match: string[]) {
 
   return matches.join('\n')
 }
+
+export function toCharacterMap(bots: AppSchema.Character[]) {
+  const map = bots.reduce<Record<string, AppSchema.Character>>(
+    (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+    {}
+  )
+  return map
+}

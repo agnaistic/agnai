@@ -21,10 +21,7 @@ export type ChatState = {
   lastFetched: number
   loaded: boolean
   // All user chats a user owns or is a member of
-  all?: {
-    chats: AllChat[]
-    chars: { [charId: string]: AppSchema.Character }
-  }
+  allChats: AllChat[]
   // All chats for a particular character
   char?: {
     chats: AppSchema.Chat[]
@@ -38,8 +35,8 @@ export type ChatState = {
     participantIds: string[]
   }
   chatProfiles: AppSchema.Profile[]
-  chatBots: AppSchema.Character[]
-  chatBotMap: Record<string, AppSchema.Character>
+  // chatBots: AppSchema.Character[]
+  // chatBotMap: Record<string, AppSchema.Character>
   memberIds: { [userId: string]: AppSchema.Profile }
   prompt?: Prompt
   opts: {
@@ -71,7 +68,7 @@ const initState: ChatState = {
   lastFetched: 0,
   lastChatId: null,
   loaded: false,
-  all: undefined,
+  allChats: [],
   char: undefined,
   active: undefined,
 
@@ -79,8 +76,8 @@ const initState: ChatState = {
   chatProfiles: [],
 
   /** All characters currently in the chat */
-  chatBots: [],
-  chatBotMap: {},
+  // chatBots: [],
+  // chatBotMap: {},
 
   /** Map of all profiles that have ever participated in the chat */
   memberIds: {},
@@ -98,9 +95,10 @@ export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
   lastChatId: safeLocalStorage.getItem('lastChatId'),
   loaded: false,
+  allChats: [],
   chatProfiles: [],
-  chatBots: [],
-  chatBotMap: {},
+  // chatBots: [],
+  // chatBotMap: {},
   memberIds: {},
   opts: {
     ...getOptsCache(),
@@ -118,22 +116,8 @@ export const chatStore = createStore<ChatState>('chat', {
 
   events.on(EVENTS.init, (init) => {
     if (init.chats) {
-      chatStore.setState({
-        all: { chats: init.chats, chars: init.characters },
-        chatBots: init.characters,
-      })
-    } else {
-      const { all: prev } = get()
-      chatStore.setState({
-        all: { chats: prev?.chats || [], chars: prev?.chars || init.characters },
-      })
+      chatStore.setState({ allChats: init.chats })
     }
-  })
-
-  events.on(EVENTS.charsLoaded, (chars: AppSchema.Character[]) => {
-    const { chatBotMap, chatBots } = get()
-    const bots = toChatBots(chatBotMap, chatBots, chars)
-    set(bots)
   })
 
   return {
@@ -183,8 +167,6 @@ export const chatStore = createStore<ChatState>('chat', {
           activeCharId: res.result.character._id,
         })
 
-        const bots = res.result.characters?.concat(res.result.character) || [res.result.character]
-        const nextChars = toChatBots(prev.chatBotMap, prev.chatBots, bots)
         const isMultiChars =
           res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
@@ -198,7 +180,6 @@ export const chatStore = createStore<ChatState>('chat', {
           },
           chatProfiles: res.result.members,
           memberIds: res.result.members.reduce(toMemberKeys, {}),
-          ...nextChars,
         }
       }
     },
@@ -209,7 +190,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *editChat(
-      { char, all, active },
+      { char, allChats, active },
       id: string,
       update: Partial<AppSchema.Chat>,
       onSuccess?: () => void
@@ -224,14 +205,7 @@ export const chatStore = createStore<ChatState>('chat', {
         onSuccess?.()
         toastStore.success('Updated chat settings')
 
-        if (all?.chats) {
-          yield {
-            all: {
-              chars: all.chars,
-              chats: all.chats.map((ch) => (ch._id === id ? res.result! : ch)),
-            },
-          }
-        }
+        yield { allChats: allChats.map((ch) => (ch._id === id ? res.result! : ch)) }
 
         if (char) {
           yield {
@@ -294,7 +268,7 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *getAllChats({ all, lastFetched }) {
+    async *getAllChats({ allChats, lastFetched }) {
       const diff = Date.now() - lastFetched
       if (diff < 30000) return
 
@@ -303,7 +277,7 @@ export const chatStore = createStore<ChatState>('chat', {
       yield { lastFetched: Date.now(), loaded: true }
       if (res.error) {
         toastStore.error(`Could not retrieve chats`)
-        return { all }
+        return { allChats }
       }
 
       if (res.result) {
@@ -311,7 +285,7 @@ export const chatStore = createStore<ChatState>('chat', {
           (prev, curr) => ({ ...prev, [curr._id]: curr }),
           {}
         )
-        return { all: { chats: res.result.chats.sort(sortDesc), chars } }
+        return { allChats: res.result.chats.sort(sortDesc), chars }
       }
     },
     getBotChats: async (_, characterId: string) => {
@@ -328,7 +302,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *createChat(
-      { all, char },
+      { allChats, char },
       characterId: string,
       props: NewChat,
       onSuccess?: (id: string) => void
@@ -336,9 +310,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await chatsApi.createChat(characterId, props)
       if (res.error) toastStore.error(`Failed to create conversation`)
       if (res.result) {
-        if (all?.chats) {
-          yield { all: { ...all, chats: [res.result, ...all.chats] } }
-        }
+        yield { allChats: [res.result, ...allChats] }
 
         if (char?.char._id === characterId) {
           yield { char: { ...char, chats: [res.result, ...char.chats] } }
@@ -385,7 +357,7 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async *deleteChat({ active, all, char }, chatId: string, onSuccess?: Function) {
+    async *deleteChat({ active, allChats, char }, chatId: string, onSuccess?: Function) {
       draftStore.clear(chatId)
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
@@ -395,9 +367,7 @@ export const chatStore = createStore<ChatState>('chat', {
           yield { active: undefined }
         }
 
-        if (all?.chats) {
-          yield { all: { ...all, chats: all.chats.filter((ch) => ch._id !== chatId) } }
-        }
+        yield { allChats: allChats.filter((ch) => ch._id !== chatId) }
 
         if (char?.chats) {
           yield { char: { ...char, chats: char.chats.filter((ch) => ch._id !== chatId) } }
@@ -408,7 +378,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *importChat(
-      { all, char },
+      { allChats, char },
       characterId: string,
       imported: ImportChat,
       onSuccess?: (chat: AppSchema.Chat) => void
@@ -416,9 +386,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await chatsApi.importChat(characterId, imported)
       if (res.error) toastStore.error(`Failed to import chat: ${res.error}`)
       if (res.result) {
-        if (all?.chats) {
-          yield { all: { ...all, chats: [res.result, ...all.chats] } }
-        }
+        yield { allChats: [res.result, ...allChats] }
 
         if (char?.char._id === characterId) {
           yield { char: { ...char, chats: [res.result, ...char.chats] } }
@@ -481,14 +449,14 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
 })
 
 subscribe('chat-deleted', { chatId: 'string' }, (body) => {
-  const { all, active, char } = chatStore()
+  const { allChats, active, char } = chatStore()
   if (active?.chat._id === body.chatId) {
     chatStore.setState({ active: undefined })
   }
 
-  if (all?.chats) {
-    const next = all.chats.filter((ch) => ch._id !== body.chatId)
-    chatStore.setState({ all: { ...all, chats: next } })
+  {
+    const next = allChats.filter((ch) => ch._id !== body.chatId)
+    chatStore.setState({ allChats: next })
   }
 
   if (char?.chats) {
@@ -558,26 +526,17 @@ subscribe(
   'chat-character-added',
   { chatId: 'string', active: 'boolean?', character: 'any' },
   (body) => {
-    const { active, chatBotMap, chatBots, all } = chatStore.getState()
-    const nextBots = toChatBots(chatBotMap, chatBots, [body.character])
+    const { active, allChats } = chatStore.getState()
 
-    if (all?.chats) {
-      const nextChats = all.chats?.map((c) => {
-        if (c._id !== body.chatId) return c
-        return {
-          ...c,
-          characters: { ...(c.characters || {}), [body.character._id]: true },
-        }
-      })
-      chatStore.setState({
-        ...nextBots,
-        all: {
-          ...all,
-          chats: nextChats,
-          chars: { ...(all.chars || {}), [body.character._id]: body.character },
-        },
-      })
-    }
+    const nextChats = allChats.map((chat) => {
+      if (chat._id !== body.chatId) return chat
+      return {
+        ...chat,
+        characters: Object.assign({}, chat.characters, { [body.character._id]: true }),
+      }
+    })
+
+    chatStore.setState({ allChats: nextChats })
 
     if (!active || active.chat._id !== body.chatId) return
 
@@ -594,39 +553,26 @@ subscribe(
           characters: nextActive,
         },
       },
-      ...nextBots,
     })
   }
 )
 
 subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
-  const { active, chatBotMap, chatBots, all } = chatStore.getState()
+  const { active, allChats } = chatStore.getState()
 
-  if (all?.chats) {
-    const nextChats = all.chats.map((c) => {
-      if (c._id !== body.chatId) return c
-      return {
-        ...c,
-        characters: { ...(c.characters || {}), [body.characterId]: false },
-      }
-    })
-    chatStore.setState({
-      all: {
-        ...all,
-        chats: nextChats,
-      },
-    })
-  }
+  const nextChats = allChats.map((c) => {
+    if (c._id !== body.chatId) return c
+    return {
+      ...c,
+      characters: { ...(c.characters || {}), [body.characterId]: false },
+    }
+  })
+  chatStore.setState({ allChats: nextChats })
 
   if (!active || active.chat._id !== body.chatId) return
 
-  const nextChatBots = chatBots.filter((ch) => ch._id !== body.characterId)
-  const nextChatBotMap = { ...chatBotMap }
-  delete nextChatBotMap[body.characterId]
   const nextChatCharacters = { ...(active.chat.characters || {}), [body.characterId]: false }
   chatStore.setState({
-    chatBots: nextChatBots,
-    chatBotMap: nextChatBotMap,
     active: {
       ...active,
       chat: {
@@ -636,19 +582,3 @@ subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' },
     },
   })
 })
-
-function toChatBots(
-  map: Record<string, AppSchema.Character>,
-  list: AppSchema.Character[],
-  incoming: AppSchema.Character[]
-) {
-  const chatBotMap = { ...map }
-  const chatBots = list.slice()
-  for (const char of incoming) {
-    if (char._id in chatBotMap) continue
-    chatBotMap[char._id] = char
-    chatBots.push(char)
-  }
-
-  return { chatBotMap, chatBots }
-}

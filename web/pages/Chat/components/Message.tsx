@@ -32,6 +32,7 @@ import Button from '/web/shared/Button'
 type MessageProps = {
   msg: SplitMessage
   chat: AppSchema.Chat
+  botMap: Record<string, AppSchema.Character>
   char: AppSchema.Character
   last?: boolean
   swipe?: string | false
@@ -75,6 +76,7 @@ const Message: Component<MessageProps> = (props) => {
             retrying={props.retrying}
             partial={props.partial}
             sendMessage={props.sendMessage}
+            botMap={props.botMap}
           />
         )}
       </For>
@@ -200,9 +202,7 @@ const SingleMessage: Component<
 
                 <Match when={props.char && !!props.msg.characterId}>
                   <AvatarIcon
-                    avatarUrl={
-                      state.chatBotMap[props.msg.characterId!]?.avatar || props.char?.avatar
-                    }
+                    avatarUrl={props.botMap[props.msg.characterId!]?.avatar || props.char?.avatar}
                     openable
                     bot={true}
                     format={format()}
@@ -233,7 +233,7 @@ const SingleMessage: Component<
                   data-user-name={isUser()}
                 >
                   {props.msg.characterId
-                    ? state.chatBotMap[props.msg.characterId!]?.name || props.char?.name!
+                    ? props.botMap[props.msg.characterId!]?.name || props.char?.name!
                     : handleToShow()}
                 </b>
                 <span

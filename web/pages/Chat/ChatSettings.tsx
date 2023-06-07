@@ -129,7 +129,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           />
         </Show>
 
-        <Show when={cfg.flags.cyoa && activePreset()?.service === 'openai'}>
+        <Show when={activePreset()?.service === 'openai'}>
           <Select
             fieldName="mode"
             label="Chat Mode"

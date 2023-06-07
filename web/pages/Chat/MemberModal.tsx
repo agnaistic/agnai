@@ -61,6 +61,7 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 
 const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string }> = (props) => {
   const self = userStore()
+  const chars = characterStore((s) => s.characters)
   const state = chatStore()
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
@@ -76,11 +77,8 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
         .map((pair) => pair[0])
         .map(
           (charId) =>
-            state.chatBots.find((bot) => bot._id === charId) ??
-            ({
-              _id: charId,
-              name: charId,
-            } as AppSchema.Character)
+            chars.list.find((bot) => bot._id === charId) ??
+            ({ _id: charId, name: charId } as AppSchema.Character)
         )
         .sort((a, b) => a.name.localeCompare(b.name)),
     ]

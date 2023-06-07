@@ -45,7 +45,7 @@ const CharacterChats: Component = () => {
     loaded: s.characters.loaded,
   }))
   const state = chatStore((s) =>
-    (s.all?.chats || [])?.map((chat) => ({
+    s.allChats.map((chat) => ({
       _id: chat._id,
       name: chat.name,
       createdAt: chat.createdAt,

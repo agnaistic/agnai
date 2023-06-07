@@ -7,7 +7,7 @@ import Button from '../../shared/Button'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import { getRootRgb, setComponentPageTitle } from '../../shared/util'
-import { chatStore, settingStore, UISettings as UI, userStore } from '../../store'
+import { characterStore, chatStore, settingStore, UISettings as UI, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettingsModal } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -36,16 +36,21 @@ const ChatDetail: Component = () => {
   const nav = useNavigate()
   const user = userStore()
   const cfg = settingStore()
+
+  const chars = characterStore((s) => ({
+    chatBots: s.characters.list,
+    botMap: s.characters.map,
+  }))
+
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.loaded,
     opts: s.opts,
-    chatBots: s.chatBots,
-    botMap: s.chatBotMap,
     activeBots: Object.values(s.active?.chat.characters || {}).filter((bot) => !!bot).length,
   }))
+
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
     images: s.images,
@@ -62,8 +67,8 @@ const ChatDetail: Component = () => {
   })
 
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
-  const botGreeting = createMemo(() => chats.chatBots[0]?.greeting)
-  const altGreetings = createMemo(() => chats.chatBots[0]?.alternateGreetings ?? [])
+  const botGreeting = createMemo(() => chars.chatBots[0]?.greeting)
+  const altGreetings = createMemo(() => chars.chatBots[0]?.alternateGreetings ?? [])
 
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
@@ -217,7 +222,7 @@ const ChatDetail: Component = () => {
 
   const activeCharIds = createMemo(() => {
     if (!chats.char) return []
-    const active = chats.chatBots
+    const active = chars.chatBots
       .filter((bot) => chats.chat?.characters?.[bot._id])
       .map((ch) => ch._id)
     return new Set([chats.char._id, ...active])
@@ -298,7 +303,8 @@ const ChatDetail: Component = () => {
               setOoc={setOoc}
               showOocToggle={isGroupChat()}
               request={requestMessage}
-              bots={chats.chatBots}
+              bots={chars.chatBots}
+              botMap={chars.botMap}
             />
             <Show when={isOwner() && chats.activeBots >= 1}>
               <div
@@ -309,7 +315,7 @@ const ChatDetail: Component = () => {
                 <For each={Array.from(activeCharIds())}>
                   {(id) => (
                     <CharacterResponseBtn
-                      char={chats.botMap[id]}
+                      char={chars.botMap[id]}
                       request={requestMessage}
                       waiting={!!msgs.waiting}
                       replying={chats.replyAs === id}
@@ -334,6 +340,7 @@ const ChatDetail: Component = () => {
                   {(msg, i) => (
                     <Message
                       msg={msg}
+                      botMap={chars.botMap}
                       chat={chats.chat!}
                       char={chats.char!}
                       editing={chats.opts.editing}
@@ -366,8 +373,9 @@ const ChatDetail: Component = () => {
                 </For>
                 <Show when={waitingMsg()}>
                   <Message
+                    botMap={chars.botMap}
                     msg={waitingMsg()!}
-                    char={chats.botMap[waitingMsg()?.characterId!]}
+                    char={chars.botMap[waitingMsg()?.characterId!]}
                     chat={chats.chat!}
                     onRemove={() => {}}
                     editing={chats.opts.editing}

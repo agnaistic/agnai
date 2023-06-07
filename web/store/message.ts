@@ -3,7 +3,7 @@ import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { getAssetUrl } from '../shared/util'
 import { isLoggedIn } from './api'
-import { createStore } from './create'
+import { createStore, getStore } from './create'
 import { getImageData } from './data/chars'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -483,13 +483,15 @@ subscribe(
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
-    const { active, chatBotMap } = chatStore.getState()
-    const { user } = userStore.getState()
+    const { characters } = getStore('character').getState()
+    const { active } = getStore('chat').getState()
+
+    const { user } = getStore('user').getState()
 
     if (activeChatId !== body.chatId || !active) return
 
     const prev = msgs.find((msg) => msg._id === body.messageId)
-    const char = prev?.characterId ? chatBotMap[prev?.characterId] : undefined
+    const char = prev?.characterId ? characters.map[prev?.characterId] : undefined
 
     msgStore.setState({
       partial: undefined,
@@ -578,7 +580,9 @@ subscribe(
 
 function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User | undefined) {
   if (msg.adapter === 'image' || !msg.characterId || msg.userId) return
-  const char = chatStore.getState().chatBotMap[msg.characterId]
+  const { characters } = getStore('character').getState()
+  const char = characters.map[msg.characterId]
+
   if (!char?.voice) return
   if (!user?.texttospeech?.enabled) return
   return {

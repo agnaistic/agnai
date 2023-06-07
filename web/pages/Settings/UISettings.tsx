@@ -223,6 +223,7 @@ const UISettings: Component = () => {
       <div class="text-lg font-bold">Preview</div>
       <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
         <Message
+          botMap={{}}
           char={bot}
           chat={chat}
           editing={false}
@@ -233,6 +234,7 @@ const UISettings: Component = () => {
 
         <Show when={state.profile}>
           <Message
+            botMap={{}}
             char={bot}
             chat={chat}
             editing={false}

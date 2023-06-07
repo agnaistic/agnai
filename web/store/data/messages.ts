@@ -11,7 +11,20 @@ import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
 
-export type PromptEntities = Awaited<ReturnType<typeof getPromptEntities>>
+export type PromptEntities = {
+  chat: AppSchema.Chat
+  char: AppSchema.Character
+  user: AppSchema.User
+  profile: AppSchema.Profile
+  book?: AppSchema.MemoryBook
+  messages: AppSchema.ChatMessage[]
+  settings: Partial<AppSchema.GenSettings>
+  members: AppSchema.Profile[]
+  chatBots: AppSchema.Character[]
+  autoReplyAs?: string
+  characters: Record<string, AppSchema.Character>
+  impersonating?: AppSchema.Character
+}
 
 export const msgsApi = {
   editMessage,
@@ -292,7 +305,7 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
 
 type GenerateEntities = Awaited<ReturnType<typeof getPromptEntities>>
 
-export async function getPromptEntities() {
+export async function getPromptEntities(): Promise<PromptEntities> {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
     if (!entities) throw new Error(`Could not collate data for prompting`)
@@ -305,7 +318,7 @@ export async function getPromptEntities() {
 }
 
 async function getGuestEntities() {
-  const { active, chatBots, chatBotMap } = getStore('chat').getState()
+  const { active } = getStore('chat').getState()
   if (!active) return
 
   const chat = active.chat
@@ -322,7 +335,10 @@ async function getGuestEntities() {
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
 
-  const { impersonating } = getStore('character').getState()
+  const {
+    impersonating,
+    characters: { list, map },
+  } = getStore('character').getState()
 
   return {
     chat,
@@ -333,15 +349,15 @@ async function getGuestEntities() {
     messages,
     settings,
     members: [profile] as AppSchema.Profile[],
-    chatBots,
+    chatBots: list,
     autoReplyAs: active.replyAs,
-    characters: chatBotMap,
+    characters: map,
     impersonating,
   }
 }
 
 function getAuthedPromptEntities() {
-  const { active, chatProfiles: members, chatBots, chatBotMap } = getStore('chat').getState()
+  const { active, chatProfiles: members } = getStore('chat').getState()
   if (!active) return
 
   const { profile, user } = getStore('user').getState()
@@ -355,9 +371,12 @@ function getAuthedPromptEntities() {
     .books.list.find((book) => book._id === chat.memoryId)
 
   const messages = getStore('messages').getState().msgs
-  const settings = getAuthGenSettings(chat, user)
+  const settings = getAuthGenSettings(chat, user)!
 
-  const { impersonating } = getStore('character').getState()
+  const {
+    impersonating,
+    characters: { list, map },
+  } = getStore('character').getState()
 
   return {
     chat,
@@ -368,9 +387,9 @@ function getAuthedPromptEntities() {
     messages,
     settings,
     members,
-    chatBots,
+    chatBots: list,
     autoReplyAs: active.replyAs,
-    characters: chatBotMap,
+    characters: map,
     impersonating,
   }
 }

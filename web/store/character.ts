@@ -7,6 +7,7 @@ import { toastStore } from './toasts'
 import { charsApi } from './data/chars'
 import { imageApi } from './data/image'
 import { getAssetUrl, safeLocalStorage } from '../shared/util'
+import { toCharacterMap } from '../pages/Character/util'
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
@@ -16,6 +17,7 @@ type CharacterState = {
   characters: {
     loaded: boolean
     list: AppSchema.Character[]
+    map: Record<string, AppSchema.Character>
   }
   creating: boolean
   generate: {
@@ -52,7 +54,7 @@ export type UpdateCharacter = Partial<
 
 const initState: CharacterState = {
   creating: false,
-  characters: { loaded: false, list: [] },
+  characters: { loaded: false, list: [], map: {} },
   generate: {
     image: null,
     blob: null,
@@ -74,7 +76,9 @@ export const characterStore = createStore<CharacterState>(
       return
     }
 
-    characterStore.setState({ characters: { list: init.characters, loaded: true } })
+    characterStore.setState({
+      characters: { list: init.characters, map: toCharacterMap(init.characters), loaded: true },
+    })
 
     const impersonateId = safeLocalStorage.getItem(IMPERSONATE_KEY)
     if (!impersonateId) return
@@ -98,14 +102,27 @@ export const characterStore = createStore<CharacterState>(
       }
 
       if (res.result && state.impersonating) {
-        return { characters: { list: res.result.characters, loaded: true } }
+        return {
+          characters: {
+            list: res.result.characters,
+            map: toCharacterMap(res.result.characters),
+            loaded: true,
+          },
+        }
       }
 
       if (res.result && !state.impersonating) {
         const id = safeLocalStorage.getItem(IMPERSONATE_KEY)
         const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
         events.emit(EVENTS.charsLoaded, res.result.characters)
-        return { characters: { list: res.result.characters, loaded: true }, impersonating }
+        return {
+          characters: {
+            list: res.result.characters,
+            map: toCharacterMap(res.result.characters),
+            loaded: true,
+          },
+          impersonating,
+        }
       }
     },
 
@@ -127,12 +144,18 @@ export const characterStore = createStore<CharacterState>(
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
         toastStore.success(`Successfully created character`)
-        yield { characters: { list: list.concat(res.result), loaded: true } }
+        yield {
+          characters: {
+            list: list.concat(res.result),
+            map: toCharacterMap(list.concat(res.result)),
+            loaded: true,
+          },
+        }
         onSuccess?.(res.result)
       }
     },
     async *editCharacter(
-      { characters: { list } },
+      { characters: { list, map } },
       characterId: string,
       char: UpdateCharacter,
       onSuccess?: () => void
@@ -145,6 +168,7 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
+            map: replace(map, characterId, res.result),
             loaded: true,
           },
         }
@@ -152,7 +176,7 @@ export const characterStore = createStore<CharacterState>(
       }
     },
     setFavorite: async (
-      { characters: { list, loaded } },
+      { characters: { list, map, loaded } },
       characterId: string,
       favorite: boolean
     ) => {
@@ -162,12 +186,13 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, favorite } : ch)),
+            map: replace(map, characterId, { favorite }),
             loaded,
           },
         }
       }
     },
-    async *editAvatar({ characters: { list } }, characterId: string, file: File) {
+    async *editAvatar({ characters: { list, map } }, characterId: string, file: File) {
       const res = await charsApi.editAvatar(characterId, file)
       if (res.error) {
         toastStore.error(`Failed to update avatar: ${res.error}`)
@@ -177,12 +202,13 @@ export const characterStore = createStore<CharacterState>(
         yield {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? res.result : ch)),
+            map: replace(map, characterId, res.result),
             loaded: true,
           },
         }
       }
     },
-    async *removeAvatar({ characters: { list } }, characterId: string) {
+    async *removeAvatar({ characters: { list, map } }, characterId: string) {
       const res = await charsApi.removeAvatar(characterId)
       if (res.error) {
         toastStore.error(`Failed to remove avatar: ${res.error}`)
@@ -192,20 +218,26 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, avatar: '' } : ch)),
+            map: replace(map, characterId, { avatar: '' }),
             loaded: true,
           },
         }
       }
     },
-    deleteCharacter: async ({ characters: { list } }, charId: string, onSuccess?: () => void) => {
+    deleteCharacter: async (
+      { characters: { list, map } },
+      charId: string,
+      onSuccess?: () => void
+    ) => {
       const res = await charsApi.deleteCharacter(charId)
       if (res.error) return toastStore.error(`Failed to delete character`)
       if (res.result) {
         const next = list.filter((char) => char._id !== charId)
         toastStore.success('Successfully deleted character')
         onSuccess?.()
+        delete map[charId]
         return {
-          characters: { loaded: true, list: next },
+          characters: { loaded: true, list: next, map },
         }
       }
     },
@@ -249,4 +281,33 @@ async function dataURLtoFile(base64: string) {
   return fetch(base64)
     .then((res) => res.arrayBuffer())
     .then((buf) => new File([buf], 'avatar.png', { type: 'image/png' }))
+}
+
+subscribe(
+  'chat-character-added',
+  { chatId: 'string', active: 'boolean?', character: 'any' },
+  (body) => {
+    const { characters } = characterStore.getState()
+    const char: AppSchema.Character = body.character
+
+    const match = characters.list.find((ch) => ch._id === char._id)
+    if (match) return
+
+    characterStore.setState({
+      characters: {
+        list: characters.list.concat(body.character),
+        map: Object.assign(characters.map, { [char._id]: char }),
+        loaded: characters.loaded,
+      },
+    })
+  }
+)
+
+function replace(
+  map: Record<string, AppSchema.Character>,
+  id: string,
+  char: Partial<AppSchema.Character>
+): Record<string, AppSchema.Character> {
+  const next = map[id] || {}
+  return { ...map, [id]: { ...next, ...char } }
 }
