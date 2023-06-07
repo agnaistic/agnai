@@ -1,6 +1,7 @@
 import { api, isLoggedIn } from '../api'
 import { AppSchema } from '../../../srv/db/schema'
 import { localApi } from './storage'
+import { toArray } from '/common/util'
 
 type InitEntities = {
   profile: AppSchema.Profile
@@ -118,7 +119,9 @@ export async function updateProfile(handle: string, file?: File) {
   return res
 }
 
-export async function updateConfig(config: Partial<AppSchema.User>) {
+type ConfigUpdate = Partial<AppSchema.User> & { hordeModels?: string[] }
+
+export async function updateConfig(config: ConfigUpdate) {
   if (!isLoggedIn()) {
     const prev = localApi.loadItem('config')
     const next: AppSchema.User = { ...prev, ...config }
@@ -134,6 +137,8 @@ export async function updateConfig(config: Partial<AppSchema.User>) {
     if (prev.elevenLabsApiKey && !next.elevenLabsApiKey) {
       next.elevenLabsApiKey = prev.elevenLabsApiKey
     }
+
+    next.hordeModel = toArray(config.hordeModels)
 
     localApi.saveConfig(next)
     return { result: next, error: undefined }
