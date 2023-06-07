@@ -181,7 +181,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       chatId,
       message: body.text!,
       characterId: impersonate?._id,
-      senderId: impersonate ? undefined : userId!,
+      senderId: userId,
       ooc: body.kind === 'ooc',
     })
 

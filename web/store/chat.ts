@@ -129,6 +129,13 @@ export const chatStore = createStore<ChatState>('chat', {
       })
     }
   })
+
+  events.on(EVENTS.charsLoaded, (chars: AppSchema.Character[]) => {
+    const { chatBotMap, chatBots } = get()
+    const bots = toChatBots(chatBotMap, chatBots, chars)
+    set(bots)
+  })
+
   return {
     /**
      * If a user accepts an invite to a chat, their profile has not been fetched and cached
@@ -176,7 +183,7 @@ export const chatStore = createStore<ChatState>('chat', {
           activeCharId: res.result.character._id,
         })
 
-        const bots = res.result.characters || []
+        const bots = res.result.characters?.concat(res.result.character) || [res.result.character]
         const nextChars = toChatBots(prev.chatBotMap, prev.chatBots, bots)
         const isMultiChars =
           res.result.chat.characters && Object.keys(res.result.chat.characters).length
@@ -291,8 +298,9 @@ export const chatStore = createStore<ChatState>('chat', {
       const diff = Date.now() - lastFetched
       if (diff < 30000) return
 
+      yield { loaded: false }
       const res = await chatsApi.getAllChats()
-      yield { lastFetched: Date.now() }
+      yield { lastFetched: Date.now(), loaded: true }
       if (res.error) {
         toastStore.error(`Could not retrieve chats`)
         return { all }

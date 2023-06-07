@@ -175,14 +175,15 @@ export const msgStore = createStore<MsgState>(
       }
 
       const msg = messageId ? msgs.find((msg) => msg._id === messageId)! : msgs[msgs.length - 1]
-      const replace = { ...msg, voiceUrl: undefined }
+      const replace = msg?.userId ? undefined : { ...msg, voiceUrl: undefined }
+      const characterId = replace?.characterId || activeCharId
       yield {
         partial: '',
-        waiting: { chatId, mode: 'retry', characterId: replace.characterId! },
+        waiting: { chatId, mode: 'retry', characterId },
         retrying: replace,
       }
 
-      addMsgToRetries(replace)
+      if (replace) addMsgToRetries(replace)
 
       const res = await msgsApi.generateResponseV2({ kind: 'retry', messageId })
 

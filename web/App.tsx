@@ -17,6 +17,11 @@ import ImpersonateModal from './pages/Character/ImpersonateModal'
 import ChubRoutes from './pages/Chub'
 import Redirect from './shared/Redirect'
 import Maintenance from './shared/Maintenance'
+import CharacterChats from './pages/Character/ChatList'
+import ChatDetail from './pages/Chat/ChatDetail'
+import ChangeLog from './pages/Home/ChangeLog'
+import Settings from './pages/Settings'
+import ProfilePage from './pages/Profile'
 
 const App: Component = () => {
   const state = userStore()
@@ -32,18 +37,18 @@ const App: Component = () => {
             component={() => <Redirect external="https://discord.gg/luminai" />}
           />
           <ChubRoutes />
-          <Route path="/chats" component={lazy(() => import('./pages/Character/ChatList'))} />
-          <Route path="/chat" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
-          <Route path="/chat/:id" component={lazy(() => import('./pages/Chat/ChatDetail'))} />
+          <Route path="/chats" component={CharacterChats} />
+          <Route path="/chat" component={ChatDetail} />
+          <Route path="/chat/:id" component={ChatDetail} />
           <Route path={['/info', '/']} component={HomePage} />
-          <Route path="/changelog" component={lazy(() => import('./pages/Home/ChangeLog'))} />
+          <Route path="/changelog" component={ChangeLog} />
           <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
           <Route
             path="/presets"
             component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
           />
-          <Route path="/profile" component={lazy(() => import('./pages/Profile'))} />
-          <Route path="/settings" component={lazy(() => import('./pages/Settings'))} />
+          <Route path="/profile" component={ProfilePage} />
+          <Route path="/settings" component={Settings} />
           <Route path="/memory" component={lazy(() => import('./pages/Memory'))} />
           <Route
             path="/memory/:id"

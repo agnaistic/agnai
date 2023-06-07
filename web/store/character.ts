@@ -104,6 +104,7 @@ export const characterStore = createStore<CharacterState>(
       if (res.result && !state.impersonating) {
         const id = safeLocalStorage.getItem(IMPERSONATE_KEY)
         const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
+        events.emit(EVENTS.charsLoaded, res.result.characters)
         return { characters: { list: res.result.characters, loaded: true }, impersonating }
       }
     },

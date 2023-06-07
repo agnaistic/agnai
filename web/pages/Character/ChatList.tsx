@@ -23,6 +23,7 @@ import {
   groupAndSort,
   saveListCache,
 } from './util'
+import Loading from '/web/shared/Loading'
 
 const sortOptions = [
   { value: 'chat-updated', label: 'Chat Activity', kind: 'chat' },
@@ -306,16 +307,28 @@ const Chats: Component<{
   )
 }
 
-const NoChats: Component<{ character?: string }> = (props) => (
-  <div class="mt-4 flex w-full justify-center text-xl">
-    <div>
-      <Show when={!props.character}>You have no conversations yet.</Show>
-      <Show when={props.character}>
-        You have no conversations with <i>{props.character}</i>.
-      </Show>
-    </div>
-  </div>
-)
+const NoChats: Component<{ character?: string }> = (props) => {
+  const state = chatStore()
+  return (
+    <Show
+      when={state.loaded}
+      fallback={
+        <div class="flex w-full justify-center">
+          <Loading />
+        </div>
+      }
+    >
+      <div class="mt-4 flex w-full justify-center text-xl">
+        <div>
+          <Show when={!props.character}>You have no conversations yet.</Show>
+          <Show when={props.character}>
+            You have no conversations with <i>{props.character}</i>.
+          </Show>
+        </div>
+      </div>
+    </Show>
+  )
+}
 
 export default CharacterChats
 

@@ -325,7 +325,20 @@ const CreateCharacter: Component = () => {
         <div class="flex w-full flex-col">
           <FormLabel
             label="Description"
-            helperText="A description or label for your character. This is will not influence your character in any way."
+            helperText={
+              <div class="flex flex-col">
+                <span>
+                  A description or label for your character. This is will not influence your
+                  character in any way.
+                </span>
+                <Show when={canPopulatFields()}>
+                  <span>
+                    To use OpenAI to generate a character, describe the character below then click{' '}
+                    <b>Generate</b>. It can take 30-60 seconds.
+                  </span>
+                </Show>
+              </div>
+            }
           />
           <div class="flex w-full gap-2">
             <TextInput
@@ -333,7 +346,7 @@ const CreateCharacter: Component = () => {
               parentClass="w-full"
               value={downloaded()?.description || state.edit?.description}
             />
-            <Show when={flags.chargen && canPopulatFields()}>
+            <Show when={canPopulatFields()}>
               <Button onClick={generateCharacter} disabled={creating()}>
                 {creating() ? 'Generating...' : 'Generate'}
               </Button>

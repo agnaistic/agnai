@@ -198,9 +198,16 @@ async function getGenerateProps(
         // Case: When regenerating a response that isn't last. Typically when image messages follow the last text message
         const index = entities.messages.findIndex((msg) => msg._id === opts.messageId)
         const replacing = entities.messages[index]
-        props.replyAs = getBot(replacing.characterId || active.char._id)
-        props.replacing = replacing
-        props.messages = entities.messages.slice(0, index)
+
+        // Retrying an impersonated message - We'll use the "auto-reply as" or the "main character"
+        if (replacing?.userId) {
+          props.replyAs = getBot(active.replyAs || active.char._id)
+          props.messages = entities.messages
+        } else {
+          props.replyAs = getBot(replacing.characterId || active.char._id)
+          props.replacing = replacing
+          props.messages = entities.messages.slice(0, index)
+        }
       } else if (!lastMsg && secondLastMsg.characterId) {
         // Case: Replacing the first message (i.e. the greeting)
         props.replyAs = getBot(active.replyAs || active.char._id)
