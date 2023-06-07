@@ -85,7 +85,6 @@ const builtinPresets = {
     gaslight: `{{char}} Memory: {{memory}}
 Description of {{char}}: {{personality}}
 [ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
-This is how the character speaks:{{example_dialogue}}
 ***
 Summary: {{scenario}}`,
   },
@@ -151,8 +150,7 @@ Summary: {{scenario}}`,
 Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
-Facts: {{memory}}
-This is how {{char}} should talk: {{example_dialogue}}`,
+Facts: {{memory}}`,
   },
   openaiAlt: {
     name: 'Turbo (#2)',
@@ -169,8 +167,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
 Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
-Facts: {{memory}}
-This is how {{char}} should talk: {{example_dialogue}}`,
+Facts: {{memory}}`,
   },
   openaiTurbo: {
     name: 'DaVinci',
@@ -187,8 +184,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
 Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
-Facts: {{memory}}
-This is how {{char}} should talk: {{example_dialogue}}`,
+Facts: {{memory}}`,
   },
   scale: {
     name: 'Scale',
@@ -211,8 +207,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
 Description of {{char}}:
 {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
-Facts: {{memory}}
-This is how {{char}} should talk: {{example_dialogue}}`,
+Facts: {{memory}}`,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
 
@@ -224,7 +219,6 @@ export const defaultPresets = {
 export const defaultTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
 Facts:{{memory}}
-Example of {{char}}'s dialogue:{{example_dialogue}}
 
 <START>
 {{history}}
@@ -240,7 +234,6 @@ export const adventureAmble = `[System note: In addition provide 3 possible cons
 export const adventureTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
 Facts:{{memory}}
-Example of {{char}}'s dialogue:{{example_dialogue}}
 
 <START>
 {{history}}
