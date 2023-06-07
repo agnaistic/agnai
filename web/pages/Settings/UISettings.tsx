@@ -5,7 +5,7 @@ import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
-import { getRootVariable, toDropdownItems } from '../../shared/util'
+import { toDropdownItems } from '../../shared/util'
 import { AVATAR_CORNERS, AVATAR_SIZES, BG_THEME, UI_THEME, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
@@ -125,15 +125,12 @@ const UISettings: Component = () => {
         label="Message Background Color"
         fieldName="messageColor"
         helperText={
-          <span
-            class="link"
-            onClick={() => userStore.updateUI({ msgBackground: getRootVariable('bg-800') })}
-          >
+          <span class="link" onClick={() => userStore.updateColor({ msgBackground: 'bg-800' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.updateUI({ msgBackground: color })}
-        value={state.ui.msgBackground}
+        onChange={(color) => userStore.updateColor({ msgBackground: color })}
+        value={state.current.msgBackground}
       />
 
       <ColorPicker
@@ -141,10 +138,7 @@ const UISettings: Component = () => {
         fieldName="botMessageColor"
         helperText={
           <>
-            <span
-              class="link"
-              onClick={() => userStore.updateUI({ botBackground: getRootVariable('bg-800') })}
-            >
+            <span class="link" onClick={() => userStore.updateColor({ botBackground: 'bg-800' })}>
               Reset to Default
             </span>
             <span>
@@ -152,23 +146,20 @@ const UISettings: Component = () => {
             </span>
           </>
         }
-        onChange={(color) => userStore.updateUI({ botBackground: color })}
-        value={state.ui.botBackground}
+        onChange={(color) => userStore.updateColor({ botBackground: color })}
+        value={state.current.botBackground}
       />
 
       <ColorPicker
         label="Chat Text Color"
         fieldName="chatTextColor"
         helperText={
-          <span
-            class="link"
-            onClick={() => userStore.updateUI({ chatTextColor: getRootVariable('text-800') })}
-          >
+          <span class="link" onClick={() => userStore.updateColor({ chatTextColor: 'text-800' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.updateUI({ chatTextColor: color })}
-        value={state.ui.chatTextColor}
+        onChange={(color) => userStore.updateColor({ chatTextColor: color })}
+        value={state.current.chatTextColor}
       />
 
       <ColorPicker
@@ -177,13 +168,13 @@ const UISettings: Component = () => {
         helperText={
           <span
             class="link"
-            onClick={() => userStore.updateUI({ chatEmphasisColor: getRootVariable('text-600') })}
+            onClick={() => userStore.updateColor({ chatEmphasisColor: 'text-600' })}
           >
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.updateUI({ chatEmphasisColor: color })}
-        value={state.ui.chatEmphasisColor}
+        onChange={(color) => userStore.updateColor({ chatEmphasisColor: color })}
+        value={state.current.chatEmphasisColor}
       />
 
       <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />

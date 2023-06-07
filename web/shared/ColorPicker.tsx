@@ -1,4 +1,5 @@
 import { Component, JSX, Show } from 'solid-js'
+import { getSettingColor } from '../store'
 
 const ColorPicker: Component<{
   fieldName: string
@@ -25,7 +26,12 @@ const ColorPicker: Component<{
           </Show>
         </label>
       </Show>
-      <input ref={ref} type="color" value={props.value} onChange={onChange} />
+      <input
+        ref={ref}
+        type="color"
+        value={getSettingColor(props.value || '')}
+        onChange={onChange}
+      />
     </div>
   )
 }

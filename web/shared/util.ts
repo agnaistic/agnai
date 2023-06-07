@@ -322,13 +322,13 @@ export function createDebounce<T extends (...args: any[]) => void>(
  */
 export function getRootVariable(name: string) {
   const root = document.documentElement
-  const value = getComputedStyle(root).getPropertyValue(`--${name}`)
+  const value = getComputedStyle(root).getPropertyValue(name.startsWith('--') ? name : `--${name}`)
   return value
 }
 
 export function setRootVariable(name: string, value: string) {
   const root = document.documentElement
-  root.style.setProperty(`--${name}`, value)
+  root.style.setProperty(name.startsWith('--') ? name : `--${name}`, value)
 }
 
 export function hexToRgb(hex: string) {

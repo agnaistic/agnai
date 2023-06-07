@@ -1,3 +1,4 @@
+import './Message.css'
 import {
   Check,
   DownloadCloud,
@@ -24,7 +25,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore } from '../../../store'
+import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
 
@@ -114,10 +115,10 @@ const SingleMessage: Component<
 
     const hex =
       props.msg.characterId && props.msg.adapter
-        ? user.ui.botBackground
+        ? getSettingColor(user.ui.botBackground || 'bg-800')
         : props.msg.ooc
         ? getRootVariable('bg-1000')
-        : user.ui.msgBackground || 'bg-800'
+        : getSettingColor(user.ui.msgBackground || 'bg-800')
 
     if (!hex) return {}
 
