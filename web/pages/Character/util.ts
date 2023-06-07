@@ -13,6 +13,7 @@ export type ChatLine = {
   name: string
   createdAt: string
   updatedAt: string
+  characterId: string
 }
 
 export type SortType =
@@ -94,7 +95,7 @@ export function groupAndSort(
 
   const chars = allChars.slice().map((char) => {
     if (type !== 'bot-activity') return char
-    const first = sortedChats.find((c) => c.characters.some((char) => char._id === char._id))
+    const first = sortedChats.find((c) => c.characters.some((ch) => ch._id === char._id))
     return { ...char, updatedAt: first?.updatedAt || new Date(0).toISOString() }
   })
 

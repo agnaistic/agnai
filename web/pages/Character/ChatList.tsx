@@ -36,19 +36,24 @@ const sortOptions = [
 const CharacterChats: Component = () => {
   const params = useParams()
   const cache = getListCache()
+  const chars = characterStore((s) => ({
+    list: s.characters.list,
+    map: s.characters.list.reduce<Record<string, AppSchema.Character>>(
+      (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+      {}
+    ),
+    loaded: s.characters.loaded,
+  }))
   const state = chatStore((s) =>
     (s.all?.chats || [])?.map((chat) => ({
       _id: chat._id,
       name: chat.name,
       createdAt: chat.createdAt,
       updatedAt: chat.updatedAt,
-      characters: toChatListState(s.all?.chars || {}, chat),
+      characterId: chat.characterId,
+      characters: toChatListState(chars.map, chat),
     }))
   )
-  const chars = characterStore((s) => ({
-    list: s.characters.list,
-    loaded: s.characters.loaded,
-  }))
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
@@ -195,6 +200,7 @@ const CharacterChats: Component = () => {
         fallback={<NoChats character={chars.list.find((c) => c._id === params.id)?.name} />}
       >
         <Chats
+          allChars={chars.map}
           chats={chats()}
           chars={chars.list}
           sortField={sortField()}
@@ -213,6 +219,7 @@ const CharacterChats: Component = () => {
 }
 
 const Chats: Component<{
+  allChars: Record<string, AppSchema.Character>
   chats: ChatLine[]
   chars: AppSchema.Character[]
   sortField: SortType
@@ -222,12 +229,7 @@ const Chats: Component<{
   const [showDelete, setDelete] = createSignal('')
 
   const groups = createMemo(() => {
-    const filteredCharId = props.charId
-    let chars = props.chars
-
-    if (filteredCharId) {
-      chars = props.chars.filter((c) => c._id === filteredCharId)
-    }
+    const chars = props.charId ? props.chars.filter((ch) => ch._id === props.charId) : props.chars
 
     return groupAndSort(chars, props.chats, props.sortField, props.sortDirection)
   })
@@ -258,7 +260,7 @@ const Chats: Component<{
                       <div class="ml-4 flex items-center">
                         <div class="relative flex-shrink-0">
                           <For each={chat.characters.slice(0, 3).reverse()}>
-                            {(char, i) => {
+                            {(ch, i) => {
                               const positionStyle = getAvatarPositionStyle(chat, i)
                               if (positionStyle === undefined) return
 
@@ -266,7 +268,7 @@ const Chats: Component<{
                                 <div
                                   class={`absolute top-1/2 -translate-y-1/2 transform ${positionStyle}`}
                                 >
-                                  <AvatarIcon avatarUrl={char.avatar} />
+                                  <AvatarIcon avatarUrl={props.allChars[ch._id]?.avatar} />
                                 </div>
                               )
                             }}
