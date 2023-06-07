@@ -1,4 +1,4 @@
-import { RefreshCw, Save, X } from 'lucide-solid'
+import { Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -8,6 +8,7 @@ import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/
 import { adminStore } from '../../store'
 
 const UsersPage: Component = () => {
+  let ref: any
   setComponentPageTitle('Users')
   const [pw, setPw] = createSignal('')
   const state = adminStore()
@@ -18,8 +19,14 @@ const UsersPage: Component = () => {
     adminStore.getInfo(id)
   }
 
+  const search = (ev: Event) => {
+    ev?.preventDefault()
+    const { username } = getStrictForm(ref, { username: 'string' })
+    adminStore.getUsers(username)
+  }
+
   createEffect(() => {
-    adminStore.getUsers()
+    adminStore.getUsers('')
   })
 
   return (
@@ -27,9 +34,12 @@ const UsersPage: Component = () => {
       <PageHeader title="User Management" />
 
       <div class="flex flex-col gap-2 pb-4">
-        <div class="flex justify-end">
-          <RefreshCw size={16} class="icon-button" onClick={adminStore.getUsers} />
-        </div>
+        <form ref={ref} class="flex justify-between" onSubmit={search}>
+          <div class="flex flex-col">
+            <TextInput fieldName="username" placeholder="Username" />
+          </div>
+          <Button onClick={search}>Search</Button>
+        </form>
         <For each={state.users}>
           {(user) => (
             <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl">

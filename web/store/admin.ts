@@ -24,8 +24,8 @@ type AdminState = {
 
 export const adminStore = createStore<AdminState>('admin', { users: [] })((_) => {
   return {
-    async getUsers() {
-      const res = await api.get<{ users: AppSchema.User[] }>('/admin/users')
+    async getUsers(_, username: string, page = 0) {
+      const res = await api.post<{ users: AppSchema.User[] }>('/admin/users', { username, page })
       if (res.error) return toastStore.error(`Unable to retrieve users: ${res.error}`)
       if (res.result) {
         return { users: res.result.users }

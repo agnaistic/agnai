@@ -9,8 +9,10 @@ const router = Router()
 
 router.use(loggedIn, isAdmin)
 
-const getUsers = handle(async (req) => {
-  const users = await store.admin.getUsers()
+const searchUsers = handle(async (req) => {
+  const { body } = req
+  assertValid({ username: 'string?', page: 'number?' }, body)
+  const users = await store.admin.getUsers({ username: body.username, page: body.page })
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
 })
 
@@ -40,7 +42,7 @@ const getMetrics = handle(async () => {
   }
 })
 
-router.get('/users', getUsers)
+router.post('/users', searchUsers)
 router.get('/metrics', getMetrics)
 router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)
