@@ -151,6 +151,7 @@ function isAllowedType(contentType: string) {
     case 'image/jpeg':
     case 'image/jpg':
     case 'image/png':
+    case 'image/apng':
       return true
   }
 
