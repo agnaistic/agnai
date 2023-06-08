@@ -74,6 +74,7 @@ const HOLDER_NAMES = {
   post: 'post',
   scenario: 'scenario',
   history: 'history',
+  linebreak: 'br',
 }
 
 const HOLDERS = {
@@ -85,6 +86,7 @@ const HOLDERS = {
   allPersonas: /\{\{all_personalities\}\}/gi,
   post: /\{\{post\}\}/gi,
   history: /\{\{history\}\}/gi,
+  linebreak: `/\{\{(br|linebreak|newline)\}\}/gi`,
 }
 
 const ALL_HOLDERS = new RegExp(
@@ -188,12 +190,13 @@ export function injectPlaceholders(
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
     .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
-    .replace(HOLDERS.sampleChat, newline(sampleChat))
+    .replace(HOLDERS.sampleChat, sampleChat || '')
     .replace(HOLDERS.scenario, parts.scenario || '')
-    .replace(HOLDERS.memory, newline(parts.memory))
+    .replace(HOLDERS.memory, parts.memory || '')
     .replace(HOLDERS.persona, parts.persona)
     .replace(HOLDERS.allPersonas, parts.allPersonas?.join('\n') || '')
     .replace(HOLDERS.post, parts.post.join('\n'))
+    .replace(HOLDERS.linebreak, '\n')
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
     .replace(BOT_REPLACE, opts.replyAs.name)
     .replace(SELF_REPLACE, sender)
@@ -673,9 +676,4 @@ export function trimTokens(opts: TrimOpts) {
   }
 
   return output
-}
-
-function newline(value: string | undefined) {
-  if (!value) return ''
-  return '\n' + value
 }

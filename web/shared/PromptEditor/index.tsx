@@ -11,6 +11,7 @@ type Placeholder = {
 const placeholders: Record<string, Placeholder> = {
   char: { required: false, limit: Infinity },
   user: { required: false, limit: Infinity },
+  // linebreak: { required: false, limit: Infinity },
   history: { required: true, limit: 1 },
   scenario: { required: true, limit: 1 },
   memory: { required: false, limit: 1 },
