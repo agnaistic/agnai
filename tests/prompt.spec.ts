@@ -197,8 +197,7 @@ function build(
     },
     encoder
   )
-  // Replace spaces with dots to help with interpreting test results
-  result.template = result.template.replace(/ /g, '.')
+
   return result
 }
 

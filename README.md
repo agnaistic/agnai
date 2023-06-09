@@ -4,15 +4,9 @@
 
 AI Agnostic Chat
 
-[Live Version](https://agnai.chat) | [Discord](https://discord.gg/luminai) | [Roadmap](https://github.com/users/sceuick/projects/1)
+[Live Version](https://agnai.chat) | [Discord](https://discord.gg/luminai)
 
 You can visit the hosted version at [Agnai.chat](https://agnai.chat)
-
-<div style="display: flex; flex-direction: row; gap: 0.5rem;" >
-<img src="./screenshots/chat.png" height="150">
-<img src="./screenshots/persona.png" height="150">
-<img src="./screenshots/settings.png" height="150">
-</div>
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
@@ -36,7 +30,7 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
 
 ## Features
 
-- **Group Conversations**: Multiple users with one character/bot
+- **Group Conversations**: Multiple users with multiple bots
 - **Multiple AI services**: Support for Kobold, Novel, AI Horde, LuminAI, OpenAI, Claude
 - Multiple persona schema formats: W++, Square bracket format (SBF), Boostyle, Plain text
 - Multi-tenancy:
@@ -64,7 +58,7 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
 6. From inside the cloned/unpacked folder in your terminal/console:
    - `npm run deps`
      - **Do this every time you update AgnAI, just in case.**
-     - This will install the dependencies using `pnpm v6`
+     - This will install the dependencies using `pnpm v8`
    - `npm run build:all`
    - Build and run the project in watch mode:
      - Mac/Linux: `npm run start`
