@@ -333,6 +333,7 @@ const ChatDetail: Component = () => {
               <div id="chat-messages" class="flex flex-col gap-2">
                 <Show
                   when={
+                    cfg.flags.charv2 &&
                     chats.loaded &&
                     chatMsgs().length < 2 &&
                     chats.char?.description
