@@ -191,7 +191,7 @@ export function injectPlaceholders(
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
     if (hist.order === 'asc') next.unshift(`${sampleChat}\n${SAMPLE_CHAT_MARKER}`)
-    else next.push(`How ${opts.replyAs} speaks:\n${sampleChat}\n${SAMPLE_CHAT_MARKER}`)
+    else next.push(`How ${opts.replyAs.name} speaks:\n${sampleChat}\n${SAMPLE_CHAT_MARKER}`)
 
     hist.lines = next
   }

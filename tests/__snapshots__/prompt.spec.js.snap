@@ -5,7 +5,7 @@ exports[`Prompt building will build a basic prompt 1`] = `
 Scenario: SCENARIO
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -18,7 +18,7 @@ exports[`Prompt building will build a continue prompt 1`] = `
 Scenario: SCENARIO
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -35,7 +35,7 @@ ENTRY TWO
 ENTRY THREE
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -52,7 +52,7 @@ Facts:
 ENTRY ONE
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: LONGWOR A
@@ -68,7 +68,7 @@ ENTRY TIE
 ENTRY THREE
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -93,7 +93,7 @@ exports[`Prompt building will include gaslight for non-turbo adapter 1`] = `
 "GASLIGHT You
 Scenario: SCENARIO
 Bot's persona: PERSONA
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -113,7 +113,7 @@ ENTRY TIE
 ENTRY THREE
 Scenario: SCENARIO
 Bot's persona: PERSONA
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -128,7 +128,7 @@ exports[`Prompt building will include sample chat when gaslight does not sample 
 Scenario: SCENARIO
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -145,7 +145,7 @@ ENTRY ONE
 ENTRY TWO
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -163,7 +163,7 @@ ENTRY TIE
 ENTRY THREE
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -191,7 +191,7 @@ ENTRY TIE
 ENTRY THREE
 
 <START>
-How [object Object] speaks:
+How Bot speaks:
 Bot: SAMPLE_CHAT
 System: New conversation started. Previous conversations are examples only.
 Bot: FIRST
@@ -206,7 +206,7 @@ exports[`Prompt building will use correct placeholders in scenario and sample ch
 Scenario: MAIN Main
 
 <START>
-How [object Object] speaks:
+How Reply speaks:
 SAMPLECHAT Reply
 System: New conversation started. Previous conversations are examples only.
 Reply:"
