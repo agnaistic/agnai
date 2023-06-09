@@ -20,7 +20,7 @@ type ChubState = {
   charsLoading: boolean
 }
 
-export const CHUB_URL = `https://api.characterhub.org/api`
+export const CHUB_URL = `https://api.chub.ai/api`
 
 const initState: ChubState = {
   nsfw: false,
