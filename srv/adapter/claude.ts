@@ -123,7 +123,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
-  const gaslightCost = encoder('System: ' + parts.gaslight)
+  const gaslightCost = encoder('System: ' + opts.prompt)
   const ujb = parts.ujb ? `System: ${parts.ujb}` : ''
 
   const maxBudget =
@@ -140,7 +140,7 @@ function createClaudePrompt(opts: AdapterProps): string {
     history.push(line)
   }
 
-  const messages = [`System: ${parts.gaslight}`, ...history.reverse()]
+  const messages = [`System: ${opts.prompt}`, ...history.reverse()]
 
   if (ujb) {
     messages.push(ujb)

@@ -4,22 +4,12 @@ import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import {
-  BOT_REPLACE,
-  SELF_REPLACE,
-  ensureValidTemplate,
-  injectPlaceholders,
-  NEW_CONVO_STARTED,
-} from '../../common/prompt'
+import { ensureValidTemplate, injectPlaceholders } from '../../common/prompt'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
-import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { needleToSSE } from './stream'
-import { AdapterProps } from './type'
-import { adventureAmble } from '/common/default-preset'
-import { Encoder } from '/common/tokenize'
 
 const baseUrl = `https://api.openai.com`
 
@@ -63,21 +53,7 @@ type CompletionGenerator = (
 >
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const {
-    char,
-    members,
-    user,
-    prompt,
-    settings,
-    sender,
-    log,
-    guest,
-    lines,
-    parts,
-    gen,
-    kind,
-    isThirdParty,
-  } = opts
+  const { char, members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
   const base = getBaseUrl(user, isThirdParty)
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
@@ -102,109 +78,17 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
-    const handle = opts.impersonate?.name || sender.handle || 'You'
 
-    const gaslight = injectPlaceholders(
-      ensureValidTemplate(parts.gaslight, opts.parts, ['history', 'post']),
-      {
-        opts,
-        parts: opts.parts,
-        encoder,
-      }
-    )
+    const gaslight = injectPlaceholders(ensureValidTemplate(prompt, opts.parts), {
+      opts,
+      parts: opts.parts,
+      encoder,
+      history: { lines: opts.lines, order: 'asc' },
+    })
+
     const messages: OpenAIMessagePropType[] = [{ role: 'system', content: gaslight }]
-    const history: OpenAIMessagePropType[] = []
 
-    const all = []
-
-    let maxBudget =
-      (gen.maxContextLength || defaultPresets.openai.maxContextLength) - body.max_tokens
-
-    let tokens = encoder(gaslight)
-
-    if (lines) {
-      all.push(...lines)
-    }
-
-    if (kind !== 'summary' && parts.ujb) {
-      history.push({ role: 'system', content: parts.ujb })
-      tokens += encoder(parts.ujb)
-    }
-
-    if (kind === 'summary') {
-      // This probably needs to be workshopped
-      let content = user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
-
-      if (!content.startsWith('(')) content = '(' + content
-      if (!content.endsWith(')')) content = content + ')'
-
-      const looks = Object.values(opts.characters || {})
-        .map(getCharLooks)
-        .filter((v) => !!v)
-        .join('\n')
-      if (looks) {
-        messages[0].content += '\n' + looks
-        tokens += encoder(looks)
-      }
-
-      tokens += encoder(content)
-      history.push({ role: 'user', content })
-    }
-
-    if (kind === 'continue') {
-      let content = `Continue ${opts.replyAs.name}'s response`
-      tokens += encoder(content)
-      history.push({ role: 'system', content })
-    }
-
-    if (kind === 'self') {
-      const content = `Respond as ${handle}`
-      tokens += encoder(content)
-      history.push({ role: 'system', content })
-    }
-
-    if (kind !== 'continue' && kind !== 'summary' && kind !== 'plain') {
-      const content = getInstruction(opts, encoder)
-      tokens += encoder(content)
-      history.push({ role: 'system', content })
-    }
-
-    const linesLatestFirst = all.reverse()
-    const startOfExamples = linesLatestFirst.findIndex((l) => l === 'System: ' + NEW_CONVO_STARTED)
-
-    for (const [i, line] of linesLatestFirst.entries()) {
-      let role: 'user' | 'assistant' | 'system' = 'assistant'
-      let name: 'example_user' | 'example_assistant' | undefined
-      const isSystem = line.startsWith('System:')
-      const isBot = line.startsWith(char.name)
-      let content = line.trim().replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, handle)
-
-      if (isBot) {
-        role = 'assistant'
-        if (i > startOfExamples && startOfExamples !== -1) {
-          role = 'system'
-          name = 'example_assistant'
-        }
-      } else if (line === '<START>') {
-        role = 'system'
-      } else if (isSystem) {
-        role = 'system'
-        content = content.replace('System:', '').trim()
-      } else {
-        role = 'user'
-        if (i > startOfExamples && startOfExamples !== -1) {
-          role = 'system'
-          name = 'example_user'
-        }
-      }
-      const length = encoder(content)
-      if (tokens + length > maxBudget) break
-
-      tokens += length
-      history.push({ role, content, name })
-    }
-
-    body.messages = messages.concat(history.reverse())
+    body.messages = messages
   } else {
     body.prompt = prompt
   }
@@ -415,26 +299,4 @@ function getCompletionContent(completion?: FullCompletion) {
   } else {
     return completion.choices[0].message.content
   }
-}
-
-function getCharLooks(char: AppSchema.Character) {
-  if (char.persona?.kind === 'text') return
-
-  const visuals = [
-    char.persona?.attributes?.looks || '',
-    char.persona?.attributes?.appearance || '',
-  ].filter((v) => !!v)
-
-  if (!visuals.length) return
-  return `${char.name}'s appearance: ${visuals.join(', ')}`
-}
-
-function getInstruction(opts: AdapterProps, encoder: Encoder) {
-  if (opts.chat.mode !== 'adventure') {
-    return `Respond as ${opts.replyAs.name}`
-  }
-
-  // This is experimental and probably needs to be workshopped to get better responses
-  const content = injectPlaceholders(adventureAmble, { opts, parts: opts.parts, encoder })
-  return content
 }

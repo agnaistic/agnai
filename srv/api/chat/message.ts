@@ -36,7 +36,6 @@ const genValidator = {
     greeting: 'string?',
     memory: 'any?',
     sampleChat: ['string?'],
-    gaslight: 'string',
     post: ['string'],
     allPersonas: 'any?',
   },
