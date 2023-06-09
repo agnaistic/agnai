@@ -8,6 +8,8 @@ import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
 
+export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
+
 export type PromptParts = {
   scenario?: string
   greeting?: string
@@ -145,13 +147,14 @@ export function createPromptWithParts(
 ) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
+  const history = { lines, order: 'asc' } as const
   const prompt = injectPlaceholders(template, {
     opts,
     parts,
-    history: { lines, order: 'asc' },
+    history,
     encoder,
   })
-  return { lines, prompt, parts, post }
+  return { lines: history.lines, prompt, parts, post }
 }
 
 export function getTemplate(
@@ -177,8 +180,6 @@ type InjectOpts = {
   history?: { lines: string[]; order: 'asc' | 'desc' }
   encoder: Encoder
 }
-
-const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 
 export function injectPlaceholders(
   template: string,

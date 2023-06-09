@@ -1,30 +1,40 @@
 import type { OutgoingHttpHeaders } from 'http'
 import needle from 'needle'
 import { sanitiseAndTrim } from '../api/chat/common'
-import { ModelAdapter } from './type'
+import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { ensureValidTemplate, injectPlaceholders } from '../../common/prompt'
+import {
+  BOT_REPLACE,
+  SAMPLE_CHAT_MARKER,
+  SELF_REPLACE,
+  ensureValidTemplate,
+  injectPlaceholders,
+} from '../../common/prompt'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
 import { needleToSSE } from './stream'
+import { Encoder } from '/common/tokenize'
+import { adventureAmble } from '/common/default-preset'
+import { IMAGE_SUMMARY_PROMPT } from '/common/image'
+import { config } from '../config'
 
 const baseUrl = `https://api.openai.com`
 
-type ContentRole = 'user' | 'assistant' | 'system'
+type Role = 'user' | 'assistant' | 'system'
 
-type OpenAIMessagePropType = {
-  role: ContentRole
+type CompletionItem = {
+  role: Role
   content: string
-  name?: 'example_user' | 'example_assistant'
+  name?: string
 }
 
 type CompletitionContent<T> = Array<
   { finish_reason: string; index: number } & ({ text: string } | T)
 >
-type ChatCompletionContent = { message: { content: string; role: ContentRole } }
+type ChatCompletionContent = { message: { content: string; role: Role } }
 
 type StreamedChatCompletionDelta = { delta: Partial<ChatCompletionContent['message']> }
 
@@ -78,15 +88,18 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
+    // const history = { lines: opts.lines, order: 'asc' } as const
+    // opts.lines = history.lines
+    // const gaslight = injectPlaceholders(ensureValidTemplate(prompt, opts.parts), {
+    //   opts,
+    //   parts: opts.parts,
+    //   encoder,
+    //   history,
+    // })
 
-    const gaslight = injectPlaceholders(ensureValidTemplate(prompt, opts.parts), {
-      opts,
-      parts: opts.parts,
-      encoder,
-      history: { lines: opts.lines, order: 'asc' },
-    })
-
-    const messages: OpenAIMessagePropType[] = [{ role: 'system', content: gaslight }]
+    const messages: CompletionItem[] = config.inference.flatChatCompletion
+      ? [{ role: 'system', content: opts.prompt }]
+      : toChatCompletionPayload(opts, body.max_tokens, encoder)
 
     body.messages = messages
   } else {
@@ -299,4 +312,151 @@ function getCompletionContent(completion?: FullCompletion) {
   } else {
     return completion.choices[0].message.content
   }
+}
+
+function toChatCompletionPayload(
+  opts: AdapterProps,
+  maxTokens: number,
+  encoder: Encoder
+): CompletionItem[] {
+  if (opts.kind === 'plain') {
+    return [{ role: 'system', content: opts.prompt }]
+  }
+
+  const { kind, lines, parts, user, gen, replyAs } = opts
+
+  const messages: CompletionItem[] = []
+  const history: CompletionItem[] = []
+
+  const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
+  const gaslight = injectPlaceholders(
+    ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, opts.parts, [
+      'history',
+      'post',
+    ]),
+    { opts, parts, encoder }
+  )
+
+  messages.push({ role: 'system', content: gaslight })
+
+  const all = []
+
+  let maxBudget = (gen.maxContextLength || defaultPresets.openai.maxContextLength) - maxTokens
+  let tokens = encoder(gaslight)
+
+  if (lines) {
+    all.push(...lines)
+  }
+
+  if (kind !== 'summary' && parts.ujb) {
+    history.push({ role: 'system', content: parts.ujb })
+    tokens += encoder(parts.ujb)
+  }
+
+  if (kind === 'summary') {
+    // This probably needs to be workshopped
+    let content = user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
+
+    if (!content.startsWith('(')) content = '(' + content
+    if (!content.endsWith(')')) content = content + ')'
+
+    const looks = Object.values(opts.characters || {})
+      .map(getCharLooks)
+      .filter((v) => !!v)
+      .join('\n')
+    if (looks) {
+      messages[0].content += '\n' + looks
+      tokens += encoder(looks)
+    }
+
+    tokens += encoder(content)
+    history.push({ role: 'user', content })
+  }
+
+  if (kind === 'continue') {
+    let content = `Continue ${opts.replyAs.name}'s response`
+    tokens += encoder(content)
+    history.push({ role: 'system', content })
+  }
+
+  if (kind === 'self') {
+    const content = `Respond as ${handle}`
+    tokens += encoder(content)
+    history.push({ role: 'system', content })
+  }
+
+  if (kind !== 'continue' && kind !== 'summary') {
+    const content = getInstruction(opts, encoder)
+    tokens += encoder(content)
+    history.push({ role: 'system', content })
+  }
+
+  const startOfExamples = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
+
+  for (let i = all.length - 1; i >= 0; i--) {
+    const line = all[i]
+
+    const obj: CompletionItem = {
+      role: 'assistant',
+      content: line.trim().replace(BOT_REPLACE, replyAs.name).replace(SELF_REPLACE, handle),
+    }
+
+    const isSystem = line.startsWith('System:')
+    const isBot = !line.startsWith(handle) && !isSystem
+
+    if (i === startOfExamples) {
+      const samples = obj.content.split('\n').reverse()
+      for (const sample of samples) {
+        const role = sample.startsWith(replyAs.name)
+          ? 'assistant'
+          : sample.startsWith('System')
+          ? 'system'
+          : 'user'
+
+        const name = role !== 'system' ? `example_${role}` : undefined
+        const msg: CompletionItem = { role, content: sample, name }
+        const length = encoder(msg.content)
+        if (tokens + length > maxBudget) break
+        history.push(msg)
+      }
+      continue
+    } else if (isBot) {
+    } else if (line === '<START>') {
+      obj.role = 'system'
+    } else if (isSystem) {
+      obj.role = 'system'
+      obj.content = obj.content.replace('System:', '').trim()
+    } else {
+      obj.role = 'user'
+    }
+    const length = encoder(obj.content)
+    if (tokens + length > maxBudget) break
+
+    tokens += length
+    history.push(obj)
+  }
+
+  return messages.concat(history.reverse())
+}
+
+function getCharLooks(char: AppSchema.Character) {
+  if (char.persona?.kind === 'text') return
+
+  const visuals = [
+    char.persona?.attributes?.looks || '',
+    char.persona?.attributes?.appearance || '',
+  ].filter((v) => !!v)
+
+  if (!visuals.length) return
+  return `${char.name}'s appearance: ${visuals.join(', ')}`
+}
+
+function getInstruction(opts: AdapterProps, encoder: Encoder) {
+  if (opts.chat.mode !== 'adventure') {
+    return `Respond as ${opts.replyAs.name}`
+  }
+
+  // This is experimental and probably needs to be workshopped to get better responses
+  const content = injectPlaceholders(adventureAmble, { opts, parts: opts.parts, encoder })
+  return content
 }

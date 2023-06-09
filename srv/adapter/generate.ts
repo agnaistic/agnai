@@ -153,7 +153,7 @@ export async function createTextStreamV2(
     settings,
     user: opts.user,
     guest: guestSocketId,
-    lines: opts.lines,
+    lines: prompt.lines,
     isThirdParty,
     replyAs: opts.replyAs,
     characters: Object.assign(opts.characters, { impersonated: opts.impersonate }),
