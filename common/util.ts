@@ -12,8 +12,8 @@ export const isObject = (val: unknown) => Object.prototype.toString.call(val) ==
 
 export const cycleArray = <T>(arr: T[], shiftAmount: number) => {
   const effectiveShift = shiftAmount % arr.length
-  return [
-    ...arr.slice(effectiveShift),
-    ...arr.slice(0, effectiveShift)
-  ]
+  return [...arr.slice(effectiveShift), ...arr.slice(0, effectiveShift)]
 }
+
+export const dateStringFromUnix = (unixTimestamp: number): string =>
+  new Date(unixTimestamp).toISOString()

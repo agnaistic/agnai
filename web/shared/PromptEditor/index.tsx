@@ -18,7 +18,7 @@ const placeholders: Record<string, Placeholder> = {
   personality: { required: true, limit: 1 },
   ujb: { required: false, limit: 1 },
   post: { required: true, limit: 1 },
-  example_dialogue: { required: false, limit: 1 },
+  example_dialogue: { required: true, limit: 1 },
   all_personalities: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
@@ -86,6 +86,10 @@ const PromptEditor: Component<{
               <span class="text-yellow-600">Yellow</span> placeholders are optional and will not be
               automatically included if you do not include them.
             </div>
+            <div>
+              <span class="text-red-600">example_dialogue</span> will be inserted as conversation
+              history if you do not include it. It is recommended to NOT include example_dialogue.
+            </div>
           </>
         }
       />
@@ -121,13 +125,15 @@ const Placeholder: Component<
   })
 
   const disabled = createMemo(() => count() >= props.limit)
+  console.log(props)
 
   return (
     <div
       onClick={() => props.onClick(props.name)}
       class="cursor-pointer select-none rounded-md py-1 px-2 text-sm"
       classList={{
-        'bg-green-600': props.required,
+        'bg-red-600': props.name === 'example_dialogue',
+        'bg-green-600': props.required && props.name !== 'example_dialogue',
         'bg-yellow-600': !props.required && props.limit === 1,
         'bg-600': !props.required && props.limit > 1,
         'cursor-not-allowed': disabled(),

@@ -9,6 +9,7 @@ import {
   SELF_REPLACE,
   ensureValidTemplate,
   injectPlaceholders,
+  NEW_CONVO_STARTED,
 } from '../../common/prompt'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
@@ -27,6 +28,7 @@ type ContentRole = 'user' | 'assistant' | 'system'
 type OpenAIMessagePropType = {
   role: ContentRole
   content: string
+  name?: 'example_user' | 'example_assistant'
 }
 
 type CompletitionContent<T> = Array<
@@ -167,23 +169,39 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       history.push({ role: 'system', content })
     }
 
-    for (const line of all.reverse()) {
+    const linesLatestFirst = all.reverse()
+    const startOfExamples = linesLatestFirst.findIndex((l) => l === 'System: ' + NEW_CONVO_STARTED)
+
+    for (const [i, line] of linesLatestFirst.entries()) {
       let role: 'user' | 'assistant' | 'system' = 'assistant'
+      let name: 'example_user' | 'example_assistant' | undefined
+      const isSystem = line.startsWith('System:')
       const isBot = line.startsWith(char.name)
-      const content = line.trim().replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, handle)
+      let content = line.trim().replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, handle)
 
       if (isBot) {
         role = 'assistant'
+        if (i > startOfExamples && startOfExamples !== -1) {
+          role = 'system'
+          name = 'example_assistant'
+        }
       } else if (line === '<START>') {
         role = 'system'
+      } else if (isSystem) {
+        role = 'system'
+        content = content.replace('System:', '').trim()
       } else {
         role = 'user'
+        if (i > startOfExamples && startOfExamples !== -1) {
+          role = 'system'
+          name = 'example_user'
+        }
       }
       const length = encoder(content)
       if (tokens + length > maxBudget) break
 
       tokens += length
-      history.push({ role, content })
+      history.push({ role, content, name })
     }
 
     body.messages = messages.concat(history.reverse())

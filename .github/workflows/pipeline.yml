@@ -8,7 +8,7 @@ on: pull_request
 
 env:
   node-version: '18.4.0'
-  pnpm-version: 7.2.1
+  pnpm-version: 8.6.0
 
 jobs:
   checks:

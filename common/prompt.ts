@@ -7,6 +7,7 @@ import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
+import { dateStringFromUnix } from './util'
 
 export type PromptParts = {
   scenario?: string
@@ -64,6 +65,7 @@ type BuildPromptOpts = {
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
 export const BOT_REPLACE = /(\{\{char\}\}|<BOT>|\{\{name\}\})/gi
 export const SELF_REPLACE = /(\{\{user\}\}|<USER>)/gi
+export const START_REPLACE = /(<START>)/gi
 
 const HOLDER_NAMES = {
   ujb: 'ujb',
@@ -104,10 +106,27 @@ const ALL_HOLDERS = new RegExp(
  * @returns
  */
 export function createPrompt(opts: PromptOpts, encoder: Encoder) {
-  const sortedMsgs = opts.messages
-    .filter((msg) => msg.adapter !== 'image')
-    .slice()
-    .sort(sortMessagesDesc)
+  const gaslightHasExampleDialogue = !!opts.settings?.gaslight?.match(HOLDERS.sampleChat)
+  const sampleMessages = gaslightHasExampleDialogue
+    ? []
+    : sampleChatStringToMessages({
+        sampleChat: opts.replyAs.sampleChat,
+        username: opts.user.username,
+        charname: opts.replyAs.name,
+        userId: opts.user._id,
+        characterId: opts.replyAs._id,
+        chatId: opts.chat._id,
+      })
+        .slice()
+        .sort(sortMessagesDesc)
+
+  const sortedMsgs = [
+    ...sampleMessages,
+    ...opts.messages
+      .filter((msg) => msg.adapter !== 'image')
+      .slice()
+      .sort(sortMessagesDesc),
+  ]
   opts.messages = sortedMsgs
 
   /**
@@ -292,6 +311,7 @@ type PromptPartsOptions = Pick<
 
 export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
   const { chat, char, members, replyAs } = opts
+  const gaslightHasExampleDialogue = !!opts.settings?.gaslight?.match(HOLDERS.sampleChat)
   const sender = opts.impersonate
     ? opts.impersonate.name
     : members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
@@ -335,11 +355,13 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  parts.sampleChat = (replyAs._id === char._id ? chat.sampleChat : replyAs.sampleChat)
-    .split('\n')
-    .filter(removeEmpty)
-    // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
-    .map(replace)
+  parts.sampleChat = gaslightHasExampleDialogue
+    ? (replyAs._id === char._id ? chat.sampleChat : replyAs.sampleChat)
+        .split('\n')
+        .filter(removeEmpty)
+        // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
+        .map(replace)
+    : undefined
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
@@ -442,14 +464,14 @@ function getLinesForPrompt(
     profiles.set(member.userId, member)
   }
 
-  const formatMsg = (chat: AppSchema.ChatMessage) => {
+  const formatMsg = (msg: AppSchema.ChatMessage) => {
     const sender = opts.impersonate
       ? opts.impersonate.name
-      : profiles.get(chat.userId || opts.chat.userId)?.handle || 'You'
+      : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
     return fillPlaceholders(
-      chat,
-      opts.characters[chat.characterId!]?.name || opts.replyAs?.name || char.name,
+      msg,
+      opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
       sender
     ).trim()
   }
@@ -477,9 +499,9 @@ function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string
   return adding
 }
 
-function fillPlaceholders(chat: AppSchema.ChatMessage, char: string, user: string) {
-  const prefix = chat.characterId ? char : user
-  const msg = chat.msg.replace(BOT_REPLACE, char).replace(SELF_REPLACE, user)
+function fillPlaceholders(chatMsg: AppSchema.ChatMessage, char: string, user: string): string {
+  const prefix = chatMsg.system ? 'System' : chatMsg.characterId ? char : user
+  const msg = chatMsg.msg.replace(BOT_REPLACE, char).replace(SELF_REPLACE, user)
   return `${prefix}: ${msg}`
 }
 
@@ -681,4 +703,81 @@ export function trimTokens(opts: TrimOpts) {
 function newline(value: string | undefined) {
   if (!value) return ''
   return '\n' + value
+}
+
+const EXAMPLE_MSG_ID_PREFIX = '__example_message_'
+
+export const exampleMsgId = (messageNumber: number): string =>
+  `${EXAMPLE_MSG_ID_PREFIX}${messageNumber}`
+
+export const NEW_CONVO_STARTED: string =
+  'New conversation started. Previous conversations are examples only.'
+
+export const sampleChatStringToMessages = ({
+  sampleChat,
+  username,
+  charname,
+  userId,
+  characterId,
+  chatId,
+}: {
+  sampleChat: string
+  username: string
+  charname: string
+  userId: string
+  characterId: string
+  chatId: string
+}): AppSchema.ChatMessage[] => {
+  // this is a confusing chatgpt regex. see `sample-chat.spec.ts` to check that
+  // it behaves as expected.
+  const regex = /(?<=\n)(?={{user}}:|{{char}}:|<user>:|<bot>:|<start>)/gi
+  const separateStartFromDefsAfterIt = (str: string): string[] => {
+    const trimmed = str.trim()
+    if (trimmed.toLowerCase().startsWith('<start>')) {
+      const afterStart = trimmed.split('\n').slice(1)
+      return ['<start>', ...(afterStart.length > 0 ? [afterStart.join('\n')] : [])]
+    } else {
+      return [str]
+    }
+  }
+  const stringMsgs = sampleChat
+    .split(regex)
+    .map((str) => str.trim())
+    .filter(Boolean)
+    .flatMap(separateStartFromDefsAfterIt)
+
+  const mkMsg = (
+    id: number,
+    author: 'user' | 'character' | 'system',
+    text: string
+  ): AppSchema.ChatMessage => ({
+    _id: exampleMsgId(id),
+    kind: 'chat-message',
+    chatId,
+    characterId: author === 'character' ? characterId : undefined,
+    userId: author === 'user' ? userId : undefined,
+    msg: text,
+    createdAt: dateStringFromUnix(id),
+    updatedAt: dateStringFromUnix(id),
+    system: author === 'system' ? true : undefined,
+  })
+
+  const stringMsgToExampleMsg = (stringMsg: string, i: number): AppSchema.ChatMessage => {
+    const withPholdersApplied = stringMsg
+      .replace(BOT_REPLACE, charname)
+      .replace(SELF_REPLACE, username)
+    if (withPholdersApplied.toLowerCase() === '<start>') {
+      return mkMsg(i, 'system', NEW_CONVO_STARTED)
+    } else if (withPholdersApplied.startsWith(`${username}:`)) {
+      return mkMsg(i, 'user', withPholdersApplied.replace(`${username}:`, '').trim())
+    } else if (withPholdersApplied.startsWith(`${charname}:`)) {
+      return mkMsg(i, 'character', withPholdersApplied.replace(`${charname}:`, '').trim())
+    } else {
+      return mkMsg(i, 'system', withPholdersApplied.trim())
+    }
+  }
+
+  const exampleMsgs = stringMsgs.map(stringMsgToExampleMsg)
+
+  return [...exampleMsgs, mkMsg(exampleMsgs.length, 'system', NEW_CONVO_STARTED)]
 }
