@@ -88,14 +88,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   if (useChat) {
     const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
-    // const history = { lines: opts.lines, order: 'asc' } as const
-    // opts.lines = history.lines
-    // const gaslight = injectPlaceholders(ensureValidTemplate(prompt, opts.parts), {
-    //   opts,
-    //   parts: opts.parts,
-    //   encoder,
-    //   history,
-    // })
 
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
