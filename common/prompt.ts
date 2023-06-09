@@ -381,15 +381,12 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() }, encoder)
   if (memory) parts.memory = memory.prompt
 
-  if (opts.settings?.useGaslight || opts.settings?.service === 'openai') {
-    parts.ujb = opts.settings?.ignoreCharacterUjb
-      ? opts.settings?.ultimeJailbreak
-      : char.postHistoryInstructions || opts.settings?.ultimeJailbreak
-  }
-
+  parts.ujb = opts.settings?.ignoreCharacterUjb
+    ? opts.settings?.ultimeJailbreak
+    : replyAs.postHistoryInstructions || opts.settings?.ultimeJailbreak
   parts.systemPrompt = opts.settings?.ignoreCharacterSystemPrompt
     ? opts.settings?.systemPrompt
-    : char.systemPrompt || opts.settings?.systemPrompt
+    : replyAs.systemPrompt || opts.settings?.systemPrompt
 
   parts.post = post.map(replace)
 
