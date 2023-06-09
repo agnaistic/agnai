@@ -31,7 +31,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -47,7 +47,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -87,7 +87,7 @@ describe('Prompt building', () => {
       expected(
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -105,7 +105,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE\nENTRY TWO',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -127,7 +127,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY TWO\nENTRY THREE',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -151,7 +151,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -173,7 +173,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: LONGWOR A',
@@ -194,7 +194,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY TIE\nENTRY THREE',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -270,7 +270,7 @@ describe('Prompt building', () => {
         `Bot's Persona: PERSONA`,
         'Scenario: SCENARIO',
         'Facts:\nENTRY ONE\nENTRY TIE\nENTRY THREE',
-        `Example of Bot's dialogue: `,
+        `Example of Bot's dialogue:`,
         'Bot: SAMPLE_CHAT',
         '\n<START>',
         'Bot: FIRST',
@@ -297,7 +297,7 @@ describe('Prompt building', () => {
       expected(
         `Reply's Persona: PERSONA`,
         `Scenario: MAIN Main`,
-        `Example of Reply's dialogue: `,
+        `Example of Reply's dialogue:`,
         'SAMPLECHAT Reply',
         `\n<START>\n`,
         'Reply:'
@@ -333,7 +333,7 @@ function build(
   } = {}
 ) {
   const encoder = getEncoder('main')
-  return createPrompt(
+  const result = createPrompt(
     {
       char: opts.char || char,
       members: [profile],
@@ -349,6 +349,9 @@ function build(
     },
     encoder
   )
+  // Replace spaces with dots to help with interpreting test results
+  result.template = result.template.replace(/ /g, '.')
+  return result
 }
 
 function botMsg(text: string) {
@@ -360,5 +363,6 @@ function toMsg(text: string) {
 }
 
 function expected(...lines: string[]) {
-  return lines.join('\n')
+  // Replace spaces with dots to help with interpreting test results
+  return lines.join('\n').replace(/ /g, '.')
 }

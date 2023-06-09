@@ -128,6 +128,9 @@ function getType(filename: string) {
     case '.png':
       return 'image/png'
 
+    case '.apng':
+      return 'image/apng'
+
     case '.webm':
       return 'video/webm'
 
@@ -151,6 +154,7 @@ function isAllowedType(contentType: string) {
     case 'image/jpeg':
     case 'image/jpg':
     case 'image/png':
+    case 'image/apng':
       return true
   }
 

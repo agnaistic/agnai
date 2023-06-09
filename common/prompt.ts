@@ -190,9 +190,9 @@ export function injectPlaceholders(
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
     .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
-    .replace(HOLDERS.sampleChat, sampleChat || '')
+    .replace(HOLDERS.sampleChat, newline(sampleChat))
     .replace(HOLDERS.scenario, parts.scenario || '')
-    .replace(HOLDERS.memory, parts.memory || '')
+    .replace(HOLDERS.memory, newline(parts.memory))
     .replace(HOLDERS.persona, parts.persona)
     .replace(HOLDERS.allPersonas, parts.allPersonas?.join('\n') || '')
     .replace(HOLDERS.post, parts.post.join('\n'))
@@ -676,4 +676,9 @@ export function trimTokens(opts: TrimOpts) {
   }
 
   return output
+}
+
+function newline(value: string | undefined) {
+  if (!value) return ''
+  return '\n' + value
 }

@@ -4,6 +4,9 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_6 June 2023_
+- Add background color to customizable colors
+
 _3 June 2023_
 - Add "message background color", "chat text color", and "chat emphasis color" to UI settings
 
@@ -56,8 +59,7 @@ _5 May 2023_
 
 _21 Apr 2023_
 - Added dashboard
-- Added changelog
-`
+- Added change log`
 
 const ChangeLog: Component = () => {
   setComponentPageTitle('Changelog')
