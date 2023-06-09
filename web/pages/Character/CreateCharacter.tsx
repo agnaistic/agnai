@@ -389,7 +389,7 @@ const CreateCharacter: Component = () => {
               fieldName="avatar"
               label="Avatar"
               helperText='Use the "appearance" attribute in your persona to influence the generated images'
-              accept="image/png,image/jpeg, image/apng"
+              accept="image/png,image/jpeg,image/apng"
               onUpdate={updateFile}
             />
             <div class="flex w-full gap-2">

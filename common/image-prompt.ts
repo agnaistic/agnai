@@ -48,7 +48,7 @@ export async function createAppearancePrompt(
     throw new Error(`Your character does not have an "appearance" or "looks" attribute.`)
   }
 
-  const prompt = `full body portrait, ${visuals.join(', ')}, dramatic lighting`
+  const prompt = `full body portrait, ${visuals.join(', ')}`
   return prompt
 }
 

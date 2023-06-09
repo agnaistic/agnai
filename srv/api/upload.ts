@@ -128,6 +128,9 @@ function getType(filename: string) {
     case '.png':
       return 'image/png'
 
+    case '.apng':
+      return 'image/apng'
+
     case '.webm':
       return 'video/webm'
 
