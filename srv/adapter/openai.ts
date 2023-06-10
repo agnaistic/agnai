@@ -340,11 +340,6 @@ function toChatCompletionPayload(
     all.push(...lines)
   }
 
-  if (kind !== 'summary' && parts.ujb) {
-    history.push({ role: 'system', content: parts.ujb })
-    tokens += encoder(parts.ujb)
-  }
-
   if (kind === 'summary') {
     // This probably needs to be workshopped
     let content = user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
@@ -383,7 +378,12 @@ function toChatCompletionPayload(
     history.push({ role: 'system', content })
   }
 
-  const startOfExamples = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
+  if (kind !== 'summary' && parts.ujb) {
+    history.push({ role: 'system', content: parts.ujb })
+    tokens += encoder(parts.ujb)
+  }
+
+  const examplePos = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
 
   for (let i = all.length - 1; i >= 0; i--) {
     const line = all[i]
@@ -396,21 +396,33 @@ function toChatCompletionPayload(
     const isSystem = line.startsWith('System:')
     const isBot = !line.startsWith(handle) && !isSystem
 
-    if (i === startOfExamples) {
+    if (i === examplePos) {
+      const additions: CompletionItem[] = []
       const samples = obj.content.split('\n').reverse()
-      for (const sample of samples) {
+
+      for (let sample of samples) {
         const role = sample.startsWith(replyAs.name)
           ? 'assistant'
           : sample.startsWith('System')
           ? 'system'
           : 'user'
 
-        const name = role !== 'system' ? `example_${role}` : undefined
-        const msg: CompletionItem = { role, content: sample, name }
+        let name = role !== 'system' ? `example_${role}` : undefined
+        if (additions.length === samples.length - 1) {
+          sample = `How you speak:`
+          name = undefined
+        }
+
+        const msg: CompletionItem = {
+          role: role, //  === 'system' ? role : 'user',
+          content: sample.replace(BOT_REPLACE, replyAs.name).replace(SELF_REPLACE, handle),
+          name,
+        }
         const length = encoder(msg.content)
         if (tokens + length > maxBudget) break
-        history.push(msg)
+        additions.push(msg)
       }
+      history.push(...additions)
       continue
     } else if (isBot) {
     } else if (line === '<START>') {

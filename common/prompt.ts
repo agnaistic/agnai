@@ -9,6 +9,7 @@ import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { Encoder } from './tokenize'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
+export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
 
 export type PromptParts = {
   scenario?: string
@@ -190,8 +191,9 @@ export function injectPlaceholders(
   if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
-    if (hist.order === 'asc') next.unshift(`${sampleChat}\n${SAMPLE_CHAT_MARKER}`)
-    else next.push(`How ${opts.replyAs.name} speaks:\n${sampleChat}\n${SAMPLE_CHAT_MARKER}`)
+    const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${SAMPLE_CHAT_MARKER}`
+    if (hist.order === 'asc') next.unshift(msg)
+    else next.push(msg)
 
     hist.lines = next
   }

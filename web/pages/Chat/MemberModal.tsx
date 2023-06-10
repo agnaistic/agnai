@@ -1,4 +1,4 @@
-import { ArrowBigLeft, Bot, Crown, Mail, Trash, User } from 'lucide-solid'
+import { ArrowBigLeft, Crown, Mail, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -23,11 +23,11 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
           Close
         </Button>
         <Button schema="primary" onClick={() => setView('add_character')}>
-          <Bot size={16} /> Add Character
+          <Plus size={16} /> Character
         </Button>
         <Show when={isLoggedIn()}>
           <Button schema="primary" onClick={() => setView('invite_user')}>
-            <User size={16} /> Add User
+            <Plus size={16} /> User
           </Button>
         </Show>
       </Show>
