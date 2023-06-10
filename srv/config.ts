@@ -93,6 +93,10 @@ export const config = {
     policies: !!env('SHOW_POLICIES', ''),
     inject: env('INJECT', ''),
   },
+
+  inference: {
+    flatChatCompletion: !!env('SIMPLE_COMPLETION', ''),
+  },
 }
 
 if (config.ui.inject) {

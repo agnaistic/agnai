@@ -102,7 +102,7 @@ const PromptEditor: Component<{
         disabled={props.disabled}
       />
 
-      <div class="flex gap-2">
+      <div class="flex flex-wrap gap-2">
         <For each={Object.entries(placeholders).filter(([name]) => !props.exclude?.includes(name))}>
           {([name, data]) => (
             <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />

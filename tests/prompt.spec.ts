@@ -163,6 +163,21 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     })
     expect(actual.template).toMatchSnapshot()
   })
+
+  it('will include example dialogue with omitted from template', () => {
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        char: { ...main, sampleChat: 'Bot: Example_Dialogue' },
+        settings: {
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
+          useGaslight: false,
+        },
+      }
+    )
+
+    expect(actual.template).toMatchSnapshot()
+  })
 })
 
 function build(

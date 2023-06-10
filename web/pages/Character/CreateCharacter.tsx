@@ -342,6 +342,7 @@ const CreateCharacter: Component = () => {
           />
           <div class="flex w-full gap-2">
             <TextInput
+              isMultiline
               fieldName="description"
               parentClass="w-full"
               value={downloaded()?.description || state.edit?.description}
