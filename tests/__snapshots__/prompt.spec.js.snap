@@ -89,6 +89,25 @@ Bot: ORIGINAL
 Bot:"
 `;
 
+exports[`Prompt building will include example dialogue with omitted from template 1`] = `
+"Bot's Persona: PERSONA
+Scenario: SCENARIO
+Facts:
+ENTRY ONE
+ENTRY TIE
+ENTRY THREE
+
+<START>
+How Bot speaks:
+Bot: SAMPLE_CHAT
+System: New conversation started. Previous conversations are examples only.
+Bot: FIRST
+You: 1-TRIGGER
+You: TIE-TRIGGER
+You: 20-TRIGGER
+Bot:"
+`;
+
 exports[`Prompt building will include gaslight for non-turbo adapter 1`] = `
 "GASLIGHT You
 Scenario: SCENARIO
