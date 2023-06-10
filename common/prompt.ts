@@ -186,22 +186,23 @@ export function injectPlaceholders(
   template: string,
   { opts, parts, history: hist, encoder }: InjectOpts
 ) {
+  const sender =
+    opts.impersonate?.name ||
+    opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle ||
+    'You'
   const sampleChat = parts.sampleChat?.join('\n')
 
   if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
     const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${SAMPLE_CHAT_MARKER}`
+      .replace(BOT_REPLACE, opts.replyAs.name)
+      .replace(SELF_REPLACE, sender)
     if (hist.order === 'asc') next.unshift(msg)
     else next.push(msg)
 
     hist.lines = next
   }
-
-  const sender =
-    opts.impersonate?.name ||
-    opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle ||
-    'You'
 
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
