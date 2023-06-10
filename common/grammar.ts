@@ -1,14 +1,15 @@
 export const grammar = `
 Expression
-  = pre:Text? content:(Parent / Text)* post:Text? {
+  = pre:Text? content:Parent* post:Text? {
    return [pre, ...content, post].filter(v => !!v)
   }
 
-Parent "parent" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
   
-Child "child" = v:(Condition / Placeholder) { return v }  
+Child "child-node" = v:(Condition / Placeholder) { return v }  
   
-Placeholder "placeholder" = OP WS interp:Interp WS pipes:Pipe* CL {
+Placeholder "placeholder"
+  = OP WS interp:Interp WS pipes:Pipe* CL {
   return { kind: 'placeholder', value: interp, pipes }
 }
 
@@ -33,14 +34,14 @@ Pipe "pipe" = _ "|" _ fn:Handler {
 }
 
 Text "text" = ch:Char+ {
-  return ch.map(c => c[0]).join('')
+  const text = ch.join('')
+  return text
 }
 
 Char "character" = word:(.) & {
-	const code = word.charCodeAt(0)
-    if (code === 123) return false
-    return word
-}
+	const first = word.charCodeAt(0)
+    return first !== 123
+} { return word }
 
 _ "whitespace"
   = [ \t]*
@@ -76,7 +77,8 @@ Message "message" = "msg"i / "message"i / "text"i { return "message" }
 Bots "bots" = ( "bots"i / "characters"i ) { return "bots" }
 History "history" = ( "history"i / "messages"i ) { return "history" }
 
-Interp "interp" = Character
+Interp "interp"
+	= Character
 	/ User
     / Scenario
     / Persona
