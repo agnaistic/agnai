@@ -41,10 +41,7 @@ const Chub: Component = () => {
   return (
     <>
       <PageHeader title="Character Hub" />
-      Download Characters and Lorebooks from{' '}
-      <a href="https://chub.ai" class="text-[var(--hl-500)]">
-        CHUB
-      </a>
+
       <div class="my-2">
         <Tabs
           tabs={tabs.map((t) => chubTabs[t])}
@@ -66,6 +63,17 @@ const Chub: Component = () => {
         <div class={currentTab() === 'filter' ? tabClass : 'hidden'}>
           <FilterSettings />
         </div>
+      </div>
+      <div>
+        <sub>
+          <em>
+            Disclaimer: Characters are owned and managed by{' '}
+            <a class="link" href="https://chub.ai" target="_blank">
+              CHUB.ai
+            </a>
+            .
+          </em>
+        </sub>
       </div>
       <Show when={!!charModal()}>
         <ChubImportCharModal
