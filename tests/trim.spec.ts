@@ -1,4 +1,4 @@
-require('module-alias/register')
+import './init'
 import { expect } from 'chai'
 import { trimResponseV2 } from '../srv/api/chat/common'
 import { toChar, toBotMsg, toProfile } from './util'

@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Template parser tests will create a full template 1`] = `
+"Scenario: SCENARIO
+Robot's persona: PERSONA
+Otherbot's persona: PERSONA
+Thirdbot's persona: PERSONA
+
+Example dialogue: Robot: SAMPLE_CHAT
+<START>
+- Robot: First message
+- Sender: User response
+- Otherbot: Multibot message
+(System: Reply as Robot)
+Robot:"
+`;
+
+exports[`Template parser tests will iterate over messages 1`] = `
+"Scenario: SCENARIO
+0 First message
+1 User response
+2 Multibot message"
+`;
+
+exports[`Template parser tests will not render missing conditional 1`] = `"Persona: PERSONA"`;
+
+exports[`Template parser tests will render a basic template 1`] = `
+"Scenario: SCENARIO
+Persona: PERSONA"
+`;
+
+exports[`Template parser tests will render conditional 1`] = `"Scenario: SCENARIO"`;

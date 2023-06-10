@@ -1,13 +1,10 @@
-require('module-alias/register')
-import chai, { expect } from 'chai'
-import { jestSnapshotPlugin } from 'mocha-chai-jest-snapshot'
+import './init'
+import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
 import { createPrompt, BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
 import { AppSchema } from '../srv/db/schema'
 import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
 import { getEncoder } from '../srv/tokenize'
-
-chai.use(jestSnapshotPlugin())
 
 const char = toChar('Bot')
 const main = toChar('Main', { scenario: 'MAIN {{char}}', sampleChat: 'SAMPLECHAT {{char}}' })

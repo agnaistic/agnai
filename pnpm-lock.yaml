@@ -53,6 +53,9 @@ dependencies:
   needle:
     specifier: ^3.2.0
     version: 3.2.0
+  peggy:
+    specifier: ^3.0.2
+    version: registry.npmjs.org/peggy@3.0.2
   pino:
     specifier: ^8.10.0
     version: 8.10.0
@@ -5973,6 +5976,13 @@ packages:
     version: 1.1.4
     dev: true
 
+  registry.npmjs.org/commander@10.0.1:
+    resolution: {integrity: sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/commander/-/commander-10.0.1.tgz}
+    name: commander
+    version: 10.0.1
+    engines: {node: '>=14'}
+    dev: false
+
   registry.npmjs.org/commander@2.20.3:
     resolution: {integrity: sha512-GpVkmM8vF2vQUkj2LvZmD35JxeJOLCwJ9cUkugyk2nuhbv3+mJvpLYYt+0+USMxE+oj+ey/lJEnhZw75x/OMcQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/commander/-/commander-2.20.3.tgz}
     name: commander
@@ -7061,6 +7071,17 @@ packages:
     engines: {node: '>=8'}
     dev: true
 
+  registry.npmjs.org/peggy@3.0.2:
+    resolution: {integrity: sha512-n7chtCbEoGYRwZZ0i/O3t1cPr6o+d9Xx4Zwy2LYfzv0vjchMBU0tO+qYYyvZloBPcgRgzYvALzGWHe609JjEpg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/peggy/-/peggy-3.0.2.tgz}
+    name: peggy
+    version: 3.0.2
+    engines: {node: '>=14'}
+    hasBin: true
+    dependencies:
+      commander: registry.npmjs.org/commander@10.0.1
+      source-map-generator: registry.npmjs.org/source-map-generator@0.8.0
+    dev: false
+
   registry.npmjs.org/picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/picocolors/-/picocolors-1.0.0.tgz}
     name: picocolors
@@ -7252,6 +7273,13 @@ packages:
     version: 3.0.0
     engines: {node: '>=8'}
     dev: true
+
+  registry.npmjs.org/source-map-generator@0.8.0:
+    resolution: {integrity: sha512-psgxdGMwl5MZM9S3FWee4EgsEaIjahYV5AzGnwUvPhWeITz/j6rKpysQHlQ4USdxvINlb8lKfWGIXwfkrgtqkA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/source-map-generator/-/source-map-generator-0.8.0.tgz}
+    name: source-map-generator
+    version: 0.8.0
+    engines: {node: '>= 10'}
+    dev: false
 
   registry.npmjs.org/source-map-support@0.5.21:
     resolution: {integrity: sha512-uBHU3L3czsIyYXKX88fdrGovxdSCoTGDRZ6SYXtSRxLZUzHg5P/66Ht6uoUlHu9EZod+inXhKo3qQgwXUT/y1w==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/source-map-support/-/source-map-support-0.5.21.tgz}
