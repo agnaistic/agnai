@@ -119,34 +119,19 @@ function createClaudePrompt(opts: AdapterProps): string {
   let tokens = 0
   const history: string[] = []
 
+  const sampleAmble = SAMPLE_CHAT_PREAMBLE.replace(BOT_REPLACE, replyAs.name)
+  const sender = opts.impersonate?.name ?? opts.sender.handle
+
   for (const line of lines.slice().reverse()) {
-    const lineType: 'system' | 'char' | 'user' | 'example' = opts.members.some((mem) =>
-      line.startsWith(mem.handle)
-    )
+    const lineType: LineType = line.startsWith(sender)
       ? 'user'
       : line.startsWith('System:')
       ? 'system'
-      : line.startsWith(SAMPLE_CHAT_PREAMBLE.replace(BOT_REPLACE, replyAs.name))
+      : line.startsWith(sampleAmble)
       ? 'example'
       : 'char'
-    const processedLine = (() => {
-      switch (lineType) {
-        case 'user':
-          return 'Human: ' + line
-        case 'system':
-          return 'Human:\n<system_note>\n' + line + '\n</system_note>'
-        case 'example':
-          return (
-            'Human:\n<example_dialogue>\n' +
-            line
-              .replace(START_REPLACE, '<system_note>New conversation started.</system_note>')
-              .replace('\n' + SAMPLE_CHAT_MARKER, '') +
-            '\n</example_dialogue>'
-          )
-        case 'char':
-          return 'Assistant: ' + line
-      }
-    })()
+
+    const processedLine = processLine(lineType, line)
     const cost = encoder(processedLine)
     if (cost + tokens >= maxBudget) break
 
@@ -175,4 +160,25 @@ function createClaudePrompt(opts: AdapterProps): string {
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
   return messages.join('\n\n') + continueAddon + '\n\n' + 'Assistant: ' + replyAs.name + ':'
+}
+
+type LineType = 'system' | 'char' | 'user' | 'example'
+
+function processLine(type: LineType, line: string) {
+  switch (type) {
+    case 'user':
+      return `Human: ${line}`
+
+    case 'system':
+      return `Human:\n<system_note>\n${line}\n</system_note>`
+
+    case 'example':
+      const mid = line
+        .replace(START_REPLACE, '<system_note>New conversation started.</system_note>')
+        .replace('\n' + SAMPLE_CHAT_MARKER, '')
+      return `Human:\n<example_dialogue>\n${mid}\n</example_dialogue>`
+
+    case 'char':
+      return `Assistant: ${line}`
+  }
 }
