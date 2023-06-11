@@ -1,12 +1,15 @@
 import { Component, Show, createEffect, createSignal } from 'solid-js'
 import { AppSchema } from '/srv/db/schema'
 import { settingStore, userStore } from '../store'
+import { v4 } from 'uuid'
 
 type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
 
 const Slot: Component<{ slot: SlotKind }> = (props) => {
-  let ref: any
   const [show, setShow] = createSignal(false)
+
+  const [id] = createSignal(v4())
+  const [done, setDone] = createSignal(false)
   const cfg = settingStore((s) => ({ slots: s.config.slots, flags: s.flags }))
   const user = userStore()
 
@@ -22,20 +25,24 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
     const canShow = hasSlot && (cfg.flags.slots || isTesting || cfg.slots.enabled)
 
     setShow(canShow)
-    if (!ref) return
+    const ele = document.getElementById(id())
+    if (!ele) return
 
     if (canShow) {
-      ref.innerHTML = cfg.slots[props.slot] || ''
+      if (done()) return
+      const node = document.createRange().createContextualFragment(cfg.slots[props.slot] as any)
+      ele.append(node)
+      setDone(true)
     } else {
-      ref.innerHTML = ''
+      ele.innerHTML = ''
     }
   })
 
   return (
     <Show when={show()}>
       <div
+        id={id()}
         data-testing={cfg.slots.testing}
-        ref={ref}
         classList={{
           'border-[var(--bg-700)]': user.user?.admin && cfg.slots.testing,
           'border-[1px]': user.user?.admin && cfg.slots.testing,

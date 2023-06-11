@@ -50,10 +50,7 @@ const Navigation: Component = () => {
             <UserNavigation />
           </Show>
         </div>
-        {/* <div class="flex flex-row justify-around text-xs">
-        <Item href="/terms-of-service">Terms</Item>
-        <Item href="/privacy-policy">Privacy Policy</Item>
-      </div> */}
+
         <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
           <div class="ellipsis my-auto flex w-full items-center justify-between">
             <div
@@ -208,11 +205,6 @@ const GuestNavigation: Component = () => {
         </ExternalLink>
       </Show>
 
-      <Item href="/info">
-        <Info />
-        Information
-      </Item>
-
       <ExternalLink href="https://github.com/agnaistic/agnai" newtab>
         <Github />
         GitHub
@@ -227,7 +219,7 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
   return (
     <A
       href={props.href}
-      class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] "
+      class="sm:text-md flex h-10 items-center justify-start gap-4 rounded-lg px-2 text-sm hover:bg-[var(--bg-700)] sm:h-12 "
       onClick={settingStore.closeMenu}
     >
       {props.children}
