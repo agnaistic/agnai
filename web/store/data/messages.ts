@@ -10,6 +10,7 @@ import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
+import { getBotsForChat } from '/web/pages/Chat/util'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -340,6 +341,8 @@ async function getGuestEntities() {
     characters: { list, map },
   } = getStore('character').getState()
 
+  const characters = getBotsForChat(chat, char, map)
+
   return {
     chat,
     char,
@@ -351,7 +354,7 @@ async function getGuestEntities() {
     members: [profile] as AppSchema.Profile[],
     chatBots: list,
     autoReplyAs: active.replyAs,
-    characters: map,
+    characters,
     impersonating,
   }
 }

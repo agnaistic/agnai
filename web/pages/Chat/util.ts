@@ -18,3 +18,18 @@ export function getActiveBots(chat: AppSchema.Chat, bots: Record<string, AppSche
     .filter((bot) => !!bot)
   return all
 }
+
+export function getBotsForChat(
+  chat: AppSchema.Chat,
+  main: AppSchema.Character,
+  bots: Record<string, AppSchema.Character>
+) {
+  const chars: Record<string, AppSchema.Character> = { [main._id]: main }
+
+  for (const key in chat.characters || {}) {
+    const bot = bots[key]
+    if (bot) chars[key] = bot
+  }
+
+  return chars
+}
