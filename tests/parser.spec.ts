@@ -66,6 +66,19 @@ Scenario: {{scenario}}
     )
     expect(actual).toMatchSnapshot()
   })
+
+  it('will handle history conditions correctly', () => {
+    const actual = test(
+      `
+Scenario: {{scenario}}
+{{char}}'s persona: {{persona}}
+{{#each bots}}{{.name}}'s persona: {{.persona}}{{/each}}
+
+{{#each history}}{{#if .isbot}}Assistant: {{/if}}{{#if .isuser}}Human: {{/if}}{{.name}}: {{.dialogue}}{{/each}}
+{{post}}`.trim()
+    )
+    expect(actual).toMatchSnapshot()
+  })
 })
 
 function test(template: string, overrides: Partial<ParseOpts> = {}) {
@@ -91,6 +104,7 @@ function getParseOpts(overrides: Partial<ParseOpts> = {}) {
     members: [profile],
     parts,
     user,
+    sender: profile,
     ...overrides,
   }
 

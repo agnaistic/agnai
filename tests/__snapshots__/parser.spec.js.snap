@@ -15,6 +15,18 @@ Example dialogue: Robot: SAMPLE_CHAT
 Robot:"
 `;
 
+exports[`Template parser tests will handle history conditions correctly 1`] = `
+"Scenario: SCENARIO
+Robot's persona: PERSONA
+Otherbot's persona: PERSONA
+Thirdbot's persona: PERSONA
+
+Assistant: Robot: First message
+Human: Sender: User response
+Assistant: Otherbot: Multibot message
+Robot:"
+`;
+
 exports[`Template parser tests will iterate over messages 1`] = `
 "Scenario: SCENARIO
 0 First message

@@ -299,7 +299,7 @@ const ChatDetail: Component = () => {
               bots={chars.chatBots}
               botMap={chars.botMap}
             />
-            <Show when={isOwner() && chats.activeBots.length > 1}>
+            <Show when={isOwner() && chats.activeBots.length > 2}>
               <div
                 class={`flex justify-center gap-2 py-1 ${
                   msgs.waiting ? 'opacity-70 saturate-0' : ''

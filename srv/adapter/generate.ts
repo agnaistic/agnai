@@ -51,7 +51,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   goose: handleGooseAI,
 }
 
-type PlainRequest = {
+type InferenceRequest = {
   prompt: string
   settings: Partial<AppSchema.GenSettings>
   guest?: string
@@ -59,7 +59,7 @@ type PlainRequest = {
   log: AppLog
 }
 
-export async function createInferenceStream(opts: PlainRequest) {
+export async function createInferenceStream(opts: InferenceRequest) {
   opts.settings.maxTokens = 500
   opts.settings.temp = 1
   opts.settings.topP = 1
