@@ -266,9 +266,12 @@ export namespace AppSchema {
     order?: number[]
     skipSpecialTokens?: boolean
 
+    systemPrompt?: string
+    ignoreCharacterSystemPrompt?: boolean
     gaslight?: string
     useGaslight?: boolean
     ultimeJailbreak?: string
+    ignoreCharacterUjb?: boolean
     antiBond?: boolean
 
     frequencyPenalty?: number

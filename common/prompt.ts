@@ -20,6 +20,7 @@ export type PromptParts = {
   ujb?: string
   post: string[]
   memory?: string
+  systemPrompt?: string
 }
 
 export type Prompt = {
@@ -77,10 +78,11 @@ const HOLDER_NAMES = {
   post: 'post',
   scenario: 'scenario',
   history: 'history',
+  systemPrompt: 'system_prompt',
   linebreak: 'br',
 }
 
-const HOLDERS = {
+export const HOLDERS = {
   ujb: /\{\{ujb\}\}/gi,
   sampleChat: /\{\{example_dialogue\}\}/gi,
   scenario: /\{\{scenario\}\}/gi,
@@ -89,6 +91,7 @@ const HOLDERS = {
   allPersonas: /\{\{all_personalities\}\}/gi,
   post: /\{\{post\}\}/gi,
   history: /\{\{history\}\}/gi,
+  systemPrompt: /\{\{system_prompt\}\}/gi,
   linebreak: `/\{\{(br|linebreak|newline)\}\}/gi`,
 }
 
@@ -207,6 +210,7 @@ export function injectPlaceholders(
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
     .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
+    .replace(HOLDERS.systemPrompt, newline(parts.systemPrompt))
     .replace(HOLDERS.sampleChat, newline(sampleChat))
     .replace(HOLDERS.scenario, parts.scenario || '')
     .replace(HOLDERS.memory, newline(parts.memory))
@@ -234,6 +238,7 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
   const useSampleChat = !!parts.sampleChat?.join('\n')
   const useMemory = !!parts.memory
   const useScenario = !!parts.scenario
+  const useSystemPrompt = !!parts.systemPrompt
 
   let modified = template
     .split('\n')
@@ -248,6 +253,8 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
       if (!useSampleChat && line.match(HOLDERS.sampleChat)) return false
       if (!useMemory && line.match(HOLDERS.memory)) return false
       if (!useScenario && line.match(HOLDERS.scenario)) return false
+      // idg what this does tbh - @malfoyslastname
+      if (!useSystemPrompt && line.match(HOLDERS.systemPrompt)) return false
       return true
     })
     .join('\n')
@@ -375,8 +382,14 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   if (memory) parts.memory = memory.prompt
 
   if (opts.settings?.useGaslight || opts.settings?.service === 'openai') {
-    parts.ujb = char.postHistoryInstructions || opts.settings?.ultimeJailbreak
+    parts.ujb = opts.settings?.ignoreCharacterUjb
+      ? opts.settings?.ultimeJailbreak
+      : char.postHistoryInstructions || opts.settings?.ultimeJailbreak
   }
+
+  parts.systemPrompt = opts.settings?.ignoreCharacterSystemPrompt
+    ? opts.settings?.systemPrompt
+    : char.systemPrompt || opts.settings?.systemPrompt
 
   parts.post = post.map(replace)
 
@@ -492,7 +505,7 @@ export function getChatPreset(
   chat: AppSchema.Chat,
   user: AppSchema.User,
   userPresets: AppSchema.UserGenPreset[]
-): Partial<AppSchema.GenSettings> {
+): Partial<AppSchema.UserGenPreset> {
   /**
    * Order of precedence:
    * 1. chat.genPreset
@@ -683,4 +696,42 @@ export function trimTokens(opts: TrimOpts) {
 function newline(value: string | undefined) {
   if (!value) return ''
   return '\n' + value
+}
+
+export const extractSystemPromptFromLegacyGaslight = (
+  legacyGaslight: string
+): { systemPrompt: string; gaslight: string } => {
+  const personalityPlaceholderPos = legacyGaslight.toLowerCase().indexOf('{{personality}}')
+  const noChange = { systemPrompt: '', gaslight: legacyGaslight }
+
+  // No {{personality}} placeholder in gaslight, we don't know what the user is
+  // trying to achieve so no change
+  if (personalityPlaceholderPos === -1) return noChange
+
+  const everythingBeforePersonalityPlaceholder = legacyGaslight
+    .slice(0, personalityPlaceholderPos)
+    .trim()
+  const sentenceStartersMatches = [...everythingBeforePersonalityPlaceholder.matchAll(/[.\n]/g)]
+
+  // There's only one sentence before the {{personality}} placeholder, so we're
+  // going to assume it says something like "{{char}}'s persona:", therefore
+  // empty system prompt, therefore no change
+  if (sentenceStartersMatches.length === 0) return noChange
+
+  // I'm not sure if this case can happen, but let's include it just in case, to
+  // prevent runtime errors
+  if (sentenceStartersMatches[sentenceStartersMatches.length - 1]!.index === undefined)
+    return noChange
+
+  const startOfLastSentenceBeforePersonalityPlaceholder =
+    sentenceStartersMatches[sentenceStartersMatches.length - 1]!.index! + 1
+
+  const systemPrompt = legacyGaslight
+    .slice(0, startOfLastSentenceBeforePersonalityPlaceholder)
+    .trim()
+  const newGaslight =
+    '{{system_prompt}}\n' +
+    legacyGaslight.slice(startOfLastSentenceBeforePersonalityPlaceholder).trim()
+
+  return { systemPrompt, gaslight: newGaslight }
 }

@@ -17,7 +17,6 @@ import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
 import { settingStore } from '../store'
 import PromptEditor from './PromptEditor'
-// import PromptEditor from './PromptEditor'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -106,43 +105,33 @@ const GeneralSettings: Component<Props> = (props) => {
       <div class="text-xl font-bold">General Settings</div>
 
       {/* <PromptEditor preset={props.inherit} /> */}
+      <div class="flex flex-wrap gap-4">
+        <Select
+          fieldName="oaiModel"
+          label="OpenAI Model"
+          items={modelsToItems(OPENAI_MODELS)}
+          helperText="Which OpenAI model to use"
+          value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'oaiModel'}
+        />
 
-      <Select
-        fieldName="oaiModel"
-        label="OpenAI Model"
-        items={modelsToItems(OPENAI_MODELS)}
-        helperText="Which OpenAI model to use"
-        value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
-        disabled={props.disabled}
-        service={props.service}
-        aiSetting={'oaiModel'}
-      />
+        <Select
+          fieldName="novelModel"
+          label="NovelAI Model"
+          items={[
+            ...modelsToItems(NOVEL_MODELS).map(({ value }) => ({ label: value, value })),
+            { value: '', label: 'Use service default' },
+          ]}
+          helperText="Which NovelAI model to use"
+          value={props.inherit?.novelModel || ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'novelModel'}
+        />
 
-      <Select
-        fieldName="novelModel"
-        label="NovelAI Model"
-        items={[
-          ...modelsToItems(NOVEL_MODELS).map(({ value }) => ({ label: value, value })),
-          { value: '', label: 'Use service default' },
-        ]}
-        helperText="Which NovelAI model to use"
-        value={props.inherit?.novelModel || ''}
-        disabled={props.disabled}
-        service={props.service}
-        aiSetting={'novelModel'}
-      />
-
-      <Select
-        fieldName="claudeModel"
-        label="Claude Model"
-        items={modelsToItems(CLAUDE_MODELS)}
-        helperText="Which Claude model to use"
-        value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
-        disabled={props.disabled}
-        service={props.service}
-        aiSetting={'claudeModel'}
-      />
-
+<<<<<<< HEAD
       <Select
         fieldName="replicateModelType"
         label="Replicate Model Type"
@@ -170,6 +159,19 @@ const GeneralSettings: Component<Props> = (props) => {
         aiSetting={'replicateModelVersion'}
       />
 
+=======
+        <Select
+          fieldName="claudeModel"
+          label="Claude Model"
+          items={modelsToItems(CLAUDE_MODELS)}
+          helperText="Which Claude model to use"
+          value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'claudeModel'}
+        />
+      </div>
+>>>>>>> b6f08c6 (feat: support card system prompt, add toggle to ignore card sysprompt and card ujb)
       <RangeInput
         fieldName="maxTokens"
         label="Max New Tokens"
@@ -271,6 +273,17 @@ const PromptSettings: Component<Props> = (props) => {
         aiSetting={'gaslight'}
       />
 
+      <TextInput
+        fieldName="systemPrompt"
+        label="System prompt"
+        placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
+        isMultiline
+        value={props.inherit?.systemPrompt ?? ''}
+        disabled={props.disabled}
+        service={props.service}
+        aiSetting={'systemPrompt'}
+        class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+      />
       <PromptEditor
         fieldName="gaslight"
         value={props.inherit?.gaslight}
@@ -309,8 +322,27 @@ const PromptSettings: Component<Props> = (props) => {
         value={props.inherit?.ultimeJailbreak ?? ''}
         disabled={props.disabled}
         service={props.service}
+        class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
         aiSetting={'ultimeJailbreak'}
       />
+      <div class="flex flex-wrap gap-4">
+        <Toggle
+          fieldName="ignoreCharacterSystemPrompt"
+          label="Override character system prompt"
+          value={props.inherit?.ignoreCharacterSystemPrompt ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'ignoreCharacterSystemPrompt'}
+        />
+        <Toggle
+          fieldName="ignoreCharacterUjb"
+          label="Override character UJB"
+          value={props.inherit?.ignoreCharacterUjb ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'ignoreCharacterUjb'}
+        />
+      </div>
     </>
   )
 }

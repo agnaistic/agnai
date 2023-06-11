@@ -199,9 +199,12 @@ export const adapterSettings: {
   temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
+  systemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
+  ignoreCharacterSystemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
   gaslight: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
   antiBond: ['openai', 'claude', 'scale'],
   ultimeJailbreak: ['openai', 'claude', 'kobold'],
+  ignoreCharacterUjb: ['openai', 'claude', 'kobold'],
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],
 
   repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],

@@ -15,6 +15,7 @@ export type ChatModal =
   | 'ui'
   | 'members'
   | 'delete'
+  | 'updateGaslightToUseSystemPrompt'
   | 'none'
 
 const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props) => {

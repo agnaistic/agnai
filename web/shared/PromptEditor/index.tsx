@@ -11,7 +11,7 @@ type Placeholder = {
 const placeholders: Record<string, Placeholder> = {
   char: { required: false, limit: Infinity },
   user: { required: false, limit: Infinity },
-  // linebreak: { required: false, limit: Infinity },
+  system_prompt: { required: false, limit: 1 },
   history: { required: true, limit: 1 },
   scenario: { required: true, limit: 1 },
   memory: { required: false, limit: 1 },
@@ -83,8 +83,8 @@ const PromptEditor: Component<{
               if they are missing.
             </div>
             <div>
-              <span class="text-yellow-600">Yellow</span> placeholders are optional and will not be
-              automatically included if you do not include them.
+              <span class="text-yellow-600">Yellow</span> placeholders will not be automatically
+              included if you do not include them.
             </div>
             <div>
               <span class="text-red-600">example_dialogue</span> will be inserted as conversation
