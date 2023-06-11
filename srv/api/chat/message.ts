@@ -1,7 +1,7 @@
 import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
 import { createTextStreamV2 } from '../../adapter/generate'
-import { AppRequest, errors, handle } from '../wrap'
+import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../db/schema'
@@ -74,29 +74,7 @@ export const createMessage = handle(async (req) => {
     if (!chat) throw errors.NotFound
     const members = chat.memberIds.concat(chat.userId)
 
-    const update: Partial<AppSchema.Chat> = {}
-    if (impersonate) {
-      const nextChars = { ...chat.characters }
-      if (impersonate._id in nextChars === false) {
-        const char = await store.characters.getCharacter(userId, impersonate._id)
-        if (!char) throw errors.Forbidden
-
-        // Ensure the character is update to date for authorized users
-        Object.assign(impersonate, char)
-
-        nextChars[impersonate._id] = false
-        publishMany(members, {
-          type: 'chat-character-added',
-          chatId,
-          character: char,
-          active: false,
-        })
-      }
-
-      update.characters = nextChars
-    }
-
-    await store.chats.update(chatId, update)
+    await ensureBotMembership(chat, members, undefined, impersonate)
 
     const userMsg = await store.msgs.createChatMessage({
       chatId,
@@ -105,6 +83,7 @@ export const createMessage = handle(async (req) => {
       senderId: userId,
       ooc: body.kind === 'ooc',
     })
+
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
@@ -154,27 +133,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send' || body.kind === 'ooc') {
-    const update: Partial<AppSchema.Chat> = {}
-    if (impersonate) {
-      const nextChars = { ...chat.characters }
-      if (impersonate._id in nextChars === false) {
-        const char = await store.characters.getCharacter(userId, impersonate._id)
-        if (!char) throw errors.Forbidden
-
-        // Ensure the character is update to date for authorized users
-        Object.assign(impersonate, char)
-
-        nextChars[impersonate._id] = false
-        publishMany(members, {
-          type: 'chat-character-added',
-          chatId,
-          character: char,
-          active: false,
-        })
-      }
-
-      update.characters = nextChars
-    }
+    await ensureBotMembership(chat, members, replyAs, impersonate)
 
     const userMsg = await store.msgs.createChatMessage({
       chatId,
@@ -184,7 +143,6 @@ export const generateMessageV2 = handle(async (req, res) => {
       ooc: body.kind === 'ooc',
     })
 
-    await store.chats.update(chatId, update)
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
@@ -415,4 +373,41 @@ function newMessage(
     ...props,
   }
   return userMsg
+}
+
+async function ensureBotMembership(
+  chat: AppSchema.Chat,
+  members: string[],
+  replyAs: AppSchema.Character | undefined,
+  impersonate: AppSchema.Character | undefined
+) {
+  const update: Partial<AppSchema.Chat> = {}
+
+  const characters = chat.characters || {}
+  if (impersonate && characters[impersonate._id] === undefined) {
+    const actual = await store.characters.getCharacter(impersonate.userId, impersonate._id)
+    if (!actual) {
+      throw new StatusError(
+        'Could not create message: Impersonation character could not be found',
+        400
+      )
+    }
+
+    // Ensure the caller's character is up to date
+    Object.assign(impersonate, actual)
+    characters[impersonate._id] = false
+    publishMany(members, {
+      type: 'chat-character-added',
+      chatId: chat._id,
+      character: actual,
+      active: false,
+    })
+  }
+
+  if (replyAs && !characters[replyAs._id]) {
+    characters[replyAs._id] = true
+  }
+
+  update.characters = characters
+  await store.chats.update(chat._id, update)
 }
