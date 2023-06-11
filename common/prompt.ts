@@ -624,7 +624,7 @@ function getContextLimit(
         OPENAI_MODELS.DaVinci,
       ])
 
-      if (!model || models.has(model)) return 4095 - genAmount
+      if (!model || models.has(model)) return Math.min(configuredMax, 4090) - genAmount
       return configuredMax - genAmount
     }
 
