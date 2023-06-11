@@ -4,6 +4,14 @@ import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { OPENAI_MODELS } from '../../common/adapters'
+import {
+  SAMPLE_CHAT_PREAMBLE,
+  BOT_REPLACE,
+  injectPlaceholders,
+  ensureValidTemplate,
+  START_REPLACE,
+  SAMPLE_CHAT_MARKER,
+} from '../../common/prompt'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
 
@@ -13,36 +21,15 @@ const baseUrl = `https://api.anthropic.com/v1/complete`
 const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
 
 export const handleClaude: ModelAdapter = async function* (opts) {
-  const {
-    char,
-    members,
-    user,
-    settings,
-    log,
-    guest,
-    gen,
-    sender,
-    isThirdParty,
-    impersonate,
-    characters,
-  } = opts
+  const { members, user, settings, log, guest, gen, isThirdParty } = opts
   const base = getBaseUrl(user, isThirdParty)
   if (!user.claudeApiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
   const claudeModel = settings.claudeModel ?? defaultPresets.claude.claudeModel
-  const username = impersonate?.name || sender.handle || 'You'
 
-  const stops = new Set([
-    `\n\n${char.name}:`,
-    `\n\n${username}:`,
-    `\n\nSystem:`,
-    ...Object.values(characters || {})
-      .filter((ch) => !!ch)
-      .map((ch) => `\n\n${ch.name}:`),
-    ...members.map((member) => `\n\n${member.handle}:`),
-  ])
+  const stops = new Set([`\n\nHuman:`, `\n\nAssistant:`])
 
   const requestBody = {
     model: claudeModel,
@@ -123,8 +110,8 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
-  const gaslightCost = encoder('System: ' + opts.prompt)
-  const ujb = parts.ujb ? `System: ${parts.ujb}` : ''
+  const gaslightCost = encoder('Human: ' + opts.prompt)
+  const ujb = parts.ujb ? `Human: ${parts.ujb}` : ''
 
   const maxBudget =
     maxContextLength - maxResponseTokens - gaslightCost - encoder(ujb) - encoder(char.name + ':')
@@ -133,22 +120,59 @@ function createClaudePrompt(opts: AdapterProps): string {
   const history: string[] = []
 
   for (const line of lines.slice().reverse()) {
-    const cost = encoder(line)
+    const lineType: 'system' | 'char' | 'user' | 'example' = opts.members.some((mem) =>
+      line.startsWith(mem.handle)
+    )
+      ? 'user'
+      : line.startsWith('System:')
+      ? 'system'
+      : line.startsWith(SAMPLE_CHAT_PREAMBLE.replace(BOT_REPLACE, replyAs.name))
+      ? 'example'
+      : 'char'
+    const processedLine = (() => {
+      switch (lineType) {
+        case 'user':
+          return 'Human: ' + line
+        case 'system':
+          return 'Human:\n<system_note>\n' + line + '\n</system_note>'
+        case 'example':
+          return (
+            'Human:\n<example_dialogue>\n' +
+            line
+              .replace(START_REPLACE, '<system_note>New conversation started.</system_note>')
+              .replace('\n' + SAMPLE_CHAT_MARKER, '') +
+            '\n</example_dialogue>'
+          )
+        case 'char':
+          return 'Assistant: ' + line
+      }
+    })()
+    const cost = encoder(processedLine)
     if (cost + tokens >= maxBudget) break
 
     tokens += cost
-    history.push(line)
+    history.push(processedLine)
   }
 
-  const messages = [`System: ${opts.prompt}`, ...history.reverse()]
+  const gaslight = injectPlaceholders(
+    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
+      'history',
+      'post',
+    ]),
+    { opts, parts, encoder }
+  )
+
+  const messages = [`\n\nHuman: ${gaslight}`, ...history.reverse()]
 
   if (ujb) {
     messages.push(ujb)
   }
 
   const continueAddon =
-    opts.kind === 'continue' ? `\n\nSystem: Continue ${replyAs.name}'s reply.` : ''
+    opts.kind === 'continue'
+      ? `\n\nHuman: <system_note>Continue ${replyAs.name}'s reply.</system_note>`
+      : ''
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
-  return '\n\n' + messages.join('\n\n') + continueAddon + '\n\n' + replyAs.name + ':'
+  return messages.join('\n\n') + continueAddon + '\n\n' + 'Assistant: ' + replyAs.name + ':'
 }
