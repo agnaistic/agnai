@@ -6,6 +6,7 @@ import { config } from '../config'
 import { isConnected } from '../db/client'
 import { handle } from './wrap'
 import { AppSchema } from '../db/schema'
+import { store } from '../db'
 
 const router = Router()
 
@@ -48,3 +49,19 @@ export async function getAppConfig() {
 
   return { ...appConfig, canAuth }
 }
+
+async function update() {
+  try {
+    if (!config.db.host) return
+    const cfg = await store.admin.getConfig()
+
+    appConfig.maintenance = cfg.maintenance || appConfig.maintenance
+    appConfig.patreon = cfg.patreon ?? appConfig.patreon
+    appConfig.slots.enabled = cfg.slots?.enabled ?? appConfig.slots.enabled
+    appConfig.slots.banner = cfg.slots?.banner || appConfig.slots.banner
+    appConfig.slots.menu = cfg.slots?.menu || appConfig.slots.menu
+    appConfig.slots.mobile = cfg.slots?.mobile || appConfig.slots.mobile
+  } catch (ex) {}
+}
+
+setInterval(update, 15000)

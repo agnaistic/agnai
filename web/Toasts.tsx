@@ -12,7 +12,7 @@ const Toasts: Component = () => {
   const state = toastStore()
 
   return (
-    <div class="absolute bottom-2 right-2 flex w-80 flex-col gap-2">
+    <div class="absolute bottom-2 right-2 flex max-w-[20rem] flex-col gap-2">
       <For each={state.toasts}>{(toast) => <Single toast={toast} />}</For>
     </div>
   )

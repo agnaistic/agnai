@@ -2,6 +2,7 @@ import { Filter } from 'mongodb'
 import { db } from './client'
 import { encryptPassword } from './util'
 import { AppSchema } from './schema'
+import { getDb } from './client'
 
 type UsersOpts = {
   username?: string
@@ -32,4 +33,14 @@ export async function getUserInfo(userId: string) {
   const characters = await db('character').countDocuments({ userId })
 
   return { userId, chats, characters, handle: profile?.handle, avatar: profile?.avatar }
+}
+
+export async function getConfig(): Promise<any> {
+  const cfg = await getDb().collection('configuration').findOne()
+  if (!cfg) {
+    await getDb().collection('configuration').insertOne({ slots: {} })
+    return {}
+  }
+
+  return cfg
 }
