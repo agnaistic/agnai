@@ -89,6 +89,12 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState({ impersonating })
   })
 
+  events.on(EVENTS.charsReceived, (chars: AppSchema.Character[]) => {
+    const { map, loaded } = get().characters
+    const next = receiveChars(map, chars)
+    set({ characters: { ...next, loaded } })
+  })
+
   return {
     async *getCharacters(state) {
       if (state.loading) return
@@ -114,7 +120,7 @@ export const characterStore = createStore<CharacterState>(
       if (res.result && !state.impersonating) {
         const id = safeLocalStorage.getItem(IMPERSONATE_KEY)
         const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
-        events.emit(EVENTS.charsLoaded, res.result.characters)
+
         return {
           characters: {
             list: res.result.characters,
@@ -310,4 +316,19 @@ function replace(
 ): Record<string, AppSchema.Character> {
   const next = map[id] || {}
   return { ...map, [id]: { ...next, ...char } }
+}
+
+function receiveChars(
+  current: Record<string, AppSchema.Character>,
+  received: AppSchema.Character[]
+) {
+  const next: Record<string, AppSchema.Character> = { ...current }
+  for (const char of received) {
+    next[char._id] = char
+  }
+
+  return {
+    list: Object.values(next),
+    map: next,
+  }
 }

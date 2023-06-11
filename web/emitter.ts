@@ -5,7 +5,7 @@ export const EVENTS = {
   loggedOut: 'logged-out',
   sessionExpired: 'session-expired',
   init: 'init',
-  charsLoaded: 'chars-loaded',
+  charsReceived: 'chars-received',
 }
 
 export const events = new EventEmitter()

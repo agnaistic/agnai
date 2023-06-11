@@ -9,7 +9,7 @@ const Tabs: Component<{
   return (
     <div
       class={
-        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm ' +
+        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm' +
           props.class || ''
       }
     >

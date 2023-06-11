@@ -170,6 +170,8 @@ export const chatStore = createStore<ChatState>('chat', {
         const isMultiChars =
           res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
+        events.emit(EVENTS.charsReceived, res.result.characters)
+
         yield {
           lastChatId: id,
           active: {
@@ -281,11 +283,8 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
-        const chars = res.result.characters.reduce<any>(
-          (prev, curr) => ({ ...prev, [curr._id]: curr }),
-          {}
-        )
-        return { allChats: res.result.chats.sort(sortDesc), chars }
+        events.emit(EVENTS.charsReceived, res.result.characters)
+        return { allChats: res.result.chats.sort(sortDesc) }
       }
     },
     getBotChats: async (_, characterId: string) => {
