@@ -33,6 +33,7 @@ export namespace AppSchema {
       testing: boolean
       menu: string
       banner: string
+      mobile: string
     }
   }
 

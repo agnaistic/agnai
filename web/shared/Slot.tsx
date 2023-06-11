@@ -42,7 +42,7 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
     <Show when={show()}>
       <div
         id={id()}
-        data-testing={cfg.slots.testing}
+        data-slot={props.slot}
         classList={{
           'border-[var(--bg-700)]': user.user?.admin && cfg.slots.testing,
           'border-[1px]': user.user?.admin && cfg.slots.testing,

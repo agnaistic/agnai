@@ -5,7 +5,6 @@ import {
   Bot,
   Github,
   HeartHandshake,
-  Info,
   LogIn,
   LogOut,
   MailPlus,
@@ -20,8 +19,11 @@ import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { characterStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
+import { useEffect, useWindowSize } from './shared/hooks'
 
 const Navigation: Component = () => {
+  let parent: any
+  let content: any
   const state = settingStore()
   const user = userStore()
   const chars = characterStore()
@@ -32,13 +34,24 @@ const Navigation: Component = () => {
     userStore.logout()
   }
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!parent || !content) return
+
+      parent.setAttribute('style', '')
+      content.setAttribute('style', '')
+    }, 50)
+
+    return () => clearInterval(interval)
+  })
+
   const hide = createMemo(() => (state.showMenu ? '' : 'drawer--hide'))
   const fullscreen = createMemo(() => (state.fullscreen ? 'hidden' : ''))
 
   return (
     <>
-      <div data-menu="" class={`drawer bg-800 flex flex-col gap-4 pt-4 ${hide()} ${fullscreen()}`}>
-        <div class="drawer__content flex flex-col gap-2 px-4">
+      <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 pt-2 ${hide()} ${fullscreen()}`}>
+        <div ref={content} class="drawer__content flex flex-col gap-1 px-4 sm:gap-2">
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
               <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
@@ -51,7 +64,7 @@ const Navigation: Component = () => {
           </Show>
         </div>
 
-        <div class="flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
+        <div class="absolute bottom-0 flex h-16 w-full flex-col items-center justify-between border-t-2 border-[var(--bg-700)] px-4">
           <div class="ellipsis my-auto flex w-full items-center justify-between">
             <div
               class="flex max-w-[calc(100%-32px)] items-center gap-2"
@@ -90,6 +103,7 @@ const Navigation: Component = () => {
 const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
+  const page = useWindowSize()
 
   return (
     <>
@@ -140,12 +154,9 @@ const UserNavigation: Component = () => {
         </ExternalLink>
       </Show>
 
-      <Item href="/info">
-        <Info />
-        Information
-      </Item>
-
-      <Slot slot="menu" />
+      <Show when={page.width() >= 1024}>
+        <Slot slot="menu" />
+      </Show>
     </>
   )
 }
@@ -157,6 +168,7 @@ const GuestNavigation: Component = () => {
     guest: s.guestAccessAllowed,
     flags: s.flags,
   }))
+  const page = useWindowSize()
 
   return (
     <>
@@ -210,7 +222,9 @@ const GuestNavigation: Component = () => {
         GitHub
       </ExternalLink>
 
-      <Slot slot="menu" />
+      <Show when={page.width() >= 1024}>
+        <Slot slot="menu" />
+      </Show>
     </>
   )
 }

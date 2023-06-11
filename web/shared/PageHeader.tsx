@@ -1,5 +1,7 @@
 import { Component, JSX, Show, createMemo } from 'solid-js'
 import Divider from './Divider'
+import { useWindowSize } from './hooks'
+import Slot from './Slot'
 
 type Props = {
   title: string | JSX.Element
@@ -9,6 +11,7 @@ type Props = {
 }
 
 const PageHeader: Component<Props> = (props) => {
+  const page = useWindowSize()
   const mod = createMemo(() => (props.sticky ? `sticky top-0 py-2` : ''))
   return (
     <>
@@ -23,6 +26,15 @@ const PageHeader: Component<Props> = (props) => {
       <Show when={!props.noDivider}>
         <Divider />
       </Show>
+
+      <div class="flex justify-center">
+        <Show when={page.width() >= 768}>
+          <Slot slot="banner" />
+        </Show>
+        <Show when={page.width() < 768}>
+          <Slot slot="mobile" />
+        </Show>
+      </div>
     </>
   )
 }

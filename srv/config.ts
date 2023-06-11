@@ -102,6 +102,7 @@ export const config = {
     testing: env('SLOTS_TESTING', 'true') === 'false' ? false : true,
     menu: env('MENU_SLOT', ''),
     banner: env('BANNER_SLOT', ''),
+    mobile: env('MOBILE_SLOT', ''),
   },
 }
 
