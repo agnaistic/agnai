@@ -168,8 +168,8 @@ export async function generateResponseV2(opts: GenerateOpts) {
     settings: entities.settings,
     replacing: props.replacing,
     continuing: props.continuing,
-    replyAs: props.replyAs,
-    impersonate: props.impersonate,
+    replyAs: removeAvatar(props.replyAs),
+    impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
   }
 
@@ -424,7 +424,8 @@ function emptyMsg(
   }
 }
 
-function removeAvatar<T extends AppSchema.Character | AppSchema.Profile>(char: T): T {
+function removeAvatar<T extends AppSchema.Character | AppSchema.Profile | undefined>(char?: T): T {
+  if (!char) return undefined as T
   return { ...char, avatar: undefined }
 }
 

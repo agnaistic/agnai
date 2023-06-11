@@ -5,14 +5,14 @@ import { logMiddleware } from './logger'
 import api from './api'
 import { errors } from './api/wrap'
 import { resolve } from 'path'
-import { Server } from 'http'
 import { setupSockets } from './api/ws'
 import { config } from './config'
+import { createServer } from './server'
 
 const upload = multer({ limits: { fileSize: config.limits.upload * 1024 * 1024 } })
 
 const app = express()
-const server = new Server(app)
+const server = createServer(app)
 
 app.use(express.urlencoded({ limit: `${config.limits.upload}mb`, extended: false }))
 app.use(express.json({ limit: `${config.limits.payload}mb` }))

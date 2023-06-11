@@ -9,7 +9,7 @@ export function setSocketId(id: string) {
 
 export const baseUrl =
   location.port === '1234' || location.port === '3001'
-    ? `http://${location.hostname}:3001`
+    ? `${location.protocol}//${location.hostname}:3001`
     : location.origin
 
 export const api = {

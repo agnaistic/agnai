@@ -54,6 +54,7 @@ const initState: SettingState = {
     assetPrefix: '',
     selfhosting: false,
     imagesSaved: false,
+    slots: { testing: true, banner: '', menu: '', enabled: false },
   },
   flags: getFlags(),
 }

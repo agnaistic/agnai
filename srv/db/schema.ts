@@ -28,6 +28,12 @@ export namespace AppSchema {
     patreon?: boolean
     policies?: boolean
     flags?: string
+    slots: {
+      enabled: boolean
+      testing: boolean
+      menu: string
+      banner: string
+    }
   }
 
   export type ChatMode = 'standard' | 'adventure'

@@ -97,6 +97,12 @@ export const config = {
   inference: {
     flatChatCompletion: !!env('SIMPLE_COMPLETION', ''),
   },
+  slots: {
+    enabled: env('SLOTS_ENABLED', 'false') === 'true',
+    testing: env('SLOTS_TESTING', 'true') === 'false' ? false : true,
+    menu: env('MENU_SLOT', ''),
+    banner: env('BANNER_SLOT', ''),
+  },
 }
 
 if (config.ui.inject) {

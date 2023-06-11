@@ -19,6 +19,7 @@ import {
 import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { characterStore, inviteStore, settingStore, userStore } from './store'
+import Slot from './shared/Slot'
 
 const Navigation: Component = () => {
   const state = settingStore()
@@ -91,7 +92,7 @@ const Navigation: Component = () => {
 
 const UserNavigation: Component = () => {
   const user = userStore()
-  const cfg = settingStore()
+  const menu = settingStore()
 
   return (
     <>
@@ -99,7 +100,7 @@ const UserNavigation: Component = () => {
         <User /> Profile
       </Item>
 
-      <Show when={cfg.flags.chub}>
+      <Show when={menu.flags.chub}>
         <Item href="/chub">
           <ShoppingBag />
           CHUB
@@ -136,7 +137,7 @@ const UserNavigation: Component = () => {
         </Item>
       </Show>
 
-      <Show when={cfg.config.patreon}>
+      <Show when={menu.config.patreon}>
         <ExternalLink href="https://patreon.com/Agnaistic" newtab>
           <HeartHandshake /> Patreon
         </ExternalLink>
@@ -146,6 +147,8 @@ const UserNavigation: Component = () => {
         <Info />
         Information
       </Item>
+
+      <Slot slot="menu" />
     </>
   )
 }
@@ -214,6 +217,8 @@ const GuestNavigation: Component = () => {
         <Github />
         GitHub
       </ExternalLink>
+
+      <Slot slot="menu" />
     </>
   )
 }

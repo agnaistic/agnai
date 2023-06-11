@@ -353,7 +353,7 @@ body {
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;
-    @apply bg-800 w-[calc(100vw-40px)] max-w-[320px] sm:relative  sm:top-0 sm:clear-none sm:w-72;
+    @apply bg-800 w-[calc(100vw-40px)] max-w-[320px] sm:relative  sm:top-0 sm:clear-none sm:w-[320px];
     @apply z-10 sm:z-0;
   }
 
