@@ -111,7 +111,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
   const gaslightCost = encoder('Human: ' + opts.prompt)
-  const ujb = parts.ujb ? `Human: ${parts.ujb}` : ''
+  const ujb = parts.ujb ? `Human: <system_note>${parts.ujb}</system_note>` : ''
 
   const maxBudget =
     maxContextLength - maxResponseTokens - gaslightCost - encoder(ujb) - encoder(char.name + ':')
