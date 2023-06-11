@@ -1,3 +1,4 @@
+import './chat-detail.css'
 import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu, Radio } from 'lucide-solid'
@@ -27,8 +28,8 @@ import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import AvatarIcon from '/web/shared/AvatarIcon'
-import './chat-detail.css'
 import { cycleArray } from '/common/util'
+import { getActiveBots } from './util'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -48,7 +49,7 @@ const ChatDetail: Component = () => {
     members: s.chatProfiles,
     loaded: s.loaded,
     opts: s.opts,
-    activeBots: Object.values(s.active?.chat.characters || {}).filter((bot) => !!bot).length,
+    activeBots: getActiveBots(s.active?.chat!, chars.botMap),
   }))
 
   const msgs = msgStore((s) => ({
@@ -220,14 +221,6 @@ const ChatDetail: Component = () => {
     msgStore.retry(chats.chat?._id!)
   }
 
-  const activeCharIds = createMemo(() => {
-    if (!chats.char) return []
-    const active = chars.chatBots
-      .filter((bot) => chats.chat?.characters?.[bot._id])
-      .map((ch) => ch._id)
-    return new Set([chats.char._id, ...active])
-  })
-
   return (
     <>
       <Show when={!chats.loaded}>
@@ -306,19 +299,19 @@ const ChatDetail: Component = () => {
               bots={chars.chatBots}
               botMap={chars.botMap}
             />
-            <Show when={isOwner() && chats.activeBots >= 1}>
+            <Show when={isOwner() && chats.activeBots.length > 1}>
               <div
                 class={`flex justify-center gap-2 py-1 ${
                   msgs.waiting ? 'opacity-70 saturate-0' : ''
                 }`}
               >
-                <For each={Array.from(activeCharIds())}>
-                  {(id) => (
+                <For each={chats.activeBots}>
+                  {(bot) => (
                     <CharacterResponseBtn
-                      char={chars.botMap[id]}
+                      char={bot}
                       request={requestMessage}
                       waiting={!!msgs.waiting}
-                      replying={chats.replyAs === id}
+                      replying={chats.replyAs === bot._id}
                     />
                   )}
                 </For>

@@ -74,7 +74,7 @@ export const createMessage = handle(async (req) => {
     if (!chat) throw errors.NotFound
     const members = chat.memberIds.concat(chat.userId)
 
-    await ensureBotMembership(chat, members, undefined, impersonate)
+    await ensureBotMembership(chat, members, impersonate)
 
     const userMsg = await store.msgs.createChatMessage({
       chatId,
@@ -133,7 +133,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   // For authenticated users we will verify parts of the payload
   if (body.kind === 'send' || body.kind === 'ooc') {
-    await ensureBotMembership(chat, members, replyAs, impersonate)
+    await ensureBotMembership(chat, members, impersonate)
 
     const userMsg = await store.msgs.createChatMessage({
       chatId,
@@ -378,7 +378,6 @@ function newMessage(
 async function ensureBotMembership(
   chat: AppSchema.Chat,
   members: string[],
-  replyAs: AppSchema.Character | undefined,
   impersonate: AppSchema.Character | undefined
 ) {
   const update: Partial<AppSchema.Chat> = {}
@@ -402,10 +401,6 @@ async function ensureBotMembership(
       character: actual,
       active: false,
     })
-  }
-
-  if (replyAs && !characters[replyAs._id]) {
-    characters[replyAs._id] = true
   }
 
   update.characters = characters
