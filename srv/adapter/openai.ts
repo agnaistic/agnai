@@ -375,7 +375,7 @@ function toChatCompletionPayload(
   if (kind !== 'continue' && kind !== 'summary') {
     const content = getInstruction(opts, encoder)
     tokens += encoder(content)
-    history.push({ role: 'system', content })
+    parts.ujb = parts.ujb ? (parts.ujb + '\n\n' + content) : content
   }
 
   if (kind !== 'summary' && parts.ujb) {
