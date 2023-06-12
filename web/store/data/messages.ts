@@ -10,7 +10,7 @@ import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
-import { getBotsForChat } from '/web/pages/Chat/util'
+import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -252,8 +252,7 @@ async function getGenerateProps(
     case 'send': {
       // If the chat is a single-user chat, it is always in 'auto-reply' mode
       // Ensure the autoReplyAs parameter is set for single-bot chats
-      const isMulti =
-        Object.values(entities.chat.characters || {}).filter((val) => !!val).length >= 1
+      const isMulti = getActiveBots(entities.chat, entities.characters).length > 1
       if (!isMulti) entities.autoReplyAs = entities.char._id
 
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
@@ -381,6 +380,8 @@ function getAuthedPromptEntities() {
     characters: { list, map },
   } = getStore('character').getState()
 
+  const characters = getBotsForChat(chat, char, map)
+
   return {
     chat,
     char,
@@ -392,7 +393,7 @@ function getAuthedPromptEntities() {
     members,
     chatBots: list,
     autoReplyAs: active.replyAs,
-    characters: map,
+    characters,
     impersonating,
   }
 }
