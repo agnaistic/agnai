@@ -20,7 +20,7 @@ export async function createAppearancePrompt(
   let visuals: string[] = []
 
   const max = getMaxImageContext(user)
-  let size = await tokenize(`full body portrait, dramatic lighting`)
+  let size = await tokenize(`portrait, dramatic lighting`)
 
   const persona =
     avatar.kind === 'character'
@@ -48,7 +48,7 @@ export async function createAppearancePrompt(
     throw new Error(`Your character does not have an "appearance" or "looks" attribute.`)
   }
 
-  const prompt = `full body portrait, ${visuals.join(', ')}`
+  const prompt = `portrait, ${visuals.join(', ')}`
   return prompt
 }
 
