@@ -206,6 +206,11 @@ export const adapterSettings: {
   banEosToken: ['ooba'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
+
+  replicateModelVersion: ['replicate'],
+  replicateModelType: ['replicate'],
+
+  skipSpecialTokens: ['ooba', 'kobold'],
 }
 
 export type RegisteredAdapter = {
