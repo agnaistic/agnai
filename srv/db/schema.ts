@@ -276,6 +276,8 @@ export namespace AppSchema {
     oaiModel?: string
     novelModel?: string
     claudeModel?: string
+    replicateModelType?: string
+    replicateModelVersion?: string
     streamResponse?: boolean
 
     memoryDepth?: number

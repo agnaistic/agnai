@@ -250,6 +250,24 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     gaslight: '',
     oaiModel: '',
   },
+  replicate: {
+    maxTokens: 'max_tokens',
+    repetitionPenalty: 'repetition_penalty',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+    temp: 'temperature',
+    topK: '',
+    topP: 'top_p',
+    typicalP: '',
+    topA: '',
+    order: '',
+    frequencyPenalty: '',
+    presencePenalty: '',
+    gaslight: '',
+    replicateModelType: 'replicateModelType',
+    replicateModelVersion: 'replicateModelVersion',
+  },
 }
 
 export function isDefaultPreset(value?: string): value is GenerationPreset {
@@ -281,5 +299,8 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
 
     case 'goose':
       return { ...defaultPresets.basic, service: 'goose' }
+
+    case 'replicate':
+      return defaultPresets.replicate_vicuna_13b
   }
 }

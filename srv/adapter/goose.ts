@@ -14,7 +14,7 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
     return
   }
 
-  const key = config.apiKey ? decryptText(config.apiKey) : null
+  const key = config.apiKey ? (opts.guest ? config.apiKey : decryptText(config.apiKey)) : null
   if (!key) {
     yield { error: `GooseAI request failed: No API key set` }
     return

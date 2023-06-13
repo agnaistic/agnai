@@ -51,6 +51,7 @@ export const AI_ADAPTERS = [
   'scale',
   'claude',
   'goose',
+  'replicate',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -104,6 +105,12 @@ export const NOVEL_MODELS = {
   clio_v1: 'clio-v1',
 } satisfies { [key: string]: string }
 
+export const REPLICATE_MODEL_TYPES = {
+  llama: 'LLaMa',
+  stablelm: 'StableLM',
+  openassistant: 'Open Assistant',
+} as const
+
 export type HordeModel = {
   name: string
   count: number
@@ -153,6 +160,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   scale: 'Scale',
   claude: 'Claude',
   goose: 'Goose AI',
+  replicate: 'Replicate',
 }
 
 export type PresetAISettings = Omit<

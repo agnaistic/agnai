@@ -10,6 +10,7 @@ import {
   ADAPTER_LABELS,
   AIAdapter,
   NOVEL_MODELS,
+  REPLICATE_MODEL_TYPES,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -140,6 +141,33 @@ const GeneralSettings: Component<Props> = (props) => {
         disabled={props.disabled}
         service={props.service}
         aiSetting={'claudeModel'}
+      />
+
+      <Select
+        fieldName="replicateModelType"
+        label="Replicate Model Type"
+        items={modelsToItems(REPLICATE_MODEL_TYPES)}
+        helperText="Which Replicate API input parameters to use"
+        value={
+          props.inherit?.replicateModelType ??
+          defaultPresets.replicate_vicuna_13b.replicateModelType
+        }
+        disabled={props.disabled}
+        service={props.service}
+        aiSetting={'replicateModelType'}
+      />
+
+      <TextInput
+        fieldName="replicateModelType"
+        label="Replicate Model Type"
+        helperText="Which Replicate model to use (see https://replicate.com/collections/language-models)"
+        value={
+          props.inherit?.replicateModelVersion ??
+          defaultPresets.replicate_vicuna_13b.replicateModelVersion
+        }
+        disabled={props.disabled}
+        service={props.service}
+        aiSetting={'replicateModelVersion'}
       />
 
       <RangeInput
