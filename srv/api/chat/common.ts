@@ -90,6 +90,8 @@ export function sanitiseAndTrim(
 ) {
   const parsed = sanitise(text.replace(prompt, ''))
   const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
+    .split(`${char.name}:`)
+    .join('')
   return trimmed || parsed
 }
 

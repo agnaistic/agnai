@@ -265,6 +265,7 @@ export function ensureValidTemplate(
   let hasPersona = !!template.match(HOLDERS.persona)
   let hasHistory = !!template.match(HOLDERS.history)
   let hasPost = !!template.match(HOLDERS.post)
+  let hasUjb = !!template.match(HOLDERS.ujb)
 
   const useScenario = !!parts.scenario
   const usePersona = !!parts.persona
@@ -284,10 +285,13 @@ export function ensureValidTemplate(
   if (!skips.has('post') && !skips.has('history') && !hasHistory && !hasPost) {
     modified += `\n{{history}}\n{{post}}`
   } else if (!skips.has('history') && !hasHistory && hasPost) {
-    modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{${HOLDER_NAMES.post}}}`)
+    modified = modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{post}}`)
   } else if (!skips.has('post') && hasHistory && !hasPost) {
-    modified += '\n{{post}}'
+    modified += `\n{{post}}`
   }
+
+  const post = !hasUjb && parts.ujb ? `{{ujb}}\n{{post}}` : `{{post}}`
+  modified = modified.replace(HOLDERS.post, post)
 
   return modified
 }
@@ -370,15 +374,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() }, encoder)
   if (memory) parts.memory = memory.prompt
 
-  const ujb = opts.settings?.ultimeJailbreak
-
-  const injectOpts = { opts, parts, encoder }
-
-  if (char.postHistoryInstructions || ujb) {
-    parts.ujb = injectPlaceholders(
-      removeUnusedPlaceholders(char.postHistoryInstructions || ujb!, parts),
-      injectOpts
-    )
+  if (opts.settings?.useGaslight || opts.settings?.service === 'openai') {
+    parts.ujb = char.postHistoryInstructions || opts.settings?.ultimeJailbreak
   }
 
   parts.post = post.map(replace)
