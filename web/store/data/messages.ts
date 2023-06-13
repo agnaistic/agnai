@@ -36,6 +36,7 @@ export const msgsApi = {
   generateResponseV2,
   deleteMessages,
   basicInference,
+  createActiveChatPrompt,
 }
 
 type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
@@ -137,32 +138,6 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   const { prompt, props, entities } = activePrompt
 
-  const chat = {
-    ...entities.chat,
-    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios),
-  }
-
-  const encoder = await getEncoder()
-  const prompt = createPrompt(
-    {
-      kind: opts.kind,
-      char: entities.char,
-      chat,
-      user: entities.user,
-      members: entities.members.concat([entities.profile]),
-      continue: props?.continue,
-      book: entities.book,
-      retry: props?.retry,
-      settings: entities.settings,
-      messages: props.messages,
-      replyAs: props.replyAs,
-      characters: entities.characters,
-      impersonate: props.impersonate,
-      lastMessage: entities.lastMessage,
-      trimSentences: ui.trimSentences,
-    },
-    encoder
-  )
   if (ui?.logPromptsToBrowserConsole) {
     console.log(`=== Sending the following prompt: ===`)
     console.log(`${prompt.template}`)
@@ -203,20 +178,26 @@ async function createActiveChatPrompt(
   maxContext?: number
 ) {
   const { active } = chatStore()
+  const { ui } = userStore()
 
   if (!active) {
     throw new Error('No active chat. Try refreshing')
   }
 
   const props = await getGenerateProps(opts, active)
-
   const entities = props.entities
+
+  const chat = {
+    ...entities.chat,
+    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios),
+  }
 
   const encoder = await getEncoder()
   const prompt = createPrompt(
     {
+      kind: opts.kind,
       char: entities.char,
-      chat: entities.chat,
+      chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
       continue: props?.continue,
@@ -226,6 +207,9 @@ async function createActiveChatPrompt(
       messages: props.messages,
       replyAs: props.replyAs,
       characters: entities.characters,
+      impersonate: props.impersonate,
+      lastMessage: entities.lastMessage,
+      trimSentences: ui.trimSentences,
     },
     encoder,
     maxContext

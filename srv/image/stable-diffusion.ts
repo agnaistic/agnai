@@ -27,6 +27,10 @@ type SDRequest = {
   save_images: boolean
   prompt: string
   subseed?: number
+  enable_hr?: boolean
+  hr_scale?: number
+  hr_upscaler?: string
+  hr_second_pass_steps?: number
 }
 
 export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId) => {
@@ -35,6 +39,10 @@ export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId
 
   const payload: SDRequest = {
     prompt,
+    // enable_hr: true,
+    // hr_scale: 1.5,
+    // hr_second_pass_steps: 15,
+    // hr_upscaler: "",
     height: base?.height ?? 384,
     width: base?.width ?? 384,
     n_iter: 1,

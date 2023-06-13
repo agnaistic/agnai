@@ -45,7 +45,7 @@
     "format:fix": "prettier \"web/**/*.ts\" \"web/**/*.tsx\" --write && prettier \"srv/**/*.ts\" --write && prettier \"common/**/*.ts\" --write",
     "model:init": "python3 -m venv ./.model && .model/bin/pip install poetry==1.4.1 && .model/bin/poetry config virtualenvs.in-project true",
     "model:deps": ".model/bin/poetry install --no-interaction --no-ansi",
-    "model:start": ".model/bin/poetry run python -m flask --app model/app.py run --host 0.0.0.0 -p 5001",
+    "model:start": ".model/bin/poetry run python model/app.py",
     "model:watch": "nodemon -e py --watch model --exec \"python -m flask --app model/app.py run --host 0.0.0.0 -p 5001\"",
     "model": "npm run model:start",
     "server": "node srv/start.js",
