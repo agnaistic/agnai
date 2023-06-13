@@ -372,14 +372,11 @@ function toChatCompletionPayload(
     history.push({ role: 'system', content })
   }
 
-  if (kind !== 'continue' && kind !== 'summary') {
-    const content = getInstruction(opts, encoder)
-    parts.ujb = parts.ujb ? parts.ujb + '\n\n' + content : content
-  }
+  const finalSystemMessage = mkFinalSystemMessage(opts, encoder, parts.ujb)
 
-  if (kind !== 'summary' && parts.ujb) {
-    history.push({ role: 'system', content: parts.ujb })
-    tokens += encoder(parts.ujb)
+  if (finalSystemMessage) {
+    history.push(finalSystemMessage)
+    tokens += encoder(finalSystemMessage.content)
   }
 
   const examplePos = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
@@ -462,4 +459,22 @@ function getInstruction(opts: AdapterProps, encoder: Encoder) {
   // This is experimental and probably needs to be workshopped to get better responses
   const content = injectPlaceholders(adventureAmble, { opts, parts: opts.parts, encoder })
   return content
+}
+
+function mkFinalSystemMessage(
+  opts: AdapterProps,
+  encoder: Encoder,
+  ujb?: string
+): CompletionItem | undefined {
+  if (opts.kind === 'summary') {
+    return undefined
+  } else if (opts.kind === 'continue') {
+    return ujb ? { role: 'system', content: ujb } : undefined
+  } else {
+    const finalInstructions = getInstruction(opts, encoder)
+    return {
+      role: 'system',
+      content: ujb ? `${ujb}\n\n${finalInstructions}` : finalInstructions,
+    }
+  }
 }
