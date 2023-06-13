@@ -360,8 +360,11 @@ function toCharacterIds(characters?: Record<string, boolean>) {
 function toChatListState(chars: Record<string, AppSchema.Character>, chat: AllChat) {
   const charIds = [chat.characterId].concat(toCharacterIds(chat.characters))
 
+  const seen = new Set<string>()
   const rows: ChatCharacter[] = []
   for (const id of charIds) {
+    if (seen.has(id)) continue
+    seen.add(id)
     const char = chars[id]
     if (!char) {
       rows.push({ _id: '', name: 'Unknown', description: '', avatar: '' })

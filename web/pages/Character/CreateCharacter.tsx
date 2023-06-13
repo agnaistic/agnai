@@ -46,7 +46,7 @@ import { BUNDLED_CHARACTER_BOOK_ID } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { characterGenTemplate } from '/common/default-preset'
-import { toNewCharacter } from './util'
+import { toGeneratedCharacter } from './util'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -138,7 +138,7 @@ const CreateCharacter: Component = () => {
         return
       }
 
-      const char = toNewCharacter(response!, description)
+      const char = toGeneratedCharacter(response!, description)
 
       setSchema('wpp')
       setDownloaded(char)

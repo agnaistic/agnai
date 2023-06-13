@@ -278,7 +278,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await chatsApi.getAllChats()
       yield { lastFetched: Date.now(), loaded: true }
       if (res.error) {
-        toastStore.error(`Could not retrieve chats`)
+        toastStore.error(`Could not retrieve chats: ${res.error}`)
         return { allChats }
       }
 
@@ -289,7 +289,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
     getBotChats: async (_, characterId: string) => {
       const res = await chatsApi.getBotChats(characterId)
-      if (res.error) toastStore.error('Failed to retrieve conversations')
+      if (res.error) toastStore.error(`Failed to retrieve conversations: ${res.error}`)
       if (res.result) {
         return {
           loaded: true,
@@ -307,7 +307,7 @@ export const chatStore = createStore<ChatState>('chat', {
       onSuccess?: (id: string) => void
     ) {
       const res = await chatsApi.createChat(characterId, props)
-      if (res.error) toastStore.error(`Failed to create conversation`)
+      if (res.error) toastStore.error(`Failed to create conversation: ${res.error}`)
       if (res.result) {
         yield { allChats: [res.result, ...allChats] }
 

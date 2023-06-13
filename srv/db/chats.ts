@@ -3,6 +3,7 @@ import { getCharacter } from './characters'
 import { db } from './client'
 import { AppSchema } from './schema'
 import { now } from './util'
+import { StatusError } from '../api/wrap'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
@@ -50,7 +51,7 @@ export async function create(
   const id = `${v4()}`
   const char = await getCharacter(props.userId, characterId)
   if (!char) {
-    throw new Error(`Unable to create chat: Character not found`)
+    throw new StatusError(`Character not found (${characterId.slice(0, 8)})`, 400)
   }
 
   const doc: AppSchema.Chat = {

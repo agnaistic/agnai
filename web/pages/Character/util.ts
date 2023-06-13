@@ -126,7 +126,7 @@ export function saveListCache(cache: ListCache) {
   safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cache))
 }
 
-export function toNewCharacter(response: string, description: string): NewCharacter {
+export function toGeneratedCharacter(response: string, description: string): NewCharacter {
   const lines = response.split('\n')
   const char: NewCharacter = {
     originalAvatar: undefined,

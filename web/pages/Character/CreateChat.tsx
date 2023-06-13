@@ -27,8 +27,10 @@ const CreateChatModal: Component<{
   let ref: any
 
   const nav = useNavigate()
+  const user = userStore((s) => ({ ...s.user }))
+  const presets = presetStore((s) => s.presets)
   const state = characterStore((s) => ({
-    chars: s.characters?.list || [],
+    chars: (s.characters?.list || []).filter((c) => c.userId === user._id),
     loaded: s.characters.loaded,
   }))
 
@@ -47,9 +49,6 @@ const CreateChatModal: Component<{
     if (!state.chars.length) return
     setSelected(state.chars[0]._id)
   })
-
-  const user = userStore((s) => ({ ...s.user }))
-  const presets = presetStore((s) => s.presets)
 
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
