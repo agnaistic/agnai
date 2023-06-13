@@ -12,6 +12,7 @@ import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import ServiceWarning from '/web/shared/ServiceWarning'
+import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import Divider from '/web/shared/Divider'
@@ -30,15 +31,12 @@ const CreateChatModal: Component<{
   let ref: any
 
   const nav = useNavigate()
-  const user = userStore((s) => ({ ...s.user }))
-  const presets = presetStore((s) => s.presets)
   const state = characterStore((s) => ({
     chars: (s.characters?.list || []).filter((c) => c.userId === user._id),
     loaded: s.characters.loaded,
   }))
 
   const [selectedId, setSelected] = createSignal<string>()
-  const [presetId, setPresetId] = createSignal('')
   const [useOverrides, setUseOverrides] = createSignal(false)
 
   const char = createMemo(() =>
@@ -54,9 +52,15 @@ const CreateChatModal: Component<{
     setSelected(state.chars[0]._id)
   })
 
+  const user = userStore((s) => ({ ...s.user }))
+  const [presetId, setPresetId] = createSignal(user.defaultPreset)
+  const presets = presetStore((s) => s.presets)
+
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
-    return [{ label: 'System Built-in Preset (Horde)', value: AutoPreset.service }].concat(opts)
+    return [
+      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+    ].concat(opts)
   })
 
   const selectedPreset = createMemo(() => {
@@ -71,7 +75,6 @@ const CreateChatModal: Component<{
     if (!character) return
 
     const body = getStrictForm(ref, {
-      genPreset: 'string',
       name: 'string',
       greeting: 'string',
       scenario: 'string',
@@ -89,6 +92,7 @@ const CreateChatModal: Component<{
           greeting: body.greeting,
           scenario: body.scenario,
           sampleChat: body.sampleChat,
+          genPreset: presetId(),
           overrides: { kind: body.schema, attributes },
         }
       : {
@@ -102,7 +106,7 @@ const CreateChatModal: Component<{
       overrides.greeting = body.greeting
     }
 
-    const payload = { ...body, ...overrides, useOverrides: useOverrides() }
+    const payload = { ...body, ...overrides, useOverrides: useOverrides(), genPreset: presetId() }
     chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
 
@@ -149,17 +153,11 @@ const CreateChatModal: Component<{
             </Card>
           </Show>
           <Card>
-            <Select
-              fieldName="genPreset"
-              label="Preset"
-              items={presetOptions()}
-              value={user.defaultPreset || ''}
-              helperText={
-                <>
-                  <ServiceWarning service={selectedPreset()?.service} />
-                </>
-              }
-              onChange={(ev) => setPresetId(ev.value)}
+            <PresetSelect
+              options={presetOptions()}
+              selected={presetId()}
+              setPresetId={setPresetId}
+              warning={<ServiceWarning service={selectedPreset()?.service} />}
             />
           </Card>
           <Show when={selectedPreset()?.service === 'openai'}>

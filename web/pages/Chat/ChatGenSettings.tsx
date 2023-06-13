@@ -8,7 +8,6 @@ import {
 } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Select from '../../shared/Select'
 import GenerationSettings from '../../shared/GenerationSettings'
 import Modal from '../../shared/Modal'
 import { getStrictForm } from '../../shared/util'
@@ -19,6 +18,7 @@ import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
+import { PresetSelect } from '/web/shared/PresetSelect'
 
 export const ChatGenSettingsModal: Component<{
   chat: AppSchema.Chat
@@ -45,7 +45,7 @@ export const ChatGenSettingsModal: Component<{
     return all.concat(defaults)
   })
 
-  const [selected, setSelected] = createSignal<string | undefined>(
+  const [selected, setSelected] = createSignal<string>(
     props.chat?.genPreset
       ? props.chat.genPreset
       : props.chat.genSettings
@@ -86,7 +86,7 @@ export const ChatGenSettingsModal: Component<{
   })
 
   const onSave = () => {
-    const { preset } = getStrictForm(ref, { preset: 'string' })
+    const preset = selected()
     if (preset === AutoPreset.chat) {
       const body = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenSettings(props.chat._id, body, props.close)
@@ -136,11 +136,10 @@ export const ChatGenSettingsModal: Component<{
     >
       <div class="text-sm">
         <form ref={ref} class="flex flex-col gap-2">
-          <Select
-            fieldName="preset"
-            items={presetOptions()}
-            value={selected()}
-            onChange={(item) => setSelected(item.value)}
+          <PresetSelect
+            options={presetOptions()}
+            selected={selected()}
+            setPresetId={(val) => setSelected(val)}
           />
 
           <ServiceWarning service={servicePreset()?.preset.service} />
@@ -161,7 +160,6 @@ export const ChatGenSettingsModal: Component<{
 
           <Switch>
             <Match when={selected() === AutoPreset.service && servicePreset()}>
-              <div class="bold text-md">Using: {servicePreset()!.name}</div>
               <GenerationSettings
                 inherit={servicePreset()!.preset}
                 disabled={servicePreset()?.fallback}
@@ -179,7 +177,6 @@ export const ChatGenSettingsModal: Component<{
               <For each={presets()}>
                 {(preset) => (
                   <Show when={selected() === preset._id!}>
-                    <div class="bold text-md">Using: {preset.name} (User Preset)</div>
                     <GenerationSettings
                       inherit={preset}
                       disabled={isDefaultPreset(selected())}
