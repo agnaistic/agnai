@@ -185,7 +185,13 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     if ('partial' in gen) {
-      sendMany(members, { type: 'message-partial', partial: gen.partial, adapter, chatId })
+      const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
+      sendMany(members, {
+        type: 'message-partial',
+        partial: `${prefix}${gen.partial}`,
+        adapter,
+        chatId,
+      })
       continue
     }
 
