@@ -71,6 +71,7 @@ const PersonaAttributes: Component<{
           <TextInput fieldName="attr-key.0" value="text" class="hidden" />
           <TextInput
             fieldName="attr-value.0"
+            class="min-h-[90px]"
             value={props.value?.text?.[0]}
             isMultiline
             placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."

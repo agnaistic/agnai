@@ -1,5 +1,15 @@
-import { Book, Download, Palette, Settings, Sliders, Trash, Users, Camera } from 'lucide-solid'
-import { Component, Show, createMemo } from 'solid-js'
+import {
+  Book,
+  Download,
+  Palette,
+  Settings,
+  User,
+  Sliders,
+  Trash,
+  Users,
+  Camera,
+} from 'lucide-solid'
+import { Component, Show, createMemo, JSX } from 'solid-js'
 import Button from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, settingStore, toastStore, userStore } from '../../store'
@@ -17,7 +27,10 @@ export type ChatModal =
   | 'delete'
   | 'none'
 
-const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props) => {
+const ChatOptions: Component<{
+  setModal: (modal: ChatModal) => void
+  toggleCharEditor: () => void
+}> = (props) => {
   const chats = chatStore((s) => ({
     ...s.active,
     opts: s.opts,
@@ -71,7 +84,7 @@ const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props)
           <div class="flex w-full items-center justify-between">
             <div>Hide OOC messages</div>
             <Toggle
-              class="flex items-center"
+              class="h-50 flex items-center"
               fieldName="editChat"
               value={chats.opts.hideOoc}
               onChange={toggleOocMessages}
@@ -94,7 +107,7 @@ const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props)
 
         <Option onClick={settingStore.toggleAnonymize}>
           <div class="flex w-full items-center justify-between">
-            <div>Anonymize Chat</div>
+            <div>Anonymize</div>
             <Toggle
               class="flex items-center"
               fieldName="anonymizeChat"
@@ -105,69 +118,68 @@ const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props)
         </Option>
 
         <Option onClick={screenshotChat}>
-          {/* Unfortunately msgs has to be abbreviated to fit on one line */}
           <Camera />
-          <Show when={!chats.opts.screenshot}>Take Screenshot</Show>
-          <Show when={chats.opts.screenshot}>
-            <em>Loading, please wait...</em>
-          </Show>
+          <div class="ml-1">
+            <Show when={!chats.opts.screenshot}>Screenshot</Show>
+            <Show when={chats.opts.screenshot}>
+              <em>Loading, please wait...</em>
+            </Show>
+          </div>
         </Option>
 
-        <Option
-          onClick={() => props.setModal('memory')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Book />
-          Edit Chat Memory
-        </Option>
+        <MenuItemRow>
+          <MenuItem onClick={() => props.setModal('members')} label="Party" icon={<Users />} />
+          <MenuItem onClick={() => props.setModal('gen')} icon={<Sliders />} label="Preset" />
+        </MenuItemRow>
+        <MenuItemRow>
+          <MenuItem onClick={props.toggleCharEditor} icon={<User />} label="Chara" />
+          <MenuItem onClick={() => props.setModal('memory')} icon={<Book />} label="Memory" />
+        </MenuItemRow>
+      </Show>
 
-        <Option
-          onClick={() => props.setModal('members')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Users /> Participants
-        </Option>
-
-        <Option
-          onClick={() => props.setModal('gen')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Sliders /> Generation Settings
-        </Option>
-
-        <Option
+      <MenuItemRow>
+        <MenuItem
           onClick={() => props.setModal('settings')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Settings /> Chat Settings
-        </Option>
-      </Show>
+          icon={<Settings />}
+          label="Chat"
+          showWhen={isOwner()}
+        />
+        <MenuItem onClick={() => props.setModal('ui')} icon={<Palette />} label="UI" />
+      </MenuItemRow>
 
-      <Option
-        onClick={() => props.setModal('ui')}
-        class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-      >
-        <Palette /> UI Settings
-      </Option>
-
-      <Option
-        onClick={() => props.setModal('export')}
-        class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-      >
-        <Download /> Export Chat
-      </Option>
-
-      <Show when={isOwner()}>
-        <Option
+      <MenuItemRow>
+        <MenuItem onClick={() => props.setModal('export')} icon={<Download />} label="Export" />
+        <MenuItem
           onClick={() => props.setModal('delete')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Trash /> Delete Chat
-        </Option>
-      </Show>
+          icon={<Trash />}
+          label="Delete"
+          showWhen={isOwner()}
+        />
+      </MenuItemRow>
     </div>
   )
 }
+
+const MenuItemRow: Component<{ children: JSX.Element }> = (props) => (
+  <div class="flex gap-1">{props.children}</div>
+)
+
+const MenuItem: Component<{
+  onClick: () => void
+  icon: JSX.Element
+  label: string
+  showWhen?: boolean
+}> = (props) => (
+  <Show when={props.showWhen ?? true}>
+    <Option
+      onClick={props.onClick}
+      class="flex flex-1 justify-start gap-2 hover:bg-[var(--bg-700)]"
+    >
+      {props.icon}
+      {props.label}
+    </Option>
+  </Show>
+)
 
 const Option: Component<{
   children: any
@@ -180,7 +192,7 @@ const Option: Component<{
     props.close?.()
   }
   return (
-    <Button schema="secondary" size="sm" onClick={onClick} alignLeft>
+    <Button schema="secondary" size="sm" onClick={onClick} alignLeft class={props.class}>
       {props.children}
     </Button>
   )

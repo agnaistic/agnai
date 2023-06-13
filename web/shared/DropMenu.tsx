@@ -62,7 +62,7 @@ export const DropMenu: Component<{
           onClick={props.close}
         ></div>
       </Show>
-      <div class="relative z-20 text-sm">
+      <div class="relative z-50 text-sm">
         <Show when={props.show}>
           <div
             class={`absolute ${position()} bg-800 w-fit rounded-md border-[1px] border-[var(--bg-600)] ${

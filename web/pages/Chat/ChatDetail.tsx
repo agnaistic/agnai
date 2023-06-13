@@ -1,10 +1,20 @@
 import './chat-detail.css'
-import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onCleanup,
+  Show,
+} from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu, Radio } from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
+import { CharacterPill } from '../../shared/CharacterPill'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import { getRootRgb, setComponentPageTitle } from '../../shared/util'
@@ -27,9 +37,11 @@ import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
-import AvatarIcon from '/web/shared/AvatarIcon'
 import { cycleArray } from '/common/util'
 import { getActiveBots } from './util'
+import { CreateCharacterForm } from '/web/shared/CreateCharacterForm'
+import { RightPane } from './RightPane'
+import { usePane } from '/web/shared/hooks'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -37,11 +49,11 @@ const ChatDetail: Component = () => {
   const nav = useNavigate()
   const user = userStore()
   const cfg = settingStore()
-
   const chars = characterStore((s) => ({
     chatBots: s.characters.list,
     botMap: s.characters.map,
   }))
+  const isPaneOrPopup = usePane()
 
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
@@ -82,6 +94,10 @@ const ChatDetail: Component = () => {
   const [removeId, setRemoveId] = createSignal('')
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
+  const [editId, setEditId] = createSignal('')
+  createEffect(() => {
+    setEditId(chats.char?._id ?? '')
+  })
 
   const chatMsgs = createMemo(() => {
     return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
@@ -91,7 +107,9 @@ const ChatDetail: Component = () => {
 
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
-  const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth))
+  const chatWidth = createMemo(() =>
+    getChatWidth(user.ui.chatWidth, chatStore().opts.editingChar && isPaneOrPopup() === 'pane')
+  )
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
   const isSelfRemoved = createMemo(() => {
@@ -126,6 +144,15 @@ const ChatDetail: Component = () => {
   const clearModal = () => {
     setShowOpts(false)
     chatStore.option('modal', 'none')
+  }
+
+  const toggleCharEditor = () => {
+    setShowOpts(false)
+    chatStore.option('editingChar', !chatStore().opts.editingChar)
+  }
+
+  const closeCharEditor = () => {
+    chatStore.option('editingChar', false)
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
@@ -179,6 +206,10 @@ const ChatDetail: Component = () => {
     }
   })
 
+  onCleanup(() => {
+    closeCharEditor()
+  })
+
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
     if (isDevCommand(message)) {
       switch (message) {
@@ -221,6 +252,10 @@ const ChatDetail: Component = () => {
     msgStore.retry(chats.chat?._id!)
   }
 
+  const chatMargin = () => (chats.opts.editingChar ? 'xs:mr-auto mx-auto' : 'mx-auto')
+
+  const topBarVisibility = () => (chats.opts.editingChar ? '' : 'sm:flex')
+
   return (
     <>
       <Show when={!chats.loaded}>
@@ -229,172 +264,183 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <div class={`mx-auto flex h-full ${chatWidth()} flex-col justify-between sm:py-2`}>
+        <div class="mx-auto flex h-full w-full justify-between gap-4">
           <div
-            class="hidden h-9 items-center justify-between rounded-md sm:flex"
-            style={headerBg()}
+            class={`${chatMargin()} h-full ${chatWidth()} flex flex-col justify-between xs:flex sm:py-2`}
           >
-            <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
-              <Show when={!cfg.fullscreen && isOwner()}>
-                <A href={`/character/${chats.char?._id}/chats`}>
-                  <ChevronLeft />
-                </A>
-                <div class="ellipsis flex flex-col">
-                  <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                    {chats.char?.name}
-                  </span>
-                  <Show when={chats.chat!.name}>
-                    <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                      {chats.chat!.name}
+            <div
+              class={`hidden h-9 items-center justify-between rounded-md ${topBarVisibility()}`}
+              style={headerBg()}
+            >
+              <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
+                <Show when={!cfg.fullscreen && isOwner()}>
+                  <A href={`/character/${chats.char?._id}/chats`}>
+                    <ChevronLeft />
+                  </A>
+                  <div class="ellipsis flex flex-col">
+                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
+                      {chats.char?.name}
                     </span>
+                    <Show when={chats.chat!.name}>
+                      <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                        {chats.chat!.name}
+                      </span>
+                    </Show>
+                  </div>
+                </Show>
+              </div>
+
+              <div class="flex flex-row gap-3">
+                <Show when={isOwner()}>
+                  <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
+                    {adapterLabel()}
+                  </div>
+                </Show>
+
+                <div class="" onClick={() => setShowOpts(true)}>
+                  <Menu class="icon-button" />
+                  <DropMenu
+                    show={showOpts()}
+                    close={() => setShowOpts(false)}
+                    horz="left"
+                    vert="down"
+                  >
+                    <ChatOptions setModal={setModal} toggleCharEditor={toggleCharEditor} />
+                  </DropMenu>
+                </div>
+
+                <Show when={!cfg.fullscreen}>
+                  <div class="icon-button" onClick={() => settingStore.fullscreen(true)}>
+                    <ArrowUpRight />
+                  </div>
+                </Show>
+
+                <Show when={cfg.fullscreen}>
+                  <div class="icon-button" onClick={() => settingStore.fullscreen(false)}>
+                    <ArrowDownLeft />
+                  </div>
+                </Show>
+              </div>
+            </div>
+
+            <div class="flex h-[calc(100%-8px)] flex-col-reverse gap-1 sm:h-[calc(100%-36px)]">
+              <InputBar
+                chat={chats.chat!}
+                swiped={swipe() !== 0}
+                send={sendMessage}
+                more={moreMessage}
+                char={chats.char}
+                ooc={ooc() ?? isGroupChat()}
+                setOoc={setOoc}
+                showOocToggle={isGroupChat()}
+                request={requestMessage}
+                bots={chars.chatBots}
+                botMap={chars.botMap}
+              />
+              <Show when={isOwner() && chats.activeBots.length > 1}>
+                <div
+                  class={`flex justify-center gap-2 py-1 ${
+                    msgs.waiting ? 'opacity-70 saturate-0' : ''
+                  }`}
+                >
+                  <For each={chats.activeBots}>
+                    {(bot) => (
+                      <CharacterPill
+                        char={bot}
+                        onClick={requestMessage}
+                        disabled={!!msgs.waiting}
+                        active={chats.replyAs === bot._id}
+                      />
+                    )}
+                  </For>
+                </div>
+              </Show>
+              <Show when={isSelfRemoved()}>
+                <div class="flex w-full justify-center">
+                  You have been removed from the conversation
+                </div>
+              </Show>
+              <div class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
+                <div id="chat-messages" class="flex flex-col gap-2">
+                  <Show
+                    when={
+                      cfg.flags.charv2 &&
+                      chats.loaded &&
+                      chatMsgs().length < 2 &&
+                      chats.char?.description
+                    }
+                  >
+                    <div class="mx-auto mb-4 text-[var(--text-500)]">
+                      <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
+                      {chats.char!.description!.split('\n').map((paragText) => (
+                        <div>{paragText}</div>
+                      ))}
+                    </div>
                   </Show>
-                </div>
-              </Show>
-            </div>
-
-            <div class="flex flex-row gap-3">
-              <Show when={isOwner()}>
-                <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
-                  {adapterLabel()}
-                </div>
-              </Show>
-
-              <div class="" onClick={() => setShowOpts(true)}>
-                <Menu class="icon-button" />
-                <DropMenu
-                  show={showOpts()}
-                  close={() => setShowOpts(false)}
-                  horz="left"
-                  vert="down"
-                >
-                  <ChatOptions setModal={setModal} />
-                </DropMenu>
-              </div>
-
-              <Show when={!cfg.fullscreen}>
-                <div class="icon-button" onClick={() => settingStore.fullscreen(true)}>
-                  <ArrowUpRight />
-                </div>
-              </Show>
-
-              <Show when={cfg.fullscreen}>
-                <div class="icon-button" onClick={() => settingStore.fullscreen(false)}>
-                  <ArrowDownLeft />
-                </div>
-              </Show>
-            </div>
-          </div>
-
-          <div class="flex h-[calc(100%-8px)] flex-col-reverse gap-1 sm:h-[calc(100%-36px)]">
-            <InputBar
-              chat={chats.chat!}
-              swiped={swipe() !== 0}
-              send={sendMessage}
-              more={moreMessage}
-              char={chats.char}
-              ooc={ooc() ?? isGroupChat()}
-              setOoc={setOoc}
-              showOocToggle={isGroupChat()}
-              request={requestMessage}
-              bots={chars.chatBots}
-              botMap={chars.botMap}
-            />
-            <Show when={isOwner() && chats.activeBots.length > 1}>
-              <div
-                class={`flex justify-center gap-2 py-1 ${
-                  msgs.waiting ? 'opacity-70 saturate-0' : ''
-                }`}
-              >
-                <For each={chats.activeBots}>
-                  {(bot) => (
-                    <CharacterResponseBtn
-                      char={bot}
-                      request={requestMessage}
-                      waiting={!!msgs.waiting}
-                      replying={chats.replyAs === bot._id}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-            <Show when={isSelfRemoved()}>
-              <div class="flex w-full justify-center">
-                You have been removed from the conversation
-              </div>
-            </Show>
-            <div class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
-              <div id="chat-messages" class="flex flex-col gap-2">
-                <Show
-                  when={
-                    cfg.flags.charv2 &&
-                    chats.loaded &&
-                    chatMsgs().length < 2 &&
-                    chats.char?.description
-                  }
-                >
-                  <div class="mx-auto mb-4 text-[var(--text-500)]">
-                    <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
-                    {chats.char!.description!.split('\n').map((paragText) => (
-                      <div>{paragText}</div>
-                    ))}
-                  </div>
-                </Show>
-                <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
-                  <div class="flex justify-center">
-                    <Button onClick={generateFirst}>Generate Message</Button>
-                  </div>
-                </Show>
-                <For each={chatMsgs()}>
-                  {(msg, i) => (
+                  <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
+                    <div class="flex justify-center">
+                      <Button onClick={generateFirst}>Generate Message</Button>
+                    </div>
+                  </Show>
+                  <For each={chatMsgs()}>
+                    {(msg, i) => (
+                      <Message
+                        msg={msg}
+                        botMap={chars.botMap}
+                        chat={chats.chat!}
+                        char={chats.char!}
+                        editing={chats.opts.editing}
+                        anonymize={cfg.anonymize}
+                        last={i() === indexOfLastRPMessage()}
+                        onRemove={() => setRemoveId(msg._id)}
+                        swipe={
+                          msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
+                        }
+                        confirmSwipe={() => confirmSwipe(msg._id)}
+                        cancelSwipe={cancelSwipe}
+                        tts={tts()}
+                        retrying={msgs.retrying}
+                        partial={msgs.partial}
+                        sendMessage={sendMessage}
+                        editingChar={chatStore().opts.editingChar}
+                      >
+                        {isOwner() &&
+                          retries()?.list?.length! > 1 &&
+                          i() === indexOfLastRPMessage() && (
+                            <SwipeMessage
+                              chatId={chats.chat?._id!}
+                              pos={swipe()}
+                              prev={clickSwipe(-1)}
+                              next={clickSwipe(1)}
+                              list={retries()?.list || []}
+                            />
+                          )}
+                      </Message>
+                    )}
+                  </For>
+                  <Show when={waitingMsg()}>
                     <Message
-                      msg={msg}
                       botMap={chars.botMap}
+                      msg={waitingMsg()!}
+                      char={chars.botMap[waitingMsg()?.characterId!]}
                       chat={chats.chat!}
-                      char={chats.char!}
+                      onRemove={() => {}}
                       editing={chats.opts.editing}
                       anonymize={cfg.anonymize}
-                      last={i() === indexOfLastRPMessage()}
-                      onRemove={() => setRemoveId(msg._id)}
-                      swipe={
-                        msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
-                      }
-                      confirmSwipe={() => confirmSwipe(msg._id)}
-                      cancelSwipe={cancelSwipe}
-                      tts={tts()}
-                      retrying={msgs.retrying}
-                      partial={msgs.partial}
                       sendMessage={sendMessage}
-                    >
-                      {isOwner() &&
-                        retries()?.list?.length! > 1 &&
-                        i() === indexOfLastRPMessage() && (
-                          <SwipeMessage
-                            chatId={chats.chat?._id!}
-                            pos={swipe()}
-                            prev={clickSwipe(-1)}
-                            next={clickSwipe(1)}
-                            list={retries()?.list || []}
-                          />
-                        )}
-                    </Message>
-                  )}
-                </For>
-                <Show when={waitingMsg()}>
-                  <Message
-                    botMap={chars.botMap}
-                    msg={waitingMsg()!}
-                    char={chars.botMap[waitingMsg()?.characterId!]}
-                    chat={chats.chat!}
-                    onRemove={() => {}}
-                    editing={chats.opts.editing}
-                    anonymize={cfg.anonymize}
-                    sendMessage={sendMessage}
-                  />
-                </Show>
+                      editingChar={chatStore().opts.editingChar}
+                    />
+                  </Show>
+                </div>
+                <InfiniteScroll />
               </div>
-              <InfiniteScroll />
             </div>
           </div>
+          <Show when={chats.opts.editingChar}>
+            <RightPane close={closeCharEditor} modalTitle="Edit a Character">
+              <CreateCharacterForm editId={editId()} modal={{ close: closeCharEditor }} />
+            </RightPane>
+          </Show>
         </div>
       </Show>
 
@@ -456,36 +502,6 @@ const ChatDetail: Component = () => {
 
 export default ChatDetail
 
-const CharacterResponseBtn: Component<{
-  char: AppSchema.Character
-  waiting: boolean
-  replying?: boolean
-  request: (charId: string) => void
-}> = (props) => {
-  const cursor = createMemo(() => (props.waiting ? 'cursor-default' : 'cursor-pointer'))
-
-  return (
-    <Show when={props.char}>
-      <div
-        class={`flex max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} bg-900 items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
-        onclick={() => !props.waiting && props.request(props.char._id)}
-      >
-        <AvatarIcon
-          bot={true}
-          format={{ size: 'xs', corners: 'circle' }}
-          avatarUrl={props.char.avatar}
-        />
-        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">
-          {props.char.name}
-        </strong>
-        <Show when={props.replying}>
-          <Radio size={16} />
-        </Show>
-      </div>
-    </Show>
-  )
-}
-
 const SwipeMessage: Component<{
   chatId: string
   list: string[]
@@ -538,7 +554,8 @@ const InfiniteScroll: Component = () => {
   )
 }
 
-function getChatWidth(setting: UI['chatWidth']) {
+function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean) {
+  if (sidePaneVisible) return 'max-w-sm'
   switch (setting) {
     case 'narrow':
       return 'max-w-3xl'

@@ -12,6 +12,7 @@ const NavBar: Component = () => {
     chat: s.active?.chat,
     char: s.active?.char,
     loaded: s.loaded,
+    opts: s.opts,
   }))
 
   const [showOpts, setShowOpts] = createSignal(false)
@@ -25,6 +26,10 @@ const NavBar: Component = () => {
     chatStore.option('modal', modal)
   }
 
+  const toggleCharEditor = () => {
+    setShowOpts(false)
+    chatStore.option('editingChar', !chatStore().opts.editingChar)
+  }
   const Title = (
     <A href="/">
       <div class="flex w-full justify-center">
@@ -33,14 +38,16 @@ const NavBar: Component = () => {
     </A>
   )
 
+  const visibilityClass = () => (chats.opts.editingChar ? '' : 'sm:hidden')
+
   return (
     <Show when={!cfg.fullscreen}>
       <span
         data-header=""
-        class="bg-900 flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden"
+        class={`bg-900 flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 ${visibilityClass()}`}
       >
-        <span class="flex w-full items-center justify-between gap-2 font-semibold sm:justify-start">
-          <div class="w-8 sm:hidden" onClick={settingStore.menu}>
+        <span class="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
+          <div class={`w-8 ${visibilityClass}`} onClick={settingStore.menu}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
           <div class="ellipsis flex w-full flex-col">
@@ -57,7 +64,7 @@ const NavBar: Component = () => {
             <div class="" onClick={() => setShowOpts(true)}>
               <MoreHorizontal class="icon-button" />
               <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
-                <ChatOptions setModal={setModal} />
+                <ChatOptions setModal={setModal} toggleCharEditor={toggleCharEditor} />
               </DropMenu>
             </div>
           </Show>

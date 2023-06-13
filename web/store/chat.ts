@@ -44,6 +44,7 @@ export type ChatState = {
     editing: boolean
     screenshot: boolean
     hideOoc: boolean
+    editingChar: boolean
   }
 }
 
@@ -86,6 +87,7 @@ const initState: ChatState = {
     screenshot: false,
     hideOoc: false,
     modal: undefined,
+    editingChar: false,
   },
 }
 
@@ -104,6 +106,7 @@ export const chatStore = createStore<ChatState>('chat', {
     ...getOptsCache(),
     modal: undefined,
     screenshot: false,
+    editingChar: false,
   },
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {

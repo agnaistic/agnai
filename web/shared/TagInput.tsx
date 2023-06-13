@@ -78,7 +78,7 @@ const TagInput: Component<TagInputProps> = (props) => {
           value={inputValue()}
           onInput={handleInputChange}
           onKeyDown={handleInputKeyDown}
-          placeholder="Add tags..."
+          placeholder="&nbsp;&nbsp;Add tags..."
         />
       </div>
       <ul class="absolute left-0 z-10 mt-1 bg-white text-gray-800 shadow-md">
