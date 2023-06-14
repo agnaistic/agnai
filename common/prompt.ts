@@ -460,7 +460,9 @@ function getLinesForPrompt(
       msg,
       opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
       sender
-    ).trim()
+    )
+      .replace(/\s+/g, ' ')
+      .trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
@@ -633,10 +635,13 @@ function getContextLimit(
       const models = new Set<string>([
         OPENAI_MODELS.Turbo,
         OPENAI_MODELS.Turbo0301,
+        OPENAI_MODELS.Turbo_4k,
         OPENAI_MODELS.DaVinci,
       ])
 
       if (!model || models.has(model)) return Math.min(configuredMax, 4090) - genAmount
+      if (model === OPENAI_MODELS.Turbo_16k) return Math.min(configuredMax, 16360) - genAmount
+
       return configuredMax - genAmount
     }
 

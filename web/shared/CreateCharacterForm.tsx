@@ -94,7 +94,13 @@ export const CreateCharacterForm: Component<{
       list: s.characters.list,
     }
   })
-
+  const [tokens, setTokens] = createSignal({
+    name: 0,
+    scenario: 0,
+    greeting: 0,
+    persona: 0,
+    sample: 0,
+  })
   const [downloaded, setDownloaded] = createSignal<NewCharacter>()
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
@@ -110,6 +116,11 @@ export const CreateCharacterForm: Component<{
   const [showAdvanced, setShowAdvanced] = createSignal(false)
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
   const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
+
+  const totalTokens = createMemo(() => {
+    const t = tokens()
+    return t.greeting + t.name + t.persona + t.sample + t.scenario
+  })
 
   const edit = createMemo(() => state.edit)
 
@@ -336,6 +347,7 @@ export const CreateCharacterForm: Component<{
           <div class={`flex justify-between pl-2`}>
             <PageHeader
               title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
+              subtitle={<em>{totalTokens()} tokens</em>}
             />
           </div>
         </Show>
@@ -349,6 +361,7 @@ export const CreateCharacterForm: Component<{
               label="Character Name"
               placeholder=""
               value={downloaded()?.name || state.edit?.name}
+              tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
             />
           </Card>
 
@@ -447,6 +460,7 @@ export const CreateCharacterForm: Component<{
               placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
               value={downloaded()?.scenario || state.edit?.scenario}
               isMultiline
+              tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
             />
           </Card>
           <Card class="flex flex-col gap-3">
@@ -460,6 +474,7 @@ export const CreateCharacterForm: Component<{
               }
               value={downloaded()?.greeting || state.edit?.greeting}
               class="h-60"
+              tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
             />
             <Show when={flags.charv2}>
               <AlternateGreetingsInput
@@ -495,6 +510,9 @@ export const CreateCharacterForm: Component<{
               <PersonaAttributes
                 value={downloaded()?.persona.attributes}
                 plainText={schema() === 'text' || schema() === undefined}
+                schema={schema()}
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+                form={ref}
               />
             </Show>
 
@@ -502,6 +520,9 @@ export const CreateCharacterForm: Component<{
               <PersonaAttributes
                 value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
                 plainText={schema() === 'text'}
+                            schema={schema()}
+            tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+            form={ref}
               />
             </Show>
           </Card>
@@ -518,6 +539,7 @@ export const CreateCharacterForm: Component<{
               }
               placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
               value={downloaded()?.sampleChat || state.edit?.sampleChat}
+              tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
             />
           </Card>
           <h2
@@ -602,6 +624,9 @@ export const CreateCharacterForm: Component<{
               />
             </Card>
           </div>
+        </div>
+                <div class="flex justify-end">
+          <em>{totalTokens()} tokens</em>
         </div>
         <div class={`flex justify-end gap-2`}>
           <Button onClick={cancel} schema="secondary">

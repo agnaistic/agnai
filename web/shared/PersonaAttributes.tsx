@@ -1,9 +1,12 @@
 import { MinusCircle, Plus } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { getFormEntries } from './util'
+import { getEncoder } from '/common/tokenize'
+import { formatCharacter } from '/common/characters'
+import { AppSchema } from '/srv/db/schema'
 
 type Attr = { key: string; values: string }
 
@@ -17,9 +20,17 @@ const PersonaAttributes: Component<{
   value?: Record<string, string[]>
   plainText?: boolean
   hideLabel?: boolean
+  schema?: AppSchema.Persona['kind']
+  tokenCount?: boolean | ((count: number) => void)
+  form?: any
 }> = (props) => {
   const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
+  const [tokens, setTokens] = createSignal(0)
+
+  onMount(() => {
+    updateCount()
+  })
 
   createEffect(() => {
     if (props.value) {
@@ -33,9 +44,33 @@ const PersonaAttributes: Component<{
     setPrev(props.value)
   })
 
+  createEffect(async () => {
+    attrs()
+    updateCount()
+  })
+
+  const updateCount = async () => {
+    if (!props.tokenCount || !props.form) return
+    const attributes = getAttributeMap(props.form)
+
+    const encoder = await getEncoder()
+
+    const formatted = formatCharacter(
+      'Name',
+      { kind: props.schema || 'text', attributes },
+      props.schema
+    )
+    const count = encoder(formatted)
+    setTokens(count)
+    if (typeof props.tokenCount === 'function') {
+      props.tokenCount(count)
+    }
+  }
+
   const add = () => setAttrs((prev) => [...prev, { key: '', values: '' }])
 
   const onKey = (key: string, index: number) => {
+    updateCount()
     if (key !== 'Enter') return
     if (index + 1 !== attrs().length) return
     add()
@@ -62,6 +97,10 @@ const PersonaAttributes: Component<{
                   loves.
                 </Show>
               </span>
+              <Show when={props.tokenCount}>
+                <br />
+                <em class="text-xs">{tokens()} tokens</em>
+              </Show>
             </>
           }
         />
@@ -75,6 +114,7 @@ const PersonaAttributes: Component<{
             value={props.value?.text?.[0]}
             isMultiline
             placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."
+            tokenCount={() => updateCount()}
           />
         </div>
       </Show>
@@ -116,6 +156,7 @@ const Attribute: Component<{
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
           value={props.attr.values}
           onKeyUp={(ev) => props.onKey(ev.key, props.index)}
+          isMultiline
         />
       </div>
       <div class="1/12 flex items-center" onClick={() => props.remove(props.index)}>
