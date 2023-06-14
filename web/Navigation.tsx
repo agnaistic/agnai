@@ -47,7 +47,9 @@ const Navigation: Component = () => {
   })
 
   const hide = createMemo(() => (state.showMenu ? '' : 'drawer--hide'))
-  const fullscreen = createMemo(() => (state.fullscreen || (chat.opts.editingChar && !state.showMenu) ? 'hidden' : ''))
+  const fullscreen = createMemo(() =>
+    state.fullscreen || (chat.opts.editingChar && !state.showMenu) ? 'hidden' : ''
+  )
 
   return (
     <>

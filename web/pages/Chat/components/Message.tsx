@@ -165,8 +165,7 @@ const SingleMessage: Component<
   const nameDateFlexDir = () =>
     props.editingChar ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'
   const nameDateAlignItems = () => (props.editingChar ? '' : 'sm:items-end')
-  const nameFontSize = () =>
-    props.editingChar ? 'sm:text-base' : 'sm:text-lg'
+  const nameFontSize = () => (props.editingChar ? 'sm:text-base' : 'sm:text-lg')
 
   return (
     <div
@@ -224,7 +223,7 @@ const SingleMessage: Component<
                 }`}
               >
                 <b
-                  class={ `text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameFontSize()}` }
+                  class={`text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameFontSize()}`}
                   // Necessary to override text-md and text-lg's line height, for proper alignment
                   style="line-height: 1;"
                   data-bot-name={isBot()}

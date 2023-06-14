@@ -94,13 +94,13 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
   if (isLoggedIn()) {
     const form = new FormData()
     appendFormOptional(form, 'name', char.name)
-    appendFormOptional(form, 'greeting', char.greeting)
-    appendFormOptional(form, 'scenario', char.scenario)
+    appendFormOptional_(form, 'greeting', char.greeting)
+    appendFormOptional_(form, 'scenario', char.scenario)
     appendFormOptional(form, 'persona', JSON.stringify(char.persona))
-    appendFormOptional(form, 'description', char.description || '')
+    appendFormOptional_(form, 'description', char.description || '')
     appendFormOptional(form, 'culture', char.culture)
     appendFormOptional(form, 'tags', char.tags || [], JSON.stringify)
-    appendFormOptional(form, 'sampleChat', char.sampleChat)
+    appendFormOptional_(form, 'sampleChat', char.sampleChat)
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
     appendFormOptional(form, 'avatar', file)
     // v2 fields start here

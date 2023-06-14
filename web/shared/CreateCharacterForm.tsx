@@ -109,6 +109,7 @@ export const CreateCharacterForm: Component<{
   )
   const [showAdvanced, setShowAdvanced] = createSignal(false)
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
+  const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
 
   const edit = createMemo(() => state.edit)
 
@@ -530,7 +531,7 @@ export const CreateCharacterForm: Component<{
             </div>
             Advanced options
           </h2>
-          <Show when={showAdvanced()}>
+          <div class={`flex flex-col gap-3 ${advancedVisibility()}`}>
             <Show when={flags.charv2}>
               <Card class="flex flex-col gap-3">
                 <TextInput
@@ -600,7 +601,7 @@ export const CreateCharacterForm: Component<{
                 onChange={(option) => setCulture(option.value)}
               />
             </Card>
-          </Show>
+          </div>
         </div>
         <div class={`flex justify-end gap-2`}>
           <Button onClick={cancel} schema="secondary">

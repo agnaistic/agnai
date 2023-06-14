@@ -322,7 +322,9 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const parts: PromptParts = {
     persona: formatCharacter(
       replyAs.name,
-      replyAs._id === char._id ? chat.overrides : replyAs.persona
+      replyAs._id === char._id && chat.useOverrides
+        ? chat.overrides ?? replyAs.persona
+        : replyAs.persona
     ),
     post: [],
     allPersonas: [],
@@ -330,7 +332,9 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   const personalities = new Set(replyAs._id)
 
-  const botKind = opts.chat.overrides?.kind || opts.char.persona.kind
+  const botKind = opts.chat.useOverrides
+    ? opts.chat.overrides?.kind || opts.char.persona.kind
+    : opts.char.persona.kind
   if (opts.impersonate && !personalities.has(opts.impersonate._id)) {
     personalities.add(opts.impersonate._id)
     parts.allPersonas.push(
@@ -351,11 +355,20 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     )
   }
 
-  if (chat.scenario) {
+  if (chat.scenario && chat.useOverrides) {
+    // we use the BOT_REPLACE here otherwise later it'll get replaced with the
+    // replyAs instead of the main character
+    // (we always use the main character's scenario, not replyAs)
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
+  } else {
+    parts.scenario = char.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  parts.sampleChat = (replyAs._id === char._id ? chat.sampleChat : replyAs.sampleChat)
+  parts.sampleChat = (
+    replyAs._id === char._id && chat.useOverrides
+      ? chat.sampleChat ?? replyAs.sampleChat
+      : replyAs.sampleChat
+  )
     .split('\n')
     .filter(removeEmpty)
     // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
@@ -363,6 +376,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
+  } else {
+    parts.greeting = replace(char.greeting)
   }
 
   const post = createPostPrompt(opts)

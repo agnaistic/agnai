@@ -127,10 +127,11 @@ export namespace AppSchema {
     messageCount: number
     adapter?: ChatAdapter
 
-    greeting: string
-    scenario: string
-    sampleChat: string
-    overrides: Persona
+    useOverrides?: boolean
+    greeting?: string
+    scenario?: string
+    sampleChat?: string
+    overrides?: Persona
 
     createdAt: string
     updatedAt: string

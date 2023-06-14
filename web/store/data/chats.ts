@@ -105,6 +105,7 @@ export async function importChat(characterId: string, props: ImportChat) {
     greeting: props.greeting || char.greeting,
     sampleChat: props.sampleChat || char.sampleChat,
     overrides: { ...char.persona },
+    useOverrides: props.useOverrides ?? false,
   })
 
   const start = Date.now()
@@ -147,7 +148,14 @@ export async function getAllChats() {
 
   if (!chats?.length) {
     const [char] = characters
-    const { chat, msg } = createNewChat(char, { ...char, overrides: char.persona })
+    const { chat, msg } = createNewChat(char, {
+      ...char,
+      greeting: undefined,
+      scenario: undefined,
+      sampleChat: undefined,
+      overrides: undefined,
+      useOverrides: false,
+    })
     localApi.saveChats([chat])
     localApi.saveMessages(chat._id, [msg])
 

@@ -555,10 +555,10 @@ const InfiniteScroll: Component = () => {
 }
 
 function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean) {
-  if (sidePaneVisible) return 'max-w-sm'
+  if (sidePaneVisible) return 'min-w-[360px] w-[360px] max-w-[360px]'
   switch (setting) {
     case 'narrow':
-      return 'max-w-3xl'
+      return 'w-full max-w-3xl'
 
     case 'full':
     default:

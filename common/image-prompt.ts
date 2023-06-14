@@ -15,19 +15,14 @@ const appearanceKeys = ['appearance', 'looks']
 
 export async function createAppearancePrompt(
   user: AppSchema.User,
-  avatar: AppSchema.Chat | AppSchema.Character | AppSchema.Persona
+  avatar: { persona: AppSchema.Persona }
 ) {
   let visuals: string[] = []
 
   const max = getMaxImageContext(user)
   let size = await tokenize(`portrait, dramatic lighting`)
 
-  const persona =
-    avatar.kind === 'character'
-      ? avatar.persona
-      : avatar.kind === 'chat'
-      ? avatar.overrides
-      : avatar
+  const { persona } = avatar
 
   for (const key of appearanceKeys) {
     if (persona.kind === 'text') break

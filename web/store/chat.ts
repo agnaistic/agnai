@@ -54,14 +54,16 @@ export type ImportChat = {
   scenario: string
   sampleChat: string
   messages: Array<{ msg: string; characterId?: string; userId?: string }>
+  useOverrides?: boolean
 }
 
 export type NewChat = {
   name: string
-  greeting: string
-  scenario: string
-  sampleChat: string
-  overrides: AppSchema.Chat['overrides']
+  greeting?: string
+  scenario?: string
+  sampleChat?: string
+  overrides?: AppSchema.Chat['overrides']
+  useOverrides: boolean
   mode?: AppSchema.Chat['mode']
 }
 

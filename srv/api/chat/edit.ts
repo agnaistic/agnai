@@ -12,10 +12,10 @@ export const updateChat = handle(async ({ params, body, user }) => {
       name: 'string',
       mode: ['standard', 'adventure'],
       adapter: ['default', ...config.adapters] as const,
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-      memoryId: 'string',
+      greeting: 'string?',
+      scenario: 'string?',
+      sampleChat: 'string?',
+      memoryId: 'string?',
       overrides: personaValidator,
     },
     body,
@@ -26,7 +26,13 @@ export const updateChat = handle(async ({ params, body, user }) => {
   const prev = await store.chats.getChatOnly(id)
   if (prev?.userId !== user?.userId) throw errors.Forbidden
 
-  const chat = await store.chats.update(id, body)
+  const chat = await store.chats.update(id, {
+    ...body,
+    greeting: body.greeting ?? '',
+    scenario: body.scenario ?? '',
+    sampleChat: body.sampleChat ?? '',
+    overrides: body.overrides ?? '',
+  })
   return chat
 })
 
