@@ -122,6 +122,11 @@ export const CreateCharacterForm: Component<{
     return t.greeting + t.name + t.persona + t.sample + t.scenario
   })
 
+  const totalPermanentTokens = createMemo(() => {
+    const t = tokens()
+    return t.greeting + t.name + t.persona + t.scenario
+  })
+
   const edit = createMemo(() => state.edit)
 
   const isExternalBook = createMemo(() =>
@@ -344,16 +349,27 @@ export const CreateCharacterForm: Component<{
         ref={ref}
       >
         <Show when={isPage || paneOrPopup() === 'pane'}>
-          <div class={`flex justify-between pl-2`}>
+          <div class={`flex items-end gap-1 pl-2`}>
             <PageHeader
               title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
-              subtitle={<em>{totalTokens()} tokens</em>}
             />
+            <div>
+              <em>
+                ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
+              </em>
+            </div>
           </div>
         </Show>
         <div
           class={`flex h-[calc(80dvh-210px)] grow flex-col justify-between gap-4 overflow-y-scroll pr-3 pl-2 xs:h-[calc(100dvh-215px)] sm:h-[calc(100dvh-170px)]`}
         >
+          <Show when={!isPage && paneOrPopup() === 'popup'}>
+            <div>
+              <em>
+                ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
+              </em>
+            </div>
+          </Show>
           <Card>
             <TextInput
               fieldName="name"
@@ -624,9 +640,6 @@ export const CreateCharacterForm: Component<{
               />
             </Card>
           </div>
-        </div>
-        <div class="flex justify-end">
-          <em>{totalTokens()} tokens</em>
         </div>
         <div class={`flex justify-end gap-2`}>
           <Button onClick={cancel} schema="secondary">
