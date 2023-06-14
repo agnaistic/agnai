@@ -61,6 +61,19 @@ export type NovelModel = keyof typeof NOVEL_MODELS
 
 export type OpenAIModel = (typeof OPENAI_MODELS)[keyof typeof OPENAI_MODELS]
 
+export const GOOSE_ENGINES = {
+  'gpt-neo-20b': 'GPT Neo 20B',
+  'gpt-j-6b': 'GPT-J 6B',
+  'gpt-neo-2-7b': 'GPT-Neo 2.7B',
+  'gpt-neo-1-3b': 'GPT-Neo 1.3B',
+  'gpt-neo-125m': 'GPT-Neo 125M',
+  'fairseq-13b': 'Fairseq 13B',
+  'fairseq-6-7b': 'Fairseq 6.7B',
+  'fairseq-2-7b': 'Fairseq 2.7B',
+  'fairseq-1-3b': 'Fairseq 1.3B',
+  'fairseq-125m': 'Fairseq 125M',
+}
+
 export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',

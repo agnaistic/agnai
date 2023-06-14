@@ -47,7 +47,6 @@ import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from './util'
-import { v4 } from 'uuid'
 
 const options = [
   { id: 'wpp', label: 'W++' },

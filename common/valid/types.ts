@@ -32,6 +32,7 @@ export type Reference =
   | [Validator]
   | [Validator, '?']
   | Validator
+  | (Validator & { '?': any })
   | [...string[]]
   | readonly [...string[]]
   | [...string[], null]
@@ -110,7 +111,7 @@ export type UnwrapBody<T extends Validator> = {
     ? Array<UnwrapBody<T[key][0]>> | undefined
     : T[key] extends [Validator] | readonly [Validator]
     ? FromTupleBody<T[key]>
-    : T[key] extends Validator & { '?': '?' }
+    : T[key] extends Validator & { '?': any }
     ? Omit<UnwrapBody<T[key]>, '?'> | undefined
     : T[key] extends Validator
     ? UnwrapBody<T[key]>
