@@ -45,7 +45,15 @@ export async function create(
   characterId: string,
   props: Pick<
     AppSchema.Chat,
-    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides' | 'genPreset' | 'mode' | 'useOverrides'
+    | 'name'
+    | 'greeting'
+    | 'scenario'
+    | 'sampleChat'
+    | 'userId'
+    | 'overrides'
+    | 'genPreset'
+    | 'mode'
+    | 'useOverrides'
   >
 ) {
   const id = `${v4()}`

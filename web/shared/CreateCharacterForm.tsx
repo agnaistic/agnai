@@ -520,9 +520,9 @@ export const CreateCharacterForm: Component<{
               <PersonaAttributes
                 value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
                 plainText={schema() === 'text'}
-                            schema={schema()}
-            tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-            form={ref}
+                schema={schema()}
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+                form={ref}
               />
             </Show>
           </Card>
@@ -625,7 +625,7 @@ export const CreateCharacterForm: Component<{
             </Card>
           </div>
         </div>
-                <div class="flex justify-end">
+        <div class="flex justify-end">
           <em>{totalTokens()} tokens</em>
         </div>
         <div class={`flex justify-end gap-2`}>
