@@ -26,6 +26,35 @@ export function useWindowSize(): {
   return { width, height }
 }
 
+export function useDraft(id: string) {
+  const key = `chat:${id}:draft`
+  const text = localStorage.getItem(key) || ''
+
+  const restore = () => {
+    const text = localStorage.getItem(key)
+    return text || ''
+  }
+
+  const update = (value?: string) => {
+    if (value) {
+      localStorage.setItem(key, value)
+    } else {
+      localStorage.removeItem(key)
+    }
+  }
+
+  const clear = () => {
+    localStorage.removeItem(key)
+  }
+
+  return { text, restore, update, clear }
+}
+
+export function clearDraft(id: string) {
+  const key = `chat:${id}:draft`
+  localStorage.removeItem(key)
+}
+
 export function useEffect(callback: () => void | Function): void {
   createEffect(() => {
     if (isDefined(callback) && isFunction(callback)) {

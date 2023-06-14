@@ -5,8 +5,22 @@ import { ModelAdapter } from './type'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { tokenize } from '/common/tokenize'
 import { sendMany } from '../api/ws'
+import { logger } from '../logger'
 
 const publicApiV1 = 'https://api.replicate.com/v1'
+
+const COLLECTIONS = {
+  language: 'language-models',
+  image: 'text-to-image',
+  diffusion: 'diffusion-models',
+  imageEditing: 'image-editing',
+  embedding: 'embedding-models',
+  audio: 'audio-generation',
+  video: 'text-to-video',
+  upscale: 'super-resolution',
+  makeover: 'ml-makeovers',
+  controlNet: 'control-net',
+}
 
 // Llama: https://replicate.com/replicate/vicuna-13b/api
 type ReplicateInputLlama = {
@@ -280,4 +294,42 @@ async function getPrediction(url: string, key: string): Promise<ReplicatePredict
 
 function sleep(delay: number) {
   return new Promise((resolve) => setTimeout(resolve, delay))
+}
+
+export async function getCollections(key: string) {
+  const resp = await needle(`get`, `${publicApiV1}/collections`, {
+    headers: { Authorization: `Token ${parseKey(key)}` },
+  })
+
+  if (resp.statusCode && resp.statusCode >= 400) {
+    logger.error({ body: resp.body }, `Failed to get replicate collections`)
+    throw new Error(`[${resp.statusCode}] Failed to get collections`)
+  }
+
+  return resp.body
+}
+
+export async function getCollection(key: string, slug: string) {
+  const resp = await needle(`get`, `${publicApiV1}/collections/${slug}`, {
+    headers: { Authorization: `Token ${parseKey(key)}` },
+  })
+
+  if (resp.statusCode && resp.statusCode >= 400) {
+    logger.error({ body: resp.body }, `Failed to get replicate collections`)
+    throw new Error(`[${resp.statusCode}] Failed to get collections`)
+  }
+
+  return resp.body
+}
+
+export async function getLanguageCollection(key: string) {
+  return getCollection(key, COLLECTIONS.language)
+}
+
+function parseKey(key: string) {
+  try {
+    return decryptText(key)
+  } catch (ex) {
+    return key
+  }
 }

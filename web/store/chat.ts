@@ -3,13 +3,13 @@ import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
+import { clearDraft } from '../shared/hooks'
 import { safeLocalStorage } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
 import { usersApi } from './data/user'
-import { draftStore } from './drafts'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
@@ -357,7 +357,7 @@ export const chatStore = createStore<ChatState>('chat', {
     },
 
     async *deleteChat({ active, allChats, char }, chatId: string, onSuccess?: Function) {
-      draftStore.clear(chatId)
+      clearDraft(chatId)
       const res = await chatsApi.deleteChat(chatId)
       if (res.error) return toastStore.error(`Failed to delete chat: ${res.error}`)
       if (res.result) {

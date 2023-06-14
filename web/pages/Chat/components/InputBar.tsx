@@ -1,24 +1,15 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  onMount,
-  Setter,
-  Show,
-} from 'solid-js'
+import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
-import { chatStore, draftStore, toastStore, userStore } from '../../../store'
+import { chatStore, toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { createDebounce } from '/web/shared/util'
+import { useDraft } from '/web/shared/hooks'
 // import WizardIcon from '/web/icons/WizardIcon'
 // import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
@@ -40,8 +31,8 @@ const InputBar: Component<{
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
   const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
-  const draft = draftStore((p) => ({ value: p.drafts[props.chat._id] }))
-  let draftRestored = false
+
+  const draft = useDraft(props.chat._id)
 
   const toggleOoc = () => {
     props.setOoc(!props.ooc)
@@ -49,7 +40,7 @@ const InputBar: Component<{
 
   const isOwner = createMemo(() => props.chat.userId === user.user?._id)
 
-  const [text, setText] = createSignal('')
+  const [text, setText] = createSignal(draft.text)
   const [menu, setMenu] = createSignal(false)
   const [cleared, setCleared] = createSignal(0, { equals: false })
 
@@ -59,27 +50,15 @@ const InputBar: Component<{
     return `Send a message...`
   })
 
-  const [saveDraft, disposeSaveDraftDebounce] = createDebounce((t: string) => {
-    draftStore.update(props.chat._id, t)
+  const [saveDraft, disposeSaveDraftDebounce] = createDebounce((text: string) => {
+    draft.update(text)
   }, 500)
-
-  onMount(() => {
-    draftStore.restore(props.chat._id)
-  })
-
-  createEffect(() => {
-    if (draftRestored || !draft.value) return
-    draftRestored = true
-    setText(draft.value)
-  })
-
-  createEffect(() => {
-    saveDraft(text())
-  })
 
   const updateText = () => {
     if (!ref) return
+    const value = ref.value || ''
     setText(ref.value || '')
+    saveDraft(value)
   }
 
   const send = () => {
@@ -98,7 +77,7 @@ const InputBar: Component<{
       setCleared(0)
     })
 
-    draftStore.clear(props.chat._id)
+    draft.clear()
   }
 
   const createImage = () => {
