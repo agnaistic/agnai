@@ -47,6 +47,7 @@ import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from './util'
+import { v4 } from 'uuid'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -83,6 +84,13 @@ const CreateCharacter: Component = () => {
     }
   })
 
+  const [tokens, setTokens] = createSignal({
+    name: 0,
+    scenario: 0,
+    greeting: 0,
+    persona: 0,
+    sample: 0,
+  })
   const [downloaded, setDownloaded] = createSignal<NewCharacter>()
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
@@ -95,6 +103,11 @@ const CreateCharacter: Component = () => {
   const [alternateGreetings, setAlternateGreetings] = createSignal(
     state.edit?.alternateGreetings ?? []
   )
+
+  const totalTokens = createMemo(() => {
+    const t = tokens()
+    return t.greeting + t.name + t.persona + t.sample + t.scenario
+  })
 
   const edit = createMemo(() => state.edit)
 
@@ -310,6 +323,7 @@ const CreateCharacter: Component = () => {
     <div>
       <PageHeader
         title={`${params.editId ? 'Edit' : params.duplicateId ? 'Copy' : 'Create'} a Character`}
+        subtitle={<em>{totalTokens()} tokens</em>}
       />
 
       <form class="flex flex-col gap-4" onSubmit={flags.charv2 ? onSubmitV2 : onSubmit} ref={ref}>
@@ -320,6 +334,7 @@ const CreateCharacter: Component = () => {
           helperText="The name of your character."
           placeholder=""
           value={downloaded()?.name || state.edit?.name}
+          tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
         />
 
         <div class="flex w-full flex-col">
@@ -426,6 +441,7 @@ const CreateCharacter: Component = () => {
           placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
           value={downloaded()?.scenario || state.edit?.scenario}
           isMultiline
+          tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
         />
 
         <TextInput
@@ -437,6 +453,7 @@ const CreateCharacter: Component = () => {
             "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
           }
           value={downloaded()?.greeting || state.edit?.greeting}
+          tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
         />
         <Show when={flags.charv2}>
           <AlternateGreetingsInput
@@ -472,6 +489,9 @@ const CreateCharacter: Component = () => {
           <PersonaAttributes
             value={downloaded()?.persona.attributes}
             plainText={schema() === 'text' || schema() === undefined}
+            schema={schema()}
+            tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+            form={ref}
           />
         </Show>
 
@@ -479,6 +499,9 @@ const CreateCharacter: Component = () => {
           <PersonaAttributes
             value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
             plainText={schema() === 'text'}
+            schema={schema()}
+            tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+            form={ref}
           />
         </Show>
 
@@ -494,6 +517,7 @@ const CreateCharacter: Component = () => {
           }
           placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
           value={downloaded()?.sampleChat || state.edit?.sampleChat}
+          tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
         />
 
         <h4 class="text-md font-bold">Character Voice</h4>
@@ -541,6 +565,9 @@ const CreateCharacter: Component = () => {
           />
         </Show>
 
+        <div class="flex justify-end">
+          <em>{totalTokens()} tokens</em>
+        </div>
         <div class="flex justify-end gap-2">
           <Button onClick={() => nav('/character/list')} schema="secondary">
             <X />

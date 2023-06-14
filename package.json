@@ -123,7 +123,7 @@
     "mocha": "^10.2.0",
     "mocha-chai-jest-snapshot": "^1.1.4",
     "nodemon": "^2.0.20",
-    "parcel": "^2.8.3",
+    "parcel": "^2.9.2",
     "path-browserify": "^1.0.0",
     "png-chunk-text": "^1.0.0",
     "png-chunks-encode": "^1.0.0",

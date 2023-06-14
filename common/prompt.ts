@@ -445,7 +445,9 @@ function getLinesForPrompt(
       msg,
       opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
       sender
-    ).trim()
+    )
+      .replace(/\s+/g, ' ')
+      .trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
