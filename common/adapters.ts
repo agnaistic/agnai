@@ -78,6 +78,7 @@ export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',
   Turbo0301: 'gpt-3.5-turbo-0301',
+  Turbo_4k: 'gpt-3.5-turbo-0613',
   Turbo_16k: 'gpt-3.5-turbo-16k',
   GPT4: 'gpt-4',
   GPT4_0314: 'gpt-4-0314',
@@ -88,6 +89,7 @@ export const OPENAI_MODELS = {
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
   [OPENAI_MODELS.Turbo0301]: true,
+  [OPENAI_MODELS.Turbo_4k]: true,
   [OPENAI_MODELS.Turbo_16k]: true,
   [OPENAI_MODELS.GPT4]: true,
   [OPENAI_MODELS.GPT4_0314]: true,

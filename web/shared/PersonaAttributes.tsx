@@ -50,14 +50,17 @@ const PersonaAttributes: Component<{
   })
 
   const updateCount = async () => {
-    if (!props.schema || !props.tokenCount || !props.form) return
+    if (!props.tokenCount || !props.form) return
     const attributes = getAttributeMap(props.form)
 
     const encoder = await getEncoder()
 
-    const formatted = formatCharacter('Name', { kind: props.schema, attributes }, props.schema)
+    const formatted = formatCharacter(
+      'Name',
+      { kind: props.schema || 'text', attributes },
+      props.schema
+    )
     const count = encoder(formatted)
-    console.log('updating', props.schema, typeof props.tokenCount, attributes, formatted, count)
     setTokens(count)
     if (typeof props.tokenCount === 'function') {
       props.tokenCount(count)
@@ -110,6 +113,7 @@ const PersonaAttributes: Component<{
             value={props.value?.text?.[0]}
             isMultiline
             placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."
+            tokenCount={() => updateCount()}
           />
         </div>
       </Show>
