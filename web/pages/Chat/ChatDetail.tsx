@@ -307,7 +307,7 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <main class="mx-auto flex  w-full justify-between gap-4">
           <div
-            class={`chat-detail ${chatMargin()} ${chatWidth()} flex flex-col justify-between xs:flex sm:py-2`}
+            class={`chat-detail ${chatMargin()} ${chatWidth()} mx-auto flex flex-col justify-between xs:flex sm:py-2`}
           >
             <header
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
@@ -622,7 +622,7 @@ const InfiniteScroll: Component = () => {
 }
 
 function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean) {
-  // if (sidePaneVisible) return 'min-w-[360px] w-[360px] max-w-[360px]'
+  if (sidePaneVisible) return 'w-full max-w-full'
   switch (setting) {
     case 'narrow':
       return 'w-full max-w-3xl'
