@@ -285,11 +285,12 @@ const ChatDetail: Component = () => {
   )
 
   const contentStyles = createMemo((): JSX.CSSProperties => {
-    if (chats.opts.editingChar) {
+    if (chats.opts.editingChar && isPaneOrPopup() === 'pane') {
       return {
         display: 'grid',
         gap: '4px',
         'grid-template-columns': '1fr 2fr',
+        'grid-auto-rows': 'minmax(0, 1fr)',
       }
     }
 
@@ -367,9 +368,12 @@ const ChatDetail: Component = () => {
               </div>
             </header>
 
-            <section class="flex flex-col gap-1 overflow-y-auto" style={contentStyles()}>
+            <section
+              class="overflow-y-none flex flex-col gap-1 overflow-y-auto"
+              style={contentStyles()}
+            >
               <section class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
-                <div id="chat-messages" class="flex flex-col gap-2 ">
+                <div id="chat-messages" class="flex flex-col gap-2">
                   <Show
                     when={
                       cfg.flags.charv2 &&
