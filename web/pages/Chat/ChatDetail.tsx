@@ -369,7 +369,7 @@ const ChatDetail: Component = () => {
             </header>
 
             <section
-              class="overflow-y-none flex flex-col gap-1 overflow-y-auto"
+              class="overflow-y-none flex flex-col justify-end gap-1 overflow-y-auto"
               style={contentStyles()}
             >
               <section class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">

@@ -192,6 +192,7 @@ const UISettings: Component = () => {
           { label: 'Narrow', value: 'narrow' },
         ]}
         onChange={(item) => userStore.updateUI({ chatWidth: item.value as any })}
+        value={state.ui.chatWidth}
       />
 
       <RangeInput
