@@ -366,13 +366,15 @@ export const CreateCharacterForm: Component<{
             </div>
           </div>
         </Show>
-        <div class="grid gap-2" style={{ 'grid-template-columns': '3fr 1fr' }}>
-          {props.children}
-          <Button type="submit" disabled={state.creating}>
-            <Save />
-            {props.editId ? 'Update' : 'Create'}
-          </Button>
-        </div>
+        <Show when={!isPage}>
+          <div class="grid gap-2" style={{ 'grid-template-columns': '3fr 1fr' }}>
+            {props.children}
+            <Button type="submit" disabled={state.creating}>
+              <Save />
+              {props.editId ? 'Update' : 'Create'}
+            </Button>
+          </div>
+        </Show>
 
         <Show when={showWarning()}>
           <SolidCard bg="orange-600">
