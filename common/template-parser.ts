@@ -106,7 +106,7 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
           return formatCharacter(
             bot.name,
             bot.persona,
-            bot.persona.kind || opts.chat.overrides.kind
+            bot.persona.kind /* || opts.chat.overrides.kind */ // looks like the || operator's left hand side is always truthy - @malfoyslastname
           )
       }
     }

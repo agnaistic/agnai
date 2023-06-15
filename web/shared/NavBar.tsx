@@ -4,6 +4,8 @@ import { A, useLocation } from '@solidjs/router'
 import { chatStore, settingStore } from '../store'
 import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
 import { DropMenu } from './DropMenu'
+import { getClientPreset } from './adapter'
+import { ADAPTER_LABELS } from '/common/adapters'
 
 const NavBar: Component = () => {
   const cfg = settingStore()
@@ -12,6 +14,7 @@ const NavBar: Component = () => {
     chat: s.active?.chat,
     char: s.active?.char,
     loaded: s.loaded,
+    opts: s.opts,
   }))
 
   const [showOpts, setShowOpts] = createSignal(false)
@@ -25,6 +28,10 @@ const NavBar: Component = () => {
     chatStore.option('modal', modal)
   }
 
+  const toggleCharEditor = () => {
+    setShowOpts(false)
+    chatStore.option('editingChar', !chatStore().opts.editingChar)
+  }
   const Title = (
     <A href="/">
       <div class="flex w-full justify-center">
@@ -33,14 +40,28 @@ const NavBar: Component = () => {
     </A>
   )
 
+  const chatPreset = createMemo(() => getClientPreset(chats.chat))
+
+  const adapterLabel = createMemo(() => {
+    const data = chatPreset()
+    if (!data) return ''
+
+    const { name, adapter, isThirdParty, presetLabel } = data
+
+    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
+      name || presetLabel
+    }`
+    return label
+  })
+
   return (
     <Show when={!cfg.fullscreen}>
       <span
         data-header=""
-        class="bg-900 flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden"
+        class={`bg-900 flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden`}
       >
-        <span class="flex w-full items-center justify-between gap-2 font-semibold sm:justify-start">
-          <div class="w-8 sm:hidden" onClick={settingStore.menu}>
+        <span class="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
+          <div class={`w-8 sm:hidden`} onClick={settingStore.menu}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
           <div class="ellipsis flex w-full flex-col">
@@ -57,7 +78,11 @@ const NavBar: Component = () => {
             <div class="" onClick={() => setShowOpts(true)}>
               <MoreHorizontal class="icon-button" />
               <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
-                <ChatOptions setModal={setModal} />
+                <ChatOptions
+                  setModal={setModal}
+                  toggleCharEditor={toggleCharEditor}
+                  adapterLabel={adapterLabel()}
+                />
               </DropMenu>
             </div>
           </Show>

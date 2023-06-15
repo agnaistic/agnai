@@ -55,7 +55,10 @@ export async function getChat(id: string) {
   return localApi.result({ chat, character, messages, members: [profile], active: [], characters })
 }
 
-export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
+export async function editChat(
+  id: string,
+  update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }
+) {
   if (isLoggedIn()) {
     const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
     return res
@@ -66,6 +69,14 @@ export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
   if (!prev) return localApi.error(`Chat not found`)
 
   const next = { ...prev, ...update, updatedAt: new Date().toISOString() }
+
+  if (update.useOverrides === false) {
+    delete next.overrides
+    delete next.greeting
+    delete next.sampleChat
+    delete next.scenario
+  }
+
   localApi.saveChats(localApi.replace(id, chats, next))
   return localApi.result(next)
 }
@@ -105,6 +116,7 @@ export async function importChat(characterId: string, props: ImportChat) {
     greeting: props.greeting || char.greeting,
     sampleChat: props.sampleChat || char.sampleChat,
     overrides: { ...char.persona },
+    useOverrides: props.useOverrides ?? false,
   })
 
   const start = Date.now()
@@ -147,7 +159,14 @@ export async function getAllChats() {
 
   if (!chats?.length) {
     const [char] = characters
-    const { chat, msg } = createNewChat(char, { ...char, overrides: char.persona })
+    const { chat, msg } = createNewChat(char, {
+      ...char,
+      greeting: undefined,
+      scenario: undefined,
+      sampleChat: undefined,
+      overrides: undefined,
+      useOverrides: false,
+    })
     localApi.saveChats([chat])
     localApi.saveMessages(chat._id, [msg])
 

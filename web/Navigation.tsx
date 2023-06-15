@@ -17,7 +17,7 @@ import {
 } from 'lucide-solid'
 import { Component, createMemo, JSX, Show } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
-import { characterStore, inviteStore, settingStore, userStore } from './store'
+import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
 import { useEffect, useWindowSize } from './shared/hooks'
 
@@ -27,6 +27,7 @@ const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
   const chars = characterStore()
+  const chat = chatStore()
   const nav = useNavigate()
 
   const logout = () => {
@@ -45,7 +46,13 @@ const Navigation: Component = () => {
     return () => clearInterval(interval)
   })
 
-  const hide = createMemo(() => (state.showMenu ? '' : 'drawer--hide'))
+  const hide = createMemo(() => {
+    if (chat.opts.editingChar && !state.showMenu) return 'drawer--hide'
+    if (state.showMenu) return ''
+    // || (chat.opts.editingChar && !state.showMenu)
+    return 'drawer--hide'
+  })
+
   const fullscreen = createMemo(() => (state.fullscreen ? 'hidden' : ''))
 
   return (

@@ -5,6 +5,7 @@ import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { sendMany } from '../ws'
 import { personaValidator } from './common'
+import { AppSchema } from '/srv/db/schema'
 
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
@@ -12,11 +13,12 @@ export const updateChat = handle(async ({ params, body, user }) => {
       name: 'string',
       mode: ['standard', 'adventure'],
       adapter: ['default', ...config.adapters] as const,
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-      memoryId: 'string',
-      overrides: personaValidator,
+      greeting: 'string?',
+      scenario: 'string?',
+      sampleChat: 'string?',
+      memoryId: 'string?',
+      overrides: { '?': 'any', ...personaValidator },
+      useOverrides: 'boolean?',
     },
     body,
     true
@@ -26,7 +28,27 @@ export const updateChat = handle(async ({ params, body, user }) => {
   const prev = await store.chats.getChatOnly(id)
   if (prev?.userId !== user?.userId) throw errors.Forbidden
 
-  const chat = await store.chats.update(id, body)
+  const update: PartialUpdate<AppSchema.Chat> = {
+    name: body.name,
+    mode: body.mode,
+    adapter: body.adapter,
+  }
+
+  if (body.useOverrides === false) {
+    update.overrides = null
+    update.greeting = null
+    update.scenario = null
+    update.sampleChat = null
+  }
+
+  if (body.useOverrides === true) {
+    update.greeting = body.greeting || ''
+    update.scenario = body.scenario || ''
+    update.sampleChat = body.sampleChat || ''
+    update.overrides = body.overrides
+  }
+
+  const chat = await store.chats.update(id, update)
   return chat
 })
 

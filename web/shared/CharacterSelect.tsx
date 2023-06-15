@@ -38,7 +38,7 @@ const CharacterSelect: Component<{
   return (
     <>
       <FormLabel label={props.label} helperText={props.helperText} />
-      <div class="py-1">
+      <div class="">
         <Button
           schema="secondary"
           class={`relative rounded-xl ${props.class}`}
@@ -58,7 +58,7 @@ const CharacterSelect: Component<{
             </div>
           </Show>
 
-          <span class="ellipsis">{match()?.name || props.emptyLabel || 'Select a character'}</span>
+          <span class="ellipsis">{match()?.name || props.emptyLabel || 'Select ...'}</span>
           <span class="absolute right-0">
             <ChevronDown />
           </span>

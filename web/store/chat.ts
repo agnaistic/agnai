@@ -44,6 +44,7 @@ export type ChatState = {
     editing: boolean
     screenshot: boolean
     hideOoc: boolean
+    editingChar: boolean
   }
 }
 
@@ -53,14 +54,16 @@ export type ImportChat = {
   scenario: string
   sampleChat: string
   messages: Array<{ msg: string; characterId?: string; userId?: string }>
+  useOverrides?: boolean
 }
 
 export type NewChat = {
   name: string
-  greeting: string
-  scenario: string
-  sampleChat: string
-  overrides: AppSchema.Chat['overrides']
+  greeting?: string
+  scenario?: string
+  sampleChat?: string
+  overrides?: AppSchema.Chat['overrides']
+  useOverrides: boolean
   mode?: AppSchema.Chat['mode']
 }
 
@@ -86,6 +89,7 @@ const initState: ChatState = {
     screenshot: false,
     hideOoc: false,
     modal: undefined,
+    editingChar: false,
   },
 }
 
@@ -104,6 +108,7 @@ export const chatStore = createStore<ChatState>('chat', {
     ...getOptsCache(),
     modal: undefined,
     screenshot: false,
+    editingChar: false,
   },
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
@@ -195,9 +200,10 @@ export const chatStore = createStore<ChatState>('chat', {
       { char, allChats, active },
       id: string,
       update: Partial<AppSchema.Chat>,
+      useOverrides: boolean | undefined,
       onSuccess?: () => void
     ) {
-      const res = await chatsApi.editChat(id, update)
+      const res = await chatsApi.editChat(id, { ...update, useOverrides })
       if (res.error) {
         toastStore.error(`Failed to update chat: ${res.error}`)
         return

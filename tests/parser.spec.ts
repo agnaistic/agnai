@@ -39,9 +39,11 @@ describe('Template parser tests', () => {
   })
 
   it('will not render missing conditional', () => {
-    const actual = test(`{{#if scenario}}Scenario: {{scenario}}{{/if}}Persona: {{persona}}`, {
-      char: toChar('Name', { scenario: '' }),
-    })
+    const actual = test(
+      `{{#if scenario}}Scenario: {{scenario}}{{/if}}Persona: {{persona}}`,
+      { char: toChar('Name', { scenario: '' }) },
+      { scenario: '' }
+    )
     expect(actual).toMatchSnapshot()
   })
 
@@ -81,15 +83,30 @@ Scenario: {{scenario}}
   })
 })
 
-function test(template: string, overrides: Partial<ParseOpts> = {}) {
-  return parseTemplate(template, getParseOpts(overrides))
+function test(
+  template: string,
+  overrides: Partial<ParseOpts> = {},
+  charOverrides: Partial<AppSchema.Character> = {}
+) {
+  return parseTemplate(template, getParseOpts(overrides, charOverrides))
 }
 
-function getParseOpts(overrides: Partial<ParseOpts> = {}) {
+function getParseOpts(
+  overrides: Partial<ParseOpts> = {},
+  charOverrides: Partial<AppSchema.Character> = {}
+) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
-
+  const overChar = { ...char, ...charOverrides }
   const parts = getPromptParts(
-    { char, characters, chat: overChat, members, replyAs: char, user, kind: 'send' },
+    {
+      char: overChar,
+      characters,
+      chat: overChat,
+      members,
+      replyAs: overChar,
+      user,
+      kind: 'send',
+    },
     lines,
     encoder
   )
