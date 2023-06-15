@@ -40,8 +40,6 @@ const NavBar: Component = () => {
     </A>
   )
 
-  const visibilityClass = () => (chats.opts.editingChar ? '' : 'sm:hidden')
-
   const chatPreset = createMemo(() => getClientPreset(chats.chat))
 
   const adapterLabel = createMemo(() => {
@@ -60,10 +58,10 @@ const NavBar: Component = () => {
     <Show when={!cfg.fullscreen}>
       <span
         data-header=""
-        class={`bg-900 flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 ${visibilityClass()}`}
+        class={`bg-900 flex h-[48px] justify-between gap-4 border-b-2 border-[var(--bg-800)] px-4 py-3 max-sm:p-1 sm:hidden`}
       >
         <span class="mx-auto flex w-full max-w-5xl items-center justify-between gap-2 font-semibold sm:justify-start">
-          <div class={`w-8 ${visibilityClass}`} onClick={settingStore.menu}>
+          <div class={`w-8 sm:hidden`} onClick={settingStore.menu}>
             <Menu class="focusable-icon-button cursor-pointer" size={32} />
           </div>
           <div class="ellipsis flex w-full flex-col">

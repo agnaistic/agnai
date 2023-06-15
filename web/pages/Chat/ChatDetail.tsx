@@ -280,8 +280,21 @@ const ChatDetail: Component = () => {
     msgStore.retry(chats.chat?._id!)
   }
 
-  const chatMargin = createMemo(() => (chats.opts.editingChar ? 'xs:mr-auto mx-auto' : 'mx-auto'))
-  const topBarVisibility = createMemo(() => (chats.opts.editingChar ? '' : 'sm:flex'))
+  const chatMargin = createMemo(
+    () => ' ' || (chats.opts.editingChar ? 'xs:mr-auto mx-auto' : 'mx-auto')
+  )
+
+  const contentStyles = createMemo((): JSX.CSSProperties => {
+    if (chats.opts.editingChar) {
+      return {
+        display: 'grid',
+        gap: '4px',
+        'grid-template-columns': '1fr 2fr',
+      }
+    }
+
+    return {}
+  })
 
   return (
     <>
@@ -291,12 +304,12 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <div class="mx-auto flex h-full w-full justify-between gap-4">
+        <main class="mx-auto flex  w-full justify-between gap-4">
           <div
-            class={`${chatMargin()} h-full ${chatWidth()} flex flex-col justify-between xs:flex sm:py-2`}
+            class={`chat-detail ${chatMargin()} ${chatWidth()} flex flex-col justify-between xs:flex sm:py-2`}
           >
-            <div
-              class={`hidden h-9 items-center justify-between rounded-md ${topBarVisibility()}`}
+            <header
+              class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
               style={headerBg()}
             >
               <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
@@ -352,47 +365,11 @@ const ChatDetail: Component = () => {
                   </div>
                 </Show>
               </div>
-            </div>
+            </header>
 
-            <div class="flex h-[calc(100%-8px)] flex-col-reverse gap-1 sm:h-[calc(100%-36px)]">
-              <InputBar
-                chat={chats.chat!}
-                swiped={swipe() !== 0}
-                send={sendMessage}
-                more={moreMessage}
-                char={chats.char}
-                ooc={ooc() ?? isGroupChat()}
-                setOoc={setOoc}
-                showOocToggle={isGroupChat()}
-                request={requestMessage}
-                bots={chars.chatBots}
-                botMap={chars.botMap}
-              />
-              <Show when={isOwner() && chats.activeBots.length > 1}>
-                <div
-                  class={`flex justify-center gap-2 py-1 ${
-                    msgs.waiting ? 'opacity-70 saturate-0' : ''
-                  }`}
-                >
-                  <For each={chats.activeBots}>
-                    {(bot) => (
-                      <CharacterPill
-                        char={bot}
-                        onClick={requestMessage}
-                        disabled={!!msgs.waiting}
-                        active={chats.replyAs === bot._id}
-                      />
-                    )}
-                  </For>
-                </div>
-              </Show>
-              <Show when={isSelfRemoved()}>
-                <div class="flex w-full justify-center">
-                  You have been removed from the conversation
-                </div>
-              </Show>
-              <div class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
-                <div id="chat-messages" class="flex flex-col gap-2">
+            <section class="flex flex-col gap-1 overflow-y-auto" style={contentStyles()}>
+              <section class="flex flex-col-reverse gap-4 overflow-y-scroll sm:pr-2">
+                <div id="chat-messages" class="flex flex-col gap-2 ">
                   <Show
                     when={
                       cfg.flags.charv2 &&
@@ -413,6 +390,7 @@ const ChatDetail: Component = () => {
                       <Button onClick={generateFirst}>Generate Message</Button>
                     </div>
                   </Show>
+                  <InfiniteScroll />
                   <For each={chatMsgs()}>
                     {(msg, i) => (
                       <Message
@@ -463,34 +441,70 @@ const ChatDetail: Component = () => {
                     />
                   </Show>
                 </div>
-                <InfiniteScroll />
-              </div>
-            </div>
-          </div>
-          <Show when={chats.opts.editingChar}>
-            <RightPane close={closeCharEditor} modalTitle="Edit Character">
-              <Switch>
-                <Match when={editId() === ''}>
-                  <div class="mx-auto flex h-full w-full items-center justify-center">
-                    <Loading />
-                  </div>
-                </Match>
+              </section>
 
-                <Match when={editId() !== ''}>
-                  <CreateCharacterForm editId={editId()} modal={{ close: closeCharEditor }}>
-                    <CharacterSelect
-                      class="w-full"
-                      fieldName="editingId"
-                      items={editableCharcters()}
-                      value={editingChar()}
-                      onChange={changeEditingChar}
+              <Show when={chats.opts.editingChar}>
+                <RightPane close={closeCharEditor} modalTitle="Edit Character">
+                  <Switch>
+                    <Match when={editId() === ''}>
+                      <div class="mx-auto flex h-full w-full items-center justify-center">
+                        <Loading />
+                      </div>
+                    </Match>
+
+                    <Match when={editId() !== ''}>
+                      <CreateCharacterForm editId={editId()} modal={{ close: closeCharEditor }}>
+                        <CharacterSelect
+                          class="w-full"
+                          fieldName="editingId"
+                          items={editableCharcters()}
+                          value={editingChar()}
+                          onChange={changeEditingChar}
+                        />
+                      </CreateCharacterForm>
+                    </Match>
+                  </Switch>
+                </RightPane>
+              </Show>
+            </section>
+            <Show when={isSelfRemoved()}>
+              <div class="flex w-full justify-center">
+                You have been removed from the conversation
+              </div>
+            </Show>
+            <Show when={isOwner() && chats.activeBots.length > 1}>
+              <div
+                class={`flex justify-center gap-2 py-1 ${
+                  msgs.waiting ? 'opacity-70 saturate-0' : ''
+                }`}
+              >
+                <For each={chats.activeBots}>
+                  {(bot) => (
+                    <CharacterPill
+                      char={bot}
+                      onClick={requestMessage}
+                      disabled={!!msgs.waiting}
+                      active={chats.replyAs === bot._id}
                     />
-                  </CreateCharacterForm>
-                </Match>
-              </Switch>
-            </RightPane>
-          </Show>
-        </div>
+                  )}
+                </For>
+              </div>
+            </Show>
+            <InputBar
+              chat={chats.chat!}
+              swiped={swipe() !== 0}
+              send={sendMessage}
+              more={moreMessage}
+              char={chats.char}
+              ooc={ooc() ?? isGroupChat()}
+              setOoc={setOoc}
+              showOocToggle={isGroupChat()}
+              request={requestMessage}
+              bots={chars.chatBots}
+              botMap={chars.botMap}
+            />
+          </div>
+        </main>
       </Show>
 
       <Show when={chats.opts.modal === 'settings'}>
@@ -604,7 +618,7 @@ const InfiniteScroll: Component = () => {
 }
 
 function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean) {
-  if (sidePaneVisible) return 'min-w-[360px] w-[360px] max-w-[360px]'
+  // if (sidePaneVisible) return 'min-w-[360px] w-[360px] max-w-[360px]'
   switch (setting) {
     case 'narrow':
       return 'w-full max-w-3xl'

@@ -1,13 +1,19 @@
 .chat-detail {
   display: grid;
-  height: 100%;
+  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
+  max-height: 100vh;
+  max-height: 100dvh;
   width: 100%;
-  grid-template-rows: 36px 1fr 40px;
+  gap: 4px;
+  grid-template-rows: 1fr auto;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 1024px) {
   .chat-detail {
-    grid-template-rows: 1fr 40px;
+    height: 100vh;
+    height: 100dvh;
+    grid-template-rows: auto 1fr auto;
   }
 }
 

@@ -20,13 +20,13 @@ export const RightPane: Component<{
   return (
     <Switch>
       <Match when={paneOrPopup() === 'pane'}>
-        <div class="relative hidden h-full flex-grow py-3 xs:block" style={rightPaneBgStyles()}>
+        <div class="hidden py-3 xs:block" style={rightPaneBgStyles()}>
           <div onClick={props.close} class="sticky top-0 z-20 float-right cursor-pointer">
             <div class="ml-[-32px]">
               <X />
             </div>
           </div>
-          <div class="h-full px-2">{content}</div>
+          <div class=" overflow-y-scroll px-2">{content}</div>
         </div>
       </Match>
       <Match when={paneOrPopup() === 'popup'}>

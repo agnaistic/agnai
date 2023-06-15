@@ -58,6 +58,7 @@ const options = [
 ]
 
 export const CreateCharacterForm: Component<{
+  chat?: AppSchema.Chat
   editId?: string
   duplicateId?: string
   import?: string
@@ -345,12 +346,12 @@ export const CreateCharacterForm: Component<{
   return (
     <>
       <form
-        class="flex h-full flex-col gap-4 text-base"
+        class="flex flex-col gap-4 text-base"
         onSubmit={flags.charv2 ? onSubmitV2 : onSubmit}
         ref={ref}
       >
         <Show when={isPage || paneOrPopup() === 'pane'}>
-          <div class={`flex items-end gap-1 pl-2`}>
+          <div class={`sticky flex items-end gap-1 pl-2`}>
             <PageHeader
               title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
             />
@@ -361,10 +362,14 @@ export const CreateCharacterForm: Component<{
             </div>
           </div>
         </Show>
-        {props.children}
-        <div
-          class={`flex h-[calc(80dvh-210px)] grow flex-col justify-between gap-4 overflow-y-scroll pr-3 pl-2 xs:h-[calc(100dvh-215px)] sm:h-[calc(100dvh-170px)]`}
-        >
+        <div class="grid gap-2" style={{ 'grid-template-columns': '3fr 1fr' }}>
+          {props.children}
+          <Button type="submit" disabled={state.creating}>
+            <Save />
+            {props.editId ? 'Update' : 'Create'}
+          </Button>
+        </div>
+        <div class={`flex grow flex-col justify-between gap-4 pr-3 pl-2 `}>
           <Show when={!isPage && paneOrPopup() === 'popup'}>
             <div>
               <em>
@@ -643,7 +648,7 @@ export const CreateCharacterForm: Component<{
             </Card>
           </div>
         </div>
-        <div class={`flex justify-end gap-2`}>
+        <div class={`sticky flex justify-end gap-2`}>
           <Button onClick={cancel} schema="secondary">
             <X />
             {props.modal ? 'Close' : 'Cancel'}

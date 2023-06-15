@@ -38,7 +38,7 @@ const CharacterSelect: Component<{
   return (
     <>
       <FormLabel label={props.label} helperText={props.helperText} />
-      <div class="py-1">
+      <div class="">
         <Button
           schema="secondary"
           class={`relative rounded-xl ${props.class}`}

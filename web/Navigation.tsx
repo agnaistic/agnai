@@ -46,10 +46,14 @@ const Navigation: Component = () => {
     return () => clearInterval(interval)
   })
 
-  const hide = createMemo(() => (state.showMenu ? '' : 'drawer--hide'))
-  const fullscreen = createMemo(() =>
-    state.fullscreen || (chat.opts.editingChar && !state.showMenu) ? 'hidden' : ''
-  )
+  const hide = createMemo(() => {
+    if (chat.opts.editingChar && !state.showMenu) return 'drawer--hide'
+    if (state.showMenu) return ''
+    // || (chat.opts.editingChar && !state.showMenu)
+    return 'drawer--hide'
+  })
+
+  const fullscreen = createMemo(() => (state.fullscreen ? 'hidden' : ''))
 
   return (
     <>
