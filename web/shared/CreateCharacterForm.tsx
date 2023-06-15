@@ -62,6 +62,7 @@ export const CreateCharacterForm: Component<{
   duplicateId?: string
   import?: string
   modal?: { close: () => void }
+  children?: any
 }> = (props) => {
   let ref: any
   const nav = useNavigate()
@@ -360,6 +361,7 @@ export const CreateCharacterForm: Component<{
             </div>
           </div>
         </Show>
+        {props.children}
         <div
           class={`flex h-[calc(80dvh-210px)] grow flex-col justify-between gap-4 overflow-y-scroll pr-3 pl-2 xs:h-[calc(100dvh-215px)] sm:h-[calc(100dvh-170px)]`}
         >

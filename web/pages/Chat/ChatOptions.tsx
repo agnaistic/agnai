@@ -8,9 +8,10 @@ import {
   Trash,
   Users,
   Camera,
+  VenetianMask,
 } from 'lucide-solid'
 import { Component, Show, createMemo, JSX } from 'solid-js'
-import Button from '../../shared/Button'
+import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
@@ -28,6 +29,7 @@ export type ChatModal =
   | 'none'
 
 const ChatOptions: Component<{
+  adapterLabel: string
   setModal: (modal: ChatModal) => void
   toggleCharEditor: () => void
 }> = (props) => {
@@ -78,7 +80,7 @@ const ChatOptions: Component<{
   }
 
   return (
-    <div class="flex w-60 flex-col gap-2 p-2">
+    <div class="flex w-72 flex-col gap-2 p-2">
       <Show when={chats.members.length > 1}>
         <Option onClick={toggleOocMessages}>
           <div class="flex w-full items-center justify-between">
@@ -105,57 +107,59 @@ const ChatOptions: Component<{
           </div>
         </Option>
 
-        <Option onClick={settingStore.toggleAnonymize}>
-          <div class="flex w-full items-center justify-between">
-            <div>Anonymize</div>
-            <Toggle
-              class="flex items-center"
-              fieldName="anonymizeChat"
-              value={cfg.anonymize}
-              onChange={settingStore.toggleAnonymize}
-            />
-          </div>
+        <Option onClick={props.toggleCharEditor}>
+          <User /> Character
         </Option>
 
-        <Option onClick={screenshotChat}>
-          <Camera />
-          <div class="ml-1">
+        <Option onClick={() => props.setModal('members')}>
+          <Users /> Participants
+        </Option>
+
+        <MenuItemRow>
+          <MenuItem onClick={() => props.setModal('settings')} hide={!isOwner()}>
+            <Settings /> Edit Chat
+          </MenuItem>
+          <MenuItem onClick={() => props.setModal('gen')}>
+            <Sliders /> Preset
+          </MenuItem>
+        </MenuItemRow>
+        <MenuItemRow>
+          <MenuItem onClick={screenshotChat}>
+            <Camera />
             <Show when={!chats.opts.screenshot}>Screenshot</Show>
             <Show when={chats.opts.screenshot}>
               <em>Loading, please wait...</em>
             </Show>
-          </div>
-        </Option>
-
-        <MenuItemRow>
-          <MenuItem onClick={() => props.setModal('members')} label="Party" icon={<Users />} />
-          <MenuItem onClick={() => props.setModal('gen')} icon={<Sliders />} label="Preset" />
-        </MenuItemRow>
-        <MenuItemRow>
-          <MenuItem onClick={props.toggleCharEditor} icon={<User />} label="Chara" />
-          <MenuItem onClick={() => props.setModal('memory')} icon={<Book />} label="Memory" />
+          </MenuItem>
+          <MenuItem onClick={() => props.setModal('memory')}>
+            <Book /> Memory
+          </MenuItem>
         </MenuItemRow>
       </Show>
 
       <MenuItemRow>
         <MenuItem
-          onClick={() => props.setModal('settings')}
-          icon={<Settings />}
-          label="Chat"
-          showWhen={isOwner()}
-        />
-        <MenuItem onClick={() => props.setModal('ui')} icon={<Palette />} label="UI" />
+          schema={cfg.anonymize ? 'primary' : undefined}
+          onClick={settingStore.toggleAnonymize}
+        >
+          <VenetianMask /> Anonymize
+        </MenuItem>
+        <MenuItem onClick={() => props.setModal('ui')}>
+          <Palette /> UI
+        </MenuItem>
       </MenuItemRow>
 
       <MenuItemRow>
-        <MenuItem onClick={() => props.setModal('export')} icon={<Download />} label="Export" />
-        <MenuItem
-          onClick={() => props.setModal('delete')}
-          icon={<Trash />}
-          label="Delete"
-          showWhen={isOwner()}
-        />
+        <MenuItem onClick={() => props.setModal('export')}>
+          <Download /> Export
+        </MenuItem>
+        <MenuItem onClick={() => props.setModal('delete')} hide={!isOwner()}>
+          <Trash /> Delete
+        </MenuItem>
       </MenuItemRow>
+      <div class="flex justify-center">
+        <em class="text-sm">{props.adapterLabel}</em>
+      </div>
     </div>
   )
 }
@@ -166,17 +170,17 @@ const MenuItemRow: Component<{ children: JSX.Element }> = (props) => (
 
 const MenuItem: Component<{
   onClick: () => void
-  icon: JSX.Element
-  label: string
-  showWhen?: boolean
+  schema?: ButtonSchema
+  hide?: boolean
+  children: any
 }> = (props) => (
-  <Show when={props.showWhen ?? true}>
+  <Show when={!props.hide}>
     <Option
       onClick={props.onClick}
       class="flex flex-1 justify-start gap-2 hover:bg-[var(--bg-700)]"
+      schema={props.schema}
     >
-      {props.icon}
-      {props.label}
+      {props.children}
     </Option>
   </Show>
 )
@@ -184,6 +188,7 @@ const MenuItem: Component<{
 const Option: Component<{
   children: any
   class?: string
+  schema?: ButtonSchema
   onClick: () => void
   close?: () => void
 }> = (props) => {
@@ -192,7 +197,13 @@ const Option: Component<{
     props.close?.()
   }
   return (
-    <Button schema="secondary" size="sm" onClick={onClick} alignLeft class={props.class}>
+    <Button
+      schema={props.schema || 'secondary'}
+      size="sm"
+      onClick={onClick}
+      alignLeft
+      class={props.class}
+    >
       {props.children}
     </Button>
   )

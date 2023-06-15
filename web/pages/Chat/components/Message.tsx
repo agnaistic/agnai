@@ -153,7 +153,6 @@ const SingleMessage: Component<
 
   const handleToShow = () => {
     if (props.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
-
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
   }

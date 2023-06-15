@@ -23,6 +23,7 @@ const PersonaAttributes: Component<{
   schema?: AppSchema.Persona['kind']
   tokenCount?: boolean | ((count: number) => void)
   form?: any
+  disabled?: boolean
 }> = (props) => {
   const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
@@ -107,7 +108,7 @@ const PersonaAttributes: Component<{
       </Show>
       <Show when={props.plainText}>
         <div>
-          <TextInput fieldName="attr-key.0" value="text" class="hidden" />
+          <TextInput fieldName="attr-key.0" value="text" class="hidden" disabled={props.disabled} />
           <TextInput
             fieldName="attr-value.0"
             class="text-input-min-h-override"
@@ -115,19 +116,28 @@ const PersonaAttributes: Component<{
             isMultiline
             placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."
             tokenCount={() => updateCount()}
+            disabled={props.disabled}
           />
         </div>
       </Show>
       <Show when={!props.plainText}>
         <div>
-          <Button onClick={add}>
+          <Button onClick={add} disabled={props.disabled}>
             <Plus size={16} />
             Add Attribute
           </Button>
         </div>
         <div class="mt-2 flex w-full flex-col gap-2">
           <For each={attrs()}>
-            {(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} remove={remove} />}
+            {(attr, i) => (
+              <Attribute
+                attr={attr}
+                index={i()}
+                onKey={onKey}
+                remove={remove}
+                disabled={props.disabled}
+              />
+            )}
           </For>
         </div>
       </Show>
@@ -140,6 +150,7 @@ const Attribute: Component<{
   index: number
   onKey: (key: string, i: number) => void
   remove: (i: number) => void
+  disabled?: boolean
 }> = (props) => {
   return (
     <div class="flex w-full gap-2">
@@ -148,6 +159,7 @@ const Attribute: Component<{
           fieldName={`attr-key.${props.index}`}
           placeholder="Name. E.g. appearance"
           value={props.attr.key}
+          disabled={props.disabled}
         />
       </div>
       <div class="w-8/12">
@@ -157,6 +169,7 @@ const Attribute: Component<{
           value={props.attr.values}
           onKeyUp={(ev) => props.onKey(ev.key, props.index)}
           isMultiline
+          disabled={props.disabled}
         />
       </div>
       <div class="1/12 flex items-center" onClick={() => props.remove(props.index)}>

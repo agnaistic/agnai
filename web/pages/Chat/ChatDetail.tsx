@@ -6,8 +6,10 @@ import {
   createSignal,
   For,
   JSX,
+  Match,
   onCleanup,
   Show,
+  Switch,
 } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, ChevronRight, Menu } from 'lucide-solid'
@@ -37,11 +39,13 @@ import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
-import { cycleArray } from '/common/util'
+import { cycleArray, wait } from '/common/util'
 import { getActiveBots } from './util'
 import { CreateCharacterForm } from '/web/shared/CreateCharacterForm'
 import { RightPane } from './RightPane'
 import { usePane } from '/web/shared/hooks'
+import CharacterSelect from '/web/shared/CharacterSelect'
+import Loading from '/web/shared/Loading'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -95,8 +99,21 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
   const [editId, setEditId] = createSignal('')
+
   createEffect(() => {
     setEditId(chats.char?._id ?? '')
+  })
+
+  const editableCharcters = createMemo(() => {
+    const enabled = chats.chat?.characters || {}
+    return chars.chatBots.filter(
+      (ch) =>
+        ch.userId === user.user?._id && (enabled[ch._id] || chats.chat?.characterId === ch._id)
+    )
+  })
+
+  const editingChar = createMemo(() => {
+    return chars.chatBots.find((ch) => ch._id === editId())
   })
 
   const chatMsgs = createMemo(() => {
@@ -153,6 +170,7 @@ const ChatDetail: Component = () => {
 
   const closeCharEditor = () => {
     chatStore.option('editingChar', false)
+    setEditId(chats.char?._id || '')
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
@@ -181,6 +199,16 @@ const ChatDetail: Component = () => {
     }`
     return label
   })
+
+  const changeEditingChar = async (char: AppSchema.Character | undefined) => {
+    const prev = editId()
+    if (prev === char?._id) return
+
+    setEditId('')
+    if (!char) return
+    await wait(0.2)
+    setEditId(char._id)
+  }
 
   createEffect(() => {
     if (isGreetingOnlyMsg() && botGreeting() && altGreetings().length > 0) {
@@ -252,9 +280,8 @@ const ChatDetail: Component = () => {
     msgStore.retry(chats.chat?._id!)
   }
 
-  const chatMargin = () => (chats.opts.editingChar ? 'xs:mr-auto mx-auto' : 'mx-auto')
-
-  const topBarVisibility = () => (chats.opts.editingChar ? '' : 'sm:flex')
+  const chatMargin = createMemo(() => (chats.opts.editingChar ? 'xs:mr-auto mx-auto' : 'mx-auto'))
+  const topBarVisibility = createMemo(() => (chats.opts.editingChar ? '' : 'sm:flex'))
 
   return (
     <>
@@ -305,7 +332,11 @@ const ChatDetail: Component = () => {
                     horz="left"
                     vert="down"
                   >
-                    <ChatOptions setModal={setModal} toggleCharEditor={toggleCharEditor} />
+                    <ChatOptions
+                      adapterLabel={adapterLabel()}
+                      setModal={setModal}
+                      toggleCharEditor={toggleCharEditor}
+                    />
                   </DropMenu>
                 </div>
 
@@ -437,8 +468,26 @@ const ChatDetail: Component = () => {
             </div>
           </div>
           <Show when={chats.opts.editingChar}>
-            <RightPane close={closeCharEditor} modalTitle="Edit a Character">
-              <CreateCharacterForm editId={editId()} modal={{ close: closeCharEditor }} />
+            <RightPane close={closeCharEditor} modalTitle="Edit Character">
+              <Switch>
+                <Match when={editId() === ''}>
+                  <div class="mx-auto flex h-full w-full items-center justify-center">
+                    <Loading />
+                  </div>
+                </Match>
+
+                <Match when={editId() !== ''}>
+                  <CreateCharacterForm editId={editId()} modal={{ close: closeCharEditor }}>
+                    <CharacterSelect
+                      class="w-full"
+                      fieldName="editingId"
+                      items={editableCharcters()}
+                      value={editingChar()}
+                      onChange={changeEditingChar}
+                    />
+                  </CreateCharacterForm>
+                </Match>
+              </Switch>
             </RightPane>
           </Show>
         </div>

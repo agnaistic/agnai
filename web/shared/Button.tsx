@@ -1,6 +1,6 @@
 import { Component, JSX } from 'solid-js'
 
-type ButtonSchema = keyof typeof kinds
+export type ButtonSchema = keyof typeof kinds
 
 const kinds = {
   primary: 'btn-primary',

@@ -1,3 +1,16 @@
+.chat-detail {
+  display: grid;
+  height: 100%;
+  width: 100%;
+  grid-template-rows: 36px 1fr 40px;
+}
+
+@media (max-width: 1024px) {
+  .chat-detail {
+    grid-template-rows: 1fr 40px;
+  }
+}
+
 .rendered-markdown {
   color: var(--text-800);
   color: var(--text-chatcolor);
