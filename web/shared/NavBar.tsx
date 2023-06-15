@@ -4,6 +4,8 @@ import { A, useLocation } from '@solidjs/router'
 import { chatStore, settingStore } from '../store'
 import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
 import { DropMenu } from './DropMenu'
+import { getClientPreset } from './adapter'
+import { ADAPTER_LABELS } from '/common/adapters'
 
 const NavBar: Component = () => {
   const cfg = settingStore()
@@ -40,6 +42,20 @@ const NavBar: Component = () => {
 
   const visibilityClass = () => (chats.opts.editingChar ? '' : 'sm:hidden')
 
+  const chatPreset = createMemo(() => getClientPreset(chats.chat))
+
+  const adapterLabel = createMemo(() => {
+    const data = chatPreset()
+    if (!data) return ''
+
+    const { name, adapter, isThirdParty, presetLabel } = data
+
+    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
+      name || presetLabel
+    }`
+    return label
+  })
+
   return (
     <Show when={!cfg.fullscreen}>
       <span
@@ -64,7 +80,11 @@ const NavBar: Component = () => {
             <div class="" onClick={() => setShowOpts(true)}>
               <MoreHorizontal class="icon-button" />
               <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
-                <ChatOptions setModal={setModal} toggleCharEditor={toggleCharEditor} />
+                <ChatOptions
+                  setModal={setModal}
+                  toggleCharEditor={toggleCharEditor}
+                  adapterLabel={adapterLabel()}
+                />
               </DropMenu>
             </div>
           </Show>

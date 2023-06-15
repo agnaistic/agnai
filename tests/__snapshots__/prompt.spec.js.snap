@@ -91,7 +91,7 @@ Bot:"
 
 exports[`Prompt building will include example dialogue with omitted from template 1`] = `
 "Bot's Persona: PERSONA
-Scenario: MAIN Main
+Scenario: SCENARIO
 Facts:
 ENTRY ONE
 ENTRY TIE

@@ -477,7 +477,7 @@ export function appendFormOptional(
  * Like `appendFormOptional`, but does append the value if it is an empty string.
  * This might be what we want `appendFormOptional` to be, but I'm scared of breaking things.
  */
-export function appendFormOptional_<T>(
+export function strictAppendFormOptional<T>(
   form: FormData,
   key: string,
   value: T,

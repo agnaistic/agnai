@@ -1,5 +1,5 @@
 import { assertValid } from '/common/valid'
-// import { PERSONA_FORMATS } from '../../../common/adapters'
+import { PERSONA_FORMATS } from '../../../common/adapters'
 import { store } from '../../db'
 import { NewMessage } from '../../db/messages'
 import { handle, StatusError } from '../wrap'
@@ -15,10 +15,11 @@ export const createChat = handle(async ({ body, user, userId }) => {
       scenario: 'string?',
       sampleChat: 'string?',
       // TODO: fix the validator so we can properly write this
-      overrides: 'any?', // should be { kind: PERSONA_FORMATS, attributes: 'any' } or undefined,
+      overrides: { '?': 'any', kind: PERSONA_FORMATS, attributes: 'any' },
     },
     body
   )
+
   const character = await store.characters.getCharacter(userId, body.characterId)
   const chat = await store.chats.create(body.characterId, {
     ...body,

@@ -4,14 +4,6 @@ export type FromTupleLiteral<T> = T extends [...string[], null] | readonly [...s
   ? T[number]
   : never
 
-// export type FromTupleLiteral<T> = T extends [...infer U] | readonly [...infer U]
-//   ? U extends Primitive
-//     ? never
-//     : T[number] extends string
-//     ? T[number]
-//     : never
-//   : never
-
 export type OptionalToPrimitive<T extends OptionalPrimitive> = T extends 'string?'
   ? string
   : T extends 'number?'

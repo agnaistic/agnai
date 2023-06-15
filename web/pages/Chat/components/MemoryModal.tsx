@@ -50,7 +50,7 @@ const ChatMemoryModal: Component<{
 
   const useMemoryBook = () => {
     if (!props.chat._id) return
-    chatStore.editChat(props.chat._id, { memoryId: id() })
+    chatStore.editChat(props.chat._id, { memoryId: id() }, undefined)
   }
 
   const Footer = () => (

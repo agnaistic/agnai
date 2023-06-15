@@ -322,9 +322,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const parts: PromptParts = {
     persona: formatCharacter(
       replyAs.name,
-      replyAs._id === char._id && chat.useOverrides
-        ? chat.overrides ?? replyAs.persona
-        : replyAs.persona
+      replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
     ),
     post: [],
     allPersonas: [],
@@ -332,9 +330,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   const personalities = new Set(replyAs._id)
 
-  const botKind = opts.chat.useOverrides
-    ? opts.chat.overrides?.kind || opts.char.persona.kind
-    : opts.char.persona.kind
+  const botKind = opts.chat.overrides?.kind || opts.char.persona.kind
   if (opts.impersonate && !personalities.has(opts.impersonate._id)) {
     personalities.add(opts.impersonate._id)
     parts.allPersonas.push(
@@ -355,7 +351,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     )
   }
 
-  if (chat.scenario && chat.useOverrides) {
+  if (chat.scenario && chat.overrides) {
     // we use the BOT_REPLACE here otherwise later it'll get replaced with the
     // replyAs instead of the main character
     // (we always use the main character's scenario, not replyAs)
@@ -365,7 +361,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   }
 
   parts.sampleChat = (
-    replyAs._id === char._id && chat.useOverrides
+    replyAs._id === char._id && !!chat.overrides
       ? chat.sampleChat ?? replyAs.sampleChat
       : replyAs.sampleChat
   )

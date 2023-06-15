@@ -55,7 +55,10 @@ export async function getChat(id: string) {
   return localApi.result({ chat, character, messages, members: [profile], active: [], characters })
 }
 
-export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
+export async function editChat(
+  id: string,
+  update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }
+) {
   if (isLoggedIn()) {
     const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
     return res
@@ -66,6 +69,14 @@ export async function editChat(id: string, update: Partial<AppSchema.Chat>) {
   if (!prev) return localApi.error(`Chat not found`)
 
   const next = { ...prev, ...update, updatedAt: new Date().toISOString() }
+
+  if (update.useOverrides === false) {
+    delete next.overrides
+    delete next.greeting
+    delete next.sampleChat
+    delete next.scenario
+  }
+
   localApi.saveChats(localApi.replace(id, chats, next))
   return localApi.result(next)
 }

@@ -25,7 +25,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const user = userStore()
   const cfg = settingStore()
   const presets = presetStore((s) => s.presets)
-  const [useOverrides, setUseOverrides] = createSignal(state.chat?.useOverrides ?? false)
+  const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -43,37 +43,26 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       greeting: 'string?',
       sampleChat: 'string?',
       scenario: 'string?',
-      schema: 'any?', // ['wpp', 'boostyle', 'sbf', 'text', undefined],
+      schema: ['wpp', 'boostyle', 'sbf', 'text', null],
       mode: ['standard', 'adventure', null],
-    } as const)
+    })
 
     const attributes = getAttributeMap(ref)
 
-    const overrides: AppSchema.Persona = {
-      kind: body.schema,
-      attributes,
-    }
+    const overrides: AppSchema.Persona | undefined = body.schema
+      ? { kind: body.schema, attributes }
+      : undefined
 
-    chatStore.editChat(
-      state.chat?._id!,
-      { ...body, overrides, useOverrides: useOverrides() },
-      () => {
-        props.close()
-      }
-    )
+    chatStore.editChat(state.chat?._id!, { ...body, overrides }, useOverrides(), () => {
+      props.close()
+    })
   }
 
   const revert = () => {
     const char = state.char
     if (!char) return
 
-    chatStore.editChat(state.chat?._id!, {
-      greeting: undefined,
-      scenario: undefined,
-      sampleChat: undefined,
-      overrides: undefined,
-      useOverrides: false,
-    })
+    chatStore.editChat(state.chat?._id!, {}, false)
   }
 
   const Footer = (
@@ -163,7 +152,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             fieldName="useOverrides"
             value={useOverrides()}
             onChange={(use) => setUseOverrides(use)}
-            label="Edit character definitions for this chat only"
+            label="Override character definitions for this chat only"
             helperText="If you want to edit the character itself and all chats using it, open the 'Chara' link in the Chat Menu instead."
           />
         </Card>

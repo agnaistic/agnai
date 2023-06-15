@@ -127,7 +127,6 @@ export namespace AppSchema {
     messageCount: number
     adapter?: ChatAdapter
 
-    useOverrides?: boolean
     greeting?: string
     scenario?: string
     sampleChat?: string

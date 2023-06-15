@@ -200,9 +200,10 @@ export const chatStore = createStore<ChatState>('chat', {
       { char, allChats, active },
       id: string,
       update: Partial<AppSchema.Chat>,
+      useOverrides: boolean | undefined,
       onSuccess?: () => void
     ) {
-      const res = await chatsApi.editChat(id, update)
+      const res = await chatsApi.editChat(id, { ...update, useOverrides })
       if (res.error) {
         toastStore.error(`Failed to update chat: ${res.error}`)
         return

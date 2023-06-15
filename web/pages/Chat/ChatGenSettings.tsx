@@ -91,7 +91,7 @@ export const ChatGenSettingsModal: Component<{
       const body = getStrictForm(ref, chatGenSettings)
       chatStore.editChatGenSettings(props.chat._id, body, props.close)
     } else if (preset === AutoPreset.service) {
-      chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined })
+      chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined }, undefined)
     } else {
       chatStore.editChatGenPreset(props.chat._id, preset, () => {
         props.close()

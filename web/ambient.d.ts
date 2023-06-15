@@ -6,3 +6,5 @@ declare module '*.svg' {
 declare interface Window {
   flag: (flag: any, value: boolea) => void
 }
+
+declare type PartialUpdate<T> = { [P in keyof T]?: T[P] | null }

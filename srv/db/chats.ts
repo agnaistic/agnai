@@ -36,8 +36,8 @@ export async function getMessageAndChat(msgId: string) {
   return { msg, chat }
 }
 
-export async function update(id: string, props: Partial<AppSchema.Chat>) {
-  await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
+export async function update(id: string, props: PartialUpdate<AppSchema.Chat>) {
+  await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } as any })
   return getChatOnly(id)
 }
 
@@ -45,15 +45,7 @@ export async function create(
   characterId: string,
   props: Pick<
     AppSchema.Chat,
-    | 'name'
-    | 'greeting'
-    | 'scenario'
-    | 'sampleChat'
-    | 'userId'
-    | 'overrides'
-    | 'genPreset'
-    | 'mode'
-    | 'useOverrides'
+    'name' | 'greeting' | 'scenario' | 'sampleChat' | 'userId' | 'overrides' | 'genPreset' | 'mode'
   >
 ) {
   const id = `${v4()}`
@@ -74,7 +66,6 @@ export async function create(
     sampleChat: props.sampleChat,
     scenario: props.scenario,
     overrides: props.overrides,
-    useOverrides: props.useOverrides,
     createdAt: now(),
     updatedAt: now(),
     genPreset: props.genPreset,
