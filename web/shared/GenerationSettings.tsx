@@ -131,7 +131,6 @@ const GeneralSettings: Component<Props> = (props) => {
           aiSetting={'novelModel'}
         />
 
-<<<<<<< HEAD
       <Select
         fieldName="replicateModelType"
         label="Replicate Model Type"
@@ -158,8 +157,6 @@ const GeneralSettings: Component<Props> = (props) => {
         service={props.service}
         aiSetting={'replicateModelVersion'}
       />
-
-=======
         <Select
           fieldName="claudeModel"
           label="Claude Model"
@@ -171,7 +168,6 @@ const GeneralSettings: Component<Props> = (props) => {
           aiSetting={'claudeModel'}
         />
       </div>
->>>>>>> b6f08c6 (feat: support card system prompt, add toggle to ignore card sysprompt and card ujb)
       <RangeInput
         fieldName="maxTokens"
         label="Max New Tokens"
