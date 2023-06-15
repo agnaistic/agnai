@@ -3,6 +3,7 @@ import { getCharacter } from './characters'
 import { db } from './client'
 import { AppSchema } from './schema'
 import { now } from './util'
+import { StatusError } from '../api/wrap'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
@@ -35,8 +36,8 @@ export async function getMessageAndChat(msgId: string) {
   return { msg, chat }
 }
 
-export async function update(id: string, props: Partial<AppSchema.Chat>) {
-  await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } })
+export async function update(id: string, props: PartialUpdate<AppSchema.Chat>) {
+  await db('chat').updateOne({ _id: id }, { $set: { ...props, updatedAt: now() } as any })
   return getChatOnly(id)
 }
 
@@ -50,7 +51,7 @@ export async function create(
   const id = `${v4()}`
   const char = await getCharacter(props.userId, characterId)
   if (!char) {
-    throw new Error(`Unable to create chat: Character not found`)
+    throw new StatusError(`Character not found (${characterId.slice(0, 8)})`, 400)
   }
 
   const doc: AppSchema.Chat = {
@@ -64,7 +65,7 @@ export async function create(
     greeting: props.greeting,
     sampleChat: props.sampleChat,
     scenario: props.scenario,
-    overrides: props.overrides || char.persona,
+    overrides: props.overrides,
     createdAt: now(),
     updatedAt: now(),
     genPreset: props.genPreset,

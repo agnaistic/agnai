@@ -1,5 +1,7 @@
-import { Accessor, createEffect, onCleanup } from 'solid-js'
+import { Accessor, createEffect, createMemo, onCleanup } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
+import { userStore } from '../store'
+import { hexToRgb } from './util'
 
 export function useWindowSize(): {
   width: Accessor<number>
@@ -26,6 +28,42 @@ export function useWindowSize(): {
   return { width, height }
 }
 
+export function usePane() {
+  const windowSize = useWindowSize()
+  const isSmallScreen = createMemo(() => windowSize.width() < 768)
+  const paneDisplay = createMemo(() => (isSmallScreen() ? 'popup' : 'pane'))
+  return paneDisplay
+}
+
+export function useDraft(id: string) {
+  const key = `chat:${id}:draft`
+  const text = localStorage.getItem(key) || ''
+
+  const restore = () => {
+    const text = localStorage.getItem(key)
+    return text || ''
+  }
+
+  const update = (value?: string) => {
+    if (value) {
+      localStorage.setItem(key, value)
+    } else {
+      localStorage.removeItem(key)
+    }
+  }
+
+  const clear = () => {
+    localStorage.removeItem(key)
+  }
+
+  return { text, restore, update, clear }
+}
+
+export function clearDraft(id: string) {
+  const key = `chat:${id}:draft`
+  localStorage.removeItem(key)
+}
+
 export function useEffect(callback: () => void | Function): void {
   createEffect(() => {
     if (isDefined(callback) && isFunction(callback)) {
@@ -37,6 +75,22 @@ export function useEffect(callback: () => void | Function): void {
 
     return
   })
+}
+
+export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {
+  const user = userStore()
+  const bgStyle = createMemo(() => {
+    // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
+    user.ui.mode
+    const rgb = hexToRgb(props.hex)
+    if (!rgb) return {}
+    const opacity = props.opacity?.toString() ?? user.ui.msgOpacity.toString()
+    return {
+      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`,
+      ...(props.blur ? { 'backdrop-filter': 'blur(5px)' } : {}),
+    }
+  })
+  return bgStyle
 }
 
 function isDefined<T>(value: T | undefined | null): value is T {

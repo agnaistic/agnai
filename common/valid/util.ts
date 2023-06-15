@@ -43,8 +43,8 @@ export function isOptionalArray(value: any): value is [Validator, '?'] | readonl
   return value[1] === '?'
 }
 
-export function isObjectOptional(value: any): value is Validator & { '?': true } {
-  return typeof value === 'object' && '?' in value && value['?'] === true
+export function isObjectOptional(value: any): value is Validator & { '?': any } {
+  return typeof value === 'object' && '?' in value && !!value['?']
 }
 
 export function isTupleBody(

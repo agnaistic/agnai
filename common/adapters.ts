@@ -51,6 +51,7 @@ export const AI_ADAPTERS = [
   'scale',
   'claude',
   'goose',
+  'replicate',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -60,10 +61,25 @@ export type NovelModel = keyof typeof NOVEL_MODELS
 
 export type OpenAIModel = (typeof OPENAI_MODELS)[keyof typeof OPENAI_MODELS]
 
+export const GOOSE_ENGINES = {
+  'gpt-neo-20b': 'GPT Neo 20B',
+  'gpt-j-6b': 'GPT-J 6B',
+  'gpt-neo-2-7b': 'GPT-Neo 2.7B',
+  'gpt-neo-1-3b': 'GPT-Neo 1.3B',
+  'gpt-neo-125m': 'GPT-Neo 125M',
+  'fairseq-13b': 'Fairseq 13B',
+  'fairseq-6-7b': 'Fairseq 6.7B',
+  'fairseq-2-7b': 'Fairseq 2.7B',
+  'fairseq-1-3b': 'Fairseq 1.3B',
+  'fairseq-125m': 'Fairseq 125M',
+}
+
 export const OPENAI_MODELS = {
   DaVinci: 'text-davinci-003',
   Turbo: 'gpt-3.5-turbo',
   Turbo0301: 'gpt-3.5-turbo-0301',
+  Turbo_4k: 'gpt-3.5-turbo-0613',
+  Turbo_16k: 'gpt-3.5-turbo-16k',
   GPT4: 'gpt-4',
   GPT4_0314: 'gpt-4-0314',
   GPT4_32k: 'gpt-4-32k',
@@ -73,6 +89,8 @@ export const OPENAI_MODELS = {
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.Turbo]: true,
   [OPENAI_MODELS.Turbo0301]: true,
+  [OPENAI_MODELS.Turbo_4k]: true,
+  [OPENAI_MODELS.Turbo_16k]: true,
   [OPENAI_MODELS.GPT4]: true,
   [OPENAI_MODELS.GPT4_0314]: true,
   [OPENAI_MODELS.GPT4_32k]: true,
@@ -103,6 +121,12 @@ export const NOVEL_MODELS = {
   krake: 'krake-v2',
   clio_v1: 'clio-v1',
 } satisfies { [key: string]: string }
+
+export const REPLICATE_MODEL_TYPES = {
+  llama: 'LLaMa',
+  stablelm: 'StableLM',
+  openassistant: 'Open Assistant',
+} as const
 
 export type HordeModel = {
   name: string
@@ -153,6 +177,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   scale: 'Scale',
   claude: 'Claude',
   goose: 'Goose AI',
+  replicate: 'Replicate',
 }
 
 export type PresetAISettings = Omit<
@@ -198,6 +223,11 @@ export const adapterSettings: {
   banEosToken: ['ooba'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
+
+  replicateModelVersion: ['replicate'],
+  replicateModelType: ['replicate'],
+
+  skipSpecialTokens: ['ooba', 'kobold'],
 }
 
 export type RegisteredAdapter = {

@@ -21,6 +21,8 @@ type CNode =
   | Exclude<PNode, { kind: 'each' }>
   | { kind: 'bot-prop'; prop: BotsProp }
   | { kind: 'history-prop'; prop: HistoryProp }
+  | { kind: 'history-if'; prop: HistoryProp; children: CNode[] }
+  | { kind: 'bot-if'; prop: BotsProp; children: CNode[] }
 
 type Holder =
   | 'char'
@@ -35,7 +37,7 @@ type Holder =
 
 type IterableHolder = 'history' | 'bots'
 
-type HistoryProp = 'i' | 'message' | 'dialogue' | 'name'
+type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
 type BotsProp = 'i' | 'personality' | 'name'
 
 export type ParseOpts = {
@@ -50,6 +52,7 @@ export type ParseOpts = {
   settings?: Partial<AppSchema.GenSettings>
   lines: string[]
   characters: Record<string, AppSchema.Character>
+  sender: AppSchema.Profile
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
@@ -89,6 +92,7 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
   if (typeof node === 'string') return node
 
   switch (node.kind) {
+    case 'bot-if':
     case 'bot-prop': {
       const bot = entity as AppSchema.Character
       switch (node.prop) {
@@ -102,11 +106,12 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
           return formatCharacter(
             bot.name,
             bot.persona,
-            bot.persona.kind || opts.chat.overrides.kind
+            bot.persona.kind /* || opts.chat.overrides.kind */ // looks like the || operator's left hand side is always truthy - @malfoyslastname
           )
       }
     }
 
+    case 'history-if':
     case 'history-prop': {
       const line = entity as string
       switch (node.prop) {
@@ -125,6 +130,14 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
           const index = line.indexOf(':')
           return line.slice(index + 1).trim()
         }
+
+        case 'isbot':
+        case 'isuser':
+          const index = line.indexOf(':')
+          const name = line.slice(0, index)
+          const sender = opts.impersonate?.name ?? opts.sender.handle
+          const match = name === sender
+          return node.prop === 'isuser' ? match : !match
       }
     }
   }
@@ -165,12 +178,24 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOp
         case 'placeholder': {
           const result = renderNode(child, opts)
           if (result) curr += result
+          break
         }
 
         case 'bot-prop':
-        case 'history-prop':
+        case 'history-prop': {
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
+          break
+        }
+
+        case 'bot-if':
+        case 'history-if': {
+          const prop = renderProp(child, opts, entity, i)
+          if (!prop) break
+          const result = renderEntityCondition(child.children, opts, entity, i)
+          curr += result
+          break
+        }
       }
     }
     if (curr) output.push(curr)
@@ -178,6 +203,17 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOp
   }
 
   return output.join('\n')
+}
+
+function renderEntityCondition(nodes: CNode[], opts: ParseOpts, entity: unknown, i: number) {
+  let result = ''
+
+  for (const node of nodes) {
+    const res = renderProp(node, opts, entity, i)
+    if (res) result += res.toString()
+  }
+
+  return result
 }
 
 function getPlaceholder(value: Holder, opts: ParseOpts) {

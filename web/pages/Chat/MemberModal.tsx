@@ -10,6 +10,7 @@ import { v4 } from 'uuid'
 import { getStrictForm } from '../../shared/util'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
+import { getActiveBots } from './util'
 
 type View = 'list' | 'invite_user' | 'add_character'
 
@@ -66,23 +67,11 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
 
-  const charMembers = createMemo<AppSchema.Character[]>(() => {
-    const characters = state.active?.chat.characters || {}
-    const mainChar = state.active?.char
-    if (!mainChar) return []
-    return [
-      mainChar,
-      ...Object.entries(characters)
-        .filter((pair) => pair[1])
-        .map((pair) => pair[0])
-        .map(
-          (charId) =>
-            chars.list.find((bot) => bot._id === charId) ??
-            ({ _id: charId, name: charId } as AppSchema.Character)
-        )
-        .sort((a, b) => a.name.localeCompare(b.name)),
-    ]
-  })
+  const charMembers = createMemo<AppSchema.Character[]>(() =>
+    getActiveBots(state.active?.chat!, chars.map).sort((left, right) =>
+      left.name.localeCompare(right.name)
+    )
+  )
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 

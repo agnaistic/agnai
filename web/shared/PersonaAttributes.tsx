@@ -1,9 +1,12 @@
 import { MinusCircle, Plus } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, onMount, Show } from 'solid-js'
 import Button from './Button'
 import { FormLabel } from './FormLabel'
 import TextInput from './TextInput'
 import { getFormEntries } from './util'
+import { getEncoder } from '/common/tokenize'
+import { formatCharacter } from '/common/characters'
+import { AppSchema } from '/srv/db/schema'
 
 type Attr = { key: string; values: string }
 
@@ -17,9 +20,18 @@ const PersonaAttributes: Component<{
   value?: Record<string, string[]>
   plainText?: boolean
   hideLabel?: boolean
+  schema?: AppSchema.Persona['kind']
+  tokenCount?: boolean | ((count: number) => void)
+  form?: any
+  disabled?: boolean
 }> = (props) => {
   const [prev, setPrev] = createSignal(props.value)
   const [attrs, setAttrs] = createSignal<Attr[]>(toAttrs(props.value))
+  const [tokens, setTokens] = createSignal(0)
+
+  onMount(() => {
+    updateCount()
+  })
 
   createEffect(() => {
     if (props.value) {
@@ -33,9 +45,33 @@ const PersonaAttributes: Component<{
     setPrev(props.value)
   })
 
+  createEffect(async () => {
+    attrs()
+    updateCount()
+  })
+
+  const updateCount = async () => {
+    if (!props.tokenCount || !props.form) return
+    const attributes = getAttributeMap(props.form)
+
+    const encoder = await getEncoder()
+
+    const formatted = formatCharacter(
+      'Name',
+      { kind: props.schema || 'text', attributes },
+      props.schema
+    )
+    const count = encoder(formatted)
+    setTokens(count)
+    if (typeof props.tokenCount === 'function') {
+      props.tokenCount(count)
+    }
+  }
+
   const add = () => setAttrs((prev) => [...prev, { key: '', values: '' }])
 
   const onKey = (key: string, index: number) => {
+    updateCount()
     if (key !== 'Enter') return
     if (index + 1 !== attrs().length) return
     add()
@@ -62,31 +98,46 @@ const PersonaAttributes: Component<{
                   loves.
                 </Show>
               </span>
+              <Show when={props.tokenCount}>
+                <br />
+                <em class="text-xs">{tokens()} tokens</em>
+              </Show>
             </>
           }
         />
       </Show>
       <Show when={props.plainText}>
         <div>
-          <TextInput fieldName="attr-key.0" value="text" class="hidden" />
+          <TextInput fieldName="attr-key.0" value="text" class="hidden" disabled={props.disabled} />
           <TextInput
             fieldName="attr-value.0"
+            class="text-input-min-h-override"
             value={props.value?.text?.[0]}
             isMultiline
             placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."
+            tokenCount={() => updateCount()}
+            disabled={props.disabled}
           />
         </div>
       </Show>
       <Show when={!props.plainText}>
         <div>
-          <Button onClick={add}>
+          <Button onClick={add} disabled={props.disabled}>
             <Plus size={16} />
             Add Attribute
           </Button>
         </div>
         <div class="mt-2 flex w-full flex-col gap-2">
           <For each={attrs()}>
-            {(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} remove={remove} />}
+            {(attr, i) => (
+              <Attribute
+                attr={attr}
+                index={i()}
+                onKey={onKey}
+                remove={remove}
+                disabled={props.disabled}
+              />
+            )}
           </For>
         </div>
       </Show>
@@ -99,6 +150,7 @@ const Attribute: Component<{
   index: number
   onKey: (key: string, i: number) => void
   remove: (i: number) => void
+  disabled?: boolean
 }> = (props) => {
   return (
     <div class="flex w-full gap-2">
@@ -107,6 +159,7 @@ const Attribute: Component<{
           fieldName={`attr-key.${props.index}`}
           placeholder="Name. E.g. appearance"
           value={props.attr.key}
+          disabled={props.disabled}
         />
       </div>
       <div class="w-8/12">
@@ -115,6 +168,8 @@ const Attribute: Component<{
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
           value={props.attr.values}
           onKeyUp={(ev) => props.onKey(ev.key, props.index)}
+          isMultiline
+          disabled={props.disabled}
         />
       </div>
       <div class="1/12 flex items-center" onClick={() => props.remove(props.index)}>

@@ -1,6 +1,17 @@
-import { Book, Download, Palette, Settings, Sliders, Trash, Users, Camera } from 'lucide-solid'
-import { Component, Show, createMemo } from 'solid-js'
-import Button from '../../shared/Button'
+import {
+  Book,
+  Download,
+  Palette,
+  Settings,
+  User,
+  Sliders,
+  Trash,
+  Users,
+  Camera,
+  VenetianMask,
+} from 'lucide-solid'
+import { Component, Show, createMemo, JSX } from 'solid-js'
+import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
@@ -17,7 +28,11 @@ export type ChatModal =
   | 'delete'
   | 'none'
 
-const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props) => {
+const ChatOptions: Component<{
+  adapterLabel: string
+  setModal: (modal: ChatModal) => void
+  toggleCharEditor: () => void
+}> = (props) => {
   const chats = chatStore((s) => ({
     ...s.active,
     opts: s.opts,
@@ -65,13 +80,13 @@ const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props)
   }
 
   return (
-    <div class="flex w-60 flex-col gap-2 p-2">
+    <div class="flex w-72 flex-col gap-2 p-2">
       <Show when={chats.members.length > 1}>
         <Option onClick={toggleOocMessages}>
           <div class="flex w-full items-center justify-between">
             <div>Hide OOC messages</div>
             <Toggle
-              class="flex items-center"
+              class="h-50 flex items-center"
               fieldName="editChat"
               value={chats.opts.hideOoc}
               onChange={toggleOocMessages}
@@ -92,86 +107,88 @@ const ChatOptions: Component<{ setModal: (modal: ChatModal) => void }> = (props)
           </div>
         </Option>
 
-        <Option onClick={settingStore.toggleAnonymize}>
-          <div class="flex w-full items-center justify-between">
-            <div>Anonymize Chat</div>
-            <Toggle
-              class="flex items-center"
-              fieldName="anonymizeChat"
-              value={cfg.anonymize}
-              onChange={settingStore.toggleAnonymize}
-            />
-          </div>
+        <Option onClick={props.toggleCharEditor}>
+          <User /> Character
         </Option>
 
-        <Option onClick={screenshotChat}>
-          {/* Unfortunately msgs has to be abbreviated to fit on one line */}
-          <Camera />
-          <Show when={!chats.opts.screenshot}>Take Screenshot</Show>
-          <Show when={chats.opts.screenshot}>
-            <em>Loading, please wait...</em>
-          </Show>
-        </Option>
-
-        <Option
-          onClick={() => props.setModal('memory')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Book />
-          Edit Chat Memory
-        </Option>
-
-        <Option
-          onClick={() => props.setModal('members')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
+        <Option onClick={() => props.setModal('members')}>
           <Users /> Participants
         </Option>
 
-        <Option
-          onClick={() => props.setModal('gen')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Sliders /> Generation Settings
-        </Option>
-
-        <Option
-          onClick={() => props.setModal('settings')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-        >
-          <Settings /> Chat Settings
-        </Option>
+        <MenuItemRow>
+          <MenuItem onClick={() => props.setModal('settings')} hide={!isOwner()}>
+            <Settings /> Edit Chat
+          </MenuItem>
+          <MenuItem onClick={() => props.setModal('gen')}>
+            <Sliders /> Preset
+          </MenuItem>
+        </MenuItemRow>
+        <MenuItemRow>
+          <MenuItem onClick={screenshotChat}>
+            <Camera />
+            <Show when={!chats.opts.screenshot}>Screenshot</Show>
+            <Show when={chats.opts.screenshot}>
+              <em>Loading, please wait...</em>
+            </Show>
+          </MenuItem>
+          <MenuItem onClick={() => props.setModal('memory')}>
+            <Book /> Memory
+          </MenuItem>
+        </MenuItemRow>
       </Show>
 
-      <Option
-        onClick={() => props.setModal('ui')}
-        class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-      >
-        <Palette /> UI Settings
-      </Option>
-
-      <Option
-        onClick={() => props.setModal('export')}
-        class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
-      >
-        <Download /> Export Chat
-      </Option>
-
-      <Show when={isOwner()}>
-        <Option
-          onClick={() => props.setModal('delete')}
-          class="flex justify-start gap-2 hover:bg-[var(--bg-700)]"
+      <MenuItemRow>
+        <MenuItem
+          schema={cfg.anonymize ? 'primary' : undefined}
+          onClick={settingStore.toggleAnonymize}
         >
-          <Trash /> Delete Chat
-        </Option>
-      </Show>
+          <VenetianMask /> Anonymize
+        </MenuItem>
+        <MenuItem onClick={() => props.setModal('ui')}>
+          <Palette /> UI
+        </MenuItem>
+      </MenuItemRow>
+
+      <MenuItemRow>
+        <MenuItem onClick={() => props.setModal('export')}>
+          <Download /> Export
+        </MenuItem>
+        <MenuItem onClick={() => props.setModal('delete')} hide={!isOwner()}>
+          <Trash /> Delete
+        </MenuItem>
+      </MenuItemRow>
+      <div class="flex justify-center">
+        <em class="text-sm">{props.adapterLabel}</em>
+      </div>
     </div>
   )
 }
 
+const MenuItemRow: Component<{ children: JSX.Element }> = (props) => (
+  <div class="flex gap-1">{props.children}</div>
+)
+
+const MenuItem: Component<{
+  onClick: () => void
+  schema?: ButtonSchema
+  hide?: boolean
+  children: any
+}> = (props) => (
+  <Show when={!props.hide}>
+    <Option
+      onClick={props.onClick}
+      class="flex flex-1 justify-start gap-2 hover:bg-[var(--bg-700)]"
+      schema={props.schema}
+    >
+      {props.children}
+    </Option>
+  </Show>
+)
+
 const Option: Component<{
   children: any
   class?: string
+  schema?: ButtonSchema
   onClick: () => void
   close?: () => void
 }> = (props) => {
@@ -180,7 +197,13 @@ const Option: Component<{
     props.close?.()
   }
   return (
-    <Button schema="secondary" size="sm" onClick={onClick} alignLeft>
+    <Button
+      schema={props.schema || 'secondary'}
+      size="sm"
+      onClick={onClick}
+      alignLeft
+      class={props.class}
+    >
       {props.children}
     </Button>
   )

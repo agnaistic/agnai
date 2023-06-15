@@ -315,7 +315,7 @@ function toChatCompletionPayload(
     return [{ role: 'system', content: opts.prompt }]
   }
 
-  const { kind, lines, parts, user, gen, replyAs } = opts
+  const { lines, parts, gen, replyAs } = opts
 
   const messages: CompletionItem[] = []
   const history: CompletionItem[] = []
@@ -340,47 +340,12 @@ function toChatCompletionPayload(
     all.push(...lines)
   }
 
-  if (kind === 'summary') {
-    // This probably needs to be workshopped
-    let content = user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
-
-    if (!content.startsWith('(')) content = '(' + content
-    if (!content.endsWith(')')) content = content + ')'
-
-    const looks = Object.values(opts.characters || {})
-      .map(getCharLooks)
-      .filter((v) => !!v)
-      .join('\n')
-    if (looks) {
-      messages[0].content += '\n' + looks
-      tokens += encoder(looks)
-    }
-
-    tokens += encoder(content)
-    history.push({ role: 'user', content })
-  }
-
-  if (kind === 'continue') {
-    let content = `Continue ${opts.replyAs.name}'s response`
-    tokens += encoder(content)
-    history.push({ role: 'system', content })
-  }
-
-  if (kind === 'self') {
-    const content = `Respond as ${handle}`
-    tokens += encoder(content)
-    history.push({ role: 'system', content })
-  }
-
-  if (kind !== 'continue' && kind !== 'summary') {
-    const content = getInstruction(opts, encoder)
-    tokens += encoder(content)
-    history.push({ role: 'system', content })
-  }
-
-  if (kind !== 'summary' && parts.ujb) {
-    history.push({ role: 'system', content: parts.ujb })
-    tokens += encoder(parts.ujb)
+  // Append 'postamble' and system prompt (ujb)
+  const post = getPostInstruction(opts, messages, encoder)
+  if (post) {
+    post.content = injectPlaceholders(post.content, { opts, parts: opts.parts, encoder })
+    tokens += encoder(post.content)
+    history.push(post)
   }
 
   const examplePos = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
@@ -455,12 +420,54 @@ function getCharLooks(char: AppSchema.Character) {
   return `${char.name}'s appearance: ${visuals.join(', ')}`
 }
 
-function getInstruction(opts: AdapterProps, encoder: Encoder) {
-  if (opts.chat.mode !== 'adventure') {
-    return `Respond as ${opts.replyAs.name}`
+function getPostInstruction(
+  opts: AdapterProps,
+  messages: CompletionItem[],
+  encoder: Encoder
+): CompletionItem | undefined {
+  let prefix = opts.parts.ujb ? `${opts.parts.ujb}\n\n` : ''
+
+  if (opts.chat.mode === 'adventure') {
+    prefix = `${adventureAmble}\n\n${prefix}`
   }
 
-  // This is experimental and probably needs to be workshopped to get better responses
-  const content = injectPlaceholders(adventureAmble, { opts, parts: opts.parts, encoder })
-  return content
+  switch (opts.kind) {
+    // These cases should never reach here
+    case 'plain':
+    case 'ooc': {
+      return
+    }
+
+    case 'continue':
+      return { role: 'system', content: `${prefix}Continue ${opts.replyAs.name}'s response` }
+
+    case 'summary': {
+      let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
+
+      if (!content.startsWith('(')) content = '(' + content
+      if (!content.endsWith(')')) content = content + ')'
+
+      const looks = Object.values(opts.characters || {})
+        .map(getCharLooks)
+        .filter((v) => !!v)
+        .join('\n')
+
+      if (looks) {
+        messages[0].content += '\n' + looks
+      }
+      return { role: 'user', content }
+    }
+
+    case 'self':
+      return {
+        role: 'system',
+        content: `${prefix}Respond as ${opts.impersonate?.name || opts.sender?.handle || 'You'}`,
+      }
+
+    case 'retry':
+    case 'send':
+    case 'request': {
+      return { role: 'system', content: `${prefix}Respond as ${opts.replyAs.name}` }
+    }
+  }
 }

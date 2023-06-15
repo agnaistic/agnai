@@ -125,7 +125,6 @@ const Placeholder: Component<
   })
 
   const disabled = createMemo(() => count() >= props.limit)
-  console.log(props)
 
   return (
     <div

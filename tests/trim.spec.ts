@@ -28,4 +28,13 @@ describe('Response trimming', () => {
     const actual = trimResponseV2(msg.msg, bot, users, {})
     expect(actual).to.eq('aaa bbb ccc.  ddd eee fff.')
   })
+
+  it('will correctly remove "Botname:" from the response', () => {
+    const msg = toBotMsg(
+      bot,
+      `${bot.name}: ${bot.name}: aaa bbb ccc. ${bot.name} : ddd eee fff. ${u1.handle} : ggg hhh`
+    )
+    const actual = trimResponseV2(msg.msg, bot, users, {})
+    expect(actual).to.eq('aaa bbb ccc.  ddd eee fff.')
+  })
 })

@@ -13,12 +13,20 @@ Placeholder "placeholder"
   return { kind: 'placeholder', value: interp, pipes }
 }
 
-BotIterator "bot-iterator" = OP "#each" WS value:Bots CL sub:(BotProp / Child / Text)* OP "/each" CL {
-  return { kind: 'each', value, children: sub.flat() }
+BotIterator "bot-iterator" = OP "#each" WS value:Bots CL pre:Text? sub:(BotCondition / BotRef / Child / Text)* post:Text? OP "/each" CL {
+  return { kind: 'each', value, children: [pre,...sub,post].filter(v => !!v) }
 }
 
-HistoryIterator "msg-iterator" = OP "#each" WS value:History CL sub:(HistoryProp / Child / Text)* OP "/each" CL {
-  return { kind: 'each', value, children: sub.flat() }
+HistoryIterator "msg-iterator" = OP "#each" WS value:History CL pre:Text? sub:(HistoryCondition / HistoryRef / Child / Text)* post:Text? OP "/each" CL {
+  return { kind: 'each', value, children: [pre,...sub,post].filter(v => !!v) }
+}
+
+BotCondition "bot-condition" = OP "#if" WS prop:BotProperty CL pre:Text? sub:(BotRef / Child / Text)* post:Text? OP "/if" CL {
+  return { kind: 'bot-if', prop, children: sub.flat() }
+}
+
+HistoryCondition "history-condition" = OP "#if" WS prop:HistoryProperty CL sub:(HistoryRef / Child / Text)* OP "/if" CL {
+  return { kind: 'history-if', prop, children: sub.flat() }
 }
 
 Condition "if" = OP "#if" WS value:Word CL sub:(Child / Text)* OP "/if" CL {
@@ -54,13 +62,11 @@ WS "ws" = " "*
 // Example pipe functions: lowercase, uppercase
 Handler "handler" = "upper" / "lower"
 
-BotProp = pre:Text? OP "." prop:("name"i / Persona / "i"i) CL post:Text? {
-  return [pre, { kind: 'bot-prop', prop }, post].filter(v => !!v)
-}
+BotRef = OP prop:BotProperty CL {return { kind: 'bot-prop', prop } }
+HistoryRef = OP prop:HistoryProperty CL { return { kind: 'history-prop', prop } }
 
-HistoryProp = pre:Text? OP "." prop:(Message / "dialogue"i / "name"i / "i"i) CL post:Text? {
-  return [pre, { kind: 'history-prop', prop }, post].filter(v => !!v)
-}
+BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
+HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
 
 Character "character" = "char"i / "character"i / "bot"i { return "char" }
 User "user" = "user"i { return "user" }

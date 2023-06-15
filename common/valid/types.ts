@@ -4,14 +4,6 @@ export type FromTupleLiteral<T> = T extends [...string[], null] | readonly [...s
   ? T[number]
   : never
 
-// export type FromTupleLiteral<T> = T extends [...infer U] | readonly [...infer U]
-//   ? U extends Primitive
-//     ? never
-//     : T[number] extends string
-//     ? T[number]
-//     : never
-//   : never
-
 export type OptionalToPrimitive<T extends OptionalPrimitive> = T extends 'string?'
   ? string
   : T extends 'number?'
@@ -32,6 +24,7 @@ export type Reference =
   | [Validator]
   | [Validator, '?']
   | Validator
+  | (Validator & { '?': any })
   | [...string[]]
   | readonly [...string[]]
   | [...string[], null]
@@ -110,7 +103,7 @@ export type UnwrapBody<T extends Validator> = {
     ? Array<UnwrapBody<T[key][0]>> | undefined
     : T[key] extends [Validator] | readonly [Validator]
     ? FromTupleBody<T[key]>
-    : T[key] extends Validator & { '?': '?' }
+    : T[key] extends Validator & { '?': any }
     ? Omit<UnwrapBody<T[key]>, '?'> | undefined
     : T[key] extends Validator
     ? UnwrapBody<T[key]>

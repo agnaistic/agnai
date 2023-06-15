@@ -265,6 +265,7 @@ export function ensureValidTemplate(
   let hasPersona = !!template.match(HOLDERS.persona)
   let hasHistory = !!template.match(HOLDERS.history)
   let hasPost = !!template.match(HOLDERS.post)
+  let hasUjb = !!template.match(HOLDERS.ujb)
 
   const useScenario = !!parts.scenario
   const usePersona = !!parts.persona
@@ -284,10 +285,13 @@ export function ensureValidTemplate(
   if (!skips.has('post') && !skips.has('history') && !hasHistory && !hasPost) {
     modified += `\n{{history}}\n{{post}}`
   } else if (!skips.has('history') && !hasHistory && hasPost) {
-    modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{${HOLDER_NAMES.post}}}`)
+    modified = modified.replace(HOLDERS.post, `{{${HOLDER_NAMES.history}}}\n{{post}}`)
   } else if (!skips.has('post') && hasHistory && !hasPost) {
-    modified += '\n{{post}}'
+    modified += `\n{{post}}`
   }
+
+  const post = !hasUjb && parts.ujb ? `{{ujb}}\n{{post}}` : `{{post}}`
+  modified = modified.replace(HOLDERS.post, post)
 
   return modified
 }
@@ -318,7 +322,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const parts: PromptParts = {
     persona: formatCharacter(
       replyAs.name,
-      replyAs._id === char._id ? chat.overrides : replyAs.persona
+      replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
     ),
     post: [],
     allPersonas: [],
@@ -347,11 +351,20 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     )
   }
 
-  if (chat.scenario) {
+  if (chat.scenario && chat.overrides) {
+    // we use the BOT_REPLACE here otherwise later it'll get replaced with the
+    // replyAs instead of the main character
+    // (we always use the main character's scenario, not replyAs)
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
+  } else {
+    parts.scenario = char.scenario.replace(BOT_REPLACE, char.name)
   }
 
-  parts.sampleChat = (replyAs._id === char._id ? chat.sampleChat : replyAs.sampleChat)
+  parts.sampleChat = (
+    replyAs._id === char._id && !!chat.overrides
+      ? chat.sampleChat ?? replyAs.sampleChat
+      : replyAs.sampleChat
+  )
     .split('\n')
     .filter(removeEmpty)
     // This will use the 'replyAs' character "if present", otherwise it'll defer to the chat.character.name
@@ -359,6 +372,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
+  } else {
+    parts.greeting = replace(char.greeting)
   }
 
   const post = createPostPrompt(opts)
@@ -382,15 +397,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
       ? worldMemory.prompt
       : charMemory?.prompt
 
-  const ujb = opts.settings?.ultimeJailbreak
-
-  const injectOpts = { opts, parts, encoder }
-
-  if (char.postHistoryInstructions || ujb) {
-    parts.ujb = injectPlaceholders(
-      removeUnusedPlaceholders(char.postHistoryInstructions || ujb!, parts),
-      injectOpts
-    )
+  if (opts.settings?.useGaslight || opts.settings?.service === 'openai') {
+    parts.ujb = char.postHistoryInstructions || opts.settings?.ultimeJailbreak
   }
 
   parts.post = post.map(replace)
@@ -460,7 +468,9 @@ function getLinesForPrompt(
       msg,
       opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
       sender
-    ).trim()
+    )
+      .replace(/\s+/g, ' ')
+      .trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
@@ -633,12 +643,18 @@ function getContextLimit(
       const models = new Set<string>([
         OPENAI_MODELS.Turbo,
         OPENAI_MODELS.Turbo0301,
+        OPENAI_MODELS.Turbo_4k,
         OPENAI_MODELS.DaVinci,
       ])
 
       if (!model || models.has(model)) return Math.min(configuredMax, 4090) - genAmount
+      if (model === OPENAI_MODELS.Turbo_16k) return Math.min(configuredMax, 16360) - genAmount
+
       return configuredMax - genAmount
     }
+
+    case 'replicate':
+      return configuredMax - genAmount
 
     case 'scale':
       return configuredMax - genAmount
