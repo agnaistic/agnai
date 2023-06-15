@@ -47,7 +47,7 @@ import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
-import { Card } from './Card'
+import { Card, SolidCard } from './Card'
 import { usePane } from './hooks'
 
 const options = [
@@ -343,6 +343,10 @@ export const CreateCharacterForm: Component<{
     }
   }
 
+  const showWarning = createMemo(
+    () => !!props.chat?.overrides && props.chat.characterId === props.editId
+  )
+
   return (
     <>
       <form
@@ -369,6 +373,14 @@ export const CreateCharacterForm: Component<{
             {props.editId ? 'Update' : 'Create'}
           </Button>
         </div>
+
+        <Show when={showWarning()}>
+          <SolidCard bg="orange-600">
+            <b>Warning!</b> Your chat currently overrides your character definitions. These changes
+            won't affect your current chat until you disable them in the "Edit Chat" menu.
+          </SolidCard>
+        </Show>
+
         <div class={`flex grow flex-col justify-between gap-4 pr-3 pl-2 `}>
           <Show when={!isPage && paneOrPopup() === 'popup'}>
             <div>

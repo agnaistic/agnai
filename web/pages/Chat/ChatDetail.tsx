@@ -457,7 +457,11 @@ const ChatDetail: Component = () => {
                     </Match>
 
                     <Match when={editId() !== ''}>
-                      <CreateCharacterForm editId={editId()} modal={{ close: closeCharEditor }}>
+                      <CreateCharacterForm
+                        chat={chats.chat}
+                        editId={editId()}
+                        modal={{ close: closeCharEditor }}
+                      >
                         <CharacterSelect
                           class="w-full"
                           fieldName="editingId"
