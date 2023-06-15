@@ -12,6 +12,9 @@ import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import ServiceWarning from '/web/shared/ServiceWarning'
+import { Card } from '/web/shared/Card'
+import { Toggle } from '/web/shared/Toggle'
+import Divider from '/web/shared/Divider'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -36,6 +39,7 @@ const CreateChatModal: Component<{
 
   const [selectedId, setSelected] = createSignal<string>()
   const [presetId, setPresetId] = createSignal('')
+  const [useOverrides, setUseOverrides] = createSignal(false)
 
   const char = createMemo(() =>
     state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
@@ -80,7 +84,25 @@ const CreateChatModal: Component<{
 
     const characterId = character._id
 
-    const payload = { ...body, overrides: { kind: body.schema, attributes } }
+    const overrides = useOverrides()
+      ? {
+          greeting: body.greeting,
+          scenario: body.scenario,
+          sampleChat: body.sampleChat,
+          overrides: { kind: body.schema, attributes },
+        }
+      : {
+          greeting: undefined,
+          scenario: undefined,
+          sampleChat: undefined,
+          overrides: undefined,
+        }
+
+    if (useOverrides()) {
+      overrides.greeting = body.greeting
+    }
+
+    const payload = { ...body, ...overrides, useOverrides: useOverrides() }
     chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
 
@@ -112,120 +134,153 @@ const CreateChatModal: Component<{
         <div class="mb-4 text-sm">
           The information provided here is only applied to the newly created conversation.
         </div>
-        <Show when={!props.charId}>
-          <CharacterSelect
-            class="w-48"
-            items={state.chars}
-            value={char()}
-            fieldName="character"
-            label="Character"
-            helperText="The conversation's central character"
-            onChange={(c) => setSelected(c?._id)}
-          />
-        </Show>
-
-        <Select
-          fieldName="genPreset"
-          label="Preset"
-          items={presetOptions()}
-          value={user.defaultPreset || ''}
-          helperText={
-            <>
-              <ServiceWarning service={selectedPreset()?.service} />
-            </>
-          }
-          onChange={(ev) => setPresetId(ev.value)}
-        />
-
-        <Show when={selectedPreset()?.service === 'openai'}>
-          <Select
-            fieldName="mode"
-            label="Chat Mode"
-            helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment. This feature may not work "
-            items={[
-              { label: 'Conversation', value: 'standard' },
-              { label: 'Adventure (Experimental)', value: 'adventure' },
-            ]}
-            value={'standard'}
-          />
-        </Show>
-
-        <TextInput
-          class="text-sm"
-          fieldName="name"
-          label="Conversation Name"
-          helperText={
-            <span>
-              A name for the conversation. This is purely for labelling. <i>(Optional)</i>
-            </span>
-          }
-          placeholder="Untitled"
-        />
-        <TextInput
-          isMultiline
-          fieldName="greeting"
-          label="Greeting"
-          value={char()?.greeting}
-          class="text-xs"
-        ></TextInput>
-
-        <TextInput
-          isMultiline
-          fieldName="scenario"
-          label="Scenario"
-          value={char()?.scenario}
-          class="text-xs"
-        ></TextInput>
-
-        <TextInput
-          isMultiline
-          fieldName="sampleChat"
-          label="Sample Chat"
-          value={char()?.sampleChat}
-          class="text-xs"
-        ></TextInput>
-
-        <Show when={char()?.persona.kind !== 'text'}>
-          <Select
-            class="mb-2 text-sm"
-            fieldName="schema"
-            label="Persona"
-            items={options}
-            value={char()?.persona.kind || 'wpp'}
-          />
-        </Show>
-
-        <Show when={char()?.persona.kind === 'text'}>
-          <Select
-            class="mb-2 text-sm"
-            fieldName="schema"
-            label="Persona"
-            items={[{ label: 'Plain text', value: 'text' }]}
-            value={'text'}
-          />
-        </Show>
-
-        <div class="w-full text-sm">
-          <Show when={char()}>
-            <PersonaAttributes
-              value={char()!.persona.attributes}
-              hideLabel
-              plainText={char()?.persona?.kind === 'text'}
+        <div class="flex flex-col gap-3">
+          <Show when={!props.charId}>
+            <Card>
+              <CharacterSelect
+                class="w-48"
+                items={state.chars}
+                value={char()}
+                fieldName="character"
+                label="Character"
+                helperText="The conversation's central character"
+                onChange={(c) => setSelected(c?._id)}
+              />
+            </Card>
+          </Show>
+          <Card>
+            <Select
+              fieldName="genPreset"
+              label="Preset"
+              items={presetOptions()}
+              value={user.defaultPreset || ''}
+              helperText={
+                <>
+                  <ServiceWarning service={selectedPreset()?.service} />
+                </>
+              }
+              onChange={(ev) => setPresetId(ev.value)}
             />
+          </Card>
+          <Show when={selectedPreset()?.service === 'openai'}>
+            <Card>
+              <Select
+                fieldName="mode"
+                label="Chat Mode"
+                helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment. This feature may not work "
+                items={[
+                  { label: 'Conversation', value: 'standard' },
+                  { label: 'Adventure (Experimental)', value: 'adventure' },
+                ]}
+                value={'standard'}
+              />
+            </Card>
           </Show>
-          <Show when={!char()}>
-            <For each={state.chars}>
-              {(item) => (
-                <Show when={char()?._id === item._id}>
-                  <PersonaAttributes
-                    value={item.persona.attributes}
-                    hideLabel
-                    plainText={item.persona.kind === 'text'}
-                  />
-                </Show>
-              )}
-            </For>
-          </Show>
+          <Card>
+            <TextInput
+              class="text-sm"
+              fieldName="name"
+              label="Conversation Name"
+              helperText={
+                <span>
+                  A name for the conversation. This is purely for labelling. <i>(Optional)</i>
+                </span>
+              }
+              placeholder="Untitled"
+            />
+          </Card>
+          <Card>
+            <Toggle
+              fieldName="useOverrides"
+              value={useOverrides()}
+              onChange={(use) => setUseOverrides(use)}
+              label="Override Character Definitions"
+              helperText="Overrides will only apply to the newly created conversation."
+            />
+          </Card>
+
+          <Divider />
+
+          <Card>
+            <TextInput
+              isMultiline
+              fieldName="greeting"
+              label="Greeting"
+              value={char()?.greeting}
+              class="text-xs"
+              disabled={!useOverrides()}
+            ></TextInput>
+          </Card>
+          <Card>
+            <TextInput
+              isMultiline
+              fieldName="scenario"
+              label="Scenario"
+              value={char()?.scenario}
+              class="text-xs"
+              disabled={!useOverrides()}
+            ></TextInput>
+          </Card>
+
+          <Card>
+            <TextInput
+              isMultiline
+              fieldName="sampleChat"
+              label="Sample Chat"
+              value={char()?.sampleChat}
+              class="text-xs"
+              disabled={!useOverrides()}
+            ></TextInput>
+          </Card>
+
+          <Card>
+            <Show when={char()?.persona.kind !== 'text'}>
+              <Select
+                class="mb-2 text-sm"
+                fieldName="schema"
+                label="Persona"
+                items={options}
+                value={char()?.persona.kind || 'wpp'}
+                disabled={!useOverrides()}
+              />
+            </Show>
+
+            <Show when={char()?.persona.kind === 'text'}>
+              <Select
+                class="mb-2 text-sm"
+                fieldName="schema"
+                label="Persona"
+                items={[{ label: 'Plain text', value: 'text' }]}
+                value={'text'}
+                disabled={!useOverrides()}
+              />
+            </Show>
+
+            <div class="w-full text-sm">
+              <Show when={char()}>
+                <PersonaAttributes
+                  value={char()!.persona.attributes}
+                  hideLabel
+                  plainText={char()?.persona?.kind === 'text'}
+                  disabled={!useOverrides()}
+                />
+              </Show>
+              <Show when={!char()}>
+                <For each={state.chars}>
+                  {(item) => (
+                    <Show when={char()?._id === item._id}>
+                      <PersonaAttributes
+                        value={item.persona.attributes}
+                        hideLabel
+                        plainText={item.persona.kind === 'text'}
+                        disabled={!useOverrides()}
+                      />
+                    </Show>
+                  )}
+                </For>
+              </Show>
+            </div>
+          </Card>
         </div>
       </form>
     </Modal>

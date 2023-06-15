@@ -1,4 +1,4 @@
-import { Component, Show, createMemo } from 'solid-js'
+import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
@@ -11,6 +11,8 @@ import { chatStore, presetStore, settingStore, userStore } from '../../store'
 import { getChatPreset } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { Card } from '/web/shared/Card'
+import { Toggle } from '/web/shared/Toggle'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -23,6 +25,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const user = userStore()
   const cfg = settingStore()
   const presets = presetStore((s) => s.presets)
+  const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -37,21 +40,20 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const onSave = () => {
     const body = getStrictForm(ref, {
       name: 'string',
-      greeting: 'string',
-      sampleChat: 'string',
-      scenario: 'string',
-      schema: ['wpp', 'boostyle', 'sbf', 'text'],
+      greeting: 'string?',
+      sampleChat: 'string?',
+      scenario: 'string?',
+      schema: ['wpp', 'boostyle', 'sbf', 'text', null],
       mode: ['standard', 'adventure', null],
-    } as const)
+    })
 
     const attributes = getAttributeMap(ref)
 
-    const overrides: AppSchema.Persona = {
-      kind: body.schema,
-      attributes,
-    }
+    const overrides: AppSchema.Persona | undefined = body.schema
+      ? { kind: body.schema, attributes }
+      : undefined
 
-    chatStore.editChat(state.chat?._id!, { ...body, overrides }, () => {
+    chatStore.editChat(state.chat?._id!, { ...body, overrides }, useOverrides(), () => {
       props.close()
     })
   }
@@ -60,12 +62,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
     const char = state.char
     if (!char) return
 
-    chatStore.editChat(state.chat?._id!, {
-      greeting: char.greeting,
-      scenario: char.scenario,
-      sampleChat: char.sampleChat,
-      overrides: { ...char.persona },
-    })
+    chatStore.editChat(state.chat?._id!, {}, false)
   }
 
   const Footer = (
@@ -108,86 +105,107 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       footer={Footer}
       maxWidth="half"
     >
-      <form ref={ref} onSubmit={onSave}>
+      <form ref={ref} onSubmit={onSave} class="flex flex-col gap-3">
         <Show when={adapterText()}>
-          <FormLabel label="AI Service" helperText={adapterText()?.text} />
+          <Card>
+            <FormLabel label="AI Service" helperText={adapterText()?.text} />
+          </Card>
         </Show>
 
         <Show when={!adapterText()}>
-          <Select
-            class={`mb-2 ${adapterText() ? 'hidden' : ''}`}
-            fieldName="adapter"
-            helperText={`Default is set to: ${
-              ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']
-            }`}
-            label="AI Service"
-            value={state.chat?.adapter}
-            items={[
-              { label: 'Default', value: 'default' },
-              ...adaptersToOptions(cfg.config.adapters),
-            ]}
-          />
+          <Card>
+            <Select
+              class={`mb-2 ${adapterText() ? 'hidden' : ''}`}
+              fieldName="adapter"
+              helperText={`Default is set to: ${
+                ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']
+              }`}
+              label="AI Service"
+              value={state.chat?.adapter}
+              items={[
+                { label: 'Default', value: 'default' },
+                ...adaptersToOptions(cfg.config.adapters),
+              ]}
+            />
+          </Card>
         </Show>
 
         <Show when={activePreset()?.service === 'openai'}>
-          <Select
-            fieldName="mode"
-            label="Chat Mode"
-            helperText="Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo"
-            items={[
-              { label: 'Conversation', value: 'standard' },
-              { label: 'Adventure (Experimental)', value: 'adventure' },
-            ]}
-            value={state.chat?.mode || 'standard'}
-          />
+          <Card>
+            <Select
+              fieldName="mode"
+              label="Chat Mode"
+              helperText="Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo"
+              items={[
+                { label: 'Conversation', value: 'standard' },
+                { label: 'Adventure (Experimental)', value: 'adventure' },
+              ]}
+              value={state.chat?.mode || 'standard'}
+            />
+          </Card>
         </Show>
+        <Card>
+          <TextInput fieldName="name" class="text-sm" value={state.chat?.name} label="Chat name" />
+        </Card>
+        <Card>
+          <Toggle
+            fieldName="useOverrides"
+            value={useOverrides()}
+            onChange={(use) => setUseOverrides(use)}
+            label="Override character definitions for this chat only"
+            helperText="If you want to edit the character itself and all chats using it, open the 'Chara' link in the Chat Menu instead."
+          />
+        </Card>
 
-        <TextInput fieldName="name" class="text-sm" value={state.chat?.name} label="Chat name" />
-        <TextInput
-          fieldName="greeting"
-          class="text-sm"
-          isMultiline
-          value={state.chat?.greeting}
-          label="Greeting"
-        />
-        <TextInput
-          fieldName="scenario"
-          class="text-sm"
-          isMultiline
-          value={state.chat?.scenario}
-          label="Scenario"
-        />
-        <TextInput
-          fieldName="sampleChat"
-          class="text-sm"
-          isMultiline
-          value={state.chat?.sampleChat}
-          label="Sample Chat"
-        />
+        <Show when={useOverrides()}>
+          <Card>
+            <TextInput
+              fieldName="greeting"
+              class="text-sm"
+              isMultiline
+              value={state.chat?.greeting || state.char?.greeting}
+              label="Greeting"
+            />
+            <TextInput
+              fieldName="scenario"
+              class="text-sm"
+              isMultiline
+              value={state.chat?.scenario || state.char?.scenario}
+              label="Scenario"
+            />
+            <TextInput
+              fieldName="sampleChat"
+              class="text-sm"
+              isMultiline
+              value={state.chat?.sampleChat || state.char?.sampleChat}
+              label="Sample Chat"
+            />
 
-        <Show when={state.char?.persona.kind !== 'text'}>
-          <Select
-            fieldName="schema"
-            label="Persona"
-            items={options}
-            value={state.chat?.overrides?.kind || state.char?.persona?.kind}
-          />
+            <Show when={state.char?.persona.kind !== 'text'}>
+              <Select
+                fieldName="schema"
+                label="Persona"
+                items={options}
+                value={state.chat?.overrides?.kind || state.char?.persona?.kind}
+              />
+            </Show>
+            <Show when={state.char?.persona.kind === 'text'}>
+              <Select
+                fieldName="schema"
+                label="Persona"
+                items={[{ label: 'Plain text', value: 'text' }]}
+                value={'text'}
+              />
+            </Show>
+            <div class="mt-4 flex flex-col gap-2 text-sm">
+              <PersonaAttributes
+                value={state.chat?.overrides?.attributes || state.char?.persona?.attributes}
+                hideLabel
+                plainText={state.char?.persona.kind === 'text'}
+              />
+            </div>
+          </Card>
         </Show>
-        <Show when={state.char?.persona.kind === 'text'}>
-          <Select
-            fieldName="schema"
-            label="Persona"
-            items={[{ label: 'Plain text', value: 'text' }]}
-            value={'text'}
-          />
-        </Show>
-        <div class="mt-4 flex flex-col gap-2 text-sm">
-          <PersonaAttributes
-            value={state.chat?.overrides?.attributes || state.char?.persona?.attributes}
-            hideLabel
-            plainText={state.char?.persona.kind === 'text'}
-          />
-        </div>
       </form>
     </Modal>
   )

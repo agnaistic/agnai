@@ -90,7 +90,7 @@ const TextInput: Component<{
             <div class={props.helperText ? '' : 'pb-1'}>
               {props.label}{' '}
               <Show when={props.tokenCount}>
-                <em class="ml-2 text-xs">{tokens()} tokens</em>
+                <em class="ml-1 text-xs">({tokens()} tokens)</em>
               </Show>
               <Show when={props.isMultiline}>
                 <IsVisible onEnter={resize} />

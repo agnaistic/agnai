@@ -192,6 +192,7 @@ const UISettings: Component = () => {
           { label: 'Narrow', value: 'narrow' },
         ]}
         onChange={(item) => userStore.updateUI({ chatWidth: item.value as any })}
+        value={state.ui.chatWidth}
       />
 
       <RangeInput
@@ -230,6 +231,7 @@ const UISettings: Component = () => {
           msg={toBotMsg(bot, '*I wave excitedly* Hello world!\nHow are you today?', { _id: '1' })}
           onRemove={noop}
           sendMessage={() => {}}
+          editingChar={false}
         />
 
         <Show when={state.profile}>
@@ -243,6 +245,7 @@ const UISettings: Component = () => {
             })}
             onRemove={noop}
             sendMessage={() => {}}
+            editingChar={false}
           />
         </Show>
       </div>

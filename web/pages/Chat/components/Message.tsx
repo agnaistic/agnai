@@ -24,10 +24,11 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../srv/db/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
-import { getAssetUrl, getRootVariable, hexToRgb } from '../../../shared/util'
+import { getAssetUrl, getRootVariable } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
+import { useBgStyle } from '/web/shared/hooks'
 
 type MessageProps = {
   msg: SplitMessage
@@ -47,6 +48,7 @@ type MessageProps = {
   partial?: string
   actions?: AppSchema.ChatMessage['actions']
   sendMessage: (msg: string, ooc: boolean) => void
+  editingChar: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -77,6 +79,7 @@ const Message: Component<MessageProps> = (props) => {
             partial={props.partial}
             sendMessage={props.sendMessage}
             botMap={props.botMap}
+            editingChar={props.editingChar}
           />
         )}
       </For>
@@ -112,25 +115,14 @@ const SingleMessage: Component<
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
 
-  const bgStyles = createMemo(() => {
-    user.ui.mode // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
-
-    const hex =
+  const bgStyles = useBgStyle({
+    hex:
       props.msg.characterId && !props.msg.userId
         ? getSettingColor(user.current.botBackground || 'bg-800')
         : props.msg.ooc
         ? getRootVariable('bg-1000')
-        : getSettingColor(user.current.msgBackground || 'bg-800')
-
-    if (!hex) return {}
-
-    const rgb = hexToRgb(hex)
-    if (!rgb) return {}
-
-    return {
-      background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${user.ui.msgOpacity.toString()})`,
-      'backdrop-filter': 'blur(5px)',
-    }
+        : getSettingColor(user.current.msgBackground || 'bg-800'),
+    blur: true,
   })
 
   const msgText = createMemo(() => {
@@ -161,7 +153,6 @@ const SingleMessage: Component<
 
   const handleToShow = () => {
     if (props.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
-
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
   }
@@ -169,6 +160,11 @@ const SingleMessage: Component<
   let ref: HTMLDivElement | undefined
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
+
+  const nameDateFlexDir = () =>
+    props.editingChar ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'
+  const nameDateAlignItems = () => (props.editingChar ? '' : 'sm:items-end')
+  const nameFontSize = () => (props.editingChar ? 'sm:text-base' : 'sm:text-lg')
 
   return (
     <div
@@ -221,12 +217,12 @@ const SingleMessage: Component<
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
-                class={`flex flex-col items-start gap-1 sm:flex-row sm:items-end sm:gap-0 ${
+                class={`flex flex-col ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()}${
                   props.msg.ooc ? 'italic' : ''
                 }`}
               >
                 <b
-                  class="text-900 text-md mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] sm:text-lg"
+                  class={`text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameFontSize()}`}
                   // Necessary to override text-md and text-lg's line height, for proper alignment
                   style="line-height: 1;"
                   data-bot-name={isBot()}

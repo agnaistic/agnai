@@ -253,10 +253,11 @@ export const characterStore = createStore<CharacterState>(
     async *generateAvatar(
       { generate: prev },
       user: AppSchema.User,
-      input: AppSchema.Character | AppSchema.Chat | AppSchema.Persona | string
+      persona: AppSchema.Persona | string
     ) {
       try {
-        const prompt = typeof input === 'string' ? input : await createAppearancePrompt(user, input)
+        const prompt =
+          typeof persona === 'string' ? persona : await createAppearancePrompt(user, { persona })
         yield { generate: { image: null, loading: true, blob: null } }
         const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
           const file = await dataURLtoFile(image)

@@ -7,7 +7,7 @@
   right: -1000px;
   transition: opacity 250ms ease;
   transition: right 250ms ease;
-  @apply bg-800 top-0 w-[calc(100vw-32px)] sm:clear-none sm:w-96;
+  @apply top-0 w-[calc(100vw-32px)] sm:clear-none sm:w-96;
   @apply z-10 sm:z-0;
 }
 

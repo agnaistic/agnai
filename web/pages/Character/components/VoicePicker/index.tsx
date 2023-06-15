@@ -131,7 +131,7 @@ export const VoicePicker: Component<{
 
   return (
     <>
-      <div class="flex flex-row flex-wrap justify-start gap-4 md:flex-nowrap">
+      <div class="flex flex-row flex-wrap justify-start gap-4">
         <VoiceServiceSelect value={service()} onChange={setService} />
         <Show when={!!service()}>
           <VoiceIdSelect service={service()!} value={voiceId()} onChange={setVoiceId} />

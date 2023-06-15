@@ -9,3 +9,8 @@
   background-color: rgba(var(--rgb-bg-900), 0.9);
   @apply my-2 h-max rounded-lg py-4;
 }
+
+/* hack while we figure out why text boxes aren't the correct size */
+.text-input-min-h-override {
+  min-height: 120px !important;
+}

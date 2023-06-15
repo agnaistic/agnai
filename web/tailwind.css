@@ -345,6 +345,10 @@ body {
     background: transparent;
   }
 
+  input[type='text']:disabled {
+    @apply bg-[var(--bg-900)];
+  }
+
   .drawer {
     height: calc(100vh - 48px);
     height: calc(100dvh - 48px);
@@ -394,6 +398,10 @@ textarea:placeholder-shown {
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;
+}
+
+textarea:disabled {
+  @apply bg-[var(--bg-900)];
 }
 
 .markdown > * a,
