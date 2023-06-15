@@ -14,7 +14,7 @@ const builtinPresets = {
   ...novelPresets,
   ...openaiPresets,
   ...replicatePresets,
-  ...scalePresets,u
+  ...scalePresets,
   ...claudePresets,
   ...oobaPresets,
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
