@@ -49,4 +49,5 @@ jobs:
           secret_key: ${{ secrets.S3_SECRET_KEY }}
           space_name: ${{ secrets.S3_BUCKET }}
           space_region: ${{ secrets.S3_REGION }}
+          permission: public-read
           source: dist
