@@ -38,12 +38,6 @@ jobs:
           echo $NODE_ENV
           pnpm install --frozen-lockfile
 
-      - name: Install Node and PNPM
-        uses: ./.github/actions/install-node-pnpm
-        with:
-          node-version: ${{  env.node-version  }}
-          pnpm-version: ${{  env.pnpm-version  }}
-
       - name: Run Prettier
         run: pnpm run format
 

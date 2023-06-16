@@ -13,9 +13,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
 
     steps:
       - name: Checkout
@@ -27,8 +24,18 @@ jobs:
           node-version: ${{  env.node-version  }}
           pnpm-version: ${{  env.pnpm-version  }}
 
-      - name: Install API dependencies
+      - name: Get cached dependencies
+        # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
+        id: cache-step
+        uses: actions/cache@v3
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+
+      - name: Install project dependencies
+        if: steps.cache-step.outputs.cache-hit != 'true'
         run: |
+          echo $NODE_ENV
           pnpm install --frozen-lockfile
 
       - name: Build frontend
