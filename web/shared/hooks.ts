@@ -1,7 +1,8 @@
-import { Accessor, createEffect, createMemo, onCleanup } from 'solid-js'
+import { Accessor, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
 import { userStore } from '../store'
 import { hexToRgb } from './util'
+import { RootModal, rootModalStore } from '../store/root-modal'
 
 export function useWindowSize(): {
   width: Accessor<number>
@@ -99,4 +100,8 @@ function isDefined<T>(value: T | undefined | null): value is T {
 
 function isFunction<T>(value: T | Function): value is Function {
   return typeof value === 'function'
+}
+export function useRootModal(modal: RootModal) {
+  onMount(() => rootModalStore.addModal(modal))
+  onCleanup(() => rootModalStore.removeModal(modal.type))
 }

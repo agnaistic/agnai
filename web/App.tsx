@@ -22,6 +22,8 @@ import ChatDetail from './pages/Chat/ChatDetail'
 import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage from './pages/Profile'
+import { rootModalStore } from './store/root-modal'
+import { For } from 'solid-js'
 
 const App: Component = () => {
   const state = userStore()
@@ -86,6 +88,7 @@ const Layout: Component = () => {
   const state = userStore()
   const cfg = settingStore()
   const location = useLocation()
+  const rootModals = rootModalStore()
 
   const reload = () => {
     settingStore.init()
@@ -148,6 +151,7 @@ const Layout: Component = () => {
         show={cfg.showImpersonate}
         close={() => settingStore.toggleImpersonate(false)}
       />
+      <For each={rootModals.modals}>{(modal) => modal.element}</For>
     </div>
   )
 }

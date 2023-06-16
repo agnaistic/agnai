@@ -48,7 +48,7 @@ import { msgsApi } from '/web/store/data/messages'
 import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
 import { Card, SolidCard } from './Card'
-import { usePane } from './hooks'
+import { usePane, useRootModal } from './hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
 
@@ -762,6 +762,30 @@ const MemoryBookPicker: Component<{
     setIsModalShown(false)
   }
 
+  useRootModal({
+    type: 'memoryBook',
+    element: (
+      <Modal
+        title="Chat Memory"
+        show={isModalShown()}
+        close={() => setIsModalShown(false)}
+        footer={<ModalFooter />}
+        onSubmit={onSubmitCharacterBookChanges}
+        maxWidth="half"
+        fixedHeight
+      >
+        <div class="text-sm">
+          <EditMemoryForm
+            hideSave
+            book={props.bundledBook!}
+            entrySort={entrySort()}
+            updateEntrySort={updateEntrySort}
+          />
+        </div>
+      </Modal>
+    ),
+  })
+
   return (
     <div>
       <h4 class="text-lg">Character Book</h4>
@@ -784,24 +808,6 @@ const MemoryBookPicker: Component<{
           <Button onClick={deleteBook}>Delete Book</Button>
         </div>
       </Show>
-      <Modal
-        title="Chat Memory"
-        show={isModalShown()}
-        close={() => setIsModalShown(false)}
-        footer={<ModalFooter />}
-        onSubmit={onSubmitCharacterBookChanges}
-        maxWidth="half"
-        fixedHeight
-      >
-        <div class="text-sm">
-          <EditMemoryForm
-            hideSave
-            book={props.bundledBook!}
-            entrySort={entrySort()}
-            updateEntrySort={updateEntrySort}
-          />
-        </div>
-      </Modal>
     </div>
   )
 }
