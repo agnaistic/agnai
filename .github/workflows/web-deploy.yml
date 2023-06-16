@@ -1,9 +1,8 @@
 name: Web deploy
 
 on:
-  pull_request
-  # push:
-  #   branches: ['dev']
+  push:
+    branches: ['dev']
 
 env:
   IMAGE_NAME: agnaistic
