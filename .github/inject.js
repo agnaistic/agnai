@@ -2,6 +2,7 @@ const path = require('path')
 const fs = require('fs')
 
 const inject = process.env.INJECT_SCRIPT
+console.log('Injecting:', !!inject)
 
 if (inject) {
   const tags = ['<meta inject="">', '<meta inject>', '<meta inject="" />']
