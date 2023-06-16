@@ -631,7 +631,7 @@ function getContextLimit(
       const models = new Set<string>([
         OPENAI_MODELS.Turbo,
         OPENAI_MODELS.Turbo0301,
-        OPENAI_MODELS.Turbo_4k,
+        OPENAI_MODELS.Turbo0613,
         OPENAI_MODELS.DaVinci,
       ])
 
