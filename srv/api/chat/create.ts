@@ -14,7 +14,8 @@ export const createChat = handle(async ({ body, user, userId }) => {
       greeting: 'string?',
       scenario: 'string?',
       sampleChat: 'string?',
-      overrides: { '?': 'any', kind: PERSONA_FORMATS, attributes: 'any' },
+      overrides: { '?': 'any?', kind: PERSONA_FORMATS, attributes: 'any' },
+      useOverrides: 'boolean?',
     },
     body
   )

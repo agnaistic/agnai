@@ -1,21 +1,22 @@
-name: Automated checks
+name: Web deploy
 
-permissions:
-  # This is required for actions/checkout
-  contents: read
+# on: pull_request
 
-on: pull_request
+on:
+  push:
+    branches: ['dev']
 
 env:
+  IMAGE_NAME: agnaistic
   node-version: '18.4.0'
-  pnpm-version: 8.6.0
+  pnpm-version: 7.2.1
 
 jobs:
-  checks:
-    name: Checks
+  build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Check out repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Install Node and PNPM
@@ -38,13 +39,19 @@ jobs:
           echo $NODE_ENV
           pnpm install --frozen-lockfile
 
-      - name: Run Prettier
-        run: pnpm run format
-
-      - name: Run compiler
-        run: pnpm run typecheck
-
-      - name: Run tests
+      - name: Build frontend
+        env:
+          INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
-          pnpm run build:server
-          pnpm run test
+          pnpm run build:prod
+          node .github/inject.js
+
+      - name: Publish
+        uses: BetaHuhn/do-spaces-action@v2
+        with:
+          access_key: ${{ secrets.S3_ACCESS_KEY}}
+          secret_key: ${{ secrets.S3_SECRET_KEY }}
+          space_name: ${{ secrets.S3_BUCKET }}
+          space_region: ${{ secrets.S3_REGION }}
+          permission: public-read
+          source: dist
