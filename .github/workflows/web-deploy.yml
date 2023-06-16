@@ -41,7 +41,7 @@ jobs:
       - name: Build frontend
         run: |
           pnpm run build:prod
-          export INJECT_SCRIPT=${{ secrets.INJECT_SCRIPT }}
+          export INJECT_SCRIPT='${{ secrets.INJECT_SCRIPT }}'
           node .github/inject.js
 
       - name: Publish
