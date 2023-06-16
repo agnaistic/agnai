@@ -75,9 +75,8 @@ const InputBar: Component<{
       ref.value = ''
       setText('')
       setCleared(0)
+      draft.clear()
     })
-
-    draft.clear()
   }
 
   const createImage = () => {
