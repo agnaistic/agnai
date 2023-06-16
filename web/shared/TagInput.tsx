@@ -52,7 +52,7 @@ const TagInput: Component<TagInputProps> = (props) => {
     } else if (e.key === 'Enter' && value !== '' && suggestions().length > 0) {
       e.preventDefault()
       addTag(suggestions()[0])
-    } else if ((e.key === ' ' || e.key == 'Enter') && value !== '') {
+    } else if ((e.key === ',' || e.key == 'Enter') && value !== '') {
       e.preventDefault()
       addTag(value)
     }
