@@ -77,7 +77,7 @@ export async function initMessageBus() {
         COUNT_EVENT,
         JSON.stringify({ count, hostname: `${os.hostname()}-${process.pid}` })
       )
-    }, 10000)
+    }, 2000)
 
     clients.sub.subscribe(COUNT_EVENT, (msg) => {
       try {

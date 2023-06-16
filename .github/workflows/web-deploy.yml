@@ -1,8 +1,9 @@
 name: Web deploy
 
 on:
-  push:
-    branches: ['dev']
+  pull_request
+  # push:
+  #   branches: ['dev']
 
 env:
   IMAGE_NAME: agnaistic
@@ -40,6 +41,8 @@ jobs:
       - name: Build frontend
         run: |
           pnpm run build:prod
+          export INJECT_SCRIPT=${{ secrets.INJECT_SCRIPT }}
+          node .github/inject.js
 
       - name: Publish
         uses: BetaHuhn/do-spaces-action@v2
