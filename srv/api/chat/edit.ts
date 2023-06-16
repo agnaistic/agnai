@@ -32,6 +32,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
     name: body.name,
     mode: body.mode,
     adapter: body.adapter,
+    memoryId: body.memoryId,
   }
 
   if (body.useOverrides === false) {
