@@ -7,13 +7,15 @@ console.log('Injecting:', !!inject)
 if (inject) {
   const tags = ['<meta inject="">', '<meta inject>', '<meta inject="" />']
   const indexFile = path.resolve(__dirname, '../dist/index.html')
-  const outFile = path.resolve(__dirname, '../dist/outdex.html')
+  const outFile = path.resolve(__dirname, '../dist/index.html')
+
+  let content = fs.readFileSync(indexFile).toString().replace('{{unknown}}', process.env.GITHUB_SHA)
 
   for (const tag of tags) {
-    const index = fs.readFileSync(indexFile).toString()
-    if (index.includes(tag)) {
-      fs.writeFileSync(outFile, index.replace(tag, inject))
-      break
-    }
+    if (!content.includes(tag)) continue
+    content = content.replace(tag, inject)
+    break
   }
+
+  fs.writeFileSync(outFile, content)
 }
