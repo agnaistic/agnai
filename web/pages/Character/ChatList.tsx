@@ -152,8 +152,8 @@ const CharacterChats: Component = () => {
       />
 
       <div class="mb-2 flex justify-between">
-        <div class="flex flex-wrap">
-          <div class="m-1 ml-0">
+        <div class="flex flex-wrap gap-1">
+          <div>
             <TextInput
               fieldName="search"
               placeholder="Search..."
@@ -170,16 +170,16 @@ const CharacterChats: Component = () => {
             onChange={(char) => setCharId(char?._id)}
           />
 
-          <div class="flex flex-wrap">
+          <div class="flex flex-wrap gap-1">
             <Select
-              class="m-1 bg-[var(--bg-600)]"
+              class="bg-[var(--bg-600)]"
               fieldName="sortBy"
               items={sortOptions.filter((opt) => (charId() ? opt.kind === 'chat' : true))}
               value={sortField()}
               onChange={(next) => setSortField(next.value as SortType)}
             />
 
-            <div class="py-1">
+            <div>
               <Button
                 schema="secondary"
                 class="rounded-xl"
