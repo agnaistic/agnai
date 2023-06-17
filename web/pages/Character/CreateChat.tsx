@@ -31,6 +31,7 @@ const CreateChatModal: Component<{
   let ref: any
 
   const nav = useNavigate()
+  const user = userStore((s) => ({ ...s.user }))
   const state = characterStore((s) => ({
     chars: (s.characters?.list || []).filter((c) => c.userId === user._id),
     loaded: s.characters.loaded,
@@ -52,7 +53,6 @@ const CreateChatModal: Component<{
     setSelected(state.chars[0]._id)
   })
 
-  const user = userStore((s) => ({ ...s.user }))
   const [presetId, setPresetId] = createSignal(user.defaultPreset)
   const presets = presetStore((s) => s.presets)
 
