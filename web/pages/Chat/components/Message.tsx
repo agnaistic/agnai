@@ -48,7 +48,7 @@ type MessageProps = {
   partial?: string
   actions?: AppSchema.ChatMessage['actions']
   sendMessage: (msg: string, ooc: boolean) => void
-  editingChar: boolean
+  isPaneOpen: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -79,7 +79,7 @@ const Message: Component<MessageProps> = (props) => {
             partial={props.partial}
             sendMessage={props.sendMessage}
             botMap={props.botMap}
-            editingChar={props.editingChar}
+            isPaneOpen={props.isPaneOpen}
           />
         )}
       </For>
@@ -163,10 +163,10 @@ const SingleMessage: Component<
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
-  const nameDateFlexDir = () =>
-    props.editingChar ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'
-  const nameDateAlignItems = () => (props.editingChar ? '' : 'sm:items-end')
-  const nameFontSize = () => (props.editingChar ? 'sm:text-base' : 'sm:text-lg')
+  const nameDateFlexDir = () => (props.isPaneOpen ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0')
+  const nameDateAlignItems = () => (props.isPaneOpen ? '' : 'sm:items-end')
+  const nameClasses = () => (props.isPaneOpen ? 'sm:text-base' : 'sm:text-lg')
+  const oocNameClass = () => (props.msg.ooc ? 'italic' : '')
 
   return (
     <div
@@ -219,12 +219,10 @@ const SingleMessage: Component<
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
-                class={`flex flex-col ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()}${
-                  props.msg.ooc ? 'italic' : ''
-                }`}
+                class={`flex min-w-0 shrink flex-col overflow-x-hidden ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()} ${oocNameClass()}`}
               >
                 <b
-                  class={`text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameFontSize()}`}
+                  class={`text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameClasses()}`}
                   // Necessary to override text-md and text-lg's line height, for proper alignment
                   style="line-height: 1;"
                   data-bot-name={isBot()}

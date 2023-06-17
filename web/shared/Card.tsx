@@ -2,11 +2,16 @@ import { Component, JSX } from 'solid-js'
 import { getSettingColor } from '../store'
 import { useBgStyle } from './hooks'
 
-export const Card: Component<{ children: JSX.Element; class?: string; bg?: string }> = (props) => {
+export const Card: Component<{
+  children: JSX.Element
+  class?: string
+  bg?: string
+  bgOpacity?: number
+}> = (props) => {
   const cardBg = useBgStyle({
     hex: getSettingColor(props.bg || 'bg-500'),
     blur: false,
-    opacity: 0.08,
+    opacity: props.bgOpacity ?? 0.08,
   })
   return (
     <div class={`rounded-lg p-3 ${props.class ?? ''}`} style={cardBg()}>

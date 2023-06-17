@@ -23,6 +23,8 @@ import ChatDetail from './pages/Chat/ChatDetail'
 import ChangeLog from './pages/Home/ChangeLog'
 import Settings from './pages/Settings'
 import ProfilePage from './pages/Profile'
+import { chatStore } from './store'
+import { usePane } from './shared/hooks'
 
 const App: Component = () => {
   const state = userStore()
@@ -87,6 +89,10 @@ const Layout: Component = () => {
   const state = userStore()
   const cfg = settingStore()
   const location = useLocation()
+  const chat = chatStore()
+  const paneOrPopup = usePane()
+  const isPaneOpen = createMemo(() => paneOrPopup() === 'pane' && !!chat.opts.pane)
+  const maxW = createMemo(() => (isPaneOpen() ? 'max-w-full' : 'max-w-5xl'))
 
   const reload = () => {
     settingStore.init()
@@ -120,7 +126,7 @@ const Layout: Component = () => {
         <Navigation />
         <div class="w-full overflow-y-auto" data-background style={bg()}>
           <div
-            class={`mx-auto h-full min-h-full w-full max-w-5xl px-2 sm:px-3`}
+            class={`mx-auto h-full min-h-full w-full ${maxW()} px-2 sm:px-3`}
             classList={{ 'content-background': !isChat() }}
           >
             <Show when={cfg.init}>

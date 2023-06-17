@@ -44,9 +44,11 @@ export type ChatState = {
     editing: boolean
     screenshot: boolean
     hideOoc: boolean
-    editingChar: boolean
+    pane?: ChatRightPane
   }
 }
+
+export type ChatRightPane = 'character' | 'preset'
 
 export type ImportChat = {
   name: string
@@ -89,7 +91,7 @@ const initState: ChatState = {
     screenshot: false,
     hideOoc: false,
     modal: undefined,
-    editingChar: false,
+    pane: undefined,
   },
 }
 
@@ -108,7 +110,7 @@ export const chatStore = createStore<ChatState>('chat', {
     ...getOptsCache(),
     modal: undefined,
     screenshot: false,
-    editingChar: false,
+    pane: undefined,
   },
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
