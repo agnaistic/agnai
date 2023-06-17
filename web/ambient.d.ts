@@ -4,5 +4,5 @@ declare module '*.svg' {
 }
 
 declare interface Window {
-  flag: (flag: any, value: boolea) => void
+  flag: (flag: any, value?: boolean) => void & any
 }

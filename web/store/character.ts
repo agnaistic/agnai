@@ -60,6 +60,7 @@ const initState: CharacterState = {
     blob: null,
     loading: false,
   },
+  impersonating: undefined,
 }
 
 export const characterStore = createStore<CharacterState>(
