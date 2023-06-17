@@ -393,8 +393,8 @@ async function ensureBotMembership(
     const actual = await store.characters.getCharacter(impersonate.userId, impersonate._id)
     if (!actual) {
       throw new StatusError(
-        'Could not create message: Impersonation character could not be found',
-        400
+        'Could not create message: Impersonation character does not belong to you',
+        403
       )
     }
 

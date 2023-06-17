@@ -10,8 +10,10 @@ export const AutoPreset = {
   service: 'horde',
 }
 
-export const BasePresetOptions: Option[] = [
-  { label: 'System Built-in Preset (Horde)', value: AutoPreset.service },
+export type PresetOption = Option & { custom: boolean }
+
+export const BasePresetOptions: PresetOption[] = [
+  { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
 ]
 
 export function getClientPreset(chat?: AppSchema.Chat) {
@@ -36,13 +38,14 @@ export function getClientPreset(chat?: AppSchema.Chat) {
 export function getPresetOptions(
   userPresets: AppSchema.UserGenPreset[],
   includes: { builtin?: boolean; base?: boolean }
-) {
+): PresetOption[] {
   const user = userStore((u) => u.user || { defaultPreset: '' })
   const presets = userPresets.slice().map((preset) => ({
-    label: `[${getServiceName(preset.service)}, Custom] ${preset.name} ${
+    label: `[${getServiceName(preset.service)}] ${preset.name} ${
       user.defaultPreset === preset._id ? '(*) ' : ''
     }`,
     value: preset._id,
+    custom: true,
   }))
 
   const defaults = Object.entries(defaultPresets).map(([_id, preset]) => ({
@@ -53,8 +56,9 @@ export function getPresetOptions(
 
   if (includes.builtin) {
     const builtinOptions = defaults.map((preset) => ({
-      label: `[${getServiceName(preset.service)}, Built-in] ${preset.name}`,
+      label: `[${getServiceName(preset.service)}] ${preset.name}`,
       value: preset._id,
+      custom: false,
     }))
 
     presets.push(...builtinOptions)

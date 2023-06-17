@@ -6,6 +6,8 @@ export const claudePresets = {
     name: 'Claude V1',
     service: 'claude',
     temp: 1,
+    topP: 1,
+    topK: 0,
     claudeModel: CLAUDE_MODELS.ClaudeV1,
     streamResponse: false,
     maxTokens: 500,
