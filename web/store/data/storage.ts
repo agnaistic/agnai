@@ -158,11 +158,11 @@ function getGuestInitEntities() {
   return { user, presets, profile, books, characters, chats }
 }
 
-export function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
+export async function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
+  const key = `messages-${chatId}`
   if (SELF_HOSTING) {
-    api.post(`/json/messages/${chatId}`, messages)
+    return api.post(`/json/messages/${chatId}`, messages)
   } else {
-    const key = `messages-${chatId}`
     safeLocalStorage.setItem(key, JSON.stringify(messages))
   }
 }

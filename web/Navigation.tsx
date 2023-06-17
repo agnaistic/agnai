@@ -173,7 +173,7 @@ const Slots: Component = () => {
         <Slot slot="menu" />
       </Match>
 
-      <Match when={page.height() >= 800}>
+      <Match when={page.height() >= 1000}>
         <Slot slot="menuLg" />
       </Match>
 

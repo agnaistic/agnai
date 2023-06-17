@@ -95,7 +95,8 @@ export async function createChat(characterId: string, props: NewChat) {
   const { chat, msg } = createNewChat(char, props)
 
   localApi.saveChats(chats.concat(chat))
-  if (props.greeting) localApi.saveMessages(chat._id, [msg])
+
+  if (msg) await localApi.saveMessages(chat._id, [msg])
   return localApi.result(chat)
 }
 
@@ -168,7 +169,8 @@ export async function getAllChats() {
       useOverrides: false,
     })
     localApi.saveChats([chat])
-    localApi.saveMessages(chat._id, [msg])
+
+    if (msg) await localApi.saveMessages(chat._id, [msg])
 
     chats.push(chat)
   }
@@ -243,6 +245,9 @@ export function createNewChat(char: AppSchema.Character, props: NewChat) {
     memberIds: [],
     messageCount: 1,
   }
+
+  const greeting = props.overrides ? props.greeting : char.greeting
+  if (!greeting) return { chat, msg: undefined }
 
   const msg: AppSchema.ChatMessage = {
     _id: v4(),

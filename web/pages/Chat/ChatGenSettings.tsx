@@ -113,7 +113,7 @@ export const ChatGenSettings: Component<{
     }
   }
 
-  const title = 'Preset settings'
+  const title = 'Preset Settings'
   const footer = (
     <>
       <Button schema="secondary" onClick={() => props.mode.close?.()}>
