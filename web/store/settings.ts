@@ -167,7 +167,7 @@ subscribe('connected', { uid: 'string' }, (body) => {
   settingStore.init()
 })
 
-window.flag = (flag: keyof FeatureFlags, value) => {
+window.flag = function (flag: keyof FeatureFlags, value) {
   if (!flag) {
     const state = settingStore((s) => s.flags)
     console.log('Available flags:')
@@ -183,6 +183,17 @@ window.flag = (flag: keyof FeatureFlags, value) => {
   console.log(`Toggled ${flag} --> ${value}`)
   settingStore.flag(flag as any, value)
 }
+
+for (const key of Object.keys(defaultFlags)) {
+  Object.defineProperty(window.flag, key, {
+    get() {
+      window.flag(key)
+      return
+    },
+  })
+}
+
+Object.freeze(window.flag)
 
 type FlagCache = { user: FeatureFlags; default: FeatureFlags }
 
