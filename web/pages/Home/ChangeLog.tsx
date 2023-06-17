@@ -4,6 +4,12 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_17 June 2023_
+- New character and preset editor pane. Edit your characters and presets while chatting!
+- Added new OpenAI models
+- Add token counts to character editor
+- New Prompt Editor (nearly ready to support advanced prompt templates!)
+
 _6 June 2023_
 - Add background color to customizable colors
 

@@ -1,72 +1,32 @@
-import { Component, Show } from 'solid-js'
+import './home.scss'
+import { Component, Match, Show, Switch, createSignal } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
 import { adaptersToOptions, setComponentPageTitle } from '../../shared/util'
 import { settingStore } from '../../store'
 import { markdown } from '../../shared/markdown'
 import { A } from '@solidjs/router'
 import { AlertTriangle } from 'lucide-solid'
+import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
+import Modal from '/web/shared/Modal'
 
-const text = `
-<a href="/discord" target="_blank">Our Discord</a>
+// const text = `
+// ## Kobold
 
-Agnaistic is a "bring your own AI" chat service. It is completely open-source and free to use. You only pay for the third-party AI services that you choose to use.
-Your conversations are completely private and never shared with anyone unless you invite them to your chat.
-Features:
+// If you're self-hosting KoboldAI or using Colab, you can use the LocalTunnel URL in the **Kobold URL** field in the Settings page.`
 
-- Chat with multiple users and characters
-- Create dynamic "Memory Books" to save on context
-- Generate images
-- Use text-to-speech and speech-to-text
-- Create your own custom presets (generation settings)
-- Run Agnaistic locally (see the GitHub link at the bottom of the page)
-
-## Important Things to Know
-
-Agnaistic is a "bring your own AI" chat service.
-
-- For the best experience, sign up for a service like OpenAI, NovelAI, GooseAI, or provide your own service using Kobold or Textgen-WebUI.
-- Head to the Settings page to configure your API Key
-- **Horde**: It is recommended to register at <a href="https://aihorde.net/register" target="_blank">AIHorde.net/register</a> to prevent your messages from failing.
-
-# Registration
-
-You don't need to register to use Agnaistic. You can use it anonymously and no data will be stored on any servers.
-If you choose to register, your data will be stored and accessible on any devices you login with.
-
-## Quick Start
-
-If you have an account with an AI service (OpenAI, NovelAI, GooseAI, etc) then go add your key in the Settings page!
-Be sure to select a preset that uses your preferred AI service.
-
-A character has been created for you! You can head to the [Characters](/character/list) page, choose a character and create a conversation to get started!
-You can edit the character from the Characters page or from the Chat. This may be helpful to see an example of how to author your own character.
-
-- **Characters**: This is where you create, edit, and delete your characters.
-- **Chats** page: This is where your conversations reside.
-- **Settings**: You can modify the UI, AI, and Image Generation settings from the settings page.
-- **Presets**: For more advanced users, you can modify your generation settings (temperature, penalties, prompt settings) here.
-
-## AI Horde
-
-This can sometimes be a little slow. AI Horde is run and powered by a small number of volunteers that provide their GPUs.
-
-*Keep your 'Max New Tokens' below 100 unless you know what you're doing!*
-*Using high values for 'Max New Tokens' is the main cause of timeouts and slow replies.*
-
-By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your API key or change the model in the Settings page.
-
-## Kobold
-
-If you're self-hosting KoboldAI or using Colab, you can use the LocalTunnel URL in the **Kobold URL** field in the Settings page.
-
-## NovelAI
-
-You can provide your API key and choose between Euterpe and Krake in the settings page. Visit the [instructions page](https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md) to learn how to retrieve your API key.
-
-`
+const enum Sub {
+  None,
+  OpenAI,
+  NovelAI,
+  Horde,
+}
 
 const HomePage: Component = () => {
   setComponentPageTitle('Information')
+  const [sub, setSub] = createSignal(Sub.None)
+
+  const closeSub = () => setSub(Sub.None)
+
   const cfg = settingStore((cfg) => ({
     adapters: adaptersToOptions(cfg.config.adapters),
     guest: cfg.guestAccessAllowed,
@@ -74,13 +34,7 @@ const HomePage: Component = () => {
   }))
   return (
     <div>
-      <PageHeader
-        title={
-          <>
-            Welcome to Agn<span class="text-[var(--hl-500)]">ai</span>stic
-          </>
-        }
-      />
+      <PageHeader title="" />
 
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500">
@@ -90,44 +44,204 @@ const HomePage: Component = () => {
         </div>
       </Show>
 
-      <div class="markdown" innerHTML={markdown.makeHtml(text)} />
+      <div class="flex flex-col gap-4 text-lg">
+        <div class="flex justify-center text-6xl">
+          Agn<span class="text-[var(--hl-500)]">ai</span>stic
+        </div>
+        <Card>
+          Agnaistic is a "bring your own AI" chat service. It is completely open-source and free to
+          use. You only pay for the third-party AI services that you choose to use. Your
+          conversations are completely private and never shared with anyone unless you invite them
+          to your chat.
+        </Card>
 
-      <div class="markdown">
-        <b>Useful Links</b>
-
-        <ul>
-          <li>
-            <A href="/changelog">Change Log</A>
-          </li>
-          <li>
-            <A
-              href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
-              target="_blank"
-            >
-              Memory Book Guide
-            </A>
-          </li>
-          <li>
-            <A href="https://github.com/agnaistic/agnai" target="_blank">
-              Github Repository
-            </A>
-          </li>
-          <Show when={cfg.config.policies}>
-            <li>
-              <A class="link" href="/terms-of-service">
-                Terms of Service
-              </A>{' '}
-              and{' '}
-              <A class="link" href="/privacy-policy">
-                Privacy Policy
+        <div class="home-cards">
+          <TitleCard type="bg" title="Guides" class="h-fit" center>
+            <div class="flex flex-wrap justify-center gap-2">
+              <Pill onClick={() => setSub(Sub.OpenAI)}>OpenAI</Pill>
+              <A
+                href="https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md"
+                target="_blank"
+              >
+                <Pill>NovelAI</Pill>
               </A>
-              .
+              <Pill onClick={() => setSub(Sub.Horde)}>Horde</Pill>
+              <A
+                href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
+                target="_blank"
+              >
+                <Pill>Memory Book</Pill>
+              </A>
+            </div>
+          </TitleCard>
+
+          <TitleCard type="bg" title="Useful Links" center>
+            <div class="flex flex-wrap justify-center gap-2">
+              <a href="/discord" target="_blank">
+                <Pill>Discord</Pill>
+              </a>
+
+              <A class="link" href="/changelog">
+                <Pill>Change Log</Pill>
+              </A>
+
+              <A href="https://github.com/agnaistic/agnai" target="_blank">
+                <Pill>GitHub</Pill>
+              </A>
+
+              <A class="link" href="/terms-of-service">
+                <Pill>Terms of Service</Pill>
+              </A>
+
+              <A class="link" href="/privacy-policy">
+                <Pill>Privacy Policy</Pill>
+              </A>
+            </div>
+          </TitleCard>
+        </div>
+
+        <Card>
+          <div class="flex justify-center text-xl font-bold">Notable Features</div>
+
+          <ul class="leading-8">
+            <li>
+              <b class="highlight">Agnaistic</b> is completely free to use. It is free to register.
+              Your data will be kept private and you can permanently delete your data at any time.
+              We take your privacy very seriously.
             </li>
-          </Show>
-        </ul>
+            <li>
+              <b class="highlight">Register!</b> Have your chats available on all of your devices.
+              Alternatively use Agnaistic completely anonymously.
+            </li>
+            <li>Chat with multiple users and multiple characters at the same time</li>
+            <li>
+              Create <b class="highlight">Memory Books</b> to give your characters information about
+              their world
+            </li>
+            <li>
+              <b class="highlight">Image generation</b> - Use Horde, NovelAI or your own Stable
+              Diffusion server
+            </li>
+            <li>
+              <b class="highlight">Voice</b> - Give your characters a voice and speak back to them
+            </li>
+            <li>
+              <b class="highlight">Custom Presets</b> - Completely customise the Generation settings
+              used to generate your responses
+            </li>
+          </ul>
+        </Card>
+
+        <Card>
+          <div class="mb-2 flex justify-center text-xl font-bold">Getting Started</div>
+          <div class="leading-8">
+            <p>
+              Already have OpenAI, NovelAI, GooseAI, Scale, Claude? Head to the{' '}
+              <A class="link" href="/settings">
+                Settings Page
+              </A>{' '}
+              and configure your AI service.
+            </p>
+            <p>
+              First time here? Head to the{' '}
+              <A class="link" href="/chats">
+                Chats Page
+              </A>{' '}
+              and want to try everything for free? Check out the{' '}
+              <b class="link" onClick={() => setSub(Sub.Horde)}>
+                Horde Guide
+              </b>
+              .
+            </p>
+          </div>
+        </Card>
       </div>
+
+      <Switch>
+        <Match when={sub() === Sub.Horde}>
+          <HordeGuide close={closeSub} />
+        </Match>
+
+        <Match when={sub() === Sub.OpenAI}>
+          <OpenAIGuide close={closeSub} />
+        </Match>
+      </Switch>
     </div>
   )
 }
 
 export default HomePage
+
+const HordeGuide: Component<{ close: () => void }> = (props) => (
+  <Modal show close={props.close} title="Horde Guide" maxWidth="half">
+    <div class="flex flex-col gap-2">
+      <SolidCard bg="hl-900">
+        <b>Important!</b> For reliable responses, ensure you have registered at{' '}
+        <a href="https://aihorde.net/register" class="link" target="_blank">
+          AI Horde
+        </a>
+        . Once you have your key, add it to your{' '}
+        <A href="/settings" class="link">
+          Horde Settings
+        </A>
+        .
+      </SolidCard>
+
+      <SolidCard bg="hl-900">
+        AI Horde is run and powered by a small number of volunteers that provide their GPUs. This is
+        a great service, but it can be a little slow. Consider contributing to the Horde!
+      </SolidCard>
+
+      <Card>
+        Keep your <b>Max New Tokens</b> below 100 unless you know what you're doing!
+        <br />
+        Using high values for 'Max New Tokens' is the main cause of timeouts and slow replies.
+      </Card>
+      <Card>
+        By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your
+        API key or change the model in the Settings page.
+      </Card>
+    </div>
+  </Modal>
+)
+
+const OpenAIGuide: Component<{ close: () => void }> = (props) => (
+  <Modal show close={props.close} title="OpenAI Guide" maxWidth="half">
+    <div class="flex flex-col gap-2">
+      <Card>
+        OpenAI is a <b>paid service</b>. To use OpenAI, you to need provide your OpenAI API Key in
+        your settings:
+      </Card>
+
+      <Card>
+        Firstly, you will need to{' '}
+        <A class="link" href="https://auth0.openai.com/u/signup" target="_blank">
+          Register an account OpenAI
+        </A>
+        .
+      </Card>
+
+      <Card>
+        Once registered, you will need to{' '}
+        <A class="link" href="https://platform.openai.com/account/api-keys" target="_blank">
+          generate an API key.
+        </A>
+      </Card>
+
+      <Card>
+        Once you have your API key, head to the{' '}
+        <A class="link" href="/settings">
+          Settings
+        </A>{' '}
+        page and set your key in the OpenAI area.
+      </Card>
+
+      <Card>
+        To use OpenAI to generate your responses, ensure your chat is using OpenAI Preset in your{' '}
+        <b>Chat Preset settings</b>.
+        <br />
+        You can access these via the top-right menu in your chat.
+      </Card>
+    </div>
+  </Modal>
+)
