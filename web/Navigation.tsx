@@ -15,7 +15,16 @@ import {
   User,
   VenetianMask,
 } from 'lucide-solid'
-import { Component, createMemo, JSX, Match, Show, Switch } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  JSX,
+  Match,
+  Show,
+  Switch,
+} from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
@@ -57,7 +66,10 @@ const Navigation: Component = () => {
   return (
     <>
       <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 pt-2 ${hide()} ${fullscreen()}`}>
-        <div ref={content} class="drawer__content flex flex-col gap-1 px-4 sm:gap-2">
+        <div
+          ref={content}
+          class="drawer__content sm:text-md flex flex-col gap-1 px-4 text-xl sm:gap-2"
+        >
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
               <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
@@ -164,13 +176,26 @@ const UserNavigation: Component = () => {
   )
 }
 
-const Slots: Component = () => {
+const Slots: Component = (props) => {
+  const state = settingStore()
   const page = useWindowSize()
+
+  const [rendered, setRendered] = createSignal(false)
+
+  createEffect(() => {
+    if (rendered()) return
+
+    if (state.showMenu) {
+      setRendered(true)
+    }
+  })
 
   return (
     <Switch>
-      <Match when={page.width() < 640}>
-        <Slot slot="menu" />
+      <Match when={page.width() < 900}>
+        <Show when={rendered()}>
+          <Slot slot="menu" />
+        </Show>
       </Match>
 
       <Match when={page.height() >= 1000}>
@@ -253,7 +278,7 @@ const Item: Component<{ href: string; children: string | JSX.Element }> = (props
   return (
     <A
       href={props.href}
-      class="sm:text-md flex h-10 items-center justify-start gap-4 rounded-lg px-2 text-sm hover:bg-[var(--bg-700)] sm:h-12 "
+      class="flex h-10 items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:h-12"
       onClick={settingStore.closeMenu}
     >
       {props.children}
