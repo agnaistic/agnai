@@ -47,11 +47,13 @@ const HomePage: Component = () => {
         <div class="flex justify-center text-6xl">
           Agn<span class="text-[var(--hl-500)]">ai</span>stic
         </div>
-        <Card>
-          Agnaistic is a "bring your own AI" chat service. It is completely open-source and free to
-          use. You only pay for the third-party AI services that you choose to use. Your
-          conversations are completely private and never shared with anyone unless you invite them
-          to your chat.
+        <Card border>
+          <div class="leading-6">
+            <b>Agnaistic</b> is a "bring your own AI" chat service. It is completely open-source and
+            free to use. You only pay for the third-party AI services that you choose to use. Your
+            conversations are completely private and never shared with anyone unless you invite them
+            to your chat.
+          </div>
         </Card>
 
         <div class="home-cards">
@@ -99,41 +101,39 @@ const HomePage: Component = () => {
           </TitleCard>
         </div>
 
-        <Card>
+        <Card border>
           <div class="flex justify-center text-xl font-bold">Notable Features</div>
-
-          <ul class="leading-8">
-            <li>
+          <div class="flex flex-col gap-2 leading-6">
+            <p>
               <b class="highlight">Agnaistic</b> is completely free to use. It is free to register.
               Your data will be kept private and you can permanently delete your data at any time.
               We take your privacy very seriously.
-            </li>
-            <li>
-              <b class="highlight">Register!</b> Have your chats available on all of your devices.
-              Alternatively use Agnaistic completely anonymously.
-            </li>
-            <li>Chat with multiple users and multiple characters at the same time</li>
-            <li>
+            </p>
+            <p>
+              <b class="highlight">Register</b> to have your data available on all of your devices.
+            </p>
+            <p>Chat with multiple users and multiple characters at the same time</p>
+            <p>
               Create <b class="highlight">Memory Books</b> to give your characters information about
-              their world
-            </li>
-            <li>
+              their world.
+            </p>
+            <p>
               <b class="highlight">Image generation</b> - Use Horde, NovelAI or your own Stable
-              Diffusion server
-            </li>
-            <li>
-              <b class="highlight">Voice</b> - Give your characters a voice and speak back to them
-            </li>
-            <li>
+              Diffusion server.
+            </p>
+            <p>
+              <b class="highlight">Voice</b> - Give your characters a voice and speak back to them.
+            </p>
+            <p>
               <b class="highlight">Custom Presets</b> - Completely customise the Generation settings
-              used to generate your responses
-            </li>
-          </ul>
+              used to generate your responses.
+            </p>
+          </div>
         </Card>
 
-        <Card>
+        <Card border>
           <div class="mb-2 flex justify-center text-xl font-bold">Getting Started</div>
-          <div class="leading-8">
+          <div class="flex flex-col gap-2 leading-6">
             <p>
               Already have OpenAI, NovelAI, GooseAI, Scale, Claude? Head to the{' '}
               <A class="link" href="/settings">

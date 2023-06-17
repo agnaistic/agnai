@@ -15,7 +15,16 @@ import {
   User,
   VenetianMask,
 } from 'lucide-solid'
-import { Component, createMemo, JSX, Match, Show, Switch } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  JSX,
+  Match,
+  Show,
+  Switch,
+} from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
@@ -167,13 +176,26 @@ const UserNavigation: Component = () => {
   )
 }
 
-const Slots: Component = () => {
+const Slots: Component = (props) => {
+  const state = settingStore()
   const page = useWindowSize()
+
+  const [rendered, setRendered] = createSignal(false)
+
+  createEffect(() => {
+    if (rendered()) return
+
+    if (state.showMenu) {
+      setRendered(true)
+    }
+  })
 
   return (
     <Switch>
-      <Match when={page.width() < 640}>
-        <Slot slot="menu" />
+      <Match when={page.width() < 900}>
+        <Show when={rendered()}>
+          <Slot slot="menu" />
+        </Show>
       </Match>
 
       <Match when={page.height() >= 1000}>
