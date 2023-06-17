@@ -315,17 +315,6 @@ const ChatDetail: Component = () => {
     }
   })
 
-  // const characterSettings = createMemo(() =>
-  // useCreateCharacterForm({
-  // })
-  // )
-
-  // const presetSettings = createMemo(() => {
-  // if (!chats.chat) return undefined
-  // return useChatGenSettings({
-  // })
-  // })
-
   return (
     <>
       <Show when={!chats.loaded}>

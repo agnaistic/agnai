@@ -352,16 +352,16 @@ export const CreateCharacterForm: Component<{
 
   const title = 'Edit Character'
   const paneAndPageTitle = (
-    <div class={`flex items-end gap-1 whitespace-nowrap`}>
-      <PageHeader
-        title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
-      />
-      <div class="whitespace-normal">
-        <em>
-          ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
-        </em>
-      </div>
-    </div>
+    <PageHeader
+      title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
+      subtitle={
+        <div class="whitespace-normal">
+          <em>
+            {totalTokens()} tokens, {totalPermanentTokens()} permanent
+          </em>
+        </div>
+      }
+    />
   )
   const footer = (
     <>
