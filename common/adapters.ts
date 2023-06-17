@@ -206,7 +206,7 @@ export const adapterSettings: {
   systemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
   ignoreCharacterSystemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
   gaslight: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
-  antiBond: ['openai', 'claude', 'scale'],
+  antiBond: ['openai', 'scale'],
   ultimeJailbreak: ['openai', 'claude', 'kobold'],
   ignoreCharacterUjb: ['openai', 'claude', 'kobold'],
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],
