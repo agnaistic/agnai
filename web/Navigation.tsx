@@ -176,39 +176,6 @@ const UserNavigation: Component = () => {
   )
 }
 
-const Slots: Component = (props) => {
-  const state = settingStore()
-  const page = useWindowSize()
-
-  const [rendered, setRendered] = createSignal(false)
-
-  createEffect(() => {
-    if (rendered()) return
-
-    if (state.showMenu) {
-      setRendered(true)
-    }
-  })
-
-  return (
-    <Switch>
-      <Match when={page.width() < 900}>
-        <Show when={rendered()}>
-          <Slot slot="menu" />
-        </Show>
-      </Match>
-
-      <Match when={page.height() >= 1000}>
-        <Slot slot="menuLg" />
-      </Match>
-
-      <Match when={true}>
-        <Slot slot="menu" />
-      </Match>
-    </Switch>
-  )
-}
-
 const GuestNavigation: Component = () => {
   const menu = settingStore((s) => ({
     showMenu: s.showMenu,
@@ -271,6 +238,39 @@ const GuestNavigation: Component = () => {
 
       <Slots />
     </>
+  )
+}
+
+const Slots: Component = (props) => {
+  const state = settingStore()
+  const page = useWindowSize()
+
+  const [rendered, setRendered] = createSignal(false)
+
+  createEffect(() => {
+    if (rendered()) return
+
+    if (state.showMenu) {
+      setTimeout(() => setRendered(true), 300)
+    }
+  })
+
+  return (
+    <Switch>
+      <Match when={page.width() < 900}>
+        <Show when={rendered()}>
+          <Slot slot="menu" />
+        </Show>
+      </Match>
+
+      <Match when={page.height() >= 1000}>
+        <Slot slot="menuLg" />
+      </Match>
+
+      <Match when={true}>
+        <Slot slot="menu" />
+      </Match>
+    </Switch>
   )
 }
 
