@@ -359,48 +359,34 @@ function toChatCompletionPayload(
     }
 
     const isSystem = line.startsWith('System:')
-    const isBot = !line.startsWith(handle) && !isSystem
+    const isUser = line.startsWith(handle)
+    const isBot = !isUser && !isSystem
 
     if (i === examplePos) {
-      const additions: CompletionItem[] = []
-      const samples = obj.content.split('\n').reverse()
-
-      for (let sample of samples) {
-        const role = sample.startsWith(replyAs.name)
-          ? 'assistant'
-          : sample.startsWith('System')
-          ? 'system'
-          : 'user'
-
-        let name = role !== 'system' ? `example_${role}` : undefined
-        if (additions.length === samples.length - 1) {
-          sample = `How you speak:`
-          name = undefined
-        }
-
-        const msg: CompletionItem = {
-          role: role, //  === 'system' ? role : 'user',
-          content: sample.replace(BOT_REPLACE, replyAs.name).replace(SELF_REPLACE, handle),
-          name,
-        }
-        const length = encoder(msg.content)
-        if (tokens + length > maxBudget) break
-        additions.push(msg)
-      }
-      history.push(...additions)
+      const { additions, consumedTokens } = splitSampleChat({
+        sampleChat: obj.content,
+        tokensAlreadyConsumed: tokens,
+        tokenBudget: maxBudget,
+        encoder,
+        charname: replyAs.name,
+        username: handle,
+      })
+      history.push(...additions.reverse())
+      tokens += consumedTokens
       continue
     } else if (isBot) {
     } else if (line === '<START>') {
-      obj.role = 'system'
+      obj.role = sampleChatMarkerCompletionItem.role
+      obj.content = sampleChatMarkerCompletionItem.content
     } else if (isSystem) {
       obj.role = 'system'
       obj.content = obj.content.replace('System:', '').trim()
     } else {
       obj.role = 'user'
     }
+
     const length = encoder(obj.content)
     if (tokens + length > maxBudget) break
-
     tokens += length
     history.push(obj)
   }
@@ -470,4 +456,66 @@ function getPostInstruction(
       return { role: 'system', content: `${prefix}Respond as ${opts.replyAs.name}` }
     }
   }
+}
+const sampleChatMarkerCompletionItem: CompletionItem = {
+  role: 'system',
+  content: SAMPLE_CHAT_MARKER.replace('System: ', ''),
+}
+
+// https://stackoverflow.com/a/3561711
+function escapeRegex(string: string) {
+  return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+}
+
+type SplitSampleChatProps = {
+  sampleChat: string
+  tokensAlreadyConsumed: number
+  tokenBudget: number
+  encoder: Encoder
+  charname: string
+  username: string
+}
+
+export const splitSampleChat = ({
+  sampleChat,
+  tokensAlreadyConsumed,
+  tokenBudget,
+  encoder,
+  charname,
+  username,
+}: SplitSampleChatProps): { additions: CompletionItem[]; consumedTokens: number } => {
+  const regex = new RegExp(
+    `(?<=\\n)(?=${escapeRegex(charname)}:|${escapeRegex(username)}:|<start>)`,
+    'gi'
+  )
+  const additions = []
+  let tokens = tokensAlreadyConsumed
+  for (const msg of sampleChat.replace(/\r\n/g, '\n').split(regex)) {
+    const trimmed = msg.trim()
+    if (!trimmed) continue
+    // if the msg starts with <start> we consider everything between
+    // <start> and the next placeholder a system message
+    if (trimmed.toLowerCase().startsWith('<start>')) {
+      const afterStart = trimmed.slice(7).trim()
+      additions.push(sampleChatMarkerCompletionItem)
+      if (afterStart) additions.push({ role: 'system' as const, content: afterStart })
+    } else {
+      const sample = trimmed
+      const role = sample.startsWith(charname + ':')
+        ? 'assistant'
+        : sample.startsWith(username + ':')
+        ? 'user'
+        : 'system'
+
+      const msg: CompletionItem = {
+        role: role,
+        content: sample.replace(BOT_REPLACE, charname).replace(SELF_REPLACE, username),
+      }
+      const length = encoder(msg.content)
+      if (tokens + length > tokenBudget) break
+      additions.push(msg)
+      tokens += length
+    }
+  }
+  return { additions, consumedTokens: tokens - tokensAlreadyConsumed }
 }
