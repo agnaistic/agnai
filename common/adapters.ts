@@ -205,7 +205,7 @@ export const adapterSettings: {
   maxContextLength: AI_ADAPTERS.slice(),
   gaslight: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],
   antiBond: ['openai', 'claude', 'scale'],
-  ultimeJailbreak: ['openai', 'claude', 'kobold'],
+  ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale'],
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],
 
   repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
