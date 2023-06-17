@@ -8,9 +8,7 @@ import {
 } from '../../../common/presets'
 import { AppSchema } from '../../../srv/db/schema'
 import Button from '../../shared/Button'
-import Select from '../../shared/Select'
 import GenerationSettings from '../../shared/GenerationSettings'
-import Modal from '../../shared/Modal'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
@@ -19,11 +17,13 @@ import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
+import { Convertible, ConvertibleMode } from './Convertible'
+import { PresetSelect } from '/web/shared/PresetSelect'
+import { Card } from '/web/shared/Card'
 
-export const ChatGenSettingsModal: Component<{
+export const ChatGenSettings: Component<{
   chat: AppSchema.Chat
-  show: boolean
-  close: () => void
+  mode: ConvertibleMode
 }> = (props) => {
   let ref: any
   const user = userStore()
@@ -45,7 +45,7 @@ export const ChatGenSettingsModal: Component<{
     return all.concat(defaults)
   })
 
-  const [selected, setSelected] = createSignal<string | undefined>(
+  const [selected, setSelected] = createSignal<string>(
     props.chat?.genPreset
       ? props.chat.genPreset
       : props.chat.genSettings
@@ -86,15 +86,15 @@ export const ChatGenSettingsModal: Component<{
   })
 
   const onSave = () => {
-    const { preset } = getStrictForm(ref, { preset: 'string' })
+    const preset = selected()
     if (preset === AutoPreset.chat) {
       const body = getStrictForm(ref, chatGenSettings)
-      chatStore.editChatGenSettings(props.chat._id, body, props.close)
+      chatStore.editChatGenSettings(props.chat._id, body, props.mode.close)
     } else if (preset === AutoPreset.service) {
       chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined }, undefined)
     } else {
       chatStore.editChatGenPreset(props.chat._id, preset, () => {
-        props.close()
+        props.mode.close?.()
         if (isDefaultPreset(preset)) {
           toastStore.success('Preset changed')
         }
@@ -113,10 +113,11 @@ export const ChatGenSettingsModal: Component<{
     }
   }
 
-  const Footer = (
+  const title = 'Preset settings'
+  const footer = (
     <>
-      <Button schema="secondary" onClick={props.close}>
-        <X /> Cancel
+      <Button schema="secondary" onClick={() => props.mode.close?.()}>
+        <X /> {props.mode.kind === 'paneOrPopup' ? 'Close' : 'Cancel'}
       </Button>
 
       <Button onClick={onSave}>
@@ -124,27 +125,17 @@ export const ChatGenSettingsModal: Component<{
       </Button>
     </>
   )
-
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      footer={Footer}
-      title="Generation Settings"
-      fixedHeight
-      maxWidth="half"
-    >
-      <div class="text-sm">
-        <form ref={ref} class="flex flex-col gap-2">
-          <Select
-            fieldName="preset"
-            items={presetOptions()}
-            value={selected()}
-            onChange={(item) => setSelected(item.value)}
+  const body = (
+    <div class="text-sm">
+      <form ref={ref} class="flex flex-col gap-4">
+        <Card class="flex flex-col gap-2">
+          <PresetSelect
+            options={presetOptions()}
+            selected={selected()}
+            setPresetId={(val) => setSelected(val)}
           />
 
           <ServiceWarning service={servicePreset()?.preset.service} />
-
           <Show when={isDefaultPreset(selected())}>
             <span class="text-[var(--hl-100)]">
               You are using a built-in preset which cannot be modified. Head to the{' '}
@@ -158,40 +149,40 @@ export const ChatGenSettingsModal: Component<{
               this one.
             </span>
           </Show>
+        </Card>
 
-          <Switch>
-            <Match when={selected() === AutoPreset.service && servicePreset()}>
-              <div class="bold text-md">Using: {servicePreset()!.name}</div>
-              <GenerationSettings
-                inherit={servicePreset()!.preset}
-                disabled={servicePreset()?.fallback}
-                onService={setAdapter}
-                disableService
-              />
-            </Match>
+        <Switch>
+          <Match when={selected() === AutoPreset.service && servicePreset()}>
+            <GenerationSettings
+              inherit={servicePreset()!.preset}
+              disabled={servicePreset()?.fallback}
+              onService={setAdapter}
+              disableService
+            />
+          </Match>
 
-            <Match when={selected() === AutoPreset.chat}>
-              <div class="bold text-md">Using: Chat Settings</div>
-              <GenerationSettings inherit={props.chat.genSettings} onService={setAdapter} />
-            </Match>
+          <Match when={selected() === AutoPreset.chat}>
+            <div class="bold text-md">Using: Chat Settings</div>
+            <GenerationSettings inherit={props.chat.genSettings} onService={setAdapter} />
+          </Match>
 
-            <Match when={true}>
-              <For each={presets()}>
-                {(preset) => (
-                  <Show when={selected() === preset._id!}>
-                    <div class="bold text-md">Using: {preset.name} (User Preset)</div>
-                    <GenerationSettings
-                      inherit={preset}
-                      disabled={isDefaultPreset(selected())}
-                      onService={setAdapter}
-                    />
-                  </Show>
-                )}
-              </For>
-            </Match>
-          </Switch>
-        </form>
-      </div>
-    </Modal>
+          <Match when={true}>
+            <For each={presets()}>
+              {(preset) => (
+                <Show when={selected() === preset._id!}>
+                  <GenerationSettings
+                    inherit={preset}
+                    disabled={isDefaultPreset(selected())}
+                    onService={setAdapter}
+                  />
+                </Show>
+              )}
+            </For>
+          </Match>
+        </Switch>
+      </form>
+    </div>
   )
+
+  return <Convertible title={title} footer={footer} body={body} mode={props.mode} />
 }

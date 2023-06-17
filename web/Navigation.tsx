@@ -47,9 +47,8 @@ const Navigation: Component = () => {
   })
 
   const hide = createMemo(() => {
-    if (chat.opts.editingChar && !state.showMenu) return 'drawer--hide'
+    if (!!chat.opts.pane && !state.showMenu) return 'drawer--hide'
     if (state.showMenu) return ''
-    // || (chat.opts.editingChar && !state.showMenu)
     return 'drawer--hide'
   })
 

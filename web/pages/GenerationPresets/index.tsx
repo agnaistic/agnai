@@ -152,7 +152,7 @@ export const GenerationPresetsPage: Component = () => {
         </Show>
         <div class="flex flex-col gap-4 p-2">
           <Show when={editing()}>
-            <form ref={ref} onSubmit={onSave}>
+            <form ref={ref} onSubmit={onSave} class="flex flex-col gap-4">
               <div class="flex gap-4">
                 <Show when={state.presets.length > 1}>
                   <Button onClick={() => setEdit(true)}>Load Preset</Button>
@@ -162,12 +162,13 @@ export const GenerationPresetsPage: Component = () => {
                   New Preset
                 </Button>
               </div>
-              <div class="flex flex-col gap-4">
+              <div class="flex flex-col">
+                <div>ID: {editing()?._id || 'New Preset'}</div>
                 <TextInput
                   fieldName="id"
-                  label="Id"
                   value={editing()?._id || 'New Preset'}
                   disabled
+                  class="hidden"
                 />
                 <TextInput
                   fieldName="name"

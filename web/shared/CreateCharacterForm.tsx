@@ -41,7 +41,7 @@ import { AppSchema } from '../../srv/db/schema'
 import { downloadCharacterHub } from '../pages/Character/ImportCharacter'
 import { ImageModal } from '../pages/Chat/ImageModal'
 import Loading from '/web/shared/Loading'
-import { For } from 'solid-js'
+import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
@@ -49,6 +49,7 @@ import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
 import { Card, SolidCard } from './Card'
 import { usePane } from './hooks'
+import { Convertible, ConvertibleMode } from '../pages/Chat/Convertible'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -62,18 +63,18 @@ export const CreateCharacterForm: Component<{
   editId?: string
   duplicateId?: string
   import?: string
-  modal?: { close: () => void }
-  children?: any
+  topAddon?: JSX.Element
+  mode: ConvertibleMode
 }> = (props) => {
   let ref: any
   const nav = useNavigate()
-  const isPage = props.modal === undefined
+  const isPage = props.mode.kind === 'page'
   const paneOrPopup = usePane()
   const cancel = () => {
     if (isPage) {
       nav('/character/list')
     } else {
-      props.modal?.close()
+      props.mode.close?.()
     }
   }
   const query = { import: props.import }
@@ -280,6 +281,8 @@ export const CreateCharacterForm: Component<{
       characterStore.editCharacter(props.editId, payload, () => {
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
+        } else if (paneOrPopup() === 'popup') {
+          props.mode.close?.()
         }
       })
     } else {
@@ -347,334 +350,339 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  return (
+  const title = 'Edit Character'
+  const paneAndPageTitle = (
+    <PageHeader
+      title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
+      subtitle={
+        <div class="whitespace-normal">
+          <em>
+            {totalTokens()} tokens, {totalPermanentTokens()} permanent
+          </em>
+        </div>
+      }
+    />
+  )
+  const footer = (
     <>
-      <form
-        class="flex flex-col gap-4 text-base"
-        onSubmit={flags.charv2 ? onSubmitV2 : onSubmit}
-        ref={ref}
-      >
-        <Show when={isPage || paneOrPopup() === 'pane'}>
-          <div class={`sticky flex items-end gap-1 pl-2`}>
-            <PageHeader
-              title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
-            />
-            <div>
-              <em>
-                ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
-              </em>
-            </div>
-          </div>
-        </Show>
-        <Show when={!isPage}>
-          <div class="grid gap-2" style={{ 'grid-template-columns': '3fr 1fr' }}>
-            {props.children}
-            <Button type="submit" disabled={state.creating}>
-              <Save />
-              {props.editId ? 'Update' : 'Create'}
-            </Button>
-          </div>
-        </Show>
-
-        <Show when={showWarning()}>
-          <SolidCard bg="orange-600">
-            <b>Warning!</b> Your chat currently overrides your character definitions. These changes
-            won't affect your current chat until you disable them in the "Edit Chat" menu.
-          </SolidCard>
-        </Show>
-
-        <div class={`flex grow flex-col justify-between gap-4 pr-3 pl-2 `}>
-          <Show when={!isPage && paneOrPopup() === 'popup'}>
-            <div>
-              <em>
-                ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
-              </em>
-            </div>
+      <Button onClick={cancel} schema="secondary">
+        <X />
+        {props.mode.kind === 'paneOrPopup' ? 'Close' : 'Cancel'}
+      </Button>
+      <Button type="submit" disabled={state.creating}>
+        <Save />
+        {props.editId ? 'Update' : 'Create'}
+      </Button>
+    </>
+  )
+  const body = (
+    <>
+      <form class="text-base" onSubmit={flags.charv2 ? onSubmitV2 : onSubmit} ref={ref}>
+        <div class="flex flex-col gap-4">
+          <Show when={!isPage}>
+            <div> {props.topAddon} </div>
           </Show>
-          <Card>
-            <TextInput
-              fieldName="name"
-              required
-              label="Character Name"
-              placeholder=""
-              value={downloaded()?.name || state.edit?.name}
-              tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
-            />
-          </Card>
 
-          <Card class="flex w-full flex-col">
-            <FormLabel
-              label="Description"
-              helperText={
-                <div class="flex flex-col">
-                  <span>
-                    A description or label for your character. This is will not influence your
-                    character in any way.
-                  </span>
-                  <Show when={canPopulatFields()}>
-                    <span>
-                      To use OpenAI to generate a character, describe the character below then click{' '}
-                      <b>Generate</b>. It can take 30-60 seconds.
-                    </span>
-                  </Show>
-                </div>
-              }
-            />
-            <div class="flex w-full gap-2">
+          <Show when={showWarning()}>
+            <SolidCard bg="orange-600">
+              <b>Warning!</b> Your chat currently overrides your character definitions. These
+              changes won't affect your current chat until you disable them in the "Edit Chat" menu.
+            </SolidCard>
+          </Show>
+
+          <div class={`flex grow flex-col justify-between gap-4 pr-3 pl-2 `}>
+            <Show when={!isPage && paneOrPopup() === 'popup'}>
+              <div>
+                <em>
+                  ({totalTokens()} tokens, {totalPermanentTokens()} permanent)
+                </em>
+              </div>
+            </Show>
+            <Card>
               <TextInput
-                isMultiline
-                fieldName="description"
-                parentClass="w-full"
-                value={downloaded()?.description || state.edit?.description}
+                fieldName="name"
+                required
+                label="Character Name"
+                placeholder=""
+                value={downloaded()?.name || state.edit?.name}
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
               />
-              <Show when={canPopulatFields()}>
-                <Button onClick={generateCharacter} disabled={creating()}>
-                  {creating() ? 'Generating...' : 'Generate'}
-                </Button>
-              </Show>
-            </div>
-          </Card>
+            </Card>
 
-          <Card>
-            <TagInput
-              availableTags={tagState.tags.map((t) => t.tag)}
-              value={tags()}
-              fieldName="tags"
-              label="Tags"
-              helperText="Used to help you organize and filter your characters."
-              onSelect={setTags}
-            />
-          </Card>
-
-          <Card class="flex w-full gap-4">
-            <Switch>
-              <Match when={!state.avatar.loading}>
-                <div
-                  class="flex items-baseline"
-                  style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                  onClick={() => settingStore.showImage(state.avatar.image || image())}
-                >
-                  <AvatarIcon
-                    format={{ corners: 'md', size: '2xl' }}
-                    avatarUrl={state.avatar.image || image()}
-                  />
-                </div>
-              </Match>
-              <Match when={state.avatar.loading}>
-                <div class="flex w-[80px] items-center justify-center">
-                  <Loading />
-                </div>
-              </Match>
-            </Switch>
-            <div class="flex w-full flex-col gap-2">
-              <FileInput
-                class="w-full"
-                fieldName="avatar"
-                label="Avatar"
-                accept="image/png,image/jpeg,image/apng"
-                onUpdate={updateFile}
+            <Card class="flex w-full flex-col">
+              <FormLabel
+                label="Description"
+                helperText={
+                  <div class="flex flex-col">
+                    <span>
+                      A description or label for your character. This is will not influence your
+                      character in any way.
+                    </span>
+                    <Show when={canPopulatFields()}>
+                      <span>
+                        To use OpenAI to generate a character, describe the character below then
+                        click <b>Generate</b>. It can take 30-60 seconds.
+                      </span>
+                    </Show>
+                  </div>
+                }
               />
               <div class="flex w-full gap-2">
                 <TextInput
+                  isMultiline
+                  fieldName="description"
                   parentClass="w-full"
-                  fieldName="imagePrompt"
-                  helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
-                  placeholder="Image prompt"
+                  value={downloaded()?.description || state.edit?.description}
                 />
-                <Button class="w-fit self-end" onClick={generateAvatar}>
-                  Generate
-                </Button>
+                <Show when={canPopulatFields()}>
+                  <Button onClick={generateCharacter} disabled={creating()}>
+                    {creating() ? 'Generating...' : 'Generate'}
+                  </Button>
+                </Show>
               </div>
-              <div></div>
-            </div>
-          </Card>
+            </Card>
 
-          <Card>
-            <TextInput
-              fieldName="scenario"
-              label="Scenario"
-              helperText="The current circumstances and context of the conversation and the characters."
-              placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
-              value={downloaded()?.scenario || state.edit?.scenario}
-              isMultiline
-              tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
-            />
-          </Card>
-          <Card class="flex flex-col gap-3">
-            <TextInput
-              isMultiline
-              fieldName="greeting"
-              label="Greeting"
-              helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
-              placeholder={
-                "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
-              }
-              value={downloaded()?.greeting || state.edit?.greeting}
-              class="h-60"
-              tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
-            />
-            <Show when={flags.charv2}>
-              <AlternateGreetingsInput
-                greetings={alternateGreetings()}
-                setGreetings={setAlternateGreetings}
-              />
-            </Show>
-          </Card>
-          <Card class="flex flex-col gap-3">
-            <div>
-              <FormLabel
-                label="Persona Schema"
-                helperText={
-                  <>
-                    <p>If you do not know what this mean, you can leave this as-is.</p>
-                    <p class="font-bold">
-                      WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible.
-                      Changing between them will cause data loss.
-                    </p>
-                    <p>Format to use for the character's format</p>
-                  </>
-                }
-              />
-              <RadioGroup
-                name="kind"
-                horizontal
-                options={options}
-                value={state.edit?.persona.kind || schema() || 'text'}
-                onChange={(kind) => setSchema(kind as any)}
-              />
-            </div>
-            <Show when={!props.editId && !props.duplicateId}>
-              <PersonaAttributes
-                value={downloaded()?.persona.attributes}
-                plainText={schema() === 'text' || schema() === undefined}
-                schema={schema()}
-                tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                form={ref}
-              />
-            </Show>
-
-            <Show when={(props.editId || props.duplicateId) && state.edit}>
-              <PersonaAttributes
-                value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
-                plainText={schema() === 'text'}
-                schema={schema()}
-                tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                form={ref}
-              />
-            </Show>
-          </Card>
-          <Card>
-            <TextInput
-              isMultiline
-              fieldName="sampleChat"
-              label="Sample Conversation"
-              helperText={
-                <span>
-                  Example chat between you and the character. This section is very important for
-                  teaching your character should speak.
-                </span>
-              }
-              placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
-              value={downloaded()?.sampleChat || state.edit?.sampleChat}
-              tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
-            />
-          </Card>
-          <h2
-            class={`mt-3 flex cursor-pointer gap-3 text-lg font-bold ${
-              showAdvanced() ? '' : 'mb-12'
-            }`}
-            onClick={toggleShowAdvanced}
-          >
-            <div class="relative top-[2px] inline-block">
-              {showAdvanced() ? <ChevronUp /> : <ChevronDown />}
-            </div>
-            Advanced options
-          </h2>
-          <div class={`flex flex-col gap-3 ${advancedVisibility()}`}>
-            <Show when={flags.charv2}>
-              <Card class="flex flex-col gap-3">
-                <TextInput
-                  isMultiline
-                  fieldName="systemPrompt"
-                  label="Character System Prompt (optional)"
-                  helperText={
-                    <span>
-                      System prompt to bundle with your character. Leave empty if you aren't sure.
-                    </span>
-                  }
-                  placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
-                  value={state.edit?.systemPrompt}
-                />
-                <TextInput
-                  isMultiline
-                  fieldName="postHistoryInstructions"
-                  label="Post-conversation history instructions (optional)"
-                  helperText={
-                    <span>
-                      Prompt to bundle with your character. Leave empty if you aren't sure.
-                    </span>
-                  }
-                  placeholder="Write at least four paragraphs."
-                  value={state.edit?.postHistoryInstructions}
-                />
-              </Card>
-              <Card>
-                <MemoryBookPicker
-                  characterBook={characterBook()}
-                  setCharacterBook={setCharacterBook}
-                  bundledBook={bundledBook()}
-                />
-              </Card>
-              <Card>
-                <TextInput
-                  fieldName="creator"
-                  label="Creator (optional)"
-                  placeholder="e.g. John1990"
-                  value={state.edit?.creator}
-                />
-              </Card>
-              <Card>
-                <TextInput
-                  fieldName="characterVersion"
-                  label="Character Version (optional)"
-                  placeholder="any text e.g. 1, 2, v1, v1fempov..."
-                  value={state.edit?.characterVersion}
-                />
-              </Card>
-            </Show>
-            <Card class="flex flex-col gap-3">
-              <h4 class="text-md font-bold">Voice</h4>
-              <div>
-                <VoicePicker value={voice()} culture={culture()} onChange={setVoice} />
-              </div>
-              <Select
-                fieldName="culture"
-                label="Language"
-                helperText={`The language this character speaks and understands.${
-                  culture().startsWith('en') ?? true
-                    ? ''
-                    : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
-                }`}
-                value={culture()}
-                items={CultureCodes}
-                onChange={(option) => setCulture(option.value)}
+            <Card>
+              <TagInput
+                availableTags={tagState.tags.map((t) => t.tag)}
+                value={tags()}
+                fieldName="tags"
+                label="Tags"
+                helperText="Used to help you organize and filter your characters."
+                onSelect={setTags}
               />
             </Card>
+
+            <Card class="flex w-full gap-4">
+              <Switch>
+                <Match when={!state.avatar.loading}>
+                  <div
+                    class="flex items-baseline"
+                    style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
+                    onClick={() => settingStore.showImage(state.avatar.image || image())}
+                  >
+                    <AvatarIcon
+                      format={{ corners: 'md', size: '2xl' }}
+                      avatarUrl={state.avatar.image || image()}
+                    />
+                  </div>
+                </Match>
+                <Match when={state.avatar.loading}>
+                  <div class="flex w-[80px] items-center justify-center">
+                    <Loading />
+                  </div>
+                </Match>
+              </Switch>
+              <div class="flex w-full flex-col gap-2">
+                <FileInput
+                  class="w-full"
+                  fieldName="avatar"
+                  label="Avatar"
+                  accept="image/png,image/jpeg,image/apng"
+                  onUpdate={updateFile}
+                />
+                <div class="flex w-full gap-2">
+                  <TextInput
+                    parentClass="w-full"
+                    fieldName="imagePrompt"
+                    helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
+                    placeholder="Image prompt"
+                  />
+                  <Button class="w-fit self-end" onClick={generateAvatar}>
+                    Generate
+                  </Button>
+                </div>
+                <div></div>
+              </div>
+            </Card>
+
+            <Card>
+              <TextInput
+                fieldName="scenario"
+                label="Scenario"
+                helperText="The current circumstances and context of the conversation and the characters."
+                placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
+                value={downloaded()?.scenario || state.edit?.scenario}
+                isMultiline
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
+              />
+            </Card>
+            <Card class="flex flex-col gap-3">
+              <TextInput
+                isMultiline
+                fieldName="greeting"
+                label="Greeting"
+                helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
+                placeholder={
+                  "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
+                }
+                value={downloaded()?.greeting || state.edit?.greeting}
+                class="h-60"
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
+              />
+              <Show when={flags.charv2}>
+                <AlternateGreetingsInput
+                  greetings={alternateGreetings()}
+                  setGreetings={setAlternateGreetings}
+                />
+              </Show>
+            </Card>
+            <Card class="flex flex-col gap-3">
+              <div>
+                <FormLabel
+                  label="Persona Schema"
+                  helperText={
+                    <>
+                      <p>If you do not know what this mean, you can leave this as-is.</p>
+                      <p class="font-bold">
+                        WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible.
+                        Changing between them will cause data loss.
+                      </p>
+                      <p>Format to use for the character's format</p>
+                    </>
+                  }
+                />
+                <RadioGroup
+                  name="kind"
+                  horizontal
+                  options={options}
+                  value={state.edit?.persona.kind || schema() || 'text'}
+                  onChange={(kind) => setSchema(kind as any)}
+                />
+              </div>
+              <Show when={!props.editId && !props.duplicateId}>
+                <PersonaAttributes
+                  value={downloaded()?.persona.attributes}
+                  plainText={schema() === 'text' || schema() === undefined}
+                  schema={schema()}
+                  tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+                  form={ref}
+                />
+              </Show>
+
+              <Show when={(props.editId || props.duplicateId) && state.edit}>
+                <PersonaAttributes
+                  value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
+                  plainText={schema() === 'text'}
+                  schema={schema()}
+                  tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+                  form={ref}
+                />
+              </Show>
+            </Card>
+            <Card>
+              <TextInput
+                isMultiline
+                fieldName="sampleChat"
+                label="Sample Conversation"
+                helperText={
+                  <span>
+                    Example chat between you and the character. This section is very important for
+                    teaching your character should speak.
+                  </span>
+                }
+                placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
+                value={downloaded()?.sampleChat || state.edit?.sampleChat}
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
+              />
+            </Card>
+            <h2
+              class={`mt-3 flex cursor-pointer gap-3 text-lg font-bold ${
+                showAdvanced() ? '' : 'mb-12'
+              }`}
+              onClick={toggleShowAdvanced}
+            >
+              <div class="relative top-[2px] inline-block">
+                {showAdvanced() ? <ChevronUp /> : <ChevronDown />}
+              </div>
+              Advanced options
+            </h2>
+            <div class={`flex flex-col gap-3 ${advancedVisibility()}`}>
+              <Show when={flags.charv2}>
+                <Card class="flex flex-col gap-3">
+                  <TextInput
+                    isMultiline
+                    fieldName="systemPrompt"
+                    label="Character System Prompt (optional)"
+                    helperText={
+                      <span>
+                        System prompt to bundle with your character. Leave empty if you aren't sure.
+                      </span>
+                    }
+                    placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
+                    value={state.edit?.systemPrompt}
+                  />
+                  <TextInput
+                    isMultiline
+                    fieldName="postHistoryInstructions"
+                    label="Post-conversation history instructions (optional)"
+                    helperText={
+                      <span>
+                        Prompt to bundle with your character. Leave empty if you aren't sure.
+                      </span>
+                    }
+                    placeholder="Write at least four paragraphs."
+                    value={state.edit?.postHistoryInstructions}
+                  />
+                </Card>
+                <Card>
+                  <MemoryBookPicker
+                    characterBook={characterBook()}
+                    setCharacterBook={setCharacterBook}
+                    bundledBook={bundledBook()}
+                  />
+                </Card>
+                <Card>
+                  <TextInput
+                    fieldName="creator"
+                    label="Creator (optional)"
+                    placeholder="e.g. John1990"
+                    value={state.edit?.creator}
+                  />
+                </Card>
+                <Card>
+                  <TextInput
+                    fieldName="characterVersion"
+                    label="Character Version (optional)"
+                    placeholder="any text e.g. 1, 2, v1, v1fempov..."
+                    value={state.edit?.characterVersion}
+                  />
+                </Card>
+              </Show>
+              <Card class="flex flex-col gap-3">
+                <h4 class="text-md font-bold">Voice</h4>
+                <div>
+                  <VoicePicker value={voice()} culture={culture()} onChange={setVoice} />
+                </div>
+                <Select
+                  fieldName="culture"
+                  label="Language"
+                  helperText={`The language this character speaks and understands.${
+                    culture().startsWith('en') ?? true
+                      ? ''
+                      : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
+                  }`}
+                  value={culture()}
+                  items={CultureCodes}
+                  onChange={(option) => setCulture(option.value)}
+                />
+              </Card>
+            </div>
           </div>
-        </div>
-        <div class={`sticky flex justify-end gap-2`}>
-          <Button onClick={cancel} schema="secondary">
-            <X />
-            {props.modal ? 'Close' : 'Cancel'}
-          </Button>
-          <Button type="submit" disabled={state.creating}>
-            <Save />
-            {props.editId ? 'Update' : 'Create'}
-          </Button>
         </div>
       </form>
       <ImageModal />
     </>
+  )
+
+  return (
+    <Convertible
+      title={title}
+      paneAndPageTitle={paneAndPageTitle}
+      footer={footer}
+      body={body}
+      mode={props.mode}
+    />
   )
 }
 

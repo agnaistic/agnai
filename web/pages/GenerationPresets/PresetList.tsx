@@ -37,7 +37,7 @@ const PresetList: Component = () => {
 
   return (
     <>
-      <PageHeader title="Generation Presets" subtitle="generation settings presets" />
+      <PageHeader title="Generation Presets" />
       <div class="mb-4 flex w-full justify-end">
         <A href="/presets/new">
           <Button>

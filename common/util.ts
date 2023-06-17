@@ -19,3 +19,7 @@ export function cycleArray<T>(arr: T[], shiftAmount: number) {
 
 export const dateStringFromUnix = (unixTimestamp: number): string =>
   new Date(unixTimestamp).toISOString()
+
+export function uniqBy<T, U>(arr: T[], accessor: (el: T) => U) {
+  return arr.flatMap((el, i) => (arr.slice(0, i).map(accessor).includes(accessor(el)) ? [] : [el]))
+}

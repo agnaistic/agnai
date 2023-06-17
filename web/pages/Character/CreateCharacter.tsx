@@ -11,6 +11,7 @@ const CreateCharacter: Component = () => {
   )
   return (
     <CreateCharacterForm
+      mode={{ kind: 'page' }}
       editId={params.editId}
       duplicateId={params.duplicateId}
       import={query.import}
