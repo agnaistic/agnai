@@ -29,11 +29,6 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
     .then((tokens) => tokens.slice(0, max))
     .then(decode)
 
-  if (!isLoggedIn()) {
-    const image = await horde.generateImage(entities.user, trimmed)
-    onDone(image)
-  }
-
   const res = await api.post<{ success: boolean }>(`/chat/${chatId || entities.chat._id}/image`, {
     prompt: trimmed,
     user: entities.user,
