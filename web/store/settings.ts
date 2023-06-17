@@ -54,7 +54,7 @@ const initState: SettingState = {
     assetPrefix: '',
     selfhosting: false,
     imagesSaved: false,
-    slots: { testing: true, banner: '', menu: '', mobile: '', enabled: false },
+    slots: { testing: true, banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
   },
   flags: getFlags(),
 }
@@ -169,8 +169,9 @@ subscribe('connected', { uid: 'string' }, (body) => {
 
 window.flag = (flag: keyof FeatureFlags, value) => {
   if (!flag) {
+    const state = settingStore((s) => s.flags)
     console.log('Available flags:')
-    for (const key in defaultFlags) console.log(key)
+    for (const [key, value] of Object.entries(defaultFlags)) console.log(key, (state as any)[key])
     return
   }
 

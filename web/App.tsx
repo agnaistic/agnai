@@ -1,3 +1,4 @@
+import './variables.css'
 import './tailwind.css'
 import './app.css'
 import './dots.css'

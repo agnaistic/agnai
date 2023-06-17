@@ -144,7 +144,7 @@ const InputBar: Component<{
         ref={ref}
         value={text()}
         placeholder={placeholder()}
-        class="focusable-field h-10 min-h-[40px] w-full rounded-xl rounded-r-none px-4 py-2 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+        class="focusable-field h-10 min-h-[40px] w-full rounded-md rounded-r-none px-4 py-2 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === 'Enter' && !ev.shiftKey) {
             send()

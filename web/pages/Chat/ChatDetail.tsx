@@ -305,9 +305,9 @@ const ChatDetail: Component = () => {
         </div>
       </Show>
       <Show when={chats.chat}>
-        <main class="mx-auto flex  w-full justify-between gap-4">
+        <main class="mx-auto flex w-full justify-between gap-4">
           <div
-            class={`chat-detail ${chatMargin()} ${chatWidth()} mx-auto flex flex-col xs:flex sm:py-2`}
+            class={`chat-detail ${chatMargin()} ${chatWidth()} mx-auto flex flex-col pb-1 xs:flex sm:py-2`}
           >
             <header
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
