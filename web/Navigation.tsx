@@ -15,7 +15,7 @@ import {
   User,
   VenetianMask,
 } from 'lucide-solid'
-import { Component, createMemo, JSX, Show } from 'solid-js'
+import { Component, createMemo, JSX, Match, Show, Switch } from 'solid-js'
 import AvatarIcon from './shared/AvatarIcon'
 import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
@@ -47,9 +47,8 @@ const Navigation: Component = () => {
   })
 
   const hide = createMemo(() => {
-    if (chat.opts.editingChar && !state.showMenu) return 'drawer--hide'
+    if (!!chat.opts.pane && !state.showMenu) return 'drawer--hide'
     if (state.showMenu) return ''
-    // || (chat.opts.editingChar && !state.showMenu)
     return 'drawer--hide'
   })
 
@@ -110,7 +109,6 @@ const Navigation: Component = () => {
 const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
-  const page = useWindowSize()
 
   return (
     <>
@@ -161,10 +159,28 @@ const UserNavigation: Component = () => {
         </ExternalLink>
       </Show>
 
-      <Show when={page.width() >= 1024}>
-        <Slot slot="menu" />
-      </Show>
+      <Slots />
     </>
+  )
+}
+
+const Slots: Component = () => {
+  const page = useWindowSize()
+
+  return (
+    <Switch>
+      <Match when={page.width() < 640}>
+        <Slot slot="menu" />
+      </Match>
+
+      <Match when={page.height() >= 800}>
+        <Slot slot="menuLg" />
+      </Match>
+
+      <Match when={true}>
+        <Slot slot="menu" />
+      </Match>
+    </Switch>
   )
 }
 
@@ -175,7 +191,6 @@ const GuestNavigation: Component = () => {
     guest: s.guestAccessAllowed,
     flags: s.flags,
   }))
-  const page = useWindowSize()
 
   return (
     <>
@@ -229,9 +244,7 @@ const GuestNavigation: Component = () => {
         GitHub
       </ExternalLink>
 
-      <Show when={page.width() >= 1024}>
-        <Slot slot="menu" />
-      </Show>
+      <Slots />
     </>
   )
 }

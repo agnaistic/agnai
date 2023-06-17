@@ -13,7 +13,7 @@ import {
 import { Component, Show, createMemo, JSX } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
-import { chatStore, settingStore, toastStore, userStore } from '../../store'
+import { ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
 import { getRootRgb } from '../../shared/util'
 
@@ -22,7 +22,6 @@ export type ChatModal =
   | 'settings'
   | 'invite'
   | 'memory'
-  | 'gen'
   | 'ui'
   | 'members'
   | 'delete'
@@ -32,7 +31,7 @@ export type ChatModal =
 const ChatOptions: Component<{
   adapterLabel: string
   setModal: (modal: ChatModal) => void
-  toggleCharEditor: () => void
+  togglePane: (pane: ChatRightPane) => void
 }> = (props) => {
   const chats = chatStore((s) => ({
     ...s.active,
@@ -108,7 +107,7 @@ const ChatOptions: Component<{
           </div>
         </Option>
 
-        <Option onClick={props.toggleCharEditor}>
+        <Option onClick={() => props.togglePane('character')}>
           <User /> Character
         </Option>
 
@@ -120,7 +119,7 @@ const ChatOptions: Component<{
           <MenuItem onClick={() => props.setModal('settings')} hide={!isOwner()}>
             <Settings /> Edit Chat
           </MenuItem>
-          <MenuItem onClick={() => props.setModal('gen')}>
+          <MenuItem onClick={() => props.togglePane('preset')}>
             <Sliders /> Preset
           </MenuItem>
         </MenuItemRow>

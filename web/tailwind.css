@@ -1,4 +1,3 @@
-@import 'variables.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -106,15 +105,15 @@ body {
   }
 
   .bg-600 {
-    background: var(--bg-600);
+    background-color: var(--bg-600);
   }
 
   .bg-700 {
-    background: var(--bg-700);
+    background-color: var(--bg-700);
   }
 
   .bg-800 {
-    background: var(--bg-800);
+    background-color: var(--bg-800);
   }
 
   .bg-900 {
@@ -350,14 +349,14 @@ body {
   }
 
   .drawer {
-    height: calc(100vh - 48px);
-    height: calc(100dvh - 48px);
+    height: calc(100vh - 42px);
+    height: calc(100dvh - 42px);
     position: absolute;
-    top: 48px;
+    top: 42px;
     left: 0;
     transition: opacity 250ms ease;
     transition: left 250ms ease;
-    @apply bg-800 w-[calc(100vw-40px)] max-w-[320px] sm:relative  sm:top-0 sm:clear-none sm:w-[320px];
+    @apply bg-800 w-[calc(100vw-20px)] max-w-[320px] sm:relative sm:top-0 sm:clear-none sm:w-[320px];
     @apply z-10 sm:z-0;
   }
 

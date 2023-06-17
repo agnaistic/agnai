@@ -37,6 +37,8 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     max_tokens_to_sample: gen.maxTokens ?? defaultPresets.claude.maxTokens,
     prompt: createClaudePrompt(opts),
     stop_sequences: Array.from(stops),
+    top_p: Math.min(1, Math.max(0, gen.topP ?? defaultPresets.claude.topP)),
+    top_k: Math.min(1, Math.max(0, gen.topK ?? defaultPresets.claude.topK)),
   }
 
   const headers: any = {

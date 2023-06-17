@@ -1,7 +1,7 @@
 import { Menu, MoreHorizontal } from 'lucide-solid'
 import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { A, useLocation } from '@solidjs/router'
-import { chatStore, settingStore } from '../store'
+import { ChatRightPane, chatStore, settingStore } from '../store'
 import ChatOptions, { ChatModal } from '../pages/Chat/ChatOptions'
 import { DropMenu } from './DropMenu'
 import { getClientPreset } from './adapter'
@@ -28,10 +28,11 @@ const NavBar: Component = () => {
     chatStore.option('modal', modal)
   }
 
-  const toggleCharEditor = () => {
+  const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
-    chatStore.option('editingChar', !chatStore().opts.editingChar)
+    chatStore.option('pane', chatStore().opts.pane === paneType ? undefined : paneType)
   }
+
   const Title = (
     <A href="/">
       <div class="flex w-full justify-center">
@@ -80,7 +81,7 @@ const NavBar: Component = () => {
               <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
                 <ChatOptions
                   setModal={setModal}
-                  toggleCharEditor={toggleCharEditor}
+                  togglePane={togglePane}
                   adapterLabel={adapterLabel()}
                 />
               </DropMenu>
