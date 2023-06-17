@@ -26,13 +26,6 @@ export const handleScale: ModelAdapter = async function* ({
     input: { input: prompt },
   }
 
-  if (opts.parts.ujb) {
-    const lines = prompt.split('\n')
-    const allButLastLine = lines.slice(0, lines.length - 1)
-    const lastLine = lines.slice(lines.length - 1)
-    body.input.input = [...allButLastLine, `System: ${opts.parts.ujb}`, lastLine].join('\n')
-  }
-
   log.debug(body, 'Scale payload')
   const auth = `Basic ${guest ? user.scaleApiKey : decryptText(user.scaleApiKey)}`
 

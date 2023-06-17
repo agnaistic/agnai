@@ -156,6 +156,40 @@ Bot: ORIGINAL
 Bot:"
 `;
 
+exports[`Prompt building will include ujb when omitted from gaslight 1`] = `
+Object {
+  "lines": Array [
+    "Bot: bot response",
+  ],
+  "parts": Object {
+    "allPersonas": Array [],
+    "greeting": "GREETING",
+    "memory": "",
+    "persona": "PERSONA",
+    "post": Array [
+      "Bot:",
+    ],
+    "sampleChat": Array [
+      "Bot: SAMPLE_CHAT",
+    ],
+    "scenario": "SCENARIO",
+    "ujb": "!!UJB_PROMPT!!",
+  },
+  "template": "GASLIGHT TEMPLATE
+You
+Bot
+---Ensured-->
+Scenario: SCENARIO
+Bot's persona: PERSONA
+How Bot speaks:
+Bot: SAMPLE_CHAT
+System: New conversation started. Previous conversations are examples only.
+Bot: bot response
+!!UJB_PROMPT!!
+Bot:",
+}
+`;
+
 exports[`Prompt building will include will two memories by weight when triggered 1`] = `
 "Bot's Persona: PERSONA
 Scenario: SCENARIO
