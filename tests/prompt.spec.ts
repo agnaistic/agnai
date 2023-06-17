@@ -181,7 +181,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
       char: main,
       settings: {
         useGaslight: true,
-        gaslight: `GASLIGHT TEMPLATE\n{{user}}\n{{char}}\n---Ensured-->`,
+        gaslight: `GASLIGHT TEMPLATE\n{{user}}\n{{char}}\nAuto-injected text:`,
         ultimeJailbreak: '!!UJB_PROMPT!!',
       },
     })
