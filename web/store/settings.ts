@@ -171,7 +171,7 @@ window.flag = (flag: keyof FeatureFlags, value) => {
   if (!flag) {
     const state = settingStore((s) => s.flags)
     console.log('Available flags:')
-    for (const [key, value] of Object.entries(defaultFlags)) console.log(key, (state as any)[key])
+    for (const [key] of Object.entries(defaultFlags)) console.log(key, (state as any)[key])
     return
   }
 
