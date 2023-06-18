@@ -354,14 +354,26 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const senderId = body.kind === 'self' ? 'anon' : undefined
   const response = newMessage(chatId, responseText, { characterId, userId: senderId, ooc: false })
 
-  sendGuest(guest, {
-    type: 'guest-message-created',
-    msg: response,
-    chatId,
-    adapter,
-    continue: body.kind === 'continue',
-    generate: true,
-  })
+  switch (body.kind) {
+    case 'summary':
+      sendGuest(guest, { type: 'chat-summary', chatId, summary: generated })
+      return
+
+    case 'continue':
+    case 'request':
+    case 'retry':
+    case 'self':
+    case 'send':
+      sendGuest(guest, {
+        type: 'guest-message-created',
+        msg: response,
+        chatId,
+        adapter,
+        continue: body.kind === 'continue',
+        generate: true,
+      })
+      return
+  }
 }
 
 function newMessage(

@@ -10,11 +10,16 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
     const svc = props.service
     if (!svc) return true
 
-    if (svc === 'openai' && !user.oaiKeySet) return false
-    if (svc === 'novel' && !user.novelVerified) return false
-    if (svc === 'claude' && !user.claudeApiKeySet) return false
-    if (svc === 'scale' && !user.scaleApiKeySet) return false
-    if (svc === 'goose' && !user.adapterConfig?.goose?.apiKeySet) return false
+    if (svc === 'openai' && !user.oaiKeySet && !user.oaiKey) return false
+    if (svc === 'novel' && !user.novelVerified && !user.novelApiKey) return false
+    if (svc === 'claude' && !user.claudeApiKeySet && !user.claudeApiKey) return false
+    if (svc === 'scale' && !user.scaleApiKeySet && !user.scaleApiKey) return false
+    if (
+      svc === 'goose' &&
+      !user.adapterConfig?.goose?.apiKeySet &&
+      !user.adapterConfig?.goose?.apiKey
+    )
+      return false
 
     return true
   })

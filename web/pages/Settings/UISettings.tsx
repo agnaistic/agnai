@@ -181,19 +181,22 @@ const UISettings: Component = () => {
       <div class="my-2 w-full justify-center">
         <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
       </div>
-      <Divider />
-      <div class="text-lg font-bold">Chat Styling</div>
 
       <Select
         fieldName="chatWidth"
-        label="Chat Width"
+        label="Content Width"
         items={[
-          { label: 'Full Width', value: 'full' },
           { label: 'Narrow', value: 'narrow' },
+          { label: 'Large', value: 'full' },
+          { label: 'X-Large', value: 'xl' },
+          { label: '2X-Large', value: '2xl' },
+          { label: '3X-Large', value: '3xl' },
         ]}
         onChange={(item) => userStore.updateUI({ chatWidth: item.value as any })}
         value={state.ui.chatWidth}
       />
+      <Divider />
+      <div class="text-lg font-bold">Chat Styling</div>
 
       <RangeInput
         fieldName="msgOpacity"

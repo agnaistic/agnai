@@ -37,7 +37,7 @@ export type UISettings = {
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
 
-  chatWidth?: 'full' | 'narrow'
+  chatWidth?: 'full' | 'narrow' | 'xl' | '2xl' | '3xl'
   logPromptsToBrowserConsole: boolean
 
   dark: CustomUI

@@ -54,6 +54,7 @@ import { CreateCharacterForm } from '/web/shared/CreateCharacterForm'
 import { usePane } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import Loading from '/web/shared/Loading'
+import Convertible from './Convertible'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -64,6 +65,7 @@ const ChatDetail: Component = () => {
   const chars = characterStore((s) => ({
     chatBots: s.characters.list,
     botMap: s.characters.map,
+    impersonate: s.impersonating,
   }))
   const isPaneOrPopup = usePane()
 
@@ -103,6 +105,7 @@ const ChatDetail: Component = () => {
   })
 
   const [swipe, setSwipe] = createSignal(0)
+  const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
   const [removeId, setRemoveId] = createSignal('')
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
@@ -113,11 +116,22 @@ const ChatDetail: Component = () => {
   })
 
   const editableCharcters = createMemo(() => {
-    const enabled = chats.chat?.characters || {}
-    return chars.chatBots.filter(
-      (ch) =>
-        ch.userId === user.user?._id && (enabled[ch._id] || chats.chat?.characterId === ch._id)
-    )
+    const ids = new Map<string, AppSchema.Character>()
+
+    if (chats.char) {
+      ids.set(chats.char._id, chats.char)
+    }
+
+    if (chars.impersonate) {
+      ids.set(chars.impersonate._id, chars.impersonate)
+    }
+
+    for (const bot of chats.activeBots) {
+      ids.set(bot._id, bot)
+    }
+
+    const editable = Array.from(ids.values())
+    return editable
   })
 
   const charBeingEdited = createMemo(() => {
@@ -133,7 +147,7 @@ const ChatDetail: Component = () => {
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() =>
-    getChatWidth(user.ui.chatWidth, !!chatStore().opts.pane && isPaneOrPopup() === 'pane')
+    getChatWidth(user.ui.chatWidth, !!chats.opts.pane && isPaneOrPopup() === 'pane')
   )
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
@@ -408,13 +422,13 @@ const ChatDetail: Component = () => {
             </header>
 
             <section
-              class={`overflow-y-none flex flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
+              class={`overflow-y-none flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
               style={contentStyles()}
             >
               <section
                 class={`flex flex-col-reverse gap-4 overflow-y-auto sm:pr-2 ${msgsMaxWidth()}`}
               >
-                <div id="chat-messages" class="flex flex-col gap-2">
+                <div id="chat-messages" class="flex w-full flex-col gap-2">
                   <Show
                     when={
                       cfg.flags.charv2 &&
@@ -491,41 +505,52 @@ const ChatDetail: Component = () => {
               <Show when={!!chats.opts.pane}>
                 <Switch>
                   <Match when={chats.opts.pane === 'character'}>
-                    <CreateCharacterForm
-                      chat={chats.chat}
-                      editId={editId()}
-                      topAddon={
-                        <Show when={editableCharcters().length > 1}>
-                          <CharacterSelect
-                            class="w-full"
-                            fieldName="editingId"
-                            items={editableCharcters()}
-                            value={charBeingEdited()}
-                            onChange={changeEditingChar}
-                          />
-                        </Show>
-                      }
-                      mode={{
-                        kind: 'paneOrPopup',
-                        close: closeCharEditor,
-                        bodyWrapper: (body) => (
-                          <Switch>
-                            <Match when={editId() === ''}>
-                              <div class="mx-auto flex h-full w-full items-center justify-center">
-                                <Loading />
-                              </div>
-                            </Match>
-                            <Match when={editId() !== ''}>{body}</Match>
-                          </Switch>
-                        ),
-                      }}
-                    />
+                    <Convertible
+                      kind="partial"
+                      title="Edit Character"
+                      close={closeCharEditor}
+                      footer={paneFooter()}
+                    >
+                      <Show when={editId() !== ''}>
+                        <CreateCharacterForm
+                          chat={chats.chat}
+                          editId={editId()}
+                          footer={setPaneFooter}
+                          close={closeCharEditor}
+                        >
+                          <Show when={editableCharcters().length > 1}>
+                            <CharacterSelect
+                              class="w-full"
+                              fieldName="editingId"
+                              items={editableCharcters()}
+                              value={charBeingEdited()}
+                              onChange={changeEditingChar}
+                            />
+                          </Show>
+                        </CreateCharacterForm>
+                      </Show>
+
+                      <Show when={editId() === ''}>
+                        <div class="flex h-full w-full items-center justify-center">
+                          <Loading />
+                        </div>
+                      </Show>
+                    </Convertible>
                   </Match>
+
                   <Match when={chats.opts.pane === 'preset'}>
-                    <ChatGenSettings
-                      chat={chats.chat!}
-                      mode={{ kind: 'paneOrPopup', close: closePane }}
-                    />
+                    <Convertible
+                      kind="partial"
+                      title="Preset Settings"
+                      close={closePane}
+                      footer={paneFooter()}
+                    >
+                      <ChatGenSettings
+                        chat={chats.chat!}
+                        close={closePane}
+                        footer={setPaneFooter}
+                      />
+                    </Convertible>
                   </Match>
                 </Switch>
               </Show>
@@ -682,8 +707,8 @@ const InfiniteScroll: Component = () => {
   )
 }
 
-function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean) {
-  if (sidePaneVisible) return 'w-full max-w-7xl'
+function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean): string {
+  if (sidePaneVisible) return 'w-full max-w-full'
   switch (setting) {
     case 'narrow':
       return 'w-full max-w-3xl'

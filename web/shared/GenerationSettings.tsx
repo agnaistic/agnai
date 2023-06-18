@@ -313,7 +313,7 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           service={props.service}
           class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-          aiSetting={'ultimeJailbreak'}
+          aiSetting={'gaslight'}
         />
         <div class="flex flex-wrap gap-4">
           <Toggle

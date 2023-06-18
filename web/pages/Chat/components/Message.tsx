@@ -219,7 +219,7 @@ const SingleMessage: Component<
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
-                class={`flex min-w-0 shrink flex-col overflow-x-hidden ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()} ${oocNameClass()}`}
+                class={`flex min-w-0 shrink flex-col overflow-hidden ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()} ${oocNameClass()}`}
               >
                 <b
                   class={`text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameClasses()}`}

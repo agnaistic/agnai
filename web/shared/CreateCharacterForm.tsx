@@ -49,7 +49,6 @@ import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
 import { Card, SolidCard } from './Card'
 import { usePane } from './hooks'
-import { Convertible, ConvertibleMode } from '../pages/Chat/Convertible'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -63,18 +62,20 @@ export const CreateCharacterForm: Component<{
   editId?: string
   duplicateId?: string
   import?: string
-  topAddon?: JSX.Element
-  mode: ConvertibleMode
+  children?: JSX.Element
+  footer?: (children: JSX.Element) => void
+  close?: () => void
 }> = (props) => {
   let ref: any
   const nav = useNavigate()
-  const isPage = props.mode.kind === 'page'
+  const isPage = props.close === undefined
+
   const paneOrPopup = usePane()
   const cancel = () => {
     if (isPage) {
       nav('/character/list')
     } else {
-      props.mode.close?.()
+      props.close?.()
     }
   }
   const query = { import: props.import }
@@ -209,6 +210,7 @@ export const CreateCharacterForm: Component<{
 
   createEffect(() => {
     tagStore.updateTags(state.list)
+    props.footer?.(footer)
   })
 
   const updateFile = async (files: FileInputResult[]) => {
@@ -246,43 +248,25 @@ export const CreateCharacterForm: Component<{
   }
 
   const onSubmit = (ev: Event) => {
-    const body = getStrictForm(ev, {
-      kind: PERSONA_FORMATS,
-      name: 'string',
-      description: 'string?',
-      culture: 'string',
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-    } as const)
-
-    const attributes = getAttributeMap(ev)
-
-    const persona = {
-      kind: body.kind,
-      attributes,
-    }
-
-    const payload = {
-      name: body.name,
-      description: body.description,
-      culture: body.culture,
+    const opts: PayloadOpts = {
+      version: flags.charv2 ? 'v2' : 'v1',
       tags: tags(),
-      scenario: body.scenario,
       avatar: state.avatar.blob || avatar(),
-      greeting: body.greeting,
-      sampleChat: body.sampleChat,
-      persona,
+      altGreetings: alternateGreetings(),
+      characterBook: characterBook(),
+      extensions: extensions(),
       originalAvatar: state.edit?.avatar,
       voice: voice(),
     }
+
+    const payload = getPayload(ref, opts)
 
     if (props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
         } else if (paneOrPopup() === 'popup') {
-          props.mode.close?.()
+          props.close?.()
         }
       })
     } else {
@@ -290,97 +274,41 @@ export const CreateCharacterForm: Component<{
     }
   }
 
-  const onSubmitV2 = (ev: Event) => {
-    const body = getStrictForm(ev, {
-      kind: PERSONA_FORMATS,
-      name: 'string',
-      description: 'string?',
-      culture: 'string',
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-      systemPrompt: 'string',
-      postHistoryInstructions: 'string',
-      creator: 'string',
-      characterVersion: 'string',
-    } as const)
-
-    const attributes = getAttributeMap(ev)
-
-    const persona = {
-      kind: body.kind,
-      attributes,
-    }
-
-    const payload = {
-      name: body.name,
-      description: body.description,
-      culture: body.culture,
-      tags: tags(),
-      scenario: body.scenario,
-      avatar: state.avatar.blob || avatar(),
-      greeting: body.greeting,
-      sampleChat: body.sampleChat,
-      persona,
-      originalAvatar: state.edit?.avatar,
-      voice: voice(),
-
-      // New fields start here
-      systemPrompt: body.systemPrompt ?? '',
-      postHistoryInstructions: body.postHistoryInstructions ?? '',
-      alternateGreetings: alternateGreetings() ?? '',
-      characterBook: characterBook(),
-      creator: body.creator ?? '',
-      extensions: extensions(),
-      characterVersion: body.characterVersion ?? '',
-    }
-
-    if (props.editId) {
-      characterStore.editCharacter(props.editId, payload, () => {
-        if (isPage) {
-          nav(`/character/${props.editId}/chats`)
-        }
-      })
-    } else {
-      characterStore.createCharacter(payload, (result) => nav(`/character/${result._id}/chats`))
-    }
-  }
-
-  const showWarning = createMemo(
-    () => !!props.chat?.overrides && props.chat.characterId === props.editId
-  )
-
-  const title = 'Edit Character'
-  const paneAndPageTitle = (
-    <PageHeader
-      title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
-      subtitle={
-        <div class="whitespace-normal">
-          <em>
-            {totalTokens()} tokens, {totalPermanentTokens()} permanent
-          </em>
-        </div>
-      }
-    />
-  )
   const footer = (
     <>
       <Button onClick={cancel} schema="secondary">
         <X />
-        {props.mode.kind === 'paneOrPopup' ? 'Close' : 'Cancel'}
+        {props.close ? 'Close' : 'Cancel'}
       </Button>
-      <Button type="submit" disabled={state.creating}>
+      <Button onClick={onSubmit} disabled={state.creating}>
         <Save />
         {props.editId ? 'Update' : 'Create'}
       </Button>
     </>
   )
-  const body = (
+
+  const showWarning = createMemo(
+    () => !!props.chat?.overrides && props.chat.characterId === props.editId
+  )
+
+  return (
     <>
-      <form class="text-base" onSubmit={flags.charv2 ? onSubmitV2 : onSubmit} ref={ref}>
+      <Show when={isPage || paneOrPopup() === 'pane'}>
+        <PageHeader
+          title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
+          subtitle={
+            <div class="whitespace-normal">
+              <em>
+                {totalTokens()} tokens, {totalPermanentTokens()} permanent
+              </em>
+            </div>
+          }
+        />
+      </Show>
+      <form class="text-base" onSubmit={onSubmit} ref={ref}>
         <div class="flex flex-col gap-4">
           <Show when={!isPage}>
-            <div> {props.topAddon} </div>
+            <div> {props.children} </div>
           </Show>
 
           <Show when={showWarning()}>
@@ -668,21 +596,15 @@ export const CreateCharacterForm: Component<{
                 />
               </Card>
             </div>
+
+            <Show when={!props.close}>
+              <div class="flex w-full justify-end gap-2">{footer}</div>
+            </Show>
           </div>
         </div>
       </form>
       <ImageModal />
     </>
-  )
-
-  return (
-    <Convertible
-      title={title}
-      paneAndPageTitle={paneAndPageTitle}
-      footer={footer}
-      body={body}
-      mode={props.mode}
-    />
   )
 }
 
@@ -769,4 +691,98 @@ const MemoryBookPicker: Component<{
       onChange={onChange}
     />
   )
+}
+
+type PayloadOpts = {
+  version: 'v1' | 'v2'
+  tags: string[] | undefined
+  voice: VoiceSettings
+  avatar: File | undefined
+  altGreetings: string[] | undefined
+  characterBook: AppSchema.MemoryBook | undefined
+  extensions: Record<string, any>
+  originalAvatar: string | undefined
+}
+
+function getPayload(ev: Event, opts: PayloadOpts) {
+  if (opts.version === 'v1') {
+    const body = getStrictForm(ev, {
+      kind: PERSONA_FORMATS,
+      name: 'string',
+      description: 'string?',
+      culture: 'string',
+      greeting: 'string',
+      scenario: 'string',
+      sampleChat: 'string',
+    } as const)
+
+    const attributes = getAttributeMap(ev)
+
+    const persona = {
+      kind: body.kind,
+      attributes,
+    }
+
+    const payload = {
+      name: body.name,
+      description: body.description,
+      culture: body.culture,
+      tags: opts.tags,
+      scenario: body.scenario,
+      avatar: opts.avatar,
+      greeting: body.greeting,
+      sampleChat: body.sampleChat,
+      persona,
+      originalAvatar: opts.originalAvatar,
+      voice: opts.voice,
+    }
+
+    return payload
+  }
+
+  const body = getStrictForm(ev, {
+    kind: PERSONA_FORMATS,
+    name: 'string',
+    description: 'string?',
+    culture: 'string',
+    greeting: 'string',
+    scenario: 'string',
+    sampleChat: 'string',
+    systemPrompt: 'string',
+    postHistoryInstructions: 'string',
+    creator: 'string',
+    characterVersion: 'string',
+  } as const)
+
+  const attributes = getAttributeMap(ev)
+
+  const persona = {
+    kind: body.kind,
+    attributes,
+  }
+
+  const payload = {
+    name: body.name,
+    description: body.description,
+    culture: body.culture,
+    tags: opts.tags,
+    scenario: body.scenario,
+    avatar: opts.avatar,
+    greeting: body.greeting,
+    sampleChat: body.sampleChat,
+    persona,
+    originalAvatar: opts.originalAvatar,
+    voice: opts.voice,
+
+    // New fields start here
+    systemPrompt: body.systemPrompt ?? '',
+    postHistoryInstructions: body.postHistoryInstructions ?? '',
+    alternateGreetings: opts.altGreetings ?? '',
+    characterBook: opts.characterBook,
+    creator: body.creator ?? '',
+    extensions: opts.extensions,
+    characterVersion: body.characterVersion ?? '',
+  }
+
+  return payload
 }

@@ -35,6 +35,9 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
      * 3. Env var is enabled
      */
     const hasSlot = !!cfg.slots[props.slot]
+    if (!hasSlot) {
+      log('Missing slot')
+    }
     const canShow = hasSlot && (cfg.flags.slots || cfg.slots.enabled)
     setShow(canShow)
     const ele = document.getElementById(id()) || ref
@@ -44,11 +47,13 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
     }
 
     if (canShow) {
-      if (done()) return
+      if (done()) {
+        return
+      }
       const node = document.createRange().createContextualFragment(cfg.slots[props.slot] as any)
       ele.append(node)
-      log('Rendered')
       setDone(true)
+      log('Rendered')
     } else {
       ele.innerHTML = ''
     }
@@ -61,8 +66,8 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
       id={id()}
       data-slot={props.slot}
       classList={{
-        'border-[var(--bg-700)]': user.user?.admin && cfg.slots.testing,
-        'border-[1px]': user.user?.admin && cfg.slots.testing,
+        'border-[var(--bg-700)]': user.user?.admin && !!user.user?.admin,
+        'border-[1px]': user.user?.admin && !!user.user?.admin,
       }}
     ></div>
   )

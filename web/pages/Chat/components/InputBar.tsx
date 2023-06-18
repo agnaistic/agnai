@@ -3,6 +3,7 @@ import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } fro
 import { AppSchema } from '../../../../srv/db/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
+import TextInput from '../../../shared/TextInput'
 import { chatStore, toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
@@ -138,14 +139,17 @@ const InputBar: Component<{
         </div>
       </Show>
 
-      <textarea
+      <TextInput
+        fieldName="chatInput"
+        isMultiline
         spellcheck
         lang={props.char?.culture}
         ref={ref}
         value={text()}
         placeholder={placeholder()}
-        class="focusable-field h-10 min-h-[40px] w-full rounded-md rounded-r-none px-4 py-2 hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
-        onKeyDown={(ev) => {
+        parentClass="flex w-full"
+        class="h-full rounded-md rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+        onKeyUp={(ev) => {
           if (ev.key === 'Enter' && !ev.shiftKey) {
             send()
             ev.preventDefault()
@@ -161,74 +165,72 @@ const InputBar: Component<{
         onSubmit={() => send()}
         cleared={cleared}
       />
-      <div>
-        <button
-          onClick={onButtonClick}
-          class="rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
-        >
-          <MoreHorizontal />
-        </button>
-        <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
-          <div class="flex w-48 flex-col gap-2 p-2">
-            {/* <Button schema="secondary" class="w-full" onClick={generateSelf} alignLeft>
+      <button
+        onClick={onButtonClick}
+        class="h-full rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
+      >
+        <MoreHorizontal />
+      </button>
+      <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
+        <div class="flex w-48 flex-col gap-2 p-2">
+          {/* <Button schema="secondary" class="w-full" onClick={generateSelf} alignLeft>
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-            <Show when={props.bots.length > 1}>
-              <div>Auto-reply</div>
-              <Button
-                schema="secondary"
-                size="sm"
-                onClick={() => setAutoReplyAs('')}
-                disabled={!chats.replyAs}
-              >
-                None
-              </Button>
-              <For each={props.bots}>
-                {(char) => (
-                  <Show
-                    when={props.chat.characters?.[char._id] || char._id === props.chat.characterId}
-                  >
-                    <Button
-                      schema="secondary"
-                      size="sm"
-                      onClick={() => setAutoReplyAs(char._id)}
-                      disabled={chats.replyAs === char._id}
-                    >
-                      {char.name}
-                    </Button>
-                  </Show>
-                )}
-              </For>
-              <hr />
-            </Show>
-            <Show when={props.showOocToggle}>
-              <Button
-                schema="secondary"
-                size="sm"
-                class="flex items-center justify-between"
-                onClick={toggleOoc}
-              >
-                <div>Stop Bot Reply</div>
-                <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
-              </Button>
-            </Show>
-            <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
-              <ImagePlus size={18} /> Generate Image
+          <Show when={props.bots.length > 1}>
+            <div>Auto-reply</div>
+            <Button
+              schema="secondary"
+              size="sm"
+              onClick={() => setAutoReplyAs('')}
+              disabled={!chats.replyAs}
+            >
+              None
             </Button>
-            <Show when={!!state.lastMsg?.characterId && isOwner()}>
-              <Button schema="secondary" class="w-full" onClick={more} alignLeft>
-                <PlusCircle size={18} /> Generate More
+            <For each={props.bots}>
+              {(char) => (
+                <Show
+                  when={props.chat.characters?.[char._id] || char._id === props.chat.characterId}
+                >
+                  <Button
+                    schema="secondary"
+                    size="sm"
+                    onClick={() => setAutoReplyAs(char._id)}
+                    disabled={chats.replyAs === char._id}
+                  >
+                    {char.name}
+                  </Button>
+                </Show>
+              )}
+            </For>
+            <hr />
+          </Show>
+          <Show when={props.showOocToggle}>
+            <Button
+              schema="secondary"
+              size="sm"
+              class="flex items-center justify-between"
+              onClick={toggleOoc}
+            >
+              <div>Stop Bot Reply</div>
+              <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
+            </Button>
+          </Show>
+          <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
+            <ImagePlus size={18} /> Generate Image
+          </Button>
+          <Show when={!!state.lastMsg?.characterId && isOwner()}>
+            <Button schema="secondary" class="w-full" onClick={more} alignLeft>
+              <PlusCircle size={18} /> Generate More
+            </Button>
+            <Show when={!!props.char?.voice}>
+              <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
+                <Megaphone size={18} /> Play Voice
               </Button>
-              <Show when={!!props.char?.voice}>
-                <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
-                  <Megaphone size={18} /> Play Voice
-                </Button>
-              </Show>
             </Show>
-          </div>
-        </DropMenu>
-      </div>
+          </Show>
+        </div>
+      </DropMenu>
     </div>
   )
 }
