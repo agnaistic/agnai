@@ -100,7 +100,6 @@ export const config = {
   },
   slots: {
     enabled: env('SLOTS_ENABLED', 'false') === 'true',
-    testing: env('SLOTS_TESTING', 'true') === 'false' ? false : true,
     menu: env('MENU_SLOT', ''),
     menuLg: env('MENU_LG_SLOT', ''),
     banner: env('BANNER_SLOT', ''),

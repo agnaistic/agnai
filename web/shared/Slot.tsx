@@ -61,8 +61,8 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
       id={id()}
       data-slot={props.slot}
       classList={{
-        'border-[var(--bg-700)]': user.user?.admin && cfg.slots.testing,
-        'border-[1px]': user.user?.admin && cfg.slots.testing,
+        'border-[var(--bg-700)]': user.user?.admin && !!user.user?.admin,
+        'border-[1px]': user.user?.admin && !!user.user?.admin,
       }}
     ></div>
   )
