@@ -43,6 +43,10 @@ body {
   @apply cursor-pointer text-[var(--hl-500)] hover:text-[var(--hl-300)];
 }
 
+.highlight {
+  @apply text-[var(--hl-400)];
+}
+
 @layer base {
   /* .bg-100 {
     background: linear-gradient(var(--bg-100), var(--gradient-100));
@@ -430,6 +434,7 @@ textarea:disabled {
 }
 
 .markdown > ol {
+  @apply ml-6;
   list-style-type: decimal;
 }
 

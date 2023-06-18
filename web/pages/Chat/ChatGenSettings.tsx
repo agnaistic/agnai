@@ -1,5 +1,15 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, Match, Show, Switch } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  Match,
+  Show,
+  Switch,
+} from 'solid-js'
 import {
   chatGenSettings,
   defaultPresets,
@@ -17,13 +27,13 @@ import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
-import { Convertible, ConvertibleMode } from './Convertible'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card } from '/web/shared/Card'
 
 export const ChatGenSettings: Component<{
   chat: AppSchema.Chat
-  mode: ConvertibleMode
+  close?: () => void
+  footer?: (children: JSX.Element) => void
 }> = (props) => {
   let ref: any
   const user = userStore()
@@ -89,12 +99,13 @@ export const ChatGenSettings: Component<{
     const preset = selected()
     if (preset === AutoPreset.chat) {
       const body = getStrictForm(ref, chatGenSettings)
-      chatStore.editChatGenSettings(props.chat._id, body, props.mode.close)
+      chatStore.editChatGenSettings(props.chat._id, body, props.close)
     } else if (preset === AutoPreset.service) {
       chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined }, undefined)
     } else {
       chatStore.editChatGenPreset(props.chat._id, preset, () => {
-        props.mode.close?.()
+        props.close?.()
+
         if (isDefaultPreset(preset)) {
           toastStore.success('Preset changed')
         }
@@ -113,19 +124,23 @@ export const ChatGenSettings: Component<{
     }
   }
 
-  const title = 'Preset settings'
-  const footer = (
-    <>
-      <Button schema="secondary" onClick={() => props.mode.close?.()}>
-        <X /> {props.mode.kind === 'paneOrPopup' ? 'Close' : 'Cancel'}
-      </Button>
+  createEffect(() => {
+    const footer = (
+      <>
+        <Button schema="secondary" onClick={() => props.close?.()}>
+          <X /> {props.close ? 'Close' : 'Cancel'}
+        </Button>
 
-      <Button onClick={onSave}>
-        <Save /> Save
-      </Button>
-    </>
-  )
-  const body = (
+        <Button onClick={onSave}>
+          <Save /> Save
+        </Button>
+      </>
+    )
+
+    props.footer?.(footer)
+  })
+
+  return (
     <div class="text-sm">
       <form ref={ref} class="flex flex-col gap-4">
         <Card class="flex flex-col gap-2">
@@ -183,6 +198,4 @@ export const ChatGenSettings: Component<{
       </form>
     </div>
   )
-
-  return <Convertible title={title} footer={footer} body={body} mode={props.mode} />
 }

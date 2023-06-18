@@ -302,7 +302,7 @@ const PromptSettings: Component<Props> = (props) => {
           value={props.inherit?.ultimeJailbreak ?? ''}
           disabled={props.disabled}
           service={props.service}
-          aiSetting={'ultimeJailbreak'}
+          aiSetting={'gaslight'}
         />
       </Card>
       <Card>

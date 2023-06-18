@@ -44,6 +44,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 export const config = {
+  clustering: !!env('CLUSTERING', ''),
   jwtSecret: env('JWT_SECRET'),
   jwtExpiry: env('JWT_EXPIRY', '7d'),
   port: +env('PORT', '3001'),
@@ -73,7 +74,7 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env('ADAPTERS', 'novel,horde,kobold,luminai,openai,scale,claude,ooba,goose,replicate')
+  adapters: env('ADAPTERS', 'novel,horde,kobold,openai,scale,claude,ooba,goose,replicate')
     .split(',')
     .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],
   storage: {
@@ -99,7 +100,6 @@ export const config = {
   },
   slots: {
     enabled: env('SLOTS_ENABLED', 'false') === 'true',
-    testing: env('SLOTS_TESTING', 'true') === 'false' ? false : true,
     menu: env('MENU_SLOT', ''),
     menuLg: env('MENU_LG_SLOT', ''),
     banner: env('BANNER_SLOT', ''),

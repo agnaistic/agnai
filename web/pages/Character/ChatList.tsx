@@ -280,11 +280,11 @@ const Chats: Component<{
                         <div class="overflow-hidden text-ellipsis whitespace-nowrap font-bold leading-5">
                           {chat.characters.map((c) => c.name).join(', ')}
                         </div>
-                        <div class="overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-4">
-                          {chat.name || 'Untitled'}
-                        </div>
-                        <div class="flex text-xs italic text-[var(--text-600)]">
-                          Updated {toDuration(new Date(chat.updatedAt))} ago.
+                        <div class="flex gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-4">
+                          <span>{chat.name || 'Untitled'} </span>
+                          <span class="flex text-xs italic text-[var(--text-600)]">
+                            {toDuration(new Date(chat.updatedAt))} ago.
+                          </span>
                         </div>
                       </div>
                     </A>

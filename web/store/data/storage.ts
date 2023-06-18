@@ -18,7 +18,7 @@ const emptyCfg: AppSchema.AppConfig = {
   imagesSaved: false,
   selfhosting: false,
   registered: [],
-  slots: { banner: '', menu: '', mobile: '', menuLg: '', testing: true, enabled: false },
+  slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
 }
 
 let SELF_HOSTING = false
@@ -158,11 +158,11 @@ function getGuestInitEntities() {
   return { user, presets, profile, books, characters, chats }
 }
 
-export function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
+export async function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
+  const key = `messages-${chatId}`
   if (SELF_HOSTING) {
-    api.post(`/json/messages/${chatId}`, messages)
+    return api.post(`/json/messages/${chatId}`, messages)
   } else {
-    const key = `messages-${chatId}`
     safeLocalStorage.setItem(key, JSON.stringify(messages))
   }
 }

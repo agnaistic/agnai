@@ -175,6 +175,18 @@ This is how {{char}} should talk: {{example_dialogue}}`,
 
     expect(actual.template).toMatchSnapshot()
   })
+
+  it('will include ujb when omitted from gaslight', () => {
+    const actual = build([botMsg('bot response')], {
+      char: main,
+      settings: {
+        useGaslight: true,
+        gaslight: `GASLIGHT TEMPLATE\n{{user}}\n{{char}}\nAuto-injected text:`,
+        ultimeJailbreak: '!!UJB_PROMPT!!',
+      },
+    })
+    expect(actual).to.matchSnapshot()
+  })
 })
 
 function build(

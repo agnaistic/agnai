@@ -52,6 +52,7 @@
     "start:all": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:web": "parcel web/index.html",
     "start": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
+    "start:cluster": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:https": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache --https\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:debug": "LOG_LEVEL=debug concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:public": "concurrently -c auto -n web,api,lt \"parcel watch web/index.html\" \"npm run server:watch\" \"npx lt --port 3001\"",
@@ -65,8 +66,8 @@
     "typecheck": "tsc -p tsconfig.json",
     "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d",
-    "deps": "npx --yes pnpm@8.6.0 install --lockfile",
-    "web": "parcel web/index.html",
+    "deps": "npx --yes pnpm@8.6.2 install --lockfile",
+    "web": "parcel web/index.html --no-cache",
     "api": "tsc -p api.tsconfig.json --watch"
   },
   "dependencies": {
@@ -91,12 +92,14 @@
     "pino-pretty": "^9.2.0",
     "redis": "^4.6.5",
     "sentencepiece-js": "^1.1.0",
+    "throng": "^5.0.0",
     "uuid": "^9.0.0",
     "ws": "^8.12.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
     "@parcel/transformer-inline-string": "2.8.3",
+    "@parcel/transformer-sass": "2.9.2",
     "@solidjs/router": "^0.6.0",
     "@types/adm-zip": "^0.5.0",
     "@types/bcryptjs": "^2.4.2",
@@ -110,6 +113,7 @@
     "@types/needle": "^3.2.0",
     "@types/node": "^18.13.0",
     "@types/showdown": "^2.0.0",
+    "@types/throng": "^5.0.4",
     "@types/uuid": "^9.0.0",
     "@types/ws": "^8.5.4",
     "babel-preset-solid": "^1.6.9",

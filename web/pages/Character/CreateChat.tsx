@@ -147,7 +147,7 @@ const CreateChatModal: Component<{
                 value={char()}
                 fieldName="character"
                 label="Character"
-                helperText="The conversation's central character"
+                helperText="The conversation's main character"
                 onChange={(c) => setSelected(c?._id)}
               />
             </Card>
