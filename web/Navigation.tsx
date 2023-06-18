@@ -251,7 +251,7 @@ const Slots: Component = (props) => {
     if (rendered()) return
 
     if (state.showMenu) {
-      setTimeout(() => setRendered(true), 300)
+      setTimeout(() => setRendered(true), 500)
     }
   })
 

@@ -49,7 +49,6 @@ import { characterGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
 import { Card, SolidCard } from './Card'
 import { usePane } from './hooks'
-import { Convertible, ConvertibleMode } from '../pages/Chat/Convertible'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -63,18 +62,20 @@ export const CreateCharacterForm: Component<{
   editId?: string
   duplicateId?: string
   import?: string
-  topAddon?: JSX.Element
-  mode: ConvertibleMode
+  children?: JSX.Element
+  footer?: (children: JSX.Element) => void
+  close?: () => void
 }> = (props) => {
   let ref: any
   const nav = useNavigate()
-  const isPage = props.mode.kind === 'page'
+  const isPage = props.close === undefined
+
   const paneOrPopup = usePane()
   const cancel = () => {
     if (isPage) {
       nav('/character/list')
     } else {
-      props.mode.close?.()
+      props.close?.()
     }
   }
   const query = { import: props.import }
@@ -208,7 +209,21 @@ export const CreateCharacterForm: Component<{
   )
 
   createEffect(() => {
+    const footer = (
+      <>
+        <Button onClick={cancel} schema="secondary">
+          <X />
+          {props.close ? 'Close' : 'Cancel'}
+        </Button>
+        <Button onClick={onSubmit} disabled={state.creating}>
+          <Save />
+          {props.editId ? 'Update' : 'Create'}
+        </Button>
+      </>
+    )
+
     tagStore.updateTags(state.list)
+    props.footer?.(footer)
   })
 
   const updateFile = async (files: FileInputResult[]) => {
@@ -264,7 +279,7 @@ export const CreateCharacterForm: Component<{
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
         } else if (paneOrPopup() === 'popup') {
-          props.mode.close?.()
+          props.close?.()
         }
       })
     } else {
@@ -276,37 +291,24 @@ export const CreateCharacterForm: Component<{
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
 
-  const title = 'Edit Character'
-  const paneAndPageTitle = (
-    <PageHeader
-      title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
-      subtitle={
-        <div class="whitespace-normal">
-          <em>
-            {totalTokens()} tokens, {totalPermanentTokens()} permanent
-          </em>
-        </div>
-      }
-    />
-  )
-  const footer = (
+  return (
     <>
-      <Button onClick={cancel} schema="secondary">
-        <X />
-        {props.mode.kind === 'paneOrPopup' ? 'Close' : 'Cancel'}
-      </Button>
-      <Button onClick={onSubmit} disabled={state.creating}>
-        <Save />
-        {props.editId ? 'Update' : 'Create'}
-      </Button>
-    </>
-  )
-  const body = (
-    <>
+      <Show when={isPage || paneOrPopup() === 'pane'}>
+        <PageHeader
+          title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
+          subtitle={
+            <div class="whitespace-normal">
+              <em>
+                {totalTokens()} tokens, {totalPermanentTokens()} permanent
+              </em>
+            </div>
+          }
+        />
+      </Show>
       <form class="text-base" onSubmit={onSubmit} ref={ref}>
         <div class="flex flex-col gap-4">
           <Show when={!isPage}>
-            <div> {props.topAddon} </div>
+            <div> {props.children} </div>
           </Show>
 
           <Show when={showWarning()}>
@@ -597,18 +599,9 @@ export const CreateCharacterForm: Component<{
           </div>
         </div>
       </form>
+
       <ImageModal />
     </>
-  )
-
-  return (
-    <Convertible
-      title={title}
-      paneAndPageTitle={paneAndPageTitle}
-      footer={footer}
-      body={body}
-      mode={props.mode}
-    />
   )
 }
 
