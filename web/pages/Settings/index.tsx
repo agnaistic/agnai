@@ -16,8 +16,9 @@ import { Show } from 'solid-js'
 import { ImageSettings } from './Image/ImageSettings'
 import { VoiceSettings } from './Voice/VoiceSettings'
 import { toArray } from '/common/util'
+import { useSearchParams } from '@solidjs/router'
 
-const settingTabs = {
+const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
   ui: 'UI Settings',
   image: 'Image Settings',
@@ -25,13 +26,21 @@ const settingTabs = {
   guest: 'Guest Data',
 }
 
-type Tab = keyof typeof settingTabs
+enum MainTab {
+  ai = 0,
+  ui = 1,
+  image = 2,
+  voice = 3,
+  guest = 4,
+}
+
+type Tab = keyof typeof MainTab
 
 const Settings: Component = () => {
   setComponentPageTitle('Settings')
   const state = userStore()
-
-  const [tab, setTab] = createSignal(0)
+  const [query, _setQuery] = useSearchParams()
+  const [tab, setTab] = createSignal<number>(MainTab[query.tab as Tab] ?? 0)
   const [workers, setWorkers] = createSignal<string[]>(toArray(state.user?.hordeWorkers))
   const [models, setModels] = createSignal<string[]>(toArray(state.user?.hordeModel))
 

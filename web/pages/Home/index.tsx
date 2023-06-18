@@ -44,15 +44,15 @@ const HomePage: Component = () => {
       </Show>
 
       <div class="flex flex-col gap-4 text-lg">
-        <div class="flex justify-center text-6xl">
+        <div class="hidden justify-center text-6xl sm:flex">
           Agn<span class="text-[var(--hl-500)]">ai</span>stic
         </div>
         <Card border>
           <div class="leading-6">
             <b>Agnaistic</b> is a "bring your own AI" chat service. It is completely open-source and
             free to use. You only pay for the third-party AI services that you choose to use. Your
-            conversations are completely private and never shared with anyone unless you invite them
-            to your chat.
+            conversations are completely private and are never shared with anyone unless you invite
+            them to your chat.
           </div>
         </Card>
 
@@ -140,7 +140,7 @@ const HomePage: Component = () => {
           <div class="flex flex-col gap-2 leading-6">
             <p>
               Already have OpenAI, NovelAI, GooseAI, Scale, Claude? Head to the{' '}
-              <A class="link" href="/settings">
+              <A class="link" href="/settings?tab=ai">
                 Settings Page
               </A>{' '}
               and configure your AI service.
@@ -184,7 +184,7 @@ const HordeGuide: Component<{ close: () => void }> = (props) => (
           AI Horde
         </a>
         . Once you have your key, add it to your{' '}
-        <A href="/settings" class="link">
+        <A href="/settings?tab=ai&service=horde" class="link">
           Horde Settings
         </A>
         .
@@ -233,7 +233,7 @@ const OpenAIGuide: Component<{ close: () => void }> = (props) => (
 
       <Card>
         Once you have your API key, head to the{' '}
-        <A class="link" href="/settings">
+        <A class="link" href="/settings?tab=ai&service=openai">
           Settings
         </A>{' '}
         page and set your key in the OpenAI area.
