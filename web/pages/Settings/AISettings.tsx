@@ -13,20 +13,25 @@ import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import RegisteredSettings from './components/RegisteredSettings'
+import { useSearchParams } from '@solidjs/router'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
   onHordeModelsChange: (models: string[]) => void
 }> = (props) => {
+  const [query] = useSearchParams()
   const state = userStore()
   const cfg = settingStore()
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
 
   createEffect(() => {
-    setTabs(cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a))
+    const tabs = cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a)
+    setTabs(tabs)
+
     if (!ready() && cfg.config.adapters?.length) {
+      const queryTab = tabs.findIndex((label) => label.toLowerCase() === query.service)
       const defaultTab = cfg.config.adapters.indexOf(state.user?.defaultAdapter!)
-      setTab(defaultTab === -1 ? 0 : defaultTab)
+      setTab(queryTab !== -1 ? queryTab : defaultTab === -1 ? 0 : defaultTab)
       setReady(true)
     }
   })
