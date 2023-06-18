@@ -209,19 +209,6 @@ export const CreateCharacterForm: Component<{
   )
 
   createEffect(() => {
-    const footer = (
-      <>
-        <Button onClick={cancel} schema="secondary">
-          <X />
-          {props.close ? 'Close' : 'Cancel'}
-        </Button>
-        <Button onClick={onSubmit} disabled={state.creating}>
-          <Save />
-          {props.editId ? 'Update' : 'Create'}
-        </Button>
-      </>
-    )
-
     tagStore.updateTags(state.list)
     props.footer?.(footer)
   })
@@ -286,6 +273,19 @@ export const CreateCharacterForm: Component<{
       characterStore.createCharacter(payload, (result) => nav(`/character/${result._id}/chats`))
     }
   }
+
+  const footer = (
+    <>
+      <Button onClick={cancel} schema="secondary">
+        <X />
+        {props.close ? 'Close' : 'Cancel'}
+      </Button>
+      <Button onClick={onSubmit} disabled={state.creating}>
+        <Save />
+        {props.editId ? 'Update' : 'Create'}
+      </Button>
+    </>
+  )
 
   const showWarning = createMemo(
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
@@ -596,10 +596,13 @@ export const CreateCharacterForm: Component<{
                 />
               </Card>
             </div>
+
+            <Show when={!props.close}>
+              <div class="flex w-full justify-end gap-2">{footer}</div>
+            </Show>
           </div>
         </div>
       </form>
-
       <ImageModal />
     </>
   )
