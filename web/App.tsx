@@ -92,7 +92,24 @@ const Layout: Component = () => {
   const chat = chatStore()
   const paneOrPopup = usePane()
   const isPaneOpen = createMemo(() => paneOrPopup() === 'pane' && !!chat.opts.pane)
-  const maxW = createMemo(() => (isPaneOpen() ? 'max-w-full' : 'max-w-5xl'))
+  const maxW = createMemo((): string => {
+    if (isPaneOpen()) return 'max-w-full'
+    const width = state.ui.chatWidth || 'full'
+    switch (width) {
+      case 'full':
+      case 'narrow':
+        return 'max-w-5xl'
+
+      case 'xl':
+        return 'max-w-6xl'
+
+      case '2xl':
+        return 'max-w-7xl'
+
+      case '3xl':
+        return 'max-w-8xl'
+    }
+  })
 
   const reload = () => {
     settingStore.init()

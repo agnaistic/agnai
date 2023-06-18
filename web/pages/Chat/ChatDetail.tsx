@@ -131,7 +131,7 @@ const ChatDetail: Component = () => {
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() =>
-    getChatWidth(user.ui.chatWidth, !!chatStore().opts.pane && isPaneOrPopup() === 'pane')
+    getChatWidth(user.ui.chatWidth, !!chats.opts.pane && isPaneOrPopup() === 'pane')
   )
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
@@ -387,7 +387,7 @@ const ChatDetail: Component = () => {
             </header>
 
             <section
-              class={`overflow-y-none flex flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
+              class={`overflow-y-none flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
               style={contentStyles()}
             >
               <section
@@ -655,8 +655,8 @@ const InfiniteScroll: Component = () => {
   )
 }
 
-function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean) {
-  if (sidePaneVisible) return 'w-full max-w-7xl'
+function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean): string {
+  if (sidePaneVisible) return 'w-full max-w-full'
   switch (setting) {
     case 'narrow':
       return 'w-full max-w-3xl'
