@@ -1,4 +1,3 @@
-import type { OutgoingHttpHeaders } from 'http'
 import needle from 'needle'
 import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter, AdapterProps } from './type'
@@ -16,7 +15,6 @@ import { StatusError } from '../api/wrap'
 import { AppSchema } from '../db/schema'
 import { getEncoder } from '../tokenize'
 import { needleToSSE } from './stream'
-import { Encoder } from '/common/tokenize'
 import { adventureAmble } from '/common/default-preset'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { config } from '../config'
@@ -25,42 +23,31 @@ const baseUrl = `https://api.openai.com`
 
 type Role = 'user' | 'assistant' | 'system'
 
-type CompletionItem = {
-  role: Role
-  content: string
-  name?: string
-}
+type CompletionItem = { role: Role; content: string; name?: string }
+type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
+type Inference = { message: { content: string; role: Role } }
+type AsyncDelta = { delta: Partial<Inference['message']> }
 
-type CompletitionContent<T> = Array<
-  { finish_reason: string; index: number } & ({ text: string } | T)
->
-type ChatCompletionContent = { message: { content: string; role: Role } }
-
-type StreamedChatCompletionDelta = { delta: Partial<ChatCompletionContent['message']> }
-
-type FullCompletion = {
+type Completion<T = Inference> = {
   id: string
   created: number
   model: string
   object: string
-  choices: CompletitionContent<ChatCompletionContent>
+  choices: CompletionContent<T>
 }
 
-type StreamedCompletion = {
-  id: string
-  created: number
-  model: string
-  object: string
-  choices: CompletitionContent<StreamedChatCompletionDelta>
-}
 type CompletionGenerator = (
   url: string,
-  headers: OutgoingHttpHeaders,
+  headers: Record<string, string | string[] | number>,
   body: any
 ) => AsyncGenerator<
   { error: string } | { error?: undefined; token: string },
-  FullCompletion | undefined
+  Completion | undefined
 >
+
+// We only ever use the OpenAI gpt-3 encoder
+// Don't bother passing it around since we know this already
+const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
 
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
@@ -87,11 +74,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const useChat = !!OPENAI_CHAT_MODELS[oaiModel]
 
   if (useChat) {
-    const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
-
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : toChatCompletionPayload(opts, body.max_tokens, encoder)
+      : toChatCompletionPayload(opts, body.max_tokens)
 
     body.messages = messages
   } else {
@@ -124,7 +109,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     ? streamCompletion(url, headers, body)
     : requestFullCompletion(url, headers, body)
   let accumulated = ''
-  let response: FullCompletion | undefined
+  let response: Completion<Inference> | undefined
 
   while (true) {
     let generated = await iter.next()
@@ -258,7 +243,7 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
         break
       }
 
-      const parsed: StreamedCompletion = JSON.parse(event.slice('data: '.length))
+      const parsed: Completion<AsyncDelta> = JSON.parse(event.slice('data: '.length))
       const { choices, ...completionMeta } = parsed
       const { finish_reason, index, ...choice } = choices[0]
 
@@ -294,7 +279,7 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
   }
 }
 
-function getCompletionContent(completion?: FullCompletion) {
+function getCompletionContent(completion?: Completion<Inference>) {
   if (!completion) {
     return ''
   }
@@ -306,11 +291,7 @@ function getCompletionContent(completion?: FullCompletion) {
   }
 }
 
-function toChatCompletionPayload(
-  opts: AdapterProps,
-  maxTokens: number,
-  encoder: Encoder
-): CompletionItem[] {
+function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): CompletionItem[] {
   if (opts.kind === 'plain') {
     return [{ role: 'system', content: opts.prompt }]
   }
@@ -326,7 +307,7 @@ function toChatCompletionPayload(
       'history',
       'post',
     ]),
-    { opts, parts, encoder }
+    { opts, parts, encoder: encoder }
   )
 
   messages.push({ role: 'system', content: gaslight })
@@ -341,9 +322,9 @@ function toChatCompletionPayload(
   }
 
   // Append 'postamble' and system prompt (ujb)
-  const post = getPostInstruction(opts, messages, encoder)
+  const post = getPostInstruction(opts, messages)
   if (post) {
-    post.content = injectPlaceholders(post.content, { opts, parts: opts.parts, encoder })
+    post.content = injectPlaceholders(post.content, { opts, parts: opts.parts, encoder: encoder })
     tokens += encoder(post.content)
     history.push(post)
   }
@@ -363,16 +344,16 @@ function toChatCompletionPayload(
     const isBot = !isUser && !isSystem
 
     if (i === examplePos) {
-      const { additions, consumedTokens } = splitSampleChat({
+      const { additions, consumed } = splitSampleChat({
+        budget: maxBudget - tokens,
         sampleChat: obj.content,
-        tokensAlreadyConsumed: tokens,
-        tokenBudget: maxBudget,
-        encoder,
-        charname: replyAs.name,
-        username: handle,
+        char: replyAs.name,
+        sender: handle,
       })
+
+      if (tokens + consumed > maxBudget) continue
       history.push(...additions.reverse())
-      tokens += consumedTokens
+      tokens += consumed
       continue
     } else if (isBot) {
     } else if (line === '<START>') {
@@ -408,8 +389,7 @@ function getCharLooks(char: AppSchema.Character) {
 
 function getPostInstruction(
   opts: AdapterProps,
-  messages: CompletionItem[],
-  encoder: Encoder
+  messages: CompletionItem[]
 ): CompletionItem | undefined {
   let prefix = opts.parts.ujb ? `${opts.parts.ujb}\n\n` : ''
 
@@ -469,53 +449,51 @@ function escapeRegex(string: string) {
 
 type SplitSampleChatProps = {
   sampleChat: string
-  tokensAlreadyConsumed: number
-  tokenBudget: number
-  encoder: Encoder
-  charname: string
-  username: string
+  char: string
+  sender: string
+  budget?: number
 }
 
-export const splitSampleChat = ({
-  sampleChat,
-  tokensAlreadyConsumed,
-  tokenBudget,
-  encoder,
-  charname,
-  username,
-}: SplitSampleChatProps): { additions: CompletionItem[]; consumedTokens: number } => {
+export function splitSampleChat(opts: SplitSampleChatProps) {
+  const { sampleChat, char, sender, budget } = opts
   const regex = new RegExp(
-    `(?<=\\n)(?=${escapeRegex(charname)}:|${escapeRegex(username)}:|<start>)`,
+    `(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|<start>)`,
     'gi'
   )
-  const additions = []
-  let tokens = tokensAlreadyConsumed
-  for (const msg of sampleChat.replace(/\r\n/g, '\n').split(regex)) {
-    const trimmed = msg.trim()
+  const additions: CompletionItem[] = []
+  let tokens = 0
+
+  for (const chat of sampleChat.replace(/\r\n/g, '\n').split(regex)) {
+    const trimmed = chat.trim()
     if (!trimmed) continue
+
     // if the msg starts with <start> we consider everything between
     // <start> and the next placeholder a system message
     if (trimmed.toLowerCase().startsWith('<start>')) {
       const afterStart = trimmed.slice(7).trim()
       additions.push(sampleChatMarkerCompletionItem)
       if (afterStart) additions.push({ role: 'system' as const, content: afterStart })
-    } else {
-      const sample = trimmed
-      const role = sample.startsWith(charname + ':')
-        ? 'assistant'
-        : sample.startsWith(username + ':')
-        ? 'user'
-        : 'system'
-
-      const msg: CompletionItem = {
-        role: role,
-        content: sample.replace(BOT_REPLACE, charname).replace(SELF_REPLACE, username),
-      }
-      const length = encoder(msg.content)
-      if (tokens + length > tokenBudget) break
-      additions.push(msg)
-      tokens += length
+      continue
     }
+
+    const sample = trimmed
+    const role = sample.startsWith(char + ':')
+      ? 'assistant'
+      : sample.startsWith(sender + ':')
+      ? 'user'
+      : 'system'
+
+    const msg: CompletionItem = {
+      role: role,
+      content: sample.replace(BOT_REPLACE, char).replace(SELF_REPLACE, sender),
+    }
+
+    const length = encoder(msg.content)
+    if (budget && tokens + length > budget) break
+
+    additions.push(msg)
+    tokens += length
   }
-  return { additions, consumedTokens: tokens - tokensAlreadyConsumed }
+
+  return { additions, consumed: tokens }
 }

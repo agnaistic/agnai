@@ -1,140 +1,168 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`sampleChatStringToMessages should properly convert <START> (case insensitive) and split basic messages 1`] = `
-Array [
-  Object {
-    "content": "New conversation started. Previous conversations are examples only.",
-    "role": "system",
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
   },
-  Object {
-    "content": "Sam: hey there Vader!",
-    "role": "user",
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey there Vader!\\"
   },
-  Object {
-    "content": "Vader: hi Sam!",
-    "role": "assistant",
-  },
-]
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi Sam!\\"
+  }
+]"
 `;
 
 exports[`sampleChatStringToMessages should properly understand the first conversation even if it doesnt begin with <START> 1`] = `
-Array [
-  Object {
-    "content": "Sam: hey there",
-    "role": "user",
+"[
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey there\\"
   },
-  Object {
-    "content": "Vader: hi!",
-    "role": "assistant",
-  },
-]
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  }
+]"
 `;
 
 exports[`sampleChatStringToMessages should understand that strings written after <START>, up until the first name+colon, should be a system message. 1`] = `
-Array [
-  Object {
-    "content": "Sam: hey",
-    "role": "user",
+"[
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
   },
-  Object {
-    "content": "Vader: hi!",
-    "role": "assistant",
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
   },
-  Object {
-    "content": "New conversation started. Previous conversations are examples only.",
-    "role": "system",
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
   },
-  Object {
-    "content": "test",
-    "role": "system",
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"test\\"
   },
-  Object {
-    "content": "Vader: bye Sam",
-    "role": "assistant",
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: bye Sam\\"
   },
-  Object {
-    "content": "Sam: byebye Vader",
-    "role": "user",
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: byebye Vader\\"
   },
-  Object {
-    "content": "Vader: I love you Sam",
-    "role": "assistant",
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: I love you Sam\\"
   },
-  Object {
-    "content": "Sam: me too Vader
-Vader is very violent.",
-    "role": "user",
-  },
-]
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: me too Vader\\\\nVader is very excited.\\"
+  }
+]"
 `;
 
 exports[`sampleChatStringToMessages should understand when multiple <Start> are used in the sample chat and turn them all into the defined System message saying a new conversation has started 1`] = `
-Array [
-  Object {
-    "content": "Vader is nice.",
-    "role": "system",
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"Vader is nice.\\"
   },
-  Object {
-    "content": "New conversation started. Previous conversations are examples only.",
-    "role": "system",
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
   },
-  Object {
-    "content": "Sam: hey",
-    "role": "user",
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
   },
-  Object {
-    "content": "Vader: hi!",
-    "role": "assistant",
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
   },
-  Object {
-    "content": "New conversation started. Previous conversations are examples only.",
-    "role": "system",
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
   },
-  Object {
-    "content": "Vader: bye Sam",
-    "role": "assistant",
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: bye Sam\\"
   },
-  Object {
-    "content": "Sam: byebye Vader",
-    "role": "user",
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: byebye Vader\\"
+  }
+]"
+`;
+
+exports[`sampleChatStringToMessages should will trim result into budget 1`] = `
+"[
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: Hey\\"
   },
-]
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: Hi!\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"test\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: This is how I talk\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: Oh, interesting!\\"
+  }
+]"
 `;
 
 exports[`sampleChatStringToMessages should, if the sampleChat string doesnt begin with a name+colon, interpret everything up to the first name+colon (or <start>) as a system message 1`] = `
-Array [
-  Object {
-    "content": "Vader is nice.",
-    "role": "system",
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"Vader is nice.\\"
   },
-  Object {
-    "content": "Sam: hey",
-    "role": "user",
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
   },
-  Object {
-    "content": "Vader: hi!",
-    "role": "assistant",
-  },
-]
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  }
+]"
 `;
 
 exports[`sampleChatStringToMessages should, if the sampleChat string doesnt begin with a name+colon, interpret everything up to the first name+colon (or <start>) as a system message 2`] = `
-Array [
-  Object {
-    "content": "Vader is nice.",
-    "role": "system",
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"Vader is nice.\\"
   },
-  Object {
-    "content": "New conversation started. Previous conversations are examples only.",
-    "role": "system",
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
   },
-  Object {
-    "content": "Sam: hey",
-    "role": "user",
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
   },
-  Object {
-    "content": "Vader: hi!",
-    "role": "assistant",
-  },
-]
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  }
+]"
 `;

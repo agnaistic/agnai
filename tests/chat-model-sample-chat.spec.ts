@@ -1,22 +1,20 @@
 import { expect } from 'chai'
 import './init'
 import { splitSampleChat } from '/srv/adapter/openai'
-import { getEncoder } from '/srv/tokenize'
-import { OPENAI_MODELS } from '/common/adapters'
 
 describe('sampleChatStringToMessages', () => {
   it('should properly convert <START> (case insensitive) and split basic messages', () => {
     const input = `<STaRT>
 Sam: hey there Vader!
 Vader: hi Sam!`
-    const output = sampleChatStringToTestMessages(input).additions
+    const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
 
   it('should properly understand the first conversation even if it doesnt begin with <START>', () => {
     const input = `Sam: hey there
 Vader: hi!`
-    const output = sampleChatStringToTestMessages(input).additions
+    const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
 
@@ -24,14 +22,14 @@ Vader: hi!`
     const input = `Vader is nice.
 Sam: hey
 Vader: hi!`
-    const output = sampleChatStringToTestMessages(input).additions
+    const output = testInput(input)
     expect(output).toMatchSnapshot()
 
     const inputWithStart = `Vader is nice.
 <START>
 Sam: hey
 Vader: hi!`
-    const outputWithStart = sampleChatStringToTestMessages(inputWithStart).additions
+    const outputWithStart = testInput(inputWithStart)
     expect(outputWithStart).toMatchSnapshot()
   })
 
@@ -43,7 +41,7 @@ Vader: hi!
 <START>
 Vader: bye Sam
 Sam: byebye Vader`
-    const output = sampleChatStringToTestMessages(input).additions
+    const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
 
@@ -56,21 +54,47 @@ Vader: bye Sam
 Sam: byebye Vader
 Vader: I love you Sam
 Sam: me too Vader
-Vader is very violent.`
-    const output = sampleChatStringToTestMessages(input).additions
+Vader is very excited.`
+    const output = testInput(input)
     expect(output).toMatchSnapshot()
+  })
+
+  it('will trim result into budget', () => {
+    const input = neat`
+      Sam: Hey
+      Vader: Hi!
+      <START>
+      test
+      Vader: This is how I talk
+      Sam: Oh, interesting!
+      Vader: I also talk like this! *smiles* But this is far too long to include in our budget!
+      Sam: More interesting!`
+    expect(testInput(input, 25)).to.matchSnapshot()
   })
 })
 
-const sampleChatStringToTestMessages = (input: string) =>
-  splitSampleChat({
+function testInput(input: string, budget?: number) {
+  const result = splitSampleChat({
     sampleChat: input,
-    tokensAlreadyConsumed: 0,
-    tokenBudget: 9999999,
-    encoder: getEncoder('openai', OPENAI_MODELS.Turbo),
-    charname: TEST_CHARACTER_NAME,
-    username: TEST_USER_NAME,
+    char: TEST_CHARACTER_NAME,
+    sender: TEST_USER_NAME,
+    budget,
   })
+
+  return JSON.stringify(result.additions, null, 2)
+}
 
 const TEST_CHARACTER_NAME = 'Vader'
 const TEST_USER_NAME = 'Sam'
+
+function neat(params: TemplateStringsArray, ...rest: string[]) {
+  let str = ''
+  for (let i = 0; i < params.length; i++) {
+    str += params[i] + (rest[i] || '')
+  }
+
+  return str
+    .split('\n')
+    .map((line) => line.replace(/^[\t ]+/g, ''))
+    .join('\n')
+}
