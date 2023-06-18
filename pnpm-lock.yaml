@@ -11,9 +11,6 @@ dependencies:
   '@dqbd/tiktoken':
     specifier: ^1.0.2
     version: 1.0.2
-  '@types/throng':
-    specifier: ^5.0.4
-    version: registry.npmjs.org/@types/throng@5.0.4
   adm-zip:
     specifier: ^0.5.10
     version: 0.5.10
@@ -127,6 +124,9 @@ devDependencies:
   '@types/showdown':
     specifier: ^2.0.0
     version: 2.0.0
+  '@types/throng':
+    specifier: ^5.0.4
+    version: registry.npmjs.org/@types/throng@5.0.4
   '@types/uuid':
     specifier: ^9.0.0
     version: 9.0.0
@@ -5879,7 +5879,7 @@ packages:
     resolution: {integrity: sha512-/ILtJTyOCMVQFbcteY5WtMLiESDJkWjXdUfWkXhJZQmLnwvxrdYmfEXdqTb2BkFSrvwWnU63b+jB4O3YOLrClg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@types/throng/-/throng-5.0.4.tgz}
     name: '@types/throng'
     version: 5.0.4
-    dev: false
+    dev: true
 
   registry.npmjs.org/@types/yargs-parser@21.0.0:
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@types/yargs-parser/-/yargs-parser-21.0.0.tgz}

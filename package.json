@@ -73,7 +73,6 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.309.0",
     "@dqbd/tiktoken": "^1.0.2",
-    "@types/throng": "^5.0.4",
     "adm-zip": "^0.5.10",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -113,6 +112,7 @@
     "@types/needle": "^3.2.0",
     "@types/node": "^18.13.0",
     "@types/showdown": "^2.0.0",
+    "@types/throng": "^5.0.4",
     "@types/uuid": "^9.0.0",
     "@types/ws": "^8.5.4",
     "babel-preset-solid": "^1.6.9",
