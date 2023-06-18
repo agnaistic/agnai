@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, JSX, onMount, createEffect, createSignal } from 'solid-js'
+import { Component, Show, createMemo, JSX, onMount, createEffect, createSignal, on } from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices } from './util'
@@ -52,6 +52,13 @@ const TextInput: Component<{
     updateCount()
   })
 
+  createEffect(() => {
+    if (props.isMultiline) {
+      value()
+      resize()
+    }
+  })
+
   const handleChange = async (
     ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
   ) => {
@@ -62,7 +69,6 @@ const TextInput: Component<{
     ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
   ) => {
     props.onInput?.(ev)
-    if (props.isMultiline) resize()
   }
 
   const updateCount = async () => {
@@ -95,7 +101,6 @@ const TextInput: Component<{
   })
 
   onMount(() => {
-    resize()
     props.ref?.(ref)
   })
 
