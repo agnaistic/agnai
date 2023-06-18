@@ -1,0 +1,168 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Chat Completion Example Dialogue:: should properly convert <START> (case insensitive) and split basic messages 1`] = `
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey there Vader!\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi Sam!\\"
+  }
+]"
+`;
+
+exports[`Chat Completion Example Dialogue:: should properly understand the first conversation even if it doesnt begin with <START> 1`] = `
+"[
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey there\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  }
+]"
+`;
+
+exports[`Chat Completion Example Dialogue:: should understand that strings written after <START>, up until the first name+colon, should be a system message. 1`] = `
+"[
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"test\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: bye Sam\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: byebye Vader\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: I love you Sam\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: me too Vader\\\\nVader is very excited.\\"
+  }
+]"
+`;
+
+exports[`Chat Completion Example Dialogue:: should understand when multiple <Start> are used in the sample chat and turn them all into the defined System message saying a new conversation has started 1`] = `
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"Vader is nice.\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: bye Sam\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: byebye Vader\\"
+  }
+]"
+`;
+
+exports[`Chat Completion Example Dialogue:: will interpret everything up to the first name+colon (or <start>) as a system message if the sampleChat string doesnt begin with a name+colon 1`] = `
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"Vader is nice.\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  }
+]"
+`;
+
+exports[`Chat Completion Example Dialogue:: will interpret everything up to the first name+colon (or <start>) as a system message if the sampleChat string doesnt begin with a name+colon 2`] = `
+"[
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"Vader is nice.\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: hey\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: hi!\\"
+  }
+]"
+`;
+
+exports[`Chat Completion Example Dialogue:: will trim result into budget 1`] = `
+"[
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: Hey\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: Hi!\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"New conversation started. Previous conversations are examples only.\\"
+  },
+  {
+    \\"role\\": \\"system\\",
+    \\"content\\": \\"test\\"
+  },
+  {
+    \\"role\\": \\"assistant\\",
+    \\"content\\": \\"Vader: This is how I talk\\"
+  },
+  {
+    \\"role\\": \\"user\\",
+    \\"content\\": \\"Sam: Oh, interesting!\\"
+  }
+]"
+`;

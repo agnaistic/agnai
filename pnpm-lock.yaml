@@ -68,6 +68,9 @@ dependencies:
   sentencepiece-js:
     specifier: ^1.1.0
     version: registry.npmjs.org/sentencepiece-js@1.1.0
+  throng:
+    specifier: ^5.0.0
+    version: registry.npmjs.org/throng@5.0.0
   uuid:
     specifier: ^9.0.0
     version: 9.0.0
@@ -124,6 +127,9 @@ devDependencies:
   '@types/showdown':
     specifier: ^2.0.0
     version: 2.0.0
+  '@types/throng':
+    specifier: ^5.0.4
+    version: registry.npmjs.org/@types/throng@5.0.4
   '@types/uuid':
     specifier: ^9.0.0
     version: 9.0.0
@@ -5886,6 +5892,12 @@ packages:
     version: 2.0.1
     dev: true
 
+  registry.npmjs.org/@types/throng@5.0.4:
+    resolution: {integrity: sha512-/ILtJTyOCMVQFbcteY5WtMLiESDJkWjXdUfWkXhJZQmLnwvxrdYmfEXdqTb2BkFSrvwWnU63b+jB4O3YOLrClg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@types/throng/-/throng-5.0.4.tgz}
+    name: '@types/throng'
+    version: 5.0.4
+    dev: true
+
   registry.npmjs.org/@types/yargs-parser@21.0.0:
     resolution: {integrity: sha512-iO9ZQHkZxHn4mSakYV0vFHAVDyEOIJQrV2uZ06HxEPcx+mt8swXoZHIbaaJ2crJYFfErySgktuTZ3BeLz+XmFA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/@types/yargs-parser/-/yargs-parser-21.0.0.tgz}
     name: '@types/yargs-parser'
@@ -7095,6 +7107,12 @@ packages:
       p-locate: registry.npmjs.org/p-locate@4.1.0
     dev: true
 
+  registry.npmjs.org/lodash@4.17.21:
+    resolution: {integrity: sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz}
+    name: lodash
+    version: 4.17.21
+    dev: false
+
   registry.npmjs.org/loose-envify@1.4.0:
     resolution: {integrity: sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/loose-envify/-/loose-envify-1.4.0.tgz}
     name: loose-envify
@@ -7824,6 +7842,15 @@ packages:
       glob: registry.npmjs.org/glob@7.2.0
       minimatch: registry.npmjs.org/minimatch@3.1.2
     dev: true
+
+  registry.npmjs.org/throng@5.0.0:
+    resolution: {integrity: sha512-nrq7+qQhn/DL8yW/wiwImTepfi6ynOCAe7moSwgoYN1F32yQMdBkuFII40oAkb3cDfaL6q5BIoFTDCHdMWQ8Pw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/throng/-/throng-5.0.0.tgz}
+    name: throng
+    version: 5.0.0
+    engines: {node: '>= 10'}
+    dependencies:
+      lodash: registry.npmjs.org/lodash@4.17.21
+    dev: false
 
   registry.npmjs.org/timsort@0.3.0:
     resolution: {integrity: sha512-qsdtZH+vMoCARQtyod4imc2nIJwg9Cc7lPRrw9CzF8ZKR0khdr8+2nX80PBhET3tcyTtJDxAffGh2rXH4tyU8A==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/timsort/-/timsort-0.3.0.tgz}

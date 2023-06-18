@@ -1,4 +1,6 @@
 import 'module-alias/register'
+import * as os from 'os'
+import throng from 'throng'
 import { initMessageBus } from './api/ws'
 import { server } from './app'
 import { config } from './config'
@@ -7,7 +9,15 @@ import { connect, createIndexes } from './db/client'
 import { logger } from './logger'
 const pkg = require('../package.json')
 
-async function start() {
+export async function start() {
+  // No longer accept requests when shutting down
+  // Allow as many responses currently generating to complete as possible during the shutdown window
+  // The shutdown window is ~10 seconds
+  process.on('SIGTERM', () => {
+    logger.warn(`Received SIGTERM. Server shutting down.`)
+    server.close()
+  })
+
   await Promise.allSettled([initDb(), initMessageBus()])
 
   server.listen(config.port, '0.0.0.0', async () => {
@@ -21,14 +31,6 @@ async function start() {
     logger.info(`JSON storage enabled for guests: ${config.jsonFolder}`)
   }
 }
-
-// No longer accept requests when shutting down
-// Allow as many responses currently generating to complete as possible during the shutdown window
-// The shutdown window is ~10 seconds
-process.on('SIGTERM', () => {
-  logger.warn(`Received SIGTERM. Server shutting down.`)
-  server.close()
-})
 
 async function initDb() {
   if (config.ui.maintenance) {
@@ -44,4 +46,26 @@ async function initDb() {
   }
 }
 
-start()
+if (require.main === module) {
+  if (config.clustering) {
+    logger.info('Using clustering')
+    throng({
+      worker: startWorker,
+      lifetime: Infinity,
+      count: os.cpus().length,
+      grace: 2000,
+      signals: ['SIGTERM', 'SIGINT'],
+    })
+  } else {
+    startWorker()
+  }
+}
+
+async function startWorker(id?: number) {
+  if (id) logger.setBindings({ w_id: id })
+
+  await start().catch((error) => {
+    logger.error(error, 'Server startup failed')
+    process.exit(1)
+  })
+}
