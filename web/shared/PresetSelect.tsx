@@ -1,9 +1,10 @@
-import { JSX, Component, createMemo, createSignal, For, Switch } from 'solid-js'
+import { JSX, Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { PresetOption } from './adapter'
 import TextInput from './TextInput'
 import { uniqBy } from '../../common/util'
-import { usePane } from './hooks'
-import { Match } from 'solid-js'
+import { useRootModal } from './hooks'
+import Button from './Button'
+import Modal from './Modal'
 
 export const PresetSelect: Component<{
   options: PresetOption[]
@@ -11,7 +12,6 @@ export const PresetSelect: Component<{
   warning?: JSX.Element
   selected?: string
 }> = (props) => {
-  const isPaneOrPopup = usePane()
   const [filter, setFilter] = createSignal('')
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
@@ -32,64 +32,81 @@ export const PresetSelect: Component<{
       ? 'None'
       : `${selectedOption.label} (${selectedOption.custom ? 'Custom' : 'Built-in'})`
   })
+  const [showSelectModal, setShowSelectModal] = createSignal(false)
+  const selectIdAndCloseModal = (id: string) => {
+    props.setPresetId(id)
+    setShowSelectModal(false)
+    setFilter('')
+  }
+  useRootModal({
+    type: 'presetSelect',
+    element: (
+      <Modal
+        show={showSelectModal()}
+        close={() => setShowSelectModal(false)}
+        title="Choose a preset"
+      >
+        <div class="flex flex-col gap-4">
+          <div class="sticky top-0">
+            <TextInput
+              fieldName="__filter"
+              placeholder="Type to filter presets..."
+              onKeyUp={(e) => setFilter(e.currentTarget.value)}
+            />
+          </div>
+          <div class="flex flex-wrap gap-2 pr-3">
+            <h4>Custom presets</h4>
+            <OptionList
+              options={custom()}
+              onSelect={selectIdAndCloseModal}
+              selected={props.selected}
+            />
+            <h4>Built-in presets</h4>
+            <OptionList
+              options={builtin()}
+              onSelect={selectIdAndCloseModal}
+              selected={props.selected}
+            />
+          </div>
+        </div>
+      </Modal>
+    ),
+  })
 
   return (
-        <div class="flex flex-col gap-2 py-3 text-sm">
-          <div class="text-lg">Preset</div>
-          <div>
-            Selected: <strong>{selectedLabel()}</strong>
-          </div>
-    <Switch>
-      <Match when={isPaneOrPopup() === 'pane'}>
-          <TextInput
-            fieldName="__filter"
-            placeholder="Type to filter presets..."
-            onKeyUp={(e) => setFilter(e.currentTarget.value)}
-          />
-          <div class="flex flex-wrap gap-2 pr-3">
-            <OptionList
-              title="Custom"
-              options={custom()}
-              setPresetId={props.setPresetId}
-              selected={props.selected}
-              fullHeight={false}
-            />
-            <OptionList
-              title="Built-in"
-              options={builtin()}
-              setPresetId={props.setPresetId}
-              selected={props.selected}
-              fullHeight={false}
-            />
-          </div>
-          {props.warning ?? <></>}
-      </Match>
-      <Match when={isPaneOrPopup() === 'popup'}>
-      </Match>
-    </Switch>
-        </div>
+    <div class="flex flex-col gap-2 py-3 text-sm">
+      <div class="text-lg">Preset</div>
+      <div>
+        Selected: <strong>{selectedLabel()}</strong>
+      </div>
+      <div class="inline-block">
+        <Button onClick={() => setShowSelectModal(true)}>Choose a preset</Button>
+      </div>
+      {props.warning ?? <></>}
+    </div>
   )
 }
 
 const OptionList: Component<{
   options: PresetOption[]
-  setPresetId: (id: string) => void
-  title: string
-  fullHeight: boolean
+  onSelect: (id: string) => void
+  title?: string
   selected?: string
 }> = (props) => (
-  <div class="flex w-[48%] min-w-[190px] flex-col gap-2">
-    <div class="text-md">{props.title}</div>
-    <div class={`flex flex-col gap-2 p-2 ${props.fullHeight ? '' : 'max-h-52 overflow-auto'}`}>
+  <div class={`flex w-full flex-col gap-2`}>
+    <Show when={props.title}>
+      <div class="text-md">{props.title}</div>
+    </Show>
+    <div class={`flex flex-col gap-2 p-2`}>
       <For each={props.options}>
         {(option) => (
           <div
             class={
               (props.selected && props.selected === option.value
                 ? 'bg-[var(--hl-800)]'
-                : 'bg-700') + ' w-full cursor-pointer gap-4 rounded-xl py-1 px-2 text-sm'
+                : 'bg-700') + ` w-full cursor-pointer gap-4 rounded-xl py-1 px-2 text-sm`
             }
-            onClick={() => props.setPresetId(option.value)}
+            onClick={() => props.onSelect(option.value)}
           >
             <div class="font-bold">{option.label}</div>
           </div>

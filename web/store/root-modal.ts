@@ -1,7 +1,7 @@
 import { JSX } from 'solid-js'
 import { createStore } from './create'
 
-export type RootModalType = 'memoryBook'
+export type RootModalType = 'memoryBook' | 'presetSelect'
 
 export type RootModal = { type: RootModalType; element: JSX.Element }
 
