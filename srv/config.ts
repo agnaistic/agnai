@@ -44,6 +44,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 export const config = {
+  clustering: !!env('CLUSTERING', ''),
   jwtSecret: env('JWT_SECRET'),
   jwtExpiry: env('JWT_EXPIRY', '7d'),
   port: +env('PORT', '3001'),

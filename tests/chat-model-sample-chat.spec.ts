@@ -2,59 +2,59 @@ import { expect } from 'chai'
 import './init'
 import { splitSampleChat } from '/srv/adapter/openai'
 
-describe('sampleChatStringToMessages', () => {
+describe('Chat Completion Example Dialogue::', () => {
   it('should properly convert <START> (case insensitive) and split basic messages', () => {
-    const input = `<STaRT>
-Sam: hey there Vader!
-Vader: hi Sam!`
+    const input = neat`<STaRT>
+      Sam: hey there Vader!
+      Vader: hi Sam!`
     const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
 
   it('should properly understand the first conversation even if it doesnt begin with <START>', () => {
-    const input = `Sam: hey there
-Vader: hi!`
+    const input = neat`Sam: hey there
+      Vader: hi!`
     const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
 
-  it('should, if the sampleChat string doesnt begin with a name+colon, interpret everything up to the first name+colon (or <start>) as a system message', () => {
-    const input = `Vader is nice.
-Sam: hey
-Vader: hi!`
+  it('will interpret everything up to the first name+colon (or <start>) as a system message if the sampleChat string doesnt begin with a name+colon', () => {
+    const input = neat`Vader is nice.
+      Sam: hey
+      Vader: hi!`
     const output = testInput(input)
     expect(output).toMatchSnapshot()
 
-    const inputWithStart = `Vader is nice.
-<START>
-Sam: hey
-Vader: hi!`
+    const inputWithStart = neat`Vader is nice.
+      <START>
+      Sam: hey
+      Vader: hi!`
     const outputWithStart = testInput(inputWithStart)
     expect(outputWithStart).toMatchSnapshot()
   })
 
   it('should understand when multiple <Start> are used in the sample chat and turn them all into the defined System message saying a new conversation has started', () => {
-    const input = `{{char}} is nice.
-<START>
-Sam: hey
-Vader: hi!
-<START>
-Vader: bye Sam
-Sam: byebye Vader`
+    const input = neat`{{char}} is nice.
+      <START>
+      Sam: hey
+      Vader: hi!
+      <START>
+      Vader: bye Sam
+      Sam: byebye Vader`
     const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
 
   it('should understand that strings written after <START>, up until the first name+colon, should be a system message.', () => {
-    const input = `Sam: hey
-Vader: hi!
-<STaRT>
-test
-Vader: bye Sam
-Sam: byebye Vader
-Vader: I love you Sam
-Sam: me too Vader
-Vader is very excited.`
+    const input = neat`Sam: hey
+      Vader: hi!
+      <STaRT>
+      test
+      Vader: bye Sam
+      Sam: byebye Vader
+      Vader: I love you Sam
+      Sam: me too Vader
+      Vader is very excited.`
     const output = testInput(input)
     expect(output).toMatchSnapshot()
   })
