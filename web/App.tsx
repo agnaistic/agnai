@@ -25,6 +25,7 @@ import Settings from './pages/Settings'
 import ProfilePage from './pages/Profile'
 import { chatStore } from './store'
 import { usePane } from './shared/hooks'
+import { getMaxChatWidth } from './shared/util'
 
 const App: Component = () => {
   const state = userStore()
@@ -95,21 +96,8 @@ const Layout: Component = () => {
 
   const maxW = createMemo((): string => {
     if (isPaneOpen()) return 'max-w-full'
-    const width = state.ui.chatWidth || 'full'
-    switch (width) {
-      case 'full':
-      case 'narrow':
-        return 'max-w-5xl'
 
-      case 'xl':
-        return 'max-w-6xl'
-
-      case '2xl':
-        return 'max-w-7xl'
-
-      case '3xl':
-        return 'max-w-8xl'
-    }
+    return getMaxChatWidth()
   })
 
   const reload = () => {

@@ -4,6 +4,7 @@ import { PromptParts } from './prompt'
 import { AppSchema } from '/srv/db/schema'
 import peggy from 'peggy'
 import { logger } from '/srv/logger'
+import { elapsedSince } from './util'
 
 const parser = peggy.generate(grammar.trim(), {
   error: (stage, msg, loc) => {
@@ -34,6 +35,8 @@ type Holder =
   | 'ujb'
   | 'post'
   | 'memory'
+  | 'chat_age'
+  | 'last_message'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -42,7 +45,6 @@ type BotsProp = 'i' | 'personality' | 'name'
 
 export type ParseOpts = {
   replyAs: AppSchema.Character
-  history: AppSchema.ChatMessage[]
   members: AppSchema.Profile[]
   impersonate?: AppSchema.Character
   parts: PromptParts
@@ -53,6 +55,7 @@ export type ParseOpts = {
   lines: string[]
   characters: Record<string, AppSchema.Character>
   sender: AppSchema.Profile
+  lastMessage?: string
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
@@ -248,5 +251,19 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
 
     case 'history':
       return opts.lines.join('\n')
+
+    case 'chat_age':
+      return elapsedSince(opts.chat.createdAt)
+
+    case 'last_message':
+      return lastMessage(opts.lastMessage || '')
   }
+}
+
+function lastMessage(value: string) {
+  if (!value) return 'unknown'
+
+  const date = new Date(value)
+  if (isNaN(date.valueOf())) return 'unknown'
+  return elapsedSince(date)
 }

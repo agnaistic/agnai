@@ -43,9 +43,10 @@ jobs:
           INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
           pnpm run build:prod
+          cp dist/index.html dist/original.html
           node .github/inject.js
 
-      - name: Publish
+      - name: Publish - Live
         uses: BetaHuhn/do-spaces-action@v2
         with:
           access_key: ${{ secrets.S3_ACCESS_KEY}}
@@ -54,3 +55,14 @@ jobs:
           space_region: ${{ secrets.S3_REGION }}
           permission: public-read
           source: dist
+
+      - name: Prepare Package
+        run: |
+          rm dist/index.html
+          cp dist/original.html dist/index.html
+
+      - name: Publish - Package
+        uses: mikeal/merge-release@master
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

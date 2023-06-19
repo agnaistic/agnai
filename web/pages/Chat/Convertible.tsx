@@ -57,6 +57,7 @@ const WithinPage: Component<PartialProps> = (props) => {
     <Switch>
       <Match when={paneOrPopup() === 'pane'}>
         <div
+          data-pane
           class="relative hidden w-full min-w-[448px]  overflow-y-auto py-3 xs:block"
           style={rightPaneBgStyles()}
         >

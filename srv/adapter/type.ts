@@ -18,6 +18,9 @@ export type GenerateRequestV2 = {
   continuing?: AppSchema.ChatMessage
   characters: Record<string, AppSchema.Character>
   impersonate?: AppSchema.Character
+
+  /** Date ISO string */
+  lastMessage?: string
 }
 
 export type GenerateOptions = {
@@ -42,6 +45,7 @@ export type AdapterProps = {
   lines: string[]
   characters?: Record<string, AppSchema.Character>
   impersonate: AppSchema.Character | undefined
+  lastMessage?: string
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>

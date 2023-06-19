@@ -29,6 +29,7 @@ import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card } from '/web/shared/Card'
+import { usePane } from '/web/shared/hooks'
 
 export const ChatGenSettings: Component<{
   chat: AppSchema.Chat
@@ -37,6 +38,7 @@ export const ChatGenSettings: Component<{
 }> = (props) => {
   let ref: any
   const user = userStore()
+  const pane = usePane()
   const state = presetStore(({ presets }) => ({
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
@@ -104,7 +106,9 @@ export const ChatGenSettings: Component<{
       chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined }, undefined)
     } else {
       chatStore.editChatGenPreset(props.chat._id, preset, () => {
-        props.close?.()
+        if (pane() === 'popup') {
+          props.close?.()
+        }
 
         if (isDefaultPreset(preset)) {
           toastStore.success('Preset changed')

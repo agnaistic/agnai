@@ -309,7 +309,13 @@ function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): Complet
       'history',
       'post',
     ]),
-    { opts, parts, encoder: encoder }
+    {
+      opts,
+      parts,
+      lastMessage: opts.lastMessage,
+      characters: opts.characters || {},
+      encoder: encoder,
+    }
   )
 
   messages.push({ role: 'system', content: gaslight })
@@ -326,7 +332,13 @@ function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): Complet
   // Append 'postamble' and system prompt (ujb)
   const post = getPostInstruction(opts, messages)
   if (post) {
-    post.content = injectPlaceholders(post.content, { opts, parts: opts.parts, encoder: encoder })
+    post.content = injectPlaceholders(post.content, {
+      opts,
+      parts: opts.parts,
+      lastMessage: opts.lastMessage,
+      characters: opts.characters || {},
+      encoder: encoder,
+    })
     tokens += encoder(post.content)
     history.push(post)
   }
@@ -398,6 +410,14 @@ function getPostInstruction(
   if (opts.chat.mode === 'adventure') {
     prefix = `${adventureAmble}\n\n${prefix}`
   }
+
+  prefix = injectPlaceholders(prefix, {
+    opts,
+    parts: opts.parts,
+    lastMessage: opts.lastMessage,
+    characters: opts.characters || {},
+    encoder,
+  })
 
   switch (opts.kind) {
     // These cases should never reach here

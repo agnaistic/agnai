@@ -218,6 +218,7 @@ function build(
       retry: opts.retry,
       replyAs: opts.replyAs || char,
       characters: {},
+      lastMessage: '',
     },
     encoder
   )

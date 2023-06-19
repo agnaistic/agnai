@@ -6,7 +6,9 @@ import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
+import { parseTemplate } from './template-parser'
 import { Encoder } from './tokenize'
+import { elapsedSince } from './util'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -49,6 +51,7 @@ export type PromptOpts = {
   replyAs: AppSchema.Character
   characters: GenerateRequestV2['characters']
   impersonate?: AppSchema.Character
+  lastMessage: string
 }
 
 type BuildPromptOpts = {
@@ -81,6 +84,8 @@ const HOLDER_NAMES = {
 }
 
 const HOLDERS = {
+  chatAge: /\{\{chat_age\}\}/gi,
+  lastMessage: /\{\{last_message\}\}/gi,
   ujb: /\{\{ujb\}\}/gi,
   sampleChat: /\{\{example_dialogue\}\}/gi,
   scenario: /\{\{scenario\}\}/gi,
@@ -124,6 +129,8 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
     opts,
     parts,
     history: { lines, order: 'desc' },
+    lastMessage: opts.lastMessage,
+    characters: opts.characters,
     encoder,
   })
   return { lines: lines.reverse(), parts, template: prompt }
@@ -138,10 +145,7 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
  * @returns
  */
 export function createPromptWithParts(
-  opts: Pick<
-    GenerateRequestV2,
-    'chat' | 'char' | 'members' | 'settings' | 'user' | 'replyAs' | 'characters' | 'impersonate'
-  >,
+  opts: GenerateRequestV2,
   parts: PromptParts,
   lines: string[],
   encoder: Encoder
@@ -153,6 +157,8 @@ export function createPromptWithParts(
     opts,
     parts,
     history,
+    characters: opts.characters,
+    lastMessage: opts.lastMessage,
     encoder,
   })
   return { lines: history.lines, prompt, parts, post }
@@ -178,18 +184,31 @@ export function getTemplate(
 type InjectOpts = {
   opts: BuildPromptOpts
   parts: PromptParts
+  lastMessage?: string
+  characters: Record<string, AppSchema.Character>
   history?: { lines: string[]; order: 'asc' | 'desc' }
   encoder: Encoder
 }
 
 export function injectPlaceholders(
   template: string,
-  { opts, parts, history: hist, encoder }: InjectOpts
+  { opts, parts, history: hist, encoder, ...rest }: InjectOpts
 ) {
-  const sender =
-    opts.impersonate?.name ||
-    opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle ||
-    'You'
+  const profile = opts.members.find((mem) => mem.userId === opts.chat.userId)
+  const sender = opts.impersonate?.name || profile?.handle || 'You'
+
+  if (opts.settings?.useTemplateParser) {
+    try {
+      const result = parseTemplate(template, {
+        ...opts,
+        sender: profile!,
+        parts,
+        lines: hist?.lines || [],
+        ...rest,
+      })
+      return result
+    } catch (ex) {}
+  }
   const sampleChat = parts.sampleChat?.join('\n')
 
   if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
@@ -214,6 +233,8 @@ export function injectPlaceholders(
     .replace(HOLDERS.allPersonas, parts.allPersonas?.join('\n') || '')
     .replace(HOLDERS.post, parts.post.join('\n'))
     .replace(HOLDERS.linebreak, '\n')
+    .replace(HOLDERS.chatAge, elapsedSince(opts.chat.createdAt))
+    .replace(HOLDERS.lastMessage, elapsedSince(rest.lastMessage || ''))
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
     .replace(BOT_REPLACE, opts.replyAs.name)
     .replace(SELF_REPLACE, sender)
