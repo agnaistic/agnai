@@ -228,10 +228,14 @@ const WorkerModal: Component<{
           onChange={setSelected}
           values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
         />
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}
-          </div>
+        <div>
+          The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b>{' '}
+          limits. If you wish to use that worker, your preset should not exceed these values.
+          <br />
+          E.g. <b>(1024/80)</b>
+        </div>
+        <div class="flex  items-center justify-between gap-4">
+          <p>Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}</p>
           <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
             De-select All
           </Button>
@@ -253,5 +257,10 @@ function sortWorkers({ models: l }: HordeWorker, { models: r }: HordeWorker) {
 }
 
 function toWorkerItem(wkr: HordeWorker): Option {
-  return { label: `${wkr.name} - ${wkr.models[0]}`, value: wkr.id }
+  const extras: string[] = []
+  if (wkr.max_context_length) extras.push(`${wkr.max_context_length}`)
+  if (wkr.max_length) extras.push(`${wkr.max_length}`)
+
+  const maxes = extras.length ? `- (${extras.join('/')}) ` : ''
+  return { label: `${wkr.name} ${maxes}- ${wkr.models[0]}`, value: wkr.id }
 }

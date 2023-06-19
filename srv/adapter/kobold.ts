@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { logger } from '../logger'
-import { normalizeUrl, trimResponseV2, getEndTokens } from '../api/chat/common'
+import { normalizeUrl, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
@@ -27,7 +27,21 @@ export const handleKobold: ModelAdapter = async function* ({
 
   // Kobold has a stop requence parameter which automatically
   // halts generation when a certain token is generated
-  body.stop_sequence = getEndTokens(char, members, ['END_OF_DIALOG','You:'])
+  const stop_sequence = ['END_OF_DIALOG', 'You:']
+
+  for (const [id, char] of Object.entries(characters || {})) {
+    if (!char) continue
+    if (id === opts.replyAs._id) continue
+    stop_sequence.push(char.name + ':')
+  }
+
+  for (const member of members) {
+    if (!member.handle) continue
+    if (member.handle === opts.replyAs.name) continue
+    stop_sequence.push(member.handle + ':')
+  }
+
+  body.stop_sequence = stop_sequence
 
   // Kobold sampler order parameter must contain all 6 samplers to be valid
   // If the sampler order is provided, but incomplete, add the remaining samplers.
