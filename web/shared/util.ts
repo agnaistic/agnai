@@ -2,7 +2,7 @@ import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
-import { userStore } from '../store'
+import { settingStore, userStore } from '../store'
 
 export function getMaxChatWidth() {
   const { chatWidth } = userStore().ui
