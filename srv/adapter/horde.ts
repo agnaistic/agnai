@@ -23,8 +23,8 @@ export const handleHorde: ModelAdapter = async function* ({
         : decryptText(user.hordeKey)
       : HORDE_GUEST_KEY
 
-    const text = await horde.generateText({ ...user, hordeKey: key }, gen, prompt)
-    const sanitised = sanitise(text)
+    const result = await horde.generateText({ ...user, hordeKey: key }, gen, prompt)
+    const sanitised = sanitise(result.text)
     const trimmed = trimResponseV2(sanitised, opts.replyAs, members, characters, ['END_OF_DIALOG'])
 
     // This is a temporary measure to help users provide more info when reporting instances of 'cut off' responses

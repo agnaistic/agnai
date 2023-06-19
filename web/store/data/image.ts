@@ -46,7 +46,7 @@ export async function generateImageWithPrompt(prompt: string, onDone: (image: st
   }
 
   if (!isLoggedIn()) {
-    const image = await horde.generateImage(user, prompt)
+    const { text: image } = await horde.generateImage(user, prompt)
     onDone(image)
   }
 

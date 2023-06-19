@@ -158,8 +158,8 @@ export async function generateText(
   }
 
   const payload = { n: 1, ...body, ...settings }
-  const text = await generate({ type: 'text', payload, key: user.hordeKey || HORDE_GUEST_KEY })
-  return text
+  const result = await generate({ type: 'text', payload, key: user.hordeKey || HORDE_GUEST_KEY })
+  return result
 }
 
 async function generate(opts: GenerateOpts) {
@@ -193,7 +193,8 @@ async function generate(opts: GenerateOpts) {
     throw error
   }
 
-  return opts.type === 'text' ? result.generations[0].text : result.generations[0].img
+  const text = opts.type === 'text' ? result.generations[0].text : result.generations[0].img
+  return { text, result }
 }
 
 async function poll(url: string, key: string | undefined, interval = 6.5) {
