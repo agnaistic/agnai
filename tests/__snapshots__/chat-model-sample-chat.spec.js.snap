@@ -155,14 +155,6 @@ exports[`Chat Completion Example Dialogue:: will trim result into budget 1`] = `
   {
     \\"role\\": \\"system\\",
     \\"content\\": \\"test\\"
-  },
-  {
-    \\"role\\": \\"assistant\\",
-    \\"content\\": \\"Vader: This is how I talk\\"
-  },
-  {
-    \\"role\\": \\"user\\",
-    \\"content\\": \\"Sam: Oh, interesting!\\"
   }
 ]"
 `;
