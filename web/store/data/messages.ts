@@ -34,7 +34,7 @@ export const msgsApi = {
   getPromptEntities,
   generateResponseV2,
   deleteMessages,
-  generatePlain: basicInference,
+  basicInference,
 }
 
 type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }

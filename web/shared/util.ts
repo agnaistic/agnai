@@ -2,11 +2,9 @@ import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
-import { settingStore, userStore } from '../store'
+import { UserState, settingStore } from '../store'
 
-export function getMaxChatWidth() {
-  const { chatWidth } = userStore().ui
-
+export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
   switch (chatWidth) {
     case 'xl':
       return 'max-w-6xl'
@@ -19,7 +17,7 @@ export function getMaxChatWidth() {
 
     case 'full':
     case 'narrow':
-    case undefined:
+    default:
       return 'max-w-5xl'
   }
 }

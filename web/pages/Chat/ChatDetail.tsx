@@ -318,7 +318,7 @@ const ChatDetail: Component = () => {
     return {}
   })
 
-  const msgsMaxWidth = createMemo(() => (chats.opts.pane ? getMaxChatWidth() : ''))
+  const msgsMaxWidth = createMemo(() => (chats.opts.pane ? getMaxChatWidth(user.ui.chatWidth) : ''))
   const msgsAndPaneJustifyContent = createMemo(() => {
     if (!chats.opts.pane) return 'justify-center'
     switch (isPaneOrPopup()) {
