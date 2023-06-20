@@ -45,7 +45,7 @@ import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
-import { characterGenTemplate } from '/common/default-preset'
+import { createCharGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
 import { Card, SolidCard } from './Card'
 import { usePane, useRootModal } from './hooks'
@@ -158,10 +158,10 @@ export const CreateCharacterForm: Component<{
     const { description } = getStrictForm(ref, { description: 'string' })
     if (!description) return
 
-    const prompt = characterGenTemplate.replace('{{description}}', description)
+    const prompt = createCharGenTemplate(preset).replace('{{description}}', description)
     setCreating(true)
 
-    msgsApi.generatePlain({ prompt, settings: preset }, (err, response) => {
+    msgsApi.basicInference({ prompt, settings: preset }, (err, response) => {
       setCreating(false)
       if (err) {
         toastStore.error(`Could not create character: ${err}`)

@@ -42,6 +42,7 @@ const genValidator = {
   lines: ['string'],
   text: 'string?',
   settings: 'any?',
+  lastMessage: 'string?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {

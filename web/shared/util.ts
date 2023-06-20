@@ -2,7 +2,25 @@ import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
-import { settingStore } from '../store'
+import { UserState, settingStore } from '../store'
+
+export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
+  switch (chatWidth) {
+    case 'xl':
+      return 'max-w-6xl'
+
+    case '2xl':
+      return 'max-w-7xl'
+
+    case '3xl':
+      return 'max-w-8xl'
+
+    case 'full':
+    case 'narrow':
+    default:
+      return 'max-w-5xl'
+  }
+}
 
 export const safeLocalStorage = {
   getItem,

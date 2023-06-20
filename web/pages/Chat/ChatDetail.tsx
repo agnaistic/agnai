@@ -19,7 +19,7 @@ import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
-import { getRootRgb, setComponentPageTitle } from '../../shared/util'
+import { getMaxChatWidth, getRootRgb, setComponentPageTitle } from '../../shared/util'
 import {
   characterStore,
   ChatRightPane,
@@ -53,6 +53,7 @@ import { usePane } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import Loading from '/web/shared/Loading'
 import Convertible from './Convertible'
+import PageHeader from '/web/shared/PageHeader'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -318,7 +319,7 @@ const ChatDetail: Component = () => {
     return {}
   })
 
-  const msgsMaxWidth = createMemo(() => (chats.opts.pane ? 'max-w-xl' : ''))
+  const msgsMaxWidth = createMemo(() => (chats.opts.pane ? getMaxChatWidth(user.ui.chatWidth) : ''))
   const msgsAndPaneJustifyContent = createMemo(() => {
     if (!chats.opts.pane) return 'justify-center'
     switch (isPaneOrPopup()) {
@@ -405,7 +406,8 @@ const ChatDetail: Component = () => {
               style={contentStyles()}
             >
               <section
-                class={`flex flex-col-reverse gap-4 overflow-y-auto sm:pr-2 ${msgsMaxWidth()}`}
+                data-messages
+                class={`flex flex-col-reverse gap-4 overflow-y-auto sm:pr-2 ${msgsMaxWidth()} w-full`}
               >
                 <div id="chat-messages" class="flex w-full flex-col gap-2">
                   <Show
@@ -520,7 +522,7 @@ const ChatDetail: Component = () => {
                   <Match when={chats.opts.pane === 'preset'}>
                     <Convertible
                       kind="partial"
-                      title="Preset Settings"
+                      title={<PageHeader title="Preset Settings" />}
                       close={closePane}
                       footer={paneFooter()}
                     >
@@ -567,7 +569,7 @@ const ChatDetail: Component = () => {
               setOoc={setOoc}
               showOocToggle={isGroupChat()}
               request={requestMessage}
-              bots={chars.chatBots}
+              bots={chats.activeBots}
               botMap={chars.botMap}
             />
           </div>

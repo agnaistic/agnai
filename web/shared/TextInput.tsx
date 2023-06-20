@@ -18,6 +18,8 @@ const TextInput: Component<{
   required?: boolean
   class?: string
   pattern?: string
+  spellcheck?: boolean
+  lang?: string
   parentClass?: string
   tokenCount?: boolean | ((count: number) => void)
   ref?: (ref: any) => void
@@ -25,7 +27,15 @@ const TextInput: Component<{
   onKeyUp?: (
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
+
+  onKeyDown?: (
+    ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
+
   onChange?: (
+    ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
+  onInput?: (
     ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
 
@@ -47,10 +57,23 @@ const TextInput: Component<{
     updateCount()
   })
 
+  createEffect(() => {
+    if (props.isMultiline) {
+      value()
+      resize()
+    }
+  })
+
   const handleChange = async (
     ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
   ) => {
     props.onChange?.(ev)
+  }
+
+  const handleInput = async (
+    ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
+  ) => {
+    props.onInput?.(ev)
   }
 
   const updateCount = async () => {
@@ -67,6 +90,11 @@ const TextInput: Component<{
   const resize = () => {
     if (!ref) return
 
+    if (ref.value === '') {
+      ref.style.height = `${MIN_HEIGHT}px`
+      return
+    }
+
     updateCount()
     const next = +ref.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : ref.scrollHeight
     ref.style.height = `${next}px`
@@ -78,7 +106,6 @@ const TextInput: Component<{
   })
 
   onMount(() => {
-    resize()
     props.ref?.(ref)
   })
 
@@ -117,9 +144,13 @@ const TextInput: Component<{
               updateCount()
               props.onKeyUp?.(ev)
             }}
+            onKeyDown={(ev) => props.onKeyDown?.(ev)}
             onChange={handleChange}
+            onInput={handleInput}
             disabled={props.disabled}
             pattern={props.pattern}
+            spellcheck={props.spellcheck}
+            lang={props.lang}
             ref={ref}
           />
         }
@@ -136,9 +167,12 @@ const TextInput: Component<{
             props.class
           }
           disabled={props.disabled}
+          spellcheck={props.spellcheck}
+          lang={props.lang}
           onKeyUp={(ev) => props.onKeyUp?.(ev)}
+          onKeyDown={(ev) => props.onKeyDown?.(ev)}
           onchange={handleChange}
-          onInput={resize}
+          onInput={handleInput}
         />
       </Show>
     </div>

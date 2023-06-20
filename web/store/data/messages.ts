@@ -25,6 +25,7 @@ export type PromptEntities = {
   autoReplyAs?: string
   characters: Record<string, AppSchema.Character>
   impersonating?: AppSchema.Character
+  lastMessage: string
 }
 
 export const msgsApi = {
@@ -33,7 +34,7 @@ export const msgsApi = {
   getPromptEntities,
   generateResponseV2,
   deleteMessages,
-  generatePlain: basicInference,
+  basicInference,
 }
 
 type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
@@ -148,6 +149,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       replyAs: props.replyAs,
       characters: entities.characters,
       impersonate: props.impersonate,
+      lastMessage: entities.lastMessage,
     },
     encoder
   )
@@ -172,6 +174,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     replyAs: removeAvatar(props.replyAs),
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
+    lastMessage: entities.lastMessage,
   }
 
   const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
@@ -309,12 +312,20 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   if (isLoggedIn()) {
     const entities = getAuthedPromptEntities()
     if (!entities) throw new Error(`Could not collate data for prompting`)
-    return { ...entities, messages: entities.messages.filter((msg) => msg.ooc !== true) }
+    return {
+      ...entities,
+      messages: entities.messages.filter((msg) => msg.ooc !== true),
+      lastMessage: getLastMessage(entities.messages),
+    }
   }
 
   const entities = await getGuestEntities()
   if (!entities) throw new Error(`Could not collate data for prompting`)
-  return { ...entities, messages: entities.messages.filter((msg) => msg.ooc !== true) }
+  return {
+    ...entities,
+    messages: entities.messages.filter((msg) => msg.ooc !== true),
+    lastMessage: getLastMessage(entities.messages),
+  }
 }
 
 async function getGuestEntities() {
@@ -441,4 +452,14 @@ function removeAvatars(chars: Record<string, AppSchema.Character>) {
   }
 
   return next
+}
+
+function getLastMessage(messages: AppSchema.ChatMessage[]) {
+  for (let i = messages.length - 1; i >= 0; i--) {
+    const msg = messages[i]
+    if (!msg.userId) continue
+    return msg.createdAt
+  }
+
+  return ''
 }

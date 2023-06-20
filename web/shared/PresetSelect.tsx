@@ -26,6 +26,7 @@ export const PresetSelect: Component<{
       (o) => o.value
     )
   )
+
   const selectedLabel = createMemo(() => {
     const selectedOption = props.options.find((o) => o.value === props.selected)
     return selectedOption === undefined

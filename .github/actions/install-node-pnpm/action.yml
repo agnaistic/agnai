@@ -1,15 +1,15 @@
 # NOTE: We cannot include checkout here, since it needs the code checked out
 # already to access the 'actions' folder
 
-name: "Install dependencies"
-description: "Checks out the repository, then installs Node & PNPM"
+name: 'Install dependencies'
+description: 'Checks out the repository, then installs Node & PNPM'
 inputs:
   node-version:
     required: true
   pnpm-version:
     required: true
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Install PNPM
       uses: pnpm/action-setup@v2

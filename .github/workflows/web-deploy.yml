@@ -43,9 +43,10 @@ jobs:
           INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
           pnpm run build:prod
+          cp dist/index.html dist/original.html
           node .github/inject.js
 
-      - name: Publish
+      - name: Publish - Live
         uses: BetaHuhn/do-spaces-action@v2
         with:
           access_key: ${{ secrets.S3_ACCESS_KEY}}

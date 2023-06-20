@@ -12,7 +12,7 @@
 
 - `console.log(JSON.parse(localStorage.getItem('session')).auth_token)`
 
-4. Copy/paste the resulting output into the `Novel API Key` field
+4. Copy/paste the resulting output into the `Novel API Key` field in your [NovelAI Settings Page](https://agnai.chat/settings?tab=ai&service=novelai)
 
 The API Key will look something like this:
 

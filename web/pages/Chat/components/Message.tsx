@@ -310,7 +310,7 @@ const SingleMessage: Component<
                     props.char!,
                     user.profile!,
                     props.partial!,
-                    props.msg.adapter
+                    'partial'
                   )}
                 />
               </Match>
@@ -339,7 +339,7 @@ const SingleMessage: Component<
                     props.char!,
                     user.profile!,
                     msgText(),
-                    props.msg.adapter
+                    props.original.adapter
                   )}
                 />
                 <Show
@@ -539,6 +539,8 @@ function renderMessage(
   text: string,
   adapter?: string
 ) {
+  if (adapter === 'partial') return text
+
   // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669

@@ -2,11 +2,10 @@ name: Publish NPM Package
 
 on:
   push:
-    tags:
-      - '*'
+    branches: ['dev']
 
-env:
-  node-version: '18.4.0'
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -18,8 +17,13 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{  env.node-version  }}
+          node-version: '18.4.0'
           registry-url: 'https://registry.npmjs.org'
+
+      - name: Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: '8.6.0'
 
       - name: Get cached dependencies
         # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
@@ -33,11 +37,18 @@ jobs:
         if: steps.cache-step.outputs.cache-hit != 'true'
         run: |
           echo $NODE_ENV
-          npm run deps
+          pnpm install --frozen-lockfile
 
-      - name: Build and Publish
+      - name: Build
+        run: |
+          echo $NODE_ENV
+          pnpm build:prod
+
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npm run build:all
-          # npm publish
+          node .github/rev-version.js
+          npm publish

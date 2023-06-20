@@ -6,4 +6,5 @@ export const defaultFlags = {
   charv2: false,
   chub: false,
   slots: true,
+  parser: false,
 } satisfies { [key: string]: boolean }
