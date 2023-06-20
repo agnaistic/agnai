@@ -2,10 +2,6 @@ name: Publish NPM Package
 
 on: pull_request
 
-env:
-  node-version: '18.4.0'
-  pnpm-version: 8.6.0
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -16,13 +12,13 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v3
         with:
-          node-version: ${{  inputs.node-version  }}
+          node-version: '18.4.0'
           registry-url: 'https://registry.npmjs.org'
 
       - name: Install PNPM
         uses: pnpm/action-setup@v2
         with:
-          version: ${{  inputs.pnpm-version  }}
+          version: '8.6.0'
 
       - name: Get cached dependencies
         # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
@@ -44,7 +40,8 @@ jobs:
           pnpm build:prod
 
       - name: Publish
-        uses: mikeal/merge-release@master
         env:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npm publish
