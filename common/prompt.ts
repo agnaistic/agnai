@@ -9,6 +9,7 @@ import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { Encoder } from './tokenize'
 import { elapsedSince } from './util'
+import { indexOfAnyOf } from './util'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -728,17 +729,21 @@ function newline(value: string | undefined) {
 export const extractSystemPromptFromLegacyGaslight = (
   legacyGaslight: string
 ): { systemPrompt: string; gaslight: string } => {
-  const personalityPlaceholderPos = legacyGaslight.toLowerCase().indexOf('{{personality}}')
-  const noChange = { systemPrompt: '', gaslight: legacyGaslight }
+  const firstPlaceholderPos = indexOfAnyOf(legacyGaslight.toLowerCase(), [
+    '{{personality}}',
+    '{{memory}}',
+    '{{scenario}}',
+    '{{example_dialogue}}',
+    '{{all_personalities}}',
+  ])
+  const noChange = { systemPrompt: '', gaslight: '{{system_prompt}}\n' + legacyGaslight }
 
   // No {{personality}} placeholder in gaslight, we don't know what the user is
   // trying to achieve so no change
-  if (personalityPlaceholderPos === -1) return noChange
+  if (firstPlaceholderPos === -1) return noChange
 
-  const everythingBeforePersonalityPlaceholder = legacyGaslight
-    .slice(0, personalityPlaceholderPos)
-    .trim()
-  const sentenceStartersMatches = [...everythingBeforePersonalityPlaceholder.matchAll(/[.\n]/g)]
+  const everythingBeforePersonalityPlaceholder = legacyGaslight.slice(0, firstPlaceholderPos).trim()
+  const sentenceStartersMatches = [...everythingBeforePersonalityPlaceholder.matchAll(/[.\n\]]/g)]
 
   // There's only one sentence before the {{personality}} placeholder, so we're
   // going to assume it says something like "{{char}}'s persona:", therefore

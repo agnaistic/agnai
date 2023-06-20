@@ -173,7 +173,6 @@ Object {
       "Bot: SAMPLE_CHAT",
     ],
     "scenario": "SCENARIO",
-    "systemPrompt": undefined,
     "ujb": "!!UJB_PROMPT!!",
   },
   "template": "GASLIGHT TEMPLATE
