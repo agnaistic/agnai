@@ -48,7 +48,6 @@ const GenerationSettings: Component<Props> = (props) => {
 
   return (
     <>
-      <Divider />
       <div class="flex flex-col gap-6">
         <Card>
           <Select

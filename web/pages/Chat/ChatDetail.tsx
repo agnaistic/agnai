@@ -53,6 +53,7 @@ import { usePane } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import Loading from '/web/shared/Loading'
 import Convertible from './Convertible'
+import PageHeader from '/web/shared/PageHeader'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -521,7 +522,7 @@ const ChatDetail: Component = () => {
                   <Match when={chats.opts.pane === 'preset'}>
                     <Convertible
                       kind="partial"
-                      title="Preset Settings"
+                      title={<PageHeader title="Preset Settings" />}
                       close={closePane}
                       footer={paneFooter()}
                     >
