@@ -2,6 +2,9 @@ name: Publish NPM Package
 
 on: pull_request
 
+permissions:
+  contents: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -45,4 +48,5 @@ jobs:
           NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          node .github/rev-version.js
           npm publish
