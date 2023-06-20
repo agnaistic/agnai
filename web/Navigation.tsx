@@ -262,10 +262,10 @@ const Slots: Component = (props) => {
           <Slot slot="menu" />
         </Show>
       </Match>
-
+      {/* 
       <Match when={page.height() >= 1000}>
         <Slot slot="menuLg" />
-      </Match>
+      </Match> */}
 
       <Match when={true}>
         <Slot slot="menu" />
