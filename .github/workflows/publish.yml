@@ -1,6 +1,6 @@
 name: Publish NPM Package
 
-on: tag
+on: pull_request
 
 env:
   node-version: '18.4.0'
