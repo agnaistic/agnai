@@ -84,11 +84,3 @@ function toRawDuration(valueSecs: number) {
     text: valueSecs <= 0 ? 'now' : `${days}d:${hours}h:${mins}m:${secs}s`.replace('0d:', ''),
   }
 }
-
-export function indexOfAnyOf(haystack: string, needles: string[]): number {
-  const indices = needles
-    .map((needle) => haystack.indexOf(needle))
-    .filter((result) => result !== -1)
-    .sort((a, b) => a - b)
-  return indices[0] ?? -1
-}

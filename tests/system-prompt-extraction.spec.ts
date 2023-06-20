@@ -6,8 +6,6 @@ describe('extractSystemPrompt', () => {
   it('Works per defined test cases', () => {
     sysPromptExtractionTestCases.forEach((testCase) => {
       const actualOutput = extractSystemPromptFromLegacyGaslight(testCase.inputGaslight)
-      console.log(testCase.inputGaslight)
-      console.log(actualOutput)
       expect(actualOutput.systemPrompt).to.equal(testCase.expectedOutput.systemPrompt)
       expect(actualOutput.gaslight).to.equal(testCase.expectedOutput.gaslight)
     })
