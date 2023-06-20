@@ -19,7 +19,7 @@ type PageProps = {
 }
 
 type PartialProps = {
-  title?: string
+  title?: string | JSX.Element
   children: JSX.Element
   footer?: JSX.Element
   kind: 'partial'

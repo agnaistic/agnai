@@ -494,7 +494,11 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
     if (trimmed.toLowerCase().startsWith('<start>')) {
       const afterStart = trimmed.slice(7).trim()
       additions.push(sampleChatMarkerCompletionItem)
-      if (afterStart) additions.push({ role: 'system' as const, content: afterStart })
+      tokens += encoder(sampleChatMarkerCompletionItem.content)
+      if (afterStart) {
+        additions.push({ role: 'system' as const, content: afterStart })
+        tokens += encoder(afterStart)
+      }
       continue
     }
 
