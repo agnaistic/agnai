@@ -1,4 +1,4 @@
-import { createEffect, createMemo, Show } from 'solid-js'
+import { createEffect, createMemo, Match, Show, Switch } from 'solid-js'
 import { Component, createSignal } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
@@ -56,20 +56,21 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
       show={props.show}
       close={props.close}
       footer={
-        modalStep() === 'step1Info' ? (
-          <Button schema="secondary" onClick={() => setModalStep('step2EditingPreset')}>
-            Next
-          </Button>
-        ) : (
-          <>
+        <Switch>
+          <Match when={modalStep() === 'step1Info'}>
+            <Button schema="secondary" onClick={() => setModalStep('step2EditingPreset')}>
+              Next
+            </Button>
+          </Match>
+          <Match when={modalStep() == 'step2EditingPreset'}>
             <Button schema="secondary" onClick={() => setModalStep('step1Info')}>
               Back
             </Button>
             <Button schema="primary" onClick={onSave}>
               Save
             </Button>
-          </>
-        )
+          </Match>
+        </Switch>
       }
     >
       <div class="text-sm">
