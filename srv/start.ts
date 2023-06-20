@@ -1,4 +1,5 @@
 import 'module-alias/register'
+import './tokenize'
 import * as os from 'os'
 import throng from 'throng'
 import { initMessageBus } from './api/ws'
