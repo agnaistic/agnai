@@ -116,12 +116,12 @@ function getParseOpts(
     characters,
     chat: overChat,
     replyAs: char,
-    history,
     lines,
     members: [profile],
     parts,
     user,
     sender: profile,
+    lastMessage: '',
     ...overrides,
   }
 

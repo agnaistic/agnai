@@ -160,6 +160,7 @@ export async function createTextStreamV2(
     replyAs: opts.replyAs,
     characters: Object.assign(opts.characters, { impersonated: opts.impersonate }),
     impersonate: opts.impersonate,
+    lastMessage: opts.lastMessage,
   })
 
   return { stream, adapter }

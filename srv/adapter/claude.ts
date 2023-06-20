@@ -146,7 +146,7 @@ function createClaudePrompt(opts: AdapterProps): string {
       'history',
       'post',
     ]),
-    { opts, parts, encoder }
+    { opts, parts, lastMessage: opts.lastMessage, characters: opts.characters || {}, encoder }
   )
 
   const messages = [`\n\nHuman: ${gaslight}`, ...history.reverse()]

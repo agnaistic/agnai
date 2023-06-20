@@ -85,6 +85,10 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const respondAgain = () => {
+    msgStore.request(props.chat._id, props.chat.characterId)
+  }
+
   const more = () => {
     props.more(state.lastMsg.msg)
     setMenu(false)
@@ -149,7 +153,7 @@ const InputBar: Component<{
         placeholder={placeholder()}
         parentClass="flex w-full"
         class="h-full rounded-md rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
-        onKeyUp={(ev) => {
+        onKeyDown={(ev) => {
           if (ev.key === 'Enter' && !ev.shiftKey) {
             send()
             ev.preventDefault()
@@ -220,6 +224,9 @@ const InputBar: Component<{
             <ImagePlus size={18} /> Generate Image
           </Button>
           <Show when={!!state.lastMsg?.characterId && isOwner()}>
+            <Button schema="secondary" class="w-full" onClick={respondAgain} alignLeft>
+              <PlusCircle size={18} /> Respond Again
+            </Button>
             <Button schema="secondary" class="w-full" onClick={more} alignLeft>
               <PlusCircle size={18} /> Generate More
             </Button>

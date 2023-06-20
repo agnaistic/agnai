@@ -11,6 +11,7 @@ import {
   AIAdapter,
   NOVEL_MODELS,
   REPLICATE_MODEL_TYPES,
+  OPENAI_CHAT_MODELS,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -46,7 +47,6 @@ const GenerationSettings: Component<Props> = (props) => {
 
   return (
     <>
-      <Divider />
       <div class="flex flex-col gap-6">
         <Card>
           <Select
@@ -106,8 +106,6 @@ const GeneralSettings: Component<Props> = (props) => {
   return (
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
-
-      {/* <PromptEditor preset={props.inherit} /> */}
 
       <Card class="flex flex-wrap gap-5">
         <Select
@@ -231,6 +229,12 @@ const modelsToItems = (models: Record<string, string>): Option<string>[] =>
   Object.entries(models).map(([label, value]) => ({ label, value }))
 
 const PromptSettings: Component<Props> = (props) => {
+  const cfg = settingStore((cfg) => cfg.flags)
+
+  // Services that use chat completion cannot use the template parser
+  const canUseParser =
+    props.inherit?.service !== 'openai' && (props.inherit?.oaiModel || '') in OPENAI_CHAT_MODELS
+
   return (
     <div class="flex flex-col gap-4">
       <div class="text-xl font-bold">Prompt Settings</div>
@@ -291,6 +295,15 @@ const PromptSettings: Component<Props> = (props) => {
           aiSetting={'systemPrompt'}
           class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
         />
+
+        <Show when={cfg.parser && canUseParser}>
+          <Toggle
+            fieldName="useTemplateParser"
+            value={props.inherit?.useTemplateParser}
+            label="Use Template Parser (Experimental)"
+          />
+        </Show>
+
         <PromptEditor
           fieldName="gaslight"
           value={props.inherit?.gaslight}

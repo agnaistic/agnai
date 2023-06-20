@@ -248,6 +248,8 @@ export namespace AppSchema {
     name: string
     service?: AIAdapter
 
+    useTemplateParser?: boolean
+
     temp: number
     maxTokens: number
     maxContextLength?: number

@@ -1,7 +1,8 @@
-import { JSX, Component, createMemo, createSignal, For } from 'solid-js'
+import { JSX, Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { PresetOption } from './adapter'
 import TextInput from './TextInput'
 import { uniqBy } from '../../common/util'
+import Select, { Option } from './Select'
 
 export const PresetSelect: Component<{
   options: PresetOption[]
@@ -9,6 +10,8 @@ export const PresetSelect: Component<{
   warning?: JSX.Element
   selected?: string
 }> = (props) => {
+  const version = 1
+
   const [filter, setFilter] = createSignal('')
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
@@ -23,6 +26,22 @@ export const PresetSelect: Component<{
       (o) => o.value
     )
   )
+
+  const combinedOptions = createMemo(() => {
+    const list = custom()
+      .concat(builtin())
+      .map<Option>((value) => {
+        const label = `${!value.custom ? `(Built-in) ` : ''}${value.label}`
+        return {
+          label,
+          value: value.value,
+        }
+      })
+      .filter((opt) => opt.label.toLowerCase().includes(filter()))
+
+    return list
+  })
+
   const selectedLabel = createMemo(() => {
     const selectedOption = props.options.find((o) => o.value === props.selected)
     return selectedOption === undefined
@@ -35,25 +54,36 @@ export const PresetSelect: Component<{
       <div>
         Selected: <strong>{selectedLabel()}</strong>
       </div>
-      <TextInput
-        fieldName="__filter"
-        placeholder="Type to filter presets..."
-        onKeyUp={(e) => setFilter(e.currentTarget.value)}
-      />
-      <div class="flex flex-wrap gap-2 pr-3">
-        <OptionList
-          title="Custom"
-          options={custom()}
-          setPresetId={props.setPresetId}
-          selected={props.selected}
+
+      <Show when={version === 1}>
+        <Select
+          items={combinedOptions()}
+          fieldName="presetId"
+          onChange={(item) => props.setPresetId(item.value)}
         />
-        <OptionList
-          title="Built-in"
-          options={builtin()}
-          setPresetId={props.setPresetId}
-          selected={props.selected}
+      </Show>
+
+      <Show when={version > 1}>
+        <TextInput
+          fieldName="__filter"
+          placeholder="Type to filter presets..."
+          onKeyUp={(e) => setFilter(e.currentTarget.value)}
         />
-      </div>
+        <div class="flex flex-wrap gap-2 pr-3">
+          <OptionList
+            title="Custom"
+            options={custom()}
+            setPresetId={props.setPresetId}
+            selected={props.selected}
+          />
+          <OptionList
+            title="Built-in"
+            options={builtin()}
+            setPresetId={props.setPresetId}
+            selected={props.selected}
+          />
+        </div>
+      </Show>
       {props.warning ?? <></>}
     </div>
   )

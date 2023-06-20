@@ -42,6 +42,7 @@ export const chatGenSettings = {
   useGaslight: 'boolean?',
   ultimeJailbreak: 'string?',
   antiBond: 'boolean?',
+  useTemplateParser: 'boolean?',
 } as const
 
 export const presetValidator = {

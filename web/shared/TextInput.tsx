@@ -27,6 +27,11 @@ const TextInput: Component<{
   onKeyUp?: (
     ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
+
+  onKeyDown?: (
+    ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
+
   onChange?: (
     ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
   ) => void
@@ -139,6 +144,7 @@ const TextInput: Component<{
               updateCount()
               props.onKeyUp?.(ev)
             }}
+            onKeyDown={(ev) => props.onKeyDown?.(ev)}
             onChange={handleChange}
             onInput={handleInput}
             disabled={props.disabled}
@@ -164,6 +170,7 @@ const TextInput: Component<{
           spellcheck={props.spellcheck}
           lang={props.lang}
           onKeyUp={(ev) => props.onKeyUp?.(ev)}
+          onKeyDown={(ev) => props.onKeyDown?.(ev)}
           onchange={handleChange}
           onInput={handleInput}
         />

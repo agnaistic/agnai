@@ -25,6 +25,24 @@ export const handleKobold: ModelAdapter = async function* ({
 }) {
   const body = { ...base, ...settings, prompt }
 
+  // Kobold has a stop requence parameter which automatically
+  // halts generation when a certain token is generated
+  const stop_sequence = ['END_OF_DIALOG', 'You:']
+
+  for (const [id, char] of Object.entries(characters || {})) {
+    if (!char) continue
+    if (id === opts.replyAs._id) continue
+    stop_sequence.push(char.name + ':')
+  }
+
+  for (const member of members) {
+    if (!member.handle) continue
+    if (member.handle === opts.replyAs.name) continue
+    stop_sequence.push(member.handle + ':')
+  }
+
+  body.stop_sequence = stop_sequence
+
   // Kobold sampler order parameter must contain all 6 samplers to be valid
   // If the sampler order is provided, but incomplete, add the remaining samplers.
   if (body.sampler_order && body.sampler_order.length !== 6) {
