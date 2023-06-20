@@ -89,6 +89,6 @@ export function indexOfAnyOf(haystack: string, needles: string[]): number {
   const indices = needles
     .map((needle) => haystack.indexOf(needle))
     .filter((result) => result !== -1)
-    .sort()
+    .sort((a, b) => a - b)
   return indices[0] ?? -1
 }

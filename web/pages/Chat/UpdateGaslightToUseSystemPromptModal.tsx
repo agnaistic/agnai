@@ -7,8 +7,8 @@ import { getClientPreset } from '../../shared/adapter'
 import Tabs from '../../shared/Tabs'
 import TextInput from '../../shared/TextInput'
 import { AppSchema } from '../../../srv/db/schema'
-import { extractSystemPromptFromLegacyGaslight } from '/common/prompt'
 import { presetStore } from '/web/store'
+import { extractSystemPromptFromLegacyGaslight } from './update-gaslight'
 
 type ModalStep = 'step1Info' | 'step2EditingPreset'
 
