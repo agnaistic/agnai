@@ -55,14 +55,3 @@ jobs:
           space_region: ${{ secrets.S3_REGION }}
           permission: public-read
           source: dist
-
-      - name: Prepare Package
-        run: |
-          rm dist/index.html
-          cp dist/original.html dist/index.html
-
-      - name: Publish - Package
-        uses: mikeal/merge-release@master
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

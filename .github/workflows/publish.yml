@@ -1,6 +1,8 @@
 name: Publish NPM Package
 
-on: pull_request
+on:
+  push:
+    branches: ['dev']
 
 permissions:
   contents: read
