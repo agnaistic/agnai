@@ -19,6 +19,7 @@ import { Check, X } from 'lucide-solid'
 import { settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
+import { FormLabel } from './FormLabel'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -284,16 +285,15 @@ const PromptSettings: Component<Props> = (props) => {
         />
       </Card>
       <Card class="flex flex-col gap-4">
-        <TextInput
+        <FormLabel label="System Prompt" />
+        <PromptEditor
           fieldName="systemPrompt"
-          label="System prompt"
-          placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
-          isMultiline
+          include={['char', 'user', 'chat_age', 'idle_duration']}
           value={props.inherit?.systemPrompt ?? ''}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'systemPrompt'}
-          class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+          // class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
         />
 
         <Show when={cfg.parser && canUseParser}>
@@ -309,6 +309,7 @@ const PromptSettings: Component<Props> = (props) => {
           value={props.inherit?.gaslight}
           exclude={['post', 'history', 'ujb']}
           disabled={props.disabled}
+          showHelp
         />
         <TextInput
           fieldName="ultimeJailbreak"
