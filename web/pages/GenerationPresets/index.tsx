@@ -131,7 +131,7 @@ export const GenerationPresetsPage: Component = () => {
   if (params.id && !state.editing) {
     return (
       <>
-        <PageHeader title="Generation Presets" subtitle="Generation presets" />
+        <PageHeader title="Generation Presets" />
         <Loading />
       </>
     )
@@ -139,7 +139,7 @@ export const GenerationPresetsPage: Component = () => {
 
   return (
     <>
-      <PageHeader title="Generation Presets" subtitle="Generation presets" />
+      <PageHeader title="Generation Presets" />
       <div class="flex flex-col gap-2 pb-10">
         <Show when={params.id === 'default'}>
           <div class="font-bold">
@@ -177,6 +177,7 @@ export const GenerationPresetsPage: Component = () => {
                   placeholder="E.g. Pygmalion Creative"
                   value={editing()?.name}
                   required
+                  parentClass="mb-2"
                 />
                 <GenerationSettings inherit={editing()} />
               </div>
