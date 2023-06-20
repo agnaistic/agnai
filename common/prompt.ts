@@ -85,7 +85,7 @@ const HOLDER_NAMES = {
 
 const HOLDERS = {
   chatAge: /\{\{chat_age\}\}/gi,
-  lastMessage: /\{\{last_message\}\}/gi,
+  idleDuration: /\{\{idle_duration\}\}/gi,
   ujb: /\{\{ujb\}\}/gi,
   sampleChat: /\{\{example_dialogue\}\}/gi,
   scenario: /\{\{scenario\}\}/gi,
@@ -234,7 +234,7 @@ export function injectPlaceholders(
     .replace(HOLDERS.post, parts.post.join('\n'))
     .replace(HOLDERS.linebreak, '\n')
     .replace(HOLDERS.chatAge, elapsedSince(opts.chat.createdAt))
-    .replace(HOLDERS.lastMessage, elapsedSince(rest.lastMessage || ''))
+    .replace(HOLDERS.idleDuration, elapsedSince(rest.lastMessage || ''))
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
     .replace(BOT_REPLACE, opts.replyAs.name)
     .replace(SELF_REPLACE, sender)

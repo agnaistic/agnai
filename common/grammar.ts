@@ -79,7 +79,7 @@ Post "post" = "post"i { return "post" }
 Memory "memory" = "memory"i { return "memory" }
 Message "message" = "msg"i / "message"i / "text"i { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
-LastMessage "last-message" = "last_message"i { return "last_message" }
+IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 
 // Iterable entities
 Bots "bots" = ( "bots"i / "characters"i ) { return "bots" }
@@ -97,5 +97,5 @@ Interp "interp"
     / Memory
     / Message
     / ChatAge
-    / LastMessage
+    / IdleDuration
 `

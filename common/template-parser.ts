@@ -36,7 +36,7 @@ type Holder =
   | 'post'
   | 'memory'
   | 'chat_age'
-  | 'last_message'
+  | 'idle_duration'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -255,7 +255,7 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
     case 'chat_age':
       return elapsedSince(opts.chat.createdAt)
 
-    case 'last_message':
+    case 'idle_duration':
       return lastMessage(opts.lastMessage || '')
   }
 }
