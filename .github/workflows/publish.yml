@@ -1,6 +1,6 @@
 name: Publish NPM Package
 
-on: pull_request
+on: tag
 
 env:
   node-version: '18.4.0'
@@ -13,11 +13,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Install Node and PNPM
-        uses: ./.github/actions/install-node-pnpm
+      - name: Install Node
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{  env.node-version  }}
-          pnpm-version: ${{  env.pnpm-version  }}
+          node-version: ${{  inputs.node-version  }}
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install PNPM
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{  inputs.pnpm-version  }}
 
       - name: Get cached dependencies
         # cache is automatically saved after this job completes. jobs depending on this one will get the latest cached files
