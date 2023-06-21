@@ -37,7 +37,7 @@ const HomePage: Component = () => {
 
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500">
-          <AlertTriangle class="mr-2 mb-2" />
+          <AlertTriangle class="mb-2 mr-2" />
           Your browser does not support local storage. You will need to login/register to use
           Agnaistic.
         </div>

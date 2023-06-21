@@ -135,7 +135,7 @@ const Layout: Component = () => {
         <Navigation />
         <div class="w-full overflow-y-auto" data-background style={bg()}>
           <div
-            class={`mx-auto h-full min-h-full w-full ${maxW()}  px-2 sm:px-3`}
+            class={`mx-auto h-full min-h-full w-full ${maxW()} px-2 sm:px-3`}
             classList={{ 'content-background': !isChat() }}
           >
             <Show when={cfg.init}>

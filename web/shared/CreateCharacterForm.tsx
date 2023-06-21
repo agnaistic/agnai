@@ -313,7 +313,7 @@ export const CreateCharacterForm: Component<{
             </SolidCard>
           </Show>
 
-          <div class={`flex grow flex-col justify-between gap-4 pr-3 pl-2 `}>
+          <div class={`flex grow flex-col justify-between gap-4 pl-2 pr-3 `}>
             <Show when={!isPage && paneOrPopup() === 'popup'}>
               <div>
                 <em>

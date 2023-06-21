@@ -47,7 +47,7 @@ type CompletionGenerator = (
 
 // We only ever use the OpenAI gpt-3 encoder
 // Don't bother passing it around since we know this already
-const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
+const encoder = () => getEncoder('openai', OPENAI_MODELS.Turbo)
 
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
@@ -104,6 +104,15 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   log.debug(body, 'OpenAI payload')
+
+  console.log('STARTING TEMP COUNT')
+  if ('messages' in body) {
+    let count = 0
+    for (const msg of body.messages) {
+      count += encoder()(msg.content)
+    }
+    opts.log.info({ count }, 'OpenAI token count')
+  }
 
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
@@ -314,7 +323,7 @@ function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): Complet
       parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
-      encoder: encoder,
+      encoder: encoder(),
     }
   )
 
@@ -323,7 +332,7 @@ function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): Complet
   const all = []
 
   let maxBudget = (gen.maxContextLength || defaultPresets.openai.maxContextLength) - maxTokens
-  let tokens = encoder(gaslight)
+  let tokens = encoder()(gaslight)
 
   if (lines) {
     all.push(...lines)
@@ -337,9 +346,9 @@ function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): Complet
       parts: opts.parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
-      encoder: encoder,
+      encoder: encoder(),
     })
-    tokens += encoder(post.content)
+    tokens += encoder()(post.content)
     history.push(post)
   }
 
@@ -380,7 +389,7 @@ function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): Complet
       obj.role = 'user'
     }
 
-    const length = encoder(obj.content)
+    const length = encoder()(obj.content)
     if (tokens + length > maxBudget) break
     tokens += length
     history.push(obj)
@@ -416,7 +425,7 @@ function getPostInstruction(
     parts: opts.parts,
     lastMessage: opts.lastMessage,
     characters: opts.characters || {},
-    encoder,
+    encoder: encoder(),
   })
 
   switch (opts.kind) {
@@ -494,10 +503,10 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
     if (trimmed.toLowerCase().startsWith('<start>')) {
       const afterStart = trimmed.slice(7).trim()
       additions.push(sampleChatMarkerCompletionItem)
-      tokens += encoder(sampleChatMarkerCompletionItem.content)
+      tokens += encoder()(sampleChatMarkerCompletionItem.content)
       if (afterStart) {
         additions.push({ role: 'system' as const, content: afterStart })
-        tokens += encoder(afterStart)
+        tokens += encoder()(afterStart)
       }
       continue
     }
@@ -514,7 +523,7 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
       content: sample.replace(BOT_REPLACE, char).replace(SELF_REPLACE, sender),
     }
 
-    const length = encoder(msg.content)
+    const length = encoder()(msg.content)
     if (budget && tokens + length > budget) break
 
     additions.push(msg)

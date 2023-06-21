@@ -68,7 +68,7 @@ const Navigation: Component = () => {
       <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 pt-2 ${hide()} ${fullscreen()}`}>
         <div
           ref={content}
-          class="drawer__content sm:text-md flex flex-col gap-1 px-4 text-xl sm:gap-2"
+          class="drawer__content sm:text-md flex flex-col gap-1 px-4 text-lg sm:gap-2"
         >
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
@@ -262,10 +262,6 @@ const Slots: Component = (props) => {
           <Slot slot="menu" />
         </Show>
       </Match>
-      {/* 
-      <Match when={page.height() >= 1000}>
-        <Slot slot="menuLg" />
-      </Match> */}
 
       <Match when={true}>
         <Slot slot="menu" />

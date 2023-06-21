@@ -15,6 +15,9 @@ export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
     case '3xl':
       return 'max-w-8xl'
 
+    case 'fill':
+      return 'max-w-none'
+
     case 'full':
     case 'narrow':
     default:
