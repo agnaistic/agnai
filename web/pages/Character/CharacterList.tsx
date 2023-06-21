@@ -678,7 +678,9 @@ export const DownloadModal: Component<{
               case 'png':
                 return (
                   <Button
-                    onClick={() => downloadPng(charJson, props.char!.avatar!, props.char!.name)}
+                    onClick={() =>
+                      downloadPng(charJson, getAssetUrl(props.char!.avatar!)!, props.char!.name)
+                    }
                   >
                     <Save /> Download
                   </Button>
