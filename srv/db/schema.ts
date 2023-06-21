@@ -185,6 +185,7 @@ export namespace AppSchema {
 
     name: string
     description?: string
+    appearance?: string
     culture?: string
     tags?: string[]
     persona: Persona

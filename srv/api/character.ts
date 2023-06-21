@@ -18,6 +18,7 @@ const router = Router()
 const characterValidator = {
   name: 'string?',
   description: 'string?',
+  appearance: 'string?',
   culture: 'string?',
   avatar: 'string?',
   scenario: 'string?',
@@ -77,6 +78,7 @@ const createCharacter = handle(async (req) => {
     persona,
     sampleChat: body.sampleChat,
     description: body.description,
+    appearance: body.appearance,
     culture: body.culture,
     scenario: body.scenario,
     greeting: body.greeting,
@@ -128,6 +130,7 @@ const editCharacter = handle(async (req) => {
   const update: CharacterUpdate = {
     name: body.name,
     description: body.description,
+    appearance: body.appearance,
     culture: body.culture,
     greeting: body.greeting,
     scenario: body.scenario,

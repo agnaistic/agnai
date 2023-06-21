@@ -42,13 +42,15 @@ import { downloadCharacterHub } from '../pages/Character/ImportCharacter'
 import { ImageModal } from '../pages/Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
-import { BUNDLED_CHARACTER_BOOK_ID } from '/common/memory'
+import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { createCharGenTemplate } from '/common/default-preset'
 import { toGeneratedCharacter } from '../pages/Character/util'
 import { Card, SolidCard } from './Card'
-import { usePane } from './hooks'
+import { usePane, useRootModal } from './hooks'
+import Modal from '/web/shared/Modal'
+import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -84,7 +86,6 @@ export const CreateCharacterForm: Component<{
   const [image, setImage] = createSignal<string | undefined>()
 
   const presets = presetStore()
-  const memory = memoryStore()
   const flags = settingStore((s) => s.flags)
   const user = userStore((s) => s.user)
   const tagState = tagStore()
@@ -108,7 +109,7 @@ export const CreateCharacterForm: Component<{
   const [downloaded, setDownloaded] = createSignal<NewCharacter>()
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
-  const [characterBook, setCharacterBook] = createSignal(state.edit?.characterBook)
+  const [bundledBook, setBundledBook] = createSignal(state.edit?.characterBook)
   const [extensions] = createSignal(state.edit?.extensions ?? {})
   const [avatar, setAvatar] = createSignal<File>()
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
@@ -132,12 +133,6 @@ export const CreateCharacterForm: Component<{
   })
 
   const edit = createMemo(() => state.edit)
-
-  const isExternalBook = createMemo(() =>
-    memory.books.list.every((book) => book._id !== state.edit?.characterBook?._id)
-  )
-
-  const bundledBook = createMemo(() => (isExternalBook() ? state.edit?.characterBook : undefined))
 
   const preferredPreset = createMemo(() => {
     const id = user?.defaultPreset
@@ -228,7 +223,7 @@ export const CreateCharacterForm: Component<{
   }
 
   const generateAvatar = async () => {
-    const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
+    const { appearance } = getStrictForm(ref, { appearance: 'string' })
     if (!user) {
       toastStore.error(`Image generation settings missing`)
       return
@@ -241,7 +236,7 @@ export const CreateCharacterForm: Component<{
     }
 
     try {
-      characterStore.generateAvatar(user!, imagePrompt || persona)
+      characterStore.generateAvatar(user!, appearance || persona)
     } catch (ex: any) {
       toastStore.error(ex.message)
     }
@@ -253,7 +248,7 @@ export const CreateCharacterForm: Component<{
       tags: tags(),
       avatar: state.avatar.blob || avatar(),
       altGreetings: alternateGreetings(),
-      characterBook: characterBook(),
+      characterBook: bundledBook(),
       extensions: extensions(),
       originalAvatar: state.edit?.avatar,
       voice: voice(),
@@ -411,10 +406,12 @@ export const CreateCharacterForm: Component<{
                 />
                 <div class="flex w-full gap-2">
                   <TextInput
+                    isMultiline
                     parentClass="w-full"
-                    fieldName="imagePrompt"
+                    fieldName="appearance"
                     helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
-                    placeholder="Image prompt"
+                    placeholder="Appearance"
+                    value={downloaded()?.appearance || state.edit?.appearance}
                   />
                   <Button class="w-fit self-end" onClick={generateAvatar}>
                     Generate
@@ -554,11 +551,7 @@ export const CreateCharacterForm: Component<{
                   />
                 </Card>
                 <Card>
-                  <MemoryBookPicker
-                    characterBook={characterBook()}
-                    setCharacterBook={setCharacterBook}
-                    bundledBook={bundledBook()}
-                  />
+                  <MemoryBookPicker setBundledBook={setBundledBook} bundledBook={bundledBook()} />
                 </Card>
                 <Card>
                   <TextInput
@@ -652,44 +645,101 @@ const AlternateGreetingsInput: Component<{
   )
 }
 
-// TODO: Character Book can only be imported from Agnai Memory books. It is not possible yet to edit a Character Book that was bundled with a downloaded character card.
 const MemoryBookPicker: Component<{
   bundledBook: AppSchema.MemoryBook | undefined
-  characterBook: AppSchema.MemoryBook | undefined
-  setCharacterBook: (newVal: AppSchema.MemoryBook | undefined) => void
+  setBundledBook: (newVal: AppSchema.MemoryBook | undefined) => void
 }> = (props) => {
   const memory = memoryStore()
-  const bookOptions = createMemo(() =>
-    memory.books.list.map((book) => ({ label: book.name, value: book._id }))
-  )
-  const NONE_VALUE = '__bundled__none__'
-  const onChange = (option: Option) => {
-    if (option.value == NONE_VALUE) {
-      props.setCharacterBook(undefined)
-    } else {
-      const isBundledMemoryBook = props.characterBook?._id === BUNDLED_CHARACTER_BOOK_ID
-      const newBook = isBundledMemoryBook
-        ? props.bundledBook
-        : memory.books.list.find((book) => book._id === option.value)
-      props.setCharacterBook(newBook)
+  const [isModalShown, setIsModalShown] = createSignal(false)
+  const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
+  const updateEntrySort = (item: Option<string>) => {
+    if (item.value === 'creationDate' || item.value === 'alpha') {
+      setEntrySort(item.value)
     }
   }
-  const dropdownItems = () => [
-    { label: 'None', value: NONE_VALUE },
-    ...(props.bundledBook
-      ? [{ label: 'Imported with card', value: BUNDLED_CHARACTER_BOOK_ID }]
-      : []),
-    ...bookOptions(),
-  ]
+
+  const NONE_VALUE = '__none_character_book__'
+  const internalMemoryBookOptions = createMemo(() => [
+    { label: 'Import Memory Book', value: NONE_VALUE },
+    ...memory.books.list.map((book) => ({ label: book.name, value: book._id })),
+  ])
+  const pickInternalMemoryBook = (option: Option) => {
+    const newBook = memory.books.list.find((book) => book._id === option.value)
+    props.setBundledBook(newBook ? { ...newBook, _id: BUNDLED_CHARACTER_BOOK_ID } : undefined)
+  }
+  const initBlankCharacterBook = () => {
+    props.setBundledBook(emptyBookWithEmptyEntry())
+  }
+  const deleteBook = () => {
+    props.setBundledBook(undefined)
+  }
+  const ModalFooter = () => (
+    <>
+      <Button schema="secondary" onClick={() => setIsModalShown(false)}>
+        Close
+      </Button>
+      <Button type="submit">
+        <Save />
+        Save Character Book
+      </Button>
+    </>
+  )
+  const onSubmitCharacterBookChanges = (ev: Event) => {
+    ev.preventDefault()
+    const update = getBookUpdate(ev)
+    if (props.bundledBook) {
+      props.setBundledBook({ ...props.bundledBook, ...update })
+    }
+    setIsModalShown(false)
+  }
+
+  useRootModal({
+    type: 'memoryBook',
+    element: (
+      <Modal
+        title="Chat Memory"
+        show={isModalShown()}
+        close={() => setIsModalShown(false)}
+        footer={<ModalFooter />}
+        onSubmit={onSubmitCharacterBookChanges}
+        maxWidth="half"
+        fixedHeight
+      >
+        <div class="text-sm">
+          <EditMemoryForm
+            hideSave
+            book={props.bundledBook!}
+            entrySort={entrySort()}
+            updateEntrySort={updateEntrySort}
+          />
+        </div>
+      </Modal>
+    ),
+  })
+
   return (
-    <Select
-      fieldName="memoryBook"
-      label="Character Memory Book"
-      helperText="Memory book to bundle with this character."
-      value={props.characterBook?._id ?? props.bundledBook ? BUNDLED_CHARACTER_BOOK_ID : NONE_VALUE}
-      items={dropdownItems()}
-      onChange={onChange}
-    />
+    <div>
+      <h4 class="text-lg">Character Book</h4>
+      <Show when={!props.bundledBook}>
+        <span class="text-sm"> This character doesn't have a Character Book. </span>
+        <div class="flex gap-3">
+          <Select
+            fieldName="memoryBook"
+            value={NONE_VALUE}
+            items={internalMemoryBookOptions()}
+            onChange={pickInternalMemoryBook}
+          />
+          <Button onClick={initBlankCharacterBook}>Create New Book</Button>
+        </div>
+      </Show>
+      <Show when={props.bundledBook}>
+        <span class="text-sm">This character has a Character Book.</span>
+        <div class="mt-2 flex gap-3">
+          <Button onClick={() => setIsModalShown(true)}>Edit Book</Button>
+          <Button onClick={deleteBook}>Delete Book</Button>
+        </div>
+      </Show>
+    </div>
   )
 }
 
@@ -710,6 +760,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
       kind: PERSONA_FORMATS,
       name: 'string',
       description: 'string?',
+      appearance: 'string?',
       culture: 'string',
       greeting: 'string',
       scenario: 'string',
@@ -728,6 +779,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
       description: body.description,
       culture: body.culture,
       tags: opts.tags,
+      appearance: body.appearance,
       scenario: body.scenario,
       avatar: opts.avatar,
       greeting: body.greeting,
@@ -744,6 +796,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     kind: PERSONA_FORMATS,
     name: 'string',
     description: 'string?',
+    appearance: 'string?',
     culture: 'string',
     greeting: 'string',
     scenario: 'string',
@@ -767,6 +820,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     culture: body.culture,
     tags: opts.tags,
     scenario: body.scenario,
+    appearance: body.appearance,
     avatar: opts.avatar,
     greeting: body.greeting,
     sampleChat: body.sampleChat,

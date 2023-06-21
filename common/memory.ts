@@ -10,7 +10,7 @@ export type MemoryOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
   settings?: Partial<AppSchema.UserGenPreset>
-  book?: AppSchema.MemoryBook
+  books?: Array<AppSchema.MemoryBook | undefined>
   lines: string[]
   members: AppSchema.Profile[]
 }
@@ -75,9 +75,9 @@ type CharacterBookEntry = CharacterBook['entries'][number]
 export const MEMORY_PREFIX = 'Facts: '
 
 export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPrompt | undefined {
-  const { chat, book, settings, members, char, lines } = opts
+  const { chat, settings, members, char, lines, books } = opts
 
-  if (!book?.entries) return
+  if (!books || !books.length) return
   const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
@@ -86,56 +86,68 @@ export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPro
 
   if (isNaN(depth) || depth <= 0) return
 
-  const matches: Match[] = []
+  const finalPrompts: string[] = []
+  const finalEntries: Match[] = []
+  let finalTokens = encoder(MEMORY_PREFIX)
 
-  let id = 0
-  const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLowerCase()
-  const reversed = prep(combinedText)
+  for (const book of books) {
+    if (!book) continue
 
-  for (const entry of book.entries) {
-    if (!entry.enabled) continue
+    const matches: Match[] = []
 
-    let index = -1
-    for (const keyword of entry.keywords) {
-      // const partial = `(${prep(keyword)})`
-      const txt = `\\b(${prep(keyword)})\\b`
-      const re = new RegExp(txt, 'gi')
-      const result = re.exec(reversed)
-      if (index === -1 && result !== null) {
-        index = result.index
+    let id = 0
+    const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLowerCase()
+    const reversed = prep(combinedText)
+
+    for (const entry of book.entries) {
+      if (!entry.enabled) continue
+
+      let index = -1
+      for (const keyword of entry.keywords) {
+        // const partial = `(${prep(keyword)})`
+        const txt = `\\b(${prep(keyword)})\\b`
+        const re = new RegExp(txt, 'gi')
+        const result = re.exec(reversed)
+        if (index === -1 && result !== null) {
+          index = result.index
+        }
+      }
+
+      if (index > -1) {
+        const text = entry.entry.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
+        const tokens = encoder(text)
+        matches.push({ index, entry, id: ++id, tokens, text })
       }
     }
 
-    if (index > -1) {
-      const text = entry.entry.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
-      const tokens = encoder(text)
-      matches.push({ index, entry, id: ++id, tokens, text })
-    }
+    matches.sort(byPriorityThenIndex)
+
+    const entries = matches.reduce(
+      (prev, curr) => {
+        if (prev.budget >= memoryBudget) return prev
+        if (prev.budget + curr.tokens > memoryBudget) return prev
+
+        prev.budget += curr.tokens
+        prev.list.push(curr)
+        return prev
+      },
+      { list: [] as Match[], budget: finalTokens }
+    )
+
+    const prompt = entries.list
+      .map(({ text }) => text)
+      .reverse()
+      .join('\n')
+
+    finalPrompts.push(prompt)
+    finalEntries.push(...entries.list)
+    finalTokens += entries.budget
   }
 
-  matches.sort(byPriorityThenIndex)
-
-  const entries = matches.reduce(
-    (prev, curr) => {
-      if (prev.budget >= memoryBudget) return prev
-      if (prev.budget + curr.tokens > memoryBudget) return prev
-
-      prev.budget += curr.tokens
-      prev.list.push(curr)
-      return prev
-    },
-    { list: [] as Match[], budget: encoder(MEMORY_PREFIX) }
-  )
-
-  const prompt = entries.list
-    .map(({ text }) => text)
-    .reverse()
-    .join('\n')
-
   return {
-    prompt,
-    entries: entries.list,
-    tokens: entries.budget,
+    prompt: finalPrompts.join('\n'),
+    entries: finalEntries, // entries.list,
+    tokens: finalTokens, // entries.budget,
   }
 }
 
@@ -224,3 +236,26 @@ function nativeToMemoryEntry(memoryEntry: AppSchema.MemoryEntry): CharacterBookE
     position: memoryEntry.position,
   }
 }
+
+export const emptyEntry = (): AppSchema.MemoryEntry => ({
+  name: '',
+  entry: '',
+  keywords: [],
+  priority: 0,
+  weight: 0,
+  enabled: true,
+})
+
+export const emptyBook = (): AppSchema.MemoryBook => ({
+  _id: '',
+  name: '',
+  description: '',
+  entries: [],
+  kind: 'memory',
+  userId: '',
+})
+
+export const emptyBookWithEmptyEntry = (): AppSchema.MemoryBook => ({
+  ...emptyBook(),
+  entries: [{ ...emptyEntry(), name: 'New Entry' }],
+})

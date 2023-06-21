@@ -2,7 +2,9 @@ import { JSX, Component, createMemo, createSignal, For, Show } from 'solid-js'
 import { PresetOption } from './adapter'
 import TextInput from './TextInput'
 import { uniqBy } from '../../common/util'
-import Select, { Option } from './Select'
+import { useRootModal } from './hooks'
+import Button from './Button'
+import Modal from './Modal'
 
 export const PresetSelect: Component<{
   options: PresetOption[]
@@ -10,8 +12,6 @@ export const PresetSelect: Component<{
   warning?: JSX.Element
   selected?: string
 }> = (props) => {
-  const version = 1
-
   const [filter, setFilter] = createSignal('')
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
@@ -27,64 +27,63 @@ export const PresetSelect: Component<{
     )
   )
 
-  const combinedOptions = createMemo(() => {
-    const list = custom()
-      .concat(builtin())
-      .map<Option>((value) => {
-        const label = `${!value.custom ? `(Built-in) ` : ''}${value.label}`
-        return {
-          label,
-          value: value.value,
-        }
-      })
-      .filter((opt) => opt.label.toLowerCase().includes(filter()))
-
-    return list
-  })
-
   const selectedLabel = createMemo(() => {
     const selectedOption = props.options.find((o) => o.value === props.selected)
     return selectedOption === undefined
       ? 'None'
       : `${selectedOption.label} (${selectedOption.custom ? 'Custom' : 'Built-in'})`
   })
+  const [showSelectModal, setShowSelectModal] = createSignal(false)
+  const selectIdAndCloseModal = (id: string) => {
+    props.setPresetId(id)
+    setShowSelectModal(false)
+    setFilter('')
+  }
+  useRootModal({
+    type: 'presetSelect',
+    element: (
+      <Modal
+        show={showSelectModal()}
+        close={() => setShowSelectModal(false)}
+        title="Choose a preset"
+      >
+        <div class="flex flex-col gap-4">
+          <div class="sticky top-0">
+            <TextInput
+              fieldName="__filter"
+              placeholder="Type to filter presets..."
+              onKeyUp={(e) => setFilter(e.currentTarget.value)}
+            />
+          </div>
+          <div class="flex flex-wrap gap-2 pr-3">
+            <h4>Custom presets</h4>
+            <OptionList
+              options={custom()}
+              onSelect={selectIdAndCloseModal}
+              selected={props.selected}
+            />
+            <h4>Built-in presets</h4>
+            <OptionList
+              options={builtin()}
+              onSelect={selectIdAndCloseModal}
+              selected={props.selected}
+            />
+          </div>
+        </div>
+      </Modal>
+    ),
+  })
+
   return (
     <div class="flex flex-col gap-2 py-3 text-sm">
       <div class="text-lg">Preset</div>
       <div>
         Selected: <strong>{selectedLabel()}</strong>
       </div>
+      <div class="inline-block">
+        <Button onClick={() => setShowSelectModal(true)}>Choose a preset</Button>
+      </div>
 
-      <Show when={version === 1}>
-        <Select
-          items={combinedOptions()}
-          fieldName="presetId"
-          onChange={(item) => props.setPresetId(item.value)}
-          value={props.selected}
-        />
-      </Show>
-
-      <Show when={version > 1}>
-        <TextInput
-          fieldName="__filter"
-          placeholder="Type to filter presets..."
-          onKeyUp={(e) => setFilter(e.currentTarget.value)}
-        />
-        <div class="flex flex-wrap gap-2 pr-3">
-          <OptionList
-            title="Custom"
-            options={custom()}
-            setPresetId={props.setPresetId}
-            selected={props.selected}
-          />
-          <OptionList
-            title="Built-in"
-            options={builtin()}
-            setPresetId={props.setPresetId}
-            selected={props.selected}
-          />
-        </div>
-      </Show>
       {props.warning ?? <></>}
     </div>
   )
@@ -92,22 +91,24 @@ export const PresetSelect: Component<{
 
 const OptionList: Component<{
   options: PresetOption[]
-  setPresetId: (id: string) => void
-  title: string
+  onSelect: (id: string) => void
+  title?: string
   selected?: string
 }> = (props) => (
-  <div class="flex w-[48%] min-w-[190px] flex-col gap-2">
-    <div class="text-md">{props.title}</div>
-    <div class="flex max-h-52 flex-col gap-2 overflow-auto p-2">
+  <div class={`flex w-full flex-col gap-2`}>
+    <Show when={props.title}>
+      <div class="text-md">{props.title}</div>
+    </Show>
+    <div class={`flex flex-col gap-2 p-2`}>
       <For each={props.options}>
         {(option) => (
           <div
             class={
               (props.selected && props.selected === option.value
                 ? 'bg-[var(--hl-800)]'
-                : 'bg-700') + ' w-full cursor-pointer gap-4 rounded-xl px-2 py-1 text-sm'
+                : 'bg-700') + ` w-full cursor-pointer gap-4 rounded-xl px-2 py-1 text-sm`
             }
-            onClick={() => props.setPresetId(option.value)}
+            onClick={() => props.onSelect(option.value)}
           >
             <div class="font-bold">{option.label}</div>
           </div>

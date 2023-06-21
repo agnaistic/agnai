@@ -25,6 +25,8 @@ import Settings from './pages/Settings'
 import ProfilePage from './pages/Profile'
 import { chatStore } from './store'
 import { usePane } from './shared/hooks'
+import { rootModalStore } from './store/root-modal'
+import { For } from 'solid-js'
 import { getMaxChatWidth } from './shared/util'
 
 const App: Component = () => {
@@ -99,6 +101,7 @@ const Layout: Component = () => {
 
     return getMaxChatWidth(state.ui.chatWidth)
   })
+  const rootModals = rootModalStore()
 
   const reload = () => {
     settingStore.init()
@@ -161,6 +164,7 @@ const Layout: Component = () => {
         show={cfg.showImpersonate}
         close={() => settingStore.toggleImpersonate(false)}
       />
+      <For each={rootModals.modals}>{(modal) => modal.element}</For>
     </div>
   )
 }

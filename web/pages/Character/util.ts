@@ -128,12 +128,17 @@ export function saveListCache(cache: ListCache) {
 
 export function toGeneratedCharacter(response: string, description: string): NewCharacter {
   const lines = response.split('\n')
+  const name = extract(lines, 'FirstName')
+
+  const re = new RegExp(name, 'g')
+
   const char: NewCharacter = {
     originalAvatar: undefined,
     description,
-    scenario: extract(lines, 'Scenario'),
-    greeting: extract(lines, 'Greeting'),
-    name: extract(lines, 'FirstName'),
+    appearance: extract(lines, 'Appearance'),
+    scenario: extract(lines, 'Scenario').replace(re, '{{char}}'),
+    greeting: extract(lines, 'Greeting').replace(re, '{{char}}'),
+    name,
     sampleChat: extract(lines, 'ExampleSpeech1', 'ExampleSpeech2', 'ExampleSpeech3')
       .split('\n')
       .map((line) => `{{char}}: ${line}`)
@@ -141,10 +146,9 @@ export function toGeneratedCharacter(response: string, description: string): New
     persona: {
       kind: 'wpp',
       attributes: {
-        personality: extract(lines, 'Personality').split(', '),
-        behaviours: extract(lines, 'Behaviours', 'Behaviors').split(', '),
-        appearance: extract(lines, 'Appearance').split(','),
-        description: toArray(extract(lines, 'Description')),
+        personality: extract(lines, 'Personality').replace(re, '{{char}}').split(', '),
+        behaviours: extract(lines, 'Behaviours', 'Behaviors').replace(re, '{{char}}').split(', '),
+        description: toArray(extract(lines, 'Description').replace(re, '{{char}}')),
       },
     },
   }

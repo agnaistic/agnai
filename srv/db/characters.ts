@@ -24,6 +24,7 @@ export type CharacterUpdate = Partial<
     | 'postHistoryInstructions'
     | 'creator'
     | 'characterVersion'
+    | 'appearance'
   >
 >
 
@@ -32,6 +33,7 @@ export async function createCharacter(
   char: Pick<
     AppSchema.Character,
     | 'name'
+    | 'appearance'
     | 'avatar'
     | 'persona'
     | 'sampleChat'

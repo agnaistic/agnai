@@ -11,15 +11,14 @@ import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
-import { FILAMENT_ENABLED, filament, handleLuminAI } from './luminai'
+import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleClaude } from './claude'
 import { GenerateRequestV2, ModelAdapter } from './type'
-import { createPromptWithParts, getAdapter, getPromptParts, trimTokens } from '../../common/prompt'
+import { createPromptWithParts, getAdapter, getPromptParts } from '../../common/prompt'
 import { handleScale } from './scale'
-import { MemoryOpts } from '../../common/memory'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -62,7 +61,7 @@ type InferenceRequest = {
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
-  opts.settings.maxTokens = 500
+  opts.settings.maxTokens = 1024
   opts.settings.temp = 1
   opts.settings.topP = 1
   opts.settings.frequencyPenalty = 0
@@ -128,10 +127,10 @@ export async function createTextStreamV2(
     opts.char = entities.char
 
     // Use pipeline
-    const memory = await getMemoryPrompt({ ...opts, book: entities.book }, log)
-    if (memory) {
-      opts.parts.memory = memory
-    }
+    // const memory = await getMemoryPrompt({ ...opts, books: [entities.book] }, log)
+    // if (memory) {
+    //   opts.parts.memory = memory
+    // }
   }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
@@ -253,24 +252,24 @@ async function getGenerationSettings(
  *
  * @param opts
  */
-async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
-  const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const encoder = getEncoder(adapter, model)
-  if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
-    const res = await filament
-      .retrieveMemories(opts.user, opts.book._id, opts.lines)
-      .catch((error) => ({ error }))
+// async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
+//   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+//   const encoder = getEncoder(adapter, model)
+//   if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
+//     const res = await filament
+//       .retrieveMemories(opts.user, opts.book._id, opts.lines)
+//       .catch((error) => ({ error }))
 
-    // If we fail, we'll revert to the naive memory retrival
-    if ('error' in res) {
-      return
-    }
+//     // If we fail, we'll revert to the naive memory retrival
+//     if ('error' in res) {
+//       return
+//     }
 
-    const memories = res.map((res) => res.entry)
-    const tokenLimit = opts.settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
-    const prompt = trimTokens({ input: memories, start: 'top', tokenLimit, encoder })
-    return prompt.join('\n')
-  }
+//     const memories = res.map((res) => res.entry)
+//     const tokenLimit = opts.settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
+//     const prompt = trimTokens({ input: memories, start: 'top', tokenLimit, encoder })
+//     return prompt.join('\n')
+//   }
 
-  return
-}
+//   return
+// }

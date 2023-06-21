@@ -4,20 +4,12 @@ import { setComponentPageTitle } from '../../shared/util'
 import { memoryStore } from '../../store'
 import { Show, createEffect, createSignal } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
-import EditMemoryForm, { EntrySort, emptyEntry, getBookUpdate } from './EditMemory'
+import EditMemoryForm, { EntrySort, getBookUpdate } from './EditMemory'
 import { Option } from '../../shared/Select'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
 import { Save } from 'lucide-solid'
-
-const newBook: AppSchema.MemoryBook = {
-  _id: '',
-  name: '',
-  description: '',
-  entries: [],
-  kind: 'memory',
-  userId: '',
-}
+import { emptyBookWithEmptyEntry } from '/common/memory'
 
 const EditMemoryPage = () => {
   const { updateTitle } = setComponentPageTitle('Memory book')
@@ -36,7 +28,7 @@ const EditMemoryPage = () => {
   createEffect(() => {
     if (params.id === 'new') {
       updateTitle('Create memory book')
-      setEditing({ ...newBook, entries: [{ ...emptyEntry, name: 'New Entry' }] })
+      setEditing(emptyBookWithEmptyEntry())
       return
     }
 
