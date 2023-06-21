@@ -31,7 +31,7 @@ const novel: Encoder = function krake(value: string) {
 const novelClio: Encoder = function clio(value: string) {
   const cleaned = sp.cleanText(value)
   const tokens = nerdstashV2.encodeIds(cleaned)
-  return tokens.length
+  return tokens.length + 4
 }
 
 let davinci: Encoder

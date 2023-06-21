@@ -14,9 +14,9 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
 
     const json = {
       name: 'Exported',
-      greeting: chat?.greeting,
-      sampleChat: chat?.sampleChat,
-      scenario: chat?.scenario,
+      greeting: chat?.greeting || '',
+      sampleChat: chat?.sampleChat || '',
+      scenario: chat?.scenario || '',
       messages: messages.map((msg) => ({
         handle: msg.userId ? chats.memberIds[msg.userId]?.handle || 'You' : undefined,
         userId: msg.userId ? msg.userId : undefined,
