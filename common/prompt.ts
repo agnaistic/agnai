@@ -420,9 +420,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
   parts.memory = memory?.prompt
 
-  parts.ujb = opts.settings?.ignoreCharacterUjb
-    ? opts.settings?.ultimeJailbreak
-    : replyAs.postHistoryInstructions || opts.settings?.ultimeJailbreak
+  parts.ujb = getFinalUjb(opts.settings?.ignoreCharacterUjb, replyAs.postHistoryInstructions, opts.settings?.ultimeJailbreak)
+
   parts.systemPrompt = opts.settings?.ignoreCharacterSystemPrompt
     ? opts.settings?.systemPrompt
     : replyAs.systemPrompt || opts.settings?.systemPrompt
@@ -430,6 +429,16 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   parts.post = post.map(replace)
 
   return parts
+}
+
+function getFinalUjb(ignoreCharacterUjb?: boolean, charaPhi?: string, userUjb?: string) {
+  if (ignoreCharacterUjb) {
+    return userUjb
+  } else if (charaPhi) {
+    return charaPhi.replace(/{{original}}/gi, userUjb ?? '')
+  } else {
+    return userUjb
+  }
 }
 
 function createPostPrompt(
