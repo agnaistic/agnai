@@ -35,8 +35,13 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
   )
   const [loadedExtraction, setLoadedExtraction] = createSignal(false)
   createEffect(() => {
-    if (!loadedExtraction() && automaticUpdate().gaslight !== '') {
+    if (
+      !loadedExtraction() &&
+      automaticUpdate().gaslight !== '' &&
+      automaticUpdate().gaslight !== '{{system_prompt}}\n'
+    ) {
       setLoadedExtraction(true)
+      console.log(automaticUpdate())
       setNewSystemPrompt(automaticUpdate().systemPrompt)
       setNewGaslight(automaticUpdate().gaslight)
     }
