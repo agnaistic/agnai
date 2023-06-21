@@ -53,7 +53,7 @@ const InputBar: Component<{
 
   const [saveDraft, disposeSaveDraftDebounce] = createDebounce((text: string) => {
     draft.update(text)
-  }, 500)
+  }, 50)
 
   const updateText = () => {
     if (!ref) return

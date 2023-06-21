@@ -410,7 +410,7 @@ export const CreateCharacterForm: Component<{
                     parentClass="w-full"
                     fieldName="appearance"
                     helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
-                    placeholder="Image prompt"
+                    placeholder="Appearance"
                     value={downloaded()?.appearance || state.edit?.appearance}
                   />
                   <Button class="w-fit self-end" onClick={generateAvatar}>
@@ -779,6 +779,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
       description: body.description,
       culture: body.culture,
       tags: opts.tags,
+      appearance: body.appearance,
       scenario: body.scenario,
       avatar: opts.avatar,
       greeting: body.greeting,
@@ -819,6 +820,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     culture: body.culture,
     tags: opts.tags,
     scenario: body.scenario,
+    appearance: body.appearance,
     avatar: opts.avatar,
     greeting: body.greeting,
     sampleChat: body.sampleChat,

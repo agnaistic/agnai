@@ -96,6 +96,7 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
     appendFormOptional(form, 'name', char.name)
     strictAppendFormOptional(form, 'greeting', char.greeting)
     strictAppendFormOptional(form, 'scenario', char.scenario)
+    appendFormOptional(form, 'appearance', char.appearance)
     appendFormOptional(form, 'persona', JSON.stringify(char.persona))
     strictAppendFormOptional(form, 'description', char.description || '')
     appendFormOptional(form, 'culture', char.culture)
