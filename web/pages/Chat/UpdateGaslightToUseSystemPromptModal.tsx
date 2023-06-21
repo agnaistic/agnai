@@ -112,7 +112,7 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
               value={newSystemPrompt()}
               onChange={(ev) => setNewSystemPrompt(ev.currentTarget.value)}
             />
-            <div class="my-2 text-base">Prompt template (gaslight)</div>
+            <div class="my-2 text-base">Prompt template (formerly gaslight)</div>
             <TextInput
               isMultiline
               fieldName="newGaslight"
