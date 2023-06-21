@@ -131,6 +131,7 @@ export function toGeneratedCharacter(response: string, description: string): New
   const char: NewCharacter = {
     originalAvatar: undefined,
     description,
+    appearance: extract(lines, 'Appearance'),
     scenario: extract(lines, 'Scenario'),
     greeting: extract(lines, 'Greeting'),
     name: extract(lines, 'FirstName'),
@@ -143,7 +144,6 @@ export function toGeneratedCharacter(response: string, description: string): New
       attributes: {
         personality: extract(lines, 'Personality').split(', '),
         behaviours: extract(lines, 'Behaviours', 'Behaviors').split(', '),
-        appearance: extract(lines, 'Appearance').split(','),
         description: toArray(extract(lines, 'Description')),
       },
     },

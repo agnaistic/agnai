@@ -42,7 +42,7 @@ const TextInput: Component<{
   service?: AIAdapter
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
-  let ref: any
+  let inputRef: any
   const [tokens, setTokens] = createSignal(0)
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
   const adapters = createMemo(() => getAISettingServices(props.aiSetting))
@@ -53,7 +53,7 @@ const TextInput: Component<{
 
   createEffect(() => {
     if (props.value === undefined) return
-    if (ref.value !== props.value) ref.value = props.value.toString()
+    if (inputRef.value !== props.value) inputRef.value = props.value.toString()
     updateCount()
   })
 
@@ -73,13 +73,14 @@ const TextInput: Component<{
   const handleInput = async (
     ev: Event & { target: Element; currentTarget: HTMLTextAreaElement | HTMLInputElement }
   ) => {
+    resize()
     props.onInput?.(ev)
   }
 
   const updateCount = async () => {
     if (!props.tokenCount) return
     const tokenizer = await getEncoder()
-    const count = tokenizer(ref.value || '')
+    const count = tokenizer(inputRef.value || '')
     setTokens(count)
 
     if (typeof props.tokenCount === 'function') {
@@ -88,16 +89,16 @@ const TextInput: Component<{
   }
 
   const resize = () => {
-    if (!ref) return
+    if (!inputRef) return
 
-    if (ref.value === '') {
-      ref.style.height = `${MIN_HEIGHT}px`
+    if (inputRef.value === '') {
+      inputRef.style.height = `${MIN_HEIGHT}px`
       return
     }
 
     updateCount()
-    const next = +ref.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : ref.scrollHeight
-    ref.style.height = `${next}px`
+    const next = +inputRef.scrollHeight < MIN_HEIGHT ? MIN_HEIGHT : inputRef.scrollHeight
+    inputRef.style.height = `${next}px`
   }
 
   const hide = createMemo(() => {
@@ -106,7 +107,7 @@ const TextInput: Component<{
   })
 
   onMount(() => {
-    props.ref?.(ref)
+    props.ref?.(inputRef)
   })
 
   return (
@@ -151,19 +152,19 @@ const TextInput: Component<{
             pattern={props.pattern}
             spellcheck={props.spellcheck}
             lang={props.lang}
-            ref={ref}
+            ref={inputRef}
           />
         }
       >
         <textarea
           id={props.fieldName}
           name={props.fieldName}
-          ref={ref}
+          ref={inputRef}
           required={props.required}
           placeholder={placeholder()}
           value={value()}
           class={
-            'form-field focusable-field text-900 min-h-[32px] w-full rounded-xl px-4 py-2 ' +
+            'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 py-2 ' +
             props.class
           }
           disabled={props.disabled}

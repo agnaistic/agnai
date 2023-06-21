@@ -223,7 +223,7 @@ export const CreateCharacterForm: Component<{
   }
 
   const generateAvatar = async () => {
-    const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
+    const { appearance } = getStrictForm(ref, { appearance: 'string' })
     if (!user) {
       toastStore.error(`Image generation settings missing`)
       return
@@ -236,7 +236,7 @@ export const CreateCharacterForm: Component<{
     }
 
     try {
-      characterStore.generateAvatar(user!, imagePrompt || persona)
+      characterStore.generateAvatar(user!, appearance || persona)
     } catch (ex: any) {
       toastStore.error(ex.message)
     }
@@ -406,10 +406,12 @@ export const CreateCharacterForm: Component<{
                 />
                 <div class="flex w-full gap-2">
                   <TextInput
+                    isMultiline
                     parentClass="w-full"
-                    fieldName="imagePrompt"
+                    fieldName="appearance"
                     helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
                     placeholder="Image prompt"
+                    value={downloaded()?.appearance || state.edit?.appearance}
                   />
                   <Button class="w-fit self-end" onClick={generateAvatar}>
                     Generate
@@ -683,7 +685,6 @@ const MemoryBookPicker: Component<{
     </>
   )
   const onSubmitCharacterBookChanges = (ev: Event) => {
-    console.log('test')
     ev.preventDefault()
     const update = getBookUpdate(ev)
     if (props.bundledBook) {
@@ -759,6 +760,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
       kind: PERSONA_FORMATS,
       name: 'string',
       description: 'string?',
+      appearance: 'string?',
       culture: 'string',
       greeting: 'string',
       scenario: 'string',
@@ -793,6 +795,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     kind: PERSONA_FORMATS,
     name: 'string',
     description: 'string?',
+    appearance: 'string?',
     culture: 'string',
     greeting: 'string',
     scenario: 'string',

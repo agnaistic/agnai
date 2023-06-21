@@ -105,7 +105,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   log.debug(body, 'OpenAI payload')
 
-  console.log('STARTING TEMP COUNT')
   if ('messages' in body) {
     let count = 0
     for (const msg of body.messages) {
