@@ -696,6 +696,7 @@ export const DownloadModal: Component<{
 function downloadPng(charJson: string, charImgUrl: string, charName: string) {
   // Create a new image element
   const imgElement = document.createElement('img')
+  imgElement.setAttribute('crossorigin', 'anonymous')
   imgElement.src = charImgUrl
   imgElement.onload = () => {
     const imgDataUrl = imgToPngDataUrl(imgElement)
