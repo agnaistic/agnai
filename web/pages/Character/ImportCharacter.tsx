@@ -276,7 +276,13 @@ function getImportFormat(obj: any): ImportFormat {
 }
 
 function isNative(obj: any): obj is AppSchema.Character {
-  return !!obj.name && !!obj.persona && !!obj.greeting && !!obj.scenario && !!obj.sampleChat
+  return (
+    'name' in obj &&
+    'persona' in obj &&
+    'greeting' in obj &&
+    'scenario' in obj &&
+    'sampleChat' in obj
+  )
 }
 
 /**
