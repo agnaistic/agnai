@@ -228,8 +228,8 @@ export function injectPlaceholders(
 
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
+    // Note: for character post-history-instructions, this is off-spec behavior
     .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
-    .replace(HOLDERS.systemPrompt, newline(parts.systemPrompt))
     .replace(HOLDERS.sampleChat, newline(sampleChat))
     .replace(HOLDERS.scenario, parts.scenario || '')
     .replace(HOLDERS.memory, newline(parts.memory))
@@ -239,6 +239,8 @@ export function injectPlaceholders(
     .replace(HOLDERS.linebreak, '\n')
     .replace(HOLDERS.chatAge, elapsedSince(opts.chat.createdAt))
     .replace(HOLDERS.idleDuration, elapsedSince(rest.lastMessage || ''))
+    // system prompt should not support other placeholders
+    .replace(HOLDERS.systemPrompt, newline(parts.systemPrompt))
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
     .replace(BOT_REPLACE, opts.replyAs.name)
     .replace(SELF_REPLACE, sender)
