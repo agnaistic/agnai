@@ -363,7 +363,7 @@ const Character: Component<{
 
   if (props.type === 'list') {
     return (
-      <div class="bg-800 flex w-full flex-row items-center justify-between gap-4 rounded-xl py-1 px-2 hover:bg-[var(--bg-700)]">
+      <div class="bg-800 flex w-full flex-row items-center justify-between gap-4 rounded-xl px-2 py-1 hover:bg-[var(--bg-700)]">
         <A
           class="ellipsis flex h-3/4 grow cursor-pointer items-center"
           href={`/character/${props.char._id}/chats`}
@@ -475,7 +475,7 @@ const Character: Component<{
             positioned, then DropMenu breaks because it relies on the nearest
             positioned parent to be the sitewide container */}
         <div
-          class="float-right mt-[-149px] mr-[3px] flex justify-end"
+          class="float-right mr-[3px] mt-[-149px] flex justify-end"
           onClick={() => setOpts(true)}
         >
           <div class="rounded-md bg-[var(--bg-500)] p-[2px]">

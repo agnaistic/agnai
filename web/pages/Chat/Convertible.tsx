@@ -81,7 +81,7 @@ const WithinPage: Component<PartialProps> = (props) => {
 }
 
 const Footer: Component<{ children: JSX.Element }> = (props) => (
-  <div class={`sticky bottom-0 mt-4 mr-2 text-right`}>
+  <div class={`sticky bottom-0 mr-2 mt-4 text-right`}>
     <Card class="inline-flex justify-end gap-2" bg="bg-900" bgOpacity={1}>
       {props.children}
     </Card>

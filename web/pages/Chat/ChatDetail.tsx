@@ -47,6 +47,8 @@ import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { cycleArray, wait } from '/common/util'
+import { HOLDERS } from '/common/prompt'
+import UpdateGaslightToUseSystemPromptModal from './UpdateGaslightToUseSystemPromptModal'
 import { getActiveBots } from './util'
 import { CreateCharacterForm } from '/web/shared/CreateCharacterForm'
 import { usePane } from '/web/shared/hooks'
@@ -212,6 +214,18 @@ const ChatDetail: Component = () => {
 
   const chatPreset = createMemo(() => getClientPreset(chats.chat))
 
+  const mustUpdateUserPresetToUseSystemPrompt = createMemo(() => {
+    const isUserSetting = chatPreset()?.preset._id !== undefined && chatPreset()?.preset._id !== ''
+    if (!isUserSetting) return false
+    const gaslight = chatPreset()?.preset.gaslight
+    if (!gaslight) return false
+    const characterHasSystemPrompt = chars.chatBots.some(
+      (char) => char.systemPrompt !== undefined && char.systemPrompt !== ''
+    )
+    const gaslightHasSystemPrompt = !!gaslight.match(HOLDERS.systemPrompt)
+    return characterHasSystemPrompt && !gaslightHasSystemPrompt
+  })
+
   const adapterLabel = createMemo(() => {
     const data = chatPreset()
     if (!data) return ''
@@ -222,6 +236,13 @@ const ChatDetail: Component = () => {
       name || presetLabel
     }`
     return label
+  })
+
+  createEffect(() => {
+    if (mustUpdateUserPresetToUseSystemPrompt()) {
+      setShowOpts(false)
+      chatStore.option('modal', 'updateGaslightToUseSystemPrompt')
+    }
   })
 
   const changeEditingChar = async (char: AppSchema.Character | undefined) => {
@@ -598,6 +619,12 @@ const ChatDetail: Component = () => {
       <Show when={chats.opts.modal === 'members'}>
         <MemberModal show={true} close={clearModal} charId={chats?.char?._id!} />
       </Show>
+
+      <UpdateGaslightToUseSystemPromptModal
+        chat={chats.chat!}
+        show={chats.opts.modal === 'updateGaslightToUseSystemPrompt'}
+        close={clearModal}
+      />
 
       <ImageModal />
 

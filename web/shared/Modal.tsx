@@ -39,7 +39,7 @@ const Modal: Component<Props> = (props) => {
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="flex h-[100vh] h-[100dvh] items-center">
+        <div class="flex h-[100dvh] h-[100vh] items-center">
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}
@@ -93,13 +93,13 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="flex h-[100vh] h-[100dvh] items-center">
+        <div class="flex h-[100dvh] h-[100vh] items-center">
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}
             class={`bg-900 my-auto max-h-[80vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
           >
-            <div class="flex flex-row justify-end pt-4 pr-4 text-lg font-bold">
+            <div class="flex flex-row justify-end pr-4 pt-4 text-lg font-bold">
               <div onClick={props.close} class="cursor-pointer">
                 <X />
               </div>

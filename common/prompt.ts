@@ -22,6 +22,7 @@ export type PromptParts = {
   ujb?: string
   post: string[]
   memory?: string
+  systemPrompt?: string
 }
 
 export type Prompt = {
@@ -80,10 +81,11 @@ const HOLDER_NAMES = {
   post: 'post',
   scenario: 'scenario',
   history: 'history',
+  systemPrompt: 'system_prompt',
   linebreak: 'br',
 }
 
-const HOLDERS = {
+export const HOLDERS = {
   chatAge: /\{\{chat_age\}\}/gi,
   idleDuration: /\{\{idle_duration\}\}/gi,
   ujb: /\{\{ujb\}\}/gi,
@@ -94,6 +96,7 @@ const HOLDERS = {
   allPersonas: /\{\{all_personalities\}\}/gi,
   post: /\{\{post\}\}/gi,
   history: /\{\{history\}\}/gi,
+  systemPrompt: /\{\{system_prompt\}\}/gi,
   linebreak: `/\{\{(br|linebreak|newline)\}\}/gi`,
 }
 
@@ -226,6 +229,7 @@ export function injectPlaceholders(
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
     .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
+    .replace(HOLDERS.systemPrompt, newline(parts.systemPrompt))
     .replace(HOLDERS.sampleChat, newline(sampleChat))
     .replace(HOLDERS.scenario, parts.scenario || '')
     .replace(HOLDERS.memory, newline(parts.memory))
@@ -255,6 +259,7 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
   const useSampleChat = !!parts.sampleChat?.join('\n')
   const useMemory = !!parts.memory
   const useScenario = !!parts.scenario
+  const useSystemPrompt = !!parts.systemPrompt
 
   let modified = template
     .split('\n')
@@ -269,6 +274,8 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
       if (!useSampleChat && line.match(HOLDERS.sampleChat)) return false
       if (!useMemory && line.match(HOLDERS.memory)) return false
       if (!useScenario && line.match(HOLDERS.scenario)) return false
+      // idg what this does tbh - @malfoyslastname
+      if (!useSystemPrompt && line.match(HOLDERS.systemPrompt)) return false
       return true
     })
     .join('\n')
@@ -406,9 +413,12 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, lines: lines.slice().reverse() }, encoder)
   if (memory) parts.memory = memory.prompt
 
-  if (opts.settings?.useGaslight || opts.settings?.service === 'openai') {
-    parts.ujb = char.postHistoryInstructions || opts.settings?.ultimeJailbreak
-  }
+  parts.ujb = opts.settings?.ignoreCharacterUjb
+    ? opts.settings?.ultimeJailbreak
+    : replyAs.postHistoryInstructions || opts.settings?.ultimeJailbreak
+  parts.systemPrompt = opts.settings?.ignoreCharacterSystemPrompt
+    ? opts.settings?.systemPrompt
+    : replyAs.systemPrompt || opts.settings?.systemPrompt
 
   parts.post = post.map(replace)
 
@@ -522,7 +532,7 @@ export function getChatPreset(
   chat: AppSchema.Chat,
   user: AppSchema.User,
   userPresets: AppSchema.UserGenPreset[]
-): Partial<AppSchema.GenSettings> {
+): Partial<AppSchema.UserGenPreset> {
   /**
    * Order of precedence:
    * 1. chat.genPreset

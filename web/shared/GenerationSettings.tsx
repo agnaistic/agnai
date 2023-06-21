@@ -19,7 +19,7 @@ import { Check, X } from 'lucide-solid'
 import { settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
-// import PromptEditor from './PromptEditor'
+import { FormLabel } from './FormLabel'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -285,6 +285,18 @@ const PromptSettings: Component<Props> = (props) => {
         />
       </Card>
       <Card class="flex flex-col gap-4">
+        <FormLabel label="System Prompt" />
+        <PromptEditor
+          fieldName="systemPrompt"
+          include={['char', 'user', 'chat_age', 'idle_duration']}
+          placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
+          value={props.inherit?.systemPrompt ?? ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'systemPrompt'}
+          // class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+        />
+
         <Show when={cfg.parser && canUseParser}>
           <Toggle
             fieldName="useTemplateParser"
@@ -298,6 +310,7 @@ const PromptSettings: Component<Props> = (props) => {
           value={props.inherit?.gaslight}
           exclude={['post', 'history', 'ujb']}
           disabled={props.disabled}
+          showHelp
         />
         <TextInput
           fieldName="ultimeJailbreak"
@@ -314,8 +327,27 @@ const PromptSettings: Component<Props> = (props) => {
           value={props.inherit?.ultimeJailbreak ?? ''}
           disabled={props.disabled}
           service={props.service}
+          class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
           aiSetting={'gaslight'}
         />
+        <div class="flex flex-wrap gap-4">
+          <Toggle
+            fieldName="ignoreCharacterSystemPrompt"
+            label="Override character system prompt"
+            value={props.inherit?.ignoreCharacterSystemPrompt ?? false}
+            disabled={props.disabled}
+            service={props.service}
+            aiSetting={'ignoreCharacterSystemPrompt'}
+          />
+          <Toggle
+            fieldName="ignoreCharacterUjb"
+            label="Override character UJB"
+            value={props.inherit?.ignoreCharacterUjb ?? false}
+            disabled={props.disabled}
+            service={props.service}
+            aiSetting={'ignoreCharacterUjb'}
+          />
+        </div>
       </Card>
       <Card>
         <Toggle
