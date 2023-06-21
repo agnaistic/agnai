@@ -170,7 +170,7 @@ const SingleMessage: Component<
 
   return (
     <div
-      class="flex w-full rounded-md py-2 px-2 pr-2 sm:px-4"
+      class="flex w-full rounded-md px-2 py-2 pr-2 sm:px-4"
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? props.char?.name : ''}

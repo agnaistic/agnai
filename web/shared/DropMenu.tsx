@@ -8,7 +8,7 @@ export const Dropup: Component<{ children: any }> = (props) => {
     <div class="relative text-sm">
       <button
         onClick={() => setShow(!show())}
-        class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] py-2 px-2 hover:bg-[var(--bg-700)]"
+        class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronUp />
       </button>
@@ -26,7 +26,7 @@ export const Dropdown: Component<{ children: any }> = (props) => {
     <div class="relative text-sm">
       <button
         onClick={() => setShow(!show())}
-        class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] py-2 px-2 hover:bg-[var(--bg-700)]"
+        class="bg-800 rounded-l-none rounded-r-md border-l border-[var(--bg-700)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <ChevronDown />
       </button>
@@ -58,7 +58,7 @@ export const DropMenu: Component<{
     <>
       <Show when={props.show}>
         <div
-          class="fixed top-0 left-0 right-0 bottom-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
+          class="fixed bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
           onClick={props.close}
         ></div>
       </Show>

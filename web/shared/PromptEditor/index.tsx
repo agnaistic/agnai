@@ -159,7 +159,7 @@ const Placeholder: Component<
   return (
     <div
       onClick={() => props.onClick(props.name)}
-      class="cursor-pointer select-none rounded-md py-1 px-2 text-sm"
+      class="cursor-pointer select-none rounded-md px-2 py-1 text-sm"
       classList={{
         'bg-red-600': props.name === 'example_dialogue',
         'bg-green-600': props.required && props.name !== 'example_dialogue',

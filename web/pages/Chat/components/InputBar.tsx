@@ -171,7 +171,7 @@ const InputBar: Component<{
       />
       <button
         onClick={onButtonClick}
-        class="h-full rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] py-2 px-2 hover:bg-[var(--bg-700)]"
+        class="h-full rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] px-2 py-2 hover:bg-[var(--bg-700)]"
       >
         <MoreHorizontal />
       </button>
