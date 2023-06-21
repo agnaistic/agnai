@@ -1,6 +1,7 @@
 import * as sp from 'sentencepiece-js'
 import fs from 'fs'
-import { init, Tiktoken } from '@dqbd/tiktoken/lite/init'
+import { init } from '@dqbd/tiktoken/lite/init'
+import { encoding_for_model } from '@dqbd/tiktoken'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
@@ -12,8 +13,8 @@ nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
 const nerdstashV2 = new sp.SentencePieceProcessor()
 nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
 
-const cl100k_base = require('@dqbd/tiktoken/encoders/cl100k_base.json')
-const p50k_base = require('@dqbd/tiktoken/encoders/p50k_base.json')
+const davinciEncoder = encoding_for_model('text-davinci-003')
+const turboEncoder = encoding_for_model('gpt-3.5-turbo')
 
 const wasm = getWasm()
 
@@ -36,6 +37,13 @@ const novelClio: Encoder = function clio(value: string) {
 let davinci: Encoder
 let turbo: Encoder
 
+const TURBO_MODELS = new Set<string>([
+  OPENAI_MODELS.Turbo,
+  OPENAI_MODELS.Turbo0301,
+  OPENAI_MODELS.Turbo0613,
+  OPENAI_MODELS.Turbo_16k,
+])
+
 export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
@@ -48,7 +56,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
     return davinci ?? novel
   }
 
-  if (model === OPENAI_MODELS.Turbo) {
+  if (model && TURBO_MODELS.has(model)) {
     return turbo ?? novel
   }
 
@@ -60,22 +68,15 @@ async function prepareTokenizers() {
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
 
     {
-      const encoder = new Tiktoken(p50k_base.bpe_ranks, p50k_base.special_tokens, p50k_base.pat_str)
       davinci = (value) => {
-        const tokens = encoder.encode(value).length + 4
+        const tokens = davinciEncoder.encode(value).length + 4
         return tokens
       }
     }
 
     {
-      const encoder = new Tiktoken(
-        cl100k_base.bpe_ranks,
-        cl100k_base.special_tokens,
-        cl100k_base.pat_str
-      )
-
       turbo = (value) => {
-        const tokens = encoder.encode(value).length + 5
+        const tokens = turboEncoder.encode(value).length + 6
         return tokens
       }
     }

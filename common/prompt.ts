@@ -646,6 +646,7 @@ function getContextLimit(
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
     case 'luminai':
+    case 'horde':
     case 'ooba':
       return configuredMax - genAmount
 
@@ -653,8 +654,6 @@ function getContextLimit(
       if (model === NOVEL_MODELS.clio_v1) return 8000 - genAmount
       return configuredMax - genAmount
     }
-
-    case 'horde':
 
     case 'openai': {
       const models = new Set<string>([

@@ -20,6 +20,22 @@ body {
   width: 2.5rem;
 }
 
+.max-w-7xl {
+  max-width: 80rem;
+}
+
+.max-w-6xl {
+  max-width: 72rem;
+}
+
+.max-w-5xl {
+  max-width: 64rem;
+}
+
+.max-w-8xl {
+  max-width: 88rem;
+}
+
 body {
   @apply text-900 bg-[var(--bg-900)];
   height: 100%;

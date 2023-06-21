@@ -60,6 +60,7 @@ export const PresetSelect: Component<{
           items={combinedOptions()}
           fieldName="presetId"
           onChange={(item) => props.setPresetId(item.value)}
+          value={props.selected}
         />
       </Show>
 
