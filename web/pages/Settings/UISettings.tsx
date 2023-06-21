@@ -191,6 +191,7 @@ const UISettings: Component = () => {
           { label: 'X-Large', value: 'xl' },
           { label: '2X-Large', value: '2xl' },
           { label: '3X-Large', value: '3xl' },
+          { label: '100%', value: 'fill' },
         ]}
         onChange={(item) => userStore.updateUI({ chatWidth: item.value as any })}
         value={state.ui.chatWidth}

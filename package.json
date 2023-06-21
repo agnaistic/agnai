@@ -138,7 +138,7 @@
     "process": "^0.11.10",
     "showdown": "^2.1.0",
     "solid-js": "1.6.9",
-    "tailwindcss": "^3.2.4",
+    "tailwindcss": "^3.3.2",
     "typescript": "^5.0.4",
     "zustand": "^4.3.3"
   }
