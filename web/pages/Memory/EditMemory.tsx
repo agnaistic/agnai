@@ -112,7 +112,7 @@ const EditMemoryForm: Component<{
               onChange={(e) => {
                 const prev = editing()
                 const entries = prev.entries.map((entry, idx) =>
-                  idx === i() ? Object.assign(entry, e) : entry
+                  idx === i() ? Object.assign({}, entry, e) : entry
                 )
                 const next = { ...prev, entries }
                 setEditing(next)

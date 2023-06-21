@@ -43,8 +43,8 @@ const ChatMemoryModal: Component<{
 
   const onSubmit = (ev: Event) => {
     ev.preventDefault()
-    if (!id()) return
-    const update = getBookUpdate(ev)
+    const update = book()
+    if (!id() || !update) return
     memoryStore.update(id(), update)
   }
 
@@ -101,6 +101,7 @@ const ChatMemoryModal: Component<{
               book={book()!}
               entrySort={entrySort()}
               updateEntrySort={updateEntrySort}
+              onChange={setBook}
             />
           </div>
         </Show>

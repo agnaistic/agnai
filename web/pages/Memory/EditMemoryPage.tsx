@@ -50,8 +50,8 @@ const EditMemoryPage = () => {
     // has the entries in creation order, for now.
     const oldEntrySort = entrySort()
     setEntrySort('creationDate')
-    const body = getBookUpdate(ref)
-    if (!params.id) return
+    const body = editing()
+    if (!params.id || !body) return
 
     if (params.id === 'new') {
       memoryStore.create(body, (book) => {
@@ -79,6 +79,7 @@ const EditMemoryPage = () => {
             book={editing()!}
             entrySort={entrySort()}
             updateEntrySort={updateEntrySort}
+            onChange={setEditing}
           />
           <div class="mt-4 flex justify-end">
             <Button type="submit">
