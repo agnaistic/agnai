@@ -106,6 +106,7 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
           <Show when={settingTab() === 'new'}>
             <div class="my-2 text-base">System prompt</div>
             <TextInput
+              helperText="This field only supports the placeholders {{char}} and {{user}}."
               isMultiline
               fieldName="newSystemPrompt"
               value={newSystemPrompt()}
