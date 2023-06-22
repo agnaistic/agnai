@@ -334,12 +334,12 @@ export const CreateCharacterForm: Component<{
 
             <Card class="flex w-full flex-col">
               <FormLabel
-                label="Description"
+                label="Description / Creator's notes"
                 helperText={
                   <div class="flex flex-col">
                     <span>
-                      A description or label for your character. This is will not influence your
-                      character in any way.
+                      A description, label, or notes for your character. This is will not influence
+                      your character in any way.
                     </span>
                     <Show when={canPopulatFields()}>
                       <span>

@@ -102,7 +102,7 @@ const PromptEditor: Component<
     <div class={`w-full flex-col gap-2 ${hide()}`}>
       <Show when={props.showHelp}>
         <FormLabel
-          label="Prompt Template (aka gaslight)"
+          label="Prompt Template (formerly gaslight)"
           helperText={
             <>
               <div>

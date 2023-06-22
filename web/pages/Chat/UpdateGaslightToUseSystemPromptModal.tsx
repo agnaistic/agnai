@@ -35,7 +35,11 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
   )
   const [loadedExtraction, setLoadedExtraction] = createSignal(false)
   createEffect(() => {
-    if (!loadedExtraction() && automaticUpdate().gaslight !== '') {
+    if (
+      !loadedExtraction() &&
+      automaticUpdate().gaslight !== '' &&
+      automaticUpdate().gaslight !== '{{system_prompt}}\n'
+    ) {
       setLoadedExtraction(true)
       setNewSystemPrompt(automaticUpdate().systemPrompt)
       setNewGaslight(automaticUpdate().gaslight)
@@ -101,12 +105,13 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
           <Show when={settingTab() === 'new'}>
             <div class="my-2 text-base">System prompt</div>
             <TextInput
+              helperText="This field only supports the placeholders {{char}} and {{user}}."
               isMultiline
               fieldName="newSystemPrompt"
               value={newSystemPrompt()}
               onChange={(ev) => setNewSystemPrompt(ev.currentTarget.value)}
             />
-            <div class="my-2 text-base">Prompt template (gaslight)</div>
+            <div class="my-2 text-base">Prompt template (formerly gaslight)</div>
             <TextInput
               isMultiline
               fieldName="newGaslight"
