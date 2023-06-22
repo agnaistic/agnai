@@ -41,7 +41,6 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
       automaticUpdate().gaslight !== '{{system_prompt}}\n'
     ) {
       setLoadedExtraction(true)
-      console.log(automaticUpdate())
       setNewSystemPrompt(automaticUpdate().systemPrompt)
       setNewGaslight(automaticUpdate().gaslight)
     }
