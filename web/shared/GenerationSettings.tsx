@@ -541,6 +541,8 @@ const GenSettings: Component<Props> = (props) => {
           helperText="Some specific models need this unset."
           value={props.inherit?.skipSpecialTokens ?? true}
           disabled={props.disabled}
+          service={props.service}
+          aiSetting="skipSpecialTokens"
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"

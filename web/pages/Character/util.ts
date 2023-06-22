@@ -149,9 +149,11 @@ export function toGeneratedCharacter(response: string, description: string): New
         personality: extract(lines, 'Personality').replace(re, '{{char}}').split(', '),
         behaviours: extract(lines, 'Behaviours', 'Behaviors').replace(re, '{{char}}').split(', '),
         description: toArray(extract(lines, 'Description').replace(re, '{{char}}')),
+        speech: extract(lines, 'Speech').replace(re, '{{char}}').split(', '),
       },
     },
   }
+
   return char
 }
 

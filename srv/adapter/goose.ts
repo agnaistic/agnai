@@ -99,6 +99,7 @@ registerAdapter('goose', handleGooseAI, {
     },
   ],
   options: [
+    'temp',
     'presencePenalty',
     'repetitionPenalty',
     'topA',
