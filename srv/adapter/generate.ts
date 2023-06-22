@@ -139,6 +139,10 @@ export async function createTextStreamV2(
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
 
+  if (opts.impersonate) {
+    Object.assign(opts.characters, { impersonated: opts.impersonate })
+  }
+
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)
   const stream = handler({
@@ -157,7 +161,7 @@ export async function createTextStreamV2(
     lines: prompt.lines,
     isThirdParty,
     replyAs: opts.replyAs,
-    characters: Object.assign(opts.characters, { impersonated: opts.impersonate }),
+    characters: opts.characters,
     impersonate: opts.impersonate,
     lastMessage: opts.lastMessage,
   })
