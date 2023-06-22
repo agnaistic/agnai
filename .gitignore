@@ -19,3 +19,4 @@ settings.json
 .npmrc
 .model/
 !.github/*.js
+!sprites.js
