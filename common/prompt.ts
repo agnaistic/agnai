@@ -420,28 +420,34 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
   parts.memory = memory?.prompt
 
-  parts.ujb = getFinalUjb(
+  parts.ujb = getFinalUjbOrSystemPrompt(
     opts.settings?.ignoreCharacterUjb,
     replyAs.postHistoryInstructions,
     opts.settings?.ultimeJailbreak
   )
 
-  parts.systemPrompt = opts.settings?.ignoreCharacterSystemPrompt
-    ? opts.settings?.systemPrompt
-    : replyAs.systemPrompt || opts.settings?.systemPrompt
+  parts.systemPrompt = getFinalUjbOrSystemPrompt(
+    opts.settings?.ignoreCharacterSystemPrompt,
+    replyAs.systemPrompt,
+    opts.settings?.systemPrompt
+  )
 
   parts.post = post.map(replace)
 
   return parts
 }
 
-function getFinalUjb(ignoreCharacterUjb?: boolean, charaPhi?: string, userUjb?: string) {
-  if (ignoreCharacterUjb) {
-    return userUjb
-  } else if (charaPhi) {
-    return charaPhi.replace(/{{original}}/gi, userUjb ?? '')
+function getFinalUjbOrSystemPrompt(
+  ignoreChara?: boolean,
+  charaPrompt?: string,
+  userPrompt?: string
+) {
+  if (ignoreChara) {
+    return userPrompt
+  } else if (charaPrompt) {
+    return charaPrompt.replace(/{{original}}/gi, userPrompt ?? '')
   } else {
-    return userUjb
+    return userPrompt
   }
 }
 
