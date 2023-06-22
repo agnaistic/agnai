@@ -420,7 +420,11 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
   parts.memory = memory?.prompt
 
-  parts.ujb = getFinalUjb(opts.settings?.ignoreCharacterUjb, replyAs.postHistoryInstructions, opts.settings?.ultimeJailbreak)
+  parts.ujb = getFinalUjb(
+    opts.settings?.ignoreCharacterUjb,
+    replyAs.postHistoryInstructions,
+    opts.settings?.ultimeJailbreak
+  )
 
   parts.systemPrompt = opts.settings?.ignoreCharacterSystemPrompt
     ? opts.settings?.systemPrompt
@@ -560,7 +564,8 @@ export function getChatPreset(
 
   // #1
   if (chat.genPreset) {
-    if (isDefaultPreset(chat.genPreset)) return defaultPresets[chat.genPreset]
+    if (isDefaultPreset(chat.genPreset))
+      return { _id: chat.genPreset, ...defaultPresets[chat.genPreset] }
 
     const preset = userPresets.find((preset) => preset._id === chat.genPreset)
     if (preset) return preset
@@ -574,7 +579,7 @@ export function getChatPreset(
   // #3
   const defaultId = user.defaultPreset
   if (defaultId) {
-    if (isDefaultPreset(defaultId)) return defaultPresets[defaultId]
+    if (isDefaultPreset(defaultId)) return { _id: defaultId, ...defaultPresets[defaultId] }
     const preset = userPresets.find((preset) => preset._id === defaultId)
     if (preset) return preset
   }
@@ -584,7 +589,7 @@ export function getChatPreset(
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
   if (fallbackId) {
-    if (isDefaultPreset(fallbackId)) return defaultPresets[fallbackId]
+    if (isDefaultPreset(fallbackId)) return { _id: fallbackId, ...defaultPresets[fallbackId] }
     const preset = userPresets.find((preset) => preset._id === fallbackId)
     if (preset) return preset
   }

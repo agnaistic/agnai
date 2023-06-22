@@ -1,8 +1,13 @@
 import { assertValid } from '/common/valid'
 import { defaultPresets, presetValidator } from '../../../common/presets'
 import { store } from '../../db'
-import { handle } from '../wrap'
+import { errors, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
+
+const createPreset = {
+  ...presetValidator,
+  chatId: 'string?',
+} as const
 
 export const getUserPresets = handle(async ({ userId }) => {
   const presets = await store.presets.getUserPresets(userId!)
@@ -14,8 +19,15 @@ export const getBasePresets = handle(async () => {
 })
 
 export const createUserPreset = handle(async ({ userId, body }) => {
-  assertValid(presetValidator, body, true)
+  assertValid(createPreset, body, true)
   const service = body.service as AIAdapter
+
+  if (body.chatId) {
+    const res = await store.chats.getChat(body.chatId)
+    if (res?.chat.userId !== userId) {
+      throw errors.Forbidden
+    }
+  }
 
   const preset = { ...body, service }
   if (!preset.order?.length) {
@@ -23,6 +35,10 @@ export const createUserPreset = handle(async ({ userId, body }) => {
   }
 
   const newPreset = await store.presets.createUserPreset(userId!, preset)
+  if (body.chatId) {
+    await store.chats.update(body.chatId, { genPreset: newPreset._id })
+  }
+
   return newPreset
 })
 

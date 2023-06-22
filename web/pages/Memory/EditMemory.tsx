@@ -144,8 +144,6 @@ const EntryCard: Component<{
     props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )
 
-  console.log(props.entry)
-
   return (
     <Accordian
       open={missingFieldsInEntry(props.entry).length > 0}
@@ -234,7 +232,7 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
   const { name, description } = getStrictForm(ref, { name: 'string', description: 'string?' })
 
   const map = new Map<string, AppSchema.MemoryEntry>()
-  console.log(inputs)
+
   for (const [key, value] of inputs) {
     const [prop, i] = key.split('.')
     if (i === undefined) continue

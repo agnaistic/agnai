@@ -4,6 +4,7 @@ import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
+export type PresetCreate = PresetUpdate & { chatId?: string }
 
 export const presetApi = {
   getPresets,

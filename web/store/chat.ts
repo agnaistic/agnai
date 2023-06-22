@@ -9,6 +9,7 @@ import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
+import { replace } from './data/storage'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
@@ -154,6 +155,18 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
+    *setChat({ active, allChats }, chatId: string, update: Partial<AppSchema.Chat>) {
+      yield { allChats: replace(chatId, allChats, update) }
+
+      if (active?.chat._id !== chatId) return
+
+      return {
+        active: {
+          ...active,
+          chat: active?.chat._id === chatId ? Object.assign({}, active.chat, update) : active?.chat,
+        },
+      }
+    },
     async *getChat(prev, id: string) {
       yield { loaded: false, active: undefined }
       msgStore.setState({
@@ -267,15 +280,8 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await chatsApi.editChatGenPreset(chatId, preset)
       if (res.error) toastStore.error(`Failed to update generation settings: ${res.error}`)
       if (res.result) {
-        if (active?.chat._id === chatId) {
-          yield {
-            active: {
-              ...active,
-              chat: { ...active.chat, genSettings: undefined, genPreset: preset },
-            },
-          }
-          onSucces?.()
-        }
+        chatStore.setChat(chatId, { genSettings: undefined, genPreset: preset })
+        onSucces?.()
       }
     },
     async *getAllChats({ allChats, lastFetched }) {
