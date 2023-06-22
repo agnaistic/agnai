@@ -142,10 +142,6 @@ export const ChatGenSettings: Component<{
         if (pane() === 'popup') {
           props.close?.()
         }
-
-        if (isDefaultPreset(preset)) {
-          toastStore.success('Preset changed')
-        }
       })
 
       const update = getStrictForm(ref, chatGenValidator)
