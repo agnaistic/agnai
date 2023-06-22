@@ -1,5 +1,5 @@
 import { Plus, X } from 'lucide-solid'
-import { Component, createMemo, createSignal, For } from 'solid-js'
+import { Component, createMemo, createSignal, Index } from 'solid-js'
 import { AppSchema } from '../../../srv/db/schema'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
@@ -101,18 +101,18 @@ const EditMemoryForm: Component<{
             class="mx-1 my-1"
           />
         </div>
-        <For each={entries()}>
+        <Index each={entries()}>
           {(entry, i) => (
             <EntryCard
               {...entry}
-              entry={entry}
-              index={i()}
-              onRemove={() => onRemoveEntry(i())}
+              entry={entry()}
+              index={i}
+              onRemove={() => onRemoveEntry(i)}
               search={search()}
               onChange={(e) => {
                 const prev = editing()
                 const entries = prev.entries.map((entry, idx) =>
-                  idx === i() ? Object.assign({}, entry, e) : entry
+                  idx === i ? Object.assign({}, entry, e) : entry
                 )
                 const next = { ...prev, entries }
                 setEditing(next)
@@ -120,7 +120,7 @@ const EditMemoryForm: Component<{
               }}
             />
           )}
-        </For>
+        </Index>
         <Button onClick={addEntry}>
           <Plus /> Entry
         </Button>
@@ -144,6 +144,8 @@ const EntryCard: Component<{
     props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )
 
+  console.log(props.entry)
+
   return (
     <Accordian
       open={missingFieldsInEntry(props.entry).length > 0}
@@ -165,7 +167,7 @@ const EntryCard: Component<{
             value={!!props.entry.enabled}
             class="flex items-center"
             onChange={(e) => {
-              props.onChange({ ...props.entry, enabled: e })
+              props.onChange({ ...props.entry, enabled: !!e })
             }}
           />
 
@@ -232,6 +234,7 @@ export function getBookUpdate(ref: Event | HTMLFormElement) {
   const { name, description } = getStrictForm(ref, { name: 'string', description: 'string?' })
 
   const map = new Map<string, AppSchema.MemoryEntry>()
+  console.log(inputs)
   for (const [key, value] of inputs) {
     const [prop, i] = key.split('.')
     if (i === undefined) continue
