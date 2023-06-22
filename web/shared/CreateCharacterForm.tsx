@@ -531,7 +531,7 @@ export const CreateCharacterForm: Component<{
                     label="Character System Prompt (optional)"
                     helperText={
                       <span>
-                        {`System prompt to bundle with your character. You can use the {{optional}} placeholder to include the user's own system prompt, if you want to supplement it instead of replacing it.`}
+                        {`System prompt to bundle with your character. You can use the {{original}} placeholder to include the user's own system prompt, if you want to supplement it instead of replacing it.`}
                       </span>
                     }
                     placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
@@ -540,10 +540,10 @@ export const CreateCharacterForm: Component<{
                   <TextInput
                     isMultiline
                     fieldName="postHistoryInstructions"
-                    label="Post-conversation history instructions (optional)"
+                    label="Post-conversation History Instructions (optional)"
                     helperText={
                       <span>
-                        {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{optional}} placeholder to include the user's UJB, if you want to supplement it instead of replacing it.`}
+                        {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's UJB, if you want to supplement it instead of replacing it.`}
                       </span>
                     }
                     placeholder="Write at least four paragraphs."
