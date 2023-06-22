@@ -1,4 +1,5 @@
 import { createStore } from './create'
+import { subscribe } from './socket'
 
 export type Toast = {
   id: number
@@ -42,5 +43,20 @@ export const toastStore = createStore<ToastState>('toasts', { toasts: [] })((get
     warn: addToast('warn'),
     success: addToast('success'),
     error: addToast('error'),
+  }
+})
+
+subscribe('notification', { level: 'string?', message: 'string' }, (body) => {
+  switch (body.level) {
+    case 'error':
+      return toastStore.error(body.message)
+
+    case 'warn':
+    case 'warning':
+      return toastStore.warn(body.message)
+
+    case 'normal':
+    default:
+      return toastStore.normal(body.message)
   }
 })
