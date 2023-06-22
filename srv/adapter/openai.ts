@@ -259,7 +259,8 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
       const { choices, ...completionMeta } = parsed
       if (!choices || !choices[0]) {
         log.warn({ sse: event }, `[OpenAI] Received invalid SSE during stream`)
-        return { error: `OpenAI return an invalid or unexpected response` }
+        yield { error: `OpenAI return an invalid or unexpected response` }
+        return
       }
 
       const { finish_reason, index, ...choice } = choices[0]
