@@ -115,7 +115,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     for (const msg of body.messages) {
       count += encoder()(msg.content)
     }
-    opts.log.info({ count }, 'OpenAI token count')
   }
 
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
