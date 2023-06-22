@@ -7,7 +7,7 @@ import Select, { Option } from '../../../shared/Select'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
-import EditMemoryForm, { getBookUpdate, EntrySort } from '../../Memory/EditMemory'
+import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
