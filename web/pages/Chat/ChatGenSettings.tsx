@@ -23,13 +23,19 @@ import { getStrictForm } from '../../shared/util'
 import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { getAdapter } from '../../../common/prompt'
-import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
-import { AutoPreset, getPresetOptions } from '../../shared/adapter'
-import { A } from '@solidjs/router'
+import { AIAdapter, AI_ADAPTERS, adapterSettings } from '../../../common/adapters'
+import { AutoPreset, getClientPreset, getPresetOptions } from '../../shared/adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
-import { Card } from '/web/shared/Card'
+import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
+import TextInput from '/web/shared/TextInput'
+
+const chatGenValidator = {
+  ...chatGenSettings,
+  name: 'string?',
+  service: ['', ...AI_ADAPTERS],
+} as const
 
 export const ChatGenSettings: Component<{
   chat: AppSchema.Chat
@@ -57,21 +63,19 @@ export const ChatGenSettings: Component<{
     return all.concat(defaults)
   })
 
+  const clientPreset = createMemo(() => getClientPreset(props.chat))
+
   const [selected, setSelected] = createSignal<string>(
-    props.chat?.genPreset
-      ? props.chat.genPreset
-      : props.chat.genSettings
-      ? AutoPreset.chat
-      : AutoPreset.service
+    clientPreset()?.preset._id || AutoPreset.service
   )
   const [genAdapter, setAdapter] = createSignal<AIAdapter>()
 
   const servicePreset = createMemo(() => {
     if (!user.user) return
 
-    const current = selected()
-    if (isDefaultPreset(current)) {
-      const preset = defaultPresets[current]
+    const currId = selected()
+    if (isDefaultPreset(currId)) {
+      const preset = defaultPresets[currId]
       return { name: preset.name, preset, fallback: true }
     }
 
@@ -99,33 +103,60 @@ export const ChatGenSettings: Component<{
 
   const onSave = () => {
     const preset = selected()
-    if (preset === AutoPreset.chat) {
-      const body = getStrictForm(ref, chatGenSettings)
-      chatStore.editChatGenSettings(props.chat._id, body, props.close)
-    } else if (preset === AutoPreset.service) {
-      chatStore.editChat(props.chat._id, { genPreset: preset, genSettings: undefined }, undefined)
-    } else {
+
+    if (isDefaultPreset(preset)) {
+      const original = defaultPresets[preset] as AppSchema.GenSettings
+      const update = getStrictForm(ref, chatGenValidator)
+
+      /**
+       * The user has selected a default preset and it is unchanged
+       * Assign it to the chat without creating a new preset
+       */
+      if (!isPresetDirty(original, update)) {
+        chatStore.editChatGenPreset(props.chat._id, preset)
+        return
+      }
+
+      /**
+       * The user has modified a default preset
+       * We will create a new preset and assign it to the chat
+       */
+      presetStore.createPreset(
+        {
+          ...update,
+          chatId: props.chat._id,
+          name: update.name || original.name,
+          service: original.service,
+        },
+        (created) => {
+          chatStore.setChat(props.chat._id, { genPreset: created._id })
+          setSelected(created._id)
+        }
+      )
+
+      return
+    }
+
+    if (!isDefaultPreset(preset)) {
       chatStore.editChatGenPreset(props.chat._id, preset, () => {
         if (pane() === 'popup') {
           props.close?.()
         }
-
-        if (isDefaultPreset(preset)) {
-          toastStore.success('Preset changed')
-        }
       })
 
-      if (!isDefaultPreset(preset)) {
-        const validator = { ...chatGenSettings, service: ['', ...AI_ADAPTERS] } as const
-        const update = getStrictForm(ref, validator)
-        if (update.service === '') {
-          toastStore.error(`You must select an AI service before saving`)
-          return
-        }
-
-        presetStore.updatePreset(preset, update as any)
+      const update = getStrictForm(ref, chatGenValidator)
+      if (update.service === '') {
+        toastStore.error(`You must select an AI service before saving`)
+        return
       }
+
+      presetStore.updatePreset(preset, update as any)
     }
+  }
+
+  const getPresetName = (presetId: string) => {
+    if (isDefaultPreset(presetId)) return `My ${defaultPresets[presetId].name} Preset`
+    return presets().find((pre) => pre._id === presetId)?.name || ''
   }
 
   createEffect(() => {
@@ -156,17 +187,12 @@ export const ChatGenSettings: Component<{
 
           <ServiceWarning service={servicePreset()?.preset.service} />
           <Show when={isDefaultPreset(selected())}>
-            <span class="text-[var(--hl-100)]">
-              You are using a built-in preset which cannot be modified. Head to the{' '}
-              <A href="/presets" class="link">
-                Presets
-              </A>{' '}
-              page to create a preset or{' '}
-              <A href={`/presets/new?preset=${selected()}`} class="link">
-                Duplicate
-              </A>{' '}
-              this one.
-            </span>
+            <TitleCard type="orange">
+              You are using a built-in preset which cannot be modified. Modifying this will create a
+              new preset and assign it to your chat.
+            </TitleCard>
+
+            <TextInput fieldName="name" value={getPresetName(selected())} label="Preset Name" />
           </Show>
         </Card>
 
@@ -174,7 +200,7 @@ export const ChatGenSettings: Component<{
           <Match when={selected() === AutoPreset.service && servicePreset()}>
             <GenerationSettings
               inherit={servicePreset()!.preset}
-              disabled={servicePreset()?.fallback}
+              saveToChatId={props.chat._id}
               onService={setAdapter}
               disableService
             />
@@ -189,11 +215,7 @@ export const ChatGenSettings: Component<{
             <For each={presets()}>
               {(preset) => (
                 <Show when={selected() === preset._id!}>
-                  <GenerationSettings
-                    inherit={preset}
-                    disabled={isDefaultPreset(selected())}
-                    onService={setAdapter}
-                  />
+                  <GenerationSettings inherit={preset} onService={setAdapter} />
                 </Show>
               )}
             </For>
@@ -202,4 +224,33 @@ export const ChatGenSettings: Component<{
       </form>
     </div>
   )
+}
+
+function isPresetDirty(
+  original: AppSchema.GenSettings,
+  compare: Omit<AppSchema.GenSettings, 'name' | 'service'>
+) {
+  const svc = original.service
+  for (const key in compare) {
+    const prop = key as keyof AppSchema.GenSettings
+
+    switch (prop) {
+      case 'name':
+      case 'service':
+        continue
+    }
+
+    if (compare[prop] === undefined || original[prop] === undefined) continue
+
+    const usable: string[] | undefined = (adapterSettings as any)[prop]
+
+    if (svc && usable && !usable.includes(svc)) continue
+
+    if (original[prop] !== compare[prop]) {
+      console.log('Diff', prop, original[prop], compare[prop])
+      return true
+    }
+  }
+
+  return false
 }

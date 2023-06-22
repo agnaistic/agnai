@@ -1,4 +1,4 @@
-import { Component, JSX, createMemo } from 'solid-js'
+import { Component, JSX, Show, createMemo } from 'solid-js'
 import { getSettingColor, userStore } from '../store'
 import { useBgStyle } from './hooks'
 
@@ -59,7 +59,7 @@ type CardType =
 
 export const TitleCard: Component<{
   children: JSX.Element
-  title: JSX.Element | string
+  title?: JSX.Element | string
   type?: CardType
   class?: string
   center?: boolean
@@ -78,15 +78,19 @@ export const TitleCard: Component<{
   })
   return (
     <div class={`flex flex-col gap-2 rounded-md border-[1px] ${props.class || ''}`} style={bg()}>
-      <div
-        class={`flex rounded-t-md px-2 pt-2 text-xl font-bold ${
-          props.center ? 'justify-center' : ''
-        }`}
-        style={bg()}
-      >
-        {props.title}
+      <Show when={!!props.title}>
+        <div
+          class={`flex rounded-t-md px-2 pt-2 text-xl font-bold ${
+            props.center ? 'justify-center' : ''
+          }`}
+          style={bg()}
+        >
+          {props.title}
+        </div>
+      </Show>
+      <div class="px-2 pb-2" classList={{ 'pt-2': !props.title }}>
+        {props.children}
       </div>
-      <div class="px-2 pb-2">{props.children}</div>
     </div>
   )
 }

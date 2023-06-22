@@ -28,6 +28,7 @@ import { usePane } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { getMaxChatWidth } from './shared/util'
+import FAQ from './pages/Home/FAQ'
 
 const App: Component = () => {
   const state = userStore()
@@ -81,6 +82,7 @@ const App: Component = () => {
           <Show when={cfg.config.canAuth}>
             <Route path="/login" component={LoginPage} />
           </Show>
+          <Route path="/faq" component={FAQ} />
           <Route path="*" component={HomePage} />
         </Route>
       </Routes>

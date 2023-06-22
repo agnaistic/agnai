@@ -423,25 +423,36 @@ textarea:disabled {
   @apply bg-[var(--bg-900)];
 }
 
-.markdown > * a,
-.markdown > a {
+.markdown code {
+  font-size: 0.75rem !important;
+}
+
+.markdown a {
   @apply cursor-pointer text-[var(--hl-500)] hover:text-[var(--hl-300)];
 }
 
-.markdown > h1 {
-  @apply py-2 text-2xl font-bold text-[var(--hl-400)];
+.markdown h1 {
+  @apply pt-8 text-2xl font-bold text-[var(--hl-400)];
 }
 
-.markdown > h2 {
-  @apply py-2 text-xl font-bold text-[var(--hl-400)];
+.markdown h2 {
+  @apply pt-6 text-xl font-bold text-[var(--hl-400)];
 }
 
-.markdown > h3 {
-  @apply py-1 text-lg font-bold text-[var(--hl-400)];
+.markdown h3 {
+  @apply pt-4 text-lg font-bold text-[var(--hl-400)];
 }
 
-.markdown > p {
+.markdown h4 {
+  @apply py-1 text-base font-bold text-[var(--hl-400)];
+}
+
+.markdown p {
   @apply py-1;
+}
+
+.markdown em {
+  @apply font-normal text-[var(--hl-200)];
 }
 
 .markdown > ul {
@@ -452,6 +463,11 @@ textarea:disabled {
 .markdown > ol {
   @apply ml-6;
   list-style-type: decimal;
+}
+
+.markdown > ul > li > ul {
+  @apply ml-6;
+  list-style-type: circle;
 }
 
 .markdown > blockquote {

@@ -84,3 +84,20 @@ function toRawDuration(valueSecs: number) {
     text: valueSecs <= 0 ? 'now' : `${days}d:${hours}h:${mins}m:${secs}s`.replace('0d:', ''),
   }
 }
+
+/**
+ * Remove leading tabs and whitespace on each line from template strings
+ * Also 'trim' the text before returning
+ */
+export function neat(params: TemplateStringsArray, ...rest: string[]) {
+  let str = ''
+  for (let i = 0; i < params.length; i++) {
+    str += params[i] + (rest[i] || '')
+  }
+
+  return str
+    .split('\n')
+    .map((line) => line.replace(/^[\t ]+/g, ''))
+    .join('\n')
+    .trim()
+}

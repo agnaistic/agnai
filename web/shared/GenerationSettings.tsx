@@ -27,6 +27,7 @@ type Props = {
   service?: AIAdapter
   onService?: (service?: AIAdapter) => void
   disableService?: boolean
+  saveToChatId?: string
 }
 
 const GenerationSettings: Component<Props> = (props) => {
@@ -66,7 +67,7 @@ const GenerationSettings: Component<Props> = (props) => {
             value={props.inherit?.service || ''}
             items={services()}
             onChange={onServiceChange}
-            disabled={props.disableService}
+            disabled={props.disabled || props.disableService}
           />
         </Card>
         <GeneralSettings disabled={props.disabled} inherit={props.inherit} service={service()} />

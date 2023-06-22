@@ -1,7 +1,7 @@
 import { AppSchema } from '../../srv/db/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
-import { PresetUpdate, presetApi } from './data/presets'
+import { PresetCreate, PresetUpdate, presetApi } from './data/presets'
 import { toastStore } from './toasts'
 
 type PresetState = {
@@ -49,7 +49,7 @@ export const presetStore = createStore<PresetState>(
     },
     async *createPreset(
       { presets },
-      preset: PresetUpdate,
+      preset: PresetCreate,
       onSuccess?: (preset: AppSchema.UserGenPreset) => void
     ) {
       yield { saving: true }
