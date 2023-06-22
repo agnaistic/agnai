@@ -18,6 +18,7 @@ import { needleToSSE } from './stream'
 import { adventureAmble } from '/common/default-preset'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { config } from '../config'
+import { AppLog } from '../logger'
 
 const baseUrl = `https://api.openai.com`
 
@@ -39,7 +40,8 @@ type Completion<T = Inference> = {
 type CompletionGenerator = (
   url: string,
   headers: Record<string, string | string[] | number>,
-  body: any
+  body: any,
+  log: AppLog
 ) => AsyncGenerator<
   { error: string } | { error?: undefined; token: string },
   Completion | undefined
@@ -116,8 +118,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
   const iter = body.stream
-    ? streamCompletion(url, headers, body)
-    : requestFullCompletion(url, headers, body)
+    ? streamCompletion(url, headers, body, opts.log)
+    : requestFullCompletion(url, headers, body, opts.log)
   let accumulated = ''
   let response: Completion<Inference> | undefined
 
@@ -229,7 +231,7 @@ const requestFullCompletion: CompletionGenerator = async function* (url, headers
  * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
  * once the stream is finished.
  */
-const streamCompletion: CompletionGenerator = async function* (url, headers, body) {
+const streamCompletion: CompletionGenerator = async function* (url, headers, body, log) {
   const resp = needle.post(url, JSON.stringify(body), {
     parse: false,
     headers: {
@@ -255,6 +257,11 @@ const streamCompletion: CompletionGenerator = async function* (url, headers, bod
 
       const parsed: Completion<AsyncDelta> = JSON.parse(event.slice('data: '.length))
       const { choices, ...completionMeta } = parsed
+      if (!choices || !choices[0]) {
+        log.warn({ sse: event }, `[OpenAI] Received invalid SSE during stream`)
+        return { error: `OpenAI return an invalid or unexpected response` }
+      }
+
       const { finish_reason, index, ...choice } = choices[0]
 
       meta = { ...completionMeta, finish_reason, index }
