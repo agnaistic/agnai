@@ -27,6 +27,7 @@ const Chub: Component = () => {
   const [tab, setTab] = createSignal(0)
   const [charModal, setCharModal] = createSignal<{ char: NewCharacter; fullPath: string }>()
   const [bookModal, setBookModal] = createSignal<{ book: AppSchema.MemoryBook; fullPath: string }>()
+  const [loading, setLoading] = createSignal(false)
 
   createEffect(() => {
     const index = tabs.indexOf(params.tab || ('characters' as any))
@@ -53,7 +54,13 @@ const Chub: Component = () => {
       </div>
       <div class="flex flex-col gap-4">
         <div class={currentTab() === 'characters' ? tabClass : 'hidden'}>
-          <CharList setChar={(char, fullPath) => setCharModal({ char, fullPath })} />
+          <CharList
+            loading={() => setLoading(true)}
+            setChar={(char, fullPath) => {
+              setCharModal({ char, fullPath })
+              setLoading(false)
+            }}
+          />
         </div>
 
         <div class={currentTab() === 'lorebooks' ? tabClass : 'hidden'}>
@@ -75,17 +82,12 @@ const Chub: Component = () => {
           </em>
         </sub>
       </div>
-      <Show when={!!charModal()}>
-        <ChubImportCharModal
-          show={!!charModal()}
-          close={() => setCharModal()}
-          char={charModal()!.char}
-          fullPath={charModal()!.fullPath}
-        />
+      <Show when={loading() || !!charModal()}>
+        <ChubImportCharModal show={true} close={() => setCharModal()} char={charModal()?.char} />
       </Show>
       <Show when={bookModal()}>
         <ChubImportBookModal
-          show={!!bookModal()}
+          show={true}
           close={() => setBookModal()}
           fullPath={bookModal()!.fullPath}
           book={bookModal()!.book}

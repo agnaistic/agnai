@@ -5,6 +5,7 @@ import {
   Bot,
   Github,
   HeartHandshake,
+  HelpCircle,
   LogIn,
   LogOut,
   MailPlus,
@@ -68,7 +69,7 @@ const Navigation: Component = () => {
       <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 pt-2 ${hide()} ${fullscreen()}`}>
         <div
           ref={content}
-          class="drawer__content sm:text-md flex flex-col gap-1 px-4 text-lg sm:gap-2"
+          class="drawer__content sm:text-md text-md flex flex-col gap-0 px-4 sm:gap-1"
         >
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
@@ -151,12 +152,16 @@ const UserNavigation: Component = () => {
         <MailPlus /> Invites <InviteBadge />
       </Item>
 
-      <Item href="/settings">
-        <Settings /> Settings
-      </Item>
-
       <Item href="/presets">
         <Sliders /> Presets
+      </Item>
+
+      <Item href="/faq">
+        <HelpCircle /> FAQ
+      </Item>
+
+      <Item href="/settings">
+        <Settings /> Settings
       </Item>
 
       <Show when={user.user?.admin}>
@@ -216,12 +221,16 @@ const GuestNavigation: Component = () => {
           <Book /> Memory
         </Item>
 
-        <Item href="/settings">
-          <Settings /> Settings
-        </Item>
-
         <Item href="/presets">
           <Sliders /> Presets
+        </Item>
+
+        <Item href="/faq">
+          <HelpCircle /> FAQ
+        </Item>
+
+        <Item href="/settings">
+          <Settings /> Settings
         </Item>
       </Show>
 

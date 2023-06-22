@@ -28,7 +28,7 @@ import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
-import { Card } from '/web/shared/Card'
+import { Card, SolidCard, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 
 export const ChatGenSettings: Component<{
@@ -156,17 +156,10 @@ export const ChatGenSettings: Component<{
 
           <ServiceWarning service={servicePreset()?.preset.service} />
           <Show when={isDefaultPreset(selected())}>
-            <span class="text-[var(--hl-100)]">
-              You are using a built-in preset which cannot be modified. Head to the{' '}
-              <A href="/presets" class="link">
-                Presets
-              </A>{' '}
-              page to create a preset or{' '}
-              <A href={`/presets/new?preset=${selected()}`} class="link">
-                Duplicate
-              </A>{' '}
-              this one.
-            </span>
+            <TitleCard type="orange">
+              You are using a built-in preset which cannot be modified. Modifying this will create a
+              new preset and assign it to your chat.
+            </TitleCard>
           </Show>
         </Card>
 
@@ -174,7 +167,7 @@ export const ChatGenSettings: Component<{
           <Match when={selected() === AutoPreset.service && servicePreset()}>
             <GenerationSettings
               inherit={servicePreset()!.preset}
-              disabled={servicePreset()?.fallback}
+              saveToChatId={props.chat._id}
               onService={setAdapter}
               disableService
             />

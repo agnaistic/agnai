@@ -5,9 +5,10 @@ import ChubNavigation from './ChubNavigation'
 import type { NewCharacter } from '/web/store/character'
 import Loading from '/web/shared/Loading'
 
-const CharList: Component<{ setChar: (char: NewCharacter, fullPath: string) => void }> = (
-  props
-) => {
+const CharList: Component<{
+  loading: () => void
+  setChar: (char: NewCharacter, fullPath: string) => void
+}> = (props) => {
   const state = chubStore()
 
   return (
@@ -22,6 +23,7 @@ const CharList: Component<{ setChar: (char: NewCharacter, fullPath: string) => v
         <For each={state.chars.slice(48 * (state.page - 1))}>
           {(char) => (
             <ChubItem
+              loading={props.loading}
               name={char.name}
               fullPath={char.fullPath}
               avatar={
