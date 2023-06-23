@@ -86,7 +86,6 @@ export const CreateCharacterForm: Component<{
   const [image, setImage] = createSignal<string | undefined>()
 
   const presets = presetStore()
-  const flags = settingStore((s) => s.flags)
   const user = userStore((s) => s.user)
   const tagState = tagStore()
   const state = characterStore((s) => {
@@ -244,7 +243,6 @@ export const CreateCharacterForm: Component<{
 
   const onSubmit = (ev: Event) => {
     const opts: PayloadOpts = {
-      version: flags.charv2 ? 'v2' : 'v1',
       tags: tags(),
       avatar: state.avatar.blob || avatar(),
       altGreetings: alternateGreetings(),
@@ -445,12 +443,10 @@ export const CreateCharacterForm: Component<{
                 class="h-60"
                 tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
               />
-              <Show when={flags.charv2}>
-                <AlternateGreetingsInput
-                  greetings={alternateGreetings()}
-                  setGreetings={setAlternateGreetings}
-                />
-              </Show>
+              <AlternateGreetingsInput
+                greetings={alternateGreetings()}
+                setGreetings={setAlternateGreetings}
+              />
             </Card>
             <Card class="flex flex-col gap-3">
               <div>
@@ -523,53 +519,51 @@ export const CreateCharacterForm: Component<{
               Advanced options
             </h2>
             <div class={`flex flex-col gap-3 ${advancedVisibility()}`}>
-              <Show when={flags.charv2}>
-                <Card class="flex flex-col gap-3">
-                  <TextInput
-                    isMultiline
-                    fieldName="systemPrompt"
-                    label="Character System Prompt (optional)"
-                    helperText={
-                      <span>
-                        {`System prompt to bundle with your character. You can use the {{original}} placeholder to include the user's own system prompt, if you want to supplement it instead of replacing it.`}
-                      </span>
-                    }
-                    placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
-                    value={state.edit?.systemPrompt}
-                  />
-                  <TextInput
-                    isMultiline
-                    fieldName="postHistoryInstructions"
-                    label="Post-conversation History Instructions (optional)"
-                    helperText={
-                      <span>
-                        {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's UJB, if you want to supplement it instead of replacing it.`}
-                      </span>
-                    }
-                    placeholder="Write at least four paragraphs."
-                    value={state.edit?.postHistoryInstructions}
-                  />
-                </Card>
-                <Card>
-                  <MemoryBookPicker setBundledBook={setBundledBook} bundledBook={bundledBook()} />
-                </Card>
-                <Card>
-                  <TextInput
-                    fieldName="creator"
-                    label="Creator (optional)"
-                    placeholder="e.g. John1990"
-                    value={state.edit?.creator}
-                  />
-                </Card>
-                <Card>
-                  <TextInput
-                    fieldName="characterVersion"
-                    label="Character Version (optional)"
-                    placeholder="any text e.g. 1, 2, v1, v1fempov..."
-                    value={state.edit?.characterVersion}
-                  />
-                </Card>
-              </Show>
+              <Card class="flex flex-col gap-3">
+                <TextInput
+                  isMultiline
+                  fieldName="systemPrompt"
+                  label="Character System Prompt (optional)"
+                  helperText={
+                    <span>
+                      {`System prompt to bundle with your character. You can use the {{original}} placeholder to include the user's own system prompt, if you want to supplement it instead of replacing it.`}
+                    </span>
+                  }
+                  placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
+                  value={state.edit?.systemPrompt}
+                />
+                <TextInput
+                  isMultiline
+                  fieldName="postHistoryInstructions"
+                  label="Post-conversation History Instructions (optional)"
+                  helperText={
+                    <span>
+                      {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's UJB, if you want to supplement it instead of replacing it.`}
+                    </span>
+                  }
+                  placeholder="Write at least four paragraphs."
+                  value={state.edit?.postHistoryInstructions}
+                />
+              </Card>
+              <Card>
+                <MemoryBookPicker setBundledBook={setBundledBook} bundledBook={bundledBook()} />
+              </Card>
+              <Card>
+                <TextInput
+                  fieldName="creator"
+                  label="Creator (optional)"
+                  placeholder="e.g. John1990"
+                  value={state.edit?.creator}
+                />
+              </Card>
+              <Card>
+                <TextInput
+                  fieldName="characterVersion"
+                  label="Character Version (optional)"
+                  placeholder="any text e.g. 1, 2, v1, v1fempov..."
+                  value={state.edit?.characterVersion}
+                />
+              </Card>
               <Card class="flex flex-col gap-3">
                 <h4 class="text-md font-bold">Voice</h4>
                 <div>
@@ -744,7 +738,6 @@ const MemoryBookPicker: Component<{
 }
 
 type PayloadOpts = {
-  version: 'v1' | 'v2'
   tags: string[] | undefined
   voice: VoiceSettings
   avatar: File | undefined
@@ -755,43 +748,6 @@ type PayloadOpts = {
 }
 
 function getPayload(ev: Event, opts: PayloadOpts) {
-  if (opts.version === 'v1') {
-    const body = getStrictForm(ev, {
-      kind: PERSONA_FORMATS,
-      name: 'string',
-      description: 'string?',
-      appearance: 'string?',
-      culture: 'string',
-      greeting: 'string',
-      scenario: 'string',
-      sampleChat: 'string',
-    } as const)
-
-    const attributes = getAttributeMap(ev)
-
-    const persona = {
-      kind: body.kind,
-      attributes,
-    }
-
-    const payload = {
-      name: body.name,
-      description: body.description,
-      culture: body.culture,
-      tags: opts.tags,
-      appearance: body.appearance,
-      scenario: body.scenario,
-      avatar: opts.avatar,
-      greeting: body.greeting,
-      sampleChat: body.sampleChat,
-      persona,
-      originalAvatar: opts.originalAvatar,
-      voice: opts.voice,
-    }
-
-    return payload
-  }
-
   const body = getStrictForm(ev, {
     kind: PERSONA_FORMATS,
     name: 'string',
@@ -831,7 +787,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     // New fields start here
     systemPrompt: body.systemPrompt ?? '',
     postHistoryInstructions: body.postHistoryInstructions ?? '',
-    alternateGreetings: opts.altGreetings ?? '',
+    alternateGreetings: opts.altGreetings ?? [],
     characterBook: opts.characterBook,
     creator: body.creator ?? '',
     extensions: opts.extensions,
