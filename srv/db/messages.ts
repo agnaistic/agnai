@@ -1,6 +1,6 @@
 import { v4 } from 'uuid'
 import { db } from './client'
-import { AppSchema } from './schema'
+import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 
 const PAGE_SIZE = 50

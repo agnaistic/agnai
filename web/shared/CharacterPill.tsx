@@ -1,7 +1,7 @@
 import { Radio } from 'lucide-solid'
 import { createMemo, Show } from 'solid-js'
 import { Component } from 'solid-js'
-import { AppSchema } from '../../srv/db/schema'
+import { AppSchema } from '../../common/types/schema'
 import AvatarIcon from './AvatarIcon'
 
 export const CharacterPill: Component<{

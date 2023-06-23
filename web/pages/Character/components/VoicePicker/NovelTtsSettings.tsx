@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import { VoiceSettingForm } from '../../../../../srv/db/texttospeech-schema'
+import { VoiceSettingForm } from '../../../../../common/types/texttospeech-schema'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { RefreshCw } from 'lucide-solid'

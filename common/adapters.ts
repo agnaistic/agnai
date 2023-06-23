@@ -1,4 +1,4 @@
-import { AppSchema } from '../srv/db/schema'
+import { AppSchema } from './types/schema'
 
 export type AIAdapter = (typeof AI_ADAPTERS)[number]
 export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]

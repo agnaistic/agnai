@@ -1,5 +1,5 @@
-import { AppSchema } from '../../srv/db/schema'
-import { TTSService } from '../../srv/db/texttospeech-schema'
+import { AppSchema } from '../../common/types/schema'
+import { TTSService } from '../../common/types/texttospeech-schema'
 import { getNativeVoices } from '../shared/Audio/speech'
 import { createStore } from './create'
 import { voiceApi } from './data/voice'

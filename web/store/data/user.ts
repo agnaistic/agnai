@@ -1,7 +1,9 @@
 import { api, isLoggedIn } from '../api'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/types/schema'
 import { localApi } from './storage'
 import { toArray } from '/common/util'
+import { UI } from '/common/types'
+import { safeLocalStorage } from '/web/shared/util'
 
 type InitEntities = {
   profile: AppSchema.Profile
@@ -19,6 +21,7 @@ export const usersApi = {
   getProfile,
   updateConfig,
   updateProfile,
+  updateUI,
 }
 
 export async function getInit() {
@@ -146,6 +149,21 @@ export async function updateConfig(config: ConfigUpdate) {
 
   const res = await api.post('/user/config', config)
   return res
+}
+
+export async function updateUI(ui: UI.UISettings) {
+  if (isLoggedIn()) {
+    const res = await api.post('/user/ui', ui)
+    if (res.result) {
+      safeLocalStorage.removeItem('ui-settings')
+    }
+    return res
+  }
+
+  const config = localApi.loadItem('config')
+  const next: AppSchema.User = { ...config, ui }
+  localApi.saveConfig(next)
+  return { success: true }
 }
 
 export async function getOpenAIUsage() {

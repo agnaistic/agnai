@@ -1,4 +1,4 @@
-import { AppSchema } from '../srv/db/schema'
+import { AppSchema } from './types/schema'
 import { defaultPresets } from './presets'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 import { Encoder } from './tokenize'

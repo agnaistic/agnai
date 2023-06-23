@@ -1,5 +1,5 @@
 import { Component, JSX, createSignal, Show, createMemo } from 'solid-js'
-import { AppSchema } from '../../srv/db/schema'
+import { AppSchema } from '../../common/types/schema'
 import { DropMenu } from './DropMenu'
 import AvatarIcon from './AvatarIcon'
 import Button from './Button'

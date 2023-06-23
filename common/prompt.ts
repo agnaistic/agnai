@@ -1,5 +1,5 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
-import type { AppSchema } from '../srv/db/schema'
+import type { AppSchema } from './types/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS } from './adapters'
 import { formatCharacter } from './characters'
 import { adventureTemplate, defaultTemplate } from './default-preset'

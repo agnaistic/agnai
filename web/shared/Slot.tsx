@@ -1,5 +1,5 @@
 import { Component, createEffect, createMemo, createSignal } from 'solid-js'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/types'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
 

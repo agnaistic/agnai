@@ -1,7 +1,8 @@
-import { AIAdapter, ChatAdapter, PersonaFormat, RegisteredAdapter } from '../../common/adapters'
-import { GenerationPreset } from '../../common/presets'
-import { ImageSettings } from './image-schema'
-import { TTSSettings, VoiceSettings } from './texttospeech-schema'
+import type { AIAdapter, ChatAdapter, PersonaFormat, RegisteredAdapter } from '../adapters'
+import type { GenerationPreset } from '../presets'
+import type { ImageSettings } from '../../srv/db/image-schema'
+import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
+import { UISettings } from './ui'
 
 export type AllDoc =
   | AppSchema.Chat
@@ -110,6 +111,8 @@ export namespace AppSchema {
 
     images?: ImageSettings
     adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
+
+    ui?: UISettings
   }
 
   export interface Chat {

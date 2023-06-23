@@ -13,7 +13,7 @@ import { Mic } from 'lucide-solid'
 import Button from '../../../shared/Button'
 import { defaultCulture } from '../../../shared/CultureCodes'
 import { msgStore, toastStore, userStore } from '../../../store'
-import { AppSchema } from '../../../../srv/db/schema'
+import { AppSchema } from '../../../../common/types/schema'
 
 const win: any = window
 

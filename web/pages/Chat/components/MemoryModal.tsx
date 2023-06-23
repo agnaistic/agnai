@@ -1,6 +1,6 @@
 import { Save } from 'lucide-solid'
 import { Component, createSignal, onMount, Show } from 'solid-js'
-import { AppSchema } from '../../../../srv/db/schema'
+import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
 import Select, { Option } from '../../../shared/Select'

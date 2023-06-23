@@ -2,7 +2,7 @@ import { Component } from 'solid-js'
 import Modal from '/web/shared/Modal'
 import { characterStore, userStore } from '/web/store'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {

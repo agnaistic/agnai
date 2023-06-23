@@ -4,7 +4,7 @@ import { NewCharacter } from '/web/store'
 import { jsonToCharacter } from '../Character/ImportCharacter'
 import { extractCardData } from '../Character/card-utils'
 import { processBook, processChar } from './util'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/types'
 
 export const ChubItem: Component<{
   name: string

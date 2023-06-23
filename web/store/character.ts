@@ -1,5 +1,5 @@
 import { createAppearancePrompt } from '../../common/image-prompt'
-import { AppSchema } from '../../srv/db/schema'
+import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { subscribe } from './socket'

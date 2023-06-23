@@ -1,6 +1,6 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
-import { AppSchema } from '../../../../srv/db/schema'
+import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
 import TextInput from '../../../shared/TextInput'

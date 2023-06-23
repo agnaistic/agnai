@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { TextToSpeechAdapter, VoiceListResponse } from './types'
-import { AppSchema } from '../db/schema'
+import { AppSchema } from '../../common/types/schema'
 import { errors } from '../api/wrap'
 import { Validator } from '/common/valid'
 import { decryptText } from '../db/util'

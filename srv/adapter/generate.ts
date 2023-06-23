@@ -4,9 +4,9 @@ import {
   defaultPresets,
   isDefaultPreset,
   getFallbackPreset,
-} from '../../common/presets'
+} from '/common/presets'
 import { store } from '../db'
-import { AppSchema } from '../db/schema'
+import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { handleHorde } from './horde'

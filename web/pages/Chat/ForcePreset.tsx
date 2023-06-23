@@ -1,5 +1,5 @@
 import { Component, Show, createMemo, createSignal } from 'solid-js'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/types/schema'
 import Modal from '../../shared/Modal'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { chatStore, presetStore, settingStore, toastStore } from '../../store'

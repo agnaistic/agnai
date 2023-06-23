@@ -1,4 +1,4 @@
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '../types/schema'
 
 export const replicatePresets = {
   replicate_vicuna_13b: {

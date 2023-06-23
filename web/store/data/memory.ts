@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { AppSchema, NewBook } from '../../../srv/db/schema'
+import { AppSchema, NewBook } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { localApi } from './storage'
 

@@ -1,6 +1,6 @@
 import { Component, createEffect, createSignal } from 'solid-js'
 import { voiceStore } from '/web/store/voice'
-import { TTSService, VoiceWebSynthesisSettings, VoiceSettings } from '/srv/db/texttospeech-schema'
+import { TTSService, VoiceWebSynthesisSettings, VoiceSettings } from '/common/types'
 import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'

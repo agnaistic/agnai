@@ -1,10 +1,11 @@
 import { Bot, VenetianMask } from 'lucide-solid'
 import { Component, createEffect, createMemo, createSignal, JSX, Show } from 'solid-js'
-import { AvatarCornerRadius, AvatarSize, settingStore } from '../store'
+import { settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { getImageData } from '../store/data/chars'
+import { UI } from '/common/types'
 
 type Props = {
   avatarUrl?: string | File
@@ -17,8 +18,8 @@ type Props = {
 }
 
 type Format = {
-  size: AvatarSize
-  corners: AvatarCornerRadius
+  size: UI.AvatarSize
+  corners: UI.AvatarCornerRadius
 }
 
 const defaultFormat: Format = { size: 'md', corners: 'circle' }
@@ -109,7 +110,7 @@ const AvatarIcon: Component<Props> = (props) => {
   )
 }
 
-const fit: Record<AvatarCornerRadius, string> = {
+const fit: Record<UI.AvatarCornerRadius, string> = {
   sm: 'object-cover sm:object-scale-down',
   md: 'object-cover sm:object-scale-down',
   lg: 'object-cover sm:object-scale-down',
@@ -117,7 +118,7 @@ const fit: Record<AvatarCornerRadius, string> = {
   none: 'object-cover sm:object-scale-down',
 }
 
-const corners: Record<AvatarCornerRadius, string> = {
+const corners: Record<UI.AvatarCornerRadius, string> = {
   sm: 'rounded-sm sm:rounded-sm',
   md: 'rounded-md sm:rounded-md',
   lg: 'rounded-lg sm:rounded-lg',

@@ -6,15 +6,16 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { toDropdownItems } from '../../shared/util'
-import { AVATAR_CORNERS, AVATAR_SIZES, BG_THEME, UI_THEME, userStore } from '../../store'
+import { userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
+import { UI } from '/common/types'
 
-const themeOptions = UI_THEME.map((color) => ({ label: color, value: color }))
+const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 const themeBgOptions = [{ label: 'Custom', value: '' }].concat(
-  ...BG_THEME.map((color) => ({ label: color, value: color }))
+  ...UI.BG_THEME.map((color) => ({ label: color, value: color }))
 )
 
 function noop() {}
@@ -63,7 +64,11 @@ const UISettings: Component = () => {
               <span
                 class="link"
                 onClick={() =>
-                  userStore.updateUI({ bgCustom: '', bgCustomGradient: '', themeBg: BG_THEME[0] })
+                  userStore.updateUI({
+                    bgCustom: '',
+                    bgCustomGradient: '',
+                    themeBg: UI.BG_THEME[0],
+                  })
                 }
               >
                 Reset to Default
@@ -108,14 +113,14 @@ const UISettings: Component = () => {
         <Select
           fieldName="avatarSize"
           label="Size"
-          items={toDropdownItems(AVATAR_SIZES)}
+          items={toDropdownItems(UI.AVATAR_SIZES)}
           value={state.ui.avatarSize}
           onChange={(item) => userStore.updateUI({ avatarSize: item.value as any })}
         />
         <Select
           fieldName="avatarCorners"
           label="Corner Radius"
-          items={toDropdownItems(AVATAR_CORNERS)}
+          items={toDropdownItems(UI.AVATAR_CORNERS)}
           value={state.ui.avatarCorners}
           onChange={(item) => userStore.updateUI({ avatarCorners: item.value as any })}
         />

@@ -12,7 +12,7 @@ import {
   START_REPLACE,
   SAMPLE_CHAT_MARKER,
 } from '../../common/prompt'
-import { AppSchema } from '../db/schema'
+import { AppSchema } from '../../common/types/schema'
 import { getEncoder } from '../tokenize'
 
 const baseUrl = `https://api.anthropic.com/v1/complete`

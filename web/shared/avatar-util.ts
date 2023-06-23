@@ -1,7 +1,7 @@
-import { AvatarSize } from '../store'
+import { UI } from '/common/types'
 
 // if you change the width values, you must also update Message.css
-export const avatarSizes: Record<AvatarSize, { avatar: string; msg: string }> = {
+export const avatarSizes: Record<UI.AvatarSize, { avatar: string; msg: string }> = {
   xs: { avatar: 'avatar-xs', msg: 'msg-with-xs-avatar' },
   sm: { avatar: 'avatar-sm', msg: 'msg-with-sm-avatar' },
   md: { avatar: 'avatar-md', msg: 'msg-with-md-avatar' },
@@ -11,7 +11,7 @@ export const avatarSizes: Record<AvatarSize, { avatar: string; msg: string }> = 
   '3xl': { avatar: 'avatar-3xl', msg: 'msg-with-3xl-avatar' },
 }
 
-export const avatarSizesCircle: Record<AvatarSize, { avatar: string; msg: string }> = {
+export const avatarSizesCircle: Record<UI.AvatarSize, { avatar: string; msg: string }> = {
   xs: { ...avatarSizes.xs, avatar: 'avatar-xs avatar-circle' },
   sm: { ...avatarSizes.sm, avatar: 'avatar-sm avatar-circle' },
   md: { ...avatarSizes.md, avatar: 'avatar-md avatar-circle' },

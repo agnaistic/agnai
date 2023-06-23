@@ -3,7 +3,7 @@ import { logger } from '../logger'
 import { getEndTokens, normalizeUrl, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { defaultPresets } from '../../common/presets'
-import { AppSchema } from '../db/schema'
+import { AppSchema } from '../../common/types/schema'
 import { StatusError } from '../api/wrap'
 import { config } from '../config'
 

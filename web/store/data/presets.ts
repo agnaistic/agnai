@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
 

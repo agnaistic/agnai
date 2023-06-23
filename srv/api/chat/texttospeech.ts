@@ -2,7 +2,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../../db'
 import { generateVoice } from '../../voice'
 import { handle } from '../wrap'
-import { VoiceSettings } from '../../db/texttospeech-schema'
+import { VoiceSettings } from '../../../common/types/texttospeech-schema'
 
 export const textToSpeech = handle(async ({ body, userId, socketId, log, params }) => {
   assertValid(

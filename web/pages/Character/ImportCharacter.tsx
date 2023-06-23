@@ -1,6 +1,6 @@
 import { Import, X } from 'lucide-solid'
 import { Component, For, Show, createSignal, onMount } from 'solid-js'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'

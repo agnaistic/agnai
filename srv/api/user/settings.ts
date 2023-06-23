@@ -2,7 +2,7 @@ import { assertValid } from '/common/valid'
 import needle from 'needle'
 import { NOVEL_BASEURL } from '../../adapter/novel'
 import { store } from '../../db'
-import { AppSchema } from '../../db/schema'
+import { AppSchema } from '../../../common/types/schema'
 import { encryptText } from '../../db/util'
 import { findUser, HORDE_GUEST_KEY } from '../horde'
 import { get } from '../request'
@@ -15,6 +15,8 @@ import { getRegisteredAdapters } from '/srv/adapter/register'
 import { AIAdapter } from '/common/adapters'
 import { config } from '/srv/config'
 import { toArray } from '/common/util'
+import { UI } from '/common/types'
+import { publishOne } from '../ws/handle'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const [profile, user, presets, config, books] = await Promise.all([
@@ -93,6 +95,16 @@ export const deleteElevenLabsKey = handle(async ({ userId }) => {
   await store.users.updateUser(userId!, {
     elevenLabsApiKey: '',
   })
+
+  return { success: true }
+})
+
+export const updateUI = handle(async ({ userId, body }) => {
+  assertValid(UI.uiGuard, body)
+
+  await store.users.updateUser(userId, { ui: body })
+
+  publishOne(userId, { type: 'ui-update', ui: body })
 
   return { success: true }
 })
