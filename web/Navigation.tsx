@@ -98,10 +98,7 @@ const Navigation: Component = () => {
               />
               <div class="ellipsis flex cursor-pointer items-center justify-end rounded-lg bg-[var(--bg-700)] px-2 py-1">
                 <div class="ellipsis flex flex-col">
-                  <span>
-                    {chars.impersonating?.name || user.profile?.handle}
-                    {state.flags.charv2 ? ' (v2)' : ''}
-                  </span>
+                  <span>{chars.impersonating?.name || user.profile?.handle}</span>
                 </div>
                 <Show when={!!chars.impersonating}>
                   <VenetianMask size={16} class="ml-2" />

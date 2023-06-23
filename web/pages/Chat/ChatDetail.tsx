@@ -430,14 +430,7 @@ const ChatDetail: Component = () => {
                 class={`flex flex-col-reverse gap-4 overflow-y-auto sm:pr-2 ${msgsMaxWidth()} w-full`}
               >
                 <div id="chat-messages" class="flex w-full flex-col gap-2">
-                  <Show
-                    when={
-                      cfg.flags.charv2 &&
-                      chats.loaded &&
-                      chatMsgs().length < 2 &&
-                      chats.char?.description
-                    }
-                  >
+                  <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
                     <div class="mx-auto mb-4 text-[var(--text-500)]">
                       <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
                       {chats.char!.description!.split('\n').map((paragText) => (
