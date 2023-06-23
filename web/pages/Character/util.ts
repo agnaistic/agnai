@@ -1,5 +1,5 @@
 import { toArray } from '/common/util'
-import { AppSchema } from '/common/schema'
+import { AppSchema } from '/common/types'
 import { safeLocalStorage } from '/web/shared/util'
 import { NewCharacter } from '/web/store'
 

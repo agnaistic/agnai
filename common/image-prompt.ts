@@ -1,4 +1,4 @@
-import { AppSchema } from './schema'
+import { AppSchema } from './types/schema'
 import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
 

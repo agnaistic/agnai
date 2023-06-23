@@ -1,6 +1,6 @@
 import { ArrowBigLeft, Crown, Mail, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
-import { AppSchema } from '../../../common/schema'
+import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'

@@ -5,7 +5,7 @@ import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { sendMany } from '../ws'
 import { personaValidator } from './common'
-import { AppSchema } from '/common/schema'
+import { AppSchema } from '/common/types'
 
 export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(

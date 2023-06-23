@@ -1,4 +1,4 @@
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { api } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'

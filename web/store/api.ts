@@ -168,7 +168,7 @@ async function* callApiStream<T = any>(path: string, opts: RequestInit) {
 }
 
 export function setAuth(jwt: string) {
-  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 7 })
+  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 30 })
 }
 
 export function getAuth() {
@@ -181,4 +181,19 @@ export function clearAuth() {
 
 export function isLoggedIn() {
   return !!getAuth()
+}
+
+export function getUserId() {
+  const auth = getAuth()
+  if (!auth) return 'anon'
+
+  const data = getTokenBody(auth)
+  console.log(data?.userId)
+  return data?.userId
+}
+
+function getTokenBody(jwt: string) {
+  const [_head, body, _sign] = jwt.split('.')
+  const data = JSON.parse(window.atob(body))
+  return data as any
 }

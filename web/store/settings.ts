@@ -1,5 +1,5 @@
 import { HordeModel, HordeWorker } from '../../common/adapters'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { setAssetPrefix } from '../shared/util'
 import { api } from './api'

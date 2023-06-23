@@ -1,5 +1,5 @@
 import { Component, createEffect, createSignal, on, onMount } from 'solid-js'
-import { TTSService } from '/common/texttospeech-schema'
+import { TTSService } from '/common/types'
 import Select, { Option } from '/web/shared/Select'
 import { voiceStore } from '/web/store/voice'
 

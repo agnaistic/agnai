@@ -1,4 +1,4 @@
-import { AppSchema } from './schema'
+import { AppSchema } from './types/schema'
 import { OPENAI_MODELS } from './adapters'
 import { claudePresets } from './presets/claude'
 import { hordePresets } from './presets/horde'

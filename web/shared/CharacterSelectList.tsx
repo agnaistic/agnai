@@ -1,5 +1,5 @@
 import { Component, For, Show, createMemo, createSignal } from 'solid-js'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import AvatarIcon from './AvatarIcon'
 import { Star, Users } from 'lucide-solid'
 import TextInput from './TextInput'

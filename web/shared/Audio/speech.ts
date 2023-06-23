@@ -1,7 +1,7 @@
 import { getAssetUrl } from '../util'
 import { AudioReference } from './AudioReference'
-import { AppSchema } from '/common/schema'
-import { VoiceWebSynthesisSettings } from '/common/texttospeech-schema'
+import { AppSchema } from '/common/types'
+import { VoiceWebSynthesisSettings } from '/common/types'
 
 let currentAudio: AudioReference | undefined = undefined
 let voicesReady = false

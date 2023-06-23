@@ -11,7 +11,7 @@ import { errors, StatusError } from '../api/wrap'
 import { sendMany } from '../api/ws'
 import { getChatOnly } from './chats'
 import { db } from './client'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 
 export type NewInvite = {
   chatId: string

@@ -3,7 +3,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../../db'
 import { loggedIn } from '../auth'
 import { handle } from '../wrap'
-import { AppSchema } from '../../../common/schema'
+import { AppSchema } from '../../../common/types/schema'
 import { FILAMENT_ENABLED, filament } from '../../adapter/luminai'
 
 const router = Router()

@@ -12,7 +12,7 @@ import {
 } from '../../common/prompt'
 import { OPENAI_CHAT_MODELS, OPENAI_MODELS } from '../../common/adapters'
 import { StatusError } from '../api/wrap'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { getEncoder } from '../tokenize'
 import { needleToSSE } from './stream'
 import { adventureAmble } from '/common/default-preset'

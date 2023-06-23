@@ -6,7 +6,7 @@ import { Toggle } from '../../shared/Toggle'
 import { getClientPreset } from '../../shared/adapter'
 import Tabs from '../../shared/Tabs'
 import TextInput from '../../shared/TextInput'
-import { AppSchema } from '../../../common/schema'
+import { AppSchema } from '../../../common/types/schema'
 import { presetStore } from '/web/store'
 import { extractSystemPromptFromLegacyGaslight } from './update-gaslight'
 

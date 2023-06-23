@@ -1,6 +1,6 @@
 import { safeLocalStorage } from '../shared/util'
 import { createStore } from './create'
-import { AppSchema } from '/common/schema'
+import { AppSchema } from '/common/types'
 
 export type Tag = string
 

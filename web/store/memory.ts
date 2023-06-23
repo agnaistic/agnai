@@ -1,4 +1,4 @@
-import { AppSchema, NewBook } from '../../common/schema'
+import { AppSchema, NewBook } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { memoryApi } from './data/memory'

@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import { VoiceSettingForm } from '../../../../../common/texttospeech-schema'
+import { VoiceSettingForm } from '../../../../../common/types/texttospeech-schema'
 import RangeInput from '../../../../shared/RangeInput'
 
 export const WebSpeechSynthesisSettings: Component<{

@@ -1,4 +1,4 @@
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { api } from './api'
 import { createStore } from './create'

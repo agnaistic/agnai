@@ -1,6 +1,6 @@
 import { getAdapter, getChatPreset } from '../../common/prompt'
 import { presetStore, userStore } from '../store'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { defaultPresets } from '../../common/presets'
 import { Option } from './Select'
 import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'

@@ -1,4 +1,4 @@
-import { AppSchema } from './schema'
+import { AppSchema } from './types/schema'
 import { AIAdapter, AI_ADAPTERS, ChatAdapter } from './adapters'
 import { defaultPresets } from './default-preset'
 

@@ -1,4 +1,4 @@
-import { AppSchema } from '/common/schema'
+import { AppSchema } from '/common/types'
 
 /**
  * Retrieve the unique set of active bots for a conversation

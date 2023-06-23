@@ -1,4 +1,4 @@
-import { AppSchema } from '../schema'
+import { AppSchema } from '../types/schema'
 
 export const scalePresets = {
   scale: {

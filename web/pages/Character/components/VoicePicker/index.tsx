@@ -1,5 +1,5 @@
 import { Component, Show, createEffect, createMemo, createSignal, on } from 'solid-js'
-import { VoiceSettings, TTSService, VoiceSettingForm } from '/common/texttospeech-schema'
+import { VoiceSettings, TTSService, VoiceSettingForm } from '/common/types'
 import { VoiceServiceSelect } from './VoiceServiceSelect'
 import { VoiceIdSelect } from './VoiceIdSelect'
 import { VoicePreviewButton } from './VoicePreviewButton'

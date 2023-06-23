@@ -1,4 +1,4 @@
-import { AppSchema } from './schema'
+import { AppSchema } from './types/schema'
 import { defaultPresets } from './default-preset'
 import { SD_SAMPLER } from './image'
 import { toArray } from './util'

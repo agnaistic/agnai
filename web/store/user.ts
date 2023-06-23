@@ -1,105 +1,23 @@
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
 import { getRootVariable, hexToRgb, safeLocalStorage, setRootVariable } from '../shared/util'
-import { api, clearAuth, getAuth, setAuth } from './api'
+import { api, clearAuth, getAuth, getUserId, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
 import { usersApi } from './data/user'
-import { publish } from './socket'
+import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
+import { UI } from '/common/types'
 
-const UI_KEY = 'ui-settings'
 const BACKGROUND_KEY = 'ui-bg'
 
 type ConfigUpdate = Partial<AppSchema.User & { hordeModels?: string[] }>
 
-type CustomUI = {
-  msgBackground: string
-  botBackground: string
-  chatTextColor: string
-  chatEmphasisColor: string
-}
-
-export type UISettings = {
-  theme: ThemeColor
-  themeBg: ThemeBGColor
-  mode: ThemeMode
-
-  bgCustom: string
-  bgCustomGradient: string
-
-  avatarSize: AvatarSize
-  avatarCorners: AvatarCornerRadius
-  font: FontSetting
-  imageWrap: boolean
-
-  /** 0 -> 1. 0 = transparent. 1 = opaque */
-  msgOpacity: number
-
-  chatWidth?: 'full' | 'narrow' | 'xl' | '2xl' | '3xl' | 'fill'
-  logPromptsToBrowserConsole: boolean
-
-  dark: CustomUI
-  light: CustomUI
-} & Partial<CustomUI>
-
-const defaultUIsettings: UISettings = {
-  theme: 'sky',
-  themeBg: 'truegray',
-
-  bgCustom: '',
-  bgCustomGradient: '',
-
-  mode: 'dark',
-  avatarSize: 'md',
-  avatarCorners: 'circle',
-  font: 'default',
-  msgOpacity: 0.8,
-  msgBackground: '--bg-800',
-  botBackground: '--bg-800',
-  chatTextColor: '--text-800',
-  chatEmphasisColor: '--text-600',
-  chatWidth: 'full',
-  logPromptsToBrowserConsole: false,
-  imageWrap: false,
-
-  light: {
-    msgBackground: '--bg-800',
-    botBackground: '--bg-800',
-    chatTextColor: '--text-800',
-    chatEmphasisColor: '--text-600',
-  },
-
-  dark: {
-    msgBackground: '--bg-800',
-    botBackground: '--bg-800',
-    chatTextColor: '--text-800',
-    chatEmphasisColor: '--text-600',
-  },
-}
-
-const fontFaces: { [key in FontSetting]: string } = {
+const fontFaces: { [key in UI.FontSetting]: string } = {
   lato: 'Lato, sans-serif',
   default: 'unset',
 }
-
-export const AVATAR_SIZES = ['xs', 'sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
-export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
-export const UI_MODE = ['light', 'dark'] as const
-export const UI_THEME = [
-  'blue',
-  'sky',
-  'teal',
-  'orange',
-  'rose',
-  'pink',
-  'purple',
-  'premium',
-] as const
-export const BG_THEME = ['truegray', 'coolgray', 'bluegray'] as const
-
-export const UI_FONT = ['default', 'lato'] as const
 
 export type UserState = {
   loading: boolean
@@ -108,21 +26,14 @@ export type UserState = {
   jwt: string
   profile?: AppSchema.Profile
   user?: AppSchema.User
-  ui: UISettings
-  current: CustomUI
+  ui: UI.UISettings
+  current: UI.CustomUI
   background?: string
   metadata: {
     openaiUsage?: number
   }
   oaiUsageLoading: boolean
 }
-
-export type ThemeColor = (typeof UI_THEME)[number]
-export type ThemeBGColor = (typeof BG_THEME)[number]
-export type ThemeMode = (typeof UI_MODE)[number]
-export type AvatarSize = (typeof AVATAR_SIZES)[number]
-export type AvatarCornerRadius = (typeof AVATAR_CORNERS)[number]
-export type FontSetting = (typeof UI_FONT)[number]
 
 export const userStore = createStore<UserState>(
   'user',
@@ -134,6 +45,15 @@ export const userStore = createStore<UserState>(
 
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile })
+
+    /**
+     * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
+     */
+    if (!init.user.ui) {
+      userStore.updateUI({})
+    } else {
+      updateTheme(init.user.ui)
+    }
   })
 
   return {
@@ -145,10 +65,12 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async getConfig() {
+    async getConfig({ ui }) {
       const res = await usersApi.getConfig()
+
       if (res.error) return toastStore.error(`Failed to get user config`)
       if (res.result) {
+        userStore.updateUI({})
         return { user: res.result }
       }
     },
@@ -199,6 +121,11 @@ export const userStore = createStore<UserState>(
         jwt: res.result.token,
       }
 
+      if (res.result.user.ui) {
+        yield { ui: res.result.user.ui }
+      }
+
+      // TODO: Work out why this is here
       events.emit(EVENTS.loggedOut)
 
       onSuccess?.()
@@ -234,12 +161,21 @@ export const userStore = createStore<UserState>(
       events.emit(EVENTS.loggedOut)
       clearAuth()
       publish({ type: 'logout' })
-      return { jwt: '', profile: undefined, user: undefined, loggedIn: false }
+      return {
+        jwt: '',
+        profile: undefined,
+        user: undefined,
+        loggedIn: false,
+        ui: getUIsettings(true),
+      }
     },
 
-    updateUI({ ui }, update: Partial<UISettings>) {
+    async updateUI({ ui }, update: Partial<UI.UISettings>) {
       const current = ui[update.mode || ui.mode]
       const next = { ...ui, ...update }
+
+      await usersApi.updateUI(next)
+
       try {
         updateTheme(next)
       } catch (e: any) {
@@ -248,7 +184,12 @@ export const userStore = createStore<UserState>(
       return { ui: next, current }
     },
 
-    updateColor({ ui }, update: Partial<CustomUI>) {
+    receiveUI(_, update: UI.UISettings) {
+      updateTheme(update)
+      return { ui: update }
+    },
+
+    updateColor({ ui }, update: Partial<UI.CustomUI>) {
       const prev = ui[ui.mode]
       const next = { ...prev, ...update }
       try {
@@ -365,7 +306,7 @@ function init(): UserState {
       background,
       oaiUsageLoading: false,
       metadata: {},
-      current: ui[ui.mode] || defaultUIsettings[ui.mode],
+      current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
     }
   }
 
@@ -377,12 +318,12 @@ function init(): UserState {
     background,
     oaiUsageLoading: false,
     metadata: {},
-    current: ui[ui.mode] || defaultUIsettings[ui.mode],
+    current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
   }
 }
 
-function updateTheme(ui: UISettings) {
-  safeLocalStorage.setItem(UI_KEY, JSON.stringify(ui))
+function updateTheme(ui: UI.UISettings) {
+  safeLocalStorage.setItem(getUIKey(), JSON.stringify(ui))
   const root = document.documentElement
 
   const colors = ui.bgCustom ? getColorShades(ui.bgCustom) : []
@@ -427,21 +368,26 @@ function updateTheme(ui: UISettings) {
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
 
-function getUIsettings() {
-  const json = safeLocalStorage.getItem(UI_KEY) || JSON.stringify(defaultUIsettings)
-  const settings: UISettings = JSON.parse(json)
-  const theme = (safeLocalStorage.getItem('theme') || settings.theme) as ThemeColor
+function getUIsettings(guest = false) {
+  const key = getUIKey(guest)
+  const json =
+    safeLocalStorage.getItem(key) ||
+    safeLocalStorage.getItem('ui-settings') ||
+    JSON.stringify(UI.defaultUIsettings)
+
+  const settings: UI.UISettings = JSON.parse(json)
+  const theme = (safeLocalStorage.getItem('theme') || settings.theme) as UI.ThemeColor
   safeLocalStorage.removeItem('theme')
 
-  if (theme && UI_THEME.includes(theme)) {
+  if (theme && UI.UI_THEME.includes(theme)) {
     settings.theme = theme
   }
 
-  const ui = { ...defaultUIsettings, ...settings }
-  ui.botBackground = ui.botBackground || defaultUIsettings.botBackground
-  ui.msgBackground = ui.msgBackground || defaultUIsettings.msgBackground
-  ui.chatEmphasisColor = ui.chatEmphasisColor || defaultUIsettings.chatEmphasisColor
-  ui.chatTextColor = ui.chatTextColor || defaultUIsettings.chatTextColor
+  const ui = { ...UI.defaultUIsettings, ...settings }
+  ui.botBackground = ui.botBackground || UI.defaultUIsettings.botBackground
+  ui.msgBackground = ui.msgBackground || UI.defaultUIsettings.msgBackground
+  ui.chatEmphasisColor = ui.chatEmphasisColor || UI.defaultUIsettings.chatEmphasisColor
+  ui.chatTextColor = ui.chatTextColor || UI.defaultUIsettings.chatTextColor
 
   return ui
 }
@@ -495,3 +441,12 @@ export function getSettingColor(color: string) {
   if (color.startsWith('#')) return color
   return getRootVariable(color)
 }
+
+function getUIKey(guest = false) {
+  const userId = guest ? 'anon' : getUserId()
+  return `ui-settings-${userId}`
+}
+
+subscribe('ui-update', { ui: 'any' }, (body) => {
+  userStore.receiveUI(body.ui)
+})

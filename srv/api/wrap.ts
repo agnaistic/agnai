@@ -1,5 +1,5 @@
 import * as express from 'express'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
 
 export function handle(handler: Handler): express.RequestHandler {

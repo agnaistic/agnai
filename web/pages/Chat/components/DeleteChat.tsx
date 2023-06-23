@@ -1,6 +1,6 @@
 import { Trash, X } from 'lucide-solid'
 import { Component } from 'solid-js'
-import { AppSchema } from '../../../../common/schema'
+import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'

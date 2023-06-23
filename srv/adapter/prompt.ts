@@ -1,6 +1,6 @@
 import { Encoder } from '../../common/tokenize'
 import { store } from '../db'
-import { AppSchema } from '../../common/schema'
+import { AppSchema } from '../../common/types/schema'
 
 type PromptOpts = {
   chat: AppSchema.Chat

@@ -1,6 +1,6 @@
 import { Plus, X } from 'lucide-solid'
 import { Component, createMemo, createSignal, Index } from 'solid-js'
-import { AppSchema } from '../../../common/schema'
+import { AppSchema } from '../../../common/types/schema'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'

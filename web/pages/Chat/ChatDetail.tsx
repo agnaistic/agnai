@@ -20,14 +20,7 @@ import { CharacterPill } from '../../shared/CharacterPill'
 import IsVisible from '../../shared/IsVisible'
 import Modal from '../../shared/Modal'
 import { getMaxChatWidth, getRootRgb, setComponentPageTitle } from '../../shared/util'
-import {
-  characterStore,
-  ChatRightPane,
-  chatStore,
-  settingStore,
-  UISettings as UI,
-  userStore,
-} from '../../store'
+import { characterStore, ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettings } from './ChatGenSettings'
 import ChatSettingsModal from './ChatSettings'
@@ -41,7 +34,7 @@ import UISettings from '../Settings/UISettings'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
-import { AppSchema } from '../../../common/schema'
+import { AppSchema } from '../../../common/types/schema'
 import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
@@ -55,6 +48,7 @@ import { usePane } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import Loading from '/web/shared/Loading'
 import Convertible from './Convertible'
+import { UI } from '/common/types'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -701,7 +695,7 @@ const InfiniteScroll: Component = () => {
   )
 }
 
-function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean): string {
+function getChatWidth(setting: UI.UISettings['chatWidth'], sidePaneVisible: boolean): string {
   if (sidePaneVisible) return 'w-full max-w-full'
   switch (setting) {
     case 'narrow':
@@ -713,7 +707,7 @@ function getChatWidth(setting: UI['chatWidth'], sidePaneVisible: boolean): strin
   }
 }
 
-function getHeaderBg(mode: UI['mode']) {
+function getHeaderBg(mode: UI.UISettings['mode']) {
   mode
   const rgb = getRootRgb('bg-900')
   const styles: JSX.CSSProperties = {
