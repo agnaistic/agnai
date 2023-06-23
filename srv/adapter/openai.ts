@@ -147,7 +147,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   try {
-    let text = getCompletionContent(response)
+    let text = getCompletionContent(response, log)
+    if (text instanceof Error) {
+      yield { error: `OpenAI returned an error: ${text.message}` }
+      return
+    }
+
     if (!text?.length) {
       log.error({ body: response }, 'OpenAI request failed: Empty response')
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
@@ -315,9 +320,14 @@ const streamCompletion: CompletionGenerator = async function* (userId, url, head
   }
 }
 
-function getCompletionContent(completion?: Completion<Inference>) {
+function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {
   if (!completion) {
     return ''
+  }
+
+  if (completion.error?.message) {
+    log.warn({ completion }, 'OpenAI returned an error')
+    return new Error(completion.error.message)
   }
 
   if ('text' in completion.choices[0]) {
