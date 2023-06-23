@@ -1,0 +1,43 @@
+.body {
+}
+
+.main {
+  @apply w-full bg-[var(--bg-800)];
+
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: 1fr auto 1fr;
+
+  grid-template-areas:
+    'header header header'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'footer footer footer';
+}
+
+.header {
+  grid-area: header;
+  height: 48px;
+}
+
+.footer {
+  grid-area: footer;
+  height: 48px;
+}
+
+.preview {
+  grid-area: preview;
+}
+
+.left {
+  grid-area: left;
+}
+
+.right {
+  grid-area: right;
+}

@@ -30,6 +30,7 @@ import { For } from 'solid-js'
 import { getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
+import Builder from './shared/Avatar/Builder'
 
 const App: Component = () => {
   const state = userStore()
@@ -85,6 +86,7 @@ const App: Component = () => {
             <Route path="/login" component={LoginPage} />
           </Show>
           <Route path="/faq" component={FAQ} />
+          <Route path="/builder" component={Builder} />
           <Route path="*" component={HomePage} />
         </Route>
       </Routes>
