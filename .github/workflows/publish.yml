@@ -42,6 +42,7 @@ jobs:
       - name: Build
         run: |
           echo $NODE_ENV
+          pnpm build:server
           pnpm build:prod
 
       - name: Publish
