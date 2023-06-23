@@ -110,13 +110,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   log.debug(body, 'OpenAI payload')
 
-  if ('messages' in body) {
-    let count = 0
-    for (const msg of body.messages) {
-      count += encoder()(msg.content)
-    }
-  }
-
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
   const iter = body.stream
