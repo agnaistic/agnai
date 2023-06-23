@@ -3,12 +3,11 @@ import { grammar } from './grammar'
 import { PromptParts } from './prompt'
 import { AppSchema } from '/srv/db/schema'
 import peggy from 'peggy'
-import { logger } from '/srv/logger'
 import { elapsedSince } from './util'
 
 const parser = peggy.generate(grammar.trim(), {
   error: (stage, msg, loc) => {
-    logger.error({ loc, stage }, msg)
+    console.error({ loc, stage }, msg)
   },
 })
 
@@ -68,7 +67,7 @@ export function parseTemplate(template: string, opts: ParseOpts) {
     }
     return output.join('')
   } catch (err) {
-    logger.error({ err }, 'Failed to parse')
+    console.error({ err }, 'Failed to parse')
     throw err
   }
 }

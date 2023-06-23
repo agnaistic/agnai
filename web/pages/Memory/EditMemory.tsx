@@ -34,18 +34,24 @@ const EditMemoryForm: Component<{
   const [editing, setEditing] = createSignal(props.book)
   const [search, setSearch] = createSignal('')
 
+  const change = (book: AppSchema.MemoryBook) => {
+    setEditing(book)
+    props.onChange?.(book)
+    console.log(book)
+  }
+
   const addEntry = () => {
     const book = editing()
     const next = book.entries.slice()
     next.push({ entry: '', keywords: [], name: '', priority: 0, weight: 0, enabled: true })
-    setEditing({ ...book, entries: next })
+    change({ ...book, entries: next })
   }
 
   const onRemoveEntry = (pos: number) => {
     const book = editing()
     const next = book.entries.filter((_, i) => i !== pos)
 
-    setEditing({ ...book, entries: next })
+    change({ ...book, entries: next })
   }
 
   const entries = () => sortEntries(editing().entries, props.entrySort)
@@ -65,7 +71,7 @@ const EditMemoryForm: Component<{
           placeholder="Name for your memory book"
           required
           onChange={(e) => {
-            setEditing({ ...editing(), name: e.currentTarget.value })
+            change({ ...editing(), name: e.currentTarget.value })
           }}
         />
 
@@ -75,7 +81,7 @@ const EditMemoryForm: Component<{
           value={editing().description}
           placeholder="(Optional) A description for your memory book"
           onChange={(e) => {
-            setEditing({ ...editing(), description: e.currentTarget.value })
+            change({ ...editing(), description: e.currentTarget.value })
           }}
         />
         <Divider />
@@ -115,8 +121,7 @@ const EditMemoryForm: Component<{
                   idx === i ? Object.assign({}, entry, e) : entry
                 )
                 const next = { ...prev, entries }
-                setEditing(next)
-                props.onChange?.(next)
+                change(next)
               }}
             />
           )}

@@ -2,7 +2,7 @@ import { AppSchema } from '../srv/db/schema'
 import { defaultPresets } from './default-preset'
 import { SD_SAMPLER } from './image'
 import { toArray } from './util'
-import { AppLog } from '/srv/logger'
+import type { AppLog } from '/srv/logger'
 
 const HORDE_GUEST_KEY = '0000000000'
 const baseUrl = 'https://horde.koboldai.net/api/v2'

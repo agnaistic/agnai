@@ -1,6 +1,9 @@
 import * as uuid from 'uuid'
+import jwt from 'jsonwebtoken'
 import pino from 'pino'
 import type { NextFunction, Response } from 'express'
+import { errors } from './api/wrap'
+import { config } from './config'
 
 const transport =
   process.env.NODE_ENV !== 'production'
@@ -43,8 +46,32 @@ export function logMiddleware() {
     req.log = log
 
     const canLog = req.method !== 'OPTIONS' && req.url.startsWith('/api')
-    if (canLog) req.log.info('start request')
 
+    const socketId = req.get('socket-id') || ''
+    req.socketId = socketId
+
+    const header = req.get('authorization')
+
+    if (header) {
+      if (!header.startsWith('Bearer ')) {
+        return next(errors.Unauthorized)
+      }
+
+      const token = header.replace('Bearer ', '')
+      try {
+        const payload = jwt.verify(token, config.jwtSecret)
+        req.user = payload as any
+        req.userId = (payload as any).userId
+        req.log.setBindings({ user: (payload as any)?.username || 'anonymous' })
+      } catch (ex) {
+        req.user = {} as any
+        return next(errors.Unauthorized)
+      }
+    } else {
+      req.log.setBindings({ guest: true })
+    }
+
+    if (canLog) req.log.info('start request')
     const start = Date.now()
 
     res.on('finish', () => {
