@@ -47,21 +47,6 @@ async function initDb() {
   }
 }
 
-if (require.main === module) {
-  if (config.clustering) {
-    logger.info('Using clustering')
-    throng({
-      worker: startWorker,
-      lifetime: Infinity,
-      count: os.cpus().length,
-      grace: 2000,
-      signals: ['SIGTERM', 'SIGINT'],
-    })
-  } else {
-    startWorker()
-  }
-}
-
 async function startWorker(id?: number) {
   if (id) logger.setBindings({ w_id: id })
 
@@ -69,4 +54,17 @@ async function startWorker(id?: number) {
     logger.error(error, 'Server startup failed')
     process.exit(1)
   })
+}
+
+if (config.clustering) {
+  logger.info('Using clustering')
+  throng({
+    worker: startWorker,
+    lifetime: Infinity,
+    count: os.cpus().length,
+    grace: 2000,
+    signals: ['SIGTERM', 'SIGINT'],
+  })
+} else {
+  startWorker()
 }
