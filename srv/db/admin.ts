@@ -1,7 +1,7 @@
 import { Filter } from 'mongodb'
 import { db } from './client'
 import { encryptPassword } from './util'
-import { AppSchema } from './schema'
+import { AppSchema } from '../../common/schema'
 import { getDb } from './client'
 
 type UsersOpts = {

@@ -14,8 +14,8 @@ import { StatusError } from '../api/wrap'
 import { elevenlabsHandler } from './elevenlabs'
 import { novelTtsHandler } from './novel'
 import { webSpeechSynthesisHandler } from './webspeechsynthesis'
-import { TTSService, VoiceSettings } from '../db/texttospeech-schema'
-import { AppSchema } from '../db/schema'
+import { TTSService, VoiceSettings } from '../../common/texttospeech-schema'
+import { AppSchema } from '../../common/schema'
 
 export async function getVoicesList(
   { user, ttsService }: VoicesListRequest,

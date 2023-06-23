@@ -6,7 +6,7 @@ import TextInput from './TextInput'
 import { getFormEntries } from './util'
 import { getEncoder } from '/common/tokenize'
 import { formatCharacter } from '/common/characters'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/schema'
 
 type Attr = { key: string; values: string }
 

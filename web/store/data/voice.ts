@@ -1,5 +1,5 @@
-import { AppSchema } from '../../../srv/db/schema'
-import { VoiceSettings, TTSService } from '../../../srv/db/texttospeech-schema'
+import { AppSchema } from '../../../common/schema'
+import { VoiceSettings, TTSService } from '../../../common/texttospeech-schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { loadItem } from './storage'

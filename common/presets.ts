@@ -1,4 +1,4 @@
-import { AppSchema } from '../srv/db/schema'
+import { AppSchema } from './schema'
 import { AIAdapter, AI_ADAPTERS, ChatAdapter } from './adapters'
 import { defaultPresets } from './default-preset'
 

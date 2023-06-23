@@ -1,6 +1,6 @@
 import { Component, Show, createMemo, createSignal } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/schema'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'

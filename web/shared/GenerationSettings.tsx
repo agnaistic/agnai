@@ -2,7 +2,7 @@ import { Component, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
-import { AppSchema } from '../../srv/db/schema'
+import { AppSchema } from '../../common/schema'
 import { defaultPresets } from '../../common/presets'
 import {
   OPENAI_MODELS,

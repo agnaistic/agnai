@@ -4,7 +4,7 @@ import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { assertValid } from '/common/valid'
 import { createInferenceStream } from '/srv/adapter/generate'
 import { store } from '/srv/db'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/schema'
 
 /**
  * WIP

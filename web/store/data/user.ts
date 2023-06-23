@@ -1,5 +1,5 @@
 import { api, isLoggedIn } from '../api'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/schema'
 import { localApi } from './storage'
 import { toArray } from '/common/util'
 

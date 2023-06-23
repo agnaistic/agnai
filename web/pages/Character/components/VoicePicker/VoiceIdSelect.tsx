@@ -1,4 +1,4 @@
-import { TTSService } from '../../../../../srv/db/texttospeech-schema'
+import { TTSService } from '../../../../../common/texttospeech-schema'
 import { voiceStore } from '../../../../store/voice'
 import { Component, createEffect, createMemo, createSignal, on } from 'solid-js'
 import Select, { Option } from '../../../../shared/Select'

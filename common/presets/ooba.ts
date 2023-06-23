@@ -1,4 +1,4 @@
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '../schema'
 
 export const oobaPresets = {
   llama: {

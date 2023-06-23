@@ -1,5 +1,5 @@
 import { Component } from 'solid-js'
-import { ElevenLabsModel, VoiceSettingForm } from '../../../../../srv/db/texttospeech-schema'
+import { ElevenLabsModel, VoiceSettingForm } from '../../../../../common/texttospeech-schema'
 import RangeInput from '../../../../shared/RangeInput'
 import Select, { Option } from '../../../../shared/Select'
 

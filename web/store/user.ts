@@ -1,4 +1,4 @@
-import { AppSchema } from '../../srv/db/schema'
+import { AppSchema } from '../../common/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
 import { getRootVariable, hexToRgb, safeLocalStorage, setRootVariable } from '../shared/util'

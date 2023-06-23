@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { getCharacter } from './characters'
 import { db } from './client'
-import { AppSchema } from './schema'
+import { AppSchema } from '../../common/schema'
 import { now } from './util'
 import { StatusError } from '../api/wrap'
 

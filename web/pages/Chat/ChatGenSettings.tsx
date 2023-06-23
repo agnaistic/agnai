@@ -16,7 +16,7 @@ import {
   getFallbackPreset,
   isDefaultPreset,
 } from '../../../common/presets'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/schema'
 import Button from '../../shared/Button'
 import GenerationSettings from '../../shared/GenerationSettings'
 import { getStrictForm } from '../../shared/util'

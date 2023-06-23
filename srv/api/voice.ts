@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { handle } from './wrap'
 import { getVoicesList, generateTextToSpeech } from '../voice'
 import { store } from '../db'
-import { TTSService } from '../db/texttospeech-schema'
+import { TTSService } from '../../common/texttospeech-schema'
 import { assertValid } from '/common/valid'
 
 const router = Router()

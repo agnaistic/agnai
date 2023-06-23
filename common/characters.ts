@@ -1,4 +1,4 @@
-import { AppSchema } from '../srv/db/schema'
+import { AppSchema } from './schema'
 import { nativeToCharacterBook } from './memory'
 
 export const defaultChars = {

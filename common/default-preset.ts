@@ -1,4 +1,4 @@
-import { AppSchema } from '../srv/db/schema'
+import { AppSchema } from './schema'
 import { OPENAI_MODELS } from './adapters'
 import { claudePresets } from './presets/claude'
 import { hordePresets } from './presets/horde'

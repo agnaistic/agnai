@@ -1,7 +1,7 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
 import { PromptParts } from './prompt'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/schema'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
 

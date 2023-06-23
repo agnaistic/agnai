@@ -1,6 +1,6 @@
 import type { ImportChat, NewChat } from '../chat'
 import { v4 } from 'uuid'
-import { AppSchema } from '../../../srv/db/schema'
+import { AppSchema } from '../../../common/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi, saveChats } from './storage'
 

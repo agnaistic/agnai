@@ -1,5 +1,5 @@
 import { customSettings } from '../../config'
-import { AppSchema } from '../../db/schema'
+import { AppSchema } from '../../../common/schema'
 
 export const personaValidator = {
   kind: ['wpp', 'sbf', 'boostyle', 'text'],

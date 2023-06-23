@@ -1,6 +1,6 @@
 import { v4 } from 'uuid'
 import { db } from './client'
-import { AppSchema, NewBook } from './schema'
+import { AppSchema, NewBook } from '../../common/schema'
 
 export async function getBooks(userId: string) {
   const books = await db('memory').find({ userId }).toArray()

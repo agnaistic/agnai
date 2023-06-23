@@ -1,4 +1,4 @@
-import { AppSchema } from '../../srv/db/schema'
+import { AppSchema } from '../../common/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { PresetCreate, PresetUpdate, presetApi } from './data/presets'

@@ -1,4 +1,4 @@
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/schema'
 
 /**
  * Retrieve the unique set of active bots for a conversation

@@ -1,7 +1,7 @@
 import crypto from 'crypto'
 import bcrypt from 'bcryptjs'
 import { config } from '../config'
-import { AppSchema } from './schema'
+import { AppSchema } from '../../common/schema'
 import { defaultChars } from '../../common/characters'
 
 const ALGO = 'aes-192-cbc'

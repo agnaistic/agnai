@@ -5,7 +5,7 @@ import { getRegisteredAdapters } from '../adapter/register'
 import { config } from '../config'
 import { isConnected } from '../db/client'
 import { handle } from './wrap'
-import { AppSchema } from '../db/schema'
+import { AppSchema } from '../../common/schema'
 import { store } from '../db'
 
 const router = Router()

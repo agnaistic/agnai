@@ -1,5 +1,5 @@
 import { OPENAI_MODELS } from '../adapters'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '../schema'
 
 export const koboldPresets = {
   basic: {

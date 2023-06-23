@@ -1,4 +1,4 @@
-import { AppSchema } from '../db/schema'
+import { AppSchema } from '../../common/schema'
 import { AppLog } from '../logger'
 
 export type ImageGenerateRequest = {

@@ -4,7 +4,7 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { memoryStore, toastStore } from '../../store'
 import EditMemoryForm, { EntrySort } from '../Memory/EditMemory'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/schema'
 import { Option } from '/web/shared/Select'
 
 const ChubImportBookModal: Component<{

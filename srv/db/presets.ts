@@ -1,6 +1,6 @@
 import { v4 } from 'uuid'
 import { db } from './client'
-import { AppSchema } from './schema'
+import { AppSchema } from '../../common/schema'
 
 export async function updateGenSetting(chatId: string, props: AppSchema.Chat['genSettings']) {
   await db('chat').updateOne({ _id: chatId }, { $set: { genSettings: props, genPreset: '' } })

@@ -22,7 +22,7 @@ import {
   Switch,
 } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
-import { AppSchema } from '../../../../srv/db/schema'
+import { AppSchema } from '../../../../common/schema'
 import AvatarIcon from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'

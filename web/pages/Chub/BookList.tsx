@@ -2,7 +2,7 @@ import { Component, For, Show } from 'solid-js'
 import { ChubItem } from './ChubItem'
 import { chubStore } from '../../store/chub'
 import ChubNavigation from './ChubNavigation'
-import { AppSchema } from '/srv/db/schema'
+import { AppSchema } from '/common/schema'
 import Loading from '/web/shared/Loading'
 
 const BookList: Component<{

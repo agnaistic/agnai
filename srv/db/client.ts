@@ -1,7 +1,7 @@
 import { Db, MongoClient } from 'mongodb'
 import { config } from '../config'
 import { logger } from '../logger'
-import { AllDoc, Doc } from './schema'
+import { AllDoc, Doc } from '../../common/schema'
 
 const uri = `mongodb://${config.db.host}:${config.db.port}`
 let connected = false
