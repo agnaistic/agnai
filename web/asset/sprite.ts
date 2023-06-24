@@ -18,6 +18,21 @@ export const attributes: SpriteAttr[] = [
   'accessories',
 ]
 
+const empty = new Set<SpriteAttr>([
+  'eye_cover_hair',
+  'blushes',
+  'glasses',
+  'accessories',
+  'headbands',
+  'freckles',
+  'headphones_base',
+])
+
+for (const attr of attributes) {
+  if (!empty.has(attr)) continue
+  manifest.attributes[attr].push('none')
+}
+
 export type SpriteAttr =
   | 'accessories'
   | 'back_hair'
@@ -49,14 +64,18 @@ export const emoteMap: Record<SpriteEmote, string> = {
   neutral: 'neutral',
 }
 
-export type SpriteBody = Record<SpriteAttr, string>
+export type SpriteBody = Record<SpriteAttr, string> & {
+  /** Hex. E.g. #ffffff */
+  eyeColor?: string
 
-export const defaultBody = attributes.reduce((prev, curr) => {
-  const rand = randomExpression(curr)
-  return Object.assign(prev, { [curr]: rand })
-}, {}) as SpriteBody
+  /** Hex. E.g. #ffffff */
+  bodyColor?: string
 
-console.log(defaultBody)
+  /** Hex. E.g. #ffffff */
+  hairColor?: string
+}
+
+export const defaultBody = getRandomBody()
 
 export function randomExpression(attr: SpriteAttr) {
   const idx = Math.floor(Math.random() * manifest.attributes[attr].length)
@@ -64,7 +83,7 @@ export function randomExpression(attr: SpriteAttr) {
 }
 
 type Manifest = {
-  attributes: Record<SpriteAttr, string>
+  attributes: Record<SpriteAttr, string[]>
 } & { [key in SpriteAttr]: Record<string, string[]> }
 
 export function getRandomBody() {
@@ -73,5 +92,16 @@ export function getRandomBody() {
     return Object.assign(prev, { [curr]: rand })
   }, {}) as SpriteBody
 
+  body.eyeColor = randomHex()
+  body.bodyColor = randomHex()
+  body.hairColor = randomHex()
+
   return body
+}
+
+function randomHex() {
+  const values = Array.from({ length: 6 }, (v) => Math.floor(Math.random() * 16))
+    .map((v) => v.toString(16))
+    .join('')
+  return '#' + values
 }

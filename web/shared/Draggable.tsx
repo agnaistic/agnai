@@ -7,6 +7,11 @@ document.addEventListener('mousemove', (ev) => {
   mousePos.y = ev.clientY
 })
 
+document.addEventListener('touchmove', (ev) => {
+  mousePos.x = ev.touches[0].clientX
+  mousePos.y = ev.touches[0].clientY
+})
+
 const Draggable: Component<{
   onChange: (deltaX: number, deltaY: number) => void
   onDone: (deltaX: number, deltaY: number) => void
@@ -28,6 +33,7 @@ const Draggable: Component<{
     }
 
     document.addEventListener('mouseup', listener)
+    document.addEventListener('touchend', listener)
 
     const timer = setInterval(() => {
       if (!watch()) return
@@ -39,13 +45,21 @@ const Draggable: Component<{
     return () => {
       clearInterval(timer)
       document.removeEventListener('mouseup', listener)
+      document.removeEventListener('touchend', listener)
     }
   })
 
   return (
     <div
-      class="select-all"
       draggable
+      class="select-all"
+      onTouchStart={(ev) => {
+        mousePos.x = ev.touches[0].clientX
+        mousePos.y = ev.touches[0].clientY
+        setWatch(true)
+        setX(ev.touches[0].clientX)
+        setY(ev.touches[0].clientY)
+      }}
       onMouseDown={(ev) => {
         setWatch(true)
         setX(ev.clientX)

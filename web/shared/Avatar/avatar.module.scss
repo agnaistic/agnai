@@ -2,11 +2,11 @@
 }
 
 .main {
-  @apply w-full bg-[var(--bg-800)];
+  @apply w-full pb-4;
 
   display: grid;
   grid-template-rows: auto;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: auto auto auto;
 
   grid-template-areas:
     'header header header'
@@ -31,13 +31,16 @@
 
 .preview {
   grid-area: preview;
+  @apply flex justify-center;
 }
 
 .left {
   grid-area: left;
   @apply flex flex-col items-end gap-2;
+  @apply hidden sm:flex;
 }
 
 .right {
   grid-area: right;
+  @apply hidden sm:flex;
 }

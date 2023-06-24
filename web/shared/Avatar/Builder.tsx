@@ -1,7 +1,14 @@
 import imgs from '../../asset/sprites/images/*.png'
 import styles from './avatar.module.scss'
-import { Component, For, JSX, createEffect, createMemo, createSignal, onMount } from 'solid-js'
-import PageHeader from '../PageHeader'
+import {
+  Component,
+  For,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from 'solid-js'
 import {
   SpriteAttr,
   SpriteBody,
@@ -11,17 +18,52 @@ import {
   manifest,
   randomExpression,
 } from '/web/asset/sprite'
+import PageHeader from '../PageHeader'
 import Button from '../Button'
-import { ArrowLeft, ArrowRight, Dices, Move, MoveDiagonal2 } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, Dices, MoveDiagonal2 } from 'lucide-solid'
 import Draggable from '../Draggable'
 import Select from '../Select'
+import { createDebounce, hexToRgb } from '../util'
+import ColorPicker from '../ColorPicker'
+
+const IS_HAIR: { [key in SpriteAttr]?: boolean } = {
+  back_hair: true,
+  front_hair: true,
+  eye_cover_hair: true,
+}
+
+const IS_BODY: { [key in SpriteAttr]?: boolean } = {
+  body: true,
+}
+
+const IS_EYES: { [key in SpriteAttr]?: boolean } = {
+  eyes: true,
+}
+
+const RECOLOR: { [key in SpriteAttr]?: boolean } = {
+  eyes: true,
+  body: true,
+  back_hair: true,
+  front_hair: true,
+  eye_cover_hair: true,
+}
+
+const RATIO = 1200 / 1000
 
 const Builder: Component<{ resize?: boolean }> = (props) => {
-  let bound: any
+  let bound: HTMLElement = {} as any
+
   const [body, setBody] = createSignal({ ...defaultBody })
-  const [base, setBase] = createSignal({ w: 240, h: 288 })
+  const [base, setBase] = createSignal({ w: 500, h: 600 })
   const [diff, setDiff] = createSignal({ w: 0, h: 0 })
   const [attr, setAttr] = createSignal(attributes[0])
+  const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
+
+  onMount(() => {
+    const width = bound.clientWidth * 0.7
+    setBase({ w: width, h: width * RATIO })
+    setBounds(base())
+  })
 
   const dragging = (x: number, y: number) => {
     setDiff({ w: x, h: y })
@@ -43,21 +85,27 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
     return { width: width + 'px', height: height + 'px' }
   }
 
-  onMount(() => {
-    setBase({ w: bound.offsetWidth, h: bound.offsetHeight })
-  })
-
   const updateAttr = (attr: SpriteAttr, type: string) => {
     console.log(attr, '--->', type)
     setBody({ ...body(), [attr]: type })
   }
 
   const options = createMemo(() => {
-    return (
-      attributes
-        // .filter((attr) => manifest.attributes[attr].length > 1)
-        .map((value) => ({ label: value.replace(/_/g, ' '), value }))
-    )
+    return attributes
+      .slice()
+      .sort()
+      .filter((attr) => attr !== 'body')
+      .map((value) => ({ label: value.replace(/_/g, ' '), value }))
+  })
+
+  const [handleColor, disposeColor] = createDebounce((hex: string) => {
+    const prop = getColorProp(attr())
+    if (!prop) return
+    setBody({ ...body(), [prop]: hex })
+  }, 16)
+
+  onCleanup(() => {
+    disposeColor()
   })
 
   return (
@@ -68,25 +116,12 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
           <header class={`flex w-full items-center justify-center ${styles.header}`}>
             Character builder
           </header>
-          <section class={styles.left}>
-            <AttributeSelect attr="mouths" type={body().mouths} update={updateAttr} />
-          </section>
 
-          <section ref={bound} class={styles.preview}>
-            {/* <FullBody gender="female" body={body()} style={getStyle()}>
-              <div class="absolute left-0 top-0">
-                <Move />
-              </div>
-              <div class="absolute bottom-0 right-0">
-                <Draggable onChange={dragging} onDone={dragged}>
-                  <MoveDiagonal2 />
-                </Draggable>
-              </div>
-            </FullBody> */}
+          <section ref={bound!} class={`${styles.preview}`}>
             <BodyCanvas gender="female" body={body()} style={getStyle()}>
-              <div class="absolute left-0 top-0">
+              {/* <div class="absolute left-0 top-0">
                 <Move />
-              </div>
+              </div> */}
               <div class="absolute bottom-0 right-0">
                 <Draggable onChange={dragging} onDone={dragged}>
                   <MoveDiagonal2 />
@@ -95,17 +130,26 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
             </BodyCanvas>
           </section>
 
-          <section class={styles.right}>Right</section>
+          {/* <section class={styles.right}>Right</section> */}
           <footer class={`${styles.footer} mt-2 flex w-full justify-center gap-2`}>
             <div class="flex flex-col items-center gap-2">
-              <AttributeSelect attr={attr()} type={body()[attr()]} update={updateAttr} />
-              <div class="flex gap-2">
+              <div class="flex items-center gap-1">
                 <Select
                   fieldName="attribute"
                   items={options()}
                   value={attr()}
                   onChange={(value) => setAttr(value.value as any)}
                 />
+                <AttributeSelect attr={attr()} type={body()[attr()]} update={updateAttr} />
+              </div>
+              <div class="flex items-center gap-2">
+                <ColorPicker
+                  fieldName="color"
+                  onInput={handleColor}
+                  disabled={!RECOLOR[attr()]}
+                  value={getAttrColor(body(), attr())}
+                />
+
                 <Button onClick={() => setBody(getRandomBody())}>
                   <Dices />
                 </Button>
@@ -118,127 +162,72 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
   )
 }
 
-const FullBody: Component<{
-  gender: string
-  style: { width: string; height: string }
-  children?: any
-  body: SpriteBody
-}> = (props) => {
-  return (
-    <div
-      class="relative h-72 w-60 select-none border-[1px] border-[var(--bg-900)]"
-      style={props.style}
-    >
-      <For each={attributes}>
-        {(attr) => <Attribute gender={props.gender} attr={attr} type={props.body[attr]} />}
-      </For>
-      {props.children}
-    </div>
-  )
-}
-
 const BodyCanvas: Component<{
   gender: string
   style: { width: string; height: string }
   children?: any
   body: SpriteBody
 }> = (props) => {
-  let ref: HTMLCanvasElement
-
-  // const [elems, setElems] = createSignal<HTMLImageElement[]>([])
-
-  // createEffect(() => {
-  //   ref.style.width = props.style.width
-  //   ref.style.height = props.style.height
-  // })
-
-  // createEffect(async () => {
-  //   const ctx = ref.getContext('2d')
-  //   if (!ctx) return
-  //   ctx.clearRect(0, 0, ref.width, ref.height)
-  //   ctx.imageSmoothingEnabled = false
-  //   ctx.imageSmoothingQuality = 'high'
-
-  //   const promises: Array<Promise<HTMLImageElement>> = []
-
-  //   for (const attr of attributes) {
-  //     const type = props.body[attr]
-  //     if (type === 'none') continue
-
-  //     for (const file of manifest[attr][type]) {
-  //       const image = asyncImage(toImage(props.gender, attr, type, file))
-  //       promises.push(image)
-  //     }
-  //   }
-
-  //   const images = await Promise.all(promises)
-  //   setElems(images)
-  //   for (const image of images) {
-  //     ctx.drawImage(image, 0, 0, ref.width, ref.height)
-  //     if (image.src.includes('eye_cover_hair')) {
-  //       const orig = ctx.globalCompositeOperation
-  //       ctx.globalCompositeOperation = 'source-in'
-  //       ctx.fillStyle = 'red'
-  //       ctx.fillRect(0, 0, 1000, 1200)
-  //       ctx.fillStyle = ''
-  //       ctx.globalCompositeOperation = orig
-
-  //       ctx
-
-  //       // image.ctx.fillStyle = color
-  //       // image.ctx.globalCompositeOperation = 'color'
-  //       // image.ctx.fillRect(0, 0, image.width, image.height)
-  //       // image.ctx.globalCompositeOperation = ''
-  //     }
-  //   }
-  // })
-
   return (
     <div
-      class="relative h-72 w-60 select-none border-[1px] border-[var(--bg-900)]"
+      class="relative h-[400px] w-[360px] select-none border-[1px] border-[var(--bg-900)]"
       style={props.style}
     >
-      <For each={Object.entries(props.body)}>
-        {([attr, type], i) => {
+      <For each={attributes}>
+        {(attr, i) => {
           return (
             <CanvasPart
               gender={props.gender}
-              attr={attr as any}
-              type={type}
+              attr={attr}
+              type={props.body[attr]}
               style={props.style}
-              color={'red'}
+              body={props.body}
             />
           )
         }}
       </For>
-      {/* <canvas ref={ref!} width={1000} height={1200}></canvas> */}
       {props.children}
     </div>
   )
 }
 
-const CanvasPart: Component<{
+type CanvasProps = {
   gender: string
   attr: SpriteAttr
   type: string
-  color?: string
+  body: SpriteBody
   style: { width: string; height: string }
-}> = (props) => {
+}
+
+const CanvasPart: Component<CanvasProps> = (props) => {
   let top: HTMLCanvasElement
   let bottom: HTMLCanvasElement
 
+  const [state, setState] = createSignal('')
+
   createEffect(() => {
+    top.style.aspectRatio = '1 / 1.2'
     top.style.width = props.style.width
     top.style.height = props.style.height
+    bottom.style.aspectRatio = '1 / 1.2'
     bottom.style.width = props.style.width
     bottom.style.height = props.style.height
   })
 
   createEffect(async () => {
-    if (props.type === 'none') return
+    const hash = getHash(props)
+    if (hash === state()) return
+
+    setState(hash)
+
     const ctx = top.getContext('2d')
     const over = bottom.getContext('2d')
     if (!ctx || !over) return
+
+    ctx.clearRect(0, 0, top.width, top.height)
+    over.clearRect(0, 0, top.width, top.height)
+
+    if (!props.type || props.type === 'none') return
 
     const promises: Array<Promise<HTMLImageElement>> = []
 
@@ -252,25 +241,21 @@ const CanvasPart: Component<{
     for (const image of images) {
       ctx.drawImage(image, 0, 0, top.width, top.height)
 
-      if (image.src.includes('cover_hair') && image.src.includes('base.')) {
+      // For particular attributes we will render a second re-colored image on top of the original
+      const shouldColor = canColor(props.attr, image.src)
+      const prop = getColorProp(props.attr)
+      const color = prop ? props.body[prop] : undefined
+
+      if (shouldColor && color) {
+        const { r, g, b } = hexToRgb(color)!
         over.drawImage(image, 0, 0, top.width, top.height)
         const orig = over.globalCompositeOperation
-        over.fillStyle = 'rgba(255,0,0, 0.5)'
+        over.fillStyle = `rgba(${r}, ${g}, ${b}, 0.6)`
         over.globalCompositeOperation = 'source-in'
         over.fillRect(0, 0, 1000, 1200)
-        // ctx.globalCompositeOperation = 'source-in'
-        // ctx.globalCompositeOperation = 'source-over'
-        // ctx.drawImage(image, 0, 0)
-        // ctx.globalCompositeOperation = 'source-over'
         over.fillStyle = ''
         over.globalCompositeOperation = orig
-        // ctx
-        // image.ctx.fillStyle = color
-        // image.ctx.globalCompositeOperation = 'color'
-        // image.ctx.fillRect(0, 0, image.width, image.height)
-        // image.ctx.globalCompositeOperation = ''
       }
-      // ctx.drawImage(image, 0, 0, ref.width, ref.height)
     }
   })
 
@@ -278,28 +263,6 @@ const CanvasPart: Component<{
     <>
       <canvas class="absolute left-0 top-0" ref={top!} width={1000} height={1200}></canvas>
       <canvas class="absolute left-0 top-0" ref={bottom!} width={1000} height={1200}></canvas>
-    </>
-  )
-}
-
-const Attribute: Component<{
-  gender: string
-  attr: SpriteAttr
-  type: string
-  ready?: (state: boolean) => void
-}> = (props) => {
-  const images = createMemo(() => {
-    if (!props.type || props.type === 'none') return []
-
-    const names = manifest[props.attr][props.type]
-    return names.map((file) => toImage(props.gender, props.attr, props.type, file))
-  })
-
-  return (
-    <>
-      <For each={images()}>
-        {(src, i) => <img class="absolute left-0 top-0 h-full w-full" src={src} />}
-      </For>
     </>
   )
 }
@@ -315,7 +278,7 @@ const AttributeSelect: Component<{
   }
 
   const move = (dir: -1 | 1) => {
-    const opts = manifest.attributes[props.attr].concat('none')
+    const opts = manifest.attributes[props.attr]
     let curr = opts.indexOf(props.type) + dir
 
     if (curr < 0) curr = opts.length - 1
@@ -329,32 +292,15 @@ const AttributeSelect: Component<{
       <Button schema="hollow" onClick={() => move(-1)}>
         <ArrowLeft size={14} />
       </Button>
-      <Button schema="hollow">
-        <Dices size={14} onClick={random} />
+      <Button schema="hollow" onClick={random}>
+        <Dices size={14} />
       </Button>
-      <Button schema="hollow">
-        <ArrowRight size={14} onClick={() => move(1)} />
+      <Button schema="hollow" onClick={() => move(1)}>
+        <ArrowRight size={14} />
       </Button>
     </div>
   )
 }
-
-// const Sect: Component<{ gender: string; attr: SpriteAttr; type: string }> = (props) => {
-//   const images = createMemo(() => manifest[props.attr][props.type])
-
-//   return (
-//     <>
-//       <For each={images()}>
-//         {(img) => (
-//           <img
-//             class="absolute left-0 top-0"
-//             src={toImage(props.gender, props.attr, props.type, img)}
-//           />
-//         )}
-//       </For>
-//     </>
-//   )
-// }
 
 export default Builder
 
@@ -375,16 +321,29 @@ function asyncImage(src: string) {
   })
 }
 
-function imageToCanvas(image: HTMLImageElement) {
-  const c = document.createElement('canvas')
-  c.width = image.naturalWidth
-  c.height = image.naturalHeight
-  const context = c.getContext('2d')!
-  context.drawImage(image, 0, 0)
+function canColor(attr: SpriteAttr, file: string) {
+  if (!RECOLOR[attr]) return false
 
-  //restore
-  context.clearRect(0, 0, image.width, image.height)
-  context.drawImage(image, 0, 0)
+  if (attr === 'body' && file.includes('skin.')) return true
+  return file.includes('base.')
+}
 
-  return { canvas: c, context }
+function getColorProp(attr: SpriteAttr): keyof SpriteBody | void {
+  if (IS_BODY[attr]) return 'bodyColor'
+  if (IS_EYES[attr]) return 'eyeColor'
+  if (IS_HAIR[attr]) return 'hairColor'
+}
+
+function getHash({ body, attr, type, gender }: CanvasProps) {
+  const prop = getColorProp(attr)
+  const color = prop ? body[prop] : 'none'
+
+  return `${attr}-${type}-${gender}-${color}`
+}
+
+function getAttrColor(body: SpriteBody, attr: SpriteAttr) {
+  const prop = getColorProp(attr)
+  if (!prop) return '#000000'
+
+  return body[prop] || '#000000'
 }
