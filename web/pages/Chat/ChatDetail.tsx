@@ -88,7 +88,7 @@ const ChatDetail: Component = () => {
   })
 
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
-  const botGreeting = createMemo(() => chats.char?.greeting)
+  const botGreeting = createMemo(() => chats.char?.greeting || '')
   const altGreetings = createMemo(() => chats.char?.alternateGreetings ?? [])
 
   const retries = createMemo(() => {
@@ -252,7 +252,7 @@ const ChatDetail: Component = () => {
   createEffect(() => {
     if (isGreetingOnlyMsg() && botGreeting() && altGreetings().length > 0) {
       const currentChoice = msgs.msgs[0].msg
-      const allGreetings = [botGreeting(), ...altGreetings()]
+      const allGreetings = [botGreeting(), ...altGreetings()].filter((text) => !!text)
       const currentChoiceIndex = allGreetings.findIndex((greeting) => greeting === currentChoice)
       const greetingsWithCurrentChoiceFirst = cycleArray(allGreetings, currentChoiceIndex)
       msgStore.setGreetingSwipes(msgs.msgs[0]._id, greetingsWithCurrentChoiceFirst)
