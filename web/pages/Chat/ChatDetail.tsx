@@ -88,8 +88,8 @@ const ChatDetail: Component = () => {
   })
 
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
-  const botGreeting = createMemo(() => chars.chatBots[0]?.greeting)
-  const altGreetings = createMemo(() => chars.chatBots[0]?.alternateGreetings ?? [])
+  const botGreeting = createMemo(() => chats.char?.greeting)
+  const altGreetings = createMemo(() => chats.char?.alternateGreetings ?? [])
 
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
