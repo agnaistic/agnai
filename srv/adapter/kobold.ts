@@ -5,7 +5,7 @@ import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/
 import { ModelAdapter } from './type'
 import { needleToSSE } from './stream'
 
-const MIN_STREAMING_KCPPVERSION = "1.30";
+const MIN_STREAMING_KCPPVERSION = '1.30'
 const REQUIRED_SAMPLERS = defaultPresets.basic.order
 
 const base = {
@@ -27,7 +27,7 @@ export const handleKobold: ModelAdapter = async function* ({
 }) {
   const body = { ...base, ...settings, prompt }
 
-  const baseURL = `${normalizeUrl(user.koboldUrl)}`;
+  const baseURL = `${normalizeUrl(user.koboldUrl)}`
 
   // Kobold has a stop requence parameter which automatically
   // halts generation when a certain token is generated
@@ -62,10 +62,10 @@ export const handleKobold: ModelAdapter = async function* ({
   // Only KoboldCPP at version 1.30 and higher has streaming support
   const isStreamSupported = checkStreamSupported(`${baseURL}/api/extra/version`)
 
-  const stream = (opts.gen.streamResponse && isStreamSupported) ?
-    streamCompletition(`${baseURL}/api/extra/generate/stream`, body) : 
-    fullCompletion(`${baseURL}/api/v1/generate`, body)
-
+  const stream =
+    opts.gen.streamResponse && isStreamSupported
+      ? streamCompletition(`${baseURL}/api/extra/generate/stream`, body)
+      : fullCompletion(`${baseURL}/api/v1/generate`, body)
 
   let accum = ''
 
@@ -80,8 +80,8 @@ export const handleKobold: ModelAdapter = async function* ({
     }
 
     if ('token' in generated.value) {
-        accum += generated.value.token
-        yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, characters, members) }
+      accum += generated.value.token
+      yield { partial: sanitiseAndTrim(accum, prompt, opts.replyAs, characters, members) }
     }
 
     if ('tokens' in generated.value) {
@@ -100,20 +100,23 @@ export const handleKobold: ModelAdapter = async function* ({
 }
 
 const checkStreamSupported = async function* (versioncheckURL: any) {
-  const result = await needle("get", versioncheckURL);
+  const result = await needle('get', versioncheckURL)
 
-  if (result.statusCode != 200 || result.errored) return false;
+  if (result.statusCode != 200 || result.errored) return false
 
-  const { body } = result;
+  const { body } = result
 
-  if (body.result != "KoboldCpp") return false;
+  if (body.result != 'KoboldCpp') return false
 
+  if (
+    (body.version ?? '0.0').localeCompare(MIN_STREAMING_KCPPVERSION, undefined, {
+      numeric: true,
+      sensitivity: 'base',
+    }) > -1
+  )
+    return false
 
-  if ((body.version ?? "0.0").localeCompare(MIN_STREAMING_KCPPVERSION, undefined, {
-    numeric: true, sensitivity: 'base'
-  }) > -1) return false;
-
-  return true;
+  return true
 }
 
 const fullCompletion = async function* (genURL: string, body: any) {
@@ -136,11 +139,11 @@ const fullCompletion = async function* (genURL: string, body: any) {
   const text = resp.body.results?.[0]?.text as string
 
   if (text) {
-    return { tokens: text };
+    return { tokens: text }
   } else {
     logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
     yield { error: `Kobold failed to generate a response: ${resp.body}` }
-    return;
+    return
   }
 }
 
