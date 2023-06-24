@@ -152,7 +152,7 @@ const InputBar: Component<{
         value={text()}
         placeholder={placeholder()}
         parentClass="flex w-full"
-        class="h-full rounded-md rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
+        class="input-bar h-full rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           if (ev.key === 'Enter' && !ev.shiftKey) {
             send()
