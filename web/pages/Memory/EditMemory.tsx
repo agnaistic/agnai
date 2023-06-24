@@ -38,7 +38,6 @@ const EditMemoryForm: Component<{
   const change = (book: AppSchema.MemoryBook) => {
     setEditing(book)
     props.onChange?.(book)
-    console.log(book)
   }
 
   const addEntry = () => {

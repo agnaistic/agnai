@@ -27,7 +27,6 @@
 
 .footer {
   grid-area: footer;
-  height: 48px;
 }
 
 .preview {
@@ -36,6 +35,7 @@
 
 .left {
   grid-area: left;
+  @apply flex flex-col items-end gap-2;
 }
 
 .right {

@@ -3,7 +3,7 @@ const path = require('path')
 
 const sprites = path.resolve('./web/asset/sprites')
 
-const map = { attritutes: {} }
+const map = { attributes: {} }
 
 const names = fs.readdirSync(sprites)
 
@@ -32,11 +32,11 @@ for (const name of names) {
 }
 
 for (const [attr, types] of attrs.entries()) {
-  map.attritutes[attr] = Array.from(types.keys())
+  map.attributes[attr] = Array.from(types.keys())
 }
 
 fs.writeFileSync(path.join(sprites, 'manifest.json'), JSON.stringify(map, null, 2))
-console.log(JSON.stringify(map.attritutes, null, 2))
+console.log(JSON.stringify(map.attributes, null, 2))
 
 function scan(folder) {
   const names = fs.readdirSync(folder)

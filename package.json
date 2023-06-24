@@ -98,6 +98,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.20.12",
+    "@parcel/config-default": "^2.9.2",
+    "@parcel/resolver-glob": "^2.9.2",
     "@parcel/transformer-inline-string": "2.8.3",
     "@parcel/transformer-sass": "2.9.2",
     "@solidjs/router": "^0.6.0",
