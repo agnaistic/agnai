@@ -55,6 +55,7 @@ import {
   insertImageMessages,
   SwipeMessage,
 } from './helpers'
+import { AvatarContainer } from '/web/shared/Avatar/Builder'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -93,6 +94,7 @@ const ChatDetail: Component = () => {
     return true
   })
 
+  const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
   const botGreeting = createMemo(() => chats.char?.greeting || '')
   const altGreetings = createMemo(() => chats.char?.alternateGreetings ?? [])
@@ -350,6 +352,8 @@ const ChatDetail: Component = () => {
     }
   })
 
+  let container: HTMLDivElement
+
   return (
     <>
       <Show when={!chats.loaded}>
@@ -360,7 +364,7 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <main class="mx-auto flex w-full justify-between gap-4">
           <div
-            class={`chat-detail gap-1 sm:gap-2 ${chatMargin()} ${chatWidth()} mx-auto flex flex-col pb-1 xs:flex sm:py-2`}
+            class={`${chatGrid()} gap-1 sm:gap-2 ${chatMargin()} ${chatWidth()} mx-auto flex flex-col pb-1 xs:flex sm:py-2`}
           >
             <header
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
@@ -420,6 +424,12 @@ const ChatDetail: Component = () => {
                 </Show>
               </div>
             </header>
+
+            <Show when={user.ui.chatAvatarMode}>
+              <section ref={container!} class="h-full w-full">
+                <AvatarContainer container={container!} gender="male" />
+              </section>
+            </Show>
 
             <section
               class={`overflow-y-none flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}

@@ -26,8 +26,6 @@ import Select from '../Select'
 import { createDebounce, hexToRgb } from '../util'
 import ColorPicker from '../ColorPicker'
 
-console.log(imgs.blank)
-
 const IS_HAIR: { [key in SpriteAttr]?: boolean } = {
   back_hair: true,
   front_hair: true,
@@ -148,7 +146,7 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
             class={`${styles.preview} relative h-full w-full select-none border-[1px] border-[var(--bg-900)]`}
           >
             <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
-            <BodyCanvas gender="female" body={body()} style={getStyle()}></BodyCanvas>
+            <AvatarCanvas gender="female" body={body()} style={getStyle()}></AvatarCanvas>
             {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
           </section>
         </main>
@@ -157,7 +155,52 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
   )
 }
 
-const BodyCanvas: Component<{
+export const AvatarContainer: Component<{
+  container: HTMLElement
+  gender: string
+  body?: SpriteBody
+}> = (props) => {
+  let bound: HTMLDivElement = {} as any
+  const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
+  const [obs] = createSignal(
+    new ResizeObserver(() => {
+      setBounds({ w: props.container.clientWidth, h: props.container.clientHeight })
+    })
+  )
+
+  onMount(() => {
+    setBounds({ w: props.container.clientWidth, h: props.container.clientHeight })
+    obs().observe(props.container)
+  })
+
+  onCleanup(() => {
+    obs().disconnect()
+  })
+
+  const body = createMemo(() => props.body || getRandomBody())
+
+  const getStyle = createMemo(() => {
+    const max = bounds()
+
+    if (max.w * RATIO < max.h) return { width: max.w + 'px', height: max.w * RATIO + 'px' }
+    if (max.h / RATIO < max.w) return { width: max.h / RATIO + 'px', height: max.h + 'px' }
+
+    return { width: max.w + 'px', height: max.h + 'px' }
+  })
+
+  return (
+    <div
+      ref={bound!}
+      class={`${styles.preview} relative h-full w-full select-none border-[1px] border-[var(--bg-900)]`}
+    >
+      <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
+      <AvatarCanvas gender="female" body={body()} style={getStyle()}></AvatarCanvas>
+      {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
+    </div>
+  )
+}
+
+export const AvatarCanvas: Component<{
   gender: string
   style: { width: string; height: string }
   children?: any

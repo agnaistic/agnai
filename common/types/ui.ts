@@ -44,6 +44,7 @@ export type UISettings = {
   bgCustom: string
   bgCustomGradient: string
 
+  chatAvatarMode?: boolean
   avatarSize: AvatarSize
   avatarCorners: AvatarCornerRadius
   font: FontSetting
@@ -74,6 +75,7 @@ export const uiGuard = {
   bgCustom: 'string',
   bgCustomGradient: 'string',
 
+  chatAvatarMode: 'boolean?',
   avatarSize: AVATAR_SIZES,
   avatarCorners: AVATAR_CORNERS,
   font: UI_FONT,
@@ -103,6 +105,7 @@ export const defaultUIsettings: UISettings = {
   chatTextColor: '--text-800',
   chatEmphasisColor: '--text-600',
   chatWidth: 'full',
+  chatAvatarMode: true,
   logPromptsToBrowserConsole: false,
   imageWrap: false,
 
