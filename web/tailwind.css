@@ -455,25 +455,60 @@ textarea:disabled {
   @apply font-normal text-[var(--hl-200)];
 }
 
-.markdown > ul {
-  @apply ml-6;
+.markdown ul {
+  @apply pl-5;
+  list-style-type: disc;
+  list-style-position: inside;
+}
+
+.markdown ol {
+  @apply pl-5;
+  counter-reset: item;
+  list-style-position: inside;
+}
+
+.markdown ul > li {
+  @apply ml-5;
   list-style-type: disc;
 }
 
-.markdown > ol {
-  @apply ml-6;
-  list-style-type: decimal;
+.markdown ol > li {
+  counter-increment: item;
+}
+
+.markdown ol > li::before {
+  content: counters(item, '.') '. ';
 }
 
 .markdown > ul > li > ul {
-  @apply ml-6;
+  @apply pl-5;
   list-style-type: circle;
+  list-style-position: inside;
 }
 
 .markdown > blockquote {
   @apply pl-4;
   border-left: 0.25em solid var(--bg-300);
 }
+
+.markdown ul > li {
+  list-style-type: disc;
+}
+.markdown ul > li > ul > li {
+  list-style-type: circle;
+}
+.markdown ul > li > ul > li > ul > li {
+  list-style-type: square;
+}
+/* .markdown ul ul ul ul li {
+  list-style: disc;
+}
+.markdown ul ul ul ul ul li {
+  list-style: circle;
+}
+.markdown ul ul ul ul ul ul li {
+  list-style: square;
+} */
 
 .overlay {
   position: fixed; /* Sit on top of the page content */

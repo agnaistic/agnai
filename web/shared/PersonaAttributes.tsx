@@ -114,7 +114,7 @@ const PersonaAttributes: Component<{
             class="text-input-min-h-override"
             value={props.value?.text?.[0]}
             isMultiline
-            placeholder="{{char}}'s name is Johnny Bravo, a tall, muscular, handsome man who is very flirtatious towards {{user}}."
+            placeholder="{{char}} is a tall man who likes {{user}}."
             tokenCount={() => updateCount()}
             disabled={props.disabled}
           />

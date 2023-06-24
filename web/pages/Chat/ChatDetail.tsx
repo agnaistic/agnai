@@ -354,7 +354,7 @@ const ChatDetail: Component = () => {
       <Show when={chats.chat}>
         <main class="mx-auto flex w-full justify-between gap-4">
           <div
-            class={`chat-detail ${chatMargin()} ${chatWidth()} mx-auto flex flex-col pb-1 xs:flex sm:py-2`}
+            class={`chat-detail gap-1 sm:gap-2 ${chatMargin()} ${chatWidth()} mx-auto flex flex-col pb-1 xs:flex sm:py-2`}
           >
             <header
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
@@ -421,7 +421,7 @@ const ChatDetail: Component = () => {
             >
               <section
                 data-messages
-                class={`flex flex-col-reverse gap-4 overflow-y-auto sm:pr-2 ${msgsMaxWidth()} w-full`}
+                class={`flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
               >
                 <div id="chat-messages" class="flex w-full flex-col gap-2">
                   <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>

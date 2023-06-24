@@ -1,3 +1,22 @@
+.chat-detail {
+  display: grid;
+  height: calc(100vh - 48px);
+  height: calc(100dvh - 48px);
+  max-height: 100vh;
+  max-height: 100dvh;
+  width: 100%;
+  grid-template-rows: 1fr auto;
+  @apply gap-1 sm:gap-2;
+}
+
+@media (min-width: 1024px) {
+  .chat-detail {
+    height: 100vh;
+    height: 100dvh;
+    grid-template-rows: auto 1fr auto;
+  }
+}
+
 .chat {
   display: grid;
 
