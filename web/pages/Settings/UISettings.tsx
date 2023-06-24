@@ -1,11 +1,11 @@
-import { Component, Show } from 'solid-js'
+import { Component, Show, onCleanup } from 'solid-js'
 import { toChar, toBotMsg, toChat, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
-import { toDropdownItems } from '../../shared/util'
+import { createDebounce, toDropdownItems } from '../../shared/util'
 import { userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
@@ -33,6 +33,14 @@ const UISettings: Component = () => {
     userStore.setBackground(result)
   }
 
+  const [tryCustomUI, unsubCustomUi] = createDebounce((update: Partial<UI.CustomUI>) => {
+    userStore.tryCustomUI(update)
+  }, 50)
+
+  onCleanup(() => {
+    unsubCustomUi()
+  })
+
   return (
     <>
       <h3 class="text-lg font-bold">Theme</h3>
@@ -42,7 +50,7 @@ const UISettings: Component = () => {
           items={themeOptions}
           label="Color"
           value={state.ui.theme}
-          onChange={(item) => userStore.updateUI({ theme: item.value as any })}
+          onChange={(item) => userStore.saveUI({ theme: item.value as any })}
         />
 
         <Select
@@ -53,7 +61,7 @@ const UISettings: Component = () => {
             { label: 'Light', value: 'light' },
           ]}
           value={state.ui.mode}
-          onChange={(item) => userStore.updateUI({ mode: item.value as any })}
+          onChange={(item) => userStore.saveUI({ mode: item.value as any })}
         />
       </div>
       <div class="flex flex-col">
@@ -64,7 +72,7 @@ const UISettings: Component = () => {
               <span
                 class="link"
                 onClick={() =>
-                  userStore.updateUI({
+                  userStore.saveUI({
                     bgCustom: '',
                     bgCustomGradient: '',
                     themeBg: UI.BG_THEME[0],
@@ -82,19 +90,15 @@ const UISettings: Component = () => {
             items={themeBgOptions}
             value={state.ui.themeBg}
             onChange={(item) =>
-              userStore.updateUI({ themeBg: item.value as any, bgCustom: undefined })
+              userStore.saveUI({ themeBg: item.value as any, bgCustom: undefined })
             }
           />
           <ColorPicker
             fieldName="customBg"
-            onChange={(color) => userStore.updateUI({ bgCustom: color, themeBg: undefined })}
-            value={state.ui.bgCustom}
+            onChange={(color) => userStore.saveCustomUI({ bgCustom: color })}
+            onInput={(color) => tryCustomUI({ bgCustom: color })}
+            value={state.current.bgCustom || state.ui.bgCustom}
           />
-          {/* <ColorPicker
-          fieldName="customBgGradient"
-          onChange={(color) => userStore.updateUI({ bgCustomGradient: color })}
-          value={state.ui.bgCustomGradient}
-        /> */}
         </div>
       </div>
       <Select
@@ -105,7 +109,7 @@ const UISettings: Component = () => {
           { label: 'Lato (Roko)', value: 'lato' },
         ]}
         value={state.ui.font}
-        onChange={(item) => userStore.updateUI({ font: item.value as any })}
+        onChange={(item) => userStore.saveUI({ font: item.value as any })}
       />
 
       <h4 class="text-md font-bold">Chat Avatars</h4>
@@ -115,14 +119,14 @@ const UISettings: Component = () => {
           label="Size"
           items={toDropdownItems(UI.AVATAR_SIZES)}
           value={state.ui.avatarSize}
-          onChange={(item) => userStore.updateUI({ avatarSize: item.value as any })}
+          onChange={(item) => userStore.saveUI({ avatarSize: item.value as any })}
         />
         <Select
           fieldName="avatarCorners"
           label="Corner Radius"
           items={toDropdownItems(UI.AVATAR_CORNERS)}
           value={state.ui.avatarCorners}
-          onChange={(item) => userStore.updateUI({ avatarCorners: item.value as any })}
+          onChange={(item) => userStore.saveUI({ avatarCorners: item.value as any })}
         />
       </div>
 
@@ -198,7 +202,7 @@ const UISettings: Component = () => {
           { label: '3X-Large', value: '3xl' },
           { label: '100%', value: 'fill' },
         ]}
-        onChange={(item) => userStore.updateUI({ chatWidth: item.value as any })}
+        onChange={(item) => userStore.saveUI({ chatWidth: item.value as any })}
         value={state.ui.chatWidth}
       />
       <Divider />
@@ -212,14 +216,14 @@ const UISettings: Component = () => {
         helperText="The opacity of the message block in the chat window."
         min={0}
         max={1}
-        onChange={(value) => userStore.updateUI({ msgOpacity: value })}
+        onChange={(value) => userStore.saveUI({ msgOpacity: value })}
       />
 
       <Toggle
         fieldName="imageWrap"
         label="Avatar Wrap Around"
         helperText='Allow text in messages to "wrap around" avatars'
-        onChange={(value) => userStore.updateUI({ imageWrap: value })}
+        onChange={(value) => userStore.saveUI({ imageWrap: value })}
         value={state.ui.imageWrap}
       />
       <Divider />
@@ -227,7 +231,7 @@ const UISettings: Component = () => {
         fieldName="logPromptsToBrowserConsole"
         label="Log prompts to browser console"
         value={state.ui?.logPromptsToBrowserConsole ?? false}
-        onChange={(enabled) => userStore.updateUI({ logPromptsToBrowserConsole: enabled })}
+        onChange={(enabled) => userStore.saveUI({ logPromptsToBrowserConsole: enabled })}
       />
       <Divider />
       <div class="text-lg font-bold">Preview</div>

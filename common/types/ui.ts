@@ -28,6 +28,7 @@ export type FontSetting = (typeof UI_FONT)[number]
 export type ChatWidth = (typeof CHAT_WIDTHS)[number]
 
 export type CustomUI = {
+  bgCustom?: string
   msgBackground: string
   botBackground: string
   chatTextColor: string

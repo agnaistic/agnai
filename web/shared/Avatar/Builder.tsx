@@ -20,11 +20,13 @@ import {
 } from '/web/asset/sprite'
 import PageHeader from '../PageHeader'
 import Button from '../Button'
-import { ArrowLeft, ArrowRight, Dices, MoveDiagonal2 } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, Dices } from 'lucide-solid'
 import Draggable from '../Draggable'
 import Select from '../Select'
 import { createDebounce, hexToRgb } from '../util'
 import ColorPicker from '../ColorPicker'
+
+console.log(imgs.blank)
 
 const IS_HAIR: { [key in SpriteAttr]?: boolean } = {
   back_hair: true,
@@ -75,27 +77,29 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
     setDiff({ w: 0, h: 0 })
   }
 
-  const getStyle = () => {
+  const getStyle = createMemo(() => {
     const b = base()
     const d = diff()
+    const max = bounds()
 
     const width = b.w + d.w
     const height = b.h + d.h
 
-    return { width: width + 'px', height: height + 'px' }
-  }
+    return { width: Math.min(max.w, width) + 'px', height: Math.min(max.h, height) + 'px' }
+  })
 
   const updateAttr = (attr: SpriteAttr, type: string) => {
-    console.log(attr, '--->', type)
     setBody({ ...body(), [attr]: type })
   }
 
   const options = createMemo(() => {
-    return attributes
-      .slice()
-      .sort()
-      .filter((attr) => attr !== 'body')
-      .map((value) => ({ label: value.replace(/_/g, ' '), value }))
+    return (
+      attributes
+        .slice()
+        .sort()
+        // .filter((attr) => attr !== 'body')
+        .map((value) => ({ label: value.replace(/_/g, ' '), value }))
+    )
   })
 
   const [handleColor, disposeColor] = createDebounce((hex: string) => {
@@ -111,27 +115,9 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
   return (
     <>
       <PageHeader title="Character Builder" />
-      <div class="flex w-full select-none justify-center">
-        <main class={styles.main}>
-          <header class={`flex w-full items-center justify-center ${styles.header}`}>
-            Character builder
-          </header>
-
-          <section ref={bound!} class={`${styles.preview}`}>
-            <BodyCanvas gender="female" body={body()} style={getStyle()}>
-              {/* <div class="absolute left-0 top-0">
-                <Move />
-              </div> */}
-              <div class="absolute bottom-0 right-0">
-                <Draggable onChange={dragging} onDone={dragged}>
-                  <MoveDiagonal2 />
-                </Draggable>
-              </div>
-            </BodyCanvas>
-          </section>
-
-          {/* <section class={styles.right}>Right</section> */}
-          <footer class={`${styles.footer} mt-2 flex w-full justify-center gap-2`}>
+      <div class="flex select-none justify-center">
+        <main class="flex w-full flex-col">
+          <header class={`${styles.header} mt-2 flex w-full justify-center gap-2`}>
             <div class="flex flex-col items-center gap-2">
               <div class="flex items-center gap-1">
                 <Select
@@ -155,7 +141,16 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
                 </Button>
               </div>
             </div>
-          </footer>
+          </header>
+
+          <section
+            ref={bound!}
+            class={`${styles.preview} relative h-full w-full select-none border-[1px] border-[var(--bg-900)]`}
+          >
+            <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
+            <BodyCanvas gender="female" body={body()} style={getStyle()}></BodyCanvas>
+            {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
+          </section>
         </main>
       </div>
     </>
@@ -167,12 +162,10 @@ const BodyCanvas: Component<{
   style: { width: string; height: string }
   children?: any
   body: SpriteBody
+  class?: string
 }> = (props) => {
   return (
-    <div
-      class="relative h-[400px] w-[360px] select-none border-[1px] border-[var(--bg-900)]"
-      style={props.style}
-    >
+    <>
       <For each={attributes}>
         {(attr, i) => {
           return (
@@ -180,14 +173,17 @@ const BodyCanvas: Component<{
               gender={props.gender}
               attr={attr}
               type={props.body[attr]}
-              style={props.style}
+              style={{
+                width: props.style.width,
+                height: props.style.height,
+              }}
               body={props.body}
             />
           )
         }}
       </For>
       {props.children}
-    </div>
+    </>
   )
 }
 
@@ -261,8 +257,18 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 
   return (
     <>
-      <canvas class="absolute left-0 top-0" ref={top!} width={1000} height={1200}></canvas>
-      <canvas class="absolute left-0 top-0" ref={bottom!} width={1000} height={1200}></canvas>
+      <canvas
+        class="absolute left-0 right-0 top-0 mx-auto"
+        ref={top!}
+        width={1000}
+        height={1200}
+      ></canvas>
+      <canvas
+        class="absolute left-0 right-0 top-0 mx-auto"
+        ref={bottom!}
+        width={1000}
+        height={1200}
+      ></canvas>
     </>
   )
 }

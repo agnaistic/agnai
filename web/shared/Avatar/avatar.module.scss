@@ -6,7 +6,7 @@
 
   display: grid;
   grid-template-rows: auto;
-  grid-template-columns: auto auto auto;
+  grid-template-columns: auto auto;
 
   grid-template-areas:
     'header header header'
@@ -16,17 +16,11 @@
     'left preview right'
     'left preview right'
     'left preview right'
-    'left preview right'
-    'footer footer footer';
+    'left preview right';
 }
 
 .header {
   grid-area: header;
-  height: 48px;
-}
-
-.footer {
-  grid-area: footer;
 }
 
 .preview {

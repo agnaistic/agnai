@@ -92,8 +92,8 @@ export function getRandomBody() {
     return Object.assign(prev, { [curr]: rand })
   }, {}) as SpriteBody
 
+  body.bodyColor = '#ecab6f'
   body.eyeColor = randomHex()
-  body.bodyColor = randomHex()
   body.hairColor = randomHex()
 
   return body

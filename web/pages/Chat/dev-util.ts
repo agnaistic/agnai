@@ -27,11 +27,11 @@ export function devCycleAvatarSettings(user: UserState) {
     if (perm === undefined) {
       console.log('Done demonstrating avatar setting permutations, restoring original settings')
       const { avatarCorners, avatarSize } = originalSettings
-      userStore.updateUI({ avatarCorners, avatarSize })
+      userStore.saveUI({ avatarCorners, avatarSize })
     } else {
       console.log(perm)
       const { avatarCorners, avatarSize } = perm
-      userStore.updateUI({ avatarCorners, avatarSize })
+      userStore.saveUI({ avatarCorners, avatarSize })
       setTimeout(() => applyPermutations(rest), 800)
     }
   }
