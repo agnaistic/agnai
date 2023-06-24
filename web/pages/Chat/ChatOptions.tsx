@@ -64,7 +64,12 @@ const ChatOptions: Component<{
     }
     toggleScreenshot(true)
     const bgRgb = getRootRgb('bg-900')
-    domToPng(ele, { backgroundColor: `rgb(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b})` })
+    domToPng(ele, {
+      backgroundColor: `rgb(${bgRgb.r}, ${bgRgb.g}, ${bgRgb.b})`,
+      style: {
+        fontSize: '0.9em',
+      },
+    })
       .then((dataUrl) => {
         const link = document.createElement('a')
         link.download = 'agnai_chat_screenshot.png'
