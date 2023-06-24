@@ -64,7 +64,7 @@ export const handleKobold: ModelAdapter = async function* ({
 
   const stream = (opts.gen.streamResponse && isStreamSupported) ?
     streamCompletition(`${baseURL}/api/extra/generate/stream`, body) : 
-    fullCompletion(`${baseURL}/api/extra/generate/stream`, body)
+    fullCompletion(`${baseURL}/api/v1/generate`, body)
 
 
   let accum = ''
@@ -102,7 +102,7 @@ export const handleKobold: ModelAdapter = async function* ({
 const checkStreamSupported = async function* (versioncheckURL: any) {
   const result = await needle("get", versioncheckURL);
 
-  if (result.statusCode != 200) return false;
+  if (result.statusCode != 200 || result.errored) return false;
 
   const { body } = result;
 
@@ -117,7 +117,7 @@ const checkStreamSupported = async function* (versioncheckURL: any) {
 }
 
 const fullCompletion = async function* (genURL: string, body: any) {
-  const resp = await needle('post', `${genURL}/api/v1/generate`, body, {
+  const resp = await needle('post', genURL, body, {
     headers: { 'Bypass-Tunnel-Reminder': 'true' },
     json: true,
   }).catch((err) => ({ error: err }))
