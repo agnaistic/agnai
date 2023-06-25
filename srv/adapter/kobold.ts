@@ -60,7 +60,7 @@ export const handleKobold: ModelAdapter = async function* ({
   log.debug(body, 'Kobold payload')
 
   // Only KoboldCPP at version 1.30 and higher has streaming support
-  const isStreamSupported = checkStreamSupported(`${baseURL}/api/extra/version`)
+  const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
 
   const stream =
     opts.gen.streamResponse && isStreamSupported
@@ -99,7 +99,7 @@ export const handleKobold: ModelAdapter = async function* ({
   yield trimmed || parsed
 }
 
-const checkStreamSupported = async function* (versioncheckURL: any) {
+const checkStreamSupported = async function (versioncheckURL: any) {
   const result = await needle('get', versioncheckURL)
 
   if (result.statusCode != 200 || result.errored) return false
@@ -108,13 +108,13 @@ const checkStreamSupported = async function* (versioncheckURL: any) {
 
   if (body.result != 'KoboldCpp') return false
 
-  if (
+  const isSupportedVersion =
     (body.version ?? '0.0').localeCompare(MIN_STREAMING_KCPPVERSION, undefined, {
       numeric: true,
       sensitivity: 'base',
     }) > -1
-  )
-    return false
+
+  if (!isSupportedVersion) return false
 
   return true
 }
