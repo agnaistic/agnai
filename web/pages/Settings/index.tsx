@@ -122,9 +122,22 @@ const Settings: Component = () => {
 
   const tabClass = `flex flex-col gap-4`
 
+  const version = (window.agnai_version?.includes('unknown') ? '' : window.agnai_version).slice(
+    0,
+    7
+  )
+
   return (
     <>
-      <PageHeader title="Settings" subtitle="Configuration" noDivider />
+      <PageHeader
+        title="Settings"
+        subtitle={
+          <Show when={!!version}>
+            <em>v.{version}</em>
+          </Show>
+        }
+        noDivider
+      />
 
       <div class="my-2">
         <Tabs tabs={tabs.map((t) => settingTabs[t])} selected={tab} select={setTab} />

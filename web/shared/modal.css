@@ -29,3 +29,9 @@
     min-height: calc(75dvh - 132px);
   }
 }
+
+.modal-body {
+  @apply flex items-center;
+  height: 100vh;
+  height: 100dvh;
+}

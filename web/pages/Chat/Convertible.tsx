@@ -61,7 +61,7 @@ const WithinPage: Component<PartialProps> = (props) => {
           class="relative hidden w-full min-w-[448px]  overflow-y-auto py-3 xs:block"
           style={rightPaneBgStyles()}
         >
-          <div onClick={props.close} class="sticky top-0 z-20 float-right cursor-pointer">
+          <div onClick={props.close} class="sticky top-0 float-right cursor-pointer">
             <div class="ml-[-32px]">
               <X />
             </div>

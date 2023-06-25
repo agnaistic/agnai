@@ -13,6 +13,7 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore, toastStore } from '../../store'
 import { AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
+import { TitleCard } from '/web/shared/Card'
 
 export const GenerationPresetsPage: Component = () => {
   const { updateTitle } = setComponentPageTitle('Preset')
@@ -142,13 +143,13 @@ export const GenerationPresetsPage: Component = () => {
       <PageHeader title="Generation Presets" />
       <div class="flex flex-col gap-2 pb-10">
         <Show when={params.id === 'default'}>
-          <div class="font-bold">
-            This is a default preset and cannot be saved.{' '}
+          <TitleCard type="orange" class="font-bold">
+            This is a built-in preset and cannot be saved.{' '}
             <A class="link" href={`/presets/new?preset=${query.preset}`}>
               Click here
             </A>{' '}
             if you'd like to create a copy of this preset.
-          </div>
+          </TitleCard>
         </Show>
         <div class="flex flex-col gap-4 p-2">
           <Show when={editing()}>
@@ -179,7 +180,7 @@ export const GenerationPresetsPage: Component = () => {
                   required
                   parentClass="mb-2"
                 />
-                <GenerationSettings inherit={editing()} />
+                <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
                 <div class="flex flex-row justify-end">

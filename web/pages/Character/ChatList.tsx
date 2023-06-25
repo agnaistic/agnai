@@ -3,7 +3,6 @@ import { Component, createEffect, createMemo, createSignal, For, onMount, Show }
 import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, SortAsc, SortDesc, Trash } from 'lucide-solid'
-import CreateChatModal from './CreateChat'
 import ImportChatModal from './ImportChat'
 import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
@@ -58,7 +57,6 @@ const CharacterChats: Component = () => {
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
   const [charId, setCharId] = createSignal<string | undefined>(params.id)
-  const [showCreate, setCreate] = createSignal(false)
   const [showImport, setImport] = createSignal(false)
   const [sortField, setSortField] = createSignal(cache.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cache.sort.direction)
@@ -131,7 +129,7 @@ const CharacterChats: Component = () => {
       </Show>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={() => setCreate(true)}
+        onClick={() => nav('/chats/create')}
       >
         <Plus /> <span class="hidden sm:inline">New</span>
       </button>
@@ -208,7 +206,6 @@ const CharacterChats: Component = () => {
           charId={charId()}
         />
       </Show>
-      <CreateChatModal show={showCreate()} close={() => setCreate(false)} charId={charId()} />
       <ImportChatModal
         show={showImport()}
         close={() => setImport(false)}

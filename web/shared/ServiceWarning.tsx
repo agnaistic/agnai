@@ -2,6 +2,7 @@ import { Component, Show, createMemo } from 'solid-js'
 import { AIAdapter } from '/common/adapters'
 import { userStore } from '../store/user'
 import { A } from '@solidjs/router'
+import { TitleCard } from './Card'
 
 const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) => {
   const user = userStore((s) => ({ ...s.user }))
@@ -36,13 +37,13 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
         </span>
       </Show>
       <Show when={props.service === 'horde' && !user?.hordeName}>
-        <span class="text-orange-500">
+        <TitleCard type="orange">
           Register at{' '}
           <a class="link" href="https://aihorde.net/register" target="_blank">
             AIHorde
           </a>{' '}
           for a better Horde experience.
-        </span>
+        </TitleCard>
       </Show>
     </>
   )

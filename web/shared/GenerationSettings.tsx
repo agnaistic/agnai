@@ -20,6 +20,7 @@ import { settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
+import { serviceHasSetting } from './util'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -212,15 +213,13 @@ const GeneralSettings: Component<Props> = (props) => {
           disabled={props.disabled}
         />
       </Card>
-      <Card>
+      <Card hide={!serviceHasSetting(props.service, 'streamResponse')}>
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
           helperText="Whether to stream the AI's response token-by-token instead of waiting for the entire message."
           value={props.inherit?.streamResponse ?? false}
           disabled={props.disabled}
-          service={props.service}
-          aiSetting={'streamResponse'}
         />
       </Card>
     </div>
@@ -285,7 +284,7 @@ const PromptSettings: Component<Props> = (props) => {
           aiSetting={'gaslight'}
         />
       </Card>
-      <Card class="flex flex-col gap-4">
+      <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'systemPrompt')}>
         <FormLabel label="System Prompt" />
         <PromptEditor
           fieldName="systemPrompt"
@@ -293,8 +292,6 @@ const PromptSettings: Component<Props> = (props) => {
           placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
           value={props.inherit?.systemPrompt ?? ''}
           disabled={props.disabled}
-          service={props.service}
-          aiSetting={'systemPrompt'}
           // class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
         />
 

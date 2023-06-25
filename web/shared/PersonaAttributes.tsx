@@ -153,16 +153,19 @@ const Attribute: Component<{
   disabled?: boolean
 }> = (props) => {
   return (
-    <div class="flex w-full gap-2">
-      <div class="w-3/12">
+    <div class="flex w-full flex-col gap-2 sm:flex-row">
+      <div class="flex w-full items-center gap-1 sm:w-3/12">
         <TextInput
           fieldName={`attr-key.${props.index}`}
           placeholder="Name. E.g. appearance"
           value={props.attr.key}
           disabled={props.disabled}
         />
+        <div class="sm:hidden" onClick={() => props.remove(props.index)}>
+          <MinusCircle size={16} class="focusable-icon-button" />
+        </div>
       </div>
-      <div class="w-8/12">
+      <div class="sm:w-8/12">
         <TextInput
           fieldName={`attr-value.${props.index}`}
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
@@ -172,7 +175,7 @@ const Attribute: Component<{
           disabled={props.disabled}
         />
       </div>
-      <div class="1/12 flex items-center" onClick={() => props.remove(props.index)}>
+      <div class="1/12 hidden items-start sm:flex" onClick={() => props.remove(props.index)}>
         <MinusCircle size={16} class="focusable-icon-button" />
       </div>
     </div>

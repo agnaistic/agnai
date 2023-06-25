@@ -8,6 +8,7 @@ export const Card: Component<{
   bg?: string
   bgOpacity?: number
   border?: boolean
+  hide?: boolean
 }> = (props) => {
   const cardBg = useBgStyle({
     hex: getSettingColor(props.bg || 'bg-500'),
@@ -15,15 +16,17 @@ export const Card: Component<{
     opacity: props.bgOpacity ?? 0.08,
   })
   return (
-    <div
-      class={`rounded-lg p-3 ${props.class ?? ''}`}
-      style={{
-        ...cardBg(),
-        border: props.border ? '1px solid var(--bg-600)' : 0,
-      }}
-    >
-      {props.children}
-    </div>
+    <Show when={!props.hide}>
+      <div
+        class={`rounded-lg p-3 ${props.class ?? ''}`}
+        style={{
+          ...cardBg(),
+          border: props.border ? '1px solid var(--bg-600)' : 0,
+        }}
+      >
+        {props.children}
+      </div>
+    </Show>
   )
 }
 

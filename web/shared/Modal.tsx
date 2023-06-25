@@ -35,11 +35,11 @@ const Modal: Component<Props> = (props) => {
 
   return (
     <Show when={props.show}>
-      <div class="fixed inset-x-0 top-0 items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
+      <div class="z-100 fixed inset-x-0 top-0 items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="flex h-[100dvh] h-[100vh] items-center">
+        <div class="modal-body">
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}
@@ -93,7 +93,7 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
         <div class="fixed inset-0 -z-10 opacity-40 transition-opacity">
           <div class="absolute inset-0 bg-black" />
         </div>
-        <div class="flex h-[100dvh] h-[100vh] items-center">
+        <div class="modal-body">
           <form
             ref={ref}
             onSubmit={props.onSubmit || defaultSubmit}

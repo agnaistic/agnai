@@ -348,7 +348,7 @@ export const CreateCharacterForm: Component<{
                   </div>
                 }
               />
-              <div class="flex w-full gap-2">
+              <div class="flex w-full flex-col gap-2 sm:flex-row">
                 <TextInput
                   isMultiline
                   fieldName="description"
@@ -402,7 +402,7 @@ export const CreateCharacterForm: Component<{
                   accept="image/png,image/jpeg,image/apng"
                   onUpdate={updateFile}
                 />
-                <div class="flex w-full gap-2">
+                <div class="flex w-full flex-col gap-2 sm:flex-row">
                   <TextInput
                     isMultiline
                     parentClass="w-full"
@@ -716,7 +716,7 @@ const MemoryBookPicker: Component<{
       <h4 class="text-lg">Character Book</h4>
       <Show when={!props.bundledBook}>
         <span class="text-sm"> This character doesn't have a Character Book. </span>
-        <div class="flex gap-3">
+        <div class="flex flex-col gap-3 sm:flex-row">
           <Select
             fieldName="memoryBook"
             value={NONE_VALUE}

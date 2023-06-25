@@ -364,17 +364,17 @@ const ChatDetail: Component = () => {
                 <Show when={!cfg.fullscreen && isOwner()}>
                   <A href={`/character/${chats.char?._id}/chats`}>
                     <ChevronLeft />
-                  </A>
-                  <div class="ellipsis flex flex-col">
-                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                      {chats.char?.name}
-                    </span>
-                    <Show when={chats.chat!.name}>
-                      <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                        {chats.chat!.name}
+                    <div class="ellipsis flex flex-col">
+                      <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
+                        {chats.char?.name}
                       </span>
-                    </Show>
-                  </div>
+                      <Show when={chats.chat!.name}>
+                        <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                          {chats.chat!.name}
+                        </span>
+                      </Show>
+                    </div>
+                  </A>
                 </Show>
               </div>
 

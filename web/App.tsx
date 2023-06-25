@@ -29,6 +29,7 @@ import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
 import { getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
+import CreateChatForm from './pages/Chat/CreateChatForm'
 
 const App: Component = () => {
   const state = userStore()
@@ -44,6 +45,7 @@ const App: Component = () => {
             component={() => <Redirect external="https://discord.gg/luminai" />}
           />
           <ChubRoutes />
+          <Route path="/chats/create/:id?" component={CreateChatForm} />
           <Route path="/chats" component={CharacterChats} />
           <Route path="/chat" component={ChatDetail} />
           <Route path="/chat/:id" component={ChatDetail} />

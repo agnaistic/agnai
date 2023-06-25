@@ -62,7 +62,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       kind: 'character',
-      userId: 'anonymous',
+      userId: 'anon',
       ...defaultChars.Robot,
     },
   ],

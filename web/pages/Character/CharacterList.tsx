@@ -45,7 +45,6 @@ import Modal from '../../shared/Modal'
 import { exportCharacter } from '../../../common/characters'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
-import CreateChatModal from './CreateChat'
 import TagSelect from '../../shared/TagSelect'
 import { Accessor } from 'solid-js'
 import extract from 'png-chunks-extract'
@@ -85,7 +84,6 @@ const CharacterList: Component = () => {
   const [search, setSearch] = createSignal('')
   const [showImport, setImport] = createSignal(false)
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
-  const [create, setCreate] = createSignal<AppSchema.Character>()
   const importQueue: NewCharacter[] = []
 
   const onImport = (chars: NewCharacter[]) => {
@@ -209,7 +207,6 @@ const CharacterList: Component = () => {
         filter={search()}
         sortField={sortField()}
         sortDirection={sortDirection()}
-        createChat={setCreate}
       />
       <ImportCharacterModal
         charhubPath={importPath()}
@@ -217,9 +214,6 @@ const CharacterList: Component = () => {
         close={() => setImport(false)}
         onSave={onImport}
       />
-      <Show when={create()}>
-        <CreateChatModal show={!!create()} close={() => setCreate()} charId={create()?._id} />
-      </Show>
     </>
   )
 }
@@ -232,7 +226,6 @@ const Characters: Component<{
   filter: string
   sortField: SortFieldTypes
   sortDirection: SortDirectionTypes
-  createChat: (char?: AppSchema.Character) => void
 }> = (props) => {
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
   const [showGrouping, setShowGrouping] = createSignal(false)
@@ -290,7 +283,6 @@ const Characters: Component<{
                           delete={() => setDelete(char)}
                           download={() => setDownload(char)}
                           toggleFavorite={(value) => toggleFavorite(char._id, value)}
-                          createChat={props.createChat}
                         />
                       )}
                     </For>
@@ -317,7 +309,6 @@ const Characters: Component<{
                           delete={() => setDelete(char)}
                           download={() => setDownload(char)}
                           toggleFavorite={(value) => toggleFavorite(char._id, value)}
-                          createChat={props.createChat}
                         />
                       )}
                     </For>
@@ -349,17 +340,10 @@ const Character: Component<{
   delete: () => void
   download: () => void
   toggleFavorite: (value: boolean) => void
-  createChat: (char?: AppSchema.Character) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)
   const [listOpts, setListOpts] = createSignal(false)
   const nav = useNavigate()
-
-  const createChat = () => {
-    props.createChat(props.char)
-    setOpts(false)
-    setListOpts(false)
-  }
 
   if (props.type === 'list') {
     return (
@@ -385,6 +369,9 @@ const Character: Component<{
             <Show when={!props.char.favorite}>
               <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
             </Show>
+            <A href={`/chats/create/${props.char._id}`}>
+              <MessageCircle class="icon-button" />
+            </A>
             <a onClick={props.download}>
               <Download class="icon-button" />
             </a>
@@ -416,7 +403,7 @@ const Character: Component<{
                   <Star /> Favorite
                 </Show>
               </Button>
-              <Button onClick={createChat} alignLeft size="sm">
+              <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
                 <MessageCircle /> Chat
               </Button>
               <Button alignLeft onClick={props.download} size="sm">
@@ -499,7 +486,7 @@ const Character: Component<{
                   <Star /> Favorite
                 </Show>
               </Button>
-              <Button onClick={createChat} alignLeft size="sm">
+              <Button onClick={() => nav(`/chats/create/${props.char._id}`)} alignLeft size="sm">
                 <MessageCircle /> Chat
               </Button>
               <Button

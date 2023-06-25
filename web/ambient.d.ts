@@ -5,4 +5,5 @@ declare module '*.svg' {
 
 declare interface Window {
   flag: (flag: any, value?: boolean) => void & any
+  agnai_version: string
 }

@@ -10,6 +10,7 @@ import TextInput from '../../shared/TextInput'
 import { Toggle } from '../../shared/Toggle'
 import { alphaCaseInsensitiveSort, getFormEntries, getStrictForm } from '../../shared/util'
 import { emptyEntry } from '/common/memory'
+import { Card } from '/web/shared/Card'
 
 const missingFieldsInEntry = (entry: AppSchema.MemoryEntry): (keyof AppSchema.MemoryEntry)[] => [
   ...(entry.keywords.length === 0 ? ['keywords' as const] : []),
@@ -85,11 +86,13 @@ const EditMemoryForm: Component<{
           }}
         />
         <Divider />
-        <div class="sticky top-0 z-10 flex items-center justify-between  py-2">
-          <div class="text-lg font-bold">Entries</div>
-          <Button onClick={addEntry}>
-            <Plus /> Entry
-          </Button>
+        <div class="sticky top-0 w-full py-2">
+          <Card class="flex w-full items-center justify-between" bgOpacity={0.5}>
+            <div class="text-lg font-bold">Entries</div>
+            <Button onClick={addEntry}>
+              <Plus /> Entry
+            </Button>
+          </Card>
         </div>
         <div class="flex items-center">
           <div class="max-w-[200px]">

@@ -188,7 +188,6 @@ export function getUserId() {
   if (!auth) return 'anon'
 
   const data = getTokenBody(auth)
-  console.log(data?.userId)
   return data?.userId
 }
 
