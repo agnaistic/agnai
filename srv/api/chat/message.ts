@@ -93,6 +93,7 @@ export const createMessage = handle(async (req) => {
 
 export const generateMessageV2 = handle(async (req, res) => {
   const { userId, body, params, log } = req
+  const requestId = v4()
   const chatId = params.id
   assertValid(genValidator, body)
 
@@ -160,7 +161,12 @@ export const generateMessageV2 = handle(async (req, res) => {
     await obtainLock(chatId)
   } catch (ex) {
     if (members.length === 1) throw ex
-    return res.json({ success: true, generating: false, message: 'User message created' })
+    return res.json({
+      requestId,
+      success: true,
+      generating: false,
+      message: 'User message created',
+    })
   }
 
   sendMany(members, {
@@ -170,7 +176,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     senderId: userId,
     characterId: replyAs._id,
   })
-  res.json({ success: true, generating: true, message: 'Generating message' })
+  res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
   const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs, impersonate }, log)
 
@@ -198,7 +204,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     if (gen.error) {
       error = true
-      sendMany(members, { type: 'message-error', error: gen.error, adapter, chatId })
+      sendMany(members, { type: 'message-error', requestId, error: gen.error, adapter, chatId })
       continue
     }
   }
@@ -233,6 +239,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       })
       sendMany(members, {
         type: 'message-created',
+        requestId,
         msg,
         chatId,
         adapter,
@@ -251,6 +258,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
         sendMany(members, {
           type: 'message-retry',
+          requestId,
           chatId,
           messageId: body.replacing._id,
           message: actioned.text,
@@ -269,6 +277,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
         sendMany(members, {
           type: 'message-created',
+          requestId,
           msg,
           chatId,
           adapter,
@@ -283,6 +292,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       await store.msgs.editMessage(body.continuing._id, { msg: responseText, adapter })
       sendMany(members, {
         type: 'message-retry',
+        requestId,
         chatId,
         messageId: body.continuing._id,
         message: responseText,
@@ -320,7 +330,8 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     return { success: true }
   }
 
-  res.json({ success: true, generating: true, message: 'Generating message' })
+  const requestId = v4()
+  res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
   const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs }, log, guest)
 
@@ -367,6 +378,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     case 'send':
       sendGuest(guest, {
         type: 'guest-message-created',
+        requestId,
         msg: response,
         chatId,
         adapter,

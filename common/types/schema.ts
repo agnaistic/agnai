@@ -3,6 +3,7 @@ import type { GenerationPreset } from '../presets'
 import type { ImageSettings } from '../../srv/db/image-schema'
 import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
+import { FullSprite } from './sprite'
 
 export type AllDoc =
   | AppSchema.Chat
@@ -197,6 +198,7 @@ export namespace AppSchema {
     sampleChat: string
 
     avatar?: string
+    sprite?: FullSprite
 
     createdAt: string
     updatedAt: string

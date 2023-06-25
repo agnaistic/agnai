@@ -55,7 +55,7 @@ import {
   insertImageMessages,
   SwipeMessage,
 } from './helpers'
-import { AvatarContainer } from '/web/shared/Avatar/Builder'
+import { AvatarContainer, useAutoExpression } from '/web/shared/Avatar/Builder'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -87,12 +87,15 @@ const ChatDetail: Component = () => {
     retries: s.retries,
     speaking: s.speaking,
     retrying: s.retrying,
+    inference: s.lastInference,
   }))
 
   const isGroupChat = createMemo(() => {
     if (!chats.participantIds?.length) return false
     return true
   })
+
+  const express = useAutoExpression()
 
   const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
@@ -216,7 +219,15 @@ const ChatDetail: Component = () => {
 
   const chatPreset = createMemo(() => getClientPreset(chats.chat))
 
-  const mustUpdateUserPresetToUseSystemPrompt = createMemo(() => {
+  createEffect(() => {
+    if (!msgs.inference) return
+    const opts = chatPreset()
+    if (!opts) return
+
+    express.classify(opts.preset, msgs.inference.text)
+  })
+
+  const shouldForceV2Gaslight = createMemo(() => {
     const isUserSetting = chatPreset()?.preset._id !== undefined && chatPreset()?.preset._id !== ''
     if (!isUserSetting) return false
     const gaslight = chatPreset()?.preset.gaslight
@@ -241,7 +252,7 @@ const ChatDetail: Component = () => {
   })
 
   createEffect(() => {
-    if (mustUpdateUserPresetToUseSystemPrompt()) {
+    if (shouldForceV2Gaslight()) {
       setShowOpts(false)
       chatStore.option('modal', 'updateGaslightToUseSystemPrompt')
     }
@@ -370,23 +381,24 @@ const ChatDetail: Component = () => {
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
               style={headerBg()}
             >
-              <div class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold">
-                <Show when={!cfg.fullscreen && isOwner()}>
-                  <A href={`/character/${chats.char?._id}/chats`}>
-                    <ChevronLeft />
-                    <div class="ellipsis flex flex-col">
-                      <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                        {chats.char?.name}
+              <Show when={!cfg.fullscreen && isOwner()}>
+                <A
+                  class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
+                  href={`/character/${chats.char?._id}/chats`}
+                >
+                  <ChevronLeft />
+                  <div class="ellipsis flex flex-col">
+                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
+                      {chats.char?.name}
+                    </span>
+                    <Show when={chats.chat!.name}>
+                      <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                        {chats.chat!.name}
                       </span>
-                      <Show when={chats.chat!.name}>
-                        <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                          {chats.chat!.name}
-                        </span>
-                      </Show>
-                    </div>
-                  </A>
-                </Show>
-              </div>
+                    </Show>
+                  </div>
+                </A>
+              </Show>
 
               <div class="flex flex-row gap-3">
                 <Show when={isOwner()}>
@@ -427,7 +439,12 @@ const ChatDetail: Component = () => {
 
             <Show when={user.ui.chatAvatarMode}>
               <section ref={container!} class="h-full w-full">
-                <AvatarContainer container={container!} gender="male" />
+                <AvatarContainer
+                  container={container!}
+                  gender="male"
+                  body={chats.char?.sprite}
+                  expression={express.expr()}
+                />
               </section>
             </Show>
 

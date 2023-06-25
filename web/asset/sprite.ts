@@ -1,3 +1,5 @@
+import { EmoteType, FullSprite, SpriteAttr, SpriteBody, emotions } from '/common/types/sprite'
+
 export const manifest = require('./sprites/manifest.json') as Manifest
 
 export const attributes: SpriteAttr[] = [
@@ -33,53 +35,26 @@ for (const attr of attributes) {
   manifest.attributes[attr].push('none')
 }
 
-export type SpriteAttr =
-  | 'accessories'
-  | 'back_hair'
-  | 'blushes'
-  | 'body'
-  | 'outfits'
-  | 'eye_cover_hair'
-  | 'eyebrows'
-  | 'eyes'
-  | 'freckles'
-  | 'front_hair'
-  | 'glasses'
-  | 'headbands'
-  | 'headphones_base'
-  | 'mouths'
-  | 'neck'
-
-export type SpriteId = 'male' | 'female'
-
-export type SpriteEmote = 'shock' | 'annoy' | 'neutral' | 'content' | 'happy' | 'laugh' | 'unhappy'
-
-export const emoteMap: Record<SpriteEmote, string> = {
-  annoy: 'annoyed',
-  content: 'closed_smile',
-  unhappy: 'frown',
-  shock: 'open_mouth',
-  happy: 'open_smile',
-  laugh: 'laugh',
-  neutral: 'neutral',
-}
-
-export type SpriteBody = Record<SpriteAttr, string> & {
-  /** Hex. E.g. #ffffff */
-  eyeColor?: string
-
-  /** Hex. E.g. #ffffff */
-  bodyColor?: string
-
-  /** Hex. E.g. #ffffff */
-  hairColor?: string
-}
-
 export const defaultBody = getRandomBody()
 
 export function randomExpression(attr: SpriteAttr) {
   const idx = Math.floor(Math.random() * manifest.attributes[attr].length)
   return manifest.attributes[attr][idx]
+}
+
+export function getEmoteExpressions(emote: EmoteType): Partial<SpriteBody> {
+  const body: Partial<SpriteBody> = {}
+  const keys = Object.entries(emotions[emote]) as any as Array<[SpriteAttr, string]>
+
+  for (const [attr, subtype] of keys) {
+    const alltypes = manifest.attributes[attr]
+    const matches = alltypes.filter((t) => t.startsWith(subtype))
+
+    if (!matches.length) body[attr] = randomElement(alltypes)
+    else body[attr] = randomElement(matches)
+  }
+
+  return body
 }
 
 type Manifest = {
@@ -90,13 +65,16 @@ export function getRandomBody() {
   const body = attributes.reduce((prev, curr) => {
     const rand = randomExpression(curr)
     return Object.assign(prev, { [curr]: rand })
-  }, {}) as SpriteBody
+  }, {}) as FullSprite
 
   body.bodyColor = '#ecab6f'
   body.eyeColor = randomHex()
   body.hairColor = randomHex()
 
-  return body
+  return {
+    ...body,
+    ...getEmoteExpressions('neutral'),
+  }
 }
 
 function randomHex() {
@@ -104,4 +82,9 @@ function randomHex() {
     .map((v) => v.toString(16))
     .join('')
   return '#' + values
+}
+
+function randomElement<T>(elems: T[]) {
+  const rand = Math.floor(Math.random() * elems.length)
+  return elems[rand]
 }

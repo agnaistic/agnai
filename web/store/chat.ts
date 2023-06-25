@@ -1,6 +1,7 @@
 import { createPrompt, Prompt } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../common/types/schema'
+import { getRandomBody } from '../asset/sprite'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
 import { clearDraft } from '../shared/hooks'
@@ -179,6 +180,14 @@ export const chatStore = createStore<ChatState>('chat', {
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
+        /**
+         * TODO: REMOVE!!!!
+         */
+
+        if (!res.result.character.sprite) {
+          res.result.character.sprite = getRandomBody()
+        }
+
         safeLocalStorage.setItem('lastChatId', id)
 
         msgStore.setState({

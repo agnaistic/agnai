@@ -34,6 +34,13 @@ export type MsgState = {
   nextLoading: boolean
   imagesSaved: boolean
   speaking: { messageId: string; status: VoiceState } | undefined
+  lastInference?: {
+    requestId: string
+    chatId: string
+    messageId: string
+    characterId: string
+    text: string
+  }
 
   /**
    * Ephemeral image messages
@@ -111,6 +118,10 @@ export const msgStore = createStore<MsgState>(
         yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)) }
         onSuccess?.()
       }
+    },
+
+    clearLastInference() {
+      return { lastInference: undefined }
     },
 
     async *continuation({ msgs }, chatId: string, onSuccess?: () => void) {
@@ -475,6 +486,7 @@ subscribe(
   'message-retry',
   {
     messageId: 'string',
+    requestId: 'string?',
     chatId: 'string',
     message: 'string',
     continue: 'boolean?',
@@ -497,6 +509,13 @@ subscribe(
       partial: undefined,
       retrying: undefined,
       waiting: undefined,
+      lastInference: {
+        requestId: body.requestId!,
+        text: body.message,
+        characterId: char?._id!,
+        chatId: body.chatId,
+        messageId: body.messageId,
+      },
     })
 
     await Promise.resolve()
@@ -538,6 +557,7 @@ subscribe(
     msg: 'any',
     chatId: 'string',
     generate: 'boolean?',
+    requestId: 'string?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
   } as const,
   (body) => {
@@ -551,6 +571,17 @@ subscribe(
     const nextMsgs = msgs.concat(msg)
 
     const isUserMsg = !!msg.userId
+
+    msgStore.setState({
+      lastInference: {
+        requestId: body.requestId!,
+        text: body.msg.msg,
+        characterId: body.msg.characterId,
+        chatId: body.chatId,
+        messageId: body.msg._id,
+      },
+    })
+
     // If the message is from a user don't clear the "waiting for response" flags
     if (isUserMsg && !body.generate) {
       msgStore.setState({ msgs: nextMsgs, speaking: speech?.speaking })
@@ -658,6 +689,7 @@ subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) 
     partial: '',
     retrying: replace,
     waiting: { chatId: body.chatId, mode: 'retry', characterId: '' },
+    lastInference: undefined,
   })
 })
 
@@ -676,6 +708,7 @@ subscribe(
         characterId: body.characterId,
       },
       partial: '',
+      lastInference: undefined,
     })
   }
 )
@@ -686,7 +719,7 @@ subscribe('message-horde-eta', { eta: 'number', queue: 'number' }, (body) => {
 
 subscribe(
   'guest-message-created',
-  { msg: 'any', chatId: 'string', continue: 'boolean?' },
+  { msg: 'any', chatId: 'string', continue: 'boolean?', requestId: 'string?' },
   (body) => {
     const { msgs, activeChatId, retrying } = msgStore.getState()
     if (activeChatId !== body.chatId) return
@@ -713,6 +746,13 @@ subscribe(
       partial: undefined,
       waiting: undefined,
       speaking: speech?.speaking,
+      lastInference: {
+        requestId: body.requestId!,
+        text: body.msg.msg,
+        characterId: body.msg.characterId,
+        chatId: body.chatId,
+        messageId: body.msg._id,
+      },
     })
 
     if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)

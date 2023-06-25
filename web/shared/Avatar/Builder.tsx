@@ -10,10 +10,9 @@ import {
   onMount,
 } from 'solid-js'
 import {
-  SpriteAttr,
-  SpriteBody,
   attributes,
   defaultBody,
+  getEmoteExpressions,
   getRandomBody,
   manifest,
   randomExpression,
@@ -25,6 +24,12 @@ import Draggable from '../Draggable'
 import Select from '../Select'
 import { createDebounce, hexToRgb } from '../util'
 import ColorPicker from '../ColorPicker'
+import { EmoteType, FullSprite, SpriteAttr, SpriteBody, classifyEmotes } from '/common/types/sprite'
+import { useEffect } from '../hooks'
+import { AppSchema } from '/common/types'
+import { msgsApi } from '/web/store/data/messages'
+import { classifyTemplate } from '/common/default-preset'
+import { toastStore } from '/web/store'
 
 const IS_HAIR: { [key in SpriteAttr]?: boolean } = {
   back_hair: true,
@@ -158,6 +163,7 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
 export const AvatarContainer: Component<{
   container: HTMLElement
   gender: string
+  expression?: EmoteType
   body?: SpriteBody
 }> = (props) => {
   let bound: HTMLDivElement = {} as any
@@ -177,7 +183,13 @@ export const AvatarContainer: Component<{
     obs().disconnect()
   })
 
-  const body = createMemo(() => props.body || getRandomBody())
+  const body = createMemo(() => {
+    const expr = getEmoteExpressions(props.expression || 'neutral')
+    return {
+      ...(props.body || getRandomBody()),
+      ...expr,
+    }
+  })
 
   const getStyle = createMemo(() => {
     const max = bounds()
@@ -189,12 +201,14 @@ export const AvatarContainer: Component<{
   })
 
   return (
-    <div
-      ref={bound!}
-      class={`${styles.preview} relative h-full w-full select-none border-[1px] border-[var(--bg-900)]`}
-    >
+    <div ref={bound!} class={`${styles.preview} relative h-full w-full select-none`}>
       <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
+      <div
+        class="absolute left-0 right-0 top-0  mx-auto rounded-md bg-[var(--bg-800)]"
+        style={getStyle()}
+      />
       <AvatarCanvas gender="female" body={body()} style={getStyle()}></AvatarCanvas>
+
       {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
     </div>
   )
@@ -234,7 +248,7 @@ type CanvasProps = {
   gender: string
   attr: SpriteAttr
   type: string
-  body: SpriteBody
+  body: FullSprite
   style: { width: string; height: string }
 }
 
@@ -377,7 +391,7 @@ function canColor(attr: SpriteAttr, file: string) {
   return file.includes('base.')
 }
 
-function getColorProp(attr: SpriteAttr): keyof SpriteBody | void {
+function getColorProp(attr: SpriteAttr): keyof FullSprite | void {
   if (IS_BODY[attr]) return 'bodyColor'
   if (IS_EYES[attr]) return 'eyeColor'
   if (IS_HAIR[attr]) return 'hairColor'
@@ -390,9 +404,57 @@ function getHash({ body, attr, type, gender }: CanvasProps) {
   return `${attr}-${type}-${gender}-${color}`
 }
 
-function getAttrColor(body: SpriteBody, attr: SpriteAttr) {
+function getAttrColor(body: FullSprite, attr: SpriteAttr) {
   const prop = getColorProp(attr)
   if (!prop) return '#000000'
 
   return body[prop] || '#000000'
+}
+
+export function useAutoExpression() {
+  const [expr, setExpr] = createSignal<EmoteType>('neutral')
+  const [reset, setReset] = createSignal(Date.now() + 1000)
+
+  const update = (emote: EmoteType) => {
+    setReset(Date.now() + 5000)
+    setExpr(emote)
+  }
+
+  const classify = async (settings: Partial<AppSchema.GenSettings>, message: string) => {
+    const prompt = classifyTemplate.replace(`{{message}}`, message)
+    await msgsApi.basicInference({ settings, prompt }, (err, resp) => {
+      if (err) {
+        toastStore.warn(`Could not classify message: ${err}`)
+        return
+      }
+
+      if (resp) {
+        const match = classifyEmotes.find((emote) => emote.includes(resp.trim().toLowerCase()))
+        if (match) {
+          console.log('Classifiation:', match)
+          update(match)
+        } else {
+          console.warn(`Classify returned noise: ${resp}`)
+        }
+      }
+    })
+  }
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (Date.now() < reset()) return
+
+      if (expr() === 'blink' && expr() !== 'neutral') {
+        update('neutral')
+        setReset(Date.now() + 10000)
+      } else {
+        update('blink')
+        setReset(Date.now() + 200)
+      }
+    }, 100)
+
+    return () => clearInterval(timer)
+  })
+
+  return { expr, update, classify }
 }

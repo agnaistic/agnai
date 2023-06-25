@@ -86,7 +86,7 @@ const App: Component = () => {
             <Route path="/login" component={LoginPage} />
           </Show>
           <Route path="/faq" component={FAQ} />
-          <Route path="/builder" component={Builder} />
+          <Route path="/builder" component={lazy(() => import('./shared/Avatar/Builder'))} />
           <Route path="*" component={HomePage} />
         </Route>
       </Routes>

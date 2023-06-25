@@ -4,7 +4,7 @@ import { baseUrl, getAuth, setSocketId } from './api'
 type Handler = { validator: Validator; fn: (body: any) => void }
 
 const listeners = new Map<string, Handler[]>()
-const onceListners = new Map<string, Array<Handler & { predicate: (body: any) => boolean }>>()
+const onceListeners = new Map<string, Array<Handler & { predicate: (body: any) => boolean }>>()
 
 const BASE_RETRY = 100
 const MAX_RETRY = 1000
@@ -38,9 +38,9 @@ export function subscribe<T extends string, U extends Validator>(
   once?: (body: UnwrapBody<U> & { type: T }) => boolean
 ) {
   if (once) {
-    const handlers = onceListners.get(type) || []
+    const handlers = onceListeners.get(type) || []
     handlers.push({ validator, fn: handler, predicate: once })
-    onceListners.set(type, handlers)
+    onceListeners.set(type, handlers)
     return
   }
   const handlers = listeners.get(type) || []
@@ -60,7 +60,7 @@ function onMessage(msg: MessageEvent<any>) {
 
     if (!payload.type) continue
     const handlers = listeners.get(payload.type) || []
-    const onceHandlers = onceListners.get(payload.type) || []
+    const onceHandlers = onceListeners.get(payload.type) || []
 
     if (!squelched.has(payload.type)) {
       if (payload.type !== 'image-generated') {
@@ -86,7 +86,7 @@ function onMessage(msg: MessageEvent<any>) {
       onceHandlers.splice(i, 1)
     }
 
-    onceListners.set(payload.type, onceHandlers)
+    onceListeners.set(payload.type, onceHandlers)
   }
 }
 
