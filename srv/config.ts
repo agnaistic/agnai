@@ -62,8 +62,8 @@ export const config = {
     pass: env('REDIS_PASSWORD', ''),
   },
   limits: {
-    upload: +env('IMAGE_SIZE_LIMIT', '2'),
-    payload: +env('JSON_SIZE_LIMIT', '2'),
+    upload: +env('IMAGE_SIZE_LIMIT', '10'),
+    payload: +env('JSON_SIZE_LIMIT', '10'),
   },
   horde: {
     maxWaitSecs: +env('HORDE_WAIT_SECS', '120'),
