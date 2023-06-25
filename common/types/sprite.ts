@@ -4,6 +4,13 @@ type SpriteEmote = Record<string, EmotionMap>
 
 export type EmoteType = keyof typeof emotions
 
+const eyes = {
+  wide_open: 'neutral_8',
+  bored: 'neutral_10',
+  tired: 'neutral_6',
+  asleep: 'closed_3',
+}
+
 export const emotions = {
   neutral: {
     eyes: 'neutral',
@@ -21,7 +28,7 @@ export const emotions = {
     mouths: 'frown',
   },
   angry: {
-    eyes: 'neutral',
+    eyes: 'neutral_5',
     mouths: 'annoyed',
     eyebrows: 'angry',
   },
@@ -53,7 +60,7 @@ export const emotions = {
   blink: {
     eyes: 'closed',
     eyebrows: 'neutral',
-    mouths: 'closed_smile',
+    mouths: 'neutral',
   },
 } satisfies SpriteEmote
 
@@ -91,4 +98,6 @@ export type FullSprite = SpriteBody & {
 
   /** Hex. E.g. #ffffff */
   hairColor?: string
+
+  gender: 'male' | 'female'
 }

@@ -225,6 +225,7 @@ const ChatDetail: Component = () => {
     if (!opts) return
 
     express.classify(opts.preset, msgs.inference.text)
+    msgStore.clearLastInference()
   })
 
   const shouldForceV2Gaslight = createMemo(() => {
@@ -441,7 +442,6 @@ const ChatDetail: Component = () => {
               <section ref={container!} class="h-full w-full">
                 <AvatarContainer
                   container={container!}
-                  gender="male"
                   body={chats.char?.sprite}
                   expression={express.expr()}
                 />

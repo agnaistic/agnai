@@ -61,7 +61,7 @@ type Manifest = {
   attributes: Record<SpriteAttr, string[]>
 } & { [key in SpriteAttr]: Record<string, string[]> }
 
-export function getRandomBody() {
+export function getRandomBody(retain: Partial<FullSprite> = {}) {
   const body = attributes.reduce((prev, curr) => {
     const rand = randomExpression(curr)
     return Object.assign(prev, { [curr]: rand })
@@ -70,10 +70,12 @@ export function getRandomBody() {
   body.bodyColor = '#ecab6f'
   body.eyeColor = randomHex()
   body.hairColor = randomHex()
+  body.gender = randomElement(['male', 'female'])
 
   return {
     ...body,
     ...getEmoteExpressions('neutral'),
+    ...retain,
   }
 }
 

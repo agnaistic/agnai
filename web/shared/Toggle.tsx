@@ -1,8 +1,9 @@
-import { Component, JSX, Show, createMemo } from 'solid-js'
+import { Component, For, JSX, Show, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import './toggle.css'
 import { AIAdapter, PresetAISettings } from '../../common/adapters'
 import { getAISettingServices } from './util'
+import { Option } from './Select'
 
 export const Toggle: Component<{
   fieldName: string
@@ -55,4 +56,42 @@ function shouldShow(setting?: keyof PresetAISettings, value?: boolean) {
   if (!setting) return false
   if (setting === 'gaslight' && value === true) return true
   return false
+}
+
+export const ToggleButtons: Component<{
+  items: Option[]
+  onChange: (opt: Option) => void
+  selected: string
+}> = (props) => {
+  const selected = createMemo(() => {
+    const idx = props.items.findIndex((opt) => opt.value === props.selected)
+    console.log('idx', idx, props.selected)
+    return idx === -1 ? 0 : idx
+  })
+
+  return (
+    <div class="flex">
+      <For each={props.items}>
+        {(opt, i) => {
+          const isLast = props.items.length === i() + 1
+          return (
+            <button
+              type="button"
+              value={props.selected}
+              class="flex items-center justify-center rounded-none border-[1px] border-[var(--hl-800)] py-2"
+              classList={{
+                'btn-primary': selected() === i(),
+                'btn-hollow': selected() !== i(),
+                'rounded-l-md': i() === 0,
+                'rounded-r-md': isLast,
+              }}
+              onClick={() => props.onChange(opt)}
+            >
+              {opt.label}
+            </button>
+          )
+        }}
+      </For>
+    </div>
+  )
 }

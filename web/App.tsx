@@ -30,7 +30,6 @@ import { For } from 'solid-js'
 import { getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
-import Builder from './shared/Avatar/Builder'
 
 const App: Component = () => {
   const state = userStore()

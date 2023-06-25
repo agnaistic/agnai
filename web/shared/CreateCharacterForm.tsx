@@ -51,6 +51,11 @@ import { Card, SolidCard } from './Card'
 import { usePane, useRootModal } from './hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
+import { ToggleButtons } from './Toggle'
+import { getRandomBody } from '../asset/sprite'
+import Builder, { AvatarContainer } from './Avatar/Builder'
+import { FullSprite } from '/common/types/sprite'
+import Slot from './Slot'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -114,6 +119,10 @@ export const CreateCharacterForm: Component<{
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
   const [creating, setCreating] = createSignal(false)
+  const [visualType, setVisualType] = createSignal('avatar')
+  const [spriteBody, setSpriteBody] = createSignal(state.edit?.sprite || getRandomBody())
+  const [showBuilder, setShowBuilder] = createSignal(false)
+
   const [alternateGreetings, setAlternateGreetings] = createSignal(
     state.edit?.alternateGreetings ?? []
   )
@@ -244,7 +253,10 @@ export const CreateCharacterForm: Component<{
   const onSubmit = (ev: Event) => {
     const opts: PayloadOpts = {
       tags: tags(),
-      avatar: state.avatar.blob || avatar(),
+
+      avatar: visualType() === 'avatar' ? state.avatar.blob || avatar() : undefined,
+      sprite: visualType() === 'sprite' ? spriteBody() : undefined,
+
       altGreetings: alternateGreetings(),
       characterBook: bundledBook(),
       extensions: extensions(),
@@ -283,6 +295,8 @@ export const CreateCharacterForm: Component<{
   const showWarning = createMemo(
     () => !!props.chat?.overrides && props.chat.characterId === props.editId
   )
+
+  let spriteRef: any
 
   return (
     <>
@@ -374,16 +388,21 @@ export const CreateCharacterForm: Component<{
               />
             </Card>
 
-            <Card class="flex w-full gap-4">
+            <Card class="flex w-full flex-col gap-4 sm:flex-row">
               <Switch>
+                <Match when={visualType() === 'sprite'}>
+                  <div class="flex h-24 w-full justify-center sm:w-24" ref={spriteRef}>
+                    <AvatarContainer body={spriteBody()} container={spriteRef} />
+                  </div>
+                </Match>
                 <Match when={!state.avatar.loading}>
                   <div
-                    class="flex items-baseline"
+                    class="flex items-baseline justify-center"
                     style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
                     onClick={() => settingStore.showImage(state.avatar.image || image())}
                   >
                     <AvatarIcon
-                      format={{ corners: 'md', size: '2xl' }}
+                      format={{ corners: 'sm', size: '3xl' }}
                       avatarUrl={state.avatar.image || image()}
                     />
                   </div>
@@ -395,26 +414,46 @@ export const CreateCharacterForm: Component<{
                 </Match>
               </Switch>
               <div class="flex w-full flex-col gap-2">
-                <FileInput
-                  class="w-full"
-                  fieldName="avatar"
-                  label="Avatar"
-                  accept="image/png,image/jpeg,image/apng"
-                  onUpdate={updateFile}
+                <ToggleButtons
+                  items={[
+                    { value: 'avatar', label: 'Avatar' },
+                    { value: 'sprite', label: 'Sprite' },
+                  ]}
+                  onChange={(opt) => {
+                    setVisualType(opt.value)
+                  }}
+                  selected={visualType()}
                 />
-                <div class="flex w-full flex-col gap-2 sm:flex-row">
-                  <TextInput
-                    isMultiline
-                    parentClass="w-full"
-                    fieldName="appearance"
-                    helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
-                    placeholder="Appearance"
-                    value={downloaded()?.appearance || state.edit?.appearance}
-                  />
-                  <Button class="w-fit self-end" onClick={generateAvatar}>
-                    Generate
-                  </Button>
-                </div>
+
+                <Switch>
+                  <Match when={visualType() === 'avatar'}>
+                    <FileInput
+                      class="w-full"
+                      fieldName="avatar"
+                      label="Avatar"
+                      accept="image/png,image/jpeg,image/apng"
+                      onUpdate={updateFile}
+                    />
+                    <div class="flex w-full flex-col gap-2 sm:flex-row">
+                      <TextInput
+                        isMultiline
+                        parentClass="w-full"
+                        fieldName="appearance"
+                        helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
+                        placeholder="Appearance"
+                        value={downloaded()?.appearance || state.edit?.appearance}
+                      />
+                      <Button class="w-fit self-end" onClick={generateAvatar}>
+                        Generate
+                      </Button>
+                    </div>
+                  </Match>
+                  <Match when={true}>
+                    <Button class="w-fit" onClick={() => setShowBuilder(true)}>
+                      Open Character Builder
+                    </Button>
+                  </Match>
+                </Switch>
                 <div></div>
               </div>
             </Card>
@@ -590,6 +629,15 @@ export const CreateCharacterForm: Component<{
           </div>
         </div>
       </form>
+      <SpriteModal
+        body={spriteBody()}
+        onChange={(body) => {
+          setSpriteBody(body)
+          setShowBuilder(false)
+        }}
+        show={showBuilder()}
+        close={() => setShowBuilder(false)}
+      />
       <ImageModal />
     </>
   )
@@ -636,6 +684,29 @@ const AlternateGreetingsInput: Component<{
         </Button>
       </div>
     </>
+  )
+}
+
+const SpriteModal: Component<{
+  body: FullSprite
+  onChange: (body: FullSprite) => void
+  show: boolean
+  close: () => void
+}> = (props) => {
+  let ref: any
+  return (
+    <Modal
+      show={props.show}
+      close={props.close}
+      title="Character Designer"
+      fixedHeight
+      maxWidth="half"
+    >
+      <Slot slot="mobile" />
+      <div class="h-[32rem] w-full sm:h-[42rem]" ref={ref}>
+        <Builder body={props.body} onChange={props.onChange} bounds={ref} noHeader />
+      </div>
+    </Modal>
   )
 }
 
@@ -687,29 +758,28 @@ const MemoryBookPicker: Component<{
     setIsModalShown(false)
   }
 
-  useRootModal({
-    type: 'memoryBook',
-    element: (
-      <Modal
-        title="Chat Memory"
-        show={isModalShown()}
-        close={() => setIsModalShown(false)}
-        footer={<ModalFooter />}
-        onSubmit={onSubmitCharacterBookChanges}
-        maxWidth="half"
-        fixedHeight
-      >
-        <div class="text-sm">
-          <EditMemoryForm
-            hideSave
-            book={props.bundledBook!}
-            entrySort={entrySort()}
-            updateEntrySort={updateEntrySort}
-          />
-        </div>
-      </Modal>
-    ),
-  })
+  const BookModal = (
+    <Modal
+      title="Chat Memory"
+      show={isModalShown()}
+      close={() => setIsModalShown(false)}
+      footer={<ModalFooter />}
+      onSubmit={onSubmitCharacterBookChanges}
+      maxWidth="half"
+      fixedHeight
+    >
+      <div class="text-sm">
+        <EditMemoryForm
+          hideSave
+          book={props.bundledBook!}
+          entrySort={entrySort()}
+          updateEntrySort={updateEntrySort}
+        />
+      </div>
+    </Modal>
+  )
+
+  useRootModal({ type: 'memoryBook', element: BookModal })
 
   return (
     <div>
@@ -745,6 +815,7 @@ type PayloadOpts = {
   characterBook: AppSchema.MemoryBook | undefined
   extensions: Record<string, any>
   originalAvatar: string | undefined
+  sprite: FullSprite | undefined
 }
 
 function getPayload(ev: Event, opts: PayloadOpts) {
@@ -777,7 +848,8 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     tags: opts.tags,
     scenario: body.scenario,
     appearance: body.appearance,
-    avatar: opts.avatar,
+    avatar: opts.avatar ?? (null as any),
+    sprite: opts.sprite ?? (null as any),
     greeting: body.greeting,
     sampleChat: body.sampleChat,
     persona,

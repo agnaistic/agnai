@@ -3,6 +3,7 @@ import styles from './avatar.module.scss'
 import {
   Component,
   For,
+  Show,
   createEffect,
   createMemo,
   createSignal,
@@ -15,21 +16,23 @@ import {
   getEmoteExpressions,
   getRandomBody,
   manifest,
-  randomExpression,
 } from '/web/asset/sprite'
 import PageHeader from '../PageHeader'
 import Button from '../Button'
-import { ArrowLeft, ArrowRight, Dices } from 'lucide-solid'
-import Draggable from '../Draggable'
+import { ArrowLeft, ArrowRight, Check, Dices } from 'lucide-solid'
 import Select from '../Select'
 import { createDebounce, hexToRgb } from '../util'
 import ColorPicker from '../ColorPicker'
-import { EmoteType, FullSprite, SpriteAttr, SpriteBody, classifyEmotes } from '/common/types/sprite'
+import { EmoteType, FullSprite, SpriteAttr, classifyEmotes } from '/common/types/sprite'
 import { useEffect } from '../hooks'
 import { AppSchema } from '/common/types'
 import { msgsApi } from '/web/store/data/messages'
-import { classifyTemplate } from '/common/default-preset'
+import { altJailbreak, classifyTemplate } from '/common/default-preset'
 import { toastStore } from '/web/store'
+
+const Y_OFFSET = -50
+const HEIGHT = 1200 + Y_OFFSET
+const WIDTH = 1000
 
 const IS_HAIR: { [key in SpriteAttr]?: boolean } = {
   back_hair: true,
@@ -53,57 +56,61 @@ const RECOLOR: { [key in SpriteAttr]?: boolean } = {
   eye_cover_hair: true,
 }
 
-const RATIO = 1200 / 1000
+const RATIO = (HEIGHT - Y_OFFSET) / WIDTH
 
-const Builder: Component<{ resize?: boolean }> = (props) => {
+const Builder: Component<{
+  body?: FullSprite
+  resize?: boolean
+  onChange?: (body: FullSprite) => void
+  bounds?: HTMLElement
+  noHeader?: boolean
+}> = (props) => {
   let bound: HTMLElement = {} as any
 
-  const [body, setBody] = createSignal({ ...defaultBody })
+  const [body, setBody] = createSignal(props.body || { ...defaultBody })
   const [base, setBase] = createSignal({ w: 500, h: 600 })
-  const [diff, setDiff] = createSignal({ w: 0, h: 0 })
-  const [attr, setAttr] = createSignal(attributes[0])
   const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
+  const [attr, setAttr] = createSignal(attributes[0])
+
+  const calculateBounds = () => {
+    const width = props.bounds?.clientWidth || bound.clientWidth
+    const height = props.bounds?.clientHeight || bound.clientHeight
+
+    if (width * RATIO < height) {
+      return { w: width, h: width * RATIO }
+    } else if (height / RATIO < width) {
+      return { w: height / RATIO, h: height }
+    } else {
+      return { w: width, h: width * RATIO }
+    }
+  }
+
+  const [obs] = createSignal(
+    new ResizeObserver(() => {
+      setBase(calculateBounds())
+      setBounds(base())
+    })
+  )
 
   onMount(() => {
-    const width = bound.clientWidth * 0.7
-    setBase({ w: width, h: width * RATIO })
+    obs().observe(props.bounds || bound)
+    setBase(calculateBounds())
     setBounds(base())
   })
 
-  const dragging = (x: number, y: number) => {
-    setDiff({ w: x, h: y })
-  }
-
-  const dragged = (x: number, y: number) => {
-    const b = base()
-    setBase({ w: b.w + x, h: b.h + y })
-    setDiff({ w: 0, h: 0 })
-  }
+  onCleanup(() => {
+    obs().disconnect()
+  })
 
   const getStyle = createMemo(() => {
-    const b = base()
-    const d = diff()
     const max = bounds()
-
-    const width = b.w + d.w
-    const height = b.h + d.h
-
-    return { width: Math.min(max.w, width) + 'px', height: Math.min(max.h, height) + 'px' }
+    return { width: max.w + 'px', height: max.h + 'px' }
   })
 
-  const updateAttr = (attr: SpriteAttr, type: string) => {
-    setBody({ ...body(), [attr]: type })
+  const updateAttr = <T extends keyof FullSprite>(attr: T, type: FullSprite[T]) => {
+    const next = { ...body(), [attr]: type }
+    setBody(next)
   }
-
-  const options = createMemo(() => {
-    return (
-      attributes
-        .slice()
-        .sort()
-        // .filter((attr) => attr !== 'body')
-        .map((value) => ({ label: value.replace(/_/g, ' '), value }))
-    )
-  })
 
   const [handleColor, disposeColor] = createDebounce((hex: string) => {
     const prop = getColorProp(attr())
@@ -117,32 +124,53 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
 
   return (
     <>
-      <PageHeader title="Character Builder" />
+      <Show when={!props.noHeader}>
+        <PageHeader title="Character Builder" />
+      </Show>
       <div class="flex select-none justify-center">
         <main class="flex w-full flex-col">
-          <header class={`${styles.header} mt-2 flex w-full justify-center gap-2`}>
-            <div class="flex flex-col items-center gap-2">
-              <div class="flex items-center gap-1">
-                <Select
-                  fieldName="attribute"
-                  items={options()}
-                  value={attr()}
-                  onChange={(value) => setAttr(value.value as any)}
-                />
-                <AttributeSelect attr={attr()} type={body()[attr()]} update={updateAttr} />
+          <header class={`${styles.header} mt-2 flex w-full flex-col items-center gap-2`}>
+            <div class="flex w-full justify-between gap-2">
+              <AttributeSelect type={body()[attr()]} update={updateAttr} />
+
+              <div class="flex gap-2">
+                <Button
+                  class="h-10 px-4"
+                  onClick={() => setBody(getRandomBody({ gender: body().gender }))}
+                >
+                  <Dices />
+                </Button>
+
+                <Button
+                  class="h-10 px-4"
+                  onClick={() => updateAttr('gender', body().gender === 'male' ? 'female' : 'male')}
+                >
+                  Body
+                </Button>
               </div>
+            </div>
+            <div class="flex w-full justify-between">
               <div class="flex items-center gap-2">
+                <Select
+                  items={[
+                    { label: 'Color: hair', value: 'front_hair' },
+                    { label: 'Color: eyes', value: 'eyes' },
+                    { label: 'Color: body', value: 'body' },
+                  ]}
+                  onChange={(v) => setAttr(v.value as any)}
+                  fieldName=""
+                />
                 <ColorPicker
                   fieldName="color"
                   onInput={handleColor}
                   disabled={!RECOLOR[attr()]}
                   value={getAttrColor(body(), attr())}
                 />
-
-                <Button onClick={() => setBody(getRandomBody())}>
-                  <Dices />
-                </Button>
               </div>
+
+              <Button onClick={() => props.onChange?.(body())}>
+                <Check /> Confirm
+              </Button>
             </div>
           </header>
 
@@ -150,9 +178,7 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
             ref={bound!}
             class={`${styles.preview} relative h-full w-full select-none border-[1px] border-[var(--bg-900)]`}
           >
-            <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
-            <AvatarCanvas gender="female" body={body()} style={getStyle()}></AvatarCanvas>
-            {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
+            <AvatarCanvas body={body()} style={getStyle()}></AvatarCanvas>
           </section>
         </main>
       </div>
@@ -162,9 +188,8 @@ const Builder: Component<{ resize?: boolean }> = (props) => {
 
 export const AvatarContainer: Component<{
   container: HTMLElement
-  gender: string
   expression?: EmoteType
-  body?: SpriteBody
+  body?: FullSprite
 }> = (props) => {
   let bound: HTMLDivElement = {} as any
   const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
@@ -207,7 +232,7 @@ export const AvatarContainer: Component<{
         class="absolute left-0 right-0 top-0  mx-auto rounded-md bg-[var(--bg-800)]"
         style={getStyle()}
       />
-      <AvatarCanvas gender="female" body={body()} style={getStyle()}></AvatarCanvas>
+      <AvatarCanvas body={body()} style={getStyle()}></AvatarCanvas>
 
       {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
     </div>
@@ -215,10 +240,9 @@ export const AvatarContainer: Component<{
 }
 
 export const AvatarCanvas: Component<{
-  gender: string
   style: { width: string; height: string }
   children?: any
-  body: SpriteBody
+  body: FullSprite
   class?: string
 }> = (props) => {
   return (
@@ -227,7 +251,6 @@ export const AvatarCanvas: Component<{
         {(attr, i) => {
           return (
             <CanvasPart
-              gender={props.gender}
               attr={attr}
               type={props.body[attr]}
               style={{
@@ -245,7 +268,6 @@ export const AvatarCanvas: Component<{
 }
 
 type CanvasProps = {
-  gender: string
   attr: SpriteAttr
   type: string
   body: FullSprite
@@ -285,14 +307,14 @@ const CanvasPart: Component<CanvasProps> = (props) => {
     const promises: Array<Promise<HTMLImageElement>> = []
 
     for (const file of manifest[props.attr][props.type]) {
-      const image = asyncImage(toImage(props.gender, props.attr, props.type, file))
+      const image = asyncImage(toImage(props.body.gender, props.attr, props.type, file))
       promises.push(image)
     }
 
     const images = await Promise.all(promises)
 
     for (const image of images) {
-      ctx.drawImage(image, 0, 0, top.width, top.height)
+      ctx.drawImage(image, 0, Y_OFFSET, top.width, top.height)
 
       // For particular attributes we will render a second re-colored image on top of the original
       const shouldColor = canColor(props.attr, image.src)
@@ -300,12 +322,13 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       const color = prop ? props.body[prop] : undefined
 
       if (shouldColor && color) {
+        const alpha = IS_EYES[props.attr] ? '0.3' : '0.6'
         const { r, g, b } = hexToRgb(color)!
-        over.drawImage(image, 0, 0, top.width, top.height)
+        over.drawImage(image, 0, Y_OFFSET, top.width, top.height)
         const orig = over.globalCompositeOperation
-        over.fillStyle = `rgba(${r}, ${g}, ${b}, 0.6)`
+        over.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
         over.globalCompositeOperation = 'source-in'
-        over.fillRect(0, 0, 1000, 1200)
+        over.fillRect(0, 0, WIDTH, HEIGHT - Y_OFFSET)
         over.fillStyle = ''
         over.globalCompositeOperation = orig
       }
@@ -317,49 +340,59 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       <canvas
         class="absolute left-0 right-0 top-0 mx-auto"
         ref={top!}
-        width={1000}
-        height={1200}
+        width={WIDTH}
+        height={HEIGHT - Y_OFFSET}
       ></canvas>
       <canvas
         class="absolute left-0 right-0 top-0 mx-auto"
         ref={bottom!}
-        width={1000}
-        height={1200}
+        width={WIDTH}
+        height={HEIGHT - Y_OFFSET}
       ></canvas>
     </>
   )
 }
 
 const AttributeSelect: Component<{
-  attr: SpriteAttr
   type: string
   update: (attr: SpriteAttr, type: string) => void
 }> = (props) => {
-  const random = () => {
-    const next = randomExpression(props.attr)
-    props.update(props.attr, next)
-  }
+  const [attr, setAttr] = createSignal(attributes[0])
+
+  const options = createMemo(() => {
+    return (
+      attributes
+        .slice()
+        .sort()
+        // .filter((attr) => attr !== 'body')
+        .map((value) => ({ label: value.replace(/_/g, ' '), value }))
+    )
+  })
 
   const move = (dir: -1 | 1) => {
-    const opts = manifest.attributes[props.attr]
+    const opts = manifest.attributes[attr()]
     let curr = opts.indexOf(props.type) + dir
 
     if (curr < 0) curr = opts.length - 1
     if (curr >= opts.length) curr = 0
 
-    props.update(props.attr, opts[curr])
+    console.log(attr(), '---->', opts[curr])
+    props.update(attr(), opts[curr])
   }
 
   return (
-    <div class="flex gap-1">
+    <div class="flex gap-2">
+      <Select
+        fieldName="attribute"
+        items={options()}
+        value={attr()}
+        onChange={(value) => setAttr(value.value as any)}
+      />
       <Button schema="hollow" onClick={() => move(-1)}>
-        <ArrowLeft size={14} />
-      </Button>
-      <Button schema="hollow" onClick={random}>
-        <Dices size={14} />
+        <ArrowLeft />
       </Button>
       <Button schema="hollow" onClick={() => move(1)}>
-        <ArrowRight size={14} />
+        <ArrowRight />
       </Button>
     </div>
   )
@@ -376,8 +409,6 @@ function asyncImage(src: string) {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image()
     image.src = src
-    // image.width = ref
-    // image.height = 1200
 
     image.onload = () => resolve(image)
     image.onerror = (ev) => reject(ev)
@@ -397,11 +428,11 @@ function getColorProp(attr: SpriteAttr): keyof FullSprite | void {
   if (IS_HAIR[attr]) return 'hairColor'
 }
 
-function getHash({ body, attr, type, gender }: CanvasProps) {
+function getHash({ body, attr, type }: CanvasProps) {
   const prop = getColorProp(attr)
   const color = prop ? body[prop] : 'none'
 
-  return `${attr}-${type}-${gender}-${color}`
+  return `${attr}-${type}-${body.gender}-${color}`
 }
 
 function getAttrColor(body: FullSprite, attr: SpriteAttr) {
@@ -421,7 +452,10 @@ export function useAutoExpression() {
   }
 
   const classify = async (settings: Partial<AppSchema.GenSettings>, message: string) => {
-    const prompt = classifyTemplate.replace(`{{message}}`, message)
+    const prompt = (
+      settings.service === 'openai' ? `${altJailbreak}\n\n${classifyTemplate}` : classifyTemplate
+    ).replace(`{{message}}`, message)
+
     await msgsApi.basicInference({ settings, prompt }, (err, resp) => {
       if (err) {
         toastStore.warn(`Could not classify message: ${err}`)

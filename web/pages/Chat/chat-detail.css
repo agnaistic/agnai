@@ -16,7 +16,7 @@
   max-height: 100vh;
   max-height: 100dvh;
   width: 100%;
-  grid-template-rows: 1fr 3fr auto;
+  grid-template-rows: 2fr 4fr auto;
 
   @apply gap-1 sm:gap-2;
 }
@@ -31,7 +31,7 @@
   .avatar-chat-detail {
     height: 100vh;
     height: 100dvh;
-    grid-template-rows: auto 1fr 3fr auto;
+    grid-template-rows: auto 2fr 4fr auto;
   }
 }
 
