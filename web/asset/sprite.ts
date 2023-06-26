@@ -28,6 +28,10 @@ const empty = new Set<SpriteAttr>([
   'headbands',
   'freckles',
   'headphones_base',
+  'freckles',
+  'neck',
+  'back_hair',
+  'front_hair',
 ])
 
 for (const attr of attributes) {
