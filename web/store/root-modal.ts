@@ -1,9 +1,7 @@
 import { JSX } from 'solid-js'
 import { createStore } from './create'
 
-export type RootModalType = 'memoryBook' | 'presetSelect'
-
-export type RootModal = { type: RootModalType; element: JSX.Element }
+export type RootModal = { id: string; element: JSX.Element }
 
 export type RootModalState = {
   modals: RootModal[]
@@ -14,11 +12,11 @@ export const rootModalStore = createStore<RootModalState>('root-modal', { modals
     return {
       addModal: ({}, modal: RootModal) => {
         const { modals } = get()
-        return { modals: [...modals.filter((m) => m.type !== modal.type), modal] }
+        return { modals: [...modals.filter((m) => m.id !== modal.id), modal] }
       },
-      removeModal: ({}, modalType: RootModalType) => {
+      removeModal: ({}, modalType: string) => {
         const { modals } = get()
-        return { modals: [...modals.filter((m) => m.type !== modalType)] }
+        return { modals: [...modals.filter((m) => m.id !== modalType)] }
       },
     }
   }

@@ -6,7 +6,7 @@ import { Edit, Import, Plus, SortAsc, SortDesc, Trash } from 'lucide-solid'
 import ImportChatModal from './ImportChat'
 import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
-import AvatarIcon from '../../shared/AvatarIcon'
+import { CharacterAvatar } from '../../shared/AvatarIcon'
 import { AppSchema } from '../../../common/types/schema'
 import Select from '../../shared/Select'
 import Divider from '../../shared/Divider'
@@ -265,7 +265,7 @@ const Chats: Component<{
                                 <div
                                   class={`absolute top-1/2 -translate-y-1/2 transform ${positionStyle}`}
                                 >
-                                  <AvatarIcon avatarUrl={props.allChars[ch._id]?.avatar} />
+                                  <CharacterAvatar char={props.allChars[ch._id]} surround />
                                 </div>
                               )
                             }}

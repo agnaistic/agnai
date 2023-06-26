@@ -218,19 +218,33 @@ export const AvatarContainer: Component<{
     }
   })
 
-  const getStyle = createMemo(() => {
+  const calculateBounds = () => {
     const max = bounds()
+    if (max.w * RATIO < max.h) {
+      return { rule: 'mw*R < mh', width: max.w, height: max.w * RATIO }
+    }
+    if (max.h / RATIO < max.w) {
+      return { rule: 'mh/R < mw', width: max.h / RATIO, height: max.h }
+    }
 
-    if (max.w * RATIO < max.h) return { width: max.w + 'px', height: max.w * RATIO + 'px' }
-    if (max.h / RATIO < max.w) return { width: max.h / RATIO + 'px', height: max.h + 'px' }
+    return { rule: '?', width: max.w, height: max.h }
+  }
 
-    return { width: max.w + 'px', height: max.h + 'px' }
+  const getStyle = createMemo(() => {
+    // console.log('W', props.container?.clientWidth, ',', bound.clientWidth, ',', max.w)
+    // console.log('H', props.container?.clientHeight, ',', bound.clientHeight, ',', max.h)
+    const calculated = calculateBounds()
+    return { width: calculated.width + 'px', height: calculated.height + 'px' }
   })
 
   return (
     <Show when={props.body}>
-      <div ref={bound!} class={`${styles.preview} relative h-full w-full select-none`}>
-        <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
+      <div
+        ref={bound!}
+        class={`${styles.preview} relative mx-auto h-full w-full select-none`}
+        style={{ height: getStyle().height }}
+        // style={{ width: props.container.clientWidth + 'px' }}
+      >
         <div class="absolute left-0 right-0 top-0  mx-auto rounded-md" style={getStyle()} />
         <AvatarCanvas body={body()!} style={getStyle()}></AvatarCanvas>
 

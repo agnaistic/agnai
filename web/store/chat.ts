@@ -1,7 +1,6 @@
 import { createPrompt, Prompt } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../common/types/schema'
-import { getRandomBody } from '../asset/sprite'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
 import { clearDraft } from '../shared/hooks'

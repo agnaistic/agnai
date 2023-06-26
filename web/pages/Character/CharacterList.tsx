@@ -35,7 +35,7 @@ import {
   MessageCircle,
 } from 'lucide-solid'
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
-import AvatarIcon from '../../shared/AvatarIcon'
+import { CharacterAvatar } from '../../shared/AvatarIcon'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
 import { getAssetUrl, safeLocalStorage, setComponentPageTitle } from '../../shared/util'
@@ -349,10 +349,10 @@ const Character: Component<{
     return (
       <div class="bg-800 flex w-full flex-row items-center justify-between gap-4 rounded-xl px-2 py-1 hover:bg-[var(--bg-700)]">
         <A
-          class="ellipsis flex h-3/4 grow cursor-pointer items-center"
+          class="ellipsis flex h-3/4 grow cursor-pointer items-center gap-4"
           href={`/character/${props.char._id}/chats`}
         >
-          <AvatarIcon avatarUrl={props.char.avatar} class="mr-4" />
+          <CharacterAvatar char={props.char} />
           <div class="flex max-w-full flex-col overflow-hidden">
             <span class="ellipsis font-bold">{props.char.name}</span>
             <span class="ellipsis">{props.char.description}</span>

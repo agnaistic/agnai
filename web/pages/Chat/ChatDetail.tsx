@@ -446,11 +446,11 @@ const ChatDetail: Component = () => {
               class={`flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
               style={contentStyles()}
             >
-              <section class="flex h-full w-full flex-col justify-end gap-2">
+              <section class="flex h-full  flex-col justify-end gap-2">
                 <Show when={user.ui.viewMode === 'split'}>
                   <section
                     ref={container!}
-                    class="flex h-full max-w-full"
+                    class="flex h-full"
                     style={{ height: `${viewHeight()}%` }}
                   >
                     <AvatarContainer

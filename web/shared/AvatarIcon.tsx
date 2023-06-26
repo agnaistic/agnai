@@ -1,5 +1,14 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, JSX, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  JSX,
+  Match,
+  Show,
+  Switch,
+} from 'solid-js'
 import { settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
@@ -7,8 +16,11 @@ import { LucideProps } from 'lucide-solid/dist/types/types'
 import { getImageData } from '../store/data/chars'
 import { AppSchema, UI } from '/common/types'
 import { AvatarContainer } from './Avatar/Builder'
+import { FullSprite } from '/common/types/sprite'
 
 type Props = {
+  visual?: string
+  sprite?: FullSprite
   avatarUrl?: string | File
   class?: string
   bot?: boolean
@@ -30,32 +42,61 @@ export const CharacterAvatar: Component<{
   openable?: boolean
   format?: Format
   bot?: boolean
+  anonymize?: boolean
+  surround?: boolean
+  class?: string
   Icon?: (props: LucideProps) => JSX.Element
 }> = (props) => {
   let ref: any
-  if (props.Icon) {
-    return <AvatarIcon format={props.format} Icon={props.Icon} bot={props.bot} />
-  }
 
-  if (props.char.visualType === 'sprite' && props.char.sprite) {
-    const size = props.format?.size || '3xl'
-    return (
-      <div class={`avatar-${size} avatar-circle`} ref={ref}>
-        <AvatarContainer body={props.char.sprite} container={ref} />
-      </div>
-    )
-  }
+  const format = createMemo(() => props.format || defaultFormat)
 
-  if (!props.char.visualType || props.char.visualType === 'avatar') {
-    return (
-      <AvatarIcon
-        avatarUrl={props.char.avatar}
-        openable={props.openable}
-        format={props.format}
-        bot={props.bot}
-      />
-    )
-  }
+  const fmtSize = createMemo(() => {
+    return `avatar-${format().size} ${format().corners === 'circle' ? 'avatar-circle' : ''}`
+  })
+
+  const fmtCorners = createMemo(() => corners[format().corners])
+
+  return (
+    <>
+      <Switch>
+        <Match when={!!props.Icon}>
+          <AvatarIcon format={props.format} Icon={props.Icon} bot={props.bot} />
+        </Match>
+
+        <Match when={props.char.visualType === 'sprite' && props.char.sprite && props.surround}>
+          <div
+            ref={ref}
+            class={`overflow-hidden border-2 border-[var(--bg-800)] bg-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+              props.class || ''
+            }`}
+            data-bot-avatar={props.bot}
+            data-user-avatar={!props.bot}
+          >
+            <AvatarContainer body={props.char.sprite} container={ref} />
+          </div>
+        </Match>
+
+        <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
+          <div class={`avatar-${props.format?.size || 'md'} avatar-circle`} ref={ref}>
+            <AvatarContainer body={props.char.sprite} container={ref} />
+          </div>
+        </Match>
+
+        <Match when>
+          <AvatarIcon
+            visual={props.char.visualType}
+            sprite={props.char.sprite}
+            avatarUrl={props.char.avatar || ''}
+            openable={props.openable}
+            format={props.format}
+            bot={props.bot}
+            anonymize={props.anonymize}
+          />
+        </Match>
+      </Switch>
+    </>
+  )
 }
 
 const AvatarIcon: Component<Props> = (props) => {
@@ -74,7 +115,10 @@ const AvatarIcon: Component<Props> = (props) => {
   const fmtCorners = createMemo(() => corners[format().corners])
 
   createEffect(async () => {
-    if (!props.avatarUrl) return
+    if (!props.avatarUrl) {
+      setAvatar('')
+      return
+    }
     if (props.avatarUrl instanceof File) {
       const data = await getImageData(props.avatarUrl)
       setAvatar(data!)
@@ -96,50 +140,69 @@ const AvatarIcon: Component<Props> = (props) => {
     settingStore.showImage(img)
   }
 
+  let container: any
+
   return (
     <>
-      <Show when={avatar()}>
-        <div
-          class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
-            props.class || ''
-          }`}
-          data-bot-avatar={props.bot}
-          data-user-avatar={!props.bot}
-          onClick={onImageClick}
-        >
-          <img
-            data-bot-image={props.bot}
-            data-user-image={!props.bot}
-            class={`
-              m-auto
-              ${format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'}
-              ${fmtFit()} ${fmtCorners()}
-              ${visibilityClass()}
-            `}
-            src={getAssetUrl(avatar()!)}
+      <Switch>
+        <Match when={props.visual === 'sprite' && props.sprite}>
+          <div
+            ref={container}
+            class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+              props.class || ''
+            }`}
             data-bot-avatar={props.bot}
-          />
-        </div>
-      </Show>
-      <Show when={!avatar()}>
-        <div
-          data-bot-avatar={props.bot}
-          data-user-avatar={!props.bot}
-          class={`avatar-${
-            format().size
-          } avatar-circle flex shrink-0 items-center justify-center rounded-full border-2 border-[var(--bg-800)] bg-[var(--bg-700)] ${cls()}`}
-        >
-          <Show when={!props.bot}>
-            <VenetianMask data-user-icon />
-          </Show>
-          <Show when={props.bot}>
-            <Show when={props.Icon}>{props.Icon && <props.Icon data-bot-icon />}</Show>
-            <Show when={!props.Icon}>
-              <Bot data-bot-icon />
+            data-user-avatar={!props.bot}
+            onClick={onImageClick}
+          >
+            <AvatarContainer body={props.sprite!} container={container} />
+          </div>
+        </Match>
+
+        <Match when={avatar()}>
+          <div
+            class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+              props.class || ''
+            }`}
+            data-bot-avatar={props.bot}
+            data-user-avatar={!props.bot}
+            onClick={onImageClick}
+          >
+            <img
+              data-bot-image={props.bot}
+              data-user-image={!props.bot}
+              class={`
+            m-auto
+            ${format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'}
+            ${fmtFit()} ${fmtCorners()}
+            ${visibilityClass()}
+            `}
+              src={getAssetUrl(avatar()!)}
+              data-bot-avatar={props.bot}
+            />
+          </div>
+        </Match>
+
+        <Match when>
+          <div
+            data-bot-avatar={props.bot}
+            data-user-avatar={!props.bot}
+            class={`avatar-${
+              format().size
+            } avatar-circle flex shrink-0 items-center justify-center rounded-full border-2 border-[var(--bg-800)] bg-[var(--bg-700)] ${cls()}`}
+          >
+            <Show when={!props.bot}>
+              <VenetianMask data-user-icon />
             </Show>
-          </Show>
-        </div>
-      </Show>
+            <Show when={props.bot}>
+              <Show when={props.Icon}>{props.Icon && <props.Icon data-bot-icon />}</Show>
+              <Show when={!props.Icon}>
+                <Bot data-bot-icon />
+              </Show>
+            </Show>
+          </div>
+        </Match>
+      </Switch>
     </>
   )
 }

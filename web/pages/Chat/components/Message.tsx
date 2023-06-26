@@ -208,8 +208,8 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={props.char && !!props.msg.characterId}>
-                  <AvatarIcon
-                    avatarUrl={props.botMap[props.msg.characterId!]?.avatar || props.char?.avatar}
+                  <CharacterAvatar
+                    char={props.botMap[props.msg.characterId!] || props.char}
                     openable
                     bot={true}
                     format={format()}

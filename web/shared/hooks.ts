@@ -103,5 +103,5 @@ function isFunction<T>(value: T | Function): value is Function {
 }
 export function useRootModal(modal: RootModal) {
   onMount(() => rootModalStore.addModal(modal))
-  onCleanup(() => rootModalStore.removeModal(modal.type))
+  onCleanup(() => rootModalStore.removeModal(modal.id))
 }

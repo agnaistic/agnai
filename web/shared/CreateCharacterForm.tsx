@@ -52,7 +52,6 @@ import { usePane, useRootModal } from './hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
 import { ToggleButtons } from './Toggle'
-import { getRandomBody } from '../asset/sprite'
 import AvatarBuilder, { AvatarContainer } from './Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
 import Slot from './Slot'
@@ -697,20 +696,26 @@ const SpriteModal: Component<{
   close: () => void
 }> = (props) => {
   let ref: any
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Character Designer"
-      fixedHeight
-      maxWidth="half"
-    >
-      <Slot slot="mobile" />
-      <div class="h-[32rem] w-full sm:h-[42rem]" ref={ref}>
-        <AvatarBuilder body={props.body} onChange={props.onChange} bounds={ref} noHeader />
-      </div>
-    </Modal>
-  )
+
+  useRootModal({
+    id: 'sprite-modal',
+    element: (
+      <Modal
+        show={props.show}
+        close={props.close}
+        title="Character Designer"
+        fixedHeight
+        maxWidth="half"
+      >
+        <Slot slot="mobile" />
+        <div class="h-[32rem] w-full sm:h-[42rem]" ref={ref}>
+          <AvatarBuilder body={props.body} onChange={props.onChange} bounds={ref} noHeader />
+        </div>
+      </Modal>
+    ),
+  })
+
+  return null
 }
 
 const MemoryBookPicker: Component<{
@@ -782,7 +787,7 @@ const MemoryBookPicker: Component<{
     </Modal>
   )
 
-  useRootModal({ type: 'memoryBook', element: BookModal })
+  useRootModal({ id: 'memoryBook', element: BookModal })
 
   return (
     <div>
