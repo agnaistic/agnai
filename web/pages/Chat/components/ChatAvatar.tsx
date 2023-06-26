@@ -1,5 +1,4 @@
-import { Component, JSX, createMemo } from 'solid-js'
-import { AppSchema } from '/common/types'
+import { JSX, createMemo } from 'solid-js'
 import { characterStore, chatStore, userStore } from '/web/store'
 import { getActiveBots } from '../util'
 import { CharacterAvatar } from '/web/shared/AvatarIcon'
