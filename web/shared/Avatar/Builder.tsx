@@ -497,7 +497,7 @@ export function useAutoExpression() {
 
       if (expr() === 'blink' && expr() !== 'neutral') {
         update('neutral')
-        setReset(Date.now() + 10000)
+        setReset(Date.now() + 20000)
       } else {
         update('blink')
         setReset(Date.now() + 200)
