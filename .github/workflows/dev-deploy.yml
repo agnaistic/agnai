@@ -1,4 +1,4 @@
-name: Web deploy
+name: Deploy to dev
 
 on: pull_request
 
@@ -49,7 +49,7 @@ jobs:
         with:
           approvers: sceuick
 
-      - name: Publish - Live
+      - name: Publish to Dev
         uses: BetaHuhn/do-spaces-action@v2
         with:
           access_key: ${{ secrets.S3_ACCESS_KEY}}
