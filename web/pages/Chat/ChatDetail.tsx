@@ -5,6 +5,7 @@ import {
   createMemo,
   createSignal,
   For,
+  Index,
   JSX,
   Match,
   onCleanup,
@@ -56,6 +57,7 @@ import {
   SwipeMessage,
 } from './helpers'
 import { AvatarContainer, useAutoExpression } from '/web/shared/Avatar/Builder'
+import { useChatAvatars } from './components/ChatAvatar'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -96,6 +98,7 @@ const ChatDetail: Component = () => {
   })
 
   const express = useAutoExpression()
+  const avatars = useChatAvatars()
 
   const viewHeight = createMemo(() => {
     const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
@@ -446,7 +449,7 @@ const ChatDetail: Component = () => {
               class={`flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
               style={contentStyles()}
             >
-              <section class="flex h-full  flex-col justify-end gap-2">
+              <section class="flex h-full w-full flex-col justify-end gap-2">
                 <Show when={user.ui.viewMode === 'split'}>
                   <section
                     ref={container!}
@@ -479,21 +482,23 @@ const ChatDetail: Component = () => {
                       </div>
                     </Show>
                     <InfiniteScroll />
-                    <For each={chatMsgs()}>
+                    <Index each={chatMsgs()}>
                       {(msg, i) => (
                         <Message
-                          msg={msg}
+                          msg={msg()}
                           botMap={chars.botMap}
                           chat={chats.chat!}
                           char={chats.char!}
                           editing={chats.opts.editing}
                           anonymize={cfg.anonymize}
-                          last={i() === indexOfLastRPMessage()}
-                          onRemove={() => setRemoveId(msg._id)}
+                          last={i === indexOfLastRPMessage()}
+                          onRemove={() => setRemoveId(msg()._id)}
                           swipe={
-                            msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
+                            msg()._id === retries()?.msgId &&
+                            swipe() > 0 &&
+                            retries()?.list[swipe()]
                           }
-                          confirmSwipe={() => confirmSwipe(msg._id)}
+                          confirmSwipe={() => confirmSwipe(msg()._id)}
                           cancelSwipe={cancelSwipe}
                           tts={tts()}
                           retrying={msgs.retrying}
@@ -503,7 +508,7 @@ const ChatDetail: Component = () => {
                         >
                           {isOwner() &&
                             retries()?.list?.length! > 1 &&
-                            i() === indexOfLastRPMessage() && (
+                            i === indexOfLastRPMessage() && (
                               <SwipeMessage
                                 chatId={chats.chat?._id!}
                                 pos={swipe()}
@@ -514,7 +519,7 @@ const ChatDetail: Component = () => {
                             )}
                         </Message>
                       )}
-                    </For>
+                    </Index>
                     <Show when={waitingMsg()}>
                       <Message
                         botMap={chars.botMap}
@@ -526,6 +531,7 @@ const ChatDetail: Component = () => {
                         anonymize={cfg.anonymize}
                         sendMessage={sendMessage}
                         isPaneOpen={!!chatStore().opts.pane}
+                        avatars={avatars.avatars()}
                       />
                     </Show>
                   </div>

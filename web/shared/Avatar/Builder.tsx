@@ -479,7 +479,8 @@ export function useAutoExpression() {
       }
 
       if (resp) {
-        const match = classifyEmotes.find((emote) => emote.includes(resp.trim().toLowerCase()))
+        const lowered = resp.trim().toLowerCase()
+        const match = classifyEmotes.find((emote) => lowered.includes(emote))
         if (match) {
           console.log('Classifiation:', match)
           update(match)

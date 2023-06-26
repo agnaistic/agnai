@@ -15,6 +15,7 @@ import {
   createMemo,
   createSignal,
   For,
+  JSX,
   Match,
   onCleanup,
   onMount,
@@ -23,7 +24,7 @@ import {
 } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
-import { CharacterAvatar } from '../../../shared/AvatarIcon'
+import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'
 import { markdown } from '../../../shared/markdown'
@@ -49,6 +50,7 @@ type MessageProps = {
   actions?: AppSchema.ChatMessage['actions']
   sendMessage: (msg: string, ooc: boolean) => void
   isPaneOpen: boolean
+  avatars?: Record<string, JSX.Element>
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -80,6 +82,7 @@ const Message: Component<MessageProps> = (props) => {
             sendMessage={props.sendMessage}
             botMap={props.botMap}
             isPaneOpen={props.isPaneOpen}
+            avatars={props.avatars}
           />
         )}
       </For>
@@ -188,14 +191,18 @@ const SingleMessage: Component<
               <Switch>
                 <Match when={voice.status === 'generating'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                    <CharacterAvatar char={props.char} format={format()} Icon={DownloadCloud} />
+                    <AvatarIcon format={format()} Icon={DownloadCloud} />
                   </div>
                 </Match>
 
                 <Match when={voice.status === 'playing'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                    <CharacterAvatar char={props.char} format={format()} Icon={PauseCircle} />
+                    <AvatarIcon format={format()} Icon={PauseCircle} />
                   </div>
+                </Match>
+
+                <Match when={props.avatars && props.avatars[props.msg.characterId!]}>
+                  {props.avatars![props.msg.characterId!]}
                 </Match>
 
                 <Match when={!!props.botMap[props.msg.characterId!]}>
@@ -208,6 +215,7 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={props.char && !!props.msg.characterId}>
+                  {/* {props.avatars[props.msg.characterId!] || props.avatars[props.char._id]} */}
                   <CharacterAvatar
                     char={props.botMap[props.msg.characterId!] || props.char}
                     openable
@@ -217,7 +225,7 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={!props.msg.characterId}>
-                  <CharacterAvatar char={props.char} format={format()} Icon={DownloadCloud} />
+                  <AvatarIcon format={format()} Icon={DownloadCloud} />
                 </Match>
               </Switch>
             </span>
