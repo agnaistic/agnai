@@ -4,7 +4,7 @@ type SpriteEmote = Record<string, EmotionMap>
 
 export type EmoteType = keyof typeof emotions
 
-const eyes = {
+export const eyes = {
   wide_open: 'neutral_8',
   bored: 'neutral_10',
   tired: 'neutral_6',

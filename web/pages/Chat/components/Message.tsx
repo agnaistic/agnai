@@ -23,7 +23,7 @@ import {
 } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
-import AvatarIcon from '../../../shared/AvatarIcon'
+import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'
 import { markdown } from '../../../shared/markdown'
@@ -188,14 +188,23 @@ const SingleMessage: Component<
               <Switch>
                 <Match when={voice.status === 'generating'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                    <AvatarIcon bot={true} format={format()} Icon={DownloadCloud} />
+                    <CharacterAvatar char={props.char} format={format()} Icon={DownloadCloud} />
                   </div>
                 </Match>
 
                 <Match when={voice.status === 'playing'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
-                    <AvatarIcon bot={true} format={format()} Icon={PauseCircle} />
+                    <CharacterAvatar char={props.char} format={format()} Icon={PauseCircle} />
                   </div>
+                </Match>
+
+                <Match when={!!props.botMap[props.msg.characterId!]}>
+                  <CharacterAvatar
+                    openable
+                    char={props.botMap[props.msg.characterId!]}
+                    format={format()}
+                    bot={!props.msg.userId}
+                  />
                 </Match>
 
                 <Match when={props.char && !!props.msg.characterId}>
@@ -208,12 +217,7 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={!props.msg.characterId}>
-                  <AvatarIcon
-                    avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
-                    openable
-                    format={format()}
-                    anonymize={props.anonymize}
-                  />
+                  <CharacterAvatar char={props.char} format={format()} Icon={DownloadCloud} />
                 </Match>
               </Switch>
             </span>

@@ -211,8 +211,9 @@ export const userStore = createStore<UserState>(
     tryUI({ ui }, update: Partial<UI.UISettings>) {
       const mode = update.mode || ui.mode
       const current = ui[mode]
-      debouceUI({ ...ui, ...update })
-      return { current }
+      const next = { current, ...ui, ...update }
+      debouceUI(next)
+      return { ui: next }
     },
 
     receiveUI(_, update: UI.UISettings) {

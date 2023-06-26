@@ -5,7 +5,8 @@ import { getAssetUrl } from './util'
 import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { getImageData } from '../store/data/chars'
-import { UI } from '/common/types'
+import { AppSchema, UI } from '/common/types'
+import { AvatarContainer } from './Avatar/Builder'
 
 type Props = {
   avatarUrl?: string | File
@@ -23,6 +24,39 @@ type Format = {
 }
 
 const defaultFormat: Format = { size: 'md', corners: 'circle' }
+
+export const CharacterAvatar: Component<{
+  char: AppSchema.Character
+  openable?: boolean
+  format?: Format
+  bot?: boolean
+  Icon?: (props: LucideProps) => JSX.Element
+}> = (props) => {
+  let ref: any
+  if (props.Icon) {
+    return <AvatarIcon format={props.format} Icon={props.Icon} bot={props.bot} />
+  }
+
+  if (props.char.visualType === 'sprite' && props.char.sprite) {
+    const size = props.format?.size || '3xl'
+    return (
+      <div class={`avatar-${size} avatar-circle`} ref={ref}>
+        <AvatarContainer body={props.char.sprite} container={ref} />
+      </div>
+    )
+  }
+
+  if (!props.char.visualType || props.char.visualType === 'avatar') {
+    return (
+      <AvatarIcon
+        avatarUrl={props.char.avatar}
+        openable={props.openable}
+        format={props.format}
+        bot={props.bot}
+      />
+    )
+  }
+}
 
 const AvatarIcon: Component<Props> = (props) => {
   const [avatar, setAvatar] = createSignal(

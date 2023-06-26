@@ -40,6 +40,7 @@ export const STARTER_CHARACTER: AppSchema.Character = {
   createdAt: '',
   updatedAt: '',
   favorite: false,
+  visualType: 'avatar',
   ...defaultChars.Robot,
 }
 

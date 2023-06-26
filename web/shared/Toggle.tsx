@@ -65,7 +65,6 @@ export const ToggleButtons: Component<{
 }> = (props) => {
   const selected = createMemo(() => {
     const idx = props.items.findIndex((opt) => opt.value === props.selected)
-    console.log('idx', idx, props.selected)
     return idx === -1 ? 0 : idx
   })
 

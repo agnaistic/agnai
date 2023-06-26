@@ -12,6 +12,7 @@ import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
 import { UI } from '/common/types'
+import { Save } from 'lucide-solid'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 const themeBgOptions = [{ label: 'Custom', value: '' }].concat(
@@ -101,6 +102,12 @@ const UISettings: Component = () => {
           />
         </div>
       </div>
+
+      <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />
+      <div class="my-2 w-full justify-center">
+        <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
+      </div>
+
       <Select
         fieldName="font"
         label="Font"
@@ -112,7 +119,44 @@ const UISettings: Component = () => {
         onChange={(item) => userStore.saveUI({ font: item.value as any })}
       />
 
-      <h4 class="text-md font-bold">Chat Avatars</h4>
+      <Divider />
+      <h3 class="text-md font-bold">Chat View Settings</h3>
+
+      <Select
+        fieldName="chatMode"
+        label="View Mode"
+        helperText={
+          <>
+            <b>Standard</b>: Messages take up the entire chat screen.
+            <br />
+            <b>Split</b>: Character's avatar appears at the top of the screen
+          </>
+        }
+        items={[
+          { label: 'Standard', value: 'standard' },
+          { label: 'Split', value: 'split' },
+        ]}
+        value={state.ui.viewMode || 'standard'}
+        onChange={(next) => userStore.saveUI({ viewMode: next.value as any })}
+      />
+
+      <div class="flex w-full items-center justify-between gap-2">
+        <RangeInput
+          parentClass="w-full"
+          fieldName="chatModeHeight"
+          min={25}
+          max={65}
+          step={1}
+          label="Split Height (%)"
+          helperText={`Maximum height of the character's avatar when in split mode`}
+          value={state.ui.viewHeight || 40}
+          onChange={(value) => userStore.tryUI({ viewHeight: value })}
+        />
+        <Button onClick={() => userStore.saveUI({ viewHeight: state.ui.viewHeight || 40 })}>
+          <Save />
+        </Button>
+      </div>
+
       <div class="flex flex-row justify-start gap-4">
         <Select
           fieldName="avatarSize"
@@ -185,11 +229,6 @@ const UISettings: Component = () => {
         onChange={(color) => userStore.updateColor({ chatEmphasisColor: color })}
         value={state.current.chatEmphasisColor}
       />
-
-      <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />
-      <div class="my-2 w-full justify-center">
-        <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
-      </div>
 
       <Select
         fieldName="chatWidth"

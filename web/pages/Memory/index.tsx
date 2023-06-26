@@ -121,7 +121,7 @@ const ImportMemoryModal: Component<ImportProps> = (props) => {
     memoryStore.create(json(), props.close)
   }
 
-  const Footer = () => (
+  const Footer = (
     <>
       <Button onClick={props.close}>
         <X /> Cancel

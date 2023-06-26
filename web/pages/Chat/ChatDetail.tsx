@@ -97,6 +97,9 @@ const ChatDetail: Component = () => {
 
   const express = useAutoExpression()
 
+  const viewHeight = createMemo(() => {
+    return user.ui.viewHeight || 40
+  })
   const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
   const botGreeting = createMemo(() => chats.char?.greeting || '')
@@ -319,9 +322,7 @@ const ChatDetail: Component = () => {
   }
 
   const moreMessage = () => msgStore.continuation(chats.chat?._id!)
-
   const requestMessage = (charId: string) => msgStore.request(chats.chat?._id!, charId)
-
   const cancelSwipe = () => setSwipe(0)
 
   const confirmSwipe = (msgId: string) => {
@@ -438,89 +439,94 @@ const ChatDetail: Component = () => {
               </div>
             </header>
 
-            <Show when={user.ui.chatAvatarMode}>
-              <section ref={container!} class="h-full w-full">
-                <AvatarContainer
-                  container={container!}
-                  body={chats.char?.sprite}
-                  expression={express.expr()}
-                />
-              </section>
-            </Show>
-
             <section
-              class={`overflow-y-none flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
+              class={`flex w-full flex-row justify-end gap-1 overflow-y-auto ${msgsAndPaneJustifyContent()}`}
               style={contentStyles()}
             >
-              <section
-                data-messages
-                class={`flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
-              >
-                <div id="chat-messages" class="flex w-full flex-col gap-2">
-                  <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
-                    <div class="mx-auto mb-4 text-[var(--text-500)]">
-                      <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
-                      {chats.char!.description!.split('\n').map((paragText) => (
-                        <div>{paragText}</div>
-                      ))}
-                    </div>
-                  </Show>
-                  <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
-                    <div class="flex justify-center">
-                      <Button onClick={generateFirst}>Generate Message</Button>
-                    </div>
-                  </Show>
-                  <InfiniteScroll />
-                  <For each={chatMsgs()}>
-                    {(msg, i) => (
+              <section class="flex h-full w-full flex-col justify-end gap-2">
+                <Show when={user.ui.viewMode === 'split'}>
+                  <section
+                    ref={container!}
+                    class="flex h-full max-w-full"
+                    style={{ height: `${viewHeight()}%` }}
+                  >
+                    <AvatarContainer
+                      container={container!}
+                      body={chats.char?.sprite}
+                      expression={express.expr()}
+                    />
+                  </section>
+                </Show>
+                <section
+                  data-messages
+                  class={`flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
+                >
+                  <div id="chat-messages" class="flex w-full flex-col gap-2">
+                    <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
+                      <div class="mx-auto mb-4 text-[var(--text-500)]">
+                        <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
+                        {chats.char!.description!.split('\n').map((paragText) => (
+                          <div>{paragText}</div>
+                        ))}
+                      </div>
+                    </Show>
+                    <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
+                      <div class="flex justify-center">
+                        <Button onClick={generateFirst}>Generate Message</Button>
+                      </div>
+                    </Show>
+                    <InfiniteScroll />
+                    <For each={chatMsgs()}>
+                      {(msg, i) => (
+                        <Message
+                          msg={msg}
+                          botMap={chars.botMap}
+                          chat={chats.chat!}
+                          char={chats.char!}
+                          editing={chats.opts.editing}
+                          anonymize={cfg.anonymize}
+                          last={i() === indexOfLastRPMessage()}
+                          onRemove={() => setRemoveId(msg._id)}
+                          swipe={
+                            msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
+                          }
+                          confirmSwipe={() => confirmSwipe(msg._id)}
+                          cancelSwipe={cancelSwipe}
+                          tts={tts()}
+                          retrying={msgs.retrying}
+                          partial={msgs.partial}
+                          sendMessage={sendMessage}
+                          isPaneOpen={!!chatStore().opts.pane}
+                        >
+                          {isOwner() &&
+                            retries()?.list?.length! > 1 &&
+                            i() === indexOfLastRPMessage() && (
+                              <SwipeMessage
+                                chatId={chats.chat?._id!}
+                                pos={swipe()}
+                                prev={clickSwipe(-1)}
+                                next={clickSwipe(1)}
+                                list={retries()?.list || []}
+                              />
+                            )}
+                        </Message>
+                      )}
+                    </For>
+                    <Show when={waitingMsg()}>
                       <Message
-                        msg={msg}
                         botMap={chars.botMap}
+                        msg={waitingMsg()!}
+                        char={chars.botMap[waitingMsg()?.characterId!]}
                         chat={chats.chat!}
-                        char={chats.char!}
+                        onRemove={() => {}}
                         editing={chats.opts.editing}
                         anonymize={cfg.anonymize}
-                        last={i() === indexOfLastRPMessage()}
-                        onRemove={() => setRemoveId(msg._id)}
-                        swipe={
-                          msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
-                        }
-                        confirmSwipe={() => confirmSwipe(msg._id)}
-                        cancelSwipe={cancelSwipe}
-                        tts={tts()}
-                        retrying={msgs.retrying}
-                        partial={msgs.partial}
                         sendMessage={sendMessage}
                         isPaneOpen={!!chatStore().opts.pane}
-                      >
-                        {isOwner() &&
-                          retries()?.list?.length! > 1 &&
-                          i() === indexOfLastRPMessage() && (
-                            <SwipeMessage
-                              chatId={chats.chat?._id!}
-                              pos={swipe()}
-                              prev={clickSwipe(-1)}
-                              next={clickSwipe(1)}
-                              list={retries()?.list || []}
-                            />
-                          )}
-                      </Message>
-                    )}
-                  </For>
-                  <Show when={waitingMsg()}>
-                    <Message
-                      botMap={chars.botMap}
-                      msg={waitingMsg()!}
-                      char={chars.botMap[waitingMsg()?.characterId!]}
-                      chat={chats.chat!}
-                      onRemove={() => {}}
-                      editing={chats.opts.editing}
-                      anonymize={cfg.anonymize}
-                      sendMessage={sendMessage}
-                      isPaneOpen={!!chatStore().opts.pane}
-                    />
-                  </Show>
-                </div>
+                      />
+                    </Show>
+                  </div>
+                </section>
               </section>
 
               <Show when={!!chats.opts.pane}>

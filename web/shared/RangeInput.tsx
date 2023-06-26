@@ -18,6 +18,7 @@ const RangeInput: Component<{
   onChange?: (value: number) => void
   service?: AIAdapter
   aiSetting?: keyof PresetAISettings
+  parentClass?: string
 }> = (props) => {
   const adapters = createMemo(() => getAISettingServices(props.aiSetting))
   const [value, setValue] = createSignal(props.value)
@@ -43,7 +44,7 @@ const RangeInput: Component<{
   })
 
   return (
-    <div class={`relative pt-1 ${hide()}`}>
+    <div class={`relative pt-1 ${hide()} ${props.parentClass || ''}`}>
       <ul class="w-full">
         <div class="flex flex-row gap-2">
           <label class="form-label block-block">{props.label}</label>

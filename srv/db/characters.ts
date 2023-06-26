@@ -25,6 +25,8 @@ export type CharacterUpdate = Partial<
     | 'creator'
     | 'characterVersion'
     | 'appearance'
+    | 'sprite'
+    | 'visualType'
   >
 >
 
@@ -51,6 +53,8 @@ export async function createCharacter(
     | 'postHistoryInstructions'
     | 'creator'
     | 'characterVersion'
+    | 'sprite'
+    | 'visualType'
   >
 ) {
   const newChar: AppSchema.Character = {
@@ -71,7 +75,7 @@ export async function updateCharacter(id: string, userId: string, char: Characte
   if (edit.avatar === undefined) {
     delete edit.avatar
   }
-  await db('character').updateOne({ _id: id, userId, kind: 'character' }, { $set: edit })
+  await db('character').updateOne({ _id: id, userId }, { $set: edit })
   return getCharacter(userId, id)
 }
 
@@ -79,12 +83,12 @@ export async function getCharacter(
   userId: string,
   id: string
 ): Promise<AppSchema.Character | undefined> {
-  const char = await db('character').findOne({ kind: 'character', _id: id, userId })
+  const char = await db('character').findOne({ _id: id, userId })
   return char || undefined
 }
 
 export async function getCharacters(userId: string) {
-  const list = await db('character').find({ kind: 'character', userId }).toArray()
+  const list = await db('character').find({ userId }).toArray()
   return list
 }
 
@@ -97,7 +101,7 @@ export async function deleteCharacter(opts: { charId: string; userId: string }) 
 
 export async function getCharacterList(charIds: string[]) {
   const list = await db('character')
-    .find({ _id: { $in: charIds }, kind: 'character' })
+    .find({ _id: { $in: charIds } })
     .toArray()
   return list
 }

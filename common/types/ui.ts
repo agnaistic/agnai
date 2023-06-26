@@ -53,6 +53,9 @@ export type UISettings = {
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
 
+  viewMode?: 'split' | 'standard'
+  viewHeight?: number
+
   chatWidth?: ChatWidth
   logPromptsToBrowserConsole: boolean
 

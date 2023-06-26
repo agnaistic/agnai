@@ -20,7 +20,11 @@ const characterValidator = {
   description: 'string?',
   appearance: 'string?',
   culture: 'string?',
+
+  visualType: 'string?',
+  sprite: 'any?',
   avatar: 'string?',
+
   scenario: 'string?',
   greeting: 'string?',
   sampleChat: 'string?',
@@ -59,6 +63,7 @@ const createCharacter = handle(async (req) => {
   const persona = JSON.parse(body.persona) as AppSchema.Persona
   assertValid(personaValidator, persona)
 
+  const sprite = body.sprite ? JSON.parse(body.sprite) : undefined
   const voice = parseAndValidateVoice(body.voice)
   const tags = toArray(body.tags)
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
@@ -82,6 +87,8 @@ const createCharacter = handle(async (req) => {
     culture: body.culture,
     scenario: body.scenario,
     greeting: body.greeting,
+    visualType: body.visualType,
+    sprite,
     avatar: body.originalAvatar,
     favorite: false,
     voice,
@@ -135,6 +142,8 @@ const editCharacter = handle(async (req) => {
     greeting: body.greeting,
     scenario: body.scenario,
     sampleChat: body.sampleChat,
+    visualType: body.visualType,
+    sprite: body.sprite ? JSON.parse(body.sprite) : undefined,
     alternateGreetings,
     characterBook: characterBook ?? null,
     systemPrompt: body.systemPrompt,

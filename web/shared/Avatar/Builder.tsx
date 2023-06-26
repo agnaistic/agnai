@@ -30,7 +30,7 @@ import { msgsApi } from '/web/store/data/messages'
 import { altJailbreak, classifyTemplate } from '/common/default-preset'
 import { toastStore } from '/web/store'
 
-const Y_OFFSET = -50
+const Y_OFFSET = 0
 const HEIGHT = 1200 + Y_OFFSET
 const WIDTH = 1000
 
@@ -228,10 +228,7 @@ export const AvatarContainer: Component<{
   return (
     <div ref={bound!} class={`${styles.preview} relative h-full w-full select-none`}>
       <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
-      <div
-        class="absolute left-0 right-0 top-0  mx-auto rounded-md bg-[var(--bg-800)]"
-        style={getStyle()}
-      />
+      <div class="absolute left-0 right-0 top-0  mx-auto rounded-md" style={getStyle()} />
       <AvatarCanvas body={body()} style={getStyle()}></AvatarCanvas>
 
       {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
@@ -315,6 +312,8 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 
     for (const image of images) {
       ctx.drawImage(image, 0, Y_OFFSET, top.width, top.height)
+      ctx.imageSmoothingEnabled = true
+      ctx.imageSmoothingQuality = 'high'
 
       // For particular attributes we will render a second re-colored image on top of the original
       const shouldColor = canColor(props.attr, image.src)

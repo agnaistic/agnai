@@ -104,6 +104,9 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
     strictAppendFormOptional(form, 'sampleChat', char.sampleChat)
     appendFormOptional(form, 'voice', JSON.stringify(char.voice))
     appendFormOptional(form, 'avatar', file)
+    appendFormOptional(form, 'visualType', char.visualType)
+    appendFormOptional(form, 'sprite', JSON.stringify(char.sprite))
+
     // v2 fields start here
     appendFormOptional(form, 'alternateGreetings', char.alternateGreetings, JSON.stringify)
     appendFormOptional(form, 'characterBook', char.characterBook, JSON.stringify)
@@ -166,6 +169,8 @@ export async function createCharacter(char: NewCharacter) {
     appendFormOptional(form, 'tags', char.tags, JSON.stringify)
     appendFormOptional(form, 'avatar', char.avatar)
     appendFormOptional(form, 'originalAvatar', char.originalAvatar)
+    appendFormOptional(form, 'visualType', char.visualType)
+    appendFormOptional(form, 'sprite', JSON.stringify(char.sprite))
 
     // v2 fields start here
     appendFormOptional(form, 'alternateGreetings', char.alternateGreetings, JSON.stringify)

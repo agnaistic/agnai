@@ -101,8 +101,10 @@ export const CreateCharacterForm: Component<{
       creating: s.creating,
       edit,
       list: s.characters.list,
+      loaded: s.characters.loaded,
     }
   })
+
   const [tokens, setTokens] = createSignal({
     name: 0,
     scenario: 0,
@@ -119,7 +121,7 @@ export const CreateCharacterForm: Component<{
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
   const [creating, setCreating] = createSignal(false)
-  const [visualType, setVisualType] = createSignal('avatar')
+  const [visualType, setVisualType] = createSignal(state.edit?.visualType || 'avatar')
   const [spriteBody, setSpriteBody] = createSignal(state.edit?.sprite || getRandomBody())
   const [showBuilder, setShowBuilder] = createSignal(false)
 
@@ -254,8 +256,9 @@ export const CreateCharacterForm: Component<{
     const opts: PayloadOpts = {
       tags: tags(),
 
-      avatar: visualType() === 'avatar' ? state.avatar.blob || avatar() : undefined,
-      sprite: visualType() === 'sprite' ? spriteBody() : undefined,
+      visualType: visualType(),
+      avatar: state.avatar.blob || avatar(),
+      sprite: spriteBody(),
 
       altGreetings: alternateGreetings(),
       characterBook: bundledBook(),
@@ -810,12 +813,15 @@ const MemoryBookPicker: Component<{
 type PayloadOpts = {
   tags: string[] | undefined
   voice: VoiceSettings
+
+  visualType: string
   avatar: File | undefined
+  sprite: FullSprite | undefined
+
   altGreetings: string[] | undefined
   characterBook: AppSchema.MemoryBook | undefined
   extensions: Record<string, any>
   originalAvatar: string | undefined
-  sprite: FullSprite | undefined
 }
 
 function getPayload(ev: Event, opts: PayloadOpts) {
@@ -848,6 +854,7 @@ function getPayload(ev: Event, opts: PayloadOpts) {
     tags: opts.tags,
     scenario: body.scenario,
     appearance: body.appearance,
+    visualType: opts.visualType,
     avatar: opts.avatar ?? (null as any),
     sprite: opts.sprite ?? (null as any),
     greeting: body.greeting,

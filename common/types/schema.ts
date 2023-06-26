@@ -197,6 +197,7 @@ export namespace AppSchema {
     scenario: string
     sampleChat: string
 
+    visualType?: string
     avatar?: string
     sprite?: FullSprite
 
