@@ -23,7 +23,7 @@ import {
 } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
-import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
+import { CharacterAvatar } from '../../../shared/AvatarIcon'
 import { getAssetUrl, getRootVariable } from '../../../shared/util'
 import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'
 import { markdown } from '../../../shared/markdown'
