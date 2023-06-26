@@ -47,6 +47,7 @@ jobs:
       - name: Approval
         uses: trstringer/manual-approval@v1
         with:
+          secret: ${{ github.TOKEN }}
           approvers: sceuick
 
       - name: Publish to Dev
