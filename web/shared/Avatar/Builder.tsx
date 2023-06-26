@@ -1,4 +1,3 @@
-import imgs from '../../asset/sprites/images/*.png'
 import styles from './avatar.module.scss'
 import {
   Component,
@@ -419,7 +418,7 @@ export default AvatarBuilder
 
 function toImage(gender: string, attr: SpriteAttr, type: string, file: string) {
   const id = `${gender}-${attr}-${type}-${file}`.replace('.png', '')
-  return (imgs as any)[id]
+  return `https://agnai-assets.sgp1.digitaloceanspaces.com/sprites/${id}.png`
 }
 
 function asyncImage(src: string) {
