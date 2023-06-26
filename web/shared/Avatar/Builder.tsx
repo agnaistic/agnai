@@ -58,7 +58,7 @@ const RECOLOR: { [key in SpriteAttr]?: boolean } = {
 
 const RATIO = (HEIGHT - Y_OFFSET) / WIDTH
 
-const Builder: Component<{
+const AvatarBuilder: Component<{
   body?: FullSprite
   resize?: boolean
   onChange?: (body: FullSprite) => void
@@ -209,9 +209,11 @@ export const AvatarContainer: Component<{
   })
 
   const body = createMemo(() => {
+    if (!props.body) return null
+
     const expr = getEmoteExpressions(props.expression || 'neutral')
     return {
-      ...(props.body || getRandomBody()),
+      ...props.body,
       ...expr,
     }
   })
@@ -226,13 +228,15 @@ export const AvatarContainer: Component<{
   })
 
   return (
-    <div ref={bound!} class={`${styles.preview} relative h-full w-full select-none`}>
-      <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
-      <div class="absolute left-0 right-0 top-0  mx-auto rounded-md" style={getStyle()} />
-      <AvatarCanvas body={body()} style={getStyle()}></AvatarCanvas>
+    <Show when={props.body}>
+      <div ref={bound!} class={`${styles.preview} relative h-full w-full select-none`}>
+        <img src={imgs.blank} class="absolute left-0 top-0 w-full" />
+        <div class="absolute left-0 right-0 top-0  mx-auto rounded-md" style={getStyle()} />
+        <AvatarCanvas body={body()!} style={getStyle()}></AvatarCanvas>
 
-      {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
-    </div>
+        {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
+      </div>
+    </Show>
   )
 }
 
@@ -397,7 +401,7 @@ const AttributeSelect: Component<{
   )
 }
 
-export default Builder
+export default AvatarBuilder
 
 function toImage(gender: string, attr: SpriteAttr, type: string, file: string) {
   const id = `${gender}-${attr}-${type}-${file}`.replace('.png', '')

@@ -180,14 +180,6 @@ export const chatStore = createStore<ChatState>('chat', {
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
-        /**
-         * TODO: REMOVE!!!!
-         */
-
-        if (!res.result.character.sprite) {
-          res.result.character.sprite = getRandomBody()
-        }
-
         safeLocalStorage.setItem('lastChatId', id)
 
         msgStore.setState({

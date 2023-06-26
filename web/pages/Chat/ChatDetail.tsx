@@ -98,6 +98,9 @@ const ChatDetail: Component = () => {
   const express = useAutoExpression()
 
   const viewHeight = createMemo(() => {
+    const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
+    if (mode === 'sprite' && !chats.char?.sprite) return 0
+    if (mode === 'avatar' || !chats.char?.visualType) return 0
     return user.ui.viewHeight || 40
   })
   const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))

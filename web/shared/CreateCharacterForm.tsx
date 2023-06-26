@@ -53,7 +53,7 @@ import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
 import { ToggleButtons } from './Toggle'
 import { getRandomBody } from '../asset/sprite'
-import Builder, { AvatarContainer } from './Avatar/Builder'
+import AvatarBuilder, { AvatarContainer } from './Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
 import Slot from './Slot'
 
@@ -122,7 +122,7 @@ export const CreateCharacterForm: Component<{
   const [culture, setCulture] = createSignal(defaultCulture)
   const [creating, setCreating] = createSignal(false)
   const [visualType, setVisualType] = createSignal(state.edit?.visualType || 'avatar')
-  const [spriteBody, setSpriteBody] = createSignal(state.edit?.sprite || getRandomBody())
+  const [spriteBody, setSpriteBody] = createSignal(state.edit?.sprite)
   const [showBuilder, setShowBuilder] = createSignal(false)
 
   const [alternateGreetings, setAlternateGreetings] = createSignal(
@@ -691,7 +691,7 @@ const AlternateGreetingsInput: Component<{
 }
 
 const SpriteModal: Component<{
-  body: FullSprite
+  body?: FullSprite
   onChange: (body: FullSprite) => void
   show: boolean
   close: () => void
@@ -707,7 +707,7 @@ const SpriteModal: Component<{
     >
       <Slot slot="mobile" />
       <div class="h-[32rem] w-full sm:h-[42rem]" ref={ref}>
-        <Builder body={props.body} onChange={props.onChange} bounds={ref} noHeader />
+        <AvatarBuilder body={props.body} onChange={props.onChange} bounds={ref} noHeader />
       </div>
     </Modal>
   )
