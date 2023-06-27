@@ -244,7 +244,7 @@ const ChatDetail: Component = () => {
     const opts = chatPreset()
     if (!opts) return
 
-    express.classify(opts.preset, msgs.inference.text)
+    // express.classify(opts.preset, msgs.inference.text)
     msgStore.clearLastInference()
   })
 
