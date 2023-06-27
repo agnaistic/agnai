@@ -19,7 +19,7 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import Modal from '../../shared/Modal'
-import { getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
+import { getAssetUrl, getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
 import { characterStore, ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettings } from './ChatGenSettings'
@@ -103,7 +103,7 @@ const ChatDetail: Component = () => {
   const viewHeight = createMemo(() => {
     const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
     if (mode === 'sprite' && !chats.char?.sprite) return 0
-    if (mode === 'avatar' || !chats.char?.visualType) return 0
+    if (mode === 'avatar' && !chats.char?.avatar) return 0
     return user.ui.viewHeight || 40
   })
   const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))
@@ -456,11 +456,21 @@ const ChatDetail: Component = () => {
                     class="flex h-full"
                     style={{ height: `${viewHeight()}%` }}
                   >
-                    <AvatarContainer
-                      container={container!}
-                      body={chats.char?.sprite}
-                      expression={express.expr()}
-                    />
+                    <Show when={chats.char?.visualType === 'sprite'}>
+                      <AvatarContainer
+                        container={container!}
+                        body={chats.char?.sprite}
+                        expression={express.expr()}
+                      />
+                    </Show>
+                    <Show when={chats.char?.visualType !== 'sprite' && chats.char?.avatar}>
+                      <div class="flex h-full w-full justify-center">
+                        <img
+                          src={getAssetUrl(chats.char?.avatar!)}
+                          class="flex h-full justify-center rounded-lg object-cover"
+                        />
+                      </div>
+                    </Show>
                   </section>
                 </Show>
                 <section
