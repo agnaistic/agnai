@@ -65,6 +65,10 @@ export const CharacterAvatar: Component<{
           <AvatarIcon format={props.format} Icon={props.Icon} bot={props.bot} />
         </Match>
 
+        <Match when={!props.char}>
+          <AvatarIcon bot={props.bot} format={props.format} />
+        </Match>
+
         <Match when={props.char.visualType === 'sprite' && props.char.sprite && props.surround}>
           <div
             ref={ref}

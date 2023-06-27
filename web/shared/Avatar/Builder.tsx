@@ -289,18 +289,21 @@ type CanvasProps = {
 }
 
 const CanvasPart: Component<CanvasProps> = (props) => {
-  let top: HTMLCanvasElement
+  let top: HTMLImageElement
   let bottom: HTMLCanvasElement
 
   const [state, setState] = createSignal('')
 
   createEffect(() => {
-    top.style.aspectRatio = '1 / 1.2'
-    top.style.width = props.style.width
-    top.style.height = props.style.height
     bottom.style.aspectRatio = '1 / 1.2'
     bottom.style.width = props.style.width
     bottom.style.height = props.style.height
+  })
+
+  const baseImages = createMemo(() => {
+    const files = manifest[props.attr][props.type] || []
+    const images = files.map((id) => toImage(props.body.gender, props.attr, props.type, id))
+    return images
   })
 
   createEffect(async () => {
@@ -309,12 +312,10 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 
     setState(hash)
 
-    const ctx = top.getContext('2d')
     const over = bottom.getContext('2d')
-    if (!ctx || !over) return
+    if (!over) return
 
-    ctx.clearRect(0, 0, top.width, top.height)
-    over.clearRect(0, 0, top.width, top.height)
+    over.clearRect(0, 0, 1000, 1200)
 
     if (!props.type || props.type === 'none') return
 
@@ -328,10 +329,6 @@ const CanvasPart: Component<CanvasProps> = (props) => {
     const images = await Promise.all(promises)
 
     for (const image of images) {
-      ctx.drawImage(image, 0, Y_OFFSET, top.width, top.height)
-      ctx.imageSmoothingEnabled = true
-      ctx.imageSmoothingQuality = 'high'
-
       // For particular attributes we will render a second re-colored image on top of the original
       const shouldColor = canColor(props.attr, image.src)
       const prop = getColorProp(props.attr)
@@ -340,7 +337,8 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       if (shouldColor && color) {
         const alpha = IS_EYES[props.attr] ? '0.3' : '0.6'
         const { r, g, b } = hexToRgb(color)!
-        over.drawImage(image, 0, Y_OFFSET, top.width, top.height)
+        over.drawImage(image, 0, Y_OFFSET, 1000, 1200)
+
         const orig = over.globalCompositeOperation
         over.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
         over.globalCompositeOperation = 'source-in'
@@ -353,18 +351,25 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 
   return (
     <>
-      <canvas
-        class="absolute left-0 right-0 top-0 mx-auto"
-        ref={top!}
-        width={WIDTH}
-        height={HEIGHT - Y_OFFSET}
-      ></canvas>
-      <canvas
-        class="absolute left-0 right-0 top-0 mx-auto"
-        ref={bottom!}
-        width={WIDTH}
-        height={HEIGHT - Y_OFFSET}
-      ></canvas>
+      <For each={baseImages()}>
+        {(src) => (
+          <img
+            class="absolute left-0 right-0 top-0 mx-auto"
+            src={src}
+            ref={top!}
+            style={props.style}
+          />
+        )}
+      </For>
+      <Show when>
+        <canvas
+          class="absolute left-0 right-0 top-0 mx-auto"
+          ref={bottom!}
+          width={WIDTH}
+          height={HEIGHT - Y_OFFSET}
+          style={props.style}
+        ></canvas>
+      </Show>
     </>
   )
 }
@@ -376,13 +381,10 @@ const AttributeSelect: Component<{
   const [attr, setAttr] = createSignal(attributes[0])
 
   const options = createMemo(() => {
-    return (
-      attributes
-        .slice()
-        .sort()
-        // .filter((attr) => attr !== 'body')
-        .map((value) => ({ label: value.replace(/_/g, ' '), value }))
-    )
+    return attributes
+      .slice()
+      .sort()
+      .map((value) => ({ label: value.replace(/_/g, ' '), value }))
   })
 
   const move = (dir: -1 | 1) => {
