@@ -55,6 +55,7 @@ import { ToggleButtons } from './Toggle'
 import AvatarBuilder, { AvatarContainer } from './Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
 import Slot from './Slot'
+import { getRandomBody } from '../asset/sprite'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -703,6 +704,8 @@ const SpriteModal: Component<{
 }> = (props) => {
   let ref: any
 
+  const [body, setBody] = createSignal(props.body || getRandomBody())
+
   useRootModal({
     id: 'sprite-modal',
     element: (
@@ -712,10 +715,16 @@ const SpriteModal: Component<{
         title="Character Designer"
         fixedHeight
         maxWidth="half"
+        footer={
+          <>
+            <Button schema="secondary">Cancel</Button>
+            <Button onClick={() => props.onChange(body())}>Confirm</Button>
+          </>
+        }
       >
         <Slot slot="mobile" />
-        <div class="h-[32rem] w-full sm:h-[42rem]" ref={ref}>
-          <AvatarBuilder body={props.body} onChange={props.onChange} bounds={ref} noHeader />
+        <div class="h-[28rem] w-full text-sm sm:h-[42rem]" ref={ref}>
+          <AvatarBuilder body={body()} onChange={(body) => setBody(body)} bounds={ref} noHeader />
         </div>
       </Modal>
     ),

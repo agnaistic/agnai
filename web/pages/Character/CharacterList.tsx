@@ -353,7 +353,7 @@ const Character: Component<{
           class="ellipsis flex h-3/4 grow cursor-pointer items-center gap-4"
           href={`/character/${props.char._id}/chats`}
         >
-          <CharacterAvatar char={props.char} />
+          <CharacterAvatar char={props.char} zoom={1.75} />
           <div class="flex max-w-full flex-col overflow-hidden">
             <span class="ellipsis font-bold">{props.char.name}</span>
             <span class="ellipsis">{props.char.description}</span>

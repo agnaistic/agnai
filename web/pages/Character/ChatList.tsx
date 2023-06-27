@@ -265,7 +265,11 @@ const Chats: Component<{
                                 <div
                                   class={`absolute top-1/2 -translate-y-1/2 transform ${positionStyle}`}
                                 >
-                                  <CharacterAvatar char={props.allChars[ch._id]} surround />
+                                  <CharacterAvatar
+                                    char={props.allChars[ch._id]}
+                                    surround
+                                    zoom={1.75}
+                                  />
                                 </div>
                               )
                             }}

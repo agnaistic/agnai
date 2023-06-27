@@ -46,7 +46,12 @@ const CharacterSelect: Component<{
           alignLeft
         >
           <Show when={props.value}>
-            <CharacterAvatar char={match()!} format={{ size: 'sm', corners: 'circle' }} surround />
+            <CharacterAvatar
+              char={match()!}
+              format={{ size: 'xs', corners: 'circle' }}
+              surround
+              zoom={1.75}
+            />
           </Show>
           <Show when={!props.value}>
             <div class="mr-1 flex h-6 w-6 shrink-0 items-center justify-center">

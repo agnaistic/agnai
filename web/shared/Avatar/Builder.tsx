@@ -9,16 +9,10 @@ import {
   onCleanup,
   onMount,
 } from 'solid-js'
-import {
-  attributes,
-  defaultBody,
-  getEmoteExpressions,
-  getRandomBody,
-  manifest,
-} from '/web/asset/sprite'
+import { attributes, getEmoteExpressions, getRandomBody, manifest } from '/web/asset/sprite'
 import PageHeader from '../PageHeader'
 import Button from '../Button'
-import { ArrowLeft, ArrowRight, Check, Dices } from 'lucide-solid'
+import { ArrowLeft, ArrowRight, Dices } from 'lucide-solid'
 import Select from '../Select'
 import { createDebounce, hexToRgb } from '../util'
 import ColorPicker from '../ColorPicker'
@@ -30,11 +24,14 @@ import { altJailbreak, classifyTemplate } from '/common/default-preset'
 import { toastStore } from '/web/store'
 import { getImageData } from '/web/store/data/chars'
 
+const BASE_URL = `https://agnai-assets.sgp1.digitaloceanspaces.com/sprites`
+const BLANK_IMG = `${BASE_URL}/blank.png`
+
 const imageCache = new Map<string, string>()
 
 const Y_OFFSET = 0
-const HEIGHT = 1200 + Y_OFFSET
-const WIDTH = 1000
+const HEIGHT = 600 + Y_OFFSET
+const WIDTH = 500
 
 const IS_HAIR: { [key in SpriteAttr]?: boolean } = {
   back_hair: true,
@@ -69,7 +66,7 @@ const AvatarBuilder: Component<{
 }> = (props) => {
   let bound: HTMLElement = {} as any
 
-  const [body, setBody] = createSignal(props.body || { ...defaultBody })
+  const [body, setBody] = createSignal(props.body || getRandomBody())
   const [base, setBase] = createSignal({ w: 500, h: 600 })
   const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
   const [attr, setAttr] = createSignal(attributes[0])
@@ -134,30 +131,15 @@ const AvatarBuilder: Component<{
           <header class={`${styles.header} mt-2 flex w-full flex-col items-center gap-2`}>
             <div class="flex w-full justify-between gap-2">
               <AttributeSelect body={body()} update={updateAttr} />
-
-              <div class="flex gap-2">
-                <Button
-                  class="h-10 px-4"
-                  onClick={() => setBody(getRandomBody({ gender: body().gender }))}
-                >
-                  <Dices />
-                </Button>
-
-                <Button
-                  class="h-10 px-4"
-                  onClick={() => updateAttr('gender', body().gender === 'male' ? 'female' : 'male')}
-                >
-                  Body
-                </Button>
-              </div>
             </div>
             <div class="flex w-full justify-between">
               <div class="flex items-center gap-2">
                 <Select
+                  class="w-24"
                   items={[
-                    { label: 'Color: hair', value: 'front_hair' },
-                    { label: 'Color: eyes', value: 'eyes' },
-                    { label: 'Color: body', value: 'body' },
+                    { label: 'hair color', value: 'front_hair' },
+                    { label: 'eye color', value: 'eyes' },
+                    { label: 'body color', value: 'body' },
                   ]}
                   onChange={(v) => setAttr(v.value as any)}
                   fieldName=""
@@ -169,16 +151,26 @@ const AvatarBuilder: Component<{
                   value={getAttrColor(body(), attr())}
                 />
               </div>
-
-              <Button onClick={() => props.onChange?.(body())}>
-                <Check /> Confirm
-              </Button>
+              <div class="flex gap-2">
+                <Button
+                  class="px-4"
+                  onClick={() => setBody(getRandomBody({ gender: body().gender }))}
+                >
+                  <Dices size={16} />
+                </Button>
+                <Button
+                  class="h-8 px-4"
+                  onClick={() => updateAttr('gender', body().gender === 'male' ? 'female' : 'male')}
+                >
+                  Body
+                </Button>
+              </div>
             </div>
           </header>
 
           <section
             ref={bound!}
-            class={`${styles.preview} relative h-full w-full select-none border-[1px] border-[var(--bg-900)]`}
+            class={`${styles.preview} relative h-full min-h-[50vh] w-full select-none border-[1px] border-[var(--bg-900)]`}
           >
             <AvatarCanvas body={body()} style={getStyle()}></AvatarCanvas>
           </section>
@@ -236,8 +228,13 @@ export const AvatarContainer: Component<{
   const getStyle = createMemo(() => {
     // console.log('W', props.container?.clientWidth, ',', bound.clientWidth, ',', max.w)
     // console.log('H', props.container?.clientHeight, ',', bound.clientHeight, ',', max.h)
-    const calculated = calculateBounds()
-    return { width: calculated.width + 'px', height: calculated.height + 'px' }
+    const calc = calculateBounds()
+    return {
+      width: calc.width + 'px',
+      height: calc.height + 'px',
+      'min-width': calc.width + 'px',
+      'min-height': calc.height + 'px',
+    }
   })
 
   return (
@@ -273,10 +270,7 @@ export const AvatarCanvas: Component<{
               zoom={props.zoom}
               attr={attr}
               type={props.body[attr]}
-              style={{
-                width: props.style.width,
-                height: props.style.height,
-              }}
+              style={props.style}
               body={props.body}
             />
           )
@@ -311,7 +305,7 @@ const CanvasPart: Component<CanvasProps> = (props) => {
   createEffect(() => {
     if (!bottom) return
 
-    bottom.style.aspectRatio = '1 / 1.2'
+    // bottom.style.aspectRatio = '1 / 1.2'
     bottom.style.width = props.style.width
     bottom.style.height = props.style.height
   })
@@ -351,7 +345,7 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       return
     }
 
-    over.clearRect(0, 0, 1000, 1200)
+    over.clearRect(0, 0, WIDTH, HEIGHT)
 
     if (!props.type || props.type === 'none') return
 
@@ -361,16 +355,18 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       promises.push(image)
     }
 
-    const images = await Promise.all(promises)
+    const images = await Promise.allSettled(promises)
 
-    for (const image of images) {
+    for (const result of images) {
+      if (result.status !== 'fulfilled') continue
+      const image = result.value
       // For particular attributes we will render a second re-colored image on top of the original
       const color = prop ? props.body[prop] : undefined
 
       if (color) {
         const alpha = IS_EYES[props.attr] ? '0.3' : '0.6'
         const { r, g, b } = hexToRgb(color)!
-        over.drawImage(image, 0, Y_OFFSET, 1000, 1200)
+        over.drawImage(image, 0, Y_OFFSET, WIDTH, HEIGHT)
 
         const orig = over.globalCompositeOperation
         over.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
@@ -387,10 +383,13 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       <For each={baseImages()}>
         {(src) => (
           <img
-            class="absolute left-0 right-0 top-0 mx-auto inline-block"
+            class="absolute left-0 right-0 top-0 mx-auto"
             src={src}
             ref={top!}
             style={{ ...props.style, transform: `scale(${props.zoom || 1})` }}
+            onError={(ev) => {
+              ev.currentTarget.src = BLANK_IMG
+            }}
           />
         )}
       </For>
@@ -438,22 +437,24 @@ const AttributeSelect: Component<{
   return (
     <div class="flex gap-2">
       <Select
+        class="w-24"
         fieldName="attribute"
         items={options()}
         value={attr()}
         onChange={(value) => setAttr(value.value as any)}
       />
       <Select
+        class="w-24"
         fieldName="type"
         items={types()}
         value={props.body[attr()]}
         onChange={(opt) => props.update(attr(), opt.value)}
       />
       <Button schema="hollow" onClick={() => move(-1)}>
-        <ArrowLeft />
+        <ArrowLeft size={16} />
       </Button>
       <Button schema="hollow" onClick={() => move(1)}>
-        <ArrowRight />
+        <ArrowRight size={16} />
       </Button>
     </div>
   )
@@ -463,7 +464,7 @@ export default AvatarBuilder
 
 function toImage(gender: string, attr: SpriteAttr, type: string, file: string) {
   const id = `${gender}-${attr}-${type}-${file}`.replace('.png', '')
-  return `https://agnai-assets.sgp1.digitaloceanspaces.com/sprites/${id}.png`
+  return `${BASE_URL}/${id}.png`
 }
 
 function asyncImage(src: string) {
@@ -471,7 +472,15 @@ function asyncImage(src: string) {
     let data = imageCache.get(src)
 
     if (!data) {
-      const blob = await fetch(src).then((res) => res.blob())
+      const blob = await fetch(src)
+        .then((res) => {
+          if (res.status >= 400) throw new Error(res.statusText)
+          return res.blob()
+        })
+        .catch((err) => ({ err }))
+
+      if ('err' in blob) return reject(blob)
+
       data = await getImageData(blob)
       imageCache.set(src, data!)
     }
