@@ -45,6 +45,7 @@ export const CharacterAvatar: Component<{
   anonymize?: boolean
   surround?: boolean
   class?: string
+  zoom?: number
   Icon?: (props: LucideProps) => JSX.Element
 }> = (props) => {
   let ref: any
@@ -76,13 +77,16 @@ export const CharacterAvatar: Component<{
             data-bot-avatar={props.bot}
             data-user-avatar={!props.bot}
           >
-            <AvatarContainer body={props.char.sprite} container={ref} />
+            <AvatarContainer body={props.char.sprite} container={ref} zoom={props.zoom} />
           </div>
         </Match>
 
         <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
-          <div class={`avatar-${props.format?.size || 'md'} avatar-circle`} ref={ref}>
-            <AvatarContainer body={props.char.sprite} container={ref} />
+          <div
+            class={`avatar-${props.format?.size || 'md'} avatar-circle ${fmtCorners()}`}
+            ref={ref}
+          >
+            <AvatarContainer zoom={props.zoom} body={props.char.sprite} container={ref} />
           </div>
         </Match>
 

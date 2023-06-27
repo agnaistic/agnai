@@ -61,6 +61,9 @@ import { useChatAvatars } from './components/ChatAvatar'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
+
+  let container: HTMLDivElement
+
   const params = useParams()
   const nav = useNavigate()
   const user = userStore()
@@ -102,10 +105,19 @@ const ChatDetail: Component = () => {
 
   const viewHeight = createMemo(() => {
     const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
-    if (mode === 'sprite' && !chats.char?.sprite) return 0
-    if (mode === 'avatar' && !chats.char?.avatar) return 0
-    return user.ui.viewHeight || 40
+    const id = chats.char?._id || ''
+    if (mode === 'sprite' && !chars.botMap[id]?.sprite) {
+      return 0
+    }
+
+    if (mode === 'avatar' && !chars.botMap[id]?.avatar) {
+      return 0
+    }
+
+    const percent = user.ui.viewHeight || 40
+    return `calc(${percent}vh - 24px)`
   })
+
   const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
   const botGreeting = createMemo(() => chats.char?.greeting || '')
@@ -371,8 +383,6 @@ const ChatDetail: Component = () => {
     }
   })
 
-  let container: HTMLDivElement
-
   return (
     <>
       <Show when={!chats.loaded}>
@@ -452,14 +462,15 @@ const ChatDetail: Component = () => {
               <section class="flex h-full w-full flex-col justify-end gap-2">
                 <Show when={user.ui.viewMode === 'split'}>
                   <section
+                    data-avatar-container
                     ref={container!}
-                    class="flex h-full"
-                    style={{ height: `${viewHeight()}%` }}
+                    class="flex items-end"
+                    style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
                   >
                     <Show when={chats.char?.visualType === 'sprite'}>
                       <AvatarContainer
                         container={container!}
-                        body={chats.char?.sprite}
+                        body={chars.botMap[chats.char?._id!]?.sprite}
                         expression={express.expr()}
                       />
                     </Show>
