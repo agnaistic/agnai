@@ -1,29 +1,29 @@
 .avatar-xs {
-  @apply w-5 min-w-[1.25rem] sm:w-5;
+  @apply w-5 min-w-[1.25rem] overflow-hidden sm:w-5;
 }
 
 .avatar-sm {
-  @apply w-8 min-w-[2rem] sm:w-8 sm:min-w-[2rem];
+  @apply w-8 min-w-[2rem] overflow-hidden sm:w-8 sm:min-w-[2rem];
 }
 
 .avatar-md {
-  @apply w-8 min-w-[2rem] sm:w-10 sm:min-w-[2.5rem];
+  @apply w-8 min-w-[2rem] overflow-hidden sm:w-10 sm:min-w-[2.5rem];
 }
 
 .avatar-lg {
-  @apply w-8 min-w-[2rem] sm:w-12 sm:min-w-[3rem];
+  @apply w-8 min-w-[2rem] overflow-hidden sm:w-12 sm:min-w-[3rem];
 }
 
 .avatar-xl {
-  @apply w-10 min-w-[2.5rem] sm:w-16 sm:min-w-[4rem];
+  @apply w-10 min-w-[2.5rem] overflow-hidden sm:w-16 sm:min-w-[4rem];
 }
 
 .avatar-2xl {
-  @apply w-12 min-w-[3rem] sm:w-20 sm:min-w-[5rem];
+  @apply w-12 min-w-[3rem] overflow-hidden sm:w-20 sm:min-w-[5rem];
 }
 
 .avatar-3xl {
-  @apply w-14 min-w-[3.5rem] sm:w-24 sm:min-w-[6rem];
+  @apply w-14 min-w-[3.5rem] overflow-hidden sm:w-24 sm:min-w-[6rem];
 }
 
 .avatar-xs.avatar-circle {

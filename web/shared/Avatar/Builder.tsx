@@ -133,7 +133,7 @@ const AvatarBuilder: Component<{
         <main class="flex w-full flex-col">
           <header class={`${styles.header} mt-2 flex w-full flex-col items-center gap-2`}>
             <div class="flex w-full justify-between gap-2">
-              <AttributeSelect type={body()[attr()]} update={updateAttr} />
+              <AttributeSelect body={body()} update={updateAttr} />
 
               <div class="flex gap-2">
                 <Button
@@ -192,6 +192,7 @@ export const AvatarContainer: Component<{
   container: HTMLElement
   expression?: EmoteType
   body?: FullSprite
+  zoom?: number
 }> = (props) => {
   let bound: HTMLDivElement = {} as any
   const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
@@ -248,7 +249,7 @@ export const AvatarContainer: Component<{
         // style={{ width: props.container.clientWidth + 'px' }}
       >
         <div class="absolute left-0 right-0 top-0  mx-auto rounded-md" style={getStyle()} />
-        <AvatarCanvas body={body()!} style={getStyle()}></AvatarCanvas>
+        <AvatarCanvas zoom={props.zoom} body={body()!} style={getStyle()}></AvatarCanvas>
 
         {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
       </div>
@@ -261,6 +262,7 @@ export const AvatarCanvas: Component<{
   children?: any
   body: FullSprite
   class?: string
+  zoom?: number
 }> = (props) => {
   return (
     <>
@@ -268,6 +270,7 @@ export const AvatarCanvas: Component<{
         {(attr, i) => {
           return (
             <CanvasPart
+              zoom={props.zoom}
               attr={attr}
               type={props.body[attr]}
               style={{
@@ -288,6 +291,7 @@ type CanvasProps = {
   attr: SpriteAttr
   type: string
   body: FullSprite
+  zoom?: number
   style: { width: string; height: string }
 }
 
@@ -383,10 +387,10 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       <For each={baseImages()}>
         {(src) => (
           <img
-            class="absolute left-0 right-0 top-0 mx-auto"
+            class="absolute left-0 right-0 top-0 mx-auto inline-block"
             src={src}
             ref={top!}
-            style={props.style}
+            style={{ ...props.style, transform: `scale(${props.zoom || 1})` }}
           />
         )}
       </For>
@@ -396,7 +400,7 @@ const CanvasPart: Component<CanvasProps> = (props) => {
           ref={bottom!}
           width={WIDTH}
           height={HEIGHT - Y_OFFSET}
-          style={props.style}
+          style={{ ...props.style, transform: `scale(${props.zoom || 1})` }}
         ></canvas>
       </Show>
     </>
@@ -404,7 +408,7 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 }
 
 const AttributeSelect: Component<{
-  type: string
+  body: FullSprite
   update: (attr: SpriteAttr, type: string) => void
 }> = (props) => {
   const [attr, setAttr] = createSignal(attributes[0])
@@ -416,14 +420,18 @@ const AttributeSelect: Component<{
       .map((value) => ({ label: value.replace(/_/g, ' '), value }))
   })
 
+  const types = createMemo(() => {
+    const opts = manifest.attributes[attr()]
+    return opts.map((name) => ({ value: name, label: name.replace(/_/g, ' ') }))
+  })
+
   const move = (dir: -1 | 1) => {
     const opts = manifest.attributes[attr()]
-    let curr = opts.indexOf(props.type) + dir
+    let curr = opts.indexOf(props.body[attr()]) + dir
 
     if (curr < 0) curr = opts.length - 1
     if (curr >= opts.length) curr = 0
 
-    console.log(attr(), '---->', opts[curr])
     props.update(attr(), opts[curr])
   }
 
@@ -434,6 +442,12 @@ const AttributeSelect: Component<{
         items={options()}
         value={attr()}
         onChange={(value) => setAttr(value.value as any)}
+      />
+      <Select
+        fieldName="type"
+        items={types()}
+        value={props.body[attr()]}
+        onChange={(opt) => props.update(attr(), opt.value)}
       />
       <Button schema="hollow" onClick={() => move(-1)}>
         <ArrowLeft />
@@ -497,12 +511,18 @@ function getAttrColor(body: FullSprite, attr: SpriteAttr) {
   return body[prop] || '#000000'
 }
 
+const TIMERS = {
+  EMOTE: 20000,
+  BLINK_INTERVAL: 15000,
+  BLINK_LENGTH: 200,
+}
+
 export function useAutoExpression() {
   const [expr, setExpr] = createSignal<EmoteType>('neutral')
   const [reset, setReset] = createSignal(Date.now() + 1000)
 
   const update = (emote: EmoteType) => {
-    setReset(Date.now() + 5000)
+    setReset(Date.now() + TIMERS.EMOTE)
     setExpr(emote)
   }
 
@@ -536,10 +556,10 @@ export function useAutoExpression() {
 
       if (expr() === 'blink' && expr() !== 'neutral') {
         update('neutral')
-        setReset(Date.now() + 20000)
+        setReset(Date.now() + TIMERS.BLINK_INTERVAL)
       } else {
         update('blink')
-        setReset(Date.now() + 200)
+        setReset(Date.now() + TIMERS.BLINK_LENGTH)
       }
     }, 100)
 

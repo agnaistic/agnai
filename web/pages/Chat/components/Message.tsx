@@ -211,6 +211,7 @@ const SingleMessage: Component<
                     char={props.botMap[props.msg.characterId!]}
                     format={format()}
                     bot={!props.msg.userId}
+                    zoom={1.75}
                   />
                 </Match>
 
@@ -219,6 +220,7 @@ const SingleMessage: Component<
                   <CharacterAvatar
                     char={props.botMap[props.msg.characterId!] || props.char}
                     openable
+                    zoom={1.75}
                     bot={true}
                     format={format()}
                   />

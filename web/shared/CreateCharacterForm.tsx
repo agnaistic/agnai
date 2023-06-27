@@ -89,12 +89,20 @@ export const CreateCharacterForm: Component<{
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
 
+  const [visualType, setVisualType] = createSignal('avatar')
+  const [spriteBody, setSpriteBody] = createSignal<FullSprite>()
+
   const presets = presetStore()
   const user = userStore((s) => s.user)
   const tagState = tagStore()
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId())
     setImage(edit?.avatar)
+    if (edit?.sprite && !spriteBody()) {
+      setSpriteBody(edit.sprite)
+      setVisualType(edit.visualType || 'avatar')
+    }
+
     return {
       avatar: s.generate,
       creating: s.creating,
@@ -120,8 +128,6 @@ export const CreateCharacterForm: Component<{
   const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
   const [culture, setCulture] = createSignal(defaultCulture)
   const [creating, setCreating] = createSignal(false)
-  const [visualType, setVisualType] = createSignal(state.edit?.visualType || 'avatar')
-  const [spriteBody, setSpriteBody] = createSignal(state.edit?.sprite)
   const [showBuilder, setShowBuilder] = createSignal(false)
 
   const [alternateGreetings, setAlternateGreetings] = createSignal(
