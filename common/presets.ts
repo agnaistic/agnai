@@ -34,7 +34,7 @@ export const chatGenSettings = {
   systemPrompt: 'string?',
   ignoreCharacterSystemPrompt: 'boolean?',
   ignoreCharacterUjb: 'boolean?',
-  gaslight: 'string',
+  gaslight: 'string?',
   oaiModel: 'string',
   novelModel: 'string?',
   claudeModel: 'string',

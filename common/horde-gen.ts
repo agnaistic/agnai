@@ -158,6 +158,7 @@ export async function generateText(
   }
 
   const payload = { n: 1, ...body, ...settings }
+  logger?.debug(payload, 'Horde payload')
   const result = await generate({ type: 'text', payload, key: user.hordeKey || HORDE_GUEST_KEY })
   return result
 }
