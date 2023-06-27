@@ -48,8 +48,6 @@ export const CharacterAvatar: Component<{
   Icon?: (props: LucideProps) => JSX.Element
 }> = (props) => {
   let ref: any
-  console.log('re-rendering')
-
   const format = createMemo(() => props.format || defaultFormat)
 
   const fmtSize = createMemo(() => {

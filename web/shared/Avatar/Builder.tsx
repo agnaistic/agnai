@@ -28,6 +28,9 @@ import { AppSchema } from '/common/types'
 import { msgsApi } from '/web/store/data/messages'
 import { altJailbreak, classifyTemplate } from '/common/default-preset'
 import { toastStore } from '/web/store'
+import { getImageData } from '/web/store/data/chars'
+
+const imageCache = new Map<string, string>()
 
 const Y_OFFSET = 0
 const HEIGHT = 1200 + Y_OFFSET
@@ -294,7 +297,16 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 
   const [state, setState] = createSignal('')
 
+  const show = createMemo(() => {
+    const prop = getColorProp(props.attr)
+    if (!prop) return false
+    if (!props.body[prop]) return false
+    return true
+  })
+
   createEffect(() => {
+    if (!bottom) return
+
     bottom.style.aspectRatio = '1 / 1.2'
     bottom.style.width = props.style.width
     bottom.style.height = props.style.height
@@ -307,22 +319,41 @@ const CanvasPart: Component<CanvasProps> = (props) => {
   })
 
   createEffect(async () => {
+    const promises: Array<Promise<HTMLImageElement>> = []
+    const attrFiles = manifest[props.attr][props.type] || []
+    const imageNames = attrFiles.map((file) =>
+      toImage(props.body.gender, props.attr, props.type, file)
+    )
+
+    const prop = getColorProp(props.attr)
+    const hasColor = prop ? props.body[prop] : false
+
+    if (!hasColor) {
+      return
+    }
+
+    if (!bottom) {
+      return
+    }
+
     const hash = getHash(props)
     if (hash === state()) return
 
     setState(hash)
 
     const over = bottom.getContext('2d')
-    if (!over) return
+
+    if (!over) {
+      return
+    }
 
     over.clearRect(0, 0, 1000, 1200)
 
     if (!props.type || props.type === 'none') return
 
-    const promises: Array<Promise<HTMLImageElement>> = []
-
-    for (const file of manifest[props.attr][props.type]) {
-      const image = asyncImage(toImage(props.body.gender, props.attr, props.type, file))
+    for (const name of imageNames) {
+      if (!canColor(props.attr, name)) continue
+      const image = asyncImage(name)
       promises.push(image)
     }
 
@@ -330,11 +361,9 @@ const CanvasPart: Component<CanvasProps> = (props) => {
 
     for (const image of images) {
       // For particular attributes we will render a second re-colored image on top of the original
-      const shouldColor = canColor(props.attr, image.src)
-      const prop = getColorProp(props.attr)
       const color = prop ? props.body[prop] : undefined
 
-      if (shouldColor && color) {
+      if (color) {
         const alpha = IS_EYES[props.attr] ? '0.3' : '0.6'
         const { r, g, b } = hexToRgb(color)!
         over.drawImage(image, 0, Y_OFFSET, 1000, 1200)
@@ -361,7 +390,7 @@ const CanvasPart: Component<CanvasProps> = (props) => {
           />
         )}
       </For>
-      <Show when>
+      <Show when={show()}>
         <canvas
           class="absolute left-0 right-0 top-0 mx-auto"
           ref={bottom!}
@@ -424,9 +453,17 @@ function toImage(gender: string, attr: SpriteAttr, type: string, file: string) {
 }
 
 function asyncImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
+  return new Promise<HTMLImageElement>(async (resolve, reject) => {
+    let data = imageCache.get(src)
+
+    if (!data) {
+      const blob = await fetch(src).then((res) => res.blob())
+      data = await getImageData(blob)
+      imageCache.set(src, data!)
+    }
+
     const image = new Image()
-    image.src = src
+    image.src = data!
 
     image.onload = () => resolve(image)
     image.onerror = (ev) => reject(ev)
