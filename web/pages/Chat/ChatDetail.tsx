@@ -5,7 +5,6 @@ import {
   createMemo,
   createSignal,
   For,
-  Index,
   JSX,
   Match,
   onCleanup,
@@ -503,23 +502,21 @@ const ChatDetail: Component = () => {
                       </div>
                     </Show>
                     <InfiniteScroll />
-                    <Index each={chatMsgs()}>
+                    <For each={chatMsgs()}>
                       {(msg, i) => (
                         <Message
-                          msg={msg()}
+                          msg={msg}
                           botMap={chars.botMap}
                           chat={chats.chat!}
                           char={chats.char!}
                           editing={chats.opts.editing}
                           anonymize={cfg.anonymize}
-                          last={i === indexOfLastRPMessage()}
-                          onRemove={() => setRemoveId(msg()._id)}
+                          last={i() === indexOfLastRPMessage()}
+                          onRemove={() => setRemoveId(msg._id)}
                           swipe={
-                            msg()._id === retries()?.msgId &&
-                            swipe() > 0 &&
-                            retries()?.list[swipe()]
+                            msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
                           }
-                          confirmSwipe={() => confirmSwipe(msg()._id)}
+                          confirmSwipe={() => confirmSwipe(msg._id)}
                           cancelSwipe={cancelSwipe}
                           tts={tts()}
                           retrying={msgs.retrying}
@@ -529,7 +526,7 @@ const ChatDetail: Component = () => {
                         >
                           {isOwner() &&
                             retries()?.list?.length! > 1 &&
-                            i === indexOfLastRPMessage() && (
+                            i() === indexOfLastRPMessage() && (
                               <SwipeMessage
                                 chatId={chats.chat?._id!}
                                 pos={swipe()}
@@ -540,7 +537,7 @@ const ChatDetail: Component = () => {
                             )}
                         </Message>
                       )}
-                    </Index>
+                    </For>
                     <Show when={waitingMsg()}>
                       <Message
                         botMap={chars.botMap}
