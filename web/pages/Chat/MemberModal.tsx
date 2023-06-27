@@ -1,7 +1,7 @@
 import { ArrowBigLeft, Crown, Mail, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
-import AvatarIcon from '../../shared/AvatarIcon'
+import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import { characterStore, chatStore, toastStore, userStore } from '../../store'
@@ -259,11 +259,7 @@ const CharacterParticipant: Component<{
   return (
     <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div class="ellipsis flex items-center gap-2">
-        <AvatarIcon
-          format={{ corners: 'circle', size: 'sm' }}
-          avatarUrl={props.char.avatar}
-          openable
-        />
+        <CharacterAvatar format={{ corners: 'circle', size: 'sm' }} char={props.char} openable />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.char.name}</div>
           <div class="text-xs italic text-[var(--text-600)]">

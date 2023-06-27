@@ -1,13 +1,13 @@
 import { Archive, Trash, X } from 'lucide-solid'
 import { Component } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
-import AvatarIcon from '../../shared/AvatarIcon'
+import { CharacterAvatar } from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { characterStore } from '../../store'
 
 const DeleteCharacterModal: Component<{
-  char?: Pick<AppSchema.Character, '_id' | 'name' | 'avatar' | 'tags'>
+  char?: AppSchema.Character
   show: boolean
   close: () => void
 }> = (props) => {
@@ -54,7 +54,7 @@ const DeleteCharacterModal: Component<{
         </div>
         <div>Are you sure you wish to delete this character?</div>
         <div class="flex justify-center gap-4">
-          <AvatarIcon avatarUrl={props.char!.avatar} />
+          <CharacterAvatar char={props.char!} />
           {props.char!.name}
         </div>
       </div>

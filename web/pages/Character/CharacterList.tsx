@@ -35,7 +35,7 @@ import {
   MessageCircle,
 } from 'lucide-solid'
 import { A, useNavigate, useSearchParams } from '@solidjs/router'
-import AvatarIcon from '../../shared/AvatarIcon'
+import { CharacterAvatar } from '../../shared/AvatarIcon'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
 import { getAssetUrl, safeLocalStorage, setComponentPageTitle } from '../../shared/util'
@@ -50,6 +50,7 @@ import { Accessor } from 'solid-js'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
 import text from 'png-chunk-text'
+import { AvatarContainer } from '/web/shared/Avatar/Builder'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -349,10 +350,10 @@ const Character: Component<{
     return (
       <div class="bg-800 flex w-full flex-row items-center justify-between gap-4 rounded-xl px-2 py-1 hover:bg-[var(--bg-700)]">
         <A
-          class="ellipsis flex h-3/4 grow cursor-pointer items-center"
+          class="ellipsis flex h-3/4 grow cursor-pointer items-center gap-4"
           href={`/character/${props.char._id}/chats`}
         >
-          <AvatarIcon avatarUrl={props.char.avatar} class="mr-4" />
+          <CharacterAvatar char={props.char} />
           <div class="flex max-w-full flex-col overflow-hidden">
             <span class="ellipsis font-bold">{props.char.name}</span>
             <span class="ellipsis">{props.char.description}</span>
@@ -429,29 +430,41 @@ const Character: Component<{
     )
   }
 
+  let ref: any
+
   return (
-    <div class="bg-800 flex flex-col items-center justify-between gap-1 rounded-md p-1">
+    <div ref={ref} class="bg-800 flex flex-col items-center justify-between gap-1 rounded-md p-1">
       <div class="w-full">
-        <Show when={props.char.avatar}>
-          <A
-            href={`/character/${props.char._id}/chats`}
-            class="block h-32 w-full justify-center overflow-hidden rounded-lg"
-          >
-            <img
-              src={getAssetUrl(props.char.avatar!)}
-              class="h-full w-full object-cover"
-              style="object-position: 50% 30%;"
-            />
-          </A>
-        </Show>
-        <Show when={!props.char.avatar}>
-          <A
-            href={`/character/${props.char._id}/chats`}
-            class="bg-700 flex h-32 w-full items-center justify-center rounded-md"
-          >
-            <VenetianMask size={24} />
-          </A>
-        </Show>
+        <Switch>
+          <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
+            <A
+              href={`/character/${props.char._id}/chats`}
+              class="block h-32 w-full justify-center overflow-hidden rounded-lg"
+            >
+              <AvatarContainer container={ref} body={props.char.sprite} />
+            </A>
+          </Match>
+          <Match when={props.char.avatar}>
+            <A
+              href={`/character/${props.char._id}/chats`}
+              class="block h-32 w-full justify-center overflow-hidden rounded-lg"
+            >
+              <img
+                src={getAssetUrl(props.char.avatar!)}
+                class="h-full w-full object-cover"
+                style="object-position: 50% 30%;"
+              />
+            </A>
+          </Match>
+          <Match when>
+            <A
+              href={`/character/${props.char._id}/chats`}
+              class="bg-700 flex h-32 w-full items-center justify-center rounded-md"
+            >
+              <VenetianMask size={24} />
+            </A>
+          </Match>
+        </Switch>
       </div>
       <div class="w-full text-sm">
         <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 font-bold">

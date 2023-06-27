@@ -159,6 +159,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
   }
 
   const request: GenerateRequestV2 = {
+    requestId: v4(),
     kind: opts.kind,
     chat: entities.chat,
     user: entities.user,
@@ -177,7 +178,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     lastMessage: entities.lastMessage,
   }
 
-  const res = await api.post(`/chat/${entities.chat._id}/generate`, request)
+  const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)
   return res
 }
 
@@ -289,7 +290,11 @@ async function getGenerateProps(
 async function createMessage(chatId: string, opts: { kind: 'ooc' | 'send-noreply'; text: string }) {
   const { impersonating } = getStore('character').getState()
   const impersonate = opts.kind === 'send-noreply' ? impersonating : undefined
-  return api.post(`/chat/${chatId}/send`, { text: opts.text, kind: opts.kind, impersonate })
+  return api.post<{ requestId: string }>(`/chat/${chatId}/send`, {
+    text: opts.text,
+    kind: opts.kind,
+    impersonate,
+  })
 }
 
 export async function deleteMessages(chatId: string, msgIds: string[]) {

@@ -1,55 +1,55 @@
 .avatar-xs {
-  @apply w-5 sm:w-5;
+  @apply w-5 min-w-[1.25rem] sm:w-5;
 }
 
 .avatar-sm {
-  @apply w-8 sm:w-8;
+  @apply w-8 min-w-[2rem] sm:w-8 sm:min-w-[2rem];
 }
 
 .avatar-md {
-  @apply w-8 sm:w-10;
+  @apply w-8 min-w-[2rem] sm:w-10 sm:min-w-[2.5rem];
 }
 
 .avatar-lg {
-  @apply w-8 sm:w-12;
+  @apply w-8 min-w-[2rem] sm:w-12 sm:min-w-[3rem];
 }
 
 .avatar-xl {
-  @apply w-10 sm:w-16;
+  @apply w-10 min-w-[2.5rem] sm:w-16 sm:min-w-[4rem];
 }
 
 .avatar-2xl {
-  @apply w-12 sm:w-20;
+  @apply w-12 min-w-[3rem] sm:w-20 sm:min-w-[5rem];
 }
 
 .avatar-3xl {
-  @apply w-14 sm:w-24;
+  @apply w-14 min-w-[3.5rem] sm:w-24 sm:min-w-[6rem];
 }
 
 .avatar-xs.avatar-circle {
-  @apply h-5 sm:h-5;
+  @apply h-5 min-h-[1.25rem] sm:h-5;
 }
 
 .avatar-sm.avatar-circle {
-  @apply h-8 sm:h-8;
+  @apply h-8 min-h-[2rem] sm:h-8;
 }
 
 .avatar-md.avatar-circle {
-  @apply h-8 sm:h-10;
+  @apply h-8 min-h-[2rem] sm:h-10 sm:min-h-[2.5rem];
 }
 
 .avatar-lg.avatar-circle {
-  @apply h-8 sm:h-12;
+  @apply h-8 min-h-[2rem] sm:h-12 sm:min-h-[3rem];
 }
 
 .avatar-xl.avatar-circle {
-  @apply h-10 sm:h-16;
+  @apply h-10 min-h-[2.5rem] sm:h-16 sm:min-h-[4rem];
 }
 
 .avatar-2xl.avatar-circle {
-  @apply h-12 sm:h-20;
+  @apply h-12 min-h-[3rem] sm:h-20 sm:min-h-[5rem];
 }
 
 .avatar-3xl.avatar-circle {
-  @apply h-14 sm:h-24;
+  @apply h-14 min-h-[3.5rem] sm:h-24 sm:min-h-[6rem];
 }

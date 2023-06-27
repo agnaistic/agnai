@@ -1,6 +1,7 @@
 import { Component, createSignal, onCleanup, onMount } from 'solid-js'
 
 type Props = {
+  squish?: boolean
   onEnter?: () => void
   onLeave?: () => void
 }
@@ -40,7 +41,11 @@ const IsVisible: Component<Props> = (props) => {
     obs()?.unobserve(ref)
   })
 
-  return <span ref={ref}>&nbsp;</span>
+  return (
+    <span style={{ 'max-height': props.squish ? '1px' : undefined }} ref={ref}>
+      &nbsp;
+    </span>
+  )
 }
 
 export default IsVisible

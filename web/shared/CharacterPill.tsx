@@ -2,7 +2,7 @@ import { Radio } from 'lucide-solid'
 import { createMemo, Show } from 'solid-js'
 import { Component } from 'solid-js'
 import { AppSchema } from '../../common/types/schema'
-import AvatarIcon from './AvatarIcon'
+import { CharacterAvatar } from './AvatarIcon'
 
 export const CharacterPill: Component<{
   char: AppSchema.Character
@@ -18,11 +18,7 @@ export const CharacterPill: Component<{
         class={`flex min-w-[100px] max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} bg-900 items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
         onclick={() => !props.disabled && props.onClick(props.char._id)}
       >
-        <AvatarIcon
-          bot={true}
-          format={{ size: 'xs', corners: 'circle' }}
-          avatarUrl={props.char.avatar}
-        />
+        <CharacterAvatar bot={true} format={{ size: 'xs', corners: 'circle' }} char={props.char} />
         <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">
           {props.char.name}
         </strong>

@@ -40,7 +40,7 @@ export const PresetSelect: Component<{
     setFilter('')
   }
   useRootModal({
-    type: 'presetSelect',
+    id: 'presetSelect',
     element: (
       <Modal
         show={showSelectModal()}

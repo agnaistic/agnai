@@ -6,7 +6,7 @@ import { Edit, Import, Plus, SortAsc, SortDesc, Trash } from 'lucide-solid'
 import ImportChatModal from './ImportChat'
 import { setComponentPageTitle, toDuration } from '../../shared/util'
 import { ConfirmModal } from '../../shared/Modal'
-import AvatarIcon from '../../shared/AvatarIcon'
+import { CharacterAvatar } from '../../shared/AvatarIcon'
 import { AppSchema } from '../../../common/types/schema'
 import Select from '../../shared/Select'
 import Divider from '../../shared/Divider'
@@ -129,7 +129,7 @@ const CharacterChats: Component = () => {
       </Show>
       <button
         class={`btn-primary w-full items-center justify-start py-2 sm:w-fit sm:justify-center`}
-        onClick={() => nav('/chats/create')}
+        onClick={() => nav(`/chats/create/${params.id || ''}`)}
       >
         <Plus /> <span class="hidden sm:inline">New</span>
       </button>
@@ -265,7 +265,7 @@ const Chats: Component<{
                                 <div
                                   class={`absolute top-1/2 -translate-y-1/2 transform ${positionStyle}`}
                                 >
-                                  <AvatarIcon avatarUrl={props.allChars[ch._id]?.avatar} />
+                                  <CharacterAvatar char={props.allChars[ch._id]} surround />
                                 </div>
                               )
                             }}

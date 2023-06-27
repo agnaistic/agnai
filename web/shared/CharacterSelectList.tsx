@@ -1,6 +1,6 @@
 import { Component, For, Show, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '../../common/types/schema'
-import AvatarIcon from './AvatarIcon'
+import { CharacterAvatar } from './AvatarIcon'
 import { Star, Users } from 'lucide-solid'
 import TextInput from './TextInput'
 
@@ -76,12 +76,9 @@ const CharacterSelectList: Component<{
                 class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
                 onClick={() => onChange(item)}
               >
-                <div class="ellipsis flex h-3/4 items-center">
-                  <AvatarIcon
-                    avatarUrl={item.avatar}
-                    class="mr-4"
-                    format={{ size: 'md', corners: 'circle' }}
-                  />
+                <div class="ellipsis flex h-3/4 items-center gap-4">
+                  <CharacterAvatar char={item} format={{ size: 'md', corners: 'circle' }} />
+
                   <div class="ellipsis flex w-full flex-col">
                     <div class="ellipsis font-bold">{item.name}</div>
                     <div class="ellipsis">{item.description}</div>

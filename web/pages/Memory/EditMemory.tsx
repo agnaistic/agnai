@@ -38,7 +38,6 @@ const EditMemoryForm: Component<{
   const change = (book: AppSchema.MemoryBook) => {
     setEditing(book)
     props.onChange?.(book)
-    console.log(book)
   }
 
   const addEntry = () => {
@@ -146,8 +145,6 @@ const EntryCard: Component<{
   index: number
   onChange: (e: AppSchema.MemoryEntry) => void
 }> = (props) => {
-  // const [entry, _setEntry] = createSignal(props.entry)
-
   const cls = createMemo(() =>
     props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
   )

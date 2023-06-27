@@ -83,6 +83,8 @@ const HOLDER_NAMES = {
   history: 'history',
   systemPrompt: 'system_prompt',
   linebreak: 'br',
+  chatAge: 'chat_age',
+  idleDuration: 'idle_duration',
 }
 
 export const HOLDERS = {

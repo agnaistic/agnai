@@ -26,7 +26,7 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import AvatarIcon from './shared/AvatarIcon'
+import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
 import { useEffect, useWindowSize } from './shared/hooks'
@@ -92,10 +92,21 @@ const Navigation: Component = () => {
                 settingStore.closeMenu()
               }}
             >
-              <AvatarIcon
-                avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
-                format={{ corners: 'circle', size: 'md' }}
-              />
+              <Switch>
+                <Match when={chars.impersonating}>
+                  <CharacterAvatar
+                    char={chars.impersonating!}
+                    format={{ corners: 'circle', size: 'md' }}
+                  />
+                </Match>
+
+                <Match when>
+                  <AvatarIcon
+                    avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
+                    format={{ corners: 'circle', size: 'md' }}
+                  />
+                </Match>
+              </Switch>
               <div class="ellipsis flex cursor-pointer items-center justify-end rounded-lg bg-[var(--bg-700)] px-2 py-1">
                 <div class="ellipsis flex flex-col">
                   <span>{chars.impersonating?.name || user.profile?.handle}</span>

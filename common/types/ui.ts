@@ -28,6 +28,7 @@ export type FontSetting = (typeof UI_FONT)[number]
 export type ChatWidth = (typeof CHAT_WIDTHS)[number]
 
 export type CustomUI = {
+  bgCustom?: string
   msgBackground: string
   botBackground: string
   chatTextColor: string
@@ -43,6 +44,7 @@ export type UISettings = {
   bgCustom: string
   bgCustomGradient: string
 
+  chatAvatarMode?: boolean
   avatarSize: AvatarSize
   avatarCorners: AvatarCornerRadius
   font: FontSetting
@@ -50,6 +52,9 @@ export type UISettings = {
 
   /** 0 -> 1. 0 = transparent. 1 = opaque */
   msgOpacity: number
+
+  viewMode?: 'split' | 'standard'
+  viewHeight?: number
 
   chatWidth?: ChatWidth
   logPromptsToBrowserConsole: boolean
@@ -73,6 +78,7 @@ export const uiGuard = {
   bgCustom: 'string',
   bgCustomGradient: 'string',
 
+  chatAvatarMode: 'boolean?',
   avatarSize: AVATAR_SIZES,
   avatarCorners: AVATAR_CORNERS,
   font: UI_FONT,
@@ -102,6 +108,7 @@ export const defaultUIsettings: UISettings = {
   chatTextColor: '--text-800',
   chatEmphasisColor: '--text-600',
   chatWidth: 'full',
+  chatAvatarMode: true,
   logPromptsToBrowserConsole: false,
   imageWrap: false,
 

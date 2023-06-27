@@ -1,7 +1,13 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
-import { getRootVariable, hexToRgb, safeLocalStorage, setRootVariable } from '../shared/util'
+import {
+  createDebounce,
+  getRootVariable,
+  hexToRgb,
+  safeLocalStorage,
+  setRootVariable,
+} from '../shared/util'
 import { api, clearAuth, getAuth, getUserId, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -18,6 +24,10 @@ const fontFaces: { [key in UI.FontSetting]: string } = {
   lato: 'Lato, sans-serif',
   default: 'unset',
 }
+
+const [debouceUI] = createDebounce((update: UI.UISettings) => {
+  updateTheme(update)
+}, 50)
 
 export type UserState = {
   loading: boolean
@@ -50,7 +60,7 @@ export const userStore = createStore<UserState>(
      * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
      */
     if (!init.user.ui) {
-      userStore.updateUI({})
+      userStore.saveUI({})
     } else {
       updateTheme(init.user.ui)
     }
@@ -70,7 +80,7 @@ export const userStore = createStore<UserState>(
 
       if (res.error) return toastStore.error(`Failed to get user config`)
       if (res.result) {
-        userStore.updateUI({})
+        userStore.saveUI({})
         return { user: res.result }
       }
     },
@@ -170,9 +180,10 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateUI({ ui }, update: Partial<UI.UISettings>) {
-      const current = ui[update.mode || ui.mode]
+    async saveUI({ ui }, update: Partial<UI.UISettings>) {
+      const mode = update.mode ? update.mode : ui.mode
       const next = { ...ui, ...update }
+      const current = next[mode]
 
       await usersApi.updateUI(next)
 
@@ -182,6 +193,27 @@ export const userStore = createStore<UserState>(
         toastStore.error(`Failed to save UI settings: ${e.message}`)
       }
       return { ui: next, current }
+    },
+
+    saveCustomUI({ ui }, update: Partial<UI.CustomUI>) {
+      const curr = ui[ui.mode]
+      userStore.saveUI({ ...ui, [ui.mode]: { ...curr, ...update } })
+    },
+
+    tryCustomUI({ ui }, update: Partial<UI.CustomUI>) {
+      const prop = ui.mode === 'light' ? 'light' : 'dark'
+      const current = { ...ui[prop], ...update }
+      const next = { ...ui, current, [prop]: current }
+      updateTheme(next)
+      return next
+    },
+
+    tryUI({ ui }, update: Partial<UI.UISettings>) {
+      const mode = update.mode || ui.mode
+      const current = ui[mode]
+      const next = { current, ...ui, ...update }
+      debouceUI(next)
+      return { ui: next }
     },
 
     receiveUI(_, update: UI.UISettings) {
@@ -326,14 +358,19 @@ function updateTheme(ui: UI.UISettings) {
   safeLocalStorage.setItem(getUIKey(), JSON.stringify(ui))
   const root = document.documentElement
 
-  const colors = ui.bgCustom ? getColorShades(ui.bgCustom) : []
+  const mode = ui[ui.mode]
+
+  const colors = mode.bgCustom
+    ? getMidColorShades(mode.bgCustom)
+    : ui.bgCustom
+    ? getColorShades(ui.bgCustom)
+    : []
 
   if (ui.mode === 'dark') {
     colors.reverse()
   }
 
   const gradients = ui.bgCustomGradient ? getColorShades(ui.bgCustomGradient) : []
-  const mode = ui[ui.mode]
 
   for (let shade = 100; shade <= 1000; shade += 100) {
     const index = shade / 100 - 1
@@ -429,6 +466,17 @@ function adjustColor(color: string, percent: number, target = 0) {
 function getColorShades(color: string) {
   const colors: string[] = [adjustColor(color, -100), color]
   for (let i = 2; i <= 9; i++) {
+    const next = adjustColor(color, i * 100)
+    colors.push(next)
+  }
+
+  return colors
+}
+
+function getMidColorShades(color: string) {
+  const start = -400
+  const colors: string[] = [adjustColor(color, start), color]
+  for (let i = 1; i <= 9; i++) {
     const next = adjustColor(color, i * 100)
     colors.push(next)
   }

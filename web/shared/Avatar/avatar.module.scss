@@ -1,0 +1,40 @@
+.body {
+}
+
+.main {
+  @apply w-full pb-4;
+
+  display: grid;
+  grid-template-rows: auto;
+  grid-template-columns: auto auto;
+
+  grid-template-areas:
+    'header header header'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right'
+    'left preview right';
+}
+
+.header {
+  grid-area: header;
+}
+
+.preview {
+  grid-area: preview;
+  @apply flex justify-center;
+}
+
+.left {
+  grid-area: left;
+  @apply flex flex-col items-end gap-2;
+  @apply hidden sm:flex;
+}
+
+.right {
+  grid-area: right;
+  @apply hidden sm:flex;
+}

@@ -28,7 +28,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
     return encodeURIComponent(JSON.stringify(json, null, 2))
   })
 
-  const Footer = () => (
+  const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
         Close

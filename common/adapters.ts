@@ -200,10 +200,13 @@ export type PresetAISettings = Omit<
   | 'useGaslight'
 >
 
+/**
+ * This is al
+ */
 export const adapterSettings: {
   [key in keyof PresetAISettings]: AIAdapter[]
 } = {
-  temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude'],
+  temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude', 'goose'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   systemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose'],

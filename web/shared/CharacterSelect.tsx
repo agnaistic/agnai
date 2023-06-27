@@ -1,7 +1,7 @@
 import { Component, JSX, createSignal, Show, createMemo } from 'solid-js'
 import { AppSchema } from '../../common/types/schema'
 import { DropMenu } from './DropMenu'
-import AvatarIcon from './AvatarIcon'
+import { CharacterAvatar } from './AvatarIcon'
 import Button from './Button'
 import { ChevronDown, Users } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
@@ -46,11 +46,7 @@ const CharacterSelect: Component<{
           alignLeft
         >
           <Show when={props.value}>
-            <AvatarIcon
-              avatarUrl={match()?.avatar}
-              format={{ size: 'xs', corners: 'circle' }}
-              class={`mr-1`}
-            />
+            <CharacterAvatar char={match()!} format={{ size: 'sm', corners: 'circle' }} surround />
           </Show>
           <Show when={!props.value}>
             <div class="mr-1 flex h-6 w-6 shrink-0 items-center justify-center">
