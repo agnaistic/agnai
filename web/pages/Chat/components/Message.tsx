@@ -216,7 +216,6 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={props.char && !!props.msg.characterId}>
-                  {/* {props.avatars[props.msg.characterId!] || props.avatars[props.char._id]} */}
                   <CharacterAvatar
                     char={props.botMap[props.msg.characterId!] || props.char}
                     openable
@@ -227,7 +226,12 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={!props.msg.characterId}>
-                  <AvatarIcon format={format()} Icon={DownloadCloud} />
+                  <AvatarIcon
+                    format={format()}
+                    Icon={DownloadCloud}
+                    avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
+                    anonymize={props.anonymize}
+                  />
                 </Match>
               </Switch>
             </span>
