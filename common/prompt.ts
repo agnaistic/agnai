@@ -446,8 +446,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Character) {
   const { settings, user } = opts
   const parts = {
-    ujb: settings?.ultimeJailbreak ?? ('' as string | undefined),
-    system: settings?.systemPrompt ?? ('' as string | undefined),
+    ujb: '' as string | undefined,
+    system: '' as string | undefined,
   }
 
   if (!settings?.service) return parts
