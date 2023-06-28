@@ -14,8 +14,8 @@ import PageHeader from '../PageHeader'
 import Button from '../Button'
 import { ArrowLeft, ArrowRight, Dices } from 'lucide-solid'
 import Select from '../Select'
-import { createDebounce, hexToRgb } from '../util'
-import ColorPicker from '../ColorPicker'
+import { createDebounce, parseHex } from '../util'
+import { ColorPickerV2 } from '../ColorPicker'
 import { EmoteType, FullSprite, SpriteAttr, classifyEmotes } from '/common/types/sprite'
 import { useEffect } from '../hooks'
 import { AppSchema } from '/common/types'
@@ -109,12 +109,13 @@ const AvatarBuilder: Component<{
   const updateAttr = <T extends keyof FullSprite>(attr: T, type: FullSprite[T]) => {
     const next = { ...body(), [attr]: type }
     setBody(next)
+    props.onChange?.(body())
   }
 
   const [handleColor, disposeColor] = createDebounce((hex: string) => {
     const prop = getColorProp(attr())
     if (!prop) return
-    setBody({ ...body(), [prop]: hex })
+    updateAttr(prop, hex)
   }, 16)
 
   onCleanup(() => {
@@ -144,10 +145,9 @@ const AvatarBuilder: Component<{
                   onChange={(v) => setAttr(v.value as any)}
                   fieldName=""
                 />
-                <ColorPicker
-                  fieldName="color"
+                <ColorPickerV2
                   onInput={handleColor}
-                  disabled={!RECOLOR[attr()]}
+                  onChange={handleColor}
                   value={getAttrColor(body(), attr())}
                 />
               </div>
@@ -364,8 +364,8 @@ const CanvasPart: Component<CanvasProps> = (props) => {
       const color = prop ? props.body[prop] : undefined
 
       if (color) {
-        const alpha = IS_EYES[props.attr] ? '0.3' : '0.6'
-        const { r, g, b } = hexToRgb(color)!
+        // const alpha = IS_EYES[props.attr] ? '0.3' : '0.6'
+        const { r, g, b, alpha = 0.5 } = parseHex(color)!
         over.drawImage(image, 0, Y_OFFSET, WIDTH, HEIGHT)
 
         const orig = over.globalCompositeOperation
@@ -515,9 +515,11 @@ function getHash({ body, attr, type }: CanvasProps) {
 
 function getAttrColor(body: FullSprite, attr: SpriteAttr) {
   const prop = getColorProp(attr)
-  if (!prop) return '#000000'
+  if (!prop) return '#0000007f'
+  const value = body[prop]
+  if (!value) return '#0000007f'
 
-  return body[prop] || '#000000'
+  return (value + '7f').slice(0, 9)
 }
 
 const TIMERS = {

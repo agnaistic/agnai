@@ -352,6 +352,14 @@ export function setRootVariable(name: string, value: string) {
   root.style.setProperty(name.startsWith('--') ? name : `--${name}`, value)
 }
 
+export function parseHex(hex: string) {
+  if (!hex.startsWith('#')) hex = '#' + hex
+  const rgb = hex.slice(1, 7)
+  const a = parseInt(hex.slice(7, 9), 16)
+  const { r, g, b } = hexToRgb(rgb)!
+  return { hex: rgb, r, g, b, alpha: isNaN(a) ? undefined : a / 255, rgba: hex }
+}
+
 export function hexToRgb(hex: string) {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex.trim())
   return result

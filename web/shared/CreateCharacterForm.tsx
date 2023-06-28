@@ -706,6 +706,10 @@ const SpriteModal: Component<{
 
   const [body, setBody] = createSignal(props.body || getRandomBody())
 
+  const handleChange = () => {
+    props.onChange(body())
+  }
+
   useRootModal({
     id: 'sprite-modal',
     element: (
@@ -718,7 +722,7 @@ const SpriteModal: Component<{
         footer={
           <>
             <Button schema="secondary">Cancel</Button>
-            <Button onClick={() => props.onChange(body())}>Confirm</Button>
+            <Button onClick={handleChange}>Confirm</Button>
           </>
         }
       >
