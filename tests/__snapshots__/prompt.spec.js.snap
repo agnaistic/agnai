@@ -4,10 +4,9 @@ exports[`Prompt building will build a basic prompt 1`] = `
 "Bot's Persona: PERSONA
 Scenario: SCENARIO
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: SECOND
 Bot:"
@@ -17,10 +16,9 @@ exports[`Prompt building will build a continue prompt 1`] = `
 "Bot's Persona: PERSONA
 Scenario: SCENARIO
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: SECOND
 Bot: ORIGINAL
@@ -34,10 +32,9 @@ Facts:
 ENTRY TWO
 ENTRY THREE
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: 10-TRIGGER
@@ -51,10 +48,9 @@ Scenario: SCENARIO
 Facts:
 ENTRY ONE
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: LONGWOR A
 You: 1-TRIGGER
 Bot:"
@@ -67,10 +63,9 @@ Facts:
 ENTRY TIE
 ENTRY THREE
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: TIE-TRIGGER
@@ -97,10 +92,9 @@ ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: TIE-TRIGGER
@@ -114,7 +108,7 @@ Scenario: SCENARIO
 Bot's persona: PERSONA
 How Bot speaks:
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: TIE-TRIGGER
@@ -134,7 +128,7 @@ Scenario: SCENARIO
 Bot's persona: PERSONA
 How Bot speaks:
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: TIE-TRIGGER
@@ -146,10 +140,9 @@ exports[`Prompt building will include sample chat when gaslight does not sample 
 "Bot's Persona: PERSONA
 Scenario: SCENARIO
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: SECOND
 Bot: ORIGINAL
@@ -173,8 +166,8 @@ Object {
       "Bot: SAMPLE_CHAT",
     ],
     "scenario": "SCENARIO",
-    "systemPrompt": undefined,
-    "ujb": "!!UJB_PROMPT!!",
+    "systemPrompt": "",
+    "ujb": "",
   },
   "template": "GASLIGHT TEMPLATE
 You
@@ -184,9 +177,8 @@ Scenario: SCENARIO
 Bot's persona: PERSONA
 How Bot speaks:
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: bot response
-!!UJB_PROMPT!!
 Bot:",
 }
 `;
@@ -198,10 +190,9 @@ Facts:
 ENTRY ONE
 ENTRY TWO
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 10-TRIGGER
 You: 1-TRIGGER
@@ -216,10 +207,9 @@ ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: TIE-TRIGGER
@@ -244,10 +234,9 @@ ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 
-<START>
-How Bot speaks:
+How Bot speaks: 
 Bot: SAMPLE_CHAT
-System: New conversation started. Previous conversations are examples only.
+<START>
 Bot: FIRST
 You: 1-TRIGGER
 You: TIE-TRIGGER
@@ -259,9 +248,9 @@ exports[`Prompt building will use correct placeholders in scenario and sample ch
 "Reply's Persona: PERSONA
 Scenario: MAIN Main
 
-<START>
-How Reply speaks:
+How Reply speaks: 
 SAMPLECHAT Reply
-System: New conversation started. Previous conversations are examples only.
+<START>
+
 Reply:"
 `;
