@@ -356,7 +356,6 @@ export function parseHex(hex: string) {
   if (!hex.startsWith('#')) hex = '#' + hex
   const rgb = hex.slice(1, 7)
   const a = parseInt(hex.slice(7, 9), 16)
-  // console.log(hex, 'alpha-->', hex.slice(7, 9), a)
   const { r, g, b } = hexToRgb(rgb)!
   return { hex: rgb, r, g, b, alpha: isNaN(a) ? undefined : a / 255, rgba: hex }
 }

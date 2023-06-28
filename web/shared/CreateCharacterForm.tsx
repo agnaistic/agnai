@@ -707,7 +707,6 @@ const SpriteModal: Component<{
   const [body, setBody] = createSignal(props.body || getRandomBody())
 
   const handleChange = () => {
-    console.log('changed', body())
     props.onChange(body())
   }
 
