@@ -434,7 +434,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
   parts.memory = memory?.prompt
 
-  const supplementary = getSupplementaryParts(opts.settings, replyAs)
+  const supplementary = getSupplementaryParts(opts, replyAs)
   parts.ujb = supplementary.ujb
   parts.systemPrompt = supplementary.system
 
@@ -443,17 +443,18 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   return parts
 }
 
-function getSupplementaryParts(
-  settings: Partial<AppSchema.GenSettings> | undefined,
-  replyAs: AppSchema.Character
-) {
+function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Character) {
+  const { settings, user } = opts
   const parts = {
-    ujb: '' as string | undefined,
-    system: '' as string | undefined,
+    ujb: settings?.ultimeJailbreak ?? ('' as string | undefined),
+    system: settings?.systemPrompt ?? ('' as string | undefined),
   }
 
   if (!settings?.service) return parts
-  if (!SUPPORTS_INSTRUCT[settings?.service]) return parts
+  if (settings.service === 'kobold' && opts.user.thirdPartyFormat !== 'kobold') return parts
+
+  const supports = SUPPORTS_INSTRUCT[settings?.service]
+  if (!supports?.(user)) return parts
 
   parts.ujb = settings.ultimeJailbreak
   parts.system = settings.systemPrompt

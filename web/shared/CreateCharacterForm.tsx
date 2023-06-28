@@ -706,7 +706,14 @@ const SpriteModal: Component<{
 }> = (props) => {
   let ref: any
 
+  const [original, setOriginal] = createSignal(props.body)
   const [body, setBody] = createSignal(props.body || getRandomBody())
+
+  createEffect(() => {
+    if (props.body && !original()) {
+      setOriginal(props.body)
+    }
+  })
 
   const handleChange = () => {
     props.onChange(body())
@@ -723,7 +730,9 @@ const SpriteModal: Component<{
         maxWidth="half"
         footer={
           <>
-            <Button schema="secondary">Cancel</Button>
+            <Button onClick={() => props.onChange(original()!)} schema="secondary">
+              Cancel
+            </Button>
             <Button onClick={handleChange}>Confirm</Button>
           </>
         }
