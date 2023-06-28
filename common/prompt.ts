@@ -243,7 +243,7 @@ export function injectPlaceholders(
   let prompt = template
     // UJB must be first to replace placeholders within the UJB
     // Note: for character post-history-instructions, this is off-spec behavior
-    .replace(HOLDERS.ujb, opts.settings?.ultimeJailbreak || '')
+    .replace(HOLDERS.ujb, parts.ujb || '')
     .replace(HOLDERS.sampleChat, newline(sampleChat))
     .replace(HOLDERS.scenario, parts.scenario || '')
     .replace(HOLDERS.memory, newline(parts.memory))
