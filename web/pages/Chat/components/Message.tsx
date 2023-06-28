@@ -266,16 +266,15 @@ const SingleMessage: Component<
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
+                  <Show when={canShowMeta(props.original.meta)}>
+                    <span
+                      class="text-600 hover:text-900 ml-1 cursor-pointer"
+                      onClick={() => rootModalStore.info(<Meta meta={props.original.meta} />)}
+                    >
+                      <Info size={14} />
+                    </span>
+                  </Show>
                 </span>
-
-                <Show when={props.original.meta}>
-                  <span
-                    class="text-600 hover:text-900 ml-1 cursor-pointer"
-                    onClick={() => rootModalStore.info(<Meta meta={props.original.meta} />)}
-                  >
-                    <Info size={14} />
-                  </span>
-                </Show>
               </span>
               <Switch>
                 <Match when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
@@ -630,4 +629,8 @@ const Meta: Component<{ meta: any }> = (props) => {
       </table>
     </>
   )
+}
+
+function canShowMeta(meta: any) {
+  return !!meta && Object.keys(meta).length > 1
 }
