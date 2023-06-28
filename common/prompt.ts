@@ -451,8 +451,6 @@ function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Char
   }
 
   if (!settings?.service) return parts
-  if (settings.service === 'kobold' && opts.user.thirdPartyFormat !== 'kobold') return parts
-
   const supports = SUPPORTS_INSTRUCT[settings?.service]
   if (!supports?.(user)) return parts
 
