@@ -1,5 +1,10 @@
-import { Component, JSX, Show } from 'solid-js'
-import { getSettingColor } from '../store'
+import { Component, JSX, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { getSettingColor, userStore } from '../store'
+import { v4 } from 'uuid'
+import Coloris from '@melloware/coloris'
+import { parseHex } from './util'
+
+Coloris.init()
 
 const ColorPicker: Component<{
   fieldName: string
@@ -42,3 +47,59 @@ const ColorPicker: Component<{
 }
 
 export default ColorPicker
+
+export const ColorPickerV2: Component<{
+  value?: string
+  onInput?: (color: string, alpha?: number) => void
+  onChange: (color: string, alpha?: number) => void
+}> = (props) => {
+  let ref: any
+  const ui = userStore((s) => s.ui)
+  const [id] = createSignal(v4().slice(0, 8))
+
+  const [value, setValue] = createSignal(props.value || '#000000ff')
+  const bg = createMemo(() => {
+    const { r, g, b, alpha } = parseHex(value())
+    return `rgba(${r}, ${g}, ${b}, ${alpha ?? 1})`
+  })
+
+  const onConfirm = (ev: any) => {
+    const { alpha } = parseHex(ev.target.value)
+    setValue(ev.target.value)
+    props.onChange(ev.target.value, alpha)
+  }
+
+  const onInput = (ev: any) => {
+    const { alpha } = parseHex(ev.target.value)
+    setValue(ev.target.value)
+    props.onInput?.(ev.target.value, alpha)
+  }
+
+  createEffect(() => {
+    Coloris({
+      el: undefined as any,
+      format: 'hex',
+      themeMode: ui.mode,
+      forceAlpha: true,
+    })
+  })
+
+  onMount(() => {})
+
+  return (
+    <input
+      style={{
+        background: bg(),
+        color: 'rgba(255, 255, 255, 0)',
+      }}
+      ref={ref}
+      id={id()}
+      data-coloris
+      class={`w-6 rounded-sm text-opacity-0 ${id()}`}
+      type="text"
+      onInput={onInput}
+      onChange={onConfirm}
+      value={value()}
+    />
+  )
+}

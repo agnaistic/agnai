@@ -85,6 +85,9 @@ devDependencies:
   '@babel/core':
     specifier: ^7.20.12
     version: 7.20.12
+  '@melloware/coloris':
+    specifier: ^0.20.0
+    version: 0.20.0
   '@parcel/config-default':
     specifier: ^2.9.2
     version: 2.9.2(@parcel/core@2.9.2)(postcss@8.4.21)
@@ -1719,6 +1722,10 @@ packages:
     requiresBuild: true
     dev: true
     optional: true
+
+  /@melloware/coloris@0.20.0:
+    resolution: {integrity: sha512-v0CeIL/Fh8SDXA9yqk/MShpnNXzN575iBklszdtCF/VHLItVZGTmsqida2iiF78PBQ4LTe7f4thNRLsvR7YiVA==}
+    dev: true
 
   /@mischnic/json-sourcemap@0.1.0:
     resolution: {integrity: sha512-dQb3QnfNqmQNYA4nFSN/uLaByIic58gOXq4Y4XqLOWmOrw73KmJPt/HLyG0wvn1bnR6mBKs/Uwvkh+Hns1T0XA==}
