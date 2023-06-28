@@ -578,7 +578,7 @@ export const CreateCharacterForm: Component<{
                     </span>
                   }
                   placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
-                  value={state.edit?.systemPrompt}
+                  value={downloaded()?.systemPrompt || state.edit?.systemPrompt}
                 />
                 <TextInput
                   isMultiline
@@ -590,7 +590,9 @@ export const CreateCharacterForm: Component<{
                     </span>
                   }
                   placeholder="Write at least four paragraphs."
-                  value={state.edit?.postHistoryInstructions}
+                  value={
+                    downloaded()?.postHistoryInstructions || state.edit?.postHistoryInstructions
+                  }
                 />
               </Card>
               <Card>
@@ -601,7 +603,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="creator"
                   label="Creator (optional)"
                   placeholder="e.g. John1990"
-                  value={state.edit?.creator}
+                  value={downloaded()?.creator || state.edit?.creator}
                 />
               </Card>
               <Card>
@@ -609,7 +611,7 @@ export const CreateCharacterForm: Component<{
                   fieldName="characterVersion"
                   label="Character Version (optional)"
                   placeholder="any text e.g. 1, 2, v1, v1fempov..."
-                  value={state.edit?.characterVersion}
+                  value={downloaded()?.characterVersion || state.edit?.characterVersion}
                 />
               </Card>
               <Card class="flex flex-col gap-3">
