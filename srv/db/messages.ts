@@ -15,14 +15,14 @@ export type NewMessage = {
   ooc: boolean
   imagePrompt?: string
   actions?: AppSchema.ChatMessage['actions']
+  meta?: any
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
 
-export async function createChatMessage(
-  { chatId, message, characterId, senderId, adapter, ooc, imagePrompt, actions }: NewMessage,
-  ephemeral?: boolean
-) {
+export async function createChatMessage(creating: NewMessage, ephemeral?: boolean) {
+  const { chatId, message, characterId, senderId, adapter, ooc, imagePrompt, actions, meta } =
+    creating
   const doc: AppSchema.ChatMessage = {
     _id: v4(),
     kind: 'chat-message',
@@ -36,6 +36,7 @@ export async function createChatMessage(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     ooc,
+    meta,
   }
 
   if (imagePrompt) {
@@ -84,7 +85,7 @@ export async function deleteMessages(messageIds: string[]) {
 
 export async function editMessage(
   id: string,
-  update: Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter'>
+  update: Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter' | 'meta'>
 ) {
   const edit: any = { ...update, updatedAt: now() }
 

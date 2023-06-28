@@ -30,6 +30,7 @@ import { For } from 'solid-js'
 import { getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
+import Modal from './shared/Modal'
 
 const App: Component = () => {
   const state = userStore()
@@ -169,8 +170,19 @@ const Layout: Component = () => {
         show={cfg.showImpersonate}
         close={() => settingStore.toggleImpersonate(false)}
       />
+      <InfoModal />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
     </div>
+  )
+}
+
+const InfoModal: Component = (props) => {
+  const state = rootModalStore()
+
+  return (
+    <Modal show={state.info} close={() => rootModalStore.info()}>
+      {state.info}
+    </Modal>
   )
 }
 

@@ -1,5 +1,10 @@
 export type Encoder = (text: string) => number
 
+export type Tokenizer = {
+  decode: (tokens: Int32Array) => string
+  encode: (value: string) => Int32Array
+}
+
 export async function encode(text: string) {
   const encoder = await import('gpt-3-encoder').then((mod) => mod.encode)
   return encoder(text)

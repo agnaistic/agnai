@@ -491,6 +491,7 @@ subscribe(
     message: 'string',
     continue: 'boolean?',
     adapter: 'string',
+    meta: 'any?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
   },
   async (body) => {
@@ -522,21 +523,20 @@ subscribe(
 
     addMsgToRetries({ _id: body.messageId, msg: body.message })
 
+    const nextMsg = {
+      msg: body.message,
+      actions: body.actions,
+      voiceUrl: undefined,
+      meta: body.meta,
+    }
+
     if (retrying?._id === body.messageId) {
-      const next = msgs.map((msg) =>
-        msg._id === body.messageId
-          ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
-          : msg
-      )
+      const next = msgs.map((msg) => (msg._id === body.messageId ? { ...msg, ...nextMsg } : msg))
       msgStore.setState({ msgs: next })
     } else {
       if (activeChatId !== body.chatId || !prev) return
       msgStore.setState({
-        msgs: msgs.map((msg) =>
-          msg._id === body.messageId
-            ? { ...msg, msg: body.message, actions: body.actions, voiceUrl: undefined }
-            : msg
-        ),
+        msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, ...nextMsg } : msg)),
       })
     }
 

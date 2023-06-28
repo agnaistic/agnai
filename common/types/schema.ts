@@ -172,6 +172,7 @@ export namespace AppSchema {
     first?: boolean
     ooc?: boolean
     system?: boolean
+    meta?: any
   }
 
   /** Description of the character or user */

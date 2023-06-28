@@ -2,6 +2,7 @@ import './Message.css'
 import {
   Check,
   DownloadCloud,
+  Info,
   PauseCircle,
   Pencil,
   RefreshCw,
@@ -30,6 +31,7 @@ import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '.
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
 import { useBgStyle } from '/web/shared/hooks'
+import { rootModalStore } from '/web/store/root-modal'
 
 type MessageProps = {
   msg: SplitMessage
@@ -265,6 +267,15 @@ const SingleMessage: Component<
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
                 </span>
+
+                <Show when={props.original.meta}>
+                  <span
+                    class="text-600 hover:text-900 ml-1 cursor-pointer"
+                    onClick={() => rootModalStore.info(<Meta meta={props.original.meta} />)}
+                  >
+                    <Info size={14} />
+                  </span>
+                </Show>
               </span>
               <Switch>
                 <Match when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
@@ -598,4 +609,25 @@ function parseMessage(
     .replace(SELF_REPLACE, profile?.handle || 'You')
     .replace(/(<)/g, '‹')
     .replace(/(>)/g, '›')
+}
+
+const Meta: Component<{ meta: any }> = (props) => {
+  if (!props.meta) return null
+
+  return (
+    <>
+      <table class="text-sm">
+        <For each={Object.entries(props.meta)}>
+          {([key, value]) => (
+            <tr>
+              <td class="pr-2">
+                <b>{key}</b>
+              </td>
+              <td>{value as string}</td>
+            </tr>
+          )}
+        </For>
+      </table>
+    </>
+  )
 }
