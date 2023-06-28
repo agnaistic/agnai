@@ -193,9 +193,9 @@ export const ChatGenSettings: Component<{
               You are using a built-in preset which cannot be modified. Modifying this will create a
               new preset and assign it to your chat.
             </TitleCard>
-
-            <TextInput fieldName="name" value={getPresetName(selected())} label="Preset Name" />
           </Show>
+
+          <TextInput fieldName="name" value={getPresetName(selected())} label="Preset Name" />
         </Card>
 
         <Switch>

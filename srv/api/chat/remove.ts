@@ -27,6 +27,16 @@ export const deleteChat = handle(async ({ params, userId }) => {
     throw errors.NotFound
   }
 
+  // Allow users to remove themselves from the chat using 'chat deletion'
+  if (chat.userId !== userId && chat.memberIds.includes(userId)) {
+    sendMany([userId, ...chat.memberIds, chat.userId], {
+      type: 'member-removed',
+      chatId: params.id,
+      memberId: userId,
+    })
+    await store.invites.removeMember(params.id, userId, userId)
+  }
+
   if (chat.userId !== userId) {
     throw errors.Forbidden
   }

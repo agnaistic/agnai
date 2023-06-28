@@ -146,11 +146,14 @@ export async function removeMember(chatId: string, requestedBy: string, memberId
   const chat = await db('chat').findOne({ _id: chatId })
   if (!chat) throw errors.NotFound
 
-  if (chat.userId !== requestedBy) {
+  if (chat.userId !== requestedBy && requestedBy !== memberId) {
     throw errors.Forbidden
   }
 
   if (chat.memberIds.includes(memberId)) {
+    const membership = await db('chat-member').findOne({ chatId, userId: memberId })
+    if (!membership) throw errors.Forbidden
+
     sendMany([requestedBy, ...chat.memberIds], { type: 'member-removed', chatId, memberId })
   }
 
