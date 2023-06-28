@@ -48,6 +48,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
 
   let generated = ''
   let error = false
+  let meta = {}
 
   for await (const gen of stream) {
     if (typeof gen === 'string') {
@@ -59,7 +60,12 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
       continue
     }
 
-    if (gen.error) {
+    if ('meta' in gen) {
+      Object.assign(meta, gen.meta)
+      continue
+    }
+
+    if ('error' in gen) {
       error = true
       const payload = {
         type: 'inference-complete',
@@ -78,6 +84,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     type: 'inference-complete',
     requestId: body.requestId,
     response: generated,
+    meta,
   }
   if (userId) sendOne(userId, payload)
   else sendGuest(socketId, payload)

@@ -1,3 +1,4 @@
+import { SUPPORTS_INSTRUCT } from '/common/adapters'
 import { AppSchema } from '/common/types'
 
 /**
@@ -32,4 +33,13 @@ export function getBotsForChat(
   }
 
   return chars
+}
+
+export function canConvertGaslightV2(preset: Partial<AppSchema.UserGenPreset>) {
+  if (!preset?._id) return false
+  if (!preset.gaslight) return false
+  if (!preset.service) return false
+  if (!SUPPORTS_INSTRUCT[preset.service]) return false
+  if (!preset._id !== undefined && preset._id !== '') return false
+  return true
 }

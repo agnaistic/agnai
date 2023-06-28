@@ -41,7 +41,7 @@ import DeleteChatModal from './components/DeleteChat'
 import { cycleArray, wait } from '/common/util'
 import { HOLDERS } from '/common/prompt'
 import UpdateGaslightToUseSystemPromptModal from './UpdateGaslightToUseSystemPromptModal'
-import { getActiveBots } from './util'
+import { getActiveBots, canConvertGaslightV2 } from './util'
 import { CreateCharacterForm } from '/web/shared/CreateCharacterForm'
 import { usePane } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
@@ -249,13 +249,16 @@ const ChatDetail: Component = () => {
   })
 
   const shouldForceV2Gaslight = createMemo(() => {
-    const isUserSetting = chatPreset()?.preset._id !== undefined && chatPreset()?.preset._id !== ''
-    if (!isUserSetting) return false
-    const gaslight = chatPreset()?.preset.gaslight
-    if (!gaslight) return false
+    const cfg = chatPreset()
+    if (!cfg) return false
+
+    if (!canConvertGaslightV2(cfg.preset)) return false
+    const gaslight = cfg.preset.gaslight!
+
     const characterHasSystemPrompt = chars.chatBots.some(
       (char) => char.systemPrompt !== undefined && char.systemPrompt !== ''
     )
+
     const gaslightHasSystemPrompt = !!gaslight.match(HOLDERS.systemPrompt)
     return characterHasSystemPrompt && !gaslightHasSystemPrompt
   })

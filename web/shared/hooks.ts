@@ -101,6 +101,7 @@ function isDefined<T>(value: T | undefined | null): value is T {
 function isFunction<T>(value: T | Function): value is Function {
   return typeof value === 'function'
 }
+
 export function useRootModal(modal: RootModal) {
   onMount(() => rootModalStore.addModal(modal))
   onCleanup(() => rootModalStore.removeModal(modal.id))

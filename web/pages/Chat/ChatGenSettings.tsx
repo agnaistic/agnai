@@ -113,7 +113,9 @@ export const ChatGenSettings: Component<{
        * Assign it to the chat without creating a new preset
        */
       if (!isPresetDirty(original, update)) {
-        chatStore.editChatGenPreset(props.chat._id, preset)
+        chatStore.editChatGenPreset(props.chat._id, preset, () => {
+          toastStore.success('Switched preset')
+        })
         return
       }
 

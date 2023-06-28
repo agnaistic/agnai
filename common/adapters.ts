@@ -200,6 +200,11 @@ export type PresetAISettings = Omit<
   | 'useGaslight'
 >
 
+export const SUPPORTS_INSTRUCT: { [key in AIAdapter]?: boolean } = {
+  claude: true,
+  openai: true,
+}
+
 /**
  * This is al
  */

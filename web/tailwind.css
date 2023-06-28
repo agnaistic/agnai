@@ -302,7 +302,6 @@ body {
   .tooltip .tooltip-text {
     visibility: hidden;
     position: absolute;
-    z-index: 1;
   }
 
   .tooltip:hover .tooltip-text {

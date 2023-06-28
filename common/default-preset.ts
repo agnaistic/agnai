@@ -30,6 +30,7 @@ export const defaultTemplate = `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
 Facts:{{memory}}
 
+How {{char}} speaks: {{example_dialogue}}
 <START>
 {{history}}
 {{ujb}}

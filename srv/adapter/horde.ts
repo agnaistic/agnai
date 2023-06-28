@@ -34,6 +34,20 @@ export const handleHorde: ModelAdapter = async function* ({
       chatId: opts.chat._id,
     })
 
+    logger.debug(result, 'Horde result')
+
+    const details = result.result.generations?.[0]
+
+    if (details) {
+      yield {
+        meta: {
+          workerId: details.worker_id,
+          workerName: details.worker_name,
+          model: details.model,
+        },
+      }
+    }
+
     yield trimmed || sanitised
   } catch (ex: any) {
     logger.error({ err: ex, body: ex.body }, `Horde request failed.`)

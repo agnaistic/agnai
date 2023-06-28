@@ -23,6 +23,9 @@ export const novelPresets = {
     useGaslight: true,
     gaslight: `{{char}} Memory: {{memory}}
 Description of {{char}}: {{personality}}
+
+How {{char}} speaks: {{example_dialogue}}
+
 [ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
 ***
 Summary: {{scenario}}`,

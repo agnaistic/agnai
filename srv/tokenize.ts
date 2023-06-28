@@ -1,11 +1,13 @@
 import * as sp from 'sentencepiece-js'
-import fs from 'fs'
+import fs, { readFileSync } from 'fs'
 import { init } from '@dqbd/tiktoken/lite/init'
 import { encoding_for_model } from '@dqbd/tiktoken'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
-import { Encoder } from '../common/tokenize'
+import { Encoder, Tokenizer } from '../common/tokenize'
+import * as mlc from '@mlc-ai/web-tokenizers'
+const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
 
 const nerdstash = new sp.SentencePieceProcessor()
 nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
@@ -13,6 +15,7 @@ nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
 const nerdstashV2 = new sp.SentencePieceProcessor()
 nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
 
+let claudeEncoder: Tokenizer
 const davinciEncoder = encoding_for_model('text-davinci-003')
 const turboEncoder = encoding_for_model('gpt-3.5-turbo')
 
@@ -34,6 +37,7 @@ const novelClio: Encoder = function clio(value: string) {
   return tokens.length + 4
 }
 
+let claude: Encoder
 let davinci: Encoder
 let turbo: Encoder
 
@@ -45,6 +49,8 @@ const TURBO_MODELS = new Set<string>([
 ])
 
 export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
+  if (adapter === 'claude') return claude ?? main
+
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
   if (adapter === 'novel') {
@@ -78,6 +84,13 @@ async function prepareTokenizers() {
       turbo = (value) => {
         const tokens = turboEncoder.encode(value).length + 6
         return tokens
+      }
+    }
+    {
+      claudeEncoder = await mlc.Tokenizer.fromJSON(claudeJson)
+      claude = (value) => {
+        const tokens = claudeEncoder.encode(value)
+        return tokens.length
       }
     }
   } catch (ex) {

@@ -1,6 +1,12 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from './types/schema'
-import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS } from './adapters'
+import {
+  AIAdapter,
+  NOVEL_MODELS,
+  OPENAI_CHAT_MODELS,
+  OPENAI_MODELS,
+  SUPPORTS_INSTRUCT,
+} from './adapters'
 import { formatCharacter } from './characters'
 import { adventureTemplate, defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
@@ -216,10 +222,16 @@ export function injectPlaceholders(
   }
   const sampleChat = parts.sampleChat?.join('\n')
 
+  // Automatically inject example conversation if not included in the prompt
   if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
-    const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${SAMPLE_CHAT_MARKER}`
+    const postSample =
+      opts.settings?.service && SUPPORTS_INSTRUCT[opts.settings.service]
+        ? SAMPLE_CHAT_MARKER
+        : '<START>'
+
+    const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
       .replace(BOT_REPLACE, opts.replyAs.name)
       .replace(SELF_REPLACE, sender)
     if (hist.order === 'asc') next.unshift(msg)
@@ -422,35 +434,42 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
   parts.memory = memory?.prompt
 
-  parts.ujb = getFinalUjbOrSystemPrompt(
-    opts.settings?.ignoreCharacterUjb,
-    replyAs.postHistoryInstructions,
-    opts.settings?.ultimeJailbreak
-  )
-
-  parts.systemPrompt = getFinalUjbOrSystemPrompt(
-    opts.settings?.ignoreCharacterSystemPrompt,
-    replyAs.systemPrompt,
-    opts.settings?.systemPrompt
-  )
+  const supplementary = getSupplementaryParts(opts.settings, replyAs)
+  parts.ujb = supplementary.ujb
+  parts.systemPrompt = supplementary.system
 
   parts.post = post.map(replace)
 
   return parts
 }
 
-function getFinalUjbOrSystemPrompt(
-  ignoreChara?: boolean,
-  charaPrompt?: string,
-  userPrompt?: string
+function getSupplementaryParts(
+  settings: Partial<AppSchema.GenSettings> | undefined,
+  replyAs: AppSchema.Character
 ) {
-  if (ignoreChara) {
-    return userPrompt
-  } else if (charaPrompt) {
-    return charaPrompt.replace(/{{original}}/gi, userPrompt ?? '')
-  } else {
-    return userPrompt
+  const parts = {
+    ujb: '' as string | undefined,
+    system: '' as string | undefined,
   }
+
+  if (!settings?.service) return parts
+  if (!SUPPORTS_INSTRUCT[settings?.service]) return parts
+
+  parts.ujb = settings.ultimeJailbreak
+  parts.system = settings.systemPrompt
+
+  if (replyAs.postHistoryInstructions && !settings.ignoreCharacterUjb) {
+    parts.ujb = replyAs.postHistoryInstructions
+  }
+
+  if (replyAs.systemPrompt && !settings.ignoreCharacterSystemPrompt) {
+    parts.system = replyAs.systemPrompt
+  }
+
+  parts.ujb = parts.ujb?.replace(/{{original}}/gi, settings.ultimeJailbreak || '')
+  parts.system = parts.system?.replace(/{{original}}/gi, settings.systemPrompt || '')
+
+  return parts
 }
 
 function createPostPrompt(

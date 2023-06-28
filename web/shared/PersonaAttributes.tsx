@@ -154,7 +154,7 @@ const Attribute: Component<{
 }> = (props) => {
   return (
     <div class="flex w-full flex-col gap-2 sm:flex-row">
-      <div class="flex w-full items-center gap-1 sm:w-3/12">
+      <div class="flex w-full items-start gap-1 sm:w-3/12">
         <TextInput
           fieldName={`attr-key.${props.index}`}
           placeholder="Name. E.g. appearance"
@@ -165,7 +165,7 @@ const Attribute: Component<{
           <MinusCircle size={16} class="focusable-icon-button" />
         </div>
       </div>
-      <div class="sm:w-8/12">
+      <div class="sm:w-9/12">
         <TextInput
           fieldName={`attr-value.${props.index}`}
           placeholder="Comma separate attributes. E.g: tall, brunette, athletic"
