@@ -200,6 +200,8 @@ export const CreateCharacterForm: Component<{
       const { file, json } = await downloadCharacterHub(query.import)
       const imageData = await getImageData(file)
       setDownloaded(json)
+      setBundledBook(json.characterBook)
+      setAlternateGreetings(json.alternateGreetings ?? [])
       setImage(imageData)
       setAvatar(() => file)
       setSchema('text')
