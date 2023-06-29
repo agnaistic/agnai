@@ -7,8 +7,10 @@ const Tooltip: Component<{
   children: JSX.Element
   tip: string | JSX.Element
 }> = (props) => {
+  let ref: HTMLDivElement
+
   return (
-    <div class="tooltip select-none">
+    <div ref={ref!} class="tooltip select-none">
       {props.children}
       <div
         class="tooltip-text bg-700 hidden w-[128px] justify-center rounded-xl px-2 py-1 text-sm sm:flex"

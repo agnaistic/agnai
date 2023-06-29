@@ -57,6 +57,7 @@ export type UISettings = {
   viewHeight?: number
 
   chatWidth?: ChatWidth
+  trimSentences?: boolean
   logPromptsToBrowserConsole: boolean
 
   dark: CustomUI

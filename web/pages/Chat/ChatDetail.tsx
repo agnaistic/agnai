@@ -509,11 +509,7 @@ const ChatDetail: Component = () => {
                       {(msg, i) => (
                         <Message
                           msg={msg}
-                          botMap={chars.botMap}
-                          chat={chats.chat!}
-                          char={chats.char!}
                           editing={chats.opts.editing}
-                          anonymize={cfg.anonymize}
                           last={i() === indexOfLastRPMessage()}
                           onRemove={() => setRemoveId(msg._id)}
                           swipe={
@@ -543,13 +539,9 @@ const ChatDetail: Component = () => {
                     </For>
                     <Show when={waitingMsg()}>
                       <Message
-                        botMap={chars.botMap}
                         msg={waitingMsg()!}
-                        char={chars.botMap[waitingMsg()?.characterId!]}
-                        chat={chats.chat!}
                         onRemove={() => {}}
                         editing={chats.opts.editing}
-                        anonymize={cfg.anonymize}
                         sendMessage={sendMessage}
                         isPaneOpen={!!chatStore().opts.pane}
                         avatars={avatars.avatars()}
