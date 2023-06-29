@@ -48,6 +48,14 @@ export async function getUser(userId: string) {
   return user
 }
 
+export async function updateUserUI(userId: string, props: Partial<AppSchema.User['ui']>) {
+  const prev = await getUser(userId)
+  if (!prev) throw errors.Unauthorized
+
+  const next: AppSchema.User['ui'] = { ...prev.ui!, ...props }
+  await db('user').updateOne({ _id: userId }, { $set: { ui: next } })
+}
+
 export async function updateUser(userId: string, props: Partial<AppSchema.User>) {
   await db('user').updateOne({ _id: userId, kind: 'user' }, { $set: props })
   return getUser(userId)

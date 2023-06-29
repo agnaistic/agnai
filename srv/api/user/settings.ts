@@ -100,9 +100,9 @@ export const deleteElevenLabsKey = handle(async ({ userId }) => {
 })
 
 export const updateUI = handle(async ({ userId, body }) => {
-  assertValid(UI.uiGuard, body)
+  assertValid(UI.uiGuard, body, true)
 
-  await store.users.updateUser(userId, { ui: body })
+  await store.users.updateUserUI(userId, body)
 
   publishOne(userId, { type: 'ui-update', ui: body })
 

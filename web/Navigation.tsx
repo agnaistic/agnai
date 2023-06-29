@@ -9,6 +9,7 @@ import {
   LogIn,
   LogOut,
   MailPlus,
+  Menu,
   MessageCircle,
   Settings,
   ShoppingBag,
@@ -78,6 +79,20 @@ const Navigation: Component = () => {
               </div>
             </A>
           </div>
+
+          <div class="flex justify-between sm:hidden">
+            <div class={`w-8 sm:hidden`} onClick={settingStore.menu}>
+              <Menu class="focusable-icon-button cursor-pointer" size={32} />
+            </div>
+            <div>
+              {' '}
+              <span class="w-full text-center text-[1rem]">
+                Agn<span class="text-[var(--hl-500)]">ai</span>stic
+              </span>
+            </div>
+            <div class="w-8"></div>
+          </div>
+
           <Show when={user.loggedIn} fallback={<GuestNavigation />}>
             <UserNavigation />
           </Show>
