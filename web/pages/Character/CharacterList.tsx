@@ -50,7 +50,7 @@ import { Accessor } from 'solid-js'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
 import text from 'png-chunk-text'
-import { AvatarContainer } from '/web/shared/Avatar/Builder'
+import AvatarContainer from '/web/shared/Avatar/Container'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'

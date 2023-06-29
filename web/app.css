@@ -14,3 +14,47 @@
 .text-input-min-h-override {
   min-height: 120px !important;
 }
+
+.drawer {
+  height: calc(100vh);
+  height: calc(100dvh);
+  position: absolute;
+  top: 0;
+  /* top: 48px; */
+  left: 0;
+  transition: opacity 250ms ease;
+  transition: left 250ms ease;
+  @apply w-[calc(100vw-20px)] max-w-[320px] bg-[var(--bg-800)] sm:relative sm:top-0 sm:clear-none sm:w-[320px];
+  @apply z-10 sm:z-0;
+}
+
+@media (min-width: 1024px) {
+  .drawer {
+    height: 100vh;
+    height: 100dvh;
+  }
+}
+
+.drawer--hide {
+  animation-fill-mode: forwards;
+  animation: hideDrawer 0s ease 200ms;
+  @apply left-[-100vw] sm:left-0 sm:opacity-100;
+}
+
+.drawer__content {
+  /* position: fixed; */
+  top: 0;
+  left: 0;
+  height: calc(100% - 64px);
+  transition: 250ms ease;
+}
+
+.drawer > * > a.active {
+  @apply bg-[var(--hl-900)];
+}
+
+@keyframes hideDrawer {
+  to {
+    visibility: hidden;
+  }
+}

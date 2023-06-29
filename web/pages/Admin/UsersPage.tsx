@@ -6,11 +6,12 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore } from '../../store'
+import { AppSchema } from '/common/types'
 
 const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
-  const [pw, setPw] = createSignal('')
+  const [pw, setPw] = createSignal<AppSchema.User>()
   const state = adminStore()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
 
@@ -46,7 +47,7 @@ const UsersPage: Component = () => {
               <div class="w-4/12 px-4 text-xs">{user._id}</div>
               <div class="w-2/12 px-4">{user.username}</div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">
-                <Button size="sm" onClick={() => setPw(user.username)}>
+                <Button size="sm" onClick={() => setPw(user)}>
                   Set Password
                 </Button>
                 <Button size="sm" onClick={() => loadInfo(user._id, user.username)}>
@@ -56,7 +57,7 @@ const UsersPage: Component = () => {
             </div>
           )}
         </For>
-        <PasswordModal show={!!pw()} username={pw()} close={() => setPw('')} />
+        <PasswordModal show={!!pw()} user={pw()!} close={() => setPw(undefined)} />
         <InfoModel
           show={!!info()}
           close={() => setInfo()}
@@ -102,13 +103,13 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   )
 }
 
-const PasswordModal: Component<{ username: string; show: boolean; close: () => void }> = (
+const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () => void }> = (
   props
 ) => {
   let ref: any
   const save = () => {
     const body = getStrictForm(ref, { newPassword: 'string' })
-    adminStore.setPassword(props.username, body.newPassword, props.close)
+    adminStore.setPassword(props.user._id, body.newPassword, props.close)
   }
 
   return (
@@ -129,7 +130,7 @@ const PasswordModal: Component<{ username: string; show: boolean; close: () => v
       }
     >
       <div>
-        Update password for: <b>{props.username}</b>
+        Update password for: <b>{props.user.username}</b>
       </div>
       <div>
         <form ref={ref}>

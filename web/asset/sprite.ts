@@ -32,6 +32,7 @@ const empty = new Set<SpriteAttr>([
   'neck',
   'back_hair',
   'front_hair',
+  'eyebrows',
 ])
 
 for (const attr of attributes) {

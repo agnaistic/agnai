@@ -21,9 +21,9 @@ export async function getUsers(opts: UsersOpts = {}) {
   return list
 }
 
-export async function changePassword(opts: { username: string; password: string }) {
+export async function changePassword(opts: { userId: string; password: string }) {
   const hash = await encryptPassword(opts.password)
-  await db('user').updateOne({ kind: 'user', username: opts.username }, { $set: { hash } })
+  await db('user').updateOne({ _id: opts.userId }, { $set: { hash } })
   return true
 }
 

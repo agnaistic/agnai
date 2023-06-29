@@ -31,8 +31,8 @@ export const adminStore = createStore<AdminState>('admin', { users: [] })((_) =>
         return { users: res.result.users }
       }
     },
-    async setPassword(_, username: string, password: string, onSuccess?: Function) {
-      const res = await api.post('/admin/user/password', { username, password })
+    async setPassword(_, userId: string, password: string, onSuccess?: Function) {
+      const res = await api.post('/admin/user/password', { userId, password })
       if (res.error) return toastStore.error(`Failed to update user: ${res.error}`)
       if (res.result) toastStore.success(`Update user settings`)
       onSuccess?.()

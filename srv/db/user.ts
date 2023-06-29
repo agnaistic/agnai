@@ -39,7 +39,7 @@ export async function getMetrics() {
 }
 
 export async function getProfile(userId: string) {
-  const profile = await db('profile').findOne({ kind: 'profile', userId })
+  const profile = await db('profile').findOne({ userId })
   return profile
 }
 
@@ -48,24 +48,32 @@ export async function getUser(userId: string) {
   return user
 }
 
+export async function updateUserUI(userId: string, props: Partial<AppSchema.User['ui']>) {
+  const prev = await getUser(userId)
+  if (!prev) throw errors.Unauthorized
+
+  const next: AppSchema.User['ui'] = { ...prev.ui!, ...props }
+  await db('user').updateOne({ _id: userId }, { $set: { ui: next } })
+}
+
 export async function updateUser(userId: string, props: Partial<AppSchema.User>) {
-  await db('user').updateOne({ _id: userId, kind: 'user' }, { $set: props })
+  await db('user').updateOne({ kind: 'user' }, { $set: props })
   return getUser(userId)
 }
 
 export async function updateProfile(userId: string, props: Partial<AppSchema.Profile>) {
-  await db('profile').updateOne({ kind: 'profile', userId }, { $set: props })
+  await db('profile').updateOne({ userId }, { $set: props })
   return getProfile(userId)
 }
 
 export async function authenticate(username: string, password: string) {
-  const user = await db('user').findOne({ kind: 'user', username: username.toLowerCase() })
+  const user = await db('user').findOne({ username: username.toLowerCase() })
   if (!user) return
 
   const match = await bcrypt.compare(password, user.hash)
   if (!match) return
 
-  const profile = await db('profile').findOne({ kind: 'profile', userId: user._id })
+  const profile = await db('profile').findOne({ userId: user._id })
   if (!profile) return
 
   const token = await createAccessToken(username, user)

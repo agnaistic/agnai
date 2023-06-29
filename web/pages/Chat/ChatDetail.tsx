@@ -55,8 +55,9 @@ import {
   insertImageMessages,
   SwipeMessage,
 } from './helpers'
-import { AvatarContainer, useAutoExpression } from '/web/shared/Avatar/Builder'
+import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import { useChatAvatars } from './components/ChatAvatar'
+import AvatarContainer from '/web/shared/Avatar/Container'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')

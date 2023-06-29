@@ -15,7 +15,7 @@ import './avatar.css'
 import { LucideProps } from 'lucide-solid/dist/types/types'
 import { getImageData } from '../store/data/chars'
 import { AppSchema, UI } from '/common/types'
-import { AvatarContainer } from './Avatar/Builder'
+import AvatarContainer from './Avatar/Container'
 import { FullSprite } from '/common/types/sprite'
 
 type Props = {
