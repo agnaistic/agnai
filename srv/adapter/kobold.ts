@@ -99,17 +99,21 @@ export const handleKobold: ModelAdapter = async function* ({
   yield trimmed || parsed
 }
 
-const checkStreamSupported = async function (versioncheckURL: any) {
-  const result = await needle('get', versioncheckURL)
+async function checkStreamSupported(versioncheckURL: any) {
+  const result = await needle('get', versioncheckURL).catch((err) => ({ err }))
+  if ('err' in result) {
+    return false
+  }
 
-  if (result.statusCode != 200 || result.errored) return false
+  if (result.statusCode !== 200 || result.errored) return false
 
   const { body } = result
 
-  if (body.result != 'KoboldCpp') return false
+  if (body.result !== 'KoboldCpp') return false
+  const version: string = body.version ?? '0.0'
 
   const isSupportedVersion =
-    (body.version ?? '0.0').localeCompare(MIN_STREAMING_KCPPVERSION, undefined, {
+    version.localeCompare(MIN_STREAMING_KCPPVERSION, undefined, {
       numeric: true,
       sensitivity: 'base',
     }) > -1
