@@ -57,7 +57,7 @@ export async function updateUserUI(userId: string, props: Partial<AppSchema.User
 }
 
 export async function updateUser(userId: string, props: Partial<AppSchema.User>) {
-  await db('user').updateOne({ userId }, { $set: { ...props, updatedAt: now() } })
+  await db('user').updateOne({ _id: userId }, { $set: { ...props, updatedAt: now() } })
   return getUser(userId)
 }
 
