@@ -140,12 +140,12 @@ export const CreateCharacterForm: Component<{
 
   const totalTokens = createMemo(() => {
     const t = tokens()
-    return t.greeting + t.name + t.persona + t.sample + t.scenario
+    return t.name + t.persona + t.sample + t.scenario
   })
 
   const totalPermanentTokens = createMemo(() => {
     const t = tokens()
-    return t.greeting + t.name + t.persona + t.scenario
+    return t.name + t.persona + t.scenario
   })
 
   const edit = createMemo(() => state.edit)
