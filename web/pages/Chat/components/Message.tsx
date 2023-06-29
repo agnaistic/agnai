@@ -555,8 +555,6 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
 }
 
 function renderMessage(ctx: ContextState, text: string, adapter?: string) {
-  if (adapter === 'partial') return text
-
   // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
