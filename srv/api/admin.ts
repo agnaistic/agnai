@@ -17,8 +17,8 @@ const searchUsers = handle(async (req) => {
 })
 
 const setUserPassword = handle(async (req) => {
-  assertValid({ username: 'string', password: 'string' }, req.body)
-  await store.admin.changePassword(req.body)
+  assertValid({ userId: 'string', password: 'string' }, req.body)
+  await store.admin.changePassword({ userId: req.body.userId, password: req.body.password })
   return { success: true }
 })
 

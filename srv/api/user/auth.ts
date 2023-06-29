@@ -22,6 +22,6 @@ export const login = handle(async (req) => {
 
 export const changePassword = handle(async (req) => {
   assertValid({ password: 'string' }, req.body)
-  await store.admin.changePassword({ username: req.user?.username!, password: req.body.password })
+  await store.admin.changePassword({ userId: req.userId, password: req.body.password })
   return { success: true }
 })
