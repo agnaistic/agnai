@@ -101,3 +101,14 @@ export function neat(params: TemplateStringsArray, ...rest: string[]) {
     .join('\n')
     .trim()
 }
+
+const end = `."'*!?)}]\``.split('')
+export function trimSentence(text: string) {
+  const last = end.reduce((last, char) => {
+    const index = text.lastIndexOf(char)
+    return index > last ? index : last
+  }, -1)
+
+  if (last === -1) return text
+  return text.slice(0, last + 1)
+}

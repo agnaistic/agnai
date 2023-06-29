@@ -1,4 +1,4 @@
-import { Component, JSX } from 'solid-js'
+import { Component, JSX, createSignal } from 'solid-js'
 
 export type ButtonSchema = keyof typeof kinds
 
@@ -49,25 +49,53 @@ const Button: Component<{
 )
 
 export const ToggleButton: Component<{
+  fieldName: string
   children: JSX.Element
-  onClick?: JSX.EventHandler<HTMLButtonElement, MouseEvent>
+  onChange?: (value: boolean) => void
   size?: 'sm' | 'md' | 'lg'
   disabled?: boolean
-  toggled: boolean
+  value?: boolean
   class?: string
   alignLeft?: boolean
-}> = (props) => (
-  <button
-    class={
-      `${kinds.hollow} select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
-        sizes[props.size || 'md']
-      } ` + (props.class || '')
-    }
-    disabled={props.disabled}
-    onClick={props.onClick}
-  >
-    {props.children}
-  </button>
-)
+}> = (props) => {
+  let ref: HTMLInputElement
+
+  const [val, setVal] = createSignal(props.value ?? false)
+
+  const onClick: JSX.EventHandler<HTMLButtonElement, MouseEvent> = (ev) => {
+    const value = !ref.checked
+    ref.checked = value
+    setVal(value)
+    props.onChange?.(value)
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        class={
+          `${kinds.hollow} select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
+            sizes[props.size || 'md']
+          } ` + (props.class || '')
+        }
+        classList={{
+          [kinds.hollow]: !val(),
+          [kinds.success]: val(),
+        }}
+        disabled={props.disabled}
+        onClick={onClick}
+      >
+        {props.children}
+      </button>
+      <input
+        ref={ref!}
+        name={props.fieldName}
+        type="checkbox"
+        class="hidden"
+        checked={props.value}
+      />
+    </>
+  )
+}
 
 export default Button

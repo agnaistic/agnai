@@ -32,19 +32,17 @@ import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
 import { useBgStyle } from '/web/shared/hooks'
 import { rootModalStore } from '/web/store/root-modal'
+import { ContextState, useAppContext } from '/web/store/context'
+import { trimSentence } from '/common/util'
 
 type MessageProps = {
   msg: SplitMessage
-  chat: AppSchema.Chat
-  botMap: Record<string, AppSchema.Character>
-  char: AppSchema.Character
   last?: boolean
   swipe?: string | false
   confirmSwipe?: () => void
   cancelSwipe?: () => void
   onRemove: () => void
   editing: boolean
-  anonymize?: boolean
   tts?: boolean
   children?: any
   retrying?: AppSchema.ChatMessage
@@ -56,10 +54,8 @@ type MessageProps = {
 }
 
 const Message: Component<MessageProps> = (props) => {
-  const user = userStore()
-  const splits = createMemo(() => splitMessage(props.char, user.profile!, props.msg), {
-    equals: false,
-  })
+  const [ctx] = useAppContext()
+  const splits = createMemo(() => splitMessage(ctx, props.msg), { equals: false })
 
   return (
     <>
@@ -67,8 +63,6 @@ const Message: Component<MessageProps> = (props) => {
         {(msg, i) => (
           <SingleMessage
             msg={msg}
-            chat={props.chat}
-            char={props.char}
             onRemove={props.onRemove}
             last={props.last && i() === splits().length - 1}
             lastSplit={i() === splits().length - 1}
@@ -77,15 +71,14 @@ const Message: Component<MessageProps> = (props) => {
             cancelSwipe={props.cancelSwipe}
             original={props.msg}
             editing={props.editing}
-            anonymize={props.anonymize}
-            children={props.children}
             retrying={props.retrying}
             partial={props.partial}
             sendMessage={props.sendMessage}
-            botMap={props.botMap}
             isPaneOpen={props.isPaneOpen}
             avatars={props.avatars}
-          />
+          >
+            {props.children}
+          </SingleMessage>
         )}
       </For>
     </>
@@ -93,7 +86,10 @@ const Message: Component<MessageProps> = (props) => {
 }
 
 const SingleMessage: Component<
-  MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
+  Omit<
+    MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean },
+    'anonymize' | 'botMap'
+  >
 > = (props) => {
   let avatarRef: any
   const user = userStore()
@@ -111,6 +107,8 @@ const SingleMessage: Component<
   const [obs] = createSignal(
     new ResizeObserver(() => setImg(Math.min(avatarRef?.clientHeight, 10000) + 'px'))
   )
+
+  const [ctx] = useAppContext()
 
   onMount(() => {
     obs().observe(avatarRef)
@@ -134,7 +132,7 @@ const SingleMessage: Component<
 
   const msgText = createMemo(() => {
     if (props.last && props.swipe) return props.swipe
-    if (!props.anonymize) {
+    if (!ctx.anonymize) {
       return props.msg.msg
     }
 
@@ -148,7 +146,7 @@ const SingleMessage: Component<
   }
 
   const cancelEdit = () => setEdit(false)
-  const visibilityClass = () => (props.anonymize ? 'invisible' : '')
+  const visibilityClass = () => (ctx.anonymize ? 'invisible' : '')
 
   const startEdit = () => {
     setEdit(true)
@@ -159,7 +157,7 @@ const SingleMessage: Component<
   }
 
   const handleToShow = () => {
-    if (props.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
+    if (ctx.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
     const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
     return handle
   }
@@ -178,7 +176,7 @@ const SingleMessage: Component<
       class="flex w-full rounded-md px-2 py-2 pr-2 sm:px-4"
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
-      data-bot={props.msg.characterId ? props.char?.name : ''}
+      data-bot={props.msg.characterId ? ctx.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
     >
       <div class={`flex w-full ${opacityClass}`}>
@@ -207,19 +205,19 @@ const SingleMessage: Component<
                   {props.avatars![props.msg.characterId!]}
                 </Match>
 
-                <Match when={!!props.botMap[props.msg.characterId!]}>
+                <Match when={!!ctx.botMap[props.msg.characterId!]}>
                   <CharacterAvatar
                     openable
-                    char={props.botMap[props.msg.characterId!]}
+                    char={ctx.botMap[props.msg.characterId!]}
                     format={format()}
                     bot={!props.msg.userId}
                     zoom={1.75}
                   />
                 </Match>
 
-                <Match when={props.char && !!props.msg.characterId}>
+                <Match when={ctx.char && !!props.msg.characterId}>
                   <CharacterAvatar
-                    char={props.botMap[props.msg.characterId!] || props.char}
+                    char={ctx.botMap[props.msg.characterId!] || ctx.char}
                     openable
                     zoom={1.75}
                     bot={true}
@@ -232,7 +230,7 @@ const SingleMessage: Component<
                     format={format()}
                     Icon={DownloadCloud}
                     avatarUrl={state.memberIds[props.msg.userId!]?.avatar}
-                    anonymize={props.anonymize}
+                    anonymize={ctx.anonymize}
                   />
                 </Match>
               </Switch>
@@ -249,7 +247,7 @@ const SingleMessage: Component<
                   data-user-name={isUser()}
                 >
                   {props.msg.characterId
-                    ? props.botMap[props.msg.characterId!]?.name || props.char?.name!
+                    ? ctx.botMap[props.msg.characterId!]?.name || ctx.char?.name!
                     : handleToShow()}
                 </b>
                 <span
@@ -277,9 +275,9 @@ const SingleMessage: Component<
                 </span>
               </span>
               <Switch>
-                <Match when={!edit() && !props.swipe && user.user?._id === props.chat?.userId}>
+                <Match when={!edit() && !props.swipe && user.user?._id === ctx.chat?.userId}>
                   <MessageOptions
-                    char={props.char}
+                    char={ctx.char!}
                     original={props.original}
                     msg={props.msg}
                     chatEditing={props.editing}
@@ -333,13 +331,7 @@ const SingleMessage: Component<
                   class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
-                  innerHTML={renderMessage(
-                    props.chat,
-                    props.char!,
-                    user.profile!,
-                    props.partial!,
-                    'partial'
-                  )}
+                  innerHTML={renderMessage(ctx, props.partial!, 'partial')}
                 />
               </Match>
               <Match
@@ -353,7 +345,12 @@ const SingleMessage: Component<
                     when={props.partial}
                     fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
                   >
-                    {props.partial}
+                    <p
+                      class="rendered-markdown px-1"
+                      data-bot-message={isBot()}
+                      data-user-message={isUser()}
+                      innerHTML={renderMessage(ctx, props.partial!, 'partial')}
+                    />
                   </Show>
                 </div>
               </Match>
@@ -362,13 +359,7 @@ const SingleMessage: Component<
                   class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
-                  innerHTML={renderMessage(
-                    props.chat,
-                    props.char!,
-                    user.profile!,
-                    msgText(),
-                    props.original.adapter
-                  )}
+                  innerHTML={renderMessage(ctx, msgText(), props.original.adapter)}
                 />
                 <Show
                   when={
@@ -376,7 +367,7 @@ const SingleMessage: Component<
                     props.original.actions &&
                     props.last &&
                     props.lastSplit &&
-                    props.chat.mode === 'adventure'
+                    ctx.chat!.mode === 'adventure'
                   }
                 >
                   <div class="flex items-center justify-center gap-2">
@@ -416,19 +407,17 @@ export default Message
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
-function splitMessage(
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  incoming: AppSchema.ChatMessage
-): SplitMessage[] {
-  const CHARS = [`${char.name}:`, `{{char}}:`]
-  const USERS = [`${profile?.handle || 'You'}:`, `{{user}}:`]
+function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): SplitMessage[] {
+  const charName = ctx.char?.name || 'Unknown'
+  const CHARS = [`${charName}:`, `{{char}}:`]
+
+  const USERS = [`${ctx.handle}:`, `{{user}}:`]
 
   const msg = { ...incoming }
-  if (msg.msg.startsWith(`${char.name}:`)) {
-    msg.msg = msg.msg.replace(`${char.name}:`, '').trim()
-  } else if (msg.msg.startsWith(`${char.name} :`)) {
-    msg.msg = msg.msg.replace(`${char.name} :`, '').trim()
+  if (msg.msg.startsWith(`${charName}:`)) {
+    msg.msg = msg.msg.replace(`${charName}:`, '').trim()
+  } else if (msg.msg.startsWith(`${charName} :`)) {
+    msg.msg = msg.msg.replace(`${charName} :`, '').trim()
   }
 
   const next: AppSchema.ChatMessage[] = []
@@ -442,7 +431,12 @@ function splitMessage(
     for (const CHAR of CHARS) {
       if (newMsg) break
       if (trim.startsWith(CHAR)) {
-        newMsg = { ...msg, msg: trim.replace(CHAR, ''), characterId: char._id, userId: undefined }
+        newMsg = {
+          ...msg,
+          msg: trim.replace(CHAR, ''),
+          characterId: ctx.char?._id,
+          userId: undefined,
+        }
         break
       }
     }
@@ -453,7 +447,7 @@ function splitMessage(
         newMsg = {
           ...msg,
           msg: trim.replace(USER, ''),
-          userId: profile.userId,
+          userId: ctx.profile?.userId || '',
           characterId: undefined,
         }
         break
@@ -560,21 +554,14 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   }
 }
 
-function renderMessage(
-  chat: AppSchema.Chat,
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  text: string,
-  adapter?: string
-) {
+function renderMessage(ctx: ContextState, text: string, adapter?: string) {
   if (adapter === 'partial') return text
 
   // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
-  const html = markdown
-    .makeHtml(parseMessage(chat, text, char, profile!, adapter))
-    .replace(/&amp;nbsp;/g, '&nbsp;')
+
+  const html = markdown.makeHtml(parseMessage(text, ctx, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
   return html
 }
 
@@ -582,18 +569,12 @@ function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSch
   send(`*${emote}* ${action}`, false)
 }
 
-function parseMessage(
-  chat: AppSchema.Chat,
-  msg: string,
-  char: AppSchema.Character,
-  profile: AppSchema.Profile,
-  adapter?: string
-) {
+function parseMessage(msg: string, ctx: ContextState, adapter?: string) {
   if (adapter === 'image') {
-    return msg.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, profile?.handle || 'You')
+    return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
   }
 
-  if (chat.mode === 'adventure') {
+  if (ctx.chat?.mode === 'adventure') {
     const nonActions: string[] = []
     const splits = msg.split('\n')
     for (const split of splits) {
@@ -603,11 +584,14 @@ function parseMessage(
     msg = nonActions.join('\n')
   }
 
-  return msg
-    .replace(BOT_REPLACE, char.name)
-    .replace(SELF_REPLACE, profile?.handle || 'You')
+  const parsed = msg
+    .replace(BOT_REPLACE, ctx.char?.name || '')
+    .replace(SELF_REPLACE, ctx.handle)
     .replace(/(<)/g, '‹')
     .replace(/(>)/g, '›')
+
+  if (ctx.trimSentences) return trimSentence(parsed)
+  return parsed
 }
 
 const Meta: Component<{ meta: any }> = (props) => {

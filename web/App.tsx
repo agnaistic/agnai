@@ -32,6 +32,7 @@ import { getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
+import { ContextProvider, useAppContext } from './store/context'
 
 const App: Component = () => {
   const state = userStore()
@@ -96,6 +97,7 @@ const App: Component = () => {
 }
 
 const Layout: Component = () => {
+  const [ctx] = useAppContext()
   const state = userStore()
   const cfg = settingStore()
   const location = useLocation()
@@ -136,44 +138,51 @@ const Layout: Component = () => {
   })
 
   return (
-    <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
-      <NavBar />
-      <div class="flex w-full grow flex-row overflow-y-hidden">
-        <Navigation />
-        <div class="w-full overflow-y-auto" data-background style={bg()}>
-          <div
-            class={`mx-auto h-full min-h-full w-full ${maxW()} px-2 sm:px-3`}
-            classList={{ 'content-background': !isChat() }}
-          >
-            <Show when={cfg.init}>
-              <Outlet />
-              <Maintenance />
-            </Show>
-            <Show when={!cfg.init && cfg.initLoading}>
-              <div class="flex h-[80vh] items-center justify-center">
-                <Loading />
-              </div>
-            </Show>
-
-            <Show when={!cfg.init && !cfg.initLoading}>
-              <div class="flex flex-col items-center gap-2">
-                <div>Agnaistic failed to load</div>
-                <div>
-                  <Button onClick={reload}>Try Again</Button>
+    <ContextProvider>
+      <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
+        <NavBar />
+        <div class="flex w-full grow flex-row overflow-y-hidden">
+          <Navigation />
+          <div class="w-full overflow-y-auto" data-background style={bg()}>
+            <div
+              class={`mx-auto h-full min-h-full w-full ${maxW()} px-2 sm:px-3`}
+              classList={{ 'content-background': !isChat() }}
+            >
+              <Show when={cfg.init}>
+                <Outlet />
+                <Maintenance />
+              </Show>
+              <Show when={!cfg.init && cfg.initLoading}>
+                <div class="flex h-[80vh] items-center justify-center">
+                  <Loading />
                 </div>
-              </div>
-            </Show>
+              </Show>
+
+              <Show when={!cfg.init && !cfg.initLoading}>
+                <div class="flex flex-col items-center gap-2">
+                  <div>Agnaistic failed to load</div>
+                  <div>
+                    <Button onClick={reload}>Try Again</Button>
+                  </div>
+                </div>
+              </Show>
+            </div>
           </div>
         </div>
+        <Toasts />
+        <ImpersonateModal
+          show={cfg.showImpersonate}
+          close={() => settingStore.toggleImpersonate(false)}
+        />
+        <InfoModal />
+        <For each={rootModals.modals}>{(modal) => modal.element}</For>
+        <Show when={ctx.tooltip}>
+          <div class="absolute bottom-0 left-0 right-0 top-0 m-auto h-12 w-12 bg-red-500">
+            {ctx.tooltip}
+          </div>
+        </Show>
       </div>
-      <Toasts />
-      <ImpersonateModal
-        show={cfg.showImpersonate}
-        close={() => settingStore.toggleImpersonate(false)}
-      />
-      <InfoModal />
-      <For each={rootModals.modals}>{(modal) => modal.element}</For>
-    </div>
+    </ContextProvider>
   )
 }
 

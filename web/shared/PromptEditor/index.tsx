@@ -2,13 +2,18 @@ import { Component, For, Show, createEffect, createMemo, createSignal, onMount }
 import { FormLabel } from '../FormLabel'
 import { AIAdapter, PresetAISettings } from '/common/adapters'
 import { getAISettingServices } from '../util'
+import { useRootModal } from '../hooks'
+import Modal from '../Modal'
+import { HelpCircle } from 'lucide-solid'
 
 type Placeholder = {
   required: boolean
   limit: number
 }
 
-const placeholders: Record<string, Placeholder> = {
+type Interp = keyof typeof placeholders
+
+const placeholders = {
   char: { required: false, limit: Infinity },
   user: { required: false, limit: Infinity },
   chat_age: { required: false, limit: Infinity },
@@ -24,9 +29,19 @@ const placeholders: Record<string, Placeholder> = {
   all_personalities: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
+const helpers: { [key in Interp]?: string } = {
+  char: 'Character name',
+  user: `Your character's or profile name`,
+  chat_age: `The age of your chat (time elapsed since chat created)`,
+  idle_duration: `The time elapsed since you last sent a message`,
+  ujb: `The jailbreak. Typically inserted at the end of the prompt.`,
+  all_personalities: `Personalities of all chracters in the chat EXCEPT the main character.`,
+  post: `The "post-amble" text. This gives specific instructions on how the model should respond. E.g. "Respond as {{char}}:"`,
+}
+
 type HolderName = keyof typeof placeholders
 
-type Optionals = { exclude: HolderName[] } | { include: HolderName[] } | {}
+type Optionals = { exclude: HolderName[] } | { include: Interp[] } | {}
 
 const PromptEditor: Component<
   {
@@ -44,6 +59,7 @@ const PromptEditor: Component<
 
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
   const [input, setInput] = createSignal<string>(props.value || '')
+  const [help, showHelp] = createSignal(false)
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
     setInput(ev.currentTarget.value)
@@ -55,19 +71,19 @@ const PromptEditor: Component<
     ref.value = props.value
   })
 
-  const usableHolders = createMemo(() => {
-    const all = Object.entries(placeholders)
+  const usable = createMemo(() => {
+    const all = Object.entries(placeholders) as Array<[Interp, Placeholder]>
 
     if ('include' in props === false && 'exclude' in props === false) return all
 
     const includes = 'include' in props ? props.include : null
     const excludes = 'exclude' in props ? props.exclude : null
     if (includes) {
-      return all.filter(([name]) => includes.includes(name))
+      return all.filter(([name]) => includes.includes(name as Interp))
     }
 
     if (excludes) {
-      return all.filter(([name]) => !excludes.includes(name))
+      return all.filter(([name]) => !excludes.includes(name as Interp))
     }
 
     return all
@@ -102,7 +118,11 @@ const PromptEditor: Component<
     <div class={`w-full flex-col gap-2 ${hide()}`}>
       <Show when={props.showHelp}>
         <FormLabel
-          label="Prompt Template (formerly gaslight)"
+          label={
+            <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
+              Prompt Template (formerly gaslight) <HelpCircle size={16} />
+            </div>
+          }
           helperText={
             <>
               <div>
@@ -133,12 +153,18 @@ const PromptEditor: Component<
       />
 
       <div class="flex flex-wrap gap-2">
-        <For each={usableHolders()}>
+        <For each={usable()}>
           {([name, data]) => (
             <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />
           )}
         </For>
       </div>
+
+      <HelpModal
+        interps={usable().map((item) => item[0])}
+        show={help()}
+        close={() => showHelp(false)}
+      />
     </div>
   )
 }
@@ -146,7 +172,7 @@ const PromptEditor: Component<
 export default PromptEditor
 
 const Placeholder: Component<
-  { name: string; input: string; onClick: (name: string) => void } & Placeholder
+  { name: Interp; input: string; onClick: (name: string) => void } & Placeholder
 > = (props) => {
   const count = createMemo(() => {
     const matches = props.input.toLowerCase().match(new RegExp(`{{${props.name}}}`, 'g'))
@@ -156,7 +182,7 @@ const Placeholder: Component<
 
   const disabled = createMemo(() => count() >= props.limit)
 
-  return (
+  const placeholder = (
     <div
       onClick={() => props.onClick(props.name)}
       class="cursor-pointer select-none rounded-md px-2 py-1 text-sm"
@@ -172,4 +198,36 @@ const Placeholder: Component<
       {props.name}
     </div>
   )
+
+  return (
+    <>
+      <Show when={!helpers[props.name]}>{placeholder}</Show>
+    </>
+  )
+}
+
+const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[] }> = (props) => {
+  useRootModal({
+    id: 'prompt-editor-help',
+    element: (
+      <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
+        <table class="text-sm">
+          <For
+            each={Object.entries(helpers).filter(([interp]) =>
+              props.interps.includes(interp as any)
+            )}
+          >
+            {([interp, help]) => (
+              <tr>
+                <th class="mr-2 flex items-start">{interp}</th>
+                <td>{help}</td>
+              </tr>
+            )}
+          </For>
+        </table>
+      </Modal>
+    ),
+  })
+
+  return null
 }

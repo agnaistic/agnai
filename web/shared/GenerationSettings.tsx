@@ -174,6 +174,7 @@ const GeneralSettings: Component<Props> = (props) => {
           aiSetting={'replicateModelVersion'}
         />
       </Card>
+
       <Card>
         <RangeInput
           fieldName="maxTokens"
@@ -285,14 +286,17 @@ const PromptSettings: Component<Props> = (props) => {
         />
       </Card>
       <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'systemPrompt')}>
-        <FormLabel label="System Prompt" />
+        <FormLabel
+          label="System Prompt"
+          helperText="General instructions for how the AI should respond. This will be inserted into your Prompt Template."
+        />
         <PromptEditor
           fieldName="systemPrompt"
           include={['char', 'user']}
           placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
           value={props.inherit?.systemPrompt ?? ''}
           disabled={props.disabled}
-          // class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+          aiSetting="gaslight"
         />
 
         <Show when={cfg.parser && canUseParser}>
@@ -312,7 +316,7 @@ const PromptSettings: Component<Props> = (props) => {
         />
         <TextInput
           fieldName="ultimeJailbreak"
-          label="UJB Prompt (GPT-4 / Turbo / Claude)"
+          label="Jailbreak (UJB) Prompt (GPT-4 / Turbo / Claude)"
           helperText={
             <>
               (Leave empty to disable)

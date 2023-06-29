@@ -1,5 +1,5 @@
 import { Component, Show, onCleanup } from 'solid-js'
-import { toChar, toBotMsg, toChat, toUserMsg } from '../../../common/dummy'
+import { toBotMsg, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -13,6 +13,7 @@ import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
 import { UI } from '/common/types'
 import { Save } from 'lucide-solid'
+import { useAppContext } from '/web/store/context'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 const themeBgOptions = [{ label: 'Custom', value: '' }].concat(
@@ -21,11 +22,9 @@ const themeBgOptions = [{ label: 'Custom', value: '' }].concat(
 
 function noop() {}
 
-const bot = toChar('Robot')
-const chat = toChat(bot, { _id: '1', name: 'Example Chat' })
-
 const UISettings: Component = () => {
   const state = userStore()
+  const [ctx] = useAppContext()
 
   const onBackground = async (results: FileInputResult[]) => {
     if (!results.length) return
@@ -121,6 +120,13 @@ const UISettings: Component = () => {
 
       <Divider />
       <h3 class="text-md font-bold">Chat View Settings</h3>
+
+      <Toggle
+        label="Trim Incomplete Sentences"
+        fieldName="trimSentences"
+        value={state.ui.trimSentences ?? false}
+        onChange={(next) => userStore.saveUI({ trimSentences: next })}
+      />
 
       <Select
         fieldName="chatMode"
@@ -274,33 +280,33 @@ const UISettings: Component = () => {
       />
       <Divider />
       <div class="text-lg font-bold">Preview</div>
-      <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
-        <Message
-          botMap={{}}
-          char={bot}
-          chat={chat}
-          editing={false}
-          msg={toBotMsg(bot, '*I wave excitedly* Hello world!\nHow are you today?', { _id: '1' })}
-          onRemove={noop}
-          sendMessage={() => {}}
-          isPaneOpen={false}
-        />
-
-        <Show when={state.profile}>
+      <Show when={ctx.chatBots.length > 0}>
+        <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
           <Message
-            botMap={{}}
-            char={bot}
-            chat={chat}
             editing={false}
-            msg={toUserMsg(state.profile!, '*I wave back* Hi {{char}}!\nFancy meeting you here!', {
-              _id: '2',
+            msg={toBotMsg(ctx.chatBots[0], '*I wave excitedly* Hello world!\nHow are you today?', {
+              _id: '1',
             })}
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}
           />
-        </Show>
-      </div>
+
+          <Show when={state.profile}>
+            <Message
+              editing={false}
+              msg={toUserMsg(
+                state.profile!,
+                '*I wave back* Hi {{char}}!\nFancy meeting you here!',
+                { _id: '2' }
+              )}
+              onRemove={noop}
+              sendMessage={() => {}}
+              isPaneOpen={false}
+            />
+          </Show>
+        </div>
+      </Show>
     </>
   )
 }
