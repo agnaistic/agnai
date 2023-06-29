@@ -152,8 +152,8 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             fieldName="useOverrides"
             value={useOverrides()}
             onChange={(use) => setUseOverrides(use)}
-            label="Override character definitions for this chat only"
-            helperText="If you want to edit the character itself and all chats using it, open the 'Chara' link in the Chat Menu instead."
+            label="Override Character Definitions for this chat only"
+            helperText="Overrides apply to this chat only. If you want to edit the original character, open the 'Character' link in the Chat Menu instead."
           />
         </Card>
 

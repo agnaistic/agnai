@@ -52,10 +52,11 @@ import { usePane, useRootModal } from './hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
 import { ToggleButtons } from './Toggle'
-import AvatarBuilder, { AvatarContainer } from './Avatar/Builder'
+import AvatarBuilder from './Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
 import Slot from './Slot'
 import { getRandomBody } from '../asset/sprite'
+import AvatarContainer from './Avatar/Container'
 
 const options = [
   { id: 'wpp', label: 'W++' },
