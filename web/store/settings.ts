@@ -76,7 +76,12 @@ export const settingStore = createStore<SettingState>(
 
       if (res.result) {
         setAssetPrefix(res.result.config.assetPrefix)
-        events.emit(EVENTS.init, res.result)
+
+        const isMaint = res.result.config?.maintenance
+        if (!isMaint) {
+          events.emit(EVENTS.init, res.result)
+        }
+
         yield { init: res.result, config: res.result.config }
 
         const maint = res.result.config?.maintenance

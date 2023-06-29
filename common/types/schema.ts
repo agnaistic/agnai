@@ -60,6 +60,9 @@ export namespace AppSchema {
 
   export interface User {
     _id: string
+
+    updatedAt?: string
+
     kind: 'user'
     username: string
     hash: string
