@@ -29,6 +29,9 @@ export type PromptParts = {
   post: string[]
   memory?: string
   systemPrompt?: string
+
+  /** User's impersonated personality */
+  impersonality?: string
 }
 
 export type Prompt = {
@@ -91,21 +94,23 @@ const HOLDER_NAMES = {
   linebreak: 'br',
   chatAge: 'chat_age',
   idleDuration: 'idle_duration',
+  impersonating: 'impersonating',
 }
 
 export const HOLDERS = {
-  chatAge: /\{\{chat_age\}\}/gi,
-  idleDuration: /\{\{idle_duration\}\}/gi,
-  ujb: /\{\{ujb\}\}/gi,
-  sampleChat: /\{\{example_dialogue\}\}/gi,
-  scenario: /\{\{scenario\}\}/gi,
-  memory: /\{\{memory\}\}/gi,
-  persona: /\{\{personality\}\}/gi,
-  allPersonas: /\{\{all_personalities\}\}/gi,
-  post: /\{\{post\}\}/gi,
-  history: /\{\{history\}\}/gi,
-  systemPrompt: /\{\{system_prompt\}\}/gi,
-  linebreak: `/\{\{(br|linebreak|newline)\}\}/gi`,
+  chatAge: /{{chat_age}}/gi,
+  idleDuration: /{{idle_duration}}/gi,
+  ujb: /{{ujb}}/gi,
+  sampleChat: /{{example_dialogue}}/gi,
+  scenario: /{{scenario}}/gi,
+  memory: /{{memory}}/gi,
+  persona: /{{personality}}/gi,
+  allPersonas: /{{all_personalities}}/gi,
+  post: /{{post}}/gi,
+  history: /{{history}}/gi,
+  systemPrompt: /{{system_prompt}}/gi,
+  linebreak: /{{(br|linebreak|newline)}}/gi,
+  impersonating: /{{impersonating}}/gi,
 }
 
 const ALL_HOLDERS = new RegExp(
@@ -248,6 +253,7 @@ export function injectPlaceholders(
     .replace(HOLDERS.scenario, parts.scenario || '')
     .replace(HOLDERS.memory, newline(parts.memory))
     .replace(HOLDERS.persona, parts.persona)
+    .replace(HOLDERS.impersonating, parts.impersonality || '')
     .replace(HOLDERS.allPersonas, parts.allPersonas?.join('\n') || '')
     .replace(HOLDERS.post, parts.post.join('\n'))
     .replace(HOLDERS.linebreak, '\n')
@@ -276,7 +282,13 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
   const useMemory = !!parts.memory
   const useScenario = !!parts.scenario
   const useSystemPrompt = !!parts.systemPrompt
+  const useImpersonality = !!parts.impersonality
 
+  /**
+   * Filter out lines that contain only one 'one of a kind' placeholder where the placeholder is empty
+   * E.g. Remove the line: `Scenario: {{scenario}}` when the scenario is empty, but
+   * Keep: `Scenario and Facts: {{scenario}} {{memory}}
+   */
   let modified = template
     .split('\n')
     .filter((line) => {
@@ -290,7 +302,7 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
       if (!useSampleChat && line.match(HOLDERS.sampleChat)) return false
       if (!useMemory && line.match(HOLDERS.memory)) return false
       if (!useScenario && line.match(HOLDERS.scenario)) return false
-      // idg what this does tbh - @malfoyslastname
+      if (!useImpersonality && line.match(HOLDERS.impersonating)) return false
       if (!useSystemPrompt && line.match(HOLDERS.systemPrompt)) return false
       return true
     })
@@ -374,15 +386,22 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   const personalities = new Set(replyAs._id)
 
-  const botKind = opts.chat.overrides?.kind || opts.char.persona.kind
   if (opts.impersonate && !personalities.has(opts.impersonate._id)) {
     personalities.add(opts.impersonate._id)
     parts.allPersonas.push(
       `${opts.impersonate.name}'s personality: ${formatCharacter(
         opts.impersonate.name,
         opts.impersonate.persona,
-        botKind
+        opts.impersonate.persona.kind
       )}`
+    )
+  }
+
+  if (opts.impersonate) {
+    parts.impersonality = formatCharacter(
+      opts.impersonate.name,
+      opts.impersonate.persona,
+      opts.impersonate.persona.kind
     )
   }
 
@@ -391,7 +410,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     if (personalities.has(bot._id)) continue
     personalities.add(bot._id)
     parts.allPersonas.push(
-      `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, botKind)}`
+      `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`
     )
   }
 

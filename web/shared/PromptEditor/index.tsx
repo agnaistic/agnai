@@ -5,6 +5,7 @@ import { getAISettingServices } from '../util'
 import { useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
+import { Card, SolidCard } from '../Card'
 
 type Placeholder = {
   required: boolean
@@ -27,11 +28,13 @@ const placeholders = {
   post: { required: true, limit: 1 },
   example_dialogue: { required: true, limit: 1 },
   all_personalities: { required: false, limit: 1 },
+  impersonating: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in Interp]?: string } = {
   char: 'Character name',
   user: `Your character's or profile name`,
+  impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
   chat_age: `The age of your chat (time elapsed since chat created)`,
   idle_duration: `The time elapsed since you last sent a message`,
   ujb: `The jailbreak. Typically inserted at the end of the prompt.`,
@@ -73,7 +76,6 @@ const PromptEditor: Component<
 
   const usable = createMemo(() => {
     const all = Object.entries(placeholders) as Array<[Interp, Placeholder]>
-
     if ('include' in props === false && 'exclude' in props === false) return all
 
     const includes = 'include' in props ? props.include : null
@@ -135,7 +137,7 @@ const PromptEditor: Component<
               </div>
               <div>
                 <span class="text-red-600">example_dialogue</span> will be inserted as conversation
-                history if you do not include it. It is recommended to NOT include example_dialogue.
+                history if you do not include it.
               </div>
             </>
           }
@@ -182,7 +184,7 @@ const Placeholder: Component<
 
   const disabled = createMemo(() => count() >= props.limit)
 
-  const placeholder = (
+  return (
     <div
       onClick={() => props.onClick(props.name)}
       class="cursor-pointer select-none rounded-md px-2 py-1 text-sm"
@@ -198,12 +200,6 @@ const Placeholder: Component<
       {props.name}
     </div>
   )
-
-  return (
-    <>
-      <Show when={!helpers[props.name]}>{placeholder}</Show>
-    </>
-  )
 }
 
 const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[] }> = (props) => {
@@ -211,20 +207,19 @@ const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[]
     id: 'prompt-editor-help',
     element: (
       <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
-        <table class="text-sm">
+        <div class="flex w-full flex-col gap-1 text-sm">
           <For
             each={Object.entries(helpers).filter(([interp]) =>
               props.interps.includes(interp as any)
             )}
           >
             {([interp, help]) => (
-              <tr>
-                <th class="mr-2 flex items-start">{interp}</th>
-                <td>{help}</td>
-              </tr>
+              <SolidCard>
+                <FormLabel fieldName={interp} label={interp} helperText={help} />
+              </SolidCard>
             )}
           </For>
-        </table>
+        </div>
       </Modal>
     ),
   })
