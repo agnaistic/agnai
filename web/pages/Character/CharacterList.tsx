@@ -21,10 +21,8 @@ import {
   Edit,
   Menu,
   MoreHorizontal,
-  Save,
   Trash,
   VenetianMask,
-  X,
   Import,
   Plus,
   Star,
@@ -41,16 +39,11 @@ import DeleteCharacterModal from '../Character/DeleteCharacter'
 import { getAssetUrl, safeLocalStorage, setComponentPageTitle } from '../../shared/util'
 import { DropMenu } from '../../shared/DropMenu'
 import Button from '../../shared/Button'
-import Modal from '../../shared/Modal'
-import { exportCharacter } from '../../../common/characters'
 import Loading from '../../shared/Loading'
 import Divider from '../../shared/Divider'
 import TagSelect from '../../shared/TagSelect'
-import { Accessor } from 'solid-js'
-import extract from 'png-chunks-extract'
-import encode from 'png-chunks-encode'
-import text from 'png-chunk-text'
 import AvatarContainer from '/web/shared/Avatar/Container'
+import { DownloadModal } from './DownloadModal'
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -576,170 +569,6 @@ function getListCache(): ListCache {
 
 function saveListCache(cache: ListCache) {
   safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cache))
-}
-
-const plainFormats = [{ value: 'text', label: 'Plain Text' }]
-
-const formats = [
-  { value: 'boostyle', label: 'Boostyle' },
-  { value: 'wpp', label: 'W++' },
-  { value: 'sbf', label: 'Square Bracket Format' },
-]
-
-type CharacterFileType = 'png' | 'json'
-
-/**
- * WIP: Enable downloading characters in different persona formats for different application targets
- */
-
-export const DownloadModal: Component<{
-  show: boolean
-  close: () => void
-  char?: AppSchema.Character
-}> = (props) => {
-  let ref: any
-  const opts = createMemo(
-    () => {
-      return props.char?.persona.kind === 'text' ? plainFormats : formats
-    },
-    { equals: false }
-  )
-
-  const [format, setFormat] = createSignal('tavern')
-  const [fileType, setFileType] = createSignal<CharacterFileType>('png')
-  const [schema, setSchema] = createSignal(opts()[0].value)
-
-  const fileTypeItems: Accessor<{ value: CharacterFileType; label: string }[]> = createMemo(() => [
-    ...(props.char?.avatar ? [{ value: 'png' as const, label: 'PNG' }] : []),
-    { value: 'json' as const, label: 'JSON' },
-  ])
-  return (
-    <Modal
-      show={props.show && !!props.char}
-      close={props.close}
-      title="Download Character"
-      footer={
-        <Button schema="secondary" onClick={props.close}>
-          <X /> Close
-        </Button>
-      }
-    >
-      <form ref={ref} class="flex flex-col gap-4">
-        <div class="flex flex-row gap-3">
-          <Select
-            label="Output Format"
-            fieldName="app"
-            value={format()}
-            items={[
-              { value: 'tavern', label: 'TavernAI' },
-              // TODO: We don't need to support exporting in Agnaistic format
-              // once we fully support Chara Card V2. We just need to put
-              // Agnai-specific fields in the `extensions` prop.
-              { value: 'native', label: 'Agnaistic' },
-              { value: 'ooba', label: 'Textgen' },
-            ]}
-            onChange={(item) => setFormat(item.value)}
-          />
-          <Select
-            label="File type"
-            fieldName="fileType"
-            value={fileType()}
-            items={fileTypeItems()}
-            onChange={(item) => setFileType(item.value as CharacterFileType)}
-          />
-        </div>
-        <div class="flex">
-          <Select
-            label="Persona Format"
-            helperText="If exporting to Agnaistic format, this does not matter"
-            fieldName="format"
-            items={opts()}
-            value={schema()}
-            onChange={(item) => setSchema(item.value)}
-            disabled={format() === 'native'}
-          />
-        </div>
-        <div class="flex w-full justify-center">
-          {(() => {
-            const charJson = charToJson(props.char!, format(), schema())
-            switch (fileType()) {
-              case 'json':
-                return (
-                  <a
-                    href={`data:text/json:charset=utf-8,${encodeURIComponent(charJson)}`}
-                    download={`${props.char!.name}.json`}
-                  >
-                    <Button>
-                      <Save /> Download
-                    </Button>
-                  </a>
-                )
-
-              case 'png':
-                return (
-                  <Button
-                    onClick={() =>
-                      downloadPng(charJson, getAssetUrl(props.char!.avatar!)!, props.char!.name)
-                    }
-                  >
-                    <Save /> Download
-                  </Button>
-                )
-            }
-          })()}
-        </div>
-      </form>
-    </Modal>
-  )
-}
-
-function downloadPng(charJson: string, charImgUrl: string, charName: string) {
-  // Create a new image element
-  const imgElement = document.createElement('img')
-  imgElement.setAttribute('crossorigin', 'anonymous')
-  imgElement.src = charImgUrl
-  imgElement.onload = () => {
-    const imgDataUrl = imgToPngDataUrl(imgElement)
-    const imgBase64Data = imgDataUrl.split(',')[1]
-    const imgBuffer = Buffer.from(atob(imgBase64Data), 'binary')
-    const chunksNo_tEXt = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
-    const base64EncodedJson = Buffer.from(charJson, 'utf8').toString('base64')
-    const lastChunkIndex = chunksNo_tEXt.length - 1
-    const chunksToExport = [
-      ...chunksNo_tEXt.slice(0, lastChunkIndex),
-      text.encode('chara', base64EncodedJson),
-      chunksNo_tEXt[lastChunkIndex],
-    ]
-    const downloadLink = document.createElement('a')
-    downloadLink.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-    downloadLink.download = charName + '.card.png'
-    downloadLink.click()
-    URL.revokeObjectURL(downloadLink.href)
-  }
-}
-
-function imgToPngDataUrl(imgElement: HTMLImageElement) {
-  const canvas = document.createElement('canvas')
-  canvas.width = imgElement.naturalWidth
-  canvas.height = imgElement.naturalHeight
-  const ctx = canvas.getContext('2d')
-  ctx?.drawImage(imgElement, 0, 0)
-  const dataUrl = canvas.toDataURL('image/png')
-  return dataUrl
-}
-
-function charToJson(char: AppSchema.Character, format: string, schema: string) {
-  const { _id, ...json } = char
-
-  const copy = { ...char }
-  copy.persona.kind = schema as any
-
-  if (format === 'native') {
-    return JSON.stringify(json, null, 2)
-  }
-
-  const content = exportCharacter(copy, format as any)
-  return JSON.stringify(content, null, 2)
 }
 
 const NoCharacters: Component = () => (

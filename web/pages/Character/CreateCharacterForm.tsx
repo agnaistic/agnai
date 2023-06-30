@@ -8,7 +8,7 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { MinusCircle, Plus, Save, X, ChevronUp, ChevronDown } from 'lucide-solid'
+import { MinusCircle, Plus, Save, X, ChevronUp, ChevronDown, Import, Download } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -34,7 +34,6 @@ import TagInput from '../../shared/TagInput'
 import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { AppSchema } from '../../../common/types/schema'
-import { downloadCharacterHub } from './ImportCharacter'
 import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
@@ -54,6 +53,9 @@ import Slot from '../../shared/Slot'
 import { getRandomBody } from '../../asset/sprite'
 import AvatarContainer from '../../shared/Avatar/Container'
 import { useCharEditor } from './editor'
+import { downloadCharacterHub } from './port'
+import { DownloadModal } from './DownloadModal'
+import ImportCharacterModal from './ImportCharacter'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -116,7 +118,8 @@ export const CreateCharacterForm: Component<{
 
   const [creating, setCreating] = createSignal(false)
   const [showBuilder, setShowBuilder] = createSignal(false)
-
+  const [converted, setConverted] = createSignal<AppSchema.Character>()
+  const [showImport, setImport] = createSignal(false)
   const [showAdvanced, setShowAdvanced] = createSignal(false)
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
   const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
@@ -339,6 +342,16 @@ export const CreateCharacterForm: Component<{
                 </em>
               </div>
             </Show>
+            <div class="flex gap-2 text-[1em]">
+              <Button onClick={() => setImport(true)}>
+                <Import /> Import
+              </Button>
+
+              <Button onClick={() => setConverted(editor.convert(ref))}>
+                <Download /> Export
+              </Button>
+            </div>
+
             <Card>
               <TextInput
                 fieldName="name"
@@ -650,6 +663,20 @@ export const CreateCharacterForm: Component<{
         close={() => setShowBuilder(false)}
       />
       <ImageModal />
+      <DownloadModal
+        show={!!converted()}
+        close={() => setConverted(undefined)}
+        char={converted()}
+      />
+      <ImportCharacterModal
+        show={showImport()}
+        close={() => setImport(false)}
+        onSave={(char) => {
+          editor.load(ref, char[0])
+          setImport(false)
+        }}
+        single
+      />
     </>
   )
 }

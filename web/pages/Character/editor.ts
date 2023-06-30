@@ -1,13 +1,13 @@
-import { createSignal } from 'solid-js'
+import { createEffect, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { PERSONA_FORMATS } from '/common/adapters'
 import { getStrictForm, setFormField } from '/web/shared/util'
-import { useEffect } from '/web/shared/hooks'
 import { getAttributeMap } from '/web/shared/PersonaAttributes'
 import { NewCharacter } from '/web/store'
+import { getImageData } from '/web/store/data/chars'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -101,8 +101,20 @@ const initState: EditState = {
 export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditState>({ ...initState })
+  const [imageData, setImageData] = createSignal<string>()
 
-  useEffect(() => {
+  createEffect(async () => {
+    const file = state.avatar || original()?.originalAvatar
+    if (!file) {
+      setImageData(undefined)
+      return
+    }
+
+    const data = await getImageData(file)
+    setImageData(data)
+  })
+
+  createEffect(() => {
     if (!editing) return
 
     const orig = original()
@@ -153,20 +165,22 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     return getPayload(ref, state, original())
   }
 
-  const download = (ref: any) => {}
+  const convert = (ref: any): AppSchema.Character => {
+    const payload = getPayload(ref, state, original())
 
-  return { state, update: setState, reset, load, download, payload, original }
+    return {
+      _id: '',
+      kind: 'character',
+      userId: '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...payload,
+      avatar: imageData(),
+    }
+  }
+
+  return { state, update: setState, reset, load, convert, payload, original }
 }
-
-// function emptyFields(ref: any) {
-//   const keys = Object.keys(newCharGuard) as Array<keyof typeof newCharGuard>
-
-//   for (const key of keys) {
-//     if (key === 'kind') {
-//       setFormField(ref, key, 'text')
-//     } else setFormField(ref, key, '')
-//   }
-// }
 
 function getPayload(ev: any, state: EditState, original?: NewCharacter) {
   const body = getStrictForm(ev, newCharGuard)
