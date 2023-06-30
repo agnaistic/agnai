@@ -5,7 +5,7 @@ import { getAISettingServices } from '../util'
 import { useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
-import { Card, SolidCard } from '../Card'
+import { SolidCard } from '../Card'
 
 type Placeholder = {
   required: boolean
