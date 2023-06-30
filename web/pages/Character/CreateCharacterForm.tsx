@@ -10,13 +10,13 @@ import {
   Switch,
 } from 'solid-js'
 import { MinusCircle, Plus, Save, X, ChevronUp, ChevronDown } from 'lucide-solid'
-import Button from '../shared/Button'
-import PageHeader from '../shared/PageHeader'
-import TextInput from '../shared/TextInput'
-import { FormLabel } from '../shared/FormLabel'
-import RadioGroup from '../shared/RadioGroup'
-import { getStrictForm } from '../shared/util'
-import FileInput, { FileInputResult } from '../shared/FileInput'
+import Button from '../../shared/Button'
+import PageHeader from '../../shared/PageHeader'
+import TextInput from '../../shared/TextInput'
+import { FormLabel } from '../../shared/FormLabel'
+import RadioGroup from '../../shared/RadioGroup'
+import { getStrictForm } from '../../shared/util'
+import FileInput, { FileInputResult } from '../../shared/FileInput'
 import {
   characterStore,
   NewCharacter,
@@ -26,37 +26,38 @@ import {
   userStore,
   memoryStore,
   presetStore,
-} from '../store'
+} from '../../store'
 import { useNavigate } from '@solidjs/router'
-import PersonaAttributes, { getAttributeMap } from '../shared/PersonaAttributes'
-import AvatarIcon from '../shared/AvatarIcon'
-import { PERSONA_FORMATS } from '../../common/adapters'
-import { getImageData } from '../store/data/chars'
-import Select, { Option } from '../shared/Select'
-import TagInput from '../shared/TagInput'
-import { CultureCodes, defaultCulture } from '../shared/CultureCodes'
-import VoicePicker from '../pages/Character/components/VoicePicker'
-import { VoiceSettings } from '../../common/types/texttospeech-schema'
-import { AppSchema } from '../../common/types/schema'
-import { downloadCharacterHub } from '../pages/Character/ImportCharacter'
-import { ImageModal } from '../pages/Chat/ImageModal'
+import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
+import AvatarIcon from '../../shared/AvatarIcon'
+import { PERSONA_FORMATS } from '../../../common/adapters'
+import { getImageData } from '../../store/data/chars'
+import Select, { Option } from '../../shared/Select'
+import TagInput from '../../shared/TagInput'
+import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
+import VoicePicker from './components/VoicePicker'
+import { VoiceSettings } from '../../../common/types/texttospeech-schema'
+import { AppSchema } from '../../../common/types/schema'
+import { downloadCharacterHub } from './ImportCharacter'
+import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { msgsApi } from '/web/store/data/messages'
 import { createCharGenTemplate } from '/common/default-preset'
-import { toGeneratedCharacter } from '../pages/Character/util'
-import { Card, SolidCard } from './Card'
-import { usePane, useRootModal } from './hooks'
+import { toGeneratedCharacter } from './util'
+import { Card, SolidCard } from '../../shared/Card'
+import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
-import EditMemoryForm, { EntrySort, getBookUpdate } from '../pages/Memory/EditMemory'
-import { ToggleButtons } from './Toggle'
-import AvatarBuilder from './Avatar/Builder'
+import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
+import { ToggleButtons } from '../../shared/Toggle'
+import AvatarBuilder from '../../shared/Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
-import Slot from './Slot'
-import { getRandomBody } from '../asset/sprite'
-import AvatarContainer from './Avatar/Container'
+import Slot from '../../shared/Slot'
+import { getRandomBody } from '../../asset/sprite'
+import AvatarContainer from '../../shared/Avatar/Container'
+import { newCharGuard } from './editor'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -121,6 +122,7 @@ export const CreateCharacterForm: Component<{
     persona: 0,
     sample: 0,
   })
+
   const [downloaded, setDownloaded] = createSignal<NewCharacter>()
   const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
   const [tags, setTags] = createSignal(state.edit?.tags)
@@ -863,21 +865,7 @@ type PayloadOpts = {
 }
 
 function getPayload(ev: Event, opts: PayloadOpts) {
-  const body = getStrictForm(ev, {
-    kind: PERSONA_FORMATS,
-    name: 'string',
-    description: 'string?',
-    appearance: 'string?',
-    culture: 'string',
-    greeting: 'string',
-    scenario: 'string',
-    sampleChat: 'string',
-    systemPrompt: 'string',
-    postHistoryInstructions: 'string',
-    creator: 'string',
-    characterVersion: 'string',
-  } as const)
-
+  const body = getStrictForm(ev, newCharGuard)
   const attributes = getAttributeMap(ev)
 
   const persona = {

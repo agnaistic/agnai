@@ -187,6 +187,24 @@ export function getStrictForm<T extends Validator>(
   return values
 }
 
+export function setFormField(ref: HTMLFormElement, field: string, value: any) {
+  const elem = ref.querySelector(`.form-field[name="${field}"]`)
+  if (!elem) {
+    console.warn(`Could not update field: Element not found`)
+    return
+  }
+
+  if ('value' in elem) {
+    elem.value = value
+  }
+}
+
+export function setFormFields(ref: HTMLFormElement, update: Record<string, any>) {
+  for (const [field, value] of Object.entries(update)) {
+    setFormField(ref, field, value)
+  }
+}
+
 export function getFormEntries(evt: Event | HTMLFormElement): Array<[string, string]> {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)

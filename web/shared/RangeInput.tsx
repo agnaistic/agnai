@@ -57,7 +57,7 @@ const RangeInput: Component<{
         <input
           id={props.fieldName}
           name={props.fieldName}
-          class="focusable-field float-right inline-block rounded-lg border border-white/5 p-1 hover:border-white/20"
+          class="form-field focusable-field float-right inline-block rounded-lg border border-white/5 p-1 hover:border-white/20"
           value={value()}
           type="number"
           min={props.min}
@@ -74,6 +74,7 @@ const RangeInput: Component<{
         ref={input}
         type="range"
         class="
+        form-field
         form-range
         h-1
         w-full
