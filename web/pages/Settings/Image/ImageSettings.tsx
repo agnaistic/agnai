@@ -61,7 +61,7 @@ export const ImageSettings: Component = () => {
         step={64}
         value={state.user?.images?.height ?? 384}
         label="Image Height"
-        helperText="The large the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
+        helperText="The larger the image, the less that can be retain in your local cache. (Novel Anlas Threshold: 512)"
       />
 
       <TextInput

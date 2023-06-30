@@ -188,9 +188,9 @@ export function getStrictForm<T extends Validator>(
 }
 
 export function setFormField(ref: HTMLFormElement, field: string, value: any) {
-  const elem = ref.querySelector(`.form-field[name="${field}"]`)
+  const elem = document.querySelector(`.form-field[name="${field}"]`)
   if (!elem) {
-    console.warn(`Could not update field: Element not found`)
+    console.warn(`[${field}] Could not update field: Element not found`)
     return
   }
 

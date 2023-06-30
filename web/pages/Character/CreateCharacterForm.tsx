@@ -4,7 +4,6 @@ import {
   createMemo,
   createSignal,
   Match,
-  on,
   onMount,
   Show,
   Switch,
@@ -19,7 +18,6 @@ import { getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import {
   characterStore,
-  NewCharacter,
   tagStore,
   settingStore,
   toastStore,
@@ -30,13 +28,11 @@ import {
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
-import { PERSONA_FORMATS } from '../../../common/adapters'
 import { getImageData } from '../../store/data/chars'
 import Select, { Option } from '../../shared/Select'
 import TagInput from '../../shared/TagInput'
-import { CultureCodes, defaultCulture } from '../../shared/CultureCodes'
+import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
-import { VoiceSettings } from '../../../common/types/texttospeech-schema'
 import { AppSchema } from '../../../common/types/schema'
 import { downloadCharacterHub } from './ImportCharacter'
 import { ImageModal } from '../Chat/ImageModal'
@@ -57,7 +53,7 @@ import { FullSprite } from '/common/types/sprite'
 import Slot from '../../shared/Slot'
 import { getRandomBody } from '../../asset/sprite'
 import AvatarContainer from '../../shared/Avatar/Container'
-import { newCharGuard } from './editor'
+import { useCharEditor } from './editor'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -92,19 +88,14 @@ export const CreateCharacterForm: Component<{
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
 
-  const [visualType, setVisualType] = createSignal('avatar')
   const [spriteBody, setSpriteBody] = createSignal<FullSprite>()
+  const editor = useCharEditor()
 
   const presets = presetStore()
   const user = userStore((s) => s.user)
   const tagState = tagStore()
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId())
-    setImage(edit?.avatar)
-    if (edit?.sprite && !spriteBody()) {
-      setSpriteBody(edit.sprite)
-      setVisualType(edit.visualType || 'avatar')
-    }
 
     return {
       avatar: s.generate,
@@ -123,20 +114,9 @@ export const CreateCharacterForm: Component<{
     sample: 0,
   })
 
-  const [downloaded, setDownloaded] = createSignal<NewCharacter>()
-  const [schema, setSchema] = createSignal<AppSchema.Persona['kind'] | undefined>()
-  const [tags, setTags] = createSignal(state.edit?.tags)
-  const [bundledBook, setBundledBook] = createSignal(state.edit?.characterBook)
-  const [extensions] = createSignal(state.edit?.extensions ?? {})
-  const [avatar, setAvatar] = createSignal<File>()
-  const [voice, setVoice] = createSignal<VoiceSettings>({ service: undefined })
-  const [culture, setCulture] = createSignal(defaultCulture)
   const [creating, setCreating] = createSignal(false)
   const [showBuilder, setShowBuilder] = createSignal(false)
 
-  const [alternateGreetings, setAlternateGreetings] = createSignal(
-    state.edit?.alternateGreetings ?? []
-  )
   const [showAdvanced, setShowAdvanced] = createSignal(false)
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
   const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
@@ -150,8 +130,6 @@ export const CreateCharacterForm: Component<{
     const t = tokens()
     return t.name + t.persona + t.scenario
   })
-
-  const edit = createMemo(() => state.edit)
 
   const preferredPreset = createMemo(() => {
     const id = user?.defaultPreset
@@ -188,13 +166,14 @@ export const CreateCharacterForm: Component<{
       }
 
       const char = toGeneratedCharacter(response!, description)
-
-      setSchema('wpp')
-      setDownloaded(char)
+      editor.load(ref, char)
     })
   }
 
   onMount(async () => {
+    /**
+     * Character importing from CharacterHub
+     */
     characterStore.clearGeneratedAvatar()
     characterStore.getCharacters()
 
@@ -202,27 +181,54 @@ export const CreateCharacterForm: Component<{
     try {
       const { file, json } = await downloadCharacterHub(query.import)
       const imageData = await getImageData(file)
-      setDownloaded(json)
-      setBundledBook(json.characterBook)
-      setAlternateGreetings(json.alternateGreetings ?? [])
+      editor.update({
+        book: json.characterBook,
+        alternateGreetings: json.alternateGreetings || [],
+        avatar: file,
+        personaKind: 'text',
+      })
+
       setImage(imageData)
-      setAvatar(() => file)
-      setSchema('text')
       toastStore.success(`Successfully downloaded from Character Hub`)
     } catch (ex: any) {
       toastStore.error(`Character Hub download failed: ${ex.message}`)
     }
   })
 
-  createEffect(
-    on(edit, (edit) => {
-      if (!edit) return
-      setSchema(edit.persona.kind)
-      setVoice(edit.voice || { service: undefined })
-      setCulture(edit.culture ?? defaultCulture)
-      setTags(edit.tags)
-    })
-  )
+  createEffect(() => {
+    if (!ref) return
+
+    // We know we're waiting for a character to edit, so let's just wait
+    if (!state.edit && srcId()) return
+
+    editor.update('editId', srcId())
+
+    // If this is our first pass: load something no matter what
+    if (!editor.original()) {
+      if (!srcId()) {
+        // console.log(editor.state)
+        editor.reset(ref)
+        return
+      }
+
+      // We have a `srcId`, we need to wait to receive the character we're editing
+      if (!state.edit) return
+
+      editor.load(ref, state.edit)
+      setImage(state.edit?.avatar)
+      return
+    }
+
+    // This is a subsequent pass - we already have state
+    // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
+
+    if (!state.edit) return
+    if (editor.state.editId !== state.edit._id) {
+      editor.load(ref, state.edit)
+      setImage(state.edit?.avatar)
+      return
+    }
+  })
 
   createEffect(() => {
     tagStore.updateTags(state.list)
@@ -231,13 +237,13 @@ export const CreateCharacterForm: Component<{
 
   const updateFile = async (files: FileInputResult[]) => {
     if (!files.length) {
-      setAvatar()
+      editor.update('avatar', undefined)
       setImage(state.edit?.avatar)
       return
     }
 
     const file = files[0].file
-    setAvatar(() => file)
+    editor.update('avatar', file)
     const data = await getImageData(file)
 
     setImage(data)
@@ -264,21 +270,7 @@ export const CreateCharacterForm: Component<{
   }
 
   const onSubmit = (ev: Event) => {
-    const opts: PayloadOpts = {
-      tags: tags(),
-
-      visualType: visualType(),
-      avatar: state.avatar.blob || avatar(),
-      sprite: spriteBody(),
-
-      altGreetings: alternateGreetings(),
-      characterBook: bundledBook(),
-      extensions: extensions(),
-      originalAvatar: state.edit?.avatar,
-      voice: voice(),
-    }
-
-    const payload = getPayload(ref, opts)
+    const payload = editor.payload(ref)
 
     if (props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {
@@ -353,7 +345,7 @@ export const CreateCharacterForm: Component<{
                 required
                 label="Character Name"
                 placeholder=""
-                value={downloaded()?.name || state.edit?.name}
+                value={editor.state.name}
                 tokenCount={(v) => setTokens((prev) => ({ ...prev, name: v }))}
               />
             </Card>
@@ -381,7 +373,7 @@ export const CreateCharacterForm: Component<{
                   isMultiline
                   fieldName="description"
                   parentClass="w-full"
-                  value={downloaded()?.description || state.edit?.description}
+                  value={editor.state.description}
                 />
                 <Show when={canPopulatFields()}>
                   <Button onClick={generateCharacter} disabled={creating()}>
@@ -394,17 +386,17 @@ export const CreateCharacterForm: Component<{
             <Card>
               <TagInput
                 availableTags={tagState.tags.map((t) => t.tag)}
-                value={tags()}
+                value={editor.state.tags}
                 fieldName="tags"
                 label="Tags"
                 helperText="Used to help you organize and filter your characters."
-                onSelect={setTags}
+                onSelect={(tags) => editor.update({ tags })}
               />
             </Card>
 
             <Card class="flex w-full flex-col gap-4 sm:flex-row">
               <Switch>
-                <Match when={visualType() === 'sprite'}>
+                <Match when={editor.state.visualType === 'sprite'}>
                   <div class="flex h-24 w-full justify-center sm:w-24" ref={spriteRef}>
                     <AvatarContainer body={spriteBody()} container={spriteRef} />
                   </div>
@@ -433,14 +425,12 @@ export const CreateCharacterForm: Component<{
                     { value: 'avatar', label: 'Avatar' },
                     { value: 'sprite', label: 'Sprite' },
                   ]}
-                  onChange={(opt) => {
-                    setVisualType(opt.value)
-                  }}
-                  selected={visualType()}
+                  onChange={(opt) => editor.update('visualType', opt.value)}
+                  selected={editor.state.visualType}
                 />
 
                 <Switch>
-                  <Match when={visualType() === 'avatar'}>
+                  <Match when={editor.state.visualType === 'avatar'}>
                     <FileInput
                       class="w-full"
                       fieldName="avatar"
@@ -455,7 +445,7 @@ export const CreateCharacterForm: Component<{
                         fieldName="appearance"
                         helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
                         placeholder="Appearance"
-                        value={downloaded()?.appearance || state.edit?.appearance}
+                        value={editor.state.appearance}
                       />
                       <Button class="w-fit self-end" onClick={generateAvatar}>
                         Generate
@@ -478,7 +468,7 @@ export const CreateCharacterForm: Component<{
                 label="Scenario"
                 helperText="The current circumstances and context of the conversation and the characters."
                 placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
-                value={downloaded()?.scenario || state.edit?.scenario}
+                value={editor.state.scenario}
                 isMultiline
                 tokenCount={(v) => setTokens((prev) => ({ ...prev, scenario: v }))}
               />
@@ -492,13 +482,13 @@ export const CreateCharacterForm: Component<{
                 placeholder={
                   "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
                 }
-                value={downloaded()?.greeting || state.edit?.greeting}
+                value={editor.state.greeting}
                 class="h-60"
                 tokenCount={(v) => setTokens((prev) => ({ ...prev, greeting: v }))}
               />
               <AlternateGreetingsInput
-                greetings={alternateGreetings()}
-                setGreetings={setAlternateGreetings}
+                greetings={editor.state.alternateGreetings}
+                setGreetings={(next) => editor.update({ alternateGreetings: next })}
               />
             </Card>
             <Card class="flex flex-col gap-3">
@@ -520,29 +510,29 @@ export const CreateCharacterForm: Component<{
                   name="kind"
                   horizontal
                   options={options}
-                  value={state.edit?.persona.kind || schema() || 'text'}
-                  onChange={(kind) => setSchema(kind as any)}
+                  value={editor.state.personaKind}
+                  onChange={(kind) => editor.update({ personaKind: kind as any })}
                 />
               </div>
-              <Show when={!props.editId && !props.duplicateId}>
+              {/* <Show when={!props.editId && !props.duplicateId}>
                 <PersonaAttributes
-                  value={downloaded()?.persona.attributes}
+                  value={editor.state.persona.attributes}
                   plainText={schema() === 'text' || schema() === undefined}
                   schema={schema()}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
                   form={ref}
                 />
-              </Show>
+              </Show> */}
 
-              <Show when={(props.editId || props.duplicateId) && state.edit}>
-                <PersonaAttributes
-                  value={downloaded()?.persona.attributes || state.edit?.persona.attributes}
-                  plainText={schema() === 'text'}
-                  schema={schema()}
-                  tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                  form={ref}
-                />
-              </Show>
+              {/* <Show when={(props.editId || props.duplicateId) && state.edit}> */}
+              <PersonaAttributes
+                value={editor.state.persona.attributes}
+                plainText={editor.state.personaKind === 'text'}
+                schema={editor.state.personaKind}
+                tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
+                form={ref}
+              />
+              {/* </Show> */}
             </Card>
             <Card>
               <TextInput
@@ -556,7 +546,7 @@ export const CreateCharacterForm: Component<{
                   </span>
                 }
                 placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
-                value={downloaded()?.sampleChat || state.edit?.sampleChat}
+                value={editor.state.sampleChat}
                 tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
               />
             </Card>
@@ -583,7 +573,7 @@ export const CreateCharacterForm: Component<{
                     </span>
                   }
                   placeholder="Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between {{char}} and {{user}}. Do not decide what {{user}} says or does. Use Internet roleplay style, e.g. no quotation marks, and write user actions in italic in third person like: *example*. You are allowed to use markdown. Be proactive, creative, drive the plot and conversation forward. Write at least one paragraph, up to four. Always stay in character. Always keep the conversation going. (Repetition is highly discouraged)"
-                  value={downloaded()?.systemPrompt || state.edit?.systemPrompt}
+                  value={editor.state.systemPrompt}
                 />
                 <TextInput
                   isMultiline
@@ -591,24 +581,25 @@ export const CreateCharacterForm: Component<{
                   label="Post-conversation History Instructions (optional)"
                   helperText={
                     <span>
-                      {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's UJB, if you want to supplement it instead of replacing it.`}
+                      {`Prompt to bundle with your character, used at the bottom of the prompt. You can use the {{original}} placeholder to include the user's jailbreak (UJB), if you want to supplement it instead of replacing it.`}
                     </span>
                   }
                   placeholder="Write at least four paragraphs."
-                  value={
-                    downloaded()?.postHistoryInstructions || state.edit?.postHistoryInstructions
-                  }
+                  value={editor.state.postHistoryInstructions}
                 />
               </Card>
               <Card>
-                <MemoryBookPicker setBundledBook={setBundledBook} bundledBook={bundledBook()} />
+                <MemoryBookPicker
+                  setBundledBook={(book) => editor.update('book', book)}
+                  bundledBook={editor.state.book}
+                />
               </Card>
               <Card>
                 <TextInput
                   fieldName="creator"
                   label="Creator (optional)"
                   placeholder="e.g. John1990"
-                  value={downloaded()?.creator || state.edit?.creator}
+                  value={editor.state.creator}
                 />
               </Card>
               <Card>
@@ -616,25 +607,29 @@ export const CreateCharacterForm: Component<{
                   fieldName="characterVersion"
                   label="Character Version (optional)"
                   placeholder="any text e.g. 1, 2, v1, v1fempov..."
-                  value={downloaded()?.characterVersion || state.edit?.characterVersion}
+                  value={editor.state.characterVersion}
                 />
               </Card>
               <Card class="flex flex-col gap-3">
                 <h4 class="text-md font-bold">Voice</h4>
                 <div>
-                  <VoicePicker value={voice()} culture={culture()} onChange={setVoice} />
+                  <VoicePicker
+                    value={editor.state.voice}
+                    culture={editor.state.culture}
+                    onChange={(voice) => editor.update('voice', voice)}
+                  />
                 </div>
                 <Select
                   fieldName="culture"
                   label="Language"
                   helperText={`The language this character speaks and understands.${
-                    culture().startsWith('en') ?? true
+                    editor.state.culture.startsWith('en') ?? true
                       ? ''
                       : ' NOTE: You need to also translate the preset gaslight to use a non-english language.'
                   }`}
-                  value={culture()}
+                  value={editor.state.culture}
                   items={CultureCodes}
-                  onChange={(option) => setCulture(option.value)}
+                  onChange={(option) => editor.update('culture', option.value)}
                 />
               </Card>
             </div>
@@ -850,54 +845,54 @@ const MemoryBookPicker: Component<{
   )
 }
 
-type PayloadOpts = {
-  tags: string[] | undefined
-  voice: VoiceSettings
+// type PayloadOpts = {
+//   tags: string[] | undefined
+//   voice: VoiceSettings
 
-  visualType: string
-  avatar: File | undefined
-  sprite: FullSprite | undefined
+//   visualType: string
+//   avatar: File | undefined
+//   sprite: FullSprite | undefined
 
-  altGreetings: string[] | undefined
-  characterBook: AppSchema.MemoryBook | undefined
-  extensions: Record<string, any>
-  originalAvatar: string | undefined
-}
+//   altGreetings: string[] | undefined
+//   characterBook: AppSchema.MemoryBook | undefined
+//   extensions: Record<string, any>
+//   originalAvatar: string | undefined
+// }
 
-function getPayload(ev: Event, opts: PayloadOpts) {
-  const body = getStrictForm(ev, newCharGuard)
-  const attributes = getAttributeMap(ev)
+// function getPayload(ev: Event, opts: PayloadOpts) {
+//   const body = getStrictForm(ev, newCharGuard)
+//   const attributes = getAttributeMap(ev)
 
-  const persona = {
-    kind: body.kind,
-    attributes,
-  }
+//   const persona = {
+//     kind: body.kind,
+//     attributes,
+//   }
 
-  const payload = {
-    name: body.name,
-    description: body.description,
-    culture: body.culture,
-    tags: opts.tags,
-    scenario: body.scenario,
-    appearance: body.appearance,
-    visualType: opts.visualType,
-    avatar: opts.avatar ?? (null as any),
-    sprite: opts.sprite ?? (null as any),
-    greeting: body.greeting,
-    sampleChat: body.sampleChat,
-    persona,
-    originalAvatar: opts.originalAvatar,
-    voice: opts.voice,
+//   const payload = {
+//     name: body.name,
+//     description: body.description,
+//     culture: body.culture,
+//     tags: opts.tags,
+//     scenario: body.scenario,
+//     appearance: body.appearance,
+//     visualType: opts.visualType,
+//     avatar: opts.avatar ?? (null as any),
+//     sprite: opts.sprite ?? (null as any),
+//     greeting: body.greeting,
+//     sampleChat: body.sampleChat,
+//     persona,
+//     originalAvatar: opts.originalAvatar,
+//     voice: opts.voice,
 
-    // New fields start here
-    systemPrompt: body.systemPrompt ?? '',
-    postHistoryInstructions: body.postHistoryInstructions ?? '',
-    alternateGreetings: opts.altGreetings ?? [],
-    characterBook: opts.characterBook,
-    creator: body.creator ?? '',
-    extensions: opts.extensions,
-    characterVersion: body.characterVersion ?? '',
-  }
+//     // New fields start here
+//     systemPrompt: body.systemPrompt ?? '',
+//     postHistoryInstructions: body.postHistoryInstructions ?? '',
+//     alternateGreetings: opts.altGreetings ?? [],
+//     characterBook: opts.characterBook,
+//     creator: body.creator ?? '',
+//     extensions: opts.extensions,
+//     characterVersion: body.characterVersion ?? '',
+//   }
 
-  return payload
-}
+//   return payload
+// }

@@ -35,6 +35,7 @@ export const deleteChat = handle(async ({ params, userId }) => {
       memberId: userId,
     })
     await store.invites.removeMember(params.id, userId, userId)
+    return
   }
 
   if (chat.userId !== userId) {
