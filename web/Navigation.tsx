@@ -9,13 +9,13 @@ import {
   LogIn,
   LogOut,
   MailPlus,
-  Menu,
   MessageCircle,
   Settings,
   ShoppingBag,
   Sliders,
   User,
   VenetianMask,
+  X,
 } from 'lucide-solid'
 import {
   Component,
@@ -31,6 +31,23 @@ import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
 import Slot from './shared/Slot'
 import { useEffect, useWindowSize } from './shared/hooks'
+
+const MobileNavHeader = () => (
+  <div class="flex justify-between sm:hidden">
+    <div class="w-8"></div>
+    <div>
+      {' '}
+      <span class="w-full text-center text-[1rem]">
+        Agn<span class="text-[var(--hl-500)]">ai</span>stic
+      </span>
+    </div>
+    <div class="w-8">
+      <div class="icon-button">
+        <X onClick={settingStore.menu} />
+      </div>
+    </div>
+  </div>
+)
 
 const Navigation: Component = () => {
   let parent: any
@@ -80,18 +97,7 @@ const Navigation: Component = () => {
             </A>
           </div>
 
-          <div class="flex justify-between sm:hidden">
-            <div class={`w-8 sm:hidden`} onClick={settingStore.menu}>
-              <Menu class="focusable-icon-button cursor-pointer" size={32} />
-            </div>
-            <div>
-              {' '}
-              <span class="w-full text-center text-[1rem]">
-                Agn<span class="text-[var(--hl-500)]">ai</span>stic
-              </span>
-            </div>
-            <div class="w-8"></div>
-          </div>
+          <MobileNavHeader />
 
           <Show when={user.loggedIn} fallback={<GuestNavigation />}>
             <UserNavigation />
