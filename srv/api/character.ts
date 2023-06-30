@@ -256,11 +256,15 @@ router.delete('/:id/avatar', removeAvatar)
 export default router
 
 function toArray(value?: string) {
-  const parsed = tryParse(value)
-  if (!parsed) return
+  if (!value) return []
 
-  assertValid({ parsed: ['string'] }, { parsed })
-  return parsed
+  if (Array.isArray(value)) return value.filter((v) => typeof v === 'string')
+
+  const parsed = tryParse(value)
+  if (Array.isArray(parsed)) return parsed.filter((v) => typeof v === 'string')
+  if (typeof parsed === 'string') return []
+
+  if (!parsed) return []
 }
 
 function tryParse(value?: any) {
