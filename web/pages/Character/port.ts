@@ -12,6 +12,7 @@ type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai'
 export const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 
 export const IMAGE_FORMATS: Record<string, boolean> = {
+  apng: true,
   png: true,
   jpg: true,
   jpeg: true,

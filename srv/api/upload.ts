@@ -142,6 +142,9 @@ function getType(filename: string) {
 
     case '.wav':
       return 'audio/wav'
+
+    case '.gif':
+      return 'image/gif'
   }
 
   return 'octet-stream'
@@ -155,6 +158,7 @@ function isAllowedType(contentType: string) {
     case 'image/jpg':
     case 'image/png':
     case 'image/apng':
+    case 'image/gif':
       return true
   }
 

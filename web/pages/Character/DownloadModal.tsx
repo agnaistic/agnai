@@ -9,6 +9,7 @@ import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
 import { exportCharacter } from '/common/characters'
+import { ALLOWED_TYPES } from '/web/store/data/chars'
 
 type CharacterFileType = 'png' | 'json'
 
@@ -40,7 +41,7 @@ export const DownloadModal: Component<{
   const fileTypeItems = createMemo(() => {
     const opts = [{ value: 'json', label: 'JSON' }]
     if (props.char?.avatar) {
-      opts.unshift({ value: 'png', label: 'PNG' })
+      opts.unshift({ value: 'png', label: 'Image Card' })
     }
     return opts
   })
@@ -113,7 +114,7 @@ export const DownloadModal: Component<{
             <Match when={fileType() === 'png'}>
               <Button
                 onClick={() =>
-                  downloadPng(
+                  downloadImage(
                     charToJson(props.char!, format(), schema()),
                     getAssetUrl(props.char!.avatar!)!,
                     props.char!.name
@@ -130,39 +131,49 @@ export const DownloadModal: Component<{
   )
 }
 
-function downloadPng(charJson: string, charImgUrl: string, charName: string) {
+/**
+ *
+ * @param json
+ * @param image Base64 or URL
+ * @param name Character name
+ */
+function downloadImage(json: string, image: string, name: string) {
   // Create a new image element
   const imgElement = document.createElement('img')
   imgElement.setAttribute('crossorigin', 'anonymous')
-  imgElement.src = charImgUrl
+
+  const ext = getExt(image)
+  const mimetype = ALLOWED_TYPES.get(ext)!
+
+  imgElement.src = image
 
   imgElement.onload = () => {
-    const imgDataUrl = imgToPngDataUrl(imgElement)
-    const imgBase64Data = imgDataUrl.split(',')[1]
-    const imgBuffer = Buffer.from(atob(imgBase64Data), 'binary')
-    const chunksNo_tEXt = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
-    const base64EncodedJson = Buffer.from(charJson, 'utf8').toString('base64')
-    const lastChunkIndex = chunksNo_tEXt.length - 1
+    const url = imageToDataURL(imgElement, mimetype)
+    const [, base64] = url.split(',')
+    const imgBuffer = Buffer.from(window.atob(base64), 'binary')
+    const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
+    const output = Buffer.from(json, 'utf8').toString('base64')
+    const lastChunkIndex = chunks.length - 1
     const chunksToExport = [
-      ...chunksNo_tEXt.slice(0, lastChunkIndex),
-      text.encode('chara', base64EncodedJson),
-      chunksNo_tEXt[lastChunkIndex],
+      ...chunks.slice(0, lastChunkIndex),
+      text.encode('chara', output),
+      chunks[lastChunkIndex],
     ]
     const downloadLink = document.createElement('a')
     downloadLink.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-    downloadLink.download = charName + '.card.png'
+    downloadLink.download = `${name}.card.${ext}`
     downloadLink.click()
     URL.revokeObjectURL(downloadLink.href)
   }
 }
 
-function imgToPngDataUrl(imgElement: HTMLImageElement) {
+function imageToDataURL(imgElement: HTMLImageElement, mimetype?: string) {
   const canvas = document.createElement('canvas')
   canvas.width = imgElement.naturalWidth
   canvas.height = imgElement.naturalHeight
   const ctx = canvas.getContext('2d')
   ctx?.drawImage(imgElement, 0, 0)
-  const dataUrl = canvas.toDataURL('image/png')
+  const dataUrl = canvas.toDataURL(mimetype || 'image/png')
   return dataUrl
 }
 
@@ -178,4 +189,16 @@ function charToJson(char: AppSchema.Character, format: string, schema: string) {
 
   const content = exportCharacter(copy, format as any)
   return JSON.stringify(content, null, 2)
+}
+
+function getExt(url: string) {
+  if (url.startsWith('data:')) {
+    const [header] = url.split(',')
+    const ext = header.slice(11, -7)
+    return ALLOWED_TYPES.has(ext) ? ext : 'png'
+  }
+
+  const ext = url.split('.').slice(-1)[0]
+  if (ALLOWED_TYPES.has(ext)) return ext
+  return 'png'
 }

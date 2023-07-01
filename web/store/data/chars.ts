@@ -200,12 +200,22 @@ export async function createCharacter(char: NewCharacter) {
   return { result: newChar, error: undefined }
 }
 
+export const ALLOWED_TYPES = new Map([
+  ['jpg', 'image/jpeg'],
+  ['jpeg', 'image/jpeg'],
+  ['png', 'image/png'],
+  ['apng', 'image/apng'],
+  ['gif', 'image/gif'],
+])
+
 export async function getImageData(file?: File | Blob | string) {
   if (!file) return
 
   if (typeof file === 'string') {
     const image = await fetch(getAssetUrl(file)).then((res) => res.blob())
-    file = new File([image], 'downloaded.png', { type: 'image/png' })
+    const ext = file.split('.').slice(-1)[0]
+    const mimetype = ALLOWED_TYPES.get(ext) || 'image/png'
+    file = new File([image], 'downloaded.png', { type: mimetype })
   }
 
   const reader = new FileReader()
