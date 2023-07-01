@@ -114,7 +114,7 @@ export const scenarioStore = createStore<ScenarioState>(
           scenario._id === scenarioId ? { ...scenario, ...update } : scenario
         )
         yield { loading: false, scenarios: next }
-        toastStore.success(`Book updated`)
+        toastStore.success(`Scenario updated`)
         onSuccess?.()
       }
     },
