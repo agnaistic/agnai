@@ -34,6 +34,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
     mode: body.mode ?? prev.mode,
     adapter: body.adapter ?? prev.adapter,
     memoryId: body.memoryId ?? prev.memoryId,
+    scenarioIds: body.scenarioIds ?? [],
   }
 
   if (body.useOverrides === false) {

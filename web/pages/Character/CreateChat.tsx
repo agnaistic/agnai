@@ -141,7 +141,7 @@ const CreateChatModal: Component<{
     }
 
     /**
-     * TODO: Validate this now that 'chat.scenario' is only used if `chat.overrides` is truthy
+     * It is correct to use `chat.scenario` as scenario's can only be used when overriding the scenario.
      */
     const scenario = scenarios.scenarios.find(
       (s) => s._id === scenarioId && s.overwriteCharacterScenario

@@ -12,6 +12,7 @@ import { defaultCulture } from '/web/shared/CultureCodes'
 import { createDebounce } from '/web/shared/util'
 import { useDraft } from '/web/shared/hooks'
 import { eventStore } from '/web/store/event'
+import { useAppContext } from '/web/store/context'
 // import WizardIcon from '/web/icons/WizardIcon'
 // import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
@@ -29,6 +30,8 @@ const InputBar: Component<{
   request: (charId: string) => void
 }> = (props) => {
   let ref: any
+
+  const [ctx] = useAppContext()
 
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
@@ -241,7 +244,13 @@ const InputBar: Component<{
                 <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
-            <Show when={!!props.chat.scenarioIds?.length && isOwner() && chats.replyAs}>
+            <Show
+              when={
+                !!ctx.chat?.scenarioIds?.length &&
+                isOwner() &&
+                (chats.replyAs || ctx.activeBots.length === 1)
+              }
+            >
               <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
                 <Zap /> Trigger Event
               </Button>
