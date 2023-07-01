@@ -398,7 +398,6 @@ function updateTheme(ui: UI.UISettings) {
     root.style.setProperty(`--rgb-bg-${shade}`, `${bgRgb?.rgb}`)
   }
 
-  console.log('setting colors', mode)
   setRootVariable('text-chatcolor', getSettingColor(mode.chatTextColor || 'text-800'))
   setRootVariable('text-emphasis-color', getSettingColor(mode.chatEmphasisColor || 'text-600'))
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))

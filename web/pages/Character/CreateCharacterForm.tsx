@@ -274,6 +274,7 @@ export const CreateCharacterForm: Component<{
 
   const onSubmit = (ev: Event) => {
     const payload = editor.payload(ref)
+    payload.avatar = state.avatar.blob || editor.state.avatar
 
     if (props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {
