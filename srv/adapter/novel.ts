@@ -6,7 +6,7 @@ import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
 import { needleToSSE } from './stream'
-import { AppLog, debug } from '../logger'
+import { AppLog } from '../logger'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = `${NOVEL_BASEURL}/ai/generate`
