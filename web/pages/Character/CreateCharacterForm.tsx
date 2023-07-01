@@ -209,7 +209,6 @@ export const CreateCharacterForm: Component<{
     // If this is our first pass: load something no matter what
     if (!editor.original()) {
       if (!srcId()) {
-        // console.log(editor.state)
         editor.reset(ref)
         return
       }

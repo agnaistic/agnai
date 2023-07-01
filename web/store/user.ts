@@ -1,3 +1,4 @@
+import Values from 'values.js'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
@@ -15,6 +16,7 @@ import { usersApi } from './data/user'
 import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
 import { UI } from '/common/types'
+import { defaultUIsettings } from '/common/types/ui'
 
 const BACKGROUND_KEY = 'ui-bg'
 
@@ -60,7 +62,7 @@ export const userStore = createStore<UserState>(
      * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
      */
     if (!init.user.ui) {
-      userStore.saveUI({})
+      userStore.saveUI(defaultUIsettings)
     } else {
       userStore.receiveUI(init.user.ui)
     }
@@ -184,14 +186,7 @@ export const userStore = createStore<UserState>(
       // const mode = update.mode ? update.mode : ui.mode
       const next: UI.UISettings = { ...ui, ...update }
       const mode = next.mode
-
-      const current: UI.CustomUI = {
-        botBackground: next.botBackground!,
-        chatEmphasisColor: next.chatEmphasisColor!,
-        chatTextColor: next.chatTextColor!,
-        msgBackground: next.msgBackground!,
-        bgCustom: next.bgCustom,
-      }
+      const current = next[next.mode]
 
       await usersApi.updateUI({ ...next, [mode]: current })
 
@@ -204,9 +199,19 @@ export const userStore = createStore<UserState>(
       return { ui: next, current, [mode]: current }
     },
 
-    saveCustomUI({ ui }, update: Partial<UI.CustomUI>) {
-      const curr = ui[ui.mode]
-      userStore.saveUI({ ...ui, [ui.mode]: { ...curr, ...update } })
+    async saveCustomUI({ ui }, update: Partial<UI.CustomUI>) {
+      const current = { ...ui[ui.mode], ...update }
+
+      const next = { ...ui, [ui.mode]: current }
+      await usersApi.updateUI(next)
+
+      try {
+        updateTheme(next)
+      } catch (e: any) {
+        toastStore.error(`Failed to save UI settings: ${e.message}`)
+      }
+
+      return { ui: next, current }
     },
 
     tryCustomUI({ ui }, update: Partial<UI.CustomUI>) {
@@ -359,11 +364,8 @@ function updateTheme(ui: UI.UISettings) {
 
   const mode = ui[ui.mode]
 
-  const colors = mode.bgCustom
-    ? getMidColorShades(mode.bgCustom)
-    : ui.bgCustom
-    ? getColorShades(ui.bgCustom)
-    : []
+  const hex = mode.bgCustom || getSettingColor('--bg-800')
+  const colors = mode.bgCustom ? new Values(`${hex}`).all(11).map(({ hex }) => '#' + hex) : []
 
   if (ui.mode === 'dark') {
     colors.reverse()
@@ -420,10 +422,6 @@ function getUIsettings(guest = false) {
   }
 
   const ui = { ...UI.defaultUIsettings, ...settings }
-  ui.botBackground = ui.botBackground || UI.defaultUIsettings.botBackground
-  ui.msgBackground = ui.msgBackground || UI.defaultUIsettings.msgBackground
-  ui.chatEmphasisColor = ui.chatEmphasisColor || UI.defaultUIsettings.chatEmphasisColor
-  ui.chatTextColor = ui.chatTextColor || UI.defaultUIsettings.chatTextColor
 
   return ui
 }
@@ -438,7 +436,9 @@ function setBackground(content: any) {
 }
 
 function adjustColor(color: string, percent: number, target = 0) {
-  if (!color.startsWith('#')) {
+  if (color.startsWith('--')) {
+    color = getSettingColor(color)
+  } else if (!color.startsWith('#')) {
     color = '#' + color
   }
 
@@ -465,17 +465,6 @@ function adjustColor(color: string, percent: number, target = 0) {
 function getColorShades(color: string) {
   const colors: string[] = [adjustColor(color, -100), color]
   for (let i = 2; i <= 9; i++) {
-    const next = adjustColor(color, i * 100)
-    colors.push(next)
-  }
-
-  return colors
-}
-
-function getMidColorShades(color: string) {
-  const start = -400
-  const colors: string[] = [adjustColor(color, start), color]
-  for (let i = 1; i <= 9; i++) {
     const next = adjustColor(color, i * 100)
     colors.push(next)
   }

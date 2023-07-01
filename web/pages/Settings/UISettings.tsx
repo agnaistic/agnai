@@ -26,7 +26,7 @@ const UISettings: Component = () => {
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
     const custom = state.current.bgCustom || ''
-    if (custom !== '') options.unshift({ label: 'Custom', value: '' })
+    if (custom !== '') return [{ label: 'Custom', value: '' }]
     return options
   })
 
@@ -82,15 +82,13 @@ const UISettings: Component = () => {
             fieldName="themeBg"
             items={themeBgOptions()}
             value={state.ui.themeBg}
-            onChange={(item) =>
-              userStore.saveUI({ themeBg: item.value as any, bgCustom: undefined })
-            }
+            onChange={(item) => userStore.saveUI({ themeBg: item.value })}
           />
           <ColorPicker
             fieldName="customBg"
             onChange={(color) => userStore.saveCustomUI({ bgCustom: color })}
             onInput={(color) => tryCustomUI({ bgCustom: color })}
-            value={state.current.bgCustom ?? state.ui.bgCustom}
+            value={state.current.bgCustom ?? state.ui[state.ui.mode].bgCustom}
           />
         </div>
       </div>
@@ -177,11 +175,12 @@ const UISettings: Component = () => {
         label="Message Background Color"
         fieldName="messageColor"
         helperText={
-          <span class="link" onClick={() => userStore.saveUI({ msgBackground: 'bg-800' })}>
+          <span class="link" onClick={() => userStore.saveCustomUI({ msgBackground: 'bg-800' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.saveUI({ msgBackground: color })}
+        onInput={(color) => tryCustomUI({ msgBackground: color })}
+        onChange={(color) => userStore.saveCustomUI({ msgBackground: color })}
         value={state.current.msgBackground}
       />
 
@@ -190,7 +189,7 @@ const UISettings: Component = () => {
         fieldName="botMessageColor"
         helperText={
           <>
-            <span class="link" onClick={() => userStore.saveUI({ botBackground: 'bg-800' })}>
+            <span class="link" onClick={() => userStore.saveCustomUI({ botBackground: 'bg-800' })}>
               Reset to Default
             </span>
             <span>
@@ -198,7 +197,8 @@ const UISettings: Component = () => {
             </span>
           </>
         }
-        onChange={(color) => userStore.saveUI({ botBackground: color })}
+        onInput={(color) => tryCustomUI({ botBackground: color })}
+        onChange={(color) => userStore.saveCustomUI({ botBackground: color })}
         value={state.current.botBackground}
       />
 
@@ -206,11 +206,12 @@ const UISettings: Component = () => {
         label="Chat Text Color"
         fieldName="chatTextColor"
         helperText={
-          <span class="link" onClick={() => userStore.saveUI({ chatTextColor: 'text-800' })}>
+          <span class="link" onClick={() => userStore.saveCustomUI({ chatTextColor: 'text-800' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.saveUI({ chatTextColor: color })}
+        onInput={(color) => tryCustomUI({ chatTextColor: color })}
+        onChange={(color) => userStore.saveCustomUI({ chatTextColor: color })}
         value={state.current.chatTextColor}
       />
 
@@ -218,11 +219,15 @@ const UISettings: Component = () => {
         label="Chat Emphasis Color"
         fieldName="chatEmphasisColor"
         helperText={
-          <span class="link" onClick={() => userStore.saveUI({ chatEmphasisColor: 'text-600' })}>
+          <span
+            class="link"
+            onClick={() => userStore.saveCustomUI({ chatEmphasisColor: 'text-600' })}
+          >
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.saveUI({ chatEmphasisColor: color })}
+        onInput={(color) => tryCustomUI({ chatEmphasisColor: color })}
+        onChange={(color) => userStore.saveCustomUI({ chatEmphasisColor: color })}
         value={state.current.chatEmphasisColor}
       />
 

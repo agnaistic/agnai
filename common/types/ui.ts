@@ -41,7 +41,6 @@ export type UISettings = {
 
   mode: ThemeMode
 
-  bgCustom: string
   bgCustomGradient: string
 
   chatAvatarMode?: boolean
@@ -62,7 +61,7 @@ export type UISettings = {
 
   dark: CustomUI
   light: CustomUI
-} & Partial<CustomUI>
+}
 
 const customUiGuard = {
   msgBackground: 'string',
@@ -76,7 +75,6 @@ export const uiGuard = {
   themeBg: 'string?',
   mode: UI_MODE,
 
-  bgCustom: 'string',
   bgCustomGradient: 'string',
 
   chatAvatarMode: 'boolean?',
@@ -96,7 +94,6 @@ export const defaultUIsettings: UISettings = {
   theme: 'sky',
   themeBg: 'truegray',
 
-  bgCustom: '',
   bgCustomGradient: '',
 
   mode: 'dark',
@@ -104,10 +101,7 @@ export const defaultUIsettings: UISettings = {
   avatarCorners: 'circle',
   font: 'default',
   msgOpacity: 0.8,
-  msgBackground: '--bg-800',
-  botBackground: '--bg-800',
-  chatTextColor: '--text-800',
-  chatEmphasisColor: '--text-600',
+
   chatWidth: 'full',
   chatAvatarMode: true,
   logPromptsToBrowserConsole: false,
