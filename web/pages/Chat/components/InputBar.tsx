@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio, Zap } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
@@ -11,6 +11,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { createDebounce } from '/web/shared/util'
 import { useDraft } from '/web/shared/hooks'
+import { eventStore } from '/web/store/event'
 // import WizardIcon from '/web/icons/WizardIcon'
 // import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
@@ -114,6 +115,11 @@ const InputBar: Component<{
       voice,
       props.char?.culture || defaultCulture
     )
+    setMenu(false)
+  }
+
+  const triggerEvent = () => {
+    eventStore.triggerEvent(props.chat, props.botMap[chats.replyAs!])
     setMenu(false)
   }
 
@@ -233,6 +239,11 @@ const InputBar: Component<{
             <Show when={!!props.char?.voice}>
               <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
                 <Megaphone size={18} /> Play Voice
+              </Button>
+            </Show>
+            <Show when={!!props.chat.scenarioIds?.length && isOwner() && chats.replyAs}>
+              <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
+                <Zap /> Trigger Event
               </Button>
             </Show>
           </Show>

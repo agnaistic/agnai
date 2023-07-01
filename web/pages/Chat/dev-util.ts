@@ -6,6 +6,7 @@ import { UI } from '/common/types'
 const devCommands = {
   '/devCycleAvatarSettings': true,
   '/devShowOocToggle': true,
+  '/devShowHiddenEvents': true,
 }
 
 type DevCommand = keyof typeof devCommands

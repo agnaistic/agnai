@@ -18,6 +18,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
       sampleChat: 'string?',
       memoryId: 'string?',
       overrides: { '?': 'any?', ...personaValidator },
+      scenarioIds: ['string?'],
       useOverrides: 'boolean?',
     },
     body,

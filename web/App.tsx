@@ -8,6 +8,7 @@ import { Outlet, Route, Router, Routes, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
 import CharacterRoutes from './pages/Character'
+import ScenarioRoutes from './pages/Scenario'
 import { settingStore } from './store/settings'
 import { userStore } from './store/user'
 import LoginPage from './pages/Login'
@@ -43,6 +44,7 @@ const App: Component = () => {
       <Routes>
         <Route path="" component={Layout}>
           <CharacterRoutes />
+          <ScenarioRoutes />
           <Route
             path="/discord"
             component={() => <Redirect external="https://discord.gg/luminai" />}

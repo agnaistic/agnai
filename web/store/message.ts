@@ -16,10 +16,21 @@ import { voiceApi } from './data/voice'
 import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/texttospeech-schema'
 import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, pauseSpeech } from '../shared/Audio/speech'
+import { eventStore } from './event'
 
 type ChatId = string
 
 export type VoiceState = 'generating' | 'playing'
+
+type SendModes =
+  | 'send'
+  | 'ooc'
+  | 'send-event:world'
+  | 'send-event:character'
+  | 'send-event:hidden'
+  | 'retry'
+  | 'self'
+  | 'send-noreply'
 
 type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
 
@@ -41,6 +52,7 @@ export type MsgState = {
     characterId: string
     text: string
   }
+  queue: Array<{ chatId: string; message: string; mode: SendModes }>
 
   /**
    * Ephemeral image messages
@@ -62,6 +74,7 @@ const initState: MsgState = {
   partial: undefined,
   retrying: undefined,
   speaking: undefined,
+  queue: [],
 }
 
 export const msgStore = createStore<MsgState>(
@@ -205,24 +218,33 @@ export const msgStore = createStore<MsgState>(
         onSuccess?.()
       }
     },
+
     async resend({ msgs }, chatId: string, msgId: string) {
       const msgIndex = msgs.findIndex((m) => m._id === msgId)
 
       if (msgIndex === -1) {
-        return toastStore.error('Cannot resend message: Message not found')
+        toastStore.error('Cannot resend message: Message not found')
+        return
       }
 
       const msg = msgs[msgIndex]
       msgStore.send(chatId, msg.msg, 'retry', undefined)
     },
+
     async *selfGenerate({ activeChatId }) {
       msgStore.send(activeChatId, '', 'self', undefined)
     },
+
+    *queue({ queue }, chatId: string, message: string, mode: SendModes) {
+      yield { queue: [...queue, { chatId, message, mode }] }
+      processQueue()
+    },
+
     async *send(
       { activeCharId },
       chatId: string,
       message: string,
-      mode: 'send' | 'ooc' | 'retry' | 'self' | 'send-noreply',
+      mode: SendModes,
       onSuccess?: () => void
     ) {
       if (!chatId) {
@@ -242,6 +264,9 @@ export const msgStore = createStore<MsgState>(
           break
 
         case 'send':
+        case 'send-event:world':
+        case 'send-event:character':
+        case 'send-event:hidden':
           res = await msgsApi.generateResponseV2({ kind: mode, text: message })
           break
 
@@ -366,6 +391,18 @@ export const msgStore = createStore<MsgState>(
     },
   }
 })
+
+function processQueue() {
+  const state = msgStore.getState()
+  const queue = state.queue
+  if (!queue.length) return
+
+  const first = queue[0]
+  const remaining = queue.slice(1)
+  msgStore.setState({ queue: remaining })
+
+  msgStore.send(first.chatId, first.message, first.mode, () => processQueue())
+}
 
 /**
  *
@@ -605,9 +642,30 @@ subscribe(
     }
 
     if (body.msg.adapter === 'image') return
-    if (speech && !isUserMsg) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
+
+    if (speech && !isUserMsg) {
+      msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
+    }
+
+    onCharacterMessageReceived(msg)
   }
 )
+
+function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {
+  if (!msg.characterId || msg.event || msg.ooc) return
+  const msgs = msgStore.getState().msgs
+  // TODO: Not that expensive, but it would be nice not to loop every time
+  let messagesSinceLastEvent = 0
+  for (let i = msgs.length - 1; i >= 0; i--) {
+    const msg = msgs[i]
+    if (msg.event) break
+
+    if (!msg.event && msg.characterId) {
+      messagesSinceLastEvent++
+    }
+  }
+  eventStore.onCharacterMessageReceived(chatStore.getState().active?.chat!, messagesSinceLastEvent)
+}
 
 function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User | undefined) {
   if (msg.adapter === 'image' || !msg.characterId || msg.userId) return
@@ -756,6 +814,8 @@ subscribe(
     })
 
     if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)
+
+    onCharacterMessageReceived(msg)
   }
 )
 

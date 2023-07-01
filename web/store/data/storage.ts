@@ -40,6 +40,7 @@ export const KEYS = {
   presets: 'presets',
   lastChatId: 'guestLastChatId',
   memory: 'memory',
+  scenario: 'scenario',
 }
 
 type LocalStorage = {
@@ -51,6 +52,7 @@ type LocalStorage = {
   presets: AppSchema.UserGenPreset[]
   lastChatId: string
   memory: AppSchema.MemoryBook[]
+  scenario: AppSchema.ScenarioBook[]
 }
 
 const localStore = new Map<keyof LocalStorage, any>()
@@ -90,6 +92,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   lastChatId: '',
   messages: [],
   memory: [],
+  scenario: [],
 }
 
 export async function handleGuestInit() {
@@ -210,6 +213,10 @@ export function saveBooks(state: AppSchema.MemoryBook[]) {
   saveItem('memory', state)
 }
 
+export function saveScenarios(state: AppSchema.ScenarioBook[]) {
+  saveItem('scenario', state)
+}
+
 export function deleteChatMessages(chatId: string) {
   safeLocalStorage.removeItem(`messages-${chatId}`)
 }
@@ -268,6 +275,7 @@ export const localApi = {
   savePresets,
   saveProfile,
   saveBooks,
+  saveScenarios,
   deleteChatMessages,
   loadItem,
   getMessages,

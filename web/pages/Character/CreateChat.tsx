@@ -1,16 +1,24 @@
 import { useNavigate } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, userStore } from '../../store'
+import {
+  NewChat,
+  characterStore,
+  chatStore,
+  presetStore,
+  scenarioStore,
+  userStore,
+} from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { AppSchema } from '/common/types'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card } from '/web/shared/Card'
@@ -32,6 +40,8 @@ const CreateChatModal: Component<{
 
   const nav = useNavigate()
   const user = userStore((s) => ({ ...s.user }))
+  const presets = presetStore((s) => s.presets)
+  const scenarios = scenarioStore()
   const state = characterStore((s) => ({
     chars: (s.characters?.list || []).filter((c) => c.userId === user._id),
     loaded: s.characters.loaded,
@@ -39,10 +49,18 @@ const CreateChatModal: Component<{
 
   const [selectedId, setSelected] = createSignal<string>()
   const [useOverrides, setUseOverrides] = createSignal(false)
+  const [scenario, setScenario] = createSignal<AppSchema.ScenarioBook>()
 
   const char = createMemo(() =>
     state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
   )
+
+  const currScenarios = createMemo(() => {
+    return [
+      { value: '', label: "Use character's scenario" },
+      ...scenarios.scenarios.map((s) => ({ label: s.name, value: s._id })),
+    ]
+  })
 
   createEffect(() => {
     if (props.charId) return
@@ -54,7 +72,6 @@ const CreateChatModal: Component<{
   })
 
   const [presetId, setPresetId] = createSignal(user.defaultPreset)
-  const presets = presetStore((s) => s.presets)
 
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
@@ -70,14 +87,25 @@ const CreateChatModal: Component<{
     return presets.find((pre) => pre._id === id)
   })
 
+  onMount(() => {
+    characterStore.getCharacters()
+    scenarioStore.getAll()
+  })
+
+  const setScenarioById = (scenarioId: string) => {
+    setScenario(scenarios.scenarios.find((s) => s._id === scenarioId))
+  }
+
   const onCreate = () => {
     const character = char()
     if (!character) return
 
-    const body = getStrictForm(ref, {
+    const { scenarioId, ...body } = getStrictForm(ref, {
+      genPreset: 'string',
       name: 'string',
-      greeting: 'string',
-      scenario: 'string',
+      greeting: 'string?',
+      scenario: 'string?',
+      scenarioId: 'string',
       sampleChat: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
       mode: ['standard', 'adventure', null],
@@ -106,7 +134,30 @@ const CreateChatModal: Component<{
       overrides.greeting = body.greeting
     }
 
-    const payload = { ...body, ...overrides, useOverrides: useOverrides(), genPreset: presetId() }
+    const payload: NewChat = {
+      ...body,
+      ...overrides,
+      useOverrides: useOverrides(),
+    }
+
+    /**
+     * TODO: Validate this now that 'chat.scenario' is only used if `chat.overrides` is truthy
+     */
+    const scenario = scenarios.scenarios.find(
+      (s) => s._id === scenarioId && s.overwriteCharacterScenario
+    )
+
+    if (scenario) {
+      if (scenario.entries.some((e) => e.trigger.kind === 'onGreeting'))
+        payload.greeting = undefined
+      if (scenario.overwriteCharacterScenario) {
+        payload.scenario = scenario.text
+      } else if (scenario.text) {
+        payload.scenario += '\n' + scenario.text
+      }
+    }
+    /** End of area to validate */
+
     chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
 
@@ -210,14 +261,39 @@ const CreateChatModal: Component<{
             ></TextInput>
           </Card>
           <Card>
-            <TextInput
+            <Select
+              fieldName="scenarioId"
+              label="Scenario"
+              helperText="The scenario to use for this conversation"
+              items={currScenarios()}
+              onChange={(option) => setScenarioById(option.value)}
+            />
+
+            <Show when={!(scenario()?.overwriteCharacterScenario ?? false)}>
+              <TextInput
+                isMultiline
+                fieldName="scenario"
+                label="Scenario"
+                value={char()?.scenario}
+                class="text-xs"
+              ></TextInput>
+
+              <TextInput
+                isMultiline
+                fieldName="greeting"
+                label="Greeting"
+                value={char()?.greeting}
+                class="text-xs"
+              ></TextInput>
+            </Show>
+            {/* <TextInput
               isMultiline
               fieldName="scenario"
               label="Scenario"
               value={char()?.scenario}
               class="text-xs"
               disabled={!useOverrides()}
-            ></TextInput>
+            ></TextInput> */}
           </Card>
 
           <Card>

@@ -26,6 +26,7 @@ export type PromptEntities = {
   characters: Record<string, AppSchema.Character>
   impersonating?: AppSchema.Character
   lastMessage: string
+  scenarios: AppSchema.ScenarioBook[]
 }
 
 export const msgsApi = {
@@ -92,6 +93,9 @@ export type GenerateOpts =
    * A user sending a new message
    */
   | { kind: 'send'; text: string }
+  | { kind: 'send-event:world'; text: string }
+  | { kind: 'send-event:character'; text: string }
+  | { kind: 'send-event:hidden'; text: string }
   | { kind: 'send-noreply'; text: string }
   | { kind: 'ooc'; text: string }
   /**
@@ -133,12 +137,17 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   const entities = props.entities
 
+  const chat = {
+    ...entities.chat,
+    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios),
+  }
+
   const encoder = await getEncoder()
   const prompt = createPrompt(
     {
       kind: opts.kind,
       char: entities.char,
-      chat: entities.chat,
+      chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
       continue: props?.continue,
@@ -168,7 +177,13 @@ export async function generateResponseV2(opts: GenerateOpts) {
     sender: removeAvatar(entities.profile),
     members: entities.members.map(removeAvatar),
     parts: prompt.parts,
-    text: opts.kind === 'send' ? opts.text : undefined,
+    text:
+      opts.kind === 'send' ||
+      opts.kind === 'send-event:world' ||
+      opts.kind === 'send-event:character' ||
+      opts.kind === 'send-event:hidden'
+        ? opts.text
+        : undefined,
     lines: prompt.lines,
     settings: entities.settings,
     replacing: props.replacing,
@@ -193,6 +208,16 @@ type GenerateProps = {
   messages: AppSchema.ChatMessage[]
   continue?: string
   impersonate?: AppSchema.Character
+}
+
+function resolveScenario(chatScenario: string, scenarios: AppSchema.ScenarioBook[]) {
+  let scenario = chatScenario
+  const mainScenario = scenarios.find((s) => s.overwriteCharacterScenario)
+  if (mainScenario) scenario = mainScenario.text
+  const secondaryScenarios = scenarios.filter((s) => s.overwriteCharacterScenario === false)
+  if (!scenarios.length) return scenario
+  scenario += '\n' + secondaryScenarios.map((s) => s.text).join('\n')
+  return scenario
 }
 
 async function getGenerateProps(
@@ -254,7 +279,10 @@ async function getGenerateProps(
       break
     }
 
-    case 'send': {
+    case 'send':
+    case 'send-event:world':
+    case 'send-event:character':
+    case 'send-event:hidden': {
       // If the chat is a single-user chat, it is always in 'auto-reply' mode
       // Ensure the autoReplyAs parameter is set for single-bot chats
       const isMulti = getActiveBots(entities.chat, entities.characters).length > 1
@@ -351,6 +379,9 @@ async function getGuestEntities() {
   const messages = await localApi.getMessages(chat?._id)
   const user = loadItem('config')
   const settings = getGuestPreset(user, chat)
+  const scenarios = loadItem('scenario')?.filter(
+    (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
+  )
 
   const {
     impersonating,
@@ -372,6 +403,7 @@ async function getGuestEntities() {
     autoReplyAs: active.replyAs,
     characters,
     impersonating,
+    scenarios,
   }
 }
 
@@ -391,6 +423,9 @@ function getAuthedPromptEntities() {
 
   const messages = getStore('messages').getState().msgs
   const settings = getAuthGenSettings(chat, user)!
+  const scenarios = getStore('scenario')
+    .getState()
+    .scenarios.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
 
   const {
     impersonating,
@@ -412,6 +447,7 @@ function getAuthedPromptEntities() {
     autoReplyAs: active.replyAs,
     characters,
     impersonating,
+    scenarios,
   }
 }
 

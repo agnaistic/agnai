@@ -24,14 +24,15 @@ export const getInitialLoad = handle(async ({ userId }) => {
     return { config: appConfig }
   }
 
-  const [profile, user, presets, books] = await Promise.all([
+  const [profile, user, presets, books, scenarios] = await Promise.all([
     store.users.getProfile(userId!),
     getSafeUserConfig(userId!),
     store.presets.getUserPresets(userId!),
     store.memory.getBooks(userId!),
+    store.scenario.getScenarios(userId!),
   ])
 
-  return { profile, user, presets, config: appConfig, books }
+  return { profile, user, presets, config: appConfig, books, scenarios }
 })
 
 export const getProfile = handle(async ({ userId, params }) => {

@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, createSignal } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -7,7 +7,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { adaptersToOptions, getStrictForm } from '../../shared/util'
-import { chatStore, presetStore, settingStore, userStore } from '../../store'
+import { chatStore, presetStore, scenarioStore, settingStore, userStore } from '../../store'
 import { getChatPreset } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -26,6 +26,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const cfg = settingStore()
   const presets = presetStore((s) => s.presets)
   const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
+  const scenarioState = scenarioStore()
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -37,13 +38,49 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
   let ref: any
 
+  const [scenarioId, setScenarioId] = createSignal(state.chat?.scenarioIds?.[0] || '')
+  const [scenarioText, setScenarioText] = createSignal(state.chat?.scenario || '')
+
+  onMount(() => {
+    scenarioStore.getAll()
+  })
+
+  createEffect(() => {
+    setScenarioId(state.chat?.scenarioIds?.[0] || '')
+  })
+
+  createEffect(() => {
+    const currentText = state.chat?.scenario || ''
+    const scenario = scenarioState.scenarios.find((s) => s._id === scenarioId())
+    if (scenario?.overwriteCharacterScenario && !state.chat?.scenarioIds?.includes(scenario._id)) {
+      setScenarioText(scenario.text)
+    } else {
+      setScenarioText(currentText)
+    }
+  })
+
+  const scenarios = createMemo(() => {
+    const noScenario = [{ value: '', label: "None (use character's scenario)" }]
+    if (scenarioState.loading || scenarioState.partial) {
+      return noScenario.concat(
+        (state.chat?.scenarioIds ?? []).map((id) => ({ value: id, label: id }))
+      )
+    } else {
+      return noScenario.concat(
+        scenarioState.scenarios.map((s) => ({ label: s.name, value: s._id }))
+      )
+    }
+  })
+
   const onSave = () => {
-    const body = getStrictForm(ref, {
+    const { scenarioId, ...body } = getStrictForm(ref, {
       name: 'string',
       greeting: 'string?',
       sampleChat: 'string?',
       scenario: 'string?',
       schema: ['wpp', 'boostyle', 'sbf', 'text', null],
+      scenarioStates: 'string',
+      scenarioId: 'string',
       mode: ['standard', 'adventure', null],
     })
 
@@ -53,7 +90,13 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       ? { kind: body.schema, attributes }
       : undefined
 
-    chatStore.editChat(state.chat?._id!, { ...body, overrides }, useOverrides(), () => {
+    const payload = {
+      ...body,
+      overrides,
+      scenarioIds: scenarioId ? [scenarioId] : undefined,
+      scenarioStates: body.scenarioStates?.split(',').map((s) => s.trim()),
+    }
+    chatStore.editChat(state.chat?._id!, payload, useOverrides(), () => {
       props.close()
     })
   }
@@ -166,11 +209,31 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
               value={state.chat?.greeting || state.char?.greeting}
               label="Greeting"
             />
+
+            <Select
+              fieldName="scenarioId"
+              label="Scenario"
+              helperText="The scenario to use for this conversation"
+              items={scenarios()}
+              value={scenarioId()}
+              onChange={(option) => setScenarioId(option.value)}
+            />
+
+            <Show when={scenarioId() !== ''}>
+              <TextInput
+                fieldName="scenarioStates"
+                label="The current state of the scenario"
+                helperText="What flags have been set in the chat by the scenario so far"
+                value={(state.chat?.scenarioStates ?? ['N/A']).join(', ')}
+              />
+            </Show>
+
             <TextInput
               fieldName="scenario"
               class="text-sm"
               isMultiline
-              value={state.chat?.scenario || state.char?.scenario}
+              value={scenarioText()}
+              onChange={(ev) => setScenarioText(ev.currentTarget.value)}
               label="Scenario"
             />
             <TextInput

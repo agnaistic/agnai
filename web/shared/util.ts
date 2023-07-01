@@ -545,3 +545,30 @@ export function strictAppendFormOptional<T>(
   if (stringify) form.append(key, stringify(value))
   else form.append(key, value as string | File)
 }
+
+export function weightedRandom<T>(list: T[], getProbability: (v: T) => number): T {
+  const total = list.reduce((sum, item) => sum + getProbability(item), 0)
+  let random = Math.random() * total
+
+  for (const item of list) {
+    random -= getProbability(item)
+    if (random < 0) {
+      return item
+    }
+  }
+
+  return list[list.length - 1]
+}
+
+type OmitKeys<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+
+export function deepCloneAndRemoveFields<T, K extends keyof T>(
+  input: T,
+  fieldsToRemove: K[]
+): OmitKeys<T, K> {
+  const clone: T = JSON.parse(JSON.stringify(input))
+  fieldsToRemove.forEach((field) => {
+    delete (clone as any)[field]
+  })
+  return clone as OmitKeys<T, K>
+}

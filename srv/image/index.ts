@@ -135,6 +135,7 @@ async function createImageMessage(opts: {
       adapter: 'image',
       ooc: false,
       imagePrompt: opts.imagePrompt,
+      event: undefined,
     })
 
     sendMany(opts.memberIds, { type: 'message-created', msg, chatId: opts.chatId })

@@ -15,6 +15,7 @@ import {
   ShoppingBag,
   Sliders,
   Sun,
+  Sword,
   User,
   VenetianMask,
   X,
@@ -179,6 +180,12 @@ const UserNavigation: Component = () => {
         <Book /> Memory
       </Item>
 
+      <Show when={menu.flags.events}>
+        <Item href="/scenario">
+          <Sword /> Scenario
+        </Item>
+      </Show>
+
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
       </Item>
@@ -260,6 +267,12 @@ const GuestNavigation: Component = () => {
         <Item href="/memory">
           <Book /> Memory
         </Item>
+
+        <Show when={menu.flags.events}>
+          <Item href="/scenario">
+            <Sword /> Scenario
+          </Item>
+        </Show>
 
         <Item href="/presets">
           <Sliders /> Presets

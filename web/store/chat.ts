@@ -64,6 +64,7 @@ export type NewChat = {
   name: string
   greeting?: string
   scenario?: string
+  scenarioIds?: string[]
   sampleChat?: string
   overrides?: AppSchema.Chat['overrides']
   useOverrides: boolean
@@ -104,8 +105,6 @@ export const chatStore = createStore<ChatState>('chat', {
   loaded: false,
   allChats: [],
   chatProfiles: [],
-  // chatBots: [],
-  // chatBotMap: {},
   memberIds: {},
   opts: {
     ...getOptsCache(),
@@ -151,7 +150,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const res = await usersApi.getProfile(id)
       if (res.result) {
         return {
-          memberIds: { ...memberIds, [id]: res.result },
+          memberIds: { ...memberIds, [id]: res.result! },
         }
       }
     },
@@ -209,6 +208,23 @@ export const chatStore = createStore<ChatState>('chat', {
       if (!active) return
       return {
         active: { ...active, replyAs: charId },
+      }
+    },
+    async *updateChatScenarioStates({ active }, chatId: string, states: string[]) {
+      if (!active || active.chat._id !== chatId) return
+      yield {
+        active: {
+          ...active,
+          chat: { ...active.chat, scenarioStates: states },
+        },
+      }
+      const res = await chatsApi.editChat(chatId, {
+        scenarioStates: states,
+        useOverrides: undefined,
+      })
+      if (res.error) {
+        toastStore.error(`Failed to update chat states: ${res.error}`)
+        return
       }
     },
     async *editChat(

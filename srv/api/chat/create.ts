@@ -16,6 +16,7 @@ export const createChat = handle(async ({ body, user, userId }) => {
       sampleChat: 'string?',
       overrides: { '?': 'any?', kind: PERSONA_FORMATS, attributes: 'any' },
       useOverrides: 'boolean?',
+      scenarioIds: ['string?'],
     },
     body
   )
@@ -72,6 +73,7 @@ export const importChat = handle(async ({ body, userId }) => {
     senderId: msg.userId ? msg.userId : undefined,
     handle: msg.handle,
     ooc: msg.ooc ?? false,
+    event: undefined,
   }))
 
   await store.msgs.importMessages(userId, messages)
