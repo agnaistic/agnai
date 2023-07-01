@@ -46,9 +46,8 @@ const Convertible: Component<ConvertibleProps> = (props) => (
 )
 
 const WithinPage: Component<PartialProps> = (props) => {
-  const user = userStore()
   const rightPaneBgStyles = useBgStyle({
-    hex: getSettingColor(user.current.botBackground || 'bg-800'),
+    hex: getSettingColor('bg-800'),
     blur: true,
   })
   const paneOrPopup = usePane()

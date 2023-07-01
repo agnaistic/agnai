@@ -90,7 +90,6 @@ export const CreateCharacterForm: Component<{
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
 
-  const [spriteBody, setSpriteBody] = createSignal<FullSprite>()
   const editor = useCharEditor()
 
   const presets = presetStore()
@@ -411,7 +410,7 @@ export const CreateCharacterForm: Component<{
               <Switch>
                 <Match when={editor.state.visualType === 'sprite'}>
                   <div class="flex h-24 w-full justify-center sm:w-24" ref={spriteRef}>
-                    <AvatarContainer body={spriteBody()} container={spriteRef} />
+                    <AvatarContainer body={editor.state.sprite} container={spriteRef} />
                   </div>
                 </Match>
                 <Match when={!state.avatar.loading}>
@@ -654,9 +653,9 @@ export const CreateCharacterForm: Component<{
         </div>
       </form>
       <SpriteModal
-        body={spriteBody()}
+        body={editor.state.sprite}
         onChange={(body) => {
-          setSpriteBody(body)
+          editor.update('sprite', body)
           setShowBuilder(false)
         }}
         show={showBuilder()}
@@ -871,55 +870,3 @@ const MemoryBookPicker: Component<{
     </div>
   )
 }
-
-// type PayloadOpts = {
-//   tags: string[] | undefined
-//   voice: VoiceSettings
-
-//   visualType: string
-//   avatar: File | undefined
-//   sprite: FullSprite | undefined
-
-//   altGreetings: string[] | undefined
-//   characterBook: AppSchema.MemoryBook | undefined
-//   extensions: Record<string, any>
-//   originalAvatar: string | undefined
-// }
-
-// function getPayload(ev: Event, opts: PayloadOpts) {
-//   const body = getStrictForm(ev, newCharGuard)
-//   const attributes = getAttributeMap(ev)
-
-//   const persona = {
-//     kind: body.kind,
-//     attributes,
-//   }
-
-//   const payload = {
-//     name: body.name,
-//     description: body.description,
-//     culture: body.culture,
-//     tags: opts.tags,
-//     scenario: body.scenario,
-//     appearance: body.appearance,
-//     visualType: opts.visualType,
-//     avatar: opts.avatar ?? (null as any),
-//     sprite: opts.sprite ?? (null as any),
-//     greeting: body.greeting,
-//     sampleChat: body.sampleChat,
-//     persona,
-//     originalAvatar: opts.originalAvatar,
-//     voice: opts.voice,
-
-//     // New fields start here
-//     systemPrompt: body.systemPrompt ?? '',
-//     postHistoryInstructions: body.postHistoryInstructions ?? '',
-//     alternateGreetings: opts.altGreetings ?? [],
-//     characterBook: opts.characterBook,
-//     creator: body.creator ?? '',
-//     extensions: opts.extensions,
-//     characterVersion: body.characterVersion ?? '',
-//   }
-
-//   return payload
-// }
