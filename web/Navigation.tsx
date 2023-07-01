@@ -3,7 +3,6 @@ import {
   Activity,
   Book,
   Bot,
-  Github,
   HeartHandshake,
   HelpCircle,
   LogIn,
