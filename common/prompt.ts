@@ -14,7 +14,7 @@ import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { Encoder } from './tokenize'
-import { elapsedSince } from './util'
+import { elapsedSince, trimSentence } from './util'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -62,6 +62,7 @@ export type PromptOpts = {
   characters: GenerateRequestV2['characters']
   impersonate?: AppSchema.Character
   lastMessage: string
+  trimSentences?: boolean
 }
 
 type BuildPromptOpts = {
@@ -128,6 +129,24 @@ const ALL_HOLDERS = new RegExp(
  * @returns
  */
 export function createPrompt(opts: PromptOpts, encoder: Encoder) {
+  if (opts.trimSentences) {
+    const nextMsgs = opts.messages.slice()
+    for (let i = 0; i < nextMsgs.length; i++) {
+      if (nextMsgs[i].userId) continue
+      nextMsgs[i] = { ...nextMsgs[i], msg: trimSentence(nextMsgs[i].msg) }
+    }
+
+    opts.messages = nextMsgs
+
+    if (opts.retry) {
+      opts.retry = { ...opts.retry, msg: trimSentence(opts.retry.msg) }
+    }
+
+    if (opts.lastMessage) {
+      opts.lastMessage = trimSentence(opts.lastMessage)
+    }
+  }
+
   const sortedMsgs = opts.messages
     .filter((msg) => msg.adapter !== 'image')
     .slice()
@@ -558,6 +577,11 @@ function getLinesForPrompt(
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
   const lines = fillPromptWithLines(encoder, maxContext, '', history)
+
+  if (opts.trimSentences) {
+    return lines.map(trimSentence)
+  }
+
   return lines
 }
 

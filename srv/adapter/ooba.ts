@@ -45,7 +45,8 @@ export const handleOoba: ModelAdapter = async function* ({
     stopping_strings: [],
   }
 
-  log.debug(body, 'Textgen payload')
+  log.debug({ ...body, prompt: null }, 'Textgen payload')
+  log.debug(`Prompt:\n${body.prompt}`)
 
   const resp = await needle(
     'post',

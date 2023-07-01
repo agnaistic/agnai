@@ -4,6 +4,7 @@ import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { GOOSE_ENGINES } from '/common/adapters'
+import { logger } from '../logger'
 
 const baseUrl = 'https://api.goose.ai/v1'
 
@@ -36,6 +37,9 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
     repetition_penalty_slope: opts.gen.repetitionPenaltySlope,
     repetition_penalty_range: opts.gen.repetitionPenaltyRange,
   }
+
+  logger.debug({ ...body, prompt: null }, 'Goose payload')
+  logger.debug(`Prompt:\n${body.prompt}`)
 
   const url = `${baseUrl}/engines/${config.engine}/completions`
   const resp = await needle('post', url, JSON.stringify(body), {

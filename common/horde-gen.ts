@@ -113,7 +113,8 @@ export async function generateImage(user: AppSchema.User, prompt: string) {
     trusted_workers: user.hordeUseTrusted ?? false,
   }
 
-  logger?.debug(payload, 'Horde payload')
+  logger?.debug({ ...payload, prompt: null }, 'Horde payload')
+  logger?.debug(`Prompt:\n${payload.prompt}`)
 
   const image = await generate({ type: 'image', payload, key: user.hordeKey || HORDE_GUEST_KEY })
   return image
@@ -158,7 +159,10 @@ export async function generateText(
   }
 
   const payload = { n: 1, ...body, ...settings }
-  logger?.debug(payload, 'Horde payload')
+
+  logger?.debug({ ...payload, prompt: null }, 'Horde payload')
+  logger?.debug(`Prompt:\n${payload.prompt}`)
+
   const result = await generate({ type: 'text', payload, key: user.hordeKey || HORDE_GUEST_KEY })
   return result
 }

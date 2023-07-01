@@ -320,7 +320,7 @@ const SingleMessage: Component<
                   class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
-                  innerHTML={renderMessage(ctx, props.partial!, 'partial')}
+                  innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
                 />
               </Match>
               <Match
@@ -338,7 +338,7 @@ const SingleMessage: Component<
                       class="rendered-markdown px-1"
                       data-bot-message={isBot()}
                       data-user-message={isUser()}
-                      innerHTML={renderMessage(ctx, props.partial!, 'partial')}
+                      innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
                     />
                   </Show>
                 </div>
@@ -348,7 +348,7 @@ const SingleMessage: Component<
                   class="rendered-markdown px-1"
                   data-bot-message={isBot()}
                   data-user-message={isUser()}
-                  innerHTML={renderMessage(ctx, msgText(), props.original.adapter)}
+                  innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
                 />
                 <Show
                   when={
@@ -543,12 +543,14 @@ function retryMessage(original: AppSchema.ChatMessage, split: SplitMessage) {
   }
 }
 
-function renderMessage(ctx: ContextState, text: string, adapter?: string) {
+function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter?: string) {
   // Address unfortunate Showdown bug where spaces in code blocks are replaced with nbsp, except
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
-  const html = markdown.makeHtml(parseMessage(text, ctx, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+  const html = markdown
+    .makeHtml(parseMessage(text, ctx, isUser, adapter))
+    .replace(/&amp;nbsp;/g, '&nbsp;')
   return html
 }
 
@@ -556,7 +558,7 @@ function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSch
   send(`*${emote}* ${action}`, false)
 }
 
-function parseMessage(msg: string, ctx: ContextState, adapter?: string) {
+function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {
   if (adapter === 'image') {
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
   }
@@ -577,7 +579,7 @@ function parseMessage(msg: string, ctx: ContextState, adapter?: string) {
     .replace(/(<)/g, '‹')
     .replace(/(>)/g, '›')
 
-  if (ctx.trimSentences) return trimSentence(parsed)
+  if (ctx.trimSentences && !isUser) return trimSentence(parsed)
   return parsed
 }
 

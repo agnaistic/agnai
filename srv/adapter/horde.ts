@@ -34,8 +34,6 @@ export const handleHorde: ModelAdapter = async function* ({
       chatId: opts.chat._id,
     })
 
-    logger.debug(result, 'Horde result')
-
     const details = result.result.generations?.[0]
 
     if (details) {

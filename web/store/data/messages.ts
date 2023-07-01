@@ -150,6 +150,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
       characters: entities.characters,
       impersonate: props.impersonate,
       lastMessage: entities.lastMessage,
+      trimSentences: ui.trimSentences,
     },
     encoder
   )

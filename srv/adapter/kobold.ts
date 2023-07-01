@@ -57,7 +57,8 @@ export const handleKobold: ModelAdapter = async function* ({
     }
   }
 
-  log.debug(body, 'Kobold payload')
+  logger.debug({ ...body, prompt: null }, 'Kobold payload')
+  logger.debug(`Prompt:\n${body.prompt}`)
 
   // Only KoboldCPP at version 1.30 and higher has streaming support
   const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)

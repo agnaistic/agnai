@@ -6,7 +6,7 @@ import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
 import { needleToSSE } from './stream'
-import { AppLog } from '../logger'
+import { AppLog, debug } from '../logger'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = `${NOVEL_BASEURL}/ai/generate`
@@ -68,7 +68,11 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const endTokens = ['***', 'Scenario:', '----', '⁂']
 
-  log.debug({ ...body, parameters: { ...body.parameters, bad_words_ids: null } }, 'NovelAI payload')
+  log.debug(
+    { ...body, input: null, parameters: { ...body.parameters, bad_words_ids: null } },
+    'NovelAI payload'
+  )
+  log.debug(`Prompt:\n${body.input}`)
 
   const headers = {
     Authorization: `Bearer ${guest ? user.novelApiKey : decryptText(user.novelApiKey)}`,

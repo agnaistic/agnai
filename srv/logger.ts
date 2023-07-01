@@ -5,6 +5,8 @@ import type { NextFunction, Response } from 'express'
 import { errors } from './api/wrap'
 import { config } from './config'
 
+const logLevel = getLogLevel()
+
 const transport =
   process.env.NODE_ENV !== 'production'
     ? { target: 'pino-pretty', options: { translateTime: `UTC:yyyy-mm-dd'T'HH:MM:ss'Z'` } }
@@ -20,11 +22,18 @@ export function createLogger(name: string) {
   return child
 }
 
+export function debug(...args: any[]) {
+  if (logLevel === 'debug' || logLevel === 'trace') {
+    console.debug(...args)
+  }
+}
+
 function parentLogger(name: string) {
+  const level = getLogLevel()
   const opts: any = {
     transport,
     name,
-    level: getLogLevel(),
+    level,
     serializers: {
       err: pino.stdSerializers.err,
       req: pino.stdSerializers.req,
