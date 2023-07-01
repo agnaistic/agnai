@@ -53,7 +53,7 @@ import Slot from '../../shared/Slot'
 import { getRandomBody } from '../../asset/sprite'
 import AvatarContainer from '../../shared/Avatar/Container'
 import { useCharEditor } from './editor'
-import { downloadCharacterHub } from './port'
+import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
 
@@ -183,6 +183,8 @@ export const CreateCharacterForm: Component<{
     try {
       const { file, json } = await downloadCharacterHub(query.import)
       const imageData = await getImageData(file)
+      const char = jsonToCharacter(json)
+      editor.load(ref, char)
       editor.update({
         book: json.characterBook,
         alternateGreetings: json.alternateGreetings || [],
