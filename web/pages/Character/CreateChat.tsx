@@ -13,6 +13,7 @@ import {
   chatStore,
   presetStore,
   scenarioStore,
+  settingStore,
   userStore,
 } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
@@ -39,6 +40,7 @@ const CreateChatModal: Component<{
   let ref: any
 
   const nav = useNavigate()
+  const cfg = settingStore()
   const user = userStore((s) => ({ ...s.user }))
   const presets = presetStore((s) => s.presets)
   const scenarios = scenarioStore()
@@ -261,13 +263,15 @@ const CreateChatModal: Component<{
             ></TextInput>
           </Card>
           <Card>
-            <Select
-              fieldName="scenarioId"
-              label="Scenario"
-              helperText="The scenario to use for this conversation"
-              items={currScenarios()}
-              onChange={(option) => setScenarioById(option.value)}
-            />
+            <Show when={cfg.flags.events}>
+              <Select
+                fieldName="scenarioId"
+                label="Scenario"
+                helperText="The scenario to use for this conversation"
+                items={currScenarios()}
+                onChange={(option) => setScenarioById(option.value)}
+              />
+            </Show>
 
             <Show when={!(scenario()?.overwriteCharacterScenario ?? false)}>
               <TextInput

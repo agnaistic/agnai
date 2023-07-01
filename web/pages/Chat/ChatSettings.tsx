@@ -210,22 +210,24 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
               label="Greeting"
             />
 
-            <Select
-              fieldName="scenarioId"
-              label="Scenario"
-              helperText="The scenario to use for this conversation"
-              items={scenarios()}
-              value={scenarioId()}
-              onChange={(option) => setScenarioId(option.value)}
-            />
-
-            <Show when={scenarioId() !== ''}>
-              <TextInput
-                fieldName="scenarioStates"
-                label="The current state of the scenario"
-                helperText="What flags have been set in the chat by the scenario so far"
-                value={(state.chat?.scenarioStates ?? ['N/A']).join(', ')}
+            <Show when={cfg.flags.events}>
+              <Select
+                fieldName="scenarioId"
+                label="Scenario"
+                helperText="The scenario to use for this conversation"
+                items={scenarios()}
+                value={scenarioId()}
+                onChange={(option) => setScenarioId(option.value)}
               />
+
+              <Show when={scenarioId() !== ''}>
+                <TextInput
+                  fieldName="scenarioStates"
+                  label="The current state of the scenario"
+                  helperText="What flags have been set in the chat by the scenario so far"
+                  value={(state.chat?.scenarioStates ?? ['N/A']).join(', ')}
+                />
+              </Show>
             </Show>
 
             <TextInput
