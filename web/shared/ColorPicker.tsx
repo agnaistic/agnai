@@ -21,6 +21,8 @@ const ColorPicker: Component<{
     props.onChange?.(ev.currentTarget.value)
   }
 
+  console.log(props.fieldName, props.value)
+
   return (
     <div class="">
       <Show when={!!props.label || !!props.helperText}>

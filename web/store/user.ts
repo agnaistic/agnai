@@ -62,7 +62,7 @@ export const userStore = createStore<UserState>(
     if (!init.user.ui) {
       userStore.saveUI({})
     } else {
-      updateTheme(init.user.ui)
+      userStore.receiveUI(init.user.ui)
     }
   })
 
@@ -181,18 +181,27 @@ export const userStore = createStore<UserState>(
     },
 
     async saveUI({ ui }, update: Partial<UI.UISettings>) {
-      const mode = update.mode ? update.mode : ui.mode
-      const next = { ...ui, ...update }
-      const current = next[mode]
+      // const mode = update.mode ? update.mode : ui.mode
+      const next: UI.UISettings = { ...ui, ...update }
+      const mode = next.mode
 
-      await usersApi.updateUI(next)
+      const current: UI.CustomUI = {
+        botBackground: next.botBackground!,
+        chatEmphasisColor: next.chatEmphasisColor!,
+        chatTextColor: next.chatTextColor!,
+        msgBackground: next.msgBackground!,
+        bgCustom: next.bgCustom,
+      }
+
+      await usersApi.updateUI({ ...next, [mode]: current })
 
       try {
-        updateTheme(next)
+        updateTheme({ ...next, [mode]: current })
       } catch (e: any) {
         toastStore.error(`Failed to save UI settings: ${e.message}`)
       }
-      return { ui: next, current }
+
+      return { ui: next, current, [mode]: current }
     },
 
     saveCustomUI({ ui }, update: Partial<UI.CustomUI>) {
@@ -217,19 +226,9 @@ export const userStore = createStore<UserState>(
     },
 
     receiveUI(_, update: UI.UISettings) {
+      const current = update[update.mode]
       updateTheme(update)
-      return { ui: update }
-    },
-
-    updateColor({ ui }, update: Partial<UI.CustomUI>) {
-      const prev = ui[ui.mode]
-      const next = { ...prev, ...update }
-      try {
-        updateTheme({ ...ui, [ui.mode]: next })
-      } catch (e: any) {
-        toastStore.error(`Failed to save UI settings: ${e.message}`)
-      }
-      return { current: next, [ui.mode]: next }
+      return { ui: update, current }
     },
 
     setBackground(_, file: FileInputResult | null) {
@@ -399,6 +398,7 @@ function updateTheme(ui: UI.UISettings) {
     root.style.setProperty(`--rgb-bg-${shade}`, `${bgRgb?.rgb}`)
   }
 
+  console.log('setting colors', mode)
   setRootVariable('text-chatcolor', getSettingColor(mode.chatTextColor || 'text-800'))
   setRootVariable('text-emphasis-color', getSettingColor(mode.chatEmphasisColor || 'text-600'))
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))

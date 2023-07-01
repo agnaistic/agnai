@@ -80,17 +80,20 @@ export function useEffect(callback: () => void | Function): void {
 
 export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean }) {
   const user = userStore()
+
   const bgStyle = createMemo(() => {
     // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
     user.ui.mode
     const rgb = hexToRgb(props.hex)
     if (!rgb) return {}
+
     const opacity = props.opacity?.toString() ?? user.ui.msgOpacity.toString()
     return {
       background: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${opacity})`,
       ...(props.blur ? { 'backdrop-filter': 'blur(5px)' } : {}),
     }
   })
+
   return bgStyle
 }
 
