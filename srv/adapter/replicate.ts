@@ -87,13 +87,17 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
   const { log } = opts
   const config = opts.user.adapterConfig?.replicate
   if (!config) {
-    yield { error: `Replicate request failed: No config` }
+    yield {
+      error: `Replicate request failed: User settings missing. Make sure you've provided your API key in your user settings.`,
+    }
     return
   }
 
   const key = config.apiToken ? (opts.guest ? config.apiToken : decryptText(config.apiToken)) : null
   if (!key) {
-    yield { error: `Replicate request failed: No API Token set` }
+    yield {
+      error: `Replicate request failed: No API Token set. Make sure it is set in your user settings.`,
+    }
     return
   }
 
@@ -247,6 +251,7 @@ registerAdapter('replicate', handleReplicate, {
     {
       field: 'apiToken',
       label: 'API Token',
+      helperText: 'You can get your key from https://replicate.com/account/api-tokens',
       secret: true,
       setting: { type: 'text', placeholder: 'E.g. a0_Q45sfF...' },
     },

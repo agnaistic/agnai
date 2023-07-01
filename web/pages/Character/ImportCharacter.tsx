@@ -1,34 +1,20 @@
 import { Import, X } from 'lucide-solid'
 import { Component, For, Show, createSignal, onMount } from 'solid-js'
-import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
-import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
+import FileInput, { FileInputResult } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
-import { extractCardData } from './card-utils'
-import { characterBookToNative } from '/common/memory'
-import { formatCharacter } from '/common/characters'
 import AvatarIcon from '/web/shared/AvatarIcon'
-import { CHUB_URL } from '/web/store/chub'
+import { SUPPORTED_FORMATS, downloadCharacterHub, importCharacterFile } from './port'
 
-const SUPPORTED_FORMATS = 'Agnaistic, CAI, TavernAI, TextGen, Pygmalion'
 const MAX_SHOWN_IMPORTS = 3
-
-const IMAGE_FORMATS: Record<string, boolean> = {
-  png: true,
-  jpg: true,
-  jpeg: true,
-}
-
-const TEXT_FORMATS: Record<string, boolean> = {
-  json: true,
-}
 
 const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
   onSave: (chars: NewCharacter[]) => void
   charhubPath?: string
+  single?: boolean
 }> = (props) => {
   const state = characterStore()
   const [imported, setImported] = createSignal<NewCharacter[]>([])
@@ -50,51 +36,17 @@ const ImportCharacterModal: Component<{
   const processFiles = async (files: FileInputResult[]) => {
     reset()
 
-    await Promise.all(
-      files.map(async (file) => {
-        try {
-          const ext = file.file.name.split('.').slice(-1)[0]
-          if (IMAGE_FORMATS[ext]) {
-            await processImage(file)
-            return
-          }
-
-          if (TEXT_FORMATS[ext]) {
-            await processJSON(file)
-            return
-          }
-
-          throw new Error(
-            `Invalid file format: ${file.file.name}. Supported formats: ${SUPPORTED_FORMATS}`
-          )
-        } catch (ex: any) {
-          setFailed(failed().concat(file.file.name))
-          toastStore.error(`Failed to import ${file.file.name}: ${ex.message}`)
-        }
-      })
-    )
+    const results = await Promise.allSettled(files.map(importCharacterFile))
+    for (let i = 0; i < results.length; i++) {
+      const result = results[i]
+      if (result.status === 'rejected') {
+        setFailed(failed().concat(files[i].file.name))
+      } else {
+        setImported(imported().concat(result.value))
+      }
+    }
 
     setReady(imported().length > 0)
-  }
-
-  const processJSON = async (file: FileInputResult) => {
-    const content = await getFileAsString(file)
-    const json = JSON.parse(content)
-    const char = jsonToCharacter(json)
-    char.tags = char.tags?.concat('imported') ?? ['imported']
-    setImported(imported().concat(char))
-    toastStore.success('Character file accepted')
-  }
-
-  const processImage = async (file: FileInputResult) => {
-    const json = await extractCardData(file.file)
-    if (!json) {
-      throw new Error('Invalid tavern image')
-    }
-    const char = Object.assign(jsonToCharacter(json), { avatar: file.file })
-    char.tags = char.tags?.concat('imported') ?? ['imported']
-    setImported(imported().concat(char))
-    toastStore.success('Tavern card accepted')
   }
 
   const onImport = async () => {
@@ -139,7 +91,7 @@ const ImportCharacterModal: Component<{
           accept="text/json,application/json,image/png,image/jpeg"
           helperText={`Supported formats: ${SUPPORTED_FORMATS}`}
           required
-          multiple
+          multiple={!props.single}
           onUpdate={processFiles}
         />
       </div>
@@ -187,129 +139,3 @@ const ImportCharacterModal: Component<{
 }
 
 export default ImportCharacterModal
-
-type ImportFormat = 'tavern' | 'tavernV2' | 'ooba' | 'agnai'
-
-export function jsonToCharacter(json: any): NewCharacter {
-  const format = getImportFormat(json)
-
-  if (format === 'agnai') {
-    return json
-  }
-
-  if (format === 'ooba') {
-    return {
-      name: json.char_name,
-      greeting: json.char_greeting,
-      persona: {
-        kind: 'text',
-        attributes: {
-          text: [json.char_persona],
-        },
-      },
-      sampleChat: json.example_dialogue,
-      scenario: json.world_scenario,
-      originalAvatar: undefined,
-    }
-  }
-
-  if (format === 'tavern') {
-    return {
-      name: json.name,
-      greeting: json.first_mes,
-      persona: {
-        kind: 'text',
-        attributes: {
-          text: [[json.description, json.personality].filter((text) => !!text).join('\n')],
-        },
-      },
-      sampleChat: json.mes_example,
-      scenario: json.scenario,
-      originalAvatar: undefined,
-    }
-  }
-
-  // format === 'tavernV2'
-  /** Tests, in the case we previously saved the lossless Agnai "Persona" data, whether the card has been edited in another application since then, causing the saved "Persona" data to be obsolete. */
-  const isSavedPersonaMissingOrOutdated =
-    json.data.extensions.agnai?.persona === undefined ||
-    formatCharacter(json.data.name, json.data.extensions.agnai?.persona) !== json.data.description
-
-  return {
-    name: json.data.name,
-    greeting: json.data.first_mes,
-    persona: isSavedPersonaMissingOrOutdated
-      ? {
-          kind: 'text',
-          attributes: {
-            text: [
-              [json.data.description, json.data.personality].filter((text) => !!text).join('\n'),
-            ],
-          },
-        }
-      : json.data.extensions.agnai.persona,
-    sampleChat: json.data.mes_example,
-    scenario: json.data.scenario,
-    originalAvatar: undefined,
-    alternateGreetings: json.data.alternate_greetings,
-    characterBook: json.data.character_book
-      ? characterBookToNative(json.data.character_book)
-      : undefined,
-    extensions: json.data.extensions,
-    systemPrompt: json.data.system_prompt,
-    postHistoryInstructions: json.data.post_history_instructions,
-    creator: json.data.creator,
-    characterVersion: json.data.character_version,
-    tags: json.data.tags,
-    description: json.data.creator_notes,
-    voice: json.data.extensions.agnai?.voice,
-  }
-}
-
-function getImportFormat(obj: any): ImportFormat {
-  if (obj.kind === 'character' || isNative(obj)) return 'agnai'
-  if ('char_name' in obj) return 'ooba'
-  if (obj.spec === 'chara_card_v2') return 'tavernV2'
-  if ('mes_example' in obj) return 'tavern'
-
-  throw new Error('Unknown import format')
-}
-
-function isNative(obj: any): obj is AppSchema.Character {
-  return (
-    'name' in obj &&
-    'persona' in obj &&
-    'greeting' in obj &&
-    'scenario' in obj &&
-    'sampleChat' in obj
-  )
-}
-
-/**
- *
- * @param path Character `fullPath`
- */
-export async function downloadCharacterHub(path: string) {
-  // const imageUrl = `https://avatars.charhub.io/avatars/${path}/avatar.webp`
-
-  const card = await fetch(`${CHUB_URL}/characters/download`, {
-    method: 'post',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ format: 'tavern', fullPath: path, version: 'main' }),
-  }).then((res) => res.blob())
-
-  const file = new File([card], `charhub_${slugify(path)}.png`, { type: 'image/png' })
-  const data = await extractCardData(file)
-  const json = jsonToCharacter(data)
-  json.avatar = file
-  return { card, file, json }
-}
-
-function slugify(str: string) {
-  return str
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/[\s_-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-}

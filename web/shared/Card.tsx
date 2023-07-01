@@ -110,24 +110,24 @@ export const Pill: Component<{
     const type = props.type || 'bg'
     let base = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? 800 : 200
     let mod = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? -400 : 400
-    let text = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? 100 : -100
+    let text = 200
 
     if (props.inverse) {
       base = base === 800 ? 200 : 800
       mod *= -1
-      text *= -1
+      text = 800
     }
 
     return {
       'background-color': `var(--${type}-${base + mod})`,
       'border-color': `var(--${type}-${base})`,
-      color: `var(--${type}-${base + text})`,
+      color: `var(--text-${text})`,
     }
   })
 
   return (
     <span
-      class="rounded-md border-[1px] px-2 py-1 text-sm"
+      class={`rounded-md border-[1px] px-2 py-1 text-sm`}
       style={bg()}
       onClick={props.onClick}
       classList={{

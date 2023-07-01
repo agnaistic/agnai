@@ -26,11 +26,10 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { getAssetUrl, getRootVariable } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore, getSettingColor } from '../../../store'
+import { getAssetUrl } from '../../../shared/util'
+import { chatStore, userStore, msgStore, settingStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
-import { useBgStyle } from '/web/shared/hooks'
 import { rootModalStore } from '/web/store/root-modal'
 import { ContextState, useAppContext } from '/web/store/context'
 import { trimSentence } from '/common/util'
@@ -47,7 +46,6 @@ type MessageProps = {
   children?: any
   retrying?: AppSchema.ChatMessage
   partial?: string
-  actions?: AppSchema.ChatMessage['actions']
   sendMessage: (msg: string, ooc: boolean) => void
   isPaneOpen: boolean
   avatars?: Record<string, JSX.Element>
@@ -86,11 +84,9 @@ const Message: Component<MessageProps> = (props) => {
 }
 
 const SingleMessage: Component<
-  Omit<
-    MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean },
-    'anonymize' | 'botMap'
-  >
+  MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
 > = (props) => {
+  let ref: HTMLDivElement
   let avatarRef: any
   const user = userStore()
   const state = chatStore()
@@ -110,25 +106,16 @@ const SingleMessage: Component<
 
   const [ctx] = useAppContext()
 
-  onMount(() => {
-    obs().observe(avatarRef)
-  })
+  onMount(() => obs().observe(avatarRef))
+  onCleanup(() => obs().disconnect())
 
-  onCleanup(() => {
-    obs().disconnect()
-  })
-
-  const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
-
-  const bgStyles = useBgStyle({
-    hex:
-      props.msg.characterId && !props.msg.userId
-        ? getSettingColor(user.current.botBackground || 'bg-800')
-        : props.msg.ooc
-        ? getRootVariable('bg-1000')
-        : getSettingColor(user.current.msgBackground || 'bg-800'),
-    blur: true,
-  })
+  const bgStyles = createMemo(() =>
+    props.msg.characterId && !props.msg.userId
+      ? ctx.bg.bot
+      : props.msg.ooc
+      ? ctx.bg.ooc
+      : ctx.bg.user
+  )
 
   const msgText = createMemo(() => {
     if (props.last && props.swipe) return props.swipe
@@ -146,7 +133,6 @@ const SingleMessage: Component<
   }
 
   const cancelEdit = () => setEdit(false)
-  const visibilityClass = () => (ctx.anonymize ? 'invisible' : '')
 
   const startEdit = () => {
     setEdit(true)
@@ -162,14 +148,17 @@ const SingleMessage: Component<
     return handle
   }
 
-  let ref: HTMLDivElement | undefined
-
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
-  const nameDateFlexDir = () => (props.isPaneOpen ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0')
-  const nameDateAlignItems = () => (props.isPaneOpen ? '' : 'sm:items-end')
-  const nameClasses = () => (props.isPaneOpen ? 'sm:text-base' : 'sm:text-lg')
-  const oocNameClass = () => (props.msg.ooc ? 'italic' : '')
+  const nameDateFlexDir = createMemo(() =>
+    props.isPaneOpen ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'
+  )
+
+  const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
+  const visibilityClass = createMemo(() => (ctx.anonymize ? 'invisible' : ''))
+  const nameDateAlignItems = createMemo(() => (props.isPaneOpen ? '' : 'sm:items-end'))
+  const nameClasses = createMemo(() => (props.isPaneOpen ? 'sm:text-base' : 'sm:text-lg'))
+  const oocNameClass = createMemo(() => (props.msg.ooc ? 'italic' : ''))
 
   return (
     <div
@@ -387,7 +376,7 @@ const SingleMessage: Component<
               </Match>
               <Match when={edit()}>
                 <div
-                  ref={ref}
+                  ref={ref!}
                   contentEditable={true}
                   onKeyUp={(ev) => {
                     if (ev.key === 'Escape') cancelEdit()

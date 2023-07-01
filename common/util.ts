@@ -112,3 +112,12 @@ export function trimSentence(text: string) {
   if (last === -1) return text
   return text.slice(0, last + 1)
 }
+
+export function slugify(str: string) {
+  return str
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}

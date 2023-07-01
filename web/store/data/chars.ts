@@ -3,7 +3,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { NewCharacter, UpdateCharacter } from '../character'
 import { loadItem, localApi } from './storage'
-import { appendFormOptional, strictAppendFormOptional } from '/web/shared/util'
+import { appendFormOptional, getAssetUrl, strictAppendFormOptional } from '/web/shared/util'
 
 export const charsApi = {
   getCharacters,
@@ -200,12 +200,18 @@ export async function createCharacter(char: NewCharacter) {
   return { result: newChar, error: undefined }
 }
 
-export async function getImageData(file?: File | Blob) {
+export async function getImageData(file?: File | Blob | string) {
   if (!file) return
+
+  if (typeof file === 'string') {
+    const image = await fetch(getAssetUrl(file)).then((res) => res.blob())
+    file = new File([image], 'downloaded.png', { type: 'image/png' })
+  }
+
   const reader = new FileReader()
 
   return new Promise<string>((resolve, reject) => {
-    reader.readAsDataURL(file)
+    reader.readAsDataURL(file as File | Blob)
 
     reader.onload = (evt) => {
       if (!evt.target?.result) return reject(new Error(`Failed to process image`))

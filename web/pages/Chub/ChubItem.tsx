@@ -1,10 +1,10 @@
 import { Component, createSignal } from 'solid-js'
 import Button from '/web/shared/Button'
 import { NewCharacter } from '/web/store'
-import { jsonToCharacter } from '../Character/ImportCharacter'
 import { extractCardData } from '../Character/card-utils'
 import { processBook, processChar } from './util'
 import { AppSchema } from '/common/types'
+import { jsonToCharacter } from '../Character/port'
 
 export const ChubItem: Component<{
   name: string

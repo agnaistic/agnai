@@ -83,23 +83,23 @@ const HomePage: Component = () => {
           <TitleCard type="bg" title="Useful Links" center>
             <div class="flex flex-wrap justify-center gap-2">
               <a href="/discord" target="_blank">
-                <Pill>Discord</Pill>
+                <Pill inverse>Discord</Pill>
               </a>
 
               <A class="link" href="/changelog">
-                <Pill>Change Log</Pill>
+                <Pill inverse>Change Log</Pill>
               </A>
 
               <A href="https://github.com/agnaistic/agnai" target="_blank">
-                <Pill>GitHub</Pill>
+                <Pill inverse>GitHub</Pill>
               </A>
 
               <A class="link" href="/terms-of-service">
-                <Pill>Terms of Service</Pill>
+                <Pill inverse>Terms of Service</Pill>
               </A>
 
               <A class="link" href="/privacy-policy">
-                <Pill>Privacy Policy</Pill>
+                <Pill inverse>Privacy Policy</Pill>
               </A>
             </div>
           </TitleCard>

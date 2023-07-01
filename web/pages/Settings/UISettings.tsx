@@ -1,4 +1,4 @@
-import { Component, Show, onCleanup } from 'solid-js'
+import { Component, Show, createMemo, onCleanup } from 'solid-js'
 import { toBotMsg, toUserMsg } from '../../../common/dummy'
 import Button from '../../shared/Button'
 import Divider from '../../shared/Divider'
@@ -16,15 +16,19 @@ import { Save } from 'lucide-solid'
 import { useAppContext } from '/web/store/context'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
-const themeBgOptions = [{ label: 'Custom', value: '' }].concat(
-  ...UI.BG_THEME.map((color) => ({ label: color, value: color }))
-)
 
 function noop() {}
 
 const UISettings: Component = () => {
   const state = userStore()
   const [ctx] = useAppContext()
+
+  const themeBgOptions = createMemo(() => {
+    const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
+    const custom = state.current.bgCustom || ''
+    if (custom !== '') options.unshift({ label: 'Custom', value: '' })
+    return options
+  })
 
   const onBackground = async (results: FileInputResult[]) => {
     if (!results.length) return
@@ -37,9 +41,7 @@ const UISettings: Component = () => {
     userStore.tryCustomUI(update)
   }, 50)
 
-  onCleanup(() => {
-    unsubCustomUi()
-  })
+  onCleanup(() => unsubCustomUi())
 
   return (
     <>
@@ -69,16 +71,7 @@ const UISettings: Component = () => {
           label="Backgrounds"
           helperText={
             <>
-              <span
-                class="link"
-                onClick={() =>
-                  userStore.saveUI({
-                    bgCustom: '',
-                    bgCustomGradient: '',
-                    themeBg: UI.BG_THEME[0],
-                  })
-                }
-              >
+              <span class="link" onClick={() => userStore.saveCustomUI({ bgCustom: '' })}>
                 Reset to Default
               </span>
             </>
@@ -87,7 +80,7 @@ const UISettings: Component = () => {
         <div class="flex items-center gap-2">
           <Select
             fieldName="themeBg"
-            items={themeBgOptions}
+            items={themeBgOptions()}
             value={state.ui.themeBg}
             onChange={(item) =>
               userStore.saveUI({ themeBg: item.value as any, bgCustom: undefined })
@@ -97,7 +90,7 @@ const UISettings: Component = () => {
             fieldName="customBg"
             onChange={(color) => userStore.saveCustomUI({ bgCustom: color })}
             onInput={(color) => tryCustomUI({ bgCustom: color })}
-            value={state.current.bgCustom || state.ui.bgCustom}
+            value={state.current.bgCustom ?? state.ui.bgCustom}
           />
         </div>
       </div>
@@ -184,11 +177,11 @@ const UISettings: Component = () => {
         label="Message Background Color"
         fieldName="messageColor"
         helperText={
-          <span class="link" onClick={() => userStore.updateColor({ msgBackground: 'bg-800' })}>
+          <span class="link" onClick={() => userStore.saveUI({ msgBackground: 'bg-800' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.updateColor({ msgBackground: color })}
+        onChange={(color) => userStore.saveUI({ msgBackground: color })}
         value={state.current.msgBackground}
       />
 
@@ -197,7 +190,7 @@ const UISettings: Component = () => {
         fieldName="botMessageColor"
         helperText={
           <>
-            <span class="link" onClick={() => userStore.updateColor({ botBackground: 'bg-800' })}>
+            <span class="link" onClick={() => userStore.saveUI({ botBackground: 'bg-800' })}>
               Reset to Default
             </span>
             <span>
@@ -205,7 +198,7 @@ const UISettings: Component = () => {
             </span>
           </>
         }
-        onChange={(color) => userStore.updateColor({ botBackground: color })}
+        onChange={(color) => userStore.saveUI({ botBackground: color })}
         value={state.current.botBackground}
       />
 
@@ -213,11 +206,11 @@ const UISettings: Component = () => {
         label="Chat Text Color"
         fieldName="chatTextColor"
         helperText={
-          <span class="link" onClick={() => userStore.updateColor({ chatTextColor: 'text-800' })}>
+          <span class="link" onClick={() => userStore.saveUI({ chatTextColor: 'text-800' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.updateColor({ chatTextColor: color })}
+        onChange={(color) => userStore.saveUI({ chatTextColor: color })}
         value={state.current.chatTextColor}
       />
 
@@ -225,14 +218,11 @@ const UISettings: Component = () => {
         label="Chat Emphasis Color"
         fieldName="chatEmphasisColor"
         helperText={
-          <span
-            class="link"
-            onClick={() => userStore.updateColor({ chatEmphasisColor: 'text-600' })}
-          >
+          <span class="link" onClick={() => userStore.saveUI({ chatEmphasisColor: 'text-600' })}>
             Reset to Default
           </span>
         }
-        onChange={(color) => userStore.updateColor({ chatEmphasisColor: color })}
+        onChange={(color) => userStore.saveUI({ chatEmphasisColor: color })}
         value={state.current.chatEmphasisColor}
       />
 
@@ -250,9 +240,6 @@ const UISettings: Component = () => {
         onChange={(item) => userStore.saveUI({ chatWidth: item.value as any })}
         value={state.ui.chatWidth}
       />
-      <Divider />
-      <div class="text-lg font-bold">Chat Styling</div>
-
       <RangeInput
         fieldName="msgOpacity"
         value={state.ui.msgOpacity}
@@ -271,10 +258,10 @@ const UISettings: Component = () => {
         onChange={(value) => userStore.saveUI({ imageWrap: value })}
         value={state.ui.imageWrap}
       />
-      <Divider />
+
       <Toggle
         fieldName="logPromptsToBrowserConsole"
-        label="Log prompts to browser console"
+        label="Log Prompts to Console"
         value={state.ui?.logPromptsToBrowserConsole ?? false}
         onChange={(enabled) => userStore.saveUI({ logPromptsToBrowserConsole: enabled })}
       />
