@@ -32,7 +32,7 @@ import { getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
-import { ContextProvider, useAppContext } from './store/context'
+import { ContextProvider } from './store/context'
 
 const App: Component = () => {
   const state = userStore()
@@ -97,7 +97,6 @@ const App: Component = () => {
 }
 
 const Layout: Component = () => {
-  const [ctx] = useAppContext()
   const state = userStore()
   const cfg = settingStore()
   const location = useLocation()
