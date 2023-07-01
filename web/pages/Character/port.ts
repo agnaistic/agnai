@@ -165,11 +165,7 @@ async function processImage(file: FileInputResult) {
     throw new Error('Invalid tavern image')
   }
   const parsed = jsonToCharacter(json)
-  const character = Object.assign(
-    parsed,
-    { avatar: file.file },
-    { tags: parsed.tags?.concat('imported') ?? ['imported'] }
-  )
+  const character = Object.assign(parsed, { avatar: file.file }, { tags: parsed.tags || [] })
 
   toastStore.success(`Tavern card accepted`)
   return character
@@ -179,7 +175,7 @@ async function processJSON(file: FileInputResult) {
   const content = await getFileAsString(file)
   const json = JSON.parse(content)
   const char = jsonToCharacter(json)
-  char.tags = char.tags?.concat('imported') ?? ['imported']
+  char.tags = char.tags || []
   toastStore.success('Character file accepted')
   return char
 }
