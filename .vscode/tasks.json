@@ -10,7 +10,19 @@
         "kind": "build",
         "isDefault": true
       },
+      "isBackground": true,
       "label": "tsc: watch - tsconfig.json"
+    },
+    {
+      "type": "typescript",
+      "tsconfig": "srv.tsconfig.json",
+      "option": "watch",
+      "problemMatcher": ["$tsc-watch"],
+      "group": {
+        "kind": "build"
+      },
+      "isBackground": true,
+      "label": "build server"
     }
   ]
 }

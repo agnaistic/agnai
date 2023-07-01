@@ -11,7 +11,8 @@
       "sourceMaps": true,
       "skipFiles": ["<node_internals>/**"],
       "type": "node",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "preLaunchTask": "build server"
     },
     {
       "name": "Attach",
