@@ -318,7 +318,9 @@ const Characters: Component<{
         </Match>
       </Switch>
 
-      <DownloadModal show={!!download()} close={() => setDownload()} char={download()} />
+      <Show when={download()}>
+        <DownloadModal show close={() => setDownload()} char={download()!} />
+      </Show>
       <DeleteCharacterModal
         char={showDelete()}
         show={!!showDelete()}

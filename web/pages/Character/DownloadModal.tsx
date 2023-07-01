@@ -47,7 +47,7 @@ export const DownloadModal: Component<{
 
   const [format, setFormat] = createSignal('tavern')
   const [fileType, setFileType] = createSignal<string>(props.char?.avatar ? 'png' : 'json')
-  const [schema, setSchema] = createSignal(props.char.persona.kind || opts()[0].value)
+  const [schema, setSchema] = createSignal(props.char?.persona?.kind || opts()[0].value)
 
   return (
     <Modal
