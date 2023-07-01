@@ -526,17 +526,7 @@ export const CreateCharacterForm: Component<{
                   onChange={(kind) => editor.update({ personaKind: kind as any })}
                 />
               </div>
-              {/* <Show when={!props.editId && !props.duplicateId}>
-                <PersonaAttributes
-                  value={editor.state.persona.attributes}
-                  plainText={schema() === 'text' || schema() === undefined}
-                  schema={schema()}
-                  tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
-                  form={ref}
-                />
-              </Show> */}
 
-              {/* <Show when={(props.editId || props.duplicateId) && state.edit}> */}
               <PersonaAttributes
                 value={editor.state.persona.attributes}
                 plainText={editor.state.personaKind === 'text'}
@@ -544,7 +534,6 @@ export const CreateCharacterForm: Component<{
                 tokenCount={(v) => setTokens((prev) => ({ ...prev, persona: v }))}
                 form={ref}
               />
-              {/* </Show> */}
             </Card>
             <Card>
               <TextInput
@@ -662,16 +651,16 @@ export const CreateCharacterForm: Component<{
         close={() => setShowBuilder(false)}
       />
       <ImageModal />
-      <DownloadModal
-        show={!!converted()}
-        close={() => setConverted(undefined)}
-        char={converted()}
-      />
+      <Show when={converted()}>
+        <DownloadModal show close={() => setConverted(undefined)} char={converted()!} />
+      </Show>
       <ImportCharacterModal
         show={showImport()}
         close={() => setImport(false)}
-        onSave={(char) => {
+        onSave={(char, imgs) => {
           editor.load(ref, char[0])
+          editor.update('avatar', imgs[0])
+          setImage(imgs[0] as any)
           setImport(false)
         }}
         single

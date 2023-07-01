@@ -26,12 +26,12 @@ export async function importCharacterFile(file: FileInputResult) {
     const ext = file.file.name.split('.').slice(-1)[0]
     if (IMAGE_FORMATS[ext]) {
       const char = await processImage(file)
-      return char
+      return { char, image: file.file }
     }
 
     if (TEXT_FORMATS[ext]) {
       const char = await processJSON(file)
-      return char
+      return { char, image: undefined }
     }
 
     throw new Error(

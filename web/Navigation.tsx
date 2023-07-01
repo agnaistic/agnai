@@ -10,9 +10,11 @@ import {
   LogOut,
   MailPlus,
   MessageCircle,
+  Moon,
   Settings,
   ShoppingBag,
   Sliders,
+  Sun,
   User,
   VenetianMask,
   X,
@@ -185,25 +187,34 @@ const UserNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
 
-      <Item href="/faq">
-        <HelpCircle /> FAQ
-      </Item>
-
-      <Item href="/settings">
-        <Settings /> Settings
-      </Item>
-
-      <Show when={user.user?.admin}>
-        <Item href="/admin/metrics">
-          <Activity /> Metrics
+      <div class="flex flex-wrap justify-center gap-1">
+        <Item href="/faq">
+          <HelpCircle />
         </Item>
-      </Show>
+        <Show when={menu.config.patreon}>
+          <ExternalLink href="https://patreon.com/Agnaistic" newtab>
+            <HeartHandshake />
+          </ExternalLink>
+        </Show>
+        <Show when={user.user?.admin}>
+          <Item href="/admin/metrics">
+            <Activity />
+          </Item>
+        </Show>
+        <Item href="/settings">
+          <Settings />
+        </Item>
 
-      <Show when={menu.config.patreon}>
-        <ExternalLink href="https://patreon.com/Agnaistic" newtab>
-          <HeartHandshake /> Patreon
-        </ExternalLink>
-      </Show>
+        <Item
+          onClick={() => {
+            userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
+          }}
+        >
+          <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
+            <Moon />
+          </Show>
+        </Item>
+      </div>
 
       <Slots />
     </>
@@ -308,15 +319,32 @@ const Slots: Component = (props) => {
   )
 }
 
-const Item: Component<{ href: string; children: string | JSX.Element }> = (props) => {
+const Item: Component<{ href?: string; children: string | JSX.Element; onClick?: () => void }> = (
+  props
+) => {
   return (
-    <A
-      href={props.href}
-      class="flex h-10 items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:h-12"
-      onClick={settingStore.closeMenu}
-    >
-      {props.children}
-    </A>
+    <>
+      <Show when={!props.href}>
+        <div
+          class="flex h-10 cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:h-12"
+          onClick={() => {
+            if (props.onClick) props.onClick()
+            else settingStore.closeMenu()
+          }}
+        >
+          {props.children}
+        </div>
+      </Show>
+      <Show when={props.href}>
+        <A
+          href={props.href!}
+          class="flex h-10 items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:h-12"
+          onClick={settingStore.closeMenu}
+        >
+          {props.children}
+        </A>
+      </Show>
+    </>
   )
 }
 

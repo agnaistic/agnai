@@ -176,11 +176,6 @@ const Layout: Component = () => {
         />
         <InfoModal />
         <For each={rootModals.modals}>{(modal) => modal.element}</For>
-        <Show when={ctx.tooltip}>
-          <div class="absolute bottom-0 left-0 right-0 top-0 m-auto h-12 w-12 bg-red-500">
-            {ctx.tooltip}
-          </div>
-        </Show>
       </div>
     </ContextProvider>
   )

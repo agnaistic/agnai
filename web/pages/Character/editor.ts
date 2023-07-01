@@ -203,7 +203,6 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     sprite: state.sprite ?? (null as any),
     greeting: body.greeting,
     sampleChat: body.sampleChat,
-    persona,
     originalAvatar: original?.originalAvatar,
     voice: state.voice,
 
@@ -215,6 +214,10 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     creator: body.creator ?? '',
     extensions: original?.extensions,
     characterVersion: body.characterVersion ?? '',
+    persona: {
+      kind: state.personaKind,
+      attributes: persona.attributes,
+    },
   }
 
   return payload

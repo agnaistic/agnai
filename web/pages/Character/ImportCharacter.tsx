@@ -12,12 +12,13 @@ const MAX_SHOWN_IMPORTS = 3
 const ImportCharacterModal: Component<{
   show: boolean
   close: () => void
-  onSave: (chars: NewCharacter[]) => void
+  onSave: (chars: NewCharacter[], images: Array<File | undefined>) => void
   charhubPath?: string
   single?: boolean
 }> = (props) => {
   const state = characterStore()
   const [imported, setImported] = createSignal<NewCharacter[]>([])
+  const [images, setImages] = createSignal<Array<File | undefined>>([])
   const [failed, setFailed] = createSignal<string[]>([])
   const [ready, setReady] = createSignal(false)
 
@@ -42,7 +43,8 @@ const ImportCharacterModal: Component<{
       if (result.status === 'rejected') {
         setFailed(failed().concat(files[i].file.name))
       } else {
-        setImported(imported().concat(result.value))
+        setImported(imported().concat(result.value.char))
+        setImages(images().concat(result.value.image))
       }
     }
 
@@ -51,11 +53,12 @@ const ImportCharacterModal: Component<{
 
   const onImport = async () => {
     if (!ready()) return
-    props.onSave(imported())
+    props.onSave(imported(), images())
   }
 
   const reset = () => {
     setReady(false)
+    setImages([])
     setImported([])
     setFailed([])
   }

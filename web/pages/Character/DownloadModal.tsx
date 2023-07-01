@@ -1,4 +1,4 @@
-import { Accessor, Component, Match, Switch, createMemo, createSignal } from 'solid-js'
+import { Component, Match, Switch, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types/schema'
 import Select from '/web/shared/Select'
 import Modal from '/web/shared/Modal'
@@ -27,7 +27,7 @@ const formats = [
 export const DownloadModal: Component<{
   show: boolean
   close: () => void
-  char?: AppSchema.Character
+  char: AppSchema.Character
 }> = (props) => {
   let ref: any
   const opts = createMemo(
@@ -37,14 +37,17 @@ export const DownloadModal: Component<{
     { equals: false }
   )
 
-  const fileTypeItems: Accessor<{ value: CharacterFileType; label: string }[]> = createMemo(() => [
-    ...(props.char?.avatar ? [{ value: 'png' as const, label: 'PNG' }] : []),
-    { value: 'json' as const, label: 'JSON' },
-  ])
+  const fileTypeItems = createMemo(() => {
+    const opts = [{ value: 'json', label: 'JSON' }]
+    if (props.char?.avatar) {
+      opts.unshift({ value: 'png', label: 'PNG' })
+    }
+    return opts
+  })
 
   const [format, setFormat] = createSignal('tavern')
-  const [fileType, setFileType] = createSignal<CharacterFileType>(fileTypeItems()[0].value)
-  const [schema, setSchema] = createSignal(opts()[0].value)
+  const [fileType, setFileType] = createSignal<string>(props.char?.avatar ? 'png' : 'json')
+  const [schema, setSchema] = createSignal(props.char.persona.kind || opts()[0].value)
 
   return (
     <Modal
@@ -64,7 +67,7 @@ export const DownloadModal: Component<{
             fieldName="app"
             value={format()}
             items={[
-              { value: 'tavern', label: 'TavernAI' },
+              { value: 'tavern', label: 'Tavern' },
               // TODO: We don't need to support exporting in Agnaistic format
               // once we fully support Chara Card V2. We just need to put
               // Agnai-specific fields in the `extensions` prop.
@@ -88,7 +91,7 @@ export const DownloadModal: Component<{
             fieldName="format"
             items={opts()}
             value={schema()}
-            onChange={(item) => setSchema(item.value)}
+            onChange={(item) => setSchema(item.value as any)}
             disabled={format() === 'native'}
           />
         </div>
@@ -132,6 +135,7 @@ function downloadPng(charJson: string, charImgUrl: string, charName: string) {
   const imgElement = document.createElement('img')
   imgElement.setAttribute('crossorigin', 'anonymous')
   imgElement.src = charImgUrl
+
   imgElement.onload = () => {
     const imgDataUrl = imgToPngDataUrl(imgElement)
     const imgBase64Data = imgDataUrl.split(',')[1]

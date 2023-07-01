@@ -60,22 +60,26 @@ const HomePage: Component = () => {
           <TitleCard type="bg" title="Guides" class="" center>
             <div class="flex flex-wrap justify-center gap-2">
               <a>
-                <Pill onClick={() => setSub(Sub.OpenAI)}>OpenAI</Pill>
+                <Pill inverse onClick={() => setSub(Sub.OpenAI)}>
+                  OpenAI
+                </Pill>
               </a>
               <A
                 href="https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md"
                 target="_blank"
               >
-                <Pill>NovelAI</Pill>
+                <Pill inverse>NovelAI</Pill>
               </A>
               <a>
-                <Pill onClick={() => setSub(Sub.Horde)}>Horde</Pill>
+                <Pill inverse onClick={() => setSub(Sub.Horde)}>
+                  Horde
+                </Pill>
               </a>
               <A
                 href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
                 target="_blank"
               >
-                <Pill>Memory Book</Pill>
+                <Pill inverse>Memory Book</Pill>
               </A>
             </div>
           </TitleCard>
