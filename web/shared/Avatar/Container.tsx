@@ -5,6 +5,10 @@ import { getEmoteExpressions } from '/web/asset/sprite'
 import { calcBounds } from './hooks'
 
 const AvatarContainer: Component<{
+  /**
+   * We optionally pass in a character ID to retain a single cache entry for a character
+   * If no ID is provided, the sprite will be hashed by its sprite composition + colors
+   */
   container: HTMLElement
   expression?: EmoteType
   body?: FullSprite
@@ -30,7 +34,7 @@ const AvatarContainer: Component<{
   const body = createMemo(() => {
     if (!props.body) return null
 
-    const expr = getEmoteExpressions(props.expression || 'neutral')
+    const expr = getEmoteExpressions(props.body, props.expression || 'neutral')
     return {
       ...props.body,
       ...expr,

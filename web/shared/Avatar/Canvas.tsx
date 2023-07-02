@@ -7,12 +7,24 @@ import { getImageData } from '/web/store/data/chars'
 
 const BASE_URL = `https://agnai-assets.sgp1.digitaloceanspaces.com/sprites`
 const BLANK_IMG = `${BASE_URL}/blank.png`
+const CACHE_TTL_SECS = 60
 
 type ImageFilename = string
 const oneImageCache = new Map<ImageFilename, string>()
 
 type SpriteHash = string
-const spriteCache = new Map<SpriteHash, Promise<string>>()
+const spriteCache = new Map<SpriteHash, { image: Promise<string>; ttl: number }>()
+
+setInterval(() => {
+  const threshold = Date.now()
+  let cleared = 0
+  for (const [key, entry] of spriteCache.entries()) {
+    if (threshold < entry.ttl) continue
+    cleared++
+    spriteCache.delete(key)
+  }
+  if (cleared > 0) debug('Cleared', cleared)
+}, 500)
 
 const RECOLOR: { [key in SpriteAttr]?: boolean } = {
   eyes: true,
@@ -40,7 +52,7 @@ export const AvatarCanvasV2: Component<{
     const cached = spriteCache.get(id)
     if (cached) {
       debug('Cache hit', short)
-      img.src = await cached
+      img.src = await cached.image
       setHash(id)
       return
     }
@@ -57,7 +69,7 @@ export const AvatarCanvasV2: Component<{
       }
     })
 
-    spriteCache.set(id, eventualSprite)
+    spriteCache.set(id, { image: eventualSprite, ttl: Date.now() + CACHE_TTL_SECS * 1000 })
   }
 
   onMount(loadSprite)
