@@ -147,6 +147,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       visualType: char?.visualType || 'avatar',
       culture: char?.culture || defaultCulture,
     })
+    console.log('Setting sprite', state.sprite)
   }
 
   const load = (ref: any, char: NewCharacter | AppSchema.Character) => {

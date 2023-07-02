@@ -643,15 +643,17 @@ export const CreateCharacterForm: Component<{
           </div>
         </div>
       </form>
-      <SpriteModal
-        body={editor.state.sprite}
-        onChange={(body) => {
-          editor.update('sprite', body)
-          setShowBuilder(false)
-        }}
-        show={showBuilder()}
-        close={() => setShowBuilder(false)}
-      />
+      <Show when={showBuilder()}>
+        <SpriteModal
+          body={editor.state.sprite}
+          onChange={(body) => {
+            editor.update('sprite', body)
+            setShowBuilder(false)
+          }}
+          show={showBuilder()}
+          close={() => setShowBuilder(false)}
+        />
+      </Show>
       <ImageModal />
       <Show when={converted()}>
         <DownloadModal show close={() => setConverted(undefined)} char={converted()!} />
