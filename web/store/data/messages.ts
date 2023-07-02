@@ -11,6 +11,7 @@ import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
+import { pipelineApi } from './pipeline'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -36,6 +37,7 @@ export const msgsApi = {
   generateResponseV2,
   deleteMessages,
   basicInference,
+  createActiveChatPrompt,
 }
 
 type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
@@ -130,39 +132,13 @@ export async function generateResponseV2(opts: GenerateOpts) {
     return createMessage(active.chat._id, opts)
   }
 
-  const props = await getGenerateProps(opts, active).catch((err: Error) => err)
-  if (props instanceof Error) {
-    return localApi.error(props.message)
+  const activePrompt = await createActiveChatPrompt(opts).catch((err) => ({ err }))
+  if ('err' in activePrompt) {
+    return localApi.error(activePrompt.err.message || activePrompt.err)
   }
 
-  const entities = props.entities
+  const { prompt, props, entities } = activePrompt
 
-  const chat = {
-    ...entities.chat,
-    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios),
-  }
-
-  const encoder = await getEncoder()
-  const prompt = createPrompt(
-    {
-      kind: opts.kind,
-      char: entities.char,
-      chat,
-      user: entities.user,
-      members: entities.members.concat([entities.profile]),
-      continue: props?.continue,
-      book: entities.book,
-      retry: props?.retry,
-      settings: entities.settings,
-      messages: props.messages,
-      replyAs: props.replyAs,
-      characters: entities.characters,
-      impersonate: props.impersonate,
-      lastMessage: entities.lastMessage,
-      trimSentences: ui.trimSentences,
-    },
-    encoder
-  )
   if (ui?.logPromptsToBrowserConsole) {
     console.log(`=== Sending the following prompt: ===`)
     console.log(`${prompt.template}`)
@@ -194,8 +170,64 @@ export async function generateResponseV2(opts: GenerateOpts) {
     lastMessage: entities.lastMessage,
   }
 
+  const lastMsg = props.messages.slice(-1)[0]
+  const text = request.text || lastMsg?.msg
+  const created = request.text ? new Date().toISOString() : lastMsg?.createdAt
+
+  /**
+   * TESTING
+   * This will only be invoked
+   */
+  if (text) {
+    await pipelineApi.memoryRecall(entities.chat._id, text, created!)
+  }
+
   const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)
   return res
+}
+
+async function createActiveChatPrompt(
+  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>,
+  maxContext?: number
+) {
+  const { active } = chatStore()
+  const { ui } = userStore()
+
+  if (!active) {
+    throw new Error('No active chat. Try refreshing')
+  }
+
+  const props = await getGenerateProps(opts, active)
+  const entities = props.entities
+
+  const chat = {
+    ...entities.chat,
+    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios),
+  }
+
+  const encoder = await getEncoder()
+  const prompt = createPrompt(
+    {
+      kind: opts.kind,
+      char: entities.char,
+      chat,
+      user: entities.user,
+      members: entities.members.concat([entities.profile]),
+      continue: props?.continue,
+      book: entities.book,
+      retry: props?.retry,
+      settings: entities.settings,
+      messages: props.messages,
+      replyAs: props.replyAs,
+      characters: entities.characters,
+      impersonate: props.impersonate,
+      lastMessage: entities.lastMessage,
+      trimSentences: ui.trimSentences,
+    },
+    encoder,
+    maxContext
+  )
+  return { prompt, props, entities }
 }
 
 type GenerateProps = {

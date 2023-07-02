@@ -120,6 +120,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
       novelApiKey: 'string?',
       novelModel: 'string?',
       koboldUrl: 'string?',
+      useLocalPipeline: 'boolean?',
       thirdPartyFormat: 'string?',
       thirdPartyPassword: 'string?',
       hordeUseTrusted: 'boolean?',
@@ -153,6 +154,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
     hordeWorkers: body.hordeWorkers,
     hordeUseTrusted: body.hordeUseTrusted ?? false,
     defaultPreset: body.defaultPreset || '',
+    useLocalPipeline: body.useLocalPipeline,
   }
 
   if (body.hordeKey || body.hordeApiKey) {

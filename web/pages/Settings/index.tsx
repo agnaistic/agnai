@@ -203,6 +203,7 @@ const settingsForm = {
   claudeApiKey: 'string?',
   logPromptsToBrowserConsole: 'boolean?',
 
+  useLocalPipeline: 'boolean?',
   summariseChat: 'boolean?',
   summaryPrompt: 'string?',
   imageType: ['horde', 'sd', 'novel'],

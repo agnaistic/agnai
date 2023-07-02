@@ -7,4 +7,5 @@ export const defaultFlags = {
   slots: true,
   parser: false,
   events: false,
+  pipeline: false,
 } satisfies { [key: string]: boolean }
