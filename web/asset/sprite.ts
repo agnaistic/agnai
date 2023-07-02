@@ -47,11 +47,16 @@ export function randomExpression(attr: SpriteAttr) {
   return manifest.attributes[attr][idx]
 }
 
-export function getEmoteExpressions(emote: EmoteType): Partial<SpriteBody> {
+export function getEmoteExpressions(main: FullSprite, emote: EmoteType): Partial<SpriteBody> {
   const body: Partial<SpriteBody> = {}
   const keys = Object.entries(emotions[emote]) as any as Array<[SpriteAttr, string]>
 
   for (const [attr, subtype] of keys) {
+    if (emote === 'neutral') {
+      body[attr] = main[attr]
+      continue
+    }
+
     const alltypes = manifest.attributes[attr]
     const matches = alltypes.filter((t) => t.startsWith(subtype))
 
@@ -79,7 +84,7 @@ export function getRandomBody(retain: Partial<FullSprite> = {}) {
 
   return {
     ...body,
-    ...getEmoteExpressions('neutral'),
+    ...getEmoteExpressions(body, 'neutral'),
     ...retain,
   }
 }

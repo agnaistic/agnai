@@ -42,9 +42,9 @@ export default router
 export async function getAppConfig() {
   const canAuth = isConnected()
 
-  if (appConfig.version === null) {
+  if (appConfig.version === '') {
     const content = await readFile(resolve(process.cwd(), 'version.txt')).catch(() => 'unknown')
-    appConfig.version = content.toString().trim().slice(0, 11)
+    appConfig.version = content.toString().trim().slice(0, 11) || 'self-hosted'
   }
 
   return { ...appConfig, canAuth }

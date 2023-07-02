@@ -236,3 +236,31 @@ async function poll(url: string, key: string | undefined, interval = 6.5) {
 function wait(secs: number) {
   return new Promise((resolve) => setTimeout(resolve, secs * 1000))
 }
+
+export type FindUserResponse = {
+  kudos_details: {
+    accumulated: number
+    gifted: number
+    admin: number
+    received: number
+    recurring: number
+  }
+  usage: {
+    tokens: number
+    requests: number
+  }
+  contributions: {
+    tokens: number
+    fulfillments: number
+  }
+  username: string
+  id: number
+  kudos: number
+  concurrency: number
+  worker_invited: number
+  moderator: boolean
+  worker_count: number
+  worker_ids: string[]
+  trusted: number
+  pseudonymous: number
+}

@@ -25,14 +25,22 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getEncoder } from '../tokenize'
 import { handleGooseAI } from './goose'
 import { handleReplicate } from './replicate'
+import { getAppConfig } from '../api/settings'
+
+let version = ''
 
 configure(async (opts) => {
+  if (!version) {
+    const appConfig = await getAppConfig()
+    version = appConfig.version
+  }
+
   const res = await needle(opts.method, opts.url, opts.payload, {
     json: true,
     headers: {
       'Content-Type': 'application/json',
       apikey: opts.key || HORDE_GUEST_KEY,
-      'User-Agent': 'Agnaistic',
+      'Client-Agent': `Agnaistic:${version}:`,
     },
   })
 
