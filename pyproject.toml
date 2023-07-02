@@ -18,8 +18,10 @@ accelerate = "^0.20.3"
 flask-cors = "^3.0.10"
 chromadb = "^0.3.26"
 sentence-transformers = "^2.2.2"
+uvicorn = "^0.22.0"
 
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
