@@ -415,8 +415,11 @@ export default Message
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
 function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): SplitMessage[] {
-  const charName = ctx.char?.name || 'Unknown'
-  const CHARS = [`${charName}:`, `{{char}}:`]
+  const charName =
+    (incoming.characterId ? ctx.botMap[incoming.characterId]?.name : ctx.char?.name) || ''
+
+  const CHARS = [`{{char}}:`]
+  if (charName) CHARS.push(`${charName}:`)
 
   const USERS = [`${ctx.handle}:`, `{{user}}:`]
 
@@ -462,7 +465,6 @@ function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): Split
     }
 
     if (!next.length && !newMsg) return [msg]
-
     if (!newMsg) {
       const lastMsg = next.slice(-1)[0]
       lastMsg.msg += ` ${trim}`
