@@ -60,6 +60,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     stop_sequences: Array.from(stops),
     top_p: Math.min(1, Math.max(0, gen.topP ?? defaultPresets.claude.topP)),
     top_k: Math.min(1, Math.max(0, gen.topK ?? defaultPresets.claude.topK)),
+    stream: (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.claude.streamResponse,
   }
 
   const headers: any = {
@@ -81,9 +82,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   log.debug(requestBody, 'Claude payload')
 
-  const streamResponse =
-    (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.claude.streamResponse
-  const iterator = streamResponse
+  const iterator = requestBody.stream
     ? streamCompletion(base.url, requestBody, headers, opts.user._id, log)
     : requestFullCompletion(base.url, requestBody, headers, opts.user._id, log)
   let acc = ''
@@ -98,12 +97,14 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     }
 
     if ('error' in generated.value) {
+      log.error({ err: generated.value.error }, 'yielded error')
       yield generated.value
       return
     }
 
     if ('token' in generated.value) {
       acc += generated.value.token
+      log.debug({ token: generated.value.token }, 'yielded token')
       yield {
         partial: sanitiseAndTrim(acc, requestBody.prompt, opts.replyAs, opts.characters, members),
       }
@@ -137,7 +138,7 @@ const requestFullCompletion: CompletionGenerator = async function* (
   url,
   body,
   headers,
-  userId,
+  _userId,
   log
 ) {
   const resp = await needle('post', url, JSON.stringify(body), {
@@ -182,22 +183,16 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 
     // https://docs.anthropic.com/claude/reference/streaming
     for await (const event of events) {
-      if (!event.startsWith('event:')) {
-        continue
-      }
-
-      const eventType = event.slice('event:'.length).trim()
-      const eventData = event.split('\n').pop()?.slice('data:'.length).trim() ?? '{}'
-      switch (eventType) {
+      switch (event.type) {
         case 'completion':
-          const delta: Partial<ClaudeCompletion> = JSON.parse(eventData)
+          const delta: Partial<ClaudeCompletion> = JSON.parse(event.data)
           const token = delta.completion || ''
           meta = { ...meta, ...delta }
           tokens.push(token)
           yield { token }
           break
         case 'error':
-          const parsedError = JSON.parse(eventData)
+          const parsedError = JSON.parse(event.data)
           log.warn({ error: parsedError }, '[Claude] Received SSE error event')
           const message = parsedError?.error?.message
             ? `Anthropic interrupted the response: ${parsedError.error.message}`
@@ -223,7 +218,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
     return
   }
 
-  return { completion: tokens.join(''), ...meta }
+  return { ...meta, completion: tokens.join('') }
 }
 
 function createClaudePrompt(opts: AdapterProps): string {
