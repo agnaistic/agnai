@@ -65,11 +65,11 @@ const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
-  if (opts.user?.useLocalPipeline && pipelineApi.isAvailable()) {
+  if (opts.user?.useLocalPipeline && pipelineApi.isAvailable().summary) {
     const { prompt } = await msgsApi.createActiveChatPrompt({ kind: 'summary' }, 1024)
-    console.log('Use local summarization')
+    console.log('Using local summarization')
     const res = await pipelineApi.summarize(prompt.template)
-    if (res.result) return res.result.summary
+    if (res?.result) return res.result.summary
   }
 
   const handler = opts.settings?.service

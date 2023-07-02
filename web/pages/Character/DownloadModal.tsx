@@ -166,7 +166,6 @@ async function downloadImage(json: string, image: string, name: string) {
 async function imageToDataURL(image: string, mimetype?: string) {
   const { ext } = getExt(image)
 
-  console.log(ext)
   const base64 = await getImageBase64(image)
   if (ext === 'png' || ext === 'apng') {
     return base64

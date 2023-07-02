@@ -11,6 +11,7 @@ import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
+import { pipelineApi } from './pipeline'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -131,9 +132,9 @@ export async function generateResponseV2(opts: GenerateOpts) {
     return createMessage(active.chat._id, opts)
   }
 
-  const activePrompt = await createActiveChatPrompt(opts).catch((err) => err)
-  if (activePrompt instanceof Error) {
-    return localApi.error(activePrompt.message)
+  const activePrompt = await createActiveChatPrompt(opts).catch((err) => ({ err }))
+  if ('err' in activePrompt) {
+    return localApi.error(activePrompt.err.message || activePrompt.err)
   }
 
   const { prompt, props, entities } = activePrompt
@@ -167,6 +168,18 @@ export async function generateResponseV2(opts: GenerateOpts) {
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
     lastMessage: entities.lastMessage,
+  }
+
+  const lastMsg = props.messages.slice(-1)[0]
+  const text = request.text || lastMsg?.msg
+  const created = request.text ? new Date().toISOString() : lastMsg?.createdAt
+
+  /**
+   * TESTING
+   * This will only be invoked
+   */
+  if (text) {
+    await pipelineApi.memoryRecall(entities.chat._id, text, created!)
   }
 
   const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)

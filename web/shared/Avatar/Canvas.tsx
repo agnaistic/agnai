@@ -40,6 +40,8 @@ export const AvatarCanvasV2: Component<{
   class?: string
   zoom?: number
 }> = (props) => {
+  const [show, setShow] = createSignal(false)
+
   let img: HTMLImageElement
   const [hash, setHash] = createSignal<string>()
 
@@ -54,6 +56,7 @@ export const AvatarCanvasV2: Component<{
       debug('Cache hit', short)
       img.src = await cached.image
       setHash(id)
+      setShow(true)
       return
     }
 
@@ -66,6 +69,8 @@ export const AvatarCanvasV2: Component<{
         resolve(full)
       } catch (ex) {
         resolve('')
+      } finally {
+        setShow(true)
       }
     })
 
@@ -78,7 +83,7 @@ export const AvatarCanvasV2: Component<{
 
   return (
     <>
-      <img ref={img!} style={props.style} />
+      <img ref={img!} style={props.style} class={`border-0 ${show() ? '' : 'invisible'}`} />
     </>
   )
 }
@@ -215,7 +220,7 @@ const CanvasPart: Component<CanvasProps> = (props) => {
         <For each={baseImages()}>
           {(src) => (
             <img
-              class="absolute left-0 right-0 top-0 mx-auto"
+              class="absolute left-0 right-0 top-0 mx-auto border-0"
               src={src}
               style={{ ...props.style, transform: `scale(${props.zoom || 1})` }}
               onError={(ev) => {

@@ -26,9 +26,35 @@ if args.all or args.memory:
     trx = SentenceTransformer("all-MiniLM-L6-v2")
     embed = lambda *args, **kwargs: trx.encode(*args, **kwargs).tolist()
 
+    @app.post("/memory/<chat_id>/reembed")
+    def memoryReembed(chat_id):
+        payload = request.get_json(silent=True)
+        messages = payload.get("messages", False) or None
+
+        if messages is None:
+            return {"success": False, "error": ".messages missing in payload"}
+
+        documents = [msg["msg"] for msg in messages]
+        ids = [msg["_id"] for msg in messages]
+        metadatas = [
+            {"name": msg["name"], "date": msg["createdAt"]} for msg in messages
+        ]
+
+        try:
+            client.delete_collection(chat_id)
+        except:
+            pass
+
+        collection = client.get_or_create_collection(
+            name=chat_id, embedding_function=embed
+        )
+        collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+
+        return {"success": True}
+
     @app.post("/memory/<chat_id>/embed")
     def memoryEmbed(chat_id):
-        payload = request.get_json(Silent=True)
+        payload = request.get_json(silent=True)
         messages = payload.get("messages", False) or None
 
         if messages is None:
@@ -49,7 +75,7 @@ if args.all or args.memory:
 
     @app.post("/memory/<chat_id>")
     def memoryRecall(chat_id):
-        payload = request.get_json(Silent=True)
+        payload = request.get_json(silent=True)
         collection = client.get_or_create_collection(
             name=chat_id, embedding_function=embed
         )
@@ -61,7 +87,7 @@ if args.all or args.memory:
 
         print(memories)
 
-        return {"success": False}
+        return {"memories": memories}
 
     print("ChromaDB ready")
     enabled = True
