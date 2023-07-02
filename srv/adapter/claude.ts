@@ -97,14 +97,12 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     }
 
     if ('error' in generated.value) {
-      log.error({ err: generated.value.error }, 'yielded error')
       yield generated.value
       return
     }
 
     if ('token' in generated.value) {
       acc += generated.value.token
-      log.debug({ token: generated.value.token }, 'yielded token')
       yield {
         partial: sanitiseAndTrim(acc, requestBody.prompt, opts.replyAs, opts.characters, members),
       }
