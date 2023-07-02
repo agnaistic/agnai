@@ -239,16 +239,15 @@ const streamCompletion: CompletionGenerator = async function* (userId, url, head
   try {
     const events = needleToSSE(resp)
     for await (const event of events) {
-      // According to OpenAI's docs their SSE stream only uses `data` events.
-      if (!event.startsWith('data: ')) {
+      if (!event.data) {
         continue
       }
 
-      if (event === 'data: [DONE]') {
+      if (event.data === '[DONE]') {
         break
       }
 
-      const parsed: Completion<AsyncDelta> = JSON.parse(event.slice('data: '.length))
+      const parsed: Completion<AsyncDelta> = JSON.parse(event.data)
       const { choices, ...evt } = parsed
       if (!choices || !choices[0]) {
         log.warn({ sse: event }, `[OpenAI] Received invalid SSE during stream`)
