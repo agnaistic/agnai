@@ -664,6 +664,7 @@ function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {
       messagesSinceLastEvent++
     }
   }
+
   eventStore.onCharacterMessageReceived(chatStore.getState().active?.chat!, messagesSinceLastEvent)
 }
 

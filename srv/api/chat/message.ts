@@ -430,15 +430,6 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     event: undefined,
   })
 
-  sendGuest(guest, {
-    type: 'guest-message-created',
-    msg: response,
-    chatId,
-    adapter,
-    continue: body.kind === 'continue',
-    generate: true,
-  })
-
   switch (body.kind) {
     case 'summary':
       sendGuest(guest, { type: 'chat-summary', chatId, summary: generated })
