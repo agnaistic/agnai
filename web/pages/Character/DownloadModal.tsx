@@ -9,7 +9,7 @@ import text from 'png-chunk-text'
 import extract from 'png-chunks-extract'
 import encode from 'png-chunks-encode'
 import { exportCharacter } from '/common/characters'
-import { ALLOWED_TYPES } from '/web/store/data/chars'
+import { ALLOWED_TYPES, getImageData } from '/web/store/data/chars'
 
 type CharacterFileType = 'png' | 'json'
 
@@ -137,42 +137,50 @@ export const DownloadModal: Component<{
  * @param image Base64 or URL
  * @param name Character name
  */
-function downloadImage(json: string, image: string, name: string) {
-  // Create a new image element
-  const imgElement = document.createElement('img')
-  imgElement.setAttribute('crossorigin', 'anonymous')
-
-  const ext = getExt(image)
+async function downloadImage(json: string, image: string, name: string) {
+  const { ext } = getExt(image)
   const mimetype = ALLOWED_TYPES.get(ext)!
 
-  imgElement.src = image
+  /**
+   * Only PNG and APNG files can contain embedded character information
+   * If the avatar image is not either of these formats, we must convert it
+   */
 
-  imgElement.onload = () => {
-    const url = imageToDataURL(imgElement, mimetype)
-    const [, base64] = url.split(',')
-    const imgBuffer = Buffer.from(window.atob(base64), 'binary')
-    const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
-    const output = Buffer.from(json, 'utf8').toString('base64')
-    const lastChunkIndex = chunks.length - 1
-    const chunksToExport = [
-      ...chunks.slice(0, lastChunkIndex),
-      text.encode('chara', output),
-      chunks[lastChunkIndex],
-    ]
-    const downloadLink = document.createElement('a')
-    downloadLink.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-    downloadLink.download = `${name}.card.${ext}`
-    downloadLink.click()
-    URL.revokeObjectURL(downloadLink.href)
-  }
+  const base64 = await imageToDataURL(image, mimetype).then((res) => res.split(',')[1])
+  const imgBuffer = Buffer.from(window.atob(base64), 'binary')
+  const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
+  const output = Buffer.from(json, 'utf8').toString('base64')
+  const lastChunkIndex = chunks.length - 1
+  const chunksToExport = [
+    ...chunks.slice(0, lastChunkIndex),
+    text.encode('chara', output),
+    chunks[lastChunkIndex],
+  ]
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
+  anchor.download = `${name}.card.${ext}`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
 }
 
-function imageToDataURL(imgElement: HTMLImageElement, mimetype?: string) {
+async function imageToDataURL(image: string, mimetype?: string) {
+  const { ext } = getExt(image)
+
+  console.log(ext)
+  const base64 = await getImageBase64(image)
+  if (ext === 'png' || ext === 'apng') {
+    return base64
+  }
+
+  const element = document.createElement('img')
+  element.setAttribute('crossorigin', 'anonymous')
+  element.src = base64
+
   const canvas = document.createElement('canvas')
-  canvas.width = imgElement.naturalWidth
-  canvas.height = imgElement.naturalHeight
+  canvas.width = element.naturalWidth
+  canvas.height = element.naturalHeight
   const ctx = canvas.getContext('2d')
-  ctx?.drawImage(imgElement, 0, 0)
+  ctx?.drawImage(element, 0, 0)
   const dataUrl = canvas.toDataURL(mimetype || 'image/png')
   return dataUrl
 }
@@ -191,14 +199,25 @@ function charToJson(char: AppSchema.Character, format: string, schema: string) {
   return JSON.stringify(content, null, 2)
 }
 
-function getExt(url: string) {
+function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
   if (url.startsWith('data:')) {
     const [header] = url.split(',')
     const ext = header.slice(11, -7)
-    return ALLOWED_TYPES.has(ext) ? ext : 'png'
+    return ALLOWED_TYPES.has(ext) ? { type: 'base64', ext } : { type: 'base64', ext: 'unknown' }
   }
 
   const ext = url.split('.').slice(-1)[0]
-  if (ALLOWED_TYPES.has(ext)) return ext
-  return 'png'
+  if (ALLOWED_TYPES.has(ext)) return { type: 'url', ext }
+  return { type: 'url', ext: 'unknown' }
+}
+
+async function getImageBase64(image: string) {
+  if (image.startsWith('data:')) return image
+
+  if (!image.startsWith('http')) {
+    image = getAssetUrl(image)
+  }
+
+  const base64 = await getImageData(image)
+  return base64!
 }
