@@ -128,7 +128,7 @@ const ALL_HOLDERS = new RegExp(
  * @param opts
  * @returns
  */
-export function createPrompt(opts: PromptOpts, encoder: Encoder) {
+export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: number) {
   if (opts.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -157,7 +157,7 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder) {
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
-  const lines = getLinesForPrompt(opts, encoder)
+  const lines = getLinesForPrompt(opts, encoder, maxContext)
   const parts = getPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
   const prompt = injectPlaceholders(template, {
@@ -552,10 +552,11 @@ function removeEmpty(value?: string) {
  */
 function getLinesForPrompt(
   { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
-  encoder: Encoder
+  encoder: Encoder,
+  maxContext?: number
 ) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
-  const maxContext = getContextLimit(settings, adapter, model)
+  maxContext = maxContext || getContextLimit(settings, adapter, model)
 
   const profiles = new Map<string, AppSchema.Profile>()
   for (const member of members) {

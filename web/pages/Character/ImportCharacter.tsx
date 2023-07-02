@@ -1,11 +1,11 @@
 import { Import, X } from 'lucide-solid'
 import { Component, For, Show, createSignal, onMount } from 'solid-js'
-import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import { characterStore, NewCharacter, toastStore } from '../../store'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import { SUPPORTED_FORMATS, downloadCharacterHub, importCharacterFile } from './port'
+import Button from '/web/shared/Button'
 
 const MAX_SHOWN_IMPORTS = 3
 
