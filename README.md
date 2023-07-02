@@ -23,7 +23,7 @@ Agnaistic is bundled as an NPM package and can be installed globally:
 # View launch options:
 > agnai help
 
-# Run with the pipeline features
+# Run with the pipeline features (Coming soon!)
 > agnai --pipeline
 
 ```
@@ -33,7 +33,7 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
 
 ## Features
 
-- **Group Conversations**: One or more users with one or more characters
+- **Group Conversations**: Multiple users with multiple bots
 - **Multiple AI services**: Support for Kobold, Novel, AI Horde, LuminAI, OpenAI, Claude
 - Multiple persona schema formats: W++, Square bracket format (SBF), Boostyle, Plain text
 - Multi-tenancy:
@@ -41,7 +41,7 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
   - User settings: Which AI service to use and their own settings
   - User generation settings
 - Chat specific overrides: AI Service, Character, Generation Settings
-- **Optional pipeline features**
+- **Optional pipeline features (Coming soon!)**
   - Text summarization for images
   - TODO: Long-term memory, image captioning, text-to-speech, ...
 

@@ -13,16 +13,20 @@ const pkg = require('../package.json')
 const options: string[] = []
 
 const disableJson = flag(
-  `Disable JSON storage mode. Browser local storage won't be used. Instead, JSON files will be managed by the server.`,
+  `Disable JSON storage mode. Browser local storage will be used. Not recommended for private use.`,
   'j',
   'json'
 )
 
 const debug = flag(`Enable debug logging. This will print payloads sent to the AI`, 'd', 'debug')
 const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'port')
-const summarizer = flag(`Run the summarizer pipeline feature`, 's', 'summary')
-const memory = flag(`Run the long-term memory pipeline feature`, 'm', 'memory')
-const pipeline = flag('Enable all pipeline features', 'pipeline')
+
+/**
+ * These are disabled until they are ready for release
+ */
+const summarizer = false ?? flag(`Run the summarizer pipeline feature`, 's', 'summary')
+const memory = false ?? flag(`Run the long-term memory pipeline feature`, 'm', 'memory')
+const pipeline = false ?? flag('Enable all pipeline features', 'pipeline')
 
 if (argv.help || argv.h) {
   help()
@@ -67,8 +71,8 @@ if (assets) {
 if (!disableJson) {
   process.env.JSON_STORAGE = '1'
   process.env.SAVE_IMAGES = '1'
-  process.env.IMAGE_SIZE_LIMIT = '10'
-  process.env.JSON_SIZE_LIMIT = '10'
+  process.env.IMAGE_SIZE_LIMIT = '100'
+  process.env.JSON_SIZE_LIMIT = '100'
 }
 
 if (port) {
