@@ -104,8 +104,8 @@ export async function createTextStreamV2(
    * Everything else should be update to date at this point
    */
   if (!guestSocketId) {
-    const entities = await getResponseEntities(opts.chat, opts.sender.userId)
-    const { adapter, model } = getAdapter(opts.chat, entities.user, entities.settings)
+    const entities = await getResponseEntities(opts.chat, opts.sender.userId, opts.settings)
+    const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
     const encoder = getEncoder(adapter, model)
     opts.parts = getPromptParts(
       {
@@ -169,7 +169,11 @@ export async function createTextStreamV2(
   return { stream, adapter }
 }
 
-export async function getResponseEntities(chat: AppSchema.Chat, senderId: string) {
+export async function getResponseEntities(
+  chat: AppSchema.Chat,
+  senderId: string,
+  gen: Partial<AppSchema.GenSettings> | undefined
+) {
   const isOwnerOrMember = senderId === chat.userId || chat.memberIds.includes(senderId)
   if (!isOwnerOrMember) {
     throw errors.Forbidden
@@ -187,11 +191,11 @@ export async function getResponseEntities(chat: AppSchema.Chat, senderId: string
     throw new StatusError('Character not found', 404)
   }
 
-  const { adapter, model } = getAdapter(chat, user)
-  const gen = await getGenerationSettings(user, chat, adapter)
-  const settings = mapPresetsToAdapter(gen, adapter)
+  const { adapter, model } = getAdapter(chat, user, gen)
+  const genSettings = await getGenerationSettings(user, chat, adapter)
+  const settings = mapPresetsToAdapter(genSettings, adapter)
 
-  return { char, user, adapter, settings, gen, model, book }
+  return { char, user, adapter, settings, gen: genSettings, model, book }
 }
 
 async function getGenerationSettings(

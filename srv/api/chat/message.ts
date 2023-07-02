@@ -19,7 +19,18 @@ const sendValidator = {
 } as const
 
 const genValidator = {
-  kind: ['send', 'ooc', 'retry', 'continue', 'self', 'summary', 'request'],
+  kind: [
+    'send',
+    'send-event:world',
+    'send-event:character',
+    'send-event:hidden',
+    'ooc',
+    'retry',
+    'continue',
+    'self',
+    'summary',
+    'request',
+  ],
   char: 'any',
   sender: 'any',
   members: ['any'],
@@ -68,6 +79,7 @@ export const createMessage = handle(async (req) => {
       userId: impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc',
+      event: undefined,
     })
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   } else {
@@ -83,6 +95,7 @@ export const createMessage = handle(async (req) => {
       characterId: impersonate?._id,
       senderId: userId,
       ooc: body.kind === 'ooc',
+      event: undefined,
     })
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
@@ -134,17 +147,29 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   // For authenticated users we will verify parts of the payload
+  let userMsg: AppSchema.ChatMessage | undefined
   if (body.kind === 'send' || body.kind === 'ooc') {
     await ensureBotMembership(chat, members, impersonate)
 
-    const userMsg = await store.msgs.createChatMessage({
+    userMsg = await store.msgs.createChatMessage({
       chatId,
       message: body.text!,
       characterId: impersonate?._id,
       senderId: userId,
       ooc: body.kind === 'ooc',
+      event: undefined,
     })
 
+    sendMany(members, { type: 'message-created', msg: userMsg, chatId })
+  } else if (body.kind.startsWith('send-event:')) {
+    userMsg = await store.msgs.createChatMessage({
+      chatId,
+      message: body.text!,
+      characterId: replyAs?._id,
+      senderId: undefined,
+      ooc: false,
+      event: body.kind.split(':')[1] as AppSchema.EventTypes,
+    })
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   }
 
@@ -233,6 +258,9 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     case 'self':
     case 'request':
+    case 'send-event:world':
+    case 'send-event:character':
+    case 'send-event:hidden':
     case 'send': {
       const msg = await store.msgs.createChatMessage({
         chatId,
@@ -243,6 +271,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         ooc: false,
         actions: actioned.actions,
         meta,
+        event: undefined,
       })
       sendMany(members, {
         type: 'message-created',
@@ -284,6 +313,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           actions: actioned.actions,
           ooc: false,
           meta,
+          event: undefined,
         })
         sendMany(members, {
           type: 'message-created',
@@ -329,11 +359,22 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const replyAs: AppSchema.Character = body.replyAs || body.char
 
   // For authenticated users we will verify parts of the payload
+  let newMsg: AppSchema.ChatMessage | undefined
   if (body.kind === 'send' || body.kind === 'ooc') {
-    const newMsg = newMessage(chatId, body.text!, {
+    newMsg = newMessage(chatId, body.text!, {
       userId: 'anon',
       ooc: body.kind === 'ooc',
+      event: undefined,
     })
+  } else if (body.kind.startsWith('send-event:')) {
+    newMsg = newMessage(chatId, body.text!, {
+      characterId: replyAs?._id,
+      ooc: false,
+      event: body.kind.split(':')[1] as AppSchema.EventTypes,
+    })
+  }
+
+  if (newMsg) {
     sendGuest(guest, { type: 'message-created', msg: newMsg, chatId })
   }
 
@@ -386,6 +427,16 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     userId: senderId,
     ooc: false,
     meta,
+    event: undefined,
+  })
+
+  sendGuest(guest, {
+    type: 'guest-message-created',
+    msg: response,
+    chatId,
+    adapter,
+    continue: body.kind === 'continue',
+    generate: true,
   })
 
   switch (body.kind) {
@@ -414,7 +465,13 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 function newMessage(
   chatId: string,
   text: string,
-  props: { userId?: string; characterId?: string; ooc: boolean; meta?: any }
+  props: {
+    userId?: string
+    characterId?: string
+    ooc: boolean
+    meta?: any
+    event: undefined | AppSchema.EventTypes
+  }
 ) {
   const userMsg: AppSchema.ChatMessage = {
     _id: v4(),

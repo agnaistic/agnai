@@ -6,12 +6,14 @@ import { chatStore } from './chat'
 import { AppSchema } from '/common/types'
 import { getSettingColor, userStore } from './user'
 import { hexToRgb } from '../shared/util'
+import { getActiveBots } from '../pages/Chat/util'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
   anonymize: boolean
   botMap: Record<string, AppSchema.Character>
   chatBots: AppSchema.Character[]
+  activeBots: AppSchema.Character[]
   handle: string
   impersonate?: AppSchema.Character
   profile?: AppSchema.Profile
@@ -36,6 +38,7 @@ const initial: ContextState = {
     bot: {},
     ooc: {},
   },
+  activeBots: [],
 }
 
 const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
@@ -75,6 +78,7 @@ export function ContextProvider(props: { children: any }) {
       profile: users.profile,
       handle: chars.impersonating?.name || users.profile?.handle || 'You',
       trimSentences: users.ui.trimSentences ?? false,
+      activeBots: chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : [],
     }
 
     setState(next)

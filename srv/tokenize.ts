@@ -15,6 +15,9 @@ nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
 const nerdstashV2 = new sp.SentencePieceProcessor()
 nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
 
+const llamaModel = new sp.SentencePieceProcessor()
+llamaModel.load(resolve(__dirname, './sp-models/llama.model'))
+
 let claudeEncoder: Tokenizer
 const davinciEncoder = encoding_for_model('text-davinci-003')
 const turboEncoder = encoding_for_model('gpt-3.5-turbo')
@@ -37,6 +40,12 @@ const novelClio: Encoder = function clio(value: string) {
   return tokens.length + 4
 }
 
+const llama: Encoder = function llama(value: string) {
+  const cleaned = sp.cleanText(value)
+  const tokens = llamaModel.encodeIds(cleaned)
+  return tokens.length + 4
+}
+
 let claude: Encoder
 let davinci: Encoder
 let turbo: Encoder
@@ -49,6 +58,11 @@ const TURBO_MODELS = new Set<string>([
 ])
 
 export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
+  if (adapter === 'replicate') {
+    if (!model || model === 'llama') return llama
+    return main
+  }
+
   if (adapter === 'claude') return claude ?? main
 
   if (adapter !== 'openai' && adapter !== 'novel') return main

@@ -3,7 +3,6 @@ import {
   Activity,
   Book,
   Bot,
-  Github,
   HeartHandshake,
   HelpCircle,
   LogIn,
@@ -15,6 +14,7 @@ import {
   ShoppingBag,
   Sliders,
   Sun,
+  Sword,
   User,
   VenetianMask,
   X,
@@ -179,6 +179,12 @@ const UserNavigation: Component = () => {
         <Book /> Memory
       </Item>
 
+      <Show when={menu.flags.events}>
+        <Item href="/scenario">
+          <Sword /> Scenario
+        </Item>
+      </Show>
+
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
       </Item>
@@ -187,20 +193,23 @@ const UserNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
 
-      <div class="flex flex-wrap justify-center gap-1">
+      <div class="flex flex-wrap justify-center gap-1 text-sm">
         <Item href="/faq">
           <HelpCircle />
         </Item>
+
         <Show when={menu.config.patreon}>
           <ExternalLink href="https://patreon.com/Agnaistic" newtab>
             <HeartHandshake />
           </ExternalLink>
         </Show>
+
         <Show when={user.user?.admin}>
           <Item href="/admin/metrics">
             <Activity />
           </Item>
         </Show>
+
         <Item href="/settings">
           <Settings />
         </Item>
@@ -222,6 +231,7 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
+  const user = userStore()
   const menu = settingStore((s) => ({
     showMenu: s.showMenu,
     config: s.config,
@@ -261,29 +271,42 @@ const GuestNavigation: Component = () => {
           <Book /> Memory
         </Item>
 
+        <Show when={menu.flags.events}>
+          <Item href="/scenario">
+            <Sword /> Scenario
+          </Item>
+        </Show>
+
         <Item href="/presets">
           <Sliders /> Presets
         </Item>
+      </Show>
 
+      <div class="flex flex-wrap justify-center gap-1 text-sm">
         <Item href="/faq">
-          <HelpCircle /> FAQ
+          <HelpCircle />
         </Item>
+
+        <Show when={menu.config.patreon}>
+          <ExternalLink href="https://patreon.com/Agnaistic" newtab>
+            <HeartHandshake />
+          </ExternalLink>
+        </Show>
 
         <Item href="/settings">
-          <Settings /> Settings
+          <Settings />
         </Item>
-      </Show>
 
-      <Show when={menu.config.patreon}>
-        <ExternalLink href="https://patreon.com/Agnaistic" newtab>
-          <HeartHandshake /> Patreon
-        </ExternalLink>
-      </Show>
-
-      <ExternalLink href="https://github.com/agnaistic/agnai" newtab>
-        <Github />
-        GitHub
-      </ExternalLink>
+        <Item
+          onClick={() => {
+            userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
+          }}
+        >
+          <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
+            <Moon />
+          </Show>
+        </Item>
+      </div>
 
       <Slots />
     </>

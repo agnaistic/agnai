@@ -9,6 +9,7 @@ import {
   Terminal,
   Trash,
   X,
+  Zap,
 } from 'lucide-solid'
 import {
   Accessor,
@@ -49,6 +50,7 @@ type MessageProps = {
   sendMessage: (msg: string, ooc: boolean) => void
   isPaneOpen: boolean
   avatars?: Record<string, JSX.Element>
+  showHiddenEvents?: boolean
 }
 
 const Message: Component<MessageProps> = (props) => {
@@ -74,6 +76,7 @@ const Message: Component<MessageProps> = (props) => {
             sendMessage={props.sendMessage}
             isPaneOpen={props.isPaneOpen}
             avatars={props.avatars}
+            showHiddenEvents={props.showHiddenEvents}
           >
             {props.children}
           </SingleMessage>
@@ -118,12 +121,15 @@ const SingleMessage: Component<
   )
 
   const msgText = createMemo(() => {
+    let msg = props.msg.msg
     if (props.last && props.swipe) return props.swipe
-    if (!ctx.anonymize) {
-      return props.msg.msg
+    if (ctx.anonymize) {
+      msg = state.chatProfiles.reduce(anonymizeText, msg).replace(SELF_REPLACE, 'User #1')
     }
-
-    return state.chatProfiles.reduce(anonymizeText, props.msg.msg).replace(SELF_REPLACE, 'User #1')
+    if (props.msg.event && !props.showHiddenEvents) {
+      msg = msg.replace(/\(OOC:.+\)/, '')
+    }
+    return msg
   })
 
   const saveEdit = () => {
@@ -178,6 +184,14 @@ const SingleMessage: Component<
               data-user-avatar={isUser()}
             >
               <Switch>
+                <Match when={props.msg.event === 'world'}>
+                  <div
+                    class={`avatar-${format().size} flex shrink-0 items-center justify-center pt-3`}
+                  >
+                    <Zap />
+                  </div>
+                </Match>
+
                 <Match when={voice.status === 'generating'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={DownloadCloud} />
@@ -234,10 +248,14 @@ const SingleMessage: Component<
                   style="line-height: 1;"
                   data-bot-name={isBot()}
                   data-user-name={isUser()}
+                  classList={{ hidden: !!props.msg.event }}
                 >
-                  {props.msg.characterId
-                    ? ctx.botMap[props.msg.characterId!]?.name || ctx.char?.name!
-                    : handleToShow()}
+                  <Switch>
+                    <Match when={props.msg.characterId}>
+                      {ctx.botMap[props.msg.characterId!]?.name || ctx.char?.name!}
+                    </Match>
+                    <Match when={true}>{handleToShow()}</Match>
+                  </Switch>
                 </b>
                 <span
                   class={`

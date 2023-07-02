@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2019-09/schema",
+  "definitions": {
+    "ScenarioEventTrigger": {
+      "anyOf": [
+        { "$ref": "#/definitions/ScenarioEventGreetingTrigger" },
+        { "$ref": "#/definitions/ScenarioEventManualTrigger" },
+        { "$ref": "#/definitions/ScenarioEventOnConnectTrigger" }
+      ]
+    },
+    "ScenarioEventGreetingTrigger": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "greeting" }
+      },
+      "required": ["kind"],
+      "additionalProperties": false
+    },
+    "ScenarioEventManualTrigger": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "manual" },
+        "probability": { "type": "number" }
+      },
+      "required": ["kind", "probability"],
+      "additionalProperties": false
+    },
+    "ScenarioEventOnConnectTrigger": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "connect" },
+        "after": { "type": "number" }
+      },
+      "required": ["kind", "after"],
+      "additionalProperties": false
+    },
+    "ScenarioEvent": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "requires": { "type": "array", "items": { "type": "string" } },
+        "assigns": { "type": "array", "items": { "type": "string" } },
+        "type": { "type": "string" },
+        "text": { "type": "string" },
+        "trigger": { "$ref": "#/definitions/ScenarioEventTrigger" }
+      },
+      "required": ["name", "requires", "assigns", "type", "text", "trigger"],
+      "additionalProperties": false
+    },
+    "ScenarioBook": {
+      "type": "object",
+      "properties": {
+        "kind": { "const": "scenario" },
+        "_id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "text": { "type": "string" },
+        "overwriteCharacterScenario": { "type": "boolean" },
+        "entries": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/ScenarioEvent" }
+        }
+      },
+      "required": [
+        "kind",
+        "_id",
+        "userId",
+        "name",
+        "description",
+        "text",
+        "overwriteCharacterScenario",
+        "entries"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/definitions/ScenarioBook"
+}

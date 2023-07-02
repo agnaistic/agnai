@@ -58,6 +58,7 @@ import {
 import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import { useChatAvatars } from './components/ChatAvatar'
 import AvatarContainer from '/web/shared/Avatar/Container'
+import { eventStore } from '/web/store/event'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -94,6 +95,7 @@ const ChatDetail: Component = () => {
     retrying: s.retrying,
     inference: s.lastInference,
   }))
+  let connectEventProcessed = false
 
   const isGroupChat = createMemo(() => {
     if (!chats.participantIds?.length) return false
@@ -136,6 +138,7 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
   const [editId, setEditId] = createSignal('')
+  const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
   createEffect(() => {
     setEditId(chats.char?._id ?? '')
@@ -165,9 +168,26 @@ const ChatDetail: Component = () => {
   })
 
   const chatMsgs = createMemo(() => {
-    return insertImageMessages(msgs.msgs, msgs.images[params.id]).filter((msg) =>
-      chats.opts.hideOoc ? !msg.ooc : true
-    )
+    const messages = msgs.msgs
+    if (!chats.chat || !chats.char) return []
+    const doShowHiddenEvents = showHiddenEvents()
+    return insertImageMessages(messages, msgs.images[params.id]).filter((msg) => {
+      if (chats.opts.hideOoc && msg.ooc) return false
+      if (msg.event === 'hidden' && !doShowHiddenEvents) return false
+      return true
+    })
+  })
+
+  createEffect(() => {
+    // On Connect Events
+    if (connectEventProcessed || !chats.chat || !chats.char) return
+    connectEventProcessed = true
+    const messages = msgs.msgs
+    if (messages.length === 0) {
+      eventStore.onGreeting(chats.chat)
+    } else {
+      eventStore.onChatOpened(chats.chat, new Date(messages[messages.length - 1].createdAt))
+    }
   })
 
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
@@ -328,6 +348,11 @@ const ChatDetail: Component = () => {
           devCycleAvatarSettings(user)
           onSuccess?.()
           return
+          onSuccess?.()
+          return
+
+        case '/devShowHiddenEvents':
+          setShowHiddenEvents(!showHiddenEvents())
       }
     }
 

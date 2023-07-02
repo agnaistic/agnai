@@ -692,6 +692,10 @@ export function getAdapter(
   let model = ''
   let presetName = 'Fallback Preset'
 
+  if (adapter === 'replicate') {
+    model = preset?.replicateModelType || 'llama'
+  }
+
   if (adapter === 'novel') {
     model = config.novelModel
   }

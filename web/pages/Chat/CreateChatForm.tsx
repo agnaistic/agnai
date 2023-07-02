@@ -15,7 +15,14 @@ import Select from '../../shared/Select'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  presetStore,
+  scenarioStore,
+  settingStore,
+  userStore,
+} from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -26,6 +33,7 @@ import { Toggle } from '/web/shared/Toggle'
 import Divider from '/web/shared/Divider'
 import PageHeader from '/web/shared/PageHeader'
 import { isLoggedIn } from '/web/store/api'
+import { AppSchema } from '/common/types'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -41,7 +49,9 @@ const CreateChatForm: Component<{
   const params = useParams()
   let ref: any
 
+  const cfg = settingStore()
   const nav = useNavigate()
+  const scenarios = scenarioStore((s) => s.scenarios)
   const user = userStore((s) => ({ ...s.user }))
   const state = characterStore((s) => ({
     chars: (s.characters?.list || []).filter((c) => !isLoggedIn() || c.userId === user._id),
@@ -50,6 +60,15 @@ const CreateChatForm: Component<{
 
   const [selectedId, setSelected] = createSignal<string | undefined>(params.id)
   const [useOverrides, setUseOverrides] = createSignal(false)
+  const [scenario, setScenario] = createSignal<AppSchema.ScenarioBook>()
+
+  const currScenarios = createMemo(() => {
+    if (!scenarios.length) return [{ value: '', label: 'You have no scenarios' }]
+    return [
+      { value: '', label: "Use character's scenario" },
+      ...scenarios.map((s) => ({ label: s.name, value: s._id })),
+    ]
+  })
 
   const char = createMemo(() =>
     state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
@@ -63,6 +82,10 @@ const CreateChatForm: Component<{
     if (!state.chars.length) return
     setSelected(state.chars[0]._id)
   })
+
+  const setScenarioById = (scenarioId: string) => {
+    setScenario(scenarios.find((s) => s._id === scenarioId))
+  }
 
   const [presetId, setPresetId] = createSignal(user.defaultPreset)
   const presets = presetStore((s) => s.presets)
@@ -117,7 +140,13 @@ const CreateChatForm: Component<{
       overrides.greeting = body.greeting
     }
 
-    const payload = { ...body, ...overrides, useOverrides: useOverrides(), genPreset: presetId() }
+    const payload = {
+      ...body,
+      ...overrides,
+      useOverrides: useOverrides(),
+      genPreset: presetId(),
+      scenarioId: scenario()?._id,
+    }
     chatStore.createChat(characterId, payload, (id) => nav(`/chat/${id}`))
   }
 
@@ -210,6 +239,17 @@ const CreateChatForm: Component<{
           </Card>
 
           <Divider />
+
+          <Show when={cfg.flags.events}>
+            <Select
+              fieldName="scenarioId"
+              label="Scenario"
+              helperText="The scenario to use for this conversation"
+              items={currScenarios()}
+              onChange={(option) => setScenarioById(option.value)}
+              disabled={scenarios.length === 0}
+            />
+          </Show>
 
           <Card>
             <TextInput

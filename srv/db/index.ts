@@ -6,6 +6,7 @@ import * as admin from './admin'
 import * as presets from './presets'
 import * as msgs from './messages'
 import * as memory from './memory'
+import * as scenario from './scenario'
 
 export { db } from './client'
 
@@ -18,4 +19,5 @@ export const store = {
   presets,
   msgs,
   memory,
+  scenario,
 }

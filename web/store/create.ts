@@ -11,6 +11,7 @@ import type { memoryStore } from './memory'
 import type { msgStore } from './message'
 import type { adminStore } from './admin'
 import type { presetStore } from './presets'
+import type { scenarioStore } from './scenario'
 
 type StoreMap = {
   user: typeof userStore
@@ -23,6 +24,7 @@ type StoreMap = {
   messages: typeof msgStore
   admin: typeof adminStore
   presets: typeof presetStore
+  scenario: typeof scenarioStore
 }
 
 type HandlerReturn<S> =
@@ -30,6 +32,7 @@ type HandlerReturn<S> =
   | Promise<MaybeState<S>>
   | AsyncGenerator<MaybeState<S>, MaybeState<S>>
   | Generator<MaybeState<S>, MaybeState<S>>
+  | Promise<MaybeState<S>>
 
 type MaybeState<S> = Partial<S> | void
 

@@ -16,6 +16,7 @@ export type AllDoc =
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
   | AppSchema.MemoryBook
+  | AppSchema.ScenarioBook
 
 export namespace AppSchema {
   export interface AppConfig {
@@ -144,6 +145,9 @@ export namespace AppSchema {
 
     genPreset?: GenerationPreset | string
     genSettings?: Omit<GenSettings, 'name'>
+
+    scenarioIds?: string[]
+    scenarioStates?: string[]
   }
 
   export interface ChatMember {
@@ -176,7 +180,10 @@ export namespace AppSchema {
     ooc?: boolean
     system?: boolean
     meta?: any
+    event?: EventTypes | undefined
   }
+
+  export type EventTypes = 'world' | 'character' | 'hidden' | 'ooc'
 
   /** Description of the character or user */
   export type Persona =
@@ -347,6 +354,55 @@ export namespace AppSchema {
     position?: 'before_char' | 'after_char'
   }
 
+  export interface ScenarioBook {
+    kind: 'scenario'
+    _id: string
+    userId: string
+    name: string
+    description?: string
+    text: string
+    overwriteCharacterScenario: boolean
+    instructions?: string
+    entries: ScenarioEvent[]
+  }
+
+  export interface ScenarioEvent {
+    /** The state this  */
+    name: string
+    requires: string[]
+    assigns: string[]
+    type: EventTypes
+    text: string
+    trigger: ScenarioEventTrigger
+  }
+
+  export type ScenarioEventTrigger =
+    | ScenarioOnGreeting
+    | ScenarioOnManual
+    | ScenarioOnChatOpened
+    | ScenarioOnCharacterMessageRx
+
+  export interface ScenarioOnGreeting {
+    kind: 'onGreeting'
+  }
+
+  export interface ScenarioOnManual {
+    kind: 'onManualTrigger'
+    probability: number
+  }
+
+  export interface ScenarioOnChatOpened {
+    kind: 'onChatOpened'
+    awayHours: number
+  }
+
+  export interface ScenarioOnCharacterMessageRx {
+    kind: 'onCharacterMessageReceived'
+    minMessagesSinceLastEvent: number
+  }
+
+  export type ScenarioTriggerKind = ScenarioEventTrigger['kind']
+
   export interface VoiceDefinition {
     id: string
     label: string
@@ -359,3 +415,5 @@ export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { k
 export const defaultGenPresets: AppSchema.GenSettings[] = []
 
 export type NewBook = Omit<AppSchema.MemoryBook, 'userId' | '_id' | 'kind'>
+
+export type NewScenario = Omit<AppSchema.ScenarioBook, 'userId' | '_id' | 'kind'>
