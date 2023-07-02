@@ -18,6 +18,8 @@ const HordeAISettings: Component<{
     workers: toArray(s.user?.hordeWorkers),
     models: toArray(s.user?.hordeModel),
     user: s.user,
+    stats: s.metadata?.hordeStats,
+    loading: s.hordeStatsLoading,
   }))
 
   const [workers, setWorkers] = createSignal<Option[]>()
@@ -55,7 +57,23 @@ const HordeAISettings: Component<{
 
   const hordeName = createMemo(
     () => {
-      if (state.user?.hordeName) return `Logged in as ${state.user.hordeName}.`
+      if (state.user?.hordeName)
+        return (
+          <div class="flex flex-col">
+            <div>
+              Logged in as {state.user.hordeName}.{' '}
+              <Show when={!state.loading}>
+                <a class="link" onClick={() => userStore.hordeStats()}>
+                  Get stats
+                </a>
+              </Show>
+              <Show when={state.loading}>Loading...</Show>
+            </div>
+            <Show when={state.stats}>
+              <div>Kudos: {state.stats?.kudos.toLocaleString()}</div>
+            </Show>
+          </div>
+        )
       return `Currently using anonymous access.`
     },
     { equals: false }

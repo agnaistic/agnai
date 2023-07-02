@@ -17,6 +17,7 @@ import { publish, subscribe } from './socket'
 import { toastStore } from './toasts'
 import { UI } from '/common/types'
 import { defaultUIsettings } from '/common/types/ui'
+import type { FindUserResponse } from '/common/horde-gen'
 
 const BACKGROUND_KEY = 'ui-bg'
 
@@ -43,8 +44,10 @@ export type UserState = {
   background?: string
   metadata: {
     openaiUsage?: number
+    hordeStats?: FindUserResponse
   }
   oaiUsageLoading: boolean
+  hordeStatsLoading: boolean
 }
 
 export const userStore = createStore<UserState>(
@@ -316,6 +319,29 @@ export const userStore = createStore<UserState>(
         }
       }
     },
+    async *hordeStats({ metadata, user }) {
+      yield { hordeStatsLoading: true }
+      const res = await api.post('/user/services/horde-stats', { key: user?.hordeKey })
+      yield { hordeStatsLoading: false }
+      if (res.error) {
+        toastStore.error(`Could not retrieve usage: ${res.error}`)
+        yield { metadata: { ...metadata, openaiUsage: -1 } }
+      }
+
+      if (res.result) {
+        if (res.result.error) {
+          toastStore.warn(`Could not retrieve Horde stats: ${res.result.error}`)
+          return
+        }
+
+        yield {
+          metadata: {
+            ...metadata,
+            hordeStats: res.result.user,
+          },
+        }
+      }
+    },
   }
 })
 
@@ -341,6 +367,7 @@ function init(): UserState {
       ui,
       background,
       oaiUsageLoading: false,
+      hordeStatsLoading: false,
       metadata: {},
       current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
     }
@@ -353,6 +380,7 @@ function init(): UserState {
     ui,
     background,
     oaiUsageLoading: false,
+    hordeStatsLoading: false,
     metadata: {},
     current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
   }
