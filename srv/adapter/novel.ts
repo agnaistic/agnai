@@ -149,7 +149,7 @@ const streamCompletition = async function* (headers: any, body: any, _log: AppLo
   try {
     const events = needleToSSE(resp)
     for await (const event of events) {
-      if (event.type !== "newToken") continue
+      if (event.type !== 'newToken') continue
       const data = JSON.parse(event.data) as {
         token: string
         final: boolean
