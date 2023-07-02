@@ -16,7 +16,7 @@ export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
   needleStream.on('header', (statusCode, headers) => {
     if (statusCode > 201) {
       needleStream.emit('err', new Error(`SSE request failed with status code ${statusCode}`))
-    } else if (headers['content-type'] !== 'text/event-stream') {
+    } else if (!headers['content-type']?.startsWith('text/event-stream')) {
       needleStream.emit(
         'err',
         new Error(`SSE request received unexpected content-type ${headers['content-type']}`)
@@ -47,12 +47,38 @@ export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
       throw new Error(`${error.message}: ${errorPayload}`)
     }
 
-    const newMsgs = (msgBuffer + chunks.join('')).split('\n\n')
+    const newMsgs = (msgBuffer + chunks.join('')).split(/\r?\n\r?\n/)
+
     chunks = []
     msgBuffer = newMsgs.pop() || ''
 
     for (const msg of newMsgs) {
-      yield msg
+      yield parseEvent(msg)
     }
   }
+}
+
+export type ServerSentEvent = { id?: string; type?: string; data: string }
+
+function parseEvent(msg: string) {
+  const buffer: ServerSentEvent = { data: '' }
+  return msg.split(/\r?\n/).reduce((event, line) => {
+    const sep = line.indexOf(':')
+    const field = sep === -1 ? line : line.slice(0, sep)
+    const value = sep === -1 ? '' : line.slice(sep + 1)
+    switch (field) {
+      case 'id':
+        event.id = value.trim()
+        break
+      case 'event':
+        event.type = value.trim()
+        break
+      case 'data':
+        event.data += value.trimStart()
+        break
+      default:
+        break
+    }
+    return event
+  }, buffer)
 }
