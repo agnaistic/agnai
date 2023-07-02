@@ -148,26 +148,21 @@ const streamCompletition = async function* (headers: any, body: any, _log: AppLo
 
   try {
     const events = needleToSSE(resp)
-
     for await (const event of events) {
-      const lines = event.split('\n')
-
-      for (const line of lines) {
-        if (!line.startsWith('data:')) continue
-        const data = JSON.parse(line.slice(5)) as {
-          token: string
-          final: boolean
-          ptr: number
-          error?: string
-        }
-        if (data.error) {
-          yield { error: `NovelAI streaming request failed: ${data.error}` }
-          return
-        }
-
-        tokens.push(data.token)
-        yield { token: data.token }
+      if (event.type !== "newToken") continue
+      const data = JSON.parse(event.data) as {
+        token: string
+        final: boolean
+        ptr: number
+        error?: string
       }
+      if (data.error) {
+        yield { error: `NovelAI streaming request failed: ${data.error}` }
+        return
+      }
+
+      tokens.push(data.token)
+      yield { token: data.token }
     }
   } catch (err: any) {
     yield { error: `NovelAI streaming request failed: ${err.message || err}` }
