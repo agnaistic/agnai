@@ -108,6 +108,9 @@ export const config = {
     banner: env('BANNER_SLOT', ''),
     mobile: env('MOBILE_SLOT', ''),
   },
+  keys: {
+    REPLICATE: env('REPLICATE_KEY', ''),
+  },
 }
 
 if (config.ui.inject) {

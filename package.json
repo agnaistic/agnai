@@ -53,6 +53,7 @@
     "start:all": "concurrently -c auto -n web,api,tsc \"parcel web/index.html\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:web": "parcel web/index.html",
     "start": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
+    "start:watch": "concurrently -c auto -n web,tsc \"parcel web/index.html --no-cache\" \"npm run build:server:watch\"",
     "start:cluster": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:https": "concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache --https\" \"npm run server:watch\" \"npm run build:server:watch\"",
     "start:debug": "LOG_LEVEL=debug concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:server:watch\"",

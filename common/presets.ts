@@ -43,6 +43,10 @@ export const chatGenSettings = {
   ultimeJailbreak: 'string?',
   antiBond: 'boolean?',
   useTemplateParser: 'boolean?',
+
+  replicateModelType: 'string?',
+  replicateModelVersion: 'string?',
+  replicateModelName: 'string?',
 } as const
 
 export const presetValidator = {

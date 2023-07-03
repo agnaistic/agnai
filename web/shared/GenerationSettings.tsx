@@ -21,6 +21,7 @@ import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
 import { serviceHasSetting } from './util'
+import { createStore } from 'solid-js/store'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -106,6 +107,26 @@ export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Eleme
 }
 
 const GeneralSettings: Component<Props> = (props) => {
+  const cfg = settingStore()
+
+  const [replicate, setReplicate] = createStore({
+    model: props.inherit?.replicateModelName,
+    type: props.inherit?.replicateModelType,
+    version: props.inherit?.replicateModelVersion,
+  })
+
+  const replicateModels = createMemo(() => {
+    if (!cfg.replicate) return []
+    const options = Object.entries(cfg.replicate).map(([name, model]) => ({
+      label: name,
+      value: name,
+    }))
+
+    options.unshift({ label: 'Use specific version', value: '' })
+
+    return options
+  })
+
   return (
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
@@ -147,31 +168,44 @@ const GeneralSettings: Component<Props> = (props) => {
           aiSetting={'claudeModel'}
         />
 
+        <Show when={replicateModels().length > 0}>
+          <Select
+            fieldName="replicateModelName"
+            items={replicateModels()}
+            label="Replicate Model"
+            value={props.inherit?.replicateModelName}
+            helperText={
+              <>
+                <span>Publicly available language models.</span>
+              </>
+            }
+            aiSetting="replicateModelVersion"
+            onChange={(ev) => setReplicate('model', ev.value)}
+          />
+        </Show>
+
         <Select
           fieldName="replicateModelType"
           label="Replicate Model Type"
           items={modelsToItems(REPLICATE_MODEL_TYPES)}
-          helperText="Which Replicate API input parameters to use"
-          value={
-            props.inherit?.replicateModelType ??
-            defaultPresets.replicate_vicuna_13b.replicateModelType
-          }
-          disabled={props.disabled}
+          helperText="Which Replicate API input parameters to use."
+          value={replicate.type}
+          disabled={!!replicate.model || props.disabled}
           service={props.service}
           aiSetting={'replicateModelType'}
+          onChange={(ev) => setReplicate('type', ev.value)}
         />
 
         <TextInput
-          fieldName="replicateModelType"
-          label="Replicate Model Type"
-          helperText="Which Replicate model to use (see https://replicate.com/collections/language-models)"
-          value={
-            props.inherit?.replicateModelVersion ??
-            defaultPresets.replicate_vicuna_13b.replicateModelVersion
-          }
-          disabled={props.disabled}
+          fieldName="replicateModelVersion"
+          label="Replicate Model by Version (SHA)"
+          helperText="If provided, this will override your model choice. Which Replicate model to use (see https://replicate.com/collections/language-models)"
+          value={replicate.version}
+          placeholder={`E.g. ${defaultPresets.replicate_vicuna_13b.replicateModelVersion}`}
+          disabled={!!replicate.model || props.disabled}
           service={props.service}
           aiSetting={'replicateModelVersion'}
+          onInput={(ev) => setReplicate('version', ev.currentTarget.value)}
         />
       </Card>
 
@@ -227,8 +261,10 @@ const GeneralSettings: Component<Props> = (props) => {
   )
 }
 
-const modelsToItems = (models: Record<string, string>): Option<string>[] =>
-  Object.entries(models).map(([label, value]) => ({ label, value }))
+function modelsToItems(models: Record<string, string>): Option<string>[] {
+  const pairs = Object.entries(models).map(([label, value]) => ({ label, value }))
+  return pairs
+}
 
 const PromptSettings: Component<Props> = (props) => {
   const cfg = settingStore((cfg) => cfg.flags)

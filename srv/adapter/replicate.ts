@@ -6,8 +6,12 @@ import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { sendMany } from '../api/ws'
 import { logger } from '../logger'
 import { getEncoder } from '../tokenize'
+import { config } from '../config'
+import { ReplicateModel, ReplicateModelType } from '/common/types/replicate'
 
 const publicApiV1 = 'https://api.replicate.com/v1'
+
+let modelCache: Record<string, ReplicateModel> = {}
 
 const COLLECTIONS = {
   language: 'language-models',
@@ -61,12 +65,12 @@ type ReplicateOutputOpenAssistant = string[]
 
 // Replica: https://replicate.com/docs/reference/http
 
-type ReplicatePredictionRequest = {
+type ReplicateRequest = {
   version: string
   input: ReplicateInputLlama | ReplicateInputStableLm | ReplicateInputOpenAssistant
 }
 
-type ReplicatePredictionResponse = {
+type ReplicatePrediction = {
   id: string
   version: string
   urls: {
@@ -81,6 +85,19 @@ type ReplicatePredictionResponse = {
   error: string | null
   logs: string
   metrics: { predict_time: number }
+}
+
+const knownModelTypes: Record<string, ReplicateModelType> = {
+  'vicuna-13b': 'llama',
+  'llama-7b': 'llama',
+
+  'oasst-sft-1-pythia-12b': 'openassistant',
+  'dolly-v2-12b': 'openassistant',
+
+  'replit-code-v1-3b': 'stablelm',
+  'stablelm-tuned-alpha-7b': 'stablelm',
+  'gpt-j-6b': 'stablelm',
+  'flan-t5-xl': 'stablelm',
 }
 
 export const handleReplicate: ModelAdapter = async function* (opts) {
@@ -101,25 +118,29 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
     return
   }
 
-  const modelType = opts.gen.replicateModelType || 'llama'
+  if (!opts.gen.replicateModelName && !opts.gen.replicateModelVersion) {
+    yield {
+      error: 'Replicate request failed: Your preset does not have a model selected.',
+    }
+    return
+  }
 
-  const version =
-    opts.gen.replicateModelVersion ||
-    '6282abe6a492de4145d7bb601023762212f9ddbbe78278bd6771c8b3b2f2a13b'
+  const selection = getModelVersion(opts.gen.replicateModelName || opts.gen.replicateModelVersion!)
+  if (!selection) {
+    yield {
+      error:
+        'Replicate request failed: Could not model version. Ensure your preset has a replicate model or version selected.',
+    }
+    return
+  }
+  const modelType = selection.type || opts.gen.replicateModelType || 'llama'
+  // const version =
+  //   opts.gen.replicateModelVersion ||
+  //   '6282abe6a492de4145d7bb601023762212f9ddbbe78278bd6771c8b3b2f2a13b'
 
-  let input: ReplicatePredictionRequest['input']
+  let input: ReplicateRequest['input']
   const encoder = getEncoder('replicate', modelType)
   switch (modelType) {
-    case 'llama': {
-      input = {
-        prompt: opts.prompt,
-        max_length: encoder(opts.prompt) + (opts.gen.maxTokens || 500),
-        temperature: opts.gen.temp,
-        top_p: opts.gen.topP,
-        repetition_penalty: opts.gen.repetitionPenalty,
-      }
-      break
-    }
     case 'stablelm': {
       // TODO: Use a similar logic to OpenAI
       const prompt = opts.prompt
@@ -134,6 +155,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       }
       break
     }
+
     case 'openassistant': {
       // TODO: Use a similar logic to OpenAI
       const prompt = opts.prompt
@@ -152,20 +174,31 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       }
       break
     }
+
+    case 'llama': {
+      input = {
+        prompt: opts.prompt,
+        max_length: encoder(opts.prompt) + (opts.gen.maxTokens || 500),
+        temperature: opts.gen.temp,
+        top_p: opts.gen.topP,
+        repetition_penalty: opts.gen.repetitionPenalty,
+      }
+      break
+    }
     default:
       yield { error: `Replicate request failed: Unknown model type ${modelType}` }
       return
   }
 
-  const body: ReplicatePredictionRequest = {
-    version,
+  const body: ReplicateRequest = {
+    version: selection.version,
     input,
   }
 
   logger.debug({ ...input, prompt: null }, 'Replicate payload')
   logger.debug(`Prompt:\n${input.prompt}`)
 
-  let prediction: ReplicatePredictionResponse
+  let prediction: ReplicatePrediction
   try {
     prediction = await createPrediction(body, key)
   } catch (e: any) {
@@ -224,7 +257,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
   }
 
   try {
-    const output: ReplicatePredictionResponse['output'] = prediction.output
+    const output: ReplicatePrediction['output'] = prediction.output
     // The first token always seems to be missing a space.
     let text = output ? output[0] + ' ' + output.slice(1).join('') : ''
     if (!text) {
@@ -233,7 +266,12 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       return
     }
 
-    yield { meta: { predict_time: prediction.metrics.predict_time } }
+    yield {
+      meta: {
+        model: opts.gen.replicateModelName || selection.version,
+        predict_time: prediction.metrics.predict_time,
+      },
+    }
     const parsed = sanitise(text)
     const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, [
       '<|USER|>',
@@ -265,7 +303,7 @@ registerAdapter('replicate', handleReplicate, {
   options: ['temp', 'maxTokens', 'repetitionPenalty', 'topP'],
 })
 
-async function createPrediction(body: any, key: string): Promise<ReplicatePredictionResponse> {
+async function createPrediction(body: any, key: string): Promise<ReplicatePrediction> {
   const url = `${publicApiV1}/predictions`
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
@@ -287,7 +325,7 @@ async function createPrediction(body: any, key: string): Promise<ReplicatePredic
   return resp.body
 }
 
-async function getPrediction(url: string, key: string): Promise<ReplicatePredictionResponse> {
+async function getPrediction(url: string, key: string): Promise<ReplicatePrediction> {
   const resp = await needle('get', url, {
     headers: { Authorization: `Token ${key}` },
   }).catch((err) => ({ error: err }))
@@ -333,8 +371,13 @@ export async function getCollection(key: string, slug: string) {
   return resp.body
 }
 
-export async function getLanguageCollection(key: string) {
-  return getCollection(key, COLLECTIONS.language)
+export async function getLanguageCollection(key: string): Promise<Record<string, ReplicateModel>> {
+  const collection = await getCollection(key, COLLECTIONS.language)
+  const models = collection.models.reduce(
+    (prev: any, curr: any) => Object.assign(prev, { [curr.name]: curr }),
+    {}
+  )
+  return models
 }
 
 function parseKey(key: string) {
@@ -343,4 +386,31 @@ function parseKey(key: string) {
   } catch (ex) {
     return key
   }
+}
+
+if (config.keys.REPLICATE) {
+  cacheLanguageModels()
+}
+
+async function cacheLanguageModels() {
+  const collection = await getLanguageCollection(config.keys.REPLICATE)
+  modelCache = collection
+}
+
+export async function getLanguageModels(key?: string) {
+  if (!key) {
+    return modelCache
+  }
+
+  const models = await getLanguageCollection(key)
+  return models
+}
+
+function getModelVersion(model: string) {
+  if (model in modelCache) {
+    const data = modelCache[model]
+    return { version: data.latest_version.id, type: knownModelTypes[model] || 'stablelm' }
+  }
+
+  return { version: model, type: '' }
 }

@@ -4,6 +4,7 @@ import { store } from '../../db'
 import { handle, StatusError } from '../wrap'
 import { findUser } from '../horde'
 import { decryptText } from '/srv/db/util'
+import { getLanguageModels } from '/srv/adapter/replicate'
 
 export const openaiUsage = handle(async ({ userId, body }) => {
   const guest = !userId
@@ -44,4 +45,9 @@ export const hordeStats = handle(async ({ userId, body }) => {
     user: user.result,
     error: user.error?.message,
   }
+})
+
+export const replicateModels = handle(async ({ userId, body }) => {
+  const models = await getLanguageModels()
+  return models
 })
