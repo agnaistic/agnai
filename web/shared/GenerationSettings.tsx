@@ -168,7 +168,7 @@ const GeneralSettings: Component<Props> = (props) => {
           aiSetting={'claudeModel'}
         />
 
-        <Show when={replicateModels().length > 0}>
+        <Show when={replicateModels().length > 1}>
           <Select
             fieldName="replicateModelName"
             items={replicateModels()}
@@ -179,6 +179,7 @@ const GeneralSettings: Component<Props> = (props) => {
                 <span>Publicly available language models.</span>
               </>
             }
+            service={props.service}
             aiSetting="replicateModelVersion"
             onChange={(ev) => setReplicate('model', ev.value)}
           />
@@ -199,7 +200,7 @@ const GeneralSettings: Component<Props> = (props) => {
         <TextInput
           fieldName="replicateModelVersion"
           label="Replicate Model by Version (SHA)"
-          helperText="If provided, this will override your model choice. Which Replicate model to use (see https://replicate.com/collections/language-models)"
+          helperText="Which Replicate model to use (see https://replicate.com/collections/language-models)"
           value={replicate.version}
           placeholder={`E.g. ${defaultPresets.replicate_vicuna_13b.replicateModelVersion}`}
           disabled={!!replicate.model || props.disabled}
