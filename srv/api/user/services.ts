@@ -3,10 +3,11 @@ import { getOpenAIUsage } from '../../adapter/openai'
 import { store } from '../../db'
 import { errors, handle, StatusError } from '../wrap'
 import { findUser } from '../horde'
-import { decryptText } from '/srv/db/util'
+import { decryptText, encryptText } from '/srv/db/util'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { AIAdapter } from '/common/adapters'
 import { getRegisteredAdapters } from '/srv/adapter/register'
+import { getSafeUserConfig } from './settings'
 
 export const openaiUsage = handle(async ({ userId, body }) => {
   const guest = !userId
@@ -75,7 +76,8 @@ export const updateService = handle(async ({ userId, body, params }) => {
    */
   for (const setting of adapter.settings) {
     if (setting.field in body) {
-      next[setting.field] = body[setting.field]
+      const value = body[setting.field]
+      next[setting.field] = setting.secret ? encryptText(value) : value
     }
   }
 
@@ -86,5 +88,6 @@ export const updateService = handle(async ({ userId, body, params }) => {
     },
   })
 
-  return { success: true }
+  const safeUser = await getSafeUserConfig(userId)
+  return safeUser
 })

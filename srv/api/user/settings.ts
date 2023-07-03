@@ -347,7 +347,7 @@ async function verifyNovelKey(key: string) {
   return res.statusCode && res.statusCode <= 400
 }
 
-async function getSafeUserConfig(userId: string) {
+export async function getSafeUserConfig(userId: string) {
   const user = await store.users.getUser(userId!)
   if (user) {
     user.novelApiKey = ''

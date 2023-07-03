@@ -7,28 +7,11 @@ import { isConnected } from '../db/client'
 import { handle } from './wrap'
 import { AppSchema } from '../../common/types/schema'
 import { store } from '../db'
+import { RegisteredAdapter } from '/common/adapters'
 
 const router = Router()
 
-const appConfig: AppSchema.AppConfig = {
-  adapters: config.adapters,
-  version: '',
-  selfhosting: config.jsonStorage,
-  canAuth: false,
-  imagesSaved: config.storage.saveImages,
-  assetPrefix: config.storage.enabled
-    ? `https://${config.storage.bucket}.${config.storage.endpoint}`
-    : '',
-  registered: getRegisteredAdapters().map((adp) => ({
-    name: adp.name,
-    settings: adp.settings,
-    options: adp.options,
-  })),
-  maintenance: config.ui.maintenance,
-  patreon: config.ui.patreon,
-  policies: config.ui.policies,
-  slots: config.slots,
-}
+let appConfig: AppSchema.AppConfig
 
 const getSettings = handle(async () => {
   const config = await getAppConfig()
@@ -41,6 +24,24 @@ export default router
 
 export async function getAppConfig() {
   const canAuth = isConnected()
+
+  if (!appConfig) {
+    appConfig = {
+      adapters: config.adapters,
+      version: '',
+      selfhosting: config.jsonStorage,
+      canAuth: false,
+      imagesSaved: config.storage.saveImages,
+      assetPrefix: config.storage.enabled
+        ? `https://${config.storage.bucket}.${config.storage.endpoint}`
+        : '',
+      registered: getRegisteredAdapters().map(toRegisteredAdapter),
+      maintenance: config.ui.maintenance,
+      patreon: config.ui.patreon,
+      policies: config.ui.policies,
+      slots: config.slots,
+    }
+  }
 
   if (appConfig.version === '') {
     const content = await readFile(resolve(process.cwd(), 'version.txt')).catch(() => 'unknown')
@@ -65,3 +66,11 @@ async function update() {
 }
 
 setInterval(update, 15000)
+
+function toRegisteredAdapter(adp: RegisteredAdapter) {
+  return {
+    name: adp.name,
+    settings: adp.settings,
+    options: adp.options,
+  }
+}

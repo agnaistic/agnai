@@ -26,12 +26,14 @@ export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options:
 }
 
 export function getRegisteredAdapters() {
-  const all = Array.from(adapters.values()).filter((adapter) =>
-    config.adapters.includes(adapter.name)
-  )
+  const all = Array.from(adapters.values()).filter(filterAdapter)
   return all
 }
 
 export function getRegisteredAdapter(name: AIAdapter): RegisteredAdapter | undefined {
   return adapters.get(name)
+}
+
+function filterAdapter(adp: RegisteredAdapter) {
+  return config.adapters.includes(adp.name)
 }

@@ -4,6 +4,7 @@ import { localApi } from './storage'
 import { toArray } from '/common/util'
 import { UI } from '/common/types'
 import { safeLocalStorage } from '/web/shared/util'
+import { AIAdapter } from '/common/adapters'
 
 type InitEntities = {
   profile: AppSchema.Profile
@@ -22,6 +23,7 @@ export const usersApi = {
   updateConfig,
   updateProfile,
   updateUI,
+  updateServiceConfig,
 }
 
 export async function getInit() {
@@ -148,6 +150,27 @@ export async function updateConfig(config: ConfigUpdate) {
   }
 
   const res = await api.post('/user/config', config)
+  return res
+}
+
+export async function updateServiceConfig(service: AIAdapter, update: any) {
+  if (!isLoggedIn()) {
+    const config = localApi.loadItem('config')
+    const prev = config.adapterConfig?.[service] || {}
+    const next = { ...prev, ...config }
+    const nextConfig = {
+      ...config,
+      adapterConfig: {
+        ...config.adapterConfig,
+        [service]: next,
+      },
+    }
+
+    localApi.saveConfig(nextConfig)
+    return { result: nextConfig, error: undefined }
+  }
+
+  const res = await api.post(`/user/config/service/${service}`, update)
   return res
 }
 
