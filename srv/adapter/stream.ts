@@ -62,23 +62,30 @@ export type ServerSentEvent = { id?: string; type?: string; data: string }
 
 function parseEvent(msg: string) {
   const buffer: ServerSentEvent = { data: '' }
-  return msg.split(/\r?\n/).reduce((event, line) => {
-    const sep = line.indexOf(':')
-    const field = sep === -1 ? line : line.slice(0, sep)
-    const value = sep === -1 ? '' : line.slice(sep + 1)
-    switch (field) {
-      case 'id':
-        event.id = value.trim()
-        break
-      case 'event':
-        event.type = value.trim()
-        break
-      case 'data':
-        event.data += value.trimStart()
-        break
-      default:
-        break
-    }
-    return event
-  }, buffer)
+  return msg.split(/\r?\n/).reduce(parseLine, buffer)
+}
+
+function parseLine(event: ServerSentEvent, line: string) {
+  const sep = line.indexOf(':')
+  const field = sep === -1 ? line : line.slice(0, sep)
+  const value = sep === -1 ? '' : line.slice(sep + 1)
+
+  switch (field) {
+    case 'id':
+      event.id = value.trim()
+      break
+
+    case 'event':
+      event.type = value.trim()
+      break
+
+    case 'data':
+      event.data += value.trimStart()
+      break
+
+    default:
+      break
+  }
+
+  return event
 }
