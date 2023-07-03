@@ -9,6 +9,7 @@ import { openaiPresets } from './presets/openai'
 import { replicatePresets } from './presets/replicate'
 import { scalePresets } from './presets/scale'
 import { classifyEmotes } from './types/sprite'
+import { openRouterPresets } from './presets/openrouter'
 
 const builtinPresets = {
   ...hordePresets,
@@ -19,6 +20,7 @@ const builtinPresets = {
   ...scalePresets,
   ...claudePresets,
   ...oobaPresets,
+  ...openRouterPresets,
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
 
 export const defaultPresets = {

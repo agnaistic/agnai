@@ -3,7 +3,16 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
 import HordeAISettings from './components/HordeAISettings'
-import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import {
+  Component,
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+} from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
@@ -15,6 +24,8 @@ import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import RegisteredSettings from './components/RegisteredSettings'
 import { useSearchParams } from '@solidjs/router'
 import { Toggle } from '/web/shared/Toggle'
+import OpenRouterOauth from './OpenRouterOauth'
+import { SolidCard } from '/web/shared/Card'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -119,6 +130,23 @@ const AISettings: Component<{
       <For each={cfg.config.registered}>
         {(each) => (
           <div class={currentTab() === each.name ? tabClass : 'hidden'}>
+            {/** Optionally show adapter specific information for registered adapters */}
+            <Switch>
+              <Match when={each.name === 'openrouter'}>
+                <OpenRouterOauth />
+              </Match>
+
+              <Match when={each.name === 'replicate'}>
+                <SolidCard>
+                  Head to{' '}
+                  <a class="link" target="_blank" href="https://replicate.com/">
+                    Replicate.com
+                  </a>{' '}
+                  to get started.
+                </SolidCard>
+              </Match>
+            </Switch>
+
             <RegisteredSettings service={each} />
           </div>
         )}

@@ -43,6 +43,10 @@ export const chatGenSettings = {
   ultimeJailbreak: 'string?',
   antiBond: 'boolean?',
   useTemplateParser: 'boolean?',
+
+  replicateModelType: 'string?',
+  replicateModelVersion: 'string?',
+  replicateModelName: 'string?',
 } as const
 
 export const presetValidator = {
@@ -272,6 +276,25 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     replicateModelType: 'replicateModelType',
     replicateModelVersion: 'replicateModelVersion',
   },
+  openrouter: {
+    maxTokens: 'max_tokens',
+    temp: 'temperature',
+    repetitionPenalty: '',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+    topA: '',
+    topK: '',
+    topP: '',
+    typicalP: '',
+    addBosToken: '',
+    antiBond: '',
+    banEosToken: '',
+    claudeModel: '',
+    encoderRepitionPenalty: '',
+    frequencyPenalty: '',
+    gaslight: '',
+  },
 }
 
 export function isDefaultPreset(value?: string): value is GenerationPreset {
@@ -306,5 +329,9 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
 
     case 'replicate':
       return defaultPresets.replicate_vicuna_13b
+
+    /** TODO: Create default preset for OpenRouter... */
+    case 'openrouter':
+      return defaultPresets.openai
   }
 }

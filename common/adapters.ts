@@ -52,6 +52,7 @@ export const AI_ADAPTERS = [
   'claude',
   'goose',
   'replicate',
+  'openrouter',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -130,9 +131,10 @@ export const NOVEL_MODELS = {
 } satisfies { [key: string]: string }
 
 export const REPLICATE_MODEL_TYPES = {
-  llama: 'LLaMa',
-  stablelm: 'StableLM',
-  openassistant: 'Open Assistant',
+  'Auto-detect': '',
+  LLaMa: 'llama',
+  StableLM: 'stablelm',
+  'Open Assistant': 'openassistant',
 } as const
 
 export type HordeModel = {
@@ -185,6 +187,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   claude: 'Claude',
   goose: 'Goose AI',
   replicate: 'Replicate',
+  openrouter: 'OpenRouter',
 }
 
 export type PresetAISettings = Omit<

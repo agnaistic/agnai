@@ -167,7 +167,7 @@ async function imageToDataURL(image: string, mimetype?: string) {
   const { ext } = getExt(image)
 
   const base64 = await getImageBase64(image)
-  if (ext === 'png' || ext === 'apng') {
+  if (ext === 'apng') {
     return base64
   }
 

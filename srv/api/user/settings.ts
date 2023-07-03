@@ -17,11 +17,13 @@ import { config } from '/srv/config'
 import { toArray } from '/common/util'
 import { UI } from '/common/types'
 import { publishOne } from '../ws/handle'
+import { getLanguageModels } from '/srv/adapter/replicate'
 
 export const getInitialLoad = handle(async ({ userId }) => {
   const appConfig = await getAppConfig()
+  const replicate = await getLanguageModels()
   if (config.ui.maintenance) {
-    return { config: appConfig }
+    return { config: appConfig, replicate }
   }
 
   const [profile, user, presets, books, scenarios] = await Promise.all([
@@ -32,7 +34,7 @@ export const getInitialLoad = handle(async ({ userId }) => {
     store.scenario.getScenarios(userId!),
   ])
 
-  return { profile, user, presets, config: appConfig, books, scenarios }
+  return { profile, user, presets, config: appConfig, books, scenarios, replicate }
 })
 
 export const getProfile = handle(async ({ userId, params }) => {
@@ -345,7 +347,7 @@ async function verifyNovelKey(key: string) {
   return res.statusCode && res.statusCode <= 400
 }
 
-async function getSafeUserConfig(userId: string) {
+export async function getSafeUserConfig(userId: string) {
   const user = await store.users.getUser(userId!)
   if (user) {
     user.novelApiKey = ''

@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { loggedIn } from '../auth'
 import { changePassword, login, register } from './auth'
 import { createUserPreset, getUserPresets, updateUserPreset, deleteUserPreset } from './presets'
-import { hordeStats, openaiUsage } from './services'
+import { hordeStats, openaiUsage, updateService } from './services'
 import {
   deleteHordeKey,
   deleteNovelKey,
@@ -30,6 +30,7 @@ router.get('/', loggedIn, getProfile)
 router.get('/presets', loggedIn, getUserPresets)
 router.get('/config', loggedIn, getConfig)
 router.get('/:id', loggedIn, getProfile)
+router.post('/config/service/:service', loggedIn, updateService)
 router.delete('/config/scale', loggedIn, deleteScaleKey)
 router.delete('/config/horde', loggedIn, deleteHordeKey)
 router.delete('/config/novel', loggedIn, deleteNovelKey)

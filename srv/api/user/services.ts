@@ -1,9 +1,13 @@
 import { assertValid } from '/common/valid'
 import { getOpenAIUsage } from '../../adapter/openai'
 import { store } from '../../db'
-import { handle, StatusError } from '../wrap'
+import { errors, handle, StatusError } from '../wrap'
 import { findUser } from '../horde'
-import { decryptText } from '/srv/db/util'
+import { decryptText, encryptText } from '/srv/db/util'
+import { getLanguageModels } from '/srv/adapter/replicate'
+import { AIAdapter } from '/common/adapters'
+import { getRegisteredAdapters } from '/srv/adapter/register'
+import { getSafeUserConfig } from './settings'
 
 export const openaiUsage = handle(async ({ userId, body }) => {
   const guest = !userId
@@ -44,4 +48,46 @@ export const hordeStats = handle(async ({ userId, body }) => {
     user: user.result,
     error: user.error?.message,
   }
+})
+
+export const replicateModels = handle(async ({ userId, body }) => {
+  const models = await getLanguageModels()
+  return models
+})
+
+export const updateService = handle(async ({ userId, body, params }) => {
+  const service = params.service as AIAdapter
+  const user = await store.users.getUser(userId)
+
+  const adapter = getRegisteredAdapters().find((adp) => adp.name === service)
+  if (!adapter) {
+    throw new StatusError(`Service (${service}) does not exist or is not enabled`, 400)
+  }
+
+  if (!user) {
+    throw errors.Forbidden
+  }
+
+  const prev = user.adapterConfig?.[service] || {}
+  const next: any = {}
+
+  /**
+   * We only set known fields on registered adapters
+   */
+  for (const setting of adapter.settings) {
+    if (setting.field in body) {
+      const value = body[setting.field]
+      next[setting.field] = setting.secret ? encryptText(value) : value
+    }
+  }
+
+  await store.users.updateUser(userId, {
+    adapterConfig: {
+      ...user.adapterConfig,
+      [service]: { ...prev, ...next },
+    },
+  })
+
+  const safeUser = await getSafeUserConfig(userId)
+  return safeUser
 })

@@ -121,3 +121,8 @@ export function slugify(str: string) {
     .replace(/[\s_-]+/g, '-')
     .replace(/^-+|-+$/g, '')
 }
+
+// https://stackoverflow.com/a/3561711
+export function escapeRegex(string: string) {
+  return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+}

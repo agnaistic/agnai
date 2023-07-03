@@ -8,6 +8,7 @@ import { usersApi } from './data/user'
 import { toastStore } from './toasts'
 import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
+import { ReplicateModel } from '/common/types/replicate'
 
 type SettingState = {
   guestAccessAllowed: boolean
@@ -30,6 +31,7 @@ type SettingState = {
   }
   showImage?: string
   flags: FeatureFlags
+  replicate: Record<string, ReplicateModel>
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -56,6 +58,7 @@ const initState: SettingState = {
     imagesSaved: false,
     slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
   },
+  replicate: {},
   flags: getFlags(),
 }
 
@@ -82,7 +85,7 @@ export const settingStore = createStore<SettingState>(
           events.emit(EVENTS.init, res.result)
         }
 
-        yield { init: res.result, config: res.result.config }
+        yield { init: res.result, config: res.result.config, replicate: res.result.replicate || {} }
 
         const maint = res.result.config?.maintenance
 

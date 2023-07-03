@@ -26,6 +26,7 @@ import { getEncoder } from '../tokenize'
 import { handleGooseAI } from './goose'
 import { handleReplicate } from './replicate'
 import { getAppConfig } from '../api/settings'
+import { handleOpenRouter } from './openrouter'
 
 let version = ''
 
@@ -58,6 +59,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   claude: handleClaude,
   goose: handleGooseAI,
   replicate: handleReplicate,
+  openrouter: handleOpenRouter,
 }
 
 type InferenceRequest = {
