@@ -136,9 +136,14 @@ function getResponseText(resp: any, log: AppLog) {
     return new Error(`Response contained no data (No choices)`)
   }
 
-  const message = resp.choices[0].message
+  const choice = resp.choices[0]
+  if (choice.text) return choice.text as string
+
+  const message = choice.message
+  if (typeof message === 'string') return message
+
   if (!message || !message.content) {
-    log.warn({ resp }, 'OpenRouter response was empty (No text')
+    log.warn({ resp }, 'OpenRouter response was empty (No text)')
     return new Error(`Response contained no data (No text)`)
   }
 
