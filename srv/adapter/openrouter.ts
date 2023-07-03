@@ -4,6 +4,7 @@ import { toChatCompletionPayload } from './chat-completion'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '../api/chat/common'
+import { AppLog } from '../logger'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
@@ -64,15 +65,15 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     }
   }
 
-  const text = getResponseText(response)
+  const text = getResponseText(response, opts.log)
   if (text instanceof Error) {
-    yield { error: `OpenAI returned an error: ${text.message}` }
+    yield { error: `OpenRouter response failed: ${text.message}` }
     return
   }
 
   if (!text?.length) {
     opts.log.error({ body: response }, 'OpenRouter request failed: Empty response')
-    yield { error: `OpenAI request failed: Received empty response. Try again.` }
+    yield { error: `OpenRouter request failed: Received empty response. Try again.` }
     return
   }
 
@@ -125,18 +126,25 @@ registerAdapter('openrouter', handleOpenRouter, {
   options: ['temp', 'maxTokens'],
 })
 
-function getResponseText(resp: any) {
+function getResponseText(resp: any, log: AppLog) {
   if (typeof resp === 'string') {
     resp = JSON.parse(resp)
   }
 
   if (!resp.choices || !Array.isArray(resp.choices) || resp.choices.length === 0) {
-    return new Error(`OpenRouter request failed: Response contained not data`)
+    log.warn({ resp }, 'OpenRouter response was empty (No choices)')
+    return new Error(`Response contained no data (No choices)`)
   }
 
-  const message = resp.choices[0].message
+  const choice = resp.choices[0]
+  if (choice.text) return choice.text as string
+
+  const message = choice.message
+  if (typeof message === 'string') return message
+
   if (!message || !message.content) {
-    return new Error(`Response contained not data`)
+    log.warn({ resp }, 'OpenRouter response was empty (No text)')
+    return new Error(`Response contained no data (No text)`)
   }
 
   return message.content as string

@@ -1,5 +1,6 @@
 import needle from 'needle'
-import { sanitise, trimResponseV2 } from '../api/chat/common'
+import { sanitiseAndTrim } from '../api/chat/common'
+import { needleToSSE } from './stream'
 import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
@@ -13,9 +14,29 @@ import {
   SAMPLE_CHAT_MARKER,
 } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
+import { AppLog } from '../logger'
 import { getEncoder } from '../tokenize'
+import { publishOne } from '../api/ws/handle'
 
 const baseUrl = `https://api.anthropic.com/v1/complete`
+const apiVersion = '2023-06-01' // https://docs.anthropic.com/claude/reference/versioning
+
+type ClaudeCompletion = {
+  completion: string
+  stop_reason: string | null
+  model: string
+  /** If `stop_reason` is "stop_sequence", this is the particular stop sequence that was matched. */
+  stop: string | null
+  log_id: string
+}
+
+type CompletionGenerator = (
+  url: string,
+  body: Record<string, any>,
+  headers: Record<string, string | string[] | number>,
+  userId: string,
+  log: AppLog
+) => AsyncGenerator<{ error: string } | { token: string }, ClaudeCompletion | undefined>
 
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
 const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
@@ -39,10 +60,12 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     stop_sequences: Array.from(stops),
     top_p: Math.min(1, Math.max(0, gen.topP ?? defaultPresets.claude.topP)),
     top_k: Math.min(1, Math.max(0, gen.topK ?? defaultPresets.claude.topK)),
+    stream: (gen.streamResponse && opts.kind !== 'summary') ?? defaultPresets.claude.streamResponse,
   }
 
   const headers: any = {
     'Content-Type': 'application/json',
+    'anthropic-version': apiVersion,
   }
 
   const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
@@ -59,7 +82,64 @@ export const handleClaude: ModelAdapter = async function* (opts) {
 
   log.debug(requestBody, 'Claude payload')
 
-  const resp = await needle('post', base.url, JSON.stringify(requestBody), {
+  const iterator = requestBody.stream
+    ? streamCompletion(base.url, requestBody, headers, opts.user._id, log)
+    : requestFullCompletion(base.url, requestBody, headers, opts.user._id, log)
+  let acc = ''
+  let resp: ClaudeCompletion | undefined
+
+  while (true) {
+    let generated = await iterator.next()
+
+    if (generated.done) {
+      resp = generated.value
+      break
+    }
+
+    if ('error' in generated.value) {
+      yield generated.value
+      return
+    }
+
+    if ('token' in generated.value) {
+      acc += generated.value.token
+      yield {
+        partial: sanitiseAndTrim(acc, requestBody.prompt, opts.replyAs, opts.characters, members),
+      }
+    }
+  }
+
+  try {
+    const completion = resp?.completion || ''
+    if (!completion) {
+      log.error({ body: resp }, 'Claude request failed: Empty response')
+      yield { error: `Claude request failed: Received empty response. Try again.` }
+    } else {
+      yield sanitiseAndTrim(completion, requestBody.prompt, opts.replyAs, opts.characters, members)
+    }
+  } catch (ex: any) {
+    log.error({ err: ex }, 'Claude failed to parse')
+    yield { error: `Claude request failed: ${ex.message}` }
+    return
+  }
+}
+
+function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
+  if (isThirdParty && user.thirdPartyFormat === 'claude' && user.koboldUrl) {
+    return { url: user.koboldUrl, changed: true }
+  }
+
+  return { url: baseUrl, changed: false }
+}
+
+const requestFullCompletion: CompletionGenerator = async function* (
+  url,
+  body,
+  headers,
+  _userId,
+  log
+) {
+  const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
   }).catch((err) => ({ error: err }))
@@ -76,33 +156,67 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     return
   }
 
-  try {
-    const completion = resp.body.completion
-    if (!completion) {
-      log.error({ body: resp.body }, 'OpenAI request failed: Empty response')
-      yield { error: `OpenAI request failed: Received empty response. Try again.` }
-      return
-    } else {
-      const sanitised = sanitise(completion)
-      const trimmed = trimResponseV2(sanitised, opts.replyAs, members, opts.characters, [
-        'END_OF_DIALOG',
-      ])
-      yield trimmed || sanitised
-      return
-    }
-  } catch (ex: any) {
-    log.error({ err: ex }, 'Claude failed to parse')
-    yield { error: `Claude request failed: ${ex.message}` }
-    return
-  }
+  return resp.body
 }
 
-function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
-  if (isThirdParty && user.thirdPartyFormat === 'claude' && user.koboldUrl) {
-    return { url: user.koboldUrl, changed: true }
+const streamCompletion: CompletionGenerator = async function* (url, body, headers, userId, log) {
+  const resp = needle.post(url, JSON.stringify(body), {
+    parse: false,
+    headers: {
+      ...headers,
+      Accept: 'text/event-stream',
+    },
+  })
+
+  const tokens = []
+  let meta: Omit<ClaudeCompletion, 'completion'> = {
+    stop_reason: null,
+    model: '',
+    stop: null,
+    log_id: '',
   }
 
-  return { url: baseUrl, changed: false }
+  try {
+    const events = needleToSSE(resp)
+
+    // https://docs.anthropic.com/claude/reference/streaming
+    for await (const event of events) {
+      switch (event.type) {
+        case 'completion':
+          const delta: Partial<ClaudeCompletion> = JSON.parse(event.data)
+          const token = delta.completion || ''
+          meta = { ...meta, ...delta }
+          tokens.push(token)
+          yield { token }
+          break
+        case 'error':
+          const parsedError = JSON.parse(event.data)
+          log.warn({ error: parsedError }, '[Claude] Received SSE error event')
+          const message = parsedError?.error?.message
+            ? `Anthropic interrupted the response: ${parsedError.error.message}`
+            : `Anthropic interrupted the response.`
+
+          if (!tokens.length) {
+            yield { error: message }
+            return
+          }
+
+          publishOne(userId, { type: 'notification', level: 'warn', message })
+          break
+        case 'ping':
+          break
+        default:
+          log.warn({ event }, '[Claude] Received unrecognized SSE event')
+          break
+      }
+    }
+  } catch (err: any) {
+    log.error({ err }, '[Claude] SSE stream failed')
+    yield { error: `Claude streaming request failed: ${err.message}` }
+    return
+  }
+
+  return { ...meta, completion: tokens.join('') }
 }
 
 function createClaudePrompt(opts: AdapterProps): string {

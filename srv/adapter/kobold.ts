@@ -167,24 +167,20 @@ const streamCompletition = async function* (streamUrl: any, body: any) {
     const events = needleToSSE(resp)
 
     for await (const event of events) {
-      const lines = event.split('\n')
-
-      for (const line of lines) {
-        if (!line.startsWith('data:')) continue
-        const data = JSON.parse(line.slice(5)) as {
-          token: string
-          final: boolean
-          ptr: number
-          error?: string
-        }
-        if (data.error) {
-          yield { error: `Kobold streaming request failed: ${data.error}` }
-          return
-        }
-
-        tokens.push(data.token)
-        yield { token: data.token }
+      if (!event.data) continue
+      const data = JSON.parse(event.data) as {
+        token: string
+        final: boolean
+        ptr: number
+        error?: string
       }
+      if (data.error) {
+        yield { error: `Kobold streaming request failed: ${data.error}` }
+        return
+      }
+
+      tokens.push(data.token)
+      yield { token: data.token }
     }
   } catch (err: any) {
     yield { error: `Kobold streaming request failed: ${err.message || err}` }
