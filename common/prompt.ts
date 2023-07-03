@@ -775,6 +775,10 @@ function getContextLimit(
 
     case 'goose':
       return Math.min(configuredMax, 2048) - genAmount
+
+    // Unsure what this should be
+    case 'openrouter':
+      return Math.min(configuredMax, 4096) - genAmount
   }
 }
 

@@ -52,6 +52,7 @@ export const AI_ADAPTERS = [
   'claude',
   'goose',
   'replicate',
+  'openrouter',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -186,6 +187,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   claude: 'Claude',
   goose: 'Goose AI',
   replicate: 'Replicate',
+  openrouter: 'OpenRouter',
 }
 
 export type PresetAISettings = Omit<

@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import './init'
-import { splitSampleChat } from '/srv/adapter/openai'
+import { splitSampleChat } from '/srv/adapter/chat-completion'
 
 describe('Chat Completion Example Dialogue::', () => {
   it('should properly convert <START> (case insensitive) and split basic messages', () => {
