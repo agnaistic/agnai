@@ -79,8 +79,8 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       sampleChat: 'string?',
       scenario: 'string?',
       schema: ['wpp', 'boostyle', 'sbf', 'text', null],
-      scenarioStates: 'string',
-      scenarioId: 'string',
+      scenarioStates: 'string?',
+      scenarioId: 'string?',
       mode: ['standard', 'adventure', null],
     })
 
