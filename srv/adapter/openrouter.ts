@@ -39,7 +39,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
 
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,
-    'HTTP-Referer': 'Agnaistic',
+    'HTTP-Referer': 'https://agnai.chat',
   }
 
   const res = getCompletion(payload, headers)
@@ -129,6 +129,11 @@ registerAdapter('openrouter', handleOpenRouter, {
 function getResponseText(resp: any, log: AppLog) {
   if (typeof resp === 'string') {
     resp = JSON.parse(resp)
+  }
+
+  if (resp.type === 'Buffer') {
+    const buffer = Buffer.from(resp.data).toString()
+    return getResponseText(buffer, log)
   }
 
   if (!resp.choices || !Array.isArray(resp.choices) || resp.choices.length === 0) {
