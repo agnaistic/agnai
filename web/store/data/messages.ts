@@ -27,7 +27,7 @@ export type PromptEntities = {
   characters: Record<string, AppSchema.Character>
   impersonating?: AppSchema.Character
   lastMessage: string
-  scenarios: AppSchema.ScenarioBook[]
+  scenarios?: AppSchema.ScenarioBook[]
 }
 
 export const msgsApi = {
@@ -202,7 +202,7 @@ async function createActiveChatPrompt(
 
   const chat = {
     ...entities.chat,
-    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios),
+    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios || []),
   }
 
   const encoder = await getEncoder()
@@ -242,13 +242,14 @@ type GenerateProps = {
   impersonate?: AppSchema.Character
 }
 
-function resolveScenario(chatScenario: string, scenarios: AppSchema.ScenarioBook[]) {
-  let scenario = chatScenario
-  const mainScenario = scenarios?.find((s) => s.overwriteCharacterScenario)
-  if (mainScenario) scenario = mainScenario.text
-  const secondaryScenarios = scenarios?.filter((s) => s.overwriteCharacterScenario === false)
-  if (!scenarios.length) return scenario
-  scenario += '\n' + secondaryScenarios.map((s) => s.text).join('\n')
+function resolveScenario(scenario: string, scenarios: AppSchema.ScenarioBook[]) {
+  const main = scenarios.find((s) => s.overwriteCharacterScenario)
+  if (main) scenario = main.text
+
+  const secondary = scenarios.filter((s) => s.overwriteCharacterScenario === false)
+  if (!secondary.length) return scenario
+
+  scenario += '\n' + secondary.map((s) => s.text).join('\n')
   return scenario
 }
 
