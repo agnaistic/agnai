@@ -7,7 +7,8 @@ import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { toastStore, userStore } from '../../store'
+import { settingStore, toastStore, userStore } from '../../store'
+import { TitleCard } from '/web/shared/Card'
 
 const ProfilePage: Component = () => {
   setComponentPageTitle('My profile')
@@ -43,6 +44,16 @@ const ProfilePage: Component = () => {
               <div class="flex items-center">{state.profile?.handle}</div>
             </div>
           </div>
+
+          <TitleCard type="orange">
+            <div class="flex">
+              You can{' '}
+              <Button class="mx-1" size="sm" onClick={() => settingStore.toggleImpersonate(true)}>
+                Impersonate
+              </Button>{' '}
+              characters by clicking your name in the menu.
+            </div>
+          </TitleCard>
 
           <TextInput
             label="ID"

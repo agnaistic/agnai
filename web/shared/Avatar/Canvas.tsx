@@ -1,9 +1,11 @@
-import { Component, For, createSignal, createMemo, createEffect, Show, onMount } from 'solid-js'
-import { parseHex } from '../util'
-import { WIDTH, HEIGHT, Y_OFFSET, getColorProp } from './hooks'
+import { Component, createSignal, createEffect, onMount, Suspense, Show } from 'solid-js'
+import { asyncFrame, parseHex } from '../util'
+import { WIDTH, HEIGHT, getColorProp } from './hooks'
 import { FullSprite, SpriteAttr } from '/common/types/sprite'
 import { attributes, manifest } from '/web/asset/sprite'
 import { getImageData } from '/web/store/data/chars'
+
+export { AvatarCanvas as default }
 
 const BASE_URL = `https://agnai-assets.sgp1.digitaloceanspaces.com/sprites`
 const BLANK_IMG = `${BASE_URL}/blank.png`
@@ -34,15 +36,15 @@ const RECOLOR: { [key in SpriteAttr]?: boolean } = {
   eye_cover_hair: true,
 }
 
-export const AvatarCanvasV2: Component<{
+const AvatarCanvas: Component<{
   style: { width: string; height: string }
   body: FullSprite
   class?: string
   zoom?: number
 }> = (props) => {
   const [show, setShow] = createSignal(false)
+  const [src, setSrc] = createSignal<string>()
 
-  let img: HTMLImageElement
   const [hash, setHash] = createSignal<string>()
 
   const loadSprite = async () => {
@@ -54,7 +56,7 @@ export const AvatarCanvasV2: Component<{
     const cached = spriteCache.get(id)
     if (cached) {
       debug('Cache hit', short)
-      img.src = await cached.image
+      setSrc(await cached.image)
       setHash(id)
       setShow(true)
       return
@@ -64,7 +66,7 @@ export const AvatarCanvasV2: Component<{
     const eventualSprite = new Promise<string>(async (resolve) => {
       try {
         const full = await getSpriteImage(props.body)
-        img.src = full
+        setSrc(full)
         setHash(id)
         resolve(full)
       } catch (ex) {
@@ -82,42 +84,13 @@ export const AvatarCanvasV2: Component<{
   createEffect(loadSprite)
 
   return (
-    <>
-      <img ref={img!} style={props.style} class={`border-0 ${show() ? '' : 'invisible'}`} />
-    </>
+    <Suspense fallback={<img src={BLANK_IMG} style={props.style} class="border-0" />}>
+      <Show when={show()}>
+        <img src={src()} style={props.style} class={`border-0 ${show() ? '' : 'invisible'}`} />
+      </Show>
+    </Suspense>
   )
 }
-
-const AvatarCanvas: Component<{
-  style: { width: string; height: string }
-  children?: any
-  body: FullSprite
-  class?: string
-  zoom?: number
-}> = (props) => {
-  onMount(async () => {})
-
-  return (
-    <>
-      <For each={attributes}>
-        {(attr, i) => {
-          return (
-            <CanvasPart
-              zoom={props.zoom}
-              attr={attr}
-              type={props.body[attr]}
-              style={props.style}
-              body={props.body}
-            />
-          )
-        }}
-      </For>
-      {props.children}
-    </>
-  )
-}
-
-export default AvatarCanvas
 
 type CanvasProps = {
   attr: SpriteAttr
@@ -125,131 +98,6 @@ type CanvasProps = {
   body: FullSprite
   zoom?: number
   style: { width: string; height: string }
-}
-
-const CanvasPart: Component<CanvasProps> = (props) => {
-  let base: HTMLCanvasElement
-  let shader: HTMLCanvasElement
-
-  const [state, setState] = createSignal('')
-
-  const recolored = createMemo(() => {
-    const prop = getColorProp(props.attr)
-    if (!prop) return false
-    if (!props.body[prop]) return false
-    return true
-  })
-
-  createEffect(() => {
-    if (!base || !shader) return
-
-    base.style.width = props.style.width
-    base.style.height = props.style.height
-    shader.style.width = props.style.width
-    shader.style.height = props.style.height
-  })
-
-  const baseImages = createMemo(() => {
-    const files = manifest[props.attr][props.type] || []
-    const images = files
-      .filter((file) => {
-        // if (props.attr === 'back_hair') return false
-        // if (props.attr.includes('hair') && file.includes('highlight')) return false
-        return true
-      })
-      .map((id) => toImage(props.body.gender, props.attr, props.type, id))
-    return images
-  })
-
-  createEffect(async () => {
-    const prop = getColorProp(props.attr)
-    const color = prop ? props.body[prop] : false
-
-    if (!color) {
-      return
-    }
-
-    if (!shader) {
-      return
-    }
-
-    const hash = getHash(props)
-    if (hash === state()) return
-
-    setState(hash)
-
-    const over = shader.getContext('2d')!
-    const under = base.getContext('2d')!
-
-    under.imageSmoothingEnabled = true
-    under.imageSmoothingQuality = 'high'
-    over.imageSmoothingEnabled = true
-    over.imageSmoothingQuality = 'high'
-    under.clearRect(0, 0, WIDTH, HEIGHT)
-    over.clearRect(0, 0, WIDTH, HEIGHT)
-
-    if (!props.type || props.type === 'none') return
-
-    const promises: Array<Promise<{ name: string; image: HTMLImageElement }>> = []
-
-    for (const name of baseImages()) {
-      const image = asyncImage(name)
-      promises.push(image)
-    }
-
-    const images = await Promise.allSettled(promises)
-
-    for (const result of images) {
-      if (result.status !== 'fulfilled') continue
-      under.drawImage(result.value.image, 0, 0, WIDTH, HEIGHT)
-
-      if (canColor(props.attr, result.value.name)) {
-        over.drawImage(result.value.image, 0, 0, WIDTH, HEIGHT - Y_OFFSET)
-      }
-    }
-
-    const { r, g, b, alpha = 0.5 } = parseHex(color)!
-    over.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`
-    over.globalCompositeOperation = 'source-in'
-    over.fillRect(0, 0, WIDTH, HEIGHT)
-  })
-
-  return (
-    <>
-      <Show when={!recolored()}>
-        <For each={baseImages()}>
-          {(src) => (
-            <img
-              class="absolute left-0 right-0 top-0 mx-auto border-0"
-              src={src}
-              style={{ ...props.style, transform: `scale(${props.zoom || 1})` }}
-              onError={(ev) => {
-                ev.currentTarget.src = BLANK_IMG
-              }}
-            />
-          )}
-        </For>
-      </Show>
-      <Show when={recolored()}>
-        <canvas
-          class="absolute left-0 right-0 top-0 mx-auto"
-          ref={base!}
-          width={WIDTH}
-          height={HEIGHT - Y_OFFSET}
-          // style={props.style}
-          style={{ ...props.style, transform: `scale(${props.zoom})` }}
-        ></canvas>
-        <canvas
-          class="absolute left-0 right-0 top-0 mx-auto"
-          ref={shader!}
-          width={WIDTH}
-          height={HEIGHT - Y_OFFSET}
-          // style={props.style}
-          style={{ ...props.style, transform: `scale(${props.zoom})` }}
-        ></canvas>
-      </Show>
-    </>
-  )
 }
 
 function toImage(gender: string, attr: SpriteAttr, type: string, file: string) {
@@ -273,12 +121,14 @@ async function getSpriteImage(body: FullSprite) {
 
       {
         const { image } = await asyncImage(src)
+        await asyncFrame()
         base.drawImage(image, 0, 0, WIDTH, HEIGHT)
       }
 
       if (color && canColor(attr, src)) {
         const base64 = await getColorLayer(src, color, recolor)
         const { image } = await asyncImageBase64(base64)
+        await asyncFrame()
         base.drawImage(image, 0, 0, WIDTH, HEIGHT)
       }
     }
@@ -297,6 +147,7 @@ async function getColorLayer(file: string, color: string, ele?: HTMLCanvasElemen
 
   const ctx = ele.getContext('2d')!
 
+  await asyncFrame()
   // Ensure the canvas is clean and has the correct settings
   ctx.imageSmoothingEnabled = false
   ctx.imageSmoothingQuality = 'low'

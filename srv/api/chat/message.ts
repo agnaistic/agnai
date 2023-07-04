@@ -211,33 +211,45 @@ export const generateMessageV2 = handle(async (req, res) => {
   let error = false
   let meta = {}
 
-  for await (const gen of stream) {
-    if (typeof gen === 'string') {
-      generated = gen
-      continue
-    }
+  try {
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        generated = gen
+        continue
+      }
 
-    if ('partial' in gen) {
-      const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
-      sendMany(members, {
-        type: 'message-partial',
-        partial: `${prefix}${gen.partial}`,
-        adapter,
-        chatId,
-      })
-      continue
-    }
+      if ('partial' in gen) {
+        const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
+        sendMany(members, {
+          type: 'message-partial',
+          partial: `${prefix}${gen.partial}`,
+          adapter,
+          chatId,
+        })
+        continue
+      }
 
-    if ('meta' in gen) {
-      Object.assign(meta, gen.meta)
-      continue
-    }
+      if ('meta' in gen) {
+        Object.assign(meta, gen.meta)
+        continue
+      }
 
-    if ('error' in gen) {
-      error = true
-      sendMany(members, { type: 'message-error', requestId, error: gen.error, adapter, chatId })
-      continue
+      if ('error' in gen) {
+        error = true
+        sendMany(members, { type: 'message-error', requestId, error: gen.error, adapter, chatId })
+        continue
+      }
     }
+  } catch (ex: any) {
+    error = true
+    log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
+    sendMany(members, {
+      type: 'message-error',
+      requestId,
+      error: `Unhandled exception: ${ex?.message || ex}`,
+      adapter,
+      chatId,
+    })
   }
 
   if (error) {

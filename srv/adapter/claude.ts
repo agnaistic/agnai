@@ -189,6 +189,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
           tokens.push(token)
           yield { token }
           break
+
         case 'error':
           const parsedError = JSON.parse(event.data)
           log.warn({ error: parsedError }, '[Claude] Received SSE error event')

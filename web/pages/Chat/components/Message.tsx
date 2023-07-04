@@ -625,5 +625,5 @@ const Meta: Component<{ meta: any }> = (props) => {
 }
 
 function canShowMeta(meta: any) {
-  return !!meta && Object.keys(meta).length > 1
+  return !!meta && Object.keys(meta).length >= 1
 }

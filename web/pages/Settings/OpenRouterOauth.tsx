@@ -45,22 +45,31 @@ const OpenRouterOauth: Component = () => {
 
   return (
     <>
-      <SolidCard>
-        Head to{' '}
-        <a class="link" target="_blank" href="https://openrouter.ai">
-          OpenRouter.ai
-        </a>{' '}
-        to register.
-        <br />
-        Support for OpenRouter is quite new. Please provide feedback via Discord if you have any
-        issues or questions.
-      </SolidCard>
+      <Show when={!isKeySet()}>
+        <SolidCard>
+          Click <b class="highlight">Login with OpenRouter</b> or visit{' '}
+          <a class="link" target="_blank" href="https://openrouter.ai">
+            OpenRouter.ai
+          </a>{' '}
+          to register.
+          <br />
+          Support for OpenRouter is quite new. Please provide feedback via Discord if you have any
+          issues or questions.
+        </SolidCard>
+      </Show>
+      <Show when={isKeySet()}>
+        <em>You are currently logged in.</em>
+      </Show>
       <div>
-        <Show when={isKeySet()}>
-          <em>Key already set</em>
+        <Show when={!isKeySet()}>
+          <Button onClick={start}>Login with OpenRouter</Button>
         </Show>
-        <span></span>
-        <Button onClick={start}>Login with OpenRouter</Button>
+
+        <Show when={isKeySet()}>
+          <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>
+            Logout
+          </Button>
+        </Show>
       </div>
     </>
   )

@@ -35,7 +35,7 @@ import Slot from './shared/Slot'
 import { useEffect, useWindowSize } from './shared/hooks'
 
 const MobileNavHeader = () => (
-  <div class="flex justify-between sm:hidden">
+  <div class="flex h-8 justify-between sm:hidden">
     <div class="w-8"></div>
     <div>
       {' '}
