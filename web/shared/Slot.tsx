@@ -5,18 +5,20 @@ import { v4 } from 'uuid'
 
 type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
 
-const Slot: Component<{ slot: SlotKind }> = (props) => {
+const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
-  const [show, setShow] = createSignal(false)
+  const user = userStore()
 
+  const [show, setShow] = createSignal(false)
+  const [stick, setStick] = createSignal(props.stick)
   const [id] = createSignal(v4())
   const [done, setDone] = createSignal(false)
+
   const cfg = settingStore((s) => ({
     slots: s.config.slots,
     flags: s.flags,
     ready: s.initLoading === false,
   }))
-  const user = userStore()
 
   const hidden = createMemo(() => (show() ? '' : 'hidden'))
 
@@ -50,10 +52,15 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
       if (done()) {
         return
       }
+
       const node = document.createRange().createContextualFragment(cfg.slots[props.slot] as any)
       ele.append(node)
       setDone(true)
       log('Rendered')
+
+      setTimeout(() => {
+        setStick(false)
+      }, 4000)
     } else {
       ele.innerHTML = ''
     }
@@ -65,6 +72,7 @@ const Slot: Component<{ slot: SlotKind }> = (props) => {
       ref={ref}
       id={id()}
       data-slot={props.slot}
+      style={stick() ? { position: 'sticky', top: 0 } : {}}
       classList={{
         'border-[var(--bg-700)]': !!user.user?.admin,
         'border-[1px]': !!user.user?.admin,

@@ -348,8 +348,6 @@ const ChatDetail: Component = () => {
           devCycleAvatarSettings(user)
           onSuccess?.()
           return
-          onSuccess?.()
-          return
 
         case '/devShowHiddenEvents':
           setShowHiddenEvents(!showHiddenEvents())

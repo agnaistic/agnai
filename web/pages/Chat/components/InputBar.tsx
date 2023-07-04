@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Radio, Zap } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Zap } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
@@ -13,6 +13,8 @@ import { createDebounce } from '/web/shared/util'
 import { useDraft } from '/web/shared/hooks'
 import { eventStore } from '/web/store/event'
 import { useAppContext } from '/web/store/context'
+import NoCharacterIcon from '/web/icons/NoCharacterIcon'
+import WizardIcon from '/web/icons/WizardIcon'
 // import WizardIcon from '/web/icons/WizardIcon'
 // import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 
@@ -141,13 +143,13 @@ const InputBar: Component<{
 
   return (
     <div class="relative flex items-center justify-center">
-      <Show when={props.showOocToggle}>
+      <Show when={true || props.showOocToggle}>
         <div class="cursor-pointer p-2" onClick={toggleOoc}>
           <Show when={props.ooc}>
-            <Radio class="icon-button" />
+            <WizardIcon />
           </Show>
           <Show when={!props.ooc}>
-            <Radio color="var(--bg-100)" />
+            <NoCharacterIcon color="var(--bg-500)" />
           </Show>
         </div>
       </Show>

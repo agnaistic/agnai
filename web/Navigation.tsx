@@ -1,6 +1,7 @@
 import { A, useNavigate } from '@solidjs/router'
 import {
   Activity,
+  Bell,
   Book,
   Bot,
   HeartHandshake,
@@ -9,6 +10,7 @@ import {
   LogOut,
   MailPlus,
   MessageCircle,
+  MessageSquare,
   Moon,
   Settings,
   ShoppingBag,
@@ -30,9 +32,18 @@ import {
   Switch,
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
-import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
+import {
+  characterStore,
+  chatStore,
+  inviteStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from './store'
 import Slot from './shared/Slot'
 import { useEffect, useWindowSize } from './shared/hooks'
+import WizardIcon from './icons/WizardIcon'
+import Badge from './shared/Badge'
 
 const MobileNavHeader = () => (
   <div class="flex h-8 justify-between sm:hidden">
@@ -153,9 +164,33 @@ const Navigation: Component = () => {
 const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
+  const toasts = toastStore()
 
   return (
     <>
+      <div class="flex justify-center gap-2">
+        <Item>
+          <MessageSquare />
+        </Item>
+
+        <Item onClick={() => toastStore.modal(true)}>
+          <Switch>
+            <Match when={toasts.unseen > 0}>
+              <div class="relative flex">
+                <Bell fill="var(--bg-100)" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                </span>
+              </div>
+            </Match>
+
+            <Match when={!toasts.unseen}>
+              <Bell color="var(--bg-500)" />
+            </Match>
+          </Switch>
+        </Item>
+      </div>
+
       <Item href="/profile">
         <User /> Profile
       </Item>
@@ -168,11 +203,11 @@ const UserNavigation: Component = () => {
       </Show>
 
       <Item href="/character/list">
-        <Bot /> Characters
+        <WizardIcon /> Characters
       </Item>
 
       <Item href="/chats">
-        <MessageCircle /> Chats
+        <MessageCircle fill="var(--bg-100)" /> Chats
       </Item>
 
       <Item href="/memory">
@@ -376,10 +411,10 @@ const InviteBadge: Component = () => {
 
   return (
     <>
-      <Show when={inv.invites.length}>
-        <div class="flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs">
+      <Show when={inv.invites.length || 1}>
+        <span class={`flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs`}>
           {inv.invites.length}
-        </div>
+        </span>
       </Show>
     </>
   )

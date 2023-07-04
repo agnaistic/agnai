@@ -19,8 +19,7 @@ const AppIcon: Component<IconProps & { svg: string }> = (props) => {
       child.setAttribute('height', size.toString())
       child.setAttribute('stroke', 'currentColor')
       child.setAttribute('fill', 'currentColor')
-
-      // child.setAttribute('fill', props.color || 'var(--bg-100)')
+      child.setAttribute('fill', props.color || 'var(--bg-100)')
     }
   })
 

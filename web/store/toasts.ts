@@ -12,9 +12,17 @@ let toastId = 0
 
 type ToastState = {
   toasts: Toast[]
+  history: Array<{ time: Date; toast: Toast; seen: boolean }>
+  unseen: number
+  modal: boolean
 }
 
-export const toastStore = createStore<ToastState>('toasts', { toasts: [] })((get, set) => {
+export const toastStore = createStore<ToastState>('toasts', {
+  toasts: [],
+  history: [],
+  unseen: 0,
+  modal: false,
+})((get, set) => {
   const addToast = (kind: Toast['type']) => {
     return (_: ToastState, msg: string, ttl = 5) => {
       const id = ++toastId
@@ -30,12 +38,37 @@ export const toastStore = createStore<ToastState>('toasts', { toasts: [] })((get
         set({ toasts: toasts.filter((t) => t.id !== id) })
       }, ttl * 1000)
 
-      const { toasts } = get()
-      return { toasts: toasts.concat(toast) }
+      const { toasts, history } = get()
+
+      const nextHistory =
+        getLevel(toast.type) > 2
+          ? [{ time: new Date(), toast, seen: false }].concat(history)
+          : history
+
+      const unseen = nextHistory.filter((nh) => !nh.seen).length
+      return { toasts: toasts.concat(toast), history: nextHistory, unseen }
     }
   }
 
   return {
+    modal({ history }, state: boolean) {
+      if (state) {
+        return {
+          modal: true,
+          history: history.map((h) => ({ ...h, seen: true })),
+          unseen: 0,
+        }
+      }
+
+      return { modal: false }
+    },
+    clearHistory(prev, id?: number) {
+      if (id) {
+        return { history: prev.history.filter((h) => h.toast.id !== id) }
+      }
+
+      return { history: [] }
+    },
     remove: ({ toasts }, id: number) => {
       return { toasts: toasts.filter((t) => t.id !== id) }
     },
@@ -60,3 +93,16 @@ subscribe('notification', { level: 'string?', message: 'string' }, (body) => {
       return toastStore.normal(body.message)
   }
 })
+
+function getLevel(type: Toast['type']) {
+  switch (type) {
+    case 'default':
+      return 1
+    case 'success':
+      return 2
+    case 'warn':
+      return 3
+    case 'error':
+      return 4
+  }
+}
