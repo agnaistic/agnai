@@ -403,7 +403,12 @@ function updateTheme(ui: UI.UISettings) {
   const mode = ui[ui.mode]
 
   const hex = mode.bgCustom || getSettingColor('--bg-800')
-  const colors = mode.bgCustom ? new Values(`${hex}`).all(12).map(({ hex }) => '#' + hex) : []
+  const colors = mode.bgCustom
+    ? new Values(`${hex}`)
+        .all(14)
+        .map(({ hex }) => '#' + hex)
+        .reverse()
+    : []
 
   if (ui.mode === 'dark') {
     colors.reverse()
