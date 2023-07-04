@@ -15,7 +15,6 @@ const AvatarContainer: Component<{
   body?: FullSprite
   zoom?: number
 }> = (props) => {
-  let bound: HTMLDivElement = {} as any
   const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
 
   const [slowBounds, cleanup] = createDebounce(
@@ -65,17 +64,7 @@ const AvatarContainer: Component<{
 
   return (
     <Show when={props.body}>
-      <div
-        ref={bound!}
-        class={`relative mx-auto flex h-full w-full select-none justify-center`}
-        style={{ height: getStyle().height, 'grid-area': 'preview' }}
-        // style={{ width: props.container.clientWidth + 'px' }}
-      >
-        <div class="absolute left-0 right-0 top-0  mx-auto rounded-md" style={getStyle()} />
-        <AvatarCanvas zoom={props.zoom} body={body()!} style={getStyle()} />
-
-        {/* <Draggable onChange={dragging} onDone={dragged}></Draggable> */}
-      </div>
+      <AvatarCanvas zoom={props.zoom} body={body()!} style={getStyle()} />
     </Show>
   )
 }

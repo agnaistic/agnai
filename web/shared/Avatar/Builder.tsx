@@ -76,10 +76,7 @@ const AvatarBuilder: Component<{
       </Show>
       <div class="flex select-none justify-center">
         <main class="flex w-full flex-col">
-          <header
-            class={`mt-2 flex w-full flex-col items-center gap-2`}
-            style={{ 'grid-area': 'header' }}
-          >
+          <header class={`mt-2 flex w-full flex-col items-center gap-2`}>
             <div class="flex w-full justify-between gap-2">
               <AttributeSelect body={body()} update={updateAttr} />
             </div>
@@ -120,7 +117,6 @@ const AvatarBuilder: Component<{
 
           <section
             ref={bound!}
-            style={{ 'grid-area': 'preview' }}
             class={`relative flex h-full min-h-[50vh] w-full select-none justify-center border-[1px] border-[var(--bg-900)]`}
           >
             <AvatarCanvas body={body()} style={getStyle()} />
