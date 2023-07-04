@@ -12,16 +12,18 @@ const names = {
   profile: 'profile.json',
   presets: 'presets.json',
   memory: 'books.json',
+  scenario: 'scenario.json',
   characters: 'characters.json',
   chats: 'chats.json',
 }
 
 const loadState = handle(async (req) => {
-  const [user, profile, presets, books, characters, chats] = await Promise.all([
+  const [user, profile, presets, books, scenario, characters, chats] = await Promise.all([
     read(names.user),
     read(names.profile),
     read(names.presets),
     read(names.memory),
+    read(names.scenario),
     read(names.characters),
     read(names.chats),
   ])
@@ -34,6 +36,7 @@ const loadState = handle(async (req) => {
     presets,
     config,
     books,
+    scenario,
     characters,
     chats,
   }
@@ -52,6 +55,7 @@ const saveCharacters = handle(async ({ body }) => {
 const saveState = handle(async ({ body }) => {
   if (body.user || body.config) await saveFile(names.user, body.user || body.config)
   if (body.books || body.memory) await saveFile(names.memory, body.books || body.memory)
+  if (body.scenario) await saveFile(names.scenario, body.scenario)
   if (body.profile) await saveFile(names.profile, body.profile)
   if (body.characters) await saveFile(names.characters, body.characters)
   if (body.presets) await saveFile(names.presets, body.presets)
