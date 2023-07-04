@@ -77,7 +77,12 @@ export const updateService = handle(async ({ userId, body, params }) => {
   for (const setting of adapter.settings) {
     if (setting.field in body) {
       const value = body[setting.field]
-      next[setting.field] = setting.secret ? encryptText(value) : value
+      if (setting.secret) {
+        const secret = value === '' ? value : encryptText(value)
+        next[setting.field] = secret
+        continue
+      }
+      next[setting.field] = value
     }
   }
 

@@ -8,7 +8,7 @@ import { createDebounce } from '../util'
 import { ColorPickerV2 } from '../ColorPicker'
 import { FullSprite, SpriteAttr } from '/common/types/sprite'
 import { calcBounds, getAttrColor, getColorProp } from './hooks'
-import { AvatarCanvasV2 } from './Canvas'
+import AvatarCanvas from './Canvas'
 
 const AvatarBuilder: Component<{
   body?: FullSprite
@@ -123,7 +123,7 @@ const AvatarBuilder: Component<{
             style={{ 'grid-area': 'preview' }}
             class={`relative flex h-full min-h-[50vh] w-full select-none justify-center border-[1px] border-[var(--bg-900)]`}
           >
-            <AvatarCanvasV2 body={body()} style={getStyle()} />
+            <AvatarCanvas body={body()} style={getStyle()} />
           </section>
         </main>
       </div>

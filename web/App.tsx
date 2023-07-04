@@ -186,7 +186,7 @@ const InfoModal: Component = (props) => {
   const state = rootModalStore()
 
   return (
-    <Modal show={state.info} close={() => rootModalStore.info()}>
+    <Modal title="Information" show={state.info} close={() => rootModalStore.info()}>
       {state.info}
     </Modal>
   )

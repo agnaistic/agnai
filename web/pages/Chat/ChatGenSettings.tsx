@@ -184,7 +184,12 @@ export const ChatGenSettings: Component<{
           <PresetSelect
             options={presetOptions()}
             selected={selected()}
-            setPresetId={(val) => setSelected(val)}
+            setPresetId={(val) => {
+              setSelected(val)
+              chatStore.editChatGenPreset(props.chat._id, val, () => {
+                toastStore.success('Chat preset changed')
+              })
+            }}
           />
 
           <ServiceWarning service={servicePreset()?.preset.service} />

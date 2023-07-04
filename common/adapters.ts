@@ -17,7 +17,7 @@ export type AdapterSetting = {
   /** If this is a secret that should be encrypted */
   secret: boolean
 
-  setting: SettingType
+  setting: SettingType & { hidden?: boolean }
 }
 
 type SettingType =

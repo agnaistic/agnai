@@ -12,12 +12,14 @@ const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) =>
     <>
       <For each={props.service.settings}>
         {(each) => (
-          <ServiceOption
-            service={props.service.name}
-            opt={each}
-            value={user?.[props.service.name]?.[each.field]}
-            config={user?.[props.service.name]}
-          />
+          <Show when={!each.setting.hidden}>
+            <ServiceOption
+              service={props.service.name}
+              opt={each}
+              value={user?.[props.service.name]?.[each.field]}
+              config={user?.[props.service.name]}
+            />
+          </Show>
         )}
       </For>
     </>

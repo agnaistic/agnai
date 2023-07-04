@@ -147,25 +147,9 @@ const AvatarIcon: Component<Props> = (props) => {
     settingStore.showImage(img)
   }
 
-  let container: any
-
   return (
     <>
       <Switch>
-        <Match when={props.visual === 'sprite' && props.sprite}>
-          <div
-            ref={container}
-            class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
-              props.class || ''
-            }`}
-            data-bot-avatar={props.bot}
-            data-user-avatar={!props.bot}
-            onClick={onImageClick}
-          >
-            <AvatarContainer body={props.sprite!} container={container} />
-          </div>
-        </Match>
-
         <Match when={avatar()}>
           <div
             class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${

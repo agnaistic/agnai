@@ -65,6 +65,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     }
   }
 
+  if (response && 'model' in response) {
+    yield { meta: { model: response.model } }
+  }
+
   const text = getResponseText(response, opts.log)
   if (text instanceof Error) {
     yield { error: `OpenRouter response failed: ${text.message}` }
@@ -108,7 +112,7 @@ registerAdapter('openrouter', handleOpenRouter, {
       field: 'apiKey',
       label: 'API Key',
       secret: true,
-      setting: { type: 'text', placeholder: 'E.g. sk-or-v1-2v6few...' },
+      setting: { hidden: true, type: 'text', placeholder: 'E.g. sk-or-v1-2v6few...' },
     },
     {
       field: 'format',
