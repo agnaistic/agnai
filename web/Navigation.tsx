@@ -10,7 +10,6 @@ import {
   LogOut,
   MailPlus,
   MessageCircle,
-  MessageSquare,
   Moon,
   Settings,
   ShoppingBag,
