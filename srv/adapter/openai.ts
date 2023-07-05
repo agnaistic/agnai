@@ -42,7 +42,7 @@ type CompletionGenerator = (
 >
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
+  const { members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
   const base = getBaseUrl(user, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {

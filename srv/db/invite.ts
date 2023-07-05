@@ -12,6 +12,7 @@ import { sendMany } from '../api/ws'
 import { getChatOnly } from './chats'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
+import { now } from './util'
 
 export type NewInvite = {
   chatId: string
@@ -56,13 +57,12 @@ export async function create(invite: NewInvite) {
     throw new StatusError(`Cannot invite yourself`, 400)
   }
 
-  const user = await db('profile').findOne({ kind: 'profile', userId: invite.invitedId })
+  const user = await db('profile').findOne({ userId: invite.invitedId })
   if (!user) {
     throw new StatusError(`User does not exist`, 400)
   }
 
   const membership = await db('chat-member').findOne({
-    kind: 'chat-member',
     chatId: invite.chatId,
     userId: invite.invitedId,
   })
@@ -119,7 +119,7 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
     _id: v4(),
     kind: 'chat-member',
     chatId: prev.chatId,
-    createdAt: new Date().toISOString(),
+    createdAt: now(),
     userId: prev.invitedId,
   }
 
@@ -140,6 +140,20 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
   await db('chat-invite').deleteOne({ _id: inviteId, kind: 'chat-invite' }, {})
 
   return accept ? member : undefined
+}
+
+/** Typically used for 1:1 chats */
+export async function addChatMember(chatId: string, memberId: string) {
+  const prev = await db('chat-member').findOne({ chatId, userId: memberId })
+  if (prev) return
+
+  await db('chat-member').insertOne({
+    _id: v4(),
+    kind: 'chat-member',
+    chatId,
+    userId: memberId,
+    createdAt: now(),
+  })
 }
 
 export async function removeMember(chatId: string, requestedBy: string, memberId: string) {

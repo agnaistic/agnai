@@ -223,7 +223,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 }
 
 function createClaudePrompt(opts: AdapterProps): string {
-  const { char, parts, gen, replyAs } = opts
+  const { parts, gen, replyAs } = opts
   const lines = opts.lines ?? []
 
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
@@ -233,7 +233,11 @@ function createClaudePrompt(opts: AdapterProps): string {
   const ujb = parts.ujb ? `Human: <system_note>${parts.ujb}</system_note>` : ''
 
   const maxBudget =
-    maxContextLength - maxResponseTokens - gaslightCost - encoder(ujb) - encoder(char.name + ':')
+    maxContextLength -
+    maxResponseTokens -
+    gaslightCost -
+    encoder(ujb) -
+    encoder(opts.replyAs.name + ':')
 
   let tokens = 0
   const history: string[] = []

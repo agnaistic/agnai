@@ -1,6 +1,7 @@
 import { AppSchema } from './types/schema'
 import { tokenize } from './tokenize'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
+import { PromptEntities } from '/web/store/data/messages'
 
 export type ImagePromptOpts = {
   user: AppSchema.User
@@ -47,7 +48,7 @@ export async function createAppearancePrompt(
   return prompt
 }
 
-export async function createImagePrompt(opts: ImagePromptOpts) {
+export async function createImagePrompt(opts: PromptEntities) {
   const maxTokens = getMaxImageContext(opts.user)
 
   /**
@@ -57,7 +58,7 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
   const lines: string[] = []
   let tokens = 0
 
-  for (const { msg, userId, adapter } of opts.messages.slice().reverse()) {
+  for (const { msg, userId, adapter, ...rest } of opts.messages.slice().reverse()) {
     if (adapter === 'image') continue
     const indexes = tokenizeMessage(msg)
 
@@ -78,7 +79,12 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
 
     if (tokens > maxTokens) break
 
-    const handle = userId ? opts.members.find((pr) => pr.userId === userId)?.handle : opts.char.name
+    const char = rest.characterId ? opts.characters[rest.characterId] : null
+    const handle = rest.characterId ? char?.name : userId ? opts.members.find((pr) => pr.userId === userId)?.handle : null
+
+    if (handle) {
+      
+    }
     tokens += await tokenize(handle + ':')
 
     if (tokens > maxTokens) {

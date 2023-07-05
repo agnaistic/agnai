@@ -318,7 +318,7 @@ async function getGenerateProps(
       // If the chat is a single-user chat, it is always in 'auto-reply' mode
       // Ensure the autoReplyAs parameter is set for single-bot chats
       const isMulti = getActiveBots(entities.chat, entities.characters).length > 1
-      if (!isMulti) entities.autoReplyAs = entities.char._id
+      if (!isMulti) entities.autoReplyAs = entities.char?._id
 
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
       props.impersonate = entities.impersonating
