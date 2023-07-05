@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal } from 'solid-js'
+import { Component, createMemo, createSignal, onMount } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -8,7 +8,7 @@ import {
   getStrictForm,
   setComponentPageTitle,
 } from '../../shared/util'
-import { userStore } from '../../store'
+import { settingStore, userStore } from '../../store'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
 import AISettings from './AISettings'
@@ -17,6 +17,7 @@ import { ImageSettings } from './Image/ImageSettings'
 import { VoiceSettings } from './Voice/VoiceSettings'
 import { toArray } from '/common/util'
 import { useSearchParams } from '@solidjs/router'
+import Modal from '/web/shared/Modal'
 
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
@@ -36,7 +37,32 @@ enum MainTab {
 
 type Tab = keyof typeof MainTab
 
-const Settings: Component = () => {
+export const SettingsModal = () => {
+  const state = settingStore()
+  const [footer, setFooter] = createSignal<any>()
+  return (
+    <Modal
+      show={state.showSettings}
+      close={() => settingStore.modal(false)}
+      fixedHeight
+      maxWidth="half"
+      footer={
+        <>
+          <Button schema="secondary" onClick={() => settingStore.modal(false)}>
+            Cancel
+          </Button>
+          {footer()}
+        </>
+      }
+    >
+      <Settings footer={setFooter} />
+    </Modal>
+  )
+}
+
+const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
+  let formRef: HTMLFormElement
+
   setComponentPageTitle('Settings')
   const state = userStore()
   const [query, _setQuery] = useSearchParams()
@@ -49,9 +75,9 @@ const Settings: Component = () => {
 
   const currentTab = createMemo(() => tabs[tab()])
 
-  const onSubmit = (evt: Event) => {
-    const adapterConfig = getAdapterConfig(getFormEntries(evt))
-    const body = getStrictForm(evt, settingsForm)
+  const onSubmit = () => {
+    const adapterConfig = getAdapterConfig(getFormEntries(formRef))
+    const body = getStrictForm(formRef, settingsForm)
 
     const {
       imageCfg,
@@ -127,6 +153,17 @@ const Settings: Component = () => {
     7
   )
 
+  onMount(() => {
+    props.footer?.(footer)
+  })
+
+  const footer = (
+    <Button onClick={onSubmit}>
+      <Save />
+      Update Settings
+    </Button>
+  )
+
   return (
     <>
       <PageHeader
@@ -142,7 +179,7 @@ const Settings: Component = () => {
       <div class="my-2">
         <Tabs tabs={tabs.map((t) => settingTabs[t])} selected={tab} select={setTab} />
       </div>
-      <form onSubmit={onSubmit} autocomplete="off">
+      <form ref={formRef!} autocomplete="off">
         <div class="flex flex-col gap-4">
           <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
             <AISettings onHordeWorkersChange={setWorkers} onHordeModelsChange={setModels} />
@@ -170,13 +207,8 @@ const Settings: Component = () => {
           </div>
         </div>
 
-        <Show when={currentTab() !== 'guest'}>
-          <div class="flex justify-end gap-2 pt-4">
-            <Button type="submit">
-              <Save />
-              Update Settings
-            </Button>
-          </div>
+        <Show when={!props.footer}>
+          <div class="flex justify-end gap-2 pt-4">{footer}</div>
         </Show>
       </form>
     </>

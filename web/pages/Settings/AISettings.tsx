@@ -25,7 +25,7 @@ import RegisteredSettings from './components/RegisteredSettings'
 import { useSearchParams } from '@solidjs/router'
 import { Toggle } from '/web/shared/Toggle'
 import OpenRouterOauth from './OpenRouterOauth'
-import { SolidCard } from '/web/shared/Card'
+import { TitleCard } from '/web/shared/Card'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -137,13 +137,13 @@ const AISettings: Component<{
               </Match>
 
               <Match when={each.name === 'replicate'}>
-                <SolidCard>
+                <TitleCard>
                   Head to{' '}
                   <a class="link" target="_blank" href="https://replicate.com/">
                     Replicate.com
                   </a>{' '}
                   to get started.
-                </SolidCard>
+                </TitleCard>
               </Match>
             </Switch>
 

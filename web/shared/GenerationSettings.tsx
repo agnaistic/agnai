@@ -372,7 +372,7 @@ const PromptSettings: Component<Props> = (props) => {
         <div class="flex flex-wrap gap-4">
           <Toggle
             fieldName="ignoreCharacterSystemPrompt"
-            label="Override character system prompt"
+            label="Override Character System Prompt"
             value={props.inherit?.ignoreCharacterSystemPrompt ?? false}
             disabled={props.disabled}
             service={props.service}
@@ -380,7 +380,7 @@ const PromptSettings: Component<Props> = (props) => {
           />
           <Toggle
             fieldName="ignoreCharacterUjb"
-            label="Override character UJB"
+            label="Override Character Jailbreak"
             value={props.inherit?.ignoreCharacterUjb ?? false}
             disabled={props.disabled}
             service={props.service}
@@ -388,7 +388,7 @@ const PromptSettings: Component<Props> = (props) => {
           />
         </div>
       </Card>
-      <Card>
+      <Card hide={!serviceHasSetting(props.service, 'antiBond')}>
         <Toggle
           fieldName="antiBond"
           label="Anti-Bond"

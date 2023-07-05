@@ -15,7 +15,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
   }
 
   return (
-    <Modal title="Impersonate a Character" show={props.show} close={props.close}>
+    <Modal title="Impersonate a Character" show={props.show} close={props.close} maxWidth="half">
       <div class="flex flex-col gap-2 text-sm">
         <span>
           Instead of updating your profile to speak as somebody else, you can <b>impersonate</b> a

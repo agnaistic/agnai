@@ -1,4 +1,4 @@
-import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
 import { settingStore, userStore } from '../../../store'
 import Button from '../../../shared/Button'
@@ -9,6 +9,8 @@ import MultiDropdown from '../../../shared/MultiDropdown'
 import { HordeModel, HordeWorker } from '../../../../common/adapters'
 import { Toggle } from '../../../shared/Toggle'
 import { toArray } from '/common/util'
+import { rootModalStore } from '/web/store/root-modal'
+import { Pill } from '/web/shared/Card'
 
 const HordeAISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -30,14 +32,14 @@ const HordeAISettings: Component<{
   const selectedModels = createMemo(() => {
     const selected = models()
     if (selected?.length) {
-      return selected.map((m) => m.value).join(', ')
+      return selected.map((m) => m.value)
     }
 
     if (!state.models.length) {
-      return 'Any'
+      return ['Any']
     }
 
-    return state.models.join(', ')
+    return state.models
   })
 
   const onSaveHordeModels = (options: Option[]) => {
@@ -122,11 +124,13 @@ const HordeAISettings: Component<{
         </Button>
       </Show>
 
-      <div class="flex items-center gap-4">
+      <div class="flex items-start gap-4">
         <Button onClick={() => setShowModels(true)} class="min-w-max">
           Select Models
         </Button>
-        <div>Models selected: {selectedModels()}</div>
+        <div class="flex flex-wrap gap-2 text-sm">
+          <For each={selectedModels()}>{(model) => <Pill inverse>{model}</Pill>}</For>
+        </div>
       </div>
       <div class="flex items-center gap-4">
         <Button onClick={() => setShow(true)}>Select Workers</Button>
@@ -163,39 +167,45 @@ const ModelModal: Component<{
     props.close()
   }
 
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Specify AI Horde Models"
-      footer={
-        <>
-          <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
-          </Button>
-          <Button onClick={save}>
-            <Save /> Select Model(s)
-          </Button>
-        </>
-      }
-    >
-      <div class="flex flex-col gap-4 text-sm">
-        <MultiDropdown
-          fieldName="workers"
-          items={cfg.models}
-          label="Select Model(s)"
-          onChange={setSelected}
-          values={selected()?.map((s) => s.value) || state.models}
-        />
-        <div class="flex items-center justify-between gap-4">
-          <div>Models selected: {selected()?.length || state.models.length || '0'}</div>
-          <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
-            De-select All
-          </Button>
+  rootModalStore.addModal({
+    id: 'horde-models',
+    element: (
+      <Modal
+        show={props.show}
+        close={props.close}
+        title="Specify AI Horde Models"
+        footer={
+          <>
+            <Button schema="secondary" onClick={props.close}>
+              <X /> Cancel
+            </Button>
+            <Button onClick={save}>
+              <Save /> Select Model(s)
+            </Button>
+          </>
+        }
+      >
+        <div class="flex flex-col gap-4 text-sm">
+          <MultiDropdown
+            class="min-h-[6rem]"
+            fieldName="workers"
+            items={cfg.models}
+            label="Select Model(s)"
+            onChange={setSelected}
+            values={selected()?.map((s) => s.value) || state.models}
+          />
+          <div class="flex items-center justify-between gap-4">
+            <div>Models selected: {selected()?.length || state.models.length || '0'}</div>
+            <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
+              De-select All
+            </Button>
+          </div>
         </div>
-      </div>
-    </Modal>
-  )
+      </Modal>
+    ),
+  })
+
+  return null
 }
 
 const WorkerModal: Component<{
@@ -221,46 +231,51 @@ const WorkerModal: Component<{
     props.close()
   }
 
-  return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      title="Specify AI Horde Workers"
-      footer={
-        <>
-          <Button schema="secondary" onClick={props.close}>
-            <X /> Cancel
-          </Button>
-          <Button onClick={save}>
-            <Save /> Select Workers
-          </Button>
-        </>
-      }
-    >
-      <div class="flex flex-col gap-4 text-sm">
-        <MultiDropdown
-          fieldName="workers"
-          items={cfg.workers}
-          label="Select Workers"
-          helperText="To use any worker de-select all workers"
-          onChange={setSelected}
-          values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
-        />
-        <div>
-          The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b>{' '}
-          limits. If you wish to use that worker, your preset should not exceed these values.
-          <br />
-          E.g. <b>(1024/80)</b>
+  rootModalStore.addModal({
+    id: 'horde-workers',
+    element: (
+      <Modal
+        show={props.show}
+        close={props.close}
+        title="Specify AI Horde Workers"
+        footer={
+          <>
+            <Button schema="secondary" onClick={props.close}>
+              <X /> Cancel
+            </Button>
+            <Button onClick={save}>
+              <Save /> Select Workers
+            </Button>
+          </>
+        }
+      >
+        <div class="flex flex-col gap-4 text-sm">
+          <MultiDropdown
+            fieldName="workers"
+            items={cfg.workers}
+            label="Select Workers"
+            helperText="To use any worker de-select all workers"
+            onChange={setSelected}
+            values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
+          />
+          <div>
+            The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b>{' '}
+            limits. If you wish to use that worker, your preset should not exceed these values.
+            <br />
+            E.g. <b>(1024/80)</b>
+          </div>
+          <div class="flex  items-center justify-between gap-4">
+            <p>Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}</p>
+            <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
+              De-select All
+            </Button>
+          </div>
         </div>
-        <div class="flex  items-center justify-between gap-4">
-          <p>Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}</p>
-          <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
-            De-select All
-          </Button>
-        </div>
-      </div>
-    </Modal>
-  )
+      </Modal>
+    ),
+  })
+
+  return null
 }
 
 function toItem(model: HordeModel) {

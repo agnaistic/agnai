@@ -1,6 +1,7 @@
 import { A, useNavigate } from '@solidjs/router'
 import {
   Activity,
+  Bell,
   Book,
   Bot,
   HeartHandshake,
@@ -30,9 +31,18 @@ import {
   Switch,
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
-import { characterStore, chatStore, inviteStore, settingStore, userStore } from './store'
+import {
+  characterStore,
+  chatStore,
+  inviteStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from './store'
 import Slot from './shared/Slot'
 import { useEffect, useWindowSize } from './shared/hooks'
+import WizardIcon from './icons/WizardIcon'
+import Badge from './shared/Badge'
 
 const MobileNavHeader = () => (
   <div class="flex h-8 justify-between sm:hidden">
@@ -153,10 +163,24 @@ const Navigation: Component = () => {
 const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
+  const toasts = toastStore()
 
   return (
     <>
-      <Item href="/profile">
+      {/* <div class="flex justify-center gap-2">
+        <Item>
+          <MessageSquare />
+        </Item>
+
+
+      </div> */}
+
+      <Item
+        onClick={() => {
+          settingStore.closeMenu()
+          userStore.modal(true)
+        }}
+      >
         <User /> Profile
       </Item>
 
@@ -168,11 +192,11 @@ const UserNavigation: Component = () => {
       </Show>
 
       <Item href="/character/list">
-        <Bot /> Characters
+        <WizardIcon /> Characters
       </Item>
 
       <Item href="/chats">
-        <MessageCircle /> Chats
+        <MessageCircle fill="var(--bg-100)" /> Chats
       </Item>
 
       <Item href="/memory">
@@ -210,7 +234,12 @@ const UserNavigation: Component = () => {
           </Item>
         </Show>
 
-        <Item href="/settings">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            settingStore.modal(true)
+          }}
+        >
           <Settings />
         </Item>
 
@@ -223,6 +252,28 @@ const UserNavigation: Component = () => {
             <Moon />
           </Show>
         </Item>
+
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            toastStore.modal(true)
+          }}
+        >
+          <Switch>
+            <Match when={toasts.unseen > 0}>
+              <div class="relative flex">
+                <Bell fill="var(--bg-100)" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                </span>
+              </div>
+            </Match>
+
+            <Match when={!toasts.unseen}>
+              <Bell color="var(--bg-500)" />
+            </Match>
+          </Switch>
+        </Item>
       </div>
 
       <Slots />
@@ -231,6 +282,7 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
+  const toasts = toastStore()
   const user = userStore()
   const menu = settingStore((s) => ({
     showMenu: s.showMenu,
@@ -248,7 +300,12 @@ const GuestNavigation: Component = () => {
       </Show>
 
       <Show when={menu.guest}>
-        <Item href="/profile">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            userStore.modal(true)
+          }}
+        >
           <User /> Profile
         </Item>
 
@@ -293,7 +350,12 @@ const GuestNavigation: Component = () => {
           </ExternalLink>
         </Show>
 
-        <Item href="/settings">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            settingStore.modal(true)
+          }}
+        >
           <Settings />
         </Item>
 
@@ -305,6 +367,28 @@ const GuestNavigation: Component = () => {
           <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
             <Moon />
           </Show>
+        </Item>
+
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            toastStore.modal(true)
+          }}
+        >
+          <Switch>
+            <Match when={toasts.unseen > 0}>
+              <div class="relative flex">
+                <Bell fill="var(--bg-100)" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                </span>
+              </div>
+            </Match>
+
+            <Match when={!toasts.unseen}>
+              <Bell color="var(--bg-500)" />
+            </Match>
+          </Switch>
         </Item>
       </div>
 
@@ -377,9 +461,9 @@ const InviteBadge: Component = () => {
   return (
     <>
       <Show when={inv.invites.length}>
-        <div class="flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs">
+        <span class={`flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs`}>
           {inv.invites.length}
-        </div>
+        </span>
       </Show>
     </>
   )
@@ -389,7 +473,7 @@ export default Navigation
 
 const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
   <a
-    class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
+    class="flex h-10 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] sm:h-12"
     href={props.href}
     target={props.newtab ? '_blank' : ''}
   >
