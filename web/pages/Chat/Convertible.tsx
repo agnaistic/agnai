@@ -47,7 +47,7 @@ const Convertible: Component<ConvertibleProps> = (props) => (
 
 const WithinPage: Component<PartialProps> = (props) => {
   const rightPaneBgStyles = useBgStyle({
-    hex: getSettingColor('bg-800'),
+    hex: 'bg-800',
     blur: true,
   })
   const paneOrPopup = usePane()

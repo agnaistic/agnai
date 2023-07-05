@@ -325,7 +325,7 @@ const PromptSettings: Component<Props> = (props) => {
       <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'systemPrompt')}>
         <FormLabel
           label="System Prompt"
-          helperText="General instructions for how the AI should respond. This will be inserted into your Prompt Template."
+          helperText="Instructions for how the AI should respond. This will be inserted into your Prompt Template."
         />
         <PromptEditor
           fieldName="systemPrompt"
@@ -353,12 +353,12 @@ const PromptSettings: Component<Props> = (props) => {
         />
         <TextInput
           fieldName="ultimeJailbreak"
-          label="Jailbreak (UJB) Prompt (GPT-4 / Turbo / Claude)"
+          label="Jailbreak (UJB) Prompt"
           helperText={
             <>
               (Leave empty to disable)
-              <br /> Ultimate Jailbreak. If this option is enabled, the UJB prompt will sent as a
-              system message at the end of the conversation before prompting OpenAI or Claude.
+              <br /> The <b>jailbreak</b> is typically used to avoid filtering and/or to street the
+              conversation. This has a very strong influence on the prompt.
             </>
           }
           placeholder="E.g. Keep OOC out of your reply."

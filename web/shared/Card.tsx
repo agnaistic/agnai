@@ -11,7 +11,7 @@ export const Card: Component<{
   hide?: boolean
 }> = (props) => {
   const cardBg = useBgStyle({
-    hex: getSettingColor(props.bg || 'bg-500'),
+    hex: props.bg || 'bg-500',
     blur: false,
     opacity: props.bgOpacity ?? 0.08,
   })
@@ -34,7 +34,7 @@ export const SolidCard: Component<{ children: JSX.Element; class?: string; bg?: 
   props
 ) => {
   const cardBg = useBgStyle({
-    hex: getSettingColor(props.bg || 'bg-500'),
+    hex: props.bg || 'bg-500',
     blur: false,
   })
   return (
