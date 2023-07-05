@@ -49,6 +49,7 @@ export type UserState = {
   }
   oaiUsageLoading: boolean
   hordeStatsLoading: boolean
+  showProfile: boolean
 }
 
 export const userStore = createStore<UserState>(
@@ -73,6 +74,9 @@ export const userStore = createStore<UserState>(
   })
 
   return {
+    modal({ showProfile }, show?: boolean) {
+      return { showProfile: show ?? !showProfile }
+    },
     async getProfile() {
       const res = await usersApi.getProfile()
       if (res.error) return toastStore.error(`Failed to get profile`)
@@ -380,6 +384,7 @@ function init(): UserState {
       hordeStatsLoading: false,
       metadata: {},
       current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
+      showProfile: false,
     }
   }
 
@@ -393,6 +398,7 @@ function init(): UserState {
     hordeStatsLoading: false,
     metadata: {},
     current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
+    showProfile: false,
   }
 }
 

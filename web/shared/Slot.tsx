@@ -1,4 +1,4 @@
-import { Component, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
@@ -67,17 +67,38 @@ const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
   })
 
   return (
-    <div
-      class={hidden()}
-      ref={ref}
-      id={id()}
-      data-slot={props.slot}
-      style={stick() ? { position: 'sticky', top: 0 } : {}}
-      classList={{
-        'border-[var(--bg-700)]': !!user.user?.admin,
-        'border-[1px]': !!user.user?.admin,
-      }}
-    ></div>
+    <>
+      <Show when={stick()}>
+        <div class="sticky top-0 z-10">
+          <div
+            class={hidden()}
+            ref={ref}
+            id={id()}
+            data-slot={props.slot}
+            style={stick() ? { position: 'sticky', top: 0 } : {}}
+            classList={{
+              'border-[var(--bg-700)]': !!user.user?.admin,
+              'bg-[var(--text-200)]': !!user.user?.admin,
+              'border-[1px]': !!user.user?.admin,
+            }}
+          ></div>
+        </div>
+      </Show>
+      <Show when={!stick()}>
+        <div
+          class={hidden()}
+          ref={ref}
+          id={id()}
+          data-slot={props.slot}
+          style={stick() ? { position: 'sticky', top: 0 } : {}}
+          classList={{
+            'border-[var(--bg-700)]': !!user.user?.admin,
+            'bg-[var(--text-200)]': !!user.user?.admin,
+            'border-[1px]': !!user.user?.admin,
+          }}
+        ></div>
+      </Show>
+    </>
   )
 }
 

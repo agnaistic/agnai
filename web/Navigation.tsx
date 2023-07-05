@@ -168,30 +168,20 @@ const UserNavigation: Component = () => {
 
   return (
     <>
-      <div class="flex justify-center gap-2">
+      {/* <div class="flex justify-center gap-2">
         <Item>
           <MessageSquare />
         </Item>
 
-        <Item onClick={() => toastStore.modal(true)}>
-          <Switch>
-            <Match when={toasts.unseen > 0}>
-              <div class="relative flex">
-                <Bell fill="var(--bg-100)" />
-                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
-                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
-                </span>
-              </div>
-            </Match>
 
-            <Match when={!toasts.unseen}>
-              <Bell color="var(--bg-500)" />
-            </Match>
-          </Switch>
-        </Item>
-      </div>
+      </div> */}
 
-      <Item href="/profile">
+      <Item
+        onClick={() => {
+          settingStore.closeMenu()
+          userStore.modal(true)
+        }}
+      >
         <User /> Profile
       </Item>
 
@@ -245,7 +235,12 @@ const UserNavigation: Component = () => {
           </Item>
         </Show>
 
-        <Item href="/settings">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            settingStore.modal(true)
+          }}
+        >
           <Settings />
         </Item>
 
@@ -258,6 +253,28 @@ const UserNavigation: Component = () => {
             <Moon />
           </Show>
         </Item>
+
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            toastStore.modal(true)
+          }}
+        >
+          <Switch>
+            <Match when={toasts.unseen > 0}>
+              <div class="relative flex">
+                <Bell fill="var(--bg-100)" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                </span>
+              </div>
+            </Match>
+
+            <Match when={!toasts.unseen}>
+              <Bell color="var(--bg-500)" />
+            </Match>
+          </Switch>
+        </Item>
       </div>
 
       <Slots />
@@ -266,6 +283,7 @@ const UserNavigation: Component = () => {
 }
 
 const GuestNavigation: Component = () => {
+  const toasts = toastStore()
   const user = userStore()
   const menu = settingStore((s) => ({
     showMenu: s.showMenu,
@@ -283,7 +301,12 @@ const GuestNavigation: Component = () => {
       </Show>
 
       <Show when={menu.guest}>
-        <Item href="/profile">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            userStore.modal(true)
+          }}
+        >
           <User /> Profile
         </Item>
 
@@ -328,7 +351,12 @@ const GuestNavigation: Component = () => {
           </ExternalLink>
         </Show>
 
-        <Item href="/settings">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            settingStore.modal(true)
+          }}
+        >
           <Settings />
         </Item>
 
@@ -340,6 +368,28 @@ const GuestNavigation: Component = () => {
           <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
             <Moon />
           </Show>
+        </Item>
+
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            toastStore.modal(true)
+          }}
+        >
+          <Switch>
+            <Match when={toasts.unseen > 0}>
+              <div class="relative flex">
+                <Bell fill="var(--bg-100)" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                </span>
+              </div>
+            </Match>
+
+            <Match when={!toasts.unseen}>
+              <Bell color="var(--bg-500)" />
+            </Match>
+          </Switch>
         </Item>
       </div>
 
@@ -424,7 +474,7 @@ export default Navigation
 
 const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
   <a
-    class="flex h-12 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)]"
+    class="flex h-10 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] sm:h-12"
     href={props.href}
     target={props.newtab ? '_blank' : ''}
   >

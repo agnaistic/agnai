@@ -192,13 +192,13 @@ body {
     @apply h-1 w-1;
   }
   ::-webkit-scrollbar-track {
-    @apply bg-[var(--bg-500)];
+    @apply bg-[var(--bg-700)];
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-[var(--text-200)];
+    @apply bg-[var(--bg-500)];
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-[var(--text-400)];
+    @apply bg-[var(--bg-300)];
   }
 
   /**

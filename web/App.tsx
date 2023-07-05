@@ -23,8 +23,8 @@ import Maintenance from './shared/Maintenance'
 import CharacterChats from './pages/Character/ChatList'
 import ChatDetail from './pages/Chat/ChatDetail'
 import ChangeLog from './pages/Home/ChangeLog'
-import Settings from './pages/Settings'
-import ProfilePage from './pages/Profile'
+import Settings, { SettingsModal } from './pages/Settings'
+import ProfilePage, { ProfileModal } from './pages/Profile'
 import { chatStore } from './store'
 import { usePane } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
@@ -176,6 +176,8 @@ const Layout: Component = () => {
           close={() => settingStore.toggleImpersonate(false)}
         />
         <InfoModal />
+        <SettingsModal />
+        <ProfileModal />
         <For each={rootModals.modals}>{(modal) => modal.element}</For>
       </div>
     </ContextProvider>

@@ -1,4 +1,4 @@
-import { Component, For } from 'solid-js'
+import { Component, For, Show } from 'solid-js'
 import { Toast, toastStore } from './store/toasts'
 import Modal from './shared/Modal'
 import { TitleCard } from './shared/Card'
@@ -20,6 +20,7 @@ const Toasts: Component = () => {
       </div>
       <Modal title="Notifications" show={state.modal} close={() => toastStore.modal(false)}>
         <div class="flex flex-col gap-2 text-sm">
+          <Show when={state.history.length === 0}>You have no notifications.</Show>
           <For each={state.history}>
             {({ time, toast, seen }) => (
               <TitleCard

@@ -32,6 +32,7 @@ type SettingState = {
   showImage?: string
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
+  showSettings: boolean
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -60,6 +61,7 @@ const initState: SettingState = {
   },
   replicate: {},
   flags: getFlags(),
+  showSettings: false,
 }
 
 export const settingStore = createStore<SettingState>(
@@ -72,6 +74,10 @@ export const settingStore = createStore<SettingState>(
   })
 
   return {
+    modal({ showSettings }, show?: boolean) {
+      const next = show ?? !showSettings
+      return { showSettings: next }
+    },
     async *init({ config: prev }) {
       yield { initLoading: true }
       const res = await usersApi.getInit()
