@@ -461,7 +461,7 @@ const InviteBadge: Component = () => {
 
   return (
     <>
-      <Show when={inv.invites.length || 1}>
+      <Show when={inv.invites.length}>
         <span class={`flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs`}>
           {inv.invites.length}
         </span>
