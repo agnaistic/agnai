@@ -490,7 +490,7 @@ const ChatDetail: Component = () => {
                   <section
                     data-avatar-container
                     ref={container!}
-                    class="flex items-end"
+                    class="flex items-end justify-center"
                     style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
                   >
                     <Show when={chats.char?.visualType === 'sprite'}>

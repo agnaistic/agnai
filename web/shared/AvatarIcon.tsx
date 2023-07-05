@@ -71,7 +71,7 @@ export const CharacterAvatar: Component<{
         <Match when={props.char.visualType === 'sprite' && props.char.sprite && props.surround}>
           <div
             ref={ref}
-            class={`overflow-hidden border-2 border-[var(--bg-800)] bg-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+            class={`flex justify-center overflow-hidden border-2 border-[var(--bg-800)] bg-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
               props.class || ''
             }`}
             data-bot-avatar={props.bot}
@@ -83,7 +83,9 @@ export const CharacterAvatar: Component<{
 
         <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
           <div
-            class={`avatar-${props.format?.size || 'md'} avatar-circle ${fmtCorners()}`}
+            class={`flex justify-center avatar-${
+              props.format?.size || 'md'
+            } avatar-circle ${fmtCorners()}`}
             ref={ref}
           >
             <AvatarContainer zoom={props.zoom} body={props.char.sprite} container={ref} />

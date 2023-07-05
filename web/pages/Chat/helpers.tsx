@@ -46,7 +46,7 @@ export const InfiniteScroll: Component = () => {
 
   return (
     <Show when={state.msgs.length > 0}>
-      <div class="flex w-full justify-center">
+      <div class="flex h-[1px] w-full justify-center overflow-hidden">
         <Show when={!state.loading}>
           <IsVisible onEnter={onEnter} />
         </Show>

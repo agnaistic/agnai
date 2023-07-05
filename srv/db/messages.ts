@@ -3,7 +3,7 @@ import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 
-const PAGE_SIZE = 50
+const PAGE_SIZE = 100
 
 export type NewMessage = {
   chatId: string
