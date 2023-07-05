@@ -143,7 +143,7 @@ const InputBar: Component<{
 
   return (
     <div class="relative flex items-center justify-center">
-      <Show when={true || props.showOocToggle}>
+      <Show when={props.showOocToggle}>
         <div class="cursor-pointer p-2" onClick={toggleOoc}>
           <Show when={props.ooc}>
             <WizardIcon />
