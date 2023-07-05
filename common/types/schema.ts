@@ -17,8 +17,21 @@ export type AllDoc =
   | AppSchema.UserGenPreset
   | AppSchema.MemoryBook
   | AppSchema.ScenarioBook
+  | AppSchema.Relation
 
 export namespace AppSchema {
+  export interface Relation {
+    _id: string
+    kind: 'relation'
+    userId: string
+    relatedTo: string
+    state: 'pending' | 'accepted' | 'none' | 'blocked'
+    chatId: string
+
+    createdAt: string
+    updatedAt: string
+  }
+
   export interface AppConfig {
     adapters: AIAdapter[]
     version: string

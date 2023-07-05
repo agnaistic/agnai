@@ -6,7 +6,8 @@ import { AppSchema } from '/common/types'
  */
 export function getActiveBots(chat: AppSchema.Chat, bots: Record<string, AppSchema.Character>) {
   if (!chat) return []
-  const unique = new Set([chat.characterId])
+  const unique = new Set<string>()
+  if (chat.characterId) unique.add(chat.characterId)
 
   for (const [id, active] of Object.entries(chat.characters || {})) {
     if (!active) continue

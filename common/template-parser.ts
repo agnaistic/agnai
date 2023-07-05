@@ -48,7 +48,7 @@ export type ParseOpts = {
   impersonate?: AppSchema.Character
   parts: PromptParts
   chat: AppSchema.Chat
-  char: AppSchema.Character
+  char?: AppSchema.Character
   user: AppSchema.User
   settings?: Partial<AppSchema.GenSettings>
   lines: string[]
@@ -234,7 +234,7 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
       return opts.parts.sampleChat?.join('\n') || ''
 
     case 'scenario':
-      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario
+      return opts.parts.scenario || opts.char?.scenario || opts.chat.scenario
 
     case 'memory':
       return opts.parts.memory || ''

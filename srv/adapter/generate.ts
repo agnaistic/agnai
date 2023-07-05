@@ -8,7 +8,7 @@ import {
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
-import { errors, StatusError } from '../api/wrap'
+import { errors } from '../api/wrap'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleLuminAI } from './luminai'
@@ -199,9 +199,9 @@ export async function getResponseEntities(
   const book = chat.memoryId ? await store.memory.getBook(chat.memoryId) : undefined
 
   const char = await store.characters.getCharacter(chat.userId, chat.characterId)
-  if (!char) {
-    throw new StatusError('Character not found', 404)
-  }
+  // if (!char) {
+  //   throw new StatusError('Character not found', 404)
+  // }
 
   const { adapter, model } = getAdapter(chat, user, gen)
   const genSettings = await getGenerationSettings(user, chat, adapter)

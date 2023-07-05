@@ -38,7 +38,7 @@ export const handleLuminAI: ModelAdapter = async function* ({
   log,
   ...opts
 }) {
-  const stopTokens = getEndTokens(char, members, ['END_OF_DIALOG'])
+  const stopTokens = getEndTokens(opts.replyAs, members, ['END_OF_DIALOG'])
   const body = { koboldUrl: user.koboldUrl, stopTokens, ...base, ...settings, prompt }
 
   // Kobold sampler order parameter must contain all 6 samplers to be valid

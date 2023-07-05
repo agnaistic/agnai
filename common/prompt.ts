@@ -50,7 +50,7 @@ export type PromptConfig = {
 export type PromptOpts = {
   kind?: GenerateRequestV2['kind']
   chat: AppSchema.Chat
-  char: AppSchema.Character
+  char?: AppSchema.Character
   user: AppSchema.User
   members: AppSchema.Profile[]
   settings?: Partial<AppSchema.GenSettings>
@@ -68,7 +68,7 @@ export type PromptOpts = {
 type BuildPromptOpts = {
   kind?: GenerateRequestV2['kind']
   chat: AppSchema.Chat
-  char: AppSchema.Character
+  char?: AppSchema.Character
   replyAs: AppSchema.Character
   user: AppSchema.User
   continue?: string
@@ -397,7 +397,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   const parts: PromptParts = {
     persona: formatCharacter(
       replyAs.name,
-      replyAs._id === char._id ? chat.overrides ?? replyAs.persona : replyAs.persona
+      replyAs._id === chat.characterId ? chat.overrides ?? replyAs.persona : replyAs.persona
     ),
     post: [],
     allPersonas: [],
@@ -433,17 +433,17 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     )
   }
 
-  if (chat.scenario && chat.overrides) {
+  if (chat.scenario && chat.overrides && char) {
     // we use the BOT_REPLACE here otherwise later it'll get replaced with the
     // replyAs instead of the main character
     // (we always use the main character's scenario, not replyAs)
     parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
-  } else {
+  } else if (char) {
     parts.scenario = char.scenario.replace(BOT_REPLACE, char.name)
   }
 
   parts.sampleChat = (
-    replyAs._id === char._id && !!chat.overrides
+    replyAs._id === chat.characterId && !!chat.overrides
       ? chat.sampleChat ?? replyAs.sampleChat
       : replyAs.sampleChat
   )
@@ -454,19 +454,23 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 
   if (chat.greeting) {
     parts.greeting = replace(chat.greeting)
-  } else {
+  } else if (char) {
     parts.greeting = replace(char.greeting)
   }
 
   const post = createPostPrompt(opts)
 
+  /**
+   * @TODO
+   * This needs to be verified as correct
+   */
   if (opts.continue) {
-    post.unshift(`${char.name}: ${opts.continue}`)
+    post.unshift(`${replyAs.name}: ${opts.continue}`)
   }
 
   const linesForMemory = [...lines].reverse()
   const books: AppSchema.MemoryBook[] = []
-  if (char.characterBook) books.push(char.characterBook)
+  if (char?.characterBook) books.push(char.characterBook)
   if (opts.book) books.push(opts.book)
 
   const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
@@ -570,7 +574,7 @@ function getLinesForPrompt(
 
     return fillPlaceholders(
       msg,
-      opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
+      opts.characters[msg.characterId!]?.name || opts.replyAs.name,
       sender
     ).trim()
   }

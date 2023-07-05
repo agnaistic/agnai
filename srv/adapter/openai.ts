@@ -124,7 +124,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     // Only the streaming generator yields individual tokens.
     if ('token' in generated.value) {
       accumulated += generated.value.token
-      yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+      yield {
+        partial: sanitiseAndTrim(accumulated, prompt, opts.replyAs, opts.characters, members),
+      }
     }
   }
 

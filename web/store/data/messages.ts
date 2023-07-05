@@ -15,7 +15,7 @@ import { pipelineApi } from './pipeline'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
-  char: AppSchema.Character
+  char?: AppSchema.Character
   user: AppSchema.User
   profile: AppSchema.Profile
   book?: AppSchema.MemoryBook
@@ -149,7 +149,6 @@ export async function generateResponseV2(opts: GenerateOpts) {
     kind: opts.kind,
     chat: entities.chat,
     user: entities.user,
-    char: removeAvatar(entities.char),
     sender: removeAvatar(entities.profile),
     members: entities.members.map(removeAvatar),
     parts: prompt.parts,
@@ -209,7 +208,6 @@ async function createActiveChatPrompt(
   const prompt = createPrompt(
     {
       kind: opts.kind,
-      char: entities.char,
       chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
@@ -262,7 +260,8 @@ async function getGenerateProps(
 
   const props: GenerateProps = {
     entities,
-    replyAs: entities.char,
+    /** We validate that this is defined before returning */
+    replyAs: null as any,
     messages: entities.messages.slice(),
     impersonate: entities.impersonating,
   }
@@ -340,7 +339,6 @@ async function getGenerateProps(
   if (!props.replyAs) throw new Error(`Could not find character to reply as`)
 
   // Remove avatar from generate requests
-  entities.char = { ...entities.char, avatar: undefined }
   props.replyAs = { ...props.replyAs, avatar: undefined }
 
   return props

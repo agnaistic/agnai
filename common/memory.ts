@@ -8,7 +8,7 @@ export const BUNDLED_CHARACTER_BOOK_ID = '__bundled__characterbook__'
 export type MemoryOpts = {
   user: AppSchema.User
   chat: AppSchema.Chat
-  char: AppSchema.Character
+  char?: AppSchema.Character
   settings?: Partial<AppSchema.UserGenPreset>
   books?: Array<AppSchema.MemoryBook | undefined>
   lines: string[]
@@ -114,7 +114,8 @@ export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPro
       }
 
       if (index > -1) {
-        const text = entry.entry.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
+        let text = entry.entry.replace(SELF_REPLACE, sender)
+        if (char) text = text.replace(BOT_REPLACE, char.name)
         const tokens = encoder(text)
         matches.push({ index, entry, id: ++id, tokens, text })
       }

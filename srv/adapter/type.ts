@@ -18,11 +18,11 @@ export type GenerateRequestV2 = {
     | 'plain'
   chat: AppSchema.Chat
   user: AppSchema.User
-  char: AppSchema.Character
   replyAs: AppSchema.Character
   sender: AppSchema.Profile
   members: AppSchema.Profile[]
   parts: PromptParts
+  char?: AppSchema.Character
   lines: string[]
   text?: string
   settings?: Partial<AppSchema.GenSettings>
@@ -47,7 +47,7 @@ export type GenerateOptions = {
 export type AdapterProps = {
   kind: GenerateRequestV2['kind']
   chat: AppSchema.Chat
-  char: AppSchema.Character
+  char?: AppSchema.Character
   replyAs: AppSchema.Character
   user: AppSchema.User
   members: AppSchema.Profile[]

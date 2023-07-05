@@ -6,7 +6,7 @@ export type ImagePromptOpts = {
   user: AppSchema.User
   messages: AppSchema.ChatMessage[]
   members: AppSchema.Profile[]
-  char: AppSchema.Character
+  char?: AppSchema.Character
   characters: Record<string, AppSchema.Character>
   chatBots: AppSchema.Character[]
 }
@@ -94,7 +94,10 @@ export async function createImagePrompt(opts: ImagePromptOpts) {
     .reverse()
     .join('\n')
     .replace(/\s+/g, ' ')
-    .replace(BOT_REPLACE, opts.char.name)
+    /**
+     * @TODO Need to verify how the handle this
+     */
+    .replace(BOT_REPLACE, opts.char?.name || '')
     .replace(SELF_REPLACE, profile?.handle || 'You')
 
   return prompt
