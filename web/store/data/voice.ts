@@ -2,6 +2,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { VoiceSettings, TTSService } from '../../../common/types/texttospeech-schema'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
+import { toastStore } from '../toasts'
 import { loadItem } from './storage'
 
 type GenerateOpts = {
@@ -47,8 +48,10 @@ async function textToSpeech(text: string, voice: VoiceSettings) {
     voice,
   })
   if (res.result) return res.result
-  else
+  if (res.error) {
+    toastStore.error(res.error)
     throw new Error(res.error ?? `An error occured generating text to speech with ${voice.service}`)
+  }
 }
 
 function getUserEntity() {

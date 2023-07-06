@@ -10,7 +10,7 @@ import { normalizeUrl, sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { logger } from '../logger'
 
-const defaultUrl = `http://127.0.0.1:7860`
+const defaultUrl = `http://127.0.0.1:5000`
 
 export const handleOoba: ModelAdapter = async function* ({
   char,
@@ -22,7 +22,8 @@ export const handleOoba: ModelAdapter = async function* ({
   ...opts
 }) {
   const body = {
-    prompt,
+    user_input: prompt,
+    mode: 'instruct',
     max_new_tokens: settings.max_new_tokens,
     do_sample: true,
     temperature: settings.temperature,
@@ -36,7 +37,9 @@ export const handleOoba: ModelAdapter = async function* ({
     num_beams: 1,
     penalty_alpha: settings.penalty_alpha,
     length_penalty: 1,
-    early_stopping: true,
+    regenerate: false,
+    stop_at_newline: false,
+    early_stopping: false,
     seed: -1,
     add_bos_token: settings.add_bos_token || false,
     truncation_length: settings.maxContextLength || 2048,
@@ -48,7 +51,7 @@ export const handleOoba: ModelAdapter = async function* ({
   yield { prompt: body.prompt }
 
   log.debug({ ...body, prompt: null }, 'Textgen payload')
-  log.debug(`Prompt:\n${body.prompt}`)
+  log.debug(`Prompt:\n${body.user_input}`)
 
   const resp = await needle(
     'post',

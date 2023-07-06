@@ -56,8 +56,9 @@ export const VoicePreviewButton: Component<{
         voiceId,
         ...props.voiceSettings,
       } as VoiceSettings
-      const { output } = await voiceApi.textToSpeech(getSampleText(culture), voice)
-      audio = await createSpeech({ url: output })
+      const result = await voiceApi.textToSpeech(getSampleText(culture), voice)
+      if (!result) return
+      audio = await createSpeech({ url: result.output })
     }
     audio?.play()
   }

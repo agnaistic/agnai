@@ -50,6 +50,7 @@ export async function generateTextToSpeech(
     audio = await service.generateVoice({ user, text: processedText, voice }, log, guestId)
   } catch (ex: any) {
     log.error({ err: ex }, 'Failed to generate audio')
+    throw new StatusError(`Could not generate audio: ${ex.message}`, 400)
   }
 
   if (!audio) {

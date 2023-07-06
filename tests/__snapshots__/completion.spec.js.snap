@@ -1,0 +1,39 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Chat completion will 1`] = `
+Array [
+  Object {
+    "content": "
+This is a system prompt
+Description of Robot:
+PERSONA
+Circumstances and context of the dialogue: Snapshot testing scenario",
+    "role": "system",
+  },
+  Object {
+    "content": "How Robot speaks:",
+    "role": "system",
+  },
+  Object {
+    "content": "Robot: This is how I speak",
+    "role": "example-assistant",
+  },
+  Object {
+    "content": "Oreo: I speak to you like this
+System: New conversation started. Previous conversations are examples only.",
+    "role": "example-user",
+  },
+  Object {
+    "content": "Robot: Greetings!",
+    "role": "assistant",
+  },
+  Object {
+    "content": "Oreo: My response to your greeting!",
+    "role": "user",
+  },
+  Object {
+    "content": "Respond as Robot",
+    "role": "system",
+  },
+]
+`;

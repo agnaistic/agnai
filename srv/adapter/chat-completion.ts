@@ -13,7 +13,7 @@ import {
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
 
-type Role = 'user' | 'assistant' | 'system'
+type Role = 'user' | 'assistant' | 'system' | 'example-user' | 'example-assistant'
 type CompletionItem = { role: Role; content: string; name?: string }
 
 type SplitSampleChatProps = {
@@ -156,13 +156,13 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
 
     const sample = trimmed
     const role = sample.startsWith(char + ':')
-      ? 'assistant'
+      ? 'example-assistant'
       : sample.startsWith(sender + ':')
-      ? 'user'
+      ? 'example-user'
       : 'system'
 
     const msg: CompletionItem = {
-      role: role,
+      role,
       content: sample.replace(BOT_REPLACE, char).replace(SELF_REPLACE, sender),
     }
 

@@ -1,5 +1,5 @@
 import { Component, JSX, Show, createMemo } from 'solid-js'
-import { getSettingColor, userStore } from '../store'
+import { userStore } from '../store'
 import { useBgStyle } from './hooks'
 
 export const Card: Component<{
