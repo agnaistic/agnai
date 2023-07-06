@@ -49,6 +49,9 @@ export const handleHorde: ModelAdapter = async function* ({
     yield trimmed || sanitised
   } catch (ex: any) {
     logger.error({ err: ex, body: ex.body }, `Horde request failed.`)
-    yield { error: `${ex.message}. ${ex?.body?.message}` }
+    let msg = [ex?.body?.message || '', JSON.stringify(ex?.body?.errors) || ''].filter(
+      (line) => !!line
+    )
+    yield { error: `${ex.message}. ${msg.join('. ')}` }
   }
 }

@@ -243,6 +243,10 @@ const streamCompletion: CompletionGenerator = async function* (userId, url, head
         continue
       }
 
+      if (event.type === 'ping') {
+        continue
+      }
+
       if (event.data === '[DONE]') {
         break
       }
