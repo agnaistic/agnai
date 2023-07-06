@@ -35,7 +35,7 @@ export async function getRelations(userId: string) {
 export async function inviteRelation(userId: string, otherUserId: string) {
   const existing = await getSpecificRelation(userId, otherUserId)
   if (!existing || existing.state === 'none') {
-    const chat = await createRelationChat(userId)
+    const chat = await createRelationChat(userId, otherUserId)
     const relation: AppSchema.Relation = {
       _id: v4(),
       kind: 'relation',
@@ -70,12 +70,14 @@ export async function acceptRelation(relationId: string, acceptingUserId: string
   await inviteApi.addChatMember(relation.chatId, acceptingUserId)
 }
 
-async function createRelationChat(userId: string) {
+async function createRelationChat(userId: string, relatedTo: string) {
   const chat = await chatApi.create('', {
-    name: 'Chat with ...',
+    name: '',
     userId,
     mode: 'standard',
   })
+
+  await inviteApi.addChatMember(chat._id, relatedTo)
 
   return chat
 }

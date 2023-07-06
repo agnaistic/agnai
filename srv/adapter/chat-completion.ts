@@ -13,8 +13,9 @@ import {
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
 
+export type CompletionItem = { role: Role; content: string; name?: string }
+
 type Role = 'user' | 'assistant' | 'system' | 'example-user' | 'example-assistant'
-type CompletionItem = { role: Role; content: string; name?: string }
 
 type SplitSampleChatProps = {
   sampleChat: string

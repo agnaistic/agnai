@@ -8,7 +8,6 @@ import {
   HelpCircle,
   LogIn,
   LogOut,
-  MailPlus,
   MessageCircle,
   Moon,
   Settings,
@@ -17,6 +16,7 @@ import {
   Sun,
   Sword,
   User,
+  Users,
   VenetianMask,
   X,
 } from 'lucide-solid'
@@ -210,7 +210,7 @@ const UserNavigation: Component = () => {
       </Show>
 
       <Item href="/invites">
-        <MailPlus /> Invites <InviteBadge />
+        <Users /> Social <InviteBadge />
       </Item>
 
       <Item href="/presets">

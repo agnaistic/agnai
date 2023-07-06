@@ -10,15 +10,12 @@ import { needleToSSE } from './stream'
 import { config } from '../config'
 import { AppLog } from '../logger'
 import { publishOne } from '../api/ws/handle'
-import { toChatCompletionPayload } from './chat-completion'
+import { CompletionItem, toChatCompletionPayload } from './chat-completion'
 
 const baseUrl = `https://api.openai.com`
 
-type Role = 'user' | 'assistant' | 'system'
-
-type CompletionItem = { role: Role; content: string; name?: string }
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
-type Inference = { message: { content: string; role: Role } }
+type Inference = { message: { content: string; role: string } }
 type AsyncDelta = { delta: Partial<Inference['message']> }
 
 type Completion<T = Inference> = {
