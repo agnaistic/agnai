@@ -111,8 +111,10 @@ registerAdapter('openrouter', handleOpenRouter, {
     {
       field: 'apiKey',
       label: 'API Key',
+      helperText:
+        'If you are unable to use the "Login with OpenRouter" button, enter your API key manually. Head to openrouter.ai/keys to obtain an API key.',
       secret: true,
-      setting: { hidden: true, type: 'text', placeholder: 'E.g. sk-or-v1-2v6few...' },
+      setting: { type: 'text', placeholder: 'E.g. sk-or-v1-2v6few...' },
     },
     {
       field: 'format',
