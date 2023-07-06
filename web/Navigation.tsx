@@ -217,7 +217,11 @@ const UserNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
 
-      <div class="flex flex-wrap justify-center gap-1 text-sm">
+      <Item href="/admin/metrics">
+        <Activity /> Metrics
+      </Item>
+
+      <div class="flex flex-wrap justify-center gap-[2px] text-sm">
         <Item href="/faq">
           <HelpCircle />
         </Item>
@@ -227,19 +231,7 @@ const UserNavigation: Component = () => {
             <HeartHandshake />
           </ExternalLink>
         </Show>
-
-        <Show when={user.user?.admin}>
-          <Item href="/admin/metrics">
-            <Activity />
-          </Item>
-        </Show>
-
-        <Item
-          onClick={() => {
-            settingStore.closeMenu()
-            settingStore.modal(true)
-          }}
-        >
+        <Item href="/settings">
           <Settings />
         </Item>
 
@@ -253,7 +245,12 @@ const UserNavigation: Component = () => {
           </Show>
         </Item>
 
-        <Item href="/settings">
+        <Item
+          onClick={() => {
+            settingStore.closeMenu()
+            toastStore.modal(true)
+          }}
+        >
           <Switch>
             <Match when={toasts.unseen > 0}>
               <div class="relative flex">
@@ -334,7 +331,7 @@ const GuestNavigation: Component = () => {
         </Item>
       </Show>
 
-      <div class="flex flex-wrap justify-center gap-1 text-sm">
+      <div class="flex flex-wrap justify-center gap-[2px] text-sm">
         <Item href="/faq">
           <HelpCircle />
         </Item>
