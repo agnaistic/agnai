@@ -253,12 +253,7 @@ const UserNavigation: Component = () => {
           </Show>
         </Item>
 
-        <Item
-          onClick={() => {
-            settingStore.closeMenu()
-            toastStore.modal(true)
-          }}
-        >
+        <Item href="/settings">
           <Switch>
             <Match when={toasts.unseen > 0}>
               <div class="relative flex">
@@ -350,12 +345,7 @@ const GuestNavigation: Component = () => {
           </ExternalLink>
         </Show>
 
-        <Item
-          onClick={() => {
-            settingStore.closeMenu()
-            settingStore.modal(true)
-          }}
-        >
+        <Item href="/settings">
           <Settings />
         </Item>
 

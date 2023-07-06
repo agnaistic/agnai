@@ -176,7 +176,6 @@ const Layout: Component = () => {
           close={() => settingStore.toggleImpersonate(false)}
         />
         <InfoModal />
-        <SettingsModal />
         <ProfileModal />
         <For each={rootModals.modals}>{(modal) => modal.element}</For>
       </div>

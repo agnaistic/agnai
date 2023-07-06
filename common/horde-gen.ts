@@ -142,11 +142,12 @@ export async function generateText(
     body.workers = user.hordeWorkers
   }
 
-  const settings: any = {
+  const params: any = {
+    n: 1,
     max_length: preset.maxTokens ?? defaultPresets.horde.maxTokens,
     top_k: preset.topK ?? defaultPresets.horde.topK,
-    top_p: preset.topK ?? defaultPresets.horde.topP,
-    typical: preset.topK ?? defaultPresets.horde.typicalP,
+    top_p: preset.topP ?? defaultPresets.horde.topP,
+    typical: preset.typicalP ?? defaultPresets.horde.typicalP,
     max_context_length: Math.min(
       preset.maxContextLength ?? defaultPresets.horde.maxContextLength,
       2048
@@ -158,12 +159,16 @@ export async function generateText(
     temperature: preset.temp ?? defaultPresets.horde.temp,
   }
 
-  const payload = { n: 1, ...body, ...settings }
+  const payload = { ...body, params }
 
-  logger?.debug({ ...payload, prompt: null }, 'Horde payload')
+  logger?.debug({ params: payload, prompt: null }, 'Horde payload')
   logger?.debug(`Prompt:\n${payload.prompt}`)
 
-  const result = await generate({ type: 'text', payload, key: user.hordeKey || HORDE_GUEST_KEY })
+  const result = await generate({
+    type: 'text',
+    payload: payload,
+    key: user.hordeKey || HORDE_GUEST_KEY,
+  })
   return result
 }
 
