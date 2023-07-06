@@ -157,7 +157,7 @@ export async function updateServiceConfig(service: AIAdapter, update: any) {
   if (!isLoggedIn()) {
     const config = localApi.loadItem('config')
     const prev = config.adapterConfig?.[service] || {}
-    const next = { ...prev, ...config }
+    const next = { ...prev, ...update }
     const nextConfig = {
       ...config,
       adapterConfig: {
