@@ -217,9 +217,11 @@ const UserNavigation: Component = () => {
         <Sliders /> Presets
       </Item>
 
-      <Item href="/admin/metrics">
-        <Activity /> Metrics
-      </Item>
+      <Show when={user.user?.admin}>
+        <Item href="/admin/metrics">
+          <Activity /> Metrics
+        </Item>
+      </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
         <Item href="/faq">
