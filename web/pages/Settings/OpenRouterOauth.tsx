@@ -1,24 +1,28 @@
-import { Component, Show, createMemo, createSignal } from 'solid-js'
+import { Component, Match, Show, Switch, createMemo, createSignal } from 'solid-js'
 import { userStore } from '/web/store'
 import Button from '/web/shared/Button'
-import { SolidCard } from '/web/shared/Card'
+import { TitleCard } from '/web/shared/Card'
 
 const OpenRouterOauth: Component = () => {
   const users = userStore()
 
   const isKeySet = createMemo(() => !!users.user?.adapterConfig?.openrouter?.apiKeySet)
-  const [_, setCode] = createSignal<string>()
+  const [trying, setTrying] = createSignal(false)
 
   const handleCode = async (code: string) => {
+    setTrying(true)
     const res = await fetch(`https://openrouter.ai/api/v1/auth/keys`, {
       method: 'POST',
       body: JSON.stringify({ code }),
     }).then((res) => res.json())
 
-    userStore.updateService('openrouter', { apiKey: res.key })
+    userStore.updateService('openrouter', { apiKey: res.key }, () => {
+      setTrying(false)
+    })
   }
 
   const start = () => {
+    setTrying(true)
     const url = location.origin
     const child = window.open(
       `https://openrouter.ai/auth?callback_url=${url}`,
@@ -28,17 +32,18 @@ const OpenRouterOauth: Component = () => {
 
     const interval = setInterval(() => {
       try {
+        if (child.closed) {
+          setTrying(false)
+          clearInterval(interval)
+        }
+
         const query = child.location.search
         const [, code] = query.split('=')
         if (!code) return
 
         handleCode(code)
-        setCode(code)
         child.close()
-
-        if (child.closed) {
-          clearInterval(interval)
-        }
+        clearInterval(interval)
       } catch (ex) {}
     }, 500)
   }
@@ -46,30 +51,35 @@ const OpenRouterOauth: Component = () => {
   return (
     <>
       <Show when={!isKeySet()}>
-        <SolidCard>
+        <TitleCard>
           Click <b class="highlight">Login with OpenRouter</b> or visit{' '}
-          <a class="link" target="_blank" href="https://openrouter.ai">
-            OpenRouter.ai
+          <a class="link" target="_blank" href="https://openrouter.ai/keys">
+            OpenRouter.ai/keys
           </a>{' '}
-          to register.
+          to create an API key and enter it below.
           <br />
           Support for OpenRouter is quite new. Please provide feedback via Discord if you have any
           issues or questions.
-        </SolidCard>
+        </TitleCard>
       </Show>
       <Show when={isKeySet()}>
         <em>You are currently logged in.</em>
       </Show>
       <div>
-        <Show when={!isKeySet()}>
-          <Button onClick={start}>Login with OpenRouter</Button>
-        </Show>
+        <Switch>
+          <Match when={trying()}>
+            <Button disabled>Logging in...</Button>
+          </Match>
+          <Match when={!isKeySet()}>
+            <Button onClick={start}>Login with OpenRouter</Button>
+          </Match>
 
-        <Show when={isKeySet()}>
-          <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>
-            Logout
-          </Button>
-        </Show>
+          <Match when={isKeySet()}>
+            <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>
+              Logout
+            </Button>
+          </Match>
+        </Switch>
       </div>
     </>
   )

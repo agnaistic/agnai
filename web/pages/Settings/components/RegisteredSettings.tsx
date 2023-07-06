@@ -12,7 +12,7 @@ const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) =>
     <>
       <For each={props.service.settings}>
         {(each) => (
-          <Show when={!each.setting.hidden}>
+          <Show when={!each.hidden}>
             <ServiceOption
               service={props.service.name}
               opt={each}

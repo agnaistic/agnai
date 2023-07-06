@@ -113,11 +113,16 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateService(_, service: AIAdapter, update: any) {
+    async updateService(_, service: AIAdapter, update: any, onDone?: (err?: any) => void) {
       const res = await usersApi.updateServiceConfig(service, update)
-      if (res.error) toastStore.error(`Failed to update service config: ${res.error}`)
+      if (res.error) {
+        onDone?.(res.error)
+        toastStore.error(`Failed to update service config: ${res.error}`)
+        return
+      }
       if (res.result) {
         toastStore.success('Updated service settings')
+        onDone?.()
         return { user: res.result }
       }
     },
