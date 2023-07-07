@@ -76,7 +76,7 @@ export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
 
   const messages = await localApi.getMessages(msg.chatId)
   const next = localApi.replace(msg._id, messages, { msg: replace })
-  localApi.saveMessages(msg.chatId, next)
+  await localApi.saveMessages(msg.chatId, next)
   return localApi.result({ success: true })
 }
 
@@ -368,7 +368,7 @@ export async function deleteMessages(chatId: string, msgIds: string[]) {
   const msgs = await localApi.getMessages(chatId)
   const ids = new Set(msgIds)
   const next = msgs.filter((msg) => ids.has(msg._id) === false)
-  localApi.saveMessages(chatId, next)
+  await localApi.saveMessages(chatId, next)
 
   return localApi.result({ success: true })
 }
@@ -405,14 +405,15 @@ async function getGuestEntities() {
   if (!chat || !char) return
 
   const book = chat?.memoryId
-    ? loadItem('memory').find((mem) => mem._id === chat.memoryId)
+    ? await loadItem('memory').then((res) => res.find((mem) => mem._id === chat.memoryId))
     : undefined
 
-  const profile = loadItem('profile')
+  const allScenarios = await loadItem('scenario')
+  const profile = await loadItem('profile')
   const messages = await localApi.getMessages(chat?._id)
-  const user = loadItem('config')
-  const settings = getGuestPreset(user, chat)
-  const scenarios = loadItem('scenario')?.filter(
+  const user = await loadItem('config')
+  const settings = await getGuestPreset(user, chat)
+  const scenarios = allScenarios?.filter(
     (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
   )
 
@@ -492,10 +493,10 @@ function getAuthGenSettings(
   return getChatPreset(chat, user, presets)
 }
 
-function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
+async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
   // The server does not store presets for users
   // Override the `genSettings` property with the locally stored preset data if found
-  const presets = loadItem('presets')
+  const presets = await loadItem('presets')
   return getChatPreset(chat, user, presets)
 }
 

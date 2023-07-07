@@ -2,13 +2,7 @@ import Values from 'values.js'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
-import {
-  createDebounce,
-  getRootVariable,
-  hexToRgb,
-  safeLocalStorage,
-  setRootVariable,
-} from '../shared/util'
+import { createDebounce, getRootVariable, hexToRgb, storage, setRootVariable } from '../shared/util'
 import { api, clearAuth, getAuth, getUserId, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
@@ -71,6 +65,11 @@ export const userStore = createStore<UserState>(
     } else {
       userStore.receiveUI(init.user.ui)
     }
+  })
+
+  storage.getItem(BACKGROUND_KEY).then((bg) => {
+    if (!bg) return
+    set({ background: bg })
   })
 
   return {
@@ -190,16 +189,17 @@ export const userStore = createStore<UserState>(
       onSuccess?.()
       publish({ type: 'login', token: res.result.token })
     },
-    logout() {
+    async logout() {
       events.emit(EVENTS.loggedOut)
       clearAuth()
       publish({ type: 'logout' })
+      const ui = await getUIsettings(true)
       return {
         jwt: '',
         profile: undefined,
         user: undefined,
         loggedIn: false,
-        ui: getUIsettings(true),
+        ui,
       }
     },
 
@@ -212,7 +212,7 @@ export const userStore = createStore<UserState>(
       await usersApi.updateUI({ ...next, [mode]: current })
 
       try {
-        updateTheme({ ...next, [mode]: current })
+        await updateTheme({ ...next, [mode]: current })
       } catch (e: any) {
         toastStore.error(`Failed to save UI settings: ${e.message}`)
       }
@@ -227,7 +227,7 @@ export const userStore = createStore<UserState>(
       await usersApi.updateUI(next)
 
       try {
-        updateTheme(next)
+        await updateTheme(next)
       } catch (e: any) {
         toastStore.error(`Failed to save UI settings: ${e.message}`)
       }
@@ -235,11 +235,11 @@ export const userStore = createStore<UserState>(
       return { ui: next, current }
     },
 
-    tryCustomUI({ ui }, update: Partial<UI.CustomUI>) {
+    async tryCustomUI({ ui }, update: Partial<UI.CustomUI>) {
       const prop = ui.mode === 'light' ? 'light' : 'dark'
       const current = { ...ui[prop], ...update }
       const next = { ...ui, current, [prop]: current }
-      updateTheme(next)
+      await updateTheme(next)
       return next
     },
 
@@ -251,9 +251,9 @@ export const userStore = createStore<UserState>(
       return { ui: next }
     },
 
-    receiveUI(_, update: UI.UISettings) {
+    async receiveUI(_, update: UI.UISettings) {
       const current = update[update.mode]
-      updateTheme(update)
+      await updateTheme(update)
       return { ui: update, current }
     },
 
@@ -300,16 +300,16 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    clearGuestState() {
+    async clearGuestState() {
       try {
-        const chats = localApi.loadItem('chats')
+        const chats = await localApi.loadItem('chats')
         for (const chat of chats) {
-          safeLocalStorage.removeItem(`messages-${chat._id}`)
+          storage.removeItem(`messages-${chat._id}`)
         }
 
         for (const key in localApi.KEYS) {
-          safeLocalStorage.removeItem(key)
-          localApi.loadItem(key as any)
+          await storage.removeItem(key)
+          await localApi.loadItem(key as any)
         }
 
         toastStore.error(`Guest state successfully reset`)
@@ -367,14 +367,12 @@ function init(): UserState {
   const existing = getAuth()
 
   try {
-    safeLocalStorage.test()
+    storage.test()
   } catch (e: any) {
     toastStore.error(`localStorage unavailable: ${e.message}`)
   }
 
   const ui = getUIsettings()
-  const background = safeLocalStorage.getItem(BACKGROUND_KEY) || undefined
-
   updateTheme(ui)
 
   if (!existing) {
@@ -383,7 +381,7 @@ function init(): UserState {
       jwt: '',
       loggedIn: false,
       ui,
-      background,
+      background: undefined,
       oaiUsageLoading: false,
       hordeStatsLoading: false,
       metadata: {},
@@ -397,7 +395,7 @@ function init(): UserState {
     loading: false,
     jwt: existing,
     ui,
-    background,
+    background: undefined,
     oaiUsageLoading: false,
     hordeStatsLoading: false,
     metadata: {},
@@ -406,8 +404,8 @@ function init(): UserState {
   }
 }
 
-function updateTheme(ui: UI.UISettings) {
-  safeLocalStorage.setItem(getUIKey(), JSON.stringify(ui))
+async function updateTheme(ui: UI.UISettings) {
+  await storage.setItem(getUIKey(), JSON.stringify(ui))
   const root = document.documentElement
 
   const mode = ui[ui.mode]
@@ -462,13 +460,13 @@ function updateTheme(ui: UI.UISettings) {
 function getUIsettings(guest = false) {
   const key = getUIKey(guest)
   const json =
-    safeLocalStorage.getItem(key) ||
-    safeLocalStorage.getItem('ui-settings') ||
+    storage.localGetItem(key) ||
+    storage.localGetItem('ui-settings') ||
     JSON.stringify(UI.defaultUIsettings)
 
   const settings: UI.UISettings = JSON.parse(json)
-  const theme = (safeLocalStorage.getItem('theme') || settings.theme) as UI.ThemeColor
-  safeLocalStorage.removeItem('theme')
+  const theme = (storage.localGetItem('theme') || settings.theme) as UI.ThemeColor
+  storage.removeItem('theme')
 
   if (theme && UI.UI_THEME.includes(theme)) {
     settings.theme = theme
@@ -479,13 +477,13 @@ function getUIsettings(guest = false) {
   return ui
 }
 
-function setBackground(content: any) {
+async function setBackground(content: any) {
   if (content === null) {
-    safeLocalStorage.removeItemUnsafe(BACKGROUND_KEY)
+    await storage.removeItem(BACKGROUND_KEY)
     return
   }
 
-  safeLocalStorage.setItemUnsafe(BACKGROUND_KEY, content)
+  await storage.setItem(BACKGROUND_KEY, content)
 }
 
 function adjustColor(color: string, percent: number, target = 0) {

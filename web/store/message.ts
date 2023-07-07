@@ -597,7 +597,7 @@ subscribe(
     requestId: 'string?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
   } as const,
-  (body) => {
+  async (body) => {
     const { msgs, activeChatId } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
@@ -632,7 +632,7 @@ subscribe(
     }
 
     if (!isLoggedIn()) {
-      localApi.saveMessages(body.chatId, nextMsgs)
+      await localApi.saveMessages(body.chatId, nextMsgs)
     }
 
     addMsgToRetries(msg)
@@ -779,7 +779,7 @@ subscribe('message-horde-eta', { eta: 'number', queue: 'number' }, (body) => {
 subscribe(
   'guest-message-created',
   { msg: 'any', chatId: 'string', continue: 'boolean?', requestId: 'string?' },
-  (body) => {
+  async (body) => {
     const { msgs, activeChatId, retrying } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
@@ -791,11 +791,11 @@ subscribe(
     const next = msgs.filter((m) => m._id !== retrying?._id).concat(msg)
     const speech = getMessageSpeechInfo(msg, userStore().user)
 
-    const chats = localApi.loadItem('chats')
-    localApi.saveChats(
+    const chats = await localApi.loadItem('chats')
+    await localApi.saveChats(
       localApi.replace(body.chatId, chats, { updatedAt: new Date().toISOString() })
     )
-    localApi.saveMessages(body.chatId, next)
+    await localApi.saveMessages(body.chatId, next)
 
     addMsgToRetries(msg)
 

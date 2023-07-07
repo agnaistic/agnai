@@ -19,7 +19,7 @@ export async function getPresets() {
     return res
   }
 
-  const presets = loadItem('presets')
+  const presets = await loadItem('presets')
   return localApi.result({ presets })
 }
 
@@ -36,8 +36,8 @@ export async function createPreset(preset: PresetUpdate) {
     userId: localApi.ID,
   }
 
-  const presets = loadItem('presets').concat(newPreset)
-  localApi.savePresets(presets)
+  const presets = await loadItem('presets').then((res) => res.concat(newPreset))
+  await localApi.savePresets(presets)
 
   return localApi.result(newPreset)
 }
@@ -48,12 +48,12 @@ export async function editPreset(presetId: string, update: Partial<PresetUpdate>
     return res
   }
 
-  const presets = loadItem('presets')
+  const presets = await loadItem('presets')
   const prev = presets.find((pr) => pr._id === presetId)
   if (!prev) return localApi.error(`Preset does not exist`)
 
   const preset = { ...prev, ...update }
-  localApi.savePresets(localApi.replace(presetId, presets, preset))
+  await localApi.savePresets(localApi.replace(presetId, presets, preset))
   return localApi.result(preset)
 }
 
@@ -63,8 +63,8 @@ export async function deletePreset(presetId: string) {
     return res
   }
 
-  const presets = loadItem('presets')
+  const presets = await loadItem('presets')
   const next = presets.filter((pre) => pre._id !== presetId)
-  localApi.savePresets(next)
+  await localApi.savePresets(next)
   return localApi.result({ success: true })
 }

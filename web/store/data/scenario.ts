@@ -17,7 +17,7 @@ export async function getScenarios() {
     return res
   }
 
-  const scenarios = localApi.loadItem('scenario')
+  const scenarios = await localApi.loadItem('scenario')
   return localApi.result({ scenarios })
 }
 
@@ -27,7 +27,7 @@ export async function getScenario(id: string) {
     return res
   }
 
-  const scenarios = localApi.loadItem('scenario')
+  const scenarios = await localApi.loadItem('scenario')
   return localApi.result(scenarios.find((s) => s._id === id))
 }
 
@@ -43,8 +43,8 @@ export async function createScenario(scenario: NewScenario) {
     userId: localApi.ID,
     ...scenario,
   }
-  const scenarios = localApi.loadItem('scenario').concat(next)
-  localApi.saveScenarios(scenarios)
+  const scenarios = await localApi.loadItem('scenario').then((res) => res.concat(next))
+  await localApi.saveScenarios(scenarios)
 
   return localApi.result(next)
 }
@@ -55,10 +55,12 @@ export async function updateScenario(scenarioId: string, update: NewScenario) {
     return res
   }
 
-  const scenarios = localApi
-    .loadItem('scenario')
-    .map((scenario) => (scenario._id === scenarioId ? { ...scenario, ...update } : scenario))
-  localApi.saveScenarios(scenarios)
+  const items = await localApi.loadItem('scenario')
+
+  const scenarios = items.map((scenario) =>
+    scenario._id === scenarioId ? { ...scenario, ...update } : scenario
+  )
+  await localApi.saveScenarios(scenarios)
 
   return localApi.result({ success: true })
 }
@@ -69,8 +71,10 @@ export async function removeScenario(scenarioId: string) {
     return res
   }
 
-  const scenarios = localApi.loadItem('scenario').filter((scenario) => scenario._id !== scenarioId)
-  localApi.saveScenarios(scenarios)
+  const scenarios = await localApi
+    .loadItem('scenario')
+    .then((res) => res.filter((scenario) => scenario._id !== scenarioId))
+  await localApi.saveScenarios(scenarios)
 
   return localApi.result({ success: true })
 }

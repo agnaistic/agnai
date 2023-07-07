@@ -172,6 +172,9 @@ devDependencies:
   js-cookie:
     specifier: ^3.0.1
     version: 3.0.1
+  localforage:
+    specifier: ^1.10.0
+    version: registry.npmjs.org/localforage@1.10.0
   localtunnel:
     specifier: ^2.0.2
     version: 2.0.2
@@ -6809,6 +6812,12 @@ packages:
       entities: registry.npmjs.org/entities@3.0.1
     dev: true
 
+  registry.npmjs.org/immediate@3.0.6:
+    resolution: {integrity: sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/immediate/-/immediate-3.0.6.tgz}
+    name: immediate
+    version: 3.0.6
+    dev: true
+
   registry.npmjs.org/immutable@4.3.0:
     resolution: {integrity: sha512-0AOCmOip+xgJwEVTQj1EfiDDOkPmuyllDuTuEX+DDXUgapLAsBIfkg3sxCYyCEA8mQqZrrxPUGjcOQ2JS3WLkg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/immutable/-/immutable-4.3.0.tgz}
     name: immutable
@@ -6906,6 +6915,14 @@ packages:
     version: 2.2.3
     engines: {node: '>=6'}
     hasBin: true
+    dev: true
+
+  registry.npmjs.org/lie@3.1.1:
+    resolution: {integrity: sha512-RiNhHysUjhrDQntfYSfY4MU24coXXdEOgw9WGcKHNeEwffDYbF//u87M1EWaMGzuFoSbqW0C9C6lEEhDOAswfw==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/lie/-/lie-3.1.1.tgz}
+    name: lie
+    version: 3.1.1
+    dependencies:
+      immediate: registry.npmjs.org/immediate@3.0.6
     dev: true
 
   registry.npmjs.org/lightningcss-darwin-arm64@1.21.1:
@@ -7039,6 +7056,14 @@ packages:
       '@lmdb/lmdb-linux-arm64': registry.npmjs.org/@lmdb/lmdb-linux-arm64@2.7.11
       '@lmdb/lmdb-linux-x64': registry.npmjs.org/@lmdb/lmdb-linux-x64@2.7.11
       '@lmdb/lmdb-win32-x64': registry.npmjs.org/@lmdb/lmdb-win32-x64@2.7.11
+    dev: true
+
+  registry.npmjs.org/localforage@1.10.0:
+    resolution: {integrity: sha512-14/H1aX7hzBBmmh7sGPd+AOMkkIrHM3Z1PAyGgZigA1H1p5O5ANnMyWzvpAETtG68/dC4pC0ncy3+PPGzXZHPg==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/localforage/-/localforage-1.10.0.tgz}
+    name: localforage
+    version: 1.10.0
+    dependencies:
+      lie: registry.npmjs.org/lie@3.1.1
     dev: true
 
   registry.npmjs.org/loose-envify@1.4.0:
