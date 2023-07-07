@@ -632,7 +632,12 @@ const Meta: Component<{ meta: any; history?: any }> = (props) => {
 
       <Show when={props.history}>
         <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
-          {props.history}
+          <Show
+            when={typeof props.history === 'string'}
+            fallback={JSON.stringify(props.history, null, 2)}
+          >
+            {props.history}
+          </Show>
         </pre>
       </Show>
     </>
