@@ -54,16 +54,6 @@ export const presetValidator = {
   ...chatGenSettings,
 } as const
 
-const disabledValues: { [key in keyof GenMap]?: AppSchema.GenSettings[key] } = {
-  topP: 1,
-  topK: 0,
-  topA: 1,
-  typicalP: 1,
-  tailFreeSampling: 1,
-  repetitionPenalty: 1,
-  repetitionPenaltySlope: 0,
-}
-
 export function mapPresetsToAdapter(presets: Partial<AppSchema.GenSettings>, adapter: AIAdapter) {
   const map = serviceGenMap[adapter]
   const body: any = {}
@@ -73,12 +63,7 @@ export function mapPresetsToAdapter(presets: Partial<AppSchema.GenSettings>, ada
     if (!value) continue
 
     const presetValue = presets[key]
-    const disabledValue = disabledValues[key]
-
     if (presetValue === undefined) continue
-
-    // Remove disabled values from generation settings
-    if (disabledValue !== undefined && presetValue === disabledValue) continue
 
     body[value] = presetValue
   }
@@ -96,12 +81,8 @@ export function getGenSettings(chat: AppSchema.Chat, adapter: AIAdapter) {
     if (!value) continue
 
     const presetValue = presetValues[key]
-    const disabledValue = disabledValues[key]
 
     if (presetValue === undefined) continue
-
-    // Remove disabled values from generation settings
-    if (disabledValue !== undefined && presetValue === disabledValue) continue
 
     body[value] = presetValue
   }
