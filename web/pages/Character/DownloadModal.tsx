@@ -55,7 +55,7 @@ export const DownloadModal: Component<{
     // Agnai-specific fields in the `extensions` prop.
 
     const base = [{ value: 'tavern', label: 'Tavern' }]
-    if (format() === 'png') return base
+    if (fileType() === 'png') return base
     return base.concat([
       { value: 'native', label: 'Agnaistic' },
       { value: 'ooba', label: 'Textgen' },
