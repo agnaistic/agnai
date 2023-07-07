@@ -31,7 +31,7 @@ const Toasts: Component = () => {
                   toastStore.modal(false)
                 }}
               >
-                Clear Notifactions
+                Clear Notifications
               </Button>
             </div>
             <For each={state.history}>
