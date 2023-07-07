@@ -405,7 +405,7 @@ function init(): UserState {
 }
 
 async function updateTheme(ui: UI.UISettings) {
-  await storage.setItem(getUIKey(), JSON.stringify(ui))
+  storage.localSetItem(getUIKey(), JSON.stringify(ui))
   const root = document.documentElement
 
   const mode = ui[ui.mode]
