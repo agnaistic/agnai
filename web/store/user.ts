@@ -90,7 +90,6 @@ export const userStore = createStore<UserState>(
 
       if (res.error) return toastStore.error(`Failed to get user config`)
       if (res.result) {
-        userStore.saveUI({})
         return { user: res.result }
       }
     },

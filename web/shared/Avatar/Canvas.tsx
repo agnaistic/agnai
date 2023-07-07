@@ -1,4 +1,4 @@
-import { Component, createSignal, createEffect, onMount, Suspense, Show } from 'solid-js'
+import { Component, createSignal, createEffect, Suspense, Show, createResource } from 'solid-js'
 import { asyncFrame, parseHex } from '../util'
 import { WIDTH, HEIGHT, getColorProp } from './hooks'
 import { FullSprite, SpriteAttr } from '/common/types/sprite'
@@ -9,7 +9,7 @@ export { AvatarCanvas as default }
 
 const BASE_URL = `https://agnai-assets.sgp1.digitaloceanspaces.com/sprites`
 const BLANK_IMG = `${BASE_URL}/blank.png`
-const CACHE_TTL_SECS = 60
+const CACHE_TTL_SECS = 120
 
 type ImageFilename = string
 const oneImageCache = new Map<ImageFilename, string>()
@@ -42,51 +42,22 @@ const AvatarCanvas: Component<{
   class?: string
   zoom?: number
 }> = (props) => {
-  const [show, setShow] = createSignal(false)
-  const [src, setSrc] = createSignal<string>()
+  const [hash, setHash] = createSignal(getSpriteHash(props.body))
+  const [src, { refetch }] = createResource(props.body, getSpriteImage)
 
-  const [hash, setHash] = createSignal<string>()
-
-  const loadSprite = async () => {
+  createEffect(() => {
     const prev = hash()
-    const id = getSpriteHash(props.body)
-    const short = shortHash(props.body)
-    if (prev === id) return
+    const next = hash()
+    if (prev === next) return
 
-    const cached = spriteCache.get(id)
-    if (cached) {
-      debug('Cache hit', short)
-      setSrc(await cached.image)
-      setHash(id)
-      setShow(true)
-      return
-    }
-
-    debug('Cache miss', short)
-    const eventualSprite = new Promise<string>(async (resolve) => {
-      try {
-        const full = await getSpriteImage(props.body)
-        setSrc(full)
-        setHash(id)
-        resolve(full)
-      } catch (ex) {
-        resolve('')
-      } finally {
-        setShow(true)
-      }
-    })
-
-    spriteCache.set(id, { image: eventualSprite, ttl: Date.now() + CACHE_TTL_SECS * 1000 })
-  }
-
-  onMount(loadSprite)
-
-  createEffect(loadSprite)
+    setHash(next)
+    refetch(props.body)
+  })
 
   return (
     <Suspense fallback={<img src={BLANK_IMG} style={props.style} class="border-0" />}>
-      <Show when={show()}>
-        <img src={src()} style={props.style} class={`border-0 ${show() ? '' : 'invisible'}`} />
+      <Show when={src()}>
+        <img src={src()} style={props.style} class={`border-0`} />
       </Show>
     </Suspense>
   )
@@ -106,36 +77,53 @@ function toImage(gender: string, attr: SpriteAttr, type: string, file: string) {
 }
 
 async function getSpriteImage(body: FullSprite) {
-  const { ctx: base, ele } = createCanvas()
-  const { ele: recolor } = createCanvas()
+  const hash = getSpriteHash(body)
+  const short = shortHash(body)
 
-  for (const attr of attributes) {
-    const files = manifest[attr][body[attr]]
-    if (!files) continue
-
-    const prop = getColorProp(attr)
-    const color = prop ? body[prop] : undefined
-
-    for (const file of files) {
-      const src = toImage(body.gender, attr, body[attr], file)
-
-      {
-        const { image } = await asyncImage(src)
-        await asyncFrame()
-        base.drawImage(image, 0, 0, WIDTH, HEIGHT)
-      }
-
-      if (color && canColor(attr, src)) {
-        const base64 = await getColorLayer(src, color, recolor)
-        const { image } = await asyncImageBase64(base64)
-        await asyncFrame()
-        base.drawImage(image, 0, 0, WIDTH, HEIGHT)
-      }
-    }
+  const cached = spriteCache.get(hash)
+  if (cached) {
+    debug('Cache hit', short)
+    const image = await cached.image
+    return image
   }
 
-  const fullImage = ele.toDataURL()
-  return fullImage
+  const eventual = new Promise<string>(async (resolve) => {
+    debug('Cache miss', short)
+
+    const { ctx: base, ele } = createCanvas()
+    const { ele: recolor } = createCanvas()
+
+    for (const attr of attributes) {
+      const files = manifest[attr][body[attr]]
+      if (!files) continue
+
+      const prop = getColorProp(attr)
+      const color = prop ? body[prop] : undefined
+
+      for (const file of files) {
+        const src = toImage(body.gender, attr, body[attr], file)
+
+        {
+          const { image } = await asyncImage(src)
+          await asyncFrame()
+          base.drawImage(image, 0, 0, WIDTH, HEIGHT)
+        }
+
+        if (color && canColor(attr, src)) {
+          const base64 = await getColorLayer(src, color, recolor)
+          const { image } = await asyncImageBase64(base64)
+          await asyncFrame()
+          base.drawImage(image, 0, 0, WIDTH, HEIGHT)
+        }
+      }
+    }
+
+    const fullImage = ele.toDataURL()
+    resolve(fullImage)
+  })
+
+  spriteCache.set(hash, { image: eventual, ttl: Date.now() + CACHE_TTL_SECS * 1000 })
+  return eventual
 }
 
 async function getColorLayer(file: string, color: string, ele?: HTMLCanvasElement) {
