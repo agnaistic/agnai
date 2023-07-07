@@ -146,7 +146,8 @@ async function downloadImage(json: string, image: string, name: string) {
    * If the avatar image is not either of these formats, we must convert it
    */
 
-  const base64 = await imageToDataURL(image, mimetype).then((res) => res.split(',')[1])
+  const dataurl = await imageToDataURL(image, mimetype)
+  const base64 = dataurl.split(',')[1]
   const imgBuffer = Buffer.from(window.atob(base64), 'binary')
   const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
   const output = Buffer.from(json, 'utf8').toString('base64')
@@ -167,19 +168,18 @@ async function imageToDataURL(image: string, mimetype?: string) {
   const { ext } = getExt(image)
 
   const base64 = await getImageBase64(image)
-  if (ext === 'apng') {
+  const apng = await isAPNG(base64)
+  if (apng || ext === 'apng') {
     return base64
   }
 
-  const element = document.createElement('img')
-  element.setAttribute('crossorigin', 'anonymous')
-  element.src = base64
+  const element = await asyncImage(base64)
 
   const canvas = document.createElement('canvas')
-  canvas.width = element.naturalWidth
-  canvas.height = element.naturalHeight
+  canvas.width = element.image.naturalWidth
+  canvas.height = element.image.naturalHeight
   const ctx = canvas.getContext('2d')
-  ctx?.drawImage(element, 0, 0)
+  ctx?.drawImage(element.image, 0, 0)
   const dataUrl = canvas.toDataURL(mimetype || 'image/png')
   return dataUrl
 }
@@ -219,4 +219,33 @@ async function getImageBase64(image: string) {
 
   const base64 = await getImageData(image)
   return base64!
+}
+
+function asyncImage(src: string) {
+  return new Promise<{ name: string; image: HTMLImageElement }>(async (resolve, reject) => {
+    const data = await getImageBase64(src)
+    const image = new Image()
+    image.setAttribute('crossorigin', 'anonymous')
+    image.src = data
+
+    image.onload = () => resolve({ name: src, image })
+    image.onerror = (ev) => reject(ev)
+  })
+}
+
+async function isAPNG(base64: string) {
+  if (base64.startsWith('data:')) {
+    base64 = base64.split(',')[1]
+  }
+  const buffer = Buffer.from(window.atob(base64), 'binary')
+  try {
+    for (const chunk of extract(buffer)) {
+      if (chunk.name === 'IDAT') return false
+      if (chunk.name === 'acTL') return true
+    }
+
+    return false
+  } catch (ex) {
+    return false
+  }
 }
