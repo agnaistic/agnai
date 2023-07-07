@@ -3,7 +3,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { localApi } from './storage'
 import { toArray } from '/common/util'
 import { UI } from '/common/types'
-import { safeLocalStorage } from '/web/shared/util'
+import { storage } from '/web/shared/util'
 import { AIAdapter } from '/common/adapters'
 
 type InitEntities = {
@@ -39,7 +39,7 @@ export async function getInit() {
 export async function getProfile(id?: string) {
   if (!isLoggedIn()) {
     // We never retrieve profiles by 'id' for anonymous users
-    const profile = localApi.loadItem('profile')
+    const profile = await localApi.loadItem('profile')
     return { result: profile, error: undefined }
   }
 
@@ -49,7 +49,7 @@ export async function getProfile(id?: string) {
 
 export async function getConfig() {
   if (!isLoggedIn()) {
-    const config = localApi.loadItem('config')
+    const config = await localApi.loadItem('config')
     return { result: config, error: undefined }
   }
 
@@ -62,7 +62,7 @@ export async function deleteApiKey(kind: string) {
     return res
   }
 
-  const user = localApi.loadItem('config')
+  const user = await localApi.loadItem('config')
   if (kind === 'novel') {
     user.novelApiKey = ''
     user.novelVerified = false
@@ -98,21 +98,21 @@ export async function deleteApiKey(kind: string) {
     user.elevenLabsApiKeySet = false
   }
 
-  localApi.saveConfig(user)
+  await localApi.saveConfig(user)
   return localApi.result({ success: true })
 }
 
 export async function updateProfile(handle: string, file?: File) {
   if (!isLoggedIn()) {
     const avatar = await getImageData(file)
-    const prev = localApi.loadItem('profile')
+    const prev = await localApi.loadItem('profile')
     const next: AppSchema.Profile = {
       ...prev,
       handle,
       avatar: avatar || prev.avatar,
     }
 
-    localApi.saveProfile(next)
+    await localApi.saveProfile(next)
     return { result: next, error: undefined }
   }
 
@@ -128,7 +128,7 @@ type ConfigUpdate = Partial<AppSchema.User> & { hordeModels?: string[] }
 
 export async function updateConfig(config: ConfigUpdate) {
   if (!isLoggedIn()) {
-    const prev = localApi.loadItem('config')
+    const prev = await localApi.loadItem('config')
     const next: AppSchema.User = { ...prev, ...config }
 
     if (prev.novelApiKey && !next.novelApiKey) {
@@ -145,7 +145,7 @@ export async function updateConfig(config: ConfigUpdate) {
 
     next.hordeModel = toArray(config.hordeModels)
 
-    localApi.saveConfig(next)
+    await localApi.saveConfig(next)
     return { result: next, error: undefined }
   }
 
@@ -155,7 +155,7 @@ export async function updateConfig(config: ConfigUpdate) {
 
 export async function updateServiceConfig(service: AIAdapter, update: any) {
   if (!isLoggedIn()) {
-    const config = localApi.loadItem('config')
+    const config = await localApi.loadItem('config')
     const prev = config.adapterConfig?.[service] || {}
     const next = { ...prev, ...update }
     const nextConfig = {
@@ -166,7 +166,7 @@ export async function updateServiceConfig(service: AIAdapter, update: any) {
       },
     }
 
-    localApi.saveConfig(nextConfig)
+    await localApi.saveConfig(nextConfig)
     return { result: nextConfig, error: undefined }
   }
 
@@ -178,14 +178,14 @@ export async function updateUI(ui: UI.UISettings) {
   if (isLoggedIn()) {
     const res = await api.post('/user/ui', ui)
     if (res.result) {
-      safeLocalStorage.removeItem('ui-settings')
+      storage.removeItem('ui-settings')
     }
     return res
   }
 
-  const config = localApi.loadItem('config')
+  const config = await localApi.loadItem('config')
   const next: AppSchema.User = { ...config, ui }
-  localApi.saveConfig(next)
+  await localApi.saveConfig(next)
   return { success: true }
 }
 
@@ -195,7 +195,7 @@ export async function getOpenAIUsage() {
     return res
   }
 
-  const user = localApi.loadItem('config')
+  const user = await localApi.loadItem('config')
   if (!user.oaiKey) {
     return localApi.error(`OpenAI key not set`)
   }

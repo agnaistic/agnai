@@ -36,7 +36,7 @@ import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import { CharacterAvatar } from '../../shared/AvatarIcon'
 import ImportCharacterModal from '../Character/ImportCharacter'
 import DeleteCharacterModal from '../Character/DeleteCharacter'
-import { getAssetUrl, safeLocalStorage, setComponentPageTitle } from '../../shared/util'
+import { getAssetUrl, storage, setComponentPageTitle } from '../../shared/util'
 import { DropMenu } from '../../shared/DropMenu'
 import Button from '../../shared/Button'
 import Loading from '../../shared/Loading'
@@ -559,7 +559,7 @@ function getSortFunction(field: SortFieldTypes, direction: SortDirectionTypes) {
 }
 
 function getListCache(): ListCache {
-  const existing = safeLocalStorage.getItem(CACHE_KEY)
+  const existing = storage.localGetItem(CACHE_KEY)
   const defaultCache: ListCache = { sort: { field: 'modified', direction: 'desc' }, view: 'list' }
 
   if (!existing) {
@@ -570,7 +570,7 @@ function getListCache(): ListCache {
 }
 
 function saveListCache(cache: ListCache) {
-  safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+  storage.localSetItem(CACHE_KEY, JSON.stringify(cache))
 }
 
 const NoCharacters: Component = () => (

@@ -1,6 +1,6 @@
 import { toArray } from '/common/util'
 import { AppSchema } from '/common/types'
-import { safeLocalStorage } from '/web/shared/util'
+import { storage } from '/web/shared/util'
 import { NewCharacter } from '/web/store'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
@@ -112,7 +112,7 @@ export function groupAndSort(
 }
 
 export function getListCache(): ListCache {
-  const existing = safeLocalStorage.getItem(CACHE_KEY)
+  const existing = storage.localGetItem(CACHE_KEY)
   const defaultCache: ListCache = { sort: { field: 'chat-updated', direction: 'desc' } }
 
   if (!existing) {
@@ -123,7 +123,7 @@ export function getListCache(): ListCache {
 }
 
 export function saveListCache(cache: ListCache) {
-  safeLocalStorage.setItem(CACHE_KEY, JSON.stringify(cache))
+  storage.localSetItem(CACHE_KEY, JSON.stringify(cache))
 }
 
 export function toGeneratedCharacter(response: string, description: string): NewCharacter {

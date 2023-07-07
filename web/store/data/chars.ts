@@ -22,7 +22,7 @@ export async function getCharacters() {
     return res
   }
 
-  const characters = localApi.loadItem('characters')
+  const characters = await localApi.loadItem('characters')
   return localApi.result({ characters })
 }
 
@@ -32,12 +32,14 @@ export async function removeAvatar(charId: string) {
     return res
   }
 
-  const chars = loadItem('characters').map((ch) => {
-    if (ch._id !== charId) return ch
-    return { ...ch, avatar: '' }
-  })
+  const chars = await loadItem('characters').then((res) =>
+    res.map((ch) => {
+      if (ch._id !== charId) return ch
+      return { ...ch, avatar: '' }
+    })
+  )
 
-  localApi.saveChars(chars)
+  await localApi.saveChars(chars)
   return localApi.result(chars.filter((ch) => ch._id === charId))
 }
 
@@ -51,7 +53,7 @@ export async function editAvatar(charId: string, file: File) {
   }
 
   const avatar = await getImageData(file)
-  const chars = loadItem('characters')
+  const chars = await loadItem('characters')
 
   const prev = chars.find((ch) => ch._id === charId)
 
@@ -61,7 +63,7 @@ export async function editAvatar(charId: string, file: File) {
 
   const nextChar = { ...prev, avatar: avatar || prev.avatar }
   const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
-  localApi.saveChars(next)
+  await localApi.saveChars(next)
 
   return localApi.result(nextChar)
 }
@@ -72,8 +74,8 @@ export async function deleteCharacter(charId: string) {
     return res
   }
 
-  const chars = loadItem('characters')
-  const chats = loadItem('chats')
+  const chars = await loadItem('characters')
+  const chats = await loadItem('chats')
 
   const next = {
     chars: chars.filter((ch) => ch._id !== charId),
@@ -84,8 +86,8 @@ export async function deleteCharacter(charId: string) {
     }),
   }
 
-  localApi.saveChars(next.chars)
-  localApi.saveChats(next.chats)
+  await localApi.saveChars(next.chars)
+  await localApi.saveChats(next.chats)
 
   return { result: true, error: undefined }
 }
@@ -121,7 +123,7 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
   }
 
   const avatar = file ? await getImageData(file) : undefined
-  const chars = loadItem('characters')
+  const chars = await loadItem('characters')
   const prev = chars.find((ch) => ch._id === charId)
 
   if (!prev) {
@@ -130,7 +132,7 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
 
   const nextChar = { ...prev, ...char, avatar: avatar || prev.avatar }
   const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
-  localApi.saveChars(next)
+  await localApi.saveChars(next)
 
   return { result: nextChar, error: undefined }
 }
@@ -141,7 +143,7 @@ export async function setFavorite(charId: string, favorite: boolean) {
     return res
   }
 
-  const chars = loadItem('characters')
+  const chars = await loadItem('characters')
   const prev = chars.find((ch) => ch._id === charId)
 
   if (!prev) {
@@ -150,7 +152,7 @@ export async function setFavorite(charId: string, favorite: boolean) {
 
   const nextChar = { ...prev, favorite: favorite }
   const next = chars.map((ch) => (ch._id === charId ? nextChar : ch))
-  localApi.saveChars(next)
+  await localApi.saveChars(next)
 
   return { result: nextChar, error: undefined }
 }
@@ -193,9 +195,9 @@ export async function createCharacter(char: NewCharacter) {
 
   const newChar: AppSchema.Character = { ...props, ...baseChar(), avatar, _id: v4() }
 
-  const chars = loadItem('characters')
+  const chars = await loadItem('characters')
   const next = chars.concat(newChar)
-  localApi.saveChars(next)
+  await localApi.saveChars(next)
 
   return { result: newChar, error: undefined }
 }

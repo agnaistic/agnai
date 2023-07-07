@@ -4,7 +4,7 @@ import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
 import { clearDraft } from '../shared/hooks'
-import { safeLocalStorage } from '../shared/util'
+import { storage } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
@@ -102,7 +102,7 @@ const EDITING_KEY = 'chat-detail-settings'
 
 export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
-  lastChatId: safeLocalStorage.getItem('lastChatId'),
+  lastChatId: storage.localGetItem('lastChatId'),
   loaded: false,
   allChats: [],
   chatProfiles: [],
@@ -182,7 +182,7 @@ export const chatStore = createStore<ChatState>('chat', {
       if (res.result) {
         pipelineApi.memoryEmbed(res.result.chat, res.result.messages)
 
-        safeLocalStorage.setItem('lastChatId', id)
+        storage.localSetItem('lastChatId', id)
 
         msgStore.setState({
           msgs: res.result.messages,
@@ -545,12 +545,12 @@ type ChatOptCache = { editing: boolean; hideOoc: boolean }
 
 function saveOptsCache(cache: ChatOptCache) {
   const prev = getOptsCache()
-  safeLocalStorage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
+  storage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
 }
 
 function getOptsCache(): ChatOptCache {
   const prev =
-    safeLocalStorage.getItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
+    storage.localGetItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
   const body = JSON.parse(prev)
   return { editing: false, hideOoc: false, ...body, modal: undefined }
 }

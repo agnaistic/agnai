@@ -49,6 +49,18 @@ export const DownloadModal: Component<{
   const [format, setFormat] = createSignal('tavern')
   const [fileType, setFileType] = createSignal<string>(props.char?.avatar ? 'png' : 'json')
   const [schema, setSchema] = createSignal(props.char?.persona?.kind || opts()[0].value)
+  const outputs = createMemo(() => {
+    // TODO: We don't need to support exporting in Agnaistic format
+    // once we fully support Chara Card V2. We just need to put
+    // Agnai-specific fields in the `extensions` prop.
+
+    const base = [{ value: 'tavern', label: 'Tavern' }]
+    if (fileType() === 'png') return base
+    return base.concat([
+      { value: 'native', label: 'Agnaistic' },
+      { value: 'ooba', label: 'Textgen' },
+    ])
+  })
 
   return (
     <Modal
@@ -67,14 +79,7 @@ export const DownloadModal: Component<{
             label="Output Format"
             fieldName="app"
             value={format()}
-            items={[
-              { value: 'tavern', label: 'Tavern' },
-              // TODO: We don't need to support exporting in Agnaistic format
-              // once we fully support Chara Card V2. We just need to put
-              // Agnai-specific fields in the `extensions` prop.
-              { value: 'native', label: 'Agnaistic' },
-              { value: 'ooba', label: 'Textgen' },
-            ]}
+            items={outputs()}
             onChange={(item) => setFormat(item.value)}
           />
           <Select
@@ -138,15 +143,12 @@ export const DownloadModal: Component<{
  * @param name Character name
  */
 async function downloadImage(json: string, image: string, name: string) {
-  const { ext } = getExt(image)
-  const mimetype = ALLOWED_TYPES.get(ext)!
-
   /**
    * Only PNG and APNG files can contain embedded character information
    * If the avatar image is not either of these formats, we must convert it
    */
 
-  const dataurl = await imageToDataURL(image, mimetype)
+  const dataurl = await imageToDataURL(image)
   const base64 = dataurl.split(',')[1]
   const imgBuffer = Buffer.from(window.atob(base64), 'binary')
   const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
@@ -159,12 +161,12 @@ async function downloadImage(json: string, image: string, name: string) {
   ]
   const anchor = document.createElement('a')
   anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-  anchor.download = `${name}.card.${ext}`
+  anchor.download = `${name}.card.png`
   anchor.click()
   URL.revokeObjectURL(anchor.href)
 }
 
-async function imageToDataURL(image: string, mimetype?: string) {
+async function imageToDataURL(image: string) {
   const { ext } = getExt(image)
 
   const base64 = await getImageBase64(image)
@@ -180,7 +182,7 @@ async function imageToDataURL(image: string, mimetype?: string) {
   canvas.height = element.image.naturalHeight
   const ctx = canvas.getContext('2d')
   ctx?.drawImage(element.image, 0, 0)
-  const dataUrl = canvas.toDataURL(mimetype || 'image/png')
+  const dataUrl = canvas.toDataURL('image/png')
   return dataUrl
 }
 

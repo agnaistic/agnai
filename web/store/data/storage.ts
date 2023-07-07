@@ -4,7 +4,7 @@ import { defaultChars } from '../../../common/characters'
 import { AppSchema } from '../../../common/types/schema'
 import { api } from '../api'
 import { toastStore } from '../toasts'
-import { safeLocalStorage } from '/web/shared/util'
+import { storage } from '/web/shared/util'
 
 type StorageKey = keyof typeof KEYS
 
@@ -134,14 +134,15 @@ export async function handleGuestInit() {
     }
   }
 
+  const entities = await getGuestInitEntities()
   return localApi.result({
-    ...getGuestInitEntities(),
+    ...entities,
     config: cfg.result!,
   })
 }
 
 async function migrateToJson() {
-  const entities = getGuestInitEntities()
+  const entities = await getGuestInitEntities()
 
   await api.post('/json', entities)
 
@@ -153,16 +154,52 @@ async function migrateToJson() {
   return entities
 }
 
-function getGuestInitEntities() {
-  const user = localApi.loadItem('config', true)
-  const profile = localApi.loadItem('profile', true)
-  const presets = localApi.loadItem('presets', true)
-  const books = localApi.loadItem('memory', true)
-  const scenario = localApi.loadItem('scenario', true)
-  const characters = localApi.loadItem('characters', true)
-  const chats = localApi.loadItem('chats', true)
+async function getGuestInitEntities() {
+  await migrateLegacyItems()
+  /**
+   * @TODO Should we do this in parallel ?
+   */
+  const user = await localApi.loadItem('config', true)
+  const profile = await localApi.loadItem('profile', true)
+  const presets = await localApi.loadItem('presets', true)
+  const books = await localApi.loadItem('memory', true)
+  const scenario = await localApi.loadItem('scenario', true)
+  const characters = await localApi.loadItem('characters', true)
+  const chats = await localApi.loadItem('chats', true)
 
   return { user, presets, profile, books, scenario, characters, chats }
+}
+
+async function migrateLegacyItems() {
+  const keys = [
+    'config',
+    'profile',
+    'presets',
+    'memory',
+    'scenario',
+    'characters',
+    'chats',
+  ] as const
+
+  for (const key of keys) {
+    const old = legacyLoadItem(key)
+    if (!old) continue
+
+    await saveItem(key, old)
+    localStorage.removeItem(key)
+    console.log('Migrated', key)
+  }
+
+  for (const key in localStorage) {
+    if (!key.startsWith('messages-')) continue
+
+    const data = localStorage.getItem(key)
+    if (!data) continue
+
+    await storage.setItem(key, data)
+    localStorage.removeItem(key)
+    console.log('Migrated', key)
+  }
 }
 
 export async function saveMessages(chatId: string, messages: AppSchema.ChatMessage[]) {
@@ -170,7 +207,7 @@ export async function saveMessages(chatId: string, messages: AppSchema.ChatMessa
   if (SELF_HOSTING) {
     return api.post(`/json/messages/${chatId}`, messages)
   } else {
-    safeLocalStorage.setItem(key, JSON.stringify(messages))
+    storage.setItem(key, JSON.stringify(messages))
   }
 }
 
@@ -187,60 +224,60 @@ export async function getMessages(
     }
   }
 
-  const messages = safeLocalStorage.getItem(`messages-${chatId}`)
+  const messages = await storage.getItem(`messages-${chatId}`)
   if (!messages) return []
 
   return JSON.parse(messages) as AppSchema.ChatMessage[]
 }
 
-export function saveChars(state: AppSchema.Character[]) {
-  saveItem('characters', state)
+export async function saveChars(state: AppSchema.Character[]) {
+  await saveItem('characters', state)
 }
 
-export function saveChats(state: AppSchema.Chat[]) {
-  saveItem('chats', state)
+export async function saveChats(state: AppSchema.Chat[]) {
+  await saveItem('chats', state)
 }
 
-export function saveProfile(state: AppSchema.Profile) {
-  saveItem('profile', state)
+export async function saveProfile(state: AppSchema.Profile) {
+  await saveItem('profile', state)
 }
 
-export function saveConfig(state: AppSchema.User) {
-  saveItem('config', state)
+export async function saveConfig(state: AppSchema.User) {
+  await saveItem('config', state)
 }
 
-export function savePresets(state: AppSchema.UserGenPreset[]) {
-  saveItem('presets', state)
+export async function savePresets(state: AppSchema.UserGenPreset[]) {
+  await saveItem('presets', state)
 }
 
-export function saveBooks(state: AppSchema.MemoryBook[]) {
-  saveItem('memory', state)
+export async function saveBooks(state: AppSchema.MemoryBook[]) {
+  await saveItem('memory', state)
 }
 
-export function saveScenarios(state: AppSchema.ScenarioBook[]) {
-  saveItem('scenario', state)
+export async function saveScenarios(state: AppSchema.ScenarioBook[]) {
+  await saveItem('scenario', state)
 }
 
-export function deleteChatMessages(chatId: string) {
-  safeLocalStorage.removeItem(`messages-${chatId}`)
+export async function deleteChatMessages(chatId: string) {
+  await storage.removeItem(`messages-${chatId}`)
 }
 
-function saveItem<TKey extends keyof typeof KEYS>(key: TKey, value: LocalStorage[TKey]) {
+async function saveItem<TKey extends keyof typeof KEYS>(key: TKey, value: LocalStorage[TKey]) {
   if (SELF_HOSTING) {
     localStore.set(key, value)
-    api.post('/json', { [key]: value })
+    await api.post('/json', { [key]: value })
   } else {
     localStore.set(key, value)
-    safeLocalStorage.setItem(KEYS[key], JSON.stringify(value))
+    await storage.setItem(KEYS[key], JSON.stringify(value))
   }
 }
 
-export function loadItem<TKey extends keyof typeof KEYS>(
+export async function loadItem<TKey extends keyof typeof KEYS>(
   key: TKey,
   local?: boolean
-): LocalStorage[TKey] {
+): Promise<LocalStorage[TKey]> {
   if (local || !selfHosting()) {
-    const item = safeLocalStorage.getItem(KEYS[key])
+    const item = await storage.getItem(KEYS[key])
     if (item) {
       const parsed = JSON.parse(item)
       localStore.set(key, parsed)
@@ -248,13 +285,26 @@ export function loadItem<TKey extends keyof typeof KEYS>(
     }
 
     const fallback = fallbacks[key]
-    safeLocalStorage.setItem(key, JSON.stringify(fallback))
+    storage.setItem(key, JSON.stringify(fallback))
 
     return fallback
   }
 
   const item = localStore.get(key)
   return item
+}
+
+function legacyLoadItem<TKey extends keyof typeof KEYS>(
+  key: TKey,
+  local?: boolean
+): LocalStorage[TKey] | void {
+  if (local || !selfHosting()) {
+    const item = storage.localGetItem(KEYS[key])
+    if (item) {
+      const parsed = JSON.parse(item)
+      return parsed
+    }
+  }
 }
 
 export function error(error: string) {

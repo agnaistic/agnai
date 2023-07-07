@@ -16,7 +16,7 @@ export async function getBooks() {
     return res
   }
 
-  const books = localApi.loadItem('memory')
+  const books = await localApi.loadItem('memory')
   return localApi.result({ books })
 }
 
@@ -32,8 +32,8 @@ export async function createBook(book: NewBook) {
     userId: localApi.ID,
     _id: v4(),
   }
-  const books = localApi.loadItem('memory').concat(next)
-  localApi.saveBooks(books)
+  const books = await localApi.loadItem('memory').then((res) => res.concat(next))
+  await localApi.saveBooks(books)
 
   return localApi.result(next)
 }
@@ -44,10 +44,10 @@ export async function updateBook(bookId: string, update: NewBook) {
     return res
   }
 
-  const books = localApi
+  const books = await localApi
     .loadItem('memory')
-    .map((book) => (book._id === bookId ? { ...book, ...update } : book))
-  localApi.saveBooks(books)
+    .then((res) => res.map((book) => (book._id === bookId ? { ...book, ...update } : book)))
+  await localApi.saveBooks(books)
 
   return localApi.result({ success: true })
 }
@@ -58,8 +58,10 @@ export async function removeBook(bookId: string) {
     return res
   }
 
-  const books = localApi.loadItem('memory').filter((book) => book._id !== bookId)
-  localApi.saveBooks(books)
+  const books = await localApi
+    .loadItem('memory')
+    .then((res) => res.filter((book) => book._id !== bookId))
+  await localApi.saveBooks(books)
 
   return localApi.result({ success: true })
 }
