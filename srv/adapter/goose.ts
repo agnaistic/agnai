@@ -38,6 +38,8 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
     repetition_penalty_range: opts.gen.repetitionPenaltyRange,
   }
 
+  yield { prompt: body.prompt }
+
   logger.debug({ ...body, prompt: null }, 'Goose payload')
   logger.debug(`Prompt:\n${body.prompt}`)
 

@@ -6,6 +6,7 @@ import { now } from './util'
 const PAGE_SIZE = 100
 
 export type NewMessage = {
+  _id?: string
   chatId: string
   message: string
   characterId?: string
@@ -35,7 +36,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     event,
   } = creating
   const doc: AppSchema.ChatMessage = {
-    _id: v4(),
+    _id: creating._id || v4(),
     kind: 'chat-message',
     rating: 'none',
     chatId,

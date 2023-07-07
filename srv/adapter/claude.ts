@@ -80,7 +80,9 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     headers['x-api-key'] = key
   }
 
-  log.debug(requestBody, 'Claude payload')
+  log.debug({ ...requestBody, prompt: null }, 'Claude payload')
+  log.debug(`Prompt:\n{requestBody.prompt}`)
+  yield { prompt: requestBody.prompt }
 
   const iterator = false // requestBody.stream
     ? streamCompletion(base.url, requestBody, headers, opts.user._id, log)

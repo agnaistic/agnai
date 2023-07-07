@@ -66,6 +66,8 @@ export const handleNovel: ModelAdapter = async function* ({
     parameters: model === NOVEL_MODELS.clio_v1 ? getClioParams(opts.gen) : { ...base, ...settings },
   }
 
+  yield { prompt: processedPrompt }
+
   const endTokens = ['***', 'Scenario:', '----', '⁂']
 
   log.debug(

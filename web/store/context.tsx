@@ -25,6 +25,7 @@ export type ContextState = {
     user: JSX.CSSProperties
     ooc: JSX.CSSProperties
   }
+  promptHistory: any
 }
 
 const initial: ContextState = {
@@ -39,6 +40,7 @@ const initial: ContextState = {
     ooc: {},
   },
   activeBots: [],
+  promptHistory: {},
 }
 
 const AppContext = createContext([initial, (next: Partial<ContextState>) => {}] as const)
@@ -79,6 +81,7 @@ export function ContextProvider(props: { children: any }) {
       handle: chars.impersonating?.name || users.profile?.handle || 'You',
       trimSentences: users.ui.trimSentences ?? false,
       activeBots: chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : [],
+      promptHistory: chats.promptHistory,
     }
 
     setState(next)
