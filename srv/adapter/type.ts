@@ -3,7 +3,7 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
 
 export type GenerateRequestV2 = {
-  requestId?: string
+  requestId: string
   kind:
     | 'send'
     | 'send-event:world'
@@ -58,6 +58,7 @@ export type AdapterProps = {
   characters?: Record<string, AppSchema.Character>
   impersonate: AppSchema.Character | undefined
   lastMessage?: string
+  requestId: string
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>
@@ -69,4 +70,4 @@ export type AdapterProps = {
 
 export type ModelAdapter = (
   opts: AdapterProps
-) => AsyncGenerator<string | { partial: string } | { error: any } | { meta: any }>
+) => AsyncGenerator<string | { partial: string } | { error: any } | { meta: any } | { prompt: any }>

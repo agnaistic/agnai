@@ -48,6 +48,7 @@ export type ChatState = {
     hideOoc: boolean
     pane?: ChatRightPane
   }
+  promptHistory: Record<string, any>
 }
 
 export type ChatRightPane = 'character' | 'preset'
@@ -96,6 +97,7 @@ const initState: ChatState = {
     modal: undefined,
     pane: undefined,
   },
+  promptHistory: {},
 }
 
 const EDITING_KEY = 'chat-detail-settings'
@@ -113,6 +115,7 @@ export const chatStore = createStore<ChatState>('chat', {
     screenshot: false,
     pane: undefined,
   },
+  promptHistory: {},
 })((get, set) => {
   events.on(EVENTS.loggedOut, () => {
     const { opts } = get()
@@ -619,5 +622,13 @@ subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' },
         characters: nextChatCharacters,
       },
     },
+  })
+})
+
+subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
+  const { promptHistory } = chatStore.getState()
+
+  chatStore.setState({
+    promptHistory: Object.assign({}, promptHistory, { [body.id]: body.prompt }),
   })
 })

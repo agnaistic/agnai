@@ -271,10 +271,19 @@ const SingleMessage: Component<
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show when={canShowMeta(props.original.meta)}>
+                  <Show
+                    when={canShowMeta(props.original.meta, ctx.promptHistory[props.original._id])}
+                  >
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
-                      onClick={() => rootModalStore.info(<Meta meta={props.original.meta} />)}
+                      onClick={() =>
+                        rootModalStore.info(
+                          <Meta
+                            meta={props.original.meta}
+                            history={ctx.promptHistory[props.original._id]}
+                          />
+                        )
+                      }
                     >
                       <Info size={14} />
                     </span>
@@ -603,7 +612,7 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-const Meta: Component<{ meta: any }> = (props) => {
+const Meta: Component<{ meta: any; history?: any }> = (props) => {
   if (!props.meta) return null
 
   return (
@@ -620,10 +629,16 @@ const Meta: Component<{ meta: any }> = (props) => {
           )}
         </For>
       </table>
+
+      <Show when={props.history}>
+        <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
+          {props.history}
+        </pre>
+      </Show>
     </>
   )
 }
 
-function canShowMeta(meta: any) {
-  return !!meta && Object.keys(meta).length >= 1
+function canShowMeta(meta: any, history: any) {
+  return !!history || (!!meta && Object.keys(meta).length >= 1)
 }

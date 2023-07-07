@@ -81,6 +81,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
   const handler = handlers[opts.settings.service!]
   const stream = handler({
     kind: 'plain',
+    requestId: '',
     char: {} as any,
     chat: {} as any,
     gen: opts.settings,
@@ -156,6 +157,7 @@ export async function createTextStreamV2(
   const gen = opts.settings || getFallbackPreset(adapter)
   const settings = mapPresetsToAdapter(gen, adapter)
   const stream = handler({
+    requestId: opts.requestId,
     kind: opts.kind,
     char: opts.char,
     chat: opts.chat,

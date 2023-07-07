@@ -73,8 +73,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       : toChatCompletionPayload(opts, body.max_tokens)
 
     body.messages = messages
+    yield { prompt: messages }
   } else {
     body.prompt = prompt
+    yield { prompt }
   }
 
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }

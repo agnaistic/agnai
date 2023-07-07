@@ -197,6 +197,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
 
   logger.debug({ ...input, prompt: null }, 'Replicate payload')
   logger.debug(`Prompt:\n${input.prompt}`)
+  yield { prompt: input.prompt }
 
   let prediction: ReplicatePrediction
   try {

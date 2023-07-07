@@ -57,6 +57,8 @@ export const handleKobold: ModelAdapter = async function* ({
     }
   }
 
+  yield { prompt: body.prompt }
+
   logger.debug({ ...body, prompt: null }, 'Kobold payload')
   logger.debug(`Prompt:\n${body.prompt}`)
 

@@ -187,7 +187,12 @@ const InfoModal: Component = (props) => {
   const state = rootModalStore()
 
   return (
-    <Modal title="Information" show={state.info} close={() => rootModalStore.info()}>
+    <Modal
+      title="Information"
+      show={state.info}
+      close={() => rootModalStore.info()}
+      maxWidth="half"
+    >
       {state.info}
     </Modal>
   )

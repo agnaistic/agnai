@@ -27,6 +27,7 @@ export const handleScale: ModelAdapter = async function* ({
   }
 
   log.debug(body, 'Scale payload')
+  yield { prompt: prompt }
   const auth = `Basic ${guest ? user.scaleApiKey : decryptText(user.scaleApiKey)}`
 
   const response = await needle('post', user.scaleUrl, body, {

@@ -33,8 +33,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
 
   if (format === 'chat') {
     payload.messages = toChatCompletionPayload(opts, payload.max_tokens)
+    yield { prompt: payload.messages }
   } else {
     payload.prompt = opts.prompt
+    yield { prompt: opts.prompt }
   }
 
   const headers = {

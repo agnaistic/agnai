@@ -203,13 +203,23 @@ export const generateMessageV2 = handle(async (req, res) => {
   })
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs, impersonate }, log)
+  const { stream, adapter } = await createTextStreamV2(
+    { ...body, chat, replyAs, impersonate, requestId },
+    log
+  )
 
   log.setBindings({ adapter })
 
   let generated = ''
   let error = false
   let meta = {}
+
+  const messageId =
+    body.kind === 'retry'
+      ? body.replacing?._id ?? requestId
+      : body.kind === 'continue'
+      ? body.continuing?._id
+      : requestId
 
   try {
     for await (const gen of stream) {
@@ -231,6 +241,11 @@ export const generateMessageV2 = handle(async (req, res) => {
 
       if ('meta' in gen) {
         Object.assign(meta, gen.meta)
+        continue
+      }
+
+      if ('prompt' in gen) {
+        sendOne(userId, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
         continue
       }
 
@@ -275,6 +290,7 @@ export const generateMessageV2 = handle(async (req, res) => {
     case 'send-event:hidden':
     case 'send': {
       const msg = await store.msgs.createChatMessage({
+        _id: requestId,
         chatId,
         characterId: replyAs._id,
         senderId: body.kind === 'self' ? userId : undefined,
@@ -318,6 +334,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         })
       } else {
         const msg = await store.msgs.createChatMessage({
+          _id: requestId,
           chatId,
           characterId: replyAs._id,
           message: generated,
@@ -397,13 +414,24 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const requestId = v4()
   res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
-  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs }, log, guest)
+  const { stream, adapter } = await createTextStreamV2(
+    { ...body, chat, replyAs, requestId },
+    log,
+    guest
+  )
 
   log.setBindings({ adapter })
 
   let generated = ''
   let error = false
   let meta = {}
+
+  const messageId =
+    body.kind === 'retry'
+      ? body.replacing?._id ?? requestId
+      : body.kind === 'continue'
+      ? body.continuing?._id
+      : requestId
 
   for await (const gen of stream) {
     if (typeof gen === 'string') {
@@ -418,6 +446,11 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
     if ('meta' in gen) {
       Object.assign(meta, gen.meta)
+      continue
+    }
+
+    if ('prompt' in gen) {
+      sendGuest(guest, { type: 'service-prompt', id: messageId, prompt: gen.prompt })
       continue
     }
 
