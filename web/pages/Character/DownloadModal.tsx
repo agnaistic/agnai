@@ -143,8 +143,6 @@ export const DownloadModal: Component<{
  * @param name Character name
  */
 async function downloadImage(json: string, image: string, name: string) {
-  const { ext } = getExt(image)
-
   /**
    * Only PNG and APNG files can contain embedded character information
    * If the avatar image is not either of these formats, we must convert it
