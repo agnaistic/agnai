@@ -163,7 +163,7 @@ async function downloadImage(json: string, image: string, name: string) {
   ]
   const anchor = document.createElement('a')
   anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
-  anchor.download = `${name}.card.${ext}`
+  anchor.download = `${name}.card.png`
   anchor.click()
   URL.revokeObjectURL(anchor.href)
 }
