@@ -22,7 +22,7 @@ export const voiceStore = createStore<VoiceState>(
 )(() => {
   return {
     getServices() {
-      const user = userStore().user
+      const user = userStore.getState().user
       const services: VoiceState['services'] = []
 
       if ('speechSynthesis' in window) {

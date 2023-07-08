@@ -467,7 +467,7 @@ function toMemberKeys(prev: Record<string, AppSchema.Profile>, curr: AppSchema.P
 }
 
 subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (body) => {
-  const { chatProfiles, memberIds } = chatStore()
+  const { chatProfiles, memberIds } = chatStore.getState()
   if (!memberIds[body.userId]) return
 
   const nextMembers = chatProfiles.map((am) =>
@@ -485,7 +485,7 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
 })
 
 subscribe('chat-deleted', { chatId: 'string' }, (body) => {
-  const { allChats, active, char } = chatStore()
+  const { allChats, active, char } = chatStore.getState()
   if (active?.chat._id === body.chatId) {
     chatStore.setState({ active: undefined })
   }
@@ -548,7 +548,7 @@ type ChatOptCache = { editing: boolean; hideOoc: boolean }
 
 function saveOptsCache(cache: ChatOptCache) {
   const prev = getOptsCache()
-  storage.setItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
+  storage.localSetItem(EDITING_KEY, JSON.stringify({ ...prev, ...cache }))
 }
 
 function getOptsCache(): ChatOptCache {

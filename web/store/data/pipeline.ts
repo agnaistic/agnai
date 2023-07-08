@@ -1,7 +1,5 @@
 import { api } from '../api'
 import { getStore } from '../create'
-import { settingStore } from '../settings'
-import { userStore } from '../user'
 import { AppSchema } from '/common/types'
 import { toMap } from '/web/shared/util'
 
@@ -140,11 +138,7 @@ type MemoryResponse = {
 
 setInterval(() => {
   if (online) return
-
-  const { flags } = settingStore()
-  const { user } = userStore()
-
-  if (!flags.pipeline || !user?.useLocalPipeline) return
+  if (!window.flags.pipeline || !window.usePipeline) return
   check().catch(() => null)
 }, 3000)
 

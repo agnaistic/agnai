@@ -17,7 +17,7 @@ export const BasePresetOptions: PresetOption[] = [
 ]
 
 export function getClientPreset(chat?: AppSchema.Chat) {
-  const user = userStore()
+  const user = userStore.getState()
   const presets = presetStore((s) => s.presets)
 
   if (!chat || !user.user) return

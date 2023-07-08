@@ -30,7 +30,7 @@ const NavBar: Component = () => {
 
   const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
-    chatStore.option('pane', chatStore().opts.pane === paneType ? undefined : paneType)
+    chatStore.option('pane', chatStore.getState().opts.pane === paneType ? undefined : paneType)
   }
 
   const Title = (

@@ -111,9 +111,9 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
       onGreeting(_, chat: AppSchema.Chat) {
         if (!chat.scenarioIds?.length) return
         try {
-          const scenarios = scenarioStore().scenarios.filter((s) =>
-            chat.scenarioIds?.includes(s._id)
-          )
+          const scenarios = scenarioStore
+            .getState()
+            .scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
           // Instructions
           scenarios
             .filter((s) => !!s.instructions)
@@ -134,7 +134,9 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
       },
       onChatOpened(_, chat: AppSchema.Chat, lastMessageDate: Date) {
         if (!chat.scenarioIds?.length) return
-        const scenarios = scenarioStore().scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
+        const scenarios = scenarioStore
+          .getState()
+          .scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
         const entries = scenarios.flatMap((s) => s.entries)
         const event = selectOnChatOpenedEvent(entries, chat.scenarioStates || [], lastMessageDate)
         if (event) executeEvent(chat, event)
@@ -144,7 +146,7 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
         chat: AppSchema.Chat,
         messagesSinceLastEvent: number
       ) {
-        const { flags } = settingStore()
+        const { flags } = settingStore.getState()
         if (!flags.events) return
 
         if (preventLoop) {
@@ -152,7 +154,9 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
           return
         }
         if (!chat.scenarioIds?.length) return
-        const scenarios = scenarioStore().scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
+        const scenarios = scenarioStore
+          .getState()
+          .scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
         const entries = scenarios.flatMap((s) => s.entries)
         const event = selectOnCharacterMessageReceivedEvent(
           entries,
@@ -165,7 +169,9 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
         }
       },
       async triggerEvent(_, chat: AppSchema.Chat, char: AppSchema.Character) {
-        const scenarios = scenarioStore().scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
+        const scenarios = scenarioStore
+          .getState()
+          .scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
         if (scenarios.length == 0) {
           toastStore.error('No scenarios found')
         }
@@ -184,7 +190,7 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
           return
         }
 
-        const profile = userStore().profile
+        const profile = userStore.getState().profile
         const prompt = selected.event.text
           .replace(BOT_REPLACE, char.name)
           .replace(SELF_REPLACE, profile?.handle || 'You')

@@ -1,4 +1,4 @@
-import { JSX, createContext, createEffect, useContext } from 'solid-js'
+import { JSX, createContext, createEffect, createMemo, useContext } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { characterStore } from './character'
 import { settingStore } from './settings'
@@ -53,7 +53,7 @@ export function ContextProvider(props: { children: any }) {
   const users = userStore()
   const cfg = settingStore()
 
-  createEffect(() => {
+  const visuals = createMemo(() => {
     const botBackground = getRgbaFromVar(
       users.current.botBackground || 'bg-800',
       users.ui.msgOpacity
@@ -64,12 +64,23 @@ export function ContextProvider(props: { children: any }) {
     )
     const oocBackground = getRgbaFromVar('bg-1000', users.ui.msgOpacity)
 
+    return {
+      bot: botBackground,
+      user: userBackground,
+      ooc: oocBackground,
+    }
+  })
+
+  const activeBots = createMemo(() => {
+    const activeBots = chats.active?.chat
+      ? getActiveBots(chats.active.chat, chars.characters.map)
+      : []
+    return activeBots
+  })
+
+  createEffect(() => {
     const next: Partial<ContextState> = {
-      bg: {
-        bot: botBackground,
-        user: userBackground,
-        ooc: oocBackground,
-      },
+      bg: visuals(),
 
       anonymize: cfg.anonymize,
       botMap: chars.characters.map,
@@ -80,7 +91,7 @@ export function ContextProvider(props: { children: any }) {
       profile: users.profile,
       handle: chars.impersonating?.name || users.profile?.handle || 'You',
       trimSentences: users.ui.trimSentences ?? false,
-      activeBots: chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : [],
+      activeBots: activeBots(),
       promptHistory: chats.promptHistory,
     }
 

@@ -181,6 +181,7 @@ subscribe('connected', { uid: 'string' }, (body) => {
   settingStore.init()
 })
 
+window.flags = {}
 window.flag = function (flag: keyof FeatureFlags, value) {
   if (!flag) {
     const state = settingStore((s) => s.flags)
@@ -237,6 +238,7 @@ function getFlags(): FeatureFlags {
     }
 
     saveFlags(flags)
+    window.flags = flags
     return flags
   } catch (ex) {
     return defaultFlags
@@ -245,6 +247,7 @@ function getFlags(): FeatureFlags {
 
 function saveFlags(flags: {}) {
   try {
+    window.flags = flags
     const cache: FlagCache = { user: flags as any, default: defaultFlags }
     localStorage.setItem(FLAG_KEY, JSON.stringify(cache))
   } catch (ex) {}

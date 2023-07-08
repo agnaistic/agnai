@@ -33,7 +33,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
           <TextInput
             fieldName="search"
             placeholder="Search by name..."
-            value={chubStore().search}
+            value={state.search}
             onKeyUp={onSearch}
           />
           <Show when={props.buttons}>
@@ -70,7 +70,7 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               schema="secondary"
               class="rounded-xl"
               onClick={() => {
-                if (chubStore().chars.length % 48 == 0) {
+                if (state.chars.length % 48 == 0) {
                   chubStore.setPage(state.page + 1)
                   update()
                 } else {

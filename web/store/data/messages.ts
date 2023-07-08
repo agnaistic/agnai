@@ -47,7 +47,7 @@ export async function basicInference(
   onComplete: (err?: any, response?: string) => void
 ) {
   const requestId = v4()
-  const { user } = userStore()
+  const { user } = userStore.getState()
 
   if (!user) {
     toastStore.error(`Could not get user settings. Refresh and try again.`)
@@ -121,8 +121,8 @@ export type GenerateOpts =
   | { kind: 'summary' }
 
 export async function generateResponseV2(opts: GenerateOpts) {
-  const { ui } = userStore()
-  const { active } = chatStore()
+  const { ui } = userStore.getState()
+  const { active } = chatStore.getState()
 
   if (!active) {
     return localApi.error('No active chat. Try refreshing.')
@@ -190,8 +190,8 @@ async function createActiveChatPrompt(
   opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>,
   maxContext?: number
 ) {
-  const { active } = chatStore()
-  const { ui } = userStore()
+  const { active } = chatStore.getState()
+  const { ui } = userStore.getState()
 
   if (!active) {
     throw new Error('No active chat. Try refreshing')

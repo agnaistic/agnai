@@ -602,7 +602,7 @@ subscribe(
     if (activeChatId !== body.chatId) return
 
     const msg = body.msg as AppSchema.ChatMessage
-    const user = userStore().user
+    const user = userStore.getState().user
 
     const speech = getMessageSpeechInfo(msg, user)
     const nextMsgs = msgs.concat(msg)
@@ -789,7 +789,7 @@ subscribe(
 
     const msg = body.msg as AppSchema.ChatMessage
     const next = msgs.filter((m) => m._id !== retrying?._id).concat(msg)
-    const speech = getMessageSpeechInfo(msg, userStore().user)
+    const speech = getMessageSpeechInfo(msg, userStore.getState().user)
 
     const chats = await localApi.loadItem('chats')
     await localApi.saveChats(

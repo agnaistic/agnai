@@ -6,14 +6,13 @@ import FileInput, { FileInputResult } from '../../shared/FileInput'
 import RangeInput from '../../shared/RangeInput'
 import Select from '../../shared/Select'
 import { createDebounce, toDropdownItems } from '../../shared/util'
-import { userStore } from '../../store'
+import { characterStore, userStore } from '../../store'
 import Message from '../Chat/components/Message'
 import { Toggle } from '../../shared/Toggle'
 import ColorPicker from '/web/shared/ColorPicker'
 import { FormLabel } from '/web/shared/FormLabel'
 import { UI } from '/common/types'
 import { Save } from 'lucide-solid'
-import { useAppContext } from '/web/store/context'
 
 const themeOptions = UI.UI_THEME.map((color) => ({ label: color, value: color }))
 
@@ -21,7 +20,7 @@ function noop() {}
 
 const UISettings: Component = () => {
   const state = userStore()
-  const [ctx] = useAppContext()
+  const chars = characterStore()
 
   const themeBgOptions = createMemo(() => {
     const options = UI.BG_THEME.map((color) => ({ label: color as string, value: color as string }))
@@ -272,13 +271,17 @@ const UISettings: Component = () => {
       />
       <Divider />
       <div class="text-lg font-bold">Preview</div>
-      <Show when={ctx.chatBots.length > 0}>
+      <Show when={chars.characters.list.length > 0}>
         <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
           <Message
             editing={false}
-            msg={toBotMsg(ctx.chatBots[0], '*I wave excitedly* Hello world!\nHow are you today?', {
-              _id: '1',
-            })}
+            msg={toBotMsg(
+              chars.characters.list[0],
+              '*I wave excitedly* Hello world!\nHow are you today?',
+              {
+                _id: '1',
+              }
+            )}
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}

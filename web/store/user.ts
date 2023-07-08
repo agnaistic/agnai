@@ -56,6 +56,7 @@ export const userStore = createStore<UserState>(
 
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile })
+    window.usePipeline = init.user.useLocalPipeline
 
     /**
      * While introducing persisted UI settings, we'll automatically persist settings that the user has in local storage
@@ -89,6 +90,7 @@ export const userStore = createStore<UserState>(
 
       if (res.error) return toastStore.error(`Failed to get user config`)
       if (res.result) {
+        window.usePipeline = res.result.useLocalPipeline
         return { user: res.result }
       }
     },
@@ -106,6 +108,7 @@ export const userStore = createStore<UserState>(
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
+        window.usePipeline = res.result.useLocalPipeline
         toastStore.success(`Updated settings`)
         return { user: res.result }
       }

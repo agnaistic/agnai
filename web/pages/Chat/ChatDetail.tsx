@@ -233,7 +233,7 @@ const ChatDetail: Component = () => {
 
   const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
-    chatStore.option('pane', chatStore().opts.pane === paneType ? undefined : paneType)
+    chatStore.option('pane', chats.opts.pane === paneType ? undefined : paneType)
   }
 
   const closePane = () => {
@@ -545,7 +545,7 @@ const ChatDetail: Component = () => {
                           retrying={msgs.retrying}
                           partial={msgs.partial}
                           sendMessage={sendMessage}
-                          isPaneOpen={!!chatStore().opts.pane}
+                          isPaneOpen={!!chats.opts.pane}
                         >
                           {isOwner() &&
                             retries()?.list?.length! > 1 &&
@@ -567,7 +567,7 @@ const ChatDetail: Component = () => {
                         onRemove={() => {}}
                         editing={chats.opts.editing}
                         sendMessage={sendMessage}
-                        isPaneOpen={!!chatStore().opts.pane}
+                        isPaneOpen={!!chats.opts.pane}
                         avatars={avatars.avatars()}
                       />
                     </Show>
