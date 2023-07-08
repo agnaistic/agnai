@@ -31,7 +31,7 @@ const genValidator = {
     'summary',
     'request',
   ],
-  char: 'any',
+  char: 'any?',
   sender: 'any',
   members: ['any'],
   user: 'any',

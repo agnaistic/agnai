@@ -157,9 +157,9 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
 
     const sample = trimmed
     const role = sample.startsWith(char + ':')
-      ? 'example-assistant'
+      ? 'assistant'
       : sample.startsWith(sender + ':')
-      ? 'example-user'
+      ? 'user'
       : 'system'
 
     const msg: CompletionItem = {

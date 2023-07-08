@@ -147,6 +147,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
   const request: GenerateRequestV2 = {
     requestId: v4(),
     kind: opts.kind,
+    char: entities.char,
     chat: entities.chat,
     user: entities.user,
     sender: removeAvatar(entities.profile),
@@ -208,6 +209,7 @@ async function createActiveChatPrompt(
   const prompt = createPrompt(
     {
       kind: opts.kind,
+      char: entities.char,
       chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
