@@ -2,7 +2,6 @@ import { Component, JSX, Show, Switch } from 'solid-js'
 import { X } from 'lucide-solid'
 import { useBgStyle, usePane } from '../../shared/hooks'
 import Modal from '../../shared/Modal'
-import { getSettingColor } from '../../store'
 import { Match } from 'solid-js'
 import { Card } from '/web/shared/Card'
 import PageHeader from '/web/shared/PageHeader'
@@ -47,7 +46,7 @@ const Convertible: Component<ConvertibleProps> = (props) => (
 
 const WithinPage: Component<PartialProps> = (props) => {
   const rightPaneBgStyles = useBgStyle({
-    hex: getSettingColor('bg-800'),
+    hex: 'bg-800',
     blur: true,
   })
   const paneOrPopup = usePane()
