@@ -71,7 +71,7 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState(initState)
   })
 
-  events.on(EVENTS.init, (init) => {
+  events.on(EVENTS.init, async (init) => {
     if (!init.characters) {
       characterStore.getCharacters()
       return
@@ -81,7 +81,7 @@ export const characterStore = createStore<CharacterState>(
       characters: { list: init.characters, map: toCharacterMap(init.characters), loaded: true },
     })
 
-    const impersonateId = storage.localGetItem(IMPERSONATE_KEY)
+    const impersonateId = await storage.getItem(IMPERSONATE_KEY)
     if (!impersonateId) return
 
     const impersonating = init.characters?.find(
@@ -119,8 +119,9 @@ export const characterStore = createStore<CharacterState>(
       }
 
       if (res.result && !state.impersonating) {
-        const id = storage.localGetItem(IMPERSONATE_KEY)
+        const id = await storage.getItem(IMPERSONATE_KEY)
         const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
+        console.log('getCharacters -- impersonating', impersonating)
 
         return {
           characters: {
