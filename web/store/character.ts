@@ -121,7 +121,6 @@ export const characterStore = createStore<CharacterState>(
       if (res.result && !state.impersonating) {
         const id = await storage.getItem(IMPERSONATE_KEY)
         const impersonating = res.result.characters.find((ch: AppSchema.Character) => ch._id === id)
-        console.log('getCharacters -- impersonating', impersonating)
 
         return {
           characters: {
