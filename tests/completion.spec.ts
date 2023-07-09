@@ -52,6 +52,7 @@ function getPayload(test: TestOpts = {}) {
 
   const payload = toChatCompletionPayload(
     {
+      requestId: '',
       char: test.char || char,
       chat,
       gen: Object.assign({}, opts.settings, test.settings),
@@ -92,6 +93,7 @@ function getOpts(test: TestOpts) {
   )
 
   const opts: GenerateRequestV2 = {
+    requestId: '',
     char,
     chat,
     kind: 'send' as const,

@@ -468,7 +468,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     post.unshift(`${replyAs.name}: ${opts.continue}`)
   }
 
-  const linesForMemory = [...lines].reverse()
+  const linesForMemory = lines.slice().reverse()
   const books: AppSchema.MemoryBook[] = []
   if (char?.characterBook) books.push(char.characterBook)
   if (opts.book) books.push(opts.book)
@@ -659,7 +659,7 @@ export function getChatPreset(
   }
 
   // #4
-  const { adapter, isThirdParty } = getAdapter(chat, user)
+  const { adapter, isThirdParty } = getAdapter(chat, user, undefined)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
   if (fallbackId) {
@@ -682,7 +682,7 @@ export function getChatPreset(
 export function getAdapter(
   chat: AppSchema.Chat,
   config: AppSchema.User,
-  preset?: Partial<AppSchema.GenSettings>
+  preset: Partial<AppSchema.GenSettings> | undefined
 ) {
   const chatAdapter =
     !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
@@ -741,7 +741,7 @@ function getContextLimit(
 
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
-  switch (adapter) {
+  switch (gen?.service || adapter) {
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
     case 'luminai':

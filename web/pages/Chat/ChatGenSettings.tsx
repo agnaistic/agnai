@@ -79,7 +79,7 @@ export const ChatGenSettings: Component<{
       return { name: preset.name, preset, fallback: true }
     }
 
-    const adapter = genAdapter() || getAdapter(props.chat, user.user).adapter
+    const adapter = genAdapter() || getAdapter(props.chat, user.user, undefined).adapter
 
     if (!user.user.defaultPresets) {
       const preset = getFallbackPreset(adapter)

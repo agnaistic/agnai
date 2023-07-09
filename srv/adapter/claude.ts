@@ -4,7 +4,6 @@ import { needleToSSE } from './stream'
 import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
-import { OPENAI_MODELS } from '../../common/adapters'
 import {
   SAMPLE_CHAT_PREAMBLE,
   BOT_REPLACE,
@@ -39,7 +38,7 @@ type CompletionGenerator = (
 ) => AsyncGenerator<{ error: string } | { token: string }, ClaudeCompletion | undefined>
 
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
-const encoder = getEncoder('openai', OPENAI_MODELS.Turbo)
+const encoder = () => getEncoder('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { members, user, settings, log, guest, gen, isThirdParty } = opts
@@ -229,15 +228,28 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
-  const gaslightCost = encoder('Human: ' + opts.prompt)
+  const gaslight = injectPlaceholders(
+    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
+      'history',
+      'post',
+    ]),
+    {
+      opts,
+      parts,
+      lastMessage: opts.lastMessage,
+      characters: opts.characters || {},
+      encoder: encoder(),
+    }
+  )
+  const gaslightCost = encoder()('Human: ' + gaslight)
   const ujb = parts.ujb ? `Human: <system_note>${parts.ujb}</system_note>` : ''
 
   const maxBudget =
     maxContextLength -
     maxResponseTokens -
     gaslightCost -
-    encoder(ujb) -
-    encoder(opts.replyAs.name + ':')
+    encoder()(ujb) -
+    encoder()(opts.replyAs.name + ':')
 
   let tokens = 0
   const history: string[] = []
@@ -255,20 +267,12 @@ function createClaudePrompt(opts: AdapterProps): string {
       : 'char'
 
     const processedLine = processLine(lineType, line)
-    const cost = encoder(processedLine)
+    const cost = encoder()(processedLine)
     if (cost + tokens >= maxBudget) break
 
     tokens += cost
     history.push(processedLine)
   }
-
-  const gaslight = injectPlaceholders(
-    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
-      'history',
-      'post',
-    ]),
-    { opts, parts, lastMessage: opts.lastMessage, characters: opts.characters || {}, encoder }
-  )
 
   const messages = [`\n\nHuman: ${gaslight}`, ...history.reverse()]
 

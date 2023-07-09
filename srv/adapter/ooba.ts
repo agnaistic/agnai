@@ -48,7 +48,7 @@ export const handleOoba: ModelAdapter = async function* ({
     stopping_strings: [],
   }
 
-  yield { prompt: body.prompt }
+  yield { prompt }
 
   log.debug({ ...body, prompt: null }, 'Textgen payload')
   log.debug(`Prompt:\n${body.user_input}`)
