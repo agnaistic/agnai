@@ -235,12 +235,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   )
   const gaslightCost = encoder()('Human: ' + gaslight)
   let ujb = parts.ujb ? `Human: <system_note>${parts.ujb}</system_note>` : ''
-  ujb = injectPlaceholders(ujb, {
-    opts,
-    parts,
-    encoder: encoder(),
-    characters: opts.characters || {},
-  })
+  ujb = injectPlaceholders(ujb, { opts, parts, encoder: encoder(), characters: opts.characters || {} })
 
   const maxBudget =
     maxContextLength - maxResponseTokens - gaslightCost - encoder()(ujb) - encoder()(opts.replyAs.name + ':')
