@@ -1,6 +1,6 @@
 import type { AIAdapter, ChatAdapter, PersonaFormat, RegisteredAdapter } from '../adapters'
 import type { GenerationPreset } from '../presets'
-import type { ImageSettings } from '../../srv/db/image-schema'
+import type { ImageSettings } from './image-schema'
 import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
 import { FullSprite } from './sprite'
@@ -17,6 +17,11 @@ export type AllDoc =
   | AppSchema.UserGenPreset
   | AppSchema.MemoryBook
   | AppSchema.ScenarioBook
+  | AppSchema.ApiKey
+
+export type OAuthScope = keyof typeof oauthScopes
+
+export const oauthScopes = ['characters', 'chats', 'presets', 'profile'] as const
 
 export namespace AppSchema {
   export interface AppConfig {
@@ -119,6 +124,21 @@ export namespace AppSchema {
     adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
 
     ui?: UISettings
+  }
+
+  export interface ApiKey {
+    _id: string
+    kind: 'apikey'
+
+    apikey: string
+    code: string
+
+    scopes: OAuthScope[]
+    challenge?: string
+    origin: string
+    userId: string
+    createdAt: string
+    enabled: boolean
   }
 
   export interface Chat {

@@ -389,5 +389,6 @@ export async function getSafeUserConfig(userId: string) {
       }
     }
   }
+
   return user
 }

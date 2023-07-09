@@ -429,7 +429,7 @@ textarea:disabled {
 }
 
 .markdown ul > li {
-  @apply ml-5;
+  /* @apply ml-5; */
   list-style-type: disc;
 }
 

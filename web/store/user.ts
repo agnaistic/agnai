@@ -333,6 +333,18 @@ export const userStore = createStore<UserState>(
         }
       }
     },
+
+    async createApiKey(_, cb: (err: any, code?: string) => void) {
+      const res = await api.post('/user/code')
+      if (res.result) {
+        cb(null, res.result.code)
+      }
+
+      if (res.error) {
+        cb(res.error)
+      }
+    },
+
     async *hordeStats({ metadata, user }) {
       yield { hordeStatsLoading: true }
       const res = await api.post('/user/services/horde-stats', { key: user?.hordeKey })

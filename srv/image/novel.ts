@@ -3,7 +3,7 @@ import needle from 'needle'
 import { ImageAdapter } from './types'
 import { decryptText } from '../db/util'
 import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER } from '../../common/image'
-import { NovelSettings } from '../db/image-schema'
+import { NovelSettings } from '../../common/types/image-schema'
 
 const baseUrl = `https://api.novelai.net/ai`
 

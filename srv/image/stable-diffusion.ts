@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { ImageAdapter } from './types'
 import { SD_SAMPLER, SD_SAMPLER_REV } from '../../common/image'
-import { SDSettings } from '../db/image-schema'
+import { SDSettings } from '../../common/types/image-schema'
 import { logger } from '../logger'
 
 const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`

@@ -4,6 +4,7 @@ import pino from 'pino'
 import type { NextFunction, Response } from 'express'
 import { errors } from './api/wrap'
 import { config } from './config'
+import { verifyApiKey } from './db/oauth'
 
 const logLevel = getLogLevel()
 
@@ -49,7 +50,7 @@ function parentLogger(name: string) {
 }
 
 export function logMiddleware() {
-  const middleware = (req: any, res: Response, next: NextFunction) => {
+  const middleware = async (req: any, res: Response, next: NextFunction) => {
     const log = logger.child({ requestId: uuid.v4(), url: req.url, method: req.method })
 
     req.log = log
@@ -59,21 +60,34 @@ export function logMiddleware() {
     const socketId = req.get('socket-id') || ''
     req.socketId = socketId
 
-    const header = req.get('authorization')
+    const auth = req.get('authorization')
+    if (auth) {
+      /** API Key usage */
+      if (auth.startsWith('Key ')) {
+        const apikey = auth.replace('Key ', '')
+        const key = await verifyApiKey(apikey)
 
-    if (header) {
-      if (!header.startsWith('Bearer ')) {
-        return next(errors.Unauthorized)
-      }
+        if (!key) {
+          return next(errors.Unauthorized)
+        }
 
-      const token = header.replace('Bearer ', '')
-      try {
-        const payload = jwt.verify(token, config.jwtSecret)
-        req.user = payload as any
-        req.userId = (payload as any).userId
-        req.log.setBindings({ user: (payload as any)?.username || 'anonymous' })
-      } catch (ex) {
-        req.user = {} as any
+        req.user = key
+        req.userId = key.userId
+        req.log.setBindings({ user: key.username })
+      } else if (auth.startsWith('Bearer ')) {
+        /** JWT usage */
+        const token = auth.replace('Bearer ', '')
+        try {
+          const payload = jwt.verify(token, config.jwtSecret)
+          req.user = payload as any
+          req.userId = (payload as any).userId
+          req.log.setBindings({ user: (payload as any)?.username || 'anonymous' })
+        } catch (ex) {
+          req.user = {} as any
+          return next(errors.Unauthorized)
+        }
+      } else {
+        /** Auth header provided, but invalid */
         return next(errors.Unauthorized)
       }
     } else {
