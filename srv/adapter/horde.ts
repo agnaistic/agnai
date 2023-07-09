@@ -25,7 +25,7 @@ export const handleHorde: ModelAdapter = async function* ({
 
     yield { prompt }
 
-    const result = await horde.generateText({ ...user, hordeKey: key }, gen, prompt)
+    const result = await horde.generateText({ ...user, hordeKey: key }, gen, prompt, opts.log)
     const sanitised = sanitise(result.text)
     const trimmed = trimResponseV2(sanitised, opts.replyAs, members, characters, ['END_OF_DIALOG'])
 

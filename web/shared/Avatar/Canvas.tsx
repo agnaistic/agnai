@@ -42,20 +42,24 @@ const AvatarCanvas: Component<{
   class?: string
   zoom?: number
 }> = (props) => {
-  const [hash, setHash] = createSignal(getSpriteHash(props.body))
-  const [src, { refetch }] = createResource(props.body, getSpriteImage)
+  const [hash, setHash] = createSignal('')
+  const [sprite, setSprite] = createSignal(props.body)
+  const [last, setLast] = createSignal<string>()
+  const [src, { refetch }] = createResource(sprite, getSpriteImage)
 
   createEffect(() => {
     const prev = hash()
-    const next = hash()
+    const next = getSpriteHash(props.body)
     if (prev === next) return
 
+    setLast(src())
+    setSprite(props.body)
     setHash(next)
     refetch(props.body)
   })
 
   return (
-    <Suspense fallback={<img src={BLANK_IMG} style={props.style} class="border-0" />}>
+    <Suspense fallback={<img src={last() || BLANK_IMG} style={props.style} class="border-0" />}>
       <Show when={src()}>
         <img src={src()} style={props.style} class={`border-0`} />
       </Show>
