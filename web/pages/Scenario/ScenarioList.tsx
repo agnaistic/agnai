@@ -62,9 +62,7 @@ const CreateScenario: Component = () => {
           </div>
         </Match>
         <Match when={scenarioState.scenarios.length === 0}>
-          <div class="mt-16 flex w-full justify-center rounded-full text-xl">
-            You have no scenarios yet.
-          </div>
+          <div class="mt-16 flex w-full justify-center rounded-full text-xl">You have no scenarios yet.</div>
         </Match>
         <Match when={scenarioState.scenarios.length > 0}>
           <div class="flex flex-col gap-2">

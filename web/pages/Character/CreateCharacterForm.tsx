@@ -1,13 +1,4 @@
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  Match,
-  onMount,
-  Show,
-  Switch,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Match, onMount, Show, Switch } from 'solid-js'
 import { MinusCircle, Plus, Save, X, ChevronUp, ChevronDown, Import, Download } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
@@ -16,15 +7,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import { getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import {
-  characterStore,
-  tagStore,
-  settingStore,
-  toastStore,
-  userStore,
-  memoryStore,
-  presetStore,
-} from '../../store'
+import { characterStore, tagStore, settingStore, toastStore, userStore, memoryStore, presetStore } from '../../store'
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -137,9 +120,7 @@ export const CreateCharacterForm: Component<{
     const id = user?.defaultPreset
     if (!id) return
 
-    const preset = isDefaultPreset(id)
-      ? defaultPresets[id]
-      : presets.presets.find((pre) => pre._id === id)
+    const preset = isDefaultPreset(id) ? defaultPresets[id] : presets.presets.find((pre) => pre._id === id)
 
     return preset
   })
@@ -307,9 +288,7 @@ export const CreateCharacterForm: Component<{
     </>
   )
 
-  const showWarning = createMemo(
-    () => !!props.chat?.overrides && props.chat.characterId === props.editId
-  )
+  const showWarning = createMemo(() => !!props.chat?.overrides && props.chat.characterId === props.editId)
 
   let spriteRef: any
 
@@ -335,8 +314,8 @@ export const CreateCharacterForm: Component<{
 
           <Show when={showWarning()}>
             <SolidCard bg="orange-600">
-              <b>Warning!</b> Your chat currently overrides your character definitions. These
-              changes won't affect your current chat until you disable them in the "Edit Chat" menu.
+              <b>Warning!</b> Your chat currently overrides your character definitions. These changes won't affect your
+              current chat until you disable them in the "Edit Chat" menu.
             </SolidCard>
           </Show>
 
@@ -375,25 +354,20 @@ export const CreateCharacterForm: Component<{
                 helperText={
                   <div class="flex flex-col">
                     <span>
-                      A description, label, or notes for your character. This is will not influence
-                      your character in any way.
+                      A description, label, or notes for your character. This is will not influence your character in
+                      any way.
                     </span>
                     <Show when={canPopulatFields()}>
                       <span>
-                        To use OpenAI to generate a character, describe the character below then
-                        click <b>Generate</b>. It can take 30-60 seconds.
+                        To use OpenAI to generate a character, describe the character below then click <b>Generate</b>.
+                        It can take 30-60 seconds.
                       </span>
                     </Show>
                   </div>
                 }
               />
               <div class="flex w-full flex-col gap-2 sm:flex-row">
-                <TextInput
-                  isMultiline
-                  fieldName="description"
-                  parentClass="w-full"
-                  value={editor.state.description}
-                />
+                <TextInput isMultiline fieldName="description" parentClass="w-full" value={editor.state.description} />
                 <Show when={canPopulatFields()}>
                   <Button onClick={generateCharacter} disabled={creating()}>
                     {creating() ? 'Generating...' : 'Generate'}
@@ -426,10 +400,7 @@ export const CreateCharacterForm: Component<{
                     style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
                     onClick={() => settingStore.showImage(state.avatar.image || image())}
                   >
-                    <AvatarIcon
-                      format={{ corners: 'sm', size: '3xl' }}
-                      avatarUrl={state.avatar.image || image()}
-                    />
+                    <AvatarIcon format={{ corners: 'sm', size: '3xl' }} avatarUrl={state.avatar.image || image()} />
                   </div>
                 </Match>
                 <Match when={state.avatar.loading}>
@@ -518,8 +489,8 @@ export const CreateCharacterForm: Component<{
                     <>
                       <p>If you do not know what this mean, you can leave this as-is.</p>
                       <p class="font-bold">
-                        WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible.
-                        Changing between them will cause data loss.
+                        WARNING: "Plain Text" and "Non-Plain Text" schemas are not compatible. Changing between them
+                        will cause data loss.
                       </p>
                       <p>Format to use for the character's format</p>
                     </>
@@ -549,8 +520,8 @@ export const CreateCharacterForm: Component<{
                 label="Sample Conversation"
                 helperText={
                   <span>
-                    Example chat between you and the character. This section is very important for
-                    teaching your character should speak.
+                    Example chat between you and the character. This section is very important for teaching your
+                    character should speak.
                   </span>
                 }
                 placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
@@ -559,14 +530,10 @@ export const CreateCharacterForm: Component<{
               />
             </Card>
             <h2
-              class={`mt-3 flex cursor-pointer gap-3 text-lg font-bold ${
-                showAdvanced() ? '' : 'mb-12'
-              }`}
+              class={`mt-3 flex cursor-pointer gap-3 text-lg font-bold ${showAdvanced() ? '' : 'mb-12'}`}
               onClick={toggleShowAdvanced}
             >
-              <div class="relative top-[2px] inline-block">
-                {showAdvanced() ? <ChevronUp /> : <ChevronDown />}
-              </div>
+              <div class="relative top-[2px] inline-block">{showAdvanced() ? <ChevronUp /> : <ChevronDown />}</div>
               Advanced options
             </h2>
             <div class={`flex flex-col gap-3 ${advancedVisibility()}`}>
@@ -688,9 +655,7 @@ const AlternateGreetingsInput: Component<{
   }
 
   const onChange = (ev: { currentTarget: HTMLInputElement | HTMLTextAreaElement }, i: number) => {
-    props.setGreetings(
-      props.greetings.map((orig, j) => (j === i ? ev.currentTarget?.value ?? '' : orig))
-    )
+    props.setGreetings(props.greetings.map((orig, j) => (j === i ? ev.currentTarget?.value ?? '' : orig)))
   }
 
   return (
@@ -831,12 +796,7 @@ const MemoryBookPicker: Component<{
       fixedHeight
     >
       <div class="text-sm">
-        <EditMemoryForm
-          hideSave
-          book={props.bundledBook!}
-          entrySort={entrySort()}
-          updateEntrySort={updateEntrySort}
-        />
+        <EditMemoryForm hideSave book={props.bundledBook!} entrySort={entrySort()} updateEntrySort={updateEntrySort} />
       </div>
     </Modal>
   )

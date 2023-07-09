@@ -57,9 +57,7 @@ export type CharacterBook = {
     selective?: boolean /** if `true`, require a key from both `keys` and `secondary_keys` to trigger the entry */
     secondary_keys?: Array<string> /** see field `selective`. ignored if selective == false */
     constant?: boolean /** if true, always inserted in the prompt (within budget limit) */
-    position?:
-      | 'before_char'
-      | 'after_char' /** whether the entry is placed before or after the character defs */
+    position?: 'before_char' | 'after_char' /** whether the entry is placed before or after the character defs */
   }>
 }
 
@@ -151,10 +149,7 @@ export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPro
   }
 }
 
-function byPriorityThenIndex(
-  { id: lid, index: li, entry: l }: Match,
-  { id: rid, index: ri, entry: r }: Match
-) {
+function byPriorityThenIndex({ id: lid, index: li, entry: l }: Match, { id: rid, index: ri, entry: r }: Match) {
   if (l.weight !== r.weight) return l.weight < r.weight ? 1 : -1
   if (li !== ri) return li > ri ? -1 : 1
   return lid > rid ? 1 : lid === rid ? 0 : -1

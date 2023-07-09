@@ -12,9 +12,7 @@ const SideDrawer: Component<{
   right?: boolean
 }> = (props) => {
   return (
-    <div
-      class={`side-drawer flex flex-col gap-2 pt-2 ${props.show && 'side-drawer--hide'} absolute`}
-    >
+    <div class={`side-drawer flex flex-col gap-2 pt-2 ${props.show && 'side-drawer--hide'} absolute`}>
       <div class="flex justify-between">
         <div class="ml-2 text-lg font-bold">{props.title || ''}</div>
         <Button schema="clear" onClick={props.close}>

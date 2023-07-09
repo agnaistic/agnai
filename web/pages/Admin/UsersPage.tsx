@@ -58,12 +58,7 @@ const UsersPage: Component = () => {
           )}
         </For>
         <PasswordModal show={!!pw()} user={pw()!} close={() => setPw(undefined)} />
-        <InfoModel
-          show={!!info()}
-          close={() => setInfo()}
-          userId={info()?.id!}
-          name={info()?.name!}
-        />
+        <InfoModel show={!!info()} close={() => setInfo()} userId={info()?.id!} name={info()?.name!} />
       </div>
     </div>
   )
@@ -71,9 +66,7 @@ const UsersPage: Component = () => {
 
 export default UsersPage
 
-const InfoModel: Component<{ show: boolean; close: () => void; userId: string; name: string }> = (
-  props
-) => {
+const InfoModel: Component<{ show: boolean; close: () => void; userId: string; name: string }> = (props) => {
   const state = adminStore()
 
   return (
@@ -87,12 +80,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
         <TextInput fieldName="id" label="User ID" value={state.info?.userId} disabled />
         <TextInput fieldName="handle" label="Handle" value={state.info?.handle} disabled />
         <TextInput fieldName="chats" label="Chats" value={state.info?.chats} disabled />
-        <TextInput
-          fieldName="characters"
-          label="Characters"
-          value={state.info?.characters}
-          disabled
-        />
+        <TextInput fieldName="characters" label="Characters" value={state.info?.characters} disabled />
         <Show when={state.info?.avatar}>
           <div class="flex w-full justify-center">
             <img src={getAssetUrl(state.info?.avatar!)} height="128px" />
@@ -103,9 +91,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   )
 }
 
-const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () => void }> = (
-  props
-) => {
+const PasswordModal: Component<{ user: AppSchema.User; show: boolean; close: () => void }> = (props) => {
   let ref: any
   const save = () => {
     const body = getStrictForm(ref, { newPassword: 'string' })

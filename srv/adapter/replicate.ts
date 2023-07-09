@@ -160,10 +160,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       // TODO: Use a similar logic to OpenAI
       const prompt = opts.prompt
         .replace(new RegExp(`^${opts.replyAs.name}:`, 'gm'), '<|endoftext|><|assistant|>')
-        .replace(
-          new RegExp(`^${opts.members[0].handle || 'You'}:`, 'gm'),
-          '<|endoftext|><|prompter|>'
-        )
+        .replace(new RegExp(`^${opts.members[0].handle || 'You'}:`, 'gm'), '<|endoftext|><|prompter|>')
       input = {
         prompt,
         max_length: encoder(opts.prompt) + (opts.gen.maxTokens || 500),
@@ -251,9 +248,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
       case 'failed':
       case 'canceled':
       default:
-        throw new Error(
-          `Replicate prediction request status: ${status} (error: ${prediction.error})`
-        )
+        throw new Error(`Replicate prediction request status: ${status} (error: ${prediction.error})`)
     }
   }
 
@@ -374,10 +369,7 @@ export async function getCollection(key: string, slug: string) {
 
 export async function getLanguageCollection(key: string): Promise<Record<string, ReplicateModel>> {
   const collection = await getCollection(key, COLLECTIONS.language)
-  const models = collection.models.reduce(
-    (prev: any, curr: any) => Object.assign(prev, { [curr.name]: curr }),
-    {}
-  )
+  const models = collection.models.reduce((prev: any, curr: any) => Object.assign(prev, { [curr.name]: curr }), {})
   return models
 }
 

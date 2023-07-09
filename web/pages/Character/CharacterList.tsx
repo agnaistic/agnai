@@ -1,14 +1,4 @@
-import {
-  Component,
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-  onMount,
-} from 'solid-js'
+import { Component, For, Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { NewCharacter, characterStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
@@ -321,11 +311,7 @@ const Characters: Component<{
       <Show when={download()}>
         <DownloadModal show close={() => setDownload()} char={download()!} />
       </Show>
-      <DeleteCharacterModal
-        char={showDelete()}
-        show={!!showDelete()}
-        close={() => setDelete(undefined)}
-      />
+      <DeleteCharacterModal char={showDelete()} show={!!showDelete()} close={() => setDelete(undefined)} />
     </>
   )
 }
@@ -408,11 +394,7 @@ const Character: Component<{
               <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
                 <Edit /> Edit
               </Button>
-              <Button
-                alignLeft
-                onClick={() => nav(`/character/create/${props.char._id}`)}
-                size="sm"
-              >
+              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)} size="sm">
                 <Copy /> Duplicate
               </Button>
               <Button alignLeft schema="red" onClick={props.delete} size="sm">
@@ -462,31 +444,18 @@ const Character: Component<{
         </Switch>
       </div>
       <div class="w-full text-sm">
-        <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 font-bold">
-          {props.char.name}
-        </div>
+        <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 font-bold">{props.char.name}</div>
         {/* hacky positioning shenanigans are necessary as opposed to using an
             absolute positioning because if any of the DropMenu parent is
             positioned, then DropMenu breaks because it relies on the nearest
             positioned parent to be the sitewide container */}
-        <div
-          class="float-right mr-[3px] mt-[-149px] flex justify-end"
-          onClick={() => setOpts(true)}
-        >
+        <div class="float-right mr-[3px] mt-[-149px] flex justify-end" onClick={() => setOpts(true)}>
           <div class="rounded-md bg-[var(--bg-500)] p-[2px]">
             <Menu size={24} class="icon-button" color="var(--bg-100)" />
           </div>
-          <DropMenu
-            show={opts()}
-            close={() => setOpts(false)}
-            customPosition="right-[9px] top-[6px]"
-          >
+          <DropMenu show={opts()} close={() => setOpts(false)} customPosition="right-[9px] top-[6px]">
             <div class="flex flex-col gap-2 p-2">
-              <Button
-                onClick={() => props.toggleFavorite(!props.char.favorite)}
-                size="sm"
-                alignLeft
-              >
+              <Button onClick={() => props.toggleFavorite(!props.char.favorite)} size="sm" alignLeft>
                 <Show when={props.char.favorite}>
                   <Star class="text-900 fill-[var(--text-900)]" /> Unfavorite
                 </Show>
@@ -510,11 +479,7 @@ const Character: Component<{
               <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
                 <Edit /> Edit
               </Button>
-              <Button
-                alignLeft
-                onClick={() => nav(`/character/create/${props.char._id}`)}
-                size="sm"
-              >
+              <Button alignLeft onClick={() => nav(`/character/create/${props.char._id}`)} size="sm">
                 <Copy /> Duplicate
               </Button>
               <Button

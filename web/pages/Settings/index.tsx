@@ -2,12 +2,7 @@ import { Component, createMemo, createSignal, onMount } from 'solid-js'
 import { AlertTriangle, Save } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
-import {
-  applyDotProperty,
-  getFormEntries,
-  getStrictForm,
-  setComponentPageTitle,
-} from '../../shared/util'
+import { applyDotProperty, getFormEntries, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { settingStore, userStore } from '../../store'
 import UISettings from './UISettings'
 import Tabs from '../../shared/Tabs'
@@ -148,10 +143,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
   const tabClass = `flex flex-col gap-4`
 
-  const version = (window.agnai_version?.includes('unknown') ? '' : window.agnai_version).slice(
-    0,
-    7
-  )
+  const version = (window.agnai_version?.includes('unknown') ? '' : window.agnai_version).slice(0, 7)
 
   onMount(() => {
     props.footer?.(footer)

@@ -80,11 +80,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, gues
   })
 
   if (result.statusCode && result.statusCode >= 400) {
-    throw new Error(
-      `Failed to generate image: ${result.body.message || result.statusMessage} (${
-        result.statusCode
-      })`
-    )
+    throw new Error(`Failed to generate image: ${result.body.message || result.statusMessage} (${result.statusCode})`)
   }
 
   const zip = new Zip(result.body).getEntries()

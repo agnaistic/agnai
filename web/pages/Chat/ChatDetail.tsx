@@ -1,16 +1,5 @@
 import './chat-detail.css'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  Match,
-  onCleanup,
-  Show,
-  Switch,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Match, onCleanup, Show, Switch } from 'solid-js'
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
@@ -47,14 +36,7 @@ import { usePane, useResizeObserver } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import Loading from '/web/shared/Loading'
 import Convertible from './Convertible'
-import {
-  emptyMsg,
-  getChatWidth,
-  getHeaderBg,
-  InfiniteScroll,
-  insertImageMessages,
-  SwipeMessage,
-} from './helpers'
+import { emptyMsg, getChatWidth, getHeaderBg, InfiniteScroll, insertImageMessages, SwipeMessage } from './helpers'
 import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import { useChatAvatars } from './components/ChatAvatar'
 import AvatarContainer from '/web/shared/Avatar/Container'
@@ -200,9 +182,7 @@ const ChatDetail: Component = () => {
 
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
-  const chatWidth = createMemo(() =>
-    getChatWidth(user.ui.chatWidth, !!chats.opts.pane && isPaneOrPopup() === 'pane')
-  )
+  const chatWidth = createMemo(() => getChatWidth(user.ui.chatWidth, !!chats.opts.pane && isPaneOrPopup() === 'pane'))
   const tts = createMemo(() => (user.user?.texttospeech?.enabled ?? true) && !!chats.char?.voice)
 
   const isSelfRemoved = createMemo(() => {
@@ -210,8 +190,7 @@ const ChatDetail: Component = () => {
     if (!chats.chat) return false
 
     const isMember =
-      chats.chat.userId === user.profile.userId ||
-      chats.members.some((mem) => mem.userId === user.profile?.userId)
+      chats.chat.userId === user.profile.userId || chats.members.some((mem) => mem.userId === user.profile?.userId)
 
     return !isMember
   })
@@ -298,9 +277,7 @@ const ChatDetail: Component = () => {
 
     const { name, adapter, isThirdParty, presetLabel } = data
 
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
-      name || presetLabel
-    }`
+    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${name || presetLabel}`
     return label
   })
 
@@ -429,10 +406,7 @@ const ChatDetail: Component = () => {
           <div
             class={`${chatGrid()} gap-1 sm:gap-2 ${chatMargin()} ${chatWidth()} mx-auto flex flex-col pb-1 xs:flex sm:py-2`}
           >
-            <header
-              class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
-              style={headerBg()}
-            >
+            <header class={`hidden h-9 items-center justify-between rounded-md sm:flex`} style={headerBg()}>
               <Show when={isOwner()}>
                 <A
                   class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
@@ -440,9 +414,7 @@ const ChatDetail: Component = () => {
                 >
                   <ChevronLeft />
                   <div class="ellipsis flex flex-col">
-                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                      {chats.char?.name}
-                    </span>
+                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">{chats.char?.name}</span>
                     <Show when={chats.chat!.name}>
                       <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
                         {chats.chat!.name}
@@ -454,19 +426,12 @@ const ChatDetail: Component = () => {
 
               <div class="flex flex-row gap-3">
                 <Show when={isOwner()}>
-                  <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
-                    {adapterLabel()}
-                  </div>
+                  <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">{adapterLabel()}</div>
                 </Show>
 
                 <div class="" onClick={() => setShowOpts(true)}>
                   <Menu class="icon-button" />
-                  <DropMenu
-                    show={showOpts()}
-                    close={() => setShowOpts(false)}
-                    horz="left"
-                    vert="down"
-                  >
+                  <DropMenu show={showOpts()} close={() => setShowOpts(false)} horz="left" vert="down">
                     <ChatOptions
                       adapterLabel={adapterLabel()}
                       setModal={setModal}
@@ -519,10 +484,7 @@ const ChatDetail: Component = () => {
                     </Show>
                   </section>
                 </Show>
-                <section
-                  data-messages
-                  class={`flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
-                >
+                <section data-messages class={`flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}>
                   <div id="chat-messages" class="flex w-full flex-col gap-2">
                     <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
                       <div class="mx-auto mb-4 text-[var(--text-500)]">
@@ -557,9 +519,7 @@ const ChatDetail: Component = () => {
                           editing={chats.opts.editing}
                           last={i() === indexOfLastRPMessage()}
                           onRemove={() => setRemoveId(msg._id)}
-                          swipe={
-                            msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
-                          }
+                          swipe={msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]}
                           confirmSwipe={() => confirmSwipe(msg._id)}
                           cancelSwipe={cancelSwipe}
                           tts={tts()}
@@ -568,17 +528,15 @@ const ChatDetail: Component = () => {
                           sendMessage={sendMessage}
                           isPaneOpen={!!chats.opts.pane}
                         >
-                          {isOwner() &&
-                            retries()?.list?.length! > 1 &&
-                            i() === indexOfLastRPMessage() && (
-                              <SwipeMessage
-                                chatId={chats.chat?._id!}
-                                pos={swipe()}
-                                prev={clickSwipe(-1)}
-                                next={clickSwipe(1)}
-                                list={retries()?.list || []}
-                              />
-                            )}
+                          {isOwner() && retries()?.list?.length! > 1 && i() === indexOfLastRPMessage() && (
+                            <SwipeMessage
+                              chatId={chats.chat?._id!}
+                              pos={swipe()}
+                              prev={clickSwipe(-1)}
+                              next={clickSwipe(1)}
+                              list={retries()?.list || []}
+                            />
+                          )}
                         </Message>
                       )}
                     </For>
@@ -599,12 +557,7 @@ const ChatDetail: Component = () => {
               <Show when={!!chats.opts.pane}>
                 <Switch>
                   <Match when={chats.opts.pane === 'character'}>
-                    <Convertible
-                      kind="partial"
-                      title="Edit Character"
-                      close={closeCharEditor}
-                      footer={paneFooter()}
-                    >
+                    <Convertible kind="partial" title="Edit Character" close={closeCharEditor} footer={paneFooter()}>
                       <Show when={editId() !== ''}>
                         <CreateCharacterForm
                           chat={chats.chat}
@@ -633,32 +586,19 @@ const ChatDetail: Component = () => {
                   </Match>
 
                   <Match when={chats.opts.pane === 'preset'}>
-                    <Convertible
-                      kind="partial"
-                      title={'Preset Settings'}
-                      close={closePane}
-                      footer={paneFooter()}
-                    >
-                      <ChatGenSettings
-                        chat={chats.chat!}
-                        close={closePane}
-                        footer={setPaneFooter}
-                      />
+                    <Convertible kind="partial" title={'Preset Settings'} close={closePane} footer={paneFooter()}>
+                      <ChatGenSettings chat={chats.chat!} close={closePane} footer={setPaneFooter} />
                     </Convertible>
                   </Match>
                 </Switch>
               </Show>
             </section>
             <Show when={isSelfRemoved()}>
-              <div class="flex w-full justify-center">
-                You have been removed from the conversation
-              </div>
+              <div class="flex w-full justify-center">You have been removed from the conversation</div>
             </Show>
             <Show when={isOwner() && chats.activeBots.length > 1}>
               <div
-                class={`flex justify-center gap-2 overflow-x-auto py-1 ${
-                  msgs.waiting ? 'opacity-70 saturate-0' : ''
-                }`}
+                class={`flex justify-center gap-2 overflow-x-auto py-1 ${msgs.waiting ? 'opacity-70 saturate-0' : ''}`}
               >
                 <For each={chats.activeBots}>
                   {(bot) => (
@@ -721,25 +661,13 @@ const ChatDetail: Component = () => {
 
       <ImageModal />
 
-      <Show
-        when={
-          chats.chat &&
-          !chats.chat.genPreset &&
-          !chats.chat.genSettings &&
-          !user.user?.defaultPreset
-        }
-      >
+      <Show when={chats.chat && !chats.chat.genPreset && !chats.chat.genSettings && !user.user?.defaultPreset}>
         <ForcePresetModal chat={chats.chat!} show={true} close={() => {}} />
       </Show>
 
       <PromptModal />
       <Show when={chats.opts.modal === 'ui'}>
-        <Modal
-          show={true}
-          close={clearModal}
-          title="UI Settings"
-          footer={<Button onClick={clearModal}>Close</Button>}
-        >
+        <Modal show={true} close={clearModal} title="UI Settings" footer={<Button onClick={clearModal}>Close</Button>}>
           <UISettings />
         </Modal>
       </Show>

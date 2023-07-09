@@ -89,17 +89,11 @@ export function sanitiseAndTrim(
   members: AppSchema.Profile[]
 ) {
   const parsed = sanitise(text.replace(prompt, ''))
-  const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG'])
-    .split(`${char.name}:`)
-    .join('')
+  const trimmed = trimResponseV2(parsed, char, members, characters, ['END_OF_DIALOG']).split(`${char.name}:`).join('')
   return trimmed || parsed
 }
 
-export function getEndTokens(
-  char: AppSchema.Character | null,
-  members: AppSchema.Profile[],
-  endTokens: string[] = []
-) {
+export function getEndTokens(char: AppSchema.Character | null, members: AppSchema.Profile[], endTokens: string[] = []) {
   const baseEndTokens = ['END_OF_DIALOG', '<END>'].concat(endTokens)
 
   if (customSettings.baseEndTokens) {

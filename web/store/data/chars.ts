@@ -187,11 +187,7 @@ export async function createCharacter(char: NewCharacter) {
   }
 
   const { avatar: file, ...props } = char
-  const avatar = file
-    ? await getImageData(file)
-    : char.originalAvatar
-    ? char.originalAvatar
-    : undefined
+  const avatar = file ? await getImageData(file) : char.originalAvatar ? char.originalAvatar : undefined
 
   const newChar: AppSchema.Character = { ...props, ...baseChar(), avatar, _id: v4() }
 

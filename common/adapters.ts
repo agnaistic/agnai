@@ -225,16 +225,7 @@ export const adapterSettings: {
 
   gaslight: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose', 'openrouter'],
   systemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose', 'openrouter'],
-  ignoreCharacterSystemPrompt: [
-    'openai',
-    'novel',
-    'scale',
-    'kobold',
-    'claude',
-    'ooba',
-    'goose',
-    'openrouter',
-  ],
+  ignoreCharacterSystemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose', 'openrouter'],
   ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter'],
   ignoreCharacterUjb: ['openai', 'claude', 'kobold', 'openrouter'],
 

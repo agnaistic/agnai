@@ -30,11 +30,7 @@ const MemoryPage: Component = () => {
         subtitle={
           <>
             {' '}
-            <a
-              href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md"
-              target="_blank"
-              class="link"
-            >
+            <a href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md" target="_blank" class="link">
               Memory Book Guide
             </a>
           </>
@@ -91,9 +87,7 @@ const MemoryPage: Component = () => {
 
 export default MemoryPage
 
-const NoBooks = () => (
-  <div class="flex justify-center">You have no memory books yet. Click Create to get started.</div>
-)
+const NoBooks = () => <div class="flex justify-center">You have no memory books yet. Click Create to get started.</div>
 
 type ImportProps = {
   show: boolean

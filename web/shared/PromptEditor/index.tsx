@@ -128,16 +128,16 @@ const PromptEditor: Component<
           helperText={
             <>
               <div>
-                <span class="text-green-600">Green</span> placeholders will be inserted
-                automatically if they are missing.
+                <span class="text-green-600">Green</span> placeholders will be inserted automatically if they are
+                missing.
               </div>
               <div>
-                <span class="text-yellow-600">Yellow</span> placeholders will not be automatically
-                included if you do not include them.
+                <span class="text-yellow-600">Yellow</span> placeholders will not be automatically included if you do
+                not include them.
               </div>
               <div>
-                <span class="text-red-600">example_dialogue</span> will be inserted as conversation
-                history if you do not include it.
+                <span class="text-red-600">example_dialogue</span> will be inserted as conversation history if you do
+                not include it.
               </div>
             </>
           }
@@ -156,26 +156,20 @@ const PromptEditor: Component<
 
       <div class="flex flex-wrap gap-2">
         <For each={usable()}>
-          {([name, data]) => (
-            <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />
-          )}
+          {([name, data]) => <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />}
         </For>
       </div>
 
-      <HelpModal
-        interps={usable().map((item) => item[0])}
-        show={help()}
-        close={() => showHelp(false)}
-      />
+      <HelpModal interps={usable().map((item) => item[0])} show={help()} close={() => showHelp(false)} />
     </div>
   )
 }
 
 export default PromptEditor
 
-const Placeholder: Component<
-  { name: Interp; input: string; onClick: (name: string) => void } & Placeholder
-> = (props) => {
+const Placeholder: Component<{ name: Interp; input: string; onClick: (name: string) => void } & Placeholder> = (
+  props
+) => {
   const count = createMemo(() => {
     const matches = props.input.toLowerCase().match(new RegExp(`{{${props.name}}}`, 'g'))
     if (!matches) return 0
@@ -208,11 +202,7 @@ const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[]
     element: (
       <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
         <div class="flex w-full flex-col gap-1 text-sm">
-          <For
-            each={Object.entries(helpers).filter(([interp]) =>
-              props.interps.includes(interp as any)
-            )}
-          >
+          <For each={Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))}>
             {([interp, help]) => (
               <SolidCard>
                 <FormLabel fieldName={interp} label={interp} helperText={help} />

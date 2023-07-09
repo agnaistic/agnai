@@ -191,18 +191,8 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
         <div>
           <form ref={ref} class="flex flex-col gap-2">
             <div class="w-full justify-center">Update your password</div>
-            <TextInput
-              type="password"
-              fieldName="newPassword"
-              required
-              placeholder="New Password"
-            />
-            <TextInput
-              type="password"
-              fieldName="confirmPassword"
-              required
-              placeholder="Repeat Password"
-            />
+            <TextInput type="password" fieldName="newPassword" required placeholder="New Password" />
+            <TextInput type="password" fieldName="confirmPassword" required placeholder="Repeat Password" />
           </form>
         </div>
       </Modal>

@@ -73,10 +73,7 @@ export async function initMessageBus() {
 
     setInterval(() => {
       const count = getAllCount()
-      clients.pub.publish(
-        COUNT_EVENT,
-        JSON.stringify({ count, hostname: `${os.hostname()}-${process.pid}` })
-      )
+      clients.pub.publish(COUNT_EVENT, JSON.stringify({ count, hostname: `${os.hostname()}-${process.pid}` }))
     }, 2000)
 
     clients.sub.subscribe(COUNT_EVENT, (msg) => {

@@ -18,9 +18,7 @@ const ScaleSettings: Component = () => {
       <TextInput
         fieldName="scaleApiKey"
         label="Scale API Key"
-        placeholder={
-          state.user?.scaleApiKeySet ? 'Scale API key is set' : 'E.g. 9rv440nv7ogj6s7j312flqijd'
-        }
+        placeholder={state.user?.scaleApiKeySet ? 'Scale API key is set' : 'E.g. 9rv440nv7ogj6s7j312flqijd'}
         type="password"
         value={state.user?.scaleApiKey}
       />

@@ -29,15 +29,7 @@ const base = {
   use_world_info: false,
 }
 
-export const handleLuminAI: ModelAdapter = async function* ({
-  char,
-  members,
-  user,
-  prompt,
-  settings,
-  log,
-  ...opts
-}) {
+export const handleLuminAI: ModelAdapter = async function* ({ char, members, user, prompt, settings, log, ...opts }) {
   const stopTokens = getEndTokens(char, members, ['END_OF_DIALOG'])
   const body = { koboldUrl: user.koboldUrl, stopTokens, ...base, ...settings, prompt }
 
@@ -105,12 +97,9 @@ export async function retrieveMemories(user: AppSchema.User, bookId: string, lin
   }
 
   const url = `${user.luminaiUrl}/api/memory/${bookId}/prompt`
-  const res = await needle(
-    'post',
-    url,
-    { prompt: lines, num_memories_per_sentence: 3 },
-    { json: true }
-  ).catch((error) => ({ error }))
+  const res = await needle('post', url, { prompt: lines, num_memories_per_sentence: 3 }, { json: true }).catch(
+    (error) => ({ error })
+  )
   if ('error' in res) {
     logger.error({ err: res.error }, `Filament request failed`)
     throw res.error

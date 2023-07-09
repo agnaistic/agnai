@@ -39,14 +39,8 @@ export const inviteStore = createStore<InviteState>(
       if (res.result) {
         return {
           invites: res.result.invites,
-          chars: res.result.chars.reduce(
-            (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
-            {}
-          ),
-          profiles: res.result.profiles.reduce(
-            (prev, curr) => Object.assign(prev, { [curr.userId]: curr }),
-            {}
-          ),
+          chars: res.result.chars.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {}),
+          profiles: res.result.profiles.reduce((prev, curr) => Object.assign(prev, { [curr.userId]: curr }), {}),
           chats: res.result.chats,
         }
       }

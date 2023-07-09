@@ -53,16 +53,10 @@ export const ChubItem: Component<{
             class="block h-32 w-full justify-center overflow-hidden rounded-lg"
             onClick={processItem}
           >
-            <img
-              src={props.avatar}
-              class="h-full w-full rounded-md object-cover"
-              style="object-position: 50% 30%;"
-            />
+            <img src={props.avatar} class="h-full w-full rounded-md object-cover" style="object-position: 50% 30%;" />
           </Button>
         </div>
-        <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-sm font-bold">
-          {props.name}
-        </div>
+        <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-sm font-bold">{props.name}</div>
       </div>
     </>
   )

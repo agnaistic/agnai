@@ -92,12 +92,7 @@ export const scenarioStore = createStore<ScenarioState>(
       }
     },
 
-    async *update(
-      { scenarios: prev, loading },
-      scenarioId: string,
-      update: NewScenario,
-      onSuccess?: () => void
-    ) {
+    async *update({ scenarios: prev, loading }, scenarioId: string, update: NewScenario, onSuccess?: () => void) {
       if (loading) {
         toastStore.error('Cannot update scenario while loading')
         return
@@ -110,9 +105,7 @@ export const scenarioStore = createStore<ScenarioState>(
       }
 
       if (res.result) {
-        const next = prev.map((scenario) =>
-          scenario._id === scenarioId ? { ...scenario, ...update } : scenario
-        )
+        const next = prev.map((scenario) => (scenario._id === scenarioId ? { ...scenario, ...update } : scenario))
         yield { loading: false, scenarios: next }
         toastStore.success(`Scenario updated`)
         onSuccess?.()

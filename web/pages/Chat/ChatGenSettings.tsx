@@ -1,21 +1,6 @@
 import { Save, X } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  Match,
-  Show,
-  Switch,
-} from 'solid-js'
-import {
-  chatGenSettings,
-  defaultPresets,
-  getFallbackPreset,
-  isDefaultPreset,
-} from '../../../common/presets'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Match, Show, Switch } from 'solid-js'
+import { chatGenSettings, defaultPresets, getFallbackPreset, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import GenerationSettings from '../../shared/GenerationSettings'
@@ -50,24 +35,22 @@ export const ChatGenSettings: Component<{
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
   }))
 
-  const presetOptions = createMemo(() =>
-    getPresetOptions(state.presets, { builtin: true, base: true })
-  )
+  const presetOptions = createMemo(() => getPresetOptions(state.presets, { builtin: true, base: true }))
 
   const presets = createMemo(() => {
     const all: Partial<AppSchema.UserGenPreset>[] = state.presets
-    const defaults = Object.entries(defaultPresets).map<Partial<AppSchema.UserGenPreset>>(
-      ([key, preset]) => ({ ...preset, _id: key, name: `Default - ${preset.name}` })
-    )
+    const defaults = Object.entries(defaultPresets).map<Partial<AppSchema.UserGenPreset>>(([key, preset]) => ({
+      ...preset,
+      _id: key,
+      name: `Default - ${preset.name}`,
+    }))
 
     return all.concat(defaults)
   })
 
   const clientPreset = createMemo(() => getClientPreset(props.chat))
 
-  const [selected, setSelected] = createSignal<string>(
-    clientPreset()?.preset._id || AutoPreset.service
-  )
+  const [selected, setSelected] = createSignal<string>(clientPreset()?.preset._id || AutoPreset.service)
   const [genAdapter, setAdapter] = createSignal<AIAdapter>()
 
   const servicePreset = createMemo(() => {
@@ -94,10 +77,7 @@ export const ChatGenSettings: Component<{
 
     if (!preset) return
     const fallback = isDefaultPreset(presetId)
-    const name =
-      'name' in preset
-        ? `${preset.name} - ${fallback ? 'Fallback' : 'Service'} Preset`
-        : 'Fallback Preset'
+    const name = 'name' in preset ? `${preset.name} - ${fallback ? 'Fallback' : 'Service'} Preset` : 'Fallback Preset'
     return { name, preset, fallback: isDefaultPreset(presetId) }
   })
 
@@ -195,8 +175,8 @@ export const ChatGenSettings: Component<{
           <ServiceWarning service={servicePreset()?.preset.service} />
           <Show when={isDefaultPreset(selected())}>
             <TitleCard type="orange">
-              You are using a built-in preset which cannot be modified. Modifying this will create a
-              new preset and assign it to your chat.
+              You are using a built-in preset which cannot be modified. Modifying this will create a new preset and
+              assign it to your chat.
             </TitleCard>
           </Show>
 
@@ -233,10 +213,7 @@ export const ChatGenSettings: Component<{
   )
 }
 
-function isPresetDirty(
-  original: AppSchema.GenSettings,
-  compare: Omit<AppSchema.GenSettings, 'name' | 'service'>
-) {
+function isPresetDirty(original: AppSchema.GenSettings, compare: Omit<AppSchema.GenSettings, 'name' | 'service'>) {
   const svc = original.service
   for (const key in compare) {
     const prop = key as keyof AppSchema.GenSettings

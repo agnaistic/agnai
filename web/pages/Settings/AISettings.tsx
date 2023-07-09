@@ -3,16 +3,7 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
 import HordeAISettings from './components/HordeAISettings'
-import {
-  Component,
-  For,
-  Match,
-  Show,
-  Switch,
-  createEffect,
-  createMemo,
-  createSignal,
-} from 'solid-js'
+import { Component, For, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'

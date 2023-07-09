@@ -7,12 +7,7 @@ const Tabs: Component<{
   class?: string
 }> = (props) => {
   return (
-    <div
-      class={
-        'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm' +
-          props.class || ''
-      }
-    >
+    <div class={'flex h-10 max-h-max w-full flex-1 select-none flex-row overflow-x-auto text-sm' + props.class || ''}>
       <For each={props.tabs}>
         {(tab, i) => (
           <div

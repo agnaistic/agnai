@@ -49,9 +49,7 @@ export const DropMenu: Component<{
   class?: string
 }> = (props) => {
   const position = createMemo(
-    () =>
-      props.customPosition ??
-      `${props.vert === 'up' ? 'bottom-6' : ''} ${props.horz === 'left' ? 'right-0' : ''}`
+    () => props.customPosition ?? `${props.vert === 'up' ? 'bottom-6' : ''} ${props.horz === 'left' ? 'right-0' : ''}`
   )
 
   return (

@@ -92,17 +92,10 @@ const AvatarBuilder: Component<{
                   onChange={(v) => setAttr(v.value as any)}
                   fieldName=""
                 />
-                <ColorPickerV2
-                  onInput={handleColor}
-                  onChange={handleColor}
-                  value={getAttrColor(body(), attr())}
-                />
+                <ColorPickerV2 onInput={handleColor} onChange={handleColor} value={getAttrColor(body(), attr())} />
               </div>
               <div class="flex gap-2">
-                <Button
-                  class="px-4"
-                  onClick={() => setBody(getRandomBody({ gender: body().gender }))}
-                >
+                <Button class="px-4" onClick={() => setBody(getRandomBody({ gender: body().gender }))}>
                   <Dices size={16} />
                 </Button>
                 <Button

@@ -18,26 +18,9 @@ import {
   VenetianMask,
   X,
 } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  JSX,
-  Match,
-  onMount,
-  Show,
-  Switch,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, JSX, Match, onMount, Show, Switch } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
-import {
-  characterStore,
-  chatStore,
-  inviteStore,
-  settingStore,
-  toastStore,
-  userStore,
-} from './store'
+import { characterStore, chatStore, inviteStore, settingStore, toastStore, userStore } from './store'
 import Slot from './shared/Slot'
 import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
@@ -90,10 +73,7 @@ const Navigation: Component = () => {
   return (
     <>
       <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 pt-2 ${hide()} ${fullscreen()}`}>
-        <div
-          ref={content}
-          class="drawer__content sm:text-md text-md flex flex-col gap-0 px-4 sm:gap-1"
-        >
+        <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0 px-4 sm:gap-1">
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
               <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
@@ -362,9 +342,7 @@ const Slots: Component = (props) => {
   )
 }
 
-const Item: Component<{ href?: string; children: string | JSX.Element; onClick?: () => void }> = (
-  props
-) => {
+const Item: Component<{ href?: string; children: string | JSX.Element; onClick?: () => void }> = (props) => {
   return (
     <>
       <Show when={!props.href}>
@@ -437,10 +415,7 @@ const UserProfile = () => {
         >
           <Switch>
             <Match when={chars.impersonating}>
-              <CharacterAvatar
-                char={chars.impersonating!}
-                format={{ corners: 'circle', size: 'xs' }}
-              />
+              <CharacterAvatar char={chars.impersonating!} format={{ corners: 'circle', size: 'xs' }} />
             </Match>
 
             <Match when>

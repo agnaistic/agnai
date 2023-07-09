@@ -33,14 +33,10 @@ if (!process.env.JWT_SECRET) {
   if (secret) {
     process.env.JWT_SECRET = secret
   } else if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error(
-      `JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`
-    )
+    throw new Error(`JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`)
   } else {
     const newSecret = v4()
-    const secretPath = process.env.JSON_FOLDER
-      ? resolve(process.env.JSON_FOLDER, '.token_secret')
-      : '.token_secret'
+    const secretPath = process.env.JSON_FOLDER ? resolve(process.env.JSON_FOLDER, '.token_secret') : '.token_secret'
     writeFileSync(secretPath, newSecret)
     process.env.JWT_SECRET = newSecret
   }
@@ -77,10 +73,7 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env(
-    'ADAPTERS',
-    'novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate'
-  )
+  adapters: env('ADAPTERS', 'novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate')
     .split(',')
     .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],
   storage: {

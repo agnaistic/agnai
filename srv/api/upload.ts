@@ -25,10 +25,7 @@ export type Attachment = {
   ext: string
 }
 
-export function handleForm<T extends Validator>(
-  req: Request,
-  type: T
-): UnwrapBody<T> & { attachments: Attachment[] } {
+export function handleForm<T extends Validator>(req: Request, type: T): UnwrapBody<T> & { attachments: Attachment[] } {
   const attachments: Attachment[] = []
 
   if (Array.isArray(req.files)) {

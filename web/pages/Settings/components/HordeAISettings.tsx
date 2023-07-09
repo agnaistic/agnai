@@ -111,9 +111,7 @@ const HordeAISettings: Component<{
         fieldName="hordeKey"
         label="AI Horde API Key"
         helperText={HordeHelpText}
-        placeholder={
-          state.user?.hordeName || state.user?.hordeKey ? 'API key has been verified' : ''
-        }
+        placeholder={state.user?.hordeName || state.user?.hordeKey ? 'API key has been verified' : ''}
         type="password"
         value={state.user?.hordeKey}
       />
@@ -259,8 +257,8 @@ const WorkerModal: Component<{
             values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
           />
           <div>
-            The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b>{' '}
-            limits. If you wish to use that worker, your preset should not exceed these values.
+            The number showns in brackets are the worker's <b>Max Context Length / Max Tokens</b> limits. If you wish to
+            use that worker, your preset should not exceed these values.
             <br />
             E.g. <b>(1024/80)</b>
           </div>

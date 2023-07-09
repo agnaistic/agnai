@@ -24,9 +24,7 @@ const PageHeader: Component<Props> = (props) => {
     <>
       <Show when={props.title}>
         <div class={`${mod()}`}>
-          <h1 class={'text-900 justify-center text-4xl sm:flex sm:w-full sm:justify-start'}>
-            {props.title}
-          </h1>
+          <h1 class={'text-900 justify-center text-4xl sm:flex sm:w-full sm:justify-start'}>{props.title}</h1>
         </div>
       </Show>
 

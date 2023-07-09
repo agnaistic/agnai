@@ -3,13 +3,7 @@ import { AdapterProps } from './type'
 import { OPENAI_MODELS } from '/common/adapters'
 import { adventureAmble, defaultPresets } from '/common/default-preset'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
-import {
-  BOT_REPLACE,
-  SAMPLE_CHAT_MARKER,
-  SELF_REPLACE,
-  ensureValidTemplate,
-  injectPlaceholders,
-} from '/common/prompt'
+import { BOT_REPLACE, SAMPLE_CHAT_MARKER, SELF_REPLACE, ensureValidTemplate, injectPlaceholders } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
 
@@ -44,10 +38,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
 
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   const gaslight = injectPlaceholders(
-    ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, opts.parts, [
-      'history',
-      'post',
-    ]),
+    ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, opts.parts, ['history', 'post']),
     {
       opts,
       parts,
@@ -130,10 +121,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
 
 export function splitSampleChat(opts: SplitSampleChatProps) {
   const { sampleChat, char, sender, budget } = opts
-  const regex = new RegExp(
-    `(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|<start>)`,
-    'gi'
-  )
+  const regex = new RegExp(`(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|<start>)`, 'gi')
   const additions: CompletionItem[] = []
   let tokens = 0
 
@@ -155,11 +143,7 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
     }
 
     const sample = trimmed
-    const role = sample.startsWith(char + ':')
-      ? 'assistant'
-      : sample.startsWith(sender + ':')
-      ? 'user'
-      : 'system'
+    const role = sample.startsWith(char + ':') ? 'assistant' : sample.startsWith(sender + ':') ? 'user' : 'system'
 
     const msg: CompletionItem = {
       role: role,
@@ -176,10 +160,7 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
   return { additions, consumed: tokens }
 }
 
-function getPostInstruction(
-  opts: AdapterProps,
-  messages: CompletionItem[]
-): CompletionItem | undefined {
+function getPostInstruction(opts: AdapterProps, messages: CompletionItem[]): CompletionItem | undefined {
   let prefix = opts.parts.ujb ? `${opts.parts.ujb}\n\n` : ''
 
   if (opts.chat.mode === 'adventure') {
@@ -238,10 +219,7 @@ function getPostInstruction(
 function getCharLooks(char: AppSchema.Character) {
   if (char.persona?.kind === 'text') return
 
-  const visuals = [
-    char.persona?.attributes?.looks || '',
-    char.persona?.attributes?.appearance || '',
-  ].filter((v) => !!v)
+  const visuals = [char.persona?.attributes?.looks || '', char.persona?.attributes?.appearance || ''].filter((v) => !!v)
 
   if (!visuals.length) return
   return `${char.name}'s appearance: ${visuals.join(', ')}`

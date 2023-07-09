@@ -7,15 +7,7 @@ import Modal from '../../shared/Modal'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import {
-  NewChat,
-  characterStore,
-  chatStore,
-  presetStore,
-  scenarioStore,
-  settingStore,
-  userStore,
-} from '../../store'
+import { NewChat, characterStore, chatStore, presetStore, scenarioStore, settingStore, userStore } from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -53,9 +45,7 @@ const CreateChatModal: Component<{
   const [useOverrides, setUseOverrides] = createSignal(false)
   const [scenario, setScenario] = createSignal<AppSchema.ScenarioBook>()
 
-  const char = createMemo(() =>
-    state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
-  )
+  const char = createMemo(() => state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId))
 
   const currScenarios = createMemo(() => {
     return [
@@ -77,9 +67,7 @@ const CreateChatModal: Component<{
 
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
-    return [
-      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
-    ].concat(opts)
+    return [{ label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false }].concat(opts)
   })
 
   const selectedPreset = createMemo(() => {
@@ -145,13 +133,10 @@ const CreateChatModal: Component<{
     /**
      * It is correct to use `chat.scenario` as scenario's can only be used when overriding the scenario.
      */
-    const scenario = scenarios.scenarios.find(
-      (s) => s._id === scenarioId && s.overwriteCharacterScenario
-    )
+    const scenario = scenarios.scenarios.find((s) => s._id === scenarioId && s.overwriteCharacterScenario)
 
     if (scenario) {
-      if (scenario.entries.some((e) => e.trigger.kind === 'onGreeting'))
-        payload.greeting = undefined
+      if (scenario.entries.some((e) => e.trigger.kind === 'onGreeting')) payload.greeting = undefined
       if (scenario.overwriteCharacterScenario) {
         payload.scenario = scenario.text
       } else if (scenario.text) {
@@ -185,12 +170,10 @@ const CreateChatModal: Component<{
     >
       <form ref={ref}>
         <div class="mb-2 text-sm">
-          Optionally modify some of the conversation context. You can override other aspects of the
-          character's persona from the conversation after it is created.
+          Optionally modify some of the conversation context. You can override other aspects of the character's persona
+          from the conversation after it is created.
         </div>
-        <div class="mb-4 text-sm">
-          The information provided here is only applied to the newly created conversation.
-        </div>
+        <div class="mb-4 text-sm">The information provided here is only applied to the newly created conversation.</div>
         <div class="flex flex-col gap-3">
           <Show when={!props.charId}>
             <Card>

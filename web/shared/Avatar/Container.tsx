@@ -17,10 +17,7 @@ const AvatarContainer: Component<{
 }> = (props) => {
   const [bounds, setBounds] = createSignal({ w: 0, h: 0 })
 
-  const [slowBounds, cleanup] = createDebounce(
-    (dims: { w: number; h: number }) => setBounds(dims),
-    50
-  )
+  const [slowBounds, cleanup] = createDebounce((dims: { w: number; h: number }) => setBounds(dims), 50)
 
   const [obs] = createSignal(
     new ResizeObserver(async () => {

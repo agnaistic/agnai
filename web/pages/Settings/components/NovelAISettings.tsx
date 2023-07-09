@@ -31,13 +31,9 @@ const NovelAISettings: Component = () => {
         value={''}
         helperText={
           <>
-            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization. Please
-            note this token expires periodically. You will occasionally need to re-enter this token.{' '}
-            <a
-              class="link"
-              target="_blank"
-              href="https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md"
-            >
+            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization. Please note this token
+            expires periodically. You will occasionally need to re-enter this token.{' '}
+            <a class="link" target="_blank" href="https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md">
               Instructions
             </a>
             .

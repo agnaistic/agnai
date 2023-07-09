@@ -12,15 +12,7 @@ import { logger } from '../logger'
 
 const defaultUrl = `http://127.0.0.1:7860`
 
-export const handleOoba: ModelAdapter = async function* ({
-  char,
-  members,
-  user,
-  prompt,
-  settings,
-  log,
-  ...opts
-}) {
+export const handleOoba: ModelAdapter = async function* ({ char, members, user, prompt, settings, log, ...opts }) {
   const body = {
     prompt,
     max_new_tokens: settings.max_new_tokens,
@@ -50,12 +42,9 @@ export const handleOoba: ModelAdapter = async function* ({
   log.debug({ ...body, prompt: null }, 'Textgen payload')
   log.debug(`Prompt:\n${body.prompt}`)
 
-  const resp = await needle(
-    'post',
-    `${normalizeUrl(user.oobaUrl, defaultUrl)}/api/v1/generate`,
-    body,
-    { json: true }
-  ).catch((err) => ({ error: err }))
+  const resp = await needle('post', `${normalizeUrl(user.oobaUrl, defaultUrl)}/api/v1/generate`, body, {
+    json: true,
+  }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
     logger.error({ err: resp.error }, ``)
@@ -82,9 +71,7 @@ export const handleOoba: ModelAdapter = async function* ({
       return
     }
     const parsed = sanitise(text.replace(prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, [
-      'END_OF_DIALOG',
-    ])
+    const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
     yield { error: `Textgen request failed: ${ex.message}` }

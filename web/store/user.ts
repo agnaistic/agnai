@@ -166,11 +166,7 @@ export const userStore = createStore<UserState>(
       onSuccess?.()
       publish({ type: 'login', token: res.result.token })
     },
-    async *register(
-      _,
-      newUser: { handle: string; username: string; password: string },
-      onSuccess?: () => void
-    ) {
+    async *register(_, newUser: { handle: string; username: string; password: string }, onSuccess?: () => void) {
       yield { loading: true }
 
       const res = await api.post('/user/register', newUser)
@@ -274,10 +270,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async deleteKey(
-      { user },
-      kind: 'novel' | 'horde' | 'openai' | 'scale' | 'claude' | 'third-party' | 'elevenlabs'
-    ) {
+    async deleteKey({ user }, kind: 'novel' | 'horde' | 'openai' | 'scale' | 'claude' | 'third-party' | 'elevenlabs') {
       const res = await usersApi.deleteApiKey(kind)
       if (res.error) return toastStore.error(`Failed to update settings: ${res.error}`)
 
@@ -462,10 +455,7 @@ async function updateTheme(ui: UI.UISettings) {
 
 function getUIsettings(guest = false) {
   const key = getUIKey(guest)
-  const json =
-    storage.localGetItem(key) ||
-    storage.localGetItem('ui-settings') ||
-    JSON.stringify(UI.defaultUIsettings)
+  const json = storage.localGetItem(key) || storage.localGetItem('ui-settings') || JSON.stringify(UI.defaultUIsettings)
 
   const settings: UI.UISettings = JSON.parse(json)
   const theme = (storage.localGetItem('theme') || settings.theme) as UI.ThemeColor

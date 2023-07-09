@@ -56,9 +56,7 @@ const WorkerModal: Component<{
           values={selected()?.map((s) => s.value) || state.user?.hordeWorkers || []}
         />
         <div class="flex items-center justify-between gap-4">
-          <div>
-            Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}
-          </div>
+          <div>Workers selected: {selected()?.length || state.user?.hordeWorkers?.length || '0'}</div>
           <Button schema="gray" class="w-max" onClick={() => setSelected([])}>
             De-select All
           </Button>

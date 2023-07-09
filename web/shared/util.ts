@@ -152,11 +152,7 @@ export function getForm<T = {}>(evt: Event | HTMLFormElement): T {
 
 type Field = HTMLSelectElement | HTMLInputElement
 
-export function getStrictForm<T extends Validator>(
-  evt: Event | HTMLFormElement,
-  body: T,
-  partial?: boolean
-) {
+export function getStrictForm<T extends Validator>(evt: Event | HTMLFormElement, body: T, partial?: boolean) {
   evt.preventDefault?.()
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
 
@@ -208,9 +204,7 @@ export function getFormEntries(evt: Event | HTMLFormElement): Array<[string, str
   const target = evt instanceof HTMLFormElement ? evt : (evt.target as HTMLFormElement)
   const disable = enableAll(target)
   const form = new FormData(target as HTMLFormElement)
-  const entries = Array.from(form.entries()).map(
-    ([key, value]) => [key, value.toString()] as [string, string]
-  )
+  const entries = Array.from(form.entries()).map(([key, value]) => [key, value.toString()] as [string, string])
   disable()
 
   return entries
@@ -240,9 +234,7 @@ export function toDuration(valueSecs: number | Date, full?: boolean) {
   } = toRawDuration(valueSecs)
 
   if (full) {
-    return [`${days}d`, `${hours}h`, `${minutes}m`, `${seconds}s`]
-      .filter((time) => !time.startsWith('0'))
-      .join(':')
+    return [`${days}d`, `${hours}h`, `${minutes}m`, `${seconds}s`].filter((time) => !time.startsWith('0')).join(':')
   }
 
   if (days) {
@@ -401,11 +393,7 @@ export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
   return map
 }
 
-export const alphaCaseInsensitiveSort = (
-  a: string,
-  b: string,
-  direction: 'asc' | 'desc' = 'asc'
-) => {
+export const alphaCaseInsensitiveSort = (a: string, b: string, direction: 'asc' | 'desc' = 'asc') => {
   const modifier = direction === 'asc' ? 1 : -1
   if (a.toLowerCase() < b.toLowerCase()) {
     return -1 * modifier
@@ -469,9 +457,7 @@ export function serviceHasSetting(service: AIAdapter | undefined, prop: keyof Pr
   if (!service) return true
   const { config } = settingStore.getState()
   const base = adapterSettings[prop]
-  const services = config.registered
-    .filter((reg) => reg.options.includes(prop))
-    .map((reg) => reg.name)
+  const services = config.registered.filter((reg) => reg.options.includes(prop)).map((reg) => reg.name)
 
   return base?.includes(service) || services.includes(service)
 }
@@ -512,18 +498,8 @@ export function appendFormOptional(
   value: string | File | undefined,
   stringify: never
 ): void
-export function appendFormOptional<T>(
-  form: FormData,
-  key: string,
-  value: T,
-  stringify?: (v: T) => string
-): void
-export function appendFormOptional(
-  form: FormData,
-  key: string,
-  value: any,
-  stringify?: (v: any) => string
-) {
+export function appendFormOptional<T>(form: FormData, key: string, value: T, stringify?: (v: T) => string): void
+export function appendFormOptional(form: FormData, key: string, value: any, stringify?: (v: any) => string) {
   if (!value) return
   if (stringify) form.append(key, stringify(value))
   else form.append(key, value as string | File)
@@ -533,12 +509,7 @@ export function appendFormOptional(
  * Like `appendFormOptional`, but does append the value if it is an empty string.
  * This might be what we want `appendFormOptional` to be, but I'm scared of breaking things.
  */
-export function strictAppendFormOptional<T>(
-  form: FormData,
-  key: string,
-  value: T,
-  stringify?: (v: T) => string
-) {
+export function strictAppendFormOptional<T>(form: FormData, key: string, value: T, stringify?: (v: T) => string) {
   if (value === null || value === undefined) return
   if (stringify) form.append(key, stringify(value))
   else form.append(key, value as string | File)
@@ -560,10 +531,7 @@ export function weightedRandom<T>(list: T[], getProbability: (v: T) => number): 
 
 type OmitKeys<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
-export function deepCloneAndRemoveFields<T, K extends keyof T>(
-  input: T,
-  fieldsToRemove: K[]
-): OmitKeys<T, K> {
+export function deepCloneAndRemoveFields<T, K extends keyof T>(input: T, fieldsToRemove: K[]): OmitKeys<T, K> {
   const clone: T = JSON.parse(JSON.stringify(input))
   fieldsToRemove.forEach((field) => {
     delete (clone as any)[field]

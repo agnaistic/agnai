@@ -64,11 +64,7 @@ export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId
   })
 
   if (result.statusCode && result.statusCode >= 400) {
-    throw new Error(
-      `Failed to generate image: ${result.body.message || result.statusMessage} (${
-        result.statusCode
-      })`
-    )
+    throw new Error(`Failed to generate image: ${result.body.message || result.statusMessage} (${result.statusCode})`)
   }
 
   const image = result.body.images[0]
