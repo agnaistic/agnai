@@ -1,6 +1,6 @@
 import { Accessor, createEffect, createMemo, onCleanup, onMount } from 'solid-js'
 import { createSignal, createRenderEffect } from 'solid-js'
-import { userStore } from '../store'
+import { getSettingColor, userStore } from '../store'
 import { hexToRgb } from './util'
 import { RootModal, rootModalStore } from '../store/root-modal'
 
@@ -84,7 +84,8 @@ export function useBgStyle(props: { hex: string; opacity?: number; blur: boolean
   const bgStyle = createMemo(() => {
     // This causes this memoized value to re-evaluated as it becomes a subscriber of ui.mode
     user.ui.mode
-    const rgb = hexToRgb(props.hex)
+    const color = getSettingColor(props.hex)
+    const rgb = hexToRgb(color)
     if (!rgb) return {}
 
     const opacity = props.opacity?.toString() ?? user.ui.msgOpacity.toString()
