@@ -76,7 +76,7 @@ const Navigation: Component = () => {
         <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0 px-4 sm:gap-1">
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
-              <div class="h-7 w-fit items-center justify-center rounded-lg px-4 font-bold">
+              <div class="h-8 w-fit items-center justify-center rounded-lg px-4 font-bold">
                 Agn<span class="text-[var(--hl-500)]">ai</span>stic
               </div>
             </A>

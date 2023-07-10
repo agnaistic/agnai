@@ -43,6 +43,7 @@ export namespace AppSchema {
       banner: string
       mobile: string
     }
+    authUrls: string[]
   }
 
   export type ChatMode = 'standard' | 'adventure'

@@ -1,5 +1,5 @@
-import { Component, createMemo, createSignal, Show } from 'solid-js'
-import { A, useNavigate } from '@solidjs/router'
+import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
+import { A, useNavigate, useSearchParams } from '@solidjs/router'
 import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
@@ -7,11 +7,14 @@ import { settingStore, toastStore, userStore } from '../../store'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
+import { getAuth, isLoggedIn } from '/web/store/api'
+import { TitleCard } from '/web/shared/Card'
 
 const LoginPage: Component = () => {
   setComponentPageTitle('Login')
   const store = userStore()
   const cfg = settingStore()
+
   const [register, setRegister] = createSignal(false)
 
   /** Friendly error message passed out of the mutation, if it exists. */
@@ -126,11 +129,40 @@ const RegisterForm: Component<FormProps> = (props) => {
 
 const LoginForm: Component<FormProps> = (props) => {
   const navigate = useNavigate()
+  const [query] = useSearchParams()
+  const state = settingStore()
+  const [error, setError] = createSignal<string>()
+
+  createEffect(() => {
+    if (state.initLoading) return
+
+    if (query.callback && isLoggedIn()) {
+      for (const authUrl of state.config.authUrls) {
+        if (query.callback.startsWith(authUrl)) return handleLogin()
+      }
+      setError('Invalid callback URL')
+      return
+    }
+  })
+
+  const handleLogin = () => {
+    userStore.remoteLogin((token) => {
+      location.href = `${query.callback}?access_token=${token}`
+    })
+  }
+
   const login = (evt: Event) => {
     const { username, password } = getStrictForm(evt, { username: 'string', password: 'string' })
     if (!username || !password) return
 
-    userStore.login(username, password, () => navigate('/dashboard'))
+    userStore.login(username, password, () => {
+      if (query.callback) {
+        handleLogin()
+        return
+      }
+
+      navigate('/dashboard')
+    })
   }
 
   return (
@@ -140,7 +172,11 @@ const LoginForm: Component<FormProps> = (props) => {
         <TextInput fieldName="password" placeholder="Password" type="password" required />
       </div>
 
-      <Button type="submit" disabled={props.isLoading}>
+      <Show when={error()}>
+        <TitleCard type="rose">{error()}</TitleCard>
+      </Show>
+
+      <Button type="submit" disabled={props.isLoading || !!error()}>
         {props.isLoading ? 'Logging in...' : 'Login'}
       </Button>
     </form>

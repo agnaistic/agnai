@@ -38,6 +38,7 @@ export async function getAppConfig() {
       patreon: config.ui.patreon,
       policies: config.ui.policies,
       slots: config.slots,
+      authUrls: config.authUrls,
     }
   }
 

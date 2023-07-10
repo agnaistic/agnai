@@ -137,7 +137,18 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *login(_, username: string, password: string, onSuccess?: () => void) {
+    async remoteLogin(_, onSuccess: (token: string) => void) {
+      const res = await api.post('/user/login/callback')
+      if (res.result) {
+        onSuccess(res.result.token)
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not authenticate: ${res.error}`)
+      }
+    },
+
+    async *login(_, username: string, password: string, onSuccess?: (token: string) => void) {
       yield { loading: true }
 
       const res = await api.post('/user/login', { username, password })
@@ -163,7 +174,7 @@ export const userStore = createStore<UserState>(
       // TODO: Work out why this is here
       events.emit(EVENTS.loggedOut)
 
-      onSuccess?.()
+      onSuccess?.(res.result.token)
       publish({ type: 'login', token: res.result.token })
     },
     async *register(_, newUser: { handle: string; username: string; password: string }, onSuccess?: () => void) {

@@ -1,6 +1,6 @@
 import { assertValid } from '/common/valid'
 import { store } from '../../db'
-import { handle, StatusError } from '../wrap'
+import { errors, handle, StatusError } from '../wrap'
 import { OAuthScope, oauthScopes } from '/common/types'
 
 export const register = handle(async (req) => {
@@ -45,4 +45,12 @@ export const verifyOauthKey = handle(async (req) => {
 
   const apiKey = await store.oauth.activateKey(req.userId, req.body.code)
   return { key: apiKey }
+})
+
+export const remoteLogin = handle(async (req) => {
+  const user = await store.users.getUser(req.userId)
+  if (!user) throw errors.Unauthorized
+
+  const token = await store.users.createRemoteAccessToken(user.username, user)
+  return { token }
 })

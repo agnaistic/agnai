@@ -45,7 +45,9 @@ if (!process.env.JWT_SECRET) {
 export const config = {
   clustering: !!env('CLUSTERING', ''),
   jwtSecret: env('JWT_SECRET'),
-  jwtExpiry: env('JWT_EXPIRY', '7d'),
+  jwtPrivateKey: env('JWT_PRIVATE_KEY', ''),
+  jwtPublicKey: env('JWT_PUBLIC_KEY', ''),
+  jwtExpiry: env('JWT_EXPIRY', '30d'),
   port: +env('PORT', '3001'),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
   extraFolder: env('EXTRA_FOLDER', ''),
@@ -107,6 +109,7 @@ export const config = {
   keys: {
     REPLICATE: env('REPLICATE_KEY', ''),
   },
+  authUrls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards').split(','),
 }
 
 if (config.ui.inject) {
@@ -120,6 +123,13 @@ if (config.ui.inject) {
       break
     }
   }
+}
+
+if (config.jwtPrivateKey) {
+  try {
+    const file = readFileSync(config.jwtPrivateKey).toString('utf-8')
+    config.jwtPrivateKey = file
+  } catch {}
 }
 
 function env(key: string, fallback?: string): string {

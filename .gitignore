@@ -20,3 +20,4 @@ settings.json
 .model/
 !.github/*.js
 !sprites.js
+/auth

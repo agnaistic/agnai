@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
-import { changePassword, createApiKey, login, register, verifyOauthKey } from './auth'
+import { changePassword, createApiKey, login, register, remoteLogin, verifyOauthKey } from './auth'
 import { createUserPreset, getUserPresets, updateUserPreset, deleteUserPreset } from './presets'
 import { hordeStats, openaiUsage, updateService } from './services'
 import {
@@ -21,6 +21,7 @@ import {
 
 const router = Router()
 
+router.post('/login/callback', loggedIn, remoteLogin)
 router.post('/login', login)
 router.post('/register', register)
 router.post('/services/openai-usage', openaiUsage)

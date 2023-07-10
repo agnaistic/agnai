@@ -1,10 +1,9 @@
 import * as uuid from 'uuid'
-import jwt from 'jsonwebtoken'
 import pino from 'pino'
 import type { NextFunction, Response } from 'express'
 import { errors } from './api/wrap'
-import { config } from './config'
 import { verifyApiKey } from './db/oauth'
+import { verifyJwt } from './db/user'
 
 const logLevel = getLogLevel()
 
@@ -78,7 +77,7 @@ export function logMiddleware() {
         /** JWT usage */
         const token = auth.replace('Bearer ', '')
         try {
-          const payload = jwt.verify(token, config.jwtSecret)
+          const payload = verifyJwt(token)
           req.user = payload as any
           req.userId = (payload as any).userId
           req.log.setBindings({ user: (payload as any)?.username || 'anonymous' })
