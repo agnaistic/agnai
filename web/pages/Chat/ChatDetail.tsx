@@ -8,6 +8,7 @@ import {
   JSX,
   Match,
   onCleanup,
+  onMount,
   Show,
   Switch,
 } from 'solid-js'
@@ -43,7 +44,7 @@ import { HOLDERS } from '/common/prompt'
 import UpdateGaslightToUseSystemPromptModal from './UpdateGaslightToUseSystemPromptModal'
 import { getActiveBots, canConvertGaslightV2 } from './util'
 import { CreateCharacterForm } from '../Character/CreateCharacterForm'
-import { usePane } from '/web/shared/hooks'
+import { usePane, useResizeObserver } from '/web/shared/hooks'
 import CharacterSelect from '/web/shared/CharacterSelect'
 import Loading from '/web/shared/Loading'
 import Convertible from './Convertible'
@@ -65,6 +66,7 @@ const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
 
   let container: HTMLDivElement
+  let slotContainer: HTMLDivElement
 
   const params = useParams()
   const nav = useNavigate()
@@ -75,7 +77,9 @@ const ChatDetail: Component = () => {
     botMap: s.characters.map,
     impersonate: s.impersonating,
   }))
+
   const isPaneOrPopup = usePane()
+  const slots = useResizeObserver()
 
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
@@ -143,6 +147,11 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     setEditId(chats.char?._id ?? '')
+
+    if (slotContainer) {
+      slots.load(slotContainer)
+      console.log(slots.size())
+    }
   })
 
   const editableCharcters = createMemo(() => {
@@ -529,7 +538,18 @@ const ChatDetail: Component = () => {
                         <Button onClick={generateFirst}>Generate Message</Button>
                       </div>
                     </Show>
-                    <Slot sticky slot="mobile" />
+                    <div ref={slotContainer!} class="flex w-full justify-center">
+                      <Switch>
+                        <Match when={slots.size().w === 0}>{null}</Match>
+                        <Match when={slots.size().w >= 728}>
+                          <Slot sticky slot="banner" />
+                        </Match>
+
+                        <Match when>
+                          <Slot sticky slot="mobile" />
+                        </Match>
+                      </Switch>
+                    </div>
                     <InfiniteScroll />
                     <For each={chatMsgs()}>
                       {(msg, i) => (
