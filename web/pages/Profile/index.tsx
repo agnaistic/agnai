@@ -10,6 +10,7 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { settingStore, toastStore, userStore } from '../../store'
 import { TitleCard } from '/web/shared/Card'
 import { rootModalStore } from '/web/store/root-modal'
+import { useNavigate } from '@solidjs/router'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
@@ -39,6 +40,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   let formRef: HTMLFormElement
 
   setComponentPageTitle('My profile')
+  const nav = useNavigate()
   const state = userStore()
   const [pass, setPass] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
@@ -91,7 +93,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                   Impersonate
                 </Button>{' '}
               </div>
-              characters by clicking your name in the menu.
+              characters by clicking MASK icon at the top of the main menu.
             </div>
           </TitleCard>
 
@@ -128,6 +130,19 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
           <div>
             <Button onClick={() => setPass(true)}>Change Password</Button>
+          </div>
+
+          <div class="flex justify-center">
+            <Button
+              schema="warning"
+              onClick={() => {
+                userStore.modal(false)
+                userStore.logout()
+                nav('/')
+              }}
+            >
+              Logout
+            </Button>
           </div>
 
           <Show when={!props.footer}>

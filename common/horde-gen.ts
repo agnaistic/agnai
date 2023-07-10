@@ -88,7 +88,7 @@ type GenerateOpts = {
   key: string
 }
 
-export async function generateImage(user: AppSchema.User, prompt: string) {
+export async function generateImage(user: AppSchema.User, prompt: string, log: AppLog = logger) {
   const base = user.images
   const settings = user.images?.horde || defaults.image
 
@@ -113,8 +113,8 @@ export async function generateImage(user: AppSchema.User, prompt: string) {
     trusted_workers: user.hordeUseTrusted ?? false,
   }
 
-  logger?.debug({ ...payload, prompt: null }, 'Horde payload')
-  logger?.debug(`Prompt:\n${payload.prompt}`)
+  log?.debug({ ...payload, prompt: null }, 'Horde payload')
+  log?.debug(`Prompt:\n${payload.prompt}`)
 
   const image = await generate({ type: 'image', payload, key: user.hordeKey || HORDE_GUEST_KEY })
   return image
@@ -123,7 +123,8 @@ export async function generateImage(user: AppSchema.User, prompt: string) {
 export async function generateText(
   user: AppSchema.User,
   preset: Partial<AppSchema.GenSettings>,
-  prompt: string
+  prompt: string,
+  log: AppLog = logger
 ) {
   const body = {
     // An empty models array will use any model
@@ -161,8 +162,8 @@ export async function generateText(
 
   const payload = { ...body, params }
 
-  logger?.debug({ params: payload, prompt: null }, 'Horde payload')
-  logger?.debug(`Prompt:\n${payload.prompt}`)
+  log?.debug({ params: payload, prompt: null }, 'Horde payload')
+  log?.debug(`Prompt:\n${payload.prompt}`)
 
   const result = await generate({
     type: 'text',

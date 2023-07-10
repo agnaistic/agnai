@@ -9,13 +9,16 @@ import {
   Users,
   Camera,
   VenetianMask,
+  AlertTriangle,
 } from 'lucide-solid'
-import { Component, Show, createMemo, JSX } from 'solid-js'
+import { Component, Show, createMemo, JSX, createSignal } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'
 import { domToPng } from 'modern-screenshot'
 import { getRootRgb } from '../../shared/util'
+import { ConfirmModal } from '/web/shared/Modal'
+import { TitleCard } from '/web/shared/Card'
 
 export type ChatModal =
   | 'export'
@@ -32,6 +35,7 @@ const ChatOptions: Component<{
   adapterLabel: string
   setModal: (modal: ChatModal) => void
   togglePane: (pane: ChatRightPane) => void
+  close: () => void
 }> = (props) => {
   const chats = chatStore((s) => ({
     ...s.active,
@@ -40,6 +44,8 @@ const ChatOptions: Component<{
   }))
   const user = userStore()
   const cfg = settingStore()
+
+  const [restart, setRestart] = createSignal(false)
 
   const toggleOocMessages = () => {
     chatStore.option('hideOoc', !chats.opts.hideOoc)
@@ -85,87 +91,111 @@ const ChatOptions: Component<{
   }
 
   return (
-    <div class="flex w-72 flex-col gap-2 p-2">
-      <Show when={chats.members.length > 1}>
-        <Option onClick={toggleOocMessages}>
-          <div class="flex w-full items-center justify-between">
-            <div>Hide OOC messages</div>
-            <Toggle
-              class="h-50 flex items-center"
-              fieldName="editChat"
-              value={chats.opts.hideOoc}
-              onChange={toggleOocMessages}
-            />
-          </div>
-        </Option>
-      </Show>
-      <Show when={isOwner()}>
-        <Option onClick={toggleEditing}>
-          <div class="flex w-full items-center justify-between">
-            <div>Enable Chat Editing</div>
-            <Toggle
-              class="flex items-center"
-              fieldName="editChat"
-              value={chats.opts.editing}
-              onChange={toggleEditing}
-            />
-          </div>
-        </Option>
+    <>
+      <div class="flex w-72 flex-col gap-2 p-2">
+        <Show when={chats.members.length > 1}>
+          <Option onClick={toggleOocMessages}>
+            <div class="flex w-full items-center justify-between">
+              <div>Hide OOC messages</div>
+              <Toggle
+                class="h-50 flex items-center"
+                fieldName="editChat"
+                value={chats.opts.hideOoc}
+                onChange={toggleOocMessages}
+              />
+            </div>
+          </Option>
+        </Show>
+        <Show when={isOwner()}>
+          <Option onClick={toggleEditing}>
+            <div class="flex w-full items-center justify-between">
+              <div>Enable Chat Editing</div>
+              <Toggle
+                class="flex items-center"
+                fieldName="editChat"
+                value={chats.opts.editing}
+                onChange={toggleEditing}
+              />
+            </div>
+          </Option>
 
-        <Option onClick={() => props.togglePane('character')}>
-          <User /> Character
-        </Option>
+          <Option onClick={() => props.togglePane('character')}>
+            <User /> Character
+          </Option>
 
-        <Option onClick={() => props.setModal('members')}>
-          <Users /> Participants
-        </Option>
+          <Option onClick={() => props.setModal('members')}>
+            <Users /> Participants
+          </Option>
+
+          <MenuItemRow>
+            <MenuItem onClick={() => props.setModal('settings')} hide={!isOwner()}>
+              <Settings /> Edit Chat
+            </MenuItem>
+            <MenuItem onClick={() => props.togglePane('preset')}>
+              <Sliders /> Preset
+            </MenuItem>
+          </MenuItemRow>
+          <MenuItemRow>
+            <MenuItem onClick={screenshotChat}>
+              <Camera />
+              <Show when={!chats.opts.screenshot}>Screenshot</Show>
+              <Show when={chats.opts.screenshot}>
+                <em>Loading, please wait...</em>
+              </Show>
+            </MenuItem>
+            <MenuItem onClick={() => props.setModal('memory')}>
+              <Book /> Memory
+            </MenuItem>
+          </MenuItemRow>
+        </Show>
 
         <MenuItemRow>
-          <MenuItem onClick={() => props.setModal('settings')} hide={!isOwner()}>
-            <Settings /> Edit Chat
+          <MenuItem
+            schema={cfg.anonymize ? 'primary' : undefined}
+            onClick={settingStore.toggleAnonymize}
+          >
+            <VenetianMask /> Anonymize
           </MenuItem>
-          <MenuItem onClick={() => props.togglePane('preset')}>
-            <Sliders /> Preset
+          <MenuItem onClick={() => props.setModal('ui')}>
+            <Palette /> UI
           </MenuItem>
         </MenuItemRow>
+
         <MenuItemRow>
-          <MenuItem onClick={screenshotChat}>
-            <Camera />
-            <Show when={!chats.opts.screenshot}>Screenshot</Show>
-            <Show when={chats.opts.screenshot}>
-              <em>Loading, please wait...</em>
-            </Show>
+          <MenuItem onClick={() => props.setModal('export')}>
+            <Download /> Export
           </MenuItem>
-          <MenuItem onClick={() => props.setModal('memory')}>
-            <Book /> Memory
+          <MenuItem onClick={() => props.setModal('delete')} hide={!isOwner()}>
+            <Trash /> Delete
           </MenuItem>
         </MenuItemRow>
-      </Show>
 
-      <MenuItemRow>
-        <MenuItem
-          schema={cfg.anonymize ? 'primary' : undefined}
-          onClick={settingStore.toggleAnonymize}
-        >
-          <VenetianMask /> Anonymize
-        </MenuItem>
-        <MenuItem onClick={() => props.setModal('ui')}>
-          <Palette /> UI
-        </MenuItem>
-      </MenuItemRow>
-
-      <MenuItemRow>
-        <MenuItem onClick={() => props.setModal('export')}>
-          <Download /> Export
-        </MenuItem>
-        <MenuItem onClick={() => props.setModal('delete')} hide={!isOwner()}>
-          <Trash /> Delete
-        </MenuItem>
-      </MenuItemRow>
-      <div class="flex justify-center">
-        <em class="text-sm">{props.adapterLabel}</em>
+        <Show when={chats.chat}>
+          <MenuItemRow>
+            <MenuItem onClick={() => setRestart(true)} center>
+              <AlertTriangle /> Restart Chat <AlertTriangle />
+            </MenuItem>
+          </MenuItemRow>
+        </Show>
+        <div class="flex justify-center">
+          <em class="text-sm">{props.adapterLabel}</em>
+        </div>
       </div>
-    </div>
+      <ConfirmModal
+        message={
+          <TitleCard type="rose" class="flex flex-col gap-4">
+            <div class="flex justify-center font-bold">Are you sure?</div>
+            <div>This will delete ALL messages in this conversation.</div>
+          </TitleCard>
+        }
+        show={restart()}
+        close={() => setRestart(false)}
+        confirm={() => {
+          chatStore.restartChat(chats.chat!._id)
+          props.close()
+        }}
+      />
+    </>
   )
 }
 
@@ -178,11 +208,14 @@ const MenuItem: Component<{
   schema?: ButtonSchema
   hide?: boolean
   children: any
+  center?: boolean
 }> = (props) => (
   <Show when={!props.hide}>
     <Option
       onClick={props.onClick}
-      class="flex flex-1 justify-start gap-2 hover:bg-[var(--bg-700)]"
+      class={`flex flex-1 ${
+        props.center ? 'justify-center' : 'justify-start'
+      } gap-2 hover:bg-[var(--bg-700)]`}
       schema={props.schema}
     >
       {props.children}

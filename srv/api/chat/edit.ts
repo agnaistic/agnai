@@ -73,6 +73,12 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   return message
 })
 
+export const restartChat = handle(async (req) => {
+  const chatId = req.params.id
+  await store.chats.restartChat(req.userId, chatId)
+  return { success: true }
+})
+
 export const updateChatGenSettings = handle(async ({ params, userId, body }) => {
   const chatId = params.id
   assertValid(chatGenSettings, body)

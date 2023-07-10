@@ -170,8 +170,10 @@ export const chatStore = createStore<ChatState>('chat', {
         },
       }
     },
-    async *getChat(prev, id: string) {
-      yield { loaded: false, active: undefined }
+    async *getChat(prev, id: string, clear = true) {
+      if (clear) {
+        yield { loaded: false, active: undefined }
+      }
       msgStore.setState({
         msgs: [],
         activeChatId: id,
@@ -410,6 +412,17 @@ export const chatStore = createStore<ChatState>('chat', {
         }
 
         onSuccess?.()
+      }
+    },
+
+    async restartChat(_, chatId: string) {
+      const res = await chatsApi.restartChat(chatId)
+      if (res.result) {
+        chatStore.getChat(chatId, false)
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not reset chat: ${res.error}`)
       }
     },
 

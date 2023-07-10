@@ -1,16 +1,16 @@
-import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
 
 type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
 
-const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
   const [show, setShow] = createSignal(false)
-  const [stick, setStick] = createSignal(props.stick)
+  const [stick, setStick] = createSignal(props.sticky)
   const [id] = createSignal(v4())
   const [done, setDone] = createSignal(false)
 
@@ -68,36 +68,18 @@ const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
 
   return (
     <>
-      <Show when={stick()}>
-        <div class="sticky top-0 z-10">
-          <div
-            class={hidden()}
-            ref={ref}
-            id={id()}
-            data-slot={props.slot}
-            style={stick() ? { position: 'sticky', top: 0 } : {}}
-            classList={{
-              'border-[var(--bg-700)]': !!user.user?.admin,
-              'bg-[var(--text-200)]': !!user.user?.admin,
-              'border-[1px]': !!user.user?.admin,
-            }}
-          ></div>
-        </div>
-      </Show>
-      <Show when={!stick()}>
-        <div
-          class={hidden()}
-          ref={ref}
-          id={id()}
-          data-slot={props.slot}
-          style={stick() ? { position: 'sticky', top: 0 } : {}}
-          classList={{
-            'border-[var(--bg-700)]': !!user.user?.admin,
-            'bg-[var(--text-200)]': !!user.user?.admin,
-            'border-[1px]': !!user.user?.admin,
-          }}
-        ></div>
-      </Show>
+      <div
+        class={hidden()}
+        ref={ref}
+        id={id()}
+        data-slot={props.slot}
+        classList={{
+          'border-[var(--bg-700)]': !!user.user?.admin,
+          'bg-[var(--text-200)]': !!user.user?.admin,
+          'border-[1px]': !!user.user?.admin,
+        }}
+        style={stick() ? { position: 'sticky', top: '0' } : {}}
+      ></div>
     </>
   )
 }

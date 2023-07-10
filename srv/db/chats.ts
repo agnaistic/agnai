@@ -3,7 +3,7 @@ import { getCharacter } from './characters'
 import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
-import { StatusError } from '../api/wrap'
+import { StatusError, errors } from '../api/wrap'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
@@ -186,4 +186,27 @@ export async function setChatCharacter(chatId: string, charId: string, state: bo
     { _id: chatId },
     { $set: { updatedAt: now(), [`characters.${charId}`]: state } }
   )
+}
+
+export async function restartChat(userId: string, chatId: string) {
+  const chat = await getChatOnly(chatId)
+  if (!chat) throw errors.NotFound
+
+  if (chat.userId !== userId) throw errors.Forbidden
+
+  await db('chat-message').deleteMany({ chatId })
+  const char = chat.characterId ? await db('character').findOne({ _id: chat.characterId }) : null
+  const greeting = char?.greeting
+
+  if (char && greeting) {
+    await db('chat-message').insertOne({
+      _id: v4(),
+      kind: 'chat-message',
+      chatId,
+      msg: greeting,
+      characterId: char._id,
+      createdAt: now(),
+      updatedAt: now(),
+    })
+  }
 }
