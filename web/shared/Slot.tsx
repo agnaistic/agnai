@@ -68,31 +68,18 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
 
   return (
     <>
-      <Show when={stick()}>
-        <div
-          class="sticky top-0 z-10"
-          classList={{
-            'border-[var(--bg-700)]': !!user.user?.admin,
-            'bg-[var(--text-200)]': !!user.user?.admin,
-            'border-[1px]': !!user.user?.admin,
-          }}
-        >
-          <div class={hidden()} ref={ref} id={id()} data-slot={props.slot}></div>
-        </div>
-      </Show>
-      <Show when={!stick()}>
-        <div
-          class={hidden()}
-          ref={ref}
-          id={id()}
-          data-slot={props.slot}
-          classList={{
-            'border-[var(--bg-700)]': !!user.user?.admin,
-            'bg-[var(--text-200)]': !!user.user?.admin,
-            'border-[1px]': !!user.user?.admin,
-          }}
-        ></div>
-      </Show>
+      <div
+        class={hidden()}
+        ref={ref}
+        id={id()}
+        data-slot={props.slot}
+        classList={{
+          'border-[var(--bg-700)]': !!user.user?.admin,
+          'bg-[var(--text-200)]': !!user.user?.admin,
+          'border-[1px]': !!user.user?.admin,
+        }}
+        style={stick() ? { position: 'sticky', top: '0' } : {}}
+      ></div>
     </>
   )
 }
