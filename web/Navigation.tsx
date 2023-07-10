@@ -348,11 +348,6 @@ const Slots: Component = (props) => {
           <Slot slot="menuLg" />
         </Match>
 
-        <Match when={size().h >= 500}>
-          <Slot slot="menu" />
-          {/* <Slot slot="menu" /> */}
-        </Match>
-
         <Match when={page.width() < 900}>
           <Show when={rendered()}>
             <Slot slot="menu" />
