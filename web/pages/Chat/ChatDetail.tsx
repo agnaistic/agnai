@@ -8,7 +8,6 @@ import {
   JSX,
   Match,
   onCleanup,
-  onMount,
   Show,
   Switch,
 } from 'solid-js'
@@ -150,7 +149,6 @@ const ChatDetail: Component = () => {
 
     if (slotContainer) {
       slots.load(slotContainer)
-      console.log(slots.size())
     }
   })
 
@@ -473,6 +471,7 @@ const ChatDetail: Component = () => {
                       adapterLabel={adapterLabel()}
                       setModal={setModal}
                       togglePane={togglePane}
+                      close={() => setShowOpts(false)}
                     />
                   </DropMenu>
                 </div>

@@ -1,7 +1,13 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
 import { createChat, importChat } from './create'
-import { updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage } from './edit'
+import {
+  restartChat,
+  updateChat,
+  updateChatGenPreset,
+  updateChatGenSettings,
+  updateMessage,
+} from './edit'
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
@@ -22,6 +28,7 @@ router.post('/:id/image', createImage)
 router.post('/:id/voice', textToSpeech)
 router.use(loggedIn)
 router.get('/', getAllChats)
+router.post('/:id/restart', restartChat)
 router.get('/invites', getInvites)
 router.get('/:id/messages', getMessages)
 router.get('/:id', getChatDetail)

@@ -605,8 +605,8 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   const parsed = msg
     .replace(BOT_REPLACE, ctx.char?.name || '')
     .replace(SELF_REPLACE, ctx.handle)
-    .replace(/(<)/g, '‹')
-    .replace(/(>)/g, '›')
+    .replace(/(<)/g, '&lt;')
+    .replace(/(>)/g, '&gt;')
 
   if (ctx.trimSentences && !isUser) return trimSentence(parsed)
   return parsed

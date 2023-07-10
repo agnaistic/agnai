@@ -19,6 +19,7 @@ export const chatsApi = {
   deleteChat,
   addCharacter,
   removeCharacter,
+  restartChat,
 }
 
 export async function getChat(id: string) {
@@ -53,6 +54,40 @@ export async function getChat(id: string) {
   }
 
   return localApi.result({ chat, character, messages, members: [profile], active: [], characters })
+}
+
+export async function restartChat(chatId: string) {
+  if (isLoggedIn()) {
+    const res = await api.method('post', `/chat/${chatId}/restart`)
+    return res
+  }
+
+  const chats = await loadItem('chats')
+  const chars = await loadItem('characters')
+
+  const chat = chats.find((ch) => ch._id === chatId)
+  if (!chat) return localApi.error('Chat not found')
+
+  const char = chars.find((ch) => ch._id === chat.characterId)
+  const greeting = char?.greeting
+
+  if (char && greeting) {
+    await localApi.saveMessages(chatId, [
+      {
+        _id: v4(),
+        kind: 'chat-message',
+        msg: greeting,
+        characterId: char._id,
+        chatId,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ])
+  } else {
+    await localApi.saveMessages(chatId, [])
+  }
+
+  return localApi.result({ success: true })
 }
 
 export async function editChat(

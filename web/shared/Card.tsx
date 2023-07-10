@@ -11,7 +11,7 @@ export const Card: Component<{
   hide?: boolean
 }> = (props) => {
   const cardBg = useBgStyle({
-    hex: getSettingColor(props.bg || 'bg-500'),
+    hex: 'bg-500',
     blur: false,
     opacity: props.bgOpacity ?? 0.08,
   })

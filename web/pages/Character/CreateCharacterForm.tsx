@@ -168,7 +168,12 @@ export const CreateCharacterForm: Component<{
       }
 
       const char = toGeneratedCharacter(response!, description)
+      const prevAvatar = editor.state.avatar
+      const prevSprite = editor.state.sprite
+
       editor.load(ref, char)
+      editor.update('avatar', prevAvatar)
+      editor.update('sprite', prevSprite)
     })
   }
 
