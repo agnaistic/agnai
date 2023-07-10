@@ -9,7 +9,6 @@ import {
   Users,
   Camera,
   VenetianMask,
-  Undo,
   AlertTriangle,
 } from 'lucide-solid'
 import { Component, Show, createMemo, JSX, createSignal } from 'solid-js'
