@@ -5,12 +5,12 @@ import { v4 } from 'uuid'
 
 type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
 
-const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
   const [show, setShow] = createSignal(false)
-  const [stick, setStick] = createSignal(props.stick)
+  const [stick, setStick] = createSignal(props.sticky)
   const [id] = createSignal(v4())
   const [done, setDone] = createSignal(false)
 
@@ -69,19 +69,15 @@ const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
   return (
     <>
       <Show when={stick()}>
-        <div class="sticky top-0 z-10">
-          <div
-            class={hidden()}
-            ref={ref}
-            id={id()}
-            data-slot={props.slot}
-            style={stick() ? { position: 'sticky', top: 0 } : {}}
-            classList={{
-              'border-[var(--bg-700)]': !!user.user?.admin,
-              'bg-[var(--text-200)]': !!user.user?.admin,
-              'border-[1px]': !!user.user?.admin,
-            }}
-          ></div>
+        <div
+          class="sticky top-0 z-10"
+          classList={{
+            'border-[var(--bg-700)]': !!user.user?.admin,
+            'bg-[var(--text-200)]': !!user.user?.admin,
+            'border-[1px]': !!user.user?.admin,
+          }}
+        >
+          <div class={hidden()} ref={ref} id={id()} data-slot={props.slot}></div>
         </div>
       </Show>
       <Show when={!stick()}>
@@ -90,7 +86,6 @@ const Slot: Component<{ slot: SlotKind; stick?: boolean }> = (props) => {
           ref={ref}
           id={id()}
           data-slot={props.slot}
-          style={stick() ? { position: 'sticky', top: 0 } : {}}
           classList={{
             'border-[var(--bg-700)]': !!user.user?.admin,
             'bg-[var(--text-200)]': !!user.user?.admin,

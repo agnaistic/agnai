@@ -45,7 +45,7 @@
   /* position: fixed; */
   top: 0;
   left: 0;
-  height: calc(100% - 64px);
+  height: calc(100% - 16px);
   transition: 250ms ease;
 }
 

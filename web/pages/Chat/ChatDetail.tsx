@@ -59,6 +59,7 @@ import { useAutoExpression } from '/web/shared/Avatar/hooks'
 import { useChatAvatars } from './components/ChatAvatar'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
+import Slot from '/web/shared/Slot'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -528,6 +529,7 @@ const ChatDetail: Component = () => {
                         <Button onClick={generateFirst}>Generate Message</Button>
                       </div>
                     </Show>
+                    <Slot sticky slot="mobile" />
                     <InfiniteScroll />
                     <For each={chatMsgs()}>
                       {(msg, i) => (

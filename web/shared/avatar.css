@@ -1,5 +1,5 @@
 .avatar-xs {
-  @apply w-5 min-w-[1.25rem] overflow-hidden sm:w-5;
+  @apply w-6 min-w-[1.25rem] overflow-hidden sm:w-6;
 }
 
 .avatar-sm {
@@ -27,7 +27,7 @@
 }
 
 .avatar-xs.avatar-circle {
-  @apply h-5 min-h-[1.25rem] sm:h-5;
+  @apply h-6 min-h-[1.25rem] sm:h-6;
 }
 
 .avatar-sm.avatar-circle {

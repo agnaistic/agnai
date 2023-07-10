@@ -110,3 +110,29 @@ export function useRootModal(modal: RootModal) {
   onMount(() => rootModalStore.addModal(modal))
   onCleanup(() => rootModalStore.removeModal(modal.id))
 }
+
+/**
+ * Use: Call `load(ref)` during `onMount(...)` to ensure the reference element is ready.
+ */
+export function useResizeObserver() {
+  const [size, setSize] = createSignal({ w: 0, h: 0 })
+  const [obs] = createSignal(
+    new ResizeObserver((cb) => {
+      const ele = cb[0]
+      if (!ele) return
+      setSize({ w: ele.target.clientWidth, h: ele.target.clientHeight })
+    })
+  )
+
+  const load = (ref: HTMLElement) => {
+    if (!ref) return
+    obs().observe(ref)
+    setSize({ w: ref.clientWidth, h: ref.clientHeight })
+  }
+
+  onCleanup(() => {
+    obs().disconnect()
+  })
+
+  return { size, load }
+}
