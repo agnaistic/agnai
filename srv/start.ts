@@ -15,7 +15,7 @@ export async function start() {
   // Allow as many responses currently generating to complete as possible during the shutdown window
   // The shutdown window is ~10 seconds
   process.on('SIGTERM', () => {
-    logger.warn(`Received SIGTERM. Server shutting down.`)
+    console.warn(`Received SIGTERM. Server shutting down.`)
     server.close()
   })
 

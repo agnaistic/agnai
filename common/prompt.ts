@@ -403,18 +403,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     allPersonas: [],
   }
 
-  const personalities = new Set(replyAs._id)
-
-  if (opts.impersonate && !personalities.has(opts.impersonate._id)) {
-    personalities.add(opts.impersonate._id)
-    parts.allPersonas.push(
-      `${opts.impersonate.name}'s personality: ${formatCharacter(
-        opts.impersonate.name,
-        opts.impersonate.persona,
-        opts.impersonate.persona.kind
-      )}`
-    )
-  }
+  const personalities = new Set([replyAs._id])
 
   if (opts.impersonate) {
     parts.impersonality = formatCharacter(

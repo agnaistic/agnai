@@ -10,7 +10,7 @@ const encoder = getEncoder('openai', 'turbo')
 
 const chars = [toChar('Robot'), toChar('Otherbot'), toChar('Thirdbot')]
 const char = chars[0]
-const user = toUser('sender')
+const { user } = toUser('sender')
 const characters = chars.reduce<Record<string, AppSchema.Character>>(
   (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
   {}

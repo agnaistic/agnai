@@ -433,7 +433,7 @@ const ChatDetail: Component = () => {
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
               style={headerBg()}
             >
-              <Show when={!cfg.fullscreen && isOwner()}>
+              <Show when={isOwner()}>
                 <A
                   class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
                   href={`/character/${chats.char?._id}/chats`}

@@ -36,6 +36,7 @@ type Holder =
   | 'memory'
   | 'chat_age'
   | 'idle_duration'
+  | 'all_personalities'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -256,6 +257,9 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
 
     case 'idle_duration':
       return lastMessage(opts.lastMessage || '')
+
+    case 'all_personalities':
+      return opts.parts.allPersonas?.join('\n') || ''
   }
 }
 
