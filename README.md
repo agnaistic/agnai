@@ -4,7 +4,7 @@
 
 AI Agnostic Chat
 
-[Live Version](https://agnai.chat) | [Discord](https://discord.gg/luminai)
+[Live Version](https://agnai.chat) | [Discord](https://agnai.chat/discord)
 
 You can visit the hosted version at [Agnai.chat](https://agnai.chat)
 
