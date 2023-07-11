@@ -1,7 +1,6 @@
-import jwt from 'jsonwebtoken'
 import { assertValid } from '/common/valid'
 import { AppSocket } from './types'
-import { config } from '../../config'
+import { verifyJwt } from '/srv/db/user'
 
 const allSockets = new Map<string, AppSocket>()
 const userSockets = new Map<string, AppSocket[]>()
@@ -58,14 +57,14 @@ function parse(data: any) {
   }
 }
 
-function login(client: AppSocket, data: any) {
+async function login(client: AppSocket, data: any) {
   assertValid({ token: 'string' }, data)
   try {
     if (client.userId) {
       logout(client)
     }
 
-    const payload = jwt.verify(data.token, config.jwtSecret) as any
+    const payload = verifyJwt(data.token)
     client.token = data.token
     client.userId = payload.userId
 

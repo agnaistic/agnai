@@ -4,6 +4,7 @@ import type { NextFunction, Response } from 'express'
 import { errors } from './api/wrap'
 import { verifyApiKey } from './db/oauth'
 import { verifyJwt } from './db/user'
+import { config } from './config'
 
 const logLevel = getLogLevel()
 
@@ -62,7 +63,7 @@ export function logMiddleware() {
     const auth = req.get('authorization')
     if (auth) {
       /** API Key usage */
-      if (auth.startsWith('Key ')) {
+      if (auth.startsWith('Key ') && config.auth.oauth) {
         const apikey = auth.replace('Key ', '')
         const key = await verifyApiKey(apikey)
 

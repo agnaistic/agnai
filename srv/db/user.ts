@@ -143,19 +143,9 @@ export async function createAccessToken(username: string, user: AppSchema.User) 
     admin: !!user.admin,
   }
 
-  const key = getKey()
-  if (key.type === 'sig') {
-    const token = jwt.sign(payload, key.key, {
-      expiresIn: config.jwtExpiry,
-    })
-    return token
-  }
-
-  const token = jwt.sign(payload, key.key, {
-    algorithm: 'RS256',
+  const token = jwt.sign(payload, config.jwtSecret, {
     expiresIn: config.jwtExpiry,
   })
-
   return token
 }
 
@@ -200,7 +190,7 @@ function getKey() {
   } as const
 }
 
-export function verifyJwt(token: string) {
+export function verifyJwt(token: string): any {
   try {
     const payload = jwt.verify(token, config.jwtSecret)
     return payload

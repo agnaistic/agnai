@@ -7,7 +7,7 @@ import { settingStore, toastStore, userStore } from '../../store'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
-import { getAuth, isLoggedIn } from '/web/store/api'
+import { isLoggedIn } from '/web/store/api'
 import { TitleCard } from '/web/shared/Card'
 
 const LoginPage: Component = () => {

@@ -44,6 +44,13 @@ if (!process.env.JWT_SECRET) {
 
 export const config = {
   clustering: !!env('CLUSTERING', ''),
+  auth: {
+    urls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards')
+      .split(',')
+      .map((name) => name.trim())
+      .filter((name) => !!name.trim()),
+    oauth: !!env('OAUTH_ENABLED', ''),
+  },
   jwtSecret: env('JWT_SECRET'),
   jwtPrivateKey: env('JWT_PRIVATE_KEY', ''),
   jwtPublicKey: env('JWT_PUBLIC_KEY', ''),
@@ -109,7 +116,6 @@ export const config = {
   keys: {
     REPLICATE: env('REPLICATE_KEY', ''),
   },
-  authUrls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards').split(','),
 }
 
 if (config.ui.inject) {
