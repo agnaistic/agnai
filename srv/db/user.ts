@@ -196,10 +196,12 @@ export function verifyJwt(token: string): any {
     return payload
   } catch (ex) {}
 
-  try {
-    const payload = jwt.verify(token, config.jwtPrivateKey)
-    return payload
-  } catch (ex) {}
+  if (config.jwtPrivateKey) {
+    try {
+      const payload = jwt.verify(token, config.jwtPrivateKey)
+      return payload
+    } catch (ex) {}
+  }
 
   throw errors.Unauthorized
 }
