@@ -60,7 +60,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
 
       setTimeout(() => {
         setStick(false)
-      }, 4000)
+      }, 5000)
     } else {
       ele.innerHTML = ''
     }
@@ -78,7 +78,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
           'bg-[var(--text-200)]': !!user.user?.admin,
           'border-[1px]': !!user.user?.admin,
         }}
-        style={stick() ? { position: 'sticky', top: '0' } : {}}
+        style={stick() ? { position: 'sticky', top: '0', 'z-index': 10 } : {}}
       ></div>
     </>
   )
