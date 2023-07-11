@@ -344,7 +344,7 @@ const Slots: Component = (props) => {
   return (
     <div ref={ref!} class="h-full">
       <Switch>
-        <Match when={size().h >= 600}>
+        <Match when={size().h >= 600 && page.width() >= 1024}>
           <Slot slot="menuLg" />
         </Match>
 
