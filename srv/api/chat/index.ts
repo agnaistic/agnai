@@ -1,13 +1,7 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
 import { createChat, importChat } from './create'
-import {
-  restartChat,
-  updateChat,
-  updateChatGenPreset,
-  updateChatGenSettings,
-  updateMessage,
-} from './edit'
+import { restartChat, updateChat, updateChatGenPreset, updateChatGenSettings, updateMessage } from './edit'
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
 import { createImage } from './image'
