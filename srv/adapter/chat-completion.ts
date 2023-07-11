@@ -121,7 +121,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
 
 export function splitSampleChat(opts: SplitSampleChatProps) {
   const { sampleChat, char, sender, budget } = opts
-  const regex = new RegExp(`(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|<start>)`, 'gi')
+  const regex = new RegExp(`(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|System:|<start>)`, 'gi')
   const additions: CompletionItem[] = []
   let tokens = 0
 
@@ -142,7 +142,7 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
       continue
     }
 
-    const sample = trimmed
+    const sample = trimmed.toLowerCase().startsWith('system:') ? trimmed.slice(7).trim() : trimmed
     const role = sample.startsWith(char + ':') ? 'assistant' : sample.startsWith(sender + ':') ? 'user' : 'system'
 
     const msg: CompletionItem = {
