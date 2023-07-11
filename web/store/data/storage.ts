@@ -19,6 +19,7 @@ const emptyCfg: AppSchema.AppConfig = {
   selfhosting: false,
   registered: [],
   slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
+  authUrls: [],
 }
 
 let SELF_HOSTING = false
