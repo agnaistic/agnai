@@ -125,10 +125,7 @@ export async function answer(userId: string, inviteId: string, accept: boolean) 
 
   if (accept) {
     await db('chat-member').insertOne(member)
-    await db('chat').updateOne(
-      { _id: chat._id, kind: 'chat' },
-      { $set: { memberIds: chat.memberIds.concat(userId) } }
-    )
+    await db('chat').updateOne({ _id: chat._id, kind: 'chat' }, { $set: { memberIds: chat.memberIds.concat(userId) } })
     const profile = await db('profile').findOne({ userId })
     sendMany([chat.userId, ...chat.memberIds.concat(userId)], {
       type: 'member-added',

@@ -163,8 +163,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
     const prevKey = prevUser.hordeKey
     const incomingKey = body.hordeKey || body.hordeApiKey!
 
-    const isNewKey =
-      body.hordeKey !== '' && body.hordeKey !== HORDE_GUEST_KEY && body.hordeKey !== prevKey
+    const isNewKey = body.hordeKey !== '' && body.hordeKey !== HORDE_GUEST_KEY && body.hordeKey !== prevKey
 
     if (isNewKey) {
       const user = await findUser(incomingKey).catch(() => null)
@@ -178,9 +177,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
   }
 
   const validatedThirdPartyUrl =
-    body.thirdPartyFormat === 'kobold'
-      ? await verifyKobldUrl(prevUser, body.koboldUrl)
-      : body.koboldUrl
+    body.thirdPartyFormat === 'kobold' ? await verifyKobldUrl(prevUser, body.koboldUrl) : body.koboldUrl
 
   if (validatedThirdPartyUrl) {
     update.koboldUrl = validatedThirdPartyUrl
@@ -392,5 +389,6 @@ export async function getSafeUserConfig(userId: string) {
       }
     }
   }
+
   return user
 }

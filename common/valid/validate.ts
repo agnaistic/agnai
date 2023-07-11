@@ -27,10 +27,7 @@ export function assertValid<T extends Validator>(
   }
 }
 
-export function isValidPartial<T extends Validator>(
-  type: T,
-  compare: any
-): compare is Partial<UnwrapBody<T>> {
+export function isValidPartial<T extends Validator>(type: T, compare: any): compare is Partial<UnwrapBody<T>> {
   const errors = validateBody(type, compare, { notThrow: true, partial: true })
   return errors.length === 0
 }
@@ -81,8 +78,7 @@ export function validateBody<T extends Validator>(
 
       const actual = bodyType.slice(0, -1)
       if (actual === 'any' || actual === 'unknown') continue
-      if (typeof value !== actual)
-        errors.push(`.${prop} is ${typeof value}, expected ${actual} or undefined`)
+      if (typeof value !== actual) errors.push(`.${prop} is ${typeof value}, expected ${actual} or undefined`)
       continue
     }
 

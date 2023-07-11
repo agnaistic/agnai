@@ -19,9 +19,7 @@ export const CharacterPill: Component<{
         onclick={() => !props.disabled && props.onClick(props.char._id)}
       >
         <CharacterAvatar bot={true} format={{ size: 'xs', corners: 'circle' }} char={props.char} />
-        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">
-          {props.char.name}
-        </strong>
+        <strong class="ml-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap pr-1">{props.char.name}</strong>
         <Show when={props.active}>
           <Radio size={16} />
         </Show>

@@ -1,10 +1,5 @@
 import { Component, Show, createEffect, createMemo, createSignal } from 'solid-js'
-import {
-  NOVEL_IMAGE_MODEL,
-  NOVEL_SAMPLER_REV,
-  SD_SAMPLER,
-  SD_SAMPLER_REV,
-} from '../../../../common/image'
+import { NOVEL_IMAGE_MODEL, NOVEL_SAMPLER_REV, SD_SAMPLER, SD_SAMPLER_REV } from '../../../../common/image'
 import Divider from '../../../shared/Divider'
 import RangeInput from '../../../shared/RangeInput'
 import Select from '../../../shared/Select'
@@ -116,19 +111,13 @@ const NovelSettings: Component = () => {
       <div class="text-xl">NovelAI</div>
       <Show when={!state.user?.novelVerified && !state.user?.novelApiKey}>
         <div class="font-bold text-red-600">
-          You do not have a valid NovelAI key set. You will not be able to generate images using
-          Novel.
+          You do not have a valid NovelAI key set. You will not be able to generate images using Novel.
         </div>
       </Show>
       <em>
         Note: The <b>Anlas Threshold</b> means anything above this value is cost Anlas credits
       </em>
-      <Select
-        fieldName="novelImageModel"
-        items={models}
-        label="Model"
-        value={state.user?.images?.novel.model}
-      />
+      <Select fieldName="novelImageModel" items={models} label="Model" value={state.user?.images?.novel.model} />
       <Select
         fieldName="novelSampler"
         items={samplers}

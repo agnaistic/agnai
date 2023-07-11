@@ -22,9 +22,7 @@ type FetchOpts = {
   key?: string
 }
 
-type Fetcher = <T = any>(
-  opts: FetchOpts
-) => Promise<{ statusCode?: number; statusMessage?: string; body: T }>
+type Fetcher = <T = any>(opts: FetchOpts) => Promise<{ statusCode?: number; statusMessage?: string; body: T }>
 
 type HordeCheck = {
   generations: any[]
@@ -149,10 +147,7 @@ export async function generateText(
     top_k: preset.topK ?? defaultPresets.horde.topK,
     top_p: preset.topP ?? defaultPresets.horde.topP,
     typical: preset.typicalP ?? defaultPresets.horde.typicalP,
-    max_context_length: Math.min(
-      preset.maxContextLength ?? defaultPresets.horde.maxContextLength,
-      2048
-    ),
+    max_context_length: Math.min(preset.maxContextLength ?? defaultPresets.horde.maxContextLength, 2048),
     rep_pen: preset.repetitionPenalty ?? defaultPresets.horde.repetitionPenaltyRange,
     rep_pen_range: preset.repetitionPenaltyRange ?? defaultPresets.horde.repetitionPenaltyRange,
     rep_pen_slope: preset.repetitionPenaltySlope,
@@ -183,9 +178,7 @@ async function generate(opts: GenerateOpts) {
 
   if (init.statusCode && init.statusCode >= 400) {
     const error: any = new Error(
-      `Failed to create Horde generation ${init.statusCode} ${
-        init.body.message || init.statusMessage
-      }`
+      `Failed to create Horde generation ${init.statusCode} ${init.body.message || init.statusMessage}`
     )
     error.body = init.body
     throw error
@@ -220,9 +213,7 @@ async function poll(url: string, key: string | undefined, interval = 6.5) {
 
     const res = await useFetch<HordeCheck>({ method: 'get', url, key })
     if (res.statusCode && res.statusCode >= 400) {
-      const error: any = new Error(
-        `Horde request failed (${res.statusCode}) ${res.body.message || res.statusMessage}`
-      )
+      const error: any = new Error(`Horde request failed (${res.statusCode}) ${res.body.message || res.statusMessage}`)
       error.body = res.body
       throw error
     }

@@ -33,14 +33,10 @@ if (!process.env.JWT_SECRET) {
   if (secret) {
     process.env.JWT_SECRET = secret
   } else if (!secret && process.env.NODE_ENV === 'production') {
-    throw new Error(
-      `JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`
-    )
+    throw new Error(`JWT_SECRET not set and .token_secret file does not exist. One must be provided in production.`)
   } else {
     const newSecret = v4()
-    const secretPath = process.env.JSON_FOLDER
-      ? resolve(process.env.JSON_FOLDER, '.token_secret')
-      : '.token_secret'
+    const secretPath = process.env.JSON_FOLDER ? resolve(process.env.JSON_FOLDER, '.token_secret') : '.token_secret'
     writeFileSync(secretPath, newSecret)
     process.env.JWT_SECRET = newSecret
   }
@@ -48,8 +44,17 @@ if (!process.env.JWT_SECRET) {
 
 export const config = {
   clustering: !!env('CLUSTERING', ''),
+  auth: {
+    urls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards')
+      .split(',')
+      .map((name) => name.trim())
+      .filter((name) => !!name.trim()),
+    oauth: !!env('OAUTH_ENABLED', ''),
+  },
   jwtSecret: env('JWT_SECRET'),
-  jwtExpiry: env('JWT_EXPIRY', '7d'),
+  jwtPrivateKey: env('JWT_PRIVATE_KEY', ''),
+  jwtPublicKey: env('JWT_PUBLIC_KEY', ''),
+  jwtExpiry: env('JWT_EXPIRY', '30d'),
   port: +env('PORT', '3001'),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
   extraFolder: env('EXTRA_FOLDER', ''),
@@ -77,10 +82,7 @@ export const config = {
     username: env('INITIAL_USER', 'admin'),
     password: env('INITIAL_PASSWORD', v4()),
   },
-  adapters: env(
-    'ADAPTERS',
-    'novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate'
-  )
+  adapters: env('ADAPTERS', 'novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate')
     .split(',')
     .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],
   storage: {
@@ -127,6 +129,13 @@ if (config.ui.inject) {
       break
     }
   }
+}
+
+if (config.jwtPrivateKey) {
+  try {
+    const file = readFileSync(config.jwtPrivateKey).toString('utf-8')
+    config.jwtPrivateKey = file
+  } catch {}
 }
 
 function env(key: string, fallback?: string): string {

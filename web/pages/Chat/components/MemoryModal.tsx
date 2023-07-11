@@ -84,11 +84,7 @@ const ChatMemoryModal: Component<{
           value={id()}
           onChange={(item) => changeBook(item.value)}
         />
-        <Button
-          disabled={id() === (props.chat.memoryId || '')}
-          class="h-fit w-fit"
-          onClick={useMemoryBook}
-        >
+        <Button disabled={id() === (props.chat.memoryId || '')} class="h-fit w-fit" onClick={useMemoryBook}>
           <Save />
           Use Memory Book
         </Button>

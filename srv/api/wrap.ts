@@ -38,6 +38,7 @@ export type AppRequest = Omit<express.Request, 'log'> & {
   userId: string
   log: AppLog
   socketId: string
+  scopes?: string[]
 }
 
 export const errors = {

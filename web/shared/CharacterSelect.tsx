@@ -46,12 +46,7 @@ const CharacterSelect: Component<{
           alignLeft
         >
           <Show when={props.value}>
-            <CharacterAvatar
-              char={match()!}
-              format={{ size: 'xs', corners: 'circle' }}
-              surround
-              zoom={1.75}
-            />
+            <CharacterAvatar char={match()!} format={{ size: 'xs', corners: 'circle' }} surround zoom={1.75} />
           </Show>
           <Show when={!props.value}>
             <div class="mr-1 flex h-6 w-6 shrink-0 items-center justify-center">
@@ -66,11 +61,7 @@ const CharacterSelect: Component<{
         </Button>
         <DropMenu show={opts()} close={() => setOpts(false)} customPosition="top-[8px] left-[0px]">
           <div class="flex max-h-[400px] max-w-[50vw] flex-col sm:max-w-[280px]">
-            <CharacterSelectList
-              items={props.items}
-              onSelect={onChange}
-              emptyLabel={props.emptyLabel}
-            />
+            <CharacterSelectList items={props.items} onSelect={onChange} emptyLabel={props.emptyLabel} />
           </div>
         </DropMenu>
       </div>

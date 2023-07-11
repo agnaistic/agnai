@@ -23,18 +23,7 @@ export type NewMessage = {
 export type ImportedMessage = NewMessage & { createdAt: string }
 
 export async function createChatMessage(creating: NewMessage, ephemeral?: boolean) {
-  const {
-    chatId,
-    message,
-    characterId,
-    senderId,
-    adapter,
-    ooc,
-    imagePrompt,
-    actions,
-    meta,
-    event,
-  } = creating
+  const { chatId, message, characterId, senderId, adapter, ooc, imagePrompt, actions, meta, event } = creating
   const doc: AppSchema.ChatMessage = {
     _id: creating._id || v4(),
     kind: 'chat-message',

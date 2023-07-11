@@ -56,11 +56,7 @@ const PersonaAttributes: Component<{
 
     const encoder = await getEncoder()
 
-    const formatted = formatCharacter(
-      'Name',
-      { kind: props.schema || 'text', attributes },
-      props.schema
-    )
+    const formatted = formatCharacter('Name', { kind: props.schema || 'text', attributes }, props.schema)
     const count = encoder(formatted)
     setTokens(count)
     if (typeof props.tokenCount === 'function') {
@@ -94,8 +90,7 @@ const PersonaAttributes: Component<{
               <span>
                 <Show when={!props.plainText}>
                   It is highly recommended to always include the <b>personality</b> attribute.
-                  <b>Example attributes</b>: mind, personality, appearance, likes, dislikes, hates,
-                  loves.
+                  <b>Example attributes</b>: mind, personality, appearance, likes, dislikes, hates, loves.
                 </Show>
               </span>
               <Show when={props.tokenCount}>
@@ -129,15 +124,7 @@ const PersonaAttributes: Component<{
         </div>
         <div class="mt-2 flex w-full flex-col gap-2">
           <For each={attrs()}>
-            {(attr, i) => (
-              <Attribute
-                attr={attr}
-                index={i()}
-                onKey={onKey}
-                remove={remove}
-                disabled={props.disabled}
-              />
-            )}
+            {(attr, i) => <Attribute attr={attr} index={i()} onKey={onKey} remove={remove} disabled={props.disabled} />}
           </For>
         </div>
       </Show>

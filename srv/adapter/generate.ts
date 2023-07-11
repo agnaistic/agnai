@@ -1,10 +1,5 @@
 import { AIAdapter } from '../../common/adapters'
-import {
-  mapPresetsToAdapter,
-  defaultPresets,
-  isDefaultPreset,
-  getFallbackPreset,
-} from '/common/presets'
+import { mapPresetsToAdapter, defaultPresets, isDefaultPreset, getFallbackPreset } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
@@ -101,11 +96,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
   return { stream }
 }
 
-export async function createTextStreamV2(
-  opts: GenerateRequestV2,
-  log: AppLog,
-  guestSocketId?: string
-) {
+export async function createTextStreamV2(opts: GenerateRequestV2, log: AppLog, guestSocketId?: string) {
   /**
    * N.b.: The front-end sends the `lines` and `history` in TIME-ASCENDING order. I.e. Oldest -> Newest
    *

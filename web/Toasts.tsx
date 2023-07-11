@@ -36,9 +36,7 @@ const Toasts: Component = () => {
             </div>
             <For each={state.history}>
               {({ time, toast, seen }) => (
-                <TitleCard
-                  type={toast.type === 'error' ? 'rose' : toast.type === 'warn' ? 'orange' : 'bg'}
-                >
+                <TitleCard type={toast.type === 'error' ? 'rose' : toast.type === 'warn' ? 'orange' : 'bg'}>
                   <p>
                     <em>{time.toLocaleString()}</em>
                   </p>

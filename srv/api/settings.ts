@@ -32,14 +32,13 @@ export async function getAppConfig() {
       selfhosting: config.jsonStorage,
       canAuth: false,
       imagesSaved: config.storage.saveImages,
-      assetPrefix: config.storage.enabled
-        ? `https://${config.storage.bucket}.${config.storage.endpoint}`
-        : '',
+      assetPrefix: config.storage.enabled ? `https://${config.storage.bucket}.${config.storage.endpoint}` : '',
       registered: getRegisteredAdapters().map(toRegisteredAdapter),
       maintenance: config.ui.maintenance,
       patreon: config.ui.patreon,
       policies: config.ui.policies,
       slots: config.slots,
+      authUrls: config.auth.urls,
     }
   }
 

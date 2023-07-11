@@ -11,9 +11,7 @@ const adapters = new Map<AIAdapter, RegisteredAdapter & { handler: ModelAdapter 
 
 export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options: AdapterOptions) {
   if (adapters.has(name)) {
-    throw new Error(
-      `Cannot start: Attempted to register adapter '${name}', but it has already been registered`
-    )
+    throw new Error(`Cannot start: Attempted to register adapter '${name}', but it has already been registered`)
   }
 
   logger.info(`Registered adapter: ${name}`)

@@ -57,8 +57,7 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
 
   if (resp.statusCode && resp.statusCode >= 400) {
     log.error({ body: resp.body }, `GooseAI request failed (${resp.statusCode})`)
-    const msg =
-      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+    const msg = resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
 
     yield {
       error: `GooseAI request failed (${resp.statusCode}): ${msg}`,
@@ -74,9 +73,7 @@ export const handleGooseAI: ModelAdapter = async function* (opts) {
       return
     }
     const parsed = sanitise(text.replace(opts.prompt, ''))
-    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, [
-      'END_OF_DIALOG',
-    ])
+    const trimmed = trimResponseV2(parsed, opts.replyAs, opts.members, opts.characters, ['END_OF_DIALOG'])
     yield trimmed || parsed
   } catch (ex: any) {
     log.error({ err: ex }, 'GooseAI failed to parse')

@@ -45,10 +45,7 @@ const App: Component = () => {
         <Route path="" component={Layout}>
           <CharacterRoutes />
           <ScenarioRoutes />
-          <Route
-            path="/discord"
-            component={() => <Redirect external="https://discord.gg/luminai" />}
-          />
+          <Route path="/discord" component={() => <Redirect external="https://discord.gg/luminai" />} />
           <ChubRoutes />
           <Route path="/chats/create/:id?" component={CreateChatForm} />
           <Route path="/chats" component={CharacterChats} />
@@ -57,33 +54,18 @@ const App: Component = () => {
           <Route path={['/info', '/']} component={HomePage} />
           <Route path="/changelog" component={ChangeLog} />
           <Route path="/presets/:id" component={lazy(() => import('./pages/GenerationPresets'))} />
-          <Route
-            path="/presets"
-            component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
-          />
+          <Route path="/presets" component={lazy(() => import('./pages/GenerationPresets/PresetList'))} />
           <Route path="/profile" component={ProfilePage} />
           <Route path="/settings" component={Settings} />
           <Route path="/memory" component={lazy(() => import('./pages/Memory'))} />
-          <Route
-            path="/memory/:id"
-            component={lazy(() => import('./pages/Memory/EditMemoryPage'))}
-          />
-          <Route
-            path="/terms-of-service"
-            component={lazy(() => import('./pages/TermsOfService'))}
-          />
+          <Route path="/memory/:id" component={lazy(() => import('./pages/Memory/EditMemoryPage'))} />
+          <Route path="/terms-of-service" component={lazy(() => import('./pages/TermsOfService'))} />
           <Route path="/privacy-policy" component={lazy(() => import('./pages/PrivacyPolicy'))} />
           <Show when={state.loggedIn}>
             <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
             <Show when={state.user?.admin}>
-              <Route
-                path="/admin/metrics"
-                component={lazy(() => import('./pages/Admin/Metrics'))}
-              />
-              <Route
-                path="/admin/users"
-                component={lazy(() => import('./pages/Admin/UsersPage'))}
-              />
+              <Route path="/admin/metrics" component={lazy(() => import('./pages/Admin/Metrics'))} />
+              <Route path="/admin/users" component={lazy(() => import('./pages/Admin/UsersPage'))} />
             </Show>
           </Show>
           <Show when={cfg.config.canAuth}>
@@ -128,8 +110,7 @@ const Layout: Component = () => {
 
   const bg = createMemo(() => {
     const styles: JSX.CSSProperties = {
-      'background-image':
-        state.background && !cfg.anonymize ? `url(${state.background})` : undefined,
+      'background-image': state.background && !cfg.anonymize ? `url(${state.background})` : undefined,
       'background-repeat': 'no-repeat',
       'background-size': 'cover',
       'background-position': 'center',
@@ -171,10 +152,7 @@ const Layout: Component = () => {
           </div>
         </div>
         <Toasts />
-        <ImpersonateModal
-          show={cfg.showImpersonate}
-          close={() => settingStore.toggleImpersonate(false)}
-        />
+        <ImpersonateModal show={cfg.showImpersonate} close={() => settingStore.toggleImpersonate(false)} />
         <InfoModal />
         <ProfileModal />
         <For each={rootModals.modals}>{(modal) => modal.element}</For>
@@ -187,12 +165,7 @@ const InfoModal: Component = (props) => {
   const state = rootModalStore()
 
   return (
-    <Modal
-      title="Information"
-      show={state.info}
-      close={() => rootModalStore.info()}
-      maxWidth="half"
-    >
+    <Modal title="Information" show={state.info} close={() => rootModalStore.info()} maxWidth="half">
       {state.info}
     </Modal>
   )

@@ -19,6 +19,7 @@ const emptyCfg: AppSchema.AppConfig = {
   selfhosting: false,
   registered: [],
   slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
+  authUrls: [],
 }
 
 let SELF_HOSTING = false
@@ -171,15 +172,7 @@ async function getGuestInitEntities() {
 }
 
 async function migrateLegacyItems() {
-  const keys = [
-    'config',
-    'profile',
-    'presets',
-    'memory',
-    'scenario',
-    'characters',
-    'chats',
-  ] as const
+  const keys = ['config', 'profile', 'presets', 'memory', 'scenario', 'characters', 'chats'] as const
 
   for (const key of keys) {
     const old = legacyLoadItem(key)
@@ -211,10 +204,7 @@ export async function saveMessages(chatId: string, messages: AppSchema.ChatMessa
   }
 }
 
-export async function getMessages(
-  chatId: string,
-  local?: boolean
-): Promise<AppSchema.ChatMessage[]> {
+export async function getMessages(chatId: string, local?: boolean): Promise<AppSchema.ChatMessage[]> {
   if (!local && SELF_HOSTING) {
     const res = await api.get(`/json/messages/${chatId}`)
     if (res.result) return res.result
@@ -294,10 +284,7 @@ export async function loadItem<TKey extends keyof typeof KEYS>(
   return item
 }
 
-function legacyLoadItem<TKey extends keyof typeof KEYS>(
-  key: TKey,
-  local?: boolean
-): LocalStorage[TKey] | void {
+function legacyLoadItem<TKey extends keyof typeof KEYS>(key: TKey, local?: boolean): LocalStorage[TKey] | void {
   if (local || !selfHosting()) {
     const item = storage.localGetItem(KEYS[key])
     if (item) {

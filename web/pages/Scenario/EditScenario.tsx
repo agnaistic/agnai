@@ -152,10 +152,7 @@ const CreateScenario: Component = () => {
 
       <div class="text-lg font-bold">Events</div>
 
-      <Show
-        when={state.scenario?.entries.length ?? 0 > 0}
-        fallback={<p>No events attached to this scenario</p>}
-      >
+      <Show when={state.scenario?.entries.length ?? 0 > 0} fallback={<p>No events attached to this scenario</p>}>
         <p>{state.scenario!.entries.length} event(s)</p>
       </Show>
 

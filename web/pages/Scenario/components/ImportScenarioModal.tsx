@@ -33,9 +33,7 @@ const ImportScenarioModal: Component<{
           continue
         }
         if (!supportedScenarioSchemas.includes(parsed.$schema)) {
-          toastStore.error(
-            `File was not a supported scenario (incorrect schema): ${file.file.name}`
-          )
+          toastStore.error(`File was not a supported scenario (incorrect schema): ${file.file.name}`)
           continue
         }
         delete parsed.$schema
@@ -63,15 +61,11 @@ const ImportScenarioModal: Component<{
     scenarioStore.create(
       next.scenario,
       () => {
-        setJson([
-          ...json().map((s) => (s === next ? { ...next, status: 'success' as ImportStatus } : s)),
-        ])
+        setJson([...json().map((s) => (s === next ? { ...next, status: 'success' as ImportStatus } : s))])
         importNext()
       },
       () => {
-        setJson([
-          ...json().map((s) => (s === next ? { ...next, status: 'failed' as ImportStatus } : s)),
-        ])
+        setJson([...json().map((s) => (s === next ? { ...next, status: 'failed' as ImportStatus } : s))])
         importNext()
       }
     )

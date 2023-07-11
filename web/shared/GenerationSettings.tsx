@@ -59,9 +59,7 @@ const GenerationSettings: Component<Props> = (props) => {
             helperText={
               <>
                 <Show when={!service()}>
-                  <p class="text-red-500">
-                    Warning! Your preset does not currently have a service set.
-                  </p>
+                  <p class="text-red-500">Warning! Your preset does not currently have a service set.</p>
                 </Show>
                 <p>This will take precedence over the adapter being set anywhere else.</p>
               </>
@@ -227,18 +225,18 @@ const GeneralSettings: Component<Props> = (props) => {
           helperText={
             <>
               <p>
-                Maximum context length. Typically 2048 for most models. OpenAI Turbo and Davinci
-                supports up to 4K. Scale and Claude support up to 8K. OpenAI GPT4-32k supports 32k.
-                If you set this too high, you may get unexpected results or errors.
+                Maximum context length. Typically 2048 for most models. OpenAI Turbo and Davinci supports up to 4K.
+                Scale and Claude support up to 8K. OpenAI GPT4-32k supports 32k. If you set this too high, you may get
+                unexpected results or errors.
               </p>
               <p>
-                We don't have GPT-4 or Claude tokenizers to correctly count tokens for those
-                services. Therefore we can't precisely count tokens when generating a prompt. Keep
-                this well below 8K to ensure you don't exceed the limit.
+                We don't have GPT-4 or Claude tokenizers to correctly count tokens for those services. Therefore we
+                can't precisely count tokens when generating a prompt. Keep this well below 8K to ensure you don't
+                exceed the limit.
               </p>
               <p>
-                Claude models with "100k" in the name support up to 100k tokens, but the same
-                caveats apply, we recommend setting a 80k limit.
+                Claude models with "100k" in the name support up to 100k tokens, but the same caveats apply, we
+                recommend setting a 80k limit.
               </p>
             </>
           }
@@ -271,8 +269,7 @@ const PromptSettings: Component<Props> = (props) => {
   const cfg = settingStore((cfg) => cfg.flags)
 
   // Services that use chat completion cannot use the template parser
-  const canUseParser =
-    props.inherit?.service !== 'openai' && (props.inherit?.oaiModel || '') in OPENAI_CHAT_MODELS
+  const canUseParser = props.inherit?.service !== 'openai' && (props.inherit?.oaiModel || '') in OPENAI_CHAT_MODELS
 
   return (
     <div class="flex flex-col gap-4">
@@ -307,12 +304,10 @@ const PromptSettings: Component<Props> = (props) => {
           label="Use Gaslight"
           helperText={
             <>
-              If this option is enabled, the Gaslight text will be included in the prompt sent to
-              the AI service.
+              If this option is enabled, the Gaslight text will be included in the prompt sent to the AI service.
               <p class="font-bold">
-                CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble".
-                If you do not include the placeholders, they will not be included in the prompt at
-                all.
+                CAUTION: By using the gaslight, you assume full control of the prompt "pre-amble". If you do not include
+                the placeholders, they will not be included in the prompt at all.
               </p>
             </>
           }
@@ -357,8 +352,8 @@ const PromptSettings: Component<Props> = (props) => {
           helperText={
             <>
               (Leave empty to disable)
-              <br /> Ultimate Jailbreak. If this option is enabled, the UJB prompt will sent as a
-              system message at the end of the conversation before prompting OpenAI or Claude.
+              <br /> Ultimate Jailbreak. If this option is enabled, the UJB prompt will sent as a system message at the
+              end of the conversation before prompting OpenAI or Claude.
             </>
           }
           placeholder="E.g. Keep OOC out of your reply."
@@ -394,9 +389,8 @@ const PromptSettings: Component<Props> = (props) => {
           label="Anti-Bond"
           helperText={
             <>
-              If this option is enabled, OpenAI will be prompted with logit biases to discourage the
-              model from talking about "bonding." This is mostly a problem with GPT-4, but can could
-              also be used with other OpenAI models.
+              If this option is enabled, OpenAI will be prompted with logit biases to discourage the model from talking
+              about "bonding." This is mostly a problem with GPT-4, but can could also be used with other OpenAI models.
             </>
           }
           value={props.inherit?.antiBond ?? false}
@@ -505,9 +499,7 @@ const GenSettings: Component<Props> = (props) => {
           min={0}
           max={2048}
           step={1}
-          value={
-            props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange
-          }
+          value={props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'repetitionPenaltyRange'}
@@ -519,9 +511,7 @@ const GenSettings: Component<Props> = (props) => {
           min={0}
           max={10}
           step={0.01}
-          value={
-            props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope
-          }
+          value={props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'repetitionPenaltySlope'}
@@ -592,9 +582,7 @@ const GenSettings: Component<Props> = (props) => {
           min={0.8}
           max={1.5}
           step={0.01}
-          value={
-            props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty
-          }
+          value={props.inherit?.encoderRepitionPenalty ?? defaultPresets.basic.encoderRepitionPenalty}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'encoderRepitionPenalty'}

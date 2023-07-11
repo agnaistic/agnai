@@ -7,6 +7,7 @@ import * as presets from './presets'
 import * as msgs from './messages'
 import * as memory from './memory'
 import * as scenario from './scenario'
+import * as oauth from './oauth'
 
 export { db } from './client'
 
@@ -20,4 +21,5 @@ export const store = {
   msgs,
   memory,
   scenario,
+  oauth,
 }

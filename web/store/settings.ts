@@ -58,6 +58,7 @@ const initState: SettingState = {
     selfhosting: false,
     imagesSaved: false,
     slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
+    authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
   },
   replicate: {},
   flags: getFlags(),

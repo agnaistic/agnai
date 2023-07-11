@@ -58,10 +58,7 @@ export const InfiniteScroll: Component = () => {
   )
 }
 
-export function getChatWidth(
-  setting: UI.UISettings['chatWidth'],
-  sidePaneVisible: boolean
-): string {
+export function getChatWidth(setting: UI.UISettings['chatWidth'], sidePaneVisible: boolean): string {
   if (sidePaneVisible) return 'w-full max-w-full'
   switch (setting) {
     case 'narrow':
@@ -102,10 +99,7 @@ export function emptyMsg(opts: {
   }
 }
 
-export function insertImageMessages(
-  msgs: AppSchema.ChatMessage[],
-  images: AppSchema.ChatMessage[] | undefined
-) {
+export function insertImageMessages(msgs: AppSchema.ChatMessage[], images: AppSchema.ChatMessage[] | undefined) {
   if (!images?.length) return msgs
 
   const next: AppSchema.ChatMessage[] = []

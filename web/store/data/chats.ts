@@ -90,10 +90,7 @@ export async function restartChat(chatId: string) {
   return localApi.result({ success: true })
 }
 
-export async function editChat(
-  id: string,
-  update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }
-) {
+export async function editChat(id: string, update: Partial<AppSchema.Chat> & { useOverrides: boolean | undefined }) {
   if (isLoggedIn()) {
     const res = await api.method<AppSchema.Chat>('put', `/chat/${id}`, update)
     return res
@@ -141,9 +138,7 @@ export async function importChat(characterId: string, props: ImportChat) {
     return res
   }
 
-  const char = await localApi
-    .loadItem('characters')
-    .then((res) => res.find((char) => char._id === characterId))
+  const char = await localApi.loadItem('characters').then((res) => res.find((char) => char._id === characterId))
   if (!char) {
     return localApi.error(`Character not found`)
   }
@@ -218,20 +213,14 @@ export async function getAllChats() {
 
 export async function getBotChats(characterId: string) {
   if (isLoggedIn()) {
-    const res = await api.get<{ character: AppSchema.Character; chats: AppSchema.Chat[] }>(
-      `/chat/${characterId}/chats`
-    )
+    const res = await api.get<{ character: AppSchema.Character; chats: AppSchema.Chat[] }>(`/chat/${characterId}/chats`)
     return res
   }
 
-  const character = await loadItem('characters').then((res) =>
-    res.find((ch) => ch._id === characterId)
-  )
+  const character = await loadItem('characters').then((res) => res.find((ch) => ch._id === characterId))
   if (!character) return localApi.error('Character not found')
 
-  const chats = await loadItem('chats').then((res) =>
-    res.filter((ch) => ch.characterId === characterId)
-  )
+  const chats = await loadItem('chats').then((res) => res.filter((ch) => ch.characterId === characterId))
   return localApi.result({ character, chats })
 }
 
@@ -312,9 +301,7 @@ export async function addCharacter(chatId: string, charId: string) {
 
   const chats = await localApi.loadItem('chats')
   const chat = chats.find((ch) => ch._id === chatId)
-  const char = await localApi
-    .loadItem('characters')
-    .then((res) => res.find((ch) => ch._id === charId))
+  const char = await localApi.loadItem('characters').then((res) => res.find((ch) => ch._id === charId))
 
   if (!chat || !char) {
     return localApi.error(`Chat or Character not found`)
@@ -337,9 +324,7 @@ export async function removeCharacter(chatId: string, charId: string) {
 
   const chats = await localApi.loadItem('chats')
   const chat = chats.find((ch) => ch._id === chatId)
-  const char = await localApi
-    .loadItem('characters')
-    .then((res) => res.find((ch) => ch._id === charId))
+  const char = await localApi.loadItem('characters').then((res) => res.find((ch) => ch._id === charId))
 
   if (!chat || !char) {
     return localApi.error(`Chat or Character not found`)

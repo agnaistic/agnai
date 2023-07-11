@@ -79,10 +79,7 @@ export async function updateCharacter(id: string, userId: string, char: Characte
   return getCharacter(userId, id)
 }
 
-export async function getCharacter(
-  userId: string,
-  id: string
-): Promise<AppSchema.Character | undefined> {
+export async function getCharacter(userId: string, id: string): Promise<AppSchema.Character | undefined> {
   const char = await db('character').findOne({ _id: id, userId })
   return char || undefined
 }

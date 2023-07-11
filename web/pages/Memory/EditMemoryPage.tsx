@@ -108,9 +108,8 @@ const EditMemoryPage = () => {
                 label="Keywords"
                 helperText={
                   <>
-                    These are the terms that trigger the entry to be potentially included in the
-                    prompt. You can use <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code>{' '}
-                    placeholders here.
+                    These are the terms that trigger the entry to be potentially included in the prompt. You can use{' '}
+                    <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders here.
                   </>
                 }
               />
@@ -120,8 +119,8 @@ const EditMemoryPage = () => {
                 label="Entry"
                 helperText={
                   <>
-                    This is the text that will be included in the prompt. You can use{' '}
-                    <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders here.
+                    This is the text that will be included in the prompt. You can use <code>{'{{char}}'}</code> and{' '}
+                    <code>{'{{user}}'}</code> placeholders here.
                   </>
                 }
               />

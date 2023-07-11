@@ -137,7 +137,18 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *login(_, username: string, password: string, onSuccess?: () => void) {
+    async remoteLogin(_, onSuccess: (token: string) => void) {
+      const res = await api.post('/user/login/callback')
+      if (res.result) {
+        onSuccess(res.result.token)
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not authenticate: ${res.error}`)
+      }
+    },
+
+    async *login(_, username: string, password: string, onSuccess?: (token: string) => void) {
       yield { loading: true }
 
       const res = await api.post('/user/login', { username, password })
@@ -163,14 +174,10 @@ export const userStore = createStore<UserState>(
       // TODO: Work out why this is here
       events.emit(EVENTS.loggedOut)
 
-      onSuccess?.()
+      onSuccess?.(res.result.token)
       publish({ type: 'login', token: res.result.token })
     },
-    async *register(
-      _,
-      newUser: { handle: string; username: string; password: string },
-      onSuccess?: () => void
-    ) {
+    async *register(_, newUser: { handle: string; username: string; password: string }, onSuccess?: () => void) {
       yield { loading: true }
 
       const res = await api.post('/user/register', newUser)
@@ -274,10 +281,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async deleteKey(
-      { user },
-      kind: 'novel' | 'horde' | 'openai' | 'scale' | 'claude' | 'third-party' | 'elevenlabs'
-    ) {
+    async deleteKey({ user }, kind: 'novel' | 'horde' | 'openai' | 'scale' | 'claude' | 'third-party' | 'elevenlabs') {
       const res = await usersApi.deleteApiKey(kind)
       if (res.error) return toastStore.error(`Failed to update settings: ${res.error}`)
 
@@ -340,6 +344,18 @@ export const userStore = createStore<UserState>(
         }
       }
     },
+
+    async createApiKey(_, cb: (err: any, code?: string) => void) {
+      const res = await api.post('/user/code')
+      if (res.result) {
+        cb(null, res.result.code)
+      }
+
+      if (res.error) {
+        cb(res.error)
+      }
+    },
+
     async *hordeStats({ metadata, user }) {
       yield { hordeStatsLoading: true }
       const res = await api.post('/user/services/horde-stats', { key: user?.hordeKey })
@@ -462,10 +478,7 @@ async function updateTheme(ui: UI.UISettings) {
 
 function getUIsettings(guest = false) {
   const key = getUIKey(guest)
-  const json =
-    storage.localGetItem(key) ||
-    storage.localGetItem('ui-settings') ||
-    JSON.stringify(UI.defaultUIsettings)
+  const json = storage.localGetItem(key) || storage.localGetItem('ui-settings') || JSON.stringify(UI.defaultUIsettings)
 
   const settings: UI.UISettings = JSON.parse(json)
   const theme = (storage.localGetItem('theme') || settings.theme) as UI.ThemeColor

@@ -1,16 +1,5 @@
 import './Message.css'
-import {
-  Check,
-  DownloadCloud,
-  Info,
-  PauseCircle,
-  Pencil,
-  RefreshCw,
-  Terminal,
-  Trash,
-  X,
-  Zap,
-} from 'lucide-solid'
+import { Check, DownloadCloud, Info, PauseCircle, Pencil, RefreshCw, Terminal, Trash, X, Zap } from 'lucide-solid'
 import {
   Accessor,
   Component,
@@ -86,16 +75,13 @@ const Message: Component<MessageProps> = (props) => {
   )
 }
 
-const SingleMessage: Component<
-  MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
-> = (props) => {
+const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }> = (props) => {
   let ref: HTMLDivElement
   let avatarRef: any
   const user = userStore()
   const state = chatStore()
   const voice = msgStore((x) => ({
-    status:
-      props.lastSplit && x.speaking?.messageId === props.msg._id ? x.speaking.status : undefined,
+    status: props.lastSplit && x.speaking?.messageId === props.msg._id ? x.speaking.status : undefined,
   }))
 
   const [edit, setEdit] = createSignal(false)
@@ -103,9 +89,7 @@ const SingleMessage: Component<
   const isUser = createMemo(() => !!props.msg.userId)
   const isImage = createMemo(() => props.original.adapter === 'image')
   const [img, setImg] = createSignal('h-full')
-  const [obs] = createSignal(
-    new ResizeObserver(() => setImg(Math.min(avatarRef?.clientHeight, 10000) + 'px'))
-  )
+  const [obs] = createSignal(new ResizeObserver(() => setImg(Math.min(avatarRef?.clientHeight, 10000) + 'px')))
 
   const [ctx] = useAppContext()
 
@@ -113,11 +97,7 @@ const SingleMessage: Component<
   onCleanup(() => obs().disconnect())
 
   const bgStyles = createMemo(() =>
-    props.msg.characterId && !props.msg.userId
-      ? ctx.bg.bot
-      : props.msg.ooc
-      ? ctx.bg.ooc
-      : ctx.bg.user
+    props.msg.characterId && !props.msg.userId ? ctx.bg.bot : props.msg.ooc ? ctx.bg.ooc : ctx.bg.user
   )
 
   const msgText = createMemo(() => {
@@ -156,9 +136,7 @@ const SingleMessage: Component<
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
-  const nameDateFlexDir = createMemo(() =>
-    props.isPaneOpen ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'
-  )
+  const nameDateFlexDir = createMemo(() => (props.isPaneOpen ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'))
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
   const visibilityClass = createMemo(() => (ctx.anonymize ? 'invisible' : ''))
@@ -185,9 +163,7 @@ const SingleMessage: Component<
             >
               <Switch>
                 <Match when={props.msg.event === 'world'}>
-                  <div
-                    class={`avatar-${format().size} flex shrink-0 items-center justify-center pt-3`}
-                  >
+                  <div class={`avatar-${format().size} flex shrink-0 items-center justify-center pt-3`}>
                     <Zap />
                   </div>
                 </Match>
@@ -271,17 +247,12 @@ const SingleMessage: Component<
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show
-                    when={canShowMeta(props.original.meta, ctx.promptHistory[props.original._id])}
-                  >
+                  <Show when={canShowMeta(props.original.meta, ctx.promptHistory[props.original._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
                         rootModalStore.info(
-                          <Meta
-                            meta={props.original.meta}
-                            history={ctx.promptHistory[props.original._id]}
-                          />
+                          <Meta meta={props.original.meta} history={ctx.promptHistory[props.original._id]} />
                         )
                       }
                     >
@@ -320,16 +291,8 @@ const SingleMessage: Component<
 
                 <Match when={props.last && props.swipe}>
                   <div class="mr-4 flex items-center gap-4 text-sm">
-                    <X
-                      size={22}
-                      class="cursor-pointer text-red-500"
-                      onClick={() => props.cancelSwipe?.()}
-                    />
-                    <Check
-                      size={22}
-                      class="cursor-pointer text-green-500"
-                      onClick={() => props.confirmSwipe?.()}
-                    />
+                    <X size={22} class="cursor-pointer text-red-500" onClick={() => props.cancelSwipe?.()} />
+                    <Check size={22} class="cursor-pointer text-green-500" onClick={() => props.confirmSwipe?.()} />
                   </div>
                 </Match>
               </Switch>
@@ -352,15 +315,11 @@ const SingleMessage: Component<
               </Match>
               <Match
                 when={
-                  props.retrying?._id == props.original._id ||
-                  (props.msg._id === 'partial' && !props.msg.msg.length)
+                  props.retrying?._id == props.original._id || (props.msg._id === 'partial' && !props.msg.msg.length)
                 }
               >
                 <div class="flex h-8 w-12 items-center justify-center">
-                  <Show
-                    when={props.partial}
-                    fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
-                  >
+                  <Show when={props.partial} fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}>
                     <p
                       class="rendered-markdown px-1"
                       data-bot-message={isBot()}
@@ -389,11 +348,7 @@ const SingleMessage: Component<
                   <div class="flex items-center justify-center gap-2">
                     <For each={props.original.actions}>
                       {(item) => (
-                        <Button
-                          size="sm"
-                          schema="gray"
-                          onClick={() => sendAction(props.sendMessage, item)}
-                        >
+                        <Button size="sm" schema="gray" onClick={() => sendAction(props.sendMessage, item)}>
                           {item.emote}
                         </Button>
                       )}
@@ -424,8 +379,7 @@ export default Message
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
 function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): SplitMessage[] {
-  const charName =
-    (incoming.characterId ? ctx.botMap[incoming.characterId]?.name : ctx.char?.name) || ''
+  const charName = (incoming.characterId ? ctx.botMap[incoming.characterId]?.name : ctx.char?.name) || ''
 
   const CHARS = [`{{char}}:`]
   if (charName) CHARS.push(`${charName}:`)
@@ -538,25 +492,14 @@ const MessageOptions: Component<{
         </div>
       </Show>
 
-      <Show
-        when={
-          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
-          props.msg.characterId
-        }
-      >
-        <div
-          class="icon-button"
-          onClick={() => !props.partial && retryMessage(props.original, props.msg)}
-        >
+      <Show when={(props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) && props.msg.characterId}>
+        <div class="icon-button" onClick={() => !props.partial && retryMessage(props.original, props.msg)}>
           <RefreshCw size={18} />
         </div>
       </Show>
 
       <Show when={props.last && !props.msg.characterId}>
-        <div
-          class="icon-button"
-          onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}
-        >
+        <div class="icon-button" onClick={() => !props.partial && msgStore.resend(props.msg.chatId, props.msg._id)}>
           <RefreshCw size={18} />
         </div>
       </Show>
@@ -577,9 +520,7 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
-  const html = markdown
-    .makeHtml(parseMessage(text, ctx, isUser, adapter))
-    .replace(/&amp;nbsp;/g, '&nbsp;')
+  const html = markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
   return html
 }
 
@@ -632,10 +573,7 @@ const Meta: Component<{ meta: any; history?: any }> = (props) => {
 
       <Show when={props.history}>
         <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
-          <Show
-            when={typeof props.history === 'string'}
-            fallback={JSON.stringify(props.history, null, 2)}
-          >
+          <Show when={typeof props.history === 'string'} fallback={JSON.stringify(props.history, null, 2)}>
             {props.history}
           </Show>
         </pre>

@@ -125,9 +125,7 @@ const ImportCharacterModal: Component<{
         <div class="mt-2 text-lg">Failed character imports:</div>
         <div class="markdown">
           <ul>
-            <For each={failed().slice(0, MAX_SHOWN_IMPORTS)}>
-              {(i) => <li>{i ?? 'Unnamed'}</li>}
-            </For>
+            <For each={failed().slice(0, MAX_SHOWN_IMPORTS)}>{(i) => <li>{i ?? 'Unnamed'}</li>}</For>
             <Show when={failed().length === MAX_SHOWN_IMPORTS + 1}>
               <li>... and one other</li>
             </Show>

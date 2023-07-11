@@ -20,9 +20,7 @@ const TagInput: Component<TagInputProps> = (props) => {
   })
 
   function updateSuggestions(value: string) {
-    setSuggestions(
-      props.availableTags.filter((tag) => tag.startsWith(value) && !tags().includes(tag))
-    )
+    setSuggestions(props.availableTags.filter((tag) => tag.startsWith(value) && !tags().includes(tag)))
   }
 
   function addTag(tag: string) {
@@ -84,10 +82,7 @@ const TagInput: Component<TagInputProps> = (props) => {
       <ul class="absolute left-0 z-10 mt-1 bg-white text-gray-800 shadow-md">
         <For each={suggestions()}>
           {(suggestion) => (
-            <li
-              class="cursor-pointer px-2 py-1 hover:bg-gray-200"
-              onClick={() => addTag(suggestion)}
-            >
+            <li class="cursor-pointer px-2 py-1 hover:bg-gray-200" onClick={() => addTag(suggestion)}>
               {suggestion}
             </li>
           )}

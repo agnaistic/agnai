@@ -18,8 +18,7 @@ export const VoicePicker: Component<{
   const [voiceId, setVoiceId] = createSignal<string>()
   const value = createMemo(() => props.value)
 
-  const [webSpeechSettings, setWebSpeechSettings] =
-    createSignal<VoiceSettingForm<'webspeechsynthesis'>>()
+  const [webSpeechSettings, setWebSpeechSettings] = createSignal<VoiceSettingForm<'webspeechsynthesis'>>()
   const [elevenLabsSettings, setElevenLabsSettings] = createSignal<VoiceSettingForm<'elevenlabs'>>()
   const [novelTtsSettings, setNovelTtsSettings] = createSignal<VoiceSettingForm<'novel'>>()
 
@@ -145,10 +144,7 @@ export const VoicePicker: Component<{
       </div>
 
       <Show when={service() === 'elevenlabs' && !!elevenLabsSettings()}>
-        <ElevenLabsSettings
-          settings={elevenLabsSettings()!}
-          onChange={(update) => setElevenLabsSettings(update)}
-        />
+        <ElevenLabsSettings settings={elevenLabsSettings()!} onChange={(update) => setElevenLabsSettings(update)} />
       </Show>
 
       <Show when={service() === 'webspeechsynthesis' && !!webSpeechSettings()}>
@@ -159,10 +155,7 @@ export const VoicePicker: Component<{
       </Show>
 
       <Show when={service() === 'novel' && !!novelTtsSettings()}>
-        <NovelTtsSettings
-          settings={novelTtsSettings()!}
-          onChange={(update) => setNovelTtsSettings(update)}
-        />
+        <NovelTtsSettings settings={novelTtsSettings()!} onChange={(update) => setNovelTtsSettings(update)} />
       </Show>
     </>
   )

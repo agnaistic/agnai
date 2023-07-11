@@ -413,9 +413,7 @@ async function getGuestEntities() {
   const messages = await localApi.getMessages(chat?._id)
   const user = await loadItem('config')
   const settings = await getGuestPreset(user, chat)
-  const scenarios = allScenarios?.filter(
-    (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
-  )
+  const scenarios = allScenarios?.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
 
   const {
     impersonating,
@@ -485,10 +483,7 @@ function getAuthedPromptEntities() {
   }
 }
 
-function getAuthGenSettings(
-  chat: AppSchema.Chat,
-  user: AppSchema.User
-): Partial<AppSchema.GenSettings> | undefined {
+function getAuthGenSettings(chat: AppSchema.Chat, user: AppSchema.User): Partial<AppSchema.GenSettings> | undefined {
   const presets = getStore('presets').getState().presets
   return getChatPreset(chat, user, presets)
 }
@@ -500,10 +495,7 @@ async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
   return getChatPreset(chat, user, presets)
 }
 
-function emptyMsg(
-  chat: AppSchema.Chat,
-  props: Partial<AppSchema.ChatMessage>
-): AppSchema.ChatMessage {
+function emptyMsg(chat: AppSchema.Chat, props: Partial<AppSchema.ChatMessage>): AppSchema.ChatMessage {
   return {
     _id: '',
     kind: 'chat-message',

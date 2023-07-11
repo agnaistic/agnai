@@ -6,7 +6,6 @@ import { AllDoc, Doc } from '../../common/types/schema'
 const uri = `mongodb://${config.db.host}:${config.db.port}`
 let connected = false
 
-logger.debug({ uri }, 'MongoDB URI')
 let database: Db | null = null
 
 export async function connect(silent = false) {
@@ -68,4 +67,7 @@ export async function createIndexes() {
   await db('gen-setting').createIndex({ userId: 1 }, { name: 'gen-setting_userId' })
   await db('chat-message').createIndex({ chatId: 1 }, { name: 'chatmessages_chatId' })
   await db('scenario').createIndex({ userId: 1 }, { name: 'scenario_userId' })
+  await db('apikey').createIndex({ userId: 1 }, { name: 'apikey_userId' })
+  await db('apikey').createIndex({ apikey: 1 }, { name: 'apikey_apikey' })
+  await db('apikey').createIndex({ code: 1 }, { name: 'apikey_code' })
 }

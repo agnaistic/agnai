@@ -98,8 +98,7 @@ async function* getCompletion(payload: any, headers: any): AsyncGenerator<any> {
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    const msg =
-      resp.body.message || resp.body.error?.message || resp.statusMessage || 'Unknown error'
+    const msg = resp.body.message || resp.body.error?.message || resp.statusMessage || 'Unknown error'
     yield { error: `OpenRouter request failed (${resp.statusCode}): ${msg}` }
     return
   }

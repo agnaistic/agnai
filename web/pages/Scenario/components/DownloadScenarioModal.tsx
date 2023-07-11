@@ -22,9 +22,7 @@ export const ExportScenarioModal: Component<{
 
     const dataStr =
       'data:text/json;charset=utf-8,' +
-      encodeURIComponent(
-        JSON.stringify({ ...clone, $schema: 'https://agnai.chat/schemas/scenario-schema-v1.json' })
-      )
+      encodeURIComponent(JSON.stringify({ ...clone, $schema: 'https://agnai.chat/schemas/scenario-schema-v1.json' }))
     return dataStr
   })
 

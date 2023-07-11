@@ -5,10 +5,7 @@ import { AppLog } from '../logger'
 
 export type TextToSpeechHandler = {
   validator: Validator
-  getVoices: (
-    user: AppSchema.User,
-    guestId: string | undefined
-  ) => Promise<AppSchema.VoiceDefinition[]>
+  getVoices: (user: AppSchema.User, guestId: string | undefined) => Promise<AppSchema.VoiceDefinition[]>
   generateVoice: TextToSpeechAdapter
 }
 

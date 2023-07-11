@@ -17,19 +17,12 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
   let settings = body.settings as Partial<AppSchema.GenSettings> | null
   if (userId) {
     const id = body.settings._id as string
-    settings = !id
-      ? body.settings
-      : isDefaultPreset(id)
-      ? defaultPresets[id]
-      : await store.presets.getUserPreset(id)
+    settings = !id ? body.settings : isDefaultPreset(id) ? defaultPresets[id] : await store.presets.getUserPreset(id)
     body.user = await store.users.getUser(userId)
   }
 
   if (!settings) {
-    throw new StatusError(
-      'The preset used does not have a service configured. Configure it from the presets page',
-      400
-    )
+    throw new StatusError('The preset used does not have a service configured. Configure it from the presets page', 400)
   }
 
   if (!body.user) {

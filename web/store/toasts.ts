@@ -41,9 +41,7 @@ export const toastStore = createStore<ToastState>('toasts', {
       const { toasts, history } = get()
 
       const nextHistory =
-        getLevel(toast.type) > 2
-          ? [{ time: new Date(), toast, seen: false }].concat(history)
-          : history
+        getLevel(toast.type) > 2 ? [{ time: new Date(), toast, seen: false }].concat(history) : history
 
       const unseen = nextHistory.filter((nh) => !nh.seen).length
       return { toasts: toasts.concat(toast), history: nextHistory, unseen }

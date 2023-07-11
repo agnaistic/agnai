@@ -126,10 +126,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   // Coalesce for backwards compatibly while new UI rolls out
-  const replyAs = await store.characters.getCharacter(
-    chat.userId,
-    body.replyAs._id || body.char._id
-  )
+  const replyAs = await store.characters.getCharacter(chat.userId, body.replyAs._id || body.char._id)
 
   if (chat.userId !== userId) {
     const isAllowed = await store.chats.canViewChat(userId, chat)
@@ -203,10 +200,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   })
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter } = await createTextStreamV2(
-    { ...body, chat, replyAs, impersonate, requestId },
-    log
-  )
+  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs, impersonate, requestId }, log)
 
   log.setBindings({ adapter })
 
@@ -414,11 +408,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const requestId = v4()
   res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
-  const { stream, adapter } = await createTextStreamV2(
-    { ...body, chat, replyAs, requestId },
-    log,
-    guest
-  )
+  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs, requestId }, log, guest)
 
   log.setBindings({ adapter })
 
@@ -532,10 +522,7 @@ async function ensureBotMembership(
   if (impersonate && characters[impersonate._id] === undefined) {
     const actual = await store.characters.getCharacter(impersonate.userId, impersonate._id)
     if (!actual) {
-      throw new StatusError(
-        'Could not create message: Impersonation character does not belong to you',
-        403
-      )
+      throw new StatusError('Could not create message: Impersonation character does not belong to you', 403)
     }
 
     // Ensure the caller's character is up to date

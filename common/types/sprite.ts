@@ -64,9 +64,7 @@ export const emotions = {
   },
 } satisfies SpriteEmote
 
-export const classifyEmotes = Object.keys(emotions).filter(
-  (emote) => emote !== 'blink'
-) as EmoteType[]
+export const classifyEmotes = Object.keys(emotions).filter((emote) => emote !== 'blink') as EmoteType[]
 
 export type SpriteAttr =
   | 'accessories'

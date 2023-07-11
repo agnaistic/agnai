@@ -2,10 +2,9 @@ export function extractSystemPromptFromLegacyGaslight(legacyGaslight: string): {
   systemPrompt: string
   gaslight: string
 } {
-  const firstPlaceholderPos =
-    /{{(personality|memory|scenario|example_dialogue|all_personalities)}}/gi.exec(
-      legacyGaslight
-    )?.index
+  const firstPlaceholderPos = /{{(personality|memory|scenario|example_dialogue|all_personalities)}}/gi.exec(
+    legacyGaslight
+  )?.index
 
   const noChange = { systemPrompt: '', gaslight: '{{system_prompt}}\n' + legacyGaslight }
 
@@ -23,18 +22,14 @@ export function extractSystemPromptFromLegacyGaslight(legacyGaslight: string): {
 
   // I'm not sure if this case can happen, but let's include it just in case, to
   // prevent runtime errors
-  if (sentenceStartersMatches[sentenceStartersMatches.length - 1]!.index === undefined)
-    return noChange
+  if (sentenceStartersMatches[sentenceStartersMatches.length - 1]!.index === undefined) return noChange
 
   const startOfLastSentenceBeforePersonalityPlaceholder =
     sentenceStartersMatches[sentenceStartersMatches.length - 1]!.index! + 1
 
-  const systemPrompt = legacyGaslight
-    .slice(0, startOfLastSentenceBeforePersonalityPlaceholder)
-    .trim()
+  const systemPrompt = legacyGaslight.slice(0, startOfLastSentenceBeforePersonalityPlaceholder).trim()
   const newGaslight =
-    '{{system_prompt}}\n' +
-    legacyGaslight.slice(startOfLastSentenceBeforePersonalityPlaceholder).trim()
+    '{{system_prompt}}\n' + legacyGaslight.slice(startOfLastSentenceBeforePersonalityPlaceholder).trim()
 
   return { systemPrompt, gaslight: newGaslight }
 }
