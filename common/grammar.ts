@@ -72,6 +72,7 @@ Character "character" = "char"i / "character"i / "bot"i { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
 Persona "personality" = "personality"i / "persona"i { return "personality" }
+AllPersona "all_personalities" = "all_personas"i / "all_personalities"i { return "all_personalities" }
 Dialogue "example_dialogue" = "samplechat"i / "example_dialogue"i { return "example_dialogue" }
 
 Note "ujb" = "ujb"i / "system_note"i { return "ujb" }
@@ -90,6 +91,7 @@ Interp "interp"
 	/ User
     / Scenario
     / Persona
+    / AllPersona
     / Dialogue
     / History
     / Note

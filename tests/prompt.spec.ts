@@ -1,28 +1,11 @@
 import './init'
 import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
-import { createPrompt, BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
-import { AppSchema } from '../common/types/schema'
-import { toBook, toChar, toBotMsg, toChat, toEntry, toProfile, toUser, toUserMsg } from './util'
+import { BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
+import { toChat, build, botMsg, toMsg, entities } from './util'
 import { getEncoder } from '../srv/tokenize'
 
-const char = toChar('Bot')
-const main = toChar('Main', { scenario: 'MAIN {{char}}', sampleChat: 'SAMPLECHAT {{char}}' })
-
-const replyAs = toChar('Reply', {
-  sampleChat: 'SAMPLECHAT {{char}}',
-  scenario: 'REPLYSCENARIO {{char}}',
-})
-const profile = toProfile('You')
-const chat = toChat(char, {})
-const user = toUser('anon')
-const book = toBook('book', [
-  toEntry(['1-TRIGGER'], 'ENTRY ONE'),
-  toEntry(['10-TRIGGER'], 'ENTRY TWO', 10, 10),
-  toEntry(['20-TRIGGER'], 'ENTRY THREE', 20, 20),
-  toEntry(['TIE-TRIGGER'], 'ENTRY TIE', 20, 20),
-  toEntry(['LONGWORD'], 'ENTRY LONG', 20, 20),
-])
+const { chat, replyAs, main } = entities
 
 describe('Prompt building', () => {
   it('will build a basic prompt', () => {
@@ -188,51 +171,6 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual).to.matchSnapshot()
   })
 })
-
-function build(
-  messages: AppSchema.ChatMessage[],
-  opts: {
-    chat?: AppSchema.Chat
-    char?: AppSchema.Character
-    profile?: AppSchema.Profile
-    user?: AppSchema.User
-    members?: AppSchema.Profile[]
-    retry?: AppSchema.ChatMessage
-    book?: AppSchema.MemoryBook
-    continue?: string
-    settings?: Partial<AppSchema.GenSettings>
-    replyAs?: AppSchema.Character
-  } = {}
-) {
-  const encoder = getEncoder('main')
-  const result = createPrompt(
-    {
-      char: opts.char || char,
-      members: [profile],
-      user,
-      chat: opts.chat || chat,
-      messages,
-      book: opts.book || book,
-      settings: opts.settings,
-      continue: opts.continue,
-      retry: opts.retry,
-      replyAs: opts.replyAs || char,
-      characters: {},
-      lastMessage: '',
-    },
-    encoder
-  )
-
-  return result
-}
-
-function botMsg(text: string) {
-  return toBotMsg(char, text)
-}
-
-function toMsg(text: string) {
-  return toUserMsg(profile, text)
-}
 
 // function expected(...lines: string[]) {
 //   // Replace spaces with dots to help with interpreting test results

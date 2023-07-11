@@ -37,7 +37,7 @@ export function toProfile(name: string): AppSchema.Profile {
   }
 }
 
-export function toUser(name: string): AppSchema.User {
+export function toUser(name: string) {
   const user: AppSchema.User = {
     _id: name,
     username: name,
@@ -57,7 +57,8 @@ export function toUser(name: string): AppSchema.User {
     oobaUrl: '',
     useLocalPipeline: false,
   }
-  return user
+  const profile = toProfile(name)
+  return { user, profile }
 }
 
 export function toBotMsg(
@@ -94,7 +95,16 @@ export function toUserMsg(
   }
 }
 
-export function toChat(char: AppSchema.Character, props?: Partial<AppSchema.Chat>): AppSchema.Chat {
+export function toChat(
+  char: AppSchema.Character,
+  props?: Partial<AppSchema.Chat>,
+  chars: AppSchema.Character[] = []
+): AppSchema.Chat {
+  const characters = chars.reduce<Record<string, boolean>>(
+    (prev, curr) => Object.assign(prev, { [curr._id]: true }),
+    {}
+  )
+
   return {
     _id: '',
     characterId: char._id,
@@ -103,6 +113,7 @@ export function toChat(char: AppSchema.Character, props?: Partial<AppSchema.Chat
     greeting: char.greeting,
     scenario: char.scenario,
     sampleChat: char.sampleChat,
+    characters,
     messageCount: 0,
     name: '',
     updatedAt: '',
