@@ -1,11 +1,11 @@
-import { Component, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, JSX, Show, createEffect, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
 
 type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
@@ -55,31 +55,46 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean }> = (props) => {
 
       const node = document.createRange().createContextualFragment(cfg.slots[props.slot] as any)
       ele.append(node)
+
+      if (stick() && props.parent) {
+        props.parent.classList.add('slot-sticky')
+      }
+
       setDone(true)
       log('Rendered')
 
       setTimeout(() => {
         setStick(false)
-      }, 5000)
+
+        if (props.parent) {
+          props.parent.classList.remove('slot-sticky')
+        }
+      }, 4500)
     } else {
       ele.innerHTML = ''
     }
   })
 
+  const style = createMemo<JSX.CSSProperties>(() => {
+    if (!stick()) return {}
+
+    return { position: 'sticky', top: '0', 'z-index': 10 }
+  })
+
   return (
     <>
-      <div
-        class={hidden()}
-        ref={ref}
-        id={id()}
-        data-slot={props.slot}
-        classList={{
-          'border-[var(--bg-700)]': !!user.user?.admin,
-          'bg-[var(--text-200)]': !!user.user?.admin,
-          'border-[1px]': !!user.user?.admin,
-        }}
-        style={stick() ? { position: 'sticky', top: '0', 'z-index': 10 } : {}}
-      ></div>
+      <Show when={user.user?.admin}>
+        <div
+          class={`border-[1px] border-[var(--bg-700)] bg-[var(--text-200)] ${hidden()}`}
+          ref={ref}
+          id={id()}
+          data-slot={props.slot}
+          style={style()}
+        ></div>
+      </Show>
+      <Show when={!user.user?.admin}>
+        <div class={hidden()} ref={ref} id={id()} data-slot={props.slot} style={style()}></div>
+      </Show>
     </>
   )
 }

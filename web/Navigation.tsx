@@ -347,7 +347,7 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
     <>
       <Show when={!props.href}>
         <div
-          class="flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[3rem]"
+          class="flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
           onClick={() => {
             if (props.onClick) props.onClick()
             else settingStore.closeMenu()
@@ -359,7 +359,7 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
       <Show when={props.href}>
         <A
           href={props.href!}
-          class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[3rem]"
+          class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
           onClick={settingStore.closeMenu}
         >
           {props.children}
