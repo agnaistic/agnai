@@ -14,7 +14,7 @@ We collect information that alone or in combination with other information in ou
 - **Account Information:** When you create an account with us, we will collect information associated with your account, including your display name, account credentials, profile picture, and other information provided during registration (collectively, "Account Information").
 - **User Content:** When you use our Services, we may collect Personal Information that is included in the input, file uploads, or feedback that you provide to our Services ("Content").{' '}
 - **Communication Information:** If you communicate with us, we may collect your name, contact information, and the contents of any messages you send ("Communication Information").
-- **Social Media Information:** We may have pages on social media sites like Instagram, Facebook, Medium, Twitter, YouTube and LinkedIn, as well as Reddit, 4chan, and a [discord server ("https://discord.gg/luminai")](https://discord.gg/luminai). When you interact with our social media pages, we will collect Personal Information that you elect to provide to us, such as your contact details or social media usernames and profile information (collectively, "Social Information"). In addition, the companies that host our social media accounts may provide us with aggregate information and analytics about our social media activity.
+- **Social Media Information:** We may have pages on social media sites like Instagram, Facebook, Medium, Twitter, YouTube and LinkedIn, as well as Reddit, 4chan, and a [discord server ("https://agnai.chat/discord")](https://agnai.chat/discord). When you interact with our social media pages, we will collect Personal Information that you elect to provide to us, such as your contact details or social media usernames and profile information (collectively, "Social Information"). In addition, the companies that host our social media accounts may provide us with aggregate information and analytics about our social media activity.
 
 **Personal Information We Receive Automatically From Your Use of the Services:** When you visit, use, and interact with the Services, we may receive the following information about your visit, use, or interactions ("Technical Information"):
 
@@ -65,7 +65,7 @@ Depending on location, individuals in the EEA, the UK, and across the globe may 
 - Withdraw your consent to the processing of your Personal Information where we rely on consent as the legal basis for processing. 
 - Object to or restrict the processing of your Personal Information where we rely on legitimate interests as the legal basis for processing
 
-You can exercise some of these rights through your Agnaistic account. If you are unable to exercise your rights through your account, please send your request in our [discord server ("https://discord.gg/luminai")](https://discord.gg/luminai).
+You can exercise some of these rights through your Agnaistic account. If you are unable to exercise your rights through your account, please send your request in our [discord server ("https://agnai.chat/discord")](https://agnai.chat/discord).
 
 ## 5. California privacy rights
 
@@ -88,13 +88,13 @@ To the extent provided for by law and subject to applicable exceptions, Californ
 
 We don't sell or share Personal Information as defined by the California Consumer Privacy Act, as amended by the California Privacy Rights Act. We also don't process sensitive personal information for the purposes of inferring characteristics about a consumer.
 
-**Exercising Your Rights**. California residents can exercise their CCPA privacy rights by sending their request to us on our [discord server ("https://discord.gg/luminai")](https://discord.gg/luminai).
+**Exercising Your Rights**. California residents can exercise their CCPA privacy rights by sending their request to us on our [discord server ("https://agnai.chat/discord")](https://agnai.chat/discord).
 **Verification**. In order to protect your Personal Information from unauthorized access, change, or deletion, we may require you to verify your credentials before you can submit a request to know, correct, or delete Personal Information. If you do not have an account with us, or if we suspect fraudulent or malicious activity, we may ask you to provide additional Personal Information and proof of residency for verification. If we cannot verify your identity, we will not provide, correct, or delete your Personal Information.
-**Authorized Agents**. you may submit a rights request through an authorized agent. If you do so, the agent must present signed written permission to act on your behalf and you may also be required to independently verify your identity and submit proof of your residency with us. Authorized agent requests can be submitted to us on our [discord server ("https://discord.gg/luminai")](https://discord.gg/luminai).
+**Authorized Agents**. you may submit a rights request through an authorized agent. If you do so, the agent must present signed written permission to act on your behalf and you may also be required to independently verify your identity and submit proof of your residency with us. Authorized agent requests can be submitted to us on our [discord server ("https://agnai.chat/discord")](https://agnai.chat/discord).
 
 ## 6. Children
 
-Our Service is not directed to children who are under the age of 18. Agnaistic does not knowingly collect Personal Information from children under the age of 18. If you have reason to believe that a child under the age of 18 has provided Personal Information to Agnaistic through the Service please contact us on our [discord server ("https://discord.gg/luminai")](https://discord.gg/luminai). We will investigate any notification and if appropriate, delete the Personal Information from our systems.
+Our Service is not directed to children who are under the age of 18. Agnaistic does not knowingly collect Personal Information from children under the age of 18. If you have reason to believe that a child under the age of 18 has provided Personal Information to Agnaistic through the Service please contact us on our [discord server ("https://agnai.chat/discord")](https://agnai.chat/discord). We will investigate any notification and if appropriate, delete the Personal Information from our systems.
 
 ## 7. Links to other websites
 
@@ -132,7 +132,7 @@ If you choose not to provide Personal Information that is needed to use some fea
 We may change this Privacy Policy at any time. When we do, we will post an updated version on this page, unless another type of notice is required by applicable law. By continuing to use our Service or providing us with Personal Information after we have posted an updated Privacy Policy, or notified you by other means, you consent to the revised Privacy Policy.
 
 ## 12. How to contact us
-Please contact us on our [discord server ("https://discord.gg/luminai")](https://discord.gg/luminai) if you have any questions or concerns not already addressed in this Privacy Policy.
+Please contact us on our [discord server ("https://agnai.chat/discord")](https://agnai.chat/discord) if you have any questions or concerns not already addressed in this Privacy Policy.
 `
 
 const PrivacyPolicyPage: Component = () => {
