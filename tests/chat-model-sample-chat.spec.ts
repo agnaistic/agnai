@@ -71,6 +71,17 @@ describe('Chat Completion Example Dialogue::', () => {
       Sam: More interesting!`
     expect(testInput(input, 25)).to.matchSnapshot()
   })
+
+  it('should correctly separate out system messages it is explicitly handed, such as a post-sample marker string', () => {
+    const input = neat`Sam: hey
+      Vader: hi!
+      <START>
+      Vader: bye Sam
+      Sam: byebye Vader
+      System: New conversation started. Previous conversations are examples only.`
+    const output = testInput(input)
+    expect(output).toMatchSnapshot()
+  })
 })
 
 function testInput(input: string, budget?: number) {
