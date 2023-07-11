@@ -13,6 +13,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
+import { pipelineApi } from '/web/store/data/pipeline'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -180,6 +181,10 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             helperText="Overrides apply to this chat only. If you want to edit the original character, open the 'Character' link in the Chat Menu instead."
           />
         </Card>
+
+        <Show when={pipelineApi.isAvailable()}>
+          <Card></Card>
+        </Show>
 
         <Show when={useOverrides()}>
           <Card>

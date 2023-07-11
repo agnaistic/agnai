@@ -179,7 +179,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
    * This will only be invoked
    */
   if (text) {
-    await pipelineApi.memoryRecall(entities.chat._id, text, created!)
+    await pipelineApi.chatRecall(entities.chat._id, text, created!)
   }
 
   const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)

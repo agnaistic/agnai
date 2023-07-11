@@ -181,7 +181,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
-        pipelineApi.memoryEmbed(res.result.chat, res.result.messages)
+        pipelineApi.chatEmbed(res.result.chat, res.result.messages)
 
         storage.localSetItem('lastChatId', id)
 

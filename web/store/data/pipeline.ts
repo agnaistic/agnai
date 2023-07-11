@@ -1,14 +1,25 @@
+import wiki from 'wikijs'
 import { api } from '../api'
 import { getStore } from '../create'
 import { AppSchema } from '/common/types'
 import { toMap } from '/web/shared/util'
+import { v4 } from 'uuid'
+
+type Embedding = {
+  documents: string[]
+  ids: string[]
+  metadatas: Array<object>
+}
 
 export const pipelineApi = {
   isAvailable,
   summarize,
   textToSpeech,
-  memoryEmbed,
-  memoryRecall,
+  chatEmbed,
+  chatRecall,
+
+  embedArticle,
+  queryEmbedding,
 }
 
 const baseUrl = `http://localhost:5001`
@@ -39,7 +50,7 @@ async function summarize(text: string) {
 
 type ChatMemory = { _id: string; msg: string; name: string; createdAt: string }
 
-async function memoryEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]) {
+async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]) {
   if (!online || !status.memory) return
 
   const { chatProfiles } = getStore('chat')()
@@ -67,43 +78,19 @@ async function memoryEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage
   }, [] as ChatMemory[])
 
   const now = Date.now()
-  await method('post', `/memory/${chat._id}/reembed`, { messages: payload }).catch((err) => {
+  await method('post', `/embed/${chat._id}/reembed`, { messages: payload }).catch((err) => {
     goOffline()
     console.debug(`Failed to embed`, err)
   })
   console.debug('Embedding duration', now.toLocaleString(), 'ms')
 }
 
-async function memoryRecall(chatId: string, message: string, created: string) {
+async function chatRecall(chatId: string, message: string, created: string) {
   if (!online || !status.memory) return
-  const now = Date.now()
-  const res = await method<{ memories: MemoryResponse }>('post', `/memory/${chatId}`, {
-    message,
-  }).catch((err) => {
-    goOffline()
-    console.error('Failed memory retrieval', err)
-    return { result: null }
-  })
+  const res = await queryEmbedding(chatId, message, { maxDistance: 1.5 })
+  const docs = res.filter((doc) => doc.date < created)
 
-  const diff = Date.now() - now
-
-  if (!res.result) return
-
-  const documents = res.result.memories.documents[0]
-  const metadatas = res.result.memories.metadatas[0]
-  const distances = res.result.memories.distances[0]
-
-  const filtered = documents
-    .map((doc, i) => {
-      const meta = metadatas[i]
-      const distance = distances[i]
-
-      return { ...meta, distance, text: doc }
-    })
-    .filter((doc) => doc.date < created && doc.distance < 1.5)
-
-  console.log('Memory retrieval', diff.toLocaleString(), 'ms')
-  return filtered
+  return docs
 }
 
 async function check() {
@@ -129,7 +116,7 @@ function getName(
   return name
 }
 
-type MemoryResponse = {
+type EmbedQueryResult = {
   ids: Array<string[]>
   distances: [number[]]
   documents: [string[]]
@@ -146,4 +133,106 @@ function goOffline() {
   online = false
   status.memory = false
   status.summary = false
+}
+
+async function embedArticle(wikipage: string) {
+  if (wikipage.includes('wikipedia.org/')) {
+    wikipage = wikipage.split('/').slice(-1)[0]
+  }
+
+  if (!wikipage) {
+    throw new Error(`Could not retrieve article: Invalid page requested`)
+  }
+
+  const page = await wiki({ apiUrl: 'https://en.wikipedia.org/w/api.php' }).page(wikipage)
+
+  const summary = await page.summary()
+  const content = await page.content()
+
+  const base = { created: new Date().toISOString(), article: wikipage }
+
+  const embed: Embedding = {
+    ids: [v4()],
+    documents: [summary],
+    metadatas: [{ ...base, section: 'Summary' }],
+  }
+
+  const push = (doc: string, meta: {}) => {
+    embed.ids.push(v4())
+    embed.documents.push(doc)
+    embed.metadatas.push({ ...base, ...meta })
+  }
+
+  for (const item of content) {
+    if (typeof item === 'string') {
+      push(item, {})
+      continue
+    }
+
+    const record = item as WikiItem
+    if (record.content) {
+      push(record.content, { section: record.title })
+    }
+
+    if (record.items) {
+      for (const sub of record.items) {
+        if (!sub.content) continue
+        push(sub.content, { section: record.title, sub_section: sub.title })
+      }
+    }
+  }
+
+  await method('post', `/embed/${wikipage}`, embed)
+}
+
+type QueryOpts = {
+  maxDistance?: number
+}
+
+async function queryEmbedding(embedding: string, message: string, opts: QueryOpts = {}) {
+  const maxDistance = opts.maxDistance ?? 1.5
+
+  if (!online || !status.memory) throw new Error(`Embeddings are not available: Offline or disabled`)
+  const now = Date.now()
+  const res = await method<{ result: EmbedQueryResult }>('post', `/embed/${embedding}/query`, {
+    message,
+  }).catch((err) => {
+    goOffline()
+    console.error('Failed memory retrieval', err)
+    return { result: null }
+  })
+
+  const diff = Date.now() - now
+
+  if (!res.result) throw new Error(`Could not query embedding`)
+
+  const documents = res.result.result.documents[0]
+  const metadatas = res.result.result.metadatas[0]
+  const distances = res.result.result.distances[0]
+
+  const filtered = documents
+    .map((doc, i) => {
+      const meta = metadatas[i]
+      const distance = distances[i]
+
+      return { ...meta, distance, text: doc }
+    })
+    .filter((doc) => doc.distance < maxDistance)
+
+  console.log('Embedding retrieval', diff.toLocaleString(), 'ms')
+  return filtered
+}
+
+wiki({ apiUrl: 'https://en.wikipedia.org/w/api.php' })
+  .page('Taylor Swift')
+  .then((page) => page.content())
+  .then((content) => {
+    console.log('Article Content')
+    console.log(content)
+  })
+
+type WikiItem = {
+  title: string
+  content: string
+  items?: WikiItem[]
 }
