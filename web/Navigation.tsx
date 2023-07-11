@@ -45,7 +45,7 @@ import Badge from './shared/Badge'
 import Button from './shared/Button'
 
 const MobileNavHeader = () => (
-  <div class="flex h-8 justify-between sm:hidden">
+  <div class="flex min-h-[2rem] justify-between sm:hidden">
     <div class="w-8"></div>
     <div>
       {' '}
@@ -369,7 +369,7 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
     <>
       <Show when={!props.href}>
         <div
-          class="flex h-10 cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:h-12"
+          class="flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[3rem]"
           onClick={() => {
             if (props.onClick) props.onClick()
             else settingStore.closeMenu()
@@ -381,7 +381,7 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
       <Show when={props.href}>
         <A
           href={props.href!}
-          class="flex h-10 items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:h-12"
+          class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[3rem]"
           onClick={settingStore.closeMenu}
         >
           {props.children}
