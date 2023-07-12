@@ -18,7 +18,7 @@ const emptyCfg: AppSchema.AppConfig = {
   imagesSaved: false,
   selfhosting: false,
   registered: [],
-  slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
+  slots: { banner: '', menu: '', mobile: '', menuLg: '',, gtmContent: '', gtmLeader: '', gtmMenu: '', enabled: false },
   authUrls: [],
 }
 
