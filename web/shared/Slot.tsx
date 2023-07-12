@@ -1,4 +1,4 @@
-import { Component, JSX, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
@@ -105,7 +105,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
           ></div>
         </Match>
         <Match when={!user.user?.admin}>
-          <div id={id()} class={hidden()} ref={ref} id={id()} data-slot={props.slot} style={style()}></div>
+          <div id={id()} class={hidden()} ref={ref} data-slot={props.slot} style={style()}></div>
         </Match>
       </Switch>
     </>
