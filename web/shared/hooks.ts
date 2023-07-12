@@ -116,6 +116,7 @@ export function useRootModal(modal: RootModal) {
  */
 export function useResizeObserver() {
   const [size, setSize] = createSignal({ w: 0, h: 0 })
+  const [loaded, setLoaded] = createSignal(false)
   const [obs] = createSignal(
     new ResizeObserver((cb) => {
       const ele = cb[0]
@@ -126,6 +127,7 @@ export function useResizeObserver() {
 
   const load = (ref: HTMLElement) => {
     if (!ref) return
+    setLoaded(true)
     obs().observe(ref)
     setSize({ w: ref.clientWidth, h: ref.clientHeight })
   }
@@ -134,5 +136,5 @@ export function useResizeObserver() {
     obs().disconnect()
   })
 
-  return { size, load }
+  return { size, load, loaded }
 }

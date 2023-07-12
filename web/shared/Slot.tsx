@@ -1,17 +1,18 @@
-import { Component, JSX, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import { AppSchema } from '/common/types'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
+import { useResizeObserver } from './hooks'
 
 type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; class?: string }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
   const [show, setShow] = createSignal(false)
   const [stick, setStick] = createSignal(props.sticky)
-  const [id] = createSignal(v4())
+  const [id] = createSignal(`${props.slot}-${v4().slice(0, 8)}`)
   const [done, setDone] = createSignal(false)
 
   const cfg = settingStore((s) => ({
@@ -19,6 +20,8 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement }
     flags: s.flags,
     ready: s.initLoading === false,
   }))
+
+  const size = useResizeObserver()
 
   const hidden = createMemo(() => (show() ? '' : 'hidden'))
 
@@ -30,6 +33,12 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement }
   createEffect(() => {
     if (!cfg.ready) return
 
+    if (ref && !size.loaded()) {
+      size.load(ref)
+      const win: any = window
+      win[props.slot] = size
+    }
+
     /**
      * Display when slot is configured and any of:
      * 1. Feature flag is enabled
@@ -40,6 +49,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement }
     if (!hasSlot) {
       log('Missing slot')
     }
+
     const canShow = hasSlot && (cfg.flags.slots || cfg.slots.enabled)
     setShow(canShow)
     const ele = document.getElementById(id()) || ref
@@ -83,18 +93,21 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement }
 
   return (
     <>
-      <Show when={user.user?.admin}>
-        <div
-          class={`border-[1px] border-[var(--bg-700)] bg-[var(--text-200)] ${hidden()}`}
-          ref={ref}
-          id={id()}
-          data-slot={props.slot}
-          style={style()}
-        ></div>
-      </Show>
-      <Show when={!user.user?.admin}>
-        <div class={hidden()} ref={ref} id={id()} data-slot={props.slot} style={style()}></div>
-      </Show>
+      <Switch>
+        <Match when={!user.user}>{null}</Match>
+        <Match when={user.user?.admin}>
+          <div
+            class={`w-full border-[1px] border-[var(--bg-700)] bg-[var(--text-200)] ${hidden()} ${props.class || ''}`}
+            ref={ref}
+            id={id()}
+            data-slot={props.slot}
+            style={style()}
+          ></div>
+        </Match>
+        <Match when={!user.user?.admin}>
+          <div id={id()} class={hidden()} ref={ref} data-slot={props.slot} style={style()}></div>
+        </Match>
+      </Switch>
     </>
   )
 }
