@@ -37,14 +37,14 @@ const PageHeader: Component<Props> = (props) => {
 
       <div class="flex justify-center" style={sticky() ? { position: 'sticky', top: 0 } : {}}>
         <Switch>
-          <Match when>
-            <Slot slot="gtmLeader" />
-          </Match>
           <Match when={page.width() >= 768}>
             <Slot slot="banner" />
           </Match>
           <Match when={page.width() < 768}>
             <Slot slot="mobile" />
+          </Match>
+          <Match when>
+            <Slot slot="gtmLeader" />
           </Match>
         </Switch>
       </div>
