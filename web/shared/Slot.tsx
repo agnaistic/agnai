@@ -25,7 +25,10 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
   }))
 
   const size = useResizeObserver()
-  const hidden = createMemo(() => (show() ? '' : 'hidden'))
+  const hidden = createMemo(() => {
+    return ''
+    return show() ? '' : 'hidden'
+  })
 
   const log = (...args: any[]) => {
     if (!user.user?.admin) return
@@ -54,6 +57,11 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
 
     const canShow = hasSlot && (cfg.flags.slots || cfg.slots.enabled)
     setShow(canShow)
+
+    if (hidden()) {
+      return
+    }
+
     const ele = document.getElementById(id()) || ref
     if (!ele) {
       log(props.slot, 'No element')
