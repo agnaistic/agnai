@@ -9,6 +9,7 @@ import { toastStore } from './toasts'
 import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
+import { wait } from '/common/util'
 
 type SettingState = {
   guestAccessAllowed: boolean
@@ -326,12 +327,11 @@ async function loadSlotConfig() {
       }
     }
 
-    console.log('Slots')
-    console.log(slots)
     settingStore.setState({ slots })
   } catch (ex: any) {
     console.log(ex.message)
   } finally {
+    await wait(0.01)
     settingStore.setState({ slotsLoaded: true })
   }
 }
