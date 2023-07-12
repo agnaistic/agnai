@@ -1,4 +1,4 @@
-import { Component, JSX, Show, createEffect, createMemo, createSignal } from 'solid-js'
+import { Component, JSX, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import Divider from './Divider'
 import { useWindowSize } from './hooks'
 import Slot from './Slot'
@@ -36,12 +36,17 @@ const PageHeader: Component<Props> = (props) => {
       </Show>
 
       <div class="flex justify-center" style={sticky() ? { position: 'sticky', top: 0 } : {}}>
-        <Show when={page.width() >= 768}>
-          <Slot slot="banner" />
-        </Show>
-        <Show when={page.width() < 768}>
-          <Slot slot="mobile" />
-        </Show>
+        <Switch>
+          <Match when>
+            <Slot slot="gtmLeader" />
+          </Match>
+          <Match when={page.width() >= 768}>
+            <Slot slot="banner" />
+          </Match>
+          <Match when={page.width() < 768}>
+            <Slot slot="mobile" />
+          </Match>
+        </Switch>
       </div>
     </>
   )

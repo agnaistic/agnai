@@ -301,48 +301,6 @@ const GuestNavigation: Component = () => {
   )
 }
 
-const Slots: Component = (props) => {
-  let ref: HTMLDivElement
-  const state = settingStore()
-  const page = useWindowSize()
-  const { size, load } = useResizeObserver()
-
-  onMount(() => {
-    load(ref)
-  })
-
-  const [rendered, setRendered] = createSignal(false)
-
-  createEffect(() => {
-    if (rendered()) return
-
-    if (state.showMenu) {
-      setTimeout(() => setRendered(true), 500)
-    }
-  })
-
-  return (
-    <div ref={ref!} class="h-full w-full">
-      <Switch>
-        <Match when={size().w < 100}>{null}</Match>
-        <Match when={size().h >= 600 && page.width() >= 1024}>
-          <Slot slot="menuLg" />
-        </Match>
-
-        <Match when={page.width() < 1024}>
-          <Show when={rendered()}>
-            <Slot slot="menu" />
-          </Show>
-        </Match>
-
-        <Match when>
-          <Slot slot="menu" />
-        </Match>
-      </Switch>
-    </div>
-  )
-}
-
 const Item: Component<{ href?: string; children: string | JSX.Element; onClick?: () => void }> = (props) => {
   return (
     <>
@@ -441,5 +399,47 @@ const UserProfile = () => {
         </div>
       </div>
     </>
+  )
+}
+
+const Slots: Component = (props) => {
+  let ref: HTMLDivElement
+  const state = settingStore()
+  const page = useWindowSize()
+  const { size, load } = useResizeObserver()
+
+  onMount(() => {
+    load(ref)
+  })
+
+  const [rendered, setRendered] = createSignal(false)
+
+  createEffect(() => {
+    if (rendered()) return
+
+    if (state.showMenu) {
+      setTimeout(() => setRendered(true), 500)
+    }
+  })
+
+  return (
+    <div ref={ref!} class="h-full w-full">
+      <Switch>
+        <Match when={size().w < 100}>{null}</Match>
+        <Match when={size().h >= 600 && page.width() >= 1024}>
+          <Slot slot="gtmMenu" />
+        </Match>
+
+        <Match when={page.width() < 1024}>
+          <Show when={rendered()}>
+            <Slot slot="menu" />
+          </Show>
+        </Match>
+
+        <Match when>
+          <Slot slot="menu" />
+        </Match>
+      </Switch>
+    </div>
   )
 }

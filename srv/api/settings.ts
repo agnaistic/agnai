@@ -58,9 +58,6 @@ async function update() {
     appConfig.maintenance = cfg.maintenance || appConfig.maintenance
     appConfig.patreon = cfg.patreon ?? appConfig.patreon
     appConfig.slots.enabled = cfg.slots?.enabled ?? appConfig.slots.enabled
-    appConfig.slots.banner = cfg.slots?.banner || appConfig.slots.banner
-    appConfig.slots.menu = cfg.slots?.menu || appConfig.slots.menu
-    appConfig.slots.mobile = cfg.slots?.mobile || appConfig.slots.mobile
   } catch (ex) {}
 }
 

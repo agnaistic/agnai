@@ -112,11 +112,17 @@ export const config = {
     menuLg: env('MENU_LG_SLOT', ''),
     banner: env('BANNER_SLOT', ''),
     mobile: env('MOBILE_SLOT', ''),
+
+    gtmMenu: env('GTM_MENU', ''),
+    gtmLeader: env('GTM_LEADER', ''),
+    gtmContent: env('GTM_CONTENT', ''),
   },
   keys: {
     REPLICATE: env('REPLICATE_KEY', ''),
   },
 }
+
+insertInject()
 
 if (config.ui.inject) {
   const tags = ['<meta inject="">', '<meta inject>']
@@ -177,5 +183,21 @@ function tryGetSettings(): CustomSettings {
     return settings
   } catch (ex) {
     return {}
+  }
+}
+
+/** @deprecated */
+function insertInject() {
+  if (config.ui.inject) {
+    const tags = ['<meta inject="">', '<meta inject>']
+
+    for (const tag of tags) {
+      const indexFile = resolve(__dirname, '../dist/index.html')
+      const index = readFileSync(indexFile).toString()
+      if (index.includes(tag)) {
+        writeFileSync(indexFile, index.replace(tag, config.ui.inject))
+        break
+      }
+    }
   }
 }

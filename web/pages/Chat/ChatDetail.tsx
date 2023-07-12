@@ -502,12 +502,8 @@ const ChatDetail: Component = () => {
                     <div ref={slotContainer!} class="flex w-full justify-center">
                       <Switch>
                         <Match when={slots.size().w === 0}>{null}</Match>
-                        <Match when={slotContainer! && slots.size().w >= 728}>
-                          <Slot sticky slot="banner" parent={slotContainer!} />
-                        </Match>
-
                         <Match when={slotContainer!}>
-                          <Slot sticky slot="mobile" parent={slotContainer!} />
+                          <Slot sticky slot="gtmContent" parent={slotContainer!} />
                         </Match>
                       </Switch>
                     </div>

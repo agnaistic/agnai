@@ -33,6 +33,17 @@ type SettingState = {
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   showSettings: boolean
+  slotsLoaded: boolean
+  slots: {
+    menuLg: string
+    menu: string
+    banner: string
+    mobile: string
+
+    gtmMenu: string
+    gtmLeader: string
+    gtmContent: string
+  }
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -57,12 +68,24 @@ const initState: SettingState = {
     assetPrefix: '',
     selfhosting: false,
     imagesSaved: false,
-    slots: { banner: '', menu: '', mobile: '', menuLg: '', enabled: false },
+    /** @deprecated */
+    slots: { banner: '', menu: '', mobile: '', menuLg: '', gtmContent: '', gtmLeader: '', gtmMenu: '', enabled: false },
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
   },
   replicate: {},
   flags: getFlags(),
   showSettings: false,
+  slotsLoaded: false,
+  slots: {
+    menuLg: '',
+    menu: '',
+    banner: '',
+    mobile: '',
+
+    gtmMenu: '',
+    gtmLeader: '',
+    gtmContent: '',
+  },
 }
 
 export const settingStore = createStore<SettingState>(
@@ -266,4 +289,61 @@ function canUseStorage(noThrow?: boolean) {
   }
 
   return true
+}
+
+loadSlotConfig()
+
+async function loadSlotConfig() {
+  const slots = {
+    menuLg: '',
+    menu: '',
+    banner: '',
+    mobile: '',
+
+    gtmMenu: '',
+    gtmLeader: '',
+    gtmContent: '',
+  }
+
+  try {
+    const content = await fetch('/slots.txt').then((res) => res.text())
+    const config = JSON.parse(content)
+
+    for (const [prop, value] of Object.entries(config)) {
+      if (typeof value !== 'string') continue
+      if (prop in slots === false) continue
+      const key = prop as keyof typeof slots
+
+      const inner = await getContent(value)
+      slots[key] = inner || ''
+    }
+
+    if (config.inject) {
+      const inner = await getContent(config.inject)
+      if (inner) {
+        const node = document.createRange().createContextualFragment(inner)
+        document.head.append(node)
+      }
+    }
+
+    console.log('Slots')
+    console.log(slots)
+    settingStore.setState({ slots })
+  } catch (ex: any) {
+    console.log(ex.message)
+  } finally {
+    settingStore.setState({ slotsLoaded: true })
+  }
+}
+
+async function getContent(value: string) {
+  if (value.startsWith('http')) {
+    const res = await fetch(value)
+      .then((res) => res.text())
+      .catch(() => null)
+
+    return res
+  } else {
+    return value
+  }
 }

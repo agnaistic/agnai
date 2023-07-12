@@ -4,7 +4,7 @@ import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
 import { useResizeObserver } from './hooks'
 
-type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing'>
+type SlotKind = Exclude<keyof Required<AppSchema.AppConfig['slots']>, 'testing' | 'enabled'>
 
 const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; class?: string }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
@@ -16,13 +16,15 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
   const [done, setDone] = createSignal(false)
 
   const cfg = settingStore((s) => ({
+    newSlots: s.slots,
+    newSlotsLoaded: s.slotsLoaded,
     slots: s.config.slots,
     flags: s.flags,
     ready: s.initLoading === false,
+    inner: s.slots[props.slot] || s.config.slots[props.slot],
   }))
 
   const size = useResizeObserver()
-
   const hidden = createMemo(() => (show() ? '' : 'hidden'))
 
   const log = (...args: any[]) => {
@@ -31,7 +33,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
   }
 
   createEffect(() => {
-    if (!cfg.ready) return
+    if (!cfg.ready || !cfg.newSlotsLoaded) return
 
     if (ref && !size.loaded()) {
       size.load(ref)
@@ -45,7 +47,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
      * 2. or 'testing' is true and user is admin
      * 3. Env var is enabled
      */
-    const hasSlot = !!cfg.slots[props.slot]
+    const hasSlot = !!cfg.inner
     if (!hasSlot) {
       log('Missing slot')
     }
@@ -63,7 +65,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
         return
       }
 
-      const node = document.createRange().createContextualFragment(cfg.slots[props.slot] as any)
+      const node = document.createRange().createContextualFragment(cfg.inner as any)
       ele.append(node)
 
       if (stick() && props.parent) {
@@ -81,6 +83,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
         }
       }, 4500)
     } else {
+      console.log('No show', hasSlot)
       ele.innerHTML = ''
     }
   })
@@ -97,15 +100,17 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
         <Match when={!user.user}>{null}</Match>
         <Match when={user.user?.admin}>
           <div
-            class={`w-full border-[1px] border-[var(--bg-700)] bg-[var(--text-200)] ${hidden()} ${props.class || ''}`}
+            class={`flex w-full justify-center border-[1px] border-[var(--bg-700)] bg-[var(--text-200)] ${hidden()} ${
+              props.class || ''
+            }`}
             ref={ref}
-            id={id()}
+            slot-id={id()}
             data-slot={props.slot}
             style={style()}
           ></div>
         </Match>
         <Match when={!user.user?.admin}>
-          <div id={id()} class={hidden()} ref={ref} data-slot={props.slot} style={style()}></div>
+          <div slot-id={id()} class={hidden()} ref={ref} data-slot={props.slot} style={style()}></div>
         </Match>
       </Switch>
     </>
