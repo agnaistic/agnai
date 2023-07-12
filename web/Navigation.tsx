@@ -426,8 +426,11 @@ const Slots: Component = (props) => {
     <div ref={ref!} class="h-full w-full">
       <Switch>
         <Match when={size().w < 100}>{null}</Match>
+
         <Match when={size().h >= 600 && page.width() >= 1024}>
-          <Slot slot="gtmMenu" />
+          <Slot slot="menuLg" />
+          {/* When GTM is enabled replace menuLg */}
+          {/* <Slot slot="gtmMenu" /> */}
         </Match>
 
         <Match when={page.width() < 1024}>
