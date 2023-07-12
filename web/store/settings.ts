@@ -307,7 +307,7 @@ async function loadSlotConfig() {
   }
 
   try {
-    const content = await fetch('https://agnai.chat/slots.txt').then((res) => res.text())
+    const content = await fetch('/slots.txt').then((res) => res.text())
     const config = JSON.parse(content)
 
     for (const [prop, value] of Object.entries(config)) {

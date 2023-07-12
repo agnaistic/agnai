@@ -83,7 +83,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent?: HTMLElement; 
         }
       }, 4500)
     } else {
-      console.log('No show', hasSlot)
       ele.innerHTML = ''
     }
   })
