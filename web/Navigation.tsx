@@ -322,13 +322,14 @@ const Slots: Component = (props) => {
   })
 
   return (
-    <div ref={ref!} class="h-full">
+    <div ref={ref!} class="h-full w-full">
       <Switch>
+        <Match when={size().w < 100}>{null}</Match>
         <Match when={size().h >= 600 && page.width() >= 1024}>
           <Slot slot="menuLg" />
         </Match>
 
-        <Match when={page.width() < 900}>
+        <Match when={page.width() < 1024}>
           <Show when={rendered()}>
             <Slot slot="menu" />
           </Show>
