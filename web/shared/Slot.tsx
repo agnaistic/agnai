@@ -1,7 +1,7 @@
 import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import { SettingState, settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
-import { getWidthPlatform, useEffect, useResizeObserver, useWindowSize } from './hooks'
+import { getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
