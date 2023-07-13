@@ -154,29 +154,31 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     // const node = document.createRange().createContextualFragment(cfg.inner as any)
     // ele.append(node)
 
-    googletag.cmd.push(function () {
-      const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
-      setSlotId(slotId)
-      const slot = googletag.defineSlot(slotId, spec.wh, id())
-      if (!slot) {
-        log(`No slot created`)
-        return
-      }
+    gtmReady.then(() => {
+      googletag.cmd.push(function () {
+        const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
+        setSlotId(slotId)
+        const slot = googletag.defineSlot(slotId, spec.wh, id())
+        if (!slot) {
+          log(`No slot created`)
+          return
+        }
 
-      slot.addService(googletag.pubads())
-      if (!user.user?.admin) {
-      }
+        slot.addService(googletag.pubads())
+        if (!user.user?.admin) {
+        }
 
-      googletag.enableServices()
-      setSlot(slot)
-    })
+        googletag.enableServices()
+        setSlot(slot)
+      })
 
-    googletag.cmd.push(function () {
-      if (adslot()) {
-        log('Displaying')
-        googletag.display(id())
-        googletag.pubads().refresh([adslot()!])
-      }
+      googletag.cmd.push(function () {
+        if (adslot()) {
+          log('Displaying')
+          googletag.display(id())
+          googletag.pubads().refresh([adslot()!])
+        }
+      })
     })
 
     if (stick() && props.parent) {
