@@ -428,19 +428,13 @@ const Slots: Component = (props) => {
         <Match when={size().w < 100}>{null}</Match>
 
         <Match when={size().h >= 600 && page.width() >= 1024}>
-          <Slot slot="menuLg" />
-          {/* When GTM is enabled replace menuLg */}
-          {/* <Slot slot="gtmMenu" /> */}
+          <Slot slot="menu" />
         </Match>
 
         <Match when={page.width() < 1024}>
           <Show when={rendered()}>
-            <Slot slot="menu" />
+            <Slot slot="menu" size="sm" />
           </Show>
-        </Match>
-
-        <Match when>
-          <Slot slot="menu" />
         </Match>
       </Switch>
     </div>

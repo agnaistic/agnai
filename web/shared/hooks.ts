@@ -7,13 +7,20 @@ import { RootModal, rootModalStore } from '../store/root-modal'
 export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>
+  platform: Accessor<'sm' | 'lg' | 'xl'>
 } {
+  const getPlatform = () => {
+    return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+  }
+
   const [width, setWidth] = createSignal(0)
   const [height, setHeight] = createSignal(0)
+  const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>(getPlatform())
 
   const handler = () => {
     setWidth(window.innerWidth)
     setHeight(window.innerHeight)
+    setPlatform(getPlatform())
   }
 
   useEffect(() => {
@@ -26,7 +33,7 @@ export function useWindowSize(): {
     handler()
   })
 
-  return { width, height }
+  return { width, height, platform }
 }
 
 export function usePane() {

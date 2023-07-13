@@ -503,12 +503,7 @@ const ChatDetail: Component = () => {
                       <Switch>
                         <Match when={slots.size().w === 0}>{null}</Match>
                         <Match when={slotContainer!}>
-                          <Slot sticky slot="banner" parent={slotContainer!} />
-                        </Match>
-
-                        {/* When GTM is fixed promote this to the top */}
-                        <Match when={false}>
-                          <Slot sticky slot="gtmContent" parent={slotContainer!} />
+                          <Slot sticky slot="content" parent={slotContainer!} />
                         </Match>
                       </Switch>
                     </div>
