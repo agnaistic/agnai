@@ -25,6 +25,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
   const [adslot, setSlot] = createSignal<googletag.Slot>()
   const [viewed, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
+  const [slotId, setSlotId] = createSignal<string>()
 
   const cfg = settingStore((s) => ({
     publisherId: s.slots.publisherId,
@@ -86,6 +87,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
 
     const onRequested = (evt: googletag.events.SlotRequestedEvent) => {
       if (evt.slot.getSlotElementId() !== id()) return
+      log('Requested', slotId())
     }
 
     const onResponse = (evt: googletag.events.SlotResponseReceived) => {
@@ -127,20 +129,22 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     return spec
   })
 
-  createEffect(() => {
+  createEffect(async () => {
+    await gtmReady
     if (!cfg.ready || !cfg.slotsLoaded || !cfg.publisherId || parentSize.size().w === 0) return
 
     if (ref && !resize.loaded()) {
       resize.load(ref)
     }
 
-    setShow(true)
-
-    const ele = document.getElementById(id()) || ref
-    if (!ele) {
-      log(props.slot, 'No element')
+    if (resize.size().w === 0) {
+      log('Skipped: Size 0')
       return
+    } else {
+      log('Okay:', resize.size().w)
     }
+
+    setShow(true)
 
     if (done()) {
       return
@@ -152,21 +156,25 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     // ele.append(node)
 
     googletag.cmd.push(function () {
-      const slot = googletag.defineSlot(getSlotId(`/${cfg.publisherId}/${spec.id}`), [spec.wh], id())
+      const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
+      setSlotId(slotId)
+      const slot = googletag.defineSlot(slotId, [spec.wh], id())
       if (!slot) {
         log(`No slot created`)
         return
       }
+
       slot.addService(googletag.pubads())
-      if (!user.user?.admin && !cfg.flags.reporting) {
-        googletag.pubads().collapseEmptyDivs()
+      if (!user.user?.admin) {
       }
+
       googletag.enableServices()
       setSlot(slot)
     })
 
     googletag.cmd.push(function () {
       if (adslot()) {
+        log('Displaying')
         googletag.display(id())
         googletag.pubads().refresh([adslot()!])
       }
@@ -198,9 +206,9 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     <>
       <Switch>
         <Match when={!user.user}>{null}</Match>
-        <Match when={user.user?.admin || cfg.flags.reporting}>
+        <Match when={user.user?.admin}>
           <div
-            class={`flex w-full justify-center border-[1px] border-[var(--bg-700)] bg-[var(--text-200)]`}
+            class={`flex w-full justify-center border-[var(--bg-700)] bg-[var(--text-200)]`}
             ref={ref}
             id={id()}
             data-slot={specs().id}
@@ -251,6 +259,8 @@ function toPixels(size: string) {
   const [w, h] = size.split('x')
   return { width: `${w}px`, height: `${h}px` }
 }
+const win: any = window
+win.getSlotById = getSlotById
 
 export function getSlotById(id: string) {
   const slots = googletag.pubads().getSlots()
@@ -262,6 +272,7 @@ export function getSlotById(id: string) {
 }
 
 function getSlotId(id: string) {
+  return id
   if (location.origin.includes('localhost')) {
     return '/6499/example/banner'
   }
