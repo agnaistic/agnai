@@ -1,7 +1,7 @@
 import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import { SettingState, settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
-import { getWidthPlatform, useEffect, useResizeObserver } from './hooks'
+import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
@@ -14,7 +14,7 @@ type SlotId = Exclude<keyof SettingState['slots'], 'publisherId'>
 type SlotSpec = { size: string; id: SlotId }
 type SlotDef = { platform: 'page' | 'container'; sm: SlotSpec; lg: SlotSpec; xl?: SlotSpec }
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; size?: SlotSize }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
@@ -136,13 +136,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
       resize.load(ref)
     }
 
-    // if (resize.size().w === 0) {
-    //   log('Skipped: Size 0')
-    //   return
-    // } else {
-    //   log('Okay:', resize.size().w)
-    // }
-
     setShow(true)
 
     if (done()) {
@@ -150,9 +143,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     }
 
     const spec = specs()
-
-    // const node = document.createRange().createContextualFragment(cfg.inner as any)
-    // ele.append(node)
 
     gtmReady.then(() => {
       googletag.cmd.push(function () {
@@ -294,7 +284,7 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   const def = slotDefs[slot]
 
   if (def.platform === 'page') {
-    const platform = getWidthPlatform(window.innerWidth)
+    const platform = getPagePlatform(window.innerWidth)
     return getBestFit(def, platform)
   }
 

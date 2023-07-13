@@ -153,3 +153,7 @@ export function useResizeObserver() {
 export function getWidthPlatform(width: number) {
   return width > 1024 ? 'xl' : width > 720 ? 'lg' : 'sm'
 }
+
+export function getPagePlatform(width: number) {
+  return width > 1600 ? 'xl' : width > 1024 ? 'lg' : 'sm'
+}
