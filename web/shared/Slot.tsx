@@ -304,6 +304,7 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   }
 
   const width = parent.clientWidth
+  log('Spec width', width)
   const platform = getWidthPlatform(width)
 
   return getBestFit(def, platform)
