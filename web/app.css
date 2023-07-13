@@ -25,7 +25,7 @@
   transition: opacity 250ms ease;
   transition: left 250ms ease;
   @apply bg-[var(--bg-800)] sm:relative sm:top-0 sm:clear-none;
-  @apply z-10 sm:z-0;
+  @apply z-20 sm:z-0;
 }
 
 @media (min-width: 1024px) {
