@@ -12,7 +12,13 @@ export type SlotSize = 'sm' | 'lg' | 'xl'
 type SlotId = Exclude<keyof SettingState['slots'], 'publisherId'>
 
 type SlotSpec = { size: string; id: SlotId }
-type SlotDef = { platform: 'page' | 'container'; sm: SlotSpec; lg: SlotSpec; xl?: SlotSpec }
+type SlotDef = {
+  calc?: (parent: HTMLElement) => SlotSize
+  platform: 'page' | 'container'
+  sm: SlotSpec
+  lg: SlotSpec
+  xl?: SlotSpec
+}
 
 const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; size?: SlotSize }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
@@ -230,6 +236,10 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     xl: { size: '970x90', id: 'agn-leaderboard-xl' },
   },
   menu: {
+    calc: (parent) => {
+      if (window.innerHeight > 1010) return 'lg'
+      return 'sm'
+    },
     platform: 'page',
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x600', id: 'agn-menu-lg' },
@@ -283,13 +293,17 @@ const gtmReady = new Promise(async (resolve) => {
 function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   const def = slotDefs[slot]
 
+  if (def.calc) {
+    const platform = def.calc(parent)
+    return getBestFit(def, platform)
+  }
+
   if (def.platform === 'page') {
     const platform = getPagePlatform(window.innerWidth)
     return getBestFit(def, platform)
   }
 
   const width = parent.clientWidth
-  log('Spec width', width)
   const platform = getWidthPlatform(width)
 
   return getBestFit(def, platform)
