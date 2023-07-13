@@ -22,7 +22,7 @@ import { Component, createEffect, createMemo, createSignal, JSX, Match, onMount,
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import { characterStore, chatStore, inviteStore, settingStore, toastStore, userStore } from './store'
 import Slot from './shared/Slot'
-import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
+import { useEffect, useResizeObserver } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import Button from './shared/Button'
@@ -405,8 +405,7 @@ const UserProfile = () => {
 const Slots: Component = (props) => {
   let ref: HTMLDivElement
   const state = settingStore()
-  const page = useWindowSize()
-  const { size, load } = useResizeObserver()
+  const { load } = useResizeObserver()
 
   onMount(() => {
     load(ref)
@@ -424,19 +423,7 @@ const Slots: Component = (props) => {
 
   return (
     <div ref={ref!} class="h-full w-full">
-      <Switch>
-        <Match when={size().w < 100}>{null}</Match>
-
-        <Match when={size().h >= 600 && page.width() >= 1024}>
-          <Slot parent={ref!} slot="menu" />
-        </Match>
-
-        <Match when={page.width() < 1024}>
-          <Show when={rendered()}>
-            <Slot parent={ref!} slot="menu" />
-          </Show>
-        </Match>
-      </Switch>
+      <Slot parent={ref!} slot="menu" />
     </div>
   )
 }

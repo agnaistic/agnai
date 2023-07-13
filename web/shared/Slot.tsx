@@ -1,7 +1,7 @@
 import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
 import { SettingState, settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
-import { getWidthPlatform, useEffect, useResizeObserver } from './hooks'
+import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
@@ -12,9 +12,15 @@ export type SlotSize = 'sm' | 'lg' | 'xl'
 type SlotId = Exclude<keyof SettingState['slots'], 'publisherId'>
 
 type SlotSpec = { size: string; id: SlotId }
-type SlotDef = { platform: 'page' | 'container'; sm: SlotSpec; lg: SlotSpec; xl?: SlotSpec }
+type SlotDef = {
+  calc?: (parent: HTMLElement) => SlotSize
+  platform: 'page' | 'container'
+  sm: SlotSpec
+  lg: SlotSpec
+  xl?: SlotSpec
+}
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; size?: SlotSize }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
@@ -136,13 +142,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
       resize.load(ref)
     }
 
-    // if (resize.size().w === 0) {
-    //   log('Skipped: Size 0')
-    //   return
-    // } else {
-    //   log('Okay:', resize.size().w)
-    // }
-
     setShow(true)
 
     if (done()) {
@@ -150,9 +149,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     }
 
     const spec = specs()
-
-    // const node = document.createRange().createContextualFragment(cfg.inner as any)
-    // ele.append(node)
 
     gtmReady.then(() => {
       googletag.cmd.push(function () {
@@ -240,6 +236,10 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     xl: { size: '970x90', id: 'agn-leaderboard-xl' },
   },
   menu: {
+    calc: (parent) => {
+      if (window.innerHeight > 1010) return 'lg'
+      return 'sm'
+    },
     platform: 'page',
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x600', id: 'agn-menu-lg' },
@@ -293,13 +293,17 @@ const gtmReady = new Promise(async (resolve) => {
 function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   const def = slotDefs[slot]
 
+  if (def.calc) {
+    const platform = def.calc(parent)
+    return getBestFit(def, platform)
+  }
+
   if (def.platform === 'page') {
-    const platform = getWidthPlatform(window.innerWidth)
+    const platform = getPagePlatform(window.innerWidth)
     return getBestFit(def, platform)
   }
 
   const width = parent.clientWidth
-  log('Spec width', width)
   const platform = getWidthPlatform(width)
 
   return getBestFit(def, platform)
