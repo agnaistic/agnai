@@ -75,7 +75,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
   return (
     <>
-      <PageHeader title="Your Profile" size="lg" />
+      <PageHeader title="Your Profile" />
       <form ref={formRef!} onSubmit={submit}>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">

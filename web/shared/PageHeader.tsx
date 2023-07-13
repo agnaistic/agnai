@@ -1,13 +1,12 @@
 import { Component, JSX, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import Divider from './Divider'
-import Slot, { SlotSize } from './Slot'
+import Slot from './Slot'
 
 type Props = {
   title: string | JSX.Element
   subtitle?: string | JSX.Element
   noDivider?: boolean
   sticky?: boolean
-  size?: SlotSize
 }
 
 const PageHeader: Component<Props> = (props) => {
