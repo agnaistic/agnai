@@ -209,7 +209,13 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; c
           ></div>
         </Match>
         <Match when={!user.user?.admin}>
-          <div id={id()} ref={ref} data-slot={specs().id} style={{ ...style(), ...specs()!.css }}></div>
+          <div
+            class="flex w-full justify-center"
+            id={id()}
+            ref={ref}
+            data-slot={specs().id}
+            style={{ ...style(), ...specs()!.css }}
+          ></div>
         </Match>
       </Switch>
     </>
