@@ -1,6 +1,5 @@
 import { Component, JSX, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
 import Divider from './Divider'
-import { useWindowSize } from './hooks'
 import Slot from './Slot'
 
 type Props = {
@@ -11,8 +10,8 @@ type Props = {
 }
 
 const PageHeader: Component<Props> = (props) => {
-  const page = useWindowSize()
-  const [sticky, setSticky] = createSignal(true)
+  let ref: HTMLDivElement
+  const [_sticky, setSticky] = createSignal(true)
 
   createEffect(() => {
     setTimeout(() => setSticky(false), 4000)
@@ -35,16 +34,10 @@ const PageHeader: Component<Props> = (props) => {
         <Divider />
       </Show>
 
-      <div class="flex justify-center" style={sticky() ? { position: 'sticky', top: 0 } : {}}>
+      <div ref={ref!} class="flex w-full justify-center">
         <Switch>
-          <Match when={page.width() >= 768}>
-            <Slot slot="banner" />
-          </Match>
-          <Match when={page.width() < 768}>
-            <Slot slot="mobile" />
-          </Match>
-          <Match when>
-            <Slot slot="gtmLeader" />
+          <Match when={ref!}>
+            <Slot sticky slot="leaderboard" parent={ref!} />
           </Match>
         </Switch>
       </div>

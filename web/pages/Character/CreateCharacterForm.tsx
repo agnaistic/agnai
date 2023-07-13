@@ -32,7 +32,6 @@ import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 import { ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
-import Slot from '../../shared/Slot'
 import { getRandomBody } from '../../asset/sprite'
 import AvatarContainer from '../../shared/Avatar/Container'
 import { useCharEditor } from './editor'
@@ -714,7 +713,6 @@ const SpriteModal: Component<{
       <Modal
         show={props.show}
         close={props.close}
-        title="Character Designer"
         fixedHeight
         maxWidth="half"
         footer={
@@ -726,7 +724,7 @@ const SpriteModal: Component<{
           </>
         }
       >
-        <Slot slot="mobile" />
+        <PageHeader title="Character Designer" />
         <div class="h-[28rem] w-full text-sm sm:h-[42rem]" ref={ref}>
           <AvatarBuilder body={body()} onChange={(body) => setBody(body)} bounds={ref} noHeader />
         </div>

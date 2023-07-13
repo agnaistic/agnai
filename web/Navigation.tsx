@@ -72,11 +72,11 @@ const Navigation: Component = () => {
 
   return (
     <>
-      <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 pt-2 ${hide()} ${fullscreen()}`}>
-        <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0 px-4 sm:gap-1">
+      <div ref={parent} class={`drawer bg-800 flex flex-col gap-2 px-2 pt-2 ${hide()} ${fullscreen()}`}>
+        <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0  sm:gap-1">
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
-              <div class="h-8 w-fit items-center justify-center rounded-lg px-4 font-bold">
+              <div class="h-8 w-fit items-center justify-center rounded-lg font-bold">
                 Agn<span class="text-[var(--hl-500)]">ai</span>stic
               </div>
             </A>
@@ -346,7 +346,7 @@ export default Navigation
 
 const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
   <a
-    class="flex h-10 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] sm:h-12"
+    class="mx-2 flex h-10 items-center justify-start gap-4 rounded-xl hover:bg-[var(--bg-700)] sm:h-12"
     href={props.href}
     target={props.newtab ? '_blank' : ''}
   >
@@ -361,7 +361,7 @@ const UserProfile = () => {
   return (
     <>
       <div
-        class="grid w-full items-center justify-between gap-2"
+        class="grid w-full items-center justify-between gap-2 pr-2"
         style={{
           'grid-template-columns': '1fr 30px',
         }}
@@ -428,19 +428,13 @@ const Slots: Component = (props) => {
         <Match when={size().w < 100}>{null}</Match>
 
         <Match when={size().h >= 600 && page.width() >= 1024}>
-          <Slot slot="menuLg" />
-          {/* When GTM is enabled replace menuLg */}
-          {/* <Slot slot="gtmMenu" /> */}
+          <Slot parent={ref!} slot="menu" />
         </Match>
 
         <Match when={page.width() < 1024}>
           <Show when={rendered()}>
-            <Slot slot="menu" />
+            <Slot parent={ref!} slot="menu" />
           </Show>
-        </Match>
-
-        <Match when>
-          <Slot slot="menu" />
         </Match>
       </Switch>
     </div>

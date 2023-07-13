@@ -11,7 +11,16 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { wait } from '/common/util'
 
-type SettingState = {
+const emptySlots = {
+  publisherId: '',
+  'agn-leaderboard-sm': '',
+  'agn-leaderboard-lg': '',
+  'agn-leaderboard-xl': '',
+  'agn-menu-sm': '',
+  'agn-menu-lg': '',
+}
+
+export type SettingState = {
   guestAccessAllowed: boolean
   initLoading: boolean
   showMenu: boolean
@@ -34,17 +43,9 @@ type SettingState = {
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   showSettings: boolean
-  slotsLoaded: boolean
-  slots: {
-    menuLg: string
-    menu: string
-    banner: string
-    mobile: string
 
-    gtmMenu: string
-    gtmLeader: string
-    gtmContent: string
-  }
+  slotsLoaded: boolean
+  slots: typeof emptySlots
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -77,16 +78,7 @@ const initState: SettingState = {
   flags: getFlags(),
   showSettings: false,
   slotsLoaded: false,
-  slots: {
-    menuLg: '',
-    menu: '',
-    banner: '',
-    mobile: '',
-
-    gtmMenu: '',
-    gtmLeader: '',
-    gtmContent: '',
-  },
+  slots: { ...emptySlots },
 }
 
 export const settingStore = createStore<SettingState>(
@@ -295,16 +287,7 @@ function canUseStorage(noThrow?: boolean) {
 loadSlotConfig()
 
 async function loadSlotConfig() {
-  const slots = {
-    menuLg: '',
-    menu: '',
-    banner: '',
-    mobile: '',
-
-    gtmMenu: '',
-    gtmLeader: '',
-    gtmContent: '',
-  }
+  const slots = { ...emptySlots }
 
   try {
     const content = await fetch('/slots.txt').then((res) => res.text())
@@ -315,34 +298,18 @@ async function loadSlotConfig() {
       if (prop in slots === false) continue
       const key = prop as keyof typeof slots
 
-      const inner = await getContent(value)
-      slots[key] = inner || ''
+      slots[key] = value
     }
 
-    // Disabled for now
-    if (config.inject && !config.inject) {
-      const inner = await getContent(config.inject)
-      if (inner) {
-        const node = document.createRange().createContextualFragment(inner)
-        document.head.append(node)
-      }
+    if (config.inject) {
+      await wait(0.2)
+      const node = document.createRange().createContextualFragment(config.inject)
+      document.head.append(node)
     }
   } catch (ex: any) {
     console.log(ex.message)
   } finally {
     await wait(0.01)
     settingStore.setState({ slots, slotsLoaded: true })
-  }
-}
-
-async function getContent(value: string) {
-  if (value.startsWith('http')) {
-    const res = await fetch(value)
-      .then((res) => res.text())
-      .catch(() => null)
-
-    return res
-  } else {
-    return value
   }
 }

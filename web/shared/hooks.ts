@@ -7,13 +7,20 @@ import { RootModal, rootModalStore } from '../store/root-modal'
 export function useWindowSize(): {
   width: Accessor<number>
   height: Accessor<number>
+  platform: Accessor<'sm' | 'lg' | 'xl'>
 } {
+  const getPlatform = () => {
+    return window.innerWidth > 1024 ? 'xl' : window.innerWidth > 720 ? 'lg' : 'sm'
+  }
+
   const [width, setWidth] = createSignal(0)
   const [height, setHeight] = createSignal(0)
+  const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>(getPlatform())
 
   const handler = () => {
     setWidth(window.innerWidth)
     setHeight(window.innerHeight)
+    setPlatform(getPlatform())
   }
 
   useEffect(() => {
@@ -26,7 +33,7 @@ export function useWindowSize(): {
     handler()
   })
 
-  return { width, height }
+  return { width, height, platform }
 }
 
 export function usePane() {
@@ -117,11 +124,14 @@ export function useRootModal(modal: RootModal) {
 export function useResizeObserver() {
   const [size, setSize] = createSignal({ w: 0, h: 0 })
   const [loaded, setLoaded] = createSignal(false)
+  const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>()
+
   const [obs] = createSignal(
     new ResizeObserver((cb) => {
       const ele = cb[0]
       if (!ele) return
       setSize({ w: ele.target.clientWidth, h: ele.target.clientHeight })
+      setPlatform(getWidthPlatform(ele.target.clientWidth))
     })
   )
 
@@ -130,11 +140,16 @@ export function useResizeObserver() {
     setLoaded(true)
     obs().observe(ref)
     setSize({ w: ref.clientWidth, h: ref.clientHeight })
+    setPlatform(getWidthPlatform(ref.clientWidth || 0))
   }
 
   onCleanup(() => {
     obs().disconnect()
   })
 
-  return { size, load, loaded }
+  return { size, load, loaded, platform }
+}
+
+export function getWidthPlatform(width: number) {
+  return width > 1024 ? 'xl' : width > 720 ? 'lg' : 'sm'
 }
