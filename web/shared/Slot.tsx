@@ -36,8 +36,8 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
 
   const log = (...args: any[]) => {
     if (!cfg.publisherId) return
-    if (!user.user?.admin && !cfg.flags.reporting)
-      console.log.apply(null, [`[${id()}]`, ...args, { show: show(), done: done() }])
+    if (!user.user?.admin && !cfg.flags.reporting) return
+    console.log.apply(null, [`[${id()}]`, ...args, { show: show(), done: done() }])
   }
 
   const resize = useResizeObserver()
