@@ -19,7 +19,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
   rootModalStore.addModal({
     id: 'impersonate-modal',
     element: (
-      <Modal show={props.show} close={props.close} maxWidth="half">
+      <Modal show={props.show} close={props.close} maxWidth="half" fixedHeight>
         <PageHeader title="Impersonate a Character" />
         <div class="flex flex-col gap-2 text-sm">
           <span>

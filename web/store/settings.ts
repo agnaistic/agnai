@@ -301,8 +301,8 @@ async function loadSlotConfig() {
       slots[key] = value
     }
 
-    // Disabled for now
     if (config.inject) {
+      await wait(0.2)
       const node = document.createRange().createContextualFragment(config.inject)
       document.head.append(node)
     }

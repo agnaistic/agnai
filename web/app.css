@@ -45,8 +45,8 @@
   /* position: fixed; */
   top: 0;
   left: 0;
-  min-width: 300px;
-  max-width: 300px;
+  min-width: 302px;
+  max-width: 302px;
   height: calc(100% - 16px);
   transition: 250ms ease;
 }

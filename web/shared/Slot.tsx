@@ -130,19 +130,18 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
   })
 
   createEffect(async () => {
-    await gtmReady
-    if (!cfg.ready || !cfg.slotsLoaded || !cfg.publisherId || parentSize.size().w === 0) return
+    if (!cfg.ready || !cfg.slotsLoaded || !cfg.publisherId) return
 
     if (ref && !resize.loaded()) {
       resize.load(ref)
     }
 
-    if (resize.size().w === 0) {
-      log('Skipped: Size 0')
-      return
-    } else {
-      log('Okay:', resize.size().w)
-    }
+    // if (resize.size().w === 0) {
+    //   log('Skipped: Size 0')
+    //   return
+    // } else {
+    //   log('Okay:', resize.size().w)
+    // }
 
     setShow(true)
 
@@ -158,7 +157,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
     googletag.cmd.push(function () {
       const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
       setSlotId(slotId)
-      const slot = googletag.defineSlot(slotId, [spec.wh], id())
+      const slot = googletag.defineSlot(slotId, spec.wh, id())
       if (!slot) {
         log(`No slot created`)
         return
@@ -231,7 +230,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }>
 
 export default Slot
 
-const sizes: Record<SlotKind, SlotDef> = {
+const slotDefs: Record<SlotKind, SlotDef> = {
   leaderboard: {
     platform: 'container',
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
@@ -256,8 +255,9 @@ function toSize(size: string): [number, number] {
 }
 
 function toPixels(size: string) {
+  return {}
   const [w, h] = size.split('x')
-  return { width: `${w}px`, height: `${h}px` }
+  return { width: `${+w + 2}px`, height: `${+h + 2}px` }
 }
 const win: any = window
 win.getSlotById = getSlotById
@@ -272,7 +272,6 @@ export function getSlotById(id: string) {
 }
 
 function getSlotId(id: string) {
-  return id
   if (location.origin.includes('localhost')) {
     return '/6499/example/banner'
   }
@@ -290,7 +289,7 @@ const gtmReady = new Promise(async (resolve) => {
 })
 
 function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
-  const def = sizes[slot]
+  const def = slotDefs[slot]
 
   if (def.platform === 'page') {
     const platform = getWidthPlatform(window.innerWidth)
@@ -308,17 +307,28 @@ function getBestFit(def: SlotDef, desired: SlotSize) {
   switch (desired) {
     case 'xl': {
       const spec = def.xl || def.lg || def.sm
-      return { css: toPixels(spec.size), wh: toSize(spec.size), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.xl, def.lg, def.sm), ...spec }
     }
 
     case 'lg': {
       const spec = def.lg || def.sm
-      return { css: toPixels(spec.size), wh: toSize(spec.size), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.lg, def.sm), ...spec }
     }
 
     default: {
       const spec = def.sm
-      return { css: toPixels(spec.size), wh: toSize(spec.size), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.sm), ...spec }
     }
   }
+}
+
+function getSizes(...specs: Array<SlotSpec | undefined>) {
+  const sizes: Array<[number, number]> = []
+
+  for (const spec of specs) {
+    if (!spec) continue
+    sizes.push(toSize(spec.size))
+  }
+
+  return sizes
 }
