@@ -124,11 +124,14 @@ export function useRootModal(modal: RootModal) {
 export function useResizeObserver() {
   const [size, setSize] = createSignal({ w: 0, h: 0 })
   const [loaded, setLoaded] = createSignal(false)
+  const [platform, setPlatform] = createSignal<'sm' | 'lg' | 'xl'>()
+
   const [obs] = createSignal(
     new ResizeObserver((cb) => {
       const ele = cb[0]
       if (!ele) return
       setSize({ w: ele.target.clientWidth, h: ele.target.clientHeight })
+      setPlatform(getWidthPlatform(ele.target.clientWidth))
     })
   )
 
@@ -137,11 +140,16 @@ export function useResizeObserver() {
     setLoaded(true)
     obs().observe(ref)
     setSize({ w: ref.clientWidth, h: ref.clientHeight })
+    setPlatform(getWidthPlatform(ref.clientWidth || 0))
   }
 
   onCleanup(() => {
     obs().disconnect()
   })
 
-  return { size, load, loaded }
+  return { size, load, loaded, platform }
+}
+
+export function getWidthPlatform(width: number) {
+  return width > 1024 ? 'xl' : width > 720 ? 'lg' : 'sm'
 }

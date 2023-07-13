@@ -428,12 +428,12 @@ const Slots: Component = (props) => {
         <Match when={size().w < 100}>{null}</Match>
 
         <Match when={size().h >= 600 && page.width() >= 1024}>
-          <Slot slot="menu" />
+          <Slot parent={ref!} slot="menu" />
         </Match>
 
         <Match when={page.width() < 1024}>
           <Show when={rendered()}>
-            <Slot slot="menu" size="sm" />
+            <Slot parent={ref!} slot="menu" />
           </Show>
         </Match>
       </Switch>

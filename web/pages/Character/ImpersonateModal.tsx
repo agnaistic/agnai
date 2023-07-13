@@ -5,6 +5,7 @@ import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { AppSchema } from '/common/types'
 import Button from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
+import PageHeader from '/web/shared/PageHeader'
 
 const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props) => {
   const chars = characterStore((s) => s.characters)
@@ -18,7 +19,8 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
   rootModalStore.addModal({
     id: 'impersonate-modal',
     element: (
-      <Modal title="Impersonate a Character" show={props.show} close={props.close} maxWidth="half">
+      <Modal show={props.show} close={props.close} maxWidth="half">
+        <PageHeader title="Impersonate a Character" size="lg" />
         <div class="flex flex-col gap-2 text-sm">
           <span>
             Instead of updating your profile to speak as somebody else, you can <b>impersonate</b> a character.
