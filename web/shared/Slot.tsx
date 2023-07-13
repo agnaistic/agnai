@@ -14,7 +14,7 @@ type SlotId = Exclude<keyof SettingState['slots'], 'publisherId'>
 type SlotSpec = { size: string; id: SlotId }
 type SlotDef = { platform: 'page' | 'container'; sm: SlotSpec; lg: SlotSpec; xl?: SlotSpec }
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; class?: string }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
@@ -26,11 +26,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; c
   const [viewed, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
 
-  const log = (...args: any[]) => {
-    if (!user.user?.admin || !cfg.publisherId) return
-    console.log.apply(null, [`[${id()}]`, ...args, { show: show(), done: done() }])
-  }
-
   const cfg = settingStore((s) => ({
     publisherId: s.slots.publisherId,
     newSlots: s.slots,
@@ -38,6 +33,12 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; c
     flags: s.flags,
     ready: s.initLoading === false,
   }))
+
+  const log = (...args: any[]) => {
+    if (!cfg.publisherId) return
+    if (!user.user?.admin && !cfg.flags.reporting)
+      console.log.apply(null, [`[${id()}]`, ...args, { show: show(), done: done() }])
+  }
 
   const resize = useResizeObserver()
   const parentSize = useResizeObserver()
@@ -157,7 +158,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; c
         return
       }
       slot.addService(googletag.pubads())
-      if (!user.user?.admin) {
+      if (!user.user?.admin && !cfg.flags.reporting) {
         googletag.pubads().collapseEmptyDivs()
       }
       googletag.enableServices()
@@ -197,24 +198,22 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; c
     <>
       <Switch>
         <Match when={!user.user}>{null}</Match>
-        <Match when={user.user?.admin}>
+        <Match when={user.user?.admin || cfg.flags.reporting}>
           <div
-            class={`flex w-full justify-center border-[1px] border-[var(--bg-700)] bg-[var(--text-200)] ${
-              props.class || ''
-            }`}
+            class={`flex w-full justify-center border-[1px] border-[var(--bg-700)] bg-[var(--text-200)]`}
             ref={ref}
             id={id()}
-            data-slot={`${specs().id}`}
+            data-slot={specs().id}
             style={{ ...style(), ...specs().css }}
           ></div>
         </Match>
-        <Match when={!user.user?.admin}>
+        <Match when>
           <div
             class="flex w-full justify-center"
             id={id()}
             ref={ref}
             data-slot={specs().id}
-            style={{ ...style(), ...specs()!.css }}
+            style={{ ...style(), ...specs().css }}
           ></div>
         </Match>
       </Switch>

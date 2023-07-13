@@ -8,4 +8,5 @@ export const defaultFlags = {
   parser: false,
   events: false,
   pipeline: false,
+  reporting: false,
 } satisfies { [key: string]: boolean }
