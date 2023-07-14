@@ -4,6 +4,7 @@ import { getStore } from '../create'
 import { AppSchema, Memory } from '/common/types'
 import { toMap } from '/web/shared/util'
 import { v4 } from 'uuid'
+import { slugify } from '/common/util'
 
 type WikiItem = {
   title: string
@@ -140,6 +141,7 @@ function goOffline() {
 }
 
 async function embedArticle(wikipage: string) {
+  wikipage = decodeURI(wikipage)
   if (wikipage.includes('wikipedia.org/')) {
     wikipage = wikipage.split('/').slice(-1)[0]
   }
@@ -180,7 +182,8 @@ async function embedArticle(wikipage: string) {
     }
   }
 
-  await method('post', `/embed/${wikipage}`, embed)
+  const slug = slugify(wikipage)
+  await method('post', `/embed/${slug}`, embed)
 }
 
 type QueryOpts = {
