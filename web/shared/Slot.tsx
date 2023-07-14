@@ -20,6 +20,8 @@ type SlotDef = {
   xl?: SlotSpec
 }
 
+const MIN_AGE = 60000
+
 const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTMLElement; size?: SlotSize }> = (
   props
 ) => {
@@ -31,7 +33,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
   const [id] = createSignal(`${props.slot}-${v4().slice(0, 8)}`)
   const [done, setDone] = createSignal(false)
   const [adslot, setSlot] = createSignal<googletag.Slot>()
-  const [viewed, setViewed] = createSignal<number>()
+  const [viewable, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
   const [slotId, setSlotId] = createSignal<string>()
 
@@ -46,7 +48,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
   const log = (...args: any[]) => {
     if (!cfg.publisherId) return
     if (!user.user?.admin && !cfg.flags.reporting) return
-    console.log.apply(null, [`[${id()}]`, ...args, { show: show(), done: done() }])
+    console.log.apply(null, [`[${id()}]`, ...args, `| show=${show()} done=${done()}`])
   }
 
   const resize = useResizeObserver()
@@ -64,22 +66,27 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
     return spec
   })
 
+  const tryRefresh = () => {
+    const slot = adslot()
+    const viewed = viewable()
+    if (!slot || typeof viewed !== 'number') return
+    const diff = Date.now() - viewed
+
+    log('Trying', Math.round(diff / 1000))
+    const canRefresh = visible() && diff >= MIN_AGE
+
+    if (canRefresh) {
+      setViewed()
+      googletag.cmd.push(() => {
+        googletag.pubads().refresh([slot])
+      })
+      log('Refreshed')
+    }
+  }
+
   useEffect(() => {
     const refresher = setInterval(() => {
-      const slot = adslot()
-      const last = viewed()
-      if (!slot || typeof last !== 'number') return
-
-      const diff = Date.now() - last
-      const canRefresh = visible() && diff >= 60000
-
-      if (canRefresh) {
-        setViewed()
-        googletag.cmd.push(() => {
-          googletag.pubads().refresh([slot])
-        })
-        log('Refreshed')
-      }
+      tryRefresh()
     }, 15000)
 
     const onLoaded = (evt: googletag.events.SlotOnloadEvent) => {
@@ -96,7 +103,13 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
 
     const onVisChange = (evt: googletag.events.SlotVisibilityChangedEvent) => {
       if (evt.slot.getSlotElementId() !== id()) return
-      setVisible(evt.inViewPercentage > 0)
+      setVisible((prev) => {
+        const next = evt.inViewPercentage >= 50
+        if (!prev && next) {
+          tryRefresh()
+        }
+        return next
+      })
     }
 
     const onRequested = (evt: googletag.events.SlotRequestedEvent) => {
@@ -168,6 +181,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
         }
 
         slot.addService(googletag.pubads())
+        googletag.pubads().collapseEmptyDivs()
         if (!user.user?.admin) {
         }
 
@@ -204,7 +218,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
   const style = createMemo<JSX.CSSProperties>(() => {
     if (!stick()) return {}
 
-    return { position: 'sticky', top: '0', 'z-index': 10 }
+    return { position: 'sticky', top: '0' }
   })
 
   return (

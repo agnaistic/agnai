@@ -460,6 +460,14 @@ const ChatDetail: Component = () => {
               style={contentStyles()}
             >
               <section class="flex h-full w-full flex-col justify-end gap-2">
+                <div ref={slotContainer!} class="sticky top-0 flex h-fit w-full justify-center">
+                  <Switch>
+                    <Match when={slots.size().w === 0}>{null}</Match>
+                    <Match when={slotContainer!}>
+                      <Slot sticky="always" slot="content" parent={slotContainer!} />
+                    </Match>
+                  </Switch>
+                </div>
                 <Show when={user.ui.viewMode === 'split'}>
                   <section
                     data-avatar-container
@@ -499,14 +507,7 @@ const ChatDetail: Component = () => {
                         <Button onClick={generateFirst}>Generate Message</Button>
                       </div>
                     </Show>
-                    <div ref={slotContainer!} class="flex w-full justify-center">
-                      <Switch>
-                        <Match when={slots.size().w === 0}>{null}</Match>
-                        <Match when={slotContainer!}>
-                          <Slot sticky="always" slot="content" parent={slotContainer!} />
-                        </Match>
-                      </Switch>
-                    </div>
+                    {/* Original Slot location */}
                     <InfiniteScroll />
                     <For each={chatMsgs()}>
                       {(msg, i) => (

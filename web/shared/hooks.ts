@@ -38,7 +38,7 @@ export function useWindowSize(): {
 
 export function usePane() {
   const windowSize = useWindowSize()
-  const isSmallScreen = createMemo(() => windowSize.width() < 768)
+  const isSmallScreen = createMemo(() => windowSize.width() < 800)
   const paneDisplay = createMemo(() => (isSmallScreen() ? 'popup' : 'pane'))
   return paneDisplay
 }
