@@ -5,11 +5,19 @@ import { AppSchema } from '/common/types'
 import { toMap } from '/web/shared/util'
 import { v4 } from 'uuid'
 
+type WikiItem = {
+  title: string
+  content: string
+  items?: WikiItem[]
+}
+
 type Embedding = {
   documents: string[]
   ids: string[]
   metadatas: Array<object>
 }
+
+type ChatEmbed = { _id: string; msg: string; name: string; createdAt: string }
 
 export const pipelineApi = {
   isAvailable,
@@ -48,8 +56,6 @@ async function summarize(text: string) {
   return res
 }
 
-type ChatMemory = { _id: string; msg: string; name: string; createdAt: string }
-
 async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]) {
   if (!online || !status.memory) return
 
@@ -75,7 +81,7 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
     prev.push({ _id: msg._id, name, msg: msg.msg, createdAt: msg.createdAt })
 
     return prev
-  }, [] as ChatMemory[])
+  }, [] as ChatEmbed[])
 
   const now = Date.now()
   await method('post', `/embed/${chat._id}/reembed`, { messages: payload }).catch((err) => {
@@ -91,16 +97,6 @@ async function chatRecall(chatId: string, message: string, created: string) {
   const docs = res.filter((doc) => doc.date < created)
 
   return docs
-}
-
-async function check() {
-  const res = await method('get', '/status')
-  if (res.result) {
-    online = true
-    status.memory = res.result.memory
-    status.summary = res.result.summarizer
-  }
-  if (res.error) online = false
 }
 
 const method: typeof api.method = (method, path, body, opts) => {
@@ -135,6 +131,7 @@ function goOffline() {
   status.summary = false
 }
 
+async function getCollections() {}
 async function embedArticle(wikipage: string) {
   if (wikipage.includes('wikipedia.org/')) {
     wikipage = wikipage.split('/').slice(-1)[0]
@@ -223,16 +220,12 @@ async function queryEmbedding(embedding: string, message: string, opts: QueryOpt
   return filtered
 }
 
-wiki({ apiUrl: 'https://en.wikipedia.org/w/api.php' })
-  .page('Taylor Swift')
-  .then((page) => page.content())
-  .then((content) => {
-    console.log('Article Content')
-    console.log(content)
-  })
-
-type WikiItem = {
-  title: string
-  content: string
-  items?: WikiItem[]
+async function check() {
+  const res = await method('get', '/status')
+  if (res.result) {
+    online = true
+    status.memory = res.result.memory
+    status.summary = res.result.summarizer
+  }
+  if (res.error) online = false
 }
