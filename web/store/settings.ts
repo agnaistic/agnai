@@ -11,13 +11,24 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { wait } from '/common/util'
 
-const emptySlots = {
+type SlotSpec = {
+  id: string
+  size: string
+  calc?: { platform: 'container' | 'page'; height?: number; width?: number }
+}
+
+type SlotConfig = {
+  publisherId: string
+
+  /**
+   * Override SlotKinds
+   */
+  definitions: Record<string, { sm?: SlotSpec; lg?: SlotSpec; xl?: SlotSpec }>
+}
+
+const emptySlots: SlotConfig = {
   publisherId: '',
-  'agn-leaderboard-sm': '',
-  'agn-leaderboard-lg': '',
-  'agn-leaderboard-xl': '',
-  'agn-menu-sm': '',
-  'agn-menu-lg': '',
+  definitions: {},
 }
 
 export type SettingState = {
@@ -71,7 +82,6 @@ const initState: SettingState = {
     selfhosting: false,
     imagesSaved: false,
     /** @deprecated */
-    slots: { banner: '', menu: '', mobile: '', menuLg: '', gtmContent: '', gtmLeader: '', gtmMenu: '', enabled: false },
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
   },
   replicate: {},
@@ -84,9 +94,10 @@ const initState: SettingState = {
 export const settingStore = createStore<SettingState>(
   'settings',
   initState
-)((_) => {
+)((get) => {
   events.on(EVENTS.loggedOut, () => {
-    settingStore.setState(initState)
+    const prev = get()
+    settingStore.setState({ ...initState, slots: prev.slots, slotsLoaded: prev.slotsLoaded })
     settingStore.init()
   })
 
@@ -287,17 +298,14 @@ function canUseStorage(noThrow?: boolean) {
 loadSlotConfig()
 
 async function loadSlotConfig() {
-  const slots = { ...emptySlots }
+  const slots: any = { ...emptySlots }
 
   try {
     const content = await fetch('/slots.txt').then((res) => res.text())
     const config = JSON.parse(content)
 
     for (const [prop, value] of Object.entries(config)) {
-      if (typeof value !== 'string') continue
-      if (prop in slots === false) continue
       const key = prop as keyof typeof slots
-
       slots[key] = value
     }
 

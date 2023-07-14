@@ -37,7 +37,6 @@ export async function getAppConfig() {
       maintenance: config.ui.maintenance,
       patreon: config.ui.patreon,
       policies: config.ui.policies,
-      slots: config.slots,
       authUrls: config.auth.urls,
     }
   }
@@ -57,7 +56,6 @@ async function update() {
 
     appConfig.maintenance = cfg.maintenance || appConfig.maintenance
     appConfig.patreon = cfg.patreon ?? appConfig.patreon
-    appConfig.slots.enabled = cfg.slots?.enabled ?? appConfig.slots.enabled
   } catch (ex) {}
 }
 
