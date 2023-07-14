@@ -18,7 +18,7 @@ import TextInput from '/web/shared/TextInput'
 
 const chatGenValidator = {
   ...chatGenSettings,
-  name: 'string?',
+  name: 'string',
   service: ['', ...AI_ADAPTERS],
 } as const
 
@@ -213,13 +213,12 @@ export const ChatGenSettings: Component<{
   )
 }
 
-function isPresetDirty(original: AppSchema.GenSettings, compare: Omit<AppSchema.GenSettings, 'name' | 'service'>) {
+function isPresetDirty(original: AppSchema.GenSettings, compare: Omit<AppSchema.GenSettings, 'service'>) {
   const svc = original.service
   for (const key in compare) {
     const prop = key as keyof AppSchema.GenSettings
 
     switch (prop) {
-      case 'name':
       case 'service':
         continue
     }

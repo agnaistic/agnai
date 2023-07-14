@@ -1,5 +1,5 @@
 import { Save } from 'lucide-solid'
-import { Component, createSignal, onMount, Show } from 'solid-js'
+import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
@@ -17,9 +17,12 @@ const ChatMemoryModal: Component<{
   const state = memoryStore((s) => ({
     books: s.books,
     items: s.books.list.map((book) => ({ label: book.name, value: book._id })),
+    embeds: s.embeds.filter((em) => em.metadata.type === 'user'),
+    embedId: s.useEmbedding,
   }))
 
   const [id, setId] = createSignal(props.chat.memoryId || '')
+  const [embedId, setEmbedId] = createSignal(state.embedId)
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
@@ -39,6 +42,7 @@ const ChatMemoryModal: Component<{
 
   onMount(() => {
     changeBook(props.chat.memoryId || '')
+    memoryStore.listCollections()
   })
 
   const onSubmit = (ev: Event) => {
@@ -65,6 +69,10 @@ const ChatMemoryModal: Component<{
     </>
   )
 
+  const embeds = createMemo(() => {
+    return [{ label: 'None', value: '' }].concat(state.embeds.map((em) => ({ label: em.name, value: em.name })))
+  })
+
   return (
     <Modal
       title="Chat Memory"
@@ -89,6 +97,23 @@ const ChatMemoryModal: Component<{
           Use Memory Book
         </Button>
         <Divider />
+        <Show when={state.embeds.length > 0}>
+          <Select
+            fieldName="embedId"
+            label="Embedding"
+            items={embeds()}
+            onChange={(item) => setEmbedId(item.value)}
+            value={embedId()}
+          />
+          <Button
+            class="w-fit"
+            disabled={embedId() === state.embedId}
+            onClick={() => memoryStore.useEmbedding(embedId())}
+          >
+            <Save />
+            Use Embedding
+          </Button>
+        </Show>
 
         <Show when={book()}>
           <div class="text-sm">

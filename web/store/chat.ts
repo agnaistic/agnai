@@ -451,6 +451,8 @@ export const chatStore = createStore<ChatState>('chat', {
           ...entities,
           replyAs: entities.characters[active.replyAs ?? active.char._id],
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
+          chatEmbeds: [],
+          userEmbeds: [],
         },
         encoder
       )

@@ -288,6 +288,30 @@ const PromptSettings: Component<Props> = (props) => {
         />
 
         <RangeInput
+          fieldName="memoryChatEmbedLimit"
+          label="Memory: Chat Embedding Context Limit"
+          helperText="If available: The maximum context length (in tokens) for chat history embeddings."
+          min={1}
+          // No idea what the max should be
+          max={2000}
+          step={1}
+          value={props.inherit?.memoryChatEmbedLimit || defaultPresets.basic.memoryContextLimit}
+          disabled={props.disabled}
+        />
+
+        <RangeInput
+          fieldName="memoryUserEmbedLimit"
+          label="Memory: User-specified Embedding Context Limit"
+          helperText="If available: The maximum context length (in tokens) for user-specified embeddings."
+          min={1}
+          // No idea what the max should be
+          max={2000}
+          step={1}
+          value={props.inherit?.memoryUserEmbedLimit || defaultPresets.basic.memoryContextLimit}
+          disabled={props.disabled}
+        />
+
+        <RangeInput
           fieldName="memoryDepth"
           label="Memory: Chat History Depth"
           helperText="How far back in the chat history to look for keywords."

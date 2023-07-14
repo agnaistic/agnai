@@ -196,6 +196,7 @@ export const settingStore = createStore<SettingState>(
     },
     flag({ flags }, flag: keyof FeatureFlags, value: boolean) {
       const nextFlags = { ...flags, [flag]: value }
+      window.flags = nextFlags
       saveFlags(nextFlags)
       return { flags: nextFlags }
     },
@@ -209,7 +210,6 @@ subscribe('connected', { uid: 'string' }, (body) => {
   settingStore.init()
 })
 
-window.flags = {}
 window.flag = function (flag: keyof FeatureFlags, value) {
   if (!flag) {
     const state = settingStore((s) => s.flags)

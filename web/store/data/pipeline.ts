@@ -1,7 +1,7 @@
 import wiki from 'wikijs'
 import { api } from '../api'
 import { getStore } from '../create'
-import { AppSchema } from '/common/types'
+import { AppSchema, Memory } from '/common/types'
 import { toMap } from '/web/shared/util'
 import { v4 } from 'uuid'
 
@@ -17,8 +17,6 @@ type Embedding = {
   metadatas: Array<object>
 }
 
-type ChatEmbed = { _id: string; msg: string; name: string; createdAt: string }
-
 export const pipelineApi = {
   isAvailable,
   summarize,
@@ -28,6 +26,7 @@ export const pipelineApi = {
 
   embedArticle,
   queryEmbedding,
+  listCollections,
 }
 
 const baseUrl = `http://localhost:5001`
@@ -56,6 +55,15 @@ async function summarize(text: string) {
   return res
 }
 
+async function listCollections() {
+  const res = await method('get', '/embed')
+  if (res.result) {
+    return res.result.result
+  }
+
+  return []
+}
+
 async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]) {
   if (!online || !status.memory) return
 
@@ -81,7 +89,7 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
     prev.push({ _id: msg._id, name, msg: msg.msg, createdAt: msg.createdAt })
 
     return prev
-  }, [] as ChatEmbed[])
+  }, [] as Memory.ChatEmbed[])
 
   const now = Date.now()
   await method('post', `/embed/${chat._id}/reembed`, { messages: payload }).catch((err) => {
@@ -93,7 +101,7 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
 
 async function chatRecall(chatId: string, message: string, created: string) {
   if (!online || !status.memory) return
-  const res = await queryEmbedding(chatId, message, { maxDistance: 1.5 })
+  const res = await queryEmbedding<{ name: string }>(chatId, message, { maxDistance: 1.5 })
   const docs = res.filter((doc) => doc.date < created)
 
   return docs
@@ -131,7 +139,6 @@ function goOffline() {
   status.summary = false
 }
 
-async function getCollections() {}
 async function embedArticle(wikipage: string) {
   if (wikipage.includes('wikipedia.org/')) {
     wikipage = wikipage.split('/').slice(-1)[0]
@@ -154,27 +161,21 @@ async function embedArticle(wikipage: string) {
     metadatas: [{ ...base, section: 'Summary' }],
   }
 
-  const push = (doc: string, meta: {}) => {
-    embed.ids.push(v4())
-    embed.documents.push(doc)
-    embed.metadatas.push({ ...base, ...meta })
-  }
-
   for (const item of content) {
     if (typeof item === 'string') {
-      push(item, {})
+      addSection(item, {}, embed)
       continue
     }
 
     const record = item as WikiItem
     if (record.content) {
-      push(record.content, { section: record.title })
+      addSection(record.content, { section: record.title }, embed)
     }
 
     if (record.items) {
       for (const sub of record.items) {
         if (!sub.content) continue
-        push(sub.content, { section: record.title, sub_section: sub.title })
+        addSection(sub.content, { section: record.title, sub_section: sub.title }, embed)
       }
     }
   }
@@ -186,7 +187,11 @@ type QueryOpts = {
   maxDistance?: number
 }
 
-async function queryEmbedding(embedding: string, message: string, opts: QueryOpts = {}) {
+async function queryEmbedding<T = {}>(
+  embedding: string,
+  message: string,
+  opts: QueryOpts = {}
+): Promise<Array<Memory.UserEmbed<T>>> {
   const maxDistance = opts.maxDistance ?? 1.5
 
   if (!online || !status.memory) throw new Error(`Embeddings are not available: Offline or disabled`)
@@ -203,21 +208,26 @@ async function queryEmbedding(embedding: string, message: string, opts: QueryOpt
 
   if (!res.result) throw new Error(`Could not query embedding`)
 
+  if (!res.result.result) {
+    return []
+  }
+
   const documents = res.result.result.documents[0]
   const metadatas = res.result.result.metadatas[0]
   const distances = res.result.result.distances[0]
+  const ids = res.result.result.ids[0]
 
   const filtered = documents
     .map((doc, i) => {
       const meta = metadatas[i]
       const distance = distances[i]
 
-      return { ...meta, distance, text: doc }
+      return { ...meta, distance, text: doc, id: ids[i] }
     })
     .filter((doc) => doc.distance < maxDistance)
 
   console.log('Embedding retrieval', diff.toLocaleString(), 'ms')
-  return filtered
+  return filtered as any
 }
 
 async function check() {
@@ -228,4 +238,19 @@ async function check() {
     status.summary = res.result.summarizer
   }
   if (res.error) online = false
+}
+
+function addSection<T>(
+  content: string,
+  meta: T,
+  embed: Embedding
+): Array<{ content: string; meta: T & { sentence: number } }> {
+  const sentences = content.split('.')
+
+  for (let i = 0; i < sentences.length; i++) {
+    embed.ids.push(v4())
+    embed.documents.push(sentences[i].trim())
+    embed.metadatas.push({ ...meta, sentence: i + 1 })
+  }
+  return sentences.map((text, i) => ({ content: text, meta: { ...meta, sentence: i + 1 } }))
 }

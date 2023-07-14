@@ -9,6 +9,7 @@ import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { Encoder } from './tokenize'
 import { elapsedSince, trimSentence } from './util'
+import { Memory } from './types'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -26,6 +27,9 @@ export type PromptParts = {
 
   /** User's impersonated personality */
   impersonality?: string
+
+  chatEmbeds: string[]
+  userEmbeds: string[]
 }
 
 export type Prompt = {
@@ -57,6 +61,8 @@ export type PromptOpts = {
   impersonate?: AppSchema.Character
   lastMessage: string
   trimSentences?: boolean
+  chatEmbeds: Memory.UserEmbed<{ name: string }>[]
+  userEmbeds: Memory.UserEmbed[]
 }
 
 type BuildPromptOpts = {
@@ -69,6 +75,8 @@ type BuildPromptOpts = {
   members: AppSchema.Profile[]
   settings?: Partial<AppSchema.GenSettings>
   impersonate?: AppSchema.Character
+  chatEmbed?: Memory.UserEmbed<{ name: string }>[]
+  userEmbed?: Memory.UserEmbed[]
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
@@ -90,6 +98,8 @@ const HOLDER_NAMES = {
   chatAge: 'chat_age',
   idleDuration: 'idle_duration',
   impersonating: 'impersonating',
+  chatEmbed: 'chat_embed',
+  userEmbed: 'user_embed',
 }
 
 export const HOLDERS = {
@@ -106,6 +116,8 @@ export const HOLDERS = {
   systemPrompt: /{{system_prompt}}/gi,
   linebreak: /{{(br|linebreak|newline)}}/gi,
   impersonating: /{{impersonating}}/gi,
+  chatEmbed: /{{chat_embed}}/gi,
+  userEmbed: /{{user_embed}}/gi,
 }
 
 const ALL_HOLDERS = new RegExp(
@@ -255,6 +267,8 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
     .replace(HOLDERS.linebreak, '\n')
     .replace(HOLDERS.chatAge, elapsedSince(opts.chat.createdAt))
     .replace(HOLDERS.idleDuration, elapsedSince(rest.lastMessage || ''))
+    .replace(HOLDERS.chatEmbed, parts.chatEmbeds.join('\n') || '')
+    .replace(HOLDERS.userEmbed, parts.userEmbeds.join('\n') || '')
     // system prompt should not support other placeholders
     .replace(HOLDERS.systemPrompt, newline(parts.systemPrompt))
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
@@ -361,6 +375,8 @@ type PromptPartsOptions = Pick<
   | 'replyAs'
   | 'impersonate'
   | 'characters'
+  | 'chatEmbeds'
+  | 'userEmbeds'
 >
 
 export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
@@ -378,6 +394,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     ),
     post: [],
     allPersonas: [],
+    chatEmbeds: [],
+    userEmbeds: [],
   }
 
   const personalities = new Set([replyAs._id])
@@ -439,6 +457,18 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   parts.systemPrompt = supplementary.system
 
   parts.post = post.map(replace)
+
+  if (opts.userEmbeds) {
+    const embeds = opts.userEmbeds.map((line) => line.text)
+    const fit = fillPromptWithLines(encoder, opts.settings?.memoryUserEmbedLimit || 500, '', embeds)
+    parts.userEmbeds = fit
+  }
+
+  if (opts.chatEmbeds) {
+    const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
+    const fit = fillPromptWithLines(encoder, opts.settings?.memoryChatEmbedLimit || 500, '', embeds)
+    parts.chatEmbeds = fit
+  }
 
   return parts
 }

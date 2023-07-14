@@ -2,6 +2,7 @@ import { AppSchema, NewBook } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { memoryApi } from './data/memory'
+import { pipelineApi } from './data/pipeline'
 import { toastStore } from './toasts'
 
 type MemoryState = {
@@ -13,6 +14,8 @@ type MemoryState = {
   creating: boolean
   loadingAll: boolean
   updating: boolean
+  embeds: Array<{ id: string; name: string; metadata: { type: string } }>
+  useEmbedding: string
 }
 
 const initState: MemoryState = {
@@ -21,6 +24,8 @@ const initState: MemoryState = {
   books: { loaded: false, list: [] },
   loadingAll: false,
   updating: false,
+  embeds: [],
+  useEmbedding: 'Taylor_Swift',
 }
 
 export const memoryStore = createStore<MemoryState>(
@@ -105,6 +110,17 @@ export const memoryStore = createStore<MemoryState>(
         toastStore.success('Book deleted')
         onSuccess?.()
       }
+    },
+
+    async listCollections() {
+      if (!pipelineApi.isAvailable()) return
+
+      const collections = await pipelineApi.listCollections()
+      return { embeds: collections.map((item: any) => ({ ...item, metadata: item.metadata || { type: 'chat' } })) }
+    },
+
+    useEmbedding(_, id: string) {
+      return { useEmbedding: id }
     },
   }
 })

@@ -61,7 +61,9 @@ def chatEmbed(chat_id):
     ids = [msg["_id"] for msg in messages]
     metadatas = [{"name": msg["name"], "date": msg["createdAt"]} for msg in messages]
 
-    collection = client.get_or_create_collection(name=chat_id, embedding_function=embed)
+    collection = client.get_or_create_collection(
+        name=chat_id, embedding_function=embed, metadata={"type": "chat"}
+    )
     collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
 
     return {"success": True}
@@ -72,27 +74,43 @@ def embedContent(name):
     payload = request.get_json(silent=True)
     documents = payload.get("documents")
     ids = payload.get("ids")
-    metadatas = payload.get("metadataas")
+    metadatas = payload.get("metadatas")
 
-    collection = client.get_or_create_collection(name=name, embedding_function=embed)
+    try:
+        client.delete_collection(name)
+    except:
+        pass
+
+    collection = client.get_or_create_collection(
+        name=name, embedding_function=embed, metadata={"type": "user"}
+    )
+
     collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
 
+    return {"success": True}
+
+
+@app.delete("/embed/<name>")
+def removeEmbed(name):
+    client.delete_collection(name)
     return {"success": True}
 
 
 @app.post("/embed/<name>/query")
 def recallContent(name):
     payload = request.get_json(silent=True)
-    collection = client.get_or_create_collection(name=name, embedding_function=embed)
+    message = payload.get("message")
+    try:
+        collection = client.get_collection(name)
+        print(name, message)
+        results = collection.query(
+            query_texts=message,
+            n_results=25,
+        )
 
-    results = collection.query(
-        query_texts=payload["message"],
-        n_results=25,
-    )
-
-    print(results)
-
-    return {"result": results}
+        return {"result": results}
+    except:
+        return {"result": None}
 
 
 @app.get("/embed")
@@ -101,8 +119,10 @@ def listCollections():
     print(collections)
 
     results = []
+    print(collections)
+
     for i, row in enumerate(collections):
-        row[i] = {"id": row.id, "name": row.name, "metadata": row.metadata}
+        results.append({"id": row.id, "name": row.name, "metadata": row.metadata})
 
     return {"result": results}
 

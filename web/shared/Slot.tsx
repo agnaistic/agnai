@@ -152,7 +152,18 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
   })
 
   createEffect(async () => {
-    if (!cfg.ready || !cfg.slotsLoaded || !cfg.publisherId) return
+    if (!cfg.ready) {
+      log('Not ready')
+      return
+    }
+
+    if (!cfg.slotsLoaded) {
+      return log('Slot not ready')
+    }
+
+    if (!cfg.publisherId) {
+      return log('No publisher id')
+    }
 
     resize.size()
 

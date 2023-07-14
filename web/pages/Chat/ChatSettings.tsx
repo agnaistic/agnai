@@ -136,6 +136,9 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   return (
     <Modal show={props.show} title="Chat Settings" close={props.close} footer={Footer} maxWidth="half">
       <form ref={ref} onSubmit={onSave} class="flex flex-col gap-3">
+        <Show when={user.user?.admin}>
+          <Card class="text-xs">{state.chat?._id}</Card>
+        </Show>
         <Show when={adapterText()}>
           <Card>
             <FormLabel label="AI Service" helperText={adapterText()?.text} />
@@ -183,7 +186,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
         </Card>
 
         <Show when={pipelineApi.isAvailable()}>
-          <Card></Card>
+          <Card>Hmm...</Card>
         </Show>
 
         <Show when={useOverrides()}>

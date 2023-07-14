@@ -49,11 +49,15 @@ const genValidator = {
     sampleChat: ['string?'],
     post: ['string'],
     allPersonas: 'any?',
+    chatEmbeds: 'any?',
+    userEmbeds: 'any?',
   },
   lines: ['string'],
   text: 'string?',
   settings: 'any?',
   lastMessage: 'string?',
+  chatEmbeds: 'any?',
+  userEmbeds: 'any?',
 } as const
 
 export const getMessages = handle(async ({ userId, params, query }) => {

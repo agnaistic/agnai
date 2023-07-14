@@ -1,4 +1,4 @@
-import { Component, For } from 'solid-js'
+import { Component, For, createMemo, createSignal } from 'solid-js'
 
 const Tabs: Component<{
   tabs: string[] | readonly string[]
@@ -30,3 +30,17 @@ const border = (selected: boolean) =>
   selected
     ? `bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]`
     : `hover:bg-[var(--bg-800)] border-[var(--bg-800)] hover:border-[var(--bg-700)]`
+
+export function useTabs(initial: number, ...tabs: string[]) {
+  const [tab, setTabs] = createSignal(initial)
+  const current = createMemo(() => {
+    return tabs[tab()]
+  })
+
+  return {
+    tabs,
+    selected: tab,
+    select: setTabs,
+    current,
+  }
+}

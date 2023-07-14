@@ -12,6 +12,7 @@ import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
+import { memoryStore } from '../memory'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -123,6 +124,7 @@ export type GenerateOpts =
 export async function generateResponseV2(opts: GenerateOpts) {
   const { ui } = userStore.getState()
   const { active } = chatStore.getState()
+  const { useEmbedding } = memoryStore.getState()
 
   if (!active) {
     return localApi.error('No active chat. Try refreshing.')
@@ -168,6 +170,8 @@ export async function generateResponseV2(opts: GenerateOpts) {
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
     lastMessage: entities.lastMessage,
+    chatEmbeds: undefined,
+    userEmbeds: undefined,
   }
 
   const lastMsg = props.messages.slice(-1)[0]
@@ -179,7 +183,16 @@ export async function generateResponseV2(opts: GenerateOpts) {
    * This will only be invoked
    */
   if (text) {
-    await pipelineApi.chatRecall(entities.chat._id, text, created!)
+    const chatEmbeds = await pipelineApi.chatRecall(entities.chat._id, text, created!)
+    const userEmbeds = useEmbedding ? await pipelineApi.queryEmbedding(useEmbedding, text) : null
+
+    if (chatEmbeds) {
+      request.chatEmbeds = chatEmbeds
+    }
+
+    if (userEmbeds) {
+      request.userEmbeds = userEmbeds
+    }
   }
 
   const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)
@@ -223,6 +236,8 @@ async function createActiveChatPrompt(
       impersonate: props.impersonate,
       lastMessage: entities.lastMessage,
       trimSentences: ui.trimSentences,
+      chatEmbeds: [],
+      userEmbeds: [],
     },
     encoder,
     maxContext

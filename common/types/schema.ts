@@ -325,6 +325,9 @@ export namespace AppSchema {
     memoryDepth?: number
     memoryContextLimit?: number
     memoryReverseWeight?: boolean
+    memoryChatEmbedLimit?: number
+    memoryUserEmbedLimit?: number
+
     src?: string
 
     images?: {

@@ -1,17 +1,85 @@
 import { A } from '@solidjs/router'
 import { assertValid } from '/common/valid'
 import { Download, Plus, Trash, Upload, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { setComponentPageTitle } from '../../shared/util'
-import { memoryStore, toastStore } from '../../store'
+import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { memoryStore, settingStore, toastStore } from '../../store'
+import Tabs, { useTabs } from '/web/shared/Tabs'
+import { pipelineApi } from '/web/store/data/pipeline'
+import TextInput from '/web/shared/TextInput'
+import { Card } from '/web/shared/Card'
 
 const MemoryPage: Component = () => {
   setComponentPageTitle('Memory')
+  const tabs = useTabs(0, 'Books', 'Embeddings')
+  const cfg = settingStore()
+
+  return (
+    <>
+      <Show when={cfg.flags.pipeline && pipelineApi.isAvailable()}>
+        <Tabs tabs={tabs.tabs} select={tabs.select} selected={tabs.selected} />
+      </Show>
+
+      <Switch>
+        <Match when={tabs.current() === 'Books'}>
+          <BooksTab />
+        </Match>
+        <Match when={tabs.current() === 'Embeddings'}>
+          <EmbedsTab />
+        </Match>
+      </Switch>
+    </>
+  )
+}
+
+export default MemoryPage
+
+const EmbedsTab: Component = (props) => {
+  let ref: any
+
+  const state = memoryStore()
+
+  const [loading, setLoading] = createSignal(false)
+
+  onMount(() => {
+    memoryStore.listCollections()
+  })
+
+  const create = async () => {
+    setLoading(true)
+    const { wiki } = getStrictForm(ref, { wiki: 'string' })
+    await pipelineApi.embedArticle(wiki)
+    toastStore.success('Successfully created embedding')
+    setLoading(false)
+  }
+  return (
+    <>
+      <PageHeader title="Memory - Embeddings" />
+      <form ref={ref}>
+        <TextInput
+          fieldName="wiki"
+          label="Embed Wikipedia Article"
+          helperText="Create an embedding using the content from a Wikipedia article"
+          placeholder="URL. E.g. https://en.wikipedia.org/wiki/Taylor_Swift"
+        />
+        <Button disabled={loading()} onClick={create}>
+          Create
+        </Button>
+      </form>
+
+      <div class="flex flex-col gap-2">
+        <For each={state.embeds}>{(each) => <Card>{each.name}</Card>}</For>
+      </div>
+    </>
+  )
+}
+
+const BooksTab: Component = (props) => {
   const state = memoryStore()
   const [showImport, setImport] = createSignal(false)
 
@@ -26,7 +94,7 @@ const MemoryPage: Component = () => {
   return (
     <>
       <PageHeader
-        title="Memory Library"
+        title="Memory - Books"
         subtitle={
           <>
             {' '}
@@ -36,6 +104,7 @@ const MemoryPage: Component = () => {
           </>
         }
       />
+
       <div class="flex w-full justify-end gap-4">
         <Button onClick={() => setImport(true)}>
           <Upload /> Import Book
@@ -84,8 +153,6 @@ const MemoryPage: Component = () => {
     </>
   )
 }
-
-export default MemoryPage
 
 const NoBooks = () => <div class="flex justify-center">You have no memory books yet. Click Create to get started.</div>
 
