@@ -1,5 +1,5 @@
 import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
-import { SettingState, settingStore, userStore } from '../store'
+import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
@@ -9,7 +9,7 @@ window.googletag = window.googletag || { cmd: [] }
 export type SlotKind = 'menu' | 'leaderboard' | 'content'
 export type SlotSize = 'sm' | 'lg' | 'xl'
 
-type SlotId = Exclude<keyof SettingState['slots'], 'publisherId'>
+type SlotId = 'agn-menu-sm' | 'agn-menu-lg' | 'agn-leaderboard-sm' | 'agn-leaderboard-lg' | 'agn-leaderboard-xl'
 
 type SlotSpec = { size: string; id: SlotId }
 type SlotDef = {
@@ -20,7 +20,9 @@ type SlotDef = {
   xl?: SlotSpec
 }
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; size?: SlotSize }> = (props) => {
+const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTMLElement; size?: SlotSize }> = (
+  props
+) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
 
@@ -55,6 +57,13 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; s
     log('Parent loaded')
   }
 
+  const specs = createMemo(() => {
+    props.parent?.clientWidth
+    parentSize.size()
+    const spec = getSpec(props.slot, props.parent, log)
+    return spec
+  })
+
   useEffect(() => {
     const refresher = setInterval(() => {
       const slot = adslot()
@@ -87,7 +96,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; s
 
     const onVisChange = (evt: googletag.events.SlotVisibilityChangedEvent) => {
       if (evt.slot.getSlotElementId() !== id()) return
-      log('Visibility', evt.inViewPercentage)
       setVisible(evt.inViewPercentage > 0)
     }
 
@@ -130,16 +138,15 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; s
     googletag.destroySlots([remove])
   })
 
-  const specs = createMemo(() => {
-    const spec = getSpec(props.slot, props.parent, log)
-    return spec
-  })
-
   createEffect(async () => {
     if (!cfg.ready || !cfg.slotsLoaded || !cfg.publisherId) return
 
+    resize.size()
+
     if (ref && !resize.loaded()) {
       resize.load(ref)
+      log('Not loaded')
+      return
     }
 
     setShow(true)
@@ -185,6 +192,7 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean; parent: HTMLElement; s
     log('Rendered')
 
     setTimeout(() => {
+      if (props.sticky === 'always') return
       setStick(false)
 
       if (props.parent) {
@@ -257,10 +265,11 @@ function toSize(size: string): [number, number] {
 }
 
 function toPixels(size: string) {
+  // const [w, h] = size.split('x')
+  // return { width: `${+w + 2}px`, height: `${+h + 2}px` }
   return {}
-  const [w, h] = size.split('x')
-  return { width: `${+w + 2}px`, height: `${+h + 2}px` }
 }
+
 const win: any = window
 win.getSlotById = getSlotById
 

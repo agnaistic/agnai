@@ -37,17 +37,6 @@ export namespace AppSchema {
     policies?: boolean
     flags?: string
 
-    /** @deprecated */
-    slots: {
-      enabled: boolean
-      menu: string
-      menuLg: string
-      banner: string
-      mobile: string
-      gtmMenu: string
-      gtmLeader: string
-      gtmContent: string
-    }
     authUrls: string[]
   }
 

@@ -106,17 +106,6 @@ export const config = {
   inference: {
     flatChatCompletion: !!env('SIMPLE_COMPLETION', ''),
   },
-  slots: {
-    enabled: env('SLOTS_ENABLED', 'false') === 'true',
-    menu: env('MENU_SLOT', ''),
-    menuLg: env('MENU_LG_SLOT', ''),
-    banner: env('BANNER_SLOT', ''),
-    mobile: env('MOBILE_SLOT', ''),
-
-    gtmMenu: env('GTM_MENU', ''),
-    gtmLeader: env('GTM_LEADER', ''),
-    gtmContent: env('GTM_CONTENT', ''),
-  },
   keys: {
     REPLICATE: env('REPLICATE_KEY', ''),
   },

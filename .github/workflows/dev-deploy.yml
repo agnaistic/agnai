@@ -1,4 +1,4 @@
-name: Deploy to dev
+name: Deploy to DEV
 
 on: workflow_dispatch
 

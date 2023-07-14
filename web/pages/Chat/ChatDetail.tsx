@@ -503,7 +503,7 @@ const ChatDetail: Component = () => {
                       <Switch>
                         <Match when={slots.size().w === 0}>{null}</Match>
                         <Match when={slotContainer!}>
-                          <Slot sticky slot="content" parent={slotContainer!} />
+                          <Slot sticky="always" slot="content" parent={slotContainer!} />
                         </Match>
                       </Switch>
                     </div>
