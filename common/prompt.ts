@@ -293,6 +293,8 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
   const useScenario = !!parts.scenario
   const useSystemPrompt = !!parts.systemPrompt
   const useImpersonality = !!parts.impersonality
+  const useChatEmbed = parts.chatEmbeds.join('').length > 0
+  const useUserEmbed = parts.userEmbeds.join('').length > 0
 
   /**
    * Filter out lines that contain only one 'one of a kind' placeholder where the placeholder is empty
@@ -314,6 +316,8 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
       if (!useScenario && line.match(HOLDERS.scenario)) return false
       if (!useImpersonality && line.match(HOLDERS.impersonating)) return false
       if (!useSystemPrompt && line.match(HOLDERS.systemPrompt)) return false
+      if (!useChatEmbed && line.match(HOLDERS.chatEmbed)) return false
+      if (!useUserEmbed && line.match(HOLDERS.userEmbed)) return false
       return true
     })
     .join('\n')

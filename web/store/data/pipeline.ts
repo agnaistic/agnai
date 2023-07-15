@@ -26,6 +26,7 @@ export const pipelineApi = {
   chatRecall,
 
   embedArticle,
+  embedPdf,
   queryEmbedding,
   listCollections,
 }
@@ -97,7 +98,7 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
     goOffline()
     console.debug(`Failed to embed`, err)
   })
-  console.debug('Embedding duration', now.toLocaleString(), 'ms')
+  console.debug('Embedding duration', Date.now() - now, 'ms')
 }
 
 async function chatRecall(chatId: string, message: string, created: string) {
@@ -184,6 +185,32 @@ async function embedArticle(wikipage: string) {
 
   const slug = slugify(wikipage)
   await method('post', `/embed/${slug}`, embed)
+}
+
+async function embedPdf(name: string, file: File) {
+  const { extractPdf } = await import('./pdf-import')
+  const data = await extractPdf(file)
+  const embed: Embedding = {
+    ids: [],
+    documents: [],
+    metadatas: [],
+  }
+
+  if (!data.text || !data.outline) {
+    throw new Error(`Could not embed PDF: Could not extract pages`)
+  }
+
+  for (let i = 0; i < data.text.length; i++) {
+    const text = data.text[i]
+    const page = data.outline.find((sect: any) => (sect.page == null ? false : sect.page >= i))
+
+    embed.ids.push(v4())
+    embed.documents.push(text)
+    embed.metadatas.push({ page: i, section: page?.title })
+  }
+
+  const slug = name ? name : slugify(file.name)
+  await method('post', `/embed/${slug.slice(0, 63)}`, embed)
 }
 
 type QueryOpts = {

@@ -12,7 +12,7 @@ export const charsApi = {
   deleteCharacter,
   editCharacter,
   createCharacter,
-  getImageBuffer,
+  getImageBuffer: getFileBuffer,
   setFavorite,
 }
 
@@ -228,7 +228,7 @@ export async function getImageData(file?: File | Blob | string) {
   })
 }
 
-export async function getImageBuffer(file?: File) {
+export async function getFileBuffer(file?: File) {
   if (!file) return
   const reader = new FileReader()
 
@@ -236,7 +236,7 @@ export async function getImageBuffer(file?: File) {
     reader.readAsArrayBuffer(file)
 
     reader.onload = (evt) => {
-      if (!evt.target?.result) return reject(new Error(`Failed to process image`))
+      if (!evt.target?.result) return reject(new Error(`Failed to process file`))
       resolve(Buffer.from(evt.target.result as ArrayBuffer))
     }
   })

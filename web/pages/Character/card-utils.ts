@@ -1,6 +1,6 @@
 import extract from 'png-chunks-extract'
 import text from 'png-chunk-text'
-import { getImageBuffer } from '../../store/data/chars'
+import { getFileBuffer } from '../../store/data/chars'
 
 export type ImageCard = {
   name: string
@@ -22,7 +22,7 @@ export type ImageCard = {
 }
 
 export async function extractCardData(file: File) {
-  const buffer = await getImageBuffer(file)
+  const buffer = await getFileBuffer(file)
   const extractions = extract(buffer as any)
   if (!extractions.length) {
     throw new Error('No extractions found')
