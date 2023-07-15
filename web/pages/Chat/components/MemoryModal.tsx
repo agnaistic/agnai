@@ -8,6 +8,7 @@ import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
+import EmbedWiki from '../../Memory/EmbedWiki'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
@@ -101,6 +102,7 @@ const ChatMemoryModal: Component<{
           <Select
             fieldName="embedId"
             label="Embedding"
+            helperText="Local Pipeline: Which user-created embedding to use."
             items={embeds()}
             onChange={(item) => setEmbedId(item.value)}
             value={embedId()}
@@ -113,6 +115,8 @@ const ChatMemoryModal: Component<{
             <Save />
             Use Embedding
           </Button>
+          <Divider />
+          <EmbedWiki />
         </Show>
 
         <Show when={book()}>

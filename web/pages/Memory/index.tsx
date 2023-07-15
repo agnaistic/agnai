@@ -7,12 +7,12 @@ import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { setComponentPageTitle } from '../../shared/util'
 import { memoryStore, settingStore, toastStore } from '../../store'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import { pipelineApi } from '/web/store/data/pipeline'
-import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
+import EmbedWiki from './EmbedWiki'
 
 const MemoryPage: Component = () => {
   setComponentPageTitle('Memory')
@@ -40,40 +40,21 @@ const MemoryPage: Component = () => {
 export default MemoryPage
 
 const EmbedsTab: Component = (props) => {
-  let ref: any
-
   const state = memoryStore()
-
-  const [loading, setLoading] = createSignal(false)
 
   onMount(() => {
     memoryStore.listCollections()
   })
 
-  const create = async () => {
-    setLoading(true)
-    const { wiki } = getStrictForm(ref, { wiki: 'string' })
-    await pipelineApi.embedArticle(wiki)
-    toastStore.success('Successfully created embedding')
-    setLoading(false)
-  }
   return (
     <>
       <PageHeader title="Memory - Embeddings" />
-      <form ref={ref}>
-        <TextInput
-          fieldName="wiki"
-          label="Embed Wikipedia Article"
-          helperText="Create an embedding using the content from a Wikipedia article"
-          placeholder="URL. E.g. https://en.wikipedia.org/wiki/Taylor_Swift"
-        />
-        <Button disabled={loading()} onClick={create}>
-          Create
-        </Button>
-      </form>
+      <EmbedWiki />
 
       <div class="flex flex-col gap-2">
-        <For each={state.embeds}>{(each) => <Card>{each.name}</Card>}</For>
+        <For each={state.embeds.filter((embed) => embed.metadata.type === 'user')}>
+          {(each) => <Card>{each.name}</Card>}
+        </For>
       </div>
     </>
   )
