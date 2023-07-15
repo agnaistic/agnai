@@ -3,7 +3,7 @@ from flask import request
 from server import app
 
 
-@app.get("/status")
+@app.get("/pipeline/status")
 def statusGet():
     return {
         "status": "ok",
@@ -13,7 +13,7 @@ def statusGet():
     }
 
 
-@app.post("/summarize")
+@app.post("/pipeline/summarize")
 def summarizePost():
     if summary.enabled is False:
         return {"success": False, "summary": None, "error": "Summarizer disabled"}

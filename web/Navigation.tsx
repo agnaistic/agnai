@@ -209,6 +209,7 @@ const GuestNavigation: Component = () => {
     config: s.config,
     guest: s.guestAccessAllowed,
     flags: s.flags,
+    pipelineOnline: s.pipelineOnline,
   }))
 
   return (
@@ -239,6 +240,9 @@ const GuestNavigation: Component = () => {
 
         <Item href="/memory">
           <Book /> Memory
+          <Show when={menu.pipelineOnline}>
+            <Signal color="green" />
+          </Show>
         </Item>
 
         <Show when={menu.flags.events}>

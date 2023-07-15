@@ -4,12 +4,11 @@ import * as path from 'path'
 import * as os from 'os'
 import { mkdirpSync } from 'mkdirp'
 import { copyFileSync, readdirSync } from 'fs'
-
 const argv = require('minimist')(process.argv.slice(2))
-const folders = getFolders()
 
 const pkg = require('../package.json')
 
+const folders = getFolders()
 const options: string[] = []
 
 const disableJson = flag(
@@ -23,6 +22,7 @@ const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'p
 
 const pipeline = flag('Run the Pipeline API with the Embedding feature (ChromaDB)', 'pipeline')
 const summarizer = false ?? flag(`Pipeline API: Run the text summarizer`, 's', 'summary')
+const tunnel = flag('Expose your Agnai server using LocalTunnel', 't', 'tunnel')
 
 if (argv.help || argv.h) {
   help()
@@ -33,7 +33,6 @@ if (debug) {
 }
 
 const jsonLocation = flag(`Provide a location for the JSON files folder. Defaults to: ${folders.json}`, 'f', 'files')
-
 const assets = flag(`Provide a location for the assets (images) folder. Defaults to: ${folders.assets}`, 'a', 'assets')
 
 if (jsonLocation) {
@@ -99,6 +98,10 @@ function help(code = 0) {
 }
 
 runPipeline().then(() => {
+  if (tunnel) {
+    process.env.PUBLIC_TUNNEL = 'true'
+  }
+
   require('./start')
 })
 
@@ -173,6 +176,8 @@ function pathExists(path: string) {
 
 async function runPipeline() {
   if (!pipeline && !summarizer) return
+
+  process.env.PIPELINE_PROXY = 'true'
 
   const pip = path.resolve(folders.pipeline, 'bin/pip')
   const poetry = path.resolve(folders.pipeline, 'bin/poetry')

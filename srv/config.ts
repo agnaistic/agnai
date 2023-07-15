@@ -109,6 +109,8 @@ export const config = {
   keys: {
     REPLICATE: env('REPLICATE_KEY', ''),
   },
+  pipelineProxy: !!env('PIPELINE_PROXY', ''),
+  publicTunnel: !!env('PUBLIC_TUNNEL', ''),
 }
 
 insertInject()

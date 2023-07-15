@@ -22,9 +22,12 @@ type SlotDef = {
 
 const MIN_AGE = 60000
 
-const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTMLElement; size?: SlotSize }> = (
-  props
-) => {
+const Slot: Component<{
+  slot: SlotKind
+  sticky?: boolean | 'always'
+  parent: HTMLElement
+  size?: SlotSize
+}> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
   const user = userStore()
   const [stick, setStick] = createSignal(props.sticky)

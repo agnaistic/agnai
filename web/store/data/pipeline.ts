@@ -31,7 +31,7 @@ export const pipelineApi = {
   listCollections,
 }
 
-const baseUrl = `http://localhost:5001`
+let baseUrl = location.origin
 
 let online = false
 const status = {
@@ -53,12 +53,12 @@ async function textToSpeech(text: string) {
 
 async function summarize(text: string) {
   if (!online || !status.summary) return
-  const res = await method('post', '/summarize', { prompt: text })
+  const res = await method('post', '/pipeline/summarize', { prompt: text })
   return res
 }
 
 async function listCollections() {
-  const res = await method('get', '/embed')
+  const res = await method('get', '/pipeline/embed')
   if (res.result) {
     return res.result.result
   }
@@ -94,7 +94,7 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
   }, [] as Memory.ChatEmbed[])
 
   const now = Date.now()
-  await method('post', `/embed/${chat._id}/reembed`, { messages: payload }).catch((err) => {
+  await method('post', `/pipeline/embed/${chat._id}/reembed`, { messages: payload }).catch((err) => {
     goOffline()
     console.debug(`Failed to embed`, err)
   })
@@ -135,7 +135,10 @@ setTimeout(pipelineHeartbeat, 100)
 function pipelineHeartbeat() {
   if (online) return
   if (!window.usePipeline) return
-  check().catch(() => null)
+
+  check().catch((ex) => {
+    return null
+  })
 }
 
 function goOffline() {
@@ -187,7 +190,7 @@ async function embedArticle(wikipage: string) {
   }
 
   const slug = slugify(wikipage)
-  await method('post', `/embed/${slug}`, embed)
+  await method('post', `/pipeline/embed/${slug}`, embed)
 }
 
 async function embedPdf(name: string, file: File) {
@@ -213,7 +216,7 @@ async function embedPdf(name: string, file: File) {
   }
 
   const slug = name ? name : slugify(file.name)
-  await method('post', `/embed/${slug.slice(0, 63)}`, embed)
+  await method('post', `/pipeline/embed/${slug.slice(0, 63)}`, embed)
 }
 
 type QueryOpts = {
@@ -229,19 +232,21 @@ async function queryEmbedding<T = {}>(
 
   if (!online || !status.memory) throw new Error(`Embeddings are not available: Offline or disabled`)
   const now = Date.now()
-  const res = await method<{ result: EmbedQueryResult }>('post', `/embed/${embedding}/query`, {
+  const res = await method<{ result: EmbedQueryResult }>('post', `/pipeline/embed/${embedding}/query`, {
     message,
   }).catch((err) => {
     goOffline()
     console.error('Failed memory retrieval', err)
-    return { result: null }
+    return { result: undefined, error: err.message || err, status: 500 }
   })
 
   const diff = Date.now() - now
 
-  if (!res.result) throw new Error(`Could not query embedding`)
+  if (res.error && res.status >= 500) {
+    throw new Error(`Could not query embedding: ${res.error}`)
+  }
 
-  if (!res.result.result) {
+  if (!res.result?.result) {
     return []
   }
 
@@ -264,8 +269,11 @@ async function queryEmbedding<T = {}>(
 }
 
 async function check() {
-  const res = await method('get', '/status')
-  if (res.result) {
+  const { config } = getStore('settings').getState()
+  baseUrl = config.pipelineProxyEnabled ? `http://${location.host}` : `http://${location.hostname}:5001`
+
+  const res = await method('get', '/pipeline/status')
+  if (res.result && res.result.status === 'ok') {
     if (!online) {
       getStore('toasts').success('Pipeline connected')
     }

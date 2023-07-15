@@ -84,7 +84,7 @@ const initState: SettingState = {
     assetPrefix: '',
     selfhosting: false,
     imagesSaved: false,
-    /** @deprecated */
+    pipelineProxyEnabled: false,
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
   },
   replicate: {},

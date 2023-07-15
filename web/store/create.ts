@@ -19,7 +19,7 @@ type StoreMap = {
   toasts: typeof toastStore
   character: typeof characterStore
   invite: typeof inviteStore
-  setting: typeof settingStore
+  settings: typeof settingStore
   memory: typeof memoryStore
   messages: typeof msgStore
   admin: typeof adminStore

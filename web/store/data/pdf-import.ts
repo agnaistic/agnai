@@ -2,7 +2,6 @@ import * as PDFDE from 'pdfdataextract'
 import * as GlobalWorkerOptions from 'pdfjs-dist/lib/display/worker_options.js'
 import * as PDFWorker from 'pdfjs-dist/build/pdf.worker.entry.js'
 import { getFileAsBuffer } from '/web/shared/FileInput'
-import { getEncoder } from '/common/tokenize'
 
 GlobalWorkerOptions.workerSrc = PDFWorker
 

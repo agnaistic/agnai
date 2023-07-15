@@ -26,7 +26,7 @@ trx = SentenceTransformer("all-MiniLM-L6-v2")
 embed = lambda *args, **kwargs: trx.encode(*args, **kwargs).tolist()
 
 
-@app.post("/embed/<chat_id>/reembed")
+@app.post("/pipeline/embed/<chat_id>/reembed")
 def memoryReembed(chat_id):
     payload = request.get_json(silent=True)
     messages = payload.get("messages", False) or None
@@ -49,7 +49,7 @@ def memoryReembed(chat_id):
     return {"success": True}
 
 
-@app.post("/embed/<chat_id>/chat")
+@app.post("/pipeline/embed/<chat_id>/chat")
 def chatEmbed(chat_id):
     payload = request.get_json(silent=True)
     messages = payload.get("messages", False) or None
@@ -70,7 +70,7 @@ def chatEmbed(chat_id):
     return {"success": True}
 
 
-@app.post("/embed/<name>")
+@app.post("/pipeline/embed/<name>")
 def embedContent(name):
     payload = request.get_json(silent=True)
     documents = payload.get("documents")
@@ -92,13 +92,13 @@ def embedContent(name):
     return {"success": True}
 
 
-@app.delete("/embed/<name>")
+@app.delete("/pipeline/embed/<name>")
 def removeEmbed(name):
     client.delete_collection(name)
     return {"success": True}
 
 
-@app.post("/embed/<name>/query")
+@app.post("/pipeline/embed/<name>/query")
 def recallContent(name):
     payload = request.get_json(silent=True)
     message = payload.get("message")
@@ -114,7 +114,7 @@ def recallContent(name):
         return {"result": None}
 
 
-@app.get("/embed")
+@app.get("/pipeline/embed")
 def listCollections():
     collections = client.list_collections()
 

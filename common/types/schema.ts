@@ -37,6 +37,7 @@ export namespace AppSchema {
     policies?: boolean
     flags?: string
 
+    pipelineProxyEnabled: boolean
     authUrls: string[]
   }
 

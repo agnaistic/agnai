@@ -8,6 +8,7 @@ import { resolve } from 'path'
 import { setupSockets } from './api/ws'
 import { config } from './config'
 import { createServer } from './server'
+import pipeline from './api/pipeline'
 
 const upload = multer({ limits: { fileSize: config.limits.upload * 1024 * 1024 } })
 
@@ -27,6 +28,10 @@ setupSockets(server)
 const index = resolve(baseFolder, 'dist', 'index.html')
 
 app.use('/api', api)
+
+if (config.pipelineProxy) {
+  app.use('/pipeline', pipeline)
+}
 
 if (!config.storage.enabled) {
   app.use('/assets', express.static(config.assetFolder))

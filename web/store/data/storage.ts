@@ -19,6 +19,7 @@ const emptyCfg: AppSchema.AppConfig = {
   selfhosting: false,
   registered: [],
   authUrls: [],
+  pipelineProxyEnabled: false,
 }
 
 let SELF_HOSTING = false
