@@ -69,14 +69,12 @@ const AISettings: Component<{
           value={state.user?.defaultPreset || ''}
         />
 
-        <Show when={cfg.flags.pipeline}>
-          <Toggle
-            fieldName="useLocalPipeline"
-            label="Use Local Pipeline"
-            helperText="If available, use local Agnaistic pipeline features (summarization for images). This is extremely new and experimental. Expect this to change and improve in the near future."
-            value={state.user?.useLocalPipeline}
-          />
-        </Show>
+        <Toggle
+          fieldName="useLocalPipeline"
+          label="Use Local Pipeline"
+          helperText="If available, use local Agnaistic pipeline features (summarization for images). This is extremely new and experimental. Expect this to change and improve in the near future."
+          value={state.user?.useLocalPipeline}
+        />
 
         <div class="my-2">
           <Tabs tabs={tabs()} selected={tab} select={setTab} />

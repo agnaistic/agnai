@@ -10,7 +10,6 @@ import PageHeader from '../../shared/PageHeader'
 import { setComponentPageTitle } from '../../shared/util'
 import { memoryStore, settingStore, toastStore } from '../../store'
 import Tabs, { useTabs } from '/web/shared/Tabs'
-import { pipelineApi } from '/web/store/data/pipeline'
 import { Card } from '/web/shared/Card'
 import EmbedContent from './EmbedContent'
 
@@ -21,7 +20,7 @@ const MemoryPage: Component = () => {
 
   return (
     <>
-      <Show when={cfg.flags.pipeline && pipelineApi.isAvailable()}>
+      <Show when={cfg.pipelineOnline}>
         <Tabs tabs={tabs.tabs} select={tabs.select} selected={tabs.selected} />
       </Show>
 

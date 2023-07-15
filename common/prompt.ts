@@ -328,7 +328,7 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
 export function ensureValidTemplate(
   template: string,
   parts: PromptParts,
-  skip?: Array<'history' | 'post' | 'persona' | 'scenario'>
+  skip?: Array<'history' | 'post' | 'persona' | 'scenario' | 'userEmbed' | 'chatEmbed'>
 ) {
   const skips = new Set(skip || [])
   let hasScenario = !!template.match(HOLDERS.scenario)
@@ -336,9 +336,13 @@ export function ensureValidTemplate(
   let hasHistory = !!template.match(HOLDERS.history)
   let hasPost = !!template.match(HOLDERS.post)
   let hasUjb = !!template.match(HOLDERS.ujb)
+  let hasUserEmbed = !!template.match(HOLDERS.userEmbed)
+  // let hasChatEmbed = !!template.match(HOLDERS.chatEmbed)
 
   const useScenario = !!parts.scenario
   const usePersona = !!parts.persona
+  const useUserEmbed = parts.userEmbeds.length > 0
+  // const useChatEmbed = parts.chatEmbeds.length > 0
 
   let modified = removeUnusedPlaceholders(template, parts)
 
@@ -350,6 +354,11 @@ export function ensureValidTemplate(
   if (!skips.has('persona') && !hasPersona && usePersona) {
     hasScenario = true
     modified += `\n{{char}}'s persona: {{${HOLDER_NAMES.persona}}}`
+  }
+
+  if (!skips.has('userEmbed') && !hasUserEmbed && useUserEmbed) {
+    hasUserEmbed = true
+    modified += `\nRelevant Information: {{${HOLDER_NAMES.userEmbed}}}`
   }
 
   if (!skips.has('post') && !skips.has('history') && !hasHistory && !hasPost) {

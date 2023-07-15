@@ -134,7 +134,7 @@ setTimeout(pipelineHeartbeat, 100)
 
 function pipelineHeartbeat() {
   if (online) return
-  if (!window.flags.pipeline || !window.usePipeline) return
+  if (!window.usePipeline) return
   check().catch(() => null)
 }
 
@@ -208,7 +208,7 @@ async function embedPdf(name: string, file: File) {
     const page = data.outline.find((sect: any) => (sect.page == null ? false : sect.page >= i))
 
     embed.ids.push(v4())
-    embed.documents.push(text.replace(/ +/g, ' '))
+    embed.documents.push(text.replace(/\n/g, ' ').replace(/ +/g, ' '))
     embed.metadatas.push({ page: i, section: page?.title })
   }
 
@@ -267,7 +267,7 @@ async function check() {
   const res = await method('get', '/status')
   if (res.result) {
     if (!online) {
-      getStore('toasts').success('Pipeline available')
+      getStore('toasts').success('Pipeline connected')
     }
     online = true
     status.memory = res.result.memory
@@ -285,7 +285,7 @@ function addSection<T>(
 
   for (let i = 0; i < sentences.length; i++) {
     embed.ids.push(v4())
-    embed.documents.push(sentences[i].trim().replace(/ +/g, ' '))
+    embed.documents.push(sentences[i].trim().replace(/\n/g, ' ').replace(/ +/g, ' '))
     embed.metadatas.push({ ...meta, sentence: i + 1 })
   }
   return sentences.map((text, i) => ({ content: text, meta: { ...meta, sentence: i + 1 } }))

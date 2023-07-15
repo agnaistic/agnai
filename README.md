@@ -23,7 +23,7 @@ Agnaistic is bundled as an NPM package and can be installed globally:
 # View launch options:
 > agnai help
 
-# Run with the pipeline features
+# Run with the Pipeline features
 > agnai --pipeline
 
 ```
@@ -133,10 +133,13 @@ The important parts of the stack are:
 # Windows
 > npm run start:win
 
-# Install and run pipeline API
-> npm run model:init  # Install poetry into a virtual environment
-> npm run model:deps  # Install/update poetry dependencies
-> npm run model:start # Start the pipeline API
+# Install and run Pipeline API
+# If required, this will update the dependencies before running the API
+> npm run model # Install poetry into a virtual environment
+
+# Run everything with a single commmand:
+> npm run start:all # Linux and OSX
+> npm run start:all:win # Windows
 ```
 
 ### Recommended Developer Tooling

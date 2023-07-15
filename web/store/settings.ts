@@ -10,6 +10,7 @@ import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { wait } from '/common/util'
+import { pipelineApi } from './data/pipeline'
 
 type SlotSpec = {
   id: string
@@ -42,6 +43,7 @@ export type SettingState = {
   workers: HordeWorker[]
   imageWorkers: HordeWorker[]
   anonymize: boolean
+  pipelineOnline: boolean
 
   init?: {
     profile: AppSchema.Profile
@@ -73,6 +75,7 @@ const initState: SettingState = {
   models: [],
   workers: [],
   imageWorkers: [],
+  pipelineOnline: false,
   config: {
     registered: [],
     adapters: [],
@@ -324,3 +327,12 @@ async function loadSlotConfig() {
     settingStore.setState({ slots, slotsLoaded: true })
   }
 }
+
+setInterval(() => {
+  const online = pipelineApi.isAvailable().online
+  const prev = settingStore.getState()
+
+  if (prev.pipelineOnline !== online) {
+    settingStore.setState({ pipelineOnline: online })
+  }
+}, 500)

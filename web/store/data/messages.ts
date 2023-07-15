@@ -13,6 +13,7 @@ import { subscribe } from '../socket'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
+import { settingStore } from '../settings'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -194,7 +195,8 @@ async function createActiveChatPrompt(
   maxContext?: number
 ) {
   const { active } = chatStore.getState()
-  const { ui } = userStore.getState()
+  const { ui, user } = userStore.getState()
+  const { pipelineOnline } = settingStore.getState()
 
   if (!active) {
     throw new Error('No active chat. Try refreshing')
@@ -219,7 +221,7 @@ async function createActiveChatPrompt(
       ? opts.text
       : entities.lastMessage
 
-  {
+  if (pipelineOnline && user?.useLocalPipeline) {
     const created = text ? new Date().toISOString() : entities.messages.slice(-1)[0]?.createdAt
     const chats = text
       ? await pipelineApi.chatRecall(entities.chat._id, text, created || new Date().toISOString())

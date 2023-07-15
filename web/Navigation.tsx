@@ -12,6 +12,7 @@ import {
   Moon,
   Settings,
   ShoppingBag,
+  Signal,
   Sliders,
   Sun,
   Sword,
@@ -122,7 +123,10 @@ const UserNavigation: Component = () => {
       </Item>
 
       <Item href="/memory">
-        <Book /> Memory
+        <Book /> Memory{' '}
+        <Show when={menu.pipelineOnline}>
+          <Signal color="green" />
+        </Show>
       </Item>
 
       <Show when={menu.flags.events}>

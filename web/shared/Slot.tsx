@@ -185,7 +185,6 @@ const Slot: Component<{ slot: SlotKind; sticky?: boolean | 'always'; parent: HTM
         const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
         setSlotId(slotId)
         const slot = googletag.defineSlot(slotId, spec.wh, id())
-        log('Spec:', spec.wh)
         if (!slot) {
           log(`No slot created`)
           return
@@ -310,6 +309,7 @@ export function getSlotById(id: string) {
 
 function getSlotId(id: string) {
   if (location.origin.includes('localhost')) {
+    console.debug('Psuedo request', id)
     return '/6499/example/banner'
   }
 

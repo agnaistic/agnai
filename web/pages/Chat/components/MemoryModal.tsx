@@ -9,6 +9,8 @@ import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import EmbedWiki from '../../Memory/EmbedContent'
+import PageHeader from '/web/shared/PageHeader'
+import { A } from '@solidjs/router'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
@@ -78,15 +80,21 @@ const ChatMemoryModal: Component<{
   })
 
   return (
-    <Modal
-      title="Chat Memory"
-      show={props.show}
-      close={props.close}
-      footer={<Footer />}
-      onSubmit={onSubmit}
-      maxWidth="half"
-      fixedHeight
-    >
+    <Modal show={props.show} close={props.close} footer={<Footer />} onSubmit={onSubmit} maxWidth="half" fixedHeight>
+      <PageHeader
+        title="Memory"
+        subtitle={
+          <>
+            <A class="link" href="/guides/pipeline">
+              Pipeline Guide
+            </A>{' '}
+            |{' '}
+            <A class="link" href="/guides/memory">
+              Memory Guide
+            </A>
+          </>
+        }
+      />
       <div class="flex flex-col gap-2">
         <Select
           fieldName="memoryId"

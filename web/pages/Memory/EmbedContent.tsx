@@ -20,25 +20,34 @@ const EmbedWiki: Component = (props) => {
 
   const embedWiki = async () => {
     setLoading(true)
-    const { wiki } = getStrictForm(ref, { wiki: 'string' })
-    await pipelineApi.embedArticle(wiki)
-    toastStore.success('Successfully created embedding')
-    setLoading(false)
-    memoryStore.listCollections()
+    try {
+      const { wiki } = getStrictForm(ref, { wiki: 'string' })
+      await pipelineApi.embedArticle(wiki)
+      toastStore.success('Successfully created embedding')
+      setLoading(false)
+      memoryStore.listCollections()
+    } finally {
+      setLoading(false)
+    }
   }
 
   const embedPdf = async () => {
-    const { pdfName } = getStrictForm(ref, { pdfName: 'string' })
-    const pdf = file()
-    if (!pdf) {
-      toastStore.error(`No PDF loaded`)
-      return
-    }
+    setLoading(true)
+    try {
+      const { pdfName } = getStrictForm(ref, { pdfName: 'string' })
+      const pdf = file()
+      if (!pdf) {
+        toastStore.error(`No PDF loaded`)
+        return
+      }
 
-    const slug = slugify(pdfName)
-    await pipelineApi.embedPdf(slug, pdf)
-    toastStore.success(`Successfully created embedding: ${slug}`)
-    memoryStore.listCollections()
+      const slug = slugify(pdfName)
+      await pipelineApi.embedPdf(slug, pdf)
+      toastStore.success(`Successfully created embedding: ${slug}`)
+      memoryStore.listCollections()
+    } finally {
+      setLoading(false)
+    }
   }
 
   const onFile = (files: FileInputResult[]) => {
