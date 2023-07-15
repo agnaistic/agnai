@@ -5,7 +5,7 @@ import { toastStore } from '/web/store/toasts'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { memoryStore } from '/web/store'
-import FileInput from '/web/shared/FileInput'
+import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import Divider from '/web/shared/Divider'
 import { slugify } from '/common/util'
 
@@ -15,6 +15,7 @@ const EmbedWiki: Component = (props) => {
   let ref: any
 
   const [loading, setLoading] = createSignal(false)
+  const [pdfName, setPdfName] = createSignal('')
   const [file, setFile] = createSignal<File>()
 
   const embedWiki = async () => {
@@ -40,6 +41,18 @@ const EmbedWiki: Component = (props) => {
     memoryStore.listCollections()
   }
 
+  const onFile = (files: FileInputResult[]) => {
+    const file = files[0]
+    if (!file) {
+      setFile()
+      setPdfName('')
+      return
+    }
+
+    setFile(() => file.file)
+    setPdfName(slugify(file.file.name).slice(0, 63))
+  }
+
   return (
     <form ref={ref}>
       <TextInput
@@ -58,15 +71,13 @@ const EmbedWiki: Component = (props) => {
         fieldName="pdfName"
         label="Name"
         helperText='(Optional) An identifier for your embedding. This will become a "slug". E.g. "Hello World" will become "hello-world"'
+        value={pdfName()}
       />
 
       <FileInput
         fieldName="pdf"
         label="Embed PDF"
-        onUpdate={(files) => {
-          console.log(files)
-          setFile(() => files[0]?.file)
-        }}
+        onUpdate={onFile}
         helperText="This may take a long time depending on the size of the PDF."
         accept="application/pdf"
       />

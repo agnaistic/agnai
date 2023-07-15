@@ -12,7 +12,7 @@ import { memoryStore, settingStore, toastStore } from '../../store'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import { pipelineApi } from '/web/store/data/pipeline'
 import { Card } from '/web/shared/Card'
-import EmbedWiki from './EmbedWiki'
+import EmbedContent from './EmbedContent'
 
 const MemoryPage: Component = () => {
   setComponentPageTitle('Memory')
@@ -49,7 +49,7 @@ const EmbedsTab: Component = (props) => {
   return (
     <>
       <PageHeader title="Memory - Embeddings" />
-      <EmbedWiki />
+      <EmbedContent />
 
       <div class="flex flex-col gap-2">
         <For each={state.embeds.filter((embed) => embed.metadata.type === 'user')}>

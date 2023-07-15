@@ -243,7 +243,10 @@ type FlagCache = { user: FeatureFlags; default: FeatureFlags }
 function getFlags(): FeatureFlags {
   try {
     const cache = localStorage.getItem(FLAG_KEY)
-    if (!cache) return defaultFlags
+    if (!cache) {
+      saveFlags(defaultFlags)
+      return defaultFlags
+    }
 
     const parsed = JSON.parse(cache) as FlagCache
 
@@ -266,9 +269,9 @@ function getFlags(): FeatureFlags {
     }
 
     saveFlags(flags)
-    window.flags = flags
     return flags
   } catch (ex) {
+    saveFlags(defaultFlags)
     return defaultFlags
   }
 }

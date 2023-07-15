@@ -129,11 +129,14 @@ type EmbedQueryResult = {
   metadatas: [Array<{ date: string; name: string }>]
 }
 
-setInterval(() => {
+setInterval(pipelineHeartbeat, 3000)
+setTimeout(pipelineHeartbeat, 100)
+
+function pipelineHeartbeat() {
   if (online) return
   if (!window.flags.pipeline || !window.usePipeline) return
   check().catch(() => null)
-}, 3000)
+}
 
 function goOffline() {
   online = false
@@ -205,7 +208,7 @@ async function embedPdf(name: string, file: File) {
     const page = data.outline.find((sect: any) => (sect.page == null ? false : sect.page >= i))
 
     embed.ids.push(v4())
-    embed.documents.push(text)
+    embed.documents.push(text.replace(/ +/g, ' '))
     embed.metadatas.push({ page: i, section: page?.title })
   }
 
@@ -263,6 +266,9 @@ async function queryEmbedding<T = {}>(
 async function check() {
   const res = await method('get', '/status')
   if (res.result) {
+    if (!online) {
+      getStore('toasts').success('Pipeline available')
+    }
     online = true
     status.memory = res.result.memory
     status.summary = res.result.summarizer
@@ -279,7 +285,7 @@ function addSection<T>(
 
   for (let i = 0; i < sentences.length; i++) {
     embed.ids.push(v4())
-    embed.documents.push(sentences[i].trim())
+    embed.documents.push(sentences[i].trim().replace(/ +/g, ' '))
     embed.metadatas.push({ ...meta, sentence: i + 1 })
   }
   return sentences.map((text, i) => ({ content: text, meta: { ...meta, sentence: i + 1 } }))

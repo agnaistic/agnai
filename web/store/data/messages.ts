@@ -12,7 +12,7 @@ import { toastStore } from '../toasts'
 import { subscribe } from '../socket'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
-import { memoryStore } from '../memory'
+import { UserEmbed } from '/common/types/memory'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -124,7 +124,6 @@ export type GenerateOpts =
 export async function generateResponseV2(opts: GenerateOpts) {
   const { ui } = userStore.getState()
   const { active } = chatStore.getState()
-  const { useEmbedding } = memoryStore.getState()
 
   if (!active) {
     return localApi.error('No active chat. Try refreshing.')
@@ -139,7 +138,19 @@ export async function generateResponseV2(opts: GenerateOpts) {
     return localApi.error(activePrompt.err.message || activePrompt.err)
   }
 
-  const { prompt, props, entities } = activePrompt
+  const { prompt, props, entities, chatEmbeds, userEmbeds } = activePrompt
+
+  const embedWarnings: string[] = []
+  if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0) embedWarnings.push('Chat')
+  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('User-created')
+
+  if (embedWarnings.length) {
+    toastStore.warn(
+      `Embedding from ${embedWarnings.join(
+        ' and '
+      )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
+    )
+  }
 
   if (ui?.logPromptsToBrowserConsole) {
     console.log(`=== Sending the following prompt: ===`)
@@ -170,29 +181,8 @@ export async function generateResponseV2(opts: GenerateOpts) {
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
     lastMessage: entities.lastMessage,
-    chatEmbeds: undefined,
-    userEmbeds: undefined,
-  }
-
-  const lastMsg = props.messages.slice(-1)[0]
-  const text = request.text || lastMsg?.msg
-  const created = request.text ? new Date().toISOString() : lastMsg?.createdAt
-
-  /**
-   * TESTING
-   * This will only be invoked
-   */
-  if (text) {
-    const chatEmbeds = await pipelineApi.chatRecall(entities.chat._id, text, created!)
-    const userEmbeds = useEmbedding ? await pipelineApi.queryEmbedding(useEmbedding, text) : null
-
-    if (chatEmbeds) {
-      request.chatEmbeds = chatEmbeds
-    }
-
-    if (userEmbeds) {
-      request.userEmbeds = userEmbeds
-    }
+    chatEmbeds,
+    userEmbeds,
   }
 
   const res = await api.post<{ requestId: string }>(`/chat/${entities.chat._id}/generate`, request)
@@ -218,6 +208,35 @@ async function createActiveChatPrompt(
     scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios || []),
   }
 
+  const chatEmbeds: UserEmbed<{ name: string }>[] = []
+  const userEmbeds: UserEmbed[] = []
+
+  const text =
+    opts.kind === 'send' ||
+    opts.kind === 'send-event:world' ||
+    opts.kind === 'send-event:character' ||
+    opts.kind === 'send-event:hidden'
+      ? opts.text
+      : entities.lastMessage
+
+  {
+    const created = text ? new Date().toISOString() : entities.messages.slice(-1)[0]?.createdAt
+    const chats = text
+      ? await pipelineApi.chatRecall(entities.chat._id, text, created || new Date().toISOString())
+      : null
+
+    const users =
+      text && entities.chat.userEmbedId ? await pipelineApi.queryEmbedding(entities.chat.userEmbedId, text) : null
+
+    if (chats) {
+      chatEmbeds.push(...chats)
+    }
+
+    if (users) {
+      userEmbeds.push(...users)
+    }
+  }
+
   const encoder = await getEncoder()
   const prompt = createPrompt(
     {
@@ -236,13 +255,13 @@ async function createActiveChatPrompt(
       impersonate: props.impersonate,
       lastMessage: entities.lastMessage,
       trimSentences: ui.trimSentences,
-      chatEmbeds: [],
-      userEmbeds: [],
+      chatEmbeds,
+      userEmbeds,
     },
     encoder,
     maxContext
   )
-  return { prompt, props, entities }
+  return { prompt, props, entities, chatEmbeds, userEmbeds }
 }
 
 type GenerateProps = {
@@ -541,7 +560,7 @@ function getLastMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
-    return msg.createdAt
+    return msg.msg
   }
 
   return ''

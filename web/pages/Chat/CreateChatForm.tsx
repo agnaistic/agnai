@@ -69,7 +69,7 @@ const CreateChatForm: Component<{
     setScenario(scenarios.find((s) => s._id === scenarioId))
   }
 
-  const [presetId, setPresetId] = createSignal(user.defaultPreset)
+  const [presetId, setPresetId] = createSignal(user.defaultPreset || 'horde')
   const presets = presetStore((s) => s.presets)
 
   const presetOptions = createMemo(() => {

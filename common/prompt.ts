@@ -641,7 +641,7 @@ export function getChatPreset(
   }
 
   // #4
-  const { adapter, isThirdParty } = getAdapter(chat, user)
+  const { adapter, isThirdParty } = getAdapter(chat, user, undefined)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
   if (fallbackId) {
@@ -661,7 +661,11 @@ export function getChatPreset(
  * 3. chat.adapter
  * 4. user.defaultAdapter
  */
-export function getAdapter(chat: AppSchema.Chat, config: AppSchema.User, preset?: Partial<AppSchema.GenSettings>) {
+export function getAdapter(
+  chat: AppSchema.Chat,
+  config: AppSchema.User,
+  preset: Partial<AppSchema.GenSettings> | undefined
+) {
   const chatAdapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
   let adapter = preset?.service ? preset.service : chatAdapter

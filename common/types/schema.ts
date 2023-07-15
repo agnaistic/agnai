@@ -142,6 +142,7 @@ export namespace AppSchema {
     mode?: 'standard' | 'adventure'
     userId: string
     memoryId?: string
+    userEmbedId?: string
 
     memberIds: string[]
     characters?: Record<string, boolean>

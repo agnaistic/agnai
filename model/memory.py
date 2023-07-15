@@ -65,6 +65,7 @@ def chatEmbed(chat_id):
         name=chat_id, embedding_function=embed, metadata={"type": "chat"}
     )
     collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+    client.persist()
 
     return {"success": True}
 
@@ -86,6 +87,7 @@ def embedContent(name):
     )
 
     collection.upsert(ids=ids, documents=documents, metadatas=metadatas)
+    client.persist()
 
     return {"success": True}
 
@@ -102,7 +104,6 @@ def recallContent(name):
     message = payload.get("message")
     try:
         collection = client.get_collection(name)
-        print(name, message)
         results = collection.query(
             query_texts=message,
             n_results=25,
@@ -116,10 +117,8 @@ def recallContent(name):
 @app.get("/embed")
 def listCollections():
     collections = client.list_collections()
-    print(collections)
 
     results = []
-    print(collections)
 
     for i, row in enumerate(collections):
         results.append({"id": row.id, "name": row.name, "metadata": row.metadata})

@@ -15,7 +15,6 @@ type MemoryState = {
   loadingAll: boolean
   updating: boolean
   embeds: Array<{ id: string; name: string; metadata: { type: string } }>
-  useEmbedding: string
 }
 
 const initState: MemoryState = {
@@ -25,7 +24,6 @@ const initState: MemoryState = {
   loadingAll: false,
   updating: false,
   embeds: [],
-  useEmbedding: 'Taylor_Swift',
 }
 
 export const memoryStore = createStore<MemoryState>(
@@ -117,10 +115,6 @@ export const memoryStore = createStore<MemoryState>(
 
       const collections = await pipelineApi.listCollections()
       return { embeds: collections.map((item: any) => ({ ...item, metadata: item.metadata || { type: 'chat' } })) }
-    },
-
-    useEmbedding(_, id: string) {
-      return { useEmbedding: id }
     },
   }
 })

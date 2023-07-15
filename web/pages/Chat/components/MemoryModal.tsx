@@ -8,7 +8,7 @@ import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
-import EmbedWiki from '../../Memory/EmbedWiki'
+import EmbedWiki from '../../Memory/EmbedContent'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
@@ -19,11 +19,10 @@ const ChatMemoryModal: Component<{
     books: s.books,
     items: s.books.list.map((book) => ({ label: book.name, value: book._id })),
     embeds: s.embeds.filter((em) => em.metadata.type === 'user'),
-    embedId: s.useEmbedding,
   }))
 
   const [id, setId] = createSignal(props.chat.memoryId || '')
-  const [embedId, setEmbedId] = createSignal(state.embedId)
+  const [embedId, setEmbedId] = createSignal(props.chat.userEmbedId)
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
   const updateEntrySort = (item: Option<string>) => {
@@ -56,6 +55,10 @@ const ChatMemoryModal: Component<{
   const useMemoryBook = () => {
     if (!props.chat._id) return
     chatStore.editChat(props.chat._id, { memoryId: id() }, undefined)
+  }
+
+  const useUserEmbed = () => {
+    chatStore.editChat(props.chat._id, { userEmbedId: embedId() }, undefined)
   }
 
   const Footer = () => (
@@ -107,11 +110,7 @@ const ChatMemoryModal: Component<{
             onChange={(item) => setEmbedId(item.value)}
             value={embedId()}
           />
-          <Button
-            class="w-fit"
-            disabled={embedId() === state.embedId}
-            onClick={() => memoryStore.useEmbedding(embedId())}
-          >
+          <Button class="w-fit" disabled={embedId() === props.chat.userEmbedId} onClick={useUserEmbed}>
             <Save />
             Use Embedding
           </Button>
