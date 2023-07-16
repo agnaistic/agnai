@@ -20,7 +20,7 @@ const FileInput: Component<{
       return props.onUpdate([])
     }
 
-    const files = await Promise.all(Array.from(list).map(getFileAsBuffer))
+    const files = await Promise.all(Array.from(list).map(getFileAsDataURL))
     props.onUpdate(files)
   }
 
@@ -47,7 +47,7 @@ export async function getFileAsString(result: FileInputResult) {
   return buffer.toString()
 }
 
-export function getFileAsBuffer(file: File): Promise<FileInputResult> {
+export function getFileAsDataURL(file: File): Promise<FileInputResult> {
   return new Promise((resolve) => {
     let content: any
     const reader = new FileReader()
@@ -56,6 +56,18 @@ export function getFileAsBuffer(file: File): Promise<FileInputResult> {
     }
     reader.onloadend = () => resolve({ file, content })
     reader.readAsDataURL(file)
+  })
+}
+
+export function getFileAsBuffer(file: File): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (ev) => {
+      if (!ev.target?.result) return reject(new Error(`Failed to process file`))
+      resolve(Buffer.from(ev.target.result as ArrayBuffer))
+    }
+
+    reader.readAsArrayBuffer(file)
   })
 }
 

@@ -156,6 +156,7 @@ Object {
   ],
   "parts": Object {
     "allPersonas": Array [],
+    "chatEmbeds": Array [],
     "greeting": "GREETING",
     "memory": "",
     "persona": "OtherBot replies a lot",
@@ -168,6 +169,7 @@ Object {
     "scenario": "MAIN MainChar",
     "systemPrompt": "",
     "ujb": "",
+    "userEmbeds": Array [],
   },
   "template": "GASLIGHT TEMPLATE
 You

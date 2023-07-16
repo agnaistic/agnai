@@ -29,6 +29,8 @@ const placeholders = {
   example_dialogue: { required: true, limit: 1 },
   all_personalities: { required: false, limit: 1 },
   impersonating: { required: false, limit: 1 },
+  chat_embed: { required: false, limit: 1 },
+  user_embed: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in Interp]?: string } = {

@@ -8,3 +8,9 @@ declare module 'sentencepiece-js' {
     encodePieices(text: ReturnType<typeof cleanText>): string
   }
 }
+
+declare module '*.js' {
+  const mod: any = {}
+
+  export = mod
+}

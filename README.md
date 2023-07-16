@@ -23,13 +23,13 @@ Agnaistic is bundled as an NPM package and can be installed globally:
 # View launch options:
 > agnai help
 
-# Run with the pipeline features (Coming soon!)
+# Run with the Pipeline features
 > agnai --pipeline
 
 ```
 
 When using the NPM package, your images and JSON files will be stored in: `HOME_FOLDER/.agnai`.  
-E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
+E.g. Linux: `/home/sceuick/.agnai/` Mac: `/Users/sceuick/.agnai` Windows: `C:\Users\sceuick\.agnai`.
 
 ## Features
 
@@ -41,9 +41,9 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
   - User settings: Which AI service to use and their own settings
   - User generation settings
 - Chat specific overrides: AI Service, Character, Generation Settings
-- **Optional pipeline features (Coming soon!)**
-  - Text summarization for images
-  - TODO: Long-term memory, image captioning, text-to-speech, ...
+- **Optional pipeline features**
+  - Long-term memory
+  - Wikipedia Article and PDF embedding
 
 ## Running with Docker
 
@@ -72,18 +72,6 @@ E.g. `/home/sceuick/.agnai/json` `/home/sceuick/.agnai/assets`
    - Build and run the project with Local Tunnel:
      - Mac/Linux: `npm run start:public`
      - Windows: `npm run start:public:win`
-
-## Design Goals
-
-This project quickly deviated from the upstream project. This project is not intended to be a SaaS nor be centered around the Pygmalion model.  
-Ultimately the design goals for this project are my own.
-
-- High quality codebase
-- AI Services: Transparently use a variety of AI models and services to converse with
-  - Initial AI services: Kobold, AI Horde, and Novel
-- Supporting additional AI services should be low friction
-- Lightweight to self-host
-- Avoiding native dependencies and Docker to be easy for non-technical people to install and run
 
 ## Self-Hosting Settings
 
@@ -145,10 +133,13 @@ The important parts of the stack are:
 # Windows
 > npm run start:win
 
-# Install and run pipeline API
-> npm run model:init  # Install poetry into a virtual environment
-> npm run model:deps  # Install/update poetry dependencies
-> npm run model:start # Start the pipeline API
+# Install and run Pipeline API
+# If required, this will update the dependencies before running the API
+> npm run model # Install poetry into a virtual environment
+
+# Run everything with a single commmand:
+> npm run start:all # Linux and OSX
+> npm run start:all:win # Windows
 ```
 
 ### Recommended Developer Tooling

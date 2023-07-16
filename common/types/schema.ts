@@ -37,6 +37,7 @@ export namespace AppSchema {
     policies?: boolean
     flags?: string
 
+    pipelineProxyEnabled: boolean
     authUrls: string[]
   }
 
@@ -142,6 +143,7 @@ export namespace AppSchema {
     mode?: 'standard' | 'adventure'
     userId: string
     memoryId?: string
+    userEmbedId?: string
 
     memberIds: string[]
     characters?: Record<string, boolean>
@@ -325,6 +327,9 @@ export namespace AppSchema {
     memoryDepth?: number
     memoryContextLimit?: number
     memoryReverseWeight?: boolean
+    memoryChatEmbedLimit?: number
+    memoryUserEmbedLimit?: number
+
     src?: string
 
     images?: {

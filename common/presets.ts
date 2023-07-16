@@ -16,8 +16,12 @@ export const chatGenSettings = {
   repetitionPenalty: 'number',
   repetitionPenaltyRange: 'number',
   repetitionPenaltySlope: 'number',
+
   memoryContextLimit: 'number?',
   memoryDepth: 'number?',
+  memoryChatEmbedLimit: 'number?',
+  memoryUserEmbedLimit: 'number?',
+
   typicalP: 'number',
   topP: 'number',
   topK: 'number',

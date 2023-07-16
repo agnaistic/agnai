@@ -81,6 +81,8 @@ Memory "memory" = "memory"i { return "memory" }
 Message "message" = "msg"i / "message"i / "text"i { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
+ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
+UserEmbed "user-embed" = "user"i { return "user_embed" }
 
 // Iterable entities
 Bots "bots" = ( "bots"i / "characters"i ) { return "bots" }
@@ -100,4 +102,6 @@ Interp "interp"
     / Message
     / ChatAge
     / IdleDuration
+    / ChatEmbed
+    / UserEmbed
 `

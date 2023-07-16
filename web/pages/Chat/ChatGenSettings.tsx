@@ -7,7 +7,7 @@ import GenerationSettings from '../../shared/GenerationSettings'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
-import { getAdapter } from '../../../common/prompt'
+import { getAdapter, getChatPreset } from '../../../common/prompt'
 import { AIAdapter, AI_ADAPTERS, adapterSettings } from '../../../common/adapters'
 import { AutoPreset, getClientPreset, getPresetOptions } from '../../shared/adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
@@ -18,7 +18,7 @@ import TextInput from '/web/shared/TextInput'
 
 const chatGenValidator = {
   ...chatGenSettings,
-  name: 'string?',
+  name: 'string',
   service: ['', ...AI_ADAPTERS],
 } as const
 
@@ -62,7 +62,8 @@ export const ChatGenSettings: Component<{
       return { name: preset.name, preset, fallback: true }
     }
 
-    const adapter = genAdapter() || getAdapter(props.chat, user.user).adapter
+    const preset = getChatPreset(props.chat, user.user, state.presets)
+    const adapter = genAdapter() || getAdapter(props.chat, user.user, preset).adapter
 
     if (!user.user.defaultPresets) {
       const preset = getFallbackPreset(adapter)
@@ -71,9 +72,6 @@ export const ChatGenSettings: Component<{
     }
 
     const presetId = user.user.defaultPresets[adapter]
-    const preset = isDefaultPreset(presetId)
-      ? defaultPresets[presetId]
-      : state.presets.find((pre) => pre._id === presetId)
 
     if (!preset) return
     const fallback = isDefaultPreset(presetId)
@@ -213,13 +211,12 @@ export const ChatGenSettings: Component<{
   )
 }
 
-function isPresetDirty(original: AppSchema.GenSettings, compare: Omit<AppSchema.GenSettings, 'name' | 'service'>) {
+function isPresetDirty(original: AppSchema.GenSettings, compare: Omit<AppSchema.GenSettings, 'service'>) {
   const svc = original.service
   for (const key in compare) {
     const prop = key as keyof AppSchema.GenSettings
 
     switch (prop) {
-      case 'name':
       case 'service':
         continue
     }

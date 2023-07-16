@@ -1,7 +1,7 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
 import { PromptParts } from './prompt'
-import { AppSchema } from '/common/types'
+import { AppSchema, Memory } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
 
@@ -37,6 +37,8 @@ type Holder =
   | 'chat_age'
   | 'idle_duration'
   | 'all_personalities'
+  | 'chat_embed'
+  | 'user_embed'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -56,6 +58,8 @@ export type ParseOpts = {
   characters: Record<string, AppSchema.Character>
   sender: AppSchema.Profile
   lastMessage?: string
+  chatEmbed?: Memory.UserEmbed<{ name: string }>[]
+  userEmbed?: Memory.UserEmbed[]
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
@@ -254,6 +258,12 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
 
     case 'all_personalities':
       return opts.parts.allPersonas?.join('\n') || ''
+
+    case 'chat_embed':
+      return opts.parts.chatEmbeds.join('\n') || ''
+
+    case 'user_embed':
+      return opts.parts.userEmbeds.join('\n') || ''
   }
 }
 

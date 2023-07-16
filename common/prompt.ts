@@ -9,6 +9,7 @@ import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { Encoder } from './tokenize'
 import { elapsedSince, trimSentence } from './util'
+import { Memory } from './types'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -26,6 +27,9 @@ export type PromptParts = {
 
   /** User's impersonated personality */
   impersonality?: string
+
+  chatEmbeds: string[]
+  userEmbeds: string[]
 }
 
 export type Prompt = {
@@ -57,6 +61,8 @@ export type PromptOpts = {
   impersonate?: AppSchema.Character
   lastMessage: string
   trimSentences?: boolean
+  chatEmbeds: Memory.UserEmbed<{ name: string }>[]
+  userEmbeds: Memory.UserEmbed[]
 }
 
 type BuildPromptOpts = {
@@ -69,6 +75,8 @@ type BuildPromptOpts = {
   members: AppSchema.Profile[]
   settings?: Partial<AppSchema.GenSettings>
   impersonate?: AppSchema.Character
+  chatEmbed?: Memory.UserEmbed<{ name: string }>[]
+  userEmbed?: Memory.UserEmbed[]
 }
 
 /** {{user}}, <user>, {{char}}, <bot>, case insensitive */
@@ -90,6 +98,8 @@ const HOLDER_NAMES = {
   chatAge: 'chat_age',
   idleDuration: 'idle_duration',
   impersonating: 'impersonating',
+  chatEmbed: 'chat_embed',
+  userEmbed: 'user_embed',
 }
 
 export const HOLDERS = {
@@ -106,6 +116,8 @@ export const HOLDERS = {
   systemPrompt: /{{system_prompt}}/gi,
   linebreak: /{{(br|linebreak|newline)}}/gi,
   impersonating: /{{impersonating}}/gi,
+  chatEmbed: /{{chat_embed}}/gi,
+  userEmbed: /{{user_embed}}/gi,
 }
 
 const ALL_HOLDERS = new RegExp(
@@ -255,6 +267,8 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
     .replace(HOLDERS.linebreak, '\n')
     .replace(HOLDERS.chatAge, elapsedSince(opts.chat.createdAt))
     .replace(HOLDERS.idleDuration, elapsedSince(rest.lastMessage || ''))
+    .replace(HOLDERS.chatEmbed, parts.chatEmbeds.join('\n') || '')
+    .replace(HOLDERS.userEmbed, parts.userEmbeds.join('\n') || '')
     // system prompt should not support other placeholders
     .replace(HOLDERS.systemPrompt, newline(parts.systemPrompt))
     // All placeholders support {{char}} and {{user}} placeholders therefore these must be last
@@ -279,6 +293,8 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
   const useScenario = !!parts.scenario
   const useSystemPrompt = !!parts.systemPrompt
   const useImpersonality = !!parts.impersonality
+  const useChatEmbed = parts.chatEmbeds.join('').length > 0
+  const useUserEmbed = parts.userEmbeds.join('').length > 0
 
   /**
    * Filter out lines that contain only one 'one of a kind' placeholder where the placeholder is empty
@@ -300,6 +316,8 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
       if (!useScenario && line.match(HOLDERS.scenario)) return false
       if (!useImpersonality && line.match(HOLDERS.impersonating)) return false
       if (!useSystemPrompt && line.match(HOLDERS.systemPrompt)) return false
+      if (!useChatEmbed && line.match(HOLDERS.chatEmbed)) return false
+      if (!useUserEmbed && line.match(HOLDERS.userEmbed)) return false
       return true
     })
     .join('\n')
@@ -310,7 +328,7 @@ function removeUnusedPlaceholders(template: string, parts: PromptParts) {
 export function ensureValidTemplate(
   template: string,
   parts: PromptParts,
-  skip?: Array<'history' | 'post' | 'persona' | 'scenario'>
+  skip?: Array<'history' | 'post' | 'persona' | 'scenario' | 'userEmbed' | 'chatEmbed'>
 ) {
   const skips = new Set(skip || [])
   let hasScenario = !!template.match(HOLDERS.scenario)
@@ -318,9 +336,13 @@ export function ensureValidTemplate(
   let hasHistory = !!template.match(HOLDERS.history)
   let hasPost = !!template.match(HOLDERS.post)
   let hasUjb = !!template.match(HOLDERS.ujb)
+  let hasUserEmbed = !!template.match(HOLDERS.userEmbed)
+  // let hasChatEmbed = !!template.match(HOLDERS.chatEmbed)
 
   const useScenario = !!parts.scenario
   const usePersona = !!parts.persona
+  const useUserEmbed = parts.userEmbeds.length > 0
+  // const useChatEmbed = parts.chatEmbeds.length > 0
 
   let modified = removeUnusedPlaceholders(template, parts)
 
@@ -332,6 +354,11 @@ export function ensureValidTemplate(
   if (!skips.has('persona') && !hasPersona && usePersona) {
     hasScenario = true
     modified += `\n{{char}}'s persona: {{${HOLDER_NAMES.persona}}}`
+  }
+
+  if (!skips.has('userEmbed') && !hasUserEmbed && useUserEmbed) {
+    hasUserEmbed = true
+    modified += `\nRelevant Information: {{${HOLDER_NAMES.userEmbed}}}`
   }
 
   if (!skips.has('post') && !skips.has('history') && !hasHistory && !hasPost) {
@@ -361,6 +388,8 @@ type PromptPartsOptions = Pick<
   | 'replyAs'
   | 'impersonate'
   | 'characters'
+  | 'chatEmbeds'
+  | 'userEmbeds'
 >
 
 export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
@@ -378,6 +407,8 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     ),
     post: [],
     allPersonas: [],
+    chatEmbeds: [],
+    userEmbeds: [],
   }
 
   const personalities = new Set([replyAs._id])
@@ -439,6 +470,18 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   parts.systemPrompt = supplementary.system
 
   parts.post = post.map(replace)
+
+  if (opts.userEmbeds) {
+    const embeds = opts.userEmbeds.map((line) => line.text)
+    const fit = fillPromptWithLines(encoder, opts.settings?.memoryUserEmbedLimit || 500, '', embeds)
+    parts.userEmbeds = fit
+  }
+
+  if (opts.chatEmbeds) {
+    const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
+    const fit = fillPromptWithLines(encoder, opts.settings?.memoryChatEmbedLimit || 500, '', embeds)
+    parts.chatEmbeds = fit
+  }
 
   return parts
 }
@@ -607,7 +650,7 @@ export function getChatPreset(
   }
 
   // #4
-  const { adapter, isThirdParty } = getAdapter(chat, user)
+  const { adapter, isThirdParty } = getAdapter(chat, user, undefined)
   const fallbackId = user.defaultPresets?.[isThirdParty ? 'kobold' : adapter]
 
   if (fallbackId) {
@@ -627,7 +670,11 @@ export function getChatPreset(
  * 3. chat.adapter
  * 4. user.defaultAdapter
  */
-export function getAdapter(chat: AppSchema.Chat, config: AppSchema.User, preset?: Partial<AppSchema.GenSettings>) {
+export function getAdapter(
+  chat: AppSchema.Chat,
+  config: AppSchema.User,
+  preset: Partial<AppSchema.GenSettings> | undefined
+) {
   const chatAdapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
   let adapter = preset?.service ? preset.service : chatAdapter

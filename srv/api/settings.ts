@@ -38,6 +38,7 @@ export async function getAppConfig() {
       patreon: config.ui.patreon,
       policies: config.ui.policies,
       authUrls: config.auth.urls,
+      pipelineProxyEnabled: config.pipelineProxy,
     }
   }
 

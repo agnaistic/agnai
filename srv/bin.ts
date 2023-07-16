@@ -4,12 +4,11 @@ import * as path from 'path'
 import * as os from 'os'
 import { mkdirpSync } from 'mkdirp'
 import { copyFileSync, readdirSync } from 'fs'
-
 const argv = require('minimist')(process.argv.slice(2))
-const folders = getFolders()
 
 const pkg = require('../package.json')
 
+const folders = getFolders()
 const options: string[] = []
 
 const disableJson = flag(
@@ -21,12 +20,9 @@ const disableJson = flag(
 const debug = flag(`Enable debug logging. This will print payloads sent to the AI`, 'd', 'debug')
 const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'port')
 
-/**
- * These are disabled until they are ready for release
- */
-const summarizer = false ?? flag(`Run the summarizer pipeline feature`, 's', 'summary')
-const memory = false ?? flag(`Run the long-term memory pipeline feature`, 'm', 'memory')
-const pipeline = false ?? flag('Enable all pipeline features', 'pipeline')
+const pipeline = flag('Run the Pipeline API with the Embedding feature (ChromaDB)', 'pipeline')
+const summarizer = false ?? flag(`Pipeline API: Run the text summarizer`, 's', 'summary')
+const tunnel = flag('Expose your Agnai server using LocalTunnel', 't', 'tunnel')
 
 if (argv.help || argv.h) {
   help()
@@ -37,7 +33,6 @@ if (debug) {
 }
 
 const jsonLocation = flag(`Provide a location for the JSON files folder. Defaults to: ${folders.json}`, 'f', 'files')
-
 const assets = flag(`Provide a location for the assets (images) folder. Defaults to: ${folders.assets}`, 'a', 'assets')
 
 if (jsonLocation) {
@@ -102,9 +97,13 @@ function help(code = 0) {
   process.exit(code)
 }
 
-require('./start')
+runPipeline().then(() => {
+  if (tunnel) {
+    process.env.PUBLIC_TUNNEL = 'true'
+  }
 
-runPipeline()
+  require('./start')
+})
 
 function getFolders() {
   const home = path.resolve(os.homedir(), '.agnai')
@@ -176,7 +175,9 @@ function pathExists(path: string) {
 }
 
 async function runPipeline() {
-  if (!pipeline || !memory || !summarizer) return
+  if (!pipeline && !summarizer) return
+
+  process.env.PIPELINE_PROXY = 'true'
 
   const pip = path.resolve(folders.pipeline, 'bin/pip')
   const poetry = path.resolve(folders.pipeline, 'bin/poetry')
@@ -192,8 +193,8 @@ async function runPipeline() {
   // await execAsync(`${poetry} show`)
   await execAsync(`${poetry} install --no-interaction --no-ansi`)
 
-  console.log('starting API...')
-  execAsync(`${poetry} run python -m flask --app ${folders.root}/model/app.py run -p 5001`)
+  console.log('Starting Pipeline API...')
+  execAsync(`${poetry} run python ${folders.root}/model/app.py`)
 }
 
 async function execAsync(command: string) {

@@ -26,7 +26,8 @@ const RangeInput: Component<{
 
   function updateRangeSliders() {
     if (!input) return
-    const nextSize = ((+input.value - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
+    const value = Math.min(+input.value, +input.max)
+    const nextSize = ((value - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
     input.style.backgroundSize = nextSize
   }
 

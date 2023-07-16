@@ -35,9 +35,7 @@ const history = [
 
 const characters = toMap([main, replyAs])
 
-const lines = history.map(
-  (h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`
-)
+const lines = history.map((h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`)
 
 export const entities = {
   chat,
@@ -78,6 +76,8 @@ export function build(
       replyAs: opts.replyAs || replyAs,
       characters: {},
       lastMessage: '',
+      chatEmbeds: [],
+      userEmbeds: [],
     },
     encoder
   )
@@ -93,18 +93,11 @@ export function toMsg(text: string) {
   return toUserMsg(profile, text)
 }
 
-export function template(
-  prompt: string,
-  overrides: Partial<ParseOpts>,
-  main?: Partial<AppSchema.Character>
-) {
+export function template(prompt: string, overrides: Partial<ParseOpts>, main?: Partial<AppSchema.Character>) {
   return parseTemplate(prompt, getParseOpts(overrides, main))
 }
 
-function getParseOpts(
-  overrides: Partial<ParseOpts> = {},
-  charOverrides: Partial<AppSchema.Character> = {}
-) {
+function getParseOpts(overrides: Partial<ParseOpts> = {}, charOverrides: Partial<AppSchema.Character> = {}) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...main, ...charOverrides }
   const parts = getPromptParts(
@@ -116,6 +109,8 @@ function getParseOpts(
       replyAs: overChar,
       user,
       kind: 'send',
+      chatEmbeds: [],
+      userEmbeds: [],
     },
     lines,
     getEncoder('main', '')

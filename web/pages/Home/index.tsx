@@ -57,6 +57,11 @@ const HomePage: Component = () => {
         <div class="home-cards">
           <TitleCard type="bg" title="Guides" class="" center>
             <div class="flex flex-wrap justify-center gap-2">
+              <A href="/guides/pipeline">
+                <Pill inverse type="hl">
+                  Pipeline Guide
+                </Pill>
+              </A>
               <a>
                 <Pill inverse onClick={() => setSub(Sub.OpenAI)}>
                   OpenAI
@@ -70,7 +75,7 @@ const HomePage: Component = () => {
                   Horde
                 </Pill>
               </a>
-              <A href="https://github.com/agnaistic/agnai/blob/dev/instructions/memory.md" target="_blank">
+              <A href="/guides/memory">
                 <Pill inverse>Memory Book</Pill>
               </A>
             </div>

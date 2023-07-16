@@ -19,6 +19,7 @@ const emptyCfg: AppSchema.AppConfig = {
   selfhosting: false,
   registered: [],
   authUrls: [],
+  pipelineProxyEnabled: false,
 }
 
 let SELF_HOSTING = false
@@ -71,7 +72,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   chats: [],
   presets: [],
   config: {
-    _id: ID,
+    _id: 'anon',
     admin: false,
     hash: '',
     kind: 'user',
@@ -89,7 +90,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     luminaiUrl: '',
     useLocalPipeline: false,
   },
-  profile: { _id: '', kind: 'profile', userId: ID, handle: 'You' },
+  profile: { _id: '', kind: 'profile', userId: 'anon', handle: 'You' },
   lastChatId: '',
   messages: [],
   memory: [],
@@ -118,11 +119,13 @@ export async function handleGuestInit() {
       !res.result.chats
     ) {
       const entities = await migrateToJson()
+      entities.user._id = 'anon'
       await api.post('/json', entities)
       return localApi.result({ ...entities, config: cfg.result! })
     }
 
     if (res.result) {
+      res.result.user._id = 'anon'
       localStore.set('config', res.result.user)
       localStore.set('profile', res.result.profile)
       localStore.set('presets', res.result.presets)
@@ -166,6 +169,8 @@ async function getGuestInitEntities() {
   const scenario = await localApi.loadItem('scenario', true)
   const characters = await localApi.loadItem('characters', true)
   const chats = await localApi.loadItem('chats', true)
+
+  user._id = 'anon'
 
   return { user, presets, profile, books, scenario, characters, chats }
 }

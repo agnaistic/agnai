@@ -42,6 +42,7 @@ export type SettingState = {
   workers: HordeWorker[]
   imageWorkers: HordeWorker[]
   anonymize: boolean
+  pipelineOnline: boolean
 
   init?: {
     profile: AppSchema.Profile
@@ -73,6 +74,7 @@ const initState: SettingState = {
   models: [],
   workers: [],
   imageWorkers: [],
+  pipelineOnline: false,
   config: {
     registered: [],
     adapters: [],
@@ -81,7 +83,7 @@ const initState: SettingState = {
     assetPrefix: '',
     selfhosting: false,
     imagesSaved: false,
-    /** @deprecated */
+    pipelineProxyEnabled: false,
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
   },
   replicate: {},
@@ -196,6 +198,7 @@ export const settingStore = createStore<SettingState>(
     },
     flag({ flags }, flag: keyof FeatureFlags, value: boolean) {
       const nextFlags = { ...flags, [flag]: value }
+      window.flags = nextFlags
       saveFlags(nextFlags)
       return { flags: nextFlags }
     },
@@ -209,7 +212,6 @@ subscribe('connected', { uid: 'string' }, (body) => {
   settingStore.init()
 })
 
-window.flags = {}
 window.flag = function (flag: keyof FeatureFlags, value) {
   if (!flag) {
     const state = settingStore((s) => s.flags)
@@ -243,7 +245,10 @@ type FlagCache = { user: FeatureFlags; default: FeatureFlags }
 function getFlags(): FeatureFlags {
   try {
     const cache = localStorage.getItem(FLAG_KEY)
-    if (!cache) return defaultFlags
+    if (!cache) {
+      saveFlags(defaultFlags)
+      return defaultFlags
+    }
 
     const parsed = JSON.parse(cache) as FlagCache
 
@@ -266,9 +271,9 @@ function getFlags(): FeatureFlags {
     }
 
     saveFlags(flags)
-    window.flags = flags
     return flags
   } catch (ex) {
+    saveFlags(defaultFlags)
     return defaultFlags
   }
 }

@@ -20,6 +20,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
       overrides: { '?': 'any?', ...personaValidator },
       scenarioIds: ['string?'],
       useOverrides: 'boolean?',
+      userEmbedId: 'string?',
     },
     body,
     true
@@ -34,6 +35,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
     mode: body.mode ?? prev.mode,
     adapter: body.adapter ?? prev.adapter,
     memoryId: body.memoryId ?? prev.memoryId,
+    userEmbedId: body.userEmbedId ?? prev.userEmbedId,
     scenarioIds: body.scenarioIds ?? [],
   }
 
