@@ -15,7 +15,7 @@ import EmbedContent from './EmbedContent'
 
 const MemoryPage: Component = () => {
   setComponentPageTitle('Memory')
-  const tabs = useTabs(0, 'Books', 'Embeddings')
+  const tabs = useTabs(['Books', 'Embeddings'])
   const cfg = settingStore()
 
   return (

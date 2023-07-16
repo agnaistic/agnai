@@ -8,7 +8,7 @@ import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
-import EmbedWiki from '../../Memory/EmbedContent'
+import EmbedContent from '../../Memory/EmbedContent'
 import PageHeader from '/web/shared/PageHeader'
 import { A } from '@solidjs/router'
 
@@ -123,8 +123,8 @@ const ChatMemoryModal: Component<{
             Use Embedding
           </Button>
           <Divider />
-          <EmbedWiki />
         </Show>
+        <EmbedContent />
 
         <Show when={book()}>
           <div class="text-sm">

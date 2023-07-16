@@ -111,8 +111,6 @@ export const memoryStore = createStore<MemoryState>(
     },
 
     async listCollections() {
-      if (!pipelineApi.isAvailable().online) return
-
       const collections = await pipelineApi.listCollections()
       return {
         embeds: collections.map((item: any) => ({

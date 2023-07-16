@@ -9,7 +9,6 @@ import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
-import { pipelineApi } from './data/pipeline'
 import { replace } from './data/storage'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
@@ -181,7 +180,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
       if (res.error) toastStore.error(`Failed to retrieve conversation: ${res.error}`)
       if (res.result) {
-        pipelineApi.chatEmbed(res.result.chat, res.result.messages)
+        // pipelineApi.chatEmbed(res.result.chat, res.result.messages)
 
         storage.localSetItem('lastChatId', id)
 

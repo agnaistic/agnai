@@ -58,6 +58,8 @@ async function summarize(text: string) {
 }
 
 async function listCollections() {
+  if (!online) return []
+
   const res = await method('get', '/pipeline/embed')
   if (res.result) {
     return res.result.result
@@ -69,11 +71,9 @@ async function listCollections() {
 async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]) {
   if (!online || !status.memory) return
 
-  const { chatProfiles } = getStore('chat')()
-  const { profile } = getStore('user')()
-  const {
-    characters: { map },
-  } = getStore('character')()
+  const { chatProfiles } = getStore('chat').getState()
+  const { profile } = getStore('user').getState()
+  const { characters } = getStore('character').getState()
 
   const profiles = toMap(chatProfiles)
   if (profile) {
@@ -81,7 +81,7 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
   }
 
   const payload = messages.reduce((prev, msg) => {
-    const name = getName(msg, map, profiles)
+    const name = getName(msg, characters.map, profiles)
 
     if (!name) {
       console.debug(`Could not get name: (${msg.characterId},${msg.userId})`)
