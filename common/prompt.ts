@@ -660,7 +660,7 @@ export function getChatPreset(
   }
 
   // #5
-  return getFallbackPreset(adapter)
+  return getFallbackPreset(adapter || 'horde')
 }
 
 /**
