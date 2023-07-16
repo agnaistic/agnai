@@ -10,7 +10,6 @@ import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { wait } from '/common/util'
-import { pipelineApi } from './data/pipeline'
 
 type SlotSpec = {
   id: string
@@ -327,12 +326,3 @@ async function loadSlotConfig() {
     settingStore.setState({ slots, slotsLoaded: true })
   }
 }
-
-setInterval(() => {
-  const online = pipelineApi.isAvailable().online
-  const prev = settingStore.getState()
-
-  if (prev.pipelineOnline !== online) {
-    settingStore.setState({ pipelineOnline: online })
-  }
-}, 500)

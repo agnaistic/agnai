@@ -6,17 +6,23 @@ import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
 
-export type SlotKind = 'menu' | 'leaderboard' | 'content'
+export type SlotKind = 'menu' | 'leaderboard' | 'content' | 'video'
 export type SlotSize = 'sm' | 'lg' | 'xl'
 
-type SlotId = 'agn-menu-sm' | 'agn-menu-lg' | 'agn-leaderboard-sm' | 'agn-leaderboard-lg' | 'agn-leaderboard-xl'
+type SlotId =
+  | 'agn-menu-sm'
+  | 'agn-menu-lg'
+  | 'agn-leaderboard-sm'
+  | 'agn-leaderboard-lg'
+  | 'agn-leaderboard-xl'
+  | 'agn-video'
 
 type SlotSpec = { size: string; id: SlotId; fallbacks?: string[] }
 type SlotDef = {
-  calc?: (parent: HTMLElement) => SlotSize
+  calc?: (parent: HTMLElement) => SlotSize | null
   platform: 'page' | 'container'
-  sm: SlotSpec
-  lg: SlotSpec
+  sm?: SlotSpec
+  lg?: SlotSpec
   xl?: SlotSpec
 }
 
@@ -66,6 +72,8 @@ const Slot: Component<{
     props.parent?.clientWidth
     parentSize.size()
     const spec = getSpec(props.slot, props.parent, log)
+    if (!spec) return null
+
     setActualId(spec.id)
     return spec
   })
@@ -182,6 +190,10 @@ const Slot: Component<{
     }
 
     const spec = specs()
+    if (!spec) {
+      log('No slot available')
+      return
+    }
 
     gtmReady.then(() => {
       googletag.cmd.push(function () {
@@ -195,6 +207,7 @@ const Slot: Component<{
 
         slot.addService(googletag.pubads())
         googletag.pubads().collapseEmptyDivs()
+        // googletag.pubads().enableVideoAds()
         // if (!user.user?.admin) {
         // }
 
@@ -237,14 +250,14 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!user.user}>{null}</Match>
+        <Match when={!user.user || !specs()}>{null}</Match>
         <Match when={user.user?.admin}>
           <div
             class={`flex w-full justify-center border-[var(--bg-700)] bg-[var(--text-200)]`}
             ref={ref}
             id={id()}
-            data-slot={specs().id}
-            style={{ ...style(), ...specs().css }}
+            data-slot={specs()!.id}
+            style={{ ...style(), ...specs()!.css }}
           ></div>
         </Match>
         <Match when>
@@ -252,8 +265,8 @@ const Slot: Component<{
             class="flex w-full justify-center"
             ref={ref}
             id={id()}
-            data-slot={specs().id}
-            style={{ ...style(), ...specs().css }}
+            data-slot={specs()!.id}
+            style={{ ...style(), ...specs()!.css }}
           ></div>
         </Match>
       </Switch>
@@ -264,6 +277,11 @@ const Slot: Component<{
 export default Slot
 
 const slotDefs: Record<SlotKind, SlotDef> = {
+  video: {
+    platform: 'page',
+    calc: (parent) => (window.innerWidth > 1024 ? 'sm' : null),
+    sm: { size: '300x400', id: 'agn-video' },
+  },
   leaderboard: {
     platform: 'container',
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
@@ -311,7 +329,7 @@ export function getSlotById(id: string) {
 }
 
 function getSlotId(id: string) {
-  if (location.origin.includes('localhost')) {
+  if (location.origin.includes('localhost') || location.origin.includes('127.0.0.1')) {
     console.debug('Psuedo request', id)
     return '/6499/example/banner'
   }
@@ -333,6 +351,7 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
 
   if (def.calc) {
     const platform = def.calc(parent)
+    if (!platform) return null
     return getBestFit(def, platform)
   }
 
@@ -348,20 +367,25 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   return getBestFit(def, platform)
 }
 
-function getBestFit(def: SlotDef, desired: SlotSize) {
+type SlotFit = { css: JSX.CSSProperties; wh: Array<[number, number]> } & SlotSpec
+
+function getBestFit(def: SlotDef, desired: SlotSize): SlotFit | null {
   switch (desired) {
     case 'xl': {
       const spec = def.xl || def.lg || def.sm
+      if (!spec) return null
       return { css: toPixels(spec.size), wh: getSizes(def.xl, def.lg, def.sm), ...spec }
     }
 
     case 'lg': {
       const spec = def.lg || def.sm
+      if (!spec) return null
       return { css: toPixels(spec.size), wh: getSizes(def.lg, def.sm), ...spec }
     }
 
     default: {
       const spec = def.sm
+      if (!spec) return null
       return { css: toPixels(spec.size), wh: getSizes(def.sm), ...spec }
     }
   }

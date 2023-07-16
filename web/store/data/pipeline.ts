@@ -129,18 +129,6 @@ type EmbedQueryResult = {
   metadatas: [Array<{ date: string; name: string }>]
 }
 
-setInterval(pipelineHeartbeat, 3000)
-setTimeout(pipelineHeartbeat, 100)
-
-function pipelineHeartbeat() {
-  if (online) return
-  if (!window.usePipeline) return
-
-  check().catch((ex) => {
-    return null
-  })
-}
-
 function goOffline() {
   online = false
   status.memory = false
@@ -268,22 +256,6 @@ async function queryEmbedding<T = {}>(
   return filtered as any
 }
 
-async function check() {
-  const { config } = getStore('settings').getState()
-  baseUrl = config.pipelineProxyEnabled ? `http://${location.host}` : `http://${location.hostname}:5001`
-
-  const res = await method('get', '/pipeline/status')
-  if (res.result && res.result.status === 'ok') {
-    if (!online) {
-      getStore('toasts').success('Pipeline connected')
-    }
-    online = true
-    status.memory = res.result.memory
-    status.summary = res.result.summarizer
-  }
-  if (res.error) online = false
-}
-
 function addSection<T>(
   content: string,
   meta: T,
@@ -297,4 +269,59 @@ function addSection<T>(
     embed.metadatas.push({ ...meta, sentence: i + 1 })
   }
   return sentences.map((text, i) => ({ content: text, meta: { ...meta, sentence: i + 1 } }))
+}
+
+/**
+ * Pipeline health/status checks
+ */
+
+setTimeout(() => {
+  const store = getStore('settings')
+  let interval: NodeJS.Timer
+
+  store.subscribe((next, prev) => {
+    if (interval !== undefined) return
+
+    // Begin polling when app initialised
+    if (prev.initLoading && !next.initLoading) {
+      pipelineHeartbeat()
+    }
+
+    interval = setInterval(pipelineHeartbeat, 3000)
+  })
+}, 100)
+
+function pipelineHeartbeat() {
+  if (!window.usePipeline) return
+
+  check()
+    .catch((ex) => {
+      online = false
+      return null
+    })
+    .finally(() => {
+      getStore('settings').setState({ pipelineOnline: online })
+    })
+}
+
+async function check() {
+  const { config } = getStore('settings').getState()
+  /**
+   * 1. If accessing Agnai from an alternate host with a development port, use that host
+   * 2. If the AppConfig is running with the pipeline proxy, use the current API url
+   * 3. Otherwise use localhost:5001
+   */
+  const apiUrl = location.port === '1234' ? `http://${location.hostname}:3001` : `http://${location.host}`
+  baseUrl = config.pipelineProxyEnabled ? apiUrl : `http://localhost:5001`
+
+  const res = await method('get', '/pipeline/status')
+  if (res.result && res.result.status === 'ok') {
+    if (!online) {
+      getStore('toasts').success('Pipeline connected')
+    }
+    online = true
+    status.memory = res.result.memory
+    status.summary = res.result.summarizer
+  }
+  if (res.error) online = false
 }
