@@ -3,7 +3,7 @@ import * as proc from 'child_process'
 import * as path from 'path'
 import * as os from 'os'
 import { mkdirpSync } from 'mkdirp'
-import { copyFileSync, readdirSync } from 'fs'
+import { copyFileSync, readdirSync, statSync } from 'fs'
 const argv = require('minimist')(process.argv.slice(2))
 
 const pkg = require('../package.json')
@@ -165,15 +165,6 @@ function getFileList(dir: string) {
   }
 }
 
-function pathExists(path: string) {
-  try {
-    readdirSync(path)
-    return true
-  } catch (ex) {
-    return false
-  }
-}
-
 async function runPipeline() {
   if (!pipeline && !summarizer) return
 
@@ -181,9 +172,9 @@ async function runPipeline() {
 
   const pip = path.resolve(folders.pipeline, 'bin/pip')
   const poetry = path.resolve(folders.pipeline, 'bin/poetry')
-  const pipelineExists = pathExists(folders.pipeline)
+  const poetryExists = fileExists(poetry)
 
-  if (!pipelineExists) {
+  if (!poetryExists) {
     console.log('Installing pipeline features... This may take some time')
     await execAsync(`python3 -m venv ${folders.pipeline}`)
     await execAsync(`${pip} install poetry==1.4.1`)
@@ -216,4 +207,14 @@ async function execAsync(command: string) {
       else resolve(code)
     })
   })
+}
+
+function fileExists(file: string) {
+  try {
+    const stat = statSync(file)
+    stat.isFile()
+    return true
+  } catch (ex) {
+    return false
+  }
 }
