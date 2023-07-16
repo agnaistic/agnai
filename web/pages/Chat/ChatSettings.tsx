@@ -50,7 +50,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   })
 
   createEffect(() => {
-    const currentText = state.chat?.scenario || ''
+    const currentText = scenarioText()
     const scenario = scenarioState.scenarios.find((s) => s._id === scenarioId())
     if (scenario?.overwriteCharacterScenario && !state.chat?.scenarioIds?.includes(scenario._id)) {
       setScenarioText(scenario.text)
