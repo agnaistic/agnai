@@ -7,5 +7,5 @@ export const defaultFlags = {
   parser: false,
   events: false,
   reporting: false,
-  naiModel: true,
+  naiModel: false,
 } satisfies { [key: string]: boolean }
