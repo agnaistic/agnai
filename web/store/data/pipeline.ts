@@ -109,10 +109,6 @@ async function chatRecall(chatId: string, message: string, created: string) {
   return docs
 }
 
-const method: typeof api.method = (method, path, body, opts) => {
-  return api.method(method, `${baseUrl}${path}`, body, { ...opts, noAuth: true })
-}
-
 function getName(
   msg: AppSchema.ChatMessage,
   bots: Record<string, AppSchema.Character>,
@@ -293,6 +289,7 @@ setTimeout(() => {
 
 function pipelineHeartbeat() {
   if (!window.usePipeline) return
+  if (online) return
 
   check()
     .catch((ex) => {
@@ -324,4 +321,15 @@ async function check() {
     status.summary = res.result.summarizer
   }
   if (res.error) online = false
+}
+
+const method: typeof api.method = async (method, path, body, opts) => {
+  try {
+    const res = await api.method(method, `${baseUrl}${path}`, body, { ...opts, noAuth: true })
+    return res
+  } catch (ex: any) {
+    online = false
+    getStore('settings').setState({ pipelineOnline: false })
+    return { error: ex.message || ex, result: undefined, status: 500 }
+  }
 }

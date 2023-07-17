@@ -114,6 +114,16 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async updatePartialConfig(_, config: ConfigUpdate) {
+      const res = await usersApi.updatePartialConfig(config)
+      if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
+      if (res.result) {
+        window.usePipeline = res.result.useLocalPipeline
+        toastStore.success(`Updated settings`)
+        return { user: res.result }
+      }
+    },
+
     async updateService(_, service: AIAdapter, update: any, onDone?: (err?: any) => void) {
       const res = await usersApi.updateServiceConfig(service, update)
       if (res.error) {

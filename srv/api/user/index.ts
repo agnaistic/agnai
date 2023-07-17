@@ -17,6 +17,7 @@ import {
   updateProfile,
   deleteElevenLabsKey,
   updateUI,
+  updatePartialConfig,
 } from './settings'
 
 const router = Router()
@@ -44,6 +45,7 @@ router.delete('/config/elevenlabs', loggedIn, deleteElevenLabsKey)
 router.delete('/presets/:id', loggedIn, deleteUserPreset)
 router.post('/password', loggedIn, changePassword)
 router.post('/ui', loggedIn, updateUI)
+router.post('/config/partial', loggedIn, updatePartialConfig)
 router.post('/config', loggedIn, updateConfig)
 router.post('/profile', loggedIn, updateProfile)
 router.post('/presets', loggedIn, createUserPreset)
