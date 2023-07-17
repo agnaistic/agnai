@@ -36,6 +36,7 @@ import Modal from './shared/Modal'
 import { ContextProvider } from './store/context'
 import PipelineGuide from './pages/Guides/Pipeline'
 import MemoryGuide from './pages/Guides/Memory'
+import NovelGuide from './pages/Guides/NovelAI'
 
 const App: Component = () => {
   const state = userStore()
@@ -66,6 +67,7 @@ const App: Component = () => {
           <Route path="/guides">
             <Route path="/pipeline" component={PipelineGuide} />
             <Route path="/memory" component={MemoryGuide} />
+            <Route path="/novel" component={NovelGuide} />
           </Route>
           <Show when={state.loggedIn}>
             <Route path="/invites" component={lazy(() => import('./pages/Invite/InvitesPage'))} />
