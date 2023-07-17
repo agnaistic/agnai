@@ -72,7 +72,7 @@ const NovelAISettings: Component = () => {
       <Divider />
       <FormLabel
         label="NovelAI Login"
-        helperText="Login to NovelAI. Your credentials will not be stored anywhere. This is to obtain your API key and intended for mobile users that cannot obtain their key any other way."
+        helperText="Login to NovelAI. Your credentials will not be stored anywhere. This is to obtain your API key and intended for users that cannot obtain their key any other way."
       />
       <div class="flex flex-col flex-wrap gap-2 sm:flex-row sm:items-end">
         <TextInput
