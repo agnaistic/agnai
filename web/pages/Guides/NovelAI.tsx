@@ -16,7 +16,7 @@ const text = `
 
 There are two methods to setup NovelAI:
 
-**Login using your username and password in the [NovelAI Settings Page](/settings?tab=ai&service=novelai).**
+**Login using your email and password in the [NovelAI Settings Page](/settings?tab=ai&service=novelai).**
 
 or
 
