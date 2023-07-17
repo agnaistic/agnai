@@ -1,62 +1,50 @@
 export const grammar = `
-Expression
-  = pre:Text? content:Parent* post:Text? {
-   return [pre, ...content, post].filter(v => !!v)
-  }
+Expression = content:Parent* { return content.filter(v => !!v) }
 
 Parent "parent-node" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
-  
-Child "child-node" = v:(Condition / Placeholder) { return v }  
+
+ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User) CL {
+	return { kind: 'placeholder', value: i }
+}
+
+BotIterator "bot-iterator" = OP "#each" WS loop:Bots CL children:(BotChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
+BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
+
+HistoryIterator "history-iterator" = OP "#each" WS loop:History CL children:(HistoryChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
+HistoryChild = i:(HistoryRef / HistoryCondition / ManyPlaceholder) { return i }
   
 Placeholder "placeholder"
   = OP WS interp:Interp WS pipes:Pipe* CL {
   return { kind: 'placeholder', value: interp, pipes }
 }
 
-BotIterator "bot-iterator" = OP "#each" WS value:Bots CL pre:Text? sub:(BotCondition / BotRef / Child / Text)* post:Text? OP "/each" CL {
-  return { kind: 'each', value, children: [pre,...sub,post].filter(v => !!v) }
-}
-
-HistoryIterator "msg-iterator" = OP "#each" WS value:History CL pre:Text? sub:(HistoryCondition / HistoryRef / Child / Text)* post:Text? OP "/each" CL {
-  return { kind: 'each', value, children: [pre,...sub,post].filter(v => !!v) }
-}
-
-BotCondition "bot-condition" = OP "#if" WS prop:BotProperty CL pre:Text? sub:(BotRef / Child / Text)* post:Text? OP "/if" CL {
+BotCondition "bot-condition" = OP "#if" WS prop:BotProperty CL sub:(BotRef / LoopText)* CloseCondition {
   return { kind: 'bot-if', prop, children: sub.flat() }
 }
 
-HistoryCondition "history-condition" = OP "#if" WS prop:HistoryProperty CL sub:(HistoryRef / Child / Text)* OP "/if" CL {
+HistoryCondition "history-condition" = OP "#if" WS prop:HistoryProperty CL sub:(HistoryRef / LoopText)* CloseCondition {
   return { kind: 'history-if', prop, children: sub.flat() }
 }
 
-Condition "if" = OP "#if" WS value:Word CL sub:(Child / Text)* OP "/if" CL {
+ConditionChild = Placeholder / Condition
+Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)* CloseCondition {
   return { kind: 'if', value, children: sub.flat() }
 }
 
-Word "word" = text:[a-zA-Z_]+ {
-  return text.join('')
-}
 
-Pipe "pipe" = _ "|" _ fn:Handler {
-  return fn
-}
+LoopText "loop-text" = !(BotChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
+ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
+Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator) ch:. { return ch }
 
-Text "text" = ch:Char+ {
-  const text = ch.join('')
-  return text
-}
+CloseCondition = OP "/if"i CL
+CloseLoop = OP "/each"i CL
+Word "word" = text:[a-zA-Z_]+ {  return text.join('') }
+Pipe "pipe" = _ "|" _ fn:Handler {  return fn }
 
-Char "character" = word:(.) & {
-	const first = word.charCodeAt(0)
-    return first !== 123
-} { return word }
 
-_ "whitespace"
-  = [ \t]*
-  
+_ "whitespace" = [ \t]*  
 OP "open" = "{{" WS
-CL "close" = WS "}}"
- 
+CL "close" = WS "}}" 
 WS "ws" = " "*
 
 // Example pipe functions: lowercase, uppercase
@@ -85,8 +73,8 @@ ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
 UserEmbed "user-embed" = "user"i { return "user_embed" }
 
 // Iterable entities
-Bots "bots" = ( "bots"i / "characters"i ) { return "bots" }
-History "history" = ( "history"i / "messages"i ) { return "history" }
+Bots "bots" = ( "bots"i ) { return "bots" }
+History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "history" }
 
 Interp "interp"
 	= Character
