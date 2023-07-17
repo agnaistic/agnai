@@ -67,7 +67,7 @@ const HomePage: Component = () => {
                   OpenAI
                 </Pill>
               </a>
-              <A href="https://github.com/agnaistic/agnai/blob/dev/instructions/novel.md" target="_blank">
+              <A href="/guides/novel">
                 <Pill inverse>NovelAI</Pill>
               </A>
               <a>

@@ -125,6 +125,20 @@ const GeneralSettings: Component<Props> = (props) => {
     return options
   })
 
+  const novelModels = createMemo(() => {
+    const base = modelsToItems(NOVEL_MODELS)
+      .map(({ value }) => ({ label: value, value }))
+      .concat({ value: '', label: 'Use service default' })
+
+    const match = base.find((b) => b.value === props.inherit?.novelModel)
+    const model = props.inherit?.novelModel || ''
+    if (model.length > 0 && !match) {
+      base.push({ value: model, label: `Custom (${model})` })
+    }
+
+    return base
+  })
+
   return (
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
@@ -141,19 +155,26 @@ const GeneralSettings: Component<Props> = (props) => {
           aiSetting={'oaiModel'}
         />
 
-        <Select
-          fieldName="novelModel"
-          label="NovelAI Model"
-          items={[
-            ...modelsToItems(NOVEL_MODELS).map(({ value }) => ({ label: value, value })),
-            { value: '', label: 'Use service default' },
-          ]}
-          helperText="Which NovelAI model to use"
-          value={props.inherit?.novelModel || ''}
-          disabled={props.disabled}
-          service={props.service}
-          aiSetting={'novelModel'}
-        />
+        <div class="flex flex-wrap gap-2">
+          <Select
+            fieldName="novelModel"
+            label="NovelAI Model"
+            items={novelModels()}
+            helperText="Which NovelAI model to use"
+            value={props.inherit?.novelModel || ''}
+            disabled={props.disabled}
+            service={props.service}
+            aiSetting={'novelModel'}
+          />
+          <Show when={cfg.flags.naiModel}>
+            <TextInput
+              fieldName="novelModelOverride"
+              helperText="Advanced: Use a custom NovelAI model"
+              label="NovelAI Model Override"
+              aiSetting={'novelModel'}
+            />
+          </Show>
+        </div>
 
         <Select
           fieldName="claudeModel"

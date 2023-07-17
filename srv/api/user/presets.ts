@@ -22,6 +22,11 @@ export const createUserPreset = handle(async ({ userId, body }) => {
   assertValid(createPreset, body, true)
   const service = body.service as AIAdapter
 
+  if (body.novelModelOverride) {
+    body.novelModel = body.novelModelOverride
+    delete body.novelModelOverride
+  }
+
   if (body.chatId) {
     const res = await store.chats.getChat(body.chatId)
     if (res?.chat.userId !== userId) {
@@ -45,6 +50,11 @@ export const createUserPreset = handle(async ({ userId, body }) => {
 export const updateUserPreset = handle(async ({ params, body, userId }) => {
   assertValid(presetValidator, body, true)
   const service = body.service as AIAdapter
+
+  if (body.novelModelOverride) {
+    body.novelModel = body.novelModelOverride
+    delete body.novelModelOverride
+  }
 
   const preset = await store.presets.updateUserPreset(userId!, params.id, { ...body, service })
   return preset

@@ -21,6 +21,7 @@ export const usersApi = {
   getOpenAIUsage,
   getProfile,
   updateConfig,
+  updatePartialConfig,
   updateProfile,
   updateUI,
   updateServiceConfig,
@@ -125,6 +126,19 @@ export async function updateProfile(handle: string, file?: File) {
 }
 
 type ConfigUpdate = Partial<AppSchema.User> & { hordeModels?: string[] }
+
+export async function updatePartialConfig(config: ConfigUpdate) {
+  if (!isLoggedIn()) {
+    const prev = await localApi.loadItem('config')
+    const next: AppSchema.User = { ...prev, ...config }
+
+    await localApi.saveConfig(next)
+    return { result: next, error: undefined }
+  }
+
+  const res = await api.post('/user/config/partial', config)
+  return res
+}
 
 export async function updateConfig(config: ConfigUpdate) {
   if (!isLoggedIn()) {

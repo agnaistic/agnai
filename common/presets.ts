@@ -40,7 +40,10 @@ export const chatGenSettings = {
   ignoreCharacterUjb: 'boolean?',
   gaslight: 'string?',
   oaiModel: 'string',
+
   novelModel: 'string?',
+  novelModelOverride: 'string?',
+
   claudeModel: 'string',
   streamResponse: 'boolean?',
   useGaslight: 'boolean?',
