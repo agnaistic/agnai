@@ -1,4 +1,4 @@
-import { toBook, toBotMsg, toChar, toChat, toEntry, toUser, toUserMsg } from '../common/dummy'
+import { toBook, toBotMsg, toChar, toChat, toEntry, toPersona, toUser, toUserMsg } from '../common/dummy'
 import { getEncoder } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
 import { createPrompt, getPromptParts } from '/common/prompt'
@@ -9,13 +9,13 @@ export * from '../common/dummy'
 const main = toChar('MainChar', {
   scenario: 'MAIN {{char}}',
   sampleChat: 'SAMPLECHAT {{char}}',
-  persona: persona('MainCharacter talks a lot'),
+  persona: toPersona('MainCharacter talks a lot'),
 })
 
 const replyAs = toChar('OtherBot', {
   sampleChat: 'SAMPLECHAT {{char}}',
   scenario: 'REPLYSCENARIO {{char}}',
-  persona: persona('OtherBot replies a lot'),
+  persona: toPersona('OtherBot replies a lot'),
 })
 
 const { user, profile } = toUser('ChatOwner')
@@ -135,11 +135,4 @@ function getParseOpts(overrides: Partial<ParseOpts> = {}, charOverrides: Partial
 
 export function toMap<T extends { _id: string }>(entities: T[]): Record<string, T> {
   return entities.reduce((prev, curr) => Object.assign(prev, { [curr._id]: curr }), {})
-}
-
-function persona(text: string): AppSchema.Persona {
-  return {
-    kind: 'text',
-    attributes: { text: [text] },
-  }
 }

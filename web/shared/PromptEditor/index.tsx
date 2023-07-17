@@ -1,11 +1,16 @@
-import { Component, For, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, For, JSX, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { FormLabel } from '../FormLabel'
 import { AIAdapter, PresetAISettings } from '/common/adapters'
-import { getAISettingServices } from '../util'
+import { getAISettingServices, toMap } from '../util'
 import { useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
 import { SolidCard } from '../Card'
+import Button from '../Button'
+import { ParseOpts, parseTemplate } from '/common/template-parser'
+import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
+import { getPromptParts } from '/common/prompt'
+import { AppSchema } from '/common/types/schema'
 
 type Placeholder = {
   required: boolean
@@ -33,7 +38,7 @@ const placeholders = {
   user_embed: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
-const helpers: { [key in Interp]?: string } = {
+const helpers: { [key in Interp]?: JSX.Element | string } = {
   char: 'Character name',
   user: `Your character's or profile name`,
   impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
@@ -42,6 +47,8 @@ const helpers: { [key in Interp]?: string } = {
   ujb: `The jailbreak. Typically inserted at the end of the prompt.`,
   all_personalities: `Personalities of all chracters in the chat EXCEPT the main character.`,
   post: `The "post-amble" text. This gives specific instructions on how the model should respond. E.g. "Respond as {{char}}:"`,
+  chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
+  user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
 }
 
 type HolderName = keyof typeof placeholders
@@ -52,6 +59,7 @@ const PromptEditor: Component<
   {
     fieldName: string
     service?: AIAdapter
+    inherit?: Partial<AppSchema.GenSettings>
     disabled?: boolean
     value?: string
     onChange?: (value: string) => void
@@ -65,6 +73,12 @@ const PromptEditor: Component<
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
   const [input, setInput] = createSignal<string>(props.value || '')
   const [help, showHelp] = createSignal(false)
+  const [preview, setPreview] = createSignal(false)
+
+  const rendered = createMemo(() => {
+    const example = parseTemplate(input(), getExampleOpts(props.inherit))
+    return example
+  })
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
     setInput(ev.currentTarget.value)
@@ -123,9 +137,14 @@ const PromptEditor: Component<
       <Show when={props.showHelp}>
         <FormLabel
           label={
-            <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
-              Prompt Template (formerly gaslight) <HelpCircle size={16} />
-            </div>
+            <>
+              <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
+                Prompt Template (formerly gaslight) <HelpCircle size={16} />
+              </div>
+              <Button size="sm" onClick={() => setPreview(!preview())}>
+                Toggle Preview
+              </Button>
+            </>
           }
           helperText={
             <>
@@ -146,10 +165,15 @@ const PromptEditor: Component<
         />
       </Show>
 
+      <Show when={preview()}>
+        <pre class="whitespace-pre-wrap break-words text-xs">{rendered()}</pre>
+      </Show>
+
       <textarea
         id={props.fieldName}
         name={props.fieldName}
         class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+        classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}
         disabled={props.disabled}
@@ -217,4 +241,57 @@ const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[]
   })
 
   return null
+}
+
+function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>): ParseOpts {
+  const char = toChar('Rory', {
+    scenario: 'Rory is strolling in the park',
+    persona: toPersona('Rory is very talkative.'),
+  })
+  const replyAs = toChar('Robot', { persona: toPersona('Robot likes coffee') })
+  const profile = toProfile('Author')
+  const { user } = toUser('Author')
+  const chat = toChat(char)
+
+  const characters = toMap([char, replyAs])
+  const history = [
+    toBotMsg(char, 'Hi, nice to meet you!'),
+    toUserMsg(profile, 'Nice to meet you too.'),
+    toBotMsg(replyAs, 'I am also here.'),
+  ]
+
+  const lines = history.map((hist) => {
+    const name = hist.characterId ? characters[hist.characterId].name : profile.handle
+    return `${name}: ${hist.msg}`
+  })
+
+  const parts = getPromptParts(
+    {
+      char,
+      characters,
+      chat,
+      members: [profile],
+      replyAs,
+      user,
+      kind: 'send',
+      chatEmbeds: [],
+      userEmbeds: [],
+      settings: inherit,
+    },
+    lines,
+    (text: string) => text.length
+  )
+
+  return {
+    char,
+    settings: inherit,
+    replyAs,
+    sender: profile,
+    characters,
+    chat,
+    lines,
+    members: [profile],
+    parts,
+    user,
+  }
 }

@@ -197,6 +197,7 @@ const GeneralSettings: Component<Props> = (props) => {
               helperText="Advanced: Use a custom NovelAI model"
               label="NovelAI Model Override"
               aiSetting={'novelModel'}
+              service={props.service}
             />
           </Show>
         </div>
@@ -413,6 +414,7 @@ const PromptSettings: Component<Props> = (props) => {
           exclude={['post', 'history', 'ujb']}
           disabled={props.disabled}
           showHelp
+          inherit={props.inherit}
         />
         <TextInput
           fieldName="ultimeJailbreak"

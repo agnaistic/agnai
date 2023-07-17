@@ -63,7 +63,8 @@ Persona "personality" = "personality"i / "persona"i { return "personality" }
 AllPersona "all_personalities" = "all_personas"i / "all_personalities"i { return "all_personalities" }
 Dialogue "example_dialogue" = "samplechat"i / "example_dialogue"i { return "example_dialogue" }
 
-Note "ujb" = "ujb"i / "system_note"i { return "ujb" }
+Instruction "instruction" = "system_prompt"i { return "system_prompt" }
+Jailbreak "ujb" = "ujb"i / "system_note"i { return "ujb" }
 Post "post" = "post"i { return "post" }
 Memory "memory" = "memory"i { return "memory" }
 Message "message" = "msg"i / "message"i / "text"i { return "message" }
@@ -84,7 +85,8 @@ Interp "interp"
     / AllPersona
     / Dialogue
     / History
-    / Note
+    / Instruction
+    / Jailbreak
     / Post
     / Memory
     / Message

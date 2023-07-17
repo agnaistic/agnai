@@ -39,6 +39,7 @@ type Holder =
   | 'all_personalities'
   | 'chat_embed'
   | 'user_embed'
+  | 'system_prompt'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -264,6 +265,9 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
 
     case 'user_embed':
       return opts.parts.userEmbeds.join('\n') || ''
+
+    case 'system_prompt':
+      return opts.parts.systemPrompt || ''
   }
 }
 

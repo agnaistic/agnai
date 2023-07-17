@@ -141,3 +141,10 @@ export function toEntry(keywords: string[], entry: string, priority = 0, weight 
     weight,
   }
 }
+
+export function toPersona(text: string): AppSchema.Persona {
+  return {
+    kind: 'text',
+    attributes: { text: [text] },
+  }
+}
