@@ -37,9 +37,12 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Build frontend
+        env:
+          INJECT_SCRIPT: ${{ secrets.INJECT_SCRIPT }}
         run: |
           pnpm run build:prod
           cp dist/index.html dist/original.html
+          node .github/inject.js
 
       - name: Publish to PRD
         uses: BetaHuhn/do-spaces-action@v2
