@@ -41,7 +41,7 @@ jobs:
           pnpm run build:prod
           cp dist/index.html dist/original.html
 
-      - name: Publish to Dev
+      - name: Publish to PRD
         uses: BetaHuhn/do-spaces-action@v2
         with:
           access_key: ${{ secrets.S3_ACCESS_KEY}}
