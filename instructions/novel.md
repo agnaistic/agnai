@@ -1,8 +1,14 @@
 # Novel Instructions
 
-> How to get your Novel AI token
+There are two methods to setup NovelAI:
 
-1. Login to Novel AI
+**Login using your email and password in the [NovelAI Settings Page](https://agnai.chat/settings?tab=ai&service=novelai).**
+
+or
+
+**Manually retrieve your token from the NovelAI site using the Developer Tools.**
+
+1. Login to [Novel AI](https://novelai.net/stories)
 2. Open the developer tools using one of the following methods:
 
    - `Ctrl + Shift + I`
