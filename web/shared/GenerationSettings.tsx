@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, For, JSX, Show } from 'solid-js'
+import { Component, createMemo, createSignal, For, JSX, onMount, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
@@ -16,7 +16,7 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
-import { settingStore } from '../store'
+import { presetStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
@@ -106,11 +106,21 @@ export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Eleme
 
 const GeneralSettings: Component<Props> = (props) => {
   const cfg = settingStore()
+  const presets = presetStore()
 
   const [replicate, setReplicate] = createStore({
     model: props.inherit?.replicateModelName,
     type: props.inherit?.replicateModelType,
     version: props.inherit?.replicateModelVersion,
+  })
+
+  const openRouterModels = createMemo(() => {
+    if (!presets.openRouterModels) return []
+
+    return presets.openRouterModels.map((model) => ({
+      value: model.id,
+      label: model.id,
+    }))
   })
 
   const replicateModels = createMemo(() => {
@@ -139,6 +149,10 @@ const GeneralSettings: Component<Props> = (props) => {
     return base
   })
 
+  onMount(() => {
+    presetStore.getOpenRouterModels()
+  })
+
   return (
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
@@ -153,6 +167,17 @@ const GeneralSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'oaiModel'}
+        />
+
+        <Select
+          fieldName="openRouterModel"
+          label="OpenRouter Model"
+          items={openRouterModels()}
+          helperText="Which OpenRouter model to use"
+          value={props.inherit?.openRouterModel?.id}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'openRouterModel'}
         />
 
         <div class="flex flex-wrap gap-2">

@@ -28,7 +28,7 @@ export type PromptEntities = {
   autoReplyAs?: string
   characters: Record<string, AppSchema.Character>
   impersonating?: AppSchema.Character
-  lastMessage: string
+  lastMessage?: { msg: string; date: string }
   scenarios?: AppSchema.ScenarioBook[]
 }
 
@@ -181,7 +181,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
     replyAs: removeAvatar(props.replyAs),
     impersonate: removeAvatar(props.impersonate),
     characters: removeAvatars(entities.characters),
-    lastMessage: entities.lastMessage,
+    lastMessage: entities.lastMessage?.date,
     chatEmbeds,
     userEmbeds,
   }
@@ -219,7 +219,7 @@ async function createActiveChatPrompt(
     opts.kind === 'send-event:character' ||
     opts.kind === 'send-event:hidden'
       ? opts.text
-      : entities.lastMessage
+      : entities.lastMessage?.msg
 
   if (pipelineOnline && user?.useLocalPipeline) {
     const created = text ? new Date().toISOString() : entities.messages.slice(-1)[0]?.createdAt
@@ -255,7 +255,7 @@ async function createActiveChatPrompt(
       replyAs: props.replyAs,
       characters: entities.characters,
       impersonate: props.impersonate,
-      lastMessage: entities.lastMessage,
+      lastMessage: entities.lastMessage?.date || '',
       trimSentences: ui.trimSentences,
       chatEmbeds,
       userEmbeds,
@@ -558,12 +558,13 @@ function removeAvatars(chars: Record<string, AppSchema.Character>) {
   return next
 }
 
+/**
+ *
+ */
 function getLastMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
-    return msg.msg
+    return { msg: msg.msg, date: msg.createdAt }
   }
-
-  return ''
 }

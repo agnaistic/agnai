@@ -1,4 +1,4 @@
-import type { AIAdapter, ChatAdapter, PersonaFormat, RegisteredAdapter } from '../adapters'
+import type { AIAdapter, ChatAdapter, OpenRouterModel, PersonaFormat, RegisteredAdapter } from '../adapters'
 import type { GenerationPreset } from '../presets'
 import type { ImageSettings } from './image-schema'
 import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
@@ -317,6 +317,7 @@ export namespace AppSchema {
     oaiModel?: string
     novelModel?: string
     claudeModel?: string
+    openRouterModel?: OpenRouterModel
 
     replicateModelName?: string
     replicateModelType?: string

@@ -8,6 +8,7 @@ import { getLanguageModels } from '/srv/adapter/replicate'
 import { AIAdapter } from '/common/adapters'
 import { getRegisteredAdapters } from '/srv/adapter/register'
 import { getSafeUserConfig } from './settings'
+import { getOpenRouterModels } from '/srv/adapter/openrouter'
 
 export const openaiUsage = handle(async ({ userId, body }) => {
   const guest = !userId
@@ -48,6 +49,11 @@ export const hordeStats = handle(async ({ userId, body }) => {
     user: user.result,
     error: user.error?.message,
   }
+})
+
+export const openRouterModels = handle(async () => {
+  const models = await getOpenRouterModels()
+  return { models }
 })
 
 export const replicateModels = handle(async ({ userId, body }) => {

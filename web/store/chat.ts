@@ -448,6 +448,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const prompt = createPrompt(
         {
           ...entities,
+          lastMessage: entities.lastMessage?.date || '',
           replyAs: entities.characters[active.replyAs ?? active.char._id],
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],

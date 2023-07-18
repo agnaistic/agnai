@@ -40,6 +40,7 @@ export const chatGenSettings = {
   ignoreCharacterUjb: 'boolean?',
   gaslight: 'string?',
   oaiModel: 'string',
+  openRouterModel: 'any?',
 
   novelModel: 'string?',
   novelModelOverride: 'string?',
