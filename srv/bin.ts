@@ -106,7 +106,7 @@ async function start() {
   const runApi = all || !pipeline
   const runPipeline = all || pipeline
 
-  if (runPipeline) await runPipeline()
+  if (runPipeline) await startPipeline()
   if (runApi) require('./start')
 }
 
