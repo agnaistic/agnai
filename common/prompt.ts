@@ -223,21 +223,8 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
   const profile = opts.members.find((mem) => mem.userId === opts.chat.userId)
   const sender = opts.impersonate?.name || profile?.handle || 'You'
 
-  if (opts.settings?.useTemplateParser) {
-    try {
-      const result = parseTemplate(template, {
-        ...opts,
-        sender: profile!,
-        parts,
-        lines: hist?.lines || [],
-        ...rest,
-      })
-      return result
-    } catch (ex) {}
-  }
-  const sampleChat = parts.sampleChat?.join('\n')
-
   // Automatically inject example conversation if not included in the prompt
+  const sampleChat = parts.sampleChat?.join('\n')
   if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
@@ -251,6 +238,19 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
     else next.push(msg)
 
     hist.lines = next
+  }
+
+  if (opts.settings?.useTemplateParser) {
+    try {
+      const result = parseTemplate(template, {
+        ...opts,
+        sender: profile!,
+        parts,
+        lines: hist?.lines || [],
+        ...rest,
+      })
+      return result
+    } catch (ex) {}
   }
 
   let prompt = template

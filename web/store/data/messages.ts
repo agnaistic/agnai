@@ -40,12 +40,13 @@ export const msgsApi = {
   deleteMessages,
   basicInference,
   createActiveChatPrompt,
+  guidance,
 }
 
-type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
+type InferenceOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
 
 export async function basicInference(
-  { prompt, settings }: PlainOpts,
+  { prompt, settings }: InferenceOpts,
   onComplete: (err?: any, response?: string) => void
 ) {
   const requestId = v4()
@@ -67,6 +68,32 @@ export async function basicInference(
   if (res.error) {
     onComplete(res.error)
     return
+  }
+}
+
+export async function guidance<T = any>(
+  { prompt, settings }: InferenceOpts,
+  onComplete?: (err: any | null, response?: { result: string; values: T }) => void
+) {
+  const requestId = v4()
+  const { user } = userStore.getState()
+
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return
+  }
+
+  const res = await api.method('post', `/chat/guidance`, { requestId, user, prompt, settings })
+  if (res.error) {
+    onComplete?.(res.error)
+    if (!onComplete) {
+      throw new Error(`Guidance failed: ${res.error}`)
+    }
+  }
+
+  if (res.result) {
+    onComplete?.(null, res.result)
+    return res.result
   }
 }
 

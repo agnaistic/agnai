@@ -1,4 +1,4 @@
-import { AIAdapter } from '../../common/adapters'
+import { AIAdapter, NOVEL_MODELS } from '../../common/adapters'
 import { mapPresetsToAdapter, defaultPresets, isDefaultPreset, getFallbackPreset } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
@@ -65,13 +65,52 @@ type InferenceRequest = {
   log: AppLog
 }
 
+export async function inferenceAsync(opts: InferenceRequest) {
+  const { stream } = await createInferenceStream(opts)
+
+  let generated = ''
+  let meta: any = {}
+  let prompt = ''
+  for await (const gen of stream) {
+    if (typeof gen === 'string') {
+      generated = gen
+      continue
+    }
+
+    if ('partial' in gen) {
+      continue
+    }
+
+    if ('meta' in gen) {
+      Object.assign(meta, gen.meta)
+      continue
+    }
+
+    if ('prompt' in gen) {
+      prompt = gen.prompt
+      continue
+    }
+
+    if ('error' in gen) {
+      throw new Error(gen.error)
+    }
+  }
+
+  return { generated, prompt, meta }
+}
+
 export async function createInferenceStream(opts: InferenceRequest) {
   opts.settings.maxTokens = 1024
-  opts.settings.temp = 1
-  opts.settings.topP = 1
-  opts.settings.frequencyPenalty = 0
-  opts.settings.presencePenalty = 0
   opts.settings.streamResponse = false
+  opts.settings.temp = 0.5
+
+  if (opts.settings.service === 'novel') {
+    opts.settings.novelModel = NOVEL_MODELS.krake
+  } else if (opts.settings.service === 'openai') {
+    opts.settings.topP = 1
+    opts.settings.frequencyPenalty = 0
+    opts.settings.presencePenalty = 0
+  }
 
   const handler = handlers[opts.settings.service!]
   const stream = handler({

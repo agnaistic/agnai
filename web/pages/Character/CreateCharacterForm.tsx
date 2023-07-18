@@ -22,9 +22,6 @@ import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
-import { msgsApi } from '/web/store/data/messages'
-import { createCharGenTemplate } from '/common/default-preset'
-import { toGeneratedCharacter } from './util'
 import { Card, SolidCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
@@ -38,6 +35,7 @@ import { useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
+import { generateChar } from './generate-char'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -124,12 +122,14 @@ export const CreateCharacterForm: Component<{
     return preset
   })
 
-  const canPopulatFields = createMemo(() => {
-    return preferredPreset()?.service === 'openai' && !!user?.oaiKeySet
+  const canGenerateCharacter = createMemo(() => {
+    const preset = preferredPreset()
+    return preset?.service !== 'horde'
+    // return preferredPreset()?.service === 'openai' && !!user?.oaiKeySet
   })
 
-  const generateCharacter = () => {
-    if (!canPopulatFields()) return
+  const generateCharacter = async () => {
+    if (!canGenerateCharacter()) return
 
     const preset = preferredPreset()
     if (!preset) return
@@ -137,24 +137,23 @@ export const CreateCharacterForm: Component<{
     const { description } = getStrictForm(ref, { description: 'string' })
     if (!description) return
 
-    const prompt = createCharGenTemplate(preset).replace('{{description}}', description)
     setCreating(true)
 
-    msgsApi.basicInference({ prompt, settings: preset }, (err, response) => {
+    try {
+      const char = await generateChar(preset, description)
       setCreating(false)
-      if (err) {
-        toastStore.error(`Could not create character: ${err}`)
-        return
-      }
 
-      const char = toGeneratedCharacter(response!, description)
       const prevAvatar = editor.state.avatar
       const prevSprite = editor.state.sprite
 
       editor.load(ref, char)
       editor.update('avatar', prevAvatar)
       editor.update('sprite', prevSprite)
-    })
+    } catch (ex: any) {
+      toastStore.error(`Could not create character: ${ex?.message || ex}`)
+    } finally {
+      setCreating(false)
+    }
   }
 
   onMount(async () => {
@@ -356,7 +355,7 @@ export const CreateCharacterForm: Component<{
                       A description, label, or notes for your character. This is will not influence your character in
                       any way.
                     </span>
-                    <Show when={canPopulatFields()}>
+                    <Show when={canGenerateCharacter()}>
                       <span>
                         To use OpenAI to generate a character, describe the character below then click <b>Generate</b>.
                         It can take 30-60 seconds.
@@ -367,7 +366,7 @@ export const CreateCharacterForm: Component<{
               />
               <div class="flex w-full flex-col gap-2 sm:flex-row">
                 <TextInput isMultiline fieldName="description" parentClass="w-full" value={editor.state.description} />
-                <Show when={canPopulatFields()}>
+                <Show when={canGenerateCharacter()}>
                   <Button onClick={generateCharacter} disabled={creating()}>
                     {creating() ? 'Generating...' : 'Generate'}
                   </Button>

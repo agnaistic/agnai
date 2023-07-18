@@ -55,7 +55,7 @@ ${adventureAmble}
 {{post}}`
 
 export function createCharGenTemplate(gen: Partial<AppSchema.GenSettings>) {
-  if (gen.service !== 'openai') return characterGenTemplate
+  if (gen.service !== 'openai') return guidedCharGenTemplate
 
   if (gen.oaiModel === OPENAI_MODELS.Turbo_16k || gen.oaiModel === OPENAI_MODELS.Turbo0613) {
     return `${modernJailbreak}\n\n${characterGenTemplate}`
@@ -82,6 +82,33 @@ Speech: {detailed description of how the character speaks or communicates}
 ExampleSpeech1: {example message from character}
 ExampleSpeech2: {example message from character}
 ExampleSpeech3: {example message from character}`
+
+export const guidedCharGenTemplate = `
+Character description:
+{{description}}
+
+Character name: [firstname]
+
+Description: [description]
+
+Scenario: [scenario]
+
+Greeting: [greeting]
+
+Personality: [personality]
+
+Typical behaviour: [behaviour]
+
+Clothing and physical appearance: [appearance]
+
+Accent and speech pattern: [speech]
+
+Example dialogue: [example1]
+
+Example dialogue: [example2]
+
+Example dialogue: [example3]
+`
 
 export const classifyTemplate = `
 Classify the message below using one of these emotions: ${classifyEmotes.join(', ')}
