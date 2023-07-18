@@ -6,6 +6,18 @@ import { ParseOpts, parseTemplate } from '/common/template-parser'
 
 export * from '../common/dummy'
 
+const originalRand = Math.random
+
+export function reset() {
+  Math.random = originalRand
+}
+
+export function setRand(num: number) {
+  Math.random = function () {
+    return num
+  }
+}
+
 const main = toChar('MainChar', {
   scenario: 'MAIN {{char}}',
   sampleChat: 'SAMPLECHAT {{char}}',

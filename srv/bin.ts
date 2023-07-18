@@ -20,8 +20,8 @@ const disableJson = flag(
 const debug = flag(`Enable debug logging. This will print payloads sent to the AI`, 'd', 'debug')
 const port = flag(`Choose the port to run the server on. Default: 3001`, 'p', 'port')
 
-const pipeline = flag('Run the Pipeline API with the Embedding feature (ChromaDB)', 'pipeline')
-const summarizer = false ?? flag(`Pipeline API: Run the text summarizer`, 's', 'summary')
+const all = flag('Run Agnaistic and the Pipeline API', 'a', 'all')
+const pipeline = flag('Run the Pipeline API only', 'pipeline')
 const tunnel = flag('Expose your Agnai server using LocalTunnel', 't', 'tunnel')
 
 if (argv.help || argv.h) {
@@ -97,13 +97,18 @@ function help(code = 0) {
   process.exit(code)
 }
 
-runPipeline().then(() => {
+start()
+
+async function start() {
   if (tunnel) {
     process.env.PUBLIC_TUNNEL = 'true'
   }
+  const runApi = all || !pipeline
+  const runPipeline = all || pipeline
 
-  require('./start')
-})
+  if (runPipeline) await runPipeline()
+  if (runApi) require('./start')
+}
 
 function getFolders() {
   const home = path.resolve(os.homedir(), '.agnai')
@@ -165,9 +170,7 @@ function getFileList(dir: string) {
   }
 }
 
-async function runPipeline() {
-  if (!pipeline && !summarizer) return
-
+async function startPipeline() {
   process.env.PIPELINE_PROXY = 'true'
 
   const pip = path.resolve(folders.pipeline, 'bin/pip')

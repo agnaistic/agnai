@@ -3,7 +3,7 @@ Expression = content:Parent* { return content.filter(v => !!v) }
 
 Parent "parent-node" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
 
-ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User) CL {
+ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random) CL {
 	return { kind: 'placeholder', value: i }
 }
 
@@ -15,6 +15,10 @@ HistoryChild = i:(HistoryRef / HistoryCondition / ManyPlaceholder) { return i }
   
 Placeholder "placeholder"
   = OP WS interp:Interp WS pipes:Pipe* CL {
+  if (interp.kind) {
+    const { kind, ...rest } = interp
+  	return { kind: 'placeholder', value: kind, ...rest, pipes }
+  }
   return { kind: 'placeholder', value: interp, pipes }
 }
 
@@ -35,6 +39,10 @@ Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)*
 LoopText "loop-text" = !(BotChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
 ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
 Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator) ch:. { return ch }
+
+CSV "csv" = words:WordList* WS last:Word { return [...words, last] }
+WordList = word:Word WS "," WS { return word }
+
 
 CloseCondition = OP "/if"i CL
 CloseLoop = OP "/each"i CL
@@ -72,6 +80,7 @@ ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
 UserEmbed "user-embed" = "user"i { return "user_embed" }
+Random "random" = "random:"i WS words:CSV { return { kind: "random", values: words } }
 
 // Iterable entities
 Bots "bots" = ( "bots"i ) { return "bots" }
@@ -94,4 +103,5 @@ Interp "interp"
     / IdleDuration
     / ChatEmbed
     / UserEmbed
+    / Random
 `

@@ -10,12 +10,14 @@ import {
   MailPlus,
   MessageCircle,
   Moon,
+  Power,
   Settings,
   ShoppingBag,
   Signal,
   Sliders,
   Sun,
   Sword,
+  Unplug,
   VenetianMask,
   X,
 } from 'lucide-solid'
@@ -27,6 +29,7 @@ import { useEffect, useResizeObserver } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import Button from './shared/Button'
+import { pipelineApi } from './store/data/pipeline'
 
 const MobileNavHeader = () => (
   <div class="flex min-h-[2rem] justify-between sm:hidden">
@@ -122,12 +125,7 @@ const UserNavigation: Component = () => {
         <MessageCircle fill="var(--bg-100)" /> Chats
       </Item>
 
-      <Item href="/memory">
-        <Book /> Memory{' '}
-        <Show when={menu.pipelineOnline}>
-          <Signal color="green" />
-        </Show>
-      </Item>
+      <Memory />
 
       <Show when={menu.flags.events}>
         <Item href="/scenario">
@@ -238,12 +236,7 @@ const GuestNavigation: Component = () => {
           <MessageCircle /> Chats
         </Item>
 
-        <Item href="/memory">
-          <Book /> Memory
-          <Show when={menu.pipelineOnline}>
-            <Signal color="green" />
-          </Show>
-        </Item>
+        <Memory />
 
         <Show when={menu.flags.events}>
           <Item href="/scenario">
@@ -361,6 +354,26 @@ const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }
     {props.children}
   </a>
 )
+
+const Memory = () => {
+  const cfg = settingStore()
+
+  return (
+    <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
+      <Item href="/memory">
+        <Book /> Memory{' '}
+      </Item>
+      <div class="flex items-center">
+        <Show when={cfg.pipelineOnline}>
+          <Signal color="green" />
+        </Show>
+        <Show when={!cfg.pipelineOnline}>
+          <Power onClick={() => pipelineApi.reconnect(true)} class="cursor-pointer opacity-30" />
+        </Show>
+      </div>
+    </div>
+  )
+}
 
 const UserProfile = () => {
   const chars = characterStore()

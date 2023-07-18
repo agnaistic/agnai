@@ -9,7 +9,7 @@ import { SolidCard } from '../Card'
 import Button from '../Button'
 import { ParseOpts, parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
-import { getPromptParts } from '/common/prompt'
+import { ensureValidTemplate, getPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 
 type Placeholder = {
@@ -34,20 +34,21 @@ const placeholders = {
   example_dialogue: { required: true, limit: 1 },
   all_personalities: { required: false, limit: 1 },
   impersonating: { required: false, limit: 1 },
-  chat_embed: { required: false, limit: 1 },
+  // chat_embed: { required: false, limit: 1 },
   user_embed: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in Interp]?: JSX.Element | string } = {
   char: 'Character name',
   user: `Your character's or profile name`,
+  system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
   impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
   chat_age: `The age of your chat (time elapsed since chat created)`,
   idle_duration: `The time elapsed since you last sent a message`,
   ujb: `The jailbreak. Typically inserted at the end of the prompt.`,
-  all_personalities: `Personalities of all chracters in the chat EXCEPT the main character.`,
+  all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
   post: `The "post-amble" text. This gives specific instructions on how the model should respond. E.g. "Respond as {{char}}:"`,
-  chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
+  // chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
   user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
 }
 
@@ -76,7 +77,9 @@ const PromptEditor: Component<
   const [preview, setPreview] = createSignal(false)
 
   const rendered = createMemo(() => {
-    const example = parseTemplate(input(), getExampleOpts(props.inherit))
+    const opts = getExampleOpts(props.inherit)
+    const template = ensureValidTemplate(input(), opts.parts)
+    const example = parseTemplate(template, opts)
     return example
   })
 

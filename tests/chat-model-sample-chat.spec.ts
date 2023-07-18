@@ -1,8 +1,11 @@
 import { expect } from 'chai'
 import './init'
 import { splitSampleChat } from '/srv/adapter/chat-completion'
+import { reset } from './util'
 
 describe('Chat Completion Example Dialogue::', () => {
+  before(reset)
+
   it('should properly convert <START> (case insensitive) and split basic messages', () => {
     const input = neat`<STaRT>
       Sam: hey there Vader!

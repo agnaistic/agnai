@@ -11,11 +11,11 @@ const parser = peggy.generate(grammar.trim(), {
   },
 })
 
-type PNode =
-  | { kind: 'placeholder'; value: Holder; pipes?: string[] }
-  | { kind: 'if'; value: Holder; children: PNode[] }
-  | { kind: 'each'; value: IterableHolder; children: CNode[] }
-  | string
+type PNode = PlaceHolder | ConditionNode | IteratorNode | string
+
+type PlaceHolder = { kind: 'placeholder'; value: Holder; values?: any; pipes?: string[] }
+type ConditionNode = { kind: 'if'; value: Holder; values?: any; children: PNode[] }
+type IteratorNode = { kind: 'each'; value: IterableHolder; children: CNode[] }
 
 type CNode =
   | Exclude<PNode, { kind: 'each' }>
@@ -40,6 +40,7 @@ type Holder =
   | 'chat_embed'
   | 'user_embed'
   | 'system_prompt'
+  | 'random'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -85,14 +86,14 @@ function renderNode(node: PNode, opts: ParseOpts) {
 
   switch (node.kind) {
     case 'placeholder': {
-      return getPlaceholder(node.value, opts)
+      return getPlaceholder(node, opts)
     }
 
     case 'each':
       return renderIterator(node.value, node.children, opts)
 
     case 'if':
-      return renderCondition(node.value, node.children, opts)
+      return renderCondition(node, node.children, opts)
   }
 }
 
@@ -151,8 +152,8 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
   }
 }
 
-function renderCondition(holder: Holder, children: PNode[], opts: ParseOpts) {
-  const value = getPlaceholder(holder, opts)
+function renderCondition(node: ConditionNode, children: PNode[], opts: ParseOpts) {
+  const value = getPlaceholder(node, opts)
   if (!value) return
 
   const output: string[] = []
@@ -222,8 +223,8 @@ function renderEntityCondition(nodes: CNode[], opts: ParseOpts, entity: unknown,
   return result
 }
 
-function getPlaceholder(value: Holder, opts: ParseOpts) {
-  switch (value) {
+function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
+  switch (node.value) {
     case 'char':
       return opts.replyAs.name
 
@@ -268,6 +269,12 @@ function getPlaceholder(value: Holder, opts: ParseOpts) {
 
     case 'system_prompt':
       return opts.parts.systemPrompt || ''
+
+    case 'random': {
+      const values = node.values as string[]
+      const rand = Math.random() * values.length
+      return values[Math.floor(rand)]
+    }
   }
 }
 

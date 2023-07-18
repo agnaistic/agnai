@@ -5,6 +5,7 @@ import { AppSchema, Memory } from '/common/types'
 import { toMap } from '/web/shared/util'
 import { v4 } from 'uuid'
 import { slugify } from '/common/util'
+import { toastStore } from '../toasts'
 
 type WikiItem = {
   title: string
@@ -29,6 +30,7 @@ export const pipelineApi = {
   embedPdf,
   queryEmbedding,
   listCollections,
+  reconnect,
 }
 
 let baseUrl = location.origin
@@ -273,27 +275,25 @@ function addSection<T>(
 
 setTimeout(() => {
   const store = getStore('settings')
-  let interval: NodeJS.Timer
 
   store.subscribe((next, prev) => {
-    if (interval !== undefined) return
-
     // Begin polling when app initialised
     if (prev.initLoading && !next.initLoading) {
-      pipelineHeartbeat()
+      reconnect()
     }
-
-    interval = setInterval(pipelineHeartbeat, 3000)
   })
 }, 100)
 
-function pipelineHeartbeat() {
+function reconnect(notify = false) {
   if (!window.usePipeline) return
   if (online) return
 
   check()
     .catch((ex) => {
       online = false
+      if (notify) {
+        toastStore.warn(`Pipeline API: ${ex.message || ex}`)
+      }
       return null
     })
     .finally(() => {
@@ -320,7 +320,14 @@ async function check() {
     status.memory = res.result.memory
     status.summary = res.result.summarizer
   }
-  if (res.error) online = false
+  if (res.error) {
+    online = false
+    if (res.status === 503) {
+      throw `Server could not be reached`
+    }
+
+    throw ` ${res.error} (${res.status})`
+  }
 }
 
 const method: typeof api.method = async (method, path, body, opts) => {
@@ -330,6 +337,6 @@ const method: typeof api.method = async (method, path, body, opts) => {
   } catch (ex: any) {
     online = false
     getStore('settings').setState({ pipelineOnline: false })
-    return { error: ex.message || ex, result: undefined, status: 500 }
+    return { error: ex.message || ex, result: undefined, status: 0 }
   }
 }
