@@ -17,7 +17,6 @@ import {
   Sliders,
   Sun,
   Sword,
-  Unplug,
   VenetianMask,
   X,
 } from 'lucide-solid'
