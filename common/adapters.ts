@@ -141,6 +141,12 @@ export const REPLICATE_MODEL_TYPES = {
   'Open Assistant': 'openassistant',
 } as const
 
+export type OpenRouterModel = {
+  id: string
+  pricing: { prompt: string; completion: string }
+  context_length: number
+}
+
 export type HordeModel = {
   name: string
   count: number
@@ -245,6 +251,7 @@ export const adapterSettings: {
   frequencyPenalty: ['openai', 'kobold', 'novel'],
   presencePenalty: ['openai', 'kobold', 'novel'],
   streamResponse: ['openai', 'kobold', 'novel', 'claude'],
+  openRouterModel: ['openrouter'],
 
   addBosToken: ['ooba'],
   banEosToken: ['ooba'],

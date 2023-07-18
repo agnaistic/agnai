@@ -5,9 +5,11 @@ import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '../api/chat/common'
 import { AppLog } from '../logger'
+import { OpenRouterModel } from '/common/adapters'
 
 const baseUrl = 'https://openrouter.ai/api/v1'
 const chatUrl = `${baseUrl}/chat/completions`
+let modelCache: OpenRouterModel[]
 
 export const handleOpenRouter: ModelAdapter = async function* (opts) {
   const { user, guest } = opts
@@ -27,6 +29,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     temperature: opts.gen.temp,
     max_tokens: opts.gen.maxTokens ?? 256,
     stop: [`${handle}:`],
+  }
+
+  if (opts.gen.openRouterModel?.id) {
+    payload.model = opts.gen.openRouterModel.id
   }
 
   const format = user.adapterConfig?.openrouter?.format || 'chat'
@@ -161,3 +167,21 @@ function getResponseText(resp: any, log: AppLog) {
 
   return message.content as string
 }
+
+export async function getOpenRouterModels(): Promise<OpenRouterModel[]> {
+  if (modelCache) return modelCache
+
+  try {
+    const res = await needle('get', 'https://openrouter.ai/api/v1/models', {}, { json: true })
+    if (res.body) {
+      modelCache = res.body.data
+    }
+
+    return modelCache
+  } catch (ex) {
+    return modelCache || []
+  }
+}
+
+setInterval(getOpenRouterModels, 60000 * 2)
+getOpenRouterModels()

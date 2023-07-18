@@ -1,12 +1,15 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
+import { api } from './api'
 import { createStore } from './create'
 import { PresetCreate, PresetUpdate, presetApi } from './data/presets'
 import { toastStore } from './toasts'
+import { OpenRouterModel } from '/common/adapters'
 
 type PresetState = {
   presets: AppSchema.UserGenPreset[]
   saving: boolean
+  openRouterModels?: OpenRouterModel[]
 }
 
 const initState: PresetState = { presets: [], saving: false }
@@ -64,6 +67,14 @@ export const presetStore = createStore<PresetState>(
         const next = presets.filter((pre) => pre._id !== presetId)
         yield { presets: next }
         onSuccess?.(res.result)
+      }
+    },
+    async getOpenRouterModels(state) {
+      if (state.openRouterModels) return
+
+      const res = await api.get<{ models: OpenRouterModel[] }>('/user/services/openrouter')
+      if (res.result) {
+        return { openRouterModels: res.result.models }
       }
     },
   }

@@ -765,8 +765,11 @@ function getContextLimit(gen: Partial<AppSchema.GenSettings> | undefined, adapte
     case 'goose':
       return Math.min(configuredMax, 2048) - genAmount
 
-    // Unsure what this should be
     case 'openrouter':
+      if (gen?.openRouterModel) {
+        return Math.min(gen.openRouterModel.context_length, configuredMax) - genAmount
+      }
+
       return Math.min(configuredMax, 4096) - genAmount
   }
 }

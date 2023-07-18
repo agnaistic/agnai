@@ -30,9 +30,10 @@ export const ChatGenSettings: Component<{
   let ref: any
   const user = userStore()
   const pane = usePane()
-  const state = presetStore(({ presets }) => ({
+  const state = presetStore(({ presets, openRouterModels }) => ({
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
+    openRouterModels,
   }))
 
   const presetOptions = createMemo(() => getPresetOptions(state.presets, { builtin: true, base: true }))
@@ -97,6 +98,11 @@ export const ChatGenSettings: Component<{
         return
       }
 
+      if (update.openRouterModel) {
+        const actual = state.openRouterModels?.find((or) => or.id === update.openRouterModel)
+        update.openRouterModel = actual || undefined
+      }
+
       /**
        * The user has modified a default preset
        * We will create a new preset and assign it to the chat
@@ -128,6 +134,11 @@ export const ChatGenSettings: Component<{
       if (update.service === '') {
         toastStore.error(`You must select an AI service before saving`)
         return
+      }
+
+      if (update.openRouterModel) {
+        const actual = state.openRouterModels?.find((or) => or.id === update.openRouterModel)
+        update.openRouterModel = actual || undefined
       }
 
       presetStore.updatePreset(preset, update as any)
