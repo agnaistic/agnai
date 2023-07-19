@@ -1,6 +1,6 @@
 import { Component, Show, createMemo, createSignal } from 'solid-js'
 import TextInput from '../../../shared/TextInput'
-import { toastStore, userStore } from '../../../store'
+import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
 import Select from '../../../shared/Select'
 import Divider from '/web/shared/Divider'
@@ -10,6 +10,7 @@ const NovelAISettings: Component = () => {
   const state = userStore()
   const [user, setUser] = createSignal('')
   const [pass, setPass] = createSignal('')
+  const [loading, setLoading] = createSignal(false)
 
   const novelVerified = createMemo(
     () => (state.user?.novelApiKey || state.user?.novelVerified ? 'API Key has been verified' : ''),
@@ -17,6 +18,7 @@ const NovelAISettings: Component = () => {
   )
 
   const novelLogin = async () => {
+    setLoading(true)
     const sodium = await import('libsodium-wrappers-sumo')
     await sodium.ready
 
@@ -35,25 +37,13 @@ const NovelAISettings: Component = () => {
       )
       .slice(0, 64)
 
-    const res = await fetch(`https://api.novelai.net/user/login`, {
-      method: 'post',
-      body: JSON.stringify({ key }),
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
+    userStore.novelLogin(key, (err) => {
+      setLoading(false)
+      if (!err) {
+        setPass('')
+        setUser('')
+      }
     })
-
-    const json = await res.json()
-
-    if (res.status >= 400 || !json.accessToken) {
-      toastStore.error('NovelAI Login: Invalid credentials')
-      return
-    }
-
-    userStore.updatePartialConfig({ novelApiKey: json.accessToken })
-    setPass('')
-    setUser('')
   }
 
   return (
@@ -88,7 +78,7 @@ const NovelAISettings: Component = () => {
           value={pass()}
           onChange={(ev) => setPass(ev.currentTarget.value)}
         />
-        <Button onClick={novelLogin} disabled={!user() && !pass()}>
+        <Button onClick={novelLogin} disabled={loading() || (!user() && !pass())}>
           Login to NovelAI
         </Button>
       </div>

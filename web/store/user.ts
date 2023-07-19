@@ -335,6 +335,21 @@ export const userStore = createStore<UserState>(
         toastStore.error(`Failed to reset guest state: ${e.message}`)
       }
     },
+
+    async novelLogin(_, key: string, onComplete: (err?: boolean) => void) {
+      const res = await usersApi.novelLogin(key)
+      if (res.result) {
+        toastStore.success('Successfully authenticated with NovelAI')
+        onComplete()
+        return { user: res.result }
+      }
+
+      if (res.error) {
+        onComplete(true)
+        toastStore.error(`NovelAI login failed: ${res.error}`)
+      }
+    },
+
     async *openaiUsage({ metadata, user }) {
       yield { oaiUsageLoading: true }
       const res = await api.post('/user/services/openai-usage', { key: user?.oaiKey })

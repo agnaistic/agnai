@@ -7,8 +7,47 @@ import { decryptText, encryptText } from '/srv/db/util'
 import { getLanguageModels } from '/srv/adapter/replicate'
 import { AIAdapter } from '/common/adapters'
 import { getRegisteredAdapters } from '/srv/adapter/register'
-import { getSafeUserConfig } from './settings'
+import { getSafeUserConfig, verifyNovelKey } from './settings'
 import { getOpenRouterModels } from '/srv/adapter/openrouter'
+import needle from 'needle'
+
+export const novelLogin = handle(async ({ userId, body }) => {
+  assertValid({ key: 'string' }, body)
+
+  const res = await needle(
+    'post',
+    'https://api.novelai.net/user/login',
+    { key: body.key },
+    {
+      json: true,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+    }
+  )
+
+  if (res.statusCode && res.statusCode >= 400) {
+    throw new StatusError(`Failed to authenticate with NovelAI: ${res.statusMessage}`, res.statusCode)
+  }
+
+  await verifyNovelKey(res.body.accessToken)
+
+  if (userId) {
+    await store.users.updateUser(userId, {
+      novelApiKey: res.body.accessToken,
+      novelVerified: true,
+    })
+  }
+
+  if (userId) {
+    const user = await getSafeUserConfig(userId)
+    return user
+  }
+
+  // Guest users
+  return { novelVerified: true, novelApiKey: res.body.accessToken }
+})
 
 export const openaiUsage = handle(async ({ userId, body }) => {
   const guest = !userId

@@ -25,6 +25,7 @@ export const usersApi = {
   updateProfile,
   updateUI,
   updateServiceConfig,
+  novelLogin,
 }
 
 export async function getInit() {
@@ -229,4 +230,17 @@ async function getImageData(file?: File) {
       resolve(evt.target.result.toString())
     }
   })
+}
+
+async function novelLogin(key: string) {
+  const res = await api.post('/user/services/novel', { key })
+
+  if (!isLoggedIn() && res.result) {
+    const user = await localApi.loadItem('config')
+    const next = { ...user, ...res.result }
+    await localApi.saveConfig(next)
+    return localApi.result(next)
+  }
+
+  return res
 }
