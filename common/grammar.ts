@@ -1,5 +1,29 @@
 export const grammar = `
-Expression = content:Parent* { return content.filter(v => !!v) }
+Expression = content:Parent* {
+	const flatten = (nodes) => {
+    	let curr = ''
+        const res = []
+        
+        for (const node of nodes) {
+          if (typeof node === 'string') curr += node
+          else {
+          	if (curr) {
+            	res.push(curr)
+                curr = ''
+            }
+            if (node.children) {
+            	node.children = flatten(node.children)
+            }
+            res.push(node)
+          }
+        }
+        if (curr) res.push(curr)
+        return res       
+    }
+    
+    const results = flatten(content)
+    return results
+}
 
 Parent "parent-node" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
 
@@ -81,6 +105,7 @@ IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
 UserEmbed "user-embed" = "user"i { return "user_embed" }
 Random "random" = "random:"i WS words:CSV { return { kind: "random", values: words } }
+Roll "roll" = ("roll"i / "dice"i) WS times:[1-9]|0..1| "d" max:[0-9]|1..10| { return { kind: 'roll', times: +times.join('') || 1, max: +max.join('') } }
 
 // Iterable entities
 Bots "bots" = ( "bots"i ) { return "bots" }
@@ -104,4 +129,5 @@ Interp "interp"
     / ChatEmbed
     / UserEmbed
     / Random
+    / Roll
 `

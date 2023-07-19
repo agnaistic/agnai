@@ -5,7 +5,7 @@ import { assertValid } from '/common/valid'
 import { createInferenceStream, inferenceAsync } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
-import { runGuidance } from '/common/guidance/parser'
+import { runGuidance } from '/common/guidance/guidance-parser'
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
   assertValid({ requestId: 'string', prompt: 'string', settings: 'any', user: 'any' }, body)

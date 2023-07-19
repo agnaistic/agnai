@@ -16,7 +16,7 @@ describe('Prompt building', () => {
   })
 
   it('will build a continue prompt', () => {
-    const actual = build([botMsg('FIRST'), toMsg('SECOND')], { continue: 'ORIGINAL' })
+    const actual = build([botMsg('FIRST')], { continue: 'ORIGINAL', replyAs: main })
     expect(actual.template).toMatchSnapshot()
   })
 
@@ -36,7 +36,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template).toMatchSnapshot()
   })
 
-  it('will include sample chat when gaslight does not sample chat placeholder', () => {
+  it('will include sample chat when gaslight does not contain sample chat placeholder', () => {
     const actual = build([botMsg('FIRST'), toMsg('SECOND')], {
       continue: 'ORIGINAL',
       chat: { ...chat, adapter: 'openai' },
@@ -112,10 +112,10 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   it('uses the correct replaces for all instances of {{char}}, {{user}}, <BOT>, and <USER>, case insensitive', () => {
     const input =
       '{{char}} loves {{user}}, {{CHAR}} hates {{USER}}, {{Char}} eats {{User}}, <BOT> drinks <USER>, <bot> boops <user>, <Bot> kicks <User>'
-    const expectedOutput =
+    const expected =
       'Haruhi loves Chad, Haruhi hates Chad, Haruhi eats Chad, Haruhi drinks Chad, Haruhi boops Chad, Haruhi kicks Chad'
-    const actualOutput = input.replace(BOT_REPLACE, 'Haruhi').replace(SELF_REPLACE, 'Chad')
-    expect(actualOutput).to.equal(expectedOutput)
+    const actual = input.replace(BOT_REPLACE, 'Haruhi').replace(SELF_REPLACE, 'Chad')
+    expect(actual).to.equal(expected)
   })
 
   it('will use correct placeholders in scenario and sample chat', () => {

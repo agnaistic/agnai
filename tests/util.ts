@@ -31,7 +31,7 @@ const replyAs = toChar('OtherBot', {
 })
 
 const { user, profile } = toUser('ChatOwner')
-const chat = toChat(main, {}, [replyAs])
+const chat = toChat(main, {}, [main, replyAs])
 const book = toBook('book', [
   toEntry(['1-TRIGGER'], 'ENTRY ONE'),
   toEntry(['10-TRIGGER'], 'ENTRY TWO', 10, 10),
@@ -73,10 +73,32 @@ export function build(
     replyAs?: AppSchema.Character
   } = {}
 ) {
-  const encoder = getEncoder('main')
+  const overChar = { ...main, ...opts.char }
+  const characters = toMap([overChar, replyAs])
+
   const result = createPrompt(
     {
-      char: opts.char || main,
+      char: overChar,
+      members: [profile],
+      user,
+      chat: opts.chat || chat,
+      messages,
+      book: opts.book || book,
+      settings: { ...opts.settings, useTemplateParser: true },
+      continue: opts.continue,
+      retry: opts.retry,
+      replyAs: opts.replyAs || replyAs,
+      characters,
+      lastMessage: '',
+      chatEmbeds: [],
+      userEmbeds: [],
+    },
+    getEncoder('main')
+  )
+
+  const legacy = createPrompt(
+    {
+      char: overChar,
       members: [profile],
       user,
       chat: opts.chat || chat,
@@ -86,19 +108,20 @@ export function build(
       continue: opts.continue,
       retry: opts.retry,
       replyAs: opts.replyAs || replyAs,
-      characters: {},
+      characters,
       lastMessage: '',
       chatEmbeds: [],
       userEmbeds: [],
     },
-    encoder
+    getEncoder('main')
   )
 
+  result.template = `*** V2 Parser ***\n\n${result.template}\n\n*** V1 Parser ***\n\n${legacy.template}`
   return result
 }
 
-export function botMsg(text: string) {
-  return toBotMsg(main, text)
+export function botMsg(text: string, from?: AppSchema.Character) {
+  return toBotMsg(from || main, text)
 }
 
 export function toMsg(text: string) {
@@ -112,31 +135,36 @@ export function template(prompt: string, overrides: Partial<ParseOpts>, main?: P
 function getParseOpts(overrides: Partial<ParseOpts> = {}, charOverrides: Partial<AppSchema.Character> = {}) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...main, ...charOverrides }
-  const parts = getPromptParts(
-    {
-      char: overChar,
-      characters,
-      chat: overChat,
-      members: [profile],
-      replyAs: overChar,
-      user,
-      kind: 'send',
-      chatEmbeds: [],
-      userEmbeds: [],
-    },
-    lines,
-    getEncoder('main', '')
-  )
+  const characters = toMap([overChar, replyAs])
+  const parts =
+    overrides.parts ||
+    getPromptParts(
+      {
+        char: overChar,
+        characters: overrides.characters || characters,
+        chat: overChat,
+        members: overrides.members || [profile],
+        replyAs: overrides.replyAs || replyAs,
+        settings: overrides.settings,
+        book,
+        user: overrides.user || user,
+        kind: 'send',
+        chatEmbeds: [],
+        userEmbeds: [],
+      },
+      overrides.lines || lines,
+      getEncoder('main')
+    )
 
   const base: ParseOpts = {
-    char: main,
-    characters,
+    char: overChar,
+    characters: overrides.characters || characters,
     chat: overChat,
-    replyAs,
-    lines,
-    members: [profile],
+    replyAs: overrides.replyAs || replyAs,
+    lines: overrides.lines || lines,
+    members: overrides.members || [profile],
     parts,
-    user,
+    user: overrides.user || user,
     sender: profile,
     lastMessage: '',
     ...overrides,

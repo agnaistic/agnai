@@ -147,10 +147,6 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: nu
     if (opts.retry) {
       opts.retry = { ...opts.retry, msg: trimSentence(opts.retry.msg) }
     }
-
-    if (opts.lastMessage) {
-      opts.lastMessage = trimSentence(opts.lastMessage)
-    }
   }
 
   const sortedMsgs = opts.messages
@@ -166,6 +162,7 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: nu
   const lines = getLinesForPrompt(opts, encoder, maxContext)
   const parts = getPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
+
   const prompt = injectPlaceholders(template, {
     opts,
     parts,
@@ -246,7 +243,7 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
         ...opts,
         sender: profile!,
         parts,
-        lines: hist?.lines || [],
+        lines: hist?.lines?.slice().reverse() || [],
         ...rest,
       })
       return result

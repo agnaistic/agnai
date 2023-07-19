@@ -41,6 +41,7 @@ type Holder =
   | 'user_embed'
   | 'system_prompt'
   | 'random'
+  | 'roll'
 
 type IterableHolder = 'history' | 'bots'
 
@@ -274,6 +275,12 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
       const values = node.values as string[]
       const rand = Math.random() * values.length
       return values[Math.floor(rand)]
+    }
+
+    case 'roll': {
+      const max = +node.values
+      const rand = Math.ceil(Math.random() * max)
+      return rand.toString()
     }
   }
 }

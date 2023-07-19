@@ -200,6 +200,13 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   openrouter: 'OpenRouter',
 }
 
+export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
+  openai: true,
+  openrouter: true,
+  claude: true,
+  scale: true,
+}
+
 export type PresetAISettings = Omit<
   AppSchema.GenSettings,
   | 'name'
