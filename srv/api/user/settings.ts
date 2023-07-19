@@ -387,7 +387,7 @@ async function verifyOobaUrl(user: AppSchema.User, incomingUrl?: string) {
   return url[0]
 }
 
-async function verifyNovelKey(key: string) {
+export async function verifyNovelKey(key: string) {
   const res = await needle('get', `${NOVEL_BASEURL}/user/data`, {
     headers: { Authorization: `Bearer ${key}` },
     json: true,
