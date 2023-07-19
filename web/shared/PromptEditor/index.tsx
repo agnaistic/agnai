@@ -18,6 +18,7 @@ type Placeholder = {
 }
 
 type Interp = keyof typeof placeholders
+type InterpV2 = keyof typeof v2placeholders
 
 const placeholders = {
   char: { required: false, limit: Infinity },
@@ -38,6 +39,11 @@ const placeholders = {
   user_embed: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
+const v2placeholders = {
+  roll: { required: false, limit: Infinity },
+  random: { required: false, limit: Infinity },
+} satisfies Record<string, Placeholder>
+
 const helpers: { [key in Interp]?: JSX.Element | string } = {
   char: 'Character name',
   user: `Your character's or profile name`,
@@ -50,6 +56,11 @@ const helpers: { [key in Interp]?: JSX.Element | string } = {
   post: `The "post-amble" text. This gives specific instructions on how the model should respond. E.g. "Respond as {{char}}:"`,
   // chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
   user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
+}
+
+const v2helpers: { [key in InterpV2]?: JSX.Element | string } = {
+  roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
+  random: 'Produces a random word from a comma-separated list. E.g.: {{random happy, sad, jealous, angry}}',
 }
 
 type HolderName = keyof typeof placeholders
@@ -94,7 +105,13 @@ const PromptEditor: Component<
   })
 
   const usable = createMemo(() => {
-    const all = Object.entries(placeholders) as Array<[Interp, Placeholder]>
+    type Entry = [Interp, Placeholder]
+    const all = Object.entries(placeholders) as Entry[]
+
+    if (props.inherit?.useTemplateParser) {
+      all.push(...(Object.entries(v2placeholders) as Entry[]))
+    }
+
     if ('include' in props === false && 'exclude' in props === false) return all
 
     const includes = 'include' in props ? props.include : null
@@ -225,13 +242,29 @@ const Placeholder: Component<{ name: Interp; input: string; onClick: (name: stri
   )
 }
 
-const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[] }> = (props) => {
+const HelpModal: Component<{
+  show: boolean
+  close: () => void
+  interps: Interp[]
+  inherit?: Partial<AppSchema.GenSettings>
+}> = (props) => {
+  const items = createMemo(() => {
+    const entries = Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))
+
+    if (props.inherit?.useTemplateParser) {
+      const second = Object.entries(v2helpers)
+      entries.push(...second)
+    }
+
+    return entries
+  })
+
   useRootModal({
     id: 'prompt-editor-help',
     element: (
       <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
         <div class="flex w-full flex-col gap-1 text-sm">
-          <For each={Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))}>
+          <For each={items()}>
             {([interp, help]) => (
               <SolidCard>
                 <FormLabel fieldName={interp} label={interp} helperText={help} />

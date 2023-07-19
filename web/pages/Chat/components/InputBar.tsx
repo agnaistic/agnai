@@ -10,13 +10,12 @@ import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
 import { defaultCulture } from '/web/shared/CultureCodes'
 import { createDebounce } from '/web/shared/util'
-import { useDraft } from '/web/shared/hooks'
+import { useDraft, useEffect } from '/web/shared/hooks'
 import { eventStore } from '/web/store/event'
 import { useAppContext } from '/web/store/context'
 import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 import WizardIcon from '/web/icons/WizardIcon'
-// import WizardIcon from '/web/icons/WizardIcon'
-// import NoCharacterIcon from '/web/icons/NoCharacterIcon'
+import { EVENTS, events } from '/web/emitter'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -38,6 +37,16 @@ const InputBar: Component<{
   const user = userStore()
   const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
   const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
+
+  useEffect(() => {
+    const listener = (text: string) => {
+      setText(text)
+    }
+
+    events.on(EVENTS.setInputText, listener)
+
+    return () => events.removeListener(EVENTS.setInputText, listener)
+  })
 
   const draft = useDraft(props.chat._id)
 
@@ -136,6 +145,12 @@ const InputBar: Component<{
     disposeSaveDraftDebounce()
   })
 
+  const genActions = () => {
+    msgStore.generateActions()
+    toastStore.normal('Generating...')
+    setMenu(false)
+  }
+
   return (
     <div class="relative flex items-center justify-center">
       <Show when={props.showOocToggle}>
@@ -214,6 +229,9 @@ const InputBar: Component<{
               <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
             </Button>
           </Show>
+          <Button schema="secondary" class="w-full" onClick={genActions} alignLeft>
+            Generate Actions
+          </Button>
           <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
             <ImagePlus size={18} /> Generate Image
           </Button>

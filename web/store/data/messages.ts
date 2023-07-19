@@ -41,9 +41,30 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
+  generateActions,
 }
 
 type InferenceOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
+
+export async function generateActions() {
+  const { settings, impersonating, profile, user, messages } = await getPromptEntities()
+  const { prompt } = await createActiveChatPrompt({ kind: 'continue' }, 1024)
+
+  const last = messages.slice(-1)[0]
+
+  if (!last) {
+    toastStore.warn('Cannot generate actions: No messages')
+    return
+  }
+
+  await api.post<{ actions: AppSchema.ChatAction[] }>(`/chat/${last._id}/actions`, {
+    settings,
+    impersonating,
+    profile,
+    user,
+    lines: prompt.lines,
+  })
+}
 
 export async function basicInference(
   { prompt, settings }: InferenceOpts,

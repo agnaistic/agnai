@@ -210,7 +210,7 @@ export async function createTextStreamV2(opts: GenerateRequestV2, log: AppLog, g
     lastMessage: opts.lastMessage,
   })
 
-  return { stream, adapter }
+  return { stream, adapter, settings: gen, user: opts.user }
 }
 
 export async function getResponseEntities(

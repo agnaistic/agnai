@@ -27,7 +27,7 @@ Expression = content:Parent* {
 
 Parent "parent-node" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
 
-ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random) CL {
+ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / Roll) CL {
 	return { kind: 'placeholder', value: i }
 }
 
@@ -105,7 +105,7 @@ IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
 UserEmbed "user-embed" = "user"i { return "user_embed" }
 Random "random" = "random:"i WS words:CSV { return { kind: "random", values: words } }
-Roll "roll" = ("roll"i / "dice"i) WS times:[1-9]|0..1| "d" max:[0-9]|1..10| { return { kind: 'roll', times: +times.join('') || 1, max: +max.join('') } }
+Roll "roll" = ("roll"i / "dice"i) WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', max: +max.join('') || 20 } }
 
 // Iterable entities
 Bots "bots" = ( "bots"i ) { return "bots" }

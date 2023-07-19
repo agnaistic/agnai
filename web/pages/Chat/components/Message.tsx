@@ -23,6 +23,7 @@ import Button from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
 import { ContextState, useAppContext } from '/web/store/context'
 import { trimSentence } from '/common/util'
+import { EVENTS, events } from '/web/emitter'
 
 type MessageProps = {
   msg: SplitMessage
@@ -151,6 +152,8 @@ const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage;
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
+      data-last={props.last?.toString()}
+      data-lastsplit={props.lastSplit?.toString()}
     >
       <div class={`flex w-full ${opacityClass}`}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
@@ -336,15 +339,7 @@ const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage;
                   data-user-message={isUser()}
                   innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
                 />
-                <Show
-                  when={
-                    !props.partial &&
-                    props.original.actions &&
-                    props.last &&
-                    props.lastSplit &&
-                    ctx.chat!.mode === 'adventure'
-                  }
-                >
+                <Show when={!props.partial && props.last && props.lastSplit}>
                   <div class="flex items-center justify-center gap-2">
                     <For each={props.original.actions}>
                       {(item) => (
@@ -525,22 +520,13 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
 }
 
 function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
-  send(`*${emote}* ${action}`, false)
+  events.emit(EVENTS.setInputText, `*${emote}* ${action}`)
+  // send(`*${emote}* ${action}`, false)
 }
 
 function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {
   if (adapter === 'image') {
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
-  }
-
-  if (ctx.chat?.mode === 'adventure') {
-    const nonActions: string[] = []
-    const splits = msg.split('\n')
-    for (const split of splits) {
-      if (!split.startsWith('{') && !split.includes('->')) nonActions.push(split)
-    }
-
-    msg = nonActions.join('\n')
   }
 
   const parsed = msg

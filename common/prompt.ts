@@ -2,7 +2,7 @@ import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from './types/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS, SUPPORTS_INSTRUCT } from './adapters'
 import { formatCharacter } from './characters'
-import { adventureTemplate, defaultTemplate } from './default-preset'
+import { defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
@@ -202,8 +202,7 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>, 
   const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
 
-  const template = useGaslight ? gaslight : opts.chat.mode === 'adventure' ? adventureTemplate : defaultTemplate
-
+  const template = useGaslight ? gaslight : defaultTemplate
   return ensureValidTemplate(template, parts)
 }
 
@@ -579,7 +578,7 @@ function getLinesForPrompt(
   return lines
 }
 
-function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
+export function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
   let count = encoder(amble)
   const adding: string[] = []
 
