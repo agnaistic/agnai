@@ -46,7 +46,10 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     body.user = user
   }
 
-  const prompt = cyoaTemplate(settings.service === 'openai' ? settings.oaiModel : '')
+  const prompt = cyoaTemplate(
+    settings.service!,
+    settings.service === 'openai' ? settings.oaiModel : ''
+  )
 
   const infer = async (text: string) => {
     const inference = await inferenceAsync({

@@ -358,6 +358,10 @@ async function getGenerateProps(
 ): Promise<GenerateProps> {
   const entities = await getPromptEntities()
   const [secondLastMsg, lastMsg] = entities.messages.slice(-2)
+  const lastCharMsg = entities.messages.reduceRight<AppSchema.ChatMessage | void>((prev, curr) => {
+    if (prev) return prev
+    if (curr.characterId) return curr
+  }, undefined)
 
   const props: GenerateProps = {
     entities,
@@ -404,10 +408,10 @@ async function getGenerateProps(
     }
 
     case 'continue': {
-      if (!lastMsg.characterId) throw new Error(`Cannot continue user message`)
+      if (!lastCharMsg?.characterId) throw new Error(`Cannot continue user message`)
       props.continuing = lastMsg
-      props.replyAs = getBot(lastMsg.characterId)
-      props.continue = lastMsg.msg
+      props.replyAs = getBot(lastCharMsg?.characterId)
+      props.continue = lastCharMsg.msg
       break
     }
 
