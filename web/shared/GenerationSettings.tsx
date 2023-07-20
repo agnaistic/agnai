@@ -22,6 +22,7 @@ import { Card } from './Card'
 import { FormLabel } from './FormLabel'
 import { serviceHasSetting } from './util'
 import { createStore } from 'solid-js/store'
+import { defaultTemplate } from '/common/default-preset'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -157,7 +158,7 @@ const GeneralSettings: Component<Props> = (props) => {
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
 
-      <Card hide={!serviceHasSetting('kobold', 'thirdPartyUrl')}>
+      <Card hide={!serviceHasSetting(props.service, 'thirdPartyUrl')}>
         <TextInput
           fieldName="thirdPartyUrl"
           label="Third Party URL"
@@ -183,7 +184,19 @@ const GeneralSettings: Component<Props> = (props) => {
         />
       </Card>
 
-      <Card class="flex flex-wrap gap-5">
+      <Card
+        class="flex flex-wrap gap-5"
+        hide={
+          !serviceHasSetting(
+            props.service,
+            'oaiModel',
+            'openRouterModel',
+            'novelModel',
+            'claudeModel',
+            'replicateModelName'
+          )
+        }
+      >
         <Select
           fieldName="oaiModel"
           label="OpenAI Model"
@@ -394,7 +407,7 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
         />
       </Card>
-      <Card class="flex flex-col gap-4">
+      <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'gaslight')}>
         <Toggle
           fieldName="useGaslight"
           label="Use Gaslight"
@@ -426,7 +439,9 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           aiSetting="gaslight"
         />
+      </Card>
 
+      <Card class="flex flex-col gap-4">
         <Show when={cfg.parser && canUseParser}>
           <Toggle
             fieldName="useTemplateParser"
@@ -440,6 +455,7 @@ const PromptSettings: Component<Props> = (props) => {
         <PromptEditor
           fieldName="gaslight"
           value={props.inherit?.gaslight}
+          placeholder={defaultTemplate}
           exclude={['post', 'history', 'ujb']}
           disabled={props.disabled}
           showHelp
