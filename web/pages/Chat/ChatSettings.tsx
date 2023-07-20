@@ -11,7 +11,7 @@ import { chatStore, presetStore, scenarioStore, settingStore, userStore } from '
 import { getChatPreset } from '../../../common/prompt'
 import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
-import { Card } from '/web/shared/Card'
+import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 
 const options = [
@@ -27,6 +27,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const presets = presetStore((s) => s.presets)
   const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
   const scenarioState = scenarioStore()
+  const [mode, setMode] = createSignal(state.chat?.mode || 'standard')
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -77,7 +78,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       schema: ['wpp', 'boostyle', 'sbf', 'text', null],
       scenarioStates: 'string?',
       scenarioId: 'string?',
-      mode: ['standard', 'adventure', null],
+      mode: ['standard', 'adventure', 'companion', null],
     })
 
     const attributes = getAttributeMap(ref)
@@ -162,10 +163,22 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             <Select
               fieldName="mode"
               label="Chat Mode"
-              helperText="Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo"
+              helperText={
+                <>
+                  <p>Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo</p>
+                  <Show when={state.chat?.mode !== 'companion' && mode() === 'companion'}>
+                    <TitleCard type="orange">
+                      Warning! Switching to COMPANION mode is irreversible! You will no longer be able to: retry
+                      messages, delete chats, edit chat settings.
+                    </TitleCard>
+                  </Show>
+                </>
+              }
+              onChange={(ev) => setMode(ev.value as any)}
               items={[
                 { label: 'Conversation', value: 'standard' },
                 { label: 'Adventure (Experimental)', value: 'adventure' },
+                { label: 'Companion', value: 'companion' },
               ]}
               value={state.chat?.mode || 'standard'}
             />

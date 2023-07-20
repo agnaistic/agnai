@@ -11,7 +11,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
   assertValid(
     {
       name: 'string',
-      mode: ['standard', 'adventure'],
+      mode: ['standard', 'adventure', 'companion'],
       adapter: ['default', ...config.adapters] as const,
       greeting: 'string?',
       scenario: 'string?',

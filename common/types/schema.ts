@@ -139,7 +139,7 @@ export namespace AppSchema {
   export interface Chat {
     _id: string
     kind: 'chat'
-    mode?: 'standard' | 'adventure'
+    mode?: 'standard' | 'adventure' | 'companion'
     userId: string
     memoryId?: string
     userEmbedId?: string

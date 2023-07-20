@@ -39,6 +39,7 @@ type Holder =
   | 'all_personalities'
   | 'chat_embed'
   | 'user_embed'
+  | 'impersonating'
   | 'system_prompt'
   | 'random'
   | 'roll'
@@ -240,6 +241,9 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
 
     case 'memory':
       return opts.parts.memory || ''
+
+    case 'impersonating':
+      return opts.parts.impersonality || ''
 
     case 'personality':
       return opts.parts.persona
