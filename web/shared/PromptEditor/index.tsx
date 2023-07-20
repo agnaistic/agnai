@@ -78,6 +78,7 @@ const PromptEditor: Component<
     aiSetting?: keyof PresetAISettings
     showHelp?: boolean
     placeholder?: string
+    v2?: boolean
   } & Optionals
 > = (props) => {
   let ref: HTMLTextAreaElement = null as any
@@ -108,7 +109,7 @@ const PromptEditor: Component<
     type Entry = [Interp, Placeholder]
     const all = Object.entries(placeholders) as Entry[]
 
-    if (props.inherit?.useTemplateParser) {
+    if (props.v2 || props.inherit?.useTemplateParser) {
       all.push(...(Object.entries(v2placeholders) as Entry[]))
     }
 
@@ -206,7 +207,7 @@ const PromptEditor: Component<
         </For>
       </div>
 
-      <HelpModal interps={usable().map((item) => item[0])} show={help()} close={() => showHelp(false)} />
+      <HelpModal v2={props.v2} interps={usable().map((item) => item[0])} show={help()} close={() => showHelp(false)} />
     </div>
   )
 }
@@ -247,11 +248,12 @@ const HelpModal: Component<{
   close: () => void
   interps: Interp[]
   inherit?: Partial<AppSchema.GenSettings>
+  v2?: boolean
 }> = (props) => {
   const items = createMemo(() => {
     const entries = Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))
 
-    if (props.inherit?.useTemplateParser) {
+    if (props.v2 || props.inherit?.useTemplateParser) {
       const second = Object.entries(v2helpers)
       entries.push(...second)
     }

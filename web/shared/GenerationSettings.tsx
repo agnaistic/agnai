@@ -340,6 +340,7 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 
 const PromptSettings: Component<Props> = (props) => {
   const cfg = settingStore((cfg) => cfg.flags)
+  const [useV2, setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
 
   // Services that use chat completion cannot use the template parser
   const canUseParser = props.inherit?.service !== 'openai' && (props.inherit?.oaiModel || '') in OPENAI_CHAT_MODELS
@@ -431,6 +432,8 @@ const PromptSettings: Component<Props> = (props) => {
             fieldName="useTemplateParser"
             value={props.inherit?.useTemplateParser}
             label="Use Template Parser (Experimental)"
+            helperText="The V2 parser supports additional placeholders (#each, #if, random, roll, ...)."
+            onChange={(v) => setV2(v)}
           />
         </Show>
 
@@ -441,6 +444,7 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           showHelp
           inherit={props.inherit}
+          v2={useV2()}
         />
         <TextInput
           fieldName="ultimeJailbreak"
