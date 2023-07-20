@@ -250,12 +250,16 @@ const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage;
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show when={canShowMeta(props.original.meta, ctx.promptHistory[props.original._id])}>
+                  <Show when={canShowMeta(props.original, props.original.meta, ctx.promptHistory[props.original._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
                         rootModalStore.info(
-                          <Meta meta={props.original.meta} history={ctx.promptHistory[props.original._id]} />
+                          <Meta
+                            adapter={props.original.adapter}
+                            meta={props.original.meta}
+                            history={ctx.promptHistory[props.original._id]}
+                          />
                         )
                       }
                     >
@@ -539,12 +543,20 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-const Meta: Component<{ meta: any; history?: any }> = (props) => {
-  if (!props.meta) return null
+const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) => {
+  if (!props.meta && !props.history && !props.adapter) return null
 
   return (
     <>
       <table class="text-sm">
+        <Show when={props.adapter}>
+          <tr>
+            <td class="pr-2">
+              <b>Adapter</b>
+            </td>
+            <td>{props.adapter}</td>
+          </tr>
+        </Show>
         <For each={Object.entries(props.meta)}>
           {([key, value]) => (
             <tr>
@@ -568,6 +580,6 @@ const Meta: Component<{ meta: any; history?: any }> = (props) => {
   )
 }
 
-function canShowMeta(meta: any, history: any) {
-  return !!history || (!!meta && Object.keys(meta).length >= 1)
+function canShowMeta(msg: AppSchema.ChatMessage, meta: any, history: any) {
+  return !!msg.adapter || !!history || (!!meta && Object.keys(meta).length >= 1)
 }

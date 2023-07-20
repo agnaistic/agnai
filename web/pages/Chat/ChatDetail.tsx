@@ -7,7 +7,7 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import Modal from '../../shared/Modal'
-import { getAssetUrl, getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
+import { getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
 import { characterStore, ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import { ChatGenSettings } from './ChatGenSettings'
@@ -23,7 +23,6 @@ import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
 import MemberModal from './MemberModal'
 import { AppSchema } from '../../../common/types/schema'
-import { ImageModal } from './ImageModal'
 import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
@@ -90,6 +89,13 @@ const ChatDetail: Component = () => {
 
   const express = useAutoExpression()
   const avatars = useChatAvatars()
+
+  // const mainCharacter = createMemo(() => {
+  //   const id = chats.char?._id
+  //   if (!id) return
+
+  //   const char = chars.botMap
+  // })
 
   const viewHeight = createMemo(() => {
     const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
@@ -484,10 +490,7 @@ const ChatDetail: Component = () => {
                     </Show>
                     <Show when={chats.char?.visualType !== 'sprite' && chats.char?.avatar}>
                       <div class="flex h-full w-full justify-center">
-                        <img
-                          src={getAssetUrl(chats.char?.avatar!)}
-                          class="flex h-full justify-center rounded-lg object-cover"
-                        />
+                        <img src={chats.char?.avatar!} class="flex h-full justify-center rounded-lg object-cover" />
                       </div>
                     </Show>
                   </section>
@@ -655,8 +658,6 @@ const ChatDetail: Component = () => {
         show={chats.opts.modal === 'updateGaslightToUseSystemPrompt'}
         close={clearModal}
       />
-
-      <ImageModal />
 
       <Show when={chats.chat && !chats.chat.genPreset && !chats.chat.genSettings && !user.user?.defaultPreset}>
         <ForcePresetModal chat={chats.chat!} show={true} close={() => {}} />

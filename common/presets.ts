@@ -42,6 +42,9 @@ export const chatGenSettings = {
   oaiModel: 'string',
   openRouterModel: 'any?',
 
+  thirdPartyUrl: 'string?',
+  thirdPartyFormat: ['kobold', 'openai', 'claude', null],
+
   novelModel: 'string?',
   novelModelOverride: 'string?',
 

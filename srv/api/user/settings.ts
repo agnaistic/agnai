@@ -352,7 +352,7 @@ export const updateProfile = handle(async (req) => {
 
 async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
   if (!incomingUrl) return incomingUrl
-  if (user.koboldUrl === incomingUrl) return
+  if (user.koboldUrl === incomingUrl) return incomingUrl
 
   const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
   if (!url || !url[0]) {

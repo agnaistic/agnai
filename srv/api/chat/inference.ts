@@ -8,12 +8,19 @@ import { AppSchema } from '/common/types'
 import { runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/default-preset'
 
-const validInference = { prompt: 'string', settings: 'any', user: 'any' } as const
+const validInference = { prompt: 'string', settings: 'any', user: 'any', service: 'string?' } as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
   body.prompt = ''
   assertValid(
-    { settings: 'any', user: 'any', lines: ['string'], impersonating: 'any?', profile: 'any', prompt: 'string?' },
+    {
+      settings: 'any',
+      user: 'any',
+      lines: ['string'],
+      impersonating: 'any?',
+      profile: 'any',
+      prompt: 'string?',
+    },
     body
   )
 
@@ -35,8 +42,6 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
   }
 
   const prompt = cyoaTemplate(settings.service === 'openai' ? settings.oaiModel : '')
-    .replace(/{{history}}/gi, body.lines.join('\n'))
-    .replace(/{{user}}/gi, body.impersonating?.name || body.profile.handle)
 
   const infer = async (text: string) => {
     const inference = await inferenceAsync({
@@ -45,12 +50,17 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
       log,
       prompt: text,
       guest: userId ? undefined : socketId,
+      retries: 2,
     })
 
     return inference.generated
   }
 
-  const { values } = await runGuidance(prompt, infer)
+  const { values } = await runGuidance(prompt, {
+    infer,
+    placeholders: { history: body.lines.join('\n'), user: body.impersonating?.name || body.profile.handle },
+  })
+
   const actions: AppSchema.ChatAction[] = []
   actions.push({ emote: values.emote1, action: values.action1 })
   actions.push({ emote: values.emote2, action: values.action2 })
@@ -69,7 +79,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid(validInference, body)
+  assertValid({ ...validInference, placeholders: 'any?' }, body)
 
   const settings = await assertSettings(body, userId)
 
@@ -79,13 +89,14 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
       settings,
       log,
       prompt: text,
+      service: body.service,
       guest: userId ? undefined : socketId,
     })
 
     return inference.generated
   }
 
-  const result = await runGuidance(body.prompt, infer)
+  const result = await runGuidance(body.prompt, { infer, placeholders: body.placeholders })
   return result
 })
 
@@ -101,6 +112,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     settings,
     log,
     prompt: body.prompt,
+    service: body.service,
     guest: userId ? undefined : socketId,
   })
 

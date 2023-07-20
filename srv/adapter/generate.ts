@@ -1,4 +1,4 @@
-import { AIAdapter, NOVEL_MODELS } from '../../common/adapters'
+import { AIAdapter } from '../../common/adapters'
 import { mapPresetsToAdapter, defaultPresets, isDefaultPreset, getFallbackPreset } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
@@ -62,51 +62,89 @@ type InferenceRequest = {
   settings: Partial<AppSchema.GenSettings>
   guest?: string
   user: AppSchema.User
+
+  /** Follows the formats:
+   * - [service]/[model] E.g. novel/krake-v2
+   * - [service] E.g. novel
+   */
+  service?: string
   log: AppLog
+  retries?: number
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
-  const { stream } = await createInferenceStream(opts)
+  const retries = opts.retries ?? 0
+  let error: any
 
-  let generated = ''
-  let meta: any = {}
-  let prompt = ''
-  for await (const gen of stream) {
-    if (typeof gen === 'string') {
-      generated = gen
-      continue
-    }
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const { stream } = await createInferenceStream(opts)
 
-    if ('partial' in gen) {
-      continue
-    }
+    let generated = ''
+    let meta: any = {}
+    let prompt = ''
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        generated = gen
+        continue
+      }
 
-    if ('meta' in gen) {
-      Object.assign(meta, gen.meta)
-      continue
-    }
+      if ('partial' in gen) {
+        continue
+      }
 
-    if ('prompt' in gen) {
-      prompt = gen.prompt
-      continue
-    }
+      if ('meta' in gen) {
+        Object.assign(meta, gen.meta)
+        continue
+      }
 
-    if ('error' in gen) {
-      throw new Error(gen.error)
+      if ('prompt' in gen) {
+        prompt = gen.prompt
+        continue
+      }
+
+      if ('error' in gen) {
+        error = gen.error
+        if (attempt >= retries) {
+          throw new Error(gen.error)
+        }
+      }
     }
+    return { generated, prompt, meta }
   }
 
-  return { generated, prompt, meta }
+  if (error) throw error
+  throw new Error(`Could not complete inference: Max retries exceeded`)
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
+  if (opts.service) {
+    const [service, model] = opts.service.split('/')
+    const settings = getFallbackPreset(service as AIAdapter)
+
+    if (model) {
+      switch (service as AIAdapter) {
+        case 'openai':
+          settings.oaiModel = model
+          break
+
+        case 'novel':
+          settings.novelModel = model
+          break
+
+        case 'claude':
+          settings.claudeModel = model
+          break
+      }
+    }
+
+    opts.settings = settings
+  }
+
   opts.settings.maxTokens = 1024
   opts.settings.streamResponse = false
   opts.settings.temp = 0.5
 
-  if (opts.settings.service === 'novel') {
-    opts.settings.novelModel = NOVEL_MODELS.krake
-  } else if (opts.settings.service === 'openai') {
+  if (opts.settings.service === 'openai') {
     opts.settings.topP = 1
     opts.settings.frequencyPenalty = 0
     opts.settings.presencePenalty = 0
@@ -174,6 +212,14 @@ export async function createTextStreamV2(opts: GenerateRequestV2, log: AppLog, g
     // if (memory) {
     //   opts.parts.memory = memory
     // }
+  }
+
+  if (opts.settings?.thirdPartyUrl) {
+    opts.user.koboldUrl = opts.settings.thirdPartyUrl
+  }
+
+  if (opts.settings?.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
   }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)

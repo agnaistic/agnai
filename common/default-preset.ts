@@ -9,7 +9,7 @@ import { replicatePresets } from './presets/replicate'
 import { scalePresets } from './presets/scale'
 import { classifyEmotes } from './types/sprite'
 import { openRouterPresets } from './presets/openrouter'
-import { AIAdapter, OPENAI_MODELS } from './adapters'
+import { OPENAI_MODELS } from './adapters'
 
 const builtinPresets = {
   ...hordePresets,

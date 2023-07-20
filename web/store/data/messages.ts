@@ -44,7 +44,7 @@ export const msgsApi = {
   generateActions,
 }
 
-type InferenceOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
+type InferenceOpts = { prompt: string; settings: Partial<AppSchema.GenSettings>; service?: string }
 
 export async function generateActions() {
   const { settings, impersonating, profile, user, messages } = await getPromptEntities()
@@ -93,7 +93,7 @@ export async function basicInference(
 }
 
 export async function guidance<T = any>(
-  { prompt, settings }: InferenceOpts,
+  { prompt, settings, service }: InferenceOpts,
   onComplete?: (err: any | null, response?: { result: string; values: T }) => void
 ) {
   const requestId = v4()
@@ -104,7 +104,7 @@ export async function guidance<T = any>(
     return
   }
 
-  const res = await api.method('post', `/chat/guidance`, { requestId, user, prompt, settings })
+  const res = await api.method('post', `/chat/guidance`, { requestId, user, prompt, settings, service })
   if (res.error) {
     onComplete?.(res.error)
     if (!onComplete) {

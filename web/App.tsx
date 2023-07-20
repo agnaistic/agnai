@@ -37,6 +37,7 @@ import { ContextProvider } from './store/context'
 import PipelineGuide from './pages/Guides/Pipeline'
 import MemoryGuide from './pages/Guides/Memory'
 import NovelGuide from './pages/Guides/NovelAI'
+import { ImageModal } from './pages/Chat/ImageModal'
 
 const App: Component = () => {
   const state = userStore()
@@ -163,6 +164,7 @@ const Layout: Component = () => {
         <ImpersonateModal show={cfg.showImpersonate} close={() => settingStore.toggleImpersonate(false)} />
         <InfoModal />
         <ProfileModal />
+        <ImageModal />
         <For each={rootModals.modals}>{(modal) => modal.element}</For>
       </div>
     </ContextProvider>

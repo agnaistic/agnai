@@ -8,7 +8,19 @@ export const AVATAR_CORNERS = ['sm', 'md', 'lg', 'circle', 'none'] as const
 export const CHAT_WIDTHS = ['full', 'narrow', 'xl', '2xl', '3xl', 'fill'] as const
 
 export const UI_MODE = ['light', 'dark'] as const
-export const UI_THEME = ['blue', 'sky', 'teal', 'orange', 'rose', 'pink', 'purple', 'premium'] as const
+export const UI_THEME = [
+  'blue',
+  'sky',
+  'teal',
+  'orange',
+  'rose',
+  'pink',
+  'purple',
+  'premium',
+  'truegray',
+  'coolgray',
+  'bluegray',
+] as const
 
 export type ThemeColor = (typeof UI_THEME)[number]
 export type ThemeBGColor = (typeof BG_THEME)[number]

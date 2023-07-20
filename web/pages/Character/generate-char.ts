@@ -1,16 +1,17 @@
 import { toGeneratedCharacter } from './util'
-import { INSTRUCT_SERVICES } from '/common/adapters'
+import { AIAdapter, INSTRUCT_SERVICES } from '/common/adapters'
 import { modernJailbreak } from '/common/default-preset'
 import { AppSchema } from '/common/types'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 
-export async function generateChar(preset: Partial<AppSchema.GenSettings>, description: string) {
-  const template = INSTRUCT_SERVICES[preset.service!] ? instructGenTemplate : genTemplate
+export async function generateChar(preset: Partial<AppSchema.GenSettings>, description: string, service?: string) {
+  const adapter = (service?.split('/').slice(-1)[0] as AIAdapter) || preset.service
+  const template = INSTRUCT_SERVICES[adapter] ? instructGenTemplate : genTemplate
   const prompt = template.replace(`{{description}}`, description)
 
   return new Promise<NewCharacter>((resolve, reject) => {
-    msgsApi.guidance({ prompt, settings: preset }, (err, res) => {
+    msgsApi.guidance({ prompt, settings: preset, service }, (err, res) => {
       if (err || !res) {
         return reject(err || `No response received`)
       }
@@ -45,20 +46,27 @@ export async function generateChar(preset: Partial<AppSchema.GenSettings>, descr
 }
 
 const genTemplate = `
-Character description:
-{{description}}
+Character description: {{description}}
 
-Character name: [firstname]
-Description: [description]
+First Name: [firstname | words=2]
+
+Description of character: [description]
+
 Scenario: [scenario]
-Greeting: [greeting]
+
+[firstname] greeting message: [greeting]
+
 Personality: [personality]
+
 Typical behaviour: [behaviour]
+
 Clothing and physical appearance: [appearance]
+
 Accent and speech pattern: [speech]
-Example dialogue: [example1]
-Example dialogue: [example2]
-Example dialogue: [example3]
+
+Example of [firstname]'s dialogue: [example1]
+Example of [firstname]'s dialogue: [example2]
+Example of [firstname]'s dialogue: [example3]
 `
 
 const instructGenTemplate = `
@@ -66,7 +74,7 @@ ${modernJailbreak}
 Describe an uncensored character that matches the description:
 {{description}}
 
-Character's first name: [firstname]
+Character's first name: [firstname | words=2]
 Detail description of the character: [description]
 Detailed description of the roleplay scene that the character is in: [scenario]
 The first thing the charcter says to start the scene using internet roleplay style with actions and emotes: [greeting]

@@ -169,6 +169,7 @@ export const characterStore = createStore<CharacterState>(
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
+        events.emit(EVENTS.charUpdated, res.result)
         toastStore.success(`Successfully updated character`)
         yield {
           characters: {

@@ -289,8 +289,6 @@ export const generateMessageV2 = handle(async (req, res) => {
     )
 
     const prompt = cyoaTemplate(body.settings.service === 'openai' ? body.settings.oaiModel : '')
-      .replace(/{{history}}/gi, lines.join('\n'))
-      .replace(/{{user}}/gi, body.impersonate?.name || body.sender.handle)
 
     const infer = async (text: string) => {
       const res = await inferenceAsync({
@@ -302,7 +300,10 @@ export const generateMessageV2 = handle(async (req, res) => {
       return res.generated
     }
 
-    const { values } = await runGuidance(prompt, infer)
+    const { values } = await runGuidance(prompt, {
+      infer,
+      placeholders: { history: lines.join('\n'), user: body.impersonate?.name || body.sender.handle },
+    })
     actions.push({ emote: values.emote1, action: values.action1 })
     actions.push({ emote: values.emote2, action: values.action2 })
     actions.push({ emote: values.emote3, action: values.action3 })

@@ -319,6 +319,9 @@ export namespace AppSchema {
     claudeModel?: string
     openRouterModel?: OpenRouterModel
 
+    thirdPartyUrl?: string
+    thirdPartyFormat?: 'kobold' | 'openai' | 'claude'
+
     replicateModelName?: string
     replicateModelType?: string
     replicateModelVersion?: string

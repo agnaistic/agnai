@@ -17,7 +17,6 @@ import TagInput from '../../shared/TagInput'
 import { CultureCodes } from '../../shared/CultureCodes'
 import VoicePicker from './components/VoicePicker'
 import { AppSchema } from '../../../common/types/schema'
-import { ImageModal } from '../Chat/ImageModal'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
@@ -36,6 +35,7 @@ import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
 import { generateChar } from './generate-char'
+import { ADAPTER_LABELS } from '/common/adapters'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -103,6 +103,46 @@ export const CreateCharacterForm: Component<{
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
   const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
 
+  const preferredPreset = createMemo(() => {
+    const id = user?.defaultPreset
+    if (!id) return
+
+    const preset = isDefaultPreset(id) ? defaultPresets[id] : presets.presets.find((pre) => pre._id === id)
+
+    return preset
+  })
+
+  const chargenOpts = createMemo(() => {
+    if (!user) return []
+
+    const opts: Option[] = []
+
+    const pref = preferredPreset()
+    if (pref?.service === 'openai' || pref?.service === 'novel' || pref?.service === 'claude') {
+      opts.push({ label: `Default (${ADAPTER_LABELS[pref.service]})`, value: '' })
+    }
+
+    if (user.oaiKeySet) {
+      opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
+      opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
+    }
+
+    if (user.novelVerified) {
+      opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
+      opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
+    }
+
+    if (pref?.service === 'kobold' || user.koboldUrl) {
+      opts.push({ label: 'Third Party', value: 'kobold' })
+    }
+
+    if (user.claudeApiKeySet) {
+      opts.push({ label: 'Claude', value: 'claude' })
+    }
+
+    return opts
+  })
+
   const totalTokens = createMemo(() => {
     const t = tokens()
     return t.name + t.persona + t.sample + t.scenario
@@ -113,24 +153,10 @@ export const CreateCharacterForm: Component<{
     return t.name + t.persona + t.scenario
   })
 
-  const preferredPreset = createMemo(() => {
-    const id = user?.defaultPreset
-    if (!id) return
-
-    const preset = isDefaultPreset(id) ? defaultPresets[id] : presets.presets.find((pre) => pre._id === id)
-
-    return preset
-  })
-
-  const canGenerateCharacter = createMemo(() => {
-    const preset = preferredPreset()
-    return preset?.service !== 'horde'
-    // return preferredPreset()?.service === 'openai' && !!user?.oaiKeySet
-  })
-
   const generateCharacter = async () => {
-    if (!canGenerateCharacter()) return
+    if (!chargenOpts().length) return
 
+    const { chargenService } = getStrictForm(ref, { chargenService: 'string?' })
     const preset = preferredPreset()
     if (!preset) return
 
@@ -140,7 +166,7 @@ export const CreateCharacterForm: Component<{
     setCreating(true)
 
     try {
-      const char = await generateChar(preset, description)
+      const char = await generateChar(preset, description, chargenService)
       setCreating(false)
 
       const prevAvatar = editor.state.avatar
@@ -355,21 +381,27 @@ export const CreateCharacterForm: Component<{
                       A description, label, or notes for your character. This is will not influence your character in
                       any way.
                     </span>
-                    <Show when={canGenerateCharacter()}>
-                      <span>
-                        To use OpenAI to generate a character, describe the character below then click <b>Generate</b>.
-                        It can take 30-60 seconds.
-                      </span>
+                    <Show when={chargenOpts().length > 0}>
+                      <p>
+                        To generate a character, describe the character below then click <b>Generate</b>. It can take
+                        30-60 seconds. You can choose which AI Service performs the generation in the Dropdown.
+                      </p>
+                      <p>
+                        <em>Note: Kobold and Novel character generation are experimental</em>
+                      </p>
                     </Show>
                   </div>
                 }
               />
-              <div class="flex w-full flex-col gap-2 sm:flex-row">
+              <div class="flex w-full flex-col gap-2">
                 <TextInput isMultiline fieldName="description" parentClass="w-full" value={editor.state.description} />
-                <Show when={canGenerateCharacter()}>
-                  <Button onClick={generateCharacter} disabled={creating()}>
-                    {creating() ? 'Generating...' : 'Generate'}
-                  </Button>
+                <Show when={chargenOpts().length > 0}>
+                  <div class="flex justify-end gap-2 sm:justify-start">
+                    <Select fieldName="chargenService" items={chargenOpts()} />
+                    <Button onClick={generateCharacter} disabled={creating()}>
+                      {creating() ? 'Generating...' : 'Generate'}
+                    </Button>
+                  </div>
                 </Show>
               </div>
             </Card>
@@ -624,7 +656,7 @@ export const CreateCharacterForm: Component<{
           close={() => setShowBuilder(false)}
         />
       </Show>
-      <ImageModal />
+
       <Show when={converted()}>
         <DownloadModal show close={() => setConverted(undefined)} char={converted()!} />
       </Show>

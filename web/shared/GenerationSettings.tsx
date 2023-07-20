@@ -157,6 +157,32 @@ const GeneralSettings: Component<Props> = (props) => {
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
 
+      <Card hide={!serviceHasSetting('kobold', 'thirdPartyUrl')}>
+        <TextInput
+          fieldName="thirdPartyUrl"
+          label="Third Party URL"
+          helperText="Typically a Kobold, Ooba, or other URL"
+          value={props.inherit?.thirdPartyUrl || ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'thirdPartyUrl'}
+        />
+
+        <Select
+          fieldName="thirdPartyFormat"
+          label="Kobold / 3rd-party Format"
+          helperText="Re-formats the prompt to the desired output format."
+          items={[
+            { label: 'Kobold/Ooba', value: 'kobold' },
+            { label: 'OpenAI', value: 'openai' },
+            { label: 'Claude', value: 'claude' },
+          ]}
+          value={props.inherit?.thirdPartyFormat ?? 'kobold'}
+          service={props.service}
+          aiSetting={'thirdPartyUrl'}
+        />
+      </Card>
+
       <Card class="flex flex-wrap gap-5">
         <Select
           fieldName="oaiModel"

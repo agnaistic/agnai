@@ -674,7 +674,9 @@ export function getAdapter(
   const chatAdapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
   let adapter = preset?.service ? preset.service : chatAdapter
-  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && adapter === 'kobold'
+
+  const thirdPartyFormat = preset?.thirdPartyFormat || config.thirdPartyFormat
+  const isThirdParty = THIRD_PARTY_ADAPTERS[thirdPartyFormat] && adapter === 'kobold'
 
   if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
     adapter = config.thirdPartyFormat

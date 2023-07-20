@@ -55,7 +55,7 @@ const Slot: Component<{
 
   const log = (...args: any[]) => {
     if (!cfg.publisherId) return
-    if (!user.user?.admin && !cfg.flags.reporting) return
+    if (!user.user?.admin || !cfg.flags.reporting) return
     let slotid = actualId()
     console.log.apply(null, [`[${id()}]`, ...args, `| ${slotid}`])
   }

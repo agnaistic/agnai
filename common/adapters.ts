@@ -252,6 +252,7 @@ export const adapterSettings: {
   topK: ['horde', 'novel', 'kobold', 'ooba', 'luminai', 'claude'],
   typicalP: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
 
+  thirdPartyUrl: ['kobold'],
   claudeModel: ['claude', 'kobold'],
   novelModel: ['novel'],
   oaiModel: ['openai', 'kobold'],

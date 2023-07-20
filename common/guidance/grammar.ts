@@ -21,7 +21,14 @@ Expression = body:(Variable / Text)+ {
 }
 
 
-Variable "variable" = "[" val:Char+ "]" { return { kind: 'variable', name: val.join('') } }
+Variable "variable" = "[" val:Char+ pipe:Pipe? "]" { return { kind: 'variable', name: val.join(''), pipe } }
 
+Pipe = _ "|" _ pipe:(WordPipe / SentencePipe) _ { return pipe }
+WordPipe = ("words" / "word"i) _ "=" _ value:Number { return { type: "words", value } }
+SentencePipe = "sentence"i { return { type: "sentence" } }
+
+Number "number" = nums:[0-9]+ { return +nums.join('') }
 Text "text" = !(Variable) ch:(.) { return ch }
-Char = ch:[a-z0-9_-]i { return ch }`
+Char = ch:[a-z0-9_-]i { return ch }
+_ "whitespace" = [ \t]* 
+`
