@@ -2,7 +2,7 @@ import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from './types/schema'
 import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS, SUPPORTS_INSTRUCT } from './adapters'
 import { formatCharacter } from './characters'
-import { adventureTemplate, defaultTemplate } from './default-preset'
+import { defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
@@ -147,10 +147,6 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: nu
     if (opts.retry) {
       opts.retry = { ...opts.retry, msg: trimSentence(opts.retry.msg) }
     }
-
-    if (opts.lastMessage) {
-      opts.lastMessage = trimSentence(opts.lastMessage)
-    }
   }
 
   const sortedMsgs = opts.messages
@@ -166,6 +162,7 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: nu
   const lines = getLinesForPrompt(opts, encoder, maxContext)
   const parts = getPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
+
   const prompt = injectPlaceholders(template, {
     opts,
     parts,
@@ -205,8 +202,7 @@ export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>, 
   const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
 
-  const template = useGaslight ? gaslight : opts.chat.mode === 'adventure' ? adventureTemplate : defaultTemplate
-
+  const template = useGaslight ? gaslight : defaultTemplate
   return ensureValidTemplate(template, parts)
 }
 
@@ -223,21 +219,8 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
   const profile = opts.members.find((mem) => mem.userId === opts.chat.userId)
   const sender = opts.impersonate?.name || profile?.handle || 'You'
 
-  if (opts.settings?.useTemplateParser) {
-    try {
-      const result = parseTemplate(template, {
-        ...opts,
-        sender: profile!,
-        parts,
-        lines: hist?.lines || [],
-        ...rest,
-      })
-      return result
-    } catch (ex) {}
-  }
-  const sampleChat = parts.sampleChat?.join('\n')
-
   // Automatically inject example conversation if not included in the prompt
+  const sampleChat = parts.sampleChat?.join('\n')
   if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
@@ -251,6 +234,19 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
     else next.push(msg)
 
     hist.lines = next
+  }
+
+  if (opts.settings?.useTemplateParser) {
+    try {
+      const result = parseTemplate(template, {
+        ...opts,
+        sender: profile!,
+        parts,
+        lines: hist?.lines?.slice().reverse() || [],
+        ...rest,
+      })
+      return result
+    } catch (ex) {}
   }
 
   let prompt = template
@@ -582,7 +578,7 @@ function getLinesForPrompt(
   return lines
 }
 
-function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
+export function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
   let count = encoder(amble)
   const adding: string[] = []
 
@@ -678,7 +674,9 @@ export function getAdapter(
   const chatAdapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
   let adapter = preset?.service ? preset.service : chatAdapter
-  const isThirdParty = THIRD_PARTY_ADAPTERS[config.thirdPartyFormat] && adapter === 'kobold'
+
+  const thirdPartyFormat = preset?.thirdPartyFormat || config.thirdPartyFormat
+  const isThirdParty = THIRD_PARTY_ADAPTERS[thirdPartyFormat] && adapter === 'kobold'
 
   if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
     adapter = config.thirdPartyFormat
@@ -729,7 +727,6 @@ function getContextLimit(gen: Partial<AppSchema.GenSettings> | undefined, adapte
   switch (adapter) {
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
-    case 'luminai':
     case 'horde':
     case 'ooba':
       return configuredMax - genAmount

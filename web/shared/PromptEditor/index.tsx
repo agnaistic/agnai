@@ -1,11 +1,16 @@
-import { Component, For, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import { Component, For, JSX, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import { FormLabel } from '../FormLabel'
 import { AIAdapter, PresetAISettings } from '/common/adapters'
-import { getAISettingServices } from '../util'
+import { getAISettingServices, toMap } from '../util'
 import { useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
 import { SolidCard } from '../Card'
+import Button from '../Button'
+import { ParseOpts, parseTemplate } from '/common/template-parser'
+import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
+import { ensureValidTemplate, getPromptParts } from '/common/prompt'
+import { AppSchema } from '/common/types/schema'
 
 type Placeholder = {
   required: boolean
@@ -13,6 +18,7 @@ type Placeholder = {
 }
 
 type Interp = keyof typeof placeholders
+type InterpV2 = keyof typeof v2placeholders
 
 const placeholders = {
   char: { required: false, limit: Infinity },
@@ -29,19 +35,32 @@ const placeholders = {
   example_dialogue: { required: true, limit: 1 },
   all_personalities: { required: false, limit: 1 },
   impersonating: { required: false, limit: 1 },
-  chat_embed: { required: false, limit: 1 },
+  // chat_embed: { required: false, limit: 1 },
   user_embed: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
-const helpers: { [key in Interp]?: string } = {
+const v2placeholders = {
+  roll: { required: false, limit: Infinity },
+  random: { required: false, limit: Infinity },
+} satisfies Record<string, Placeholder>
+
+const helpers: { [key in Interp]?: JSX.Element | string } = {
   char: 'Character name',
   user: `Your character's or profile name`,
+  system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
   impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
   chat_age: `The age of your chat (time elapsed since chat created)`,
   idle_duration: `The time elapsed since you last sent a message`,
   ujb: `The jailbreak. Typically inserted at the end of the prompt.`,
-  all_personalities: `Personalities of all chracters in the chat EXCEPT the main character.`,
+  all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
   post: `The "post-amble" text. This gives specific instructions on how the model should respond. E.g. "Respond as {{char}}:"`,
+  // chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
+  user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
+}
+
+const v2helpers: { [key in InterpV2]?: JSX.Element | string } = {
+  roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
+  random: 'Produces a random word from a comma-separated list. E.g.: {{random happy, sad, jealous, angry}}',
 }
 
 type HolderName = keyof typeof placeholders
@@ -52,12 +71,14 @@ const PromptEditor: Component<
   {
     fieldName: string
     service?: AIAdapter
+    inherit?: Partial<AppSchema.GenSettings>
     disabled?: boolean
     value?: string
     onChange?: (value: string) => void
     aiSetting?: keyof PresetAISettings
     showHelp?: boolean
     placeholder?: string
+    v2?: boolean
   } & Optionals
 > = (props) => {
   let ref: HTMLTextAreaElement = null as any
@@ -65,6 +86,14 @@ const PromptEditor: Component<
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
   const [input, setInput] = createSignal<string>(props.value || '')
   const [help, showHelp] = createSignal(false)
+  const [preview, setPreview] = createSignal(false)
+
+  const rendered = createMemo(() => {
+    const opts = getExampleOpts(props.inherit)
+    const template = ensureValidTemplate(input(), opts.parts)
+    const example = parseTemplate(template, opts)
+    return example
+  })
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
     setInput(ev.currentTarget.value)
@@ -77,7 +106,13 @@ const PromptEditor: Component<
   })
 
   const usable = createMemo(() => {
-    const all = Object.entries(placeholders) as Array<[Interp, Placeholder]>
+    type Entry = [Interp, Placeholder]
+    const all = Object.entries(placeholders) as Entry[]
+
+    if (props.v2 || props.inherit?.useTemplateParser) {
+      all.push(...(Object.entries(v2placeholders) as Entry[]))
+    }
+
     if ('include' in props === false && 'exclude' in props === false) return all
 
     const includes = 'include' in props ? props.include : null
@@ -123,9 +158,14 @@ const PromptEditor: Component<
       <Show when={props.showHelp}>
         <FormLabel
           label={
-            <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
-              Prompt Template (formerly gaslight) <HelpCircle size={16} />
-            </div>
+            <>
+              <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
+                Prompt Template (formerly gaslight) <HelpCircle size={16} />
+              </div>
+              <Button size="sm" onClick={() => setPreview(!preview())}>
+                Toggle Preview
+              </Button>
+            </>
           }
           helperText={
             <>
@@ -146,14 +186,19 @@ const PromptEditor: Component<
         />
       </Show>
 
+      <Show when={preview()}>
+        <pre class="whitespace-pre-wrap break-words text-xs">{rendered()}</pre>
+      </Show>
+
       <textarea
         id={props.fieldName}
         name={props.fieldName}
         class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+        classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}
         disabled={props.disabled}
-        placeholder={props.placeholder}
+        placeholder={props.placeholder?.replace(/\n/g, '\u000A')}
       />
 
       <div class="flex flex-wrap gap-2">
@@ -162,7 +207,7 @@ const PromptEditor: Component<
         </For>
       </div>
 
-      <HelpModal interps={usable().map((item) => item[0])} show={help()} close={() => showHelp(false)} />
+      <HelpModal v2={props.v2} interps={usable().map((item) => item[0])} show={help()} close={() => showHelp(false)} />
     </div>
   )
 }
@@ -198,13 +243,30 @@ const Placeholder: Component<{ name: Interp; input: string; onClick: (name: stri
   )
 }
 
-const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[] }> = (props) => {
+const HelpModal: Component<{
+  show: boolean
+  close: () => void
+  interps: Interp[]
+  inherit?: Partial<AppSchema.GenSettings>
+  v2?: boolean
+}> = (props) => {
+  const items = createMemo(() => {
+    const entries = Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))
+
+    if (props.v2 || props.inherit?.useTemplateParser) {
+      const second = Object.entries(v2helpers)
+      entries.push(...second)
+    }
+
+    return entries
+  })
+
   useRootModal({
     id: 'prompt-editor-help',
     element: (
       <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
         <div class="flex w-full flex-col gap-1 text-sm">
-          <For each={Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))}>
+          <For each={items()}>
             {([interp, help]) => (
               <SolidCard>
                 <FormLabel fieldName={interp} label={interp} helperText={help} />
@@ -217,4 +279,57 @@ const HelpModal: Component<{ show: boolean; close: () => void; interps: Interp[]
   })
 
   return null
+}
+
+function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>): ParseOpts {
+  const char = toChar('Rory', {
+    scenario: 'Rory is strolling in the park',
+    persona: toPersona('Rory is very talkative.'),
+  })
+  const replyAs = toChar('Robot', { persona: toPersona('Robot likes coffee') })
+  const profile = toProfile('Author')
+  const { user } = toUser('Author')
+  const chat = toChat(char)
+
+  const characters = toMap([char, replyAs])
+  const history = [
+    toBotMsg(char, 'Hi, nice to meet you!'),
+    toUserMsg(profile, 'Nice to meet you too.'),
+    toBotMsg(replyAs, 'I am also here.'),
+  ]
+
+  const lines = history.map((hist) => {
+    const name = hist.characterId ? characters[hist.characterId].name : profile.handle
+    return `${name}: ${hist.msg}`
+  })
+
+  const parts = getPromptParts(
+    {
+      char,
+      characters,
+      chat,
+      members: [profile],
+      replyAs,
+      user,
+      kind: 'send',
+      chatEmbeds: [],
+      userEmbeds: [],
+      settings: inherit,
+    },
+    lines,
+    (text: string) => text.length
+  )
+
+  return {
+    char,
+    settings: inherit,
+    replyAs,
+    sender: profile,
+    characters,
+    chat,
+    lines,
+    members: [profile],
+    parts,
+    user,
+  }
 }

@@ -1,14 +1,17 @@
 import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
-import { createTextStreamV2 } from '../../adapter/generate'
+import { createTextStreamV2, inferenceAsync } from '../../adapter/generate'
 import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
 import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
-import { extractActions } from './common'
 import { publishMany } from '../ws/handle'
+import { runGuidance } from '/common/guidance/guidance-parser'
+import { cyoaTemplate } from '/common/default-preset'
+import { fillPromptWithLines } from '/common/prompt'
+import { getEncoder } from '/srv/tokenize'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -204,7 +207,10 @@ export const generateMessageV2 = handle(async (req, res) => {
   })
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter } = await createTextStreamV2({ ...body, chat, replyAs, impersonate, requestId }, log)
+  const { stream, adapter, ...entities } = await createTextStreamV2(
+    { ...body, chat, replyAs, impersonate, requestId },
+    log
+  )
 
   log.setBindings({ adapter })
 
@@ -271,7 +277,37 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
-  const actioned = extractActions(responseText)
+
+  const actions: AppSchema.ChatAction[] = []
+
+  if (chat.mode === 'adventure') {
+    const lines = fillPromptWithLines(
+      getEncoder('main'),
+      1024,
+      '',
+      body.lines.concat(`${body.replyAs.name}: ${responseText}`)
+    )
+
+    const prompt = cyoaTemplate(body.settings.service === 'openai' ? body.settings.oaiModel : '')
+
+    const infer = async (text: string) => {
+      const res = await inferenceAsync({
+        prompt: text,
+        log,
+        settings: entities.settings,
+        user: entities.user,
+      })
+      return res.generated
+    }
+
+    const { values } = await runGuidance(prompt, {
+      infer,
+      placeholders: { history: lines.join('\n'), user: body.impersonate?.name || body.sender.handle },
+    })
+    actions.push({ emote: values.emote1, action: values.action1 })
+    actions.push({ emote: values.emote2, action: values.action2 })
+    actions.push({ emote: values.emote3, action: values.action3 })
+  }
 
   await releaseLock(chatId)
 
@@ -292,10 +328,10 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         characterId: replyAs._id,
         senderId: body.kind === 'self' ? userId : undefined,
-        message: actioned.text,
+        message: responseText,
         adapter,
         ooc: false,
-        actions: actioned.actions,
+        actions,
         meta,
         event: undefined,
       })
@@ -306,7 +342,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         chatId,
         adapter,
         generate: true,
-        actions: actioned.actions,
+        actions,
       })
       break
     }
@@ -314,8 +350,8 @@ export const generateMessageV2 = handle(async (req, res) => {
     case 'retry': {
       if (body.replacing) {
         await store.msgs.editMessage(body.replacing._id, {
-          msg: actioned.text,
-          actions: actioned.actions,
+          msg: responseText,
+          actions,
           adapter,
           meta,
         })
@@ -324,8 +360,8 @@ export const generateMessageV2 = handle(async (req, res) => {
           requestId,
           chatId,
           messageId: body.replacing._id,
-          message: actioned.text,
-          actions: actioned.actions,
+          message: responseText,
+          actions,
           adapter,
           generate: true,
           meta,
@@ -335,9 +371,9 @@ export const generateMessageV2 = handle(async (req, res) => {
           _id: requestId,
           chatId,
           characterId: replyAs._id,
-          message: generated,
+          message: responseText,
           adapter,
-          actions: actioned.actions,
+          actions,
           ooc: false,
           meta,
           event: undefined,
@@ -349,7 +385,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           chatId,
           adapter,
           generate: true,
-          actions: actioned.actions,
+          actions,
         })
       }
       break

@@ -220,7 +220,6 @@ const settingsForm = {
   hordeUseTrusted: 'boolean?',
   hordeKey: 'string?',
   hordeModel: 'string?',
-  luminaiUrl: 'string?',
   oaiKey: 'string?',
   scaleApiKey: 'string?',
   scaleUrl: 'string?',

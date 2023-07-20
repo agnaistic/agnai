@@ -130,6 +130,13 @@ export const chatStore = createStore<ChatState>('chat', {
     }
   })
 
+  events.on(EVENTS.charUpdated, (char: AppSchema.Character) => {
+    const { active } = get()
+    if (active?.char?._id !== char._id) return
+
+    set({ active: { ...active, char } })
+  })
+
   return {
     /**
      * If a user accepts an invite to a chat, their profile has not been fetched and cached

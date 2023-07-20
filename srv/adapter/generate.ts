@@ -6,7 +6,6 @@ import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
-import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
@@ -48,7 +47,6 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   kobold: handleKobold,
   ooba: handleOoba,
   horde: handleHorde,
-  luminai: handleLuminAI,
   openai: handleOAI,
   scale: handleScale,
   claude: handleClaude,
@@ -62,16 +60,93 @@ type InferenceRequest = {
   settings: Partial<AppSchema.GenSettings>
   guest?: string
   user: AppSchema.User
+
+  /** Follows the formats:
+   * - [service]/[model] E.g. novel/krake-v2
+   * - [service] E.g. novel
+   */
+  service?: string
   log: AppLog
+  retries?: number
+}
+
+export async function inferenceAsync(opts: InferenceRequest) {
+  const retries = opts.retries ?? 0
+  let error: any
+
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    const { stream } = await createInferenceStream(opts)
+
+    let generated = ''
+    let meta: any = {}
+    let prompt = ''
+    for await (const gen of stream) {
+      if (typeof gen === 'string') {
+        generated = gen
+        continue
+      }
+
+      if ('partial' in gen) {
+        continue
+      }
+
+      if ('meta' in gen) {
+        Object.assign(meta, gen.meta)
+        continue
+      }
+
+      if ('prompt' in gen) {
+        prompt = gen.prompt
+        continue
+      }
+
+      if ('error' in gen) {
+        error = gen.error
+        if (attempt >= retries) {
+          throw new Error(gen.error)
+        }
+      }
+    }
+    return { generated, prompt, meta }
+  }
+
+  if (error) throw error
+  throw new Error(`Could not complete inference: Max retries exceeded`)
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
+  if (opts.service) {
+    const [service, model] = opts.service.split('/')
+    const settings = getFallbackPreset(service as AIAdapter)
+
+    if (model) {
+      switch (service as AIAdapter) {
+        case 'openai':
+          settings.oaiModel = model
+          break
+
+        case 'novel':
+          settings.novelModel = model
+          break
+
+        case 'claude':
+          settings.claudeModel = model
+          break
+      }
+    }
+
+    opts.settings = settings
+  }
+
   opts.settings.maxTokens = 1024
-  opts.settings.temp = 1
-  opts.settings.topP = 1
-  opts.settings.frequencyPenalty = 0
-  opts.settings.presencePenalty = 0
   opts.settings.streamResponse = false
+  opts.settings.temp = 0.5
+
+  if (opts.settings.service === 'openai') {
+    opts.settings.topP = 1
+    opts.settings.frequencyPenalty = 0
+    opts.settings.presencePenalty = 0
+  }
 
   const handler = handlers[opts.settings.service!]
   const stream = handler({
@@ -129,12 +204,14 @@ export async function createTextStreamV2(opts: GenerateRequestV2, log: AppLog, g
     opts.user = entities.user
     opts.settings = entities.gen
     opts.char = entities.char
+  }
 
-    // Use pipeline
-    // const memory = await getMemoryPrompt({ ...opts, books: [entities.book] }, log)
-    // if (memory) {
-    //   opts.parts.memory = memory
-    // }
+  if (opts.settings?.thirdPartyUrl) {
+    opts.user.koboldUrl = opts.settings.thirdPartyUrl
+  }
+
+  if (opts.settings?.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
   }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
@@ -171,7 +248,7 @@ export async function createTextStreamV2(opts: GenerateRequestV2, log: AppLog, g
     lastMessage: opts.lastMessage,
   })
 
-  return { stream, adapter }
+  return { stream, adapter, settings: gen, user: opts.user }
 }
 
 export async function getResponseEntities(
@@ -258,31 +335,3 @@ async function getGenerationSettings(
     src: guest ? 'guest-fallback-last' : 'user-fallback-last',
   }
 }
-
-/**
- * This technically falls into the 'pipeline' category.
- * For now we'll keep this imperative to avoid creating a bad abstraction.
- *
- * @param opts
- */
-// async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
-//   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-//   const encoder = getEncoder(adapter, model)
-//   if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
-//     const res = await filament
-//       .retrieveMemories(opts.user, opts.book._id, opts.lines)
-//       .catch((error) => ({ error }))
-
-//     // If we fail, we'll revert to the naive memory retrival
-//     if ('error' in res) {
-//       return
-//     }
-
-//     const memories = res.map((res) => res.entry)
-//     const tokenLimit = opts.settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
-//     const prompt = trimTokens({ input: memories, start: 'top', tokenLimit, encoder })
-//     return prompt.join('\n')
-//   }
-
-//   return
-// }

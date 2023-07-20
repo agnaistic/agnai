@@ -6,6 +6,8 @@ export const EVENTS = {
   sessionExpired: 'session-expired',
   init: 'init',
   charsReceived: 'chars-received',
+  setInputText: 'set-input-text',
+  charUpdated: 'character-updated',
 }
 
 export const events = new EventEmitter()

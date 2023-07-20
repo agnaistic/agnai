@@ -23,6 +23,7 @@ import Button from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
 import { ContextState, useAppContext } from '/web/store/context'
 import { trimSentence } from '/common/util'
+import { EVENTS, events } from '/web/emitter'
 
 type MessageProps = {
   msg: SplitMessage
@@ -151,6 +152,8 @@ const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage;
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
+      data-last={props.last?.toString()}
+      data-lastsplit={props.lastSplit?.toString()}
     >
       <div class={`flex w-full ${opacityClass}`}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
@@ -247,12 +250,16 @@ const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage;
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show when={canShowMeta(props.original.meta, ctx.promptHistory[props.original._id])}>
+                  <Show when={canShowMeta(props.original, props.original.meta, ctx.promptHistory[props.original._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
                         rootModalStore.info(
-                          <Meta meta={props.original.meta} history={ctx.promptHistory[props.original._id]} />
+                          <Meta
+                            adapter={props.original.adapter}
+                            meta={props.original.meta}
+                            history={ctx.promptHistory[props.original._id]}
+                          />
                         )
                       }
                     >
@@ -336,15 +343,7 @@ const SingleMessage: Component<MessageProps & { original: AppSchema.ChatMessage;
                   data-user-message={isUser()}
                   innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
                 />
-                <Show
-                  when={
-                    !props.partial &&
-                    props.original.actions &&
-                    props.last &&
-                    props.lastSplit &&
-                    ctx.chat!.mode === 'adventure'
-                  }
-                >
+                <Show when={!props.partial && props.last && props.lastSplit}>
                   <div class="flex items-center justify-center gap-2">
                     <For each={props.original.actions}>
                       {(item) => (
@@ -525,22 +524,13 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
 }
 
 function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
-  send(`*${emote}* ${action}`, false)
+  events.emit(EVENTS.setInputText, `*${emote}* ${action}`)
+  // send(`*${emote}* ${action}`, false)
 }
 
 function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {
   if (adapter === 'image') {
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
-  }
-
-  if (ctx.chat?.mode === 'adventure') {
-    const nonActions: string[] = []
-    const splits = msg.split('\n')
-    for (const split of splits) {
-      if (!split.startsWith('{') && !split.includes('->')) nonActions.push(split)
-    }
-
-    msg = nonActions.join('\n')
   }
 
   const parsed = msg
@@ -553,12 +543,20 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-const Meta: Component<{ meta: any; history?: any }> = (props) => {
-  if (!props.meta) return null
+const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) => {
+  if (!props.meta && !props.history && !props.adapter) return null
 
   return (
     <>
       <table class="text-sm">
+        <Show when={props.adapter}>
+          <tr>
+            <td class="pr-2">
+              <b>Adapter</b>
+            </td>
+            <td>{props.adapter}</td>
+          </tr>
+        </Show>
         <For each={Object.entries(props.meta)}>
           {([key, value]) => (
             <tr>
@@ -582,6 +580,6 @@ const Meta: Component<{ meta: any; history?: any }> = (props) => {
   )
 }
 
-function canShowMeta(meta: any, history: any) {
-  return !!history || (!!meta && Object.keys(meta).length >= 1)
+function canShowMeta(msg: AppSchema.ChatMessage, meta: any, history: any) {
+  return !!msg.adapter || !!history || (!!meta && Object.keys(meta).length >= 1)
 }

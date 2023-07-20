@@ -47,7 +47,6 @@ export function toUser(name: string) {
     koboldUrl: '',
     thirdPartyFormat: 'kobold',
     thirdPartyPassword: '',
-    luminaiUrl: '',
     novelApiKey: '',
     novelModel: NOVEL_MODELS.krake,
     oaiKey: '',
@@ -139,5 +138,12 @@ export function toEntry(keywords: string[], entry: string, priority = 0, weight 
     entry,
     priority,
     weight,
+  }
+}
+
+export function toPersona(text: string): AppSchema.Persona {
+  return {
+    kind: 'text',
+    attributes: { text: [text] },
   }
 }

@@ -1,7 +1,7 @@
 import './init'
 import { expect } from 'chai'
 import { trimResponseV2 } from '../srv/api/chat/common'
-import { toChar, toBotMsg, toProfile } from './util'
+import { toChar, toBotMsg, toProfile, reset } from './util'
 
 const bot = toChar('Bot')
 
@@ -11,6 +11,8 @@ const u2 = toProfile('Human2')
 const users = [u1, u2]
 
 describe('Response trimming', () => {
+  before(reset)
+
   it('will trim when response suffixed by user text', () => {
     const msg = toBotMsg(bot, `aaa bbb ccc. ${u1.handle}: ddd eee fff. ${bot.name}: ggg hhh`)
     const actual = trimResponseV2(msg.msg, bot, users, {})

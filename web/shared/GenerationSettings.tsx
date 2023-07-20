@@ -22,6 +22,7 @@ import { Card } from './Card'
 import { FormLabel } from './FormLabel'
 import { serviceHasSetting } from './util'
 import { createStore } from 'solid-js/store'
+import { defaultTemplate } from '/common/default-preset'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -80,7 +81,7 @@ const GenerationSettings: Component<Props> = (props) => {
 export default GenerationSettings
 
 export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
-  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale']
+  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale']
   return (
     <div>
       <For each={allAdapaters}>
@@ -157,7 +158,45 @@ const GeneralSettings: Component<Props> = (props) => {
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
 
-      <Card class="flex flex-wrap gap-5">
+      <Card hide={!serviceHasSetting(props.service, 'thirdPartyUrl')}>
+        <TextInput
+          fieldName="thirdPartyUrl"
+          label="Third Party URL"
+          helperText="Typically a Kobold, Ooba, or other URL"
+          value={props.inherit?.thirdPartyUrl || ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'thirdPartyUrl'}
+        />
+
+        <Select
+          fieldName="thirdPartyFormat"
+          label="Kobold / 3rd-party Format"
+          helperText="Re-formats the prompt to the desired output format."
+          items={[
+            { label: 'Kobold/Ooba', value: 'kobold' },
+            { label: 'OpenAI', value: 'openai' },
+            { label: 'Claude', value: 'claude' },
+          ]}
+          value={props.inherit?.thirdPartyFormat ?? 'kobold'}
+          service={props.service}
+          aiSetting={'thirdPartyUrl'}
+        />
+      </Card>
+
+      <Card
+        class="flex flex-wrap gap-5"
+        hide={
+          !serviceHasSetting(
+            props.service,
+            'oaiModel',
+            'openRouterModel',
+            'novelModel',
+            'claudeModel',
+            'replicateModelName'
+          )
+        }
+      >
         <Select
           fieldName="oaiModel"
           label="OpenAI Model"
@@ -197,6 +236,7 @@ const GeneralSettings: Component<Props> = (props) => {
               helperText="Advanced: Use a custom NovelAI model"
               label="NovelAI Model Override"
               aiSetting={'novelModel'}
+              service={props.service}
             />
           </Show>
         </div>
@@ -313,6 +353,7 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 
 const PromptSettings: Component<Props> = (props) => {
   const cfg = settingStore((cfg) => cfg.flags)
+  const [useV2, setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
 
   // Services that use chat completion cannot use the template parser
   const canUseParser = props.inherit?.service !== 'openai' && (props.inherit?.oaiModel || '') in OPENAI_CHAT_MODELS
@@ -366,7 +407,7 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
         />
       </Card>
-      <Card class="flex flex-col gap-4">
+      <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'gaslight')}>
         <Toggle
           fieldName="useGaslight"
           label="Use Gaslight"
@@ -398,21 +439,28 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           aiSetting="gaslight"
         />
+      </Card>
 
+      <Card class="flex flex-col gap-4">
         <Show when={cfg.parser && canUseParser}>
           <Toggle
             fieldName="useTemplateParser"
             value={props.inherit?.useTemplateParser}
             label="Use Template Parser (Experimental)"
+            helperText="The V2 parser supports additional placeholders (#each, #if, random, roll, ...)."
+            onChange={(v) => setV2(v)}
           />
         </Show>
 
         <PromptEditor
           fieldName="gaslight"
           value={props.inherit?.gaslight}
+          placeholder={defaultTemplate}
           exclude={['post', 'history', 'ujb']}
           disabled={props.disabled}
           showHelp
+          inherit={props.inherit}
+          v2={useV2()}
         />
         <TextInput
           fieldName="ultimeJailbreak"

@@ -7,13 +7,12 @@ import { Component, For, Match, Show, Switch, createEffect, createMemo, createSi
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
-import LuminAISettings from './components/LuminAISettings'
 import KoboldAISettings from './components/KoboldAISettings'
 import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import RegisteredSettings from './components/RegisteredSettings'
-import { useSearchParams } from '@solidjs/router'
+import { A, useSearchParams } from '@solidjs/router'
 import { Toggle } from '/web/shared/Toggle'
 import OpenRouterOauth from './OpenRouterOauth'
 import { TitleCard } from '/web/shared/Card'
@@ -72,7 +71,16 @@ const AISettings: Component<{
         <Toggle
           fieldName="useLocalPipeline"
           label="Use Local Pipeline"
-          helperText="If available, use local Agnaistic pipeline features (summarization for images). This is extremely new and experimental. Expect this to change and improve in the near future."
+          helperText={
+            <>
+              <A class="link" href="/guides/pipeline">
+                Pipeline Guide.
+              </A>
+              &nbsp;If available, use local Agnaistic pipeline features (summarization for images). This is extremely
+              new and experimental. Expect this to change and improve in the near future.
+              <span></span>
+            </>
+          }
           value={state.user?.useLocalPipeline}
         />
 
@@ -106,10 +114,6 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
         <NovelAISettings />
-      </div>
-
-      <div class={currentTab() === 'luminai' ? tabClass : 'hidden'}>
-        <LuminAISettings />
       </div>
 
       <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>

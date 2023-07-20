@@ -103,7 +103,6 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     thirdPartyFormat: 'kobold',
     thirdPartyPassword: '',
     novelModel: NOVEL_MODELS.euterpe,
-    luminaiUrl: '',
     oobaUrl: '',
     hordeModel: 'PygmalionAI/pygmalion-6b',
     hordeKey: '',

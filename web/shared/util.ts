@@ -453,13 +453,18 @@ export function isDirty<T extends {}>(original: T, compare: T): boolean {
   return false
 }
 
-export function serviceHasSetting(service: AIAdapter | undefined, prop: keyof PresetAISettings) {
+export function serviceHasSetting(service: AIAdapter | undefined, ...props: Array<keyof PresetAISettings>) {
   if (!service) return true
   const { config } = settingStore.getState()
-  const base = adapterSettings[prop]
-  const services = config.registered.filter((reg) => reg.options.includes(prop)).map((reg) => reg.name)
 
-  return base?.includes(service) || services.includes(service)
+  for (const prop of props) {
+    const base = adapterSettings[prop]
+    const services = config.registered.filter((reg) => reg.options.includes(prop)).map((reg) => reg.name)
+
+    if (base?.includes(service) || services.includes(service)) return true
+  }
+
+  return false
 }
 
 export function getAISettingServices(prop?: keyof PresetAISettings) {

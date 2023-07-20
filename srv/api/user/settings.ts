@@ -129,7 +129,6 @@ const validConfig = {
   hordeKey: 'string?',
   hordeModel: 'string?',
   hordeModels: ['string?'],
-  luminaiUrl: 'string?',
   hordeWorkers: ['string'],
   oaiKey: 'string?',
   scaleUrl: 'string?',
@@ -243,7 +242,6 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   const validOobaUrl = await verifyOobaUrl(prevUser, body.oobaUrl)
   if (validOobaUrl !== undefined) update.oobaUrl = validOobaUrl
-  if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
 
   if (body.images) {
     update.images = body.images
@@ -352,7 +350,7 @@ export const updateProfile = handle(async (req) => {
 
 async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
   if (!incomingUrl) return incomingUrl
-  if (user.koboldUrl === incomingUrl) return
+  if (user.koboldUrl === incomingUrl) return incomingUrl
 
   const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
   if (!url || !url[0]) {

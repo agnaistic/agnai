@@ -95,7 +95,7 @@ async function callApi<T = any>(
   }).catch((err) => ({ error: err }))
 
   if ('error' in res) {
-    return { result: undefined, status: 500, error: res.error.message || res.error }
+    return { result: undefined, status: 503, error: res.error.message || res.error }
   }
 
   const json = await res.json()

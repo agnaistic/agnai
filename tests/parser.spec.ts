@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import './init'
-import { toBotMsg, toChar, toChat, toProfile, toUser, toUserMsg } from './util'
+import { reset, setRand, toBotMsg, toChar, toChat, toProfile, toUser, toUserMsg } from './util'
 import { getPromptParts } from '/common/prompt'
 import { ParseOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
@@ -26,6 +26,8 @@ const history = [
 const lines = history.map((h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`)
 
 describe('Template parser tests', () => {
+  before(reset)
+
   it('will render a basic template', () => {
     const actual = test(`Scenario: {{scenario}}\nPersona: {{personality}}`)
     expect(actual).toMatchSnapshot()
@@ -78,6 +80,20 @@ Scenario: {{scenario}}
 {{post}}`.trim()
     )
     expect(actual).toMatchSnapshot()
+  })
+
+  it('will render a random placeholder', () => {
+    {
+      setRand(1 / 3)
+      const actual = test(`Random {{random: one, two, three}}`)
+      expect(actual).to.equal('Random two')
+    }
+
+    {
+      setRand(2 / 3)
+      const actual = test(`Random {{random: one, two, three}}`)
+      expect(actual).to.equal('Random three')
+    }
   })
 })
 

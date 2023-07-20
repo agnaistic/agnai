@@ -1,7 +1,7 @@
 import { getEncoder } from '../tokenize'
 import { AdapterProps } from './type'
 import { OPENAI_MODELS } from '/common/adapters'
-import { adventureAmble, defaultPresets } from '/common/default-preset'
+import { defaultPresets } from '/common/default-preset'
 import { IMAGE_SUMMARY_PROMPT } from '/common/image'
 import { BOT_REPLACE, SAMPLE_CHAT_MARKER, SELF_REPLACE, ensureValidTemplate, injectPlaceholders } from '/common/prompt'
 import { AppSchema } from '/common/types'
@@ -162,10 +162,6 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
 
 function getPostInstruction(opts: AdapterProps, messages: CompletionItem[]): CompletionItem | undefined {
   let prefix = opts.parts.ujb ? `${opts.parts.ujb}\n\n` : ''
-
-  if (opts.chat.mode === 'adventure') {
-    prefix = `${adventureAmble}\n\n${prefix}`
-  }
 
   prefix = injectPlaceholders(prefix, {
     opts,

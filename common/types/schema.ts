@@ -80,7 +80,6 @@ export namespace AppSchema {
     thirdPartyFormat: 'kobold' | 'openai' | 'claude'
     thirdPartyPassword: string
     thirdPartyPasswordSet?: boolean
-    luminaiUrl: string
     oobaUrl: string
 
     oaiKey: string
@@ -318,6 +317,9 @@ export namespace AppSchema {
     novelModel?: string
     claudeModel?: string
     openRouterModel?: OpenRouterModel
+
+    thirdPartyUrl?: string
+    thirdPartyFormat?: 'kobold' | 'openai' | 'claude'
 
     replicateModelName?: string
     replicateModelType?: string

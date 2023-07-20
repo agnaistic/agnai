@@ -40,12 +40,34 @@ export const msgsApi = {
   deleteMessages,
   basicInference,
   createActiveChatPrompt,
+  guidance,
+  generateActions,
 }
 
-type PlainOpts = { prompt: string; settings: Partial<AppSchema.GenSettings> }
+type InferenceOpts = { prompt: string; settings: Partial<AppSchema.GenSettings>; service?: string }
+
+export async function generateActions() {
+  const { settings, impersonating, profile, user, messages } = await getPromptEntities()
+  const { prompt } = await createActiveChatPrompt({ kind: 'continue' }, 1024)
+
+  const last = messages.slice(-1)[0]
+
+  if (!last) {
+    toastStore.warn('Cannot generate actions: No messages')
+    return
+  }
+
+  await api.post<{ actions: AppSchema.ChatAction[] }>(`/chat/${last._id}/actions`, {
+    settings,
+    impersonating,
+    profile,
+    user,
+    lines: prompt.lines,
+  })
+}
 
 export async function basicInference(
-  { prompt, settings }: PlainOpts,
+  { prompt, settings }: InferenceOpts,
   onComplete: (err?: any, response?: string) => void
 ) {
   const requestId = v4()
@@ -67,6 +89,32 @@ export async function basicInference(
   if (res.error) {
     onComplete(res.error)
     return
+  }
+}
+
+export async function guidance<T = any>(
+  { prompt, settings, service }: InferenceOpts,
+  onComplete?: (err: any | null, response?: { result: string; values: T }) => void
+) {
+  const requestId = v4()
+  const { user } = userStore.getState()
+
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return
+  }
+
+  const res = await api.method('post', `/chat/guidance`, { requestId, user, prompt, settings, service })
+  if (res.error) {
+    onComplete?.(res.error)
+    if (!onComplete) {
+      throw new Error(`Guidance failed: ${res.error}`)
+    }
+  }
+
+  if (res.result) {
+    onComplete?.(null, res.result)
+    return res.result
   }
 }
 

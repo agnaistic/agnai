@@ -378,6 +378,9 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request image: ${res.error}`)
       }
     },
+    generateActions() {
+      msgsApi.generateActions()
+    },
   }
 })
 
@@ -713,10 +716,14 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   msgStore.setState({ msgs: msgs.filter((msg) => !ids.has(msg._id)) })
 })
 
-subscribe('message-edited', { messageId: 'string', message: 'string' }, (body) => {
+subscribe('message-edited', { messageId: 'string', message: 'string', actions: 'any?' }, (body) => {
   const { msgs } = msgStore.getState()
   msgStore.setState({
-    msgs: msgs.map((msg) => (msg._id === body.messageId ? { ...msg, msg: body.message, voiceUrl: undefined } : msg)),
+    msgs: msgs.map((msg) =>
+      msg._id === body.messageId
+        ? { ...msg, actions: body.actions || msg.actions, msg: body.message, voiceUrl: undefined }
+        : msg
+    ),
   })
 })
 
