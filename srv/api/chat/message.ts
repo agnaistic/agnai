@@ -291,7 +291,10 @@ export const generateMessageV2 = handle(async (req, res) => {
       body.lines.concat(`${body.replyAs.name}: ${responseText}`)
     )
 
-    const prompt = cyoaTemplate(body.settings.service === 'openai' ? body.settings.oaiModel : '')
+    const prompt = cyoaTemplate(
+      body.settings.service,
+      body.settings.service === 'openai' ? body.settings.oaiModel : ''
+    )
 
     const infer = async (text: string) => {
       const res = await inferenceAsync({

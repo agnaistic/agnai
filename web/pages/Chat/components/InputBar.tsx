@@ -246,9 +246,9 @@ const InputBar: Component<{
               <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
             </Button>
           </Show>
-          <Button schema="secondary" class="w-full" onClick={genActions} alignLeft>
+          {/* <Button schema="secondary" class="w-full" onClick={genActions} alignLeft>
             Generate Actions
-          </Button>
+          </Button> */}
           <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
             <ImagePlus size={18} /> Generate Image
           </Button>
