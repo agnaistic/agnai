@@ -90,7 +90,7 @@ export const tagStore = createStore<TagsState>(
         next = { filter: prev.filter.concat(tag), hidden: prev.hidden }
       }
       try {
-        storage.setItem(TAG_CACHE_KEY, JSON.stringify(next))
+        storage.localSetItem(TAG_CACHE_KEY, JSON.stringify(next))
       } catch (e) {
         console.warn('Failed to save tags in local storage', e)
       }
