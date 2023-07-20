@@ -172,13 +172,16 @@ OtherBot:"
 exports[`Prompt building will include example dialogue with omitted from template 1`] = `
 "*** V2 Parser ***
 
-OtherBot's Persona: OtherBot replies a lot
-Scenario: MAIN MainChar
-Facts:ENTRY ONE
+GASLIGHT
+ChatOwner
+OtherBot
+Facts: ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-
-How OtherBot speaks: SAMPLECHAT OtherBot
+Scenario: MAIN MainChar
+OtherBot's persona: OtherBot replies a lot
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -279,10 +282,11 @@ OtherBot:"
 exports[`Prompt building will include sample chat when gaslight does not contain sample chat placeholder 1`] = `
 "*** V2 Parser ***
 
-OtherBot's Persona: OtherBot replies a lot
+Gaslight
 Scenario: MAIN MainChar
-
-How OtherBot speaks: SAMPLECHAT OtherBot
+OtherBot's persona: OtherBot replies a lot
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: SECOND
@@ -392,13 +396,16 @@ OtherBot:"
 exports[`Prompt building will not use the gaslight when set to false 1`] = `
 "*** V2 Parser ***
 
-OtherBot's Persona: OtherBot replies a lot
-Scenario: MAIN MainChar
-Facts:ENTRY ONE
+GASLIGHT
+ChatOwner
+OtherBot
+Facts: ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-
-How OtherBot speaks: SAMPLECHAT OtherBot
+Scenario: MAIN MainChar
+OtherBot's persona: OtherBot replies a lot
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER

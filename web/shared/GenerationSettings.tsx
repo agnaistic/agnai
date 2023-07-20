@@ -446,16 +446,14 @@ const PromptSettings: Component<Props> = (props) => {
         />
       </Card>
 
-      <Card class="flex flex-col gap-4">
-        <Show when={cfg.parser && canUseParser}>
-          <Toggle
-            fieldName="useTemplateParser"
-            value={props.inherit?.useTemplateParser}
-            label="Use Template Parser (Experimental)"
-            helperText="The V2 parser supports additional placeholders (#each, #if, random, roll, ...)."
-            onChange={(v) => setV2(v)}
-          />
-        </Show>
+      <Card class="flex flex-col gap-4" hide={!cfg.parser || !canUseParser}>
+        <Toggle
+          fieldName="useTemplateParser"
+          value={props.inherit?.useTemplateParser}
+          label="Use Template Parser (Experimental)"
+          helperText="This will override your prompt. The V2 parser supports additional placeholders (#each, #if, random, roll, ...)."
+          onChange={(v) => setV2(v)}
+        />
 
         <PromptEditor
           fieldName="gaslight"

@@ -88,25 +88,25 @@ HistoryRef = OP prop:HistoryProperty CL { return { kind: 'history-prop', prop } 
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
 HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
 
-Character "character" = "char"i / "character"i / "bot"i { return "char" }
+Character "character" = ("char"i / "character"i / "bot"i) { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
-Impersonate "impersonating" = "impersonate"i / "impersonating"i { return "impersonating" }
-Persona "personality" = "personality"i / "persona"i { return "personality" }
-AllPersona "all_personalities" = "all_personas"i / "all_personalities"i { return "all_personalities" }
-Dialogue "example_dialogue" = "samplechat"i / "example_dialogue"i { return "example_dialogue" }
+Impersonate "impersonating" = ("impersonate"i / "impersonating"i) { return "impersonating" }
+Persona "personality" = ("personality"i / "persona"i) { return "personality" }
+AllPersona "all_personalities" = ("all_personas"i / "all_personalities"i) { return "all_personalities" }
+Dialogue "example_dialogue" = ("samplechat"i / "example_dialogue"i) { return "example_dialogue" }
 
 Instruction "instruction" = "system_prompt"i { return "system_prompt" }
-Jailbreak "ujb" = "ujb"i / "system_note"i { return "ujb" }
+Jailbreak "ujb" = ("ujb"i / "system_note"i) { return "ujb" }
 Post "post" = "post"i { return "post" }
 Memory "memory" = "memory"i { return "memory" }
-Message "message" = "msg"i / "message"i / "text"i { return "message" }
+Message "message" = ("msg"i / "message"i / "text"i) { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
-Random "random" = "random:"i WS words:CSV { return { kind: "random", values: words } }
-Roll "roll" = ("roll"i / "dice"i) WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', max: +max.join('') || 20 } }
+Random "random" = "random"i ":"? WS words:CSV { return { kind: "random", values: words } }
+Roll "roll" = ("roll"i / "dice"i) WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
 
 // Iterable entities
 Bots "bots" = ( "bots"i ) { return "bots" }
