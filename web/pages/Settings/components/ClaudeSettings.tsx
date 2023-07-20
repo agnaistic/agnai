@@ -12,7 +12,9 @@ const ClaudeSettings: Component = () => {
         label="Claude Key"
         helperText="Valid Claude Key."
         placeholder={
-          state.user?.claudeApiKeySet ? 'Claude key is set' : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
+          state.user?.claudeApiKeySet
+            ? 'Claude key is set'
+            : 'E.g. sk-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
         }
         type="password"
         value={state.user?.claudeApiKey}

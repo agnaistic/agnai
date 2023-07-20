@@ -1,5 +1,14 @@
 import { Bot, VenetianMask } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, JSX, Match, Show, Switch } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  JSX,
+  Match,
+  Show,
+  Switch,
+} from 'solid-js'
 import { settingStore } from '../store'
 import { getAssetUrl } from './util'
 import './avatar.css'
@@ -74,7 +83,9 @@ export const CharacterAvatar: Component<{
 
         <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
           <div
-            class={`flex justify-center avatar-${props.format?.size || 'md'} avatar-circle ${fmtCorners()}`}
+            class={`flex justify-center avatar-${
+              props.format?.size || 'md'
+            } avatar-circle ${fmtCorners()}`}
             ref={ref}
           >
             <AvatarContainer zoom={props.zoom} body={props.char.sprite} container={ref} />
@@ -98,7 +109,9 @@ export const CharacterAvatar: Component<{
 }
 
 const AvatarIcon: Component<Props> = (props) => {
-  const [avatar, setAvatar] = createSignal(typeof props.avatarUrl === 'string' ? props.avatarUrl : null)
+  const [avatar, setAvatar] = createSignal(
+    typeof props.avatarUrl === 'string' ? props.avatarUrl : null
+  )
   const cls = createMemo(() => props.class || '')
 
   const format = createMemo(() => props.format || defaultFormat)

@@ -15,7 +15,12 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
     if (svc === 'novel' && !user.novelVerified && !user.novelApiKey) return false
     if (svc === 'claude' && !user.claudeApiKeySet && !user.claudeApiKey) return false
     if (svc === 'scale' && !user.scaleApiKeySet && !user.scaleApiKey) return false
-    if (svc === 'goose' && !user.adapterConfig?.goose?.apiKeySet && !user.adapterConfig?.goose?.apiKey) return false
+    if (
+      svc === 'goose' &&
+      !user.adapterConfig?.goose?.apiKeySet &&
+      !user.adapterConfig?.goose?.apiKey
+    )
+      return false
 
     return true
   })

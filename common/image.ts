@@ -59,6 +59,9 @@ type ReverseMap<T extends Record<keyof T, keyof any>> = {
 }
 
 function reverseKeyValue<T extends { [key: string]: string }>(obj: T): ReverseMap<T> {
-  const reversed = Object.entries(obj).reduce((prev, [key, value]) => Object.assign(prev, { [value]: key }), {})
+  const reversed = Object.entries(obj).reduce(
+    (prev, [key, value]) => Object.assign(prev, { [value]: key }),
+    {}
+  )
   return reversed as any
 }

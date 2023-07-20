@@ -26,7 +26,9 @@ export const Toggle: Component<{
 
   const hide = createMemo(() => {
     if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) || shouldShow(props.aiSetting, props.value) ? '' : ` hidden `
+    return adapters()!.includes(props.service) || shouldShow(props.aiSetting, props.value)
+      ? ''
+      : ` hidden `
   })
 
   return (

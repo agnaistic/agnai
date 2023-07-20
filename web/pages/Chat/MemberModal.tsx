@@ -68,7 +68,9 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
 
   const charMembers = createMemo<AppSchema.Character[]>(() =>
-    getActiveBots(state.active?.chat!, chars.map).sort((left, right) => left.name.localeCompare(right.name))
+    getActiveBots(state.active?.chat!, chars.map).sort((left, right) =>
+      left.name.localeCompare(right.name)
+    )
   )
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
@@ -163,7 +165,10 @@ const AddCharacter: Component<{ setView: (view: View) => {} }> = (props) => {
         fallback={<div class="text-red-500">You don't have any other characters to invite</div>}
       >
         <p class="pb-1 text-sm text-[var(--text-700)]">Select a character to add to the chat</p>
-        <Show when={!!characters().length} fallback={<p>You don't have any characters available to add</p>}>
+        <Show
+          when={!!characters().length}
+          fallback={<p>You don't have any characters available to add</p>}
+        >
           <CharacterSelectList items={characters()} onSelect={add} />
         </Show>
       </Show>
@@ -217,7 +222,11 @@ const UserParticipant: Component<{
   return (
     <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div class="flex items-center gap-2">
-        <AvatarIcon avatarUrl={props.member.avatar} format={{ size: 'sm', corners: 'circle' }} openable />
+        <AvatarIcon
+          avatarUrl={props.member.avatar}
+          format={{ size: 'sm', corners: 'circle' }}
+          openable
+        />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.member.handle}</div>
           <div class="text-xs italic text-[var(--text-600)]">
@@ -253,7 +262,9 @@ const CharacterParticipant: Component<{
         <CharacterAvatar format={{ corners: 'circle', size: 'sm' }} char={props.char} openable />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.char.name}</div>
-          <div class="text-xs italic text-[var(--text-600)]">{props.isMain ? 'Main Character' : 'Character'}</div>
+          <div class="text-xs italic text-[var(--text-600)]">
+            {props.isMain ? 'Main Character' : 'Character'}
+          </div>
         </div>
       </div>
       <Show when={!props.canRemove}>

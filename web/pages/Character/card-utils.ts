@@ -27,11 +27,15 @@ export async function extractCardData(file: File) {
   if (!extractions.length) {
     throw new Error('No extractions found')
   }
-  const textExtractions = extractions.filter((d) => d.name === 'tEXt').map((d) => text.decode(d.data))
+  const textExtractions = extractions
+    .filter((d) => d.name === 'tEXt')
+    .map((d) => text.decode(d.data))
 
   const [extracted] = textExtractions
   if (!extracted) {
-    throw new Error(`No extractions of type tEXt found, found: ${extractions.map((e) => e.name).join(', ')}`)
+    throw new Error(
+      `No extractions of type tEXt found, found: ${extractions.map((e) => e.name).join(', ')}`
+    )
   }
 
   const data = Buffer.from(extracted.text, 'base64').toString('utf-8')

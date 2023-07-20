@@ -45,7 +45,15 @@ export async function create(
   characterId: string,
   props: Pick<
     AppSchema.Chat,
-    'name' | 'greeting' | 'scenario' | 'scenarioIds' | 'sampleChat' | 'userId' | 'overrides' | 'genPreset' | 'mode'
+    | 'name'
+    | 'greeting'
+    | 'scenario'
+    | 'scenarioIds'
+    | 'sampleChat'
+    | 'userId'
+    | 'overrides'
+    | 'genPreset'
+    | 'mode'
   >
 ) {
   const id = `${v4()}`
@@ -174,7 +182,10 @@ export async function getActiveMembers(chatId: string) {
 }
 
 export async function setChatCharacter(chatId: string, charId: string, state: boolean) {
-  await db('chat').updateOne({ _id: chatId }, { $set: { updatedAt: now(), [`characters.${charId}`]: state } })
+  await db('chat').updateOne(
+    { _id: chatId },
+    { $set: { updatedAt: now(), [`characters.${charId}`]: state } }
+  )
 }
 
 export async function restartChat(userId: string, chatId: string) {

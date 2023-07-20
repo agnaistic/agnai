@@ -72,7 +72,9 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
     if (res?.result) return res.result.summary
   }
 
-  const handler = opts.settings?.service ? SUMMARY_BACKENDS[opts.settings?.service] : (_opts: any) => false
+  const handler = opts.settings?.service
+    ? SUMMARY_BACKENDS[opts.settings?.service]
+    : (_opts: any) => false
 
   const canUseService = handler?.(opts) ?? false
   if (canUseService && opts.user.images?.summariseChat) {

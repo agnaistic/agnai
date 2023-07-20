@@ -94,7 +94,10 @@ export const handleKobold: ModelAdapter = async function* ({
   }
 
   const parsed = sanitise(accum)
-  const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, ['END_OF_DIALOG', 'You:'])
+  const trimmed = trimResponseV2(parsed, opts.replyAs, members, characters, [
+    'END_OF_DIALOG',
+    'You:',
+  ])
 
   yield trimmed || parsed
 }

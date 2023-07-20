@@ -5,7 +5,10 @@ import { markdown } from '/web/shared/markdown'
 const PipelineGuide: Component = () => {
   return (
     <>
-      <PageHeader title="Pipeline Guide" subtitle="How to install and use the Agnai Pipeline API"></PageHeader>
+      <PageHeader
+        title="Pipeline Guide"
+        subtitle="How to install and use the Agnai Pipeline API"
+      ></PageHeader>
       <div class="markdown" innerHTML={markdown.makeHtml(text)}></div>
     </>
   )

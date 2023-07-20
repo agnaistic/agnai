@@ -1,6 +1,12 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from './types/schema'
-import { AIAdapter, NOVEL_MODELS, OPENAI_CHAT_MODELS, OPENAI_MODELS, SUPPORTS_INSTRUCT } from './adapters'
+import {
+  AIAdapter,
+  NOVEL_MODELS,
+  OPENAI_CHAT_MODELS,
+  OPENAI_MODELS,
+  SUPPORTS_INSTRUCT,
+} from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './default-preset'
 import { IMAGE_SUMMARY_PROMPT } from './image'
@@ -182,7 +188,12 @@ export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: nu
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export function createPromptWithParts(opts: GenerateRequestV2, parts: PromptParts, lines: string[], encoder: Encoder) {
+export function createPromptWithParts(
+  opts: GenerateRequestV2,
+  parts: PromptParts,
+  lines: string[],
+  encoder: Encoder
+) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
   const history = { lines, order: 'asc' } as const
@@ -197,7 +208,10 @@ export function createPromptWithParts(opts: GenerateRequestV2, parts: PromptPart
   return { lines: history.lines, prompt, parts, post }
 }
 
-export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>, parts: PromptParts) {
+export function getTemplate(
+  opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
+  parts: PromptParts
+) {
   const isChat = OPENAI_CHAT_MODELS[opts.settings?.oaiModel || ''] ?? false
   const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
@@ -215,7 +229,10 @@ type InjectOpts = {
   encoder: Encoder
 }
 
-export function injectPlaceholders(template: string, { opts, parts, history: hist, encoder, ...rest }: InjectOpts) {
+export function injectPlaceholders(
+  template: string,
+  { opts, parts, history: hist, encoder, ...rest }: InjectOpts
+) {
   const profile = opts.members.find((mem) => mem.userId === opts.chat.userId)
   const sender = opts.impersonate?.name || profile?.handle || 'You'
 
@@ -225,7 +242,9 @@ export function injectPlaceholders(template: string, { opts, parts, history: his
     const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
     const postSample =
-      opts.settings?.service && SUPPORTS_INSTRUCT[opts.settings.service] ? SAMPLE_CHAT_MARKER : '<START>'
+      opts.settings?.service && SUPPORTS_INSTRUCT[opts.settings.service]
+        ? SAMPLE_CHAT_MARKER
+        : '<START>'
 
     const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
       .replace(BOT_REPLACE, opts.replyAs.name)
@@ -421,7 +440,9 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
     if (!bot) continue
     if (personalities.has(bot._id)) continue
     personalities.add(bot._id)
-    parts.allPersonas.push(`${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`)
+    parts.allPersonas.push(
+      `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`
+    )
   }
 
   if (chat.scenario && chat.overrides) {
@@ -434,7 +455,9 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
   }
 
   parts.sampleChat = (
-    replyAs._id === char._id && !!chat.overrides ? chat.sampleChat ?? replyAs.sampleChat : replyAs.sampleChat
+    replyAs._id === char._id && !!chat.overrides
+      ? chat.sampleChat ?? replyAs.sampleChat
+      : replyAs.sampleChat
   )
     .split('\n')
     .filter(removeEmpty)
@@ -513,7 +536,16 @@ function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Char
 function createPostPrompt(
   opts: Pick<
     PromptOpts,
-    'kind' | 'chat' | 'char' | 'members' | 'continue' | 'settings' | 'user' | 'book' | 'replyAs' | 'impersonate'
+    | 'kind'
+    | 'chat'
+    | 'char'
+    | 'members'
+    | 'continue'
+    | 'settings'
+    | 'user'
+    | 'book'
+    | 'replyAs'
+    | 'impersonate'
   >
 ) {
   const post = []
@@ -578,7 +610,12 @@ function getLinesForPrompt(
   return lines
 }
 
-export function fillPromptWithLines(encoder: Encoder, tokenLimit: number, amble: string, lines: string[]) {
+export function fillPromptWithLines(
+  encoder: Encoder,
+  tokenLimit: number,
+  amble: string,
+  lines: string[]
+) {
   let count = encoder(amble)
   const adding: string[] = []
 
@@ -626,7 +663,8 @@ export function getChatPreset(
 
   // #1
   if (chat.genPreset) {
-    if (isDefaultPreset(chat.genPreset)) return { _id: chat.genPreset, ...defaultPresets[chat.genPreset] }
+    if (isDefaultPreset(chat.genPreset))
+      return { _id: chat.genPreset, ...defaultPresets[chat.genPreset] }
 
     const preset = userPresets.find((preset) => preset._id === chat.genPreset)
     if (preset) return preset
@@ -671,7 +709,8 @@ export function getAdapter(
   config: AppSchema.User,
   preset: Partial<AppSchema.GenSettings> | undefined
 ) {
-  const chatAdapter = !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
+  const chatAdapter =
+    !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
 
   let adapter = preset?.service ? preset.service : chatAdapter
 
@@ -719,8 +758,13 @@ export function getAdapter(
  * When we know the maximum context limit for a particular LLM, ensure that the context limit we use does not exceed it.
  */
 
-function getContextLimit(gen: Partial<AppSchema.GenSettings> | undefined, adapter: AIAdapter, model: string): number {
-  const configuredMax = gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
+function getContextLimit(
+  gen: Partial<AppSchema.GenSettings> | undefined,
+  adapter: AIAdapter,
+  model: string
+): number {
+  const configuredMax =
+    gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
 
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 

@@ -1,4 +1,13 @@
-import { Component, For, JSX, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  For,
+  JSX,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import { FormLabel } from '../FormLabel'
 import { AIAdapter, PresetAISettings } from '/common/adapters'
 import { getAISettingServices, toMap } from '../util'
@@ -63,7 +72,8 @@ const helpers: { [key in Interp]?: JSX.Element | string } = {
 
 const v2helpers: { [key in InterpV2]?: JSX.Element | string } = {
   roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
-  random: 'Produces a random word from a comma-separated list. E.g.: {{random happy, sad, jealous, angry}}',
+  random:
+    'Produces a random word from a comma-separated list. E.g.: {{random happy, sad, jealous, angry}}',
 }
 
 type HolderName = keyof typeof placeholders
@@ -173,16 +183,16 @@ const PromptEditor: Component<
           helperText={
             <>
               <div>
-                <span class="text-green-600">Green</span> placeholders will be inserted automatically if they are
-                missing.
+                <span class="text-green-600">Green</span> placeholders will be inserted
+                automatically if they are missing.
               </div>
               <div>
-                <span class="text-yellow-600">Yellow</span> placeholders will not be automatically included if you do
-                not include them.
+                <span class="text-yellow-600">Yellow</span> placeholders will not be automatically
+                included if you do not include them.
               </div>
               <div>
-                <span class="text-red-600">example_dialogue</span> will be inserted as conversation history if you do
-                not include it.
+                <span class="text-red-600">example_dialogue</span> will be inserted as conversation
+                history if you do not include it.
               </div>
             </>
           }
@@ -206,11 +216,18 @@ const PromptEditor: Component<
 
       <div class="flex flex-wrap gap-2">
         <For each={usable()}>
-          {([name, data]) => <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />}
+          {([name, data]) => (
+            <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />
+          )}
         </For>
       </div>
 
-      <HelpModal v2={props.v2} interps={usable().map((item) => item[0])} show={help()} close={() => showHelp(false)} />
+      <HelpModal
+        v2={props.v2}
+        interps={usable().map((item) => item[0])}
+        show={help()}
+        close={() => showHelp(false)}
+      />
     </div>
   )
 }
@@ -218,7 +235,11 @@ const PromptEditor: Component<
 export default PromptEditor
 
 const Placeholder: Component<
-  { name: Interp; input: string; onClick: (name: string, inserted: string | undefined) => void } & Placeholder
+  {
+    name: Interp
+    input: string
+    onClick: (name: string, inserted: string | undefined) => void
+  } & Placeholder
 > = (props) => {
   const count = createMemo(() => {
     const matches = props.input.toLowerCase().match(new RegExp(`{{${props.name}}}`, 'g'))
@@ -254,7 +275,9 @@ const HelpModal: Component<{
   v2?: boolean
 }> = (props) => {
   const items = createMemo(() => {
-    const entries = Object.entries(helpers).filter(([interp]) => props.interps.includes(interp as any))
+    const entries = Object.entries(helpers).filter(([interp]) =>
+      props.interps.includes(interp as any)
+    )
 
     if (props.v2 || props.inherit?.useTemplateParser) {
       const second = Object.entries(v2helpers)

@@ -57,7 +57,11 @@ const handleElevenLabsVoicesList = async (
   )
 }
 
-const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async ({ user, text, voice }, log, guestId) => {
+const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async (
+  { user, text, voice },
+  log,
+  guestId
+) => {
   const key = getKey(user, guestId)
   if (voice.service !== 'elevenlabs') throw new Error('Invalid service')
   const payload: ElevenLabsTextToSpeechRequest = {
@@ -68,13 +72,18 @@ const handleElevenLabsTextToSpeech: TextToSpeechAdapter = async ({ user, text, v
       similarity_boost: voice.similarityBoost || 0.75,
     },
   }
-  const result = await needle('post', `${baseUrl}/text-to-speech/${voice.voiceId}/stream`, payload, {
-    json: true,
-    headers: {
-      'xi-api-key': key,
-      accept: 'audio/mpeg',
-    },
-  })
+  const result = await needle(
+    'post',
+    `${baseUrl}/text-to-speech/${voice.voiceId}/stream`,
+    payload,
+    {
+      json: true,
+      headers: {
+        'xi-api-key': key,
+        accept: 'audio/mpeg',
+      },
+    }
+  )
 
   if (result.statusCode !== 200) {
     throw new Error(

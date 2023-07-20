@@ -58,7 +58,11 @@ export const memoryStore = createStore<MemoryState>(
       }
     },
 
-    async *create({ books, creating }, book: NewBook, onSuccess?: (book: AppSchema.MemoryBook) => void) {
+    async *create(
+      { books, creating },
+      book: NewBook,
+      onSuccess?: (book: AppSchema.MemoryBook) => void
+    ) {
       if (creating) return
       yield { creating: true }
       const res = await memoryApi.createBook(book)

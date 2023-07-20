@@ -105,7 +105,9 @@ export async function generateVoice(
   }
 
   if (!audio) {
-    error = `Failed to generate audio: ${error || 'Invalid text to speech settings (No handler found)'}`
+    error = `Failed to generate audio: ${
+      error || 'Invalid text to speech settings (No handler found)'
+    }`
     send(broadcastIds, guestId, {
       type: 'voice-failed',
       chatId,

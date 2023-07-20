@@ -32,7 +32,12 @@ const TagSelect: Component<{
     <>
       <FormLabel label={props.label} helperText={props.helperText} />
       <div class="py-1">
-        <Button schema="secondary" class="relative w-48 rounded-xl" onClick={() => setOpts(!opts())} alignLeft>
+        <Button
+          schema="secondary"
+          class="relative w-48 rounded-xl"
+          onClick={() => setOpts(!opts())}
+          alignLeft
+        >
           <span class="ellipsis">
             <Show when={state.filter.length}>{state.filter.join(', ')}</Show>
             <Show when={!state.filter.length}>All tags</Show>
@@ -72,7 +77,10 @@ const TagSelect: Component<{
                             <Square />
                           </Match>
                         </Switch>
-                        <span classList={{ 'text-neutral-500': option.tag === 'archived' }} class="select-none">
+                        <span
+                          classList={{ 'text-neutral-500': option.tag === 'archived' }}
+                          class="select-none"
+                        >
                           <span class="font-bold">{option.tag}</span>
                           <span>({option.count})</span>
                         </span>

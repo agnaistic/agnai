@@ -37,9 +37,9 @@ const Button: Component<{
   <button
     type={props.type || 'button'}
     class={
-      `${kinds[props.schema || 'primary']} select-none items-center ${props.alignLeft ? '' : 'justify-center'} ${
-        sizes[props.size || 'md']
-      } ` + (props.class || '')
+      `${kinds[props.schema || 'primary']} select-none items-center ${
+        props.alignLeft ? '' : 'justify-center'
+      } ${sizes[props.size || 'md']} ` + (props.class || '')
     }
     classList={props.classList}
     disabled={props.disabled}
@@ -88,7 +88,13 @@ export const ToggleButton: Component<{
       >
         {props.children}
       </button>
-      <input ref={ref!} name={props.fieldName} type="checkbox" class="hidden" checked={props.value} />
+      <input
+        ref={ref!}
+        name={props.fieldName}
+        type="checkbox"
+        class="hidden"
+        checked={props.value}
+      />
     </>
   )
 }

@@ -23,7 +23,12 @@ const PromptModal: Component = () => {
   })
 
   return (
-    <Modal show={!!state.prompt} close={chatStore.closePrompt} title="Message Prompt" maxWidth="half">
+    <Modal
+      show={!!state.prompt}
+      close={chatStore.closePrompt}
+      title="Message Prompt"
+      maxWidth="half"
+    >
       <TextInput
         class="min-h-[300px] text-sm"
         fieldName="prompt"
@@ -31,14 +36,15 @@ const PromptModal: Component = () => {
         helperText={
           <div class="flex flex-col gap-2">
             <div>
-              This is an approximation. It may differ from the prompt actually used at the time. For authenticated
-              users, the prompt generated on the server may contain more context as it retrieves messages from the
-              database until the 'history' portion of your prompt is full. OpenAI Turbo has a different payload and is
-              generated server-side only.
+              This is an approximation. It may differ from the prompt actually used at the time. For
+              authenticated users, the prompt generated on the server may contain more context as it
+              retrieves messages from the database until the 'history' portion of your prompt is
+              full. OpenAI Turbo has a different payload and is generated server-side only.
             </div>
             <div>
-              The entire 'budget' may not get used here as token counts may change due to formatting. E.g. OpenAI Turbo
-              payloads are split into multiple messages which drastically alters token counts.
+              The entire 'budget' may not get used here as token counts may change due to
+              formatting. E.g. OpenAI Turbo payloads are split into multiple messages which
+              drastically alters token counts.
             </div>
             <div class="font-bold">Est. tokens: {tokens()}</div>
           </div>

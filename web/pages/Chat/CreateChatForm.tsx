@@ -1,12 +1,28 @@
 import { useNavigate, useParams } from '@solidjs/router'
 import { Check, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, JSX, onMount, Show } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onMount,
+  Show,
+} from 'solid-js'
 import Button from '../../shared/Button'
 import Select from '../../shared/Select'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, scenarioStore, settingStore, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  presetStore,
+  scenarioStore,
+  settingStore,
+  userStore,
+} from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -54,7 +70,9 @@ const CreateChatForm: Component<{
     ]
   })
 
-  const char = createMemo(() => state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId))
+  const char = createMemo(() =>
+    state.chars.find((ch) => ch._id === selectedId() || ch._id === props.charId)
+  )
 
   createEffect(() => {
     if (props.charId) return
@@ -74,7 +92,9 @@ const CreateChatForm: Component<{
 
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
-    return [{ label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false }].concat(opts)
+    return [
+      { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
+    ].concat(opts)
   })
 
   const selectedPreset = createMemo(() => {
@@ -153,10 +173,12 @@ const CreateChatForm: Component<{
       <PageHeader title={`Create Chat with ${char()?.name}`} />
       <form ref={ref}>
         <div class="mb-2 text-sm">
-          Optionally modify some of the conversation context. You can override other aspects of the character's persona
-          from the conversation after it is created.
+          Optionally modify some of the conversation context. You can override other aspects of the
+          character's persona from the conversation after it is created.
         </div>
-        <div class="mb-4 text-sm">The information provided here is only applied to the newly created conversation.</div>
+        <div class="mb-4 text-sm">
+          The information provided here is only applied to the newly created conversation.
+        </div>
         <div class="flex flex-col gap-3">
           <Show when={!props.charId}>
             <Card>
@@ -187,12 +209,12 @@ const CreateChatForm: Component<{
               helperText={
                 <div class="flex flex-col gap-2">
                   <TitleCard>
-                    <b>ADVENTURE:</b> Works best with instruct models (OpenAI, Claude, Scale). This may not work as
-                    intended with other models.
+                    <b>ADVENTURE:</b> Works best with instruct models (OpenAI, Claude, Scale). This
+                    may not work as intended with other models.
                   </TitleCard>
                   <TitleCard>
-                    <b>COMPANION:</b>Everything is permanent. You will not be able to: Edit Chat, Retry Message, Delete
-                    Messages, etc.
+                    <b>COMPANION:</b>Everything is permanent. You will not be able to: Edit Chat,
+                    Retry Message, Delete Messages, etc.
                   </TitleCard>
                 </div>
               }

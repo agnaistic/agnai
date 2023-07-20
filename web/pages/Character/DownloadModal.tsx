@@ -105,7 +105,9 @@ export const DownloadModal: Component<{
           <Switch>
             <Match when={fileType() === 'json'}>
               <a
-                href={`data:text/json:charset=utf-8,${encodeURIComponent(charToJson(props.char!, format(), schema()))}`}
+                href={`data:text/json:charset=utf-8,${encodeURIComponent(
+                  charToJson(props.char!, format(), schema())
+                )}`}
                 download={`${props.char!.name}.json`}
               >
                 <Button>
@@ -152,7 +154,11 @@ async function downloadImage(json: string, image: string, name: string) {
   const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
   const output = Buffer.from(json, 'utf8').toString('base64')
   const lastChunkIndex = chunks.length - 1
-  const chunksToExport = [...chunks.slice(0, lastChunkIndex), text.encode('chara', output), chunks[lastChunkIndex]]
+  const chunksToExport = [
+    ...chunks.slice(0, lastChunkIndex),
+    text.encode('chara', output),
+    chunks[lastChunkIndex],
+  ]
   const anchor = document.createElement('a')
   anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
   anchor.download = `${name}.card.png`

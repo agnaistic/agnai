@@ -228,7 +228,9 @@ function getHash({ body, attr, type }: Pick<CanvasProps, 'body' | 'attr' | 'type
 }
 
 function getSpriteHash(body: FullSprite) {
-  const colorHash = `-color(${body.bodyColor || 'none'}-${body.eyeColor || 'none'}-${body.hairColor || 'none'})`
+  const colorHash = `-color(${body.bodyColor || 'none'}-${body.eyeColor || 'none'}-${
+    body.hairColor || 'none'
+  })`
   const hash = attributes
     .map((attr) => {
       const part = getHash({ body, attr, type: body[attr] })
@@ -239,7 +241,9 @@ function getSpriteHash(body: FullSprite) {
 }
 
 function shortHash(body: FullSprite) {
-  const colorHash = `-color(${body.bodyColor || 'none'}-${body.eyeColor || 'none'}-${body.hairColor || 'none'})`
+  const colorHash = `-color(${body.bodyColor || 'none'}-${body.eyeColor || 'none'}-${
+    body.hairColor || 'none'
+  })`
   const hash = attributes
     .map((attr) => {
       const h = `${attr}:${body[attr]}`

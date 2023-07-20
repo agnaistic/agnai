@@ -20,10 +20,13 @@ export const voiceApi = {
 
 async function voicesList(ttsService: TTSService) {
   const user = getUserEntity()
-  const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(`/voice/${ttsService}/voices`, {
-    user,
-    ttsService,
-  })
+  const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(
+    `/voice/${ttsService}/voices`,
+    {
+      user,
+      ttsService,
+    }
+  )
   return res
 }
 
@@ -47,7 +50,8 @@ async function textToSpeech(text: string, voice: VoiceSettings) {
     voice,
   })
   if (res.result) return res.result
-  else throw new Error(res.error ?? `An error occured generating text to speech with ${voice.service}`)
+  else
+    throw new Error(res.error ?? `An error occured generating text to speech with ${voice.service}`)
 }
 
 function getUserEntity() {

@@ -54,8 +54,14 @@ export function ContextProvider(props: { children: any }) {
   const cfg = settingStore()
 
   const visuals = createMemo(() => {
-    const botBackground = getRgbaFromVar(users.current.botBackground || 'bg-800', users.ui.msgOpacity)
-    const userBackground = getRgbaFromVar(users.current.msgBackground || 'bg-800', users.ui.msgOpacity)
+    const botBackground = getRgbaFromVar(
+      users.current.botBackground || 'bg-800',
+      users.ui.msgOpacity
+    )
+    const userBackground = getRgbaFromVar(
+      users.current.msgBackground || 'bg-800',
+      users.ui.msgOpacity
+    )
     const oocBackground = getRgbaFromVar('bg-1000', users.ui.msgOpacity)
 
     return {
@@ -66,7 +72,9 @@ export function ContextProvider(props: { children: any }) {
   })
 
   const activeBots = createMemo(() => {
-    const activeBots = chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : []
+    const activeBots = chats.active?.chat
+      ? getActiveBots(chats.active.chat, chars.characters.map)
+      : []
     return activeBots
   })
 

@@ -56,7 +56,9 @@ const ImportChatModal: Component<{
       toastStore.success('Chat log accepted')
     } catch (ex) {
       const message = ex instanceof Error ? ex.message : 'Unknown error'
-      toastStore.warn(`Invalid chat log file format. Supported formats: Agnaistic, TavernAI (${message})`)
+      toastStore.warn(
+        `Invalid chat log file format. Supported formats: Agnaistic, TavernAI (${message})`
+      )
       setJson()
     }
   }
@@ -88,8 +90,8 @@ const ImportChatModal: Component<{
     >
       <div class="flex flex-col gap-2">
         <p>
-          <strong>Note: </strong>This currently doesn't support multi-user chats. All messages will be attributed either
-          to you or the selected character.
+          <strong>Note: </strong>This currently doesn't support multi-user chats. All messages will
+          be attributed either to you or the selected character.
         </p>
         <Divider />
         <Show when={!props.char}>

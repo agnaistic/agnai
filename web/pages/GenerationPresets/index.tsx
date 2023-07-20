@@ -171,7 +171,12 @@ export const GenerationPresetsPage: Component = () => {
               </div>
               <div class="flex flex-col">
                 <div>ID: {editing()?._id || 'New Preset'}</div>
-                <TextInput fieldName="id" value={editing()?._id || 'New Preset'} disabled class="hidden" />
+                <TextInput
+                  fieldName="id"
+                  value={editing()?._id || 'New Preset'}
+                  disabled
+                  class="hidden"
+                />
                 <TextInput
                   fieldName="name"
                   label="Name"
@@ -208,8 +213,9 @@ export const GenerationPresetsPage: Component = () => {
         message={
           <div class="flex flex-col items-center gap-2 text-sm">
             <div>
-              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is almost never what you
-              want. It is recommended for your gaslight to contain the placeholders:
+              Your gaslight is missing a <code>{'{{personality}}'}</code> placeholder. This is
+              almost never what you want. It is recommended for your gaslight to contain the
+              placeholders:
               <br /> <code>{'{{personality}}, {{scenario}} and {{memory}}'}</code>
             </div>
 

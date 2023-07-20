@@ -17,7 +17,11 @@ export const handleHorde: ModelAdapter = async function* ({
   ...opts
 }) {
   try {
-    const key = user.hordeKey ? (guest ? user.hordeKey : decryptText(user.hordeKey)) : HORDE_GUEST_KEY
+    const key = user.hordeKey
+      ? guest
+        ? user.hordeKey
+        : decryptText(user.hordeKey)
+      : HORDE_GUEST_KEY
 
     yield { prompt }
 
@@ -47,7 +51,9 @@ export const handleHorde: ModelAdapter = async function* ({
     yield trimmed || sanitised
   } catch (ex: any) {
     logger.error({ err: ex, body: ex.body }, `Horde request failed.`)
-    let msg = [ex?.body?.message || '', JSON.stringify(ex?.body?.errors) || ''].filter((line) => !!line)
+    let msg = [ex?.body?.message || '', JSON.stringify(ex?.body?.errors) || ''].filter(
+      (line) => !!line
+    )
     yield { error: `${ex.message}. ${msg.join('. ')}` }
   }
 }

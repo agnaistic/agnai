@@ -72,7 +72,11 @@ export const handleClaude: ModelAdapter = async function* (opts) {
   }
 
   const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
-  const apiKey = useThirdPartyPassword ? user.thirdPartyPassword : !isThirdParty ? user.claudeApiKey : null
+  const apiKey = useThirdPartyPassword
+    ? user.thirdPartyPassword
+    : !isThirdParty
+    ? user.claudeApiKey
+    : null
 
   const key = !!guest ? apiKey : apiKey ? decryptText(apiKey!) : null
   if (key) {
@@ -134,7 +138,13 @@ function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
   return { url: baseUrl, changed: false }
 }
 
-const requestFullCompletion: CompletionGenerator = async function* (url, body, headers, _userId, log) {
+const requestFullCompletion: CompletionGenerator = async function* (
+  url,
+  body,
+  headers,
+  _userId,
+  log
+) {
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -224,7 +234,10 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
   const gaslight = injectPlaceholders(
-    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, ['history', 'post']),
+    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
+      'history',
+      'post',
+    ]),
     {
       opts,
       parts,
@@ -243,7 +256,11 @@ function createClaudePrompt(opts: AdapterProps): string {
   })
 
   const maxBudget =
-    maxContextLength - maxResponseTokens - gaslightCost - encoder()(ujb) - encoder()(opts.replyAs.name + ':')
+    maxContextLength -
+    maxResponseTokens -
+    gaslightCost -
+    encoder()(ujb) -
+    encoder()(opts.replyAs.name + ':')
 
   let tokens = 0
   const history: string[] = []
@@ -275,7 +292,9 @@ function createClaudePrompt(opts: AdapterProps): string {
   }
 
   const continueAddon =
-    opts.kind === 'continue' ? `\n\nHuman: <system_note>Continue ${replyAs.name}'s reply.</system_note>` : ''
+    opts.kind === 'continue'
+      ? `\n\nHuman: <system_note>Continue ${replyAs.name}'s reply.</system_note>`
+      : ''
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
   return messages.join('\n\n') + continueAddon + '\n\n' + 'Assistant: ' + replyAs.name + ':'

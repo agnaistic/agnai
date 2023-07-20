@@ -36,7 +36,10 @@ type CompletionGenerator = (
   headers: Record<string, string | string[] | number>,
   body: any,
   log: AppLog
-) => AsyncGenerator<{ error: string } | { error?: undefined; token: string }, Completion | undefined>
+) => AsyncGenerator<
+  { error: string } | { error?: undefined; token: string },
+  Completion | undefined
+>
 
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
@@ -48,7 +51,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
   const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
 
-  const maxResponseLength = opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
+  const maxResponseLength =
+    opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const body: any = {
     model: oaiModel,
@@ -78,7 +82,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
 
   const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
-  const apiKey = useThirdPartyPassword ? user.thirdPartyPassword : !isThirdParty ? user.oaiKey : null
+  const apiKey = useThirdPartyPassword
+    ? user.thirdPartyPassword
+    : !isThirdParty
+    ? user.oaiKey
+    : null
   const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
 
   const headers: any = {
@@ -172,9 +180,13 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
   date.setMonth(date.getMonth() + 1)
   const end_date = date.toISOString().slice(0, 10)
 
-  const res = await needle('get', `${baseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`, {
-    headers,
-  })
+  const res = await needle(
+    'get',
+    `${baseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
+    {
+      headers,
+    }
+  )
   if (res.statusCode && res.statusCode >= 400) {
     throw new StatusError(
       `Failed to retrieve usage (${res.statusCode}): ${res.body?.message || res.statusMessage}`,
@@ -185,7 +197,13 @@ export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OA
   return res.body
 }
 
-const requestFullCompletion: CompletionGenerator = async function* (_userId, url, headers, body, _log) {
+const requestFullCompletion: CompletionGenerator = async function* (
+  _userId,
+  url,
+  headers,
+  body,
+  _log
+) {
   const resp = await needle('post', url, JSON.stringify(body), {
     json: true,
     headers,
@@ -197,7 +215,8 @@ const requestFullCompletion: CompletionGenerator = async function* (_userId, url
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    const msg = resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
+    const msg =
+      resp.body?.error?.message || resp.body.message || resp.statusMessage || 'Unknown error'
 
     yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
     return

@@ -24,11 +24,23 @@ const MetricsPage: Component = () => {
         <Button onClick={adminStore.getMetrics}>Refresh</Button>
       </div>
       <div class="gal-4 flex flex-col text-xl">
-        <FormLabel fieldName="active" label="Online Users" helperText={state.metrics?.connected || '...'} />
+        <FormLabel
+          fieldName="active"
+          label="Online Users"
+          helperText={state.metrics?.connected || '...'}
+        />
 
-        <FormLabel fieldName="active" label="Max Online Users" helperText={state.metrics?.maxLiveCount || '...'} />
+        <FormLabel
+          fieldName="active"
+          label="Max Online Users"
+          helperText={state.metrics?.maxLiveCount || '...'}
+        />
 
-        <FormLabel fieldName="totalUsers" label="Registered Users" helperText={state.metrics?.totalUsers || '...'} />
+        <FormLabel
+          fieldName="totalUsers"
+          label="Registered Users"
+          helperText={state.metrics?.totalUsers || '...'}
+        />
 
         <FormLabel fieldName="services" label="Services" helperText={state.metrics?.each.length} />
       </div>

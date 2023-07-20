@@ -1,4 +1,13 @@
-import { Component, JSX, Match, Switch, createEffect, createMemo, createSignal, onCleanup } from 'solid-js'
+import {
+  Component,
+  JSX,
+  Match,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+} from 'solid-js'
 import { settingStore, userStore } from '../store'
 import { v4 } from 'uuid'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'

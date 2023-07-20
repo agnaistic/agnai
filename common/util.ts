@@ -17,7 +17,8 @@ export function cycleArray<T>(arr: T[], shiftAmount: number) {
   return [...arr.slice(effectiveShift), ...arr.slice(0, effectiveShift)]
 }
 
-export const dateStringFromUnix = (unixTimestamp: number): string => new Date(unixTimestamp).toISOString()
+export const dateStringFromUnix = (unixTimestamp: number): string =>
+  new Date(unixTimestamp).toISOString()
 
 export function uniqBy<T, U>(arr: T[], accessor: (el: T) => U) {
   return arr.flatMap((el, i) => (arr.slice(0, i).map(accessor).includes(accessor(el)) ? [] : [el]))
@@ -33,7 +34,9 @@ export function toDuration(valueSecs: number, full?: boolean) {
   } = toRawDuration(valueSecs)
 
   if (full) {
-    return [`${days}d`, `${hours}h`, `${minutes}m`, `${seconds}s`].filter((time) => !time.startsWith('0')).join(':')
+    return [`${days}d`, `${hours}h`, `${minutes}m`, `${seconds}s`]
+      .filter((time) => !time.startsWith('0'))
+      .join(':')
   }
 
   if (days) {

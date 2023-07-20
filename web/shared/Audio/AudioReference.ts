@@ -34,7 +34,9 @@ export class AudioReference extends EventTarget {
       this.dispatchEvent(
         new AudioReferenceErrorEvent(
           'error',
-          e.error ?? audio.error?.message ?? `Unknown error (code: ${audio.error?.code ?? 'unknown'})})`
+          e.error ??
+            audio.error?.message ??
+            `Unknown error (code: ${audio.error?.code ?? 'unknown'})})`
         )
       )
     })

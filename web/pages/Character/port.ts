@@ -35,7 +35,9 @@ export async function importCharacterFile(file: FileInputResult) {
       return { char, image: undefined }
     }
 
-    throw new Error(`Invalid file format: ${file.file.name}. Supported formats: ${SUPPORTED_FORMATS}`)
+    throw new Error(
+      `Invalid file format: ${file.file.name}. Supported formats: ${SUPPORTED_FORMATS}`
+    )
   } catch (ex: any) {
     toastStore.error(`Failed to import ${file.file.name}: ${ex.message}`)
     throw ex
@@ -98,7 +100,9 @@ export function jsonToCharacter(json: any): NewCharacter {
       ? {
           kind: 'text',
           attributes: {
-            text: [[json.data.description, json.data.personality].filter((text) => !!text).join('\n')],
+            text: [
+              [json.data.description, json.data.personality].filter((text) => !!text).join('\n'),
+            ],
           },
         }
       : json.data.extensions.agnai.persona,
@@ -106,7 +110,9 @@ export function jsonToCharacter(json: any): NewCharacter {
     scenario: json.data.scenario,
     originalAvatar: undefined,
     alternateGreetings: json.data.alternate_greetings,
-    characterBook: json.data.character_book ? characterBookToNative(json.data.character_book) : undefined,
+    characterBook: json.data.character_book
+      ? characterBookToNative(json.data.character_book)
+      : undefined,
     extensions: json.data.extensions,
     systemPrompt: json.data.system_prompt,
     postHistoryInstructions: json.data.post_history_instructions,
@@ -145,7 +151,13 @@ function getImportFormat(obj: any): ImportFormat {
 }
 
 function isNativeCharacter(obj: any): obj is AppSchema.Character {
-  return 'name' in obj && 'persona' in obj && 'greeting' in obj && 'scenario' in obj && 'sampleChat' in obj
+  return (
+    'name' in obj &&
+    'persona' in obj &&
+    'greeting' in obj &&
+    'scenario' in obj &&
+    'sampleChat' in obj
+  )
 }
 
 async function processImage(file: FileInputResult) {

@@ -24,12 +24,20 @@ const TextInput: Component<{
   tokenCount?: boolean | ((count: number) => void)
   ref?: (ref: any) => void
 
-  onKeyUp?: (ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }) => void
+  onKeyUp?: (
+    ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
 
-  onKeyDown?: (ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }) => void
+  onKeyDown?: (
+    ev: KeyboardEvent & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
 
-  onChange?: (ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }) => void
-  onInput?: (ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }) => void
+  onChange?: (
+    ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
+  onInput?: (
+    ev: Event & { target: Element; currentTarget: HTMLInputElement | HTMLTextAreaElement }
+  ) => void
 
   service?: AIAdapter
   aiSetting?: keyof PresetAISettings
@@ -39,7 +47,9 @@ const TextInput: Component<{
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
   const adapters = createMemo(() => getAISettingServices(props.aiSetting))
 
-  const value = createMemo(() => (props.value !== undefined ? props.value : (null as unknown as undefined)))
+  const value = createMemo(() =>
+    props.value !== undefined ? props.value : (null as unknown as undefined)
+  )
 
   createEffect(() => {
     if (props.value === undefined) return
@@ -153,7 +163,10 @@ const TextInput: Component<{
           required={props.required}
           placeholder={placeholder()}
           value={value()}
-          class={'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 py-2 ' + props.class}
+          class={
+            'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 py-2 ' +
+            props.class
+          }
           disabled={props.disabled}
           spellcheck={props.spellcheck}
           lang={props.lang}

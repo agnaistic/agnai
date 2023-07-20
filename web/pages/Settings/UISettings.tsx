@@ -218,7 +218,10 @@ const UISettings: Component = () => {
         label="Chat Emphasis Color"
         fieldName="chatEmphasisColor"
         helperText={
-          <span class="link" onClick={() => userStore.saveCustomUI({ chatEmphasisColor: 'text-600' })}>
+          <span
+            class="link"
+            onClick={() => userStore.saveCustomUI({ chatEmphasisColor: 'text-600' })}
+          >
             Reset to Default
           </span>
         }
@@ -272,9 +275,13 @@ const UISettings: Component = () => {
         <div class="bg-100 flex w-full flex-col gap-2 rounded-md p-2">
           <Message
             editing={false}
-            msg={toBotMsg(chars.characters.list[0], '*I wave excitedly* Hello world!\nHow are you today?', {
-              _id: '1',
-            })}
+            msg={toBotMsg(
+              chars.characters.list[0],
+              '*I wave excitedly* Hello world!\nHow are you today?',
+              {
+                _id: '1',
+              }
+            )}
             onRemove={noop}
             sendMessage={() => {}}
             isPaneOpen={false}
@@ -283,7 +290,11 @@ const UISettings: Component = () => {
           <Show when={state.profile}>
             <Message
               editing={false}
-              msg={toUserMsg(state.profile!, '*I wave back* Hi {{char}}!\nFancy meeting you here!', { _id: '2' })}
+              msg={toUserMsg(
+                state.profile!,
+                '*I wave back* Hi {{char}}!\nFancy meeting you here!',
+                { _id: '2' }
+              )}
               onRemove={noop}
               sendMessage={() => {}}
               isPaneOpen={false}

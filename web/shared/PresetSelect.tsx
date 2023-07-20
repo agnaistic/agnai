@@ -18,7 +18,9 @@ export const PresetSelect: Component<{
   )
   const builtin = createMemo(() =>
     uniqBy(
-      props.options.filter((o) => !o.custom && o.label.toLowerCase().includes(filter().toLowerCase())),
+      props.options.filter(
+        (o) => !o.custom && o.label.toLowerCase().includes(filter().toLowerCase())
+      ),
       // Remove pesky duplicate builtin Horde or it's difficult to know which
       // one the user selected
       (o) => o.value
@@ -40,7 +42,11 @@ export const PresetSelect: Component<{
   useRootModal({
     id: 'presetSelect',
     element: (
-      <Modal show={showSelectModal()} close={() => setShowSelectModal(false)} title="Choose a preset">
+      <Modal
+        show={showSelectModal()}
+        close={() => setShowSelectModal(false)}
+        title="Choose a preset"
+      >
         <div class="flex flex-col gap-4">
           <div class="sticky top-0">
             <TextInput
@@ -51,9 +57,17 @@ export const PresetSelect: Component<{
           </div>
           <div class="flex flex-wrap gap-2 pr-3">
             <h4>Custom presets</h4>
-            <OptionList options={custom()} onSelect={selectIdAndCloseModal} selected={props.selected} />
+            <OptionList
+              options={custom()}
+              onSelect={selectIdAndCloseModal}
+              selected={props.selected}
+            />
             <h4>Built-in presets</h4>
-            <OptionList options={builtin()} onSelect={selectIdAndCloseModal} selected={props.selected} />
+            <OptionList
+              options={builtin()}
+              onSelect={selectIdAndCloseModal}
+              selected={props.selected}
+            />
           </div>
         </div>
       </Modal>
@@ -90,8 +104,9 @@ const OptionList: Component<{
         {(option) => (
           <div
             class={
-              (props.selected && props.selected === option.value ? 'bg-[var(--hl-800)]' : 'bg-700') +
-              ` w-full cursor-pointer gap-4 rounded-xl px-2 py-1 text-sm`
+              (props.selected && props.selected === option.value
+                ? 'bg-[var(--hl-800)]'
+                : 'bg-700') + ` w-full cursor-pointer gap-4 rounded-xl px-2 py-1 text-sm`
             }
             onClick={() => props.onSelect(option.value)}
           >

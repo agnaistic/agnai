@@ -58,7 +58,9 @@ export async function removeBook(bookId: string) {
     return res
   }
 
-  const books = await localApi.loadItem('memory').then((res) => res.filter((book) => book._id !== bookId))
+  const books = await localApi
+    .loadItem('memory')
+    .then((res) => res.filter((book) => book._id !== bookId))
   await localApi.saveBooks(books)
 
   return localApi.result({ success: true })

@@ -181,7 +181,12 @@ export const msgStore = createStore<MsgState>(
       if (res.result) onSuccess?.()
     },
 
-    async *retry({ msgs, activeCharId }, chatId: string, messageId?: string, onSuccess?: () => void) {
+    async *retry(
+      { msgs, activeCharId },
+      chatId: string,
+      messageId?: string,
+      onSuccess?: () => void
+    ) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -235,7 +240,13 @@ export const msgStore = createStore<MsgState>(
       processQueue()
     },
 
-    async *send({ activeCharId }, chatId: string, message: string, mode: SendModes, onSuccess?: () => void) {
+    async *send(
+      { activeCharId },
+      chatId: string,
+      message: string,
+      mode: SendModes,
+      onSuccess?: () => void
+    ) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -496,7 +507,9 @@ async function playVoiceFromBrowser(
     msgStore.setState({ speaking: undefined })
   })
 
-  audio.addEventListener('playing', () => msgStore.setState({ speaking: { messageId, status: 'playing' } }))
+  audio.addEventListener('playing', () =>
+    msgStore.setState({ speaking: { messageId, status: 'playing' } })
+  )
   audio.addEventListener('ended', () => msgStore.setState({ speaking: undefined }))
 
   audio.play()
@@ -784,7 +797,9 @@ subscribe(
     const speech = getMessageSpeechInfo(msg, userStore.getState().user)
 
     const chats = await localApi.loadItem('chats')
-    await localApi.saveChats(localApi.replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
+    await localApi.saveChats(
+      localApi.replace(body.chatId, chats, { updatedAt: new Date().toISOString() })
+    )
     await localApi.saveMessages(body.chatId, next)
 
     addMsgToRetries(msg)

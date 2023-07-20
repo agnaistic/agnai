@@ -3,7 +3,15 @@ import { decryptText } from '../db/util'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 
-export const handleScale: ModelAdapter = async function* ({ char, members, user, prompt, guest, log, ...opts }) {
+export const handleScale: ModelAdapter = async function* ({
+  char,
+  members,
+  user,
+  prompt,
+  guest,
+  log,
+  ...opts
+}) {
   if (!user.scaleApiKey) {
     yield { error: 'Scale API key not set' }
     return

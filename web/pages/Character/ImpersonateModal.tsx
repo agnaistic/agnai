@@ -23,12 +23,16 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
         <PageHeader title="Impersonate a Character" />
         <div class="flex flex-col gap-2 text-sm">
           <span>
-            Instead of updating your profile to speak as somebody else, you can <b>impersonate</b> a character.
+            Instead of updating your profile to speak as somebody else, you can <b>impersonate</b> a
+            character.
           </span>
           <div class="flex w-full justify-center">
             <Button onClick={() => onSelect()}>Use My Profile</Button>
           </div>
-          <CharacterSelectList items={chars.list.filter((ch) => ch.userId === user.user?._id)} onSelect={onSelect} />
+          <CharacterSelectList
+            items={chars.list.filter((ch) => ch.userId === user.user?._id)}
+            onSelect={onSelect}
+          />
         </div>
       </Modal>
     ),

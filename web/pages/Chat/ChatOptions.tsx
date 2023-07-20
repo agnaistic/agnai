@@ -59,7 +59,9 @@ const ChatOptions: Component<{
     chatStore.option('screenshot', value)
   }
 
-  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id && chats.chat?.mode !== 'companion')
+  const isOwner = createMemo(
+    () => chats.chat?.userId === user.user?._id && chats.chat?.mode !== 'companion'
+  )
 
   const screenshotChat = async () => {
     if (chats.opts.screenshot) return
@@ -150,7 +152,10 @@ const ChatOptions: Component<{
         </Show>
 
         <MenuItemRow>
-          <MenuItem schema={cfg.anonymize ? 'primary' : undefined} onClick={settingStore.toggleAnonymize}>
+          <MenuItem
+            schema={cfg.anonymize ? 'primary' : undefined}
+            onClick={settingStore.toggleAnonymize}
+          >
             <VenetianMask /> Anonymize
           </MenuItem>
           <MenuItem onClick={() => props.setModal('ui')}>
@@ -196,7 +201,9 @@ const ChatOptions: Component<{
   )
 }
 
-const MenuItemRow: Component<{ children: JSX.Element }> = (props) => <div class="flex gap-1">{props.children}</div>
+const MenuItemRow: Component<{ children: JSX.Element }> = (props) => (
+  <div class="flex gap-1">{props.children}</div>
+)
 
 const MenuItem: Component<{
   onClick: () => void
@@ -208,7 +215,9 @@ const MenuItem: Component<{
   <Show when={!props.hide}>
     <Option
       onClick={props.onClick}
-      class={`flex flex-1 ${props.center ? 'justify-center' : 'justify-start'} gap-2 hover:bg-[var(--bg-700)]`}
+      class={`flex flex-1 ${
+        props.center ? 'justify-center' : 'justify-start'
+      } gap-2 hover:bg-[var(--bg-700)]`}
       schema={props.schema}
     >
       {props.children}
@@ -228,7 +237,13 @@ const Option: Component<{
     props.close?.()
   }
   return (
-    <Button schema={props.schema || 'secondary'} size="sm" onClick={onClick} alignLeft class={props.class}>
+    <Button
+      schema={props.schema || 'secondary'}
+      size="sm"
+      onClick={onClick}
+      alignLeft
+      class={props.class}
+    >
       {props.children}
     </Button>
   )

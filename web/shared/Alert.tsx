@@ -17,11 +17,15 @@ const Alert: Component<{
   children: JSX.Element
   schema: AlertSchema
 }> = (props) => {
-  const classes = createMemo(() => [schemaToClasses[props.schema], 'rounded-lg p-4 text-sm flex gap-2'].join(' '))
+  const classes = createMemo(() =>
+    [schemaToClasses[props.schema], 'rounded-lg p-4 text-sm flex gap-2'].join(' ')
+  )
 
   return (
     <div class={classes()} role="alert">
-      <div class="w-fit rounded-full bg-red-600/10 p-3">{schemaToIcon[props.schema]({ size: 18 })}</div>
+      <div class="w-fit rounded-full bg-red-600/10 p-3">
+        {schemaToIcon[props.schema]({ size: 18 })}
+      </div>
       <div>
         <b>{props.title}</b>
         <p>{props.children}</p>

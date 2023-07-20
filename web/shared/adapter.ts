@@ -23,7 +23,13 @@ export function getClientPreset(chat?: AppSchema.Chat) {
   if (!chat || !user.user) return
 
   const preset = getChatPreset(chat, user.user, presets)
-  const { adapter, isThirdParty, model, contextLimit, preset: presetLabel } = getAdapter(chat, user.user, preset)
+  const {
+    adapter,
+    isThirdParty,
+    model,
+    contextLimit,
+    preset: presetLabel,
+  } = getAdapter(chat, user.user, preset)
 
   const name = preset && 'name' in preset ? preset.name : ''
   return { preset, adapter, model, isThirdParty, contextLimit, presetLabel, name }
@@ -35,7 +41,9 @@ export function getPresetOptions(
 ): PresetOption[] {
   const user = userStore((u) => u.user || { defaultPreset: '' })
   const presets = userPresets.slice().map((preset) => ({
-    label: `[${getServiceName(preset.service)}] ${preset.name} ${user.defaultPreset === preset._id ? '(*) ' : ''}`,
+    label: `[${getServiceName(preset.service)}] ${preset.name} ${
+      user.defaultPreset === preset._id ? '(*) ' : ''
+    }`,
     value: preset._id,
     custom: true,
   }))

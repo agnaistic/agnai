@@ -40,9 +40,11 @@ export async function get<T = any>({ url, apikey, ...opts }: Omit<PostReq, 'body
     headers.apikey = apikey
   }
 
-  const res = await needle('get', `${opts.host || baseUrl}${url}`, { json: true, headers }).catch((error) => ({
-    error,
-  }))
+  const res = await needle('get', `${opts.host || baseUrl}${url}`, { json: true, headers }).catch(
+    (error) => ({
+      error,
+    })
+  )
 
   if ('error' in res) {
     const error = new Error(`Could not reach server: ${res.error.message}`)

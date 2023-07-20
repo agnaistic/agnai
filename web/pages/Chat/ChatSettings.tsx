@@ -63,9 +63,13 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const scenarios = createMemo(() => {
     const noScenario = [{ value: '', label: "None (use character's scenario)" }]
     if (scenarioState.loading || scenarioState.partial) {
-      return noScenario.concat((state.chat?.scenarioIds ?? []).map((id) => ({ value: id, label: id })))
+      return noScenario.concat(
+        (state.chat?.scenarioIds ?? []).map((id) => ({ value: id, label: id }))
+      )
     } else {
-      return noScenario.concat(scenarioState.scenarios.map((s) => ({ label: s.name, value: s._id })))
+      return noScenario.concat(
+        scenarioState.scenarios.map((s) => ({ label: s.name, value: s._id }))
+      )
     }
   })
 
@@ -83,7 +87,9 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
     const attributes = getAttributeMap(ref)
 
-    const overrides: AppSchema.Persona | undefined = body.schema ? { kind: body.schema, attributes } : undefined
+    const overrides: AppSchema.Persona | undefined = body.schema
+      ? { kind: body.schema, attributes }
+      : undefined
 
     const payload = {
       ...body,
@@ -125,7 +131,9 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
     if (!state.chat || !user.user) return
     const preset = getChatPreset(state.chat, user.user, presets)
     if (!preset.service) return
-    const text = `Currently: ${ADAPTER_LABELS[preset.service]}. Inherited from: ${preset.name || 'Chat'}`
+    const text = `Currently: ${ADAPTER_LABELS[preset.service]}. Inherited from: ${
+      preset.name || 'Chat'
+    }`
     return {
       text,
       service: preset.service!,
@@ -134,7 +142,13 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   })
 
   return (
-    <Modal show={props.show} title="Chat Settings" close={props.close} footer={Footer} maxWidth="half">
+    <Modal
+      show={props.show}
+      title="Chat Settings"
+      close={props.close}
+      footer={Footer}
+      maxWidth="half"
+    >
       <form ref={ref} onSubmit={onSave} class="flex flex-col gap-3">
         <Show when={user.user?.admin}>
           <Card class="text-xs">{state.chat?._id}</Card>
@@ -150,10 +164,15 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             <Select
               class={`mb-2 ${adapterText() ? 'hidden' : ''}`}
               fieldName="adapter"
-              helperText={`Default is set to: ${ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']}`}
+              helperText={`Default is set to: ${
+                ADAPTER_LABELS[user.user?.defaultAdapter || 'horde']
+              }`}
               label="AI Service"
               value={state.chat?.adapter}
-              items={[{ label: 'Default', value: 'default' }, ...adaptersToOptions(cfg.config.adapters)]}
+              items={[
+                { label: 'Default', value: 'default' },
+                ...adaptersToOptions(cfg.config.adapters),
+              ]}
             />
           </Card>
         </Show>
@@ -165,11 +184,13 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
               label="Chat Mode"
               helperText={
                 <>
-                  <p>Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo</p>
+                  <p>
+                    Adventure mode is only available for instruct-capable models. I.e: OpenAI Turbo
+                  </p>
                   <Show when={state.chat?.mode !== 'companion' && mode() === 'companion'}>
                     <TitleCard type="orange">
-                      Warning! Switching to COMPANION mode is irreversible! You will no longer be able to: retry
-                      messages, delete chats, edit chat settings.
+                      Warning! Switching to COMPANION mode is irreversible! You will no longer be
+                      able to: retry messages, delete chats, edit chat settings.
                     </TitleCard>
                   </Show>
                 </>

@@ -57,7 +57,9 @@ export async function updateScenario(scenarioId: string, update: NewScenario) {
 
   const items = await localApi.loadItem('scenario')
 
-  const scenarios = items.map((scenario) => (scenario._id === scenarioId ? { ...scenario, ...update } : scenario))
+  const scenarios = items.map((scenario) =>
+    scenario._id === scenarioId ? { ...scenario, ...update } : scenario
+  )
   await localApi.saveScenarios(scenarios)
 
   return localApi.result({ success: true })

@@ -176,7 +176,9 @@ function isPromise<S>(value: any): value is Promise<Partial<S> | void> {
 
 function isGenerator<S>(
   value: any
-): value is AsyncGenerator<Partial<S> | void, Partial<S> | void> | Generator<Partial<S>, Partial<S> | void> {
+): value is
+  | AsyncGenerator<Partial<S> | void, Partial<S> | void>
+  | Generator<Partial<S>, Partial<S> | void> {
   if (!value) return false
   return 'next' in value && typeof value.next === 'function'
 }

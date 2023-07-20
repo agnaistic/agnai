@@ -20,7 +20,10 @@ export const defaultChars = {
       "*A soft smile appears on {{char}}'s face as {{user}} enters the cafe and takes a seat* *Beep! Boop!* Hello, {{user}}! It's good to see you again. What would you like to chat about?",
   },
 } satisfies {
-  [key: string]: Pick<AppSchema.Character, 'name' | 'persona' | 'sampleChat' | 'scenario' | 'greeting'>
+  [key: string]: Pick<
+    AppSchema.Character,
+    'name' | 'persona' | 'sampleChat' | 'scenario' | 'greeting'
+  >
 }
 
 export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'ooba') {
@@ -53,7 +56,9 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
           system_prompt: char.systemPrompt ?? '',
           post_history_instructions: char.postHistoryInstructions ?? '',
           alternate_greetings: char.alternateGreetings ?? [],
-          character_book: char.characterBook ? nativeToCharacterBook(char.characterBook) : undefined,
+          character_book: char.characterBook
+            ? nativeToCharacterBook(char.characterBook)
+            : undefined,
           tags: char.tags ?? [],
           creator: char.creator ?? '',
           character_version: char.characterVersion ?? '',
@@ -80,7 +85,11 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
   }
 }
 
-export function formatCharacter(name: string, persona: AppSchema.Persona, kind?: AppSchema.Persona['kind']) {
+export function formatCharacter(
+  name: string,
+  persona: AppSchema.Persona,
+  kind?: AppSchema.Persona['kind']
+) {
   switch (kind || persona.kind) {
     case 'wpp': {
       const attrs = Object.entries(persona.attributes)
@@ -91,7 +100,9 @@ export function formatCharacter(name: string, persona: AppSchema.Persona, kind?:
     }
 
     case 'sbf': {
-      const attrs = Object.entries(persona.attributes).map(([key, values]) => `${key}: ${values.map(quote).join(', ')}`)
+      const attrs = Object.entries(persona.attributes).map(
+        ([key, values]) => `${key}: ${values.map(quote).join(', ')}`
+      )
 
       return `[ character: "${name}"; ${attrs.join('; ')} ]`
     }
