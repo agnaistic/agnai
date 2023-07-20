@@ -68,6 +68,7 @@ type InferenceRequest = {
   service?: string
   log: AppLog
   retries?: number
+  maxTokens?: number
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -138,7 +139,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     opts.settings = settings
   }
 
-  opts.settings.maxTokens = 1024
+  opts.settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
   opts.settings.streamResponse = false
   opts.settings.temp = 0.5
 

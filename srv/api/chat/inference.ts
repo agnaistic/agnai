@@ -79,13 +79,14 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid({ ...validInference, placeholders: 'any?' }, body)
+  assertValid({ ...validInference, placeholders: 'any?', maxTokens: 'number?' }, body)
 
   const settings = await assertSettings(body, userId)
 
   const infer = async (text: string) => {
     const inference = await inferenceAsync({
       user: body.user,
+      maxTokens: body.maxTokens,
       settings,
       log,
       prompt: text,

@@ -5,13 +5,17 @@ import { AppSchema } from '/common/types'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 
-export async function generateChar(preset: Partial<AppSchema.GenSettings>, description: string, service?: string) {
+export async function generateChar(
+  preset: Partial<AppSchema.GenSettings>,
+  description: string,
+  service?: string
+) {
   const adapter = (service?.split('/').slice(-1)[0] as AIAdapter) || preset.service
   const template = INSTRUCT_SERVICES[adapter] ? instructGenTemplate : genTemplate
   const prompt = template.replace(`{{description}}`, description)
 
   return new Promise<NewCharacter>((resolve, reject) => {
-    msgsApi.guidance({ prompt, settings: preset, service }, (err, res) => {
+    msgsApi.guidance({ prompt, settings: preset, service, maxTokens: 200 }, (err, res) => {
       if (err || !res) {
         return reject(err || `No response received`)
       }

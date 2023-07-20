@@ -44,7 +44,12 @@ export const msgsApi = {
   generateActions,
 }
 
-type InferenceOpts = { prompt: string; settings: Partial<AppSchema.GenSettings>; service?: string }
+type InferenceOpts = {
+  prompt: string
+  settings: Partial<AppSchema.GenSettings>
+  service?: string
+  maxTokens?: number
+}
 
 export async function generateActions() {
   const { settings, impersonating, profile, user, messages } = await getPromptEntities()
@@ -93,7 +98,7 @@ export async function basicInference(
 }
 
 export async function guidance<T = any>(
-  { prompt, settings, service }: InferenceOpts,
+  { prompt, settings, service, maxTokens }: InferenceOpts,
   onComplete?: (err: any | null, response?: { result: string; values: T }) => void
 ) {
   const requestId = v4()
@@ -104,7 +109,14 @@ export async function guidance<T = any>(
     return
   }
 
-  const res = await api.method('post', `/chat/guidance`, { requestId, user, prompt, settings, service })
+  const res = await api.method('post', `/chat/guidance`, {
+    requestId,
+    user,
+    prompt,
+    settings,
+    service,
+    maxTokens,
+  })
   if (res.error) {
     onComplete?.(res.error)
     if (!onComplete) {
@@ -191,7 +203,8 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   const embedWarnings: string[] = []
   if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0) embedWarnings.push('Chat')
-  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('User-created')
+  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0)
+    embedWarnings.push('User-created')
 
   if (embedWarnings.length) {
     toastStore.warn(
@@ -276,7 +289,9 @@ async function createActiveChatPrompt(
       : null
 
     const users =
-      text && entities.chat.userEmbedId ? await pipelineApi.queryEmbedding(entities.chat.userEmbedId, text) : null
+      text && entities.chat.userEmbedId
+        ? await pipelineApi.queryEmbedding(entities.chat.userEmbedId, text)
+        : null
 
     if (chats) {
       chatEmbeds.push(...chats)
@@ -497,7 +512,9 @@ async function getGuestEntities() {
   const messages = await localApi.getMessages(chat?._id)
   const user = await loadItem('config')
   const settings = await getGuestPreset(user, chat)
-  const scenarios = allScenarios?.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
+  const scenarios = allScenarios?.filter(
+    (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
+  )
 
   const {
     impersonating,
@@ -567,7 +584,10 @@ function getAuthedPromptEntities() {
   }
 }
 
-function getAuthGenSettings(chat: AppSchema.Chat, user: AppSchema.User): Partial<AppSchema.GenSettings> | undefined {
+function getAuthGenSettings(
+  chat: AppSchema.Chat,
+  user: AppSchema.User
+): Partial<AppSchema.GenSettings> | undefined {
   const presets = getStore('presets').getState().presets
   return getChatPreset(chat, user, presets)
 }
@@ -579,7 +599,10 @@ async function getGuestPreset(user: AppSchema.User, chat: AppSchema.Chat) {
   return getChatPreset(chat, user, presets)
 }
 
-function emptyMsg(chat: AppSchema.Chat, props: Partial<AppSchema.ChatMessage>): AppSchema.ChatMessage {
+function emptyMsg(
+  chat: AppSchema.Chat,
+  props: Partial<AppSchema.ChatMessage>
+): AppSchema.ChatMessage {
   return {
     _id: '',
     kind: 'chat-message',
