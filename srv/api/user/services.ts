@@ -38,7 +38,7 @@ export const novelLogin = handle(async ({ userId, body }) => {
 
   if (userId) {
     await store.users.updateUser(userId, {
-      novelApiKey: res.body.accessToken,
+      novelApiKey: encryptText(res.body.accessToken),
       novelVerified: true,
     })
   }
