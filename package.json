@@ -42,7 +42,7 @@
     "build:server": "tsc -p srv.tsconfig.json",
     "build:watch": "tsc -p srv.tsconfig.json -w",
     "format": "prettier --check \"web/**/*.tsx\" \"web/**/*.ts\" \"web/**/*.css\" \"web/**/*.html\" && prettier --check \"srv/**/*.ts\"",
-    "format:fix": "prettier \"web/**/*.ts\" \"web/**/*.tsx\" --write && prettier \"srv/**/*.ts\" --write && prettier \"common/**/*.ts\" --write",
+    "format:fix": "prettier \"web/**/*.css\" \"web/**/*.ts\" \"web/**/*.tsx\" --write && prettier \"srv/**/*.ts\" --write && prettier \"common/**/*.ts\" --write",
     "model:init": "python3 -m venv ./.model && .model/bin/pip install poetry==1.4.1 && .model/bin/poetry config virtualenvs.in-project true && npm run model:deps",
     "model:deps": ".model/bin/poetry install --no-interaction --no-ansi || exit 0",
     "model:start": ".model/bin/poetry run python model/app.py",
