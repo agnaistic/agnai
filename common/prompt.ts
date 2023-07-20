@@ -213,13 +213,14 @@ export function getTemplate(
   parts: PromptParts
 ) {
   const isChat = OPENAI_CHAT_MODELS[opts.settings?.oaiModel || ''] ?? false
-  const useGaslight =
-    (opts.settings?.service === 'openai' && isChat) ||
-    opts.settings?.useGaslight ||
-    opts.settings?.useTemplateParser
-  const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
+  const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
 
-  const template = useGaslight ? gaslight : defaultTemplate
+  const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
+  const template = useGaslight
+    ? gaslight
+    : opts.settings?.useTemplateParser
+    ? opts.settings.gaslight ?? defaultTemplate
+    : defaultTemplate
   return ensureValidTemplate(template, parts)
 }
 
