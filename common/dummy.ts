@@ -47,7 +47,6 @@ export function toUser(name: string) {
     koboldUrl: '',
     thirdPartyFormat: 'kobold',
     thirdPartyPassword: '',
-    luminaiUrl: '',
     novelApiKey: '',
     novelModel: NOVEL_MODELS.krake,
     oaiKey: '',

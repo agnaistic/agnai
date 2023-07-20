@@ -7,7 +7,6 @@ import { Component, For, Match, Show, Switch, createEffect, createMemo, createSi
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
-import LuminAISettings from './components/LuminAISettings'
 import KoboldAISettings from './components/KoboldAISettings'
 import OobaAISettings from './components/OobaAISettings'
 import ClaudeSettings from './components/ClaudeSettings'
@@ -115,10 +114,6 @@ const AISettings: Component<{
 
       <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
         <NovelAISettings />
-      </div>
-
-      <div class={currentTab() === 'luminai' ? tabClass : 'hidden'}>
-        <LuminAISettings />
       </div>
 
       <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>

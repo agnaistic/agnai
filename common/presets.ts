@@ -190,19 +190,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     order: 'sampler_order',
     maxContextLength: 'max_context_length',
   },
-  luminai: {
-    maxTokens: 'max_length',
-    repetitionPenalty: 'rep_pen',
-    repetitionPenaltyRange: 'rep_pen_range',
-    repetitionPenaltySlope: 'rep_pen_slope',
-    tailFreeSampling: 'tfs',
-    temp: 'temperature',
-    topK: 'top_k',
-    topP: 'top_p',
-    typicalP: 'typical',
-    topA: 'top_a',
-    order: 'sampler_order',
-  },
   openai: {
     maxTokens: 'max_tokens',
     repetitionPenalty: '',
@@ -319,7 +306,6 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
       return defaultPresets.horde
 
     case 'kobold':
-    case 'luminai':
     case 'ooba':
       return defaultPresets.basic
 

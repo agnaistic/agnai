@@ -90,13 +90,6 @@ const ChatDetail: Component = () => {
   const express = useAutoExpression()
   const avatars = useChatAvatars()
 
-  // const mainCharacter = createMemo(() => {
-  //   const id = chats.char?._id
-  //   if (!id) return
-
-  //   const char = chars.botMap
-  // })
-
   const viewHeight = createMemo(() => {
     const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
     const id = chats.char?._id || ''

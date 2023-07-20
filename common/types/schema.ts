@@ -80,7 +80,6 @@ export namespace AppSchema {
     thirdPartyFormat: 'kobold' | 'openai' | 'claude'
     thirdPartyPassword: string
     thirdPartyPasswordSet?: boolean
-    luminaiUrl: string
     oobaUrl: string
 
     oaiKey: string

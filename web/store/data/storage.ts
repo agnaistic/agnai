@@ -87,7 +87,6 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
     koboldUrl: '',
     thirdPartyFormat: 'kobold',
     thirdPartyPassword: '',
-    luminaiUrl: '',
     useLocalPipeline: false,
   },
   profile: { _id: '', kind: 'profile', userId: 'anon', handle: 'You' },

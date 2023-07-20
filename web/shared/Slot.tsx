@@ -55,7 +55,7 @@ const Slot: Component<{
 
   const log = (...args: any[]) => {
     if (!cfg.publisherId) return
-    if (!user.user?.admin || !cfg.flags.reporting) return
+    if (!cfg.flags.reporting) return
     let slotid = actualId()
     console.log.apply(null, [`[${id()}]`, ...args, `| ${slotid}`])
   }
@@ -251,7 +251,7 @@ const Slot: Component<{
     <>
       <Switch>
         <Match when={!user.user || !specs()}>{null}</Match>
-        <Match when={user.user?.admin}>
+        <Match when={cfg.flags.reporting}>
           <div
             class={`flex w-full justify-center border-[var(--bg-700)] bg-[var(--text-200)]`}
             ref={ref}

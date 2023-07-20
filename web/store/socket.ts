@@ -69,7 +69,7 @@ function onMessage(msg: MessageEvent<any>) {
         console.log(JSON.stringify({ ...payload, image: (payload.image || '').slice(0, 25) + '...' }))
       }
     } else {
-      console.log(payload.type, '...')
+      // console.log(payload.type, '...')
     }
 
     for (const handler of handlers) {

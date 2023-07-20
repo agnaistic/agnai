@@ -129,7 +129,6 @@ const validConfig = {
   hordeKey: 'string?',
   hordeModel: 'string?',
   hordeModels: ['string?'],
-  luminaiUrl: 'string?',
   hordeWorkers: ['string'],
   oaiKey: 'string?',
   scaleUrl: 'string?',
@@ -243,7 +242,6 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   const validOobaUrl = await verifyOobaUrl(prevUser, body.oobaUrl)
   if (validOobaUrl !== undefined) update.oobaUrl = validOobaUrl
-  if (body.luminaiUrl !== undefined) update.luminaiUrl = body.luminaiUrl
 
   if (body.images) {
     update.images = body.images

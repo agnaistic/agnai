@@ -727,7 +727,6 @@ function getContextLimit(gen: Partial<AppSchema.GenSettings> | undefined, adapte
   switch (adapter) {
     // Any LLM could be used here so don't max any assumptions
     case 'kobold':
-    case 'luminai':
     case 'horde':
     case 'ooba':
       return configuredMax - genAmount

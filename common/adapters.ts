@@ -49,7 +49,6 @@ export const AI_ADAPTERS = [
   'novel',
   'ooba',
   'horde',
-  'luminai',
   'openai',
   'scale',
   'claude',
@@ -191,7 +190,6 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   kobold: 'Kobold / 3rd Party',
   novel: 'NovelAI',
   ooba: 'TextGen',
-  luminai: 'LuminAI',
   openai: 'OpenAI',
   scale: 'Scale',
   claude: 'Claude',
@@ -232,7 +230,7 @@ export const SUPPORTS_INSTRUCT: { [key in AIAdapter]?: (user: AppSchema.User) =>
 export const adapterSettings: {
   [key in keyof PresetAISettings]: AIAdapter[]
 } = {
-  temp: ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale', 'claude', 'goose'],
+  temp: ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale', 'claude', 'goose'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   antiBond: ['openai', 'scale'],
@@ -243,14 +241,14 @@ export const adapterSettings: {
   ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter'],
   ignoreCharacterUjb: ['openai', 'claude', 'kobold', 'openrouter'],
 
-  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'luminai'],
-  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
-  repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'luminai'],
-  repetitionPenaltySlope: ['horde', 'novel', 'kobold', 'luminai'],
-  tailFreeSampling: ['horde', 'novel', 'kobold', 'luminai'],
-  topA: ['horde', 'novel', 'kobold', 'luminai'],
-  topK: ['horde', 'novel', 'kobold', 'ooba', 'luminai', 'claude'],
-  typicalP: ['horde', 'novel', 'kobold', 'ooba', 'luminai'],
+  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel'],
+  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba'],
+  repetitionPenaltyRange: ['horde', 'novel', 'kobold'],
+  repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
+  tailFreeSampling: ['horde', 'novel', 'kobold'],
+  topA: ['horde', 'novel', 'kobold'],
+  topK: ['horde', 'novel', 'kobold', 'ooba', 'claude'],
+  typicalP: ['horde', 'novel', 'kobold', 'ooba'],
 
   thirdPartyUrl: ['kobold'],
   claudeModel: ['claude', 'kobold'],

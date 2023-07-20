@@ -6,7 +6,6 @@ import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
-import { handleLuminAI } from './luminai'
 import { handleNovel } from './novel'
 import { handleOoba } from './ooba'
 import { handleOAI } from './openai'
@@ -48,7 +47,6 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   kobold: handleKobold,
   ooba: handleOoba,
   horde: handleHorde,
-  luminai: handleLuminAI,
   openai: handleOAI,
   scale: handleScale,
   claude: handleClaude,
@@ -206,12 +204,6 @@ export async function createTextStreamV2(opts: GenerateRequestV2, log: AppLog, g
     opts.user = entities.user
     opts.settings = entities.gen
     opts.char = entities.char
-
-    // Use pipeline
-    // const memory = await getMemoryPrompt({ ...opts, books: [entities.book] }, log)
-    // if (memory) {
-    //   opts.parts.memory = memory
-    // }
   }
 
   if (opts.settings?.thirdPartyUrl) {
@@ -343,31 +335,3 @@ async function getGenerationSettings(
     src: guest ? 'guest-fallback-last' : 'user-fallback-last',
   }
 }
-
-/**
- * This technically falls into the 'pipeline' category.
- * For now we'll keep this imperative to avoid creating a bad abstraction.
- *
- * @param opts
- */
-// async function getMemoryPrompt(opts: MemoryOpts, log: AppLog) {
-//   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
-//   const encoder = getEncoder(adapter, model)
-//   if (FILAMENT_ENABLED && opts.user.luminaiUrl && opts.book) {
-//     const res = await filament
-//       .retrieveMemories(opts.user, opts.book._id, opts.lines)
-//       .catch((error) => ({ error }))
-
-//     // If we fail, we'll revert to the naive memory retrival
-//     if ('error' in res) {
-//       return
-//     }
-
-//     const memories = res.map((res) => res.entry)
-//     const tokenLimit = opts.settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
-//     const prompt = trimTokens({ input: memories, start: 'top', tokenLimit, encoder })
-//     return prompt.join('\n')
-//   }
-
-//   return
-// }

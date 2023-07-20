@@ -80,7 +80,7 @@ const GenerationSettings: Component<Props> = (props) => {
 export default GenerationSettings
 
 export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
-  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'luminai', 'openai', 'scale']
+  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale']
   return (
     <div>
       <For each={allAdapaters}>
