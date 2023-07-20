@@ -13,7 +13,10 @@ export type ImagePromptOpts = {
 
 const appearanceKeys = ['appearance', 'looks']
 
-export async function createAppearancePrompt(user: AppSchema.User, avatar: { persona: AppSchema.Persona }) {
+export async function createAppearancePrompt(
+  user: AppSchema.User,
+  avatar: { persona: AppSchema.Persona }
+) {
   let visuals: string[] = []
 
   const max = getMaxImageContext(user)

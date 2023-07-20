@@ -32,8 +32,16 @@ if (debug) {
   process.env.LOG_LEVEL = 'debug'
 }
 
-const jsonLocation = flag(`Provide a location for the JSON files folder. Defaults to: ${folders.json}`, 'f', 'files')
-const assets = flag(`Provide a location for the assets (images) folder. Defaults to: ${folders.assets}`, 'a', 'assets')
+const jsonLocation = flag(
+  `Provide a location for the JSON files folder. Defaults to: ${folders.json}`,
+  'f',
+  'files'
+)
+const assets = flag(
+  `Provide a location for the assets (images) folder. Defaults to: ${folders.assets}`,
+  'a',
+  'assets'
+)
 
 if (jsonLocation) {
   if (typeof jsonLocation !== 'string') {

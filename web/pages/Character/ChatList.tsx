@@ -13,7 +13,15 @@ import Divider from '../../shared/Divider'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import CharacterSelect from '../../shared/CharacterSelect'
-import { ChatCharacter, ChatLine, SortDirection, SortType, getListCache, groupAndSort, saveListCache } from './util'
+import {
+  ChatCharacter,
+  ChatLine,
+  SortDirection,
+  SortType,
+  getListCache,
+  groupAndSort,
+  saveListCache,
+} from './util'
 import Loading from '/web/shared/Loading'
 
 const sortOptions = [
@@ -158,7 +166,11 @@ const CharacterChats: Component = () => {
       <div class="mb-2 flex justify-between">
         <div class="flex flex-wrap gap-1">
           <div>
-            <TextInput fieldName="search" placeholder="Search..." onKeyUp={(ev) => setSearch(ev.currentTarget.value)} />
+            <TextInput
+              fieldName="search"
+              placeholder="Search..."
+              onKeyUp={(ev) => setSearch(ev.currentTarget.value)}
+            />
           </div>
 
           <CharacterSelect
@@ -195,7 +207,10 @@ const CharacterChats: Component = () => {
         </div>
       </div>
 
-      <Show when={chats().length} fallback={<NoChats character={chars.list.find((c) => c._id === params.id)?.name} />}>
+      <Show
+        when={chats().length}
+        fallback={<NoChats character={chars.list.find((c) => c._id === params.id)?.name} />}
+      >
         <Chats
           allChars={chars.map}
           chats={chats()}
@@ -249,7 +264,10 @@ const Chats: Component<{
               <For each={chats}>
                 {(chat) => (
                   <div class="flex w-full justify-between gap-2 rounded-lg bg-[var(--bg-800)] p-1 hover:bg-[var(--bg-700)]">
-                    <A class="flex w-10/12 cursor-pointer gap-2 sm:w-11/12" href={`/chat/${chat._id}`}>
+                    <A
+                      class="flex w-10/12 cursor-pointer gap-2 sm:w-11/12"
+                      href={`/chat/${chat._id}`}
+                    >
                       <div class="ml-4 flex items-center">
                         <div class="relative flex-shrink-0">
                           <For each={chat.characters.slice(0, 3).reverse()}>
@@ -258,8 +276,14 @@ const Chats: Component<{
                               if (positionStyle === undefined) return
 
                               return (
-                                <div class={`absolute top-1/2 -translate-y-1/2 transform ${positionStyle}`}>
-                                  <CharacterAvatar char={props.allChars[ch._id]} surround zoom={1.75} />
+                                <div
+                                  class={`absolute top-1/2 -translate-y-1/2 transform ${positionStyle}`}
+                                >
+                                  <CharacterAvatar
+                                    char={props.allChars[ch._id]}
+                                    surround
+                                    zoom={1.75}
+                                  />
                                 </div>
                               )
                             }}

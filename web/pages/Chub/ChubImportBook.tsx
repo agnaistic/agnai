@@ -65,8 +65,12 @@ const ChubImportBookModal: Component<{
       }
     >
       <form ref={ref}>
-        <div class="mb-2 text-sm">Optionally modify all the aspects of the memory book other than the image.</div>
-        <div class="mb-4 text-sm">The information provided here will be saved with the memory book on import.</div>
+        <div class="mb-2 text-sm">
+          Optionally modify all the aspects of the memory book other than the image.
+        </div>
+        <div class="mb-4 text-sm">
+          The information provided here will be saved with the memory book on import.
+        </div>
         <Show when={book().name}>
           <div class="text-sm">
             <EditMemoryForm

@@ -34,7 +34,12 @@ export const presetStore = createStore<PresetState>(
         return { presets: res.result.presets }
       }
     },
-    async *updatePreset({ presets }, presetId: string, preset: Partial<PresetUpdate>, onSuccess?: () => void) {
+    async *updatePreset(
+      { presets },
+      presetId: string,
+      preset: Partial<PresetUpdate>,
+      onSuccess?: () => void
+    ) {
       yield { saving: true }
       const res = await presetApi.editPreset(presetId, preset)
       yield { saving: false }
@@ -45,7 +50,11 @@ export const presetStore = createStore<PresetState>(
         onSuccess?.()
       }
     },
-    async *createPreset({ presets }, preset: PresetCreate, onSuccess?: (preset: AppSchema.UserGenPreset) => void) {
+    async *createPreset(
+      { presets },
+      preset: PresetCreate,
+      onSuccess?: (preset: AppSchema.UserGenPreset) => void
+    ) {
       yield { saving: true }
       const res = await presetApi.createPreset(preset)
       yield { saving: false }
@@ -56,7 +65,11 @@ export const presetStore = createStore<PresetState>(
         onSuccess?.(res.result)
       }
     },
-    async *deletePreset({ presets }, presetId: string, onSuccess?: (preset: AppSchema.UserGenPreset) => void) {
+    async *deletePreset(
+      { presets },
+      presetId: string,
+      onSuccess?: (preset: AppSchema.UserGenPreset) => void
+    ) {
       yield { saving: true }
       const res = await presetApi.deletePreset(presetId)
       yield { saving: false }

@@ -59,7 +59,11 @@ const EditMemoryForm: Component<{
   return (
     <>
       <div class="flex flex-col gap-2">
-        <FormLabel fieldName="id" label="Id" helperText={props.book._id === '' ? 'New book' : props.book._id} />
+        <FormLabel
+          fieldName="id"
+          label="Id"
+          helperText={props.book._id === '' ? 'New book' : props.book._id}
+        />
         <TextInput
           fieldName="name"
           label="Book Name"
@@ -115,7 +119,9 @@ const EditMemoryForm: Component<{
               search={search()}
               onChange={(e) => {
                 const prev = editing()
-                const entries = prev.entries.map((entry, idx) => (idx === i ? Object.assign({}, entry, e) : entry))
+                const entries = prev.entries.map((entry, idx) =>
+                  idx === i ? Object.assign({}, entry, e) : entry
+                )
                 const next = { ...prev, entries }
                 change(next)
               }}
@@ -139,7 +145,9 @@ const EntryCard: Component<{
   index: number
   onChange: (e: AppSchema.MemoryEntry) => void
 }> = (props) => {
-  const cls = createMemo(() => (props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'))
+  const cls = createMemo(() =>
+    props.entry.name.toLowerCase().includes(props.search.trim()) ? '' : 'hidden'
+  )
 
   return (
     <Accordian

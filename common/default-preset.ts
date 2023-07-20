@@ -75,7 +75,9 @@ export const altJailbreak = `
 
 export const cyoaTemplate = (model?: string) => {
   const jailbreak =
-    model === OPENAI_MODELS.Turbo0613 || model === OPENAI_MODELS.Turbo ? modernJailbreak : originalJailbreak
+    model === OPENAI_MODELS.Turbo0613 || model === OPENAI_MODELS.Turbo
+      ? modernJailbreak
+      : originalJailbreak
   return `
 Recent conversation history:
 {{history}}

@@ -3,12 +3,22 @@ import { OptionalPrimitive, Primitive, Validator } from './types'
 export function isPrimitive(value: any): value is Primitive {
   return (
     typeof value === 'string' &&
-    (value === 'string' || value === 'boolean' || value === 'number' || value === 'any' || value === 'unknown')
+    (value === 'string' ||
+      value === 'boolean' ||
+      value === 'number' ||
+      value === 'any' ||
+      value === 'unknown')
   )
 }
 
 export function isOptionalPrimitive(value: any): value is OptionalPrimitive {
-  return value === 'string?' || value === 'boolean?' || value === 'number?' || value === 'any?' || value === 'unknown?'
+  return (
+    value === 'string?' ||
+    value === 'boolean?' ||
+    value === 'number?' ||
+    value === 'any?' ||
+    value === 'unknown?'
+  )
 }
 
 export function isTuplePrimitive(value: any): value is [Primitive] | readonly [Primitive] {
@@ -18,7 +28,9 @@ export function isTuplePrimitive(value: any): value is [Primitive] | readonly [P
   return true
 }
 
-export function isTupleOptional(value: any): value is [OptionalPrimitive] | readonly [OptionalPrimitive] {
+export function isTupleOptional(
+  value: any
+): value is [OptionalPrimitive] | readonly [OptionalPrimitive] {
   if (Array.isArray(value) === false) return false
   if (value.length !== 1) return false
   if (!isOptionalPrimitive(value[0])) return false
@@ -44,7 +56,9 @@ export function isTupleBody(
   return typeof value[0] === 'object'
 }
 
-export function isOptionalUnion<T extends string>(value: any): value is T[] | readonly string[] | undefined {
+export function isOptionalUnion<T extends string>(
+  value: any
+): value is T[] | readonly string[] | undefined {
   if (!Array.isArray(value)) return false
   if (value.length < 1) return false
   if (isPrimitive(value[0])) return false

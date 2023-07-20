@@ -30,7 +30,9 @@ export const Card: Component<{
   )
 }
 
-export const SolidCard: Component<{ children: JSX.Element; class?: string; bg?: string }> = (props) => {
+export const SolidCard: Component<{ children: JSX.Element; class?: string; bg?: string }> = (
+  props
+) => {
   const cardBg = useBgStyle({
     hex: getSettingColor(props.bg || 'bg-500'),
     blur: false,
@@ -81,7 +83,9 @@ export const TitleCard: Component<{
     <div class={`flex flex-col gap-2 rounded-md border-[1px] ${props.class || ''}`} style={bg()}>
       <Show when={!!props.title}>
         <div
-          class={`flex rounded-t-md px-2 pt-2 text-xl font-bold ${props.center ? 'justify-center' : ''}`}
+          class={`flex rounded-t-md px-2 pt-2 text-xl font-bold ${
+            props.center ? 'justify-center' : ''
+          }`}
           style={bg()}
         >
           {props.title}

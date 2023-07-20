@@ -38,6 +38,12 @@ export type NovelTtsSettings = {
   seed?: string
 }
 
-export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<VoiceSettings, { service: T }>
+export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<
+  VoiceSettings,
+  { service: T }
+>
 
-export type VoiceSettingForm<T extends VoiceSettings['service']> = Omit<SpecificVoiceSetting<T>, 'service' | 'voiceId'>
+export type VoiceSettingForm<T extends VoiceSettings['service']> = Omit<
+  SpecificVoiceSetting<T>,
+  'service' | 'voiceId'
+>

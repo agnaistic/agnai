@@ -166,7 +166,12 @@ function handlePipe(value: string, pipe?: Pipe) {
 
     case 'words': {
       const [first] = value.trim().split('\n')
-      const words = first.replace(/\n/g, ' ').split(' ').slice(0, pipe.value).join(' ').replace(/\./gi, '')
+      const words = first
+        .replace(/\n/g, ' ')
+        .split(' ')
+        .slice(0, pipe.value)
+        .join(' ')
+        .replace(/\./gi, '')
       return words
     }
   }

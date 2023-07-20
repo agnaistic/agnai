@@ -38,7 +38,11 @@ const handleNovelVoicesList = async (
   }))
 }
 
-const handleNovelTextToSpeech: TextToSpeechAdapter = async ({ user, text, voice }, log, guestId) => {
+const handleNovelTextToSpeech: TextToSpeechAdapter = async (
+  { user, text, voice },
+  log,
+  guestId
+) => {
   if (voice.service !== 'novel') throw new Error('Invalid service')
   const token = getToken(user, guestId)
   //https://api.novelai.net/ai/generate-voice?text=This%20is%20a%20test%20for%20text%20to%20speech.%20A%20little%20harsh%2C%20a%20little%20slow%2C%20but%20always%20on%20point.&voice=-1&seed=Aini&opus=true&version=v2

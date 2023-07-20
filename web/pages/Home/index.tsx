@@ -38,7 +38,8 @@ const HomePage: Component = () => {
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500">
           <AlertTriangle class="mb-2 mr-2" />
-          Your browser does not support local storage. You will need to login/register to use Agnaistic.
+          Your browser does not support local storage. You will need to login/register to use
+          Agnaistic.
         </div>
       </Show>
 
@@ -48,9 +49,10 @@ const HomePage: Component = () => {
         </div>
         <Card border>
           <div class="leading-6">
-            <b>Agnaistic</b> is a "bring your own AI" chat service. It is completely open-source and free to use. You
-            only pay for the third-party AI services that you choose to use. Your conversations are completely private
-            and are never shared with anyone unless you invite them to your chat.
+            <b>Agnaistic</b> is a "bring your own AI" chat service. It is completely open-source and
+            free to use. You only pay for the third-party AI services that you choose to use. Your
+            conversations are completely private and are never shared with anyone unless you invite
+            them to your chat.
           </div>
         </Card>
 
@@ -110,25 +112,28 @@ const HomePage: Component = () => {
           <div class="flex justify-center text-xl font-bold">Notable Features</div>
           <div class="flex flex-col gap-2 leading-6">
             <p>
-              <b class="highlight">Agnaistic</b> is completely free to use. It is free to register. Your data will be
-              kept private and you can permanently delete your data at any time. We take your privacy very seriously.
+              <b class="highlight">Agnaistic</b> is completely free to use. It is free to register.
+              Your data will be kept private and you can permanently delete your data at any time.
+              We take your privacy very seriously.
             </p>
             <p>
               <b class="highlight">Register</b> to have your data available on all of your devices.
             </p>
             <p>Chat with multiple users and multiple characters at the same time</p>
             <p>
-              Create <b class="highlight">Memory Books</b> to give your characters information about their world.
+              Create <b class="highlight">Memory Books</b> to give your characters information about
+              their world.
             </p>
             <p>
-              <b class="highlight">Image generation</b> - Use Horde, NovelAI or your own Stable Diffusion server.
+              <b class="highlight">Image generation</b> - Use Horde, NovelAI or your own Stable
+              Diffusion server.
             </p>
             <p>
               <b class="highlight">Voice</b> - Give your characters a voice and speak back to them.
             </p>
             <p>
-              <b class="highlight">Custom Presets</b> - Completely customise the Generation settings used to generate
-              your responses.
+              <b class="highlight">Custom Presets</b> - Completely customise the Generation settings
+              used to generate your responses.
             </p>
           </div>
         </Card>
@@ -189,8 +194,8 @@ const HordeGuide: Component<{ close: () => void }> = (props) => (
       </SolidCard>
 
       <SolidCard bg="hl-900">
-        AI Horde is run and powered by a small number of volunteers that provide their GPUs. This is a great service,
-        but it can be a little slow. Consider contributing to the Horde!
+        AI Horde is run and powered by a small number of volunteers that provide their GPUs. This is
+        a great service, but it can be a little slow. Consider contributing to the Horde!
       </SolidCard>
 
       <Card>
@@ -199,8 +204,8 @@ const HordeGuide: Component<{ close: () => void }> = (props) => (
         Using high values for 'Max New Tokens' is the main cause of timeouts and slow replies.
       </Card>
       <Card>
-        By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your API key or change the
-        model in the Settings page.
+        By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your
+        API key or change the model in the Settings page.
       </Card>
     </div>
   </Modal>
@@ -210,7 +215,8 @@ const OpenAIGuide: Component<{ close: () => void }> = (props) => (
   <Modal show close={props.close} title="OpenAI Guide" maxWidth="half">
     <div class="flex flex-col gap-2">
       <Card>
-        OpenAI is a <b>paid service</b>. To use OpenAI, you to need provide your OpenAI API Key in your settings:
+        OpenAI is a <b>paid service</b>. To use OpenAI, you to need provide your OpenAI API Key in
+        your settings:
       </Card>
 
       <Card>

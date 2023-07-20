@@ -84,7 +84,9 @@ export const characterStore = createStore<CharacterState>(
     const impersonateId = await storage.getItem(IMPERSONATE_KEY)
     if (!impersonateId) return
 
-    const impersonating = init.characters?.find((ch: AppSchema.Character) => ch._id === impersonateId)
+    const impersonating = init.characters?.find(
+      (ch: AppSchema.Character) => ch._id === impersonateId
+    )
     characterStore.setState({ impersonating })
   })
 
@@ -181,7 +183,11 @@ export const characterStore = createStore<CharacterState>(
         onSuccess?.()
       }
     },
-    setFavorite: async ({ characters: { list, map, loaded } }, characterId: string, favorite: boolean) => {
+    setFavorite: async (
+      { characters: { list, map, loaded } },
+      characterId: string,
+      favorite: boolean
+    ) => {
       const res = await charsApi.setFavorite(characterId, favorite)
       if (res.error) return toastStore.error(`Failed to set favorite character`)
       if (res.result) {
@@ -226,7 +232,11 @@ export const characterStore = createStore<CharacterState>(
         }
       }
     },
-    deleteCharacter: async ({ characters: { list, map } }, charId: string, onSuccess?: () => void) => {
+    deleteCharacter: async (
+      { characters: { list, map } },
+      charId: string,
+      onSuccess?: () => void
+    ) => {
       const res = await charsApi.deleteCharacter(charId)
       if (res.error) return toastStore.error(`Failed to delete character`)
       if (res.result) {
@@ -242,9 +252,14 @@ export const characterStore = createStore<CharacterState>(
     clearGeneratedAvatar() {
       return { generate: { image: null, loading: false, blob: null } }
     },
-    async *generateAvatar({ generate: prev }, user: AppSchema.User, persona: AppSchema.Persona | string) {
+    async *generateAvatar(
+      { generate: prev },
+      user: AppSchema.User,
+      persona: AppSchema.Persona | string
+    ) {
       try {
-        const prompt = typeof persona === 'string' ? persona : await createAppearancePrompt(user, { persona })
+        const prompt =
+          typeof persona === 'string' ? persona : await createAppearancePrompt(user, { persona })
         yield { generate: { image: null, loading: true, blob: null } }
         const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
           const file = await dataURLtoFile(image)
@@ -277,21 +292,25 @@ async function dataURLtoFile(base64: string) {
     .then((buf) => new File([buf], 'avatar.png', { type: 'image/png' }))
 }
 
-subscribe('chat-character-added', { chatId: 'string', active: 'boolean?', character: 'any' }, (body) => {
-  const { characters } = characterStore.getState()
-  const char: AppSchema.Character = body.character
+subscribe(
+  'chat-character-added',
+  { chatId: 'string', active: 'boolean?', character: 'any' },
+  (body) => {
+    const { characters } = characterStore.getState()
+    const char: AppSchema.Character = body.character
 
-  const match = characters.list.find((ch) => ch._id === char._id)
-  if (match) return
+    const match = characters.list.find((ch) => ch._id === char._id)
+    if (match) return
 
-  characterStore.setState({
-    characters: {
-      list: characters.list.concat(body.character),
-      map: Object.assign(characters.map, { [char._id]: char }),
-      loaded: characters.loaded,
-    },
-  })
-})
+    characterStore.setState({
+      characters: {
+        list: characters.list.concat(body.character),
+        map: Object.assign(characters.map, { [char._id]: char }),
+        loaded: characters.loaded,
+      },
+    })
+  }
+)
 
 function replace(
   map: Record<string, AppSchema.Character>,
@@ -302,7 +321,10 @@ function replace(
   return { ...map, [id]: { ...next, ...char } }
 }
 
-function receiveChars(current: Record<string, AppSchema.Character>, received: AppSchema.Character[]) {
+function receiveChars(
+  current: Record<string, AppSchema.Character>,
+  received: AppSchema.Character[]
+) {
   const next: Record<string, AppSchema.Character> = { ...current }
   for (const char of received) {
     next[char._id] = char

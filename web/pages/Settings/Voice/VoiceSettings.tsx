@@ -33,7 +33,9 @@ export const VoiceSettings: Component = () => {
           when={getSpeechRecognition()}
           fallback={<p class="text-red-800">Speech to text is not available in your browser</p>}
         >
-          <p class="italic">You can use speech recognition by using the microphone icon in the input text box.</p>
+          <p class="italic">
+            You can use speech recognition by using the microphone icon in the input text box.
+          </p>
 
           <Toggle
             label="Enabled"

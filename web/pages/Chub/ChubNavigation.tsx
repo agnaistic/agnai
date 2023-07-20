@@ -30,7 +30,12 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
     <>
       <div class="mt-2 flex justify-between">
         <div class="flex gap-2">
-          <TextInput fieldName="search" placeholder="Search by name..." value={state.search} onKeyUp={onSearch} />
+          <TextInput
+            fieldName="search"
+            placeholder="Search by name..."
+            value={state.search}
+            onKeyUp={onSearch}
+          />
           <Show when={props.buttons}>
             <Button
               schema="secondary"

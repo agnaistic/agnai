@@ -217,7 +217,8 @@ export const updateConfig = handle(async ({ userId, body }) => {
     const prevKey = prevUser.hordeKey
     const incomingKey = body.hordeKey || body.hordeApiKey!
 
-    const isNewKey = body.hordeKey !== '' && body.hordeKey !== HORDE_GUEST_KEY && body.hordeKey !== prevKey
+    const isNewKey =
+      body.hordeKey !== '' && body.hordeKey !== HORDE_GUEST_KEY && body.hordeKey !== prevKey
 
     if (isNewKey) {
       const user = await verifyHordeKey(incomingKey)
@@ -228,7 +229,9 @@ export const updateConfig = handle(async ({ userId, body }) => {
   }
 
   const validatedThirdPartyUrl =
-    body.thirdPartyFormat === 'kobold' ? await verifyKobldUrl(prevUser, body.koboldUrl) : body.koboldUrl
+    body.thirdPartyFormat === 'kobold'
+      ? await verifyKobldUrl(prevUser, body.koboldUrl)
+      : body.koboldUrl
 
   if (validatedThirdPartyUrl) {
     update.koboldUrl = validatedThirdPartyUrl
@@ -405,49 +408,53 @@ async function verifyHordeKey(key: string) {
 
 export async function getSafeUserConfig(userId: string) {
   const user = await store.users.getUser(userId!)
-  if (user) {
-    if (user.novelApiKey) {
-      user.novelApiKey = ''
+  if (!user) return
+
+  if (user.novelApiKey) {
+    if (user.novelApiKey.includes('|') === false) {
+      await store.users.updateUser(userId, { novelApiKey: encryptText(user.novelApiKey) })
     }
 
-    user.hordeKey = ''
+    user.novelApiKey = ''
+  }
 
-    if (user.oaiKey) {
-      user.oaiKeySet = true
-      user.oaiKey = ''
-    }
+  user.hordeKey = ''
 
-    if (user.scaleApiKey) {
-      user.scaleApiKeySet = true
-      user.scaleApiKey = ''
-    }
+  if (user.oaiKey) {
+    user.oaiKeySet = true
+    user.oaiKey = ''
+  }
 
-    if (user.claudeApiKey) {
-      user.claudeApiKey = ''
-      user.claudeApiKeySet = true
-    }
+  if (user.scaleApiKey) {
+    user.scaleApiKeySet = true
+    user.scaleApiKey = ''
+  }
 
-    if (user.thirdPartyPassword) {
-      user.thirdPartyPassword = ''
-      user.thirdPartyPasswordSet = true
-    }
+  if (user.claudeApiKey) {
+    user.claudeApiKey = ''
+    user.claudeApiKeySet = true
+  }
 
-    if (user.elevenLabsApiKey) {
-      user.elevenLabsApiKey = ''
-      user.elevenLabsApiKeySet = true
-    }
+  if (user.thirdPartyPassword) {
+    user.thirdPartyPassword = ''
+    user.thirdPartyPasswordSet = true
+  }
 
-    for (const svc of getRegisteredAdapters()) {
-      if (!user.adapterConfig) break
-      if (!user.adapterConfig[svc.name]) continue
+  if (user.elevenLabsApiKey) {
+    user.elevenLabsApiKey = ''
+    user.elevenLabsApiKeySet = true
+  }
 
-      const secrets = svc.settings.filter((opt) => opt.secret)
+  for (const svc of getRegisteredAdapters()) {
+    if (!user.adapterConfig) break
+    if (!user.adapterConfig[svc.name]) continue
 
-      for (const secret of secrets) {
-        if (user.adapterConfig[svc.name]![secret.field]) {
-          user.adapterConfig[svc.name]![secret.field] = ''
-          user.adapterConfig[svc.name]![secret.field + 'Set'] = true
-        }
+    const secrets = svc.settings.filter((opt) => opt.secret)
+
+    for (const secret of secrets) {
+      if (user.adapterConfig[svc.name]![secret.field]) {
+        user.adapterConfig[svc.name]![secret.field] = ''
+        user.adapterConfig[svc.name]![secret.field + 'Set'] = true
       }
     }
   }

@@ -10,7 +10,9 @@ import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
 
-const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: () => void }> = (props) => {
+const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: () => void }> = (
+  props
+) => {
   let ref: any
   const presets = presetStore((s) => s.presets)
   const adapters = settingStore((s) => s.config.adapters)
@@ -52,7 +54,11 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
     setPresetId(id)
 
     const userPreset = presets.find((p) => p._id === id)
-    const actualPreset = userPreset ? userPreset : isDefaultPreset(id) ? defaultPresets[id] : undefined
+    const actualPreset = userPreset
+      ? userPreset
+      : isDefaultPreset(id)
+      ? defaultPresets[id]
+      : undefined
 
     setActual(actualPreset as any)
     setService(userPreset?.service || '')
@@ -67,7 +73,13 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
     </>
   )
   return (
-    <Modal show={props.show} title="Select Chat Preset" close={props.close} footer={Footer} dismissable={false}>
+    <Modal
+      show={props.show}
+      title="Select Chat Preset"
+      close={props.close}
+      footer={Footer}
+      dismissable={false}
+    >
       <form ref={ref}>
         <Select
           items={options()}
@@ -76,8 +88,8 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
             <div class="flex flex-col gap-1">
               <div class="font-bold">Chats are now required to have a preset assigned.</div>
               <div>
-                Unsure what to do? Use the <code>System Built-In Preset</code> You can change this at any time in your{' '}
-                <b>Chat Generation Settings</b>.
+                Unsure what to do? Use the <code>System Built-In Preset</code> You can change this
+                at any time in your <b>Chat Generation Settings</b>.
               </div>
               <div>
                 Alternatively, you can set a <code>Default Preset</code> in your{' '}
@@ -105,7 +117,9 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
             onChange={(val) => setService(val.value)}
             helperText={
               <>
-                <div>User Presets now require an AI service. Select an AI service for your preset.</div>
+                <div>
+                  User Presets now require an AI service. Select an AI service for your preset.
+                </div>
               </>
             }
           />

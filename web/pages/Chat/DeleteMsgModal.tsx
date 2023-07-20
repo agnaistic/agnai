@@ -3,14 +3,18 @@ import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import { msgStore } from '../../store'
 
-const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (props) => {
+const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () => void }> = (
+  props
+) => {
   const state = msgStore((s) => ({
     msgs: s.msgs,
     msg: s.msgs.find((msg) => msg._id === props.messageId),
   }))
 
   const count = createMemo(() =>
-    state.msg?.adapter === 'image' ? 1 : state.msgs.length - state.msgs.findIndex(byId(props.messageId))
+    state.msg?.adapter === 'image'
+      ? 1
+      : state.msgs.length - state.msgs.findIndex(byId(props.messageId))
   )
 
   const confirm = (one?: boolean) => {
@@ -45,7 +49,9 @@ const DeleteMsgModal: Component<{ messageId: string; show: boolean; close: () =>
           Deleteing "one" will delete the selected message only.
         </Show>
       </Show>
-      <Show when={state.msg?.adapter === 'image'}>Are you sure wish to delete 1 image message?</Show>
+      <Show when={state.msg?.adapter === 'image'}>
+        Are you sure wish to delete 1 image message?
+      </Show>
     </Modal>
   )
 }

@@ -96,10 +96,12 @@ async function chatEmbed(chat: AppSchema.Chat, messages: AppSchema.ChatMessage[]
   }, [] as Memory.ChatEmbed[])
 
   const now = Date.now()
-  await method('post', `/pipeline/embed/${chat._id}/reembed`, { messages: payload }).catch((err) => {
-    goOffline()
-    console.debug(`Failed to embed`, err)
-  })
+  await method('post', `/pipeline/embed/${chat._id}/reembed`, { messages: payload }).catch(
+    (err) => {
+      goOffline()
+      console.debug(`Failed to embed`, err)
+    }
+  )
   console.debug('Embedding duration', Date.now() - now, 'ms')
 }
 
@@ -216,11 +218,16 @@ async function queryEmbedding<T = {}>(
 ): Promise<Array<Memory.UserEmbed<T>>> {
   const maxDistance = opts.maxDistance ?? 1.5
 
-  if (!online || !status.memory) throw new Error(`Embeddings are not available: Offline or disabled`)
+  if (!online || !status.memory)
+    throw new Error(`Embeddings are not available: Offline or disabled`)
   const now = Date.now()
-  const res = await method<{ result: EmbedQueryResult }>('post', `/pipeline/embed/${embedding}/query`, {
-    message,
-  }).catch((err) => {
+  const res = await method<{ result: EmbedQueryResult }>(
+    'post',
+    `/pipeline/embed/${embedding}/query`,
+    {
+      message,
+    }
+  ).catch((err) => {
     goOffline()
     console.error('Failed memory retrieval', err)
     return { result: undefined, error: err.message || err, status: 500 }
@@ -308,7 +315,8 @@ async function check() {
    * 2. If the AppConfig is running with the pipeline proxy, use the current API url
    * 3. Otherwise use localhost:5001
    */
-  const apiUrl = location.port === '1234' ? `http://${location.hostname}:3001` : `http://${location.host}`
+  const apiUrl =
+    location.port === '1234' ? `http://${location.hostname}:3001` : `http://${location.host}`
   baseUrl = config.pipelineProxyEnabled ? apiUrl : `http://localhost:5001`
 
   const res = await method('get', '/pipeline/status')

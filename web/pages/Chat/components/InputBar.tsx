@@ -123,7 +123,12 @@ const InputBar: Component<{
       return
     }
 
-    msgStore.textToSpeech(lastTextMsg._id, lastTextMsg.msg, voice, props.char?.culture || defaultCulture)
+    msgStore.textToSpeech(
+      lastTextMsg._id,
+      lastTextMsg.msg,
+      voice,
+      props.char?.culture || defaultCulture
+    )
     setMenu(false)
   }
 
@@ -204,12 +209,19 @@ const InputBar: Component<{
             </Button> */}
           <Show when={props.bots.length > 1}>
             <div>Auto-reply</div>
-            <Button schema="secondary" size="sm" onClick={() => setAutoReplyAs('')} disabled={!chats.replyAs}>
+            <Button
+              schema="secondary"
+              size="sm"
+              onClick={() => setAutoReplyAs('')}
+              disabled={!chats.replyAs}
+            >
               None
             </Button>
             <For each={props.bots}>
               {(char) => (
-                <Show when={props.chat.characters?.[char._id] || char._id === props.chat.characterId}>
+                <Show
+                  when={props.chat.characters?.[char._id] || char._id === props.chat.characterId}
+                >
                   <Button
                     schema="secondary"
                     size="sm"
@@ -224,7 +236,12 @@ const InputBar: Component<{
             <hr />
           </Show>
           <Show when={props.showOocToggle}>
-            <Button schema="secondary" size="sm" class="flex items-center justify-between" onClick={toggleOoc}>
+            <Button
+              schema="secondary"
+              size="sm"
+              class="flex items-center justify-between"
+              onClick={toggleOoc}
+            >
               <div>Stop Bot Reply</div>
               <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
             </Button>
@@ -247,7 +264,13 @@ const InputBar: Component<{
                 <Megaphone size={18} /> Play Voice
               </Button>
             </Show>
-            <Show when={!!ctx.chat?.scenarioIds?.length && isOwner() && (chats.replyAs || ctx.activeBots.length === 1)}>
+            <Show
+              when={
+                !!ctx.chat?.scenarioIds?.length &&
+                isOwner() &&
+                (chats.replyAs || ctx.activeBots.length === 1)
+              }
+            >
               <Button schema="secondary" class="w-full" onClick={triggerEvent} alignLeft>
                 <Zap /> Trigger Event
               </Button>

@@ -16,7 +16,12 @@ export type ChatLine = {
   characterId: string
 }
 
-export type SortType = 'chat-updated' | 'chat-created' | 'character-name' | 'character-created' | 'bot-activity'
+export type SortType =
+  | 'chat-updated'
+  | 'chat-created'
+  | 'character-name'
+  | 'character-created'
+  | 'bot-activity'
 
 export type SortDirection = 'asc' | 'desc'
 

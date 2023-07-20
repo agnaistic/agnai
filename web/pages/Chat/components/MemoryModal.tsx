@@ -76,11 +76,20 @@ const ChatMemoryModal: Component<{
   )
 
   const embeds = createMemo(() => {
-    return [{ label: 'None', value: '' }].concat(state.embeds.map((em) => ({ label: em.name, value: em.name })))
+    return [{ label: 'None', value: '' }].concat(
+      state.embeds.map((em) => ({ label: em.name, value: em.name }))
+    )
   })
 
   return (
-    <Modal show={props.show} close={props.close} footer={<Footer />} onSubmit={onSubmit} maxWidth="half" fixedHeight>
+    <Modal
+      show={props.show}
+      close={props.close}
+      footer={<Footer />}
+      onSubmit={onSubmit}
+      maxWidth="half"
+      fixedHeight
+    >
       <PageHeader
         title="Memory"
         subtitle={
@@ -104,7 +113,11 @@ const ChatMemoryModal: Component<{
           value={id()}
           onChange={(item) => changeBook(item.value)}
         />
-        <Button disabled={id() === (props.chat.memoryId || '')} class="h-fit w-fit" onClick={useMemoryBook}>
+        <Button
+          disabled={id() === (props.chat.memoryId || '')}
+          class="h-fit w-fit"
+          onClick={useMemoryBook}
+        >
           <Save />
           Use Memory Book
         </Button>
@@ -118,7 +131,11 @@ const ChatMemoryModal: Component<{
             onChange={(item) => setEmbedId(item.value)}
             value={embedId()}
           />
-          <Button class="w-fit" disabled={embedId() === props.chat.userEmbedId} onClick={useUserEmbed}>
+          <Button
+            class="w-fit"
+            disabled={embedId() === props.chat.userEmbedId}
+            onClick={useUserEmbed}
+          >
             <Save />
             Use Embedding
           </Button>

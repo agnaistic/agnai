@@ -8,7 +8,12 @@ import { AppSchema } from '/common/types'
 import { runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/default-preset'
 
-const validInference = { prompt: 'string', settings: 'any', user: 'any', service: 'string?' } as const
+const validInference = {
+  prompt: 'string',
+  settings: 'any',
+  user: 'any',
+  service: 'string?',
+} as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
   body.prompt = ''
@@ -58,7 +63,10 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 
   const { values } = await runGuidance(prompt, {
     infer,
-    placeholders: { history: body.lines.join('\n'), user: body.impersonating?.name || body.profile.handle },
+    placeholders: {
+      history: body.lines.join('\n'),
+      user: body.impersonating?.name || body.profile.handle,
+    },
   })
 
   const actions: AppSchema.ChatAction[] = []
@@ -79,13 +87,14 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid({ ...validInference, placeholders: 'any?' }, body)
+  assertValid({ ...validInference, placeholders: 'any?', maxTokens: 'number?' }, body)
 
   const settings = await assertSettings(body, userId)
 
   const infer = async (text: string) => {
     const inference = await inferenceAsync({
       user: body.user,
+      maxTokens: body.maxTokens,
       settings,
       log,
       prompt: text,
@@ -165,12 +174,19 @@ async function assertSettings(body: any, userId: string) {
   let settings = body.settings as Partial<AppSchema.GenSettings> | null
   if (userId) {
     const id = body.settings._id as string
-    settings = !id ? body.settings : isDefaultPreset(id) ? defaultPresets[id] : await store.presets.getUserPreset(id)
+    settings = !id
+      ? body.settings
+      : isDefaultPreset(id)
+      ? defaultPresets[id]
+      : await store.presets.getUserPreset(id)
     body.user = await store.users.getUser(userId)
   }
 
   if (!settings) {
-    throw new StatusError('The preset used does not have a service configured. Configure it from the presets page', 400)
+    throw new StatusError(
+      'The preset used does not have a service configured. Configure it from the presets page',
+      400
+    )
   }
 
   if (!body.user) {

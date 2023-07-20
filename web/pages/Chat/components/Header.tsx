@@ -10,7 +10,10 @@ const Header: Component<{ participants: string[] }> = (props) => (
       </div>
       <h1 class="text-4xl font-bold text-white">{props.participants.join(', ')}</h1>
       <h2 class="text-lg text-white/75">
-        <Show when={props.participants.length === 1} fallback={<>This is the beginning of the group conversation.</>}>
+        <Show
+          when={props.participants.length === 1}
+          fallback={<>This is the beginning of the group conversation.</>}
+        >
           This is the beginning of your conversation with {props.participants[0]}.
         </Show>
       </h2>

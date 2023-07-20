@@ -65,7 +65,8 @@ const CreateScenario: Component = () => {
 
   const addEntry = () => {
     const requiresGreeting =
-      state.scenario?.overwriteCharacterScenario && !entries().some((e) => e.trigger.kind === 'onGreeting')
+      state.scenario?.overwriteCharacterScenario &&
+      !entries().some((e) => e.trigger.kind === 'onGreeting')
     const newEvent: AppSchema.ScenarioEvent = {
       name: requiresGreeting ? 'Greeting' : '',
       type: 'world',
@@ -93,7 +94,10 @@ const CreateScenario: Component = () => {
     setEntries(entries().filter((e) => e !== entry))
   }
 
-  const changeTriggerKind = (entry: AppSchema.ScenarioEvent, kind: AppSchema.ScenarioTriggerKind) => {
+  const changeTriggerKind = (
+    entry: AppSchema.ScenarioEvent,
+    kind: AppSchema.ScenarioTriggerKind
+  ) => {
     let trigger: AppSchema.ScenarioEventTrigger
     switch (kind) {
       case 'onGreeting':
@@ -163,7 +167,8 @@ const CreateScenario: Component = () => {
           break
 
         case 'trigger-minMessagesSinceLastEvent':
-          ;(prev.trigger as AppSchema.ScenarioOnCharacterMessageRx).minMessagesSinceLastEvent = +value
+          ;(prev.trigger as AppSchema.ScenarioOnCharacterMessageRx).minMessagesSinceLastEvent =
+            +value
           break
       }
 
@@ -207,7 +212,8 @@ const CreateScenario: Component = () => {
               <code>Greeting</code>: The very first time the user starts a chat
             </li>
             <li>
-              <code>Manual Trigger</code>: When the user uses the <i>Trigger Event</i> menu in the chat
+              <code>Manual Trigger</code>: When the user uses the <i>Trigger Event</i> menu in the
+              chat
             </li>
             <li>
               <code>Chat Opened</code>: When the user opens a chat with a character after some time
@@ -219,49 +225,54 @@ const CreateScenario: Component = () => {
           <p>Whenever an event is triggered, a prompt will be sent to the character.</p>
           <ul class="list-inside list-disc">
             <li>
-              <code>World</code>: The event will be shown as if something happened independently of the character.
+              <code>World</code>: The event will be shown as if something happened independently of
+              the character.
             </li>
             <li>
-              <code>Character</code>: The event will be shown as if the character wrote it, for example if the character
-              does something.
+              <code>Character</code>: The event will be shown as if the character wrote it, for
+              example if the character does something.
             </li>
             <li>
-              <code>Hidden</code>: The event will be hidden from the user. This is useful to make the character do
-              something, and make it look like it was on their own initiative.
+              <code>Hidden</code>: The event will be hidden from the user. This is useful to make
+              the character do something, and make it look like it was on their own initiative.
             </li>
             <li>
-              <code>OOC</code>: The event will be hidden from the character. This is useful to give information or clues
-              to the user.
+              <code>OOC</code>: The event will be hidden from the character. This is useful to give
+              information or clues to the user.
             </li>
           </ul>
           <p>The prompt text will have processing.</p>
           <ul class="list-inside list-disc">
             <li>
-              The <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders will be replaced
+              The <code>{'{{char}}'}</code> and <code>{'{{user}}'}</code> placeholders will be
+              replaced
             </li>
             <li>
-              Any text with <code>(OOC: TEXT)</code> will be hidden from the user, so you can add additional
-              instructions for the character.
+              Any text with <code>(OOC: TEXT)</code> will be hidden from the user, so you can add
+              additional instructions for the character.
             </li>
             <li>
-              It is recommended to wrap your text in <code>*asterisks*</code> unless you want the character to{' '}
-              <i>say</i> the prompt text.
+              It is recommended to wrap your text in <code>*asterisks*</code> unless you want the
+              character to <i>say</i> the prompt text.
             </li>
           </ul>
           <p>
-            Finally, you can use the states to control which events are triggered under which conditions. The chat will
-            keep track of a list of <i>states</i>, which can be assigned by events.
+            Finally, you can use the states to control which events are triggered under which
+            conditions. The chat will keep track of a list of <i>states</i>, which can be assigned
+            by events.
           </p>
           <ul class="list-inside list-disc">
             <li>
-              Required states are states that must exist in the chat to allow the trigger to run. You can also prefix a
-              required state by <code>!</code> to require the state <i>not</i> to exist in the chat for the event to
-              run. You can specify multiple states by separating them with a comma.
+              Required states are states that must exist in the chat to allow the trigger to run.
+              You can also prefix a required state by <code>!</code> to require the state <i>not</i>{' '}
+              to exist in the chat for the event to run. You can specify multiple states by
+              separating them with a comma.
             </li>
             <li>
-              Assigned states are states that will be added to the chat whenever the event is triggered. You can also
-              prefix an assigned state by <code>!</code> to <i>remove</i> the state from the chat. You can specify
-              multiple states by separating them with a comma.
+              Assigned states are states that will be added to the chat whenever the event is
+              triggered. You can also prefix an assigned state by <code>!</code> to <i>remove</i>{' '}
+              the state from the chat. You can specify multiple states by separating them with a
+              comma.
             </li>
           </ul>
           <p>When multiple events can run, they will be randomly selected.</p>
@@ -278,7 +289,9 @@ const CreateScenario: Component = () => {
 
         <Switch>
           <Match when={!entries().length}>
-            <div class="mt-16 flex w-full justify-center rounded-full text-xl">You have no events yet.</div>
+            <div class="mt-16 flex w-full justify-center rounded-full text-xl">
+              You have no events yet.
+            </div>
           </Match>
 
           <Match when={true}>
@@ -292,7 +305,9 @@ const CreateScenario: Component = () => {
                         fieldName={`trigger-kind.${index()}`}
                         items={triggerTypeOptions}
                         value={entry.trigger.kind}
-                        onChange={(option) => changeTriggerKind(entry, option.value as AppSchema.ScenarioTriggerKind)}
+                        onChange={(option) =>
+                          changeTriggerKind(entry, option.value as AppSchema.ScenarioTriggerKind)
+                        }
                       />
                       <TextInput
                         fieldName={`requires.${index()}`}
@@ -371,7 +386,9 @@ const CreateScenario: Component = () => {
                           min={0}
                           max={100}
                           step={0.01}
-                          onChange={(ev) => ((entry.trigger as AppSchema.ScenarioOnManual).probability = ev)}
+                          onChange={(ev) =>
+                            ((entry.trigger as AppSchema.ScenarioOnManual).probability = ev)
+                          }
                         />
                       </Match>
 
@@ -384,7 +401,9 @@ const CreateScenario: Component = () => {
                           min={1}
                           max={24 * 7}
                           step={1}
-                          onChange={(ev) => ((entry.trigger as AppSchema.ScenarioOnChatOpened).awayHours = ev)}
+                          onChange={(ev) =>
+                            ((entry.trigger as AppSchema.ScenarioOnChatOpened).awayHours = ev)
+                          }
                         />
                       </Match>
 
@@ -393,12 +412,17 @@ const CreateScenario: Component = () => {
                           fieldName={`trigger-minMessagesSinceLastEvent.${index()}`}
                           label="After (messages since last event)"
                           helperText="After how many message should this trigger be activated? The shortest trigger will be selected."
-                          value={(entry.trigger as AppSchema.ScenarioOnCharacterMessageRx).minMessagesSinceLastEvent}
+                          value={
+                            (entry.trigger as AppSchema.ScenarioOnCharacterMessageRx)
+                              .minMessagesSinceLastEvent
+                          }
                           min={2}
                           max={100}
                           step={1}
                           onChange={(ev) =>
-                            ((entry.trigger as AppSchema.ScenarioOnCharacterMessageRx).minMessagesSinceLastEvent = ev)
+                            ((
+                              entry.trigger as AppSchema.ScenarioOnCharacterMessageRx
+                            ).minMessagesSinceLastEvent = ev)
                           }
                         />
                       </Match>

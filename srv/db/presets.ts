@@ -7,7 +7,10 @@ export async function updateGenSetting(chatId: string, props: AppSchema.Chat['ge
 }
 
 export async function updateGenPreset(chatId: string, preset: string) {
-  await db('chat').updateOne({ _id: chatId }, { $set: { genSettings: null as any, genPreset: preset } })
+  await db('chat').updateOne(
+    { _id: chatId },
+    { $set: { genSettings: null as any, genPreset: preset } }
+  )
 }
 
 export async function createUserPreset(userId: string, settings: AppSchema.GenSettings) {
@@ -32,7 +35,11 @@ export async function getUserPresets(userId: string) {
   return presets
 }
 
-export async function updateUserPreset(userId: string, presetId: string, update: AppSchema.GenSettings) {
+export async function updateUserPreset(
+  userId: string,
+  presetId: string,
+  update: AppSchema.GenSettings
+) {
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
   const updated = await db('gen-setting').findOne({ _id: presetId })
   return updated

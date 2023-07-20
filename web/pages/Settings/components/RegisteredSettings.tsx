@@ -35,7 +35,9 @@ const ServiceOption: Component<{
   config?: Record<string, any>
 }> = (props) => {
   const field = createMemo(() => `adapterConfig.${props.service}.${props.opt.field}`)
-  const options = createMemo(() => (props.opt.setting.type === 'list' ? props.opt.setting.options : []))
+  const options = createMemo(() =>
+    props.opt.setting.type === 'list' ? props.opt.setting.options : []
+  )
 
   const isSet = createMemo(() => {
     const prop = `${props.opt.field}Set`
@@ -81,7 +83,12 @@ const ServiceOption: Component<{
       </Match>
 
       <Match when={props.opt.setting.type === 'boolean'}>
-        <Toggle fieldName={field()} label={props.opt.label} helperText={props.opt.helperText} value={props.value} />
+        <Toggle
+          fieldName={field()}
+          label={props.opt.label}
+          helperText={props.opt.helperText}
+          value={props.value}
+        />
       </Match>
 
       <Match when={props.opt.setting.type === 'list'}>

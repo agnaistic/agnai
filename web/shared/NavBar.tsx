@@ -49,7 +49,9 @@ const NavBar: Component = () => {
 
     const { name, adapter, isThirdParty, presetLabel } = data
 
-    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${name || presetLabel}`
+    const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
+      name || presetLabel
+    }`
     return label
   })
 

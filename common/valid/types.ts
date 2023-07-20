@@ -56,7 +56,11 @@ export type FromPrimitve<T extends Primitive> = T extends 'string'
   ? unknown
   : never
 
-export type FromTuple<T> = T extends [infer U] | readonly [infer U] | [infer U, '?'] | readonly [infer U, '?']
+export type FromTuple<T> = T extends
+  | [infer U]
+  | readonly [infer U]
+  | [infer U, '?']
+  | readonly [infer U, '?']
   ? U extends Primitive
     ? T extends [U, '?'] | readonly [U, '?']
       ? Array<FromPrimitve<U>> | undefined

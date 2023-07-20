@@ -78,10 +78,13 @@ const LoginPage: Component = () => {
         <p class="flex justify-center text-xl text-[var(--hl-400)]">Why register?</p>
         <div class="flex flex-col items-center">
           <p>
-            You don't need to register to use Agnaistic. You can use it anonymously and no data will be stored on any
-            servers.
+            You don't need to register to use Agnaistic. You can use it anonymously and no data will
+            be stored on any servers.
           </p>
-          <p>If you choose to register your data will be stored and accessible on any devices you login with.</p>
+          <p>
+            If you choose to register your data will be stored and accessible on any devices you
+            login with.
+          </p>
         </div>
       </div>
     </div>
@@ -116,7 +119,13 @@ const RegisterForm: Component<FormProps> = (props) => {
       <div class="flex flex-col gap-2">
         <TextInput label="Display Name" fieldName="handle" placeholder="Display name" required />
         <TextInput label="Username" fieldName="username" placeholder="Username" required />
-        <TextInput label="Password" fieldName="password" placeholder="Password" type="password" required />
+        <TextInput
+          label="Password"
+          fieldName="password"
+          placeholder="Password"
+          type="password"
+          required
+        />
         <TextInput fieldName="confirm" placeholder="Confirm Password" type="password" required />
       </div>
 

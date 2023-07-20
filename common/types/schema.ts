@@ -1,4 +1,10 @@
-import type { AIAdapter, ChatAdapter, OpenRouterModel, PersonaFormat, RegisteredAdapter } from '../adapters'
+import type {
+  AIAdapter,
+  ChatAdapter,
+  OpenRouterModel,
+  PersonaFormat,
+  RegisteredAdapter,
+} from '../adapters'
 import type { GenerationPreset } from '../presets'
 import type { ImageSettings } from './image-schema'
 import type { TTSSettings, VoiceSettings } from './texttospeech-schema'

@@ -3,7 +3,16 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
 import HordeAISettings from './components/HordeAISettings'
-import { Component, For, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
+import {
+  Component,
+  For,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+} from 'solid-js'
 import OpenAISettings from './components/OpenAISettings'
 import ScaleSettings from './components/ScaleSettings'
 import NovelAISettings from './components/NovelAISettings'
@@ -76,8 +85,9 @@ const AISettings: Component<{
               <A class="link" href="/guides/pipeline">
                 Pipeline Guide.
               </A>
-              &nbsp;If available, use local Agnaistic pipeline features (summarization for images). This is extremely
-              new and experimental. Expect this to change and improve in the near future.
+              &nbsp;If available, use local Agnaistic pipeline features (summarization for images).
+              This is extremely new and experimental. Expect this to change and improve in the near
+              future.
               <span></span>
             </>
           }

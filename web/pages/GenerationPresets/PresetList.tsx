@@ -57,7 +57,9 @@ const PresetList: Component = () => {
               >
                 <div class="ml-4 flex w-full items-center">
                   <div>
-                    <span class="mr-1 text-xs italic text-[var(--text-600)]">{getServiceName(preset.service)}</span>
+                    <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                      {getServiceName(preset.service)}
+                    </span>
                     {preset.name}
                   </div>
                 </div>
@@ -70,7 +72,12 @@ const PresetList: Component = () => {
               >
                 <Copy />
               </Button>
-              <Button schema="clear" size="sm" onClick={() => setDeleting(preset._id)} class="icon-button">
+              <Button
+                schema="clear"
+                size="sm"
+                onClick={() => setDeleting(preset._id)}
+                class="icon-button"
+              >
                 <Trash />
               </Button>
             </div>
@@ -87,7 +94,9 @@ const PresetList: Component = () => {
               >
                 <div class="ml-4 flex w-full items-center">
                   {' '}
-                  <span class="mr-1 text-xs italic text-[var(--text-600)]">{getServiceName(preset.service)}</span>
+                  <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                    {getServiceName(preset.service)}
+                  </span>
                   {preset.name}
                 </div>
               </A>

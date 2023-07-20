@@ -69,7 +69,8 @@ export async function verifyApiKey(apikey: string) {
 
   if (!key) throw errors.Unauthorized
 
-  if (key) return { scopes: key.scopes, userId: key.userId, username: key.username, admin: !!key.admin }
+  if (key)
+    return { scopes: key.scopes, userId: key.userId, username: key.username, admin: !!key.admin }
 }
 
 export async function getSafeUserKeys(userId: string) {

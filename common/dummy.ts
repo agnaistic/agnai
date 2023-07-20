@@ -3,7 +3,10 @@ import { AppSchema } from './types/schema'
 
 let counter = Date.now()
 
-export function toChar(name: string, overrides?: Partial<AppSchema.Character>): AppSchema.Character {
+export function toChar(
+  name: string,
+  overrides?: Partial<AppSchema.Character>
+): AppSchema.Character {
   return {
     _id: name,
     kind: 'character',
@@ -130,7 +133,12 @@ export function toBook(name: string, entries: AppSchema.MemoryEntry[] = []): App
   }
 }
 
-export function toEntry(keywords: string[], entry: string, priority = 0, weight = 0): AppSchema.MemoryEntry {
+export function toEntry(
+  keywords: string[],
+  entry: string,
+  priority = 0,
+  weight = 0
+): AppSchema.MemoryEntry {
   return {
     enabled: true,
     name: entry,

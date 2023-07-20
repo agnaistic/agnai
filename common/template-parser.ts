@@ -171,7 +171,9 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOp
   const output: string[] = []
 
   const entities =
-    holder === 'bots' ? Object.values(opts.characters).filter((b) => !!b && b._id !== opts.replyAs._id) : opts.lines
+    holder === 'bots'
+      ? Object.values(opts.characters).filter((b) => !!b && b._id !== opts.replyAs._id)
+      : opts.lines
 
   let i = 0
   for (const entity of entities) {
@@ -231,7 +233,11 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
       return opts.replyAs.name
 
     case 'user':
-      return opts.impersonate?.name || opts.members.find((m) => m.userId === opts.user._id)?.handle || 'You'
+      return (
+        opts.impersonate?.name ||
+        opts.members.find((m) => m.userId === opts.user._id)?.handle ||
+        'You'
+      )
 
     case 'example_dialogue':
       return opts.parts.sampleChat?.join('\n') || ''

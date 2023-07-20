@@ -13,7 +13,10 @@ type PromptOpts = {
 
 const DEFAULT_MAX_TOKENS = 2048
 
-export async function getMessagesForPrompt({ chat, settings, char, members, retry }: PromptOpts, encoder: Encoder) {
+export async function getMessagesForPrompt(
+  { chat, settings, char, members, retry }: PromptOpts,
+  encoder: Encoder
+) {
   const maxContext = settings.maxContextLength || DEFAULT_MAX_TOKENS
   let before: string | undefined
   let tokens = 0

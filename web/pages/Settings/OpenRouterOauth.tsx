@@ -58,7 +58,8 @@ const OpenRouterOauth: Component = () => {
           </a>{' '}
           to create an API key and enter it below.
           <br />
-          Support for OpenRouter is quite new. Please provide feedback via Discord if you have any issues or questions.
+          Support for OpenRouter is quite new. Please provide feedback via Discord if you have any
+          issues or questions.
         </TitleCard>
       </Show>
       <Show when={isKeySet()}>
@@ -74,7 +75,9 @@ const OpenRouterOauth: Component = () => {
           </Match>
 
           <Match when={isKeySet()}>
-            <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>Logout</Button>
+            <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>
+              Logout
+            </Button>
           </Match>
         </Switch>
       </div>

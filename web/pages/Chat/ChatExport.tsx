@@ -50,8 +50,8 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
       <p class="text-xl font-bold">Note</p>
       <p>This will only export the conversation that you currently have loaded.</p>
       <p>
-        If you want to export the entire chat, you will need to scroll up in the chat until the entire conversation it
-        loaded.
+        If you want to export the entire chat, you will need to scroll up in the chat until the
+        entire conversation it loaded.
       </p>
     </Modal>
   )

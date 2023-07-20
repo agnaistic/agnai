@@ -142,7 +142,11 @@ export const chatStore = createStore<ChatState>('chat', {
      * If a user accepts an invite to a chat, their profile has not been fetched and cached
      * To fix this, we'll lazy load them when they send a message and their profile isn't already present
      */
-    option<Prop extends keyof ChatState['opts']>(prev: ChatState, key: Prop, value: ChatState['opts'][Prop]) {
+    option<Prop extends keyof ChatState['opts']>(
+      prev: ChatState,
+      key: Prop,
+      value: ChatState['opts'][Prop]
+    ) {
       const next = { ...prev.opts, [key]: value }
       next[key] = value
       saveOptsCache(next)
@@ -197,7 +201,8 @@ export const chatStore = createStore<ChatState>('chat', {
           activeCharId: res.result.character._id,
         })
 
-        const isMultiChars = res.result.chat.characters && Object.keys(res.result.chat.characters).length
+        const isMultiChars =
+          res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
         events.emit(EVENTS.charsReceived, res.result.characters)
 
@@ -340,7 +345,12 @@ export const chatStore = createStore<ChatState>('chat', {
         }
       }
     },
-    async *createChat({ allChats, char }, characterId: string, props: NewChat, onSuccess?: (id: string) => void) {
+    async *createChat(
+      { allChats, char },
+      characterId: string,
+      props: NewChat,
+      onSuccess?: (id: string) => void
+    ) {
       const res = await chatsApi.createChat(characterId, props)
       if (res.error) toastStore.error(`Failed to create conversation: ${res.error}`)
       if (res.result) {
@@ -482,7 +492,9 @@ subscribe('profile-handle-changed', { userId: 'string', handle: 'string' }, (bod
   const { chatProfiles, memberIds } = chatStore.getState()
   if (!memberIds[body.userId]) return
 
-  const nextMembers = chatProfiles.map((am) => (am.userId === body.userId ? { ...am, handle: body.handle } : am))
+  const nextMembers = chatProfiles.map((am) =>
+    am.userId === body.userId ? { ...am, handle: body.handle } : am
+  )
 
   const next = { ...memberIds[body.userId], handle: body.handle }
 
@@ -562,7 +574,8 @@ function saveOptsCache(cache: ChatOptCache) {
 }
 
 function getOptsCache(): ChatOptCache {
-  const prev = storage.localGetItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
+  const prev =
+    storage.localGetItem(EDITING_KEY) || JSON.stringify({ editing: false, hideOoc: false })
   const body = JSON.parse(prev)
   return { editing: false, hideOoc: false, ...body, modal: undefined }
 }
@@ -573,36 +586,40 @@ subscribe('chat-server-notification', { chatId: 'string', text: 'string' }, (bod
   toastStore.warn(body.text)
 })
 
-subscribe('chat-character-added', { chatId: 'string', active: 'boolean?', character: 'any' }, (body) => {
-  const { active, allChats } = chatStore.getState()
+subscribe(
+  'chat-character-added',
+  { chatId: 'string', active: 'boolean?', character: 'any' },
+  (body) => {
+    const { active, allChats } = chatStore.getState()
 
-  const nextChats = allChats.map((chat) => {
-    if (chat._id !== body.chatId) return chat
-    return {
-      ...chat,
-      characters: Object.assign({}, chat.characters, { [body.character._id]: true }),
+    const nextChats = allChats.map((chat) => {
+      if (chat._id !== body.chatId) return chat
+      return {
+        ...chat,
+        characters: Object.assign({}, chat.characters, { [body.character._id]: true }),
+      }
+    })
+
+    chatStore.setState({ allChats: nextChats })
+
+    if (!active || active.chat._id !== body.chatId) return
+
+    const nextActive = {
+      ...(active.chat.characters || {}),
+      [body.character._id]: body.active ?? true,
     }
-  })
 
-  chatStore.setState({ allChats: nextChats })
-
-  if (!active || active.chat._id !== body.chatId) return
-
-  const nextActive = {
-    ...(active.chat.characters || {}),
-    [body.character._id]: body.active ?? true,
-  }
-
-  chatStore.setState({
-    active: {
-      ...active,
-      chat: {
-        ...active.chat,
-        characters: nextActive,
+    chatStore.setState({
+      active: {
+        ...active,
+        chat: {
+          ...active.chat,
+          characters: nextActive,
+        },
       },
-    },
-  })
-})
+    })
+  }
+)
 
 subscribe('chat-character-removed', { chatId: 'string', characterId: 'string' }, (body) => {
   const { active, allChats } = chatStore.getState()

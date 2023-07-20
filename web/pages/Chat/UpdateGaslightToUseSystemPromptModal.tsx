@@ -25,7 +25,9 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
   const selectedTab = createMemo(() => settingTabs.findIndex((tab) => tab === settingTab()))
   const selectTab = (idx: number) => setSettingTab(settingTabs[idx])
   const chatPreset = createMemo(() => getClientPreset(props.chat))
-  const automaticUpdate = createMemo(() => extractSystemPromptFromLegacyGaslight(chatPreset()?.preset.gaslight ?? ''))
+  const automaticUpdate = createMemo(() =>
+    extractSystemPromptFromLegacyGaslight(chatPreset()?.preset.gaslight ?? '')
+  )
   const [newSystemPrompt, setNewSystemPrompt] = createSignal('')
   const [newGaslight, setNewGaslight] = createSignal(automaticUpdate().gaslight)
   const [ignoreCharacterSystemPrompt, setIgnoreCharacterSystemPrompt] = createSignal(
@@ -77,10 +79,12 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
     >
       <div class="text-sm">
         <Show when={modalStep() === 'step1Info'}>
-          This character comes with a system prompt. You must update your preset's prompt template (aka gaslight) to:
+          This character comes with a system prompt. You must update your preset's prompt template
+          (aka gaslight) to:
           <ul class="my-3 flex flex-col gap-2">
             <li>
-              - Move stylistic instructions to the new System Prompt setting (e.g. "Write {`{{char}}`}
+              - Move stylistic instructions to the new System Prompt setting (e.g. "Write{' '}
+              {`{{char}}`}
               's next response. Write three paragraphs.'")
             </li>
             <li>- Ensure the prompt template includes the new {'{{system_prompt}}'} placeholder</li>
@@ -91,7 +95,12 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
           <Tabs tabs={['old', 'new']} selected={selectedTab} select={selectTab} />
           <Show when={settingTab() === 'old'}>
             <div class="my-2 text-base">Prompt template (gaslight)</div>
-            <TextInput disabled isMultiline fieldName="oldGaslight" value={chatPreset()?.preset.gaslight} />
+            <TextInput
+              disabled
+              isMultiline
+              fieldName="oldGaslight"
+              value={chatPreset()?.preset.gaslight}
+            />
           </Show>
           <Show when={settingTab() === 'new'}>
             <div class="my-2 text-base">System prompt</div>
@@ -111,7 +120,9 @@ const UpdateGaslightToUseSystemPromptModal: Component<{
             />
             <Toggle
               fieldName="ignoreCharacterSystemPrompt"
-              label=<div class="mt-2 text-base">Override character system prompt (not recommended)</div>
+              label=<div class="mt-2 text-base">
+                Override character system prompt (not recommended)
+              </div>
               value={ignoreCharacterSystemPrompt()}
               onChange={(newVal) => setIgnoreCharacterSystemPrompt(newVal)}
             />

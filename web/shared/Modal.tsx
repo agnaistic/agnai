@@ -55,7 +55,9 @@ const Modal: Component<Props> = (props) => {
             </div>
 
             {/* 132px is the height of the title + footer*/}
-            <div class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}>{props.children}</div>
+            <div class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}>
+              {props.children}
+            </div>
 
             <Show when={props.footer}>
               <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
@@ -77,7 +79,9 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
     return props.maxWidth === 'full' ? `sm:w-[calc(100vw-64px)]` : 'sm:w-[calc(50vw)]'
   })
 
-  const minHeight = createMemo(() => (props.fixedHeight ? `min-h-[calc(80vh-132px)] sm:min-h-[calc(90vh-132px)]` : ''))
+  const minHeight = createMemo(() =>
+    props.fixedHeight ? `min-h-[calc(80vh-132px)] sm:min-h-[calc(90vh-132px)]` : ''
+  )
 
   const defaultSubmit = (ev: Event) => {
     ev.preventDefault()
@@ -102,7 +106,9 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
             </div>
 
             {/* 132px is the height of the title + footer*/}
-            <div class={`max-h-[calc(80vh-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto text-lg`}>
+            <div
+              class={`max-h-[calc(80vh-132px)] sm:max-h-[calc(90vh-132px)] ${minHeight()} overflow-y-auto text-lg`}
+            >
               {props.children}
             </div>
 

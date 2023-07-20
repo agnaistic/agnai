@@ -23,7 +23,10 @@ export async function start() {
   await Promise.allSettled([initDb(), initMessageBus()])
 
   server.listen(config.port, '0.0.0.0', async () => {
-    logger.info({ port: config.port, version: pkg.version }, `Server started http://127.0.0.1:${config.port}`)
+    logger.info(
+      { port: config.port, version: pkg.version },
+      `Server started http://127.0.0.1:${config.port}`
+    )
 
     if (config.publicTunnel) {
       await startTunnel()
