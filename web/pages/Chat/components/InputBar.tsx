@@ -150,11 +150,11 @@ const InputBar: Component<{
     disposeSaveDraftDebounce()
   })
 
-  const genActions = () => {
-    msgStore.generateActions()
-    toastStore.normal('Generating...')
-    setMenu(false)
-  }
+  // const genActions = () => {
+  //   msgStore.generateActions()
+  //   toastStore.normal('Generating...')
+  //   setMenu(false)
+  // }
 
   return (
     <div class="relative flex items-center justify-center">
