@@ -213,7 +213,10 @@ export function getTemplate(
   parts: PromptParts
 ) {
   const isChat = OPENAI_CHAT_MODELS[opts.settings?.oaiModel || ''] ?? false
-  const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
+  const useGaslight =
+    (opts.settings?.service === 'openai' && isChat) ||
+    opts.settings?.useGaslight ||
+    opts.settings?.useTemplateParser
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
 
   const template = useGaslight ? gaslight : defaultTemplate
@@ -348,7 +351,7 @@ export function ensureValidTemplate(
   const skips = new Set(skip || [])
   let hasScenario = !!template.match(HOLDERS.scenario)
   let hasPersona = !!template.match(HOLDERS.persona)
-  let hasHistory = !!template.match(HOLDERS.history)
+  let hasHistory = !!template.match(HOLDERS.history) || !!template.match(/{{\#each msg}}/gi)
   let hasPost = !!template.match(HOLDERS.post)
   let hasUjb = !!template.match(HOLDERS.ujb)
   let hasUserEmbed = !!template.match(HOLDERS.userEmbed)

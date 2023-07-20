@@ -126,11 +126,14 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
     case 'history-prop': {
       const line = entity as string
       switch (node.prop) {
-        case 'i':
+        case 'i': {
           return i.toString()
+        }
 
-        case 'message':
-          return entity as string
+        case 'message': {
+          const index = line.indexOf(':')
+          return line.slice(index + 1).trim()
+        }
 
         case 'name': {
           const index = line.indexOf(':')
@@ -143,12 +146,13 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
         }
 
         case 'isbot':
-        case 'isuser':
+        case 'isuser': {
           const index = line.indexOf(':')
           const name = line.slice(0, index)
           const sender = opts.impersonate?.name ?? opts.sender.handle
           const match = name === sender
           return node.prop === 'isuser' ? match : !match
+        }
       }
     }
   }

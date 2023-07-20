@@ -14,7 +14,7 @@ import { getAISettingServices, toMap } from '../util'
 import { useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
-import { SolidCard } from '../Card'
+import { TitleCard } from '../Card'
 import Button from '../Button'
 import { ParseOpts, parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
@@ -50,8 +50,8 @@ const placeholders = {
 } satisfies Record<string, Placeholder>
 
 const v2placeholders = {
-  roll: { required: false, limit: Infinity },
-  random: { required: false, limit: Infinity },
+  roll: { required: false, limit: Infinity, inserted: 'roll 20' },
+  random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
   'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
 } satisfies Record<string, Placeholder>
@@ -74,6 +74,24 @@ const v2helpers: { [key in InterpV2]?: JSX.Element | string } = {
   roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
   random:
     'Produces a random word from a comma-separated list. E.g.: {{random happy, sad, jealous, angry}}',
+  'each bot': (
+    <>
+      Suported properties: <code>{`{{.name}} {{.persona}}`}</code>
+      <br />
+      Example: <code>{`{{#each bot}}{{.name}}'s personality: {{.persona}}{{/each}}`}</code>
+    </>
+  ),
+  'each message': (
+    <>
+      {' '}
+      Supported properties: <code>{`{{.msg}} {{.name}} {{.isuser}} {{.isbot}} {{.i}}`}</code> <br />
+      You can use <b>conditions</b> for isbot and isuser. E.g.{' '}
+      <code>{`{{#if .isuser}} ... {{/if}}`}</code>
+      <br />
+      Full example:{' '}
+      <code>{`{{#each msg}}{{#if .isuser}}User: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</code>
+    </>
+  ),
 }
 
 type HolderName = keyof typeof placeholders
@@ -294,9 +312,9 @@ const HelpModal: Component<{
         <div class="flex w-full flex-col gap-1 text-sm">
           <For each={items()}>
             {([interp, help]) => (
-              <SolidCard>
+              <TitleCard>
                 <FormLabel fieldName={interp} label={interp} helperText={help} />
-              </SolidCard>
+              </TitleCard>
             )}
           </For>
         </div>
