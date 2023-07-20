@@ -12,7 +12,7 @@ import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
-import { Card } from '/web/shared/Card'
+import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import Divider from '/web/shared/Divider'
 import PageHeader from '/web/shared/PageHeader'
@@ -94,7 +94,7 @@ const CreateChatForm: Component<{
       scenario: 'string',
       sampleChat: 'string',
       schema: ['wpp', 'boostyle', 'sbf', 'text'],
-      mode: ['standard', 'adventure', null],
+      mode: ['standard', 'adventure', 'companion', null],
     } as const)
 
     const attributes = getAttributeMap(ref)
@@ -179,20 +179,32 @@ const CreateChatForm: Component<{
               warning={<ServiceWarning service={selectedPreset()?.service} />}
             />
           </Card>
-          <Show when={selectedPreset()?.service === 'openai'}>
-            <Card>
-              <Select
-                fieldName="mode"
-                label="Chat Mode"
-                helperText="EXPERIMENTAL: This is only supported on OpenAI Turbo at the moment. This feature may not work "
-                items={[
-                  { label: 'Conversation', value: 'standard' },
-                  { label: 'Adventure (Experimental)', value: 'adventure' },
-                ]}
-                value={'standard'}
-              />
-            </Card>
-          </Show>
+
+          <Card>
+            <Select
+              fieldName="mode"
+              label="Chat Mode"
+              helperText={
+                <div class="flex flex-col gap-2">
+                  <TitleCard>
+                    <b>ADVENTURE:</b> Works best with instruct models (OpenAI, Claude, Scale). This may not work as
+                    intended with other models.
+                  </TitleCard>
+                  <TitleCard>
+                    <b>COMPANION:</b>Everything is permanent. You will not be able to: Edit Chat, Retry Message, Delete
+                    Messages, etc.
+                  </TitleCard>
+                </div>
+              }
+              items={[
+                { label: 'Conversation', value: 'standard' },
+                { label: 'Adventure (Experimental)', value: 'adventure' },
+                { label: 'Companion', value: 'companion' },
+              ]}
+              value={'standard'}
+            />
+          </Card>
+
           <Card>
             <TextInput
               class="text-sm"

@@ -15,6 +15,7 @@ import { AppSchema } from '/common/types/schema'
 type Placeholder = {
   required: boolean
   limit: number
+  inserted?: string
 }
 
 type Interp = keyof typeof placeholders
@@ -42,6 +43,8 @@ const placeholders = {
 const v2placeholders = {
   roll: { required: false, limit: Infinity },
   random: { required: false, limit: Infinity },
+  'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
+  'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in Interp]?: JSX.Element | string } = {
@@ -128,9 +131,9 @@ const PromptEditor: Component<
     return all
   })
 
-  const onPlaceholder = (name: string) => {
+  const onPlaceholder = (name: string, inserted: string | undefined) => {
     if (props.disabled) return
-    const text = `{{${name}}}`
+    const text = `{{${inserted || name}}}`
     const start = ref.selectionStart
     const end = ref.selectionEnd
     ref.setRangeText(text, ref.selectionStart, ref.selectionEnd, 'select')
@@ -214,9 +217,9 @@ const PromptEditor: Component<
 
 export default PromptEditor
 
-const Placeholder: Component<{ name: Interp; input: string; onClick: (name: string) => void } & Placeholder> = (
-  props
-) => {
+const Placeholder: Component<
+  { name: Interp; input: string; onClick: (name: string, inserted: string | undefined) => void } & Placeholder
+> = (props) => {
   const count = createMemo(() => {
     const matches = props.input.toLowerCase().match(new RegExp(`{{${props.name}}}`, 'g'))
     if (!matches) return 0
@@ -227,7 +230,7 @@ const Placeholder: Component<{ name: Interp; input: string; onClick: (name: stri
 
   return (
     <div
-      onClick={() => props.onClick(props.name)}
+      onClick={() => props.onClick(props.name, props.inserted)}
       class="cursor-pointer select-none rounded-md px-2 py-1 text-sm"
       classList={{
         'bg-red-600': props.name === 'example_dialogue',

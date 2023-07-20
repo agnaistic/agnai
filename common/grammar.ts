@@ -91,6 +91,7 @@ HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "is
 Character "character" = "char"i / "character"i / "bot"i { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
+Impersonate "impersonating" = "impersonate"i / "impersonating"i { return "impersonating" }
 Persona "personality" = "personality"i / "persona"i { return "personality" }
 AllPersona "all_personalities" = "all_personas"i / "all_personalities"i { return "all_personalities" }
 Dialogue "example_dialogue" = "samplechat"i / "example_dialogue"i { return "example_dialogue" }
@@ -103,7 +104,7 @@ Message "message" = "msg"i / "message"i / "text"i { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
-UserEmbed "user-embed" = "user"i { return "user_embed" }
+UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
 Random "random" = "random:"i WS words:CSV { return { kind: "random", values: words } }
 Roll "roll" = ("roll"i / "dice"i) WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', max: +max.join('') || 20 } }
 
@@ -116,6 +117,7 @@ Interp "interp"
 	/ User
     / Scenario
     / Persona
+    / Impersonate
     / AllPersona
     / Dialogue
     / History

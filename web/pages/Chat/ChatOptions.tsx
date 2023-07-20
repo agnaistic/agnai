@@ -59,7 +59,7 @@ const ChatOptions: Component<{
     chatStore.option('screenshot', value)
   }
 
-  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
+  const isOwner = createMemo(() => chats.chat?.userId === user.user?._id && chats.chat?.mode !== 'companion')
 
   const screenshotChat = async () => {
     if (chats.opts.screenshot) return
