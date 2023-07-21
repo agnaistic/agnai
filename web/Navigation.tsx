@@ -3,13 +3,13 @@ import {
   Activity,
   Bell,
   Book,
-  Bot,
   HeartHandshake,
   HelpCircle,
   LogIn,
   MailPlus,
   MessageCircle,
   Moon,
+  Plus,
   Power,
   Settings,
   ShoppingBag,
@@ -136,9 +136,7 @@ const UserNavigation: Component = () => {
         </Item>
       </Show>
 
-      <Item href="/character/list">
-        <WizardIcon /> Characters
-      </Item>
+      <CharacterLink />
 
       <Item href="/chats">
         <MessageCircle fill="var(--bg-100)" /> Chats
@@ -240,9 +238,7 @@ const GuestNavigation: Component = () => {
       <Show when={menu.guest}>
         <UserProfile />
 
-        <Item href="/character/list">
-          <Bot /> Characters
-        </Item>
+        <CharacterLink />
 
         <Show when={menu.flags.chub}>
           <Item href="/chub">
@@ -391,6 +387,21 @@ const Memory = () => {
         <Show when={!cfg.pipelineOnline}>
           <Power onClick={() => pipelineApi.reconnect(true)} class="cursor-pointer opacity-30" />
         </Show>
+      </div>
+    </div>
+  )
+}
+
+const CharacterLink = () => {
+  return (
+    <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
+      <Item href="/character/list">
+        <WizardIcon /> Characters
+      </Item>
+      <div class="flex items-center">
+        <A class="link" href="/editor">
+          <Plus />
+        </A>
       </div>
     </div>
   )
