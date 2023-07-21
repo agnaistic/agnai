@@ -109,13 +109,15 @@ export const ChatGenSettings: Component<{
 
     if (isDefaultPreset(preset)) {
       const original = defaultPresets[preset] as AppSchema.GenSettings
-      const update = getStrictForm(ref, chatGenValidator)
+      const update = getStrictForm(ref, { ...chatGenValidator, thirdPartyFormat: 'string?' })
+
+      update.thirdPartyFormat = update.thirdPartyFormat || (null as any)
 
       /**
        * The user has selected a default preset and it is unchanged
        * Assign it to the chat without creating a new preset
        */
-      if (!isPresetDirty(original, update)) {
+      if (!isPresetDirty(original, update as any)) {
         chatStore.editChatGenPreset(props.chat._id, preset, () => {
           toastStore.success('Switched preset')
         })
@@ -137,7 +139,7 @@ export const ChatGenSettings: Component<{
           chatId: props.chat._id,
           name: update.name || original.name,
           service: original.service,
-        },
+        } as any,
         (created) => {
           chatStore.setChat(props.chat._id, { genPreset: created._id })
           setSelected(created._id)
@@ -154,7 +156,8 @@ export const ChatGenSettings: Component<{
         }
       })
 
-      const update = getStrictForm(ref, chatGenValidator)
+      const update = getStrictForm(ref, { ...chatGenValidator, thirdPartyFormat: 'string?' })
+      update.thirdPartyFormat = update.thirdPartyFormat || (null as any)
       if (update.service === '') {
         toastStore.error(`You must select an AI service before saving`)
         return

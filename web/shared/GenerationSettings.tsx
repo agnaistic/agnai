@@ -178,11 +178,12 @@ const GeneralSettings: Component<Props> = (props) => {
           label="Kobold / 3rd-party Format"
           helperText="Re-formats the prompt to the desired output format."
           items={[
+            { label: 'None', value: '' },
             { label: 'Kobold/Ooba', value: 'kobold' },
             { label: 'OpenAI', value: 'openai' },
             { label: 'Claude', value: 'claude' },
           ]}
-          value={props.inherit?.thirdPartyFormat ?? 'kobold'}
+          value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}
           aiSetting={'thirdPartyUrl'}
         />

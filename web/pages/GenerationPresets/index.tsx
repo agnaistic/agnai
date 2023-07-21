@@ -106,8 +106,14 @@ export const GenerationPresetsPage: Component = () => {
 
   const onSave = (_ev: Event, force?: boolean) => {
     if (state.saving) return
-    const validator = { ...presetValidator, service: ['', ...AI_ADAPTERS] } as const
+    const validator = {
+      ...presetValidator,
+      service: ['', ...AI_ADAPTERS],
+      thirdPartyFormat: 'string?',
+    } as const
     const body = getStrictForm(ref, validator)
+
+    body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
 
     if (body.openRouterModel) {
       const actual = state.openRouterModels?.find((or) => or.id === body.openRouterModel)

@@ -83,6 +83,7 @@ export const CreateCharacterForm: Component<{
     }
   }
   const query = { import: props.import }
+  const [forceNew, setForceNew] = createSignal<boolean>(false)
 
   const srcId = createMemo(() => props.editId || props.duplicateId || '')
   const [image, setImage] = createSignal<string | undefined>()
@@ -98,7 +99,7 @@ export const CreateCharacterForm: Component<{
     return {
       avatar: s.generate,
       creating: s.creating,
-      edit,
+      edit: forceNew() ? undefined : edit,
       list: s.characters.list,
       loaded: s.characters.loaded,
     }
@@ -305,7 +306,7 @@ export const CreateCharacterForm: Component<{
     const payload = editor.payload(ref)
     payload.avatar = state.avatar.blob || editor.state.avatar
 
-    if (props.editId) {
+    if (!forceNew() && props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
@@ -314,7 +315,10 @@ export const CreateCharacterForm: Component<{
         }
       })
     } else {
-      characterStore.createCharacter(payload, (result) => nav(`/character/${result._id}/chats`))
+      characterStore.createCharacter(payload, (result) => {
+        setForceNew(false)
+        if (isPage) nav(`/character/${result._id}/chats`)
+      })
     }
   }
 
@@ -326,7 +330,7 @@ export const CreateCharacterForm: Component<{
       </Button>
       <Button onClick={onSubmit} disabled={state.creating}>
         <Save />
-        {props.editId ? 'Update' : 'Create'}
+        {props.editId && !forceNew() ? 'Update' : 'Create'}
       </Button>
     </>
   )
@@ -341,7 +345,9 @@ export const CreateCharacterForm: Component<{
     <>
       <Show when={isPage || paneOrPopup() === 'pane'}>
         <PageHeader
-          title={`${props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'} a Character`}
+          title={`${
+            forceNew() ? 'Create' : props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'
+          } a Character`}
           subtitle={
             <div class="whitespace-normal">
               <em>
@@ -380,6 +386,18 @@ export const CreateCharacterForm: Component<{
               <Button onClick={() => setConverted(editor.convert(ref))}>
                 <Download /> Export
               </Button>
+
+              <Show when={state.edit}>
+                <Button
+                  onClick={() => {
+                    setForceNew(true)
+                    editor.clear(ref)
+                  }}
+                >
+                  <Plus />
+                  New
+                </Button>
+              </Show>
             </div>
 
             <Card>

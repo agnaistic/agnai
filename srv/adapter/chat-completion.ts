@@ -49,7 +49,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
       'post',
     ]),
     {
-      opts,
+      opts: { ...opts, settings: gen },
       parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
