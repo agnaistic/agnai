@@ -286,3 +286,50 @@ export type RegisteredAdapter = {
   settings: AdapterSetting[]
   options: Array<keyof PresetAISettings>
 }
+
+export const settingLabels: { [key in keyof PresetAISettings]: string } = {
+  temp: 'Temperature',
+  maxTokens: 'Max Tokens (Response length)',
+  repetitionPenalty: 'Repetition Penalty',
+  repetitionPenaltyRange: 'Repetition Penality Range',
+  repetitionPenaltySlope: 'Repetition Penalty Slope',
+  tailFreeSampling: 'Tail Free Sampling',
+  topA: 'Top A',
+  topK: 'Top K',
+  topP: 'Top P',
+  typicalP: 'Typical P',
+  addBosToken: 'Add BOS Token',
+  antiBond: 'Anti-bond',
+  banEosToken: 'Ban EOS Token',
+  cfgOppose: 'CFG Opposing Prompt',
+  cfgScale: 'CFG Scale',
+  claudeModel: 'Claude Model',
+  encoderRepitionPenalty: 'Encoder Repetition Penalty',
+  frequencyPenalty: 'Frequency Penalty',
+  gaslight: 'Prompt Template',
+  ignoreCharacterSystemPrompt: 'Ignore Character System Prompt',
+  ignoreCharacterUjb: 'Ignore Character Jailbreak',
+  maxContextLength: 'Max Context Length',
+  memoryChatEmbedLimit: 'Memory: Chat Embed Context Limit',
+  memoryUserEmbedLimit: 'Memory: User-specific Embed Context Limit',
+  novelModel: 'NovelAI Model',
+  oaiModel: 'OpenAI Model',
+  openRouterModel: 'OpenRouter Model',
+  penaltyAlpha: 'Penalty Alpha',
+  presencePenalty: 'Presence Penalty',
+  replicateModelName: 'Replicate Model',
+  replicateModelType: 'Replicate Model Type',
+  replicateModelVersion: 'Replicate Model Version',
+  skipSpecialTokens: 'Skip Special Tokens',
+  streamResponse: 'Stream Response',
+  systemPrompt: 'System (Instruction) Prompt',
+  thirdPartyFormat: 'Third Party Format',
+  thirdPartyUrl: 'Third Party URL',
+  ultimeJailbreak: 'Jailbreak',
+  useTemplateParser: 'Use V2 Prompt Parser',
+}
+
+export const samplerOrders: { [key in AIAdapter]?: Array<keyof PresetAISettings> } = {
+  kobold: ['topK', 'topA', 'topP', 'tailFreeSampling', 'typicalP', 'temp', 'repetitionPenalty'],
+  novel: ['temp', 'topK', 'topP', 'tailFreeSampling', 'topA', 'typicalP', 'cfgScale'],
+}

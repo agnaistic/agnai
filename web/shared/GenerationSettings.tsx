@@ -11,6 +11,8 @@ import {
   AIAdapter,
   NOVEL_MODELS,
   REPLICATE_MODEL_TYPES,
+  samplerOrders,
+  settingLabels,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -22,6 +24,7 @@ import { FormLabel } from './FormLabel'
 import { serviceHasSetting } from './util'
 import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/default-preset'
+import Sortable, { SortItem } from './Sortable'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -763,7 +766,37 @@ const GenSettings: Component<Props> = (props) => {
           service={props.service}
           aiSetting={'penaltyAlpha'}
         />
+
+        <Show when={false}>
+          <SamplerOrder service={props.service} order={[]} setOrder={() => {}} />
+        </Show>
       </Card>
     </div>
   )
+}
+
+const SamplerOrder: Component<{
+  service?: AIAdapter
+  order: number[]
+  setOrder: (order: number[]) => void
+}> = (props) => {
+  const items = createMemo(() => {
+    const list: SortItem[] = []
+    if (!props.service) return list
+
+    const order = samplerOrders[props.service]
+    if (!order) return []
+
+    let id = 0
+    for (const item of order) {
+      list.push({
+        id: id++,
+        label: settingLabels[item]!,
+      })
+    }
+
+    return list
+  })
+
+  return <Sortable label="Sampler Order" items={items()} onChange={props.setOrder} />
 }
