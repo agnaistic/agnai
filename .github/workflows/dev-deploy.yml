@@ -2,6 +2,9 @@ name: Deploy to DEV
 
 on: workflow_dispatch
 
+permissions:
+  contents: read
+
 env:
   IMAGE_NAME: agnaistic
   node-version: '18.4.0'

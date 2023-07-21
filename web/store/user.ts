@@ -357,26 +357,6 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *openaiUsage({ metadata, user }) {
-      yield { oaiUsageLoading: true }
-      const res = await api.post('/user/services/openai-usage', { key: user?.oaiKey })
-      yield { oaiUsageLoading: false }
-      if (res.error) {
-        toastStore.error(`Could not retrieve usage: ${res.error}`)
-        yield { metadata: { ...metadata, openaiUsage: -1 } }
-      }
-
-      if (res.result) {
-        yield {
-          metadata: {
-            ...metadata,
-            openaiUsage: res.result.total_usage,
-            openaiCosts: res.result.daily_costs,
-          },
-        }
-      }
-    },
-
     async createApiKey(_, cb: (err: any, code?: string) => void) {
       const res = await api.post('/user/code')
       if (res.result) {

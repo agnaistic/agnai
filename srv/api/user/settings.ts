@@ -411,10 +411,6 @@ export async function getSafeUserConfig(userId: string) {
   if (!user) return
 
   if (user.novelApiKey) {
-    if (user.novelApiKey.includes('|') === false) {
-      await store.users.updateUser(userId, { novelApiKey: encryptText(user.novelApiKey) })
-    }
-
     user.novelApiKey = ''
   }
 

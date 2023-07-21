@@ -67,6 +67,19 @@ export type ParseOpts = {
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
+  if (opts.parts.systemPrompt) {
+    opts.parts.systemPrompt = render(opts.parts.systemPrompt, opts)
+  }
+
+  if (opts.parts.ujb) {
+    opts.parts.ujb = render(opts.parts.ujb, opts)
+  }
+
+  const output = render(template, opts)
+  return output
+}
+
+function render(template: string, opts: ParseOpts) {
   try {
     const ast = parser.parse(template, {}) as PNode[]
     const output: string[] = []
