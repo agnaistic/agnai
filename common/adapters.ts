@@ -258,6 +258,8 @@ export const adapterSettings: {
   topA: ['horde', 'novel', 'kobold'],
   topK: ['horde', 'novel', 'kobold', 'ooba', 'claude'],
   typicalP: ['horde', 'novel', 'kobold', 'ooba'],
+  cfgScale: ['novel'],
+  cfgOppose: ['novel'],
 
   thirdPartyUrl: ['kobold'],
   claudeModel: ['claude', 'kobold'],

@@ -28,10 +28,7 @@ export const novelLogin = handle(async ({ userId, body }) => {
   )
 
   if (res.statusCode && res.statusCode >= 400) {
-    throw new StatusError(
-      `Failed to authenticate with NovelAI: ${res.statusMessage}`,
-      res.statusCode
-    )
+    throw new StatusError(`Failed to authenticate with NovelAI: ${res.statusMessage}`, 400)
   }
 
   await verifyNovelKey(res.body.accessToken)

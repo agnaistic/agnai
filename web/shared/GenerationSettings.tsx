@@ -11,7 +11,6 @@ import {
   AIAdapter,
   NOVEL_MODELS,
   REPLICATE_MODEL_TYPES,
-  OPENAI_CHAT_MODELS,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -354,12 +353,7 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 }
 
 const PromptSettings: Component<Props> = (props) => {
-  const cfg = settingStore((cfg) => cfg.flags)
   const [useV2, setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
-
-  // Services that use chat completion cannot use the template parser
-  const canUseParser =
-    props.inherit?.service !== 'openai' && (props.inherit?.oaiModel || '') in OPENAI_CHAT_MODELS
 
   return (
     <div class="flex flex-col gap-4">
@@ -446,7 +440,7 @@ const PromptSettings: Component<Props> = (props) => {
         />
       </Card>
 
-      <Card class="flex flex-col gap-4" hide={!cfg.parser || !canUseParser}>
+      <Card class="flex flex-col gap-4">
         <Toggle
           fieldName="useTemplateParser"
           value={props.inherit?.useTemplateParser}
@@ -470,7 +464,8 @@ const PromptSettings: Component<Props> = (props) => {
           label="Jailbreak (UJB) Prompt (GPT-4 / Turbo / Claude)"
           helperText={
             <>
-              (Leave empty to disable)
+              (Typically used for Instruct models like Turbo, GPT-4, and Claude. Leave empty to
+              disable)
               <br /> Ultimate Jailbreak. If this option is enabled, the UJB prompt will sent as a
               system message at the end of the conversation before prompting OpenAI or Claude.
             </>
@@ -481,7 +476,7 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           service={props.service}
           class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-          aiSetting={'gaslight'}
+          aiSetting={'ultimeJailbreak'}
         />
         <div class="flex flex-wrap gap-4">
           <Toggle
@@ -540,6 +535,49 @@ const GenSettings: Component<Props> = (props) => {
           service={props.service}
           aiSetting={'temp'}
         />
+
+        <RangeInput
+          fieldName="cfgScale"
+          label="CFG Scale (Clio only)"
+          helperText={
+            <>
+              Classifier Free Guidance. See{' '}
+              <a href="https://docs.novelai.net/text/cfg.html" target="_blank" class="link">
+                NovelAI's CFG docs
+              </a>{' '}
+              for more information.
+              <br />
+              Set to 1 to disable.
+            </>
+          }
+          min={1}
+          max={3}
+          step={0.05}
+          value={props.inherit?.cfgScale || 1}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'cfgScale'}
+        />
+
+        <TextInput
+          fieldName="cfgOppose"
+          label="CFG Opposing Prompt (Clio only)"
+          helperText={
+            <>
+              A prompt that would generate the opposite of what you want. Leave empty if unsure.
+              Classifier Free Guidance. See{' '}
+              <a href="https://docs.novelai.net/text/cfg.html" target="_blank" class="link">
+                NovelAI's CFG docs
+              </a>{' '}
+              for more information.
+            </>
+          }
+          value={props.inherit?.cfgOppose || ''}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'cfgScale'}
+        />
+
         <RangeInput
           fieldName="topP"
           label="Top P"

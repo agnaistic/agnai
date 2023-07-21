@@ -20,6 +20,7 @@ const streamUrl = `${NOVEL_BASEURL}/ai/generate-stream`
  * 3. Tail Free Sampling
  * 4. Top A Sampling
  * 5. Typical Sampling
+ * 6. CFG Scale
  */
 
 const statuses: Record<number, string> = {
@@ -113,7 +114,7 @@ export const handleNovel: ModelAdapter = async function* ({
 }
 
 function getClioParams(gen: Partial<AppSchema.GenSettings>) {
-  return {
+  const payload: any = {
     temperature: gen.temp,
     max_length: gen.maxTokens,
     min_length: 1,
@@ -134,6 +135,13 @@ function getClioParams(gen: Partial<AppSchema.GenSettings>) {
     order: gen.order,
     bad_words_ids: clioBadWordsId,
   }
+
+  if (gen.cfgScale) {
+    payload.cfg_scale = gen.cfgScale
+    payload.cfg_uc = gen.cfgOppose || ''
+  }
+
+  return payload
 }
 
 const streamCompletition = async function* (headers: any, body: any, _log: AppLog) {

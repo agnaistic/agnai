@@ -308,6 +308,8 @@ export namespace AppSchema {
     banEosToken?: boolean
     order?: number[]
     skipSpecialTokens?: boolean
+    cfgScale?: number
+    cfgOppose?: string
 
     systemPrompt?: string
     ignoreCharacterSystemPrompt?: boolean
