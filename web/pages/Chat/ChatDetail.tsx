@@ -8,10 +8,11 @@ import {
   JSX,
   Match,
   onCleanup,
+  onMount,
   Show,
   Switch,
 } from 'solid-js'
-import { A, useNavigate, useParams } from '@solidjs/router'
+import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
@@ -59,6 +60,7 @@ import { useChatAvatars } from './components/ChatAvatar'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
 import Slot from '/web/shared/Slot'
+import { isValid } from '/common/valid'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -67,6 +69,7 @@ const ChatDetail: Component = () => {
   let slotContainer: HTMLDivElement
 
   const params = useParams()
+  const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
   const user = userStore()
   const cfg = settingStore()
@@ -142,6 +145,12 @@ const ChatDetail: Component = () => {
   const [ooc, setOoc] = createSignal<boolean>()
   const [editId, setEditId] = createSignal('')
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
+
+  onMount(() => {
+    if (isValid({ pane: ['character', 'preset'] }, search)) {
+      togglePane(search.pane)
+    }
+  })
 
   createEffect(() => {
     setEditId(chats.char?._id ?? '')
@@ -241,10 +250,12 @@ const ChatDetail: Component = () => {
   const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
     chatStore.option('pane', chats.opts.pane === paneType ? undefined : paneType)
+    setSearch({ pane: paneType })
   }
 
   const closePane = () => {
     chatStore.option('pane', undefined)
+    setSearch({ pane: undefined })
   }
 
   const closeCharEditor = () => {
@@ -346,6 +357,7 @@ const ChatDetail: Component = () => {
 
   onCleanup(() => {
     closeCharEditor()
+    setSearch({ pane: undefined })
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {

@@ -166,6 +166,7 @@ export async function createCharacter(char: NewCharacter) {
     form.append('sampleChat', char.sampleChat)
     appendFormOptional(form, 'persona', char.persona, JSON.stringify)
     appendFormOptional(form, 'description', char.description)
+    appendFormOptional(form, 'appearance', char.appearance)
     appendFormOptional(form, 'culture', char.culture)
     appendFormOptional(form, 'voice', char.voice, JSON.stringify)
     appendFormOptional(form, 'tags', char.tags, JSON.stringify)

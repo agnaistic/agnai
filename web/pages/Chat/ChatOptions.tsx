@@ -11,7 +11,7 @@ import {
   VenetianMask,
   AlertTriangle,
 } from 'lucide-solid'
-import { Component, Show, createMemo, JSX, createSignal } from 'solid-js'
+import { Component, Show, createMemo, JSX, createSignal, onMount, createEffect } from 'solid-js'
 import Button, { ButtonSchema } from '../../shared/Button'
 import { Toggle } from '../../shared/Toggle'
 import { ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'

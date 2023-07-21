@@ -22,5 +22,5 @@
       "/hub/*": ["./hub/*"]
     }
   },
-  "include": ["web", "srv", "common", "tests", "hub"]
+  "include": ["web", "srv", "common", "tests"]
 }

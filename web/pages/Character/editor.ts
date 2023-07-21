@@ -149,6 +149,11 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     })
   }
 
+  const clear = (ref: any) => {
+    setImageData()
+    load(ref, { ...initState, originalAvatar: undefined })
+  }
+
   const load = (ref: any, char: NewCharacter | AppSchema.Character) => {
     if ('_id' in char) {
       const { avatar, ...incoming } = char
@@ -179,7 +184,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  return { state, update: setState, reset, load, convert, payload, original }
+  return { state, update: setState, reset, load, convert, payload, original, clear }
 }
 
 function getPayload(ev: any, state: EditState, original?: NewCharacter) {
