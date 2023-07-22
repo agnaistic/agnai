@@ -170,7 +170,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     parts: { persona: '', post: [], allPersonas: [], chatEmbeds: [], userEmbeds: [] },
     prompt: opts.prompt,
     sender: {} as any,
-    settings: mapPresetsToAdapter(opts.settings, opts.settings.service!),
+    mappedSettings: mapPresetsToAdapter(opts.settings, opts.settings.service!),
     impersonate: undefined,
   })
 
@@ -235,7 +235,7 @@ export async function createTextStreamV2(
   }
 
   const gen = opts.settings || getFallbackPreset(adapter)
-  const settings = mapPresetsToAdapter(gen, adapter)
+  const mappedSettings = mapPresetsToAdapter(gen, adapter)
   const stream = handler({
     requestId: opts.requestId,
     kind: opts.kind,
@@ -247,7 +247,7 @@ export async function createTextStreamV2(
     prompt: prompt.prompt,
     parts: prompt.parts,
     sender: opts.sender,
-    settings,
+    mappedSettings,
     user: opts.user,
     guest: guestSocketId,
     lines: prompt.lines,

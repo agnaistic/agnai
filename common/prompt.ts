@@ -261,11 +261,17 @@ export function injectPlaceholders(
 
   if (opts.settings?.useTemplateParser) {
     try {
+      const lines = !hist
+        ? []
+        : hist.order === 'desc'
+        ? hist.lines.slice().reverse()
+        : hist.lines.slice()
+
       const result = parseTemplate(template, {
         ...opts,
         sender: profile!,
         parts,
-        lines: hist?.lines?.slice().reverse() || [],
+        lines,
         ...rest,
       })
       return result

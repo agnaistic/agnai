@@ -32,11 +32,11 @@ export const handleKobold: ModelAdapter = async function* ({
   characters,
   user,
   prompt,
-  settings,
+  mappedSettings,
   log,
   ...opts
 }) {
-  const body = { ...base, ...settings, prompt }
+  const body = { ...base, ...mappedSettings, prompt }
 
   const baseURL = `${normalizeUrl(user.koboldUrl)}`
 
