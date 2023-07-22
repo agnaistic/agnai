@@ -227,6 +227,10 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 }
 
 function createClaudePrompt(opts: AdapterProps): string {
+  if (opts.kind === 'plain') {
+    return `\n\nHuman: ${opts.prompt}\n\nAssistant:`
+  }
+
   const { parts, gen, replyAs } = opts
   const lines = opts.lines ?? []
 
@@ -317,6 +321,6 @@ function processLine(type: LineType, line: string) {
       return `Human:\n<example_dialogue>\n${mid}\n</example_dialogue>`
 
     case 'char':
-      return `Assistant: ${line}`
+      return `Assistant: ${line || ''}`
   }
 }

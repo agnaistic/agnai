@@ -40,6 +40,7 @@ const InputBar: Component<{
 
   useEffect(() => {
     const listener = (text: string) => {
+      setText('')
       setText(text)
     }
 
@@ -150,11 +151,11 @@ const InputBar: Component<{
     disposeSaveDraftDebounce()
   })
 
-  // const genActions = () => {
-  //   msgStore.generateActions()
-  //   toastStore.normal('Generating...')
-  //   setMenu(false)
-  // }
+  const genActions = () => {
+    msgStore.generateActions()
+    toastStore.normal('Generating...')
+    setMenu(false)
+  }
 
   return (
     <div class="relative flex items-center justify-center">
@@ -246,9 +247,11 @@ const InputBar: Component<{
               <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
             </Button>
           </Show>
-          {/* <Button schema="secondary" class="w-full" onClick={genActions} alignLeft>
-            Generate Actions
-          </Button> */}
+          <Show when={ctx.flags.actions}>
+            <Button schema="secondary" class="w-full" onClick={genActions} alignLeft>
+              Generate Actions
+            </Button>
+          </Show>
           <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>
             <ImagePlus size={18} /> Generate Image
           </Button>

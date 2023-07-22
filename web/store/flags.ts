@@ -4,8 +4,8 @@ export type FeatureFlags = typeof defaultFlags
 
 export const defaultFlags = {
   chub: false,
-  parser: true,
   events: false,
   reporting: false,
   naiModel: false,
+  actions: false,
 } satisfies { [key: string]: boolean }
