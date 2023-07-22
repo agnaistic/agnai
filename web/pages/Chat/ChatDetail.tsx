@@ -248,7 +248,6 @@ const ChatDetail: Component = () => {
   }
 
   const togglePane = (paneType: ChatRightPane) => {
-    console.log('Setpane', paneType)
     setShowOpts(false)
     chatStore.option('pane', chats.opts.pane === paneType ? undefined : paneType)
     setSearch({ pane: paneType })
