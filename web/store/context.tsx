@@ -7,6 +7,7 @@ import { AppSchema } from '/common/types'
 import { getSettingColor, userStore } from './user'
 import { hexToRgb } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
+import { FeatureFlags } from './flags'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -17,6 +18,7 @@ export type ContextState = {
   handle: string
   impersonate?: AppSchema.Character
   profile?: AppSchema.Profile
+  flags: FeatureFlags
   char?: AppSchema.Character
   chat?: AppSchema.Chat
   trimSentences: boolean
@@ -34,6 +36,7 @@ const initial: ContextState = {
   handle: 'You',
   chatBots: [],
   trimSentences: false,
+  flags: {} as any,
   bg: {
     user: {},
     bot: {},
@@ -81,7 +84,7 @@ export function ContextProvider(props: { children: any }) {
   createEffect(() => {
     const next: Partial<ContextState> = {
       bg: visuals(),
-
+      flags: cfg.flags,
       anonymize: cfg.anonymize,
       botMap: chars.characters.map,
       chatBots: chars.characters.list,

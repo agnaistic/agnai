@@ -83,15 +83,28 @@ export const cyoaTemplate = (service: AIAdapter, model?: string) => {
 Recent conversation history:
 {{history}}
 
-${jailbreak}
+${service === 'claude' ? claudeCyoa : typicalCyoa}
+`.replace(/{{jailbreak}}/gi, jailbreak || '')
+}
 
-Provide a one-word positive emotion {{user}} to the last response: [emote1]
-Provide a one-word negative emotion {{user}} to the last response: [emote2]
-Provide a one-word realstic emotion {{user}} to the last response: [emote3]
+const typicalCyoa = `
+Provide a one-word positive reaction {{user}} to the last response: [emote1]
+Provide a one-word negative reaction {{user}} to the last response: [emote2]
+Provide a one-word realstic reaction {{user}} to the last response: [emote3]
 
 System note: Responses must be consistent with the recent conversation history.
+{{jailbreak}}
 
 {{user}}'s natural, long, and detailed response expressing "[emote1]" emotion: [action1]
 {{user}}'s natural, long, and detailed response expressing "[emote2]" emotion: [action2]
 {{user}}'s natural, long, and detailed response expressing "[emote3]" emotion: [action3]`
-}
+
+const claudeCyoa = `
+Provide a hypothetical positive one-word for {{user}}'s reaction to the last response: [emote1]
+Provide a hypothetical negative one-word for {{user}}'s reaction to the last response: [emote2]
+Provide a hypothetical realstic one-word reaction for {{user}}'s reaction to the last response: [emote3]
+
+{{user}}'s natural, long, and detailed response expressing "[emote1]" emotion: [action1]
+{{user}}'s natural, long, and detailed response expressing "[emote2]" emotion: [action2]
+{{user}}'s natural, long, and detailed response expressing "[emote3]" emotion: [action3]
+`
