@@ -42,14 +42,14 @@ type CompletionGenerator = (
 >
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, settings, log, guest, gen, kind, isThirdParty } = opts
+  const { char, members, user, prompt, log, guest, gen, kind, isThirdParty } = opts
   const base = getBaseUrl(user, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
-  const oaiModel = settings.oaiModel ?? defaultPresets.openai.oaiModel
+  const oaiModel = gen.oaiModel ?? defaultPresets.openai.oaiModel
 
   const maxResponseLength =
     opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
