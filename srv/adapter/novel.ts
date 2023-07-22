@@ -47,7 +47,7 @@ export const handleNovel: ModelAdapter = async function* ({
   members,
   user,
   prompt,
-  settings,
+  mappedSettings,
   guest,
   log,
   ...opts
@@ -64,7 +64,8 @@ export const handleNovel: ModelAdapter = async function* ({
   const body = {
     model,
     input: processedPrompt,
-    parameters: model === NOVEL_MODELS.clio_v1 ? getClioParams(opts.gen) : { ...base, ...settings },
+    parameters:
+      model === NOVEL_MODELS.clio_v1 ? getClioParams(opts.gen) : { ...base, ...mappedSettings },
   }
 
   yield { prompt: processedPrompt }

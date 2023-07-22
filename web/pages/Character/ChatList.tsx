@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams } from '@solidjs/router'
 import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
-import { AllChat, characterStore, chatStore, eventStore } from '../../store'
+import { AllChat, characterStore, chatStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import { Edit, Import, Plus, Trash, SortAsc, SortDesc } from 'lucide-solid'
 import ImportChatModal from './ImportChat'
@@ -60,7 +60,6 @@ const CharacterChats: Component = () => {
   const [showImport, setImport] = createSignal(false)
   const [sortField, setSortField] = createSignal(cache.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cache.sort.direction)
-  const [redirectToChat, setRedirectToChat] = createSignal('')
 
   createEffect(() => {
     if (!params.id) {
@@ -70,13 +69,6 @@ const CharacterChats: Component = () => {
 
     const char = chars.list.find((c) => c._id === params.id)
     setComponentPageTitle(char ? `${char.name} chats` : 'Chats')
-  })
-
-  const eventStoreUnsubscribe = eventStore.subscribe((e) => {
-    if (e.events.length === 0) return
-    const event = e.events[e.events.length - 1]
-    eventStoreUnsubscribe()
-    setRedirectToChat(event.chatId)
   })
 
   createEffect(() => {
@@ -109,12 +101,6 @@ const CharacterChats: Component = () => {
       if (chat.characters.some((c) => c.description.toLowerCase().includes(trimmed))) return true
       return false
     })
-  })
-
-  createEffect(() => {
-    if (redirectToChat()) {
-      nav(`/chat/${redirectToChat()}`)
-    }
   })
 
   onMount(() => {

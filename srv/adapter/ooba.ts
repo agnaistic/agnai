@@ -1,10 +1,3 @@
-/**
- * The Textgen is extraordinarly inconsistent.
- * For now this adapter will remain disabled until the API matures.
- *
- * Kobold and Ooba will likely be superseced by our own generation pipeline.
- */
-
 import needle from 'needle'
 import { normalizeUrl, sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
@@ -17,31 +10,32 @@ export const handleOoba: ModelAdapter = async function* ({
   members,
   user,
   prompt,
-  settings,
+  mappedSettings,
   log,
+  gen,
   ...opts
 }) {
   const body = {
     prompt,
-    max_new_tokens: settings.max_new_tokens,
+    max_new_tokens: mappedSettings.maxTokens,
     do_sample: true,
-    temperature: settings.temperature,
-    top_p: settings.top_p,
-    typical_p: settings.typical_p || 1,
-    repetition_penalty: settings.repetition_penalty,
-    encoder_repetition_penalty: settings.encoder_repetition_penalty,
-    top_k: settings.top_k,
+    temperature: mappedSettings.temperature,
+    top_p: mappedSettings.top_p,
+    typical_p: mappedSettings.typical_p || 1,
+    repetition_penalty: mappedSettings.repetition_penalty,
+    encoder_repetition_penalty: mappedSettings.encoder_repetition_penalty,
+    top_k: mappedSettings.top_k,
     min_length: 0,
     no_repeat_ngram_size: 0,
     num_beams: 1,
-    penalty_alpha: settings.penalty_alpha,
+    penalty_alpha: mappedSettings.penalty_alpha,
     length_penalty: 1,
     early_stopping: true,
     seed: -1,
-    add_bos_token: settings.add_bos_token || false,
-    truncation_length: settings.maxContextLength || 2048,
-    ban_eos_token: settings.ban_eos_token || false,
-    skip_special_tokens: settings.skipSpecialTokens ?? true,
+    add_bos_token: mappedSettings.add_bos_token || false,
+    truncation_length: mappedSettings.maxContextLength || 2048,
+    ban_eos_token: mappedSettings.ban_eos_token || false,
+    skip_special_tokens: mappedSettings.skipSpecialTokens ?? true,
     stopping_strings: [],
   }
 

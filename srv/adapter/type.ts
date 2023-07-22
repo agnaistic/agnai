@@ -65,7 +65,7 @@ export type AdapterProps = {
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>
-  settings: any
+  mappedSettings: any
   guest?: string
   log: AppLog
   isThirdParty?: boolean

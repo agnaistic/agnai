@@ -189,7 +189,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   horde: 'Horde',
   kobold: 'Kobold / 3rd Party',
   novel: 'NovelAI',
-  ooba: 'TextGen',
+  ooba: 'Textgen',
   openai: 'OpenAI',
   scale: 'Scale',
   claude: 'Claude',
@@ -261,7 +261,8 @@ export const adapterSettings: {
   cfgScale: ['novel'],
   cfgOppose: ['novel'],
 
-  thirdPartyUrl: ['kobold'],
+  thirdPartyUrl: ['kobold', 'ooba'],
+  thirdPartyFormat: ['kobold'],
   claudeModel: ['claude', 'kobold'],
   novelModel: ['novel'],
   oaiModel: ['openai', 'kobold'],

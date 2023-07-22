@@ -41,13 +41,13 @@ type CompletionGenerator = (
 const encoder = () => getEncoder('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
-  const { members, user, settings, log, guest, gen, isThirdParty } = opts
+  const { members, user, log, guest, gen, isThirdParty } = opts
   const base = getBaseUrl(user, isThirdParty)
   if (!user.claudeApiKey && !base.changed) {
     yield { error: `Claude request failed: Claude API key not set. Check your settings.` }
     return
   }
-  const claudeModel = settings.claudeModel ?? defaultPresets.claude.claudeModel
+  const claudeModel = gen.claudeModel ?? defaultPresets.claude.claudeModel
 
   const stops = new Set([`\n\nHuman:`, `\n\nAssistant:`])
 

@@ -185,7 +185,7 @@ const GeneralSettings: Component<Props> = (props) => {
           ]}
           value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}
-          aiSetting={'thirdPartyUrl'}
+          aiSetting={'thirdPartyFormat'}
         />
       </Card>
 
