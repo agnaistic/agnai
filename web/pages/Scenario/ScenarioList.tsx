@@ -25,6 +25,7 @@ const CreateScenario: Component = () => {
         overwriteCharacterScenario: false,
         text: '',
         instructions: '',
+        states: [],
         entries: [],
       },
       (r) => nav(`/scenario/${r._id}`)

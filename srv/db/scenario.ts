@@ -43,6 +43,7 @@ export async function updateScenario(userId: string, scenarioId: string, scenari
         overwriteCharacterScenario: scenario.overwriteCharacterScenario,
         instructions: scenario.instructions,
         entries: scenario.entries,
+        states: scenario.states,
       },
     }
   )

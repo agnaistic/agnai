@@ -42,6 +42,7 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
+  rerunGuidance,
   generateActions,
 }
 
@@ -117,6 +118,48 @@ export async function guidance<T = any>(
     settings,
     service,
     maxTokens,
+  })
+  if (res.error) {
+    onComplete?.(res.error)
+    if (!onComplete) {
+      throw new Error(`Guidance failed: ${res.error}`)
+    }
+  }
+
+  if (res.result) {
+    onComplete?.(null, res.result)
+    return res.result
+  }
+}
+
+export async function rerunGuidance<T = any>(
+  {
+    prompt,
+    settings,
+    service,
+    maxTokens,
+    rerun,
+    previous,
+  }: InferenceOpts & { previous?: any; rerun: string[] },
+  onComplete?: (err: any | null, response?: { result: string; values: T }) => void
+) {
+  const requestId = v4()
+  const { user } = userStore.getState()
+
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return
+  }
+
+  const res = await api.method('post', `/chat/reguidance`, {
+    requestId,
+    user,
+    prompt,
+    settings,
+    service,
+    maxTokens,
+    rerun,
+    previous,
   })
   if (res.error) {
     onComplete?.(res.error)

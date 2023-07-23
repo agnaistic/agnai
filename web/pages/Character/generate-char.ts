@@ -5,6 +5,18 @@ import { AppSchema } from '/common/types'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 
+export type GenField =
+  | 'firstname'
+  | 'personality'
+  | 'speech'
+  | 'behaviour'
+  | 'appearance'
+  | 'greeting'
+  | 'scenario'
+  | 'example1'
+  | 'example2'
+  | 'example3'
+
 export async function generateChar(
   preset: Partial<AppSchema.GenSettings>,
   description: string,
@@ -15,7 +27,7 @@ export async function generateChar(
   const prompt = template.replace(`{{description}}`, description)
 
   return new Promise<NewCharacter>((resolve, reject) => {
-    msgsApi.guidance({ prompt, settings: preset, service, maxTokens: 200 }, (err, res) => {
+    msgsApi.guidance({ prompt, settings: preset, service, maxTokens: 250 }, (err, res) => {
       if (err || !res) {
         return reject(err || `No response received`)
       }
@@ -46,6 +58,65 @@ export async function generateChar(
 
       return resolve(char)
     })
+  })
+}
+
+export async function regenerateCharProp(
+  preset: Partial<AppSchema.GenSettings>,
+  fields: GenField[],
+  char: NewCharacter,
+  service?: string
+) {
+  const adapter = (service?.split('/').slice(-1)[0] as AIAdapter) || preset.service
+  const template = INSTRUCT_SERVICES[adapter] ? instructGenTemplate : genTemplate
+  const prompt = template.replace(`{{description}}`, char.description || '')
+
+  const attrs: any = char.persona.attributes
+  const vars = {
+    description: char.description,
+    firstname: char.name,
+    personality: attrs?.personality || '',
+    speech: attrs?.speech || '',
+    behaviour: attrs?.behaviour || '',
+    appearance: char.appearance || '',
+    greeting: char.greeting || '',
+    scenario: char.scenario || '',
+  }
+
+  return new Promise<NewCharacter>((resolve, reject) => {
+    msgsApi.rerunGuidance(
+      { prompt, settings: preset, service, maxTokens: 250, rerun: fields, previous: vars },
+      (err, res) => {
+        if (err || !res) {
+          return reject(err || `No response received`)
+        }
+
+        const vars = res.values
+        const sampleChat =
+          vars.example1 && vars.example2 && vars.example3
+            ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
+            : char.sampleChat
+        const newchar: NewCharacter = {
+          originalAvatar: undefined,
+          description: char.description || '',
+          name: vars.firstname,
+          persona: {
+            kind: 'wpp',
+            attributes: {
+              personality: [vars.personality],
+              speech: [vars.speech],
+              behaviour: [vars.behaviour],
+            },
+          },
+          appearance: vars.appearance,
+          greeting: vars.greeting,
+          sampleChat,
+          scenario: vars.scenario,
+        }
+
+        return resolve(newchar)
+      }
+    )
   })
 }
 

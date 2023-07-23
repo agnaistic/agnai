@@ -51,7 +51,7 @@ import { useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
-import { generateChar } from './generate-char'
+import { generateChar, GenField, regenerateCharProp } from './generate-char'
 import { ADAPTER_LABELS } from '/common/adapters'
 
 const options = [
@@ -172,6 +172,39 @@ export const CreateCharacterForm: Component<{
     const t = tokens()
     return t.name + t.persona + t.scenario
   })
+
+  const regenerateField = async (fields: GenField[]) => {
+    if (creating()) return
+
+    const prev = editor.payload(ref)
+
+    const { chargenService } = getStrictForm(ref, { chargenService: 'string?' })
+    const preset = preferredPreset()
+    if (!preset) return
+
+    const { description } = getStrictForm(ref, { description: 'string' })
+    if (!description) return
+
+    prev.description = description
+
+    setCreating(true)
+
+    try {
+      const char = await regenerateCharProp(preset, fields, prev, chargenService)
+      setCreating(false)
+
+      const prevAvatar = editor.state.avatar
+      const prevSprite = editor.state.sprite
+
+      editor.load(ref, char)
+      editor.update('avatar', prevAvatar)
+      editor.update('sprite', prevSprite)
+    } catch (ex: any) {
+      toastStore.error(`Could not create character: ${ex?.message || ex}`)
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const generateCharacter = async () => {
     if (!chargenOpts().length) return
@@ -511,6 +544,15 @@ export const CreateCharacterForm: Component<{
                         isMultiline
                         parentClass="w-full"
                         fieldName="appearance"
+                        label={
+                          <>
+                            <Regenerate
+                              fields={['appearance']}
+                              regen={regenerateField}
+                              allowed={chargenOpts().length > 0}
+                            />
+                          </>
+                        }
                         helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
                         placeholder="Appearance"
                         value={editor.state.appearance}
@@ -533,7 +575,16 @@ export const CreateCharacterForm: Component<{
             <Card>
               <TextInput
                 fieldName="scenario"
-                label="Scenario"
+                label={
+                  <>
+                    Scenario{' '}
+                    <Regenerate
+                      fields={['scenario']}
+                      regen={regenerateField}
+                      allowed={chargenOpts().length > 0}
+                    />
+                  </>
+                }
                 helperText="The current circumstances and context of the conversation and the characters."
                 placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
                 value={editor.state.scenario}
@@ -545,7 +596,16 @@ export const CreateCharacterForm: Component<{
               <TextInput
                 isMultiline
                 fieldName="greeting"
-                label="Greeting"
+                label={
+                  <>
+                    Greeting{' '}
+                    <Regenerate
+                      fields={['greeting']}
+                      regen={regenerateField}
+                      allowed={chargenOpts().length > 0}
+                    />
+                  </>
+                }
                 helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
                 placeholder={
                   "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
@@ -562,7 +622,16 @@ export const CreateCharacterForm: Component<{
             <Card class="flex flex-col gap-3">
               <div>
                 <FormLabel
-                  label="Persona Schema"
+                  label={
+                    <>
+                      Persona Schema{' '}
+                      <Regenerate
+                        fields={['behaviour', 'personality', 'speech']}
+                        regen={regenerateField}
+                        allowed={chargenOpts().length > 0}
+                      />{' '}
+                    </>
+                  }
                   helperText={
                     <>
                       <p>If you do not know what this mean, you can leave this as-is.</p>
@@ -595,7 +664,16 @@ export const CreateCharacterForm: Component<{
               <TextInput
                 isMultiline
                 fieldName="sampleChat"
-                label="Sample Conversation"
+                label={
+                  <>
+                    Sample Conversation
+                    <Regenerate
+                      fields={['example1', 'example2', 'example3']}
+                      regen={regenerateField}
+                      allowed={chargenOpts().length > 0}
+                    />
+                  </>
+                }
                 helperText={
                   <span>
                     Example chat between you and the character. This section is very important for
@@ -723,6 +801,24 @@ export const CreateCharacterForm: Component<{
         }}
         single
       />
+    </>
+  )
+}
+
+const Regenerate: Component<{
+  fields: GenField[]
+  regen: (fields: GenField[]) => any
+  allowed: boolean
+}> = (props) => {
+  return (
+    <>
+      <Show when={props.allowed}>
+        (
+        <span class="link" onClick={() => props.regen(props.fields)}>
+          Regenerate
+        </span>
+        )
+      </Show>
     </>
   )
 }

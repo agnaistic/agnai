@@ -52,6 +52,7 @@ const CreateScenario: Component = () => {
     const update: NewScenario = {
       name: body.name,
       description: body.description,
+      states: [],
       text: body.text,
       overwriteCharacterScenario: body.overwriteCharacterScenario,
       instructions: body.instructions,

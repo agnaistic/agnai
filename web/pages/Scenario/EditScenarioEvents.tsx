@@ -1,6 +1,7 @@
 import {
   Component,
   For,
+  Index,
   Match,
   Show,
   Switch,
@@ -19,7 +20,7 @@ import { AppSchema } from '/common/types'
 import Accordian from '/web/shared/Accordian'
 import Select, { Option } from '/web/shared/Select'
 import RangeInput from '/web/shared/RangeInput'
-import { getFormEntries } from '/web/shared/util'
+import { getForm } from '/web/shared/util'
 import TagInput from '/web/shared/TagInput'
 import PromptEditor from '/web/shared/PromptEditor'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -62,6 +63,11 @@ const CreateScenario: Component = () => {
 
   const [states, setStates] = createSignal<string[]>([])
   const [entries, setEntries] = createSignal<AppSchema.ScenarioEvent[]>([])
+  const availableStates = createMemo(() => {
+    const base = states()
+    const negate = states().map((state) => `!${state}`)
+    return base.concat(negate)
+  })
 
   onMount(() => {
     scenarioStore.getAll()
@@ -69,7 +75,7 @@ const CreateScenario: Component = () => {
 
   const invalidStates = createMemo(() => {
     const bad = new Set<string>()
-    const mod = states()
+    const mod = availableStates()
     const set = new Set(mod)
 
     for (const entry of entries()) {
@@ -87,11 +93,10 @@ const CreateScenario: Component = () => {
     setStates(state.scenario?.states || [])
   })
 
-  const parseStates = (value: string) => {
-    return value
-      .split(',')
-      .map((s) => s.trim())
-      .filter((s) => !!s)
+  const updateEntry = (i: number, update: Partial<AppSchema.ScenarioEvent>) => {
+    setEntries((prev) => {
+      return prev.map((entry, i) => (i !== i ? entry : { ...entry, ...update }))
+    })
   }
 
   const addEntry = () => {
@@ -165,56 +170,34 @@ const CreateScenario: Component = () => {
   const onSubmit = (ev: Event) => {
     ev.preventDefault()
     if (!state.scenario) return
+    const inputs = getForm<any>(ref)
 
-    const inputs = getFormEntries(ref)
+    const ents = entries()
 
-    const map = new Map<string, AppSchema.ScenarioEvent>()
-    for (const [key, value] of inputs) {
-      const [prop, i] = key.split('.')
-      if (i === undefined) continue
+    for (let i = 0; i < ents.length; i++) {
+      const entry = ents[i]
+      entry.name = inputs['name.' + i]
+      entry.text = inputs['text.' + i]
+      entry.type = inputs['type.' + i]
+      entry.trigger.kind = inputs['trigger-kind.' + i]
 
-      const prev = map.get(i) || ({ trigger: {} } as AppSchema.ScenarioEvent)
-
-      switch (prop) {
-        case 'name':
-        case 'text':
-          prev[prop] = value
+      switch (entry.trigger.kind) {
+        case 'onManualTrigger':
+          entry.trigger.probability = +inputs['trigger-probability.' + i]
           break
 
-        case 'requires':
-        case 'assigns':
-          prev[prop] = parseStates(value)
+        case 'onCharacterMessageReceived':
+          entry.trigger.minMessagesSinceLastEvent =
+            +inputs['trigger-minMessagesSinceLastEvent.' + i]
           break
 
-        case 'type':
-          prev[prop] = value as AppSchema.EventTypes
-          break
-
-        case 'trigger-kind':
-          prev.trigger.kind = value as AppSchema.ScenarioTriggerKind
-          break
-
-        case 'trigger-probability':
-          ;(prev.trigger as AppSchema.ScenarioOnManual).probability = +value
-          break
-
-        case 'trigger-awayHours':
-          ;(prev.trigger as AppSchema.ScenarioOnChatOpened).awayHours = +value
-          break
-
-        case 'trigger-minMessagesSinceLastEvent':
-          ;(prev.trigger as AppSchema.ScenarioOnCharacterMessageRx).minMessagesSinceLastEvent =
-            +value
+        case 'onChatOpened':
+          entry.trigger.awayHours = +inputs['trigger-awayHours.' + i]
           break
       }
-
-      map.set(i, prev)
     }
 
-    const entries = Array.from(map.values())
-
-    const update = { ...state.scenario, entries }
-
+    const update = { ...state.scenario, entries: ents, states: states() }
     scenarioStore.update(state.scenario._id, update)
   }
 
@@ -243,7 +226,7 @@ const CreateScenario: Component = () => {
         label="States"
         placeholder=""
         helperText="States that your scenario can use."
-        availableTags={states()}
+        availableTags={availableStates()}
         onSelect={(ev) => setStates(ev)}
         value={states()}
       />
@@ -274,58 +257,62 @@ const CreateScenario: Component = () => {
           </Match>
 
           <Match when={true}>
-            <For each={entries()}>
+            <Index each={entries()}>
               {(entry, index) => (
                 <Accordian
-                  open={!entry.text}
+                  open={!entry().text}
                   title={
                     <div class={`mb-1 flex w-full items-center gap-2`}>
                       <Select
-                        fieldName={`trigger-kind.${index()}`}
+                        fieldName={`trigger-kind.${index}`}
                         items={triggerTypeOptions}
-                        value={entry.trigger.kind}
+                        value={entry().trigger.kind}
                         onChange={(option) =>
-                          changeTriggerKind(entry, option.value as AppSchema.ScenarioTriggerKind)
+                          changeTriggerKind(entry(), option.value as AppSchema.ScenarioTriggerKind)
                         }
                       />
                       <TagInput
-                        fieldName={`requires.${index()}`}
-                        disabled={entry.trigger.kind === 'onGreeting'}
-                        availableTags={states()}
-                        value={entry.requires || []}
+                        fieldName={`requires.${index}`}
+                        disabled={entry().trigger.kind === 'onGreeting'}
+                        availableTags={availableStates()}
+                        value={entry().requires || []}
                         placeholder="States required to trigger"
-                        onSelect={(ev) => (entry.requires = ev)}
+                        onSelect={(ev) => updateEntry(index, { requires: ev })}
                       />
                       <TextInput
-                        fieldName={`name.${index()}`}
+                        fieldName={`name.${index}`}
                         required
                         class="border-[1px]"
                         value={entry.name}
                         placeholder='Event name, e.g. "Greeting"'
-                        onChange={(ev) => (entry.name = ev.currentTarget.value)}
+                        onChange={(ev) => (entry().name = ev.currentTarget.value)}
                       />
                       <TagInput
-                        fieldName={`assigns.${index()}`}
-                        availableTags={states()}
+                        fieldName={`assigns.${index}`}
+                        availableTags={availableStates()}
                         // class="border-[1px]"
                         strict
-                        value={entry.assigns}
+                        value={entry().assigns}
                         placeholder="States to add when triggered"
-                        onSelect={(ev) => (entry.assigns = ev)}
+                        onSelect={(ev) => updateEntry(index, { assigns: ev })}
                       />
                       <div class="ml-2 flex flex-col space-y-1">
-                        <Show when={index() !== 0}>
-                          <button class="ml-2" onClick={() => moveItem(index(), -1)}>
+                        <Show when={index !== 0}>
+                          <button class="ml-2" onClick={() => moveItem(index, -1)}>
                             <ChevronUp size={16} />
                           </button>
                         </Show>
-                        <Show when={index() !== entries().length - 1}>
-                          <button class="ml-2" onClick={() => moveItem(index(), 1)}>
+                        <Show when={index !== entries().length - 1}>
+                          <button class="ml-2" onClick={() => moveItem(index, 1)}>
                             <ChevronDown size={16} />
                           </button>
                         </Show>
                       </div>
-                      <Button schema="clear" class="icon-button" onClick={() => removeEntry(entry)}>
+                      <Button
+                        schema="clear"
+                        class="icon-button"
+                        onClick={() => removeEntry(entry())}
+                      >
                         <X />
                       </Button>
                     </div>
@@ -334,12 +321,12 @@ const CreateScenario: Component = () => {
                   <div class="flex flex-col gap-2 p-4">
                     <Card>
                       <Select
-                        fieldName={`type.${index()}`}
+                        fieldName={`type.${index}`}
                         label="Type"
                         helperText="How will this event be shown to the user."
                         items={eventTypeOptions}
-                        value={entry.type}
-                        onChange={(ev) => (entry.type = ev.value as AppSchema.EventTypes)}
+                        value={entry().type}
+                        onChange={(ev) => (entry().type = ev.value as AppSchema.EventTypes)}
                       />
                     </Card>
 
@@ -348,64 +335,64 @@ const CreateScenario: Component = () => {
                       helperText="The prompt text to send whenever this event occurs. The (OOC: something) text will be hidden from the user."
                     />
                     <PromptEditor
-                      fieldName={`text.${index()}`}
+                      fieldName={`text.${index}`}
                       showHelp
                       placeholder="*{{char}} suddenly remembers something important to say to {{user}}!* (OOC: Make up a personal memory with {{user}}.)"
                       hideHelperText
                       noDummyPreview
-                      value={entry.text}
-                      onChange={(ev) => (entry.text = ev)}
+                      value={entry().text}
+                      onChange={(ev) => (entry().text = ev)}
                       v2
                       include={['char', 'user', 'random', 'roll', 'idle_duration', 'chat_age']}
                     />
 
                     <Switch>
-                      <Match when={entry.trigger.kind === 'onGreeting'}>
+                      <Match when={entry().trigger.kind === 'onGreeting'}>
                         <TitleCard>Automatically sent when starting a new chat.</TitleCard>
                       </Match>
 
-                      <Match when={entry.trigger.kind === 'onManualTrigger'}>
+                      <Match when={entry().trigger.kind === 'onManualTrigger'}>
                         <Card>
                           <RangeInput
-                            fieldName={`trigger-probability.${index()}`}
+                            fieldName={`trigger-probability.${index}`}
                             label="Probability"
                             helperText="Manual triggers will be randomly selected, with higher probability for higher values."
-                            value={(entry.trigger as AppSchema.ScenarioOnManual).probability}
+                            value={(entry().trigger as AppSchema.ScenarioOnManual).probability}
                             min={0}
                             max={100}
                             step={0.01}
                             onChange={(ev) =>
-                              ((entry.trigger as AppSchema.ScenarioOnManual).probability = ev)
+                              ((entry().trigger as AppSchema.ScenarioOnManual).probability = ev)
                             }
                           />
                         </Card>
                       </Match>
 
-                      <Match when={entry.trigger.kind === 'onChatOpened'}>
+                      <Match when={entry().trigger.kind === 'onChatOpened'}>
                         <Card>
                           <RangeInput
-                            fieldName={`trigger-awayHours.${index()}`}
+                            fieldName={`trigger-awayHours.${index}`}
                             label="After (hours)"
                             helperText="After how many hours should this trigger be activated? The longest trigger will be selected."
-                            value={(entry.trigger as AppSchema.ScenarioOnChatOpened).awayHours}
+                            value={(entry().trigger as AppSchema.ScenarioOnChatOpened).awayHours}
                             min={0}
                             max={24 * 7}
                             step={1}
                             onChange={(ev) =>
-                              ((entry.trigger as AppSchema.ScenarioOnChatOpened).awayHours = ev)
+                              ((entry().trigger as AppSchema.ScenarioOnChatOpened).awayHours = ev)
                             }
                           />
                         </Card>
                       </Match>
 
-                      <Match when={entry.trigger.kind === 'onCharacterMessageReceived'}>
+                      <Match when={entry().trigger.kind === 'onCharacterMessageReceived'}>
                         <Card>
                           <RangeInput
-                            fieldName={`trigger-minMessagesSinceLastEvent.${index()}`}
+                            fieldName={`trigger-minMessagesSinceLastEvent.${index}`}
                             label="After (messages since last event)"
                             helperText="After how many message should this trigger be activated? The shortest trigger will be selected."
                             value={
-                              (entry.trigger as AppSchema.ScenarioOnCharacterMessageRx)
+                              (entry().trigger as AppSchema.ScenarioOnCharacterMessageRx)
                                 .minMessagesSinceLastEvent
                             }
                             min={2}
@@ -413,7 +400,7 @@ const CreateScenario: Component = () => {
                             step={1}
                             onChange={(ev) =>
                               ((
-                                entry.trigger as AppSchema.ScenarioOnCharacterMessageRx
+                                entry().trigger as AppSchema.ScenarioOnCharacterMessageRx
                               ).minMessagesSinceLastEvent = ev)
                             }
                           />
@@ -423,7 +410,7 @@ const CreateScenario: Component = () => {
                   </div>
                 </Accordian>
               )}
-            </For>
+            </Index>
           </Match>
         </Switch>
 

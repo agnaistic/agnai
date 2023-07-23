@@ -5,7 +5,7 @@ import { assertValid } from '/common/valid'
 import { createInferenceStream, inferenceAsync } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
-import { runGuidance } from '/common/guidance/guidance-parser'
+import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/default-preset'
 
 const validInference = {
@@ -109,6 +109,42 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
   }
 
   const result = await runGuidance(body.prompt, { infer, placeholders: body.placeholders })
+  return result
+})
+
+export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
+  assertValid(
+    {
+      ...validInference,
+      placeholders: 'any?',
+      maxTokens: 'number?',
+      rerun: ['string'],
+      previous: 'any?',
+    },
+    body
+  )
+
+  const settings = await assertSettings(body, userId)
+
+  const infer = async (text: string) => {
+    const inference = await inferenceAsync({
+      user: body.user,
+      maxTokens: body.maxTokens,
+      settings,
+      log,
+      prompt: text,
+      service: body.service,
+      guest: userId ? undefined : socketId,
+    })
+
+    return inference.generated
+  }
+
+  const result = await rerunGuidanceValues(body.prompt, body.rerun, {
+    infer,
+    placeholders: body.placeholders,
+    previous: body.previous,
+  })
   return result
 })
 
