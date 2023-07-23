@@ -11,17 +11,19 @@ import { getStrictForm } from '../../shared/util'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { getActiveBots } from './util'
+import { FormLabel } from '/web/shared/FormLabel'
+import PersonaAttributes, { getAttributeMap } from '/web/shared/PersonaAttributes'
 
-type View = 'list' | 'invite_user' | 'add_character'
+type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
 const MemberModal: Component<{ show: boolean; close: () => void; charId: string }> = (props) => {
-  const [view, setView] = createSignal<View>('list')
+  const [view, setView] = createSignal<View>('temp_character')
 
   const Footer = (
     <>
       <Show when={view() === 'list'}>
-        <Button schema="secondary" onClick={props.close}>
-          Close
+        <Button schema="primary" onClick={() => setView('temp_character')}>
+          <Plus size={16} /> Temp Character
         </Button>
         <Button schema="primary" onClick={() => setView('add_character')}>
           <Plus size={16} /> Character
@@ -41,11 +43,20 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
   )
   return (
     <>
-      <Modal show={props.show} close={props.close} title="Participants" footer={Footer}>
+      <Modal
+        show={props.show}
+        close={props.close}
+        title="Participants"
+        footer={Footer}
+        maxWidth="half"
+      >
         <div class="space-y-2 text-sm">
           <Switch>
             <Match when={view() === 'list'}>
               <ParticipantsList setView={setView} charId={props.charId} />
+            </Match>
+            <Match when={view() === 'temp_character'}>
+              <TempCharacter setView={setView} />
             </Match>
             <Match when={view() === 'add_character'}>
               <AddCharacter setView={setView} />
@@ -57,6 +68,73 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
         </div>
       </Modal>
     </>
+  )
+}
+
+const TempCharacter: Component<{ setView: (view: View) => void }> = (props) => {
+  let ref: any
+  const state = chatStore()
+
+  const onSave = () => {
+    const attributes = getAttributeMap(ref)
+    const body = getStrictForm(ref, {
+      name: 'string',
+      description: 'string',
+      appearance: 'string',
+      sampleChat: 'string',
+    })
+
+    const char: AppSchema.BaseCharacter = {
+      _id: '',
+      name: body.name,
+      description: body.description,
+      appearance: body.appearance,
+      sampleChat: body.sampleChat,
+      greeting: '',
+      scenario: '',
+      avatar: '',
+      persona: {
+        kind: 'text',
+        attributes,
+      },
+    }
+
+    chatStore.addTempCharacter(state.active?.chat?._id!, char, () => {
+      props.setView('list')
+    })
+  }
+
+  return (
+    <form ref={ref} class="flex flex-col gap-2">
+      <FormLabel
+        label="Temporary Character"
+        helperText="Quickly create a character for this conversation only"
+      />
+
+      <TextInput fieldName="name" label="Name" />
+      <TextInput
+        isMultiline
+        fieldName="description"
+        label="Description"
+        helperText="Optional - Used for character generation"
+      />
+      <TextInput
+        isMultiline
+        fieldName="appearance"
+        label="Appearance"
+        helperText="Optional - For generating an avatar"
+      />
+      <PersonaAttributes plainText schema="text" />
+      <TextInput
+        isMultiline
+        fieldName="sampleChat"
+        label="Example Dialogue"
+        helperText="Example of how the character speaks"
+      />
+      <div class="flex justify-center">
+        <Button onClick={onSave}>Create Character</Button>
+      </div>
+    </form>
   )
 }
 

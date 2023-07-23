@@ -391,6 +391,23 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async addTempCharacter(
+      { active, allChats },
+      chatId: string,
+      char: Omit<AppSchema.BaseCharacter, '_id'>,
+      onSuccess?: () => void
+    ) {
+      const res = await chatsApi.addTempCharacter(chatId, char)
+      if (res.result) {
+        // TODO: Update state...
+        onSuccess?.()
+      }
+
+      if (res.error) {
+        toastStore.error(`Failed to create temp character: ${res.error}`)
+      }
+    },
+
     async *removeCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
       const res = await chatsApi.removeCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
@@ -652,5 +669,35 @@ subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
 
   chatStore.setState({
     promptHistory: Object.assign({}, promptHistory, { [body.id]: body.prompt }),
+  })
+})
+
+subscribe('chat-temp-chararacter', { chatId: 'string', character: 'any' }, (body) => {
+  const { active, allChats } = chatStore.getState()
+  const nextChats = allChats.map((chat) => {
+    if (chat._id !== body.chatId) return chat
+    const temp = chat.tempCharacters || {}
+    return {
+      ...chat,
+      tempCharacters: {
+        ...temp,
+        [body.character._id]: body.character,
+      },
+    }
+  })
+
+  chatStore.setState({ allChats: nextChats })
+
+  if (!active || active.chat._id !== body.chatId) return
+  const temp = active.chat.tempCharacters || {}
+  temp[body.character._id] = body.character
+  chatStore.setState({
+    active: {
+      ...active,
+      chat: {
+        ...active.chat,
+        tempCharacters: temp,
+      },
+    },
   })
 })

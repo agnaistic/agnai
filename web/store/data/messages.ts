@@ -430,7 +430,10 @@ async function getGenerateProps(
     })
   }
 
-  const getBot = (id: string) => entities.chatBots.find((ch) => ch._id === id)!
+  const getBot = (id: string) => {
+    if (id.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
+    return entities.chatBots.find((ch) => ch._id === id)!
+  }
 
   switch (opts.kind) {
     case 'retry': {

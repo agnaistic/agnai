@@ -89,6 +89,7 @@ const ChatDetail: Component = () => {
     loaded: s.loaded,
     opts: s.opts,
     activeBots: getActiveBots(s.active?.chat!, chars.botMap),
+    tempBots: Object.values(s.active?.chat?.tempCharacters! || {}),
   }))
 
   const msgs = msgStore((s) => ({
@@ -664,7 +665,7 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <Show when={isOwner() && chats.activeBots.length > 1}>
+            <Show when={isOwner() && (chats.activeBots.length > 1 || chats.tempBots.length > 0)}>
               <div
                 class={`flex justify-center gap-2 overflow-x-auto py-1 ${
                   msgs.waiting ? 'opacity-70 saturate-0' : ''
@@ -677,6 +678,16 @@ const ChatDetail: Component = () => {
                       onClick={requestMessage}
                       disabled={!!msgs.waiting}
                       active={chats.replyAs === bot._id}
+                    />
+                  )}
+                </For>
+                <For each={chats.tempBots}>
+                  {(bot) => (
+                    <CharacterPill
+                      char={bot}
+                      onClick={requestMessage}
+                      disabled={!!msgs.waiting}
+                      active={false}
                     />
                   )}
                 </For>

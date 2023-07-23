@@ -64,8 +64,8 @@ const CreateScenario: Component = () => {
   const [states, setStates] = createSignal<string[]>([])
   const [entries, setEntries] = createSignal<AppSchema.ScenarioEvent[]>([])
   const availableStates = createMemo(() => {
-    const base = states()
-    const negate = states().map((state) => `!${state}`)
+    const base = ['none', 'any'].concat(states())
+    const negate = base.map((state) => `!${state}`)
     return base.concat(negate)
   })
 
@@ -225,10 +225,10 @@ const CreateScenario: Component = () => {
         fieldName="states"
         label="States"
         placeholder=""
-        helperText="States that your scenario can use."
+        helperText="States that your scenario can use. 'none' and 'any' are provided by default."
         availableTags={availableStates()}
         onSelect={(ev) => setStates(ev)}
-        value={states()}
+        value={['none', 'any'].concat(states())}
       />
 
       <Show when={invalidStates().length}>
@@ -262,14 +262,54 @@ const CreateScenario: Component = () => {
                 <Accordian
                   open={!entry().text}
                   title={
-                    <div class={`mb-1 flex w-full items-center gap-2`}>
+                    <div class={`mb-1 flex w-full items-start justify-between gap-2`}>
+                      <TextInput
+                        fieldName={`name.${index}`}
+                        required
+                        class="border-[1px]"
+                        parentClass="w-full"
+                        value={entry().name}
+                        placeholder='Event name, e.g. "Greeting"'
+                        onChange={(ev) => (entry().name = ev.currentTarget.value)}
+                      />
+                      <div class="flex gap-2">
+                        <div class="ml-2 flex flex-col justify-center space-y-1">
+                          <Show when={index !== 0}>
+                            <button class="ml-2" onClick={() => moveItem(index, -1)}>
+                              <ChevronUp size={16} />
+                            </button>
+                          </Show>
+                          <Show when={index !== entries().length - 1}>
+                            <button class="ml-2" onClick={() => moveItem(index, 1)}>
+                              <ChevronDown size={16} />
+                            </button>
+                          </Show>
+                        </div>
+                        <Button
+                          schema="clear"
+                          class="icon-button"
+                          onClick={() => removeEntry(entry())}
+                        >
+                          <X />
+                        </Button>
+                      </div>
+                    </div>
+                  }
+                >
+                  <div class="flex flex-col gap-2 p-4">
+                    <Card>
                       <Select
                         fieldName={`trigger-kind.${index}`}
+                        label="Trigger"
                         items={triggerTypeOptions}
                         value={entry().trigger.kind}
                         onChange={(option) =>
                           changeTriggerKind(entry(), option.value as AppSchema.ScenarioTriggerKind)
                         }
+                      />
+                      <FormLabel
+                        label="Required States"
+                        helperText="Which state(s) are required before this event will trigger."
                       />
                       <TagInput
                         fieldName={`requires.${index}`}
@@ -279,46 +319,19 @@ const CreateScenario: Component = () => {
                         placeholder="States required to trigger"
                         onSelect={(ev) => updateEntry(index, { requires: ev })}
                       />
-                      <TextInput
-                        fieldName={`name.${index}`}
-                        required
-                        class="border-[1px]"
-                        value={entry.name}
-                        placeholder='Event name, e.g. "Greeting"'
-                        onChange={(ev) => (entry().name = ev.currentTarget.value)}
+                      <FormLabel
+                        label="States to Assign"
+                        helperText="When trigger, which states will be assigned"
                       />
                       <TagInput
                         fieldName={`assigns.${index}`}
                         availableTags={availableStates()}
-                        // class="border-[1px]"
                         strict
                         value={entry().assigns}
                         placeholder="States to add when triggered"
                         onSelect={(ev) => updateEntry(index, { assigns: ev })}
                       />
-                      <div class="ml-2 flex flex-col space-y-1">
-                        <Show when={index !== 0}>
-                          <button class="ml-2" onClick={() => moveItem(index, -1)}>
-                            <ChevronUp size={16} />
-                          </button>
-                        </Show>
-                        <Show when={index !== entries().length - 1}>
-                          <button class="ml-2" onClick={() => moveItem(index, 1)}>
-                            <ChevronDown size={16} />
-                          </button>
-                        </Show>
-                      </div>
-                      <Button
-                        schema="clear"
-                        class="icon-button"
-                        onClick={() => removeEntry(entry())}
-                      >
-                        <X />
-                      </Button>
-                    </div>
-                  }
-                >
-                  <div class="flex flex-col gap-2 p-4">
+                    </Card>
                     <Card>
                       <Select
                         fieldName={`type.${index}`}

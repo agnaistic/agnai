@@ -14,7 +14,7 @@ import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
 import { Encoder } from './tokenize'
-import { elapsedSince, trimSentence } from './util'
+import { elapsedSince, getBotName, trimSentence } from './util'
 import { Memory } from './types'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
@@ -602,25 +602,9 @@ function getLinesForPrompt(
       ? opts.impersonate.name
       : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
-    // const rendered = parseTemplate(msg.msg, {
-    //   chat: opts.chat,
-    //   char: opts.characters[msg.characterId!]!,
-    //   characters: opts.characters,
-    //   lines: [],
-    //   members,
-    //   parts: {} as any,
-    //   replyAs: opts.replyAs,
-    //   sender: msg.userId ? profiles.get(msg.userId)! : profiles.get(opts.chat.userId)!,
-    //   user: opts.user,
-    //   impersonate: opts.impersonate,
-    //   lastMessage:
-    // })
+    const botName = getBotName(opts.chat, msg, opts.characters, char)
 
-    return fillPlaceholders(
-      msg,
-      opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
-      sender
-    ).trim()
+    return fillPlaceholders(msg, botName, sender).trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)

@@ -89,9 +89,7 @@ const TagInput: Component<TagInputProps> = (props) => {
           value={inputValue()}
           onInput={handleInputChange}
           onKeyDown={handleInputKeyDown}
-          placeholder={
-            tags().length || inputValue() ? undefined : props.placeholder ?? 'Add tags...'
-          }
+          placeholder={tags().length || inputValue() ? '' : props.placeholder ?? 'Add tags...'}
           disabled={props.disabled}
         />
       </div>

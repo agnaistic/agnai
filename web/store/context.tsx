@@ -13,7 +13,9 @@ export type ContextState = {
   tooltip?: string | JSX.Element
   anonymize: boolean
   botMap: Record<string, AppSchema.Character>
+  tempMap: Record<string, AppSchema.Character>
   chatBots: AppSchema.Character[]
+  tempBots: AppSchema.Character[]
   activeBots: AppSchema.Character[]
   handle: string
   impersonate?: AppSchema.Character
@@ -35,6 +37,8 @@ const initial: ContextState = {
   botMap: {},
   handle: 'You',
   chatBots: [],
+  tempBots: [],
+  tempMap: {},
   trimSentences: false,
   flags: {} as any,
   bg: {
@@ -86,6 +90,8 @@ export function ContextProvider(props: { children: any }) {
       bg: visuals(),
       flags: cfg.flags,
       anonymize: cfg.anonymize,
+      tempMap: chats.active?.chat.tempCharacters || {},
+      tempBots: Object.values(chats.active?.chat.tempCharacters || {}),
       botMap: chars.characters.map,
       chatBots: chars.characters.list,
       impersonate: chars.impersonating,

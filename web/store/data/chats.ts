@@ -18,6 +18,7 @@ export const chatsApi = {
   importChat,
   deleteChat,
   addCharacter,
+  addTempCharacter,
   removeCharacter,
   restartChat,
 }
@@ -327,6 +328,32 @@ export async function addCharacter(chatId: string, charId: string) {
 
   await localApi.saveChats(localApi.replace(chatId, chats, next))
   return localApi.result({ success: true, char })
+}
+
+export async function addTempCharacter(chatId: string, char: Omit<AppSchema.BaseCharacter, '_id'>) {
+  if (isLoggedIn()) {
+    const res = await api.post(`/chat/${chatId}/temp-character`, char)
+    return res
+  }
+
+  const chats = await localApi.loadItem('chats')
+  const chat = chats.find((ch) => ch._id === chatId)
+
+  if (!chat) return localApi.error(`Chat not found`)
+  const newchar: AppSchema.Character = {
+    _id: `temp-${v4().slice(0, 8)}`,
+    ...char,
+    userId: 'anon',
+    kind: 'character',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+  const temp = chat.tempCharacters || {}
+  temp[newchar._id] = newchar
+  chat.tempCharacters = temp
+
+  await localApi.saveChats(localApi.replace(chatId, chats, chat))
+  return localApi.result({ success: true, char: newchar })
 }
 
 export async function removeCharacter(chatId: string, charId: string) {

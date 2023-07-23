@@ -223,7 +223,11 @@ const SingleMessage: Component<
 
                 <Match when={ctx.char && !!props.msg.characterId}>
                   <CharacterAvatar
-                    char={ctx.botMap[props.msg.characterId!] || ctx.char}
+                    char={
+                      ctx.botMap[props.msg.characterId!] ||
+                      ctx.tempMap[props.msg.characterId!] ||
+                      ctx.char
+                    }
                     openable
                     zoom={1.75}
                     bot={true}
@@ -255,7 +259,9 @@ const SingleMessage: Component<
                 >
                   <Switch>
                     <Match when={props.msg.characterId}>
-                      {ctx.botMap[props.msg.characterId!]?.name || ctx.char?.name!}
+                      {ctx.botMap[props.msg.characterId!]?.name ||
+                        ctx.tempMap[props.msg.characterId!]?.name ||
+                        ctx.char?.name!}
                     </Match>
                     <Match when={true}>{handleToShow()}</Match>
                   </Switch>

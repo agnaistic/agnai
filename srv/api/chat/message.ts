@@ -133,10 +133,9 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   // Coalesce for backwards compatibly while new UI rolls out
-  const replyAs = await store.characters.getCharacter(
-    chat.userId,
-    body.replyAs._id || body.char._id
-  )
+  const replyAs = body.replyAs._id.startsWith('temp-')
+    ? body.replyAs
+    : await store.characters.getCharacter(chat.userId, body.replyAs._id || body.char._id)
 
   if (chat.userId !== userId) {
     const isAllowed = await store.chats.canViewChat(userId, chat)
