@@ -259,7 +259,7 @@ export function injectPlaceholders(
     hist.lines = next
   }
 
-  if (opts.settings?.useTemplateParser) {
+  if (true) {
     try {
       const lines = !hist
         ? []
@@ -602,6 +602,20 @@ function getLinesForPrompt(
       ? opts.impersonate.name
       : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
+    // const rendered = parseTemplate(msg.msg, {
+    //   chat: opts.chat,
+    //   char: opts.characters[msg.characterId!]!,
+    //   characters: opts.characters,
+    //   lines: [],
+    //   members,
+    //   parts: {} as any,
+    //   replyAs: opts.replyAs,
+    //   sender: msg.userId ? profiles.get(msg.userId)! : profiles.get(opts.chat.userId)!,
+    //   user: opts.user,
+    //   impersonate: opts.impersonate,
+    //   lastMessage:
+    // })
+
     return fillPlaceholders(
       msg,
       opts.characters[msg.characterId!]?.name || opts.replyAs?.name || char.name,
@@ -645,6 +659,7 @@ export function fillPromptWithLines(
 function fillPlaceholders(chatMsg: AppSchema.ChatMessage, char: string, user: string): string {
   const prefix = chatMsg.system ? 'System' : chatMsg.characterId ? char : user
   const msg = chatMsg.msg.replace(BOT_REPLACE, char).replace(SELF_REPLACE, user)
+
   return `${prefix}: ${msg}`
 }
 

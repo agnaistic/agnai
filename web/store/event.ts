@@ -26,85 +26,6 @@ type EventAndTrigger<T extends AppSchema.ScenarioEventTrigger> = {
   trigger: T
 }
 
-export function filterApplicableEvents<T extends AppSchema.ScenarioEventTrigger>(
-  events: AppSchema.ScenarioEvent[],
-  kind: AppSchema.ScenarioTriggerKind,
-  states: string[],
-  additionalFilter?: (e: EventAndTrigger<T>) => boolean
-): EventAndTrigger<T>[] {
-  return events
-    .map((e) => ({ event: e, trigger: e.trigger.kind === kind ? e.trigger : undefined }))
-    .filter(
-      (
-        e
-      ): e is {
-        event: AppSchema.ScenarioEvent
-        trigger: T
-      } => !!e.trigger
-    )
-    .filter(
-      (e) =>
-        (!e.event.requires.length ||
-          e.event.requires.every((r) =>
-            r.startsWith('!') ? !states.includes(r.substring(1)) : states.includes(r)
-          )) &&
-        (additionalFilter?.(e) ?? true)
-    )
-}
-
-export function selectOnGreetingEvent(entries: AppSchema.ScenarioEvent[], states: string[]) {
-  const applicableEvents = filterApplicableEvents<AppSchema.ScenarioOnGreeting>(
-    entries,
-    'onGreeting',
-    states
-  )
-  if (applicableEvents.length) {
-    const entry = weightedRandom(applicableEvents, () => 1)
-    if (entry) return entry.event
-  }
-}
-
-export function selectOnChatOpenedEvent(
-  entries: AppSchema.ScenarioEvent[],
-  states: string[],
-  lastModified: Date
-) {
-  const now = new Date()
-  const diffInMilliseconds = now.getTime() - lastModified.getTime()
-  const diffInHours = diffInMilliseconds / (1000 * 60 * 60)
-  const applicableEvents = filterApplicableEvents<AppSchema.ScenarioOnChatOpened>(
-    entries,
-    'onChatOpened',
-    states,
-    (e) => e.trigger.awayHours >= diffInHours
-  )
-  if (applicableEvents.length) {
-    const entry = applicableEvents.reduce((prev, curr) =>
-      prev.trigger.awayHours > curr.trigger.awayHours ? prev : curr
-    )
-    if (entry) return entry.event
-  }
-}
-
-export function selectOnCharacterMessageReceivedEvent(
-  entries: AppSchema.ScenarioEvent[],
-  states: string[],
-  messagesSinceLastEvent: number
-) {
-  const applicableEvents = filterApplicableEvents<AppSchema.ScenarioOnCharacterMessageRx>(
-    entries,
-    'onCharacterMessageReceived',
-    states,
-    (e) => messagesSinceLastEvent >= e.trigger.minMessagesSinceLastEvent
-  )
-  if (applicableEvents.length) {
-    const entry = applicableEvents.reduce((prev, curr) =>
-      prev.trigger.minMessagesSinceLastEvent < curr.trigger.minMessagesSinceLastEvent ? prev : curr
-    )
-    if (entry) return entry.event
-  }
-}
-
 export const eventStore = createStore<ChatEventState>('events', { events: [], preventLoop: false })(
   (get, set) => {
     return {
@@ -216,6 +137,89 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
     }
   }
 )
+
+export function filterApplicableEvents<T extends AppSchema.ScenarioEventTrigger>(
+  events: AppSchema.ScenarioEvent[],
+  kind: AppSchema.ScenarioTriggerKind,
+  states: string[],
+  additionalFilter?: (e: EventAndTrigger<T>) => boolean
+): EventAndTrigger<T>[] {
+  const mapped = events
+    .map((e) => ({
+      event: e,
+      trigger: e.trigger.kind === kind ? e.trigger : undefined,
+    }))
+    .filter((e) => !!e.trigger) as Array<{ event: AppSchema.ScenarioEvent; trigger: T }>
+
+  return mapped.filter((e) => {
+    if (!e.event.requires.length) return true
+    const every = e.event.requires.every((r) =>
+      r.startsWith('!') ? !states.includes(r.substring(1)) : states.includes(r)
+    )
+    const additional = additionalFilter?.(e) ?? true
+
+    return every && additional
+
+    // (!e.event.requires.length ||
+    //   e.event.requires.every((r) =>
+    //     r.startsWith('!') ? !states.includes(r.substring(1)) : states.includes(r)
+    //   )) &&
+    // (additionalFilter?.(e) ?? true)
+  })
+}
+
+export function selectOnGreetingEvent(entries: AppSchema.ScenarioEvent[], states: string[]) {
+  const applicableEvents = filterApplicableEvents<AppSchema.ScenarioOnGreeting>(
+    entries,
+    'onGreeting',
+    states
+  )
+  if (applicableEvents.length) {
+    const entry = weightedRandom(applicableEvents, () => 1)
+    if (entry) return entry.event
+  }
+}
+
+export function selectOnChatOpenedEvent(
+  entries: AppSchema.ScenarioEvent[],
+  states: string[],
+  lastModified: Date
+) {
+  const now = new Date()
+  const diffInMilliseconds = now.getTime() - lastModified.getTime()
+  const diffInHours = diffInMilliseconds / (1000 * 60 * 60)
+  const applicableEvents = filterApplicableEvents<AppSchema.ScenarioOnChatOpened>(
+    entries,
+    'onChatOpened',
+    states,
+    (e) => e.trigger.awayHours >= diffInHours
+  )
+  if (applicableEvents.length) {
+    const entry = applicableEvents.reduce((prev, curr) =>
+      prev.trigger.awayHours > curr.trigger.awayHours ? prev : curr
+    )
+    if (entry) return entry.event
+  }
+}
+
+export function selectOnCharacterMessageReceivedEvent(
+  entries: AppSchema.ScenarioEvent[],
+  states: string[],
+  messagesSinceLastEvent: number
+) {
+  const applicableEvents = filterApplicableEvents<AppSchema.ScenarioOnCharacterMessageRx>(
+    entries,
+    'onCharacterMessageReceived',
+    states,
+    (e) => messagesSinceLastEvent >= e.trigger.minMessagesSinceLastEvent
+  )
+  if (applicableEvents.length) {
+    const entry = applicableEvents.reduce((prev, curr) =>
+      prev.trigger.minMessagesSinceLastEvent < curr.trigger.minMessagesSinceLastEvent ? prev : curr
+    )
+    if (entry) return entry.event
+  }
+}
 
 function executeEvent(chat: AppSchema.Chat, event: AppSchema.ScenarioEvent) {
   updateChatScenarioStates(chat, event.assigns)

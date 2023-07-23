@@ -223,6 +223,13 @@ export async function createTextStreamV2(
   if (opts.settings?.thirdPartyFormat) {
     opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
   }
+  if (!opts.settings) {
+    opts.settings = {}
+  }
+
+  if (opts.kind.startsWith('send-event:')) {
+    opts.settings!.useTemplateParser = true
+  }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getEncoder(adapter, model)

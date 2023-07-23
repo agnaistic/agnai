@@ -299,7 +299,14 @@ const SingleMessage: Component<
                 </span>
               </span>
               <Switch>
-                <Match when={!edit() && !props.swipe && user.user?._id === ctx.chat?.userId}>
+                <Match
+                  when={
+                    !edit() &&
+                    !props.swipe &&
+                    user.user?._id === ctx.chat?.userId &&
+                    ctx.chat?.mode !== 'companion'
+                  }
+                >
                   <MessageOptions
                     char={ctx.char!}
                     original={props.original}

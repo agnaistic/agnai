@@ -6,6 +6,7 @@ const Accordian: Component<{
   children: JSX.Element
   open?: boolean
   class?: string
+  titleClickOpen?: boolean
 }> = (props) => {
   const [open, setOpen] = createSignal(props.open ?? true)
   const cls = createMemo(() => (open() ? '' : 'hidden'))
@@ -21,7 +22,14 @@ const Accordian: Component<{
             <ChevronDown />
           </Show>
         </div>
-        <div class="w-full">{props.title}</div>
+        <div
+          class="w-full"
+          onClick={() => {
+            if (props.titleClickOpen) setOpen(!open())
+          }}
+        >
+          {props.title}
+        </div>
       </div>
       <div class={`border-t border-[var(--bg-600)] pt-1 ${cls()}`}>{props.children}</div>
     </div>

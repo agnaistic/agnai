@@ -25,6 +25,7 @@ export async function createScenario(userId: string, scenario: NewScenario) {
       text: entry.text,
       trigger: entry.trigger,
     })),
+    states: [],
   }
 
   await db('scenario').insertOne(newScenario)

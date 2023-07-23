@@ -14,6 +14,7 @@ import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
 import { settingStore } from '../settings'
+import { parseTemplate } from '/common/template-parser'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -368,6 +369,22 @@ async function getGenerateProps(
     replyAs: entities.char,
     messages: entities.messages.slice(),
     impersonate: entities.impersonating,
+  }
+
+  if ('text' in opts) {
+    opts.text = parseTemplate(opts.text, {
+      char: active.char,
+      characters: entities.characters,
+      chat: active.chat,
+      lines: [],
+      members: entities.members,
+      parts: {} as any,
+      replyAs: props.replyAs,
+      sender: entities.profile,
+      impersonate: props.impersonate,
+      user: entities.user,
+      repeatable: true,
+    })
   }
 
   const getBot = (id: string) => entities.chatBots.find((ch) => ch._id === id)!

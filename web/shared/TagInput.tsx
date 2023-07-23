@@ -7,7 +7,12 @@ interface TagInputProps {
   fieldName: string
   label?: string
   helperText?: string | JSX.Element
+  placeholder?: string
+  disabled?: boolean
   onSelect: (selectedTags: string[]) => void
+
+  /** Will only allow 'availableTags' to be used */
+  strict?: boolean
 }
 
 const TagInput: Component<TagInputProps> = (props) => {
@@ -27,6 +32,12 @@ const TagInput: Component<TagInputProps> = (props) => {
 
   function addTag(tag: string) {
     const updatedTags = Array.from(new Set([...tags(), tag]))
+
+    if (props.strict) {
+      const match = props.availableTags.some((existing) => existing === tag)
+      if (!match) return
+    }
+
     setTags(updatedTags)
     setInputValue('')
     setSuggestions([])
@@ -78,7 +89,10 @@ const TagInput: Component<TagInputProps> = (props) => {
           value={inputValue()}
           onInput={handleInputChange}
           onKeyDown={handleInputKeyDown}
-          placeholder="&nbsp;&nbsp;Add tags..."
+          placeholder={
+            tags().length || inputValue() ? undefined : props.placeholder ?? 'Add tags...'
+          }
+          disabled={props.disabled}
         />
       </div>
       <ul class="absolute left-0 z-10 mt-1 bg-white text-gray-800 shadow-md">

@@ -101,7 +101,6 @@ const ChatDetail: Component = () => {
     retrying: s.retrying,
     inference: s.lastInference,
   }))
-  let connectEventProcessed = false
 
   const isGroupChat = createMemo(() => {
     if (!chats.participantIds?.length) return false
@@ -131,6 +130,7 @@ const ChatDetail: Component = () => {
   const botGreeting = createMemo(() => chats.char?.greeting || '')
   const altGreetings = createMemo(() => chats.char?.alternateGreetings ?? [])
 
+  let [evented, setEvented] = createSignal(false)
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last && !isGreetingOnlyMsg()) return
@@ -196,8 +196,9 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     // On Connect Events
-    if (connectEventProcessed || !chats.chat || !chats.char) return
-    connectEventProcessed = true
+    if (evented() || !chats.chat || !chats.char) return
+    setEvented(true)
+
     const messages = msgs.msgs
     if (messages.length === 0) {
       eventStore.onGreeting(chats.chat)

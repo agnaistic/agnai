@@ -44,26 +44,47 @@ type Holder =
   | 'random'
   | 'roll'
 
+type RepeatableHolder = Extract<
+  Holder,
+  'char' | 'user' | 'chat_age' | 'roll' | 'random' | 'idle_duration'
+>
+
+const repeatableHolders = new Set<RepeatableHolder>([
+  'char',
+  'user',
+  'chat_age',
+  'idle_duration',
+  'random',
+  'roll',
+])
+
 type IterableHolder = 'history' | 'bots'
 
 type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
 type BotsProp = 'i' | 'personality' | 'name'
 
 export type ParseOpts = {
-  replyAs: AppSchema.Character
   members: AppSchema.Profile[]
-  impersonate?: AppSchema.Character
   parts: PromptParts
   chat: AppSchema.Chat
-  char: AppSchema.Character
   user: AppSchema.User
+
+  char: AppSchema.Character | string
+  replyAs: AppSchema.Character | string
+  impersonate?: AppSchema.Character | string
+  sender: AppSchema.Profile | string
+
   settings?: Partial<AppSchema.GenSettings>
   lines: string[]
   characters: Record<string, AppSchema.Character>
-  sender: AppSchema.Profile
   lastMessage?: string
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
+
+  /**
+   * Only allow repeatable placeholders. Excludes iterators, conditions, and prompt parts.
+   */
+  repeatable?: boolean
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
@@ -162,7 +183,11 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
         case 'isuser': {
           const index = line.indexOf(':')
           const name = line.slice(0, index)
-          const sender = opts.impersonate?.name ?? opts.sender.handle
+          const sender =
+            typeof opts.impersonate === 'string'
+              ? opts.impersonate
+              : opts.impersonate?.name ??
+                (typeof opts.sender === 'string' ? opts.sender : opts.sender.handle)
           const match = name === sender
           return node.prop === 'isuser' ? match : !match
         }
@@ -172,6 +197,8 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
 }
 
 function renderCondition(node: ConditionNode, children: PNode[], opts: ParseOpts) {
+  if (opts.repeatable) return ''
+
   const value = getPlaceholder(node, opts)
   if (!value) return
 
@@ -185,11 +212,14 @@ function renderCondition(node: ConditionNode, children: PNode[], opts: ParseOpts
 }
 
 function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOpts) {
+  if (opts.repeatable) return ''
+
   const output: string[] = []
 
+  const replyAsId = typeof opts.replyAs === 'string' ? null : opts.replyAs._id
   const entities =
     holder === 'bots'
-      ? Object.values(opts.characters).filter((b) => !!b && b._id !== opts.replyAs._id)
+      ? Object.values(opts.characters).filter((b) => !!b && b._id !== replyAsId)
       : opts.lines
 
   let i = 0
@@ -245,22 +275,26 @@ function renderEntityCondition(nodes: CNode[], opts: ParseOpts, entity: unknown,
 }
 
 function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
+  if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
+
   switch (node.value) {
     case 'char':
-      return opts.replyAs.name
+      return typeof opts.replyAs === 'string' ? opts.replyAs : opts.replyAs.name
 
     case 'user':
-      return (
-        opts.impersonate?.name ||
-        opts.members.find((m) => m.userId === opts.user._id)?.handle ||
-        'You'
-      )
+      return typeof opts.impersonate === 'string'
+        ? opts.impersonate
+        : opts.impersonate?.name ||
+            opts.members.find((m) => m.userId === opts.user._id)?.handle ||
+            'You'
 
     case 'example_dialogue':
       return opts.parts.sampleChat?.join('\n') || ''
 
     case 'scenario':
-      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario
+      return opts.parts.scenario || opts.chat.scenario || typeof opts.char === 'string'
+        ? ''
+        : opts.char.scenario
 
     case 'memory':
       return opts.parts.memory || ''

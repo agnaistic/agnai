@@ -400,6 +400,7 @@ export namespace AppSchema {
     overwriteCharacterScenario: boolean
     instructions?: string
     entries: ScenarioEvent[]
+    states: string[]
   }
 
   export interface ScenarioEvent {

@@ -20,6 +20,7 @@ import { ParseOpts, parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
 import { ensureValidTemplate, getPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
+import { v4 } from 'uuid'
 
 type Placeholder = {
   required: boolean
@@ -29,6 +30,7 @@ type Placeholder = {
 
 type Interp = keyof typeof placeholders
 type InterpV2 = keyof typeof v2placeholders
+type InterpAll = Interp | InterpV2
 
 const placeholders = {
   char: { required: false, limit: Infinity },
@@ -94,9 +96,7 @@ const v2helpers: { [key in InterpV2]?: JSX.Element | string } = {
   ),
 }
 
-type HolderName = keyof typeof placeholders
-
-type Optionals = { exclude: HolderName[] } | { include: Interp[] } | {}
+type Optionals = { exclude: InterpAll[] } | { include: InterpAll[] } | {}
 
 const PromptEditor: Component<
   {
@@ -110,6 +110,12 @@ const PromptEditor: Component<
     showHelp?: boolean
     placeholder?: string
     v2?: boolean
+
+    /** Hide the meanings of "green" "yellow" "red" placeholder helper text */
+    hideHelperText?: boolean
+
+    /** Do not "inject placeholders" for the purposes of preview. Only render a preview of the provided prompt. */
+    noDummyPreview?: boolean
   } & Optionals
 > = (props) => {
   let ref: HTMLTextAreaElement = null as any
@@ -121,7 +127,7 @@ const PromptEditor: Component<
 
   const rendered = createMemo(() => {
     const opts = getExampleOpts(props.inherit)
-    const template = ensureValidTemplate(input(), opts.parts)
+    const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
     const example = parseTemplate(template, opts)
     return example
   })
@@ -199,7 +205,7 @@ const PromptEditor: Component<
             </>
           }
           helperText={
-            <>
+            <Show when={!props.hideHelperText}>
               <div>
                 <span class="text-green-600">Green</span> placeholders will be inserted
                 automatically if they are missing.
@@ -208,11 +214,7 @@ const PromptEditor: Component<
                 <span class="text-yellow-600">Yellow</span> placeholders will not be automatically
                 included if you do not include them.
               </div>
-              <div>
-                <span class="text-red-600">example_dialogue</span> will be inserted as conversation
-                history if you do not include it.
-              </div>
-            </>
+            </Show>
           }
         />
       </Show>
@@ -292,28 +294,23 @@ const HelpModal: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   v2?: boolean
 }> = (props) => {
+  const [id] = createSignal(v4())
   const items = createMemo(() => {
-    const entries = Object.entries(helpers).filter(([interp]) =>
-      props.interps.includes(interp as any)
-    )
-
-    if (props.v2 || props.inherit?.useTemplateParser) {
-      const second = Object.entries(v2helpers)
-      entries.push(...second)
-    }
+    const all = Object.entries(helpers).concat(Object.entries(v2helpers))
+    const entries = all.filter(([interp]) => props.interps.includes(interp as any))
 
     return entries
   })
 
   useRootModal({
-    id: 'prompt-editor-help',
+    id: `prompt-editor-help-${id()}`,
     element: (
       <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
         <div class="flex w-full flex-col gap-1 text-sm">
           <For each={items()}>
             {([interp, help]) => (
               <TitleCard>
-                <FormLabel fieldName={interp} label={interp} helperText={help} />
+                <FormLabel label={<b>{interp}</b>} helperText={help} />
               </TitleCard>
             )}
           </For>

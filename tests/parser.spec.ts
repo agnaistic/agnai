@@ -23,7 +23,9 @@ const history = [
   toUserMsg(profile, 'User response'),
   toBotMsg(chars[1], 'Multibot message'),
 ]
-const lines = history.map((h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`)
+const lines = history.map(
+  (h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`
+)
 
 describe('Template parser tests', () => {
   before(reset)
@@ -97,12 +99,19 @@ Scenario: {{scenario}}
   })
 })
 
-function test(template: string, overrides: Partial<ParseOpts> = {}, charOverrides: Partial<AppSchema.Character> = {}) {
+function test(
+  template: string,
+  overrides: Partial<ParseOpts> = {},
+  charOverrides: Partial<AppSchema.Character> = {}
+) {
   return parseTemplate(template, getParseOpts(overrides, charOverrides))
 }
 
-function getParseOpts(overrides: Partial<ParseOpts> = {}, charOverrides: Partial<AppSchema.Character> = {}) {
-  const overChat = overrides.char ? toChat(overrides.char) : chat
+function getParseOpts(
+  overrides: Partial<ParseOpts> = {},
+  charOverrides: Partial<AppSchema.Character> = {}
+) {
+  const overChat = overrides.char ? toChat(overrides.char as any) : chat
   const overChar = { ...char, ...charOverrides }
   const parts = getPromptParts(
     {
