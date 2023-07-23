@@ -32,7 +32,7 @@ export const Toggle: Component<{
   })
 
   return (
-    <div class={hide()}>
+    <div class={`sm: flex flex-col gap-2 sm:flex-row ${hide()} sm:items-center sm:justify-between`}>
       <Show when={props.label}>
         <FormLabel label={props.label} helperText={props.helperText} />
       </Show>

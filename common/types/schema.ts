@@ -204,6 +204,7 @@ export namespace AppSchema {
     system?: boolean
     meta?: any
     event?: EventTypes | undefined
+    state?: string
   }
 
   export type EventTypes = 'world' | 'character' | 'hidden' | 'ooc'

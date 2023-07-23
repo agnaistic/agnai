@@ -363,6 +363,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           actions,
           adapter,
           meta,
+          state: 'retried',
         })
         sendMany(members, {
           type: 'message-retry',
@@ -401,7 +402,12 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     case 'continue': {
-      await store.msgs.editMessage(body.continuing._id, { msg: responseText, adapter, meta })
+      await store.msgs.editMessage(body.continuing._id, {
+        msg: responseText,
+        adapter,
+        meta,
+        state: 'continued',
+      })
       sendMany(members, {
         type: 'message-retry',
         requestId,
