@@ -254,13 +254,15 @@ const ChatDetail: Component = () => {
     setSearch({ pane: paneType })
   }
 
-  const closePane = () => {
+  const closePane = (search = true) => {
     chatStore.option('pane', undefined)
-    setSearch({ pane: undefined })
+    if (search) {
+      setSearch({ pane: undefined })
+    }
   }
 
-  const closeCharEditor = () => {
-    closePane()
+  const closeCharEditor = (search?: boolean) => {
+    closePane(search)
     setEditId(chats.char?._id || '')
   }
 
@@ -357,8 +359,7 @@ const ChatDetail: Component = () => {
   })
 
   onCleanup(() => {
-    closeCharEditor()
-    setSearch({ pane: undefined })
+    closeCharEditor(false)
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
