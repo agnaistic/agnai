@@ -17,7 +17,7 @@ import PersonaAttributes, { getAttributeMap } from '/web/shared/PersonaAttribute
 type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
 const MemberModal: Component<{ show: boolean; close: () => void; charId: string }> = (props) => {
-  const [view, setView] = createSignal<View>('temp_character')
+  const [view, setView] = createSignal<View>('list')
 
   const Footer = (
     <>

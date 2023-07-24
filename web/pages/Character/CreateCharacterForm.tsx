@@ -52,7 +52,6 @@ import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
 import { generateChar, GenField, regenerateCharProp } from './generate-char'
-import { ADAPTER_LABELS } from '/common/adapters'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -132,37 +131,6 @@ export const CreateCharacterForm: Component<{
     return preset
   })
 
-  const chargenOpts = createMemo(() => {
-    if (!user) return []
-
-    const opts: Option[] = []
-
-    const pref = preferredPreset()
-    if (pref?.service === 'openai' || pref?.service === 'novel' || pref?.service === 'claude') {
-      opts.push({ label: `Default (${ADAPTER_LABELS[pref.service]})`, value: '' })
-    }
-
-    if (user.oaiKeySet) {
-      opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
-      opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
-    }
-
-    if (user.novelVerified) {
-      opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
-      opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
-    }
-
-    if (pref?.service === 'kobold' || user.koboldUrl) {
-      opts.push({ label: 'Third Party', value: 'kobold' })
-    }
-
-    if (user.claudeApiKeySet) {
-      opts.push({ label: 'Claude', value: 'claude' })
-    }
-
-    return opts
-  })
-
   const totalTokens = createMemo(() => {
     const t = tokens()
     return t.name + t.persona + t.sample + t.scenario
@@ -207,7 +175,7 @@ export const CreateCharacterForm: Component<{
   }
 
   const generateCharacter = async () => {
-    if (!chargenOpts().length) return
+    if (!editor.genOptions.length) return
 
     const { chargenService } = getStrictForm(ref, { chargenService: 'string?' })
     const preset = preferredPreset()
@@ -453,7 +421,7 @@ export const CreateCharacterForm: Component<{
                       A description, label, or notes for your character. This is will not influence
                       your character in any way.
                     </span>
-                    <Show when={chargenOpts().length > 0}>
+                    <Show when={editor.genOptions.length > 0}>
                       <p>
                         To generate a character, describe the character below then click{' '}
                         <b>Generate</b>. It can take 30-60 seconds. You can choose which AI Service
@@ -473,9 +441,9 @@ export const CreateCharacterForm: Component<{
                   parentClass="w-full"
                   value={editor.state.description}
                 />
-                <Show when={chargenOpts().length > 0}>
+                <Show when={editor.genOptions.length > 0}>
                   <div class="flex justify-end gap-2 sm:justify-start">
-                    <Select fieldName="chargenService" items={chargenOpts()} />
+                    <Select fieldName="chargenService" items={editor.genOptions} />
                     <Button onClick={generateCharacter} disabled={creating()}>
                       {creating() ? 'Generating...' : 'Generate'}
                     </Button>
@@ -549,7 +517,7 @@ export const CreateCharacterForm: Component<{
                             <Regenerate
                               fields={['appearance']}
                               regen={regenerateField}
-                              allowed={chargenOpts().length > 0}
+                              allowed={editor.genOptions.length > 0}
                             />
                           </>
                         }
@@ -581,7 +549,7 @@ export const CreateCharacterForm: Component<{
                     <Regenerate
                       fields={['scenario']}
                       regen={regenerateField}
-                      allowed={chargenOpts().length > 0}
+                      allowed={editor.genOptions.length > 0}
                     />
                   </>
                 }
@@ -602,7 +570,7 @@ export const CreateCharacterForm: Component<{
                     <Regenerate
                       fields={['greeting']}
                       regen={regenerateField}
-                      allowed={chargenOpts().length > 0}
+                      allowed={editor.genOptions.length > 0}
                     />
                   </>
                 }
@@ -628,7 +596,7 @@ export const CreateCharacterForm: Component<{
                       <Regenerate
                         fields={['behaviour', 'personality', 'speech']}
                         regen={regenerateField}
-                        allowed={chargenOpts().length > 0}
+                        allowed={editor.genOptions.length > 0}
                       />{' '}
                     </>
                   }
@@ -670,7 +638,7 @@ export const CreateCharacterForm: Component<{
                     <Regenerate
                       fields={['example1', 'example2', 'example3']}
                       regen={regenerateField}
-                      allowed={chargenOpts().length > 0}
+                      allowed={editor.genOptions.length > 0}
                     />
                   </>
                 }

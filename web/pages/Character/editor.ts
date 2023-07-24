@@ -3,11 +3,13 @@ import { createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
-import { PERSONA_FORMATS } from '/common/adapters'
+import { ADAPTER_LABELS, PERSONA_FORMATS } from '/common/adapters'
 import { getStrictForm, setFormField } from '/web/shared/util'
 import { getAttributeMap } from '/web/shared/PersonaAttributes'
-import { NewCharacter } from '/web/store'
+import { NewCharacter, characterStore, presetStore, toastStore, userStore } from '/web/store'
 import { getImageData } from '/web/store/data/chars'
+import { Option } from '/web/shared/Select'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -103,6 +105,8 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const [state, setState] = createStore<EditState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
 
+  const genOptions = getCharacterGenOptions()
+
   createEffect(async () => {
     const file = state.avatar || original()?.originalAvatar
     if (!file) {
@@ -184,7 +188,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  return { state, update: setState, reset, load, convert, payload, original, clear }
+  return { state, update: setState, reset, load, convert, payload, original, clear, genOptions }
 }
 
 function getPayload(ev: any, state: EditState, original?: NewCharacter) {
@@ -226,4 +230,54 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
   }
 
   return payload
+}
+
+async function generateAvatar(char: NewCharacter) {
+  const { user } = userStore.getState()
+  if (!user) {
+    return toastStore.error(`Image generation settings missing`)
+  }
+
+  return new Promise((resolve, reject) => {
+    characterStore.generateAvatar(user, char.appearance || char.persona, (err, image) => {
+      if (image) return resolve(image)
+      reject(err)
+    })
+  })
+}
+
+function getCharacterGenOptions(): Option[] {
+  const { user } = userStore.getState()
+  if (!user) return []
+
+  const { presets } = presetStore.getState()
+  const preferred = isDefaultPreset(user.defaultPreset)
+    ? defaultPresets[user.defaultPreset]
+    : presets.find((p) => p._id === user.defaultPreset)
+
+  const opts: Option[] = []
+
+  if (preferred) {
+    opts.push({ label: `Default (${ADAPTER_LABELS[preferred.service!]})`, value: '' })
+  }
+
+  if (user.oaiKeySet) {
+    opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
+    opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
+  }
+
+  if (user.novelVerified) {
+    opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
+    opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
+  }
+
+  if (preferred?.service === 'kobold' || user.koboldUrl) {
+    opts.push({ label: 'Third Party', value: 'kobold' })
+  }
+
+  if (user.claudeApiKeySet) {
+    opts.push({ label: 'Claude', value: 'claude' })
+  }
+
+  return opts
 }
