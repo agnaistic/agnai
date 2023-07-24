@@ -147,8 +147,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       opts.push({ label: 'Claude', value: 'claude' })
     }
 
-    console.log(opts)
-
     return opts
   })
 

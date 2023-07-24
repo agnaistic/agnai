@@ -5,6 +5,7 @@ import { sendMany } from '../ws'
 import { AppSchema } from '/common/types'
 import { v4 } from 'uuid'
 import { now } from '/srv/db/util'
+import { entityUploadBase64 } from '../upload'
 
 export const addCharacter = handle(async ({ body, params, userId }) => {
   assertValid({ charId: 'string' }, body)
@@ -104,8 +105,15 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
 
   tempCharacters[upserted._id] = upserted
 
+  const filename = await entityUploadBase64('char', upserted._id, body.avatar)
+  if (filename) {
+    upserted.avatar = filename + '?' + v4().slice(0, 4)
+  }
+
   const members = await store.chats.getActiveMembers(params.id)
+
   await store.chats.update(params.id, { tempCharacters })
+
   sendMany(members.concat(chat.userId), {
     type: 'chat-temp-character',
     chatId: params.id,

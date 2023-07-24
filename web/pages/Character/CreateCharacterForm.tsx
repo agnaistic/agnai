@@ -22,7 +22,6 @@ import {
   toastStore,
   memoryStore,
   chatStore,
-  NewCharacter,
 } from '../../store'
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
@@ -93,8 +92,6 @@ export const CreateCharacterForm: Component<{
     const edit = s.characters.list.find((ch) => ch._id === srcId())
     const tempChar =
       props.temp && props.editId ? props.chat?.tempCharacters?.[props.editId] : undefined
-
-    console.log(tempChar)
 
     return {
       avatar: s.generate,
@@ -221,11 +218,15 @@ export const CreateCharacterForm: Component<{
     setImage(data)
   }
 
-  const onSubmit = (ev: Event) => {
+  const onSubmit = async (ev: Event) => {
     const payload = editor.payload(ref)
     payload.avatar = state.avatar.blob || editor.state.avatar
 
     if (props.temp && props.chat) {
+      if (payload.avatar) {
+        const data = await getImageData(payload.avatar)
+        payload.avatar = data
+      }
       chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, () => {
         if (paneOrPopup() === 'popup') props.close?.()
       })

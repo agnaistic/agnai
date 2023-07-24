@@ -21,7 +21,7 @@ export type Attachment = {
   field: string
   original: string
   type: string
-  content: Buffer
+  content: Buffer | string
   ext: string
 }
 
@@ -54,6 +54,26 @@ export async function entityUpload(kind: string, id: string, attachment?: Attach
   if (!attachment) return
   const filename = `${kind}-${id}`
   return upload(attachment, filename)
+}
+
+export async function entityUploadBase64(kind: string, id: string, content?: string) {
+  if (!content) return
+  const filename = `${kind}-${id}`
+  const attachment = toAttachment(content)
+  return upload(attachment, filename)
+}
+
+function toAttachment(content: string): Attachment {
+  const [prefix, base64] = content.split(',')
+  const type = prefix.slice(5, -7)
+  const [, ext] = type.split('/')
+  return {
+    ext,
+    field: '',
+    original: '',
+    type: getType(ext),
+    content: Buffer.from(base64, 'base64'),
+  }
 }
 
 export async function upload(attachment: Attachment, name: string, ttl?: number) {
