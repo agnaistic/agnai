@@ -15,7 +15,15 @@ import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import { characterStore, tagStore, settingStore, toastStore, memoryStore } from '../../store'
+import {
+  characterStore,
+  tagStore,
+  settingStore,
+  toastStore,
+  memoryStore,
+  chatStore,
+  NewCharacter,
+} from '../../store'
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -56,6 +64,7 @@ export const CreateCharacterForm: Component<{
   duplicateId?: string
   import?: string
   children?: JSX.Element
+  temp?: boolean
   footer?: (children: JSX.Element) => void
   close?: () => void
 }> = (props) => {
@@ -82,11 +91,15 @@ export const CreateCharacterForm: Component<{
   const tagState = tagStore()
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId())
+    const tempChar =
+      props.temp && props.editId ? props.chat?.tempCharacters?.[props.editId] : undefined
+
+    console.log(tempChar)
 
     return {
       avatar: s.generate,
       creating: s.creating,
-      edit: forceNew() ? undefined : edit,
+      edit: props.temp ? tempChar : forceNew() ? undefined : edit,
       list: s.characters.list,
       loaded: s.characters.loaded,
     }
@@ -208,31 +221,15 @@ export const CreateCharacterForm: Component<{
     setImage(data)
   }
 
-  // const generateAvatar = async () => {
-  //   const { appearance } = getStrictForm(ref, { appearance: 'string' })
-  //   if (!user) {
-  //     toastStore.error(`Image generation settings missing`)
-  //     return
-  //   }
-
-  //   const attributes = getAttributeMap(ref)
-  //   const persona: AppSchema.Persona = {
-  //     kind: 'boostyle',
-  //     attributes,
-  //   }
-
-  //   try {
-  //     characterStore.generateAvatar(user!, appearance || persona)
-  //   } catch (ex: any) {
-  //     toastStore.error(ex.message)
-  //   }
-  // }
-
   const onSubmit = (ev: Event) => {
     const payload = editor.payload(ref)
     payload.avatar = state.avatar.blob || editor.state.avatar
 
-    if (!forceNew() && props.editId) {
+    if (props.temp && props.chat) {
+      chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, () => {
+        if (paneOrPopup() === 'popup') props.close?.()
+      })
+    } else if (!forceNew() && props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
@@ -563,7 +560,7 @@ export const CreateCharacterForm: Component<{
                 fieldName="sampleChat"
                 label={
                   <>
-                    Sample Conversation
+                    Sample Conversation{' '}
                     <Regenerate
                       fields={['example1', 'example2', 'example3']}
                       regen={generateCharacter}

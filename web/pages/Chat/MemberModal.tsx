@@ -3,7 +3,7 @@ import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch 
 import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
-import Modal, { ConfirmModal } from '../../shared/Modal'
+import { ConfirmModal } from '../../shared/Modal'
 import { characterStore, chatStore, toastStore, userStore } from '../../store'
 import TextInput from '../../shared/TextInput'
 import { v4 } from 'uuid'
@@ -11,11 +11,9 @@ import { getStrictForm } from '../../shared/util'
 import { isLoggedIn } from '/web/store/api'
 import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { getActiveBots } from './util'
-import { FormLabel } from '/web/shared/FormLabel'
-import PersonaAttributes, { getAttributeMap } from '/web/shared/PersonaAttributes'
 import Divider from '/web/shared/Divider'
-import { useCharEditor } from '../Character/editor'
 import Convertible from './Convertible'
+import { CreateCharacterForm } from '../Character/CreateCharacterForm'
 
 type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
@@ -24,8 +22,11 @@ const MemberModal: Component<{
   close: () => void
   charId: string
   footer?: (markup: any) => void
+  chat: AppSchema.Chat
 }> = (props) => {
   const [view, setView] = createSignal<View>('list')
+  const [editCharId, setEditCharId] = createSignal<string>()
+  const [footer, setFooter] = createSignal<any>()
 
   const Footer = (
     <>
@@ -50,27 +51,44 @@ const MemberModal: Component<{
     </>
   )
 
-  if (props.footer) {
-    props.footer(Footer)
+  onMount(() => {
+    setFooter(Footer)
+  })
+
+  const closeEditor = () => {
+    setView('list')
+    props.footer?.(Footer)
+  }
+
+  const paneClose = () => {
+    if (view() === 'list') {
+      props.close()
+    } else {
+      setView('list')
+    }
+  }
+
+  const editChar = (id: string) => {
+    setEditCharId(id)
+    setView('temp_character')
   }
 
   return (
     <>
-      {/* <Modal
-        show={props.show}
-        close={props.close}
-        title="Participants"
-        footer={Footer}
-        maxWidth="half"
-      > */}
-      <Convertible kind="partial" title="Participants" close={props.close} footer={Footer}>
+      <Convertible kind="partial" title="Participants" close={paneClose} footer={footer()}>
         <div class="space-y-2 text-sm">
           <Switch>
             <Match when={view() === 'list'}>
-              <ParticipantsList setView={setView} charId={props.charId} />
+              <ParticipantsList setView={setView} charId={props.charId} edit={editChar} />
             </Match>
             <Match when={view() === 'temp_character'}>
-              <TempCharacter setView={setView} />
+              <CreateCharacterForm
+                editId={editCharId()}
+                chat={props.chat}
+                footer={setFooter}
+                close={closeEditor}
+                temp={editCharId()?.startsWith('temp')}
+              />
             </Match>
             <Match when={view() === 'add_character'}>
               <AddCharacter setView={setView} />
@@ -81,86 +99,15 @@ const MemberModal: Component<{
           </Switch>
         </div>
       </Convertible>
-      {/* </Modal> */}
     </>
   )
 }
 
-const TempCharacter: Component<{ setView: (view: View) => void }> = (props) => {
-  let ref: any
-  const state = chatStore()
-  const cfg = userStore()
-
-  const editor = useCharEditor()
-
-  const onSave = () => {
-    const attributes = getAttributeMap(ref)
-    const body = getStrictForm(ref, {
-      name: 'string',
-      description: 'string',
-      appearance: 'string',
-      sampleChat: 'string',
-    })
-
-    const char: AppSchema.Character = {
-      _id: '',
-      name: body.name,
-      description: body.description,
-      appearance: body.appearance,
-      sampleChat: body.sampleChat,
-      greeting: '',
-      scenario: '',
-      avatar: '',
-      persona: {
-        kind: 'text',
-        attributes,
-      },
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      kind: 'character',
-      userId: cfg.user?._id || 'anon',
-    }
-
-    chatStore.upsertTempCharacter(state.active?.chat?._id!, char, () => {
-      props.setView('list')
-    })
-  }
-
-  return (
-    <form ref={ref} class="flex flex-col gap-2">
-      <FormLabel
-        label="Temporary Character"
-        helperText="Quickly create a character for this conversation only"
-      />
-
-      <TextInput fieldName="name" label="Name" />
-      <TextInput
-        isMultiline
-        fieldName="description"
-        label="Description"
-        helperText="Optional - Used for character generation"
-      />
-      <TextInput
-        isMultiline
-        fieldName="appearance"
-        label="Appearance"
-        helperText="Optional - For generating an avatar"
-      />
-      <PersonaAttributes plainText schema="text" />
-      <TextInput
-        isMultiline
-        fieldName="sampleChat"
-        label="Example Dialogue"
-        helperText="Example of how the character speaks"
-      />
-      <div class="flex justify-center">
-        <Button onClick={onSave}>Create Character</Button>
-      </div>
-    </form>
-  )
-}
-
-const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string }> = (props) => {
+const ParticipantsList: Component<{
+  setView: (view: View) => {}
+  charId: string
+  edit: (charId: string) => void
+}> = (props) => {
   const self = userStore()
   const chars = characterStore((s) => s.characters)
   const state = chatStore()
@@ -174,7 +121,6 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
   )
 
   const temps = createMemo(() => {
-    console.log('evalling')
     const chat = state.active?.chat
     if (!chat) return []
 
@@ -221,6 +167,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
             remove={removeChar}
             canRemove={props.charId !== char._id}
             isMain={props.charId === char._id}
+            edit={props.edit}
           />
         )}
       </For>
@@ -236,6 +183,7 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
               remove={removeChar}
               canRemove={props.charId !== char._id}
               isMain={props.charId === char._id}
+              edit={props.edit}
             />
           )}
         </For>
@@ -381,6 +329,7 @@ const CharacterParticipant: Component<{
   isMain: boolean
   remove: (charId: string) => void
   chat?: AppSchema.Chat
+  edit?: (charId: string) => void
 }> = (props) => {
   const isTemp = createMemo(() => props.char._id.startsWith('temp-'))
 
@@ -391,7 +340,13 @@ const CharacterParticipant: Component<{
 
   return (
     <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
-      <div class="ellipsis flex items-center gap-2">
+      <div
+        class="ellipsis flex w-full items-center gap-2"
+        classList={{
+          'cursor-pointer': !!props.edit,
+        }}
+        onClick={() => props.edit?.(props.char._id)}
+      >
         <CharacterAvatar format={{ corners: 'circle', size: 'sm' }} char={props.char} openable />
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.char.name}</div>

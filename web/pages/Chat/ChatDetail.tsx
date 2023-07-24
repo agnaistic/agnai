@@ -148,7 +148,7 @@ const ChatDetail: Component = () => {
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
   onMount(() => {
-    if (isValid({ pane: ['character', 'preset'] }, search)) {
+    if (isValid({ pane: ['character', 'preset', 'participants'] }, search)) {
       togglePane(search.pane)
     }
   })
@@ -659,7 +659,13 @@ const ChatDetail: Component = () => {
                   </Match>
 
                   <Match when={chats.opts.pane === 'participants'}>
-                    <MemberModal show charId={chats?.char?._id!} close={closePane} />
+                    <MemberModal
+                      show
+                      chat={chats.chat!}
+                      charId={chats?.char?._id!}
+                      close={closePane}
+                      footer={setPaneFooter}
+                    />
                   </Match>
                 </Switch>
               </Show>

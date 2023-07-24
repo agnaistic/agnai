@@ -77,7 +77,7 @@ const CharacterSelectList: Component<{
                 onClick={() => onChange(item)}
               >
                 <div class="ellipsis flex h-3/4 items-center gap-4">
-                  <CharacterAvatar char={item} format={{ size: 'md', corners: 'circle' }} />
+                  <CharacterAvatar char={item} format={{ size: 'sm', corners: 'circle' }} />
 
                   <div class="ellipsis flex w-full flex-col">
                     <div class="ellipsis font-bold">{item.name}</div>

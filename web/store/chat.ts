@@ -394,7 +394,9 @@ export const chatStore = createStore<ChatState>('chat', {
     async *upsertTempCharacter(
       { active, allChats },
       chatId: string,
-      char: Omit<AppSchema.Character, '_id'> & { _id?: string },
+      char: Omit<AppSchema.Character, '_id' | 'kind' | 'createdAt' | 'updatedAt' | 'userId'> & {
+        _id?: string
+      },
       onSuccess?: () => void
     ) {
       const res = await chatsApi.upsertTempCharacter(chatId, char)
