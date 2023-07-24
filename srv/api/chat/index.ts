@@ -15,7 +15,7 @@ import { createInvite, acceptInvite, rejectInvite, getInvites, uninviteMember } 
 import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
-import { addCharacter, addTempCharacter, removeCharacter } from './characters'
+import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
 import { generateActions, guidance, inference, rerunGuidance } from './inference'
 
 const router = Router()
@@ -47,7 +47,7 @@ router.post('/:id/uninvite', uninviteMember)
 router.post('/:inviteId/accept', acceptInvite)
 router.post('/:inviteId/reject', rejectInvite)
 router.post('/:id/characters', addCharacter)
-router.post('/:id/temp-character', addTempCharacter)
+router.post('/:id/temp-character', upsertTempCharacter)
 router.delete('/:id/characters/:charId', removeCharacter)
 
 router.get('/:id/chats', getCharacterChats)

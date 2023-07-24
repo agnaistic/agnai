@@ -18,7 +18,7 @@ export const chatsApi = {
   importChat,
   deleteChat,
   addCharacter,
-  addTempCharacter,
+  upsertTempCharacter,
   removeCharacter,
   restartChat,
 }
@@ -330,7 +330,10 @@ export async function addCharacter(chatId: string, charId: string) {
   return localApi.result({ success: true, char })
 }
 
-export async function addTempCharacter(chatId: string, char: Omit<AppSchema.BaseCharacter, '_id'>) {
+export async function upsertTempCharacter(
+  chatId: string,
+  char: Omit<AppSchema.BaseCharacter, '_id'> & { _id?: string }
+) {
   if (isLoggedIn()) {
     const res = await api.post(`/chat/${chatId}/temp-character`, char)
     return res
@@ -341,7 +344,7 @@ export async function addTempCharacter(chatId: string, char: Omit<AppSchema.Base
 
   if (!chat) return localApi.error(`Chat not found`)
   const newchar: AppSchema.Character = {
-    _id: `temp-${v4().slice(0, 8)}`,
+    _id: char._id || `temp-${v4().slice(0, 8)}`,
     ...char,
     userId: 'anon',
     kind: 'character',

@@ -299,7 +299,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       const res = await inferenceAsync({
         prompt: text,
         log,
-        settings: entities.settings,
+        service: entities.settings.service!,
         user: entities.user,
       })
       return res.generated

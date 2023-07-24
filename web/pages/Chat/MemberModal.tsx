@@ -1,4 +1,4 @@
-import { ArrowBigLeft, Crown, Mail, Plus, Trash } from 'lucide-solid'
+import { ArrowBigLeft, Crown, Eye, EyeOff, Mail, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
@@ -13,10 +13,18 @@ import CharacterSelectList from '/web/shared/CharacterSelectList'
 import { getActiveBots } from './util'
 import { FormLabel } from '/web/shared/FormLabel'
 import PersonaAttributes, { getAttributeMap } from '/web/shared/PersonaAttributes'
+import Divider from '/web/shared/Divider'
+import { useCharEditor } from '../Character/editor'
+import Convertible from './Convertible'
 
 type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
-const MemberModal: Component<{ show: boolean; close: () => void; charId: string }> = (props) => {
+const MemberModal: Component<{
+  show: boolean
+  close: () => void
+  charId: string
+  footer?: (markup: any) => void
+}> = (props) => {
   const [view, setView] = createSignal<View>('list')
 
   const Footer = (
@@ -41,15 +49,21 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
       </Show>
     </>
   )
+
+  if (props.footer) {
+    props.footer(Footer)
+  }
+
   return (
     <>
-      <Modal
+      {/* <Modal
         show={props.show}
         close={props.close}
         title="Participants"
         footer={Footer}
         maxWidth="half"
-      >
+      > */}
+      <Convertible kind="partial" title="Participants" close={props.close} footer={Footer}>
         <div class="space-y-2 text-sm">
           <Switch>
             <Match when={view() === 'list'}>
@@ -66,7 +80,8 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
             </Match>
           </Switch>
         </div>
-      </Modal>
+      </Convertible>
+      {/* </Modal> */}
     </>
   )
 }
@@ -74,6 +89,9 @@ const MemberModal: Component<{ show: boolean; close: () => void; charId: string 
 const TempCharacter: Component<{ setView: (view: View) => void }> = (props) => {
   let ref: any
   const state = chatStore()
+  const cfg = userStore()
+
+  const editor = useCharEditor()
 
   const onSave = () => {
     const attributes = getAttributeMap(ref)
@@ -84,7 +102,7 @@ const TempCharacter: Component<{ setView: (view: View) => void }> = (props) => {
       sampleChat: 'string',
     })
 
-    const char: AppSchema.BaseCharacter = {
+    const char: AppSchema.Character = {
       _id: '',
       name: body.name,
       description: body.description,
@@ -97,9 +115,13 @@ const TempCharacter: Component<{ setView: (view: View) => void }> = (props) => {
         kind: 'text',
         attributes,
       },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      kind: 'character',
+      userId: cfg.user?._id || 'anon',
     }
 
-    chatStore.addTempCharacter(state.active?.chat?._id!, char, () => {
+    chatStore.upsertTempCharacter(state.active?.chat?._id!, char, () => {
       props.setView('list')
     })
   }
@@ -151,6 +173,15 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
     )
   )
 
+  const temps = createMemo(() => {
+    console.log('evalling')
+    const chat = state.active?.chat
+    if (!chat) return []
+
+    if (!chat.tempCharacters) return []
+    return Object.values(chat.tempCharacters)
+  })
+
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
 
   const remove = () => {
@@ -193,6 +224,22 @@ const ParticipantsList: Component<{ setView: (view: View) => {}; charId: string 
           />
         )}
       </For>
+
+      <Show when={temps().length > 0}>
+        <Divider />
+        <h3>Temporary Characters</h3>
+        <For each={temps()}>
+          {(char) => (
+            <CharacterParticipant
+              chat={state.active?.chat}
+              char={char}
+              remove={removeChar}
+              canRemove={props.charId !== char._id}
+              isMain={props.charId === char._id}
+            />
+          )}
+        </For>
+      </Show>
 
       <ConfirmModal
         show={!!deleting()}
@@ -333,7 +380,15 @@ const CharacterParticipant: Component<{
   canRemove: boolean
   isMain: boolean
   remove: (charId: string) => void
+  chat?: AppSchema.Chat
 }> = (props) => {
+  const isTemp = createMemo(() => props.char._id.startsWith('temp-'))
+
+  const toggleTempChar = (state: boolean) => {
+    if (!props.chat) return
+    chatStore.upsertTempCharacter(props.chat._id, { ...props.char, favorite: state })
+  }
+
   return (
     <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div class="ellipsis flex items-center gap-2">
@@ -345,15 +400,32 @@ const CharacterParticipant: Component<{
           </div>
         </div>
       </div>
-      <Show when={!props.canRemove}>
-        <Button schema="clear" onClick={() => {}} disabled>
-          <Trash size={16} class="opacity-50" />
-        </Button>
+
+      <Show when={!isTemp()}>
+        <Show when={!props.canRemove}>
+          <Button schema="clear" onClick={() => {}} disabled>
+            <Trash size={16} class="opacity-50" />
+          </Button>
+        </Show>
+        <Show when={props.canRemove}>
+          <Button schema="clear" onClick={() => props.remove(props.char._id)}>
+            <Trash size={16} />
+          </Button>
+        </Show>
       </Show>
-      <Show when={props.canRemove}>
-        <Button schema="clear" onClick={() => props.remove(props.char._id)}>
-          <Trash size={16} />
-        </Button>
+
+      <Show when={props.chat && isTemp()}>
+        <Show when={props.char.favorite !== false}>
+          <Button schema="clear" onClick={() => toggleTempChar(false)}>
+            <Eye size={16} />
+          </Button>
+        </Show>
+
+        <Show when={props.char.favorite === false}>
+          <Button schema="clear" onClick={() => toggleTempChar(true)}>
+            <EyeOff size={16} color="var(--bg-500)" />
+          </Button>
+        </Show>
       </Show>
     </div>
   )

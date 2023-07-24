@@ -657,6 +657,10 @@ const ChatDetail: Component = () => {
                       />
                     </Convertible>
                   </Match>
+
+                  <Match when={chats.opts.pane === 'participants'}>
+                    <MemberModal show charId={chats?.char?._id!} close={closePane} />
+                  </Match>
                 </Switch>
               </Show>
             </section>
@@ -683,12 +687,14 @@ const ChatDetail: Component = () => {
                 </For>
                 <For each={chats.tempBots}>
                   {(bot) => (
-                    <CharacterPill
-                      char={bot}
-                      onClick={requestMessage}
-                      disabled={!!msgs.waiting}
-                      active={false}
-                    />
+                    <Show when={bot.favorite !== false}>
+                      <CharacterPill
+                        char={bot}
+                        onClick={requestMessage}
+                        disabled={!!msgs.waiting}
+                        active={false}
+                      />
+                    </Show>
                   )}
                 </For>
               </div>
@@ -728,10 +734,6 @@ const ChatDetail: Component = () => {
 
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
-      </Show>
-
-      <Show when={chats.opts.modal === 'members'}>
-        <MemberModal show={true} close={clearModal} charId={chats?.char?._id!} />
       </Show>
 
       <UpdateGaslightToUseSystemPromptModal

@@ -48,7 +48,7 @@ export const msgsApi = {
 
 type InferenceOpts = {
   prompt: string
-  settings: Partial<AppSchema.GenSettings>
+  settings?: Partial<AppSchema.GenSettings>
   service?: string
   maxTokens?: number
 }
@@ -100,7 +100,7 @@ export async function basicInference(
 }
 
 export async function guidance<T = any>(
-  { prompt, settings, service, maxTokens }: InferenceOpts,
+  { prompt, service, maxTokens }: InferenceOpts,
   onComplete?: (err: any | null, response?: { result: string; values: T }) => void
 ) {
   const requestId = v4()
@@ -115,7 +115,6 @@ export async function guidance<T = any>(
     requestId,
     user,
     prompt,
-    settings,
     service,
     maxTokens,
   })
@@ -135,7 +134,6 @@ export async function guidance<T = any>(
 export async function rerunGuidance<T = any>(
   {
     prompt,
-    settings,
     service,
     maxTokens,
     rerun,
@@ -155,7 +153,6 @@ export async function rerunGuidance<T = any>(
     requestId,
     user,
     prompt,
-    settings,
     service,
     maxTokens,
     rerun,

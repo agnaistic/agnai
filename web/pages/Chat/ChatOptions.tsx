@@ -128,7 +128,7 @@ const ChatOptions: Component<{
           <User /> Character
         </Option>
 
-        <Option onClick={() => props.setModal('members')} hide={!isOwner()}>
+        <Option onClick={() => props.togglePane('participants')} hide={!isOwner()}>
           <Users /> Participants
         </Option>
 

@@ -21,14 +21,17 @@ Expression = body:(Variable / Text)+ {
 }
 
 
-Variable "variable" = "[" val:Char+ pipe:Pipe? "]" { return { kind: 'variable', name: val.join(''), pipe } }
+Variable "variable" = "[" val:Char+ pipe:Pipe? tokens:TokensPipe? "]" { return { kind: 'variable', name: val.join(''), pipe, tokens } }
 
-Pipe = _ "|" _ pipe:(WordPipe / SentencePipe) _ { return pipe }
+Pipe = Sep pipe:(WordPipe / SentencePipe) _ { return pipe }
 WordPipe = ("words" / "word"i) _ "=" _ value:Number { return { type: "words", value } }
 SentencePipe = "sentence"i { return { type: "sentence" } }
+TokensPipe "max-tokens" = Sep "tokens"i _ "=" _ value:Number { return value }
 
 Number "number" = nums:[0-9]+ { return +nums.join('') }
 Text "text" = !(Variable) ch:(.) { return ch }
 Char = ch:[a-z0-9_-]i { return ch }
+
+Sep = _ "|" _
 _ "whitespace" = [ \t]* 
 `

@@ -1,15 +1,22 @@
-import { createEffect, createSignal } from 'solid-js'
+import { createEffect, createMemo, createSignal } from 'solid-js'
 import { createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
-import { ADAPTER_LABELS, PERSONA_FORMATS } from '/common/adapters'
+import {
+  ADAPTER_LABELS,
+  AIAdapter,
+  NOVEL_MODELS,
+  OPENAI_MODELS,
+  PERSONA_FORMATS,
+} from '/common/adapters'
 import { getStrictForm, setFormField } from '/web/shared/util'
 import { getAttributeMap } from '/web/shared/PersonaAttributes'
 import { NewCharacter, characterStore, presetStore, toastStore, userStore } from '/web/store'
 import { getImageData } from '/web/store/data/chars'
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
+import { GenField, generateChar, regenerateCharProp } from './generate-char'
 
 type CharKey = keyof NewCharacter
 type GuardKey = keyof typeof newCharGuard
@@ -101,11 +108,49 @@ const initState: EditState = {
 }
 
 export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
+  const user = userStore()
+  const presets = presetStore()
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
 
-  const genOptions = getCharacterGenOptions()
+  const genOptions = createMemo(() => {
+    if (!user.user) return []
+
+    const preset = isDefaultPreset(user.user.defaultPreset)
+      ? defaultPresets[user.user.defaultPreset]
+      : presets.presets.find((p) => p._id === user.user?.defaultPreset)
+
+    const opts: Option[] = []
+
+    if (preset?.service) {
+      const model = getModelForService(preset.service!)
+      const value = model ? `${preset.service}/${model}` : preset.service!
+      opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value })
+    }
+
+    if (user.user.oaiKeySet) {
+      opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
+      opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
+    }
+
+    if (user.user.novelVerified) {
+      opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
+      opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
+    }
+
+    if (preset?.service === 'kobold' || user.user.koboldUrl) {
+      opts.push({ label: 'Third Party', value: 'kobold' })
+    }
+
+    if (user.user.claudeApiKeySet) {
+      opts.push({ label: 'Claude', value: 'claude' })
+    }
+
+    console.log(opts)
+
+    return opts
+  })
 
   createEffect(async () => {
     const file = state.avatar || original()?.originalAvatar
@@ -126,6 +171,32 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       setOriginal(editing)
     }
   })
+
+  const createAvatar = async (ref: any) => {
+    const char = payload(ref)
+    const avatar = await generateAvatar(char)
+
+    if (avatar) {
+      setImageData(avatar)
+    }
+  }
+
+  const generateCharacter = async (ref: any, service: string, fields?: GenField[]) => {
+    const char = payload(ref)
+
+    const prevAvatar = state.avatar
+    const prevSprite = state.sprite
+
+    if (fields?.length) {
+      const result = await regenerateCharProp(char, service, fields)
+      load(ref, result)
+    } else {
+      const result = await generateChar(char.description || 'a random character', service)
+      load(ref, result)
+    }
+    setState('avatar', prevAvatar)
+    setState('sprite', prevSprite)
+  }
 
   const reset = (ref: any) => {
     const char = original()
@@ -188,7 +259,22 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  return { state, update: setState, reset, load, convert, payload, original, clear, genOptions }
+  return {
+    state,
+    update: setState,
+    reset,
+    load,
+    convert,
+    payload,
+    original,
+    clear,
+    genOptions,
+    createAvatar,
+    avatar: imageData,
+    canGuidance: genOptions().length > 0,
+    generateCharacter,
+    generateAvatar,
+  }
 }
 
 function getPayload(ev: any, state: EditState, original?: NewCharacter) {
@@ -238,7 +324,7 @@ async function generateAvatar(char: NewCharacter) {
     return toastStore.error(`Image generation settings missing`)
   }
 
-  return new Promise((resolve, reject) => {
+  return new Promise<string>((resolve, reject) => {
     characterStore.generateAvatar(user, char.appearance || char.persona, (err, image) => {
       if (image) return resolve(image)
       reject(err)
@@ -246,38 +332,12 @@ async function generateAvatar(char: NewCharacter) {
   })
 }
 
-function getCharacterGenOptions(): Option[] {
-  const { user } = userStore.getState()
-  if (!user) return []
+function getModelForService(service: AIAdapter) {
+  switch (service) {
+    case 'openai':
+      return OPENAI_MODELS.Turbo0301
 
-  const { presets } = presetStore.getState()
-  const preferred = isDefaultPreset(user.defaultPreset)
-    ? defaultPresets[user.defaultPreset]
-    : presets.find((p) => p._id === user.defaultPreset)
-
-  const opts: Option[] = []
-
-  if (preferred) {
-    opts.push({ label: `Default (${ADAPTER_LABELS[preferred.service!]})`, value: '' })
+    case 'novel':
+      return NOVEL_MODELS.krake
   }
-
-  if (user.oaiKeySet) {
-    opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
-    opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
-  }
-
-  if (user.novelVerified) {
-    opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
-    opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
-  }
-
-  if (preferred?.service === 'kobold' || user.koboldUrl) {
-    opts.push({ label: 'Third Party', value: 'kobold' })
-  }
-
-  if (user.claudeApiKeySet) {
-    opts.push({ label: 'Claude', value: 'claude' })
-  }
-
-  return opts
 }

@@ -62,7 +62,6 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
 
 type InferenceRequest = {
   prompt: string
-  settings: Partial<AppSchema.GenSettings>
   guest?: string
   user: AppSchema.User
 
@@ -70,7 +69,7 @@ type InferenceRequest = {
    * - [service]/[model] E.g. novel/krake-v2
    * - [service] E.g. novel
    */
-  service?: string
+  service: string
   log: AppLog
   retries?: number
   maxTokens?: number
@@ -121,46 +120,42 @@ export async function inferenceAsync(opts: InferenceRequest) {
 }
 
 export async function createInferenceStream(opts: InferenceRequest) {
-  if (opts.service) {
-    const [service, model] = opts.service.split('/')
-    const settings = getFallbackPreset(service as AIAdapter)
+  const [service, model] = opts.service.split('/')
+  const settings = getFallbackPreset(service as AIAdapter)
 
-    if (model) {
-      switch (service as AIAdapter) {
-        case 'openai':
-          settings.oaiModel = model
-          break
+  if (model) {
+    switch (service as AIAdapter) {
+      case 'openai':
+        settings.oaiModel = model
+        break
 
-        case 'novel':
-          settings.novelModel = model
-          break
+      case 'novel':
+        settings.novelModel = model
+        break
 
-        case 'claude':
-          settings.claudeModel = model
-          break
-      }
+      case 'claude':
+        settings.claudeModel = model
+        break
     }
-
-    opts.settings = settings
   }
 
-  opts.settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
-  opts.settings.streamResponse = false
-  opts.settings.temp = 0.5
+  settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
+  settings.streamResponse = false
+  settings.temp = 0.5
 
-  if (opts.settings.service === 'openai') {
-    opts.settings.topP = 1
-    opts.settings.frequencyPenalty = 0
-    opts.settings.presencePenalty = 0
+  if (settings.service === 'openai') {
+    settings.topP = 1
+    settings.frequencyPenalty = 0
+    settings.presencePenalty = 0
   }
 
-  const handler = handlers[opts.settings.service!]
+  const handler = handlers[settings.service!]
   const stream = handler({
     kind: 'plain',
     requestId: '',
     char: {} as any,
     chat: {} as any,
-    gen: opts.settings,
+    gen: settings,
     log: opts.log,
     lines: [],
     members: [],
@@ -170,7 +165,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     parts: { persona: '', post: [], allPersonas: [], chatEmbeds: [], userEmbeds: [] },
     prompt: opts.prompt,
     sender: {} as any,
-    mappedSettings: mapPresetsToAdapter(opts.settings, opts.settings.service!),
+    mappedSettings: mapPresetsToAdapter(settings, settings.service!),
     impersonate: undefined,
   })
 

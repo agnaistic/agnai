@@ -14,19 +14,10 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
-import { getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import {
-  characterStore,
-  tagStore,
-  settingStore,
-  toastStore,
-  userStore,
-  memoryStore,
-  presetStore,
-} from '../../store'
+import { characterStore, tagStore, settingStore, toastStore, memoryStore } from '../../store'
 import { useNavigate } from '@solidjs/router'
-import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
+import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { getImageData } from '../../store/data/chars'
 import Select, { Option } from '../../shared/Select'
@@ -37,7 +28,6 @@ import { AppSchema } from '../../../common/types/schema'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
-import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, SolidCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
@@ -51,7 +41,7 @@ import { useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
-import { generateChar, GenField, regenerateCharProp } from './generate-char'
+import { GenField } from './generate-char'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -89,8 +79,6 @@ export const CreateCharacterForm: Component<{
 
   const editor = useCharEditor()
 
-  const presets = presetStore()
-  const user = userStore((s) => s.user)
   const tagState = tagStore()
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId())
@@ -112,6 +100,7 @@ export const CreateCharacterForm: Component<{
     sample: 0,
   })
 
+  const [genService, setGenService] = createSignal<string>(editor.genOptions()[0]?.value || '')
   const [creating, setCreating] = createSignal(false)
   const [showBuilder, setShowBuilder] = createSignal(false)
   const [converted, setConverted] = createSignal<AppSchema.Character>()
@@ -119,17 +108,6 @@ export const CreateCharacterForm: Component<{
   const [showAdvanced, setShowAdvanced] = createSignal(false)
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
   const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
-
-  const preferredPreset = createMemo(() => {
-    const id = user?.defaultPreset
-    if (!id) return
-
-    const preset = isDefaultPreset(id)
-      ? defaultPresets[id]
-      : presets.presets.find((pre) => pre._id === id)
-
-    return preset
-  })
 
   const totalTokens = createMemo(() => {
     const t = tokens()
@@ -141,63 +119,10 @@ export const CreateCharacterForm: Component<{
     return t.name + t.persona + t.scenario
   })
 
-  const regenerateField = async (fields: GenField[]) => {
-    if (creating()) return
-
-    const prev = editor.payload(ref)
-
-    const { chargenService } = getStrictForm(ref, { chargenService: 'string?' })
-    const preset = preferredPreset()
-    if (!preset) return
-
-    const { description } = getStrictForm(ref, { description: 'string' })
-    if (!description) return
-
-    prev.description = description
-
+  const generateCharacter = async (fields?: GenField[]) => {
     setCreating(true)
-
     try {
-      const char = await regenerateCharProp(preset, fields, prev, chargenService)
-      setCreating(false)
-
-      const prevAvatar = editor.state.avatar
-      const prevSprite = editor.state.sprite
-
-      editor.load(ref, char)
-      editor.update('avatar', prevAvatar)
-      editor.update('sprite', prevSprite)
-    } catch (ex: any) {
-      toastStore.error(`Could not create character: ${ex?.message || ex}`)
-    } finally {
-      setCreating(false)
-    }
-  }
-
-  const generateCharacter = async () => {
-    if (!editor.genOptions.length) return
-
-    const { chargenService } = getStrictForm(ref, { chargenService: 'string?' })
-    const preset = preferredPreset()
-    if (!preset) return
-
-    const { description } = getStrictForm(ref, { description: 'string' })
-    if (!description) return
-
-    setCreating(true)
-
-    try {
-      const char = await generateChar(preset, description, chargenService)
-      setCreating(false)
-
-      const prevAvatar = editor.state.avatar
-      const prevSprite = editor.state.sprite
-
-      editor.load(ref, char)
-      editor.update('avatar', prevAvatar)
-      editor.update('sprite', prevSprite)
-    } catch (ex: any) {
-      toastStore.error(`Could not create character: ${ex?.message || ex}`)
+      await editor.generateCharacter(ref, genService(), fields)
     } finally {
       setCreating(false)
     }
@@ -283,25 +208,25 @@ export const CreateCharacterForm: Component<{
     setImage(data)
   }
 
-  const generateAvatar = async () => {
-    const { appearance } = getStrictForm(ref, { appearance: 'string' })
-    if (!user) {
-      toastStore.error(`Image generation settings missing`)
-      return
-    }
+  // const generateAvatar = async () => {
+  //   const { appearance } = getStrictForm(ref, { appearance: 'string' })
+  //   if (!user) {
+  //     toastStore.error(`Image generation settings missing`)
+  //     return
+  //   }
 
-    const attributes = getAttributeMap(ref)
-    const persona: AppSchema.Persona = {
-      kind: 'boostyle',
-      attributes,
-    }
+  //   const attributes = getAttributeMap(ref)
+  //   const persona: AppSchema.Persona = {
+  //     kind: 'boostyle',
+  //     attributes,
+  //   }
 
-    try {
-      characterStore.generateAvatar(user!, appearance || persona)
-    } catch (ex: any) {
-      toastStore.error(ex.message)
-    }
-  }
+  //   try {
+  //     characterStore.generateAvatar(user!, appearance || persona)
+  //   } catch (ex: any) {
+  //     toastStore.error(ex.message)
+  //   }
+  // }
 
   const onSubmit = (ev: Event) => {
     const payload = editor.payload(ref)
@@ -421,7 +346,7 @@ export const CreateCharacterForm: Component<{
                       A description, label, or notes for your character. This is will not influence
                       your character in any way.
                     </span>
-                    <Show when={editor.genOptions.length > 0}>
+                    <Show when={editor.canGuidance}>
                       <p>
                         To generate a character, describe the character below then click{' '}
                         <b>Generate</b>. It can take 30-60 seconds. You can choose which AI Service
@@ -441,10 +366,14 @@ export const CreateCharacterForm: Component<{
                   parentClass="w-full"
                   value={editor.state.description}
                 />
-                <Show when={editor.genOptions.length > 0}>
+                <Show when={editor.canGuidance}>
                   <div class="flex justify-end gap-2 sm:justify-start">
-                    <Select fieldName="chargenService" items={editor.genOptions} />
-                    <Button onClick={generateCharacter} disabled={creating()}>
+                    <Select
+                      fieldName="chargenService"
+                      items={editor.genOptions()}
+                      onChange={(item) => setGenService(item.value)}
+                    />
+                    <Button onClick={() => generateCharacter()} disabled={creating()}>
                       {creating() ? 'Generating...' : 'Generate'}
                     </Button>
                   </div>
@@ -516,8 +445,8 @@ export const CreateCharacterForm: Component<{
                           <>
                             <Regenerate
                               fields={['appearance']}
-                              regen={regenerateField}
-                              allowed={editor.genOptions.length > 0}
+                              regen={generateCharacter}
+                              allowed={editor.canGuidance}
                             />
                           </>
                         }
@@ -525,7 +454,7 @@ export const CreateCharacterForm: Component<{
                         placeholder="Appearance"
                         value={editor.state.appearance}
                       />
-                      <Button class="w-fit self-end" onClick={generateAvatar}>
+                      <Button class="w-fit self-end" onClick={() => editor.createAvatar(ref)}>
                         Generate
                       </Button>
                     </div>
@@ -548,8 +477,8 @@ export const CreateCharacterForm: Component<{
                     Scenario{' '}
                     <Regenerate
                       fields={['scenario']}
-                      regen={regenerateField}
-                      allowed={editor.genOptions.length > 0}
+                      regen={generateCharacter}
+                      allowed={editor.canGuidance}
                     />
                   </>
                 }
@@ -569,8 +498,8 @@ export const CreateCharacterForm: Component<{
                     Greeting{' '}
                     <Regenerate
                       fields={['greeting']}
-                      regen={regenerateField}
-                      allowed={editor.genOptions.length > 0}
+                      regen={generateCharacter}
+                      allowed={editor.canGuidance}
                     />
                   </>
                 }
@@ -595,8 +524,8 @@ export const CreateCharacterForm: Component<{
                       Persona Schema{' '}
                       <Regenerate
                         fields={['behaviour', 'personality', 'speech']}
-                        regen={regenerateField}
-                        allowed={editor.genOptions.length > 0}
+                        regen={generateCharacter}
+                        allowed={editor.canGuidance}
                       />{' '}
                     </>
                   }
@@ -637,8 +566,8 @@ export const CreateCharacterForm: Component<{
                     Sample Conversation
                     <Regenerate
                       fields={['example1', 'example2', 'example3']}
-                      regen={regenerateField}
-                      allowed={editor.genOptions.length > 0}
+                      regen={generateCharacter}
+                      allowed={editor.canGuidance}
                     />
                   </>
                 }

@@ -10,16 +10,17 @@ import { cyoaTemplate } from '/common/default-preset'
 
 const validInference = {
   prompt: 'string',
-  settings: 'any',
+  settings: 'any?',
   user: 'any',
-  service: 'string?',
+  service: 'string',
 } as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
   body.prompt = ''
   assertValid(
     {
-      settings: 'any',
+      service: 'string',
+      settings: 'any?',
       user: 'any',
       lines: ['string'],
       impersonating: 'any?',
@@ -40,9 +41,8 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 
   if (userId) {
     const user = await store.users.getUser(userId)
-    if (!user) {
-      throw errors.Unauthorized
-    }
+    if (!user) throw errors.Unauthorized
+
     body.user = user
   }
 
@@ -51,14 +51,15 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     settings.service === 'openai' ? settings.oaiModel : ''
   )
 
-  const infer = async (text: string) => {
+  const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({
       user: body.user,
-      settings,
+      service: body.service,
       log,
       prompt: text,
       guest: userId ? undefined : socketId,
       retries: 2,
+      maxTokens: tokens,
     })
 
     return inference.generated
@@ -90,16 +91,19 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid({ ...validInference, placeholders: 'any?', maxTokens: 'number?' }, body)
+  assertValid({ ...validInference, placeholders: 'any?' }, body)
 
-  const settings = await assertSettings(body, userId)
+  if (userId) {
+    const user = await store.users.getUser(userId)
+    if (!user) throw errors.Unauthorized
+    body.user = user
+  }
 
-  const infer = async (text: string) => {
+  const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({
       user: body.user,
-      maxTokens: body.maxTokens,
-      settings,
       log,
+      maxTokens: tokens,
       prompt: text,
       service: body.service,
       guest: userId ? undefined : socketId,
@@ -124,13 +128,16 @@ export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
     body
   )
 
-  const settings = await assertSettings(body, userId)
+  if (userId) {
+    const user = await store.users.getUser(userId)
+    if (!user) throw errors.Unauthorized
+    body.user = user
+  }
 
-  const infer = async (text: string) => {
+  const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({
       user: body.user,
-      maxTokens: body.maxTokens,
-      settings,
+      maxTokens: tokens,
       log,
       prompt: text,
       service: body.service,
@@ -151,13 +158,16 @@ export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
 export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
   assertValid({ ...validInference, requestId: 'string' }, body)
 
-  const settings = await assertSettings(body, userId)
-
   res.json({ success: true, generating: true, message: 'Generating response' })
+
+  if (userId) {
+    const user = await store.users.getUser(userId)
+    if (!user) throw errors.Unauthorized
+    body.user = user
+  }
 
   const { stream } = await createInferenceStream({
     user: body.user,
-    settings,
     log,
     prompt: body.prompt,
     service: body.service,

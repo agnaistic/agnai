@@ -50,7 +50,7 @@ export type ChatState = {
   promptHistory: Record<string, any>
 }
 
-export type ChatRightPane = 'character' | 'preset'
+export type ChatRightPane = 'character' | 'preset' | 'participants'
 
 export type ImportChat = {
   name: string
@@ -391,16 +391,30 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
-    async addTempCharacter(
+    async *upsertTempCharacter(
       { active, allChats },
       chatId: string,
-      char: Omit<AppSchema.BaseCharacter, '_id'>,
+      char: Omit<AppSchema.Character, '_id'> & { _id?: string },
       onSuccess?: () => void
     ) {
-      const res = await chatsApi.addTempCharacter(chatId, char)
+      const res = await chatsApi.upsertTempCharacter(chatId, char)
       if (res.result) {
-        // TODO: Update state...
+        const char = res.result.char
+
         onSuccess?.()
+        if (active?.chat._id === chatId) {
+          yield {
+            active: {
+              ...active,
+              chat: replaceTemp(active.chat, char),
+            },
+          }
+        }
+
+        const nextChats = allChats.map((chat) =>
+          chat._id === chatId ? replaceTemp(chat, char) : chat
+        )
+        yield { allChats: nextChats }
       }
 
       if (res.error) {
@@ -676,28 +690,27 @@ subscribe('chat-temp-chararacter', { chatId: 'string', character: 'any' }, (body
   const { active, allChats } = chatStore.getState()
   const nextChats = allChats.map((chat) => {
     if (chat._id !== body.chatId) return chat
-    const temp = chat.tempCharacters || {}
-    return {
-      ...chat,
-      tempCharacters: {
-        ...temp,
-        [body.character._id]: body.character,
-      },
-    }
+    return replaceTemp(chat, body.character)
   })
 
   chatStore.setState({ allChats: nextChats })
 
   if (!active || active.chat._id !== body.chatId) return
-  const temp = active.chat.tempCharacters || {}
-  temp[body.character._id] = body.character
+
   chatStore.setState({
     active: {
       ...active,
-      chat: {
-        ...active.chat,
-        tempCharacters: temp,
-      },
+      chat: replaceTemp(active.chat, body.character),
     },
   })
 })
+
+function replaceTemp(chat: AppSchema.Chat, char: AppSchema.Character): AppSchema.Chat {
+  const temp = chat.tempCharacters || {}
+  temp[char._id] = char
+
+  return {
+    ...chat,
+    tempCharacters: { ...temp },
+  }
+}

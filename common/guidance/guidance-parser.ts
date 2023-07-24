@@ -4,7 +4,7 @@ import { grammar } from './grammar'
 type PNode = VarNode | TextNode
 
 type TextNode = { kind: 'text'; text: string }
-type VarNode = { kind: 'variable'; name: string; pipe?: Pipe }
+type VarNode = { kind: 'variable'; name: string; pipe?: Pipe; tokens?: number }
 
 type Pipe = { type: 'sentence' } | { type: 'words'; value: number }
 
@@ -15,7 +15,7 @@ const parser = peggy.generate(grammar.trim(), {
 })
 
 type GuidanceOpts = {
-  infer: (prompt: string) => Promise<string>
+  infer: (prompt: string, maxTokens?: number) => Promise<string>
 
   /**
    * Will replace {{holders}} with their corresponding values
@@ -72,7 +72,7 @@ export async function rerunGuidanceValues<
           continue
         }
 
-        const results = await opts.infer(prompt.trim())
+        const results = await opts.infer(prompt.trim(), node.tokens)
         const value = handlePipe(results.trim(), node.pipe)
         values[node.name] = value
         done.add(node.name)

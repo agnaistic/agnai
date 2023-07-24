@@ -61,9 +61,10 @@ export const removeCharacter = handle(async ({ params, userId }, _) => {
   return { success: true }
 })
 
-export const addTempCharacter = handle(async ({ body, params, userId }) => {
+export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
   assertValid(
     {
+      _id: 'string?',
       name: 'string',
       description: 'string',
       appearance: 'string',
@@ -72,6 +73,7 @@ export const addTempCharacter = handle(async ({ body, params, userId }) => {
       greeting: 'string',
       scenario: 'string',
       avatar: 'string?',
+      favorite: 'boolean?',
     },
     body
   )
@@ -81,8 +83,10 @@ export const addTempCharacter = handle(async ({ body, params, userId }) => {
   if (chat.userId !== userId) throw errors.Forbidden
 
   const tempCharacters = chat.tempCharacters || {}
-  const newChar: AppSchema.Character = {
-    _id: `temp-${v4().slice(0, 8)}`,
+  const prev = body._id ? tempCharacters[body._id] : null
+
+  const upserted: AppSchema.Character = {
+    _id: body._id || `temp-${v4().slice(0, 8)}`,
     kind: 'character',
     createdAt: now(),
     updatedAt: now(),
@@ -95,17 +99,18 @@ export const addTempCharacter = handle(async ({ body, params, userId }) => {
     avatar: body.avatar,
     description: body.description,
     greeting: body.greeting,
+    favorite: body.favorite !== undefined ? body.favorite : prev?.favorite,
   }
 
-  tempCharacters[newChar._id] = newChar
+  tempCharacters[upserted._id] = upserted
 
   const members = await store.chats.getActiveMembers(params.id)
   await store.chats.update(params.id, { tempCharacters })
   sendMany(members.concat(chat.userId), {
     type: 'chat-temp-character',
     chatId: params.id,
-    character: newChar,
+    character: upserted,
   })
 
-  return { success: true, char: newChar }
+  return { success: true, char: upserted }
 })
