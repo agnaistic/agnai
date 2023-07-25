@@ -705,9 +705,10 @@ const Regenerate: Component<{
   regen: (fields: GenField[]) => any
   allowed: boolean
 }> = (props) => {
+  const flags = settingStore((s) => s.flags)
   return (
     <>
-      <Show when={props.allowed}>
+      <Show when={props.allowed && flags.regen}>
         (
         <span class="link" onClick={() => props.regen(props.fields)}>
           Regenerate
