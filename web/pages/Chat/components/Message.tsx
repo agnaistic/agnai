@@ -1,4 +1,5 @@
 import './Message.css'
+import * as Purify from 'dompurify'
 import {
   Check,
   DownloadCloud,
@@ -590,9 +591,9 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
-  const html = markdown
-    .makeHtml(parseMessage(text, ctx, isUser, adapter))
-    .replace(/&amp;nbsp;/g, '&nbsp;')
+  const html = Purify.sanitize(
+    markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+  )
   return html
 }
 
@@ -606,11 +607,7 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
   }
 
-  const parsed = msg
-    .replace(BOT_REPLACE, ctx.char?.name || '')
-    .replace(SELF_REPLACE, ctx.handle)
-    .replace(/(<)/g, '&lt;')
-    .replace(/(>)/g, '&gt;')
+  const parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
 
   if (ctx.trimSentences && !isUser) return trimSentence(parsed)
   return parsed
