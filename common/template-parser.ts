@@ -1,9 +1,11 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
-import { PromptParts } from './prompt'
+import { PromptParts, fillPromptWithLines } from './prompt'
 import { AppSchema, Memory } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
+import { Encoder } from './tokenize'
+import { v4 } from 'uuid'
 
 const parser = peggy.generate(grammar.trim(), {
   error: (stage, msg, loc) => {
@@ -69,10 +71,10 @@ export type ParseOpts = {
   chat: AppSchema.Chat
   user: AppSchema.User
 
-  char: AppSchema.Character | string
-  replyAs: AppSchema.Character | string
-  impersonate?: AppSchema.Character | string
-  sender: AppSchema.Profile | string
+  char: AppSchema.Character
+  replyAs: AppSchema.Character
+  impersonate?: AppSchema.Character
+  sender: AppSchema.Profile
 
   settings?: Partial<AppSchema.GenSettings>
   lines: string[]
@@ -81,6 +83,13 @@ export type ParseOpts = {
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
 
+  /** If present, history will be rendered last */
+  limit?: {
+    context: number
+    encoder: Encoder
+    output?: Record<string, string[]>
+  }
+
   /**
    * Only allow repeatable placeholders. Excludes iterators, conditions, and prompt parts.
    */
@@ -88,6 +97,10 @@ export type ParseOpts = {
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
+  if (opts.limit) {
+    opts.limit.output = {}
+  }
+
   if (opts.parts.systemPrompt) {
     opts.parts.systemPrompt = render(opts.parts.systemPrompt, opts)
   }
@@ -96,7 +109,15 @@ export function parseTemplate(template: string, opts: ParseOpts) {
     opts.parts.ujb = render(opts.parts.ujb, opts)
   }
 
-  const output = render(template, opts)
+  let output = render(template, opts)
+
+  if (opts.limit && opts.limit.output) {
+    for (const [id, lines] of Object.entries(opts.limit.output)) {
+      const trimmed = fillPromptWithLines(opts.limit.encoder, opts.limit.context, output, lines)
+      output = output.replace(id, trimmed.join('\n'))
+    }
+  }
+
   return output
 }
 
@@ -183,11 +204,7 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
         case 'isuser': {
           const index = line.indexOf(':')
           const name = line.slice(0, index)
-          const sender =
-            typeof opts.impersonate === 'string'
-              ? opts.impersonate
-              : opts.impersonate?.name ??
-                (typeof opts.sender === 'string' ? opts.sender : opts.sender.handle)
+          const sender = opts.impersonate?.name ?? opts.sender.handle
           const match = name === sender
           return node.prop === 'isuser' ? match : !match
         }
@@ -216,10 +233,9 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOp
 
   const output: string[] = []
 
-  const replyAsId = typeof opts.replyAs === 'string' ? null : opts.replyAs._id
   const entities =
     holder === 'bots'
-      ? Object.values(opts.characters).filter((b) => !!b && b._id !== replyAsId)
+      ? Object.values(opts.characters).filter((b) => !!b && b._id !== opts.replyAs._id)
       : opts.lines
 
   let i = 0
@@ -260,6 +276,12 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOp
     i++
   }
 
+  if (holder === 'history' && opts.limit) {
+    const id = '__' + v4() + '__'
+    opts.limit.output![id] = output
+    return id
+  }
+
   return output.join('\n')
 }
 
@@ -279,22 +301,20 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
 
   switch (node.value) {
     case 'char':
-      return typeof opts.replyAs === 'string' ? opts.replyAs : opts.replyAs.name
+      return opts.replyAs.name
 
     case 'user':
-      return typeof opts.impersonate === 'string'
-        ? opts.impersonate
-        : opts.impersonate?.name ||
-            opts.members.find((m) => m.userId === opts.user._id)?.handle ||
-            'You'
+      return (
+        opts.impersonate?.name ||
+        opts.members.find((m) => m.userId === opts.user._id)?.handle ||
+        'You'
+      )
 
     case 'example_dialogue':
       return opts.parts.sampleChat?.join('\n') || ''
 
     case 'scenario':
-      return opts.parts.scenario || opts.chat.scenario || typeof opts.char === 'string'
-        ? ''
-        : opts.char.scenario
+      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario
 
     case 'memory':
       return opts.parts.memory || ''
@@ -311,8 +331,15 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
     case 'post':
       return opts.parts.post.join('\n')
 
-    case 'history':
+    case 'history': {
+      if (opts.limit) {
+        const id = `__${v4()}__`
+        opts.limit.output![id] = opts.lines
+        return id
+      }
+
       return opts.lines.join('\n')
+    }
 
     case 'chat_age':
       return elapsedSince(opts.chat.createdAt)

@@ -133,9 +133,10 @@ export function getBotName(
   chat: AppSchema.Chat,
   msg: AppSchema.ChatMessage,
   chars: Record<string, AppSchema.Character>,
+  replyAs: AppSchema.Character,
   main: AppSchema.Character
 ) {
-  if (!msg.characterId) return main.name
+  if (!msg.characterId) return replyAs?.name || main.name
   if (msg.characterId.startsWith('temp-')) {
     const temp = chat.tempCharacters?.[msg.characterId]
     if (!temp) return main.name

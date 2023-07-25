@@ -111,7 +111,7 @@ function getParseOpts(
   overrides: Partial<ParseOpts> = {},
   charOverrides: Partial<AppSchema.Character> = {}
 ) {
-  const overChat = overrides.char ? toChat(overrides.char as any) : chat
+  const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...char, ...charOverrides }
   const parts = getPromptParts(
     {

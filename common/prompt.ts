@@ -261,7 +261,9 @@ export function injectPlaceholders(
 
   if (true) {
     try {
-      const lines = !hist
+      const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
+
+      let lines = !hist
         ? []
         : hist.order === 'desc'
         ? hist.lines.slice().reverse()
@@ -273,6 +275,10 @@ export function injectPlaceholders(
         parts,
         lines,
         ...rest,
+        limit: {
+          context: getContextLimit(opts.settings, adapter, model),
+          encoder,
+        },
       })
       return result
     } catch (ex) {}
@@ -602,7 +608,7 @@ function getLinesForPrompt(
       ? opts.impersonate.name
       : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
-    const botName = getBotName(opts.chat, msg, opts.characters, char)
+    const botName = getBotName(opts.chat, msg, opts.characters, opts.replyAs, char)
 
     return fillPlaceholders(msg, botName, sender).trim()
   }
