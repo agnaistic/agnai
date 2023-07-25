@@ -87,7 +87,7 @@ const MemberModal: Component<{
                 chat={props.chat}
                 footer={setFooter}
                 close={closeEditor}
-                temp={editCharId()?.startsWith('temp')}
+                temp={editCharId()?.startsWith('temp') || !editCharId()}
               />
             </Match>
             <Match when={view() === 'add_character'}>

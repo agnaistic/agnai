@@ -17,8 +17,7 @@ OtherBot:
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: SECOND
@@ -42,8 +41,7 @@ MainChar:
 MainChar's Persona: MainCharacter talks a lot
 Scenario: MAIN MainChar
 
-How MainChar speaks: 
-SAMPLECHAT MainChar
+How MainChar speaks: SAMPLECHAT MainChar
 <START>
 MainChar: FIRST
 MainChar: ORIGINAL
@@ -70,12 +68,10 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY TWO
+Facts:ENTRY TWO
 ENTRY THREE
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -101,11 +97,9 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY ONE
+Facts:ENTRY ONE
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: LONGWOR A
 ChatOwner: 1-TRIGGER
@@ -132,12 +126,10 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY TIE
+Facts:ENTRY TIE
 ENTRY THREE
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -161,8 +153,7 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-This is how OtherBot should talk: 
-SAMPLECHAT OtherBot
+This is how OtherBot should talk: SAMPLECHAT OtherBot
 MainChar: FIRST
 ChatOwner: SECOND
 MainChar: ORIGINAL
@@ -193,13 +184,11 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY ONE
+Facts:ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -225,7 +214,7 @@ OtherBot:
 
 *** V1 Parser ***
 
-GASLIGHT You
+GASLIGHT ChatOwner
 Scenario: MAIN MainChar
 OtherBot's persona: OtherBot replies a lot
 How OtherBot speaks:
@@ -261,10 +250,9 @@ OtherBot:
 *** V1 Parser ***
 
 GASLIGHT
-You
+ChatOwner
 OtherBot
-Facts:
-ENTRY ONE
+Facts:ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 Scenario: MAIN MainChar
@@ -298,8 +286,7 @@ OtherBot:
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: SECOND
@@ -348,7 +335,7 @@ OtherBot:
 *** V1 Parser ***
 
 GASLIGHT TEMPLATE
-You
+ChatOwner
 OtherBot
 Auto-injected text:
 Scenario: MAIN MainChar
@@ -380,12 +367,10 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY ONE
+Facts:ENTRY ONE
 ENTRY TWO
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 10-TRIGGER
@@ -417,13 +402,11 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY ONE
+Facts:ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -473,13 +456,11 @@ OtherBot:
 
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
-Facts:
-ENTRY ONE
+Facts:ENTRY ONE
 ENTRY TIE
 ENTRY THREE
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -504,8 +485,7 @@ OtherBot:
 OtherBot's Persona: OtherBot replies a lot
 Scenario: MAIN MainChar
 
-How OtherBot speaks: 
-SAMPLECHAT OtherBot
+How OtherBot speaks: SAMPLECHAT OtherBot
 <START>
 
 OtherBot:"
