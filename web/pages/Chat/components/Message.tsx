@@ -627,7 +627,7 @@ const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) 
             <td>{props.adapter}</td>
           </tr>
         </Show>
-        <For each={Object.entries(props.meta)}>
+        <For each={Object.entries(props.meta || {})}>
           {([key, value]) => (
             <tr>
               <td class="pr-2">

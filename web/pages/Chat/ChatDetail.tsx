@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'solid-js'
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu } from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu, VenetianMask } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
@@ -377,11 +377,11 @@ const ChatDetail: Component = () => {
     }
 
     // If the number of active bots is 1 or fewer then always request a response
-    const botMembers = Object.entries(chats.chat?.characters || {}).reduce(
-      (prev, [id, active]) => (active && id !== chats.chat?.characterId ? prev + 1 : prev),
-      0
-    )
-    const kind = ooc ? 'ooc' : chats.replyAs || botMembers === 0 ? 'send' : 'send-noreply'
+    const kind = ooc
+      ? 'ooc'
+      : chats.replyAs || chats.activeBots.length <= 1
+      ? 'send'
+      : 'send-noreply'
     if (!ooc) setSwipe(0)
     msgStore.send(chats.chat?._id!, message, kind, onSuccess)
     return
@@ -664,7 +664,6 @@ const ChatDetail: Component = () => {
                       chat={chats.chat!}
                       charId={chats?.char?._id!}
                       close={closePane}
-                      footer={setPaneFooter}
                     />
                   </Match>
                 </Switch>
@@ -681,6 +680,13 @@ const ChatDetail: Component = () => {
                   msgs.waiting ? 'opacity-70 saturate-0' : ''
                 }`}
               >
+                <Button
+                  size="md"
+                  schema="bordered"
+                  onClick={() => settingStore.toggleImpersonate(true)}
+                >
+                  <VenetianMask size={16} />
+                </Button>
                 <For each={chats.activeBots}>
                   {(bot) => (
                     <CharacterPill
@@ -689,18 +695,6 @@ const ChatDetail: Component = () => {
                       disabled={!!msgs.waiting}
                       active={chats.replyAs === bot._id}
                     />
-                  )}
-                </For>
-                <For each={chats.tempBots}>
-                  {(bot) => (
-                    <Show when={bot.favorite !== false}>
-                      <CharacterPill
-                        char={bot}
-                        onClick={requestMessage}
-                        disabled={!!msgs.waiting}
-                        active={false}
-                      />
-                    </Show>
                   )}
                 </For>
               </div>

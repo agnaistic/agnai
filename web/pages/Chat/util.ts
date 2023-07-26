@@ -4,19 +4,32 @@ import { AppSchema } from '/common/types'
 /**
  * Retrieve the unique set of active bots for a conversation
  */
-export function getActiveBots(chat: AppSchema.Chat, bots: Record<string, AppSchema.Character>) {
+export function getActiveBots(
+  chat: AppSchema.Chat,
+  bots: Record<string, AppSchema.Character>,
+  exclude?: Record<string, any>
+) {
   if (!chat) return []
   const unique = new Set([chat.characterId])
 
   for (const [id, active] of Object.entries(chat.characters || {})) {
+    if (exclude && id in exclude) continue
     if (!active) continue
     if (!bots[id]) continue
     unique.add(id)
   }
 
+  for (const [id, active] of Object.entries(chat.tempCharacters || {})) {
+    if (exclude && id in exclude) continue
+    if (!active) continue
+    if (active.favorite === false) continue
+    unique.add(id)
+  }
+
   const all = Array.from(unique)
-    .map((id) => bots[id])
+    .map((id) => bots[id] || chat.tempCharacters?.[id])
     .filter((bot) => !!bot)
+    .sort(tempSort)
   return all
 }
 
@@ -47,4 +60,8 @@ export function canConvertGaslightV2(preset: Partial<AppSchema.UserGenPreset>) {
   if (!SUPPORTS_INSTRUCT[preset.service]) return false
 
   return true
+}
+
+function tempSort(a: AppSchema.Character, b: AppSchema.Character) {
+  return +!b._id.startsWith('temp-') - +!a._id.startsWith('temp-') || a.name.localeCompare(b.name)
 }

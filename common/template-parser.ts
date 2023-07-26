@@ -118,7 +118,7 @@ export function parseTemplate(template: string, opts: ParseOpts) {
     }
   }
 
-  return output
+  return render(output, opts)
 }
 
 function render(template: string, opts: ParseOpts) {

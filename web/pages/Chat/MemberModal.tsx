@@ -21,7 +21,6 @@ const MemberModal: Component<{
   show: boolean
   close: () => void
   charId: string
-  footer?: (markup: any) => void
   chat: AppSchema.Chat
 }> = (props) => {
   const [view, setView] = createSignal<View>('list')
@@ -31,7 +30,13 @@ const MemberModal: Component<{
   const Footer = (
     <>
       <Show when={view() === 'list'}>
-        <Button schema="primary" onClick={() => setView('temp_character')}>
+        <Button
+          schema="primary"
+          onClick={() => {
+            setEditCharId()
+            setView('temp_character')
+          }}
+        >
           <Plus size={16} /> Temp Character
         </Button>
         <Button schema="primary" onClick={() => setView('add_character')}>
@@ -57,7 +62,7 @@ const MemberModal: Component<{
 
   const closeEditor = () => {
     setView('list')
-    props.footer?.(Footer)
+    setFooter(Footer)
   }
 
   const paneClose = () => {
@@ -115,17 +120,22 @@ const ParticipantsList: Component<{
   const [deleting, setDeleting] = createSignal<AppSchema.Profile>()
 
   const charMembers = createMemo<AppSchema.Character[]>(() =>
-    getActiveBots(state.active?.chat!, chars.map).sort((left, right) =>
-      left.name.localeCompare(right.name)
+    getActiveBots(state.active?.chat!, chars.map, state.active?.chat.tempCharacters || {}).sort(
+      (left, right) => left.name.localeCompare(right.name)
     )
   )
 
   const temps = createMemo(() => {
     const chat = state.active?.chat
-    if (!chat) return []
+    if (!chat) return { active: [], inactive: [] }
 
-    if (!chat.tempCharacters) return []
-    return Object.values(chat.tempCharacters)
+    if (!chat.tempCharacters) return { active: [], inactive: [] }
+
+    const all = Object.values(chat.tempCharacters)
+    const active = all.filter((char) => char.favorite !== false)
+    const inactive = all.filter((char) => char.favorite === false)
+
+    return { active, inactive }
   })
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
@@ -172,22 +182,40 @@ const ParticipantsList: Component<{
         )}
       </For>
 
-      <Show when={temps().length > 0}>
+      <Show when={temps().active.length > 0 || temps().inactive.length > 0}>
         <Divider />
         <h3>Temporary Characters</h3>
-        <For each={temps()}>
-          {(char) => (
-            <CharacterParticipant
-              chat={state.active?.chat}
-              char={char}
-              remove={removeChar}
-              canRemove={props.charId !== char._id}
-              isMain={props.charId === char._id}
-              edit={props.edit}
-            />
-          )}
-        </For>
       </Show>
+
+      <For each={temps().active}>
+        {(char) => (
+          <CharacterParticipant
+            chat={state.active?.chat}
+            char={char}
+            remove={removeChar}
+            canRemove={props.charId !== char._id}
+            isMain={props.charId === char._id}
+            edit={props.edit}
+          />
+        )}
+      </For>
+
+      <Show when={temps().active.length > 0 || temps().inactive.length > 0}>
+        <Divider />
+      </Show>
+
+      <For each={temps().inactive}>
+        {(char) => (
+          <CharacterParticipant
+            chat={state.active?.chat}
+            char={char}
+            remove={removeChar}
+            canRemove={props.charId !== char._id}
+            isMain={props.charId === char._id}
+            edit={props.edit}
+          />
+        )}
+      </For>
 
       <ConfirmModal
         show={!!deleting()}
@@ -351,7 +379,11 @@ const CharacterParticipant: Component<{
         <div class="ellipsis flex flex-col">
           <div class="ellipsis">{props.char.name}</div>
           <div class="text-xs italic text-[var(--text-600)]">
-            {props.isMain ? 'Main Character' : 'Character'}
+            {props.isMain
+              ? 'Main Character'
+              : props.char._id.startsWith('temp-')
+              ? 'Temporary Character'
+              : 'Character'}
           </div>
         </div>
       </div>

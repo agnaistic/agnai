@@ -576,8 +576,13 @@ async function ensureBotMembership(
 ) {
   const update: Partial<AppSchema.Chat> = {}
 
+  // Ignore ownership of temporary characters
   const characters = chat.characters || {}
-  if (impersonate && characters[impersonate._id] === undefined) {
+  if (
+    impersonate &&
+    characters[impersonate._id] === undefined &&
+    !impersonate._id.startsWith('temp-')
+  ) {
     const actual = await store.characters.getCharacter(impersonate.userId, impersonate._id)
     if (!actual) {
       throw new StatusError(
