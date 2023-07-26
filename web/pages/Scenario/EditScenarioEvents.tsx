@@ -64,7 +64,7 @@ const CreateScenario: Component = () => {
   const [states, setStates] = createSignal<string[]>([])
   const [entries, setEntries] = createSignal<AppSchema.ScenarioEvent[]>([])
   const availableStates = createMemo(() => {
-    const base = ['none', 'any'].concat(states())
+    const base = states()
     const negate = base.map((state) => `!${state}`)
     return base.concat(negate)
   })
@@ -225,10 +225,10 @@ const CreateScenario: Component = () => {
         fieldName="states"
         label="States"
         placeholder=""
-        helperText="States that your scenario can use. 'none' and 'any' are provided by default."
+        helperText="States that your scenario can use."
         availableTags={availableStates()}
         onSelect={(ev) => setStates(ev)}
-        value={['none', 'any'].concat(states())}
+        value={states()}
       />
 
       <Show when={invalidStates().length}>
