@@ -495,11 +495,15 @@ export const chatStore = createStore<ChatState>('chat', {
       const entities = await msgsApi.getPromptEntities()
 
       const encoder = await getEncoder()
+      const replyAs = active.replyAs?.startsWith('temp-')
+        ? entities.chat.tempCharacters![active.replyAs]
+        : entities.characters[active.replyAs ?? active.char._id]
+
       const prompt = createPrompt(
         {
           ...entities,
           lastMessage: entities.lastMessage?.date || '',
-          replyAs: entities.characters[active.replyAs ?? active.char._id],
+          replyAs,
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],

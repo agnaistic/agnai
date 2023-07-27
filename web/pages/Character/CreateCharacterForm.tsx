@@ -35,7 +35,7 @@ import { AppSchema } from '../../../common/types/schema'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
-import { Card, SolidCard } from '../../shared/Card'
+import { Card, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
@@ -302,6 +302,14 @@ export const CreateCharacterForm: Component<{
                 </em>
               </div>
             </Show>
+
+            <Show when={props.temp}>
+              <TitleCard type="premium">
+                You are {props.editId ? 'editing' : 'creating'} a temporary character. A temporary
+                character exist within your current chat only.
+              </TitleCard>
+            </Show>
+
             <div class="flex gap-2 text-[1em]">
               <Button onClick={() => setImport(true)}>
                 <Import /> Import

@@ -45,6 +45,10 @@ export function getBotsForChat(
     if (bot) chars[key] = bot
   }
 
+  for (const [id, char] of Object.entries(chat.tempCharacters || {})) {
+    chars[id] = char
+  }
+
   return chars
 }
 
