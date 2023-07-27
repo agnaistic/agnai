@@ -234,9 +234,9 @@ type InjectOpts = {
 }
 
 export function injectPlaceholders(template: string, inject: InjectOpts) {
-  if (!inject.opts.settings?.useTemplateParser) {
-    return parseTemplateV1(template, inject)
-  }
+  // if (!inject.opts.settings?.useTemplateParser) {
+  //   return parseTemplateV1(template, inject)
+  // }
 
   const { opts, parts, history: hist, encoder, ...rest } = inject
   const profile = opts.members.find((mem) => mem.userId === opts.chat.userId)
