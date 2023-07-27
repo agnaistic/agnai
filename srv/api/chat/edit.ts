@@ -21,6 +21,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
       scenarioIds: ['string?'],
       useOverrides: 'boolean?',
       userEmbedId: 'string?',
+      scenarioStates: ['string?'],
     },
     body,
     true
@@ -36,7 +37,8 @@ export const updateChat = handle(async ({ params, body, user }) => {
     adapter: body.adapter ?? prev.adapter,
     memoryId: body.memoryId ?? prev.memoryId,
     userEmbedId: body.userEmbedId ?? prev.userEmbedId,
-    scenarioIds: body.scenarioIds ?? [],
+    scenarioIds: body.scenarioIds ?? prev.scenarioIds,
+    scenarioStates: body.scenarioStates ?? prev.scenarioStates,
   }
 
   if (body.useOverrides === false) {

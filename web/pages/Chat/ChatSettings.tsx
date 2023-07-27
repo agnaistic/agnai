@@ -243,7 +243,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
                   fieldName="scenarioStates"
                   label="The current state of the scenario"
                   helperText="What flags have been set in the chat by the scenario so far"
-                  value={(state.chat?.scenarioStates ?? ['N/A']).join(', ')}
+                  value={(state.chat?.scenarioStates ?? []).join(', ')}
                 />
               </Show>
             </Show>

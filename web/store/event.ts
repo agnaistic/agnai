@@ -142,7 +142,7 @@ export function filterApplicableEvents<T extends AppSchema.ScenarioEventTrigger>
   events: AppSchema.ScenarioEvent[],
   kind: AppSchema.ScenarioTriggerKind,
   states: string[],
-  additionalFilter?: (e: EventAndTrigger<T>) => boolean
+  filterPredicate?: (e: EventAndTrigger<T>) => boolean
 ): EventAndTrigger<T>[] {
   const mapped = events
     .map((e) => ({
@@ -152,19 +152,14 @@ export function filterApplicableEvents<T extends AppSchema.ScenarioEventTrigger>
     .filter((e) => !!e.trigger) as Array<{ event: AppSchema.ScenarioEvent; trigger: T }>
 
   return mapped.filter((e) => {
-    if (!e.event.requires.length) return true
+    const additional = filterPredicate?.(e) ?? true
+    if (!e.event.requires.length) return additional
+
     const every = e.event.requires.every((r) =>
       r.startsWith('!') ? !states.includes(r.substring(1)) : states.includes(r)
     )
-    const additional = additionalFilter?.(e) ?? true
 
     return every && additional
-
-    // (!e.event.requires.length ||
-    //   e.event.requires.every((r) =>
-    //     r.startsWith('!') ? !states.includes(r.substring(1)) : states.includes(r)
-    //   )) &&
-    // (additionalFilter?.(e) ?? true)
   })
 }
 

@@ -656,14 +656,14 @@ subscribe(
 
 function onCharacterMessageReceived(msg: AppSchema.ChatMessage) {
   if (!msg.characterId || msg.event || msg.ooc) return
-  const msgs = msgStore.getState().msgs
+  const { msgs } = msgStore.getState()
   // TODO: Not that expensive, but it would be nice not to loop every time
   let messagesSinceLastEvent = 0
   for (let i = msgs.length - 1; i >= 0; i--) {
     const msg = msgs[i]
     if (msg.event) break
 
-    if (!msg.event && msg.characterId) {
+    if (!msg.event && !msg.userId) {
       messagesSinceLastEvent++
     }
   }

@@ -165,7 +165,7 @@ export async function getAllChats(userId: string) {
           updatedAt: 1,
           genPreset: 1,
           genSettings: 1,
-          tempCharacters: 1,
+          // tempCharacters: 1,
           'character.name': 1,
         },
       },
