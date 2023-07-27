@@ -106,7 +106,9 @@ const SingleMessage: Component<
   const isImage = createMemo(() => props.original.adapter === 'image')
   const [img, setImg] = createSignal('h-full')
   const [obs] = createSignal(
-    new ResizeObserver(() => setImg(Math.min(avatarRef?.clientHeight, 10000) + 'px'))
+    new ResizeObserver(() => {
+      setImg(`calc(${Math.min(avatarRef?.clientHeight, 10000)}px + 1em)`)
+    })
   )
 
   const [ctx] = useAppContext()
@@ -180,7 +182,7 @@ const SingleMessage: Component<
     >
       <div class={`flex w-full ${opacityClass}`}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
-          <div ref={avatarRef} class="break-words">
+          <div class="break-words">
             <span
               class={`float-left pr-3`}
               style={{ 'min-height': user.ui.imageWrap ? '' : img() }}
@@ -350,75 +352,77 @@ const SingleMessage: Component<
                 </Match>
               </Switch>
             </span>
-            <Switch>
-              <Match when={isImage()}>
-                <img
-                  class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
-                  src={getAssetUrl(props.msg.msg)}
-                  onClick={() => settingStore.showImage(props.original.msg)}
-                />
-              </Match>
-              <Match when={props.retrying?._id === props.original._id && props.partial}>
-                <p
-                  class="rendered-markdown px-1"
-                  data-bot-message={isBot()}
-                  data-user-message={isUser()}
-                  innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
-                />
-              </Match>
-              <Match
-                when={
-                  props.retrying?._id == props.original._id ||
-                  (props.msg._id === 'partial' && !props.msg.msg.length)
-                }
-              >
-                <div class="flex h-8 w-12 items-center justify-center">
-                  <Show
-                    when={props.partial}
-                    fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
-                  >
-                    <p
-                      class="rendered-markdown px-1"
-                      data-bot-message={isBot()}
-                      data-user-message={isUser()}
-                      innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
-                    />
-                  </Show>
-                </div>
-              </Match>
-              <Match when={!edit() && !isImage()}>
-                <p
-                  class="rendered-markdown px-1"
-                  data-bot-message={isBot()}
-                  data-user-message={isUser()}
-                  innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
-                />
-                <Show when={!props.partial && props.last && props.lastSplit}>
-                  <div class="flex items-center justify-center gap-2">
-                    <For each={props.original.actions}>
-                      {(item) => (
-                        <Button
-                          size="sm"
-                          schema="gray"
-                          onClick={() => sendAction(props.sendMessage, item)}
-                        >
-                          {item.emote}
-                        </Button>
-                      )}
-                    </For>
+            <div ref={avatarRef}>
+              <Switch>
+                <Match when={isImage()}>
+                  <img
+                    class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
+                    src={getAssetUrl(props.msg.msg)}
+                    onClick={() => settingStore.showImage(props.original.msg)}
+                  />
+                </Match>
+                <Match when={props.retrying?._id === props.original._id && props.partial}>
+                  <p
+                    class="rendered-markdown px-1"
+                    data-bot-message={isBot()}
+                    data-user-message={isUser()}
+                    innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
+                  />
+                </Match>
+                <Match
+                  when={
+                    props.retrying?._id == props.original._id ||
+                    (props.msg._id === 'partial' && !props.msg.msg.length)
+                  }
+                >
+                  <div class="flex h-8 w-12 items-center justify-center">
+                    <Show
+                      when={props.partial}
+                      fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
+                    >
+                      <p
+                        class="rendered-markdown px-1"
+                        data-bot-message={isBot()}
+                        data-user-message={isUser()}
+                        innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
+                      />
+                    </Show>
                   </div>
-                </Show>
-              </Match>
-              <Match when={edit()}>
-                <div
-                  ref={ref!}
-                  contentEditable={true}
-                  onKeyUp={(ev) => {
-                    if (ev.key === 'Escape') cancelEdit()
-                  }}
-                ></div>
-              </Match>
-            </Switch>
+                </Match>
+                <Match when={!edit() && !isImage()}>
+                  <p
+                    class="rendered-markdown px-1"
+                    data-bot-message={isBot()}
+                    data-user-message={isUser()}
+                    innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
+                  />
+                  <Show when={!props.partial && props.last && props.lastSplit}>
+                    <div class="flex items-center justify-center gap-2">
+                      <For each={props.original.actions}>
+                        {(item) => (
+                          <Button
+                            size="sm"
+                            schema="gray"
+                            onClick={() => sendAction(props.sendMessage, item)}
+                          >
+                            {item.emote}
+                          </Button>
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </Match>
+                <Match when={edit()}>
+                  <div
+                    ref={ref!}
+                    contentEditable={true}
+                    onKeyUp={(ev) => {
+                      if (ev.key === 'Escape') cancelEdit()
+                    }}
+                  ></div>
+                </Match>
+              </Switch>
+            </div>
           </div>
           {props.last && props.lastSplit && props.children}
         </div>
