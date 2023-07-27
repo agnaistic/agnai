@@ -223,6 +223,7 @@ export const SUPPORTS_INSTRUCT: { [key in AIAdapter]?: (user: AppSchema.User) =>
   openai: () => true,
   kobold: (opts) => opts.thirdPartyFormat !== 'kobold',
   openrouter: () => true,
+  scale: () => true,
 }
 
 /**

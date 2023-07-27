@@ -8,4 +8,5 @@ export const defaultFlags = {
   reporting: false,
   naiModel: false,
   actions: false,
+  regen: false,
 } satisfies { [key: string]: boolean }

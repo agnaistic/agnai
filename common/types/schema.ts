@@ -152,6 +152,7 @@ export namespace AppSchema {
 
     memberIds: string[]
     characters?: Record<string, boolean>
+    tempCharacters?: Record<string, AppSchema.Character>
 
     name: string
     characterId: string
@@ -204,6 +205,7 @@ export namespace AppSchema {
     system?: boolean
     meta?: any
     event?: EventTypes | undefined
+    state?: string
   }
 
   export type EventTypes = 'world' | 'character' | 'hidden' | 'ooc'
@@ -216,23 +218,26 @@ export namespace AppSchema {
       }
     | { kind: 'text'; attributes: { text: [string] } }
 
-  export interface Character {
+  export interface BaseCharacter {
     _id: string
-    kind: 'character'
-    userId: string
-
     name: string
     description?: string
     appearance?: string
-    culture?: string
-    tags?: string[]
+    avatar?: string
     persona: Persona
     greeting: string
     scenario: string
     sampleChat: string
+  }
+
+  export interface Character extends BaseCharacter {
+    kind: 'character'
+    userId: string
+
+    culture?: string
+    tags?: string[]
 
     visualType?: string
-    avatar?: string
     sprite?: FullSprite
 
     createdAt: string
@@ -399,16 +404,17 @@ export namespace AppSchema {
     overwriteCharacterScenario: boolean
     instructions?: string
     entries: ScenarioEvent[]
+    states: string[]
   }
 
-  export interface ScenarioEvent {
+  export interface ScenarioEvent<T extends ScenarioEventTrigger = ScenarioEventTrigger> {
     /** The state this  */
     name: string
     requires: string[]
     assigns: string[]
     type: EventTypes
     text: string
-    trigger: ScenarioEventTrigger
+    trigger: T
   }
 
   export type ScenarioEventTrigger =

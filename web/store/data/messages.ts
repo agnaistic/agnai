@@ -14,6 +14,7 @@ import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
 import { settingStore } from '../settings'
+import { parseTemplate } from '/common/template-parser'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -41,12 +42,13 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
+  rerunGuidance,
   generateActions,
 }
 
 type InferenceOpts = {
   prompt: string
-  settings: Partial<AppSchema.GenSettings>
+  settings?: Partial<AppSchema.GenSettings>
   service?: string
   maxTokens?: number
 }
@@ -98,7 +100,7 @@ export async function basicInference(
 }
 
 export async function guidance<T = any>(
-  { prompt, settings, service, maxTokens }: InferenceOpts,
+  { prompt, service, maxTokens }: InferenceOpts,
   onComplete?: (err: any | null, response?: { result: string; values: T }) => void
 ) {
   const requestId = v4()
@@ -113,9 +115,48 @@ export async function guidance<T = any>(
     requestId,
     user,
     prompt,
-    settings,
     service,
     maxTokens,
+  })
+  if (res.error) {
+    onComplete?.(res.error)
+    if (!onComplete) {
+      throw new Error(`Guidance failed: ${res.error}`)
+    }
+  }
+
+  if (res.result) {
+    onComplete?.(null, res.result)
+    return res.result
+  }
+}
+
+export async function rerunGuidance<T = any>(
+  {
+    prompt,
+    service,
+    maxTokens,
+    rerun,
+    previous,
+  }: InferenceOpts & { previous?: any; rerun: string[] },
+  onComplete?: (err: any | null, response?: { result: string; values: T }) => void
+) {
+  const requestId = v4()
+  const { user } = userStore.getState()
+
+  if (!user) {
+    toastStore.error(`Could not get user settings. Refresh and try again.`)
+    return
+  }
+
+  const res = await api.method('post', `/chat/reguidance`, {
+    requestId,
+    user,
+    prompt,
+    service,
+    maxTokens,
+    rerun,
+    previous,
   })
   if (res.error) {
     onComplete?.(res.error)
@@ -370,7 +411,26 @@ async function getGenerateProps(
     impersonate: entities.impersonating,
   }
 
-  const getBot = (id: string) => entities.chatBots.find((ch) => ch._id === id)!
+  if ('text' in opts) {
+    opts.text = parseTemplate(opts.text, {
+      char: active.char,
+      characters: entities.characters,
+      chat: active.chat,
+      lines: [],
+      members: entities.members,
+      parts: {} as any,
+      replyAs: props.replyAs,
+      sender: entities.profile,
+      impersonate: props.impersonate,
+      user: entities.user,
+      repeatable: true,
+    })
+  }
+
+  const getBot = (id: string) => {
+    if (id.startsWith('temp-')) return entities.chat.tempCharacters?.[id]!
+    return entities.chatBots.find((ch) => ch._id === id)!
+  }
 
   switch (opts.kind) {
     case 'retry': {

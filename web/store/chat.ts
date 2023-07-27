@@ -50,7 +50,7 @@ export type ChatState = {
   promptHistory: Record<string, any>
 }
 
-export type ChatRightPane = 'character' | 'preset'
+export type ChatRightPane = 'character' | 'preset' | 'participants'
 
 export type ImportChat = {
   name: string
@@ -391,6 +391,39 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
 
+    async *upsertTempCharacter(
+      { active, allChats },
+      chatId: string,
+      char: Omit<AppSchema.Character, '_id' | 'kind' | 'createdAt' | 'updatedAt' | 'userId'> & {
+        _id?: string
+      },
+      onSuccess?: () => void
+    ) {
+      const res = await chatsApi.upsertTempCharacter(chatId, char)
+      if (res.result) {
+        const char = res.result.char
+
+        onSuccess?.()
+        if (active?.chat._id === chatId) {
+          yield {
+            active: {
+              ...active,
+              chat: replaceTemp(active.chat, char),
+            },
+          }
+        }
+
+        const nextChats = allChats.map((chat) =>
+          chat._id === chatId ? replaceTemp(chat, char) : chat
+        )
+        yield { allChats: nextChats }
+      }
+
+      if (res.error) {
+        toastStore.error(`Failed to create temp character: ${res.error}`)
+      }
+    },
+
     async *removeCharacter(_, chatId: string, charId: string, onSuccess?: () => void) {
       const res = await chatsApi.removeCharacter(chatId, charId)
       if (res.error) return toastStore.error(`Failed to remove character: ${res.error}`)
@@ -462,11 +495,15 @@ export const chatStore = createStore<ChatState>('chat', {
       const entities = await msgsApi.getPromptEntities()
 
       const encoder = await getEncoder()
+      const replyAs = active.replyAs?.startsWith('temp-')
+        ? entities.chat.tempCharacters![active.replyAs]
+        : entities.characters[active.replyAs ?? active.char._id]
+
       const prompt = createPrompt(
         {
           ...entities,
           lastMessage: entities.lastMessage?.date || '',
-          replyAs: entities.characters[active.replyAs ?? active.char._id],
+          replyAs,
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],
@@ -654,3 +691,32 @@ subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
     promptHistory: Object.assign({}, promptHistory, { [body.id]: body.prompt }),
   })
 })
+
+subscribe('chat-temp-chararacter', { chatId: 'string', character: 'any' }, (body) => {
+  const { active, allChats } = chatStore.getState()
+  const nextChats = allChats.map((chat) => {
+    if (chat._id !== body.chatId) return chat
+    return replaceTemp(chat, body.character)
+  })
+
+  chatStore.setState({ allChats: nextChats })
+
+  if (!active || active.chat._id !== body.chatId) return
+
+  chatStore.setState({
+    active: {
+      ...active,
+      chat: replaceTemp(active.chat, body.character),
+    },
+  })
+})
+
+function replaceTemp(chat: AppSchema.Chat, char: AppSchema.Character): AppSchema.Chat {
+  const temp = chat.tempCharacters || {}
+  temp[char._id] = char
+
+  return {
+    ...chat,
+    tempCharacters: { ...temp },
+  }
+}

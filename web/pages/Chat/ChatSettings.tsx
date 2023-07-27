@@ -213,7 +213,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
             fieldName="useOverrides"
             value={useOverrides()}
             onChange={(use) => setUseOverrides(use)}
-            label="Override Character Definitions for this chat only"
+            label="Override Character Definitions"
             helperText="Overrides apply to this chat only. If you want to edit the original character, open the 'Character' link in the Chat Menu instead."
           />
         </Card>
@@ -243,7 +243,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
                   fieldName="scenarioStates"
                   label="The current state of the scenario"
                   helperText="What flags have been set in the chat by the scenario so far"
-                  value={(state.chat?.scenarioStates ?? ['N/A']).join(', ')}
+                  value={(state.chat?.scenarioStates ?? []).join(', ')}
                 />
               </Show>
             </Show>

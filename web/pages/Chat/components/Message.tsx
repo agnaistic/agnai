@@ -1,4 +1,5 @@
 import './Message.css'
+import * as Purify from 'dompurify'
 import {
   Check,
   DownloadCloud,
@@ -223,7 +224,11 @@ const SingleMessage: Component<
 
                 <Match when={ctx.char && !!props.msg.characterId}>
                   <CharacterAvatar
-                    char={ctx.botMap[props.msg.characterId!] || ctx.char}
+                    char={
+                      ctx.botMap[props.msg.characterId!] ||
+                      ctx.tempMap[props.msg.characterId!] ||
+                      ctx.char
+                    }
                     openable
                     zoom={1.75}
                     bot={true}
@@ -255,7 +260,9 @@ const SingleMessage: Component<
                 >
                   <Switch>
                     <Match when={props.msg.characterId}>
-                      {ctx.botMap[props.msg.characterId!]?.name || ctx.char?.name!}
+                      {ctx.botMap[props.msg.characterId!]?.name ||
+                        ctx.tempMap[props.msg.characterId!]?.name ||
+                        ctx.char?.name!}
                     </Match>
                     <Match when={true}>{handleToShow()}</Match>
                   </Switch>
@@ -299,7 +306,14 @@ const SingleMessage: Component<
                 </span>
               </span>
               <Switch>
-                <Match when={!edit() && !props.swipe && user.user?._id === ctx.chat?.userId}>
+                <Match
+                  when={
+                    !edit() &&
+                    !props.swipe &&
+                    user.user?._id === ctx.chat?.userId &&
+                    ctx.chat?.mode !== 'companion'
+                  }
+                >
                   <MessageOptions
                     char={ctx.char!}
                     original={props.original}
@@ -577,9 +591,9 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // it also encodes the ampersand, which results in them actually being rendered as `&amp;nbsp;`
   // https://github.com/showdownjs/showdown/issues/669
 
-  const html = markdown
-    .makeHtml(parseMessage(text, ctx, isUser, adapter))
-    .replace(/&amp;nbsp;/g, '&nbsp;')
+  const html = Purify.sanitize(
+    markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+  )
   return html
 }
 
@@ -593,11 +607,7 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
     return msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
   }
 
-  const parsed = msg
-    .replace(BOT_REPLACE, ctx.char?.name || '')
-    .replace(SELF_REPLACE, ctx.handle)
-    .replace(/(<)/g, '&lt;')
-    .replace(/(>)/g, '&gt;')
+  const parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
 
   if (ctx.trimSentences && !isUser) return trimSentence(parsed)
   return parsed
@@ -617,7 +627,7 @@ const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) 
             <td>{props.adapter}</td>
           </tr>
         </Show>
-        <For each={Object.entries(props.meta)}>
+        <For each={Object.entries(props.meta || {})}>
           {([key, value]) => (
             <tr>
               <td class="pr-2">

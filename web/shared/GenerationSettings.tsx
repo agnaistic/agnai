@@ -357,7 +357,7 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 }
 
 const PromptSettings: Component<Props> = (props) => {
-  const [useV2, setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
+  const [_useV2, _setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
 
   return (
     <div class="flex flex-col gap-4">
@@ -445,13 +445,13 @@ const PromptSettings: Component<Props> = (props) => {
       </Card>
 
       <Card class="flex flex-col gap-4">
-        <Toggle
+        {/* <Toggle
           fieldName="useTemplateParser"
           value={props.inherit?.useTemplateParser}
           label="Use Template Parser (Experimental)"
           helperText="This will override your prompt. The V2 parser supports additional placeholders (#each, #if, random, roll, ...)."
           onChange={(v) => setV2(v)}
-        />
+        /> */}
 
         <PromptEditor
           fieldName="gaslight"
@@ -461,7 +461,7 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           showHelp
           inherit={props.inherit}
-          v2={useV2()}
+          v2
         />
         <TextInput
           fieldName="ultimeJailbreak"

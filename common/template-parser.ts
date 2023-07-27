@@ -1,9 +1,11 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
-import { PromptParts } from './prompt'
+import { PromptParts, fillPromptWithLines } from './prompt'
 import { AppSchema, Memory } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
+import { Encoder } from './tokenize'
+import { v4 } from 'uuid'
 
 const parser = peggy.generate(grammar.trim(), {
   error: (stage, msg, loc) => {
@@ -44,29 +46,61 @@ type Holder =
   | 'random'
   | 'roll'
 
+type RepeatableHolder = Extract<
+  Holder,
+  'char' | 'user' | 'chat_age' | 'roll' | 'random' | 'idle_duration'
+>
+
+const repeatableHolders = new Set<RepeatableHolder>([
+  'char',
+  'user',
+  'chat_age',
+  'idle_duration',
+  'random',
+  'roll',
+])
+
 type IterableHolder = 'history' | 'bots'
 
 type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
 type BotsProp = 'i' | 'personality' | 'name'
 
 export type ParseOpts = {
-  replyAs: AppSchema.Character
   members: AppSchema.Profile[]
-  impersonate?: AppSchema.Character
   parts: PromptParts
   chat: AppSchema.Chat
-  char: AppSchema.Character
   user: AppSchema.User
+
+  char: AppSchema.Character
+  replyAs: AppSchema.Character
+  impersonate?: AppSchema.Character
+  sender: AppSchema.Profile
+
   settings?: Partial<AppSchema.GenSettings>
   lines: string[]
   characters: Record<string, AppSchema.Character>
-  sender: AppSchema.Profile
   lastMessage?: string
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
   userEmbed?: Memory.UserEmbed[]
+
+  /** If present, history will be rendered last */
+  limit?: {
+    context: number
+    encoder: Encoder
+    output?: Record<string, string[]>
+  }
+
+  /**
+   * Only allow repeatable placeholders. Excludes iterators, conditions, and prompt parts.
+   */
+  repeatable?: boolean
 }
 
 export function parseTemplate(template: string, opts: ParseOpts) {
+  if (opts.limit) {
+    opts.limit.output = {}
+  }
+
   if (opts.parts.systemPrompt) {
     opts.parts.systemPrompt = render(opts.parts.systemPrompt, opts)
   }
@@ -75,8 +109,16 @@ export function parseTemplate(template: string, opts: ParseOpts) {
     opts.parts.ujb = render(opts.parts.ujb, opts)
   }
 
-  const output = render(template, opts)
-  return output
+  let output = render(template, opts)
+
+  if (opts.limit && opts.limit.output) {
+    for (const [id, lines] of Object.entries(opts.limit.output)) {
+      const trimmed = fillPromptWithLines(opts.limit.encoder, opts.limit.context, output, lines)
+      output = output.replace(id, trimmed.join('\n'))
+    }
+  }
+
+  return render(output, opts)
 }
 
 function render(template: string, opts: ParseOpts) {
@@ -172,6 +214,8 @@ function renderProp(node: CNode, opts: ParseOpts, entity: unknown, i: number) {
 }
 
 function renderCondition(node: ConditionNode, children: PNode[], opts: ParseOpts) {
+  if (opts.repeatable) return ''
+
   const value = getPlaceholder(node, opts)
   if (!value) return
 
@@ -185,6 +229,8 @@ function renderCondition(node: ConditionNode, children: PNode[], opts: ParseOpts
 }
 
 function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOpts) {
+  if (opts.repeatable) return ''
+
   const output: string[] = []
 
   const entities =
@@ -230,6 +276,12 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: ParseOp
     i++
   }
 
+  if (holder === 'history' && opts.limit) {
+    const id = '__' + v4() + '__'
+    opts.limit.output![id] = output
+    return id
+  }
+
   return output.join('\n')
 }
 
@@ -245,6 +297,8 @@ function renderEntityCondition(nodes: CNode[], opts: ParseOpts, entity: unknown,
 }
 
 function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
+  if (opts.repeatable && !repeatableHolders.has(node.value as any)) return ''
+
   switch (node.value) {
     case 'char':
       return opts.replyAs.name
@@ -277,8 +331,15 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: ParseOpts) {
     case 'post':
       return opts.parts.post.join('\n')
 
-    case 'history':
+    case 'history': {
+      if (opts.limit) {
+        const id = `__${v4()}__`
+        opts.limit.output![id] = opts.lines
+        return id
+      }
+
       return opts.lines.join('\n')
+    }
 
     case 'chat_age':
       return elapsedSince(opts.chat.createdAt)

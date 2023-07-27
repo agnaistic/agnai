@@ -13,7 +13,7 @@ import {
   Switch,
 } from 'solid-js'
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu } from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu, VenetianMask } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
@@ -89,6 +89,7 @@ const ChatDetail: Component = () => {
     loaded: s.loaded,
     opts: s.opts,
     activeBots: getActiveBots(s.active?.chat!, chars.botMap),
+    tempBots: Object.values(s.active?.chat?.tempCharacters! || {}),
   }))
 
   const msgs = msgStore((s) => ({
@@ -101,7 +102,6 @@ const ChatDetail: Component = () => {
     retrying: s.retrying,
     inference: s.lastInference,
   }))
-  let connectEventProcessed = false
 
   const isGroupChat = createMemo(() => {
     if (!chats.participantIds?.length) return false
@@ -131,6 +131,7 @@ const ChatDetail: Component = () => {
   const botGreeting = createMemo(() => chats.char?.greeting || '')
   const altGreetings = createMemo(() => chats.char?.alternateGreetings ?? [])
 
+  let [evented, setEvented] = createSignal(false)
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last && !isGreetingOnlyMsg()) return
@@ -147,7 +148,7 @@ const ChatDetail: Component = () => {
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
   onMount(() => {
-    if (isValid({ pane: ['character', 'preset'] }, search)) {
+    if (isValid({ pane: ['character', 'preset', 'participants'] }, search)) {
       togglePane(search.pane)
     }
   })
@@ -196,8 +197,9 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     // On Connect Events
-    if (connectEventProcessed || !chats.chat || !chats.char) return
-    connectEventProcessed = true
+    if (evented() || !chats.chat || !chats.char) return
+    setEvented(true)
+
     const messages = msgs.msgs
     if (messages.length === 0) {
       eventStore.onGreeting(chats.chat)
@@ -253,13 +255,15 @@ const ChatDetail: Component = () => {
     setSearch({ pane: paneType })
   }
 
-  const closePane = () => {
+  const closePane = (search = true) => {
     chatStore.option('pane', undefined)
-    setSearch({ pane: undefined })
+    if (search) {
+      setSearch({ pane: undefined })
+    }
   }
 
-  const closeCharEditor = () => {
-    closePane()
+  const closeCharEditor = (search?: boolean) => {
+    closePane(search)
     setEditId(chats.char?._id || '')
   }
 
@@ -356,8 +360,7 @@ const ChatDetail: Component = () => {
   })
 
   onCleanup(() => {
-    closeCharEditor()
-    setSearch({ pane: undefined })
+    closeCharEditor(false)
   })
 
   const sendMessage = (message: string, ooc: boolean, onSuccess?: () => void) => {
@@ -374,11 +377,11 @@ const ChatDetail: Component = () => {
     }
 
     // If the number of active bots is 1 or fewer then always request a response
-    const botMembers = Object.entries(chats.chat?.characters || {}).reduce(
-      (prev, [id, active]) => (active && id !== chats.chat?.characterId ? prev + 1 : prev),
-      0
-    )
-    const kind = ooc ? 'ooc' : chats.replyAs || botMembers === 0 ? 'send' : 'send-noreply'
+    const kind = ooc
+      ? 'ooc'
+      : chats.replyAs || chats.activeBots.length <= 1
+      ? 'send'
+      : 'send-noreply'
     if (!ooc) setSwipe(0)
     msgStore.send(chats.chat?._id!, message, kind, onSuccess)
     return
@@ -654,6 +657,15 @@ const ChatDetail: Component = () => {
                       />
                     </Convertible>
                   </Match>
+
+                  <Match when={chats.opts.pane === 'participants'}>
+                    <MemberModal
+                      show
+                      chat={chats.chat!}
+                      charId={chats?.char?._id!}
+                      close={closePane}
+                    />
+                  </Match>
                 </Switch>
               </Show>
             </section>
@@ -662,12 +674,19 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <Show when={isOwner() && chats.activeBots.length > 1}>
+            <Show when={isOwner() && (chats.activeBots.length > 1 || chats.tempBots.length > 0)}>
               <div
                 class={`flex justify-center gap-2 overflow-x-auto py-1 ${
                   msgs.waiting ? 'opacity-70 saturate-0' : ''
                 }`}
               >
+                <Button
+                  size="md"
+                  schema="bordered"
+                  onClick={() => settingStore.toggleImpersonate(true)}
+                >
+                  <VenetianMask size={16} />
+                </Button>
                 <For each={chats.activeBots}>
                   {(bot) => (
                     <CharacterPill
@@ -715,10 +734,6 @@ const ChatDetail: Component = () => {
 
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
-      </Show>
-
-      <Show when={chats.opts.modal === 'members'}>
-        <MemberModal show={true} close={clearModal} charId={chats?.char?._id!} />
       </Show>
 
       <UpdateGaslightToUseSystemPromptModal

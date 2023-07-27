@@ -56,7 +56,7 @@ const WithinPage: Component<PartialProps> = (props) => {
       <Match when={paneOrPopup() === 'pane'}>
         <div
           data-pane
-          class="hidden w-full min-w-[448px]  overflow-y-auto py-3 xs:block"
+          class="hidden w-full min-w-[448px] max-w-[650px] overflow-y-auto py-3 xs:block"
           style={rightPaneBgStyles()}
         >
           <div onClick={props.close} class="sticky top-0 float-right cursor-pointer">

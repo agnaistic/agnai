@@ -8,7 +8,7 @@ const MIN_HEIGHT = 40
 
 const TextInput: Component<{
   fieldName: string
-  label?: string
+  label?: string | JSX.Element
   helperText?: string | JSX.Element
   placeholder?: string
   isMultiline?: boolean

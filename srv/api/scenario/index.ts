@@ -37,6 +37,7 @@ const validEntry = {
 
 const validScenario = {
   name: 'string',
+  states: ['string'],
   description: 'string?',
   text: 'string',
   overwriteCharacterScenario: 'boolean',

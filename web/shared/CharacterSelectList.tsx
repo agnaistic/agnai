@@ -3,6 +3,9 @@ import { AppSchema } from '../../common/types/schema'
 import { CharacterAvatar } from './AvatarIcon'
 import { Star, Users } from 'lucide-solid'
 import TextInput from './TextInput'
+import { chatStore } from '../store'
+import { toMap } from './util'
+import Divider from './Divider'
 
 export type Option<T extends string = string> = {
   label: string
@@ -14,26 +17,32 @@ const CharacterSelectList: Component<{
   emptyLabel?: string
   onSelect: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
+  const chats = chatStore()
   const [_ref, setRef] = createSignal<any>()
-  const [filter, setFilter] = createSignal('')
+  const [search, setSearch] = createSignal('')
+
+  const current = createMemo(() => {
+    if (!chats.active?.chat) return
+
+    const chars: AppSchema.Character[] = []
+    const map = chats.active.chat.characters || {}
+    for (const char of props.items) {
+      if (char._id in map) {
+        chars.push(char)
+      }
+    }
+
+    for (const char of Object.values(chats.active.chat.tempCharacters || {})) {
+      // Ignore 'hidden' temporary characters
+      if (char.favorite === false) continue
+      chars.push(char)
+    }
+
+    return { list: chars, map: toMap(chars) }
+  })
 
   const sorted = createMemo(() => {
-    const words = filter()
-      .trim()
-      .toLowerCase()
-      .split(' ')
-      .filter((w) => !!w)
-
-    return props.items
-      .slice()
-      .filter((i) => {
-        if (!words.length) return true
-        for (let word of words) {
-          if (!wordMatch(i, word)) return false
-        }
-        return true
-      })
-      .sort((a, b) => +!!b.favorite - +!!a.favorite || a.name.localeCompare(b.name))
+    return narrow(props.items, search(), current()?.map)
   })
 
   const onChange = (value: AppSchema.Character | undefined) => {
@@ -52,7 +61,7 @@ const CharacterSelectList: Component<{
           <TextInput
             fieldName="__filter"
             placeholder="Type to filter characters..."
-            onKeyUp={(e) => setFilter(e.currentTarget.value)}
+            onKeyUp={(e) => setSearch(e.currentTarget.value)}
             ref={assignRef}
           />
           <Show when={props.emptyLabel}>
@@ -70,6 +79,33 @@ const CharacterSelectList: Component<{
               </div>
             </div>
           </Show>
+          <Show when={current()?.list?.length}>
+            <For each={current()?.list}>
+              {(item) => (
+                <div
+                  class="bg-700 flex w-full cursor-pointer flex-row items-center justify-between gap-4 rounded-xl px-2 py-1"
+                  onClick={() => onChange(item)}
+                >
+                  <div class="ellipsis flex h-3/4 items-center gap-4">
+                    <CharacterAvatar char={item} format={{ size: 'sm', corners: 'circle' }} />
+
+                    <div class="ellipsis flex w-full flex-col">
+                      <div class="ellipsis font-bold">{item.name}</div>
+                      <div class="ellipsis">{item.description}</div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
+                      <Show when={item.favorite}>
+                        <Star class="icon-button fill-[var(--text-900)] text-[var(--text-900)]" />
+                      </Show>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </For>
+            <Divider />
+          </Show>
           <For each={sorted()}>
             {(item) => (
               <div
@@ -77,7 +113,7 @@ const CharacterSelectList: Component<{
                 onClick={() => onChange(item)}
               >
                 <div class="ellipsis flex h-3/4 items-center gap-4">
-                  <CharacterAvatar char={item} format={{ size: 'md', corners: 'circle' }} />
+                  <CharacterAvatar char={item} format={{ size: 'sm', corners: 'circle' }} />
 
                   <div class="ellipsis flex w-full flex-col">
                     <div class="ellipsis font-bold">{item.name}</div>
@@ -107,3 +143,30 @@ function wordMatch(char: AppSchema.Character, word: string) {
 }
 
 export default CharacterSelectList
+
+function narrow(
+  chars: AppSchema.Character[],
+  search: string,
+  exclude?: Record<string, AppSchema.Character>
+) {
+  const words = search
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .filter((w) => !!w)
+
+  return chars
+    .slice()
+    .filter((i) => {
+      if (exclude && i._id in exclude) return false
+      if (!words.length) return true
+      for (let word of words) {
+        return wordMatch(i, word)
+      }
+    })
+    .sort(faveSort)
+}
+
+function faveSort(a: AppSchema.Character, b: AppSchema.Character) {
+  return +!!b.favorite - +!!a.favorite || a.name.localeCompare(b.name)
+}

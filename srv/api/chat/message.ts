@@ -133,10 +133,9 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   // Coalesce for backwards compatibly while new UI rolls out
-  const replyAs = await store.characters.getCharacter(
-    chat.userId,
-    body.replyAs._id || body.char._id
-  )
+  const replyAs = body.replyAs._id.startsWith('temp-')
+    ? body.replyAs
+    : await store.characters.getCharacter(chat.userId, body.replyAs._id || body.char._id)
 
   if (chat.userId !== userId) {
     const isAllowed = await store.chats.canViewChat(userId, chat)
@@ -300,7 +299,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       const res = await inferenceAsync({
         prompt: text,
         log,
-        settings: entities.settings,
+        service: entities.settings.service!,
         user: entities.user,
       })
       return res.generated
@@ -363,6 +362,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           actions,
           adapter,
           meta,
+          state: 'retried',
         })
         sendMany(members, {
           type: 'message-retry',
@@ -401,7 +401,12 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
 
     case 'continue': {
-      await store.msgs.editMessage(body.continuing._id, { msg: responseText, adapter, meta })
+      await store.msgs.editMessage(body.continuing._id, {
+        msg: responseText,
+        adapter,
+        meta,
+        state: 'continued',
+      })
       sendMany(members, {
         type: 'message-retry',
         requestId,
@@ -571,8 +576,13 @@ async function ensureBotMembership(
 ) {
   const update: Partial<AppSchema.Chat> = {}
 
+  // Ignore ownership of temporary characters
   const characters = chat.characters || {}
-  if (impersonate && characters[impersonate._id] === undefined) {
+  if (
+    impersonate &&
+    characters[impersonate._id] === undefined &&
+    !impersonate._id.startsWith('temp-')
+  ) {
     const actual = await store.characters.getCharacter(impersonate.userId, impersonate._id)
     if (!actual) {
       throw new StatusError(

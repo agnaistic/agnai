@@ -22,6 +22,7 @@ const ChatExport: Component<{ show: boolean; close: () => void }> = (props) => {
         userId: msg.userId ? msg.userId : undefined,
         characterId: msg.characterId ? 'imported' : undefined,
         msg: msg.msg,
+        state: msg.state,
       })),
     }
 

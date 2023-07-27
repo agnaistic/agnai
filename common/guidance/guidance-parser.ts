@@ -4,7 +4,7 @@ import { grammar } from './grammar'
 type PNode = VarNode | TextNode
 
 type TextNode = { kind: 'text'; text: string }
-type VarNode = { kind: 'variable'; name: string; pipe?: Pipe }
+type VarNode = { kind: 'variable'; name: string; pipe?: Pipe; tokens?: number }
 
 type Pipe = { type: 'sentence' } | { type: 'words'; value: number }
 
@@ -15,7 +15,7 @@ const parser = peggy.generate(grammar.trim(), {
 })
 
 type GuidanceOpts = {
-  infer: (prompt: string) => Promise<string>
+  infer: (prompt: string, maxTokens?: number) => Promise<string>
 
   /**
    * Will replace {{holders}} with their corresponding values
@@ -34,6 +34,61 @@ export function guidanceParse(template: string): PNode[] {
   return ast
 }
 
+export async function rerunGuidanceValues<
+  T extends Record<string, string> = Record<string, string>
+>(template: string, rerun: string[], opts: GuidanceOpts) {
+  const nodes = guidanceParse(inject(template, opts.placeholders))
+  const values = opts.previous || {}
+
+  for (const name of rerun) {
+    let found = false
+    for (const node of nodes) {
+      if (node.kind === 'variable' && node.name === name) {
+        found = true
+        break
+      }
+    }
+
+    if (!found)
+      throw new Error(`Cannot re-run guidance: Requested variable "${name}" is not in template`)
+  }
+
+  const done = new Set<string>()
+
+  let prompt = ''
+  for (const node of nodes) {
+    switch (node.kind) {
+      case 'text':
+        prompt += node.text
+        continue
+
+      case 'variable': {
+        const prev = values[node.name]
+        if (!rerun.includes(node.name)) {
+          if (prev === undefined) {
+            throw new Error(`Cannot re-run guidance: Missing previous value "${node.name}"`)
+          }
+          prompt += prev
+          continue
+        }
+
+        const results = await opts.infer(prompt.trim(), node.tokens)
+        const value = handlePipe(results.trim(), node.pipe)
+        values[node.name] = value
+        done.add(node.name)
+
+        if (done.size === rerun.length) {
+          return { values: values as T }
+        }
+
+        continue
+      }
+    }
+  }
+
+  return { values: values as T }
+}
+
 export async function runGuidanceChain<T extends Record<string, string> = Record<string, string>>(
   templates: string[],
   opts: GuidanceOpts
@@ -47,7 +102,7 @@ export async function runGuidanceChain<T extends Record<string, string> = Record
     Object.assign(values, result.values)
   }
 
-  return values as T
+  return { values: values as T }
 }
 
 export async function runGuidance<T extends Record<string, string> = Record<string, string>>(

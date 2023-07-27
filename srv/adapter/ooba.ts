@@ -44,14 +44,10 @@ export const handleOoba: ModelAdapter = async function* ({
   log.debug({ ...body, prompt: null }, 'Textgen payload')
   log.debug(`Prompt:\n${body.prompt}`)
 
-  const resp = await needle(
-    'post',
-    `${normalizeUrl(user.oobaUrl, defaultUrl)}/api/v1/generate`,
-    body,
-    {
-      json: true,
-    }
-  ).catch((err) => ({ error: err }))
+  const url = gen.thirdPartyUrl || user.koboldUrl || defaultUrl
+  const resp = await needle('post', `${normalizeUrl(user.oobaUrl, url)}/api/v1/generate`, body, {
+    json: true,
+  }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
     logger.error({ err: resp.error }, ``)

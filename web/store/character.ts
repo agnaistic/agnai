@@ -4,7 +4,7 @@ import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
-import { charsApi } from './data/chars'
+import { charsApi, getImageData } from './data/chars'
 import { imageApi } from './data/image'
 import { getAssetUrl, storage } from '../shared/util'
 import { toCharacterMap } from '../pages/Character/util'
@@ -255,7 +255,8 @@ export const characterStore = createStore<CharacterState>(
     async *generateAvatar(
       { generate: prev },
       user: AppSchema.User,
-      persona: AppSchema.Persona | string
+      persona: AppSchema.Persona | string,
+      onDone?: (err: any, image?: string) => void
     ) {
       try {
         const prompt =
@@ -263,9 +264,12 @@ export const characterStore = createStore<CharacterState>(
         yield { generate: { image: null, loading: true, blob: null } }
         const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
           const file = await dataURLtoFile(image)
+          const data = await getImageData(file)
+          onDone?.(null, data)
           set({ generate: { image, loading: false, blob: file } })
         })
         if (res.error) {
+          onDone?.(res.error)
           yield { generate: { image: prev.image, loading: false, blob: prev.blob } }
         }
       } catch (ex: any) {

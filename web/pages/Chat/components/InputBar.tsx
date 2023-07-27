@@ -208,7 +208,7 @@ const InputBar: Component<{
               <MessageCircle size={18} />
               Respond as Me
             </Button> */}
-          <Show when={props.bots.length > 1}>
+          <Show when={ctx.activeBots.length > 1}>
             <div>Auto-reply</div>
             <Button
               schema="secondary"
@@ -218,20 +218,16 @@ const InputBar: Component<{
             >
               None
             </Button>
-            <For each={props.bots}>
+            <For each={ctx.activeBots}>
               {(char) => (
-                <Show
-                  when={props.chat.characters?.[char._id] || char._id === props.chat.characterId}
+                <Button
+                  schema="secondary"
+                  size="sm"
+                  onClick={() => setAutoReplyAs(char._id)}
+                  disabled={chats.replyAs === char._id}
                 >
-                  <Button
-                    schema="secondary"
-                    size="sm"
-                    onClick={() => setAutoReplyAs(char._id)}
-                    disabled={chats.replyAs === char._id}
-                  >
-                    {char.name}
-                  </Button>
-                </Show>
+                  {char.name}
+                </Button>
               )}
             </For>
             <hr />

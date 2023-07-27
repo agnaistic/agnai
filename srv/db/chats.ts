@@ -79,6 +79,7 @@ export async function create(
     updatedAt: now(),
     genPreset: props.genPreset,
     messageCount: props.greeting ? 1 : 0,
+    tempCharacters: {},
   }
 
   await db('chat').insertOne(doc)
@@ -164,6 +165,7 @@ export async function getAllChats(userId: string) {
           updatedAt: 1,
           genPreset: 1,
           genSettings: 1,
+          // tempCharacters: 1,
           'character.name': 1,
         },
       },

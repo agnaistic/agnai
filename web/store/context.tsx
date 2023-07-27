@@ -5,16 +5,29 @@ import { settingStore } from './settings'
 import { chatStore } from './chat'
 import { AppSchema } from '/common/types'
 import { getSettingColor, userStore } from './user'
-import { hexToRgb } from '../shared/util'
+import { hexToRgb, toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
   anonymize: boolean
-  botMap: Record<string, AppSchema.Character>
-  chatBots: AppSchema.Character[]
+
+  /** Current chat temporary bots */
+  tempMap: Record<string, AppSchema.Character>
+  /** Current chat temporary bots */
+  tempBots: AppSchema.Character[]
+
+  /** Current chat bots */
+  activeMap: Record<string, AppSchema.Character>
+  /** Current chat bots */
   activeBots: AppSchema.Character[]
+
+  /** All user-owned bots */
+  botMap: Record<string, AppSchema.Character>
+  /** All user-owned bots */
+  chatBots: AppSchema.Character[]
+
   handle: string
   impersonate?: AppSchema.Character
   profile?: AppSchema.Profile
@@ -32,9 +45,15 @@ export type ContextState = {
 
 const initial: ContextState = {
   anonymize: false,
+  tempMap: {},
   botMap: {},
-  handle: 'You',
+  activeMap: {},
+
   chatBots: [],
+  tempBots: [],
+  activeBots: [],
+
+  handle: 'You',
   trimSentences: false,
   flags: {} as any,
   bg: {
@@ -42,7 +61,6 @@ const initial: ContextState = {
     bot: {},
     ooc: {},
   },
-  activeBots: [],
   promptHistory: {},
 }
 
@@ -75,10 +93,8 @@ export function ContextProvider(props: { children: any }) {
   })
 
   const activeBots = createMemo(() => {
-    const activeBots = chats.active?.chat
-      ? getActiveBots(chats.active.chat, chars.characters.map)
-      : []
-    return activeBots
+    const list = chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : []
+    return list
   })
 
   createEffect(() => {
@@ -86,15 +102,21 @@ export function ContextProvider(props: { children: any }) {
       bg: visuals(),
       flags: cfg.flags,
       anonymize: cfg.anonymize,
+      tempMap: chats.active?.chat.tempCharacters || {},
+      tempBots: Object.values(chats.active?.chat.tempCharacters || {}),
+
       botMap: chars.characters.map,
       chatBots: chars.characters.list,
+
+      activeMap: toMap(activeBots()),
+      activeBots: activeBots(),
+
       impersonate: chars.impersonating,
       char: chats.active?.char,
       chat: chats.active?.chat,
       profile: users.profile,
       handle: chars.impersonating?.name || users.profile?.handle || 'You',
       trimSentences: users.ui.trimSentences ?? false,
-      activeBots: activeBots(),
       promptHistory: chats.promptHistory,
     }
 

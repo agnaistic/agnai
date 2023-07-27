@@ -21,6 +21,7 @@ export const updateChat = handle(async ({ params, body, user }) => {
       scenarioIds: ['string?'],
       useOverrides: 'boolean?',
       userEmbedId: 'string?',
+      scenarioStates: ['string?'],
     },
     body,
     true
@@ -36,7 +37,8 @@ export const updateChat = handle(async ({ params, body, user }) => {
     adapter: body.adapter ?? prev.adapter,
     memoryId: body.memoryId ?? prev.memoryId,
     userEmbedId: body.userEmbedId ?? prev.userEmbedId,
-    scenarioIds: body.scenarioIds ?? [],
+    scenarioIds: body.scenarioIds ?? prev.scenarioIds,
+    scenarioStates: body.scenarioStates ?? prev.scenarioStates,
   }
 
   if (body.useOverrides === false) {
@@ -64,7 +66,7 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const message = await store.msgs.editMessage(params.id, { msg: body.message })
+  const message = await store.msgs.editMessage(params.id, { msg: body.message, state: 'edited' })
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',

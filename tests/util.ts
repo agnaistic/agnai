@@ -1,4 +1,13 @@
-import { toBook, toBotMsg, toChar, toChat, toEntry, toPersona, toUser, toUserMsg } from '../common/dummy'
+import {
+  toBook,
+  toBotMsg,
+  toChar,
+  toChat,
+  toEntry,
+  toPersona,
+  toUser,
+  toUserMsg,
+} from '../common/dummy'
 import { getEncoder } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
 import { createPrompt, getPromptParts } from '/common/prompt'
@@ -47,7 +56,9 @@ const history = [
 
 const characters = toMap([main, replyAs])
 
-const lines = history.map((h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`)
+const lines = history.map(
+  (h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`
+)
 
 export const entities = {
   chat,
@@ -128,11 +139,18 @@ export function toMsg(text: string) {
   return toUserMsg(profile, text)
 }
 
-export function template(prompt: string, overrides: Partial<ParseOpts>, main?: Partial<AppSchema.Character>) {
+export function template(
+  prompt: string,
+  overrides: Partial<ParseOpts>,
+  main?: Partial<AppSchema.Character>
+) {
   return parseTemplate(prompt, getParseOpts(overrides, main))
 }
 
-function getParseOpts(overrides: Partial<ParseOpts> = {}, charOverrides: Partial<AppSchema.Character> = {}) {
+function getParseOpts(
+  overrides: Partial<ParseOpts> = {},
+  charOverrides: Partial<AppSchema.Character> = {}
+) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...main, ...charOverrides }
   const characters = toMap([overChar, replyAs])
@@ -144,7 +162,7 @@ function getParseOpts(overrides: Partial<ParseOpts> = {}, charOverrides: Partial
         characters: overrides.characters || characters,
         chat: overChat,
         members: overrides.members || [profile],
-        replyAs: overrides.replyAs || replyAs,
+        replyAs: (overrides.replyAs || replyAs) as any,
         settings: overrides.settings,
         book,
         user: overrides.user || user,

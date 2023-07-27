@@ -1,3 +1,5 @@
+import { AppSchema } from './types/schema'
+
 export function toArray<T>(values?: T | T[]): T[] {
   if (values === undefined) return []
   if (Array.isArray(values)) return values
@@ -125,4 +127,26 @@ export function slugify(str: string) {
 // https://stackoverflow.com/a/3561711
 export function escapeRegex(string: string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
+}
+
+export function getBotName(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  chars: Record<string, AppSchema.Character>,
+  replyAs: AppSchema.Character,
+  main: AppSchema.Character
+) {
+  if (!msg.characterId) return replyAs?.name || main.name
+  if (msg.characterId.startsWith('temp-')) {
+    const temp = chat.tempCharacters?.[msg.characterId]
+    if (!temp) return main.name
+    return temp.name
+  }
+
+  const char = chars[msg.characterId]
+  if (!char) {
+    return main.name
+  }
+
+  return char.name
 }

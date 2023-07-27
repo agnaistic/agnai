@@ -14,19 +14,17 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import RadioGroup from '../../shared/RadioGroup'
-import { getStrictForm } from '../../shared/util'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import {
   characterStore,
   tagStore,
   settingStore,
   toastStore,
-  userStore,
   memoryStore,
-  presetStore,
+  chatStore,
 } from '../../store'
 import { useNavigate } from '@solidjs/router'
-import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
+import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
 import { getImageData } from '../../store/data/chars'
 import Select, { Option } from '../../shared/Select'
@@ -37,8 +35,7 @@ import { AppSchema } from '../../../common/types/schema'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
-import { defaultPresets, isDefaultPreset } from '/common/presets'
-import { Card, SolidCard } from '../../shared/Card'
+import { Card, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
@@ -51,8 +48,7 @@ import { useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
-import { generateChar } from './generate-char'
-import { ADAPTER_LABELS } from '/common/adapters'
+import { GenField } from './generate-char'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -67,6 +63,7 @@ export const CreateCharacterForm: Component<{
   duplicateId?: string
   import?: string
   children?: JSX.Element
+  temp?: boolean
   footer?: (children: JSX.Element) => void
   close?: () => void
 }> = (props) => {
@@ -90,16 +87,16 @@ export const CreateCharacterForm: Component<{
 
   const editor = useCharEditor()
 
-  const presets = presetStore()
-  const user = userStore((s) => s.user)
   const tagState = tagStore()
   const state = characterStore((s) => {
     const edit = s.characters.list.find((ch) => ch._id === srcId())
+    const tempChar =
+      props.temp && props.editId ? props.chat?.tempCharacters?.[props.editId] : undefined
 
     return {
       avatar: s.generate,
       creating: s.creating,
-      edit: forceNew() ? undefined : edit,
+      edit: props.temp ? tempChar : forceNew() ? undefined : edit,
       list: s.characters.list,
       loaded: s.characters.loaded,
     }
@@ -113,6 +110,7 @@ export const CreateCharacterForm: Component<{
     sample: 0,
   })
 
+  const [genService, setGenService] = createSignal<string>(editor.genOptions()[0]?.value || '')
   const [creating, setCreating] = createSignal(false)
   const [showBuilder, setShowBuilder] = createSignal(false)
   const [converted, setConverted] = createSignal<AppSchema.Character>()
@@ -120,48 +118,6 @@ export const CreateCharacterForm: Component<{
   const [showAdvanced, setShowAdvanced] = createSignal(false)
   const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
   const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
-
-  const preferredPreset = createMemo(() => {
-    const id = user?.defaultPreset
-    if (!id) return
-
-    const preset = isDefaultPreset(id)
-      ? defaultPresets[id]
-      : presets.presets.find((pre) => pre._id === id)
-
-    return preset
-  })
-
-  const chargenOpts = createMemo(() => {
-    if (!user) return []
-
-    const opts: Option[] = []
-
-    const pref = preferredPreset()
-    if (pref?.service === 'openai' || pref?.service === 'novel' || pref?.service === 'claude') {
-      opts.push({ label: `Default (${ADAPTER_LABELS[pref.service]})`, value: '' })
-    }
-
-    if (user.oaiKeySet) {
-      opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
-      opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })
-    }
-
-    if (user.novelVerified) {
-      opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
-      opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
-    }
-
-    if (pref?.service === 'kobold' || user.koboldUrl) {
-      opts.push({ label: 'Third Party', value: 'kobold' })
-    }
-
-    if (user.claudeApiKeySet) {
-      opts.push({ label: 'Claude', value: 'claude' })
-    }
-
-    return opts
-  })
 
   const totalTokens = createMemo(() => {
     const t = tokens()
@@ -173,30 +129,10 @@ export const CreateCharacterForm: Component<{
     return t.name + t.persona + t.scenario
   })
 
-  const generateCharacter = async () => {
-    if (!chargenOpts().length) return
-
-    const { chargenService } = getStrictForm(ref, { chargenService: 'string?' })
-    const preset = preferredPreset()
-    if (!preset) return
-
-    const { description } = getStrictForm(ref, { description: 'string' })
-    if (!description) return
-
+  const generateCharacter = async (fields?: GenField[]) => {
     setCreating(true)
-
     try {
-      const char = await generateChar(preset, description, chargenService)
-      setCreating(false)
-
-      const prevAvatar = editor.state.avatar
-      const prevSprite = editor.state.sprite
-
-      editor.load(ref, char)
-      editor.update('avatar', prevAvatar)
-      editor.update('sprite', prevSprite)
-    } catch (ex: any) {
-      toastStore.error(`Could not create character: ${ex?.message || ex}`)
+      await editor.generateCharacter(ref, genService(), fields)
     } finally {
       setCreating(false)
     }
@@ -282,31 +218,19 @@ export const CreateCharacterForm: Component<{
     setImage(data)
   }
 
-  const generateAvatar = async () => {
-    const { appearance } = getStrictForm(ref, { appearance: 'string' })
-    if (!user) {
-      toastStore.error(`Image generation settings missing`)
-      return
-    }
-
-    const attributes = getAttributeMap(ref)
-    const persona: AppSchema.Persona = {
-      kind: 'boostyle',
-      attributes,
-    }
-
-    try {
-      characterStore.generateAvatar(user!, appearance || persona)
-    } catch (ex: any) {
-      toastStore.error(ex.message)
-    }
-  }
-
-  const onSubmit = (ev: Event) => {
+  const onSubmit = async (ev: Event) => {
     const payload = editor.payload(ref)
     payload.avatar = state.avatar.blob || editor.state.avatar
 
-    if (!forceNew() && props.editId) {
+    if (props.temp && props.chat) {
+      if (payload.avatar) {
+        const data = await getImageData(payload.avatar)
+        payload.avatar = data
+      }
+      chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, () => {
+        props.close?.()
+      })
+    } else if (!forceNew() && props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {
         if (isPage) {
           nav(`/character/${props.editId}/chats`)
@@ -378,6 +302,14 @@ export const CreateCharacterForm: Component<{
                 </em>
               </div>
             </Show>
+
+            <Show when={props.temp}>
+              <TitleCard type="premium">
+                You are {props.editId ? 'editing' : 'creating'} a temporary character. A temporary
+                character exist within your current chat only.
+              </TitleCard>
+            </Show>
+
             <div class="flex gap-2 text-[1em]">
               <Button onClick={() => setImport(true)}>
                 <Import /> Import
@@ -420,7 +352,7 @@ export const CreateCharacterForm: Component<{
                       A description, label, or notes for your character. This is will not influence
                       your character in any way.
                     </span>
-                    <Show when={chargenOpts().length > 0}>
+                    <Show when={editor.canGuidance}>
                       <p>
                         To generate a character, describe the character below then click{' '}
                         <b>Generate</b>. It can take 30-60 seconds. You can choose which AI Service
@@ -440,10 +372,14 @@ export const CreateCharacterForm: Component<{
                   parentClass="w-full"
                   value={editor.state.description}
                 />
-                <Show when={chargenOpts().length > 0}>
+                <Show when={editor.canGuidance}>
                   <div class="flex justify-end gap-2 sm:justify-start">
-                    <Select fieldName="chargenService" items={chargenOpts()} />
-                    <Button onClick={generateCharacter} disabled={creating()}>
+                    <Select
+                      fieldName="chargenService"
+                      items={editor.genOptions()}
+                      onChange={(item) => setGenService(item.value)}
+                    />
+                    <Button onClick={() => generateCharacter()} disabled={creating()}>
                       {creating() ? 'Generating...' : 'Generate'}
                     </Button>
                   </div>
@@ -511,11 +447,20 @@ export const CreateCharacterForm: Component<{
                         isMultiline
                         parentClass="w-full"
                         fieldName="appearance"
+                        label={
+                          <>
+                            <Regenerate
+                              fields={['appearance']}
+                              regen={generateCharacter}
+                              allowed={editor.canGuidance}
+                            />
+                          </>
+                        }
                         helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
                         placeholder="Appearance"
                         value={editor.state.appearance}
                       />
-                      <Button class="w-fit self-end" onClick={generateAvatar}>
+                      <Button class="w-fit self-end" onClick={() => editor.createAvatar(ref)}>
                         Generate
                       </Button>
                     </div>
@@ -533,7 +478,16 @@ export const CreateCharacterForm: Component<{
             <Card>
               <TextInput
                 fieldName="scenario"
-                label="Scenario"
+                label={
+                  <>
+                    Scenario{' '}
+                    <Regenerate
+                      fields={['scenario']}
+                      regen={generateCharacter}
+                      allowed={editor.canGuidance}
+                    />
+                  </>
+                }
                 helperText="The current circumstances and context of the conversation and the characters."
                 placeholder="E.g. {{char}} is in their office working. {{user}} opens the door and walks in."
                 value={editor.state.scenario}
@@ -545,7 +499,16 @@ export const CreateCharacterForm: Component<{
               <TextInput
                 isMultiline
                 fieldName="greeting"
-                label="Greeting"
+                label={
+                  <>
+                    Greeting{' '}
+                    <Regenerate
+                      fields={['greeting']}
+                      regen={generateCharacter}
+                      allowed={editor.canGuidance}
+                    />
+                  </>
+                }
                 helperText="The first message from your character. It is recommended to provide a lengthy first message to encourage the character to give longer responses."
                 placeholder={
                   "E.g. *I smile as you walk into the room* Hello, {{user}}! I can't believe it's lunch time already! Where are we going?"
@@ -562,7 +525,16 @@ export const CreateCharacterForm: Component<{
             <Card class="flex flex-col gap-3">
               <div>
                 <FormLabel
-                  label="Persona Schema"
+                  label={
+                    <>
+                      Persona Schema{' '}
+                      <Regenerate
+                        fields={['behaviour', 'personality', 'speech']}
+                        regen={generateCharacter}
+                        allowed={editor.canGuidance}
+                      />{' '}
+                    </>
+                  }
                   helperText={
                     <>
                       <p>If you do not know what this mean, you can leave this as-is.</p>
@@ -595,7 +567,16 @@ export const CreateCharacterForm: Component<{
               <TextInput
                 isMultiline
                 fieldName="sampleChat"
-                label="Sample Conversation"
+                label={
+                  <>
+                    Sample Conversation{' '}
+                    <Regenerate
+                      fields={['example1', 'example2', 'example3']}
+                      regen={generateCharacter}
+                      allowed={editor.canGuidance}
+                    />
+                  </>
+                }
                 helperText={
                   <span>
                     Example chat between you and the character. This section is very important for
@@ -723,6 +704,25 @@ export const CreateCharacterForm: Component<{
         }}
         single
       />
+    </>
+  )
+}
+
+const Regenerate: Component<{
+  fields: GenField[]
+  regen: (fields: GenField[]) => any
+  allowed: boolean
+}> = (props) => {
+  const flags = settingStore((s) => s.flags)
+  return (
+    <>
+      <Show when={props.allowed && flags.regen}>
+        (
+        <span class="link" onClick={() => props.regen(props.fields)}>
+          Regenerate
+        </span>
+        )
+      </Show>
     </>
   )
 }
