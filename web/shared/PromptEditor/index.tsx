@@ -146,9 +146,7 @@ const PromptEditor: Component<
     type Entry = [Interp, Placeholder]
     const all = Object.entries(placeholders) as Entry[]
 
-    if (props.v2 || props.inherit?.useTemplateParser) {
-      all.push(...(Object.entries(v2placeholders) as Entry[]))
-    }
+    all.push(...(Object.entries(v2placeholders) as Entry[]))
 
     if ('include' in props === false && 'exclude' in props === false) return all
 
