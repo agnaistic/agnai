@@ -407,14 +407,14 @@ export namespace AppSchema {
     states: string[]
   }
 
-  export interface ScenarioEvent {
+  export interface ScenarioEvent<T extends ScenarioEventTrigger = ScenarioEventTrigger> {
     /** The state this  */
     name: string
     requires: string[]
     assigns: string[]
     type: EventTypes
     text: string
-    trigger: ScenarioEventTrigger
+    trigger: T
   }
 
   export type ScenarioEventTrigger =

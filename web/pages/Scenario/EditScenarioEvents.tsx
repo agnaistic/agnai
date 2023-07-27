@@ -93,9 +93,12 @@ const CreateScenario: Component = () => {
     setStates(state.scenario?.states || [])
   })
 
-  const updateEntry = (i: number, update: Partial<AppSchema.ScenarioEvent>) => {
+  const updateEntry = <T extends AppSchema.ScenarioEventTrigger = AppSchema.ScenarioEventTrigger>(
+    index: number,
+    update: Partial<AppSchema.ScenarioEvent<T>>
+  ) => {
     setEntries((prev) => {
-      return prev.map((entry, i) => (i !== i ? entry : { ...entry, ...update }))
+      return prev.map((entry, i) => (index !== i ? entry : { ...entry, ...update }))
     })
   }
 
@@ -270,7 +273,7 @@ const CreateScenario: Component = () => {
                         parentClass="w-full"
                         value={entry().name}
                         placeholder='Event name, e.g. "Greeting"'
-                        onChange={(ev) => (entry().name = ev.currentTarget.value)}
+                        onChange={(ev) => updateEntry(index, { name: ev.currentTarget.value })}
                       />
                       <div class="flex gap-2">
                         <div class="ml-2 flex flex-col justify-center space-y-1">
@@ -339,7 +342,7 @@ const CreateScenario: Component = () => {
                         helperText="How will this event be shown to the user."
                         items={eventTypeOptions}
                         value={entry().type}
-                        onChange={(ev) => (entry().type = ev.value as AppSchema.EventTypes)}
+                        onChange={(ev) => updateEntry(index, { type: ev.value as any })}
                       />
                     </Card>
 
@@ -354,7 +357,7 @@ const CreateScenario: Component = () => {
                       hideHelperText
                       noDummyPreview
                       value={entry().text}
-                      onChange={(ev) => (entry().text = ev)}
+                      onChange={(ev) => updateEntry(index, { text: ev })}
                       v2
                       include={['char', 'user', 'random', 'roll', 'idle_duration', 'chat_age']}
                     />
@@ -375,7 +378,9 @@ const CreateScenario: Component = () => {
                             max={100}
                             step={0.01}
                             onChange={(ev) =>
-                              ((entry().trigger as AppSchema.ScenarioOnManual).probability = ev)
+                              updateEntry(index, {
+                                trigger: { kind: 'onManualTrigger', probability: ev },
+                              })
                             }
                           />
                         </Card>
@@ -392,7 +397,9 @@ const CreateScenario: Component = () => {
                             max={24 * 7}
                             step={1}
                             onChange={(ev) =>
-                              ((entry().trigger as AppSchema.ScenarioOnChatOpened).awayHours = ev)
+                              updateEntry(index, {
+                                trigger: { kind: 'onChatOpened', awayHours: ev },
+                              })
                             }
                           />
                         </Card>
@@ -412,9 +419,12 @@ const CreateScenario: Component = () => {
                             max={100}
                             step={1}
                             onChange={(ev) =>
-                              ((
-                                entry().trigger as AppSchema.ScenarioOnCharacterMessageRx
-                              ).minMessagesSinceLastEvent = ev)
+                              updateEntry(index, {
+                                trigger: {
+                                  kind: 'onCharacterMessageReceived',
+                                  minMessagesSinceLastEvent: ev,
+                                },
+                              })
                             }
                           />
                         </Card>
