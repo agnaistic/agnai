@@ -113,7 +113,12 @@ export function parseTemplate(template: string, opts: ParseOpts) {
 
   if (opts.limit && opts.limit.output) {
     for (const [id, lines] of Object.entries(opts.limit.output)) {
-      const trimmed = fillPromptWithLines(opts.limit.encoder, opts.limit.context, output, lines)
+      const trimmed = fillPromptWithLines(
+        opts.limit.encoder,
+        opts.limit.context,
+        output,
+        lines
+      ).reverse()
       output = output.replace(id, trimmed.join('\n'))
     }
   }

@@ -281,13 +281,7 @@ const SingleMessage: Component<
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show
-                    when={canShowMeta(
-                      props.original,
-                      props.original.meta,
-                      ctx.promptHistory[props.original._id]
-                    )}
-                  >
+                  <Show when={canShowMeta(props.original, ctx.promptHistory[props.original._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
@@ -653,6 +647,7 @@ const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) 
   )
 }
 
-function canShowMeta(msg: AppSchema.ChatMessage, meta: any, history: any) {
-  return !!msg.adapter || !!history || (!!meta && Object.keys(meta).length >= 1)
+function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
+  if (!msg) return false
+  return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
 }
