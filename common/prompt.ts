@@ -266,8 +266,8 @@ export function injectPlaceholders(template: string, inject: InjectOpts) {
   const lines = !hist
     ? []
     : hist.order === 'desc'
-    ? hist.lines.slice().reverse()
-    : hist.lines.slice()
+    ? hist.lines.slice()
+    : hist.lines.slice().reverse()
 
   const result = parseTemplate(template, {
     ...opts,

@@ -117,8 +117,8 @@ export function parseTemplate(template: string, opts: ParseOpts) {
         opts.limit.encoder,
         opts.limit.context,
         output,
-        lines.slice().reverse()
-      )
+        lines
+      ).reverse()
       output = output.replace(id, trimmed.join('\n'))
     }
   }
