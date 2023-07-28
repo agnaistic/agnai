@@ -2,6 +2,7 @@ import { v4 } from 'uuid'
 import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi } from './storage'
+import { replace } from '/common/util'
 
 export type PresetUpdate = Omit<AppSchema.UserGenPreset, '_id' | 'kind' | 'userId'>
 export type PresetCreate = PresetUpdate & { chatId?: string }
@@ -53,7 +54,7 @@ export async function editPreset(presetId: string, update: Partial<PresetUpdate>
   if (!prev) return localApi.error(`Preset does not exist`)
 
   const preset = { ...prev, ...update }
-  await localApi.savePresets(localApi.replace(presetId, presets, preset))
+  await localApi.savePresets(replace(presetId, presets, preset))
   return localApi.result(preset)
 }
 
