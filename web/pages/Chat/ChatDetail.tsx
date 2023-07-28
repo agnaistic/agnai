@@ -201,7 +201,8 @@ const ChatDetail: Component = () => {
     setEvented(true)
 
     const messages = msgs.msgs
-    if (messages.length === 0) {
+    const isNonEvent = !msgs.msgs[0]?.event
+    if (isNonEvent && messages.length <= 1) {
       eventStore.onGreeting(chats.chat)
     } else {
       eventStore.onChatOpened(chats.chat, new Date(messages[messages.length - 1].createdAt))
@@ -543,7 +544,7 @@ const ChatDetail: Component = () => {
                 </Show>
                 <section
                   data-messages
-                  class={`flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
+                  class={`mx-auto flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
                 >
                   <div id="chat-messages" class="flex w-full flex-col gap-2">
                     <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>

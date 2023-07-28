@@ -65,7 +65,7 @@ const CreateChatForm: Component<{
   const currScenarios = createMemo(() => {
     if (!scenarios.length) return [{ value: '', label: 'You have no scenarios' }]
     return [
-      { value: '', label: "Use character's scenario" },
+      { value: '', label: 'None' },
       ...scenarios.map((s) => ({ label: s.name, value: s._id })),
     ]
   })

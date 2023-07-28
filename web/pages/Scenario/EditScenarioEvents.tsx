@@ -61,12 +61,23 @@ const CreateScenario: Component = () => {
     scenario: x.scenarios.find((s) => s._id === params.editId),
   }))
 
-  const [states, setStates] = createSignal<string[]>([])
   const [entries, setEntries] = createSignal<AppSchema.ScenarioEvent[]>([])
+
   const availableStates = createMemo(() => {
-    const base = states()
-    const negate = base.map((state) => `!${state}`)
-    return base.concat(negate)
+    const states = new Set<string>()
+
+    for (const entry of entries()) {
+      for (const state of entry.assigns.concat(entry.requires)) {
+        if (state.startsWith('!')) continue
+        states.add(state)
+      }
+    }
+
+    for (const state of Array.from(states)) {
+      states.add(`!${state}`)
+    }
+
+    return Array.from(states)
   })
 
   onMount(() => {
@@ -90,7 +101,6 @@ const CreateScenario: Component = () => {
 
   createEffect(() => {
     setEntries(state.scenario?.entries || [])
-    setStates(state.scenario?.states || [])
   })
 
   const updateEntry = <T extends AppSchema.ScenarioEventTrigger = AppSchema.ScenarioEventTrigger>(
@@ -200,7 +210,7 @@ const CreateScenario: Component = () => {
       }
     }
 
-    const update = { ...state.scenario, entries: ents, states: states() }
+    const update = { ...state.scenario, entries: ents }
     scenarioStore.update(state.scenario._id, update)
   }
 
@@ -224,25 +234,15 @@ const CreateScenario: Component = () => {
 
       <EventsHelp />
 
-      <TagInput
-        fieldName="states"
-        label="States"
-        placeholder=""
-        helperText="States that your scenario can use."
-        availableTags={availableStates()}
-        onSelect={(ev) => setStates(ev)}
-        value={states()}
-      />
-
-      <Show when={invalidStates().length}>
-        <TitleCard type="rose">
-          Some entries contain states that are no longer valid:
-          <br />
-          <div class="flex flex-wrap gap-2">
-            <For each={invalidStates()}>{(tag) => <Pill>{tag}</Pill>}</For>
-          </div>
-        </TitleCard>
-      </Show>
+      <FormLabel label="States Used" helperText="The states you have used in your events so far" />
+      <div class="flex gap-2">
+        <For each={availableStates()}>
+          {(state) => {
+            if (state.startsWith('!')) return null
+            return <Pill type="hl">{state}</Pill>
+          }}
+        </For>
+      </div>
 
       <form class="relative flex flex-col gap-4" onSubmit={onSubmit} ref={ref}>
         <div class="sticky top-0 z-[1] flex items-center justify-between bg-[var(--bg-900)] py-2">
@@ -329,7 +329,6 @@ const CreateScenario: Component = () => {
                       <TagInput
                         fieldName={`assigns.${index}`}
                         availableTags={availableStates()}
-                        strict
                         value={entry().assigns}
                         placeholder="States to add when triggered"
                         onSelect={(ev) => updateEntry(index, { assigns: ev })}

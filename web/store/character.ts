@@ -260,7 +260,9 @@ export const characterStore = createStore<CharacterState>(
     ) {
       try {
         const prompt =
-          typeof persona === 'string' ? persona : await createAppearancePrompt(user, { persona })
+          typeof persona === 'string'
+            ? `full body, ${persona}`
+            : await createAppearancePrompt(user, { persona })
         yield { generate: { image: null, loading: true, blob: null } }
         const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
           const file = await dataURLtoFile(image)

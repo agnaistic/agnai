@@ -15,6 +15,7 @@ import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
 import { settingStore } from '../settings'
 import { parseTemplate } from '/common/template-parser'
+import { replace } from '/common/util'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -35,6 +36,7 @@ export type PromptEntities = {
 
 export const msgsApi = {
   editMessage,
+  editMessageProps,
   getMessages,
   getPromptEntities,
   generateResponseV2,
@@ -172,13 +174,20 @@ export async function rerunGuidance<T = any>(
 }
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
+  return editMessageProps(msg, { msg: replace })
+}
+
+export async function editMessageProps(
+  msg: AppSchema.ChatMessage,
+  update: Partial<AppSchema.ChatMessage>
+) {
   if (isLoggedIn()) {
-    const res = await api.method('put', `/chat/${msg._id}/message`, { message: replace })
+    const res = await api.method('put', `/chat/${msg._id}/message-props`, update)
     return res
   }
 
   const messages = await localApi.getMessages(msg.chatId)
-  const next = localApi.replace(msg._id, messages, { msg: replace })
+  const next = replace(msg._id, messages, update)
   await localApi.saveMessages(msg.chatId, next)
   return localApi.result({ success: true })
 }

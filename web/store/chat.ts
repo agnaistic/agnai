@@ -9,11 +9,11 @@ import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
-import { replace } from './data/storage'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+import { replace } from '/common/util'
 
 export { AllChat }
 

@@ -28,14 +28,16 @@ import {
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
-import { getAssetUrl } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore } from '../../../store'
+import { getAssetUrl, getStrictForm } from '../../../shared/util'
+import { chatStore, userStore, msgStore, settingStore, toastStore } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
 import { ContextState, useAppContext } from '/web/store/context'
 import { trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
+import TextInput from '/web/shared/TextInput'
+import { Card } from '/web/shared/Card'
 
 type MessageProps = {
   msg: SplitMessage
@@ -289,8 +291,7 @@ const SingleMessage: Component<
                       onClick={() =>
                         rootModalStore.info(
                           <Meta
-                            adapter={props.original.adapter}
-                            meta={props.original.meta}
+                            msg={props.original}
                             history={ctx.promptHistory[props.original._id]}
                           />
                         )
@@ -611,31 +612,62 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   return parsed
 }
 
-const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) => {
-  if (!props.meta && !props.history && !props.adapter) return null
+const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) => {
+  let ref: any
+
+  if (!props.msg) return null
+  if (!props.msg.meta && !props.history && !props.msg.adapter) return null
+
+  const updateImagePrompt = () => {
+    const { imagePrompt } = getStrictForm(ref, { imagePrompt: 'string' })
+    msgStore.editMessageProp(props.msg._id, { imagePrompt }, () => {
+      toastStore.success('Image prompt updated')
+    })
+  }
 
   return (
-    <>
-      <table class="text-sm">
-        <Show when={props.adapter}>
-          <tr>
-            <td class="pr-2">
-              <b>Adapter</b>
-            </td>
-            <td>{props.adapter}</td>
-          </tr>
-        </Show>
-        <For each={Object.entries(props.meta || {})}>
-          {([key, value]) => (
+    <form ref={ref} class="flex w-full flex-col gap-2">
+      <Card>
+        <table class="text-sm">
+          <Show when={props.msg.adapter}>
             <tr>
               <td class="pr-2">
-                <b>{key}</b>
+                <b>Adapter</b>
               </td>
-              <td>{value as string}</td>
+              <td>{props.msg.adapter}</td>
             </tr>
-          )}
-        </For>
-      </table>
+          </Show>
+          <For each={Object.entries(props.msg.meta || {})}>
+            {([key, value]) => (
+              <tr>
+                <td class="pr-2">
+                  <b>{key}</b>
+                </td>
+                <td>{value as string}</td>
+              </tr>
+            )}
+          </For>
+        </table>
+      </Card>
+
+      <Show when={props.msg.imagePrompt}>
+        <Card>
+          <TextInput
+            helperText={
+              <>
+                Image Prompt -{' '}
+                <span class="link" onClick={updateImagePrompt}>
+                  Save
+                </span>
+              </>
+            }
+            parentClass="text-sm"
+            isMultiline
+            value={props.msg.imagePrompt}
+            fieldName="imagePrompt"
+          />
+        </Card>
+      </Show>
 
       <Show when={props.history}>
         <pre class="overflow-x-auto whitespace-pre-wrap break-words rounded-sm bg-[var(--bg-700)] p-1 text-sm">
@@ -647,7 +679,7 @@ const Meta: Component<{ adapter?: string; meta: any; history?: any }> = (props) 
           </Show>
         </pre>
       </Show>
-    </>
+    </form>
   )
 }
 

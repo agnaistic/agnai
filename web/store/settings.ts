@@ -34,6 +34,10 @@ const emptySlots: SlotConfig = {
 export type SettingState = {
   guestAccessAllowed: boolean
   initLoading: boolean
+  cfg: {
+    loading: boolean
+    ttl: number
+  }
   showMenu: boolean
   showImpersonate: boolean
   fullscreen: boolean
@@ -68,6 +72,7 @@ const initState: SettingState = {
   anonymize: false,
   guestAccessAllowed: canUseStorage(),
   initLoading: true,
+  cfg: { loading: false, ttl: 0 },
   showMenu: false,
   showImpersonate: false,
   fullscreen: false,
@@ -154,8 +159,14 @@ export const settingStore = createStore<SettingState>(
     fullscreen(_, next: boolean) {
       return { fullscreen: next }
     },
-    async getConfig() {
+    async *getConfig({ cfg }) {
+      if (cfg.loading) return
+      if (Date.now() - cfg.ttl < 60000) return
+
+      yield { cfg: { loading: true, ttl: Date.now() } }
       const res = await api.get('/settings')
+      yield { cfg: { loading: false, ttl: Date.now() } }
+
       if (res.result) {
         return { config: res.result }
       }

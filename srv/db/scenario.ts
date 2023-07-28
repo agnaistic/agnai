@@ -7,6 +7,13 @@ export async function getScenarios(userId: string) {
   return books
 }
 
+export async function getScenariosById(ids: string[]) {
+  const books = await db('scenario')
+    .find({ _id: { $in: ids } })
+    .toArray()
+  return books
+}
+
 export async function createScenario(userId: string, scenario: NewScenario) {
   const newScenario: AppSchema.ScenarioBook = {
     _id: v4(),

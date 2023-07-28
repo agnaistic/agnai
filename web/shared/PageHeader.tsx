@@ -45,7 +45,7 @@ const PageHeader: Component<Props> = (props) => {
         <Divider />
       </Show>
 
-      <div ref={ref!} class="flex w-full justify-center">
+      <div ref={ref!} class="mb-2 flex w-full justify-center">
         <Switch>
           <Match when={ref!}>
             <Slot sticky slot="leaderboard" parent={ref!} />

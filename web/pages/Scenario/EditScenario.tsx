@@ -3,7 +3,7 @@ import { scenarioStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
 import { Copy, Download, Save, Trash, X, Zap } from 'lucide-solid'
-import { A, useNavigate, useParams } from '@solidjs/router'
+import { useNavigate, useParams } from '@solidjs/router'
 import TextInput from '../../shared/TextInput'
 import { deepCloneAndRemoveFields, getStrictForm } from '../../shared/util'
 import { NewScenario } from '/common/types'
@@ -92,6 +92,21 @@ const CreateScenario: Component = () => {
         }
       />
 
+      {/* <div class="text-lg font-bold">Events</div> */}
+      <div class="flex items-center gap-2">
+        <Button schema="primary" onClick={() => nav(`/scenario/${params.editId}/events`)}>
+          <Zap size={16} /> Manage Events
+        </Button>
+        <Show
+          when={state.scenario?.entries.length ?? 0 > 0}
+          fallback={<p>No events attached to this scenario</p>}
+        >
+          <p>{state.scenario!.entries.length} event(s)</p>
+        </Show>
+      </div>
+
+      <Divider />
+
       <div class="text-lg font-bold">Scenario Details</div>
 
       <form class="flex flex-col gap-4" onSubmit={onSubmit} ref={ref}>
@@ -148,41 +163,6 @@ const CreateScenario: Component = () => {
           </Button>
         </div>
       </form>
-
-      <Divider />
-
-      <div class="text-lg font-bold">Events</div>
-
-      <Show
-        when={state.scenario?.entries.length ?? 0 > 0}
-        fallback={<p>No events attached to this scenario</p>}
-      >
-        <p>{state.scenario!.entries.length} event(s)</p>
-      </Show>
-
-      <div class="flex justify-end gap-2">
-        <A href={`/scenario/${params.editId}/events`}>
-          <Button schema="primary">
-            <Zap size={16} /> Manage Events
-          </Button>
-        </A>
-      </div>
-
-      {/*
-      <Divider />
-
-      <div class="text-lg font-bold">Memory</div>
-
-      <p>No memory books attached to this scenario</p>
-
-      <div class="flex justify-end gap-2">
-        <A class="flex-col" href={`/memory`}>
-          <Button schema="primary">
-            <Book size={16} /> Manage Memory
-          </Button>
-        </A>
-      </div>
-      */}
 
       <ConfirmModal
         show={!!showDelete()}
