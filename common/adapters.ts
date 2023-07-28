@@ -131,6 +131,7 @@ export const NOVEL_MODELS = {
   euterpe: 'euterpe-v2',
   krake: 'krake-v2',
   clio_v1: 'clio-v1',
+  kayra_v1: 'kayra-v1'
 } satisfies { [key: string]: string }
 
 export const REPLICATE_MODEL_TYPES = {

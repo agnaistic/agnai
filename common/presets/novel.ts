@@ -2,6 +2,37 @@ import { NOVEL_MODELS } from '../adapters'
 import { AppSchema } from '../types/schema'
 
 export const novelPresets = {
+  novel_kayra: {
+    name: 'Kayra - Carefree',
+    service: 'novel',
+    novelModel: NOVEL_MODELS.kayra_v1,
+    maxTokens: 300,
+    maxContextLength: 8000,
+    repetitionPenalty: 2.8,
+    repetitionPenaltyRange: 2048,
+    repetitionPenaltySlope: 0.02,
+    frequencyPenalty: 0.03,
+    presencePenalty: 0.0,
+    temp: 1.05,
+    tailFreeSampling: 0.915,
+    topK: 12,
+    topP: 0.85,
+    topA: 0.1,
+    order: [2, 3, 0, 4, 1],
+    cfgScale: 1,
+    cfgOppose: '',
+    streamResponse: false,
+    typicalP: 1,
+    useGaslight: true,
+    gaslight: `{{char}} Memory: {{memory}}
+Description of {{char}}: {{personality}}
+
+How {{char}} speaks: {{example_dialogue}}
+
+[ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
+***
+Summary: {{scenario}}`,
+  },
   novel_clio: {
     name: 'Clio - Talker C',
     service: 'novel',

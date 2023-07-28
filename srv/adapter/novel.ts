@@ -16,7 +16,7 @@ const streamUrl = `${NOVEL_BASEURL}/ai/generate-stream`
  * Samplers:
  * 0. Temperature
  * 1. Top K
- * 2. Nucleus Sampling
+ * 2. Nucleus Sampling (Top P)
  * 3. Tail Free Sampling
  * 4. Top A Sampling
  * 5. Typical Sampling

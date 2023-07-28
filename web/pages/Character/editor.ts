@@ -135,6 +135,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
 
     if (user.user.novelVerified) {
+      opts.push({ label: 'NovelAI - Kayra', value: 'novel/kayra-v1' })
       opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
       opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
     }
