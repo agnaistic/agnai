@@ -207,7 +207,7 @@ function renderProp(node: CNode, opts: TemplateOpts, entity: unknown, i: number)
         case 'isuser': {
           const index = line.indexOf(':')
           const name = line.slice(0, index)
-          const sender = opts.impersonate?.name ?? opts.sender.handle
+          const sender = opts.impersonate?.name ?? opts.sender?.handle
           const match = name === sender
           return node.prop === 'isuser' ? match : !match
         }
@@ -307,7 +307,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return opts.replyAs.name
 
     case 'user':
-      return opts.impersonate?.name || opts.sender.handle || 'You'
+      return opts.impersonate?.name || opts.sender?.handle || 'You'
 
     case 'example_dialogue':
       return opts.parts.sampleChat?.join('\n') || ''

@@ -40,7 +40,7 @@ const replyAs = toChar('OtherBot', {
 })
 
 const { user, profile } = toUser('ChatOwner')
-const chat = toChat(main, {}, [main, replyAs])
+const chat = toChat(main, { userId: profile.userId }, [main, replyAs])
 const book = toBook('book', [
   toEntry(['1-TRIGGER'], 'ENTRY ONE'),
   toEntry(['10-TRIGGER'], 'ENTRY TWO', 10, 10),
