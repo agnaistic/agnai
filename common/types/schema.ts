@@ -1,6 +1,8 @@
 import type {
   AIAdapter,
   ChatAdapter,
+  HordeModel,
+  HordeWorker,
   OpenRouterModel,
   PersonaFormat,
   RegisteredAdapter,
@@ -45,6 +47,10 @@ export namespace AppSchema {
 
     pipelineProxyEnabled: boolean
     authUrls: string[]
+    horde: {
+      models: HordeModel[]
+      workers: HordeWorker[]
+    }
   }
 
   export type ChatMode = 'standard' | 'adventure'

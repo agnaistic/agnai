@@ -90,6 +90,7 @@ const initState: SettingState = {
     imagesSaved: false,
     pipelineProxyEnabled: false,
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
+    horde: { workers: [], models: [] },
   },
   replicate: {},
   flags: getFlags(),

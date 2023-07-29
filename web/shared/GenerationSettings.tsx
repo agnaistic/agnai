@@ -25,6 +25,7 @@ import { serviceHasSetting } from './util'
 import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/default-preset'
 import Sortable, { SortItem } from './Sortable'
+import { HordeDetails } from '../pages/Settings/components/HordeAISettings'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -119,6 +120,14 @@ const GeneralSettings: Component<Props> = (props) => {
     version: props.inherit?.replicateModelVersion,
   })
 
+  const [tokens, setTokens] = createSignal(
+    props.inherit?.maxTokens || defaultPresets.basic.maxTokens
+  )
+
+  const [context, setContext] = createSignal(
+    props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength
+  )
+
   const openRouterModels = createMemo(() => {
     if (!presets.openRouterModels) return []
 
@@ -161,6 +170,12 @@ const GeneralSettings: Component<Props> = (props) => {
   return (
     <div class="flex flex-col gap-2">
       <div class="text-xl font-bold">General Settings</div>
+
+      <Show when={props.service === 'horde'}>
+        <Card>
+          <HordeDetails maxTokens={tokens()} maxContextLength={context()} />
+        </Card>
+      </Show>
 
       <Card hide={!serviceHasSetting(props.service, 'thirdPartyUrl')}>
         <TextInput
@@ -309,6 +324,7 @@ const GeneralSettings: Component<Props> = (props) => {
           step={1}
           value={props.inherit?.maxTokens || defaultPresets.basic.maxTokens}
           disabled={props.disabled}
+          onChange={(val) => setTokens(val)}
         />
         <RangeInput
           fieldName="maxContextLength"
@@ -336,6 +352,7 @@ const GeneralSettings: Component<Props> = (props) => {
           step={1}
           value={props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength}
           disabled={props.disabled}
+          onChange={(val) => setContext(val)}
         />
       </Card>
       <Card hide={!serviceHasSetting(props.service, 'streamResponse')}>
@@ -357,8 +374,6 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 }
 
 const PromptSettings: Component<Props> = (props) => {
-  const [_useV2, _setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
-
   return (
     <div class="flex flex-col gap-4">
       <div class="text-xl font-bold">Prompt Settings</div>
@@ -523,9 +538,12 @@ const PromptSettings: Component<Props> = (props) => {
 }
 
 const GenSettings: Component<Props> = (props) => {
+  const [_useV2, _setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
+
   return (
     <div class="flex flex-col gap-4">
       <div class="text-xl font-bold">Generation Settings</div>
+
       <Card class="flex flex-col gap-4">
         <RangeInput
           fieldName="temp"

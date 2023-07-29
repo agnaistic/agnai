@@ -47,3 +47,7 @@ async function updateModelCache() {
 export function getHordeWorkers() {
   return WORKER_CACHE.slice()
 }
+
+export function getHoredeModels() {
+  return TEXT_CACHE.slice()
+}

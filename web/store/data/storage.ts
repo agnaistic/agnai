@@ -20,6 +20,10 @@ const emptyCfg: AppSchema.AppConfig = {
   registered: [],
   authUrls: [],
   pipelineProxyEnabled: false,
+  horde: {
+    workers: [],
+    models: [],
+  },
 }
 
 let SELF_HOSTING = false
