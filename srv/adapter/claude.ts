@@ -273,7 +273,7 @@ async function createClaudePrompt(opts: AdapterProps) {
     }
   )
   const gaslightCost = await encoder()('Human: ' + gaslight)
-  let ujb = parts.ujb ? `Human: <system_note>${parts.ujb}</system_note>` : ''
+  let ujb = parts.ujb ? `System: ${parts.ujb}` : ''
   ujb = (
     await injectPlaceholders(ujb, {
       opts,
@@ -341,16 +341,14 @@ async function createClaudePrompt(opts: AdapterProps) {
     addedAllInserts = true
   }
 
-  const messages = [`\n\nHuman: ${gaslight}`, ...history.reverse()]
+  const messages = [`\n\nSystem: ${gaslight}`, ...history.reverse()]
 
   if (ujb) {
     messages.push(ujb)
   }
 
   const continueAddon =
-    opts.kind === 'continue'
-      ? `\n\nHuman: <system_note>Continue ${replyAs.name}'s reply.</system_note>`
-      : ''
+    opts.kind === 'continue' ? `\n\nSystem: Continue ${replyAs.name}'s reply.` : ''
 
   const appendName = opts.gen.prefixNameAppend ?? true
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
@@ -372,11 +370,11 @@ function processLine(type: LineType, line: string) {
       return `Human: ${line}`
 
     case 'system':
-      return `Human:\n<system_note>\n${line}\n</system_note>`
+      return `System: ${line}`
 
     case 'example':
       const mid = line
-        .replace(START_REPLACE, '<system_note>New conversation started.</system_note>')
+        .replace(START_REPLACE, 'New conversation started.')
         .replace('\n' + SAMPLE_CHAT_MARKER, '')
       return `Human:\n<example_dialogue>\n${mid}\n</example_dialogue>`
 
