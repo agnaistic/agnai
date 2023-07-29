@@ -128,7 +128,7 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
           continue
         }
 
-        const results = await infer(prompt.trim())
+        const results = await infer(prompt.trim(), node.tokens)
         const result = results.trim()
         const value = handlePipe(result, node.pipe)
         prompt += value

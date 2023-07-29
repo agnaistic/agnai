@@ -21,7 +21,7 @@ export const novelPresets = {
     order: [2, 3, 0, 4, 1],
     cfgScale: 1,
     cfgOppose: '',
-    streamResponse: false,
+    streamResponse: true,
     typicalP: 1,
     useGaslight: true,
     gaslight: `{{char}} Memory: {{memory}}
@@ -50,7 +50,7 @@ Summary: {{scenario}}`,
     topP: 0.95,
     topA: 0.075,
     order: [1, 3, 4, 0, 2],
-    streamResponse: false,
+    streamResponse: true,
     useGaslight: true,
     gaslight: `{{char}} Memory: {{memory}}
 Description of {{char}}: {{personality}}

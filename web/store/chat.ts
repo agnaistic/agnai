@@ -688,7 +688,10 @@ subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
   const { promptHistory } = chatStore.getState()
 
   chatStore.setState({
-    promptHistory: Object.assign({}, promptHistory, { [body.id]: body.prompt }),
+    promptHistory: Object.assign({}, promptHistory, {
+      [body.id]: body.prompt,
+      partial: body.prompt,
+    }),
   })
 })
 

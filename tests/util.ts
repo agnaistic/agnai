@@ -11,7 +11,7 @@ import {
 import { getEncoder } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
 import { createPrompt, getPromptParts } from '/common/prompt'
-import { ParseOpts, parseTemplate } from '/common/template-parser'
+import { TemplateOpts, parseTemplate } from '/common/template-parser'
 
 export * from '../common/dummy'
 
@@ -141,16 +141,21 @@ export function toMsg(text: string) {
 
 export function template(
   prompt: string,
-  overrides: Partial<ParseOpts>,
+  overrides: Partial<TemplateOpts>,
   main?: Partial<AppSchema.Character>
 ) {
   return parseTemplate(prompt, getParseOpts(overrides, main))
 }
 
-function getParseOpts(
-  overrides: Partial<ParseOpts> = {},
-  charOverrides: Partial<AppSchema.Character> = {}
-) {
+type TestOpts = Partial<
+  TemplateOpts & {
+    settings?: Partial<AppSchema.GenSettings>
+    members?: AppSchema.Profile[]
+    user?: AppSchema.User
+  }
+>
+
+function getParseOpts(overrides: TestOpts = {}, charOverrides: Partial<AppSchema.Character> = {}) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...main, ...charOverrides }
   const characters = toMap([overChar, replyAs])
@@ -174,7 +179,7 @@ function getParseOpts(
       getEncoder('main')
     )
 
-  const base: ParseOpts = {
+  const base: TemplateOpts = {
     char: overChar,
     characters: overrides.characters || characters,
     chat: overChat,

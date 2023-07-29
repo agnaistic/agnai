@@ -70,7 +70,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   yield { prompt: processedPrompt }
 
-  const endTokens = ['***', 'Scenario:', '----', '⁂']
+  const endTokens = ['***', 'Scenario:', '----', '⁂', '***']
 
   log.debug(
     { ...body, input: null, parameters: { ...body.parameters, bad_words_ids: null } },
@@ -111,6 +111,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   const parsed = sanitise(accum)
   const trimmed = trimResponseV2(parsed, opts.replyAs, members, opts.characters, endTokens)
+
   yield trimmed || parsed
 }
 

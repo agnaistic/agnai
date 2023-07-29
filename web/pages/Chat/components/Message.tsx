@@ -685,5 +685,6 @@ const Meta: Component<{ msg: AppSchema.ChatMessage; history?: any }> = (props) =
 
 function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   if (!msg) return false
+  if (msg._id === 'partial') return false
   return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
 }

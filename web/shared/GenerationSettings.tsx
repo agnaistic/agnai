@@ -23,7 +23,7 @@ import { Card } from './Card'
 import { FormLabel } from './FormLabel'
 import { serviceHasSetting } from './util'
 import { createStore } from 'solid-js/store'
-import { defaultTemplate } from '/common/default-preset'
+import { defaultTemplate } from '/common/templates'
 import Sortable, { SortItem } from './Sortable'
 import { HordeDetails } from '../pages/Settings/components/HordeAISettings'
 

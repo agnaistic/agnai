@@ -1,6 +1,6 @@
 import { createSignal } from 'solid-js'
 import { useEffect } from '../hooks'
-import { altJailbreak, classifyTemplate } from '/common/default-preset'
+import { altJailbreak, classifyTemplate } from '/common/templates'
 import { AppSchema } from '/common/types'
 import { EmoteType, FullSprite, SpriteAttr, classifyEmotes } from '/common/types/sprite'
 import { toastStore } from '/web/store'

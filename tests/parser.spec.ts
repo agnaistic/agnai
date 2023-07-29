@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import './init'
 import { reset, setRand, toBotMsg, toChar, toChat, toProfile, toUser, toUserMsg } from './util'
 import { getPromptParts } from '/common/prompt'
-import { ParseOpts, parseTemplate } from '/common/template-parser'
+import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
 import { getEncoder } from '/srv/tokenize'
 
@@ -101,14 +101,14 @@ Scenario: {{scenario}}
 
 function test(
   template: string,
-  overrides: Partial<ParseOpts> = {},
+  overrides: Partial<TemplateOpts> = {},
   charOverrides: Partial<AppSchema.Character> = {}
 ) {
   return parseTemplate(template, getParseOpts(overrides, charOverrides))
 }
 
 function getParseOpts(
-  overrides: Partial<ParseOpts> = {},
+  overrides: Partial<TemplateOpts> = {},
   charOverrides: Partial<AppSchema.Character> = {}
 ) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
@@ -129,15 +129,13 @@ function getParseOpts(
     encoder
   )
 
-  const base: ParseOpts = {
+  const base: TemplateOpts = {
     char,
     characters,
     chat: overChat,
     replyAs: char,
     lines,
-    members: [profile],
     parts,
-    user,
     sender: profile,
     lastMessage: '',
     ...overrides,

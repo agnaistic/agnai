@@ -9,7 +9,7 @@ import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
 import { runGuidance } from '/common/guidance/guidance-parser'
-import { cyoaTemplate } from '/common/default-preset'
+import { cyoaTemplate } from '/common/templates'
 import { fillPromptWithLines } from '/common/prompt'
 import { getEncoder } from '/srv/tokenize'
 

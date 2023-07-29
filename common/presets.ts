@@ -152,13 +152,15 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     repetitionPenalty: 'repetition_penalty',
     repetitionPenaltyRange: 'repetition_penalty_range',
     repetitionPenaltySlope: 'repetition_penalty_slope',
+    frequencyPenalty: 'repetition_penalty_frequency',
+    presencePenalty: 'repetition_penalty_presence',
     tailFreeSampling: 'tail_free_sampling',
     temp: 'temperature',
     topK: 'top_k',
     topP: 'top_p',
     typicalP: 'typical_p',
     topA: 'top_a',
-    order: '',
+    order: 'order',
     novelModel: 'novelModel',
   },
   ooba: {
@@ -316,7 +318,40 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
       return defaultPresets.openai
 
     case 'novel':
-      return defaultPresets.novel_20BC
+      return defaultPresets.novel_clio
+
+    case 'scale':
+      return defaultPresets.scale
+
+    case 'claude':
+      return defaultPresets.claude
+
+    case 'goose':
+      return { ...defaultPresets.basic, service: 'goose' }
+
+    case 'replicate':
+      return defaultPresets.replicate_vicuna_13b
+
+    /** TODO: Create default preset for OpenRouter... */
+    case 'openrouter':
+      return defaultPresets.openai
+  }
+}
+
+export function getInferencePreset(adapter: AIAdapter): Partial<AppSchema.GenSettings> {
+  switch (adapter) {
+    case 'horde':
+      return defaultPresets.horde
+
+    case 'kobold':
+    case 'ooba':
+      return defaultPresets.basic
+
+    case 'openai':
+      return defaultPresets.openai
+
+    case 'novel':
+      return defaultPresets.novel_kayra
 
     case 'scale':
       return defaultPresets.scale

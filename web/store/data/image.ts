@@ -2,11 +2,12 @@ import * as horde from '../../../common/horde-gen'
 import { createImagePrompt, getMaxImageContext } from '../../../common/image-prompt'
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
-import { subscribe } from '../socket'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
 import { AIAdapter, NOVEL_MODELS } from '/common/adapters'
 import { pipelineApi } from './pipeline'
-import { decode, encode } from '/common/tokenize'
+import { decode, encode, getEncoder } from '/common/tokenize'
+import { parseTemplate } from '/common/template-parser'
+import { neat } from '/common/util'
 
 type GenerateOpts = {
   chatId?: string
@@ -79,44 +80,56 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   const canUseService = handler?.(opts) ?? false
   if (canUseService && opts.user.images?.summariseChat) {
     console.log('Using', opts.settings?.service, 'to summarise')
-    msgsApi.generateResponseV2({ kind: 'summary' })
 
-    return new Promise<string>((resolve, reject) => {
-      let timer = setTimeout(() => {
-        reject(new Error(`Chat summarisation timed out`))
-      }, 45000)
-      subscribe(
-        'chat-summary',
-        { chatId: 'string', summary: 'string' },
-        (body) => {
-          clearTimeout(timer)
-          resolve(body.summary)
-        },
-        () => true
-      )
-    })
+    const summary = await getChatSummary(opts.settings.service!)
+    console.log('Image caption: ', summary)
+    return summary
   }
 
-  if (opts.settings?.service! in SUMMARY_BACKENDS === false || !opts.user.images?.summariseChat) {
-    const prompt = await createImagePrompt(opts)
-    return prompt
+  const prompt = await createImagePrompt(opts)
+  return prompt
+}
+
+async function getChatSummary(service: AIAdapter) {
+  const opts = await msgsApi.getActiveTemplateParts()
+  opts.limit = {
+    context: 1024,
+    encoder: await getEncoder(),
   }
+  opts.lines = opts.lines.reverse()
 
-  console.log('Using', opts.settings?.service, 'to summarise')
-  msgsApi.generateResponseV2({ kind: 'summary' })
+  const template = getSummaryTemplate(service)
+  if (!template) throw new Error(`No chat summary template available for "${service}"`)
 
-  return new Promise<string>((resolve, reject) => {
-    let timer = setTimeout(() => {
-      reject(new Error(`Chat summarisation timed out`))
-    }, 45000)
-    subscribe(
-      'chat-summary',
-      { chatId: 'string', summary: 'string' },
-      (body) => {
-        clearTimeout(timer)
-        resolve(body.summary)
-      },
-      (body) => body.chatId === opts.chat._id
-    )
-  })
+  const prompt = parseTemplate(template, opts)
+  const { values } = await msgsApi.guidanceAsync<{ summary: string }>({ prompt, service })
+  return values.summary
+}
+
+function getSummaryTemplate(service: AIAdapter) {
+  switch (service) {
+    case 'novel':
+      return neat`
+      {{char}}'s personality: {{personality}}
+      ***
+      {{history}}
+      { Write a detailed image caption of the current scene with a description of each character's appearance }
+      Caption:[summary | tokens=250]
+      `
+
+    case 'openai':
+    case 'openrouter':
+    case 'claude':
+    case 'scale':
+      return neat`
+      {{personality}}
+      
+      (System note: Start of conversation)
+      {{history}}
+      
+      {{ujb}}
+      (System: Write an image caption of the current scene including the character's appearance)
+      Image caption: [summary]
+      `
+  }
 }

@@ -1,6 +1,6 @@
 import { toGeneratedCharacter } from './util'
 import { AIAdapter, INSTRUCT_SERVICES } from '/common/adapters'
-import { modernJailbreak } from '/common/default-preset'
+import { modernJailbreak } from '/common/templates'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 

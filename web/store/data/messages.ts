@@ -1,5 +1,10 @@
 import { v4 } from 'uuid'
-import { createPrompt, getChatPreset } from '../../../common/prompt'
+import {
+  createPrompt,
+  getChatPreset,
+  getLinesForPrompt,
+  getPromptParts,
+} from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
 import { AppSchema } from '../../../common/types/schema'
@@ -14,8 +19,9 @@ import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
 import { settingStore } from '../settings'
-import { parseTemplate } from '/common/template-parser'
+import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { replace } from '/common/util'
+import { toMap } from '/web/shared/util'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -44,8 +50,10 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
+  guidanceAsync,
   rerunGuidance,
   generateActions,
+  getActiveTemplateParts,
 }
 
 type InferenceOpts = {
@@ -67,6 +75,7 @@ export async function generateActions() {
   }
 
   await api.post<{ actions: AppSchema.ChatAction[] }>(`/chat/${last._id}/actions`, {
+    service: settings.service,
     settings,
     impersonating,
     profile,
@@ -104,7 +113,7 @@ export async function basicInference(
 export async function guidance<T = any>(
   { prompt, service, maxTokens }: InferenceOpts,
   onComplete?: (err: any | null, response?: { result: string; values: T }) => void
-) {
+): Promise<void> {
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -120,6 +129,7 @@ export async function guidance<T = any>(
     service,
     maxTokens,
   })
+
   if (res.error) {
     onComplete?.(res.error)
     if (!onComplete) {
@@ -127,10 +137,18 @@ export async function guidance<T = any>(
     }
   }
 
-  if (res.result) {
-    onComplete?.(null, res.result)
-    return res.result
-  }
+  onComplete?.(null, res.result)
+}
+
+export async function guidanceAsync<T = any>(
+  opts: InferenceOpts
+): Promise<{ result: string; values: T }> {
+  return new Promise((resolve, reject) => {
+    guidance<T>(opts, (err, result) => {
+      if (err) return reject(err)
+      if (result) resolve(result)
+    })
+  })
 }
 
 export async function rerunGuidance<T = any>(
@@ -301,6 +319,68 @@ export async function generateResponseV2(opts: GenerateOpts) {
   return res
 }
 
+async function getActiveTemplateParts() {
+  const { active } = chatStore.getState()
+
+  const { parts, entities } = await getActivePromptOptions({ kind: 'send', text: '' })
+  const toLine = messageToLine({
+    chars: entities.characters,
+    members: entities.members,
+    sender: entities.profile,
+    impersonate: entities.impersonating,
+  })
+
+  const opts: TemplateOpts = {
+    chat: entities.chat,
+    replyAs: active?.replyAs ? entities.characters[active.replyAs] : entities.char,
+    char: entities.char,
+    characters: entities.characters,
+    lines: entities.messages.filter((msg) => msg.adapter !== 'image' && !msg.event).map(toLine),
+    parts,
+    sender: entities.profile,
+  }
+
+  return opts
+}
+
+async function getActivePromptOptions(
+  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
+) {
+  const { active } = chatStore.getState()
+
+  if (!active) {
+    throw new Error('No active chat. Try refreshing')
+  }
+
+  const props = await getGenerateProps(opts, active)
+  const entities = props.entities
+
+  const encoder = await getEncoder()
+
+  const promptOpts = {
+    kind: opts.kind,
+    char: entities.char,
+    characters: entities.characters,
+    chat: entities.chat,
+    members: entities.members,
+    replyAs: props.replyAs,
+    user: entities.user,
+    userEmbeds: [],
+    book: entities.book,
+    continue: props.continue,
+    impersonate: entities.impersonating,
+    chatEmbeds: [],
+    settings: entities.settings,
+    messages: entities.messages,
+    lastMessage: entities.lastMessage?.date || '',
+  }
+
+  const lines = getLinesForPrompt(promptOpts, encoder)
+  const parts = getPromptParts(promptOpts, lines, encoder)
+
+  return { lines, parts, entities, props }
+}
+
 async function createActiveChatPrompt(
   opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>,
   maxContext?: number
@@ -426,12 +506,10 @@ async function getGenerateProps(
       characters: entities.characters,
       chat: active.chat,
       lines: [],
-      members: entities.members,
       parts: {} as any,
       replyAs: props.replyAs,
       sender: entities.profile,
       impersonate: props.impersonate,
-      user: entities.user,
       repeatable: true,
     })
   }
@@ -710,5 +788,22 @@ function getLastMessage(messages: AppSchema.ChatMessage[]) {
     const msg = messages[i]
     if (!msg.userId) continue
     return { msg: msg.msg, date: msg.createdAt }
+  }
+}
+
+function messageToLine(opts: {
+  chars: Record<string, AppSchema.Character>
+  sender: AppSchema.Profile
+  members: AppSchema.Profile[]
+  impersonate?: AppSchema.Character
+}) {
+  const map = toMap(opts.members)
+  return (msg: AppSchema.ChatMessage) => {
+    const entity =
+      (msg.characterId ? opts.chars[msg.characterId]?.name : map[msg.userId!]?.handle) ||
+      opts.impersonate?.name ||
+      opts.sender.handle ||
+      'You'
+    return `${entity}: ${msg.msg}`
   }
 }

@@ -21,12 +21,18 @@ Expression = body:(Variable / Text)+ {
 }
 
 
-Variable "variable" = "[" val:Char+ pipe:Pipe? tokens:TokensPipe? "]" { return { kind: 'variable', name: val.join(''), pipe, tokens } }
+Variable "variable"	= "[" val:Char+ pipes:Pipe* "]" {
+    const result = { kind: 'variable', name: val.join('') }
+    for (const pipe of pipes) {
+       Object.assign(result, pipe)
+    }
+    return result
+}
 
-Pipe = Sep pipe:(WordPipe / SentencePipe) _ { return pipe }
-WordPipe = ("words" / "word"i) _ "=" _ value:Number { return { type: "words", value } }
-SentencePipe = "sentence"i { return { type: "sentence" } }
-TokensPipe "max-tokens" = Sep "tokens"i _ "=" _ value:Number { return value }
+Pipe = Sep pipe:(WordPipe / SentencePipe / TokensPipe) _ { return pipe }
+WordPipe = ("words" / "word"i) _ "=" _ value:Number { return { pipe: { type: "words", value } } }
+SentencePipe = "sentence"i { return { pipe: { type: "sentence" } } }
+TokensPipe "max-tokens" = "tokens"i _ "=" _ value:Number { return { tokens: value } }
 
 Number "number" = nums:[0-9]+ { return +nums.join('') }
 Text "text" = !(Variable) ch:(.) { return ch }

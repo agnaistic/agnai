@@ -8,7 +8,7 @@ import {
   SUPPORTS_INSTRUCT,
 } from './adapters'
 import { formatCharacter } from './characters'
-import { defaultTemplate } from './default-preset'
+import { defaultTemplate } from './templates'
 import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
@@ -532,9 +532,16 @@ function createPostPrompt(
 ) {
   const post = []
   if (opts.kind === 'summary') {
-    let text = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.other
-    if (!text.startsWith('(')) text = '(' + text
-    if (!text.endsWith(')')) text += ')'
+    let text =
+      opts.user.images?.summaryPrompt || opts.settings?.service === 'novel'
+        ? IMAGE_SUMMARY_PROMPT.novel
+        : IMAGE_SUMMARY_PROMPT.other
+
+    if (opts.settings?.service !== 'novel') {
+      if (!text.startsWith('(')) text = '(' + text
+      if (!text.endsWith(')')) text += ')'
+    }
+
     post.push(`System: ${text}\nSummary:`)
   } else {
     post.push(`${opts.replyAs.name}:`)
@@ -556,7 +563,7 @@ function removeEmpty(value?: string) {
  *
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
-function getLinesForPrompt(
+export function getLinesForPrompt(
   { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
   encoder: Encoder,
   maxContext?: number

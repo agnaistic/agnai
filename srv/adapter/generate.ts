@@ -4,6 +4,7 @@ import {
   defaultPresets,
   isDefaultPreset,
   getFallbackPreset,
+  getInferencePreset,
 } from '/common/presets'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
@@ -121,7 +122,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 
 export async function createInferenceStream(opts: InferenceRequest) {
   const [service, model] = opts.service.split('/')
-  const settings = getFallbackPreset(service as AIAdapter)
+  const settings = getInferencePreset(service as AIAdapter)
 
   if (model) {
     switch (service as AIAdapter) {
@@ -129,12 +130,12 @@ export async function createInferenceStream(opts: InferenceRequest) {
         settings.oaiModel = model
         break
 
-      case 'novel':
-        settings.novelModel = model
-        break
-
       case 'claude':
         settings.claudeModel = model
+        break
+
+      case 'novel':
+        settings.novelModel = model
         break
     }
   }
