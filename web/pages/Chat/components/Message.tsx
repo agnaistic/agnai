@@ -591,27 +591,36 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // https://github.com/showdownjs/showdown/issues/669
 
   const html = Purify.sanitize(
-    markdown
-      .makeHtml(parseMessage(text, ctx, isUser, adapter))
-      .replace(/&amp;nbsp;/g, '&nbsp;')
-      // wrap all "quoted dialogue"inside <q> tag
-      .replace(
-        // we first match code blocks to ensure we do NOTHING to what's inside them
-        // then we match "regular quotes" and“'pretty quotes” as capture group
-        /```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
-        function (match, textBetweenRegularQuotes, textBetweenFancyQuotes) {
-          if (textBetweenRegularQuotes) {
-            return '<q>"' + textBetweenRegularQuotes.replace(/\"/g, '') + '"</q>'
-          } else if (textBetweenFancyQuotes) {
-            return '<q>“' + textBetweenFancyQuotes.replace(/\u201C|\u201D/g, '') + '”</q>'
-          } else {
-            return match
-          }
-        }
-      )
+    wrapQuotesInQTag(
+      markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+    )
   )
 
   return html
+}
+
+function wrapQuotesInQTag(str: string) {
+  return str.replace(
+    // we first match code blocks to ensure we do NOTHING to what's inside them
+    // then we match "regular quotes" and“'pretty quotes” as capture group
+    /```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+    wrapMatchedQuoteInQTag
+  )
+}
+
+/** For use as a String#replace(str, cb) callback */
+function wrapMatchedQuoteInQTag(
+  match: string,
+  textBetweenRegularQuotes?: string /** regex capture group 1 */,
+  textBetweenFancyQuotes?: string /** regex capture group 2 */
+) {
+  if (textBetweenRegularQuotes) {
+    return '<q>"' + textBetweenRegularQuotes.replace(/\"/g, '') + '"</q>'
+  } else if (textBetweenFancyQuotes) {
+    return '<q>“' + textBetweenFancyQuotes.replace(/\u201C|\u201D/g, '') + '”</q>'
+  } else {
+    return match
+  }
 }
 
 function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
