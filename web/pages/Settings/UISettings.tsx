@@ -230,6 +230,19 @@ const UISettings: Component = () => {
         value={state.current.chatEmphasisColor}
       />
 
+      <ColorPicker
+        label="Chat Quote Color"
+        fieldName="chatQuoteColor"
+        helperText={
+          <span class="link" onClick={() => userStore.saveCustomUI({ chatQuoteColor: 'text-800' })}>
+            Reset to Default
+          </span>
+        }
+        onInput={(color) => tryCustomUI({ chatQuoteColor: color })}
+        onChange={(color) => userStore.saveCustomUI({ chatQuoteColor: color })}
+        value={state.current.chatQuoteColor}
+      />
+
       <Select
         fieldName="chatWidth"
         label="Content Width"

@@ -36,6 +36,7 @@ export type CustomUI = {
   botBackground: string
   chatTextColor: string
   chatEmphasisColor: string
+  chatQuoteColor: string
 }
 
 export type UISettings = {
@@ -71,6 +72,7 @@ const customUiGuard = {
   botBackground: 'string',
   chatTextColor: 'string',
   chatEmphasisColor: 'string',
+    chatQuoteColor: 'string',
 } as const
 
 export const uiGuard = {
@@ -115,6 +117,7 @@ export const defaultUIsettings: UISettings = {
     botBackground: '--bg-800',
     chatTextColor: '--text-800',
     chatEmphasisColor: '--text-600',
+    chatQuoteColor: '--text-800',
   },
 
   dark: {
@@ -122,5 +125,6 @@ export const defaultUIsettings: UISettings = {
     botBackground: '--bg-800',
     chatTextColor: '--text-800',
     chatEmphasisColor: '--text-600',
+    chatQuoteColor: '--text-800',
   },
 }

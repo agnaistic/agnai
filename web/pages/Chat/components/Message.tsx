@@ -591,8 +591,26 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // https://github.com/showdownjs/showdown/issues/669
 
   const html = Purify.sanitize(
-    markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+    markdown
+      .makeHtml(parseMessage(text, ctx, isUser, adapter))
+      .replace(/&amp;nbsp;/g, '&nbsp;')
+      // wrap all "quoted dialogue"inside <q> tag
+      .replace(
+        // we first match code blocks to ensure we do NOTHING to what's inside them
+        // then we match "regular quotes" and“'pretty quotes” as capture group
+        /```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+        function (match, textBetweenRegularQuotes, textBetweenFancyQuotes) {
+          if (textBetweenRegularQuotes) {
+            return '<q>"' + textBetweenRegularQuotes.replace(/\"/g, '') + '"</q>'
+          } else if (textBetweenFancyQuotes) {
+            return '<q>“' + textBetweenFancyQuotes.replace(/\u201C|\u201D/g, '') + '”</q>'
+          } else {
+            return match
+          }
+        }
+      )
   )
+
   return html
 }
 
