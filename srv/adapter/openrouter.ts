@@ -35,15 +35,8 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.model = opts.gen.openRouterModel.id
   }
 
-  const format = user.adapterConfig?.openrouter?.format || 'chat'
-
-  if (format === 'chat') {
-    payload.messages = toChatCompletionPayload(opts, payload.max_tokens)
-    yield { prompt: payload.messages }
-  } else {
-    payload.prompt = opts.prompt
-    yield { prompt: opts.prompt }
-  }
+  payload.messages = toChatCompletionPayload(opts, payload.max_tokens)
+  yield { prompt: payload.messages }
 
   const headers = {
     Authorization: `Bearer ${guest ? key : decryptText(key)}`,
@@ -123,18 +116,6 @@ registerAdapter('openrouter', handleOpenRouter, {
         'If you are unable to use the "Login with OpenRouter" button, enter your API key manually. Head to openrouter.ai/keys to obtain an API key.',
       secret: true,
       setting: { type: 'text', placeholder: 'E.g. sk-or-v1-2v6few...' },
-    },
-    {
-      field: 'format',
-      label: 'Prompt format. Use "chat completion" for OpenAI models.',
-      secret: false,
-      setting: {
-        type: 'list',
-        options: [
-          { label: 'Plain text', value: 'plain' },
-          { label: 'Chat Completion', value: 'chat' },
-        ],
-      },
     },
   ],
   options: ['temp', 'maxTokens'],

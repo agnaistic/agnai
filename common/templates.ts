@@ -64,11 +64,11 @@ ${service === 'claude' ? claudeCyoa : service === 'novel' ? novelCyoa : typicalC
 }
 
 const novelCyoa = neat`
-{ Provide 1 word positive emotion for {{user}}'s reaction }
+{ Provide 1 word positive emotion to describe {{user}}'s reaction to the last message }
 Emotion: [emote1 | words=1 | tokens=5]
-{ Provide 1 word negative emotion for {{user}}'s reaction }
+{ Provide 1 word negative emotion to describe {{user}}'s reaction to the last message }
 Emotion: [emote2 | words=1 | tokens=5 ]
-{ Provide 1 word realstic emotion for {{user}}'s reaction }
+{ Provide 1 word realstic emotion to describe {{user}}'s reaction to the last message }
 Emotion: [emote3 | words=1 | tokens=5 ]
 { {{user}}'s natural, long, and detailed response expressing "[emote1]" emotion }
 {{user}}: [action1 | tokens=100]

@@ -161,7 +161,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical_p',
     topA: 'top_a',
     order: 'order',
-    novelModel: 'novelModel',
   },
   ooba: {
     maxTokens: 'max_new_tokens',

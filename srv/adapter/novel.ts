@@ -32,14 +32,18 @@ const statuses: Record<number, string> = {
 
 const base = {
   generate_until_sentence: true,
-  min_length: 8,
+  min_length: 1,
   prefix: 'vanilla',
-  stop_sequences: [[27]], // Stop on ':'
   use_cache: false,
   use_string: true,
   repetition_penalty_frequency: 0,
   repetition_penalty_presence: 0,
   bad_words_ids: badWordIds,
+}
+
+const NEW_PARAMS: Record<string, boolean> = {
+  [NOVEL_MODELS.clio_v1]: true,
+  [NOVEL_MODELS.kayra_v1]: true,
 }
 
 export const handleNovel: ModelAdapter = async function* ({
@@ -64,8 +68,14 @@ export const handleNovel: ModelAdapter = async function* ({
   const body = {
     model,
     input: processedPrompt,
-    parameters:
-      model === NOVEL_MODELS.clio_v1 ? getClioParams(opts.gen) : { ...base, ...mappedSettings },
+    parameters: NEW_PARAMS[model] ? getModernParams(opts.gen) : { ...base, ...mappedSettings },
+  }
+
+  if (opts.kind === 'plain') {
+    body.parameters.prefix = 'special_instruct'
+    body.parameters.phrase_rep_pen = 'aggressive'
+  } else {
+    body.parameters.stop_sequences = NEW_PARAMS[model] ? [[49287], [43145], [19438]] : [[27]]
   }
 
   yield { prompt: processedPrompt }
@@ -115,7 +125,7 @@ export const handleNovel: ModelAdapter = async function* ({
   yield trimmed || parsed
 }
 
-function getClioParams(gen: Partial<AppSchema.GenSettings>) {
+function getModernParams(gen: Partial<AppSchema.GenSettings>) {
   const payload: any = {
     temperature: gen.temp,
     max_length: gen.maxTokens,

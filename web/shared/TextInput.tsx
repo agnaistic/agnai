@@ -97,8 +97,8 @@ const TextInput: Component<{
       inputRef = ref
       if (props.value) {
         ref.value = props.value
-        resize()
       }
+      resize()
     })
   }
 

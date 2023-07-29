@@ -131,10 +131,14 @@ const GeneralSettings: Component<Props> = (props) => {
   const openRouterModels = createMemo(() => {
     if (!presets.openRouterModels) return []
 
-    return presets.openRouterModels.map((model) => ({
+    const options = presets.openRouterModels.map((model) => ({
       value: model.id,
       label: model.id,
     }))
+
+    options.unshift({ label: 'Default', value: '' })
+
+    return options
   })
 
   const replicateModels = createMemo(() => {
@@ -233,7 +237,7 @@ const GeneralSettings: Component<Props> = (props) => {
           label="OpenRouter Model"
           items={openRouterModels()}
           helperText="Which OpenRouter model to use"
-          value={props.inherit?.openRouterModel?.id}
+          value={props.inherit?.openRouterModel?.id || ''}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'openRouterModel'}

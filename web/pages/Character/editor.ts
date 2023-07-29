@@ -337,6 +337,6 @@ function getModelForService(service: AIAdapter) {
       return OPENAI_MODELS.Turbo0301
 
     case 'novel':
-      return NOVEL_MODELS.krake
+      return NOVEL_MODELS.kayra_v1
   }
 }
