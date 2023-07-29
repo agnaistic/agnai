@@ -57,6 +57,7 @@ export type PromptOpts = {
   char: AppSchema.Character
   user: AppSchema.User
   members: AppSchema.Profile[]
+  sender: AppSchema.Profile
   settings?: Partial<AppSchema.GenSettings>
   messages: AppSchema.ChatMessage[]
   retry?: AppSchema.ChatMessage
@@ -76,6 +77,7 @@ export type BuildPromptOpts = {
   chat: AppSchema.Chat
   char: AppSchema.Character
   replyAs: AppSchema.Character
+  sender: AppSchema.Profile
   user: AppSchema.User
   continue?: string
   members: AppSchema.Profile[]
@@ -235,8 +237,7 @@ type InjectOpts = {
 
 export function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
-  const profile = opts.members.find((mem) => mem.userId === opts.chat.userId)
-  const sender = opts.impersonate?.name || profile?.handle || 'You'
+  const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
 
   // Automatically inject example conversation if not included in the prompt
   const sampleChat = parts.sampleChat?.join('\n')
@@ -267,7 +268,7 @@ export function injectPlaceholders(template: string, inject: InjectOpts) {
 
   const result = parseTemplate(template, {
     ...opts,
-    sender: profile!,
+    sender: inject.opts.sender,
     parts,
     lines,
     ...rest,
@@ -373,6 +374,7 @@ type PromptPartsOptions = Pick<
   | 'kind'
   | 'chat'
   | 'char'
+  | 'sender'
   | 'members'
   | 'continue'
   | 'settings'
@@ -386,10 +388,8 @@ type PromptPartsOptions = Pick<
 >
 
 export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
-  const { chat, char, members, replyAs } = opts
-  const sender = opts.impersonate
-    ? opts.impersonate.name
-    : members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+  const { chat, char, replyAs } = opts
+  const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
   const replace = (value: string) => placeholderReplace(value, opts.replyAs.name, sender)
 

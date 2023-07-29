@@ -122,6 +122,7 @@ function getParseOpts(
       replyAs: overChar,
       user,
       kind: 'send',
+      sender: profile,
       chatEmbeds: [],
       userEmbeds: [],
     },

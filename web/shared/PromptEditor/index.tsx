@@ -350,6 +350,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
       members: [profile],
       replyAs,
       user,
+      sender: profile,
       kind: 'send',
       chatEmbeds: [],
       userEmbeds: [],

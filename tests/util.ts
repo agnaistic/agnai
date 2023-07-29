@@ -40,7 +40,7 @@ const replyAs = toChar('OtherBot', {
 })
 
 const { user, profile } = toUser('ChatOwner')
-const chat = toChat(main, { userId: profile.userId }, [main, replyAs])
+const chat = toChat(main, {}, [main, replyAs])
 const book = toBook('book', [
   toEntry(['1-TRIGGER'], 'ENTRY ONE'),
   toEntry(['10-TRIGGER'], 'ENTRY TWO', 10, 10),
@@ -100,6 +100,7 @@ export function build(
       retry: opts.retry,
       replyAs: opts.replyAs || replyAs,
       characters,
+      sender: profile,
       lastMessage: '',
       chatEmbeds: [],
       userEmbeds: [],
@@ -120,6 +121,7 @@ export function build(
       retry: opts.retry,
       replyAs: opts.replyAs || replyAs,
       characters,
+      sender: profile,
       lastMessage: '',
       chatEmbeds: [],
       userEmbeds: [],
@@ -164,6 +166,7 @@ function getParseOpts(overrides: TestOpts = {}, charOverrides: Partial<AppSchema
     getPromptParts(
       {
         char: overChar,
+        sender: profile,
         characters: overrides.characters || characters,
         chat: overChat,
         members: overrides.members || [profile],

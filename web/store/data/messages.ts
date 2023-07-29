@@ -362,6 +362,7 @@ async function getActivePromptOptions(
     char: entities.char,
     characters: entities.characters,
     chat: entities.chat,
+    sender: entities.profile,
     members: entities.members,
     replyAs: props.replyAs,
     user: entities.user,
@@ -437,6 +438,7 @@ async function createActiveChatPrompt(
     {
       kind: opts.kind,
       char: entities.char,
+      sender: entities.profile,
       chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),

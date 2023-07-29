@@ -504,6 +504,7 @@ export const chatStore = createStore<ChatState>('chat', {
           ...entities,
           lastMessage: entities.lastMessage?.date || '',
           replyAs,
+          sender: entities.profile,
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],
