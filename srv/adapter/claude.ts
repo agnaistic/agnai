@@ -374,7 +374,7 @@ function processLine(type: LineType, line: string) {
 
     case 'example':
       const mid = line
-        .replace(START_REPLACE, 'New conversation started.')
+        .replace(START_REPLACE, '<mod>New conversation started.</mod>')
         .replace('\n' + SAMPLE_CHAT_MARKER, '')
       return `Human:\n<example_dialogue>\n${mid}\n</example_dialogue>`
 
