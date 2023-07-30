@@ -111,10 +111,11 @@ function getSummaryTemplate(service: AIAdapter) {
     case 'novel':
       return neat`
       {{char}}'s personality: {{personality}}
+      [ Style: chat ]
       ***
       {{history}}
       { Write a detailed image caption of the current scene with a description of each character's appearance }
-      Caption:[summary | tokens=250]
+      [summary | tokens=250]
       `
 
     case 'openai':
