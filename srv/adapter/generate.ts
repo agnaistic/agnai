@@ -122,7 +122,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 
 export async function createInferenceStream(opts: InferenceRequest) {
   const [service, model] = opts.service.split('/')
-  const settings = getInferencePreset(service as AIAdapter)
+  const settings = getInferencePreset(service as AIAdapter, opts.user)
 
   if (model) {
     switch (service as AIAdapter) {

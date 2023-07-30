@@ -9,8 +9,8 @@ import { needleToSSE } from './stream'
 import { AppLog } from '../logger'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
-const novelUrl = `${NOVEL_BASEURL}/ai/generate`
-const streamUrl = `${NOVEL_BASEURL}/ai/generate-stream`
+const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
+const streamUrl = (model: string) => `${getBaseUrl(model)}/ai/generate-stream`
 
 /**
  * Samplers:
@@ -157,7 +157,7 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
 }
 
 const streamCompletition = async function* (headers: any, body: any, _log: AppLog) {
-  const resp = needle.post(streamUrl, body, {
+  const resp = needle.post(streamUrl(body.model), body, {
     parse: false,
     json: true,
     headers: {
@@ -195,7 +195,7 @@ const streamCompletition = async function* (headers: any, body: any, _log: AppLo
 }
 
 const fullCompletition = async function* (headers: any, body: any, log: AppLog) {
-  const res = await needle('post', novelUrl, body, {
+  const res = await needle('post', novelUrl(body.model), body, {
     json: true,
     // timeout: 2000,
     response_timeout: 15000,
@@ -234,4 +234,11 @@ const fullCompletition = async function* (headers: any, body: any, log: AppLog) 
 
 function processNovelAIPrompt(prompt: string) {
   return prompt.replace(/^\<START\>$/gm, '***')
+}
+
+function getBaseUrl(model: string) {
+  if (!model.includes('/')) return NOVEL_BASEURL
+  const url = model.split('/').slice(0, -1).join('/')
+  if (url.toLowerCase().startsWith('http')) return url
+  return `https://${url}`
 }

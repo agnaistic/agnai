@@ -337,7 +337,10 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
   }
 }
 
-export function getInferencePreset(adapter: AIAdapter): Partial<AppSchema.GenSettings> {
+export function getInferencePreset(
+  adapter: AIAdapter,
+  user: AppSchema.User
+): Partial<AppSchema.GenSettings> {
   switch (adapter) {
     case 'horde':
       return defaultPresets.horde
@@ -349,8 +352,10 @@ export function getInferencePreset(adapter: AIAdapter): Partial<AppSchema.GenSet
     case 'openai':
       return defaultPresets.openai
 
-    case 'novel':
-      return defaultPresets.novel_kayra
+    case 'novel': {
+      if (user.novelModel === 'kayra-v1') return defaultPresets.novel_kayra
+      return defaultPresets.novel_clio
+    }
 
     case 'scale':
       return defaultPresets.scale
