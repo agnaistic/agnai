@@ -240,7 +240,7 @@ const UISettings: Component = () => {
         }
         onInput={(color) => tryCustomUI({ chatQuoteColor: color })}
         onChange={(color) => userStore.saveCustomUI({ chatQuoteColor: color })}
-        value={state.current.chatQuoteColor}
+        value={state.current.chatQuoteColor || '--text-800'}
       />
 
       <Select
@@ -305,7 +305,7 @@ const UISettings: Component = () => {
               editing={false}
               msg={toUserMsg(
                 state.profile!,
-                '*I wave back* Hi {{char}}!\nFancy meeting you here!',
+                '*I wave back* Hi {{char}}!\nFancy meeting you here! I heard someone say "The weather is great today!"',
                 { _id: '2' }
               )}
               onRemove={noop}

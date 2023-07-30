@@ -506,6 +506,11 @@ function getUIsettings(guest = false) {
 
   const ui = { ...UI.defaultUIsettings, ...settings }
 
+  if (!ui.dark.chatEmphasisColor) {
+    ui.dark.chatQuoteColor = UI.defaultUIsettings.dark.chatQuoteColor
+    ui.light.chatQuoteColor = UI.defaultUIsettings.light.chatQuoteColor
+  }
+
   return ui
 }
 
