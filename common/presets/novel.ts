@@ -30,8 +30,10 @@ Description of {{char}}: {{personality}}
 How {{char}} speaks: {{example_dialogue}}
 
 [ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
+[ Style: chat ]
+Summary: {{scenario}}
 ***
-Summary: {{scenario}}`,
+`,
   },
   novel_clio: {
     name: 'Clio - Talker C',
@@ -44,7 +46,7 @@ Summary: {{scenario}}`,
     repetitionPenaltySlope: 0.09,
     frequencyPenalty: 0.03,
     presencePenalty: 0.005,
-    temp: 1.05,
+    temp: 1.35,
     tailFreeSampling: 0.967,
     topK: 80,
     topP: 0.95,

@@ -3,7 +3,7 @@ import { createImagePrompt, getMaxImageContext } from '../../../common/image-pro
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
-import { AIAdapter, NOVEL_MODELS } from '/common/adapters'
+import { AIAdapter } from '/common/adapters'
 import { pipelineApi } from './pipeline'
 import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
@@ -62,7 +62,7 @@ export async function generateImageWithPrompt(prompt: string, onDone: (image: st
 
 const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean } = {
   openai: () => true,
-  novel: (opts) => opts.user.novelModel === NOVEL_MODELS.clio_v1,
+  novel: () => true,
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
@@ -111,10 +111,11 @@ function getSummaryTemplate(service: AIAdapter) {
     case 'novel':
       return neat`
       {{char}}'s personality: {{personality}}
+      [ Style: chat ]
       ***
       {{history}}
       { Write a detailed image caption of the current scene with a description of each character's appearance }
-      Caption:[summary | tokens=250]
+      [summary | tokens=250]
       `
 
     case 'openai':

@@ -97,7 +97,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
     sampleChat: body.sampleChat,
     scenario: body.scenario,
     appearance: body.appearance,
-    avatar: body.avatar,
+    avatar: body.avatar || prev?.avatar,
     description: body.description,
     greeting: body.greeting,
     favorite: body.favorite !== undefined ? body.favorite : prev?.favorite,

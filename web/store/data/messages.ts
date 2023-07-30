@@ -322,7 +322,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
 async function getActiveTemplateParts() {
   const { active } = chatStore.getState()
 
-  const { parts, entities } = await getActivePromptOptions({ kind: 'send', text: '' })
+  const { parts, entities } = await getActivePromptOptions({ kind: 'summary' })
   const toLine = messageToLine({
     chars: entities.characters,
     members: entities.members,

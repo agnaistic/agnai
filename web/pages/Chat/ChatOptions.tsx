@@ -25,7 +25,6 @@ export type ChatModal =
   | 'settings'
   | 'invite'
   | 'memory'
-  | 'ui'
   | 'members'
   | 'delete'
   | 'updateGaslightToUseSystemPrompt'
@@ -133,7 +132,7 @@ const ChatOptions: Component<{
         </Option>
 
         <Row>
-          <Item onClick={() => props.setModal('settings')} hide={!isOwner()}>
+          <Item onClick={() => props.togglePane('chat-settings')} hide={!isOwner()}>
             <Settings /> Edit Chat
           </Item>
           <Item onClick={() => props.togglePane('preset')} hide={!isOwner()}>
@@ -160,7 +159,7 @@ const ChatOptions: Component<{
           >
             <VenetianMask /> Anonymize
           </Item>
-          <Item onClick={() => props.setModal('ui')}>
+          <Item onClick={() => props.togglePane('ui')}>
             <Palette /> UI
           </Item>
         </Row>
