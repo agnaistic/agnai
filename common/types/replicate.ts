@@ -19,7 +19,7 @@ export type ReplicateModel = {
 
   urls: { get: string; cancel: string }
 
-  default_example: {
+  default_example?: {
     completed_at: string
     created_at: string
     started_at: string
