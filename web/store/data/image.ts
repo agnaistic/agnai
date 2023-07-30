@@ -62,7 +62,7 @@ export async function generateImageWithPrompt(prompt: string, onDone: (image: st
 
 const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean } = {
   openai: () => true,
-  novel: (opts) => opts.user.novelModel === NOVEL_MODELS.clio_v1,
+  novel: () => true,
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
