@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { badWordIds, clioBadWordsId } from './novel-bad-words'
+import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
 import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
@@ -143,9 +143,10 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     use_cache: false,
     use_string: true,
     return_full_text: false,
-    prefix: 'vanilla',
+    prefix: 'special_instruct',
     order: gen.order,
     bad_words_ids: clioBadWordsId,
+    repetition_penalty_whitelist: penaltyWhitelist,
   }
 
   if (gen.cfgScale) {
@@ -198,7 +199,7 @@ const fullCompletition = async function* (headers: any, body: any, log: AppLog) 
   const res = await needle('post', novelUrl(body.model), body, {
     json: true,
     // timeout: 2000,
-    response_timeout: 15000,
+    response_timeout: 30000,
     headers,
   }).catch((err) => ({ err }))
 
