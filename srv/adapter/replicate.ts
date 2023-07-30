@@ -374,10 +374,12 @@ export async function getCollection(key: string, slug: string) {
 
 export async function getLanguageCollection(key: string): Promise<Record<string, ReplicateModel>> {
   const collection = await getCollection(key, COLLECTIONS.language)
-  const models = collection.models.reduce(
-    (prev: any, curr: any) => Object.assign(prev, { [curr.name]: curr }),
-    {}
-  )
+  const models = collection.models.reduce((prev: any, curr: ReplicateModel) => {
+    curr.latest_version.openapi_schema = undefined
+    curr.default_example = undefined
+    prev[curr.name] = curr
+    return prev
+  }, {})
   return models
 }
 
