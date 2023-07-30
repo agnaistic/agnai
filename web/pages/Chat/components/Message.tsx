@@ -591,14 +591,40 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
   // https://github.com/showdownjs/showdown/issues/669
 
   const html = Purify.sanitize(
-    markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+    wrapWithQuoteElement(
+      markdown.makeHtml(parseMessage(text, ctx, isUser, adapter)).replace(/&amp;nbsp;/g, '&nbsp;')
+    )
   )
+
   return html
 }
 
-function sendAction(send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
-  events.emit(EVENTS.setInputText, `*${emote}* ${action}`)
-  // send(`*${emote}* ${action}`, false)
+function wrapWithQuoteElement(str: string) {
+  return str.replace(
+    // we first match code blocks to ensure we do NOTHING to what's inside them
+    // then we match "regular quotes" and“'pretty quotes” as capture group
+    /```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+    wrapCaptureGroups
+  )
+}
+
+/** For use as a String#replace(str, cb) callback */
+function wrapCaptureGroups(
+  match: string,
+  regularQuoted?: string /** regex capture group 1 */,
+  curlyQuoted?: string /** regex capture group 2 */
+) {
+  if (regularQuoted) {
+    return '<q>"' + regularQuoted.replace(/\"/g, '') + '"</q>'
+  } else if (curlyQuoted) {
+    return '<q>“' + curlyQuoted.replace(/\u201C|\u201D/g, '') + '”</q>'
+  } else {
+    return match
+  }
+}
+
+function sendAction(_send: MessageProps['sendMessage'], { emote, action }: AppSchema.ChatAction) {
+  events.emit(EVENTS.setInputText, action)
 }
 
 function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?: string) {

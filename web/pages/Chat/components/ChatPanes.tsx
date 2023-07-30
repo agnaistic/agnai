@@ -53,7 +53,7 @@ const ChatPanes: Component<{
   const [editId, setEditId] = createSignal<string>()
 
   onMount(() => {
-    if (isValid({ pane: ['character', 'preset', 'participants'] }, search)) {
+    if (isValid({ pane: ['character', 'preset', 'participants', 'ui', 'chat-settings'] }, search)) {
       togglePane(search.pane)
     }
   })

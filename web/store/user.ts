@@ -484,6 +484,7 @@ async function updateTheme(ui: UI.UISettings) {
 
   setRootVariable('text-chatcolor', getSettingColor(mode.chatTextColor || 'text-800'))
   setRootVariable('text-emphasis-color', getSettingColor(mode.chatEmphasisColor || 'text-600'))
+  setRootVariable('text-quote-color', getSettingColor(mode.chatQuoteColor || 'text-800'))
   setRootVariable('bot-background', getSettingColor(mode.botBackground || 'bg-800'))
   root.style.setProperty(`--sitewide-font`, fontFaces[ui.font])
 }
@@ -504,6 +505,11 @@ function getUIsettings(guest = false) {
   }
 
   const ui = { ...UI.defaultUIsettings, ...settings }
+
+  if (!ui.dark.chatEmphasisColor) {
+    ui.dark.chatQuoteColor = UI.defaultUIsettings.dark.chatQuoteColor
+    ui.light.chatQuoteColor = UI.defaultUIsettings.light.chatQuoteColor
+  }
 
   return ui
 }

@@ -8,6 +8,16 @@ em {
   color: var(--text-emphasis-color);
 }
 
+.rendered-markdown q {
+  color: var(--text-800);
+  color: var(--text-quote-color);
+}
+
+.rendered-markdown q::before,
+.rendered-markdown q::after {
+  content: '';
+}
+
 .rendered-markdown p:not(:last-child) {
   margin-bottom: 0.4em; /* ensure <p> els are visually separated by empty line */
 }
