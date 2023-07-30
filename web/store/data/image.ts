@@ -3,7 +3,7 @@ import { createImagePrompt, getMaxImageContext } from '../../../common/image-pro
 import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
-import { AIAdapter, NOVEL_MODELS } from '/common/adapters'
+import { AIAdapter } from '/common/adapters'
 import { pipelineApi } from './pipeline'
 import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
