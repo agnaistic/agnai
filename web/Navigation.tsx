@@ -16,7 +16,6 @@ import {
   Signal,
   Sliders,
   Sun,
-  Sword,
   VenetianMask,
   X,
 } from 'lucide-solid'
@@ -41,7 +40,7 @@ import {
   userStore,
 } from './store'
 import Slot from './shared/Slot'
-import { useEffect, useResizeObserver } from './shared/hooks'
+import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import Button from './shared/Button'
@@ -70,6 +69,7 @@ const Navigation: Component = () => {
   const state = settingStore()
   const user = userStore()
   const chat = chatStore()
+  const size = useWindowSize()
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -88,7 +88,15 @@ const Navigation: Component = () => {
     return 'drawer--hide'
   })
 
-  const fullscreen = createMemo(() => (state.fullscreen ? 'hidden' : ''))
+  const fullscreen = createMemo(() => {
+    if (state.fullscreen) return 'hidden'
+
+    if (chat.opts.pane && size.width() <= 1200) {
+      return 'hidden'
+    }
+
+    return ''
+  })
 
   return (
     <>
@@ -142,13 +150,7 @@ const UserNavigation: Component = () => {
         <MessageCircle fill="var(--bg-100)" /> Chats
       </Item>
 
-      <Memory />
-
-      <Show when={menu.flags.events}>
-        <Item href="/scenario">
-          <Sword /> Scenario
-        </Item>
-      </Show>
+      <Library />
 
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
@@ -251,13 +253,7 @@ const GuestNavigation: Component = () => {
           <MessageCircle /> Chats
         </Item>
 
-        <Memory />
-
-        <Show when={menu.flags.events}>
-          <Item href="/scenario">
-            <Sword /> Scenario
-          </Item>
-        </Show>
+        <Library />
 
         <Item href="/presets">
           <Sliders /> Presets
@@ -364,7 +360,7 @@ export default Navigation
 
 const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
   <a
-    class="mx-2 flex h-10 items-center justify-start gap-4 rounded-xl hover:bg-[var(--bg-700)] sm:h-12"
+    class="flex h-10 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] sm:h-12"
     href={props.href}
     target={props.newtab ? '_blank' : ''}
   >
@@ -372,13 +368,13 @@ const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }
   </a>
 )
 
-const Memory = () => {
+const Library = () => {
   const cfg = settingStore()
 
   return (
     <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
       <Item href="/memory">
-        <Book /> Memory{' '}
+        <Book /> Library{' '}
       </Item>
       <div class="flex items-center">
         <Show when={cfg.pipelineOnline}>

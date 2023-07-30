@@ -2,6 +2,7 @@ import { expect } from 'chai'
 import './init'
 import { splitSampleChat } from '/srv/adapter/chat-completion'
 import { reset } from './util'
+import { neat } from '/common/util'
 
 describe('Chat Completion Example Dialogue::', () => {
   before(reset)
@@ -100,15 +101,3 @@ function testInput(input: string, budget?: number) {
 
 const TEST_CHARACTER_NAME = 'Vader'
 const TEST_USER_NAME = 'Sam'
-
-function neat(params: TemplateStringsArray, ...rest: string[]) {
-  let str = ''
-  for (let i = 0; i < params.length; i++) {
-    str += params[i] + (rest[i] || '')
-  }
-
-  return str
-    .split('\n')
-    .map((line) => line.replace(/^[\t ]+/g, ''))
-    .join('\n')
-}

@@ -13,6 +13,7 @@ import { FormLabel } from '../../shared/FormLabel'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
+import TagInput from '/web/shared/TagInput'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -27,7 +28,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
   const presets = presetStore((s) => s.presets)
   const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
   const scenarioState = scenarioStore()
-  const [mode, setMode] = createSignal(state.chat?.mode || 'standard')
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -39,8 +39,10 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
 
   let ref: any
 
+  const [mode, setMode] = createSignal(state.chat?.mode || 'standard')
   const [scenarioId, setScenarioId] = createSignal(state.chat?.scenarioIds?.[0] || '')
   const [scenarioText, setScenarioText] = createSignal(state.chat?.scenario || state.char?.scenario)
+  const [states, setStates] = createSignal(state.chat?.scenarioStates || [])
 
   onMount(() => {
     scenarioStore.getAll()
@@ -80,7 +82,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       sampleChat: 'string?',
       scenario: 'string?',
       schema: ['wpp', 'boostyle', 'sbf', 'text', null],
-      scenarioStates: 'string?',
       scenarioId: 'string?',
       mode: ['standard', 'adventure', 'companion', null],
     })
@@ -95,7 +96,7 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
       ...body,
       overrides,
       scenarioIds: scenarioId ? [scenarioId] : undefined,
-      scenarioStates: body.scenarioStates?.split(',').map((s) => s.trim()),
+      scenarioStates: states(),
     }
     chatStore.editChat(state.chat?._id!, payload, useOverrides(), () => {
       props.close()
@@ -218,6 +219,30 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
           />
         </Card>
 
+        <Show when={cfg.flags.events && scenarios().length > 1}>
+          <Card>
+            <Select
+              fieldName="scenarioId"
+              label="Scenario"
+              helperText="The scenario to use for this conversation"
+              items={scenarios()}
+              value={scenarioId()}
+              onChange={(option) => setScenarioId(option.value)}
+            />
+
+            <Show when={scenarioId() !== ''}>
+              <TagInput
+                availableTags={[]}
+                onSelect={(tags) => setStates(tags)}
+                fieldName="scenarioStates"
+                label="The current state of the scenario"
+                helperText="What flags have been set in the chat by the scenario so far"
+                value={state.chat?.scenarioStates ?? []}
+              />
+            </Show>
+          </Card>
+        </Show>
+
         <Show when={useOverrides()}>
           <Card>
             <TextInput
@@ -227,26 +252,6 @@ const ChatSettingsModal: Component<{ show: boolean; close: () => void }> = (prop
               value={state.chat?.greeting || state.char?.greeting}
               label="Greeting"
             />
-
-            <Show when={cfg.flags.events}>
-              <Select
-                fieldName="scenarioId"
-                label="Scenario"
-                helperText="The scenario to use for this conversation"
-                items={scenarios()}
-                value={scenarioId()}
-                onChange={(option) => setScenarioId(option.value)}
-              />
-
-              <Show when={scenarioId() !== ''}>
-                <TextInput
-                  fieldName="scenarioStates"
-                  label="The current state of the scenario"
-                  helperText="What flags have been set in the chat by the scenario so far"
-                  value={(state.chat?.scenarioStates ?? []).join(', ')}
-                />
-              </Show>
-            </Show>
 
             <TextInput
               fieldName="scenario"

@@ -51,9 +51,8 @@ const NovelAISettings: Component = () => {
       <Select
         fieldName="novelModel"
         label="Default NovelAI Model"
+        helperText="This will be used for inferencing. E.g. Generating characters, CYOA, Generating Actions, etc."
         items={[
-          { label: 'Euterpe', value: 'euterpe-v2' },
-          { label: 'Krake', value: 'krake-v2' },
           { label: 'Clio', value: 'clio-v1' },
           { label: 'Kayra', value: 'kayra-v1' },
         ]}

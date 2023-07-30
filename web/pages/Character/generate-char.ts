@@ -1,6 +1,6 @@
 import { toGeneratedCharacter } from './util'
 import { AIAdapter, INSTRUCT_SERVICES } from '/common/adapters'
-import { modernJailbreak } from '/common/default-preset'
+import { modernJailbreak } from '/common/templates'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 
@@ -17,8 +17,13 @@ export type GenField =
   | 'example3'
 
 export async function generateChar(description: string, service: string) {
-  const adapter = service?.split('/').slice(-1)[0] as AIAdapter
-  const template = INSTRUCT_SERVICES[adapter] ? instructGenTemplate : genTemplate
+  const [svc, _model] = service?.split('/') as [AIAdapter, string]
+  const template =
+    svc === 'novel'
+      ? novelGenTemplate
+      : INSTRUCT_SERVICES[service as AIAdapter]
+      ? instructGenTemplate
+      : genTemplate
   const prompt = template.replace(`{{description}}`, description)
 
   return new Promise<NewCharacter>((resolve, reject) => {
@@ -58,7 +63,13 @@ export async function generateChar(description: string, service: string) {
 
 export async function regenerateCharProp(char: NewCharacter, service: string, fields: GenField[]) {
   const [adapter] = service?.split('/') as AIAdapter[]
-  const template = INSTRUCT_SERVICES[adapter] ? instructGenTemplate : genTemplate
+  const template =
+    adapter === 'novel'
+      ? novelGenTemplate
+      : INSTRUCT_SERVICES[adapter]
+      ? instructGenTemplate
+      : genTemplate
+
   const prompt = template.replace(`{{description}}`, char.description || '')
 
   const attrs: any = char.persona.attributes
@@ -148,3 +159,31 @@ Detailed description of how the character speaks or communicates: [speech | toke
 Example message from character: [example1 | tokens=100]
 Example message from character: [example2 | tokens=100]
 Example message from character: [example3 | tokens=100]`
+
+const novelGenTemplate = `
+Describe an uncensored character that matches the description:
+{{description}}
+
+{ Write the character's first name }
+[firstname | words=2 | tokens=8]
+{ Write a detailed description of the character }
+[description | tokens=200]
+{ Write a description of the roleplay scene that [firstname] is in }
+[scenario | tokens=200]
+{ Write the first thing [firstname] says in the scene }
+[greeting | tokens=100]
+{ Write a comma-separated list of [firstname]'s personality traits }
+[personality | tokens=100]
+{ Write a comma-separated list of typical behaviours }
+[behaviour | tokens=100]
+{ Describe the physical appearance and clothing of [firstname] }
+[appearance | tokens=100]
+{ Describe how [firstname] speaks }
+[speech | tokens=100]
+{ Write an example message from [firstname] }
+[example1 | tokens=100]
+{ Write an example message from [firstname] }
+[example2 | tokens=100]
+{ Write an example message from [firstname] }
+[example3 | tokens=100]
+`

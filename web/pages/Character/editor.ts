@@ -137,7 +137,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     if (user.user.novelVerified) {
       opts.push({ label: 'NovelAI - Kayra', value: 'novel/kayra-v1' })
       opts.push({ label: 'NovelAI - Clio', value: 'novel/clio-v1' })
-      opts.push({ label: 'NovelAI - Krake', value: 'novel/krake-v2' })
     }
 
     if (preset?.service === 'kobold' || user.user.koboldUrl) {
@@ -337,6 +336,6 @@ function getModelForService(service: AIAdapter) {
       return OPENAI_MODELS.Turbo0301
 
     case 'novel':
-      return NOVEL_MODELS.krake
+      return NOVEL_MODELS.kayra_v1
   }
 }

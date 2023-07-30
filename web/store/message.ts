@@ -17,6 +17,7 @@ import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/tex
 import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, pauseSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
+import { findOne, replace } from '/common/util'
 
 type ChatId = string
 
@@ -116,6 +117,28 @@ export const msgStore = createStore<MsgState>(
             return msg
           }),
         }
+      }
+    },
+
+    async *editMessageProp(
+      { msgs },
+      msgId: string,
+      update: Partial<AppSchema.ChatMessage>,
+      onSuccess?: Function
+    ) {
+      const prev = msgs.find((m) => m._id === msgId)
+      if (!prev) return toastStore.error(`Cannot find message`)
+
+      const res = await msgsApi.editMessageProps(prev, update)
+      if (res.error) {
+        toastStore.error(`Failed to update message: ${res.error}`)
+      }
+
+      if (res.result) {
+        yield {
+          msgs: msgs.map((m) => (m._id === msgId ? { ...m, ...update, voiceUrl: undefined } : m)),
+        }
+        onSuccess?.()
       }
     },
 
@@ -729,16 +752,22 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   msgStore.setState({ msgs: msgs.filter((msg) => !ids.has(msg._id)) })
 })
 
-subscribe('message-edited', { messageId: 'string', message: 'string', actions: 'any?' }, (body) => {
-  const { msgs } = msgStore.getState()
-  msgStore.setState({
-    msgs: msgs.map((msg) =>
-      msg._id === body.messageId
-        ? { ...msg, actions: body.actions || msg.actions, msg: body.message, voiceUrl: undefined }
-        : msg
-    ),
-  })
-})
+subscribe(
+  'message-edited',
+  { messageId: 'string', message: 'string?', imagePrompt: 'string?', actions: 'any?' },
+  (body) => {
+    const { msgs } = msgStore.getState()
+    const prev = findOne(body.messageId, msgs)
+    const nextMsgs = replace(body.messageId, msgs, {
+      imagePrompt: body.imagePrompt || prev?.imagePrompt,
+      msg: body.message || prev?.msg,
+      actions: body.actions || prev?.actions,
+      voiceUrl: undefined,
+    })
+
+    msgStore.setState({ msgs: nextMsgs })
+  }
+)
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
   const { msgs, activeChatId, retrying } = msgStore.getState()
@@ -797,9 +826,7 @@ subscribe(
     const speech = getMessageSpeechInfo(msg, userStore.getState().user)
 
     const chats = await localApi.loadItem('chats')
-    await localApi.saveChats(
-      localApi.replace(body.chatId, chats, { updatedAt: new Date().toISOString() })
-    )
+    await localApi.saveChats(replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
     await localApi.saveMessages(body.chatId, next)
 
     addMsgToRetries(msg)

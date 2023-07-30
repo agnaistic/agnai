@@ -35,16 +35,16 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
           const scenarios = scenarioStore
             .getState()
             .scenarios.filter((s) => chat.scenarioIds?.includes(s._id))
-          // Instructions
-          scenarios
-            .filter((s) => !!s.instructions)
-            .forEach((s) =>
-              msgStore.queue(
-                chat._id,
-                `**Scenario: ${s.name}**\nInstructions: ${s.instructions}`,
-                'ooc'
-              )
+
+          for (const scenario of scenarios) {
+            if (!scenario.instructions) continue
+            msgStore.queue(
+              chat._id,
+              `**Scenario: ${scenario.name}**\nInstructions: ${scenario.instructions}`,
+              'ooc'
             )
+          }
+
           // Greeting
           const entries = scenarios.flatMap((s) => s.entries)
           const event = selectOnGreetingEvent(entries, chat.scenarioStates || [])

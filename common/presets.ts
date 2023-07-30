@@ -159,7 +159,6 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical_p',
     topA: 'top_a',
     order: '',
-    novelModel: 'novelModel',
   },
   ooba: {
     maxTokens: 'max_new_tokens',
@@ -316,7 +315,46 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
       return defaultPresets.openai
 
     case 'novel':
-      return defaultPresets.novel_20BC
+      return defaultPresets.novel_clio
+
+    case 'scale':
+      return defaultPresets.scale
+
+    case 'claude':
+      return defaultPresets.claude
+
+    case 'goose':
+      return { ...defaultPresets.basic, service: 'goose' }
+
+    case 'replicate':
+      return defaultPresets.replicate_vicuna_13b
+
+    /** TODO: Create default preset for OpenRouter... */
+    case 'openrouter':
+      return defaultPresets.openai
+  }
+}
+
+export function getInferencePreset(
+  user: AppSchema.User,
+  adapter: AIAdapter,
+  model?: string
+): Partial<AppSchema.GenSettings> {
+  switch (adapter) {
+    case 'horde':
+      return defaultPresets.horde
+
+    case 'kobold':
+    case 'ooba':
+      return defaultPresets.basic
+
+    case 'openai':
+      return defaultPresets.openai
+
+    case 'novel': {
+      if (model === 'kayra-v1' || user.novelModel === 'kayra-v1') return defaultPresets.novel_kayra
+      return defaultPresets.novel_clio
+    }
 
     case 'scale':
       return defaultPresets.scale

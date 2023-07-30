@@ -80,7 +80,7 @@ const saveMessages = handle(async ({ params, body }) => {
 const router = Router()
 
 router.get('/', loadState)
-router.get('/chracters', loadCharacters)
+router.get('/characters', loadCharacters)
 router.get('/messages/:id', loadMessages)
 
 router.post('/', saveState)

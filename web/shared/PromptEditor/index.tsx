@@ -16,7 +16,7 @@ import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
 import { TitleCard } from '../Card'
 import Button from '../Button'
-import { ParseOpts, parseTemplate } from '/common/template-parser'
+import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
 import { ensureValidTemplate, getPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
@@ -320,7 +320,7 @@ const HelpModal: Component<{
   return null
 }
 
-function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>): ParseOpts {
+function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
   const char = toChar('Rory', {
     scenario: 'Rory is strolling in the park',
     persona: toPersona('Rory is very talkative.'),
@@ -350,6 +350,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>): ParseOpts {
       members: [profile],
       replyAs,
       user,
+      sender: profile,
       kind: 'send',
       chatEmbeds: [],
       userEmbeds: [],
@@ -361,14 +362,11 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>): ParseOpts {
 
   return {
     char,
-    settings: inherit,
     replyAs,
     sender: profile,
     characters,
     chat,
     lines,
-    members: [profile],
     parts,
-    user,
   }
 }

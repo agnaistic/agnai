@@ -7,6 +7,7 @@ import {
   updateChatGenPreset,
   updateChatGenSettings,
   updateMessage,
+  updateMessageProps,
 } from './edit'
 import { getAllChats, getCharacterChats, getChatDetail } from './get'
 import { guestGenerateMsg } from './guest-msg'
@@ -53,6 +54,7 @@ router.delete('/:id/characters/:charId', removeCharacter)
 router.get('/:id/chats', getCharacterChats)
 
 router.put('/:id/message', updateMessage)
+router.put('/:id/message-props', updateMessageProps)
 router.delete('/:id/messages', deleteMessages)
 router.delete('/:id', deleteChat)
 

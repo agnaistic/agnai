@@ -1,7 +1,17 @@
 import { A } from '@solidjs/router'
 import { assertValid } from '/common/valid'
 import { Download, Plus, Trash, Upload, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  onMount,
+  Show,
+  Switch,
+} from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult, getFileAsString } from '../../shared/FileInput'
@@ -12,22 +22,35 @@ import { memoryStore, settingStore, toastStore } from '../../store'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import { Card } from '/web/shared/Card'
 import EmbedContent from './EmbedContent'
+import ScenarioList from '../Scenario/ScenarioList'
 
 const MemoryPage: Component = () => {
-  setComponentPageTitle('Memory')
-  const tabs = useTabs(['Books', 'Embeddings'])
+  setComponentPageTitle('Library')
   const cfg = settingStore()
+
+  const allowed = createMemo(() => {
+    const base = ['Memories', 'Scenarios']
+    if (cfg.pipelineOnline) {
+      base.push('Embeddings')
+    }
+    return base
+  })
+
+  const tabs = useTabs(allowed())
 
   return (
     <>
-      <Show when={cfg.pipelineOnline}>
-        <Tabs tabs={tabs.tabs} select={tabs.select} selected={tabs.selected} />
-      </Show>
+      <Tabs tabs={tabs.tabs} select={tabs.select} selected={tabs.selected} />
 
       <Switch>
-        <Match when={tabs.current() === 'Books'}>
+        <Match when={tabs.current() === 'Memories'}>
           <BooksTab />
         </Match>
+
+        <Match when={tabs.current() === 'Scenarios'}>
+          <ScenarioList />
+        </Match>
+
         <Match when={tabs.current() === 'Embeddings'}>
           <EmbedsTab />
         </Match>

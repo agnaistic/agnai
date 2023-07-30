@@ -6,7 +6,7 @@ import { createInferenceStream, inferenceAsync } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
 import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
-import { cyoaTemplate } from '/common/default-preset'
+import { cyoaTemplate } from '/common/templates'
 
 const validInference = {
   prompt: 'string',
@@ -46,10 +46,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     body.user = user
   }
 
-  const prompt = cyoaTemplate(
-    settings.service!,
-    settings.service === 'openai' ? settings.oaiModel : ''
-  )
+  const prompt = cyoaTemplate(body.service!, settings.service === 'openai' ? settings.oaiModel : '')
 
   const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({

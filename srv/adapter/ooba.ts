@@ -3,8 +3,6 @@ import { normalizeUrl, sanitise, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { logger } from '../logger'
 
-const defaultUrl = `http://127.0.0.1:7860`
-
 export const handleOoba: ModelAdapter = async function* ({
   char,
   members,
@@ -44,8 +42,8 @@ export const handleOoba: ModelAdapter = async function* ({
   log.debug({ ...body, prompt: null }, 'Textgen payload')
   log.debug(`Prompt:\n${body.prompt}`)
 
-  const url = gen.thirdPartyUrl || user.koboldUrl || defaultUrl
-  const resp = await needle('post', `${normalizeUrl(user.oobaUrl, url)}/api/v1/generate`, body, {
+  const url = gen.thirdPartyUrl || user.koboldUrl
+  const resp = await needle('post', `${normalizeUrl(url)}/api/v1/generate`, body, {
     json: true,
   }).catch((err) => ({ error: err }))
 

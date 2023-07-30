@@ -2,12 +2,12 @@ import { assertValid } from '/common/valid'
 import { chatGenSettings } from '../../../common/presets'
 import { config } from '../../config'
 import { store } from '../../db'
-import { errors, handle } from '../wrap'
+import { StatusError, errors, handle } from '../wrap'
 import { sendMany } from '../ws'
 import { personaValidator } from './common'
 import { AppSchema } from '/common/types'
 
-export const updateChat = handle(async ({ params, body, user }) => {
+export const updateChat = handle(async ({ params, body, user, userId }) => {
   assertValid(
     {
       name: 'string',
@@ -30,6 +30,15 @@ export const updateChat = handle(async ({ params, body, user }) => {
   const id = params.id
   const prev = await store.chats.getChatOnly(id)
   if (!prev || prev?.userId !== user?.userId) throw errors.Forbidden
+
+  if (body.scenarioIds) {
+    const scenarios = await store.scenario.getScenariosById(body.scenarioIds)
+    for (const scenario of scenarios) {
+      if (scenario.userId !== userId) {
+        throw new StatusError('You do not have access to this scenario', 403)
+      }
+    }
+  }
 
   const update: PartialUpdate<AppSchema.Chat> = {
     name: body.name ?? prev.name,
@@ -59,6 +68,9 @@ export const updateChat = handle(async ({ params, body, user }) => {
   return chat
 })
 
+/**
+ * @deprecated
+ */
 export const updateMessage = handle(async ({ body, params, userId }) => {
   assertValid({ message: 'string' }, body)
   const prev = await store.chats.getMessageAndChat(params.id)
@@ -72,6 +84,34 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
     type: 'message-edited',
     messageId: params.id,
     message: body.message,
+  })
+
+  return message
+})
+
+export const updateMessageProps = handle(async ({ body, params, userId }) => {
+  assertValid({ imagePrompt: 'string?', msg: 'string?' }, body)
+
+  const prev = await store.chats.getMessageAndChat(params.id)
+
+  if (!prev || !prev.chat) throw errors.NotFound
+  if (prev.chat?.userId !== userId) throw errors.Forbidden
+
+  const update: Partial<AppSchema.ChatMessage> = {
+    imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
+    msg: body.msg ?? prev.msg.msg,
+  }
+
+  const message = await store.msgs.editMessage(params.id, {
+    ...update,
+    state: body.msg === undefined ? prev.msg.state : 'edited',
+  })
+
+  sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
+    type: 'message-edited',
+    messageId: params.id,
+    imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
+    message: body.msg || prev.msg.msg,
   })
 
   return message

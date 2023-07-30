@@ -145,6 +145,63 @@ const HordeAISettings: Component<{
 
 export default HordeAISettings
 
+export const HordeDetails: Component<{ maxTokens: number; maxContextLength: number }> = (props) => {
+  const user = userStore()
+  const cfg = settingStore((c) => c.config.horde)
+
+  const status = createMemo(() => {
+    const m = new Set(
+      Array.isArray(user.user?.hordeModel)
+        ? user.user?.hordeModel
+        : !!user.user?.hordeModel && user.user.hordeModel !== 'any'
+        ? [user.user?.hordeModel]
+        : []
+    )
+    const w = new Set(user.user?.hordeWorkers || [])
+
+    let excluded = 0
+    let unwanted = 0
+
+    const matches = cfg.workers.filter((wrk) => {
+      if (m.size > 0) {
+        if (!wrk.models.some((model) => m.has(model))) {
+          unwanted++
+          return false
+        }
+      }
+
+      if (w.size > 0) {
+        if (!w.has(wrk.id)) {
+          unwanted++
+          return false
+        }
+      }
+
+      if (props.maxTokens > wrk.max_length) {
+        excluded++
+        return false
+      }
+      if (props.maxContextLength! > wrk.max_context_length) {
+        excluded++
+        return false
+      }
+      return true
+    })
+
+    return { matches, unwanted, excluded }
+  })
+
+  return (
+    <>
+      <div class="text-lg font-bold">Horde Status</div>
+      Number of Horde Workers that match your preset: {status().matches.length} /{' '}
+      {cfg.workers.length}.<br />
+      Workers excluded by your Max Tokens ({props.maxTokens}) / Max Context Length (
+      {props.maxContextLength}): {status().excluded}
+    </>
+  )
+}
+
 const ModelModal: Component<{
   show: boolean
   close: () => void

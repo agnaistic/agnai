@@ -8,6 +8,7 @@ import { handle } from './wrap'
 import { AppSchema } from '../../common/types/schema'
 import { store } from '../db'
 import { RegisteredAdapter } from '/common/adapters'
+import { getHordeWorkers, getHoredeModels } from './horde'
 
 const router = Router()
 
@@ -24,6 +25,8 @@ export default router
 
 export async function getAppConfig() {
   const canAuth = isConnected()
+  const workers = getHordeWorkers()
+  const models = getHoredeModels()
 
   if (!appConfig) {
     appConfig = {
@@ -41,7 +44,16 @@ export async function getAppConfig() {
       policies: config.ui.policies,
       authUrls: config.auth.urls,
       pipelineProxyEnabled: config.pipelineProxy,
+      horde: {
+        models,
+        workers: workers.filter((w) => w.type === 'text'),
+      },
     }
+  }
+
+  appConfig.horde = {
+    models,
+    workers: workers.filter((w) => w.type === 'text'),
   }
 
   if (appConfig.version === '') {

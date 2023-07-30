@@ -3,6 +3,7 @@ import { v4 } from 'uuid'
 import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi, saveChats } from './storage'
+import { replace } from '/common/util'
 
 export type AllChat = AppSchema.Chat & { character?: { name: string } }
 
@@ -113,7 +114,7 @@ export async function editChat(
     delete next.scenario
   }
 
-  await localApi.saveChats(localApi.replace(id, chats, next))
+  await localApi.saveChats(replace(id, chats, next))
   return localApi.result(next)
 }
 
@@ -252,7 +253,7 @@ export async function editChatGenSettings(chatId: string, settings: AppSchema.Ch
     genPreset: undefined,
     updatedAt: new Date().toISOString(),
   }
-  await saveChats(localApi.replace(chatId, chats, next))
+  await saveChats(replace(chatId, chats, next))
   return localApi.result(next)
 }
 
@@ -272,7 +273,7 @@ export async function editChatGenPreset(chatId: string, preset: string) {
     genPreset: preset,
     updatedAt: new Date().toISOString(),
   }
-  await saveChats(localApi.replace(chatId, chats, next))
+  await saveChats(replace(chatId, chats, next))
   return localApi.result(next)
 }
 
@@ -326,7 +327,7 @@ export async function addCharacter(chatId: string, charId: string) {
     characters: Object.assign(chat?.characters || {}, { [charId]: true }),
   }
 
-  await localApi.saveChats(localApi.replace(chatId, chats, next))
+  await localApi.saveChats(replace(chatId, chats, next))
   return localApi.result({ success: true, char })
 }
 
@@ -355,7 +356,7 @@ export async function upsertTempCharacter(
   temp[newchar._id] = newchar
   chat.tempCharacters = temp
 
-  await localApi.saveChats(localApi.replace(chatId, chats, chat))
+  await localApi.saveChats(replace(chatId, chats, chat))
   return localApi.result({ success: true, char: newchar })
 }
 
@@ -380,6 +381,6 @@ export async function removeCharacter(chatId: string, charId: string) {
     characters: Object.assign(chat?.characters || {}, { [charId]: false }),
   }
 
-  await localApi.saveChats(localApi.replace(chatId, chats, next))
+  await localApi.saveChats(replace(chatId, chats, next))
   return localApi.result({ success: true })
 }

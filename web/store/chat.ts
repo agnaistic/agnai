@@ -9,11 +9,11 @@ import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
-import { replace } from './data/storage'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
+import { replace } from '/common/util'
 
 export { AllChat }
 
@@ -504,6 +504,7 @@ export const chatStore = createStore<ChatState>('chat', {
           ...entities,
           lastMessage: entities.lastMessage?.date || '',
           replyAs,
+          sender: entities.profile,
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],
@@ -688,7 +689,10 @@ subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
   const { promptHistory } = chatStore.getState()
 
   chatStore.setState({
-    promptHistory: Object.assign({}, promptHistory, { [body.id]: body.prompt }),
+    promptHistory: Object.assign({}, promptHistory, {
+      [body.id]: body.prompt,
+      partial: body.prompt,
+    }),
   })
 })
 
