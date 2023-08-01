@@ -31,6 +31,11 @@ export type OAuthScope = keyof typeof oauthScopes
 
 export const oauthScopes = ['characters', 'chats', 'presets', 'profile'] as const
 
+export type ChatBranch = {
+  parent: string
+  children: { [key: string]: number }
+}
+
 export namespace AppSchema {
   export interface AppConfig {
     adapters: AIAdapter[]
@@ -178,6 +183,8 @@ export namespace AppSchema {
 
     scenarioIds?: string[]
     scenarioStates?: string[]
+
+    tree?: { [key: string]: ChatBranch }
   }
 
   export interface ChatMember {
@@ -198,8 +205,6 @@ export namespace AppSchema {
     characterId?: string
     userId?: string
 
-    // Only chat owners can rate messages for now
-    rating?: 'y' | 'n' | 'none'
     adapter?: string
     imagePrompt?: string
     actions?: ChatAction[]
@@ -317,7 +322,10 @@ export namespace AppSchema {
     penaltyAlpha?: number
     addBosToken?: boolean
     banEosToken?: boolean
+
     order?: number[]
+    disabledSamplers?: number[]
+
     skipSpecialTokens?: boolean
     cfgScale?: number
     cfgOppose?: string

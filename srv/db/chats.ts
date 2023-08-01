@@ -212,3 +212,46 @@ export async function restartChat(userId: string, chatId: string) {
     })
   }
 }
+
+export async function createChatTree(chat: AppSchema.Chat) {
+  if (chat.tree) return chat
+
+  const messages = (await db('chat-message')
+    .find({ chatId: chat._id })
+    .project({ _id: 1, createdAt: 1 })
+    .sort({ createdAt: 'asc' })
+    .toArray()) as Array<{ _id: string; createdAt: string }>
+
+  const tree: AppSchema.Chat['tree'] = {}
+  let last: string = ''
+
+  for (const msg of messages) {
+    if (last) {
+      tree[last].children[msg._id] = 1
+    }
+    tree[msg._id] = { parent: last, children: {} }
+    last = msg._id
+  }
+
+  chat.tree = tree
+  await db('chat').updateOne({ _id: chat._id }, { $set: { tree } })
+  return tree
+}
+
+export async function assignMessageParent(opts: {
+  chatId: string
+  tree: AppSchema.Chat['tree']
+  parentId: string
+  messageId: string
+}) {
+  const { tree, parentId, messageId } = opts
+  if (!tree || !tree[parentId]) return tree
+
+  tree[parentId].children[messageId] = 1
+
+  await db('chat').updateOne(
+    { _id: opts.chatId },
+    { $set: { [`tree.${parentId}.children.${messageId}`]: 1 } }
+  )
+  return tree
+}

@@ -32,6 +32,8 @@ export const getChatDetail = handle(async ({ userId, params }) => {
 
   const messages = await store.msgs.getMessages(id)
 
+  // await store.chats.createChatTree(detail.chat)
+
   return { messages, character, members, active, ...detail }
 })
 

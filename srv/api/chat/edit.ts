@@ -1,5 +1,4 @@
 import { assertValid } from '/common/valid'
-import { chatGenSettings } from '../../../common/presets'
 import { config } from '../../config'
 import { store } from '../../db'
 import { StatusError, errors, handle } from '../wrap'
@@ -120,19 +119,6 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
 export const restartChat = handle(async (req) => {
   const chatId = req.params.id
   await store.chats.restartChat(req.userId, chatId)
-  return { success: true }
-})
-
-export const updateChatGenSettings = handle(async ({ params, userId, body }) => {
-  const chatId = params.id
-  assertValid(chatGenSettings, body)
-
-  const chat = await store.chats.getChatOnly(chatId)
-  if (chat?.userId !== userId) {
-    throw errors.Forbidden
-  }
-
-  await store.presets.updateGenSetting(chatId, body)
   return { success: true }
 })
 

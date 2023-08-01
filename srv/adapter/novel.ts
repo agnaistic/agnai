@@ -78,12 +78,31 @@ export const handleNovel: ModelAdapter = async function* ({
     body.parameters.stop_sequences = NEW_PARAMS[model] ? [[49287], [43145], [19438]] : [[27]]
   }
 
+  if (opts.gen.order && !opts.gen.disabledSamplers) {
+    body.parameters.order = opts.gen.order
+  }
+
+  if (opts.gen.order && opts.gen.disabledSamplers) {
+    body.parameters.order = opts.gen.order.filter(
+      (sampler) => !opts.gen.disabledSamplers?.includes(sampler)
+    )
+  }
+
   yield { prompt: processedPrompt }
 
   const endTokens = ['***', 'Scenario:', '----', '⁂', '***']
 
   log.debug(
-    { ...body, input: null, parameters: { ...body.parameters, bad_words_ids: null } },
+    {
+      ...body,
+      input: null,
+      parameters: {
+        ...body.parameters,
+        bad_words_ids: null,
+        repetition_penalty_whitelist: null,
+        stop_sequences: null,
+      },
+    },
     'NovelAI payload'
   )
   log.debug(`Prompt:\n${body.input}`)

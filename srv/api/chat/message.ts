@@ -22,6 +22,7 @@ const sendValidator = {
 } as const
 
 const genValidator = {
+  parent: 'string?',
   kind: [
     'send',
     'send-event:world',
@@ -165,6 +166,15 @@ export const generateMessageV2 = handle(async (req, res) => {
       ooc: body.kind === 'ooc',
       event: undefined,
     })
+
+    if (body.parent) {
+      chat.tree = await store.chats.assignMessageParent({
+        chatId: chat._id,
+        parentId: body.parent,
+        messageId: userMsg._id,
+        tree: chat.tree,
+      })
+    }
 
     sendMany(members, { type: 'message-created', msg: userMsg, chatId })
   } else if (body.kind.startsWith('send-event:')) {
@@ -343,6 +353,16 @@ export const generateMessageV2 = handle(async (req, res) => {
         meta,
         event: undefined,
       })
+
+      if (body.parent && userMsg) {
+        await store.chats.assignMessageParent({
+          chatId: chat._id,
+          parentId: userMsg._id,
+          messageId: msg._id,
+          tree: chat.tree,
+        })
+      }
+
       sendMany(members, {
         type: 'message-created',
         requestId,
