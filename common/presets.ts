@@ -32,7 +32,7 @@ export const chatGenSettings = {
   banEosToken: 'boolean?',
   skipSpecialTokens: 'boolean?',
   penaltyAlpha: 'number?',
-  order: ['number?'],
+
   frequencyPenalty: 'number',
   presencePenalty: 'number',
   systemPrompt: 'string?',
@@ -61,6 +61,9 @@ export const chatGenSettings = {
   replicateModelType: 'string?',
   replicateModelVersion: 'string?',
   replicateModelName: 'string?',
+
+  order: 'string?',
+  disabledSamplers: 'string?',
 } as const
 
 export const presetValidator = {

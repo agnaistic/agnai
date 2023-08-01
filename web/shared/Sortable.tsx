@@ -12,6 +12,7 @@ const Sortable: Component<{
   label?: JSX.Element | string
   helperText?: JSX.Element
   onChange: (order: number[]) => void
+  setSorter?: (sort: Sort) => void
 }> = (props) => {
   let ref: HTMLUListElement
 
@@ -30,6 +31,7 @@ const Sortable: Component<{
         props.onChange(order)
       },
     })
+    props.setSorter?.(s)
     setSort(s)
   })
 

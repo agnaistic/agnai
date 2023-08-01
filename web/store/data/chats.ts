@@ -15,7 +15,6 @@ export const chatsApi = {
   getChat,
   getBotChats,
   editChatGenPreset,
-  editChatGenSettings,
   importChat,
   deleteChat,
   addCharacter,
@@ -235,26 +234,6 @@ export async function getBotChats(characterId: string) {
     res.filter((ch) => ch.characterId === characterId)
   )
   return localApi.result({ character, chats })
-}
-
-export async function editChatGenSettings(chatId: string, settings: AppSchema.Chat['genSettings']) {
-  if (isLoggedIn()) {
-    const res = await api.method('put', `/chat/${chatId}/generation`, settings)
-    return res
-  }
-
-  const chats = await loadItem('chats')
-  const chat = chats.find((ch) => ch._id === chatId)
-  if (!chat) return localApi.error(`Chat not found`)
-
-  const next: AppSchema.Chat = {
-    ...chat,
-    genSettings: settings,
-    genPreset: undefined,
-    updatedAt: new Date().toISOString(),
-  }
-  await saveChats(replace(chatId, chats, next))
-  return localApi.result(next)
 }
 
 export async function editChatGenPreset(chatId: string, preset: string) {

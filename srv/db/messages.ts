@@ -38,7 +38,6 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
   const doc: AppSchema.ChatMessage = {
     _id: creating._id || v4(),
     kind: 'chat-message',
-    rating: 'none',
     chatId,
     characterId,
     userId: senderId,

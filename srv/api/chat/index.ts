@@ -5,7 +5,6 @@ import {
   restartChat,
   updateChat,
   updateChatGenPreset,
-  updateChatGenSettings,
   updateMessage,
   updateMessageProps,
 } from './edit'
@@ -38,7 +37,6 @@ router.get('/:id/messages', getMessages)
 router.get('/:id', getChatDetail)
 
 router.put('/:id', updateChat)
-router.put('/:id/generation', updateChatGenSettings)
 router.put('/:id/preset', updateChatGenPreset)
 
 router.post('/', createChat)

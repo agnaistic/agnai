@@ -1,4 +1,14 @@
-import { Component, createMemo, createSignal, For, JSX, onMount, Show } from 'solid-js'
+import Sorter from 'sortablejs'
+import {
+  Component,
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  JSX,
+  onMount,
+  Show,
+} from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
@@ -26,6 +36,7 @@ import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/templates'
 import Sortable, { SortItem } from './Sortable'
 import { HordeDetails } from '../pages/Settings/components/HordeAISettings'
+import Button from './Button'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -790,9 +801,7 @@ const GenSettings: Component<Props> = (props) => {
           aiSetting={'penaltyAlpha'}
         />
 
-        <Show when={false}>
-          <SamplerOrder service={props.service} order={[]} setOrder={() => {}} />
-        </Show>
+        <SamplerOrder service={props.service} inherit={props.inherit} />
       </Card>
     </div>
   )
@@ -800,9 +809,35 @@ const GenSettings: Component<Props> = (props) => {
 
 const SamplerOrder: Component<{
   service?: AIAdapter
-  order: number[]
-  setOrder: (order: number[]) => void
+  inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
+  const [order, setOrder] = createSignal((props.inherit?.order || []).join(','))
+
+  const [value, setValue] = createSignal(order())
+  const [disabled, setDisabled] = createSignal(props.inherit?.disabledSamplers || [])
+  const [sorter, setSorter] = createSignal<Sorter>()
+
+  createEffect(() => {
+    // Try to detect if the inherited settings change
+    const inherited = (props.inherit?.order || []).join(',')
+    if (inherited !== order()) {
+      setOrder(inherited)
+      setValue(inherited)
+      setDisabled(props.inherit?.disabledSamplers || [])
+      resort()
+    }
+  })
+
+  const updateValue = (next: number[]) => {
+    setValue(next.join(','))
+  }
+
+  const toggleSampler = (id: number) => {
+    if (disabled().includes(id)) return
+    const next = disabled().concat(id)
+    setDisabled(next)
+  }
+
   const items = createMemo(() => {
     const list: SortItem[] = []
     if (!props.service) return list
@@ -821,5 +856,49 @@ const SamplerOrder: Component<{
     return list
   })
 
-  return <Sortable label="Sampler Order" items={items()} onChange={props.setOrder} />
+  const resort = () => {
+    const sort = sorter()
+    if (!sort) return
+
+    sort.sort(value().split(','))
+  }
+
+  return (
+    <div classList={{ hidden: items().length === 0 }}>
+      <Sortable
+        label="Sampler Order"
+        items={items()}
+        onChange={updateValue}
+        setSorter={(s) => {
+          setSorter(s)
+          resort()
+        }}
+      />
+
+      <Card hide={props.service !== 'novel'}>
+        <FormLabel
+          fieldName="disabledSamplers"
+          label="Enabled Samplers"
+          helperText="To disable a sampler, toggle it to grey."
+        />
+
+        <div class="flex flex-wrap gap-2">
+          <For each={items()}>
+            {(item) => (
+              <Button
+                size="sm"
+                schema={disabled().includes(+item.id) ? 'secondary' : 'success'}
+                onClick={() => toggleSampler(+item.id)}
+              >
+                {item.label}
+              </Button>
+            )}
+          </For>
+        </div>
+      </Card>
+
+      <TextInput fieldName="order" parentClass="hidden" value={value()} />
+      <TextInput fieldName="disabledSamplers" parentClass="hidden" value={disabled().join(',')} />
+    </div>
+  )
 }
