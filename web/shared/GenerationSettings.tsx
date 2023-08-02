@@ -833,7 +833,11 @@ const SamplerOrder: Component<{
   }
 
   const toggleSampler = (id: number) => {
-    if (disabled().includes(id)) return
+    if (disabled().includes(id)) {
+      const next = disabled().filter((sampler) => sampler !== id)
+      setDisabled(next)
+      return
+    }
     const next = disabled().concat(id)
     setDisabled(next)
   }
