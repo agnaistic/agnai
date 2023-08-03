@@ -63,9 +63,14 @@ export const handleNovel: ModelAdapter = async function* ({
   }
 
   const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.euterpe
+  const encode = getEncoderTokens('novel', model)
 
   const processedPrompt = processNovelAIPrompt(prompt)
-  const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
+
+  const otherChatMemberNames = Array.from(new Set([
+    ...members.map(m => m.handle),
+    ...(opts.characters ? Object.values(opts.characters).map(c => c.name) : [])
+  ]));
 
   const body = {
     model,
@@ -77,9 +82,8 @@ export const handleNovel: ModelAdapter = async function* ({
     body.parameters.phrase_rep_pen = 'aggressive'
   } else {
     body.parameters.stop_sequences = NEW_PARAMS[model] ? [
-      getEncoderTokens('novel', model)('\n' + handle + ':', true),
       [43145], [19438]
-    ] : [[27]]
+    ].concat(otherChatMemberNames.map(m => encode('\n' + m + ':', true))) : [[27]]
   }
 
   if (opts.gen.order && !opts.gen.disabledSamplers) {
