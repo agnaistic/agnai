@@ -60,6 +60,7 @@ const NovelAISettings: Component = () => {
       />
 
       <Divider />
+      {/*
       <FormLabel
         label="NovelAI Login"
         helperText="Login to NovelAI. Your credentials will not be stored anywhere. This is to obtain your API key and intended for users that cannot obtain their key any other way."
@@ -83,6 +84,7 @@ const NovelAISettings: Component = () => {
         </Button>
       </div>
       <Divider />
+      */}
 
       <TextInput
         fieldName="novelApiKey"
@@ -91,8 +93,7 @@ const NovelAISettings: Component = () => {
         value={''}
         helperText={
           <>
-            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization. Please
-            note this token expires periodically. You will occasionally need to re-enter this token.{' '}
+            NEVER SHARE THIS WITH ANYBODY! The token from the NovelAI request authorization.{' '}
             <a
               class="link"
               target="_blank"
