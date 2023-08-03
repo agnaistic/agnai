@@ -28,13 +28,13 @@ const main: Encoder = function main(value: string) {
   return gpt.encode(value).length
 }
 
-const novel: Encoder = function krake(value: string) {
+const novelNSV1: Encoder = function krake(value: string) {
   const cleaned = sp.cleanText(value)
   const tokens = nerdstash.encodeIds(cleaned)
   return tokens.length
 }
 
-const novelClio: Encoder = function clio(value: string) {
+const novelNSV2: Encoder = function clio(value: string) {
   const cleaned = sp.cleanText(value)
   const tokens = nerdstashV2.encodeIds(cleaned)
   return tokens.length + 4
@@ -68,16 +68,17 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
   if (adapter === 'novel') {
-    if (model === NOVEL_MODELS.clio_v1) return novelClio
-    return novel
+    if (model === NOVEL_MODELS.kayra_v1) return novelNSV2
+    if (model === NOVEL_MODELS.clio_v1) return novelNSV1
+    return main
   }
 
   if (model === OPENAI_MODELS.DaVinci) {
-    return davinci ?? novel
+    return davinci ?? main
   }
 
   if (model && TURBO_MODELS.has(model)) {
-    return turbo ?? novel
+    return turbo ?? main
   }
 
   return main
