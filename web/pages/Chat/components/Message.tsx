@@ -8,6 +8,7 @@ import {
   Pencil,
   PlusCircle,
   RefreshCw,
+  Repeat1,
   Terminal,
   Trash,
   X,
@@ -464,6 +465,7 @@ const MessageOptions: Component<{
   show: Signal<boolean>
   onRemove: () => void
 }> = (props) => {
+  const msgState = msgStore()
   return (
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
@@ -499,6 +501,20 @@ const MessageOptions: Component<{
           onClick={() => !props.partial && retryMessage(props.original, props.msg)}
         >
           <RefreshCw size={18} />
+        </div>
+      </Show>
+      <Show
+        when={
+          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
+          props.msg.characterId &&
+          !!msgState.textBeforeGenMore
+        }
+      >
+        <div
+          class="icon-button"
+          onClick={() => !props.partial && msgStore.continuation(props.msg.chatId, undefined, true)}
+        >
+          <Repeat1 size={18} />
         </div>
       </Show>
 

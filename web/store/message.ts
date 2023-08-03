@@ -54,6 +54,7 @@ export type MsgState = {
     characterId: string
     text: string
   }
+  textBeforeGenMore: string | undefined
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
   cache: Record<string, AppSchema.ChatMessage>
   branch?: AppSchema.ChatMessage[]
@@ -80,6 +81,7 @@ const initState: MsgState = {
   speaking: undefined,
   queue: [],
   cache: {},
+  textBeforeGenMore: undefined,
 }
 
 export const msgStore = createStore<MsgState>(
@@ -208,7 +210,12 @@ export const msgStore = createStore<MsgState>(
       return { lastInference: undefined }
     },
 
-    async *continuation({ msgs }, chatId: string, onSuccess?: () => void) {
+    async *continuation(
+      { msgs },
+      chatId: string,
+      onSuccess?: () => void,
+      retryLatestGenMoreOutput?: boolean
+    ) {
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -218,20 +225,34 @@ export const msgStore = createStore<MsgState>(
       const [_, replace] = msgs.slice(-2)
       yield {
         partial: '',
-        waiting: { chatId, mode: 'continue', characterId: replace.characterId! },
+        waiting: {
+          chatId,
+          mode: 'continue',
+          characterId: replace.characterId!,
+        },
         retrying: replace,
       }
 
       addMsgToRetries(replace)
 
-      const res = await msgsApi.generateResponse({ kind: 'continue' })
+      const msgState = msgStore.getState()
+      const textBeforeGenMore = retryLatestGenMoreOutput
+        ? msgState.textBeforeGenMore ?? replace.msg
+        : replace.msg
+      const res = await msgsApi.generateResponse({
+        kind: 'continue',
+        retry: retryLatestGenMoreOutput,
+      })
 
       if (res.error) {
         toastStore.error(`(Continue) Generation request failed: ${res.error}`)
         yield { partial: undefined, waiting: undefined }
       }
 
-      if (res.result) onSuccess?.()
+      if (res.result) {
+        msgStore.setState({ textBeforeGenMore })
+        onSuccess?.()
+      }
     },
 
     async *request(_, chatId: string, characterId: string, onSuccess?: () => void) {
@@ -705,6 +726,7 @@ subscribe(
         chatId: body.chatId,
         messageId: body.msg._id,
       },
+      textBeforeGenMore: undefined,
     })
 
     // If the message is from a user don't clear the "waiting for response" flags
@@ -917,6 +939,7 @@ subscribe(
         chatId: body.chatId,
         messageId: body.msg._id,
       },
+      textBeforeGenMore: undefined,
     })
 
     if (speech) msgStore.textToSpeech(msg._id, msg.msg, speech.voice, speech?.culture)

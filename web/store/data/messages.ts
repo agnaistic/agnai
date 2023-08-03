@@ -22,6 +22,7 @@ import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
+import { msgStore } from '../message'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -219,7 +220,7 @@ export type GenerateOpts =
   /**
    * The last message in the chat is a bot message and we want to generate more text for this message.
    */
-  | { kind: 'continue' }
+  | { kind: 'continue'; retry?: boolean }
   /**
    * Generate a message on behalf of the user
    */
@@ -542,6 +543,15 @@ async function getGenerateProps(
       props.continuing = lastMsg
       props.replyAs = getBot(lastCharMsg?.characterId)
       props.continue = lastCharMsg.msg
+      if (opts.retry) {
+        const msgState = msgStore()
+        props.continuing = { ...lastMsg, msg: msgState.textBeforeGenMore ?? lastMsg.msg }
+        props.continue = msgState.textBeforeGenMore ?? lastMsg.msg
+        props.messages = [
+          ...props.messages.slice(0, props.messages.length - 1),
+          { ...lastMsg, msg: msgState.textBeforeGenMore ?? lastMsg.msg },
+        ]
+      }
       break
     }
 
