@@ -7,6 +7,7 @@ import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
 import { needleToSSE } from './stream'
 import { AppLog } from '../logger'
+import { getEncoderTokens } from '../tokenize'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
@@ -64,6 +65,7 @@ export const handleNovel: ModelAdapter = async function* ({
   const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.euterpe
 
   const processedPrompt = processNovelAIPrompt(prompt)
+  const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
 
   const body = {
     model,
@@ -72,10 +74,12 @@ export const handleNovel: ModelAdapter = async function* ({
   }
 
   if (opts.kind === 'plain') {
-    body.parameters.prefix = 'special_instruct'
     body.parameters.phrase_rep_pen = 'aggressive'
   } else {
-    body.parameters.stop_sequences = NEW_PARAMS[model] ? [[49287], [43145], [19438]] : [[27]]
+    body.parameters.stop_sequences = NEW_PARAMS[model] ? [
+      getEncoderTokens('novel', model)('\n' + handle + ':', true),
+      [43145], [19438]
+    ] : [[27]]
   }
 
   if (opts.gen.order && !opts.gen.disabledSamplers) {

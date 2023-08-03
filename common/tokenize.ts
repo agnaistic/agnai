@@ -1,4 +1,4 @@
-export type Encoder = (text: string) => number
+export type Encoder<B extends boolean = false> = (text: string, returnTokens?: B) => (B extends true ? number[] : number)
 
 export type Tokenizer = {
   decode: (tokens: Int32Array) => string

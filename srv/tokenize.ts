@@ -24,27 +24,28 @@ const turboEncoder = encoding_for_model('gpt-3.5-turbo')
 
 const wasm = getWasm()
 
-const main: Encoder = function main(value: string) {
-  return gpt.encode(value).length
-}
+const main: Encoder = function main(value: string, returnTokens?: boolean) {
+  const tokens = gpt.encode(value)
+  return returnTokens ? tokens : tokens.length
+} as Encoder
 
-const novelNSV1: Encoder = function krake(value: string) {
-  const cleaned = sp.cleanText(value)
+const novelNSV1: Encoder = function clio(value: string, returnTokens?: boolean) {
+  const cleaned = returnTokens ? value : sp.cleanText(value)
   const tokens = nerdstash.encodeIds(cleaned)
-  return tokens.length
-}
+  return returnTokens ? tokens : tokens.length
+} as Encoder
 
-const novelNSV2: Encoder = function clio(value: string) {
-  const cleaned = sp.cleanText(value)
+const novelNSV2: Encoder = function kayra(value: string, returnTokens?: boolean) {
+  const cleaned = returnTokens ? value : sp.cleanText(value)
   const tokens = nerdstashV2.encodeIds(cleaned)
-  return tokens.length + 4
-}
+  return returnTokens ? tokens : tokens.length
+} as Encoder
 
-const llama: Encoder = function llama(value: string) {
-  const cleaned = sp.cleanText(value)
+const llama: Encoder = function llama(value: string, returnTokens?: boolean) {
+  const cleaned = returnTokens ? value : sp.cleanText(value)
   const tokens = llamaModel.encodeIds(cleaned)
-  return tokens.length + 4
-}
+  return returnTokens ? tokens : (tokens.length + 4)
+} as Encoder
 
 let claude: Encoder
 let davinci: Encoder
@@ -84,29 +85,34 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
   return main
 }
 
+export function getEncoderTokens(adapter: AIAdapter | 'main', model?: string) {
+  return getEncoder(adapter, model) as any as Encoder<true>
+}
+
 async function prepareTokenizers() {
   try {
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
 
     {
-      davinci = (value) => {
-        const tokens = davinciEncoder.encode(value).length + 4
-        return tokens
-      }
+      davinci = function(value, returnTokens?: boolean) {
+        const tokens = davinciEncoder.encode(value)
+        return returnTokens ? Array.from(tokens) : (tokens.length + 4)
+      } as Encoder
     }
 
     {
-      turbo = (value) => {
-        const tokens = turboEncoder.encode(value).length + 6
-        return tokens
-      }
+      turbo = function(value, returnTokens?: boolean) {
+        const tokens = turboEncoder.encode(value)
+        return returnTokens ? Array.from(tokens) : (tokens.length + 6)
+      } as Encoder
     }
+
     {
       claudeEncoder = await mlc.Tokenizer.fromJSON(claudeJson)
-      claude = (value) => {
-        const tokens = claudeEncoder.encode(value)
-        return tokens.length
-      }
+      claude = function(value, returnTokens?: boolean) {
+        const tokens = turboEncoder.encode(value)
+        return returnTokens ? Array.from(tokens) : tokens.length
+      } as Encoder
     }
   } catch (ex) {
     console.warn(`Failed to load OAI tokenizers`)
