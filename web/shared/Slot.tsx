@@ -35,7 +35,8 @@ type SlotDef = {
   xl?: SlotSpec
 }
 
-const MIN_AGE = 60000
+const MIN_AGE = 60 * 1000
+const VIDEO_AGE = 125 * 1000
 
 const Slot: Component<{
   slot: SlotKind
@@ -94,7 +95,8 @@ const Slot: Component<{
     const diff = Date.now() - viewed
 
     log('Trying', Math.round(diff / 1000))
-    const canRefresh = visible() && diff >= MIN_AGE
+    const minAge = specs()?.id.includes('agn-video') ? VIDEO_AGE : MIN_AGE
+    const canRefresh = visible() && diff >= minAge
 
     if (canRefresh) {
       setViewed()
@@ -288,9 +290,14 @@ export default Slot
 const slotDefs: Record<SlotKind, SlotDef> = {
   video: {
     platform: 'page',
-    calc: (parent) => (window.innerWidth > 1024 ? 'lg' : 'sm'),
+    calc: (parent) => {
+      const def = window.innerWidth > 1024 ? (window.innerHeight > 1010 ? 'xl' : 'lg') : 'sm'
+      console.log('video', def)
+      return def
+    },
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x300', id: 'agn-video-sm' },
+    xl: { size: '300x600', id: 'agn-video-sm' },
   },
   leaderboard: {
     platform: 'container',
@@ -341,8 +348,7 @@ export function getSlotById(id: string) {
 function getSlotId(id: string) {
   if (location.origin.includes('localhost') || location.origin.includes('127.0.0.1')) {
     console.debug('Psuedo request', id)
-    return '/6499/example/native-video'
-    // return '/6499/example/banner'
+    return id.includes('video') ? '/6499/example/native-video' : '/6499/example/banner'
   }
 
   return id
