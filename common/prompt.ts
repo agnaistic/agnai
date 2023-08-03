@@ -760,7 +760,7 @@ export function getContextLimit(
       return configuredMax - genAmount
 
     case 'novel': {
-      if (model === NOVEL_MODELS.clio_v1) return 8000 - genAmount
+      if (model === NOVEL_MODELS.clio_v1 || model == NOVEL_MODELS.kayra_v1) return 8000 - genAmount
       return configuredMax - genAmount
     }
 
