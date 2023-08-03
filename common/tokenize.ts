@@ -1,4 +1,10 @@
-export type Encoder = (text: string) => number
+export type TokenCounter = (text: string) => number
+
+export type Encoder = {
+  count: (text: string) => number
+  encode: (text: string) => number[]
+  decode: (tokens: number[]) => string
+}
 
 export type Tokenizer = {
   decode: (tokens: Int32Array) => string

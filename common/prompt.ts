@@ -9,11 +9,10 @@ import {
 } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './templates'
-import { IMAGE_SUMMARY_PROMPT } from './image'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
-import { Encoder } from './tokenize'
+import { TokenCounter } from './tokenize'
 import { elapsedSince, getBotName, trimSentence } from './util'
 import { Memory } from './types'
 
@@ -47,7 +46,7 @@ export type Prompt = {
 export type PromptConfig = {
   adapter: AIAdapter
   model: string
-  encoder: Encoder
+  encoder: TokenCounter
   lines: string[]
 }
 
@@ -142,7 +141,7 @@ const ALL_HOLDERS = new RegExp(
  * @param opts
  * @returns
  */
-export function createPrompt(opts: PromptOpts, encoder: Encoder, maxContext?: number) {
+export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext?: number) {
   if (opts.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -194,7 +193,7 @@ export function createPromptWithParts(
   opts: GenerateRequestV2,
   parts: PromptParts,
   lines: string[],
-  encoder: Encoder
+  encoder: TokenCounter
 ) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
@@ -218,11 +217,8 @@ export function getTemplate(
   const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
 
   const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
-  const template = useGaslight
-    ? gaslight
-    : opts.settings?.useTemplateParser
-    ? opts.settings.gaslight ?? defaultTemplate
-    : defaultTemplate
+  const template = useGaslight ? gaslight ?? defaultTemplate : defaultTemplate
+
   return ensureValidTemplate(template, parts)
 }
 
@@ -232,7 +228,7 @@ type InjectOpts = {
   lastMessage?: string
   characters: Record<string, AppSchema.Character>
   history?: { lines: string[]; order: 'asc' | 'desc' }
-  encoder: Encoder
+  encoder: TokenCounter
 }
 
 export function injectPlaceholders(template: string, inject: InjectOpts) {
@@ -387,7 +383,7 @@ type PromptPartsOptions = Pick<
   | 'userEmbeds'
 >
 
-export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: Encoder) {
+export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
   const { chat, char, replyAs } = opts
   const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
@@ -527,21 +523,7 @@ function createPostPrompt(
   >
 ) {
   const post = []
-  if (opts.kind === 'summary') {
-    let text =
-      opts.user.images?.summaryPrompt || opts.settings?.service === 'novel'
-        ? IMAGE_SUMMARY_PROMPT.novel
-        : IMAGE_SUMMARY_PROMPT.other
-
-    if (opts.settings?.service !== 'novel') {
-      if (!text.startsWith('(')) text = '(' + text
-      if (!text.endsWith(')')) text += ')'
-    }
-
-    post.push(`System: ${text}\nSummary:`)
-  } else {
-    post.push(`${opts.replyAs.name}:`)
-  }
+  post.push(`${opts.replyAs.name}:`)
   return post
 }
 
@@ -561,7 +543,7 @@ function removeEmpty(value?: string) {
  */
 export function getLinesForPrompt(
   { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
-  encoder: Encoder,
+  encoder: TokenCounter,
   maxContext?: number
 ) {
   const { adapter, model } = getAdapter(opts.chat, opts.user, settings)
@@ -594,7 +576,7 @@ export function getLinesForPrompt(
 }
 
 export function fillPromptWithLines(
-  encoder: Encoder,
+  encoder: TokenCounter,
   tokenLimit: number,
   amble: string,
   lines: string[]
@@ -810,7 +792,7 @@ export type TrimOpts = {
    * - If 'bottom', the top of the text will be trimed
    */
   start: 'top' | 'bottom'
-  encoder: Encoder
+  encoder: TokenCounter
   tokenLimit: number
 }
 

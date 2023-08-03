@@ -24,7 +24,7 @@ type SlotId =
   | 'agn-leaderboard-sm'
   | 'agn-leaderboard-lg'
   | 'agn-leaderboard-xl'
-  | 'agn-video'
+  | 'agn-video-sm'
 
 type SlotSpec = { size: string; id: SlotId; fallbacks?: string[] }
 type SlotDef = {
@@ -216,7 +216,7 @@ const Slot: Component<{
 
         slot.addService(googletag.pubads())
         googletag.pubads().collapseEmptyDivs()
-        // googletag.pubads().enableVideoAds()
+        googletag.pubads().enableVideoAds()
         // if (!user.user?.admin) {
         // }
 
@@ -288,8 +288,9 @@ export default Slot
 const slotDefs: Record<SlotKind, SlotDef> = {
   video: {
     platform: 'page',
-    calc: (parent) => (window.innerWidth > 1024 ? 'sm' : null),
-    sm: { size: '300x400', id: 'agn-video' },
+    calc: (parent) => (window.innerWidth > 1024 ? 'lg' : 'sm'),
+    sm: { size: '300x250', id: 'agn-menu-sm' },
+    lg: { size: '300x300', id: 'agn-video-sm' },
   },
   leaderboard: {
     platform: 'container',
@@ -340,7 +341,8 @@ export function getSlotById(id: string) {
 function getSlotId(id: string) {
   if (location.origin.includes('localhost') || location.origin.includes('127.0.0.1')) {
     console.debug('Psuedo request', id)
-    return '/6499/example/banner'
+    return '/6499/example/native-video'
+    // return '/6499/example/banner'
   }
 
   return id

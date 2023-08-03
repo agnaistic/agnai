@@ -146,6 +146,7 @@ export async function generateText(
   const params: any = {
     n: 1,
     max_length: Math.min(preset.maxTokens ?? defaultPresets.horde.maxTokens, 512),
+    top_a: preset.topA ?? defaultPresets.horde.topA,
     top_k: preset.topK ?? defaultPresets.horde.topK,
     top_p: preset.topP ?? defaultPresets.horde.topP,
     typical: preset.typicalP ?? defaultPresets.horde.typicalP,
@@ -158,6 +159,10 @@ export async function generateText(
     rep_pen_slope: preset.repetitionPenaltySlope,
     tfs: preset.tailFreeSampling ?? defaultPresets.horde.tailFreeSampling,
     temperature: Math.min(preset.temp ?? defaultPresets.horde.temp, 5),
+  }
+
+  if (preset.order) {
+    params.order = preset.order
   }
 
   const payload = { ...body, params }

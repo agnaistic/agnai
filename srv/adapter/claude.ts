@@ -62,7 +62,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     stream: gen.streamResponse ?? defaultPresets.claude.streamResponse,
   }
 
-  if (opts.kind === 'plain' || opts.kind === 'summary') {
+  if (opts.kind === 'plain') {
     payload.stream = false
   }
 

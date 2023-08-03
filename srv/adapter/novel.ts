@@ -7,6 +7,7 @@ import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
 import { needleToSSE } from './stream'
 import { AppLog } from '../logger'
+import { getTokenizer } from '../tokenize'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
@@ -61,7 +62,7 @@ export const handleNovel: ModelAdapter = async function* ({
     return
   }
 
-  const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.euterpe
+  const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.clio_v1
 
   const processedPrompt = processNovelAIPrompt(prompt)
 
@@ -75,7 +76,35 @@ export const handleNovel: ModelAdapter = async function* ({
     body.parameters.prefix = 'special_instruct'
     body.parameters.phrase_rep_pen = 'aggressive'
   } else {
-    body.parameters.stop_sequences = NEW_PARAMS[model] ? [[49287], [43145], [19438]] : [[27]]
+    const { encode } = getTokenizer('novel', model)
+    const stops: Array<number[]> = []
+    const biases: any[] = [
+      {
+        bias: -0.1,
+        ensure_sequence_finish: false,
+        generate_once: false,
+        sequence: encode('***'),
+      },
+      {
+        bias: -0.1,
+        ensure_sequence_finish: false,
+        generate_once: false,
+        sequence: encode('⁂'),
+      },
+    ]
+
+    for (const [_id, char] of Object.entries(opts.characters || {})) {
+      const tokens = encode(`${char.name}:`)
+      stops.push(tokens)
+      // biases.push({
+      //   bias: -0.1,
+      //   ensure_sequence_finish: false,
+      //   generate_once: false,
+      //   sequence: tokens,
+      // })
+    }
+    body.parameters.logit_bias_exp = biases
+    body.parameters.stop_sequences = stops
   }
 
   if (opts.gen.order && !opts.gen.disabledSamplers) {
@@ -90,7 +119,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   yield { prompt: processedPrompt }
 
-  const endTokens = ['***', 'Scenario:', '----', '⁂', '***']
+  const endTokens = ['***', 'Scenario:', '----', '⁂']
 
   log.debug(
     {

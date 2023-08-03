@@ -181,9 +181,7 @@ const ChatOptions: Component<{
           </Row>
         </Show>
         <div class="flex justify-center">
-          <em class="text-sm">
-            {props.adapterLabel} {isOwner().toString()}
-          </em>
+          <em class="text-sm">{props.adapterLabel}</em>
         </div>
       </div>
       <ConfirmModal

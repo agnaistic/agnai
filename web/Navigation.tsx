@@ -475,7 +475,7 @@ const Slots: Component = (props) => {
 
   return (
     <div ref={ref!} class="h-full w-full">
-      <Slot parent={ref!} slot="menu" />
+      <Slot parent={ref!} slot="video" />
     </div>
   )
 }

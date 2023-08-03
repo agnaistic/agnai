@@ -5,17 +5,17 @@ import { encoding_for_model } from '@dqbd/tiktoken'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
-import { Encoder, Tokenizer } from '../common/tokenize'
+import { Encoder, TokenCounter, Tokenizer } from '../common/tokenize'
 import * as mlc from '@mlc-ai/web-tokenizers'
 const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
 
-const nerdstash = new sp.SentencePieceProcessor()
+export const nerdstash = new sp.SentencePieceProcessor()
 nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
 
-const nerdstashV2 = new sp.SentencePieceProcessor()
+export const nerdstashV2 = new sp.SentencePieceProcessor()
 nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
 
-const llamaModel = new sp.SentencePieceProcessor()
+export const llamaModel = new sp.SentencePieceProcessor()
 llamaModel.load(resolve(__dirname, './sp-models/llama.model'))
 
 let claudeEncoder: Tokenizer
@@ -24,26 +24,48 @@ const turboEncoder = encoding_for_model('gpt-3.5-turbo')
 
 const wasm = getWasm()
 
-const main: Encoder = function main(value: string) {
-  return gpt.encode(value).length
+const main: Encoder = {
+  encode: (value: string) => gpt.encode(value),
+  decode: (tokens) => gpt.decode(tokens),
+  count: (value: string) => gpt.encode(value).length,
 }
 
-const novel: Encoder = function krake(value: string) {
-  const cleaned = sp.cleanText(value)
-  const tokens = nerdstash.encodeIds(cleaned)
-  return tokens.length
+const novel: Encoder = {
+  decode: (tokens: number[]) => {
+    return nerdstash.decodeIds(tokens)
+  },
+  encode: (value: string) => {
+    // const cleaned = sp.cleanText(value)
+    return nerdstash.encodeIds(value)
+  },
+  count: (value: string) => {
+    // const cleaned = sp.cleanText(value)
+    return nerdstash.encodeIds(value).length
+  },
 }
 
-const novelClio: Encoder = function clio(value: string) {
-  const cleaned = sp.cleanText(value)
-  const tokens = nerdstashV2.encodeIds(cleaned)
-  return tokens.length + 4
+const novelModern: Encoder = {
+  encode: (value: string) => {
+    // const cleaned = sp.cleanText(value)
+    return nerdstashV2.encodeIds(value)
+  },
+  decode: (tokens) => nerdstashV2.decodeIds(tokens),
+  count: (value: string) => {
+    // const cleaned = sp.cleanText(value)
+    return nerdstashV2.encodeIds(value).length
+  },
 }
 
-const llama: Encoder = function llama(value: string) {
-  const cleaned = sp.cleanText(value)
-  const tokens = llamaModel.encodeIds(cleaned)
-  return tokens.length + 4
+const llama: Encoder = {
+  encode: (value: string) => {
+    // const cleaned = sp.cleanText(value)
+    return llamaModel.encodeIds(value)
+  },
+  decode: (tokens) => llamaModel.decodeIds(tokens),
+  count: (value) => {
+    // const cleaned = sp.cleanText(value)
+    return llamaModel.encodeIds(value).length
+  },
 }
 
 let claude: Encoder
@@ -57,7 +79,12 @@ const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo_16k,
 ])
 
-export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
+export function getEncoder(adapter: AIAdapter | 'main', model?: string): TokenCounter {
+  const tokenizer = getTokenizer(adapter, model)
+  return tokenizer.count
+}
+
+export function getTokenizer(adapter: AIAdapter | 'main', model?: string): Encoder {
   if (adapter === 'replicate') {
     if (!model || model === 'llama') return llama
     return main
@@ -68,7 +95,8 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string) {
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
   if (adapter === 'novel') {
-    if (model === NOVEL_MODELS.clio_v1) return novelClio
+    if (model === NOVEL_MODELS.clio_v1) return novelModern
+    if (model === NOVEL_MODELS.kayra_v1) return novelModern
     return novel
   }
 
@@ -88,23 +116,44 @@ async function prepareTokenizers() {
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
 
     {
-      davinci = (value) => {
-        const tokens = davinciEncoder.encode(value).length + 4
-        return tokens
+      davinci = {
+        decode: (tokens) => davinciEncoder.decode(Uint32Array.from(tokens)).toString(),
+        encode: (value) => {
+          const tokens = Array.from(davinciEncoder.encode(value))
+          return tokens
+        },
+        count: (value) => {
+          const tokens = davinciEncoder.encode(value).length + 4
+          return tokens
+        },
       }
     }
 
     {
-      turbo = (value) => {
-        const tokens = turboEncoder.encode(value).length + 6
-        return tokens
+      turbo = {
+        decode: (tokens) => turboEncoder.decode(Uint32Array.from(tokens)).toString(),
+        encode: (value) => {
+          const tokens = Array.from(turboEncoder.encode(value))
+          return tokens
+        },
+        count: (value) => {
+          const tokens = turboEncoder.encode(value).length + 6
+          return tokens
+        },
       }
     }
     {
       claudeEncoder = await mlc.Tokenizer.fromJSON(claudeJson)
-      claude = (value) => {
-        const tokens = claudeEncoder.encode(value)
-        return tokens.length
+      claude = {
+        decode: (tokens) => claudeEncoder.decode(Int32Array.from(tokens)),
+        encode: (value) => {
+          const tokens = Array.from(claudeEncoder.encode(value))
+          return tokens
+        },
+        count: (value) => {
+          const tokens = claudeEncoder.encode(value)
+          return tokens.length
+        },
       }
     }
   } catch (ex) {
