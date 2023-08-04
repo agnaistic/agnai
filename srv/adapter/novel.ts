@@ -93,16 +93,22 @@ export const handleNovel: ModelAdapter = async function* ({
       },
     ]
 
-    for (const [_id, char] of Object.entries(opts.characters || {})) {
-      const tokens = encode(`${char.name}:`)
+    const added = new Set<string>()
+
+    for (const [, char] of Object.entries(opts.characters || {})) {
+      if (added.has(char._id) || char._id === opts.replyAs?._id) continue
+      added.add(char._id)
+      const tokens = encode(`\n${char.name}:`)
       stops.push(tokens)
-      // biases.push({
-      //   bias: -0.1,
-      //   ensure_sequence_finish: false,
-      //   generate_once: false,
-      //   sequence: tokens,
-      // })
     }
+
+    for (const member of members) {
+      if (added.has(member._id)) continue
+      added.add(member._id)
+      const tokens = encode(`\n${member.handle}`)
+      stops.push(tokens)
+    }
+
     body.parameters.logit_bias_exp = biases
     body.parameters.stop_sequences = stops
   }
