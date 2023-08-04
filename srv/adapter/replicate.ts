@@ -392,12 +392,14 @@ function parseKey(key: string) {
 }
 
 if (config.keys.REPLICATE) {
-  cacheLanguageModels()
+  cacheLanguageModels().catch(() => null)
 }
 
 async function cacheLanguageModels() {
-  const collection = await getLanguageCollection(config.keys.REPLICATE)
-  modelCache = collection
+  try {
+    const collection = await getLanguageCollection(config.keys.REPLICATE)
+    modelCache = collection
+  } catch (ex) {}
 }
 
 export async function getLanguageModels(key?: string) {

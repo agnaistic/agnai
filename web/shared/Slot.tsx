@@ -92,6 +92,7 @@ const Slot: Component<{
     const slot = adslot()
     const viewed = viewable()
     if (!slot || typeof viewed !== 'number') return
+
     const diff = Date.now() - viewed
 
     log('Trying', Math.round(diff / 1000))

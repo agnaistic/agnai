@@ -101,11 +101,11 @@ export function getTokenizer(adapter: AIAdapter | 'main', model?: string): Encod
   }
 
   if (model === OPENAI_MODELS.DaVinci) {
-    return davinci ?? novel
+    return davinci ?? main
   }
 
   if (model && TURBO_MODELS.has(model)) {
-    return turbo ?? novel
+    return turbo ?? main
   }
 
   return main
