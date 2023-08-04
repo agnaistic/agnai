@@ -39,8 +39,8 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   it('will include sample chat when gaslight does not contain sample chat placeholder', () => {
     const actual = build([botMsg('FIRST'), toMsg('SECOND')], {
       continue: 'ORIGINAL',
-      chat: { ...chat, adapter: 'openai' },
-      settings: { oaiModel: OPENAI_MODELS.Turbo, gaslight: 'Gaslight' },
+      chat,
+      settings: { service: 'openai', oaiModel: OPENAI_MODELS.Turbo, gaslight: 'Gaslight' },
     })
     expect(actual.template).toMatchSnapshot()
   })
@@ -52,14 +52,22 @@ This is how {{char}} should talk: {{example_dialogue}}`,
 
   it('will exclude lowest priority memory to fit in budget', () => {
     const limit = getEncoder('kobold')(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`) - 1
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')], {
-      settings: { memoryContextLimit: limit },
-    })
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: { memoryContextLimit: limit },
+      }
+    )
     expect(actual.template).toMatchSnapshot()
   })
 
   it('will order by trigger position when weight tie occurs', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')])
+    const actual = build([
+      botMsg('FIRST'),
+      toMsg('1-TRIGGER'),
+      toMsg('TIE-TRIGGER'),
+      toMsg('20-TRIGGER'),
+    ])
     expect(actual.template).toMatchSnapshot()
   })
 
@@ -72,39 +80,51 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   })
 
   it('will exclude memories triggered outside of memory depth', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')], {
-      settings: { memoryDepth: 2 },
-    })
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: { memoryDepth: 2 },
+      }
+    )
 
     expect(actual.template).toMatchSnapshot()
   })
 
   it('will include gaslight for non-turbo adapter', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')], {
-      settings: { gaslight: 'GASLIGHT {{user}}', useGaslight: true },
-    })
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: { gaslight: 'GASLIGHT {{user}}', useGaslight: true },
+      }
+    )
 
     expect(actual.template).toMatchSnapshot()
   })
 
   it('will include placeholders in the gaslight', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')], {
-      settings: {
-        gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts:{{memory}}',
-        useGaslight: true,
-      },
-    })
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: {
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts:{{memory}}',
+          useGaslight: true,
+        },
+      }
+    )
 
     expect(actual.template).toMatchSnapshot()
   })
 
   it('will not use the gaslight when set to false', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')], {
-      settings: {
-        gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
-        useGaslight: false,
-      },
-    })
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        settings: {
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
+          useGaslight: false,
+        },
+      }
+    )
 
     expect(actual.template).toMatchSnapshot()
   })
@@ -133,13 +153,16 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   })
 
   it('will include example dialogue with omitted from template', () => {
-    const actual = build([botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')], {
-      char: { ...main, sampleChat: 'Bot: Example_Dialogue' },
-      settings: {
-        gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
-        useGaslight: false,
-      },
-    })
+    const actual = build(
+      [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
+      {
+        char: { ...main, sampleChat: 'Bot: Example_Dialogue' },
+        settings: {
+          gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
+          useGaslight: false,
+        },
+      }
+    )
 
     expect(actual.template).toMatchSnapshot()
   })

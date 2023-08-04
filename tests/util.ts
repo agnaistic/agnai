@@ -95,7 +95,7 @@ export function build(
       chat: opts.chat || chat,
       messages,
       book: opts.book || book,
-      settings: { ...opts.settings, useTemplateParser: true },
+      settings: { ...opts.settings },
       continue: opts.continue,
       retry: opts.retry,
       replyAs: opts.replyAs || replyAs,
@@ -108,28 +108,6 @@ export function build(
     getEncoder('main')
   )
 
-  const legacy = createPrompt(
-    {
-      char: overChar,
-      members: [profile],
-      user,
-      chat: opts.chat || chat,
-      messages,
-      book: opts.book || book,
-      settings: opts.settings,
-      continue: opts.continue,
-      retry: opts.retry,
-      replyAs: opts.replyAs || replyAs,
-      characters,
-      sender: profile,
-      lastMessage: '',
-      chatEmbeds: [],
-      userEmbeds: [],
-    },
-    getEncoder('main')
-  )
-
-  result.template = `*** V2 Parser ***\n\n${result.template}\n\n*** V1 Parser ***\n\n${legacy.template}`
   return result
 }
 

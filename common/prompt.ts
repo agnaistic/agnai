@@ -215,9 +215,10 @@ export function getTemplate(
 ) {
   const isChat = OPENAI_CHAT_MODELS[opts.settings?.oaiModel || ''] ?? false
   const useGaslight = (opts.settings?.service === 'openai' && isChat) || opts.settings?.useGaslight
+  const fallback = getFallbackPreset(opts.settings?.service!)
 
-  const gaslight = opts.settings?.gaslight || defaultPresets.openai.gaslight
-  const template = useGaslight ? gaslight ?? defaultTemplate : defaultTemplate
+  const gaslight = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
+  const template = useGaslight ? gaslight : defaultTemplate
 
   return ensureValidTemplate(template, parts)
 }
