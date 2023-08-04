@@ -14,7 +14,7 @@ import {
 } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
-import { getEncoder } from '../tokenize'
+import { getTokenCounter } from '../tokenize'
 import { publishOne } from '../api/ws/handle'
 
 const baseUrl = `https://api.anthropic.com/v1/complete`
@@ -38,7 +38,7 @@ type CompletionGenerator = (
 ) => AsyncGenerator<{ error: string } | { token: string }, ClaudeCompletion | undefined>
 
 // There's no tokenizer for Claude, we use OpenAI's as an estimation
-const encoder = () => getEncoder('claude', '')
+const encoder = () => getTokenCounter('claude', '')
 
 export const handleClaude: ModelAdapter = async function* (opts) {
   const { members, user, log, guest, gen, isThirdParty } = opts

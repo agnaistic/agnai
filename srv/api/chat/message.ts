@@ -11,7 +11,7 @@ import { publishMany } from '../ws/handle'
 import { runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/templates'
 import { fillPromptWithLines } from '/common/prompt'
-import { getEncoder } from '/srv/tokenize'
+import { getTokenCounter } from '/srv/tokenize'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -294,7 +294,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   if (chat.mode === 'adventure') {
     const lines = fillPromptWithLines(
-      getEncoder('main'),
+      getTokenCounter('main'),
       1024,
       '',
       body.lines.concat(`${body.replyAs.name}: ${responseText}`)

@@ -4,9 +4,9 @@ import { reset, setRand, toBotMsg, toChar, toChat, toProfile, toUser, toUserMsg 
 import { getPromptParts } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
-import { getEncoder } from '/srv/tokenize'
+import { getTokenCounter } from '/srv/tokenize'
 
-const encoder = getEncoder('openai', 'turbo')
+const encoder = getTokenCounter('openai', 'turbo')
 
 const chars = [toChar('Robot'), toChar('Otherbot'), toChar('Thirdbot')]
 const char = chars[0]

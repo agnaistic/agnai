@@ -22,7 +22,7 @@ import { handleScale } from './scale'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
-import { getEncoder } from '../tokenize'
+import { getTokenCounter } from '../tokenize'
 import { handleGooseAI } from './goose'
 import { handleReplicate } from './replicate'
 import { getAppConfig } from '../api/settings'
@@ -189,7 +189,7 @@ export async function createTextStreamV2(
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId, opts.settings)
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
-    const encoder = getEncoder(adapter, model)
+    const encoder = getTokenCounter(adapter, model)
     opts.parts = getPromptParts(
       {
         ...entities,
@@ -229,7 +229,7 @@ export async function createTextStreamV2(
   }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const encoder = getEncoder(adapter, model)
+  const encoder = getTokenCounter(adapter, model)
   const handler = handlers[adapter]
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)

@@ -7,18 +7,25 @@ import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 import { Encoder, TokenCounter, Tokenizer } from '../common/tokenize'
 import * as mlc from '@mlc-ai/web-tokenizers'
-const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
+import * as nai from 'nai-js-tokenizer'
 
-export const nerdstash = new sp.SentencePieceProcessor()
+const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
+const pileJson = readFileSync(resolve(__dirname, 'sp-models', 'pile_tokenizer.json'))
+const gpt2Json = readFileSync(resolve(__dirname, 'sp-models', 'gpt2_tokenizer.json'))
+
+const nerdstash = new sp.SentencePieceProcessor()
 nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
 
-export const nerdstashV2 = new sp.SentencePieceProcessor()
+const nerdstashV2 = new sp.SentencePieceProcessor()
 nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
 
-export const llamaModel = new sp.SentencePieceProcessor()
+const llamaModel = new sp.SentencePieceProcessor()
 llamaModel.load(resolve(__dirname, './sp-models/llama.model'))
 
 let claudeEncoder: Tokenizer
+let krake: Encoder
+let euterpe: Encoder
+
 const davinciEncoder = encoding_for_model('text-davinci-003')
 const turboEncoder = encoding_for_model('gpt-3.5-turbo')
 
@@ -79,12 +86,12 @@ const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo_16k,
 ])
 
-export function getEncoder(adapter: AIAdapter | 'main', model?: string): TokenCounter {
-  const tokenizer = getTokenizer(adapter, model)
+export function getTokenCounter(adapter: AIAdapter | 'main', model?: string): TokenCounter {
+  const tokenizer = getEncoder(adapter, model)
   return tokenizer.count
 }
 
-export function getTokenizer(adapter: AIAdapter | 'main', model?: string): Encoder {
+export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder {
   if (adapter === 'replicate') {
     if (!model || model === 'llama') return llama
     return main
@@ -95,9 +102,10 @@ export function getTokenizer(adapter: AIAdapter | 'main', model?: string): Encod
   if (adapter !== 'openai' && adapter !== 'novel') return main
 
   if (adapter === 'novel') {
-    if (model === NOVEL_MODELS.clio_v1) return novelModern
     if (model === NOVEL_MODELS.kayra_v1) return novelModern
-    return novel
+    if (model === NOVEL_MODELS.clio_v1) return novel
+    if (model === NOVEL_MODELS.krake) return krake
+    return euterpe
   }
 
   if (model === OPENAI_MODELS.DaVinci) {
@@ -114,6 +122,36 @@ export function getTokenizer(adapter: AIAdapter | 'main', model?: string): Encod
 async function prepareTokenizers() {
   try {
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
+
+    {
+      const json = JSON.parse(gpt2Json.toString())
+      const tokenizer = new nai.Encoder(json.vocab, json.merges, json.specialTokens, json.config)
+      euterpe = {
+        encode: (value) => {
+          const tokens = tokenizer.encode(value)
+          return tokens
+        },
+        decode: (tokens) => {
+          return tokenizer.decode(tokens)
+        },
+        count: (value) => tokenizer.encode(value).length,
+      }
+    }
+
+    {
+      const json = JSON.parse(pileJson.toString())
+      const tokenizer = new nai.Encoder(json.vocab, json.merges, json.specialTokens, json.config)
+      krake = {
+        encode: (value) => {
+          const tokens = tokenizer.encode(value)
+          return tokens
+        },
+        decode: (tokens) => {
+          return tokenizer.decode(tokens)
+        },
+        count: (value) => tokenizer.encode(value).length,
+      }
+    }
 
     {
       davinci = {

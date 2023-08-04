@@ -99,7 +99,7 @@ export function buildMemoryPrompt(
     const matches: Match[] = []
 
     let id = 0
-    const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLowerCase()
+    const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLocaleLowerCase()
     const reversed = prep(combinedText)
 
     for (const entry of book.entries) {

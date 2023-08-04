@@ -7,7 +7,7 @@ import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
 import { needleToSSE } from './stream'
 import { AppLog } from '../logger'
-import { getTokenizer } from '../tokenize'
+import { getEncoder } from '../tokenize'
 
 export const NOVEL_BASEURL = `https://api.novelai.net`
 const novelUrl = (model: string) => `${getBaseUrl(model)}/ai/generate`
@@ -76,7 +76,7 @@ export const handleNovel: ModelAdapter = async function* ({
     body.parameters.prefix = 'special_instruct'
     body.parameters.phrase_rep_pen = 'aggressive'
   } else {
-    const { encode } = getTokenizer('novel', model)
+    const { encode } = getEncoder('novel', model)
     const stops: Array<number[]> = []
     const biases: any[] = [
       {

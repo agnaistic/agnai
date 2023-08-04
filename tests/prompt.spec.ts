@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
 import { BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
 import { toChat, build, botMsg, toMsg, entities, reset } from './util'
-import { getEncoder } from '../srv/tokenize'
+import { getTokenCounter } from '../srv/tokenize'
 
 const { chat, replyAs, main } = entities
 
@@ -51,7 +51,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   })
 
   it('will exclude lowest priority memory to fit in budget', () => {
-    const limit = getEncoder('kobold')(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`) - 1
+    const limit = getTokenCounter('kobold')(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`) - 1
     const actual = build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
       {

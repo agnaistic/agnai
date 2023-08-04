@@ -1,4 +1,4 @@
-import { getEncoder } from '../tokenize'
+import { getTokenCounter } from '../tokenize'
 import { AdapterProps } from './type'
 import { OPENAI_MODELS } from '/common/adapters'
 import { defaultPresets } from '/common/default-preset'
@@ -25,7 +25,7 @@ type SplitSampleChatProps = {
 
 // We only ever use the OpenAI gpt-3 encoder
 // Don't bother passing it around since we know this already
-const encoder = () => getEncoder('openai', OPENAI_MODELS.Turbo)
+const encoder = () => getTokenCounter('openai', OPENAI_MODELS.Turbo)
 
 const sampleChatMarkerCompletionItem: CompletionItem = {
   role: 'system',
