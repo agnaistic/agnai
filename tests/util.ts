@@ -8,7 +8,7 @@ import {
   toUser,
   toUserMsg,
 } from '../common/dummy'
-import { getEncoder } from '/srv/tokenize'
+import { getTokenCounter } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
 import { createPrompt, getPromptParts } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
@@ -95,7 +95,7 @@ export function build(
       chat: opts.chat || chat,
       messages,
       book: opts.book || book,
-      settings: { ...opts.settings, useTemplateParser: true },
+      settings: { ...opts.settings },
       continue: opts.continue,
       retry: opts.retry,
       replyAs: opts.replyAs || replyAs,
@@ -105,31 +105,9 @@ export function build(
       chatEmbeds: [],
       userEmbeds: [],
     },
-    getEncoder('main')
+    getTokenCounter('main')
   )
 
-  const legacy = createPrompt(
-    {
-      char: overChar,
-      members: [profile],
-      user,
-      chat: opts.chat || chat,
-      messages,
-      book: opts.book || book,
-      settings: opts.settings,
-      continue: opts.continue,
-      retry: opts.retry,
-      replyAs: opts.replyAs || replyAs,
-      characters,
-      sender: profile,
-      lastMessage: '',
-      chatEmbeds: [],
-      userEmbeds: [],
-    },
-    getEncoder('main')
-  )
-
-  result.template = `*** V2 Parser ***\n\n${result.template}\n\n*** V1 Parser ***\n\n${legacy.template}`
   return result
 }
 
@@ -179,7 +157,7 @@ function getParseOpts(overrides: TestOpts = {}, charOverrides: Partial<AppSchema
         userEmbeds: [],
       },
       overrides.lines || lines,
-      getEncoder('main')
+      getTokenCounter('main')
     )
 
   const base: TemplateOpts = {

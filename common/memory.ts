@@ -1,7 +1,7 @@
 import { AppSchema } from './types/schema'
 import { defaultPresets } from './presets'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
-import { Encoder } from './tokenize'
+import { TokenCounter } from './tokenize'
 
 export const BUNDLED_CHARACTER_BOOK_ID = '__bundled__characterbook__'
 
@@ -74,7 +74,10 @@ type CharacterBookEntry = CharacterBook['entries'][number]
 
 export const MEMORY_PREFIX = 'Facts: '
 
-export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPrompt | undefined {
+export function buildMemoryPrompt(
+  opts: MemoryOpts,
+  encoder: TokenCounter
+): MemoryPrompt | undefined {
   const { chat, settings, members, char, lines, books } = opts
 
   if (!books || !books.length) return
@@ -96,7 +99,7 @@ export function buildMemoryPrompt(opts: MemoryOpts, encoder: Encoder): MemoryPro
     const matches: Match[] = []
 
     let id = 0
-    const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLowerCase()
+    const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLocaleLowerCase()
     const reversed = prep(combinedText)
 
     for (const entry of book.entries) {

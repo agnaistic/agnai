@@ -1,4 +1,4 @@
-import { Encoder } from '../../common/tokenize'
+import { TokenCounter } from '../../common/tokenize'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 
@@ -15,7 +15,7 @@ const DEFAULT_MAX_TOKENS = 2048
 
 export async function getMessagesForPrompt(
   { chat, settings, char, members, retry }: PromptOpts,
-  encoder: Encoder
+  encoder: TokenCounter
 ) {
   const maxContext = settings.maxContextLength || DEFAULT_MAX_TOKENS
   let before: string | undefined

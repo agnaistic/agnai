@@ -24,7 +24,7 @@ type SlotId =
   | 'agn-leaderboard-sm'
   | 'agn-leaderboard-lg'
   | 'agn-leaderboard-xl'
-  | 'agn-video'
+  | 'agn-video-sm'
 
 type SlotSpec = { size: string; id: SlotId; fallbacks?: string[] }
 type SlotDef = {
@@ -35,7 +35,8 @@ type SlotDef = {
   xl?: SlotSpec
 }
 
-const MIN_AGE = 60000
+const MIN_AGE = 60 * 1000
+const VIDEO_AGE = 125 * 1000
 
 const Slot: Component<{
   slot: SlotKind
@@ -91,10 +92,12 @@ const Slot: Component<{
     const slot = adslot()
     const viewed = viewable()
     if (!slot || typeof viewed !== 'number') return
+
     const diff = Date.now() - viewed
 
     log('Trying', Math.round(diff / 1000))
-    const canRefresh = visible() && diff >= MIN_AGE
+    const minAge = specs()?.id.includes('agn-video') ? VIDEO_AGE : MIN_AGE
+    const canRefresh = visible() && diff >= minAge
 
     if (canRefresh) {
       setViewed()
@@ -216,7 +219,7 @@ const Slot: Component<{
 
         slot.addService(googletag.pubads())
         googletag.pubads().collapseEmptyDivs()
-        // googletag.pubads().enableVideoAds()
+        googletag.pubads().enableVideoAds()
         // if (!user.user?.admin) {
         // }
 
@@ -288,8 +291,14 @@ export default Slot
 const slotDefs: Record<SlotKind, SlotDef> = {
   video: {
     platform: 'page',
-    calc: (parent) => (window.innerWidth > 1024 ? 'sm' : null),
-    sm: { size: '300x400', id: 'agn-video' },
+    calc: (parent) => {
+      const def = window.innerWidth > 1024 ? (window.innerHeight > 1010 ? 'xl' : 'lg') : 'sm'
+      console.log('video', def)
+      return def
+    },
+    sm: { size: '300x250', id: 'agn-menu-sm' },
+    lg: { size: '300x300', id: 'agn-video-sm' },
+    xl: { size: '300x600', id: 'agn-video-sm' },
   },
   leaderboard: {
     platform: 'container',
@@ -340,7 +349,7 @@ export function getSlotById(id: string) {
 function getSlotId(id: string) {
   if (location.origin.includes('localhost') || location.origin.includes('127.0.0.1')) {
     console.debug('Psuedo request', id)
-    return '/6499/example/banner'
+    return id.includes('video') ? '/6499/example/native-video' : '/6499/example/banner'
   }
 
   return id

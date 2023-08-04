@@ -93,7 +93,7 @@ const Message: Component<MessageProps> = (props) => {
 const SingleMessage: Component<
   MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
 > = (props) => {
-  let ref: HTMLDivElement
+  let editRef: HTMLDivElement
   let avatarRef: any
   const user = userStore()
   const state = chatStore()
@@ -139,8 +139,8 @@ const SingleMessage: Component<
   })
 
   const saveEdit = () => {
-    if (!ref) return
-    msgStore.editMessage(props.msg._id, ref.innerText)
+    if (!editRef) return
+    msgStore.editMessage(props.msg._id, editRef.innerText)
     setEdit(false)
   }
 
@@ -148,10 +148,10 @@ const SingleMessage: Component<
 
   const startEdit = () => {
     setEdit(true)
-    if (ref) {
-      ref.innerText = props.original.msg
+    if (editRef) {
+      editRef.innerText = props.original.msg
     }
-    ref?.focus()
+    editRef?.focus()
   }
 
   const handleToShow = () => {
@@ -415,7 +415,7 @@ const SingleMessage: Component<
                 </Match>
                 <Match when={edit()}>
                   <div
-                    ref={ref!}
+                    ref={editRef!}
                     contentEditable={true}
                     onKeyUp={(ev) => {
                       if (ev.key === 'Escape') cancelEdit()

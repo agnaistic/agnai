@@ -438,6 +438,20 @@ const PromptSettings: Component<Props> = (props) => {
           disabled={props.disabled}
         />
       </Card>
+      <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'systemPrompt')}>
+        <FormLabel
+          label="System Prompt"
+          helperText="General instructions for how the AI should respond. This will be inserted into your Prompt Template."
+        />
+        <PromptEditor
+          fieldName="systemPrompt"
+          include={['char', 'user']}
+          placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
+          value={props.inherit?.systemPrompt ?? ''}
+          disabled={props.disabled}
+        />
+      </Card>
+
       <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'gaslight')}>
         <Toggle
           fieldName="useGaslight"
@@ -456,33 +470,10 @@ const PromptSettings: Component<Props> = (props) => {
           value={props.inherit?.useGaslight ?? false}
           disabled={props.disabled}
           service={props.service}
-          aiSetting={'gaslight'}
-        />
-      </Card>
-      <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'systemPrompt')}>
-        <FormLabel
-          label="System Prompt"
-          helperText="General instructions for how the AI should respond. This will be inserted into your Prompt Template."
-        />
-        <PromptEditor
-          fieldName="systemPrompt"
-          include={['char', 'user']}
-          placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
-          value={props.inherit?.systemPrompt ?? ''}
-          disabled={props.disabled}
-          aiSetting="gaslight"
         />
       </Card>
 
       <Card class="flex flex-col gap-4">
-        {/* <Toggle
-          fieldName="useTemplateParser"
-          value={props.inherit?.useTemplateParser}
-          label="Use Template Parser (Experimental)"
-          helperText="This will override your prompt. The V2 parser supports additional placeholders (#each, #if, random, roll, ...)."
-          onChange={(v) => setV2(v)}
-        /> */}
-
         <PromptEditor
           fieldName="gaslight"
           value={props.inherit?.gaslight}

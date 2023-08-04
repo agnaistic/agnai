@@ -5,7 +5,7 @@ import { ModelAdapter } from './type'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { sendMany } from '../api/ws'
 import { logger } from '../logger'
-import { getEncoder } from '../tokenize'
+import { getTokenCounter } from '../tokenize'
 import { config } from '../config'
 import { ReplicateModel, ReplicateModelType } from '/common/types/replicate'
 
@@ -139,7 +139,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
   //   '6282abe6a492de4145d7bb601023762212f9ddbbe78278bd6771c8b3b2f2a13b'
 
   let input: ReplicateRequest['input']
-  const encoder = getEncoder('replicate', modelType)
+  const encoder = getTokenCounter('replicate', modelType)
   switch (modelType) {
     case 'stablelm': {
       // TODO: Use a similar logic to OpenAI
@@ -392,12 +392,14 @@ function parseKey(key: string) {
 }
 
 if (config.keys.REPLICATE) {
-  cacheLanguageModels()
+  cacheLanguageModels().catch(() => null)
 }
 
 async function cacheLanguageModels() {
-  const collection = await getLanguageCollection(config.keys.REPLICATE)
-  modelCache = collection
+  try {
+    const collection = await getLanguageCollection(config.keys.REPLICATE)
+    modelCache = collection
+  } catch (ex) {}
 }
 
 export async function getLanguageModels(key?: string) {

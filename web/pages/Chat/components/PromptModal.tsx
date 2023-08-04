@@ -1,5 +1,5 @@
 import { Component, createMemo, createSignal, onMount } from 'solid-js'
-import { Encoder, getEncoder } from '../../../../common/tokenize'
+import { TokenCounter, getEncoder } from '../../../../common/tokenize'
 import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, userStore } from '../../../store'
@@ -7,7 +7,7 @@ import { chatStore, userStore } from '../../../store'
 const PromptModal: Component = () => {
   const user = userStore()
   const state = chatStore((s) => ({ prompt: s.prompt, chat: s.active?.chat }))
-  const [encoder, setEncoder] = createSignal<Encoder>()
+  const [encoder, setEncoder] = createSignal<TokenCounter>()
 
   onMount(async () => {
     const enc = await getEncoder()

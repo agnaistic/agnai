@@ -4,7 +4,7 @@ import { PromptParts, fillPromptWithLines } from './prompt'
 import { AppSchema, Memory } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
-import { Encoder } from './tokenize'
+import { TokenCounter } from './tokenize'
 import { v4 } from 'uuid'
 
 const parser = peggy.generate(grammar.trim(), {
@@ -84,7 +84,7 @@ export type TemplateOpts = {
   /** If present, history will be rendered last */
   limit?: {
     context: number
-    encoder: Encoder
+    encoder: TokenCounter
     output?: Record<string, string[]>
   }
 
