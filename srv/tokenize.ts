@@ -99,8 +99,6 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
 
   if (adapter === 'claude') return claude ?? main
 
-  if (adapter !== 'openai' && adapter !== 'novel') return main
-
   if (adapter === 'novel') {
     if (model === NOVEL_MODELS.kayra_v1) return novelModern
     if (model === NOVEL_MODELS.clio_v1) return novel
@@ -119,39 +117,39 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
   return main
 }
 
+{
+  const json = JSON.parse(gpt2Json.toString())
+  const tokenizer = new nai.Encoder(json.vocab, json.merges, json.specialTokens, json.config)
+  euterpe = {
+    encode: (value) => {
+      const tokens = tokenizer.encode(value)
+      return tokens
+    },
+    decode: (tokens) => {
+      return tokenizer.decode(tokens)
+    },
+    count: (value) => tokenizer.encode(value).length,
+  }
+}
+
+{
+  const json = JSON.parse(pileJson.toString())
+  const tokenizer = new nai.Encoder(json.vocab, json.merges, json.specialTokens, json.config)
+  krake = {
+    encode: (value) => {
+      const tokens = tokenizer.encode(value)
+      return tokens
+    },
+    decode: (tokens) => {
+      return tokenizer.decode(tokens)
+    },
+    count: (value) => tokenizer.encode(value).length,
+  }
+}
+
 async function prepareTokenizers() {
   try {
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
-
-    {
-      const json = JSON.parse(gpt2Json.toString())
-      const tokenizer = new nai.Encoder(json.vocab, json.merges, json.specialTokens, json.config)
-      euterpe = {
-        encode: (value) => {
-          const tokens = tokenizer.encode(value)
-          return tokens
-        },
-        decode: (tokens) => {
-          return tokenizer.decode(tokens)
-        },
-        count: (value) => tokenizer.encode(value).length,
-      }
-    }
-
-    {
-      const json = JSON.parse(pileJson.toString())
-      const tokenizer = new nai.Encoder(json.vocab, json.merges, json.specialTokens, json.config)
-      krake = {
-        encode: (value) => {
-          const tokens = tokenizer.encode(value)
-          return tokens
-        },
-        decode: (tokens) => {
-          return tokenizer.decode(tokens)
-        },
-        count: (value) => tokenizer.encode(value).length,
-      }
-    }
 
     {
       davinci = {

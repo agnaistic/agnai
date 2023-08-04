@@ -6,8 +6,6 @@ import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
 import { getTokenCounter } from '/srv/tokenize'
 
-const encoder = getTokenCounter('openai', 'turbo')
-
 const chars = [toChar('Robot'), toChar('Otherbot'), toChar('Thirdbot')]
 const char = chars[0]
 const { user } = toUser('sender')
@@ -127,7 +125,7 @@ function getParseOpts(
       userEmbeds: [],
     },
     lines,
-    encoder
+    getTokenCounter('openai', 'turbo')
   )
 
   const base: TemplateOpts = {
