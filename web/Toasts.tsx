@@ -39,11 +39,22 @@ const Toasts: Component = () => {
             <For each={state.history}>
               {({ time, toast, seen }) => (
                 <TitleCard
-                  type={toast.type === 'error' ? 'rose' : toast.type === 'warn' ? 'orange' : 'bg'}
+                  type={
+                    toast.type === 'admin'
+                      ? 'blue'
+                      : toast.type === 'error'
+                      ? 'rose'
+                      : toast.type === 'warn'
+                      ? 'orange'
+                      : 'bg'
+                  }
                 >
                   <p>
                     <em>{time.toLocaleString()}</em>
                   </p>
+                  <Show when={toast.type === 'admin'}>
+                    <b>Message from Administrator</b>
+                  </Show>
                   <p>{toast.message}</p>
                 </TitleCard>
               )}
