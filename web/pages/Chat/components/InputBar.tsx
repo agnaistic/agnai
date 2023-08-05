@@ -161,10 +161,10 @@ const InputBar: Component<{
     <div class="relative flex items-center justify-center">
       <Show when={props.showOocToggle}>
         <div class="cursor-pointer p-2" onClick={toggleOoc}>
-          <Show when={props.ooc}>
+          <Show when={!props.ooc}>
             <WizardIcon />
           </Show>
-          <Show when={!props.ooc}>
+          <Show when={props.ooc}>
             <NoCharacterIcon color="var(--bg-500)" />
           </Show>
         </div>

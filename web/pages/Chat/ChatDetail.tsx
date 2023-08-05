@@ -32,7 +32,6 @@ import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { cycleArray } from '/common/util'
 import { HOLDERS } from '/common/prompt'
-import UpdateGaslightToUseSystemPromptModal from './UpdateGaslightToUseSystemPromptModal'
 import { getActiveBots, canConvertGaslightV2 } from './util'
 import { usePane, useResizeObserver } from '/web/shared/hooks'
 import {
@@ -601,12 +600,6 @@ const ChatDetail: Component = () => {
       <Show when={!!removeId()}>
         <DeleteMsgModal show={!!removeId()} messageId={removeId()} close={() => setRemoveId('')} />
       </Show>
-
-      <UpdateGaslightToUseSystemPromptModal
-        chat={chats.chat!}
-        show={chats.opts.modal === 'updateGaslightToUseSystemPrompt'}
-        close={clearModal}
-      />
 
       <Show
         when={

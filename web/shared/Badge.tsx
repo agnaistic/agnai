@@ -1,7 +1,7 @@
 import { Component, createMemo } from 'solid-js'
 
 const Badge: Component<{ children: any; bg?: string }> = (props) => {
-  const bg = createMemo(() => props.bg || 'bg-red-900')
+  const bg = createMemo(() => props.bg || 'bg-red-500')
 
   return (
     <>

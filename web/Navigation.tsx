@@ -348,7 +348,9 @@ const InviteBadge: Component = () => {
   return (
     <>
       <Show when={inv.invites.length}>
-        <span class={`flex h-6 items-center justify-center rounded-xl bg-red-900 px-2 text-xs`}>
+        <span
+          class={`flex h-6 items-center justify-center rounded-xl bg-red-600 px-2 text-xs text-white`}
+        >
           {inv.invites.length}
         </span>
       </Show>

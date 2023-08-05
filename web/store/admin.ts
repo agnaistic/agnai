@@ -48,5 +48,14 @@ export const adminStore = createStore<AdminState>('admin', { users: [] })((_) =>
         return { metrics: res.result }
       }
     },
+    async sendAll(_, message: string, onSuccess?: Function) {
+      const res = await api.post(`/admin/notify`, { message })
+
+      if (!res.error) {
+        onSuccess?.()
+      } else {
+        toastStore.error(`Failed to send: ${res.error}`)
+      }
+    },
   }
 })
