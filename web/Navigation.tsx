@@ -43,7 +43,6 @@ import Slot from './shared/Slot'
 import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
-import Button from './shared/Button'
 import { pipelineApi } from './store/data/pipeline'
 
 const MobileNavHeader = () => (
@@ -412,7 +411,7 @@ const UserProfile = () => {
   return (
     <>
       <div
-        class="grid w-full items-center justify-between gap-2 pr-2"
+        class="grid w-full items-center justify-between gap-2"
         style={{
           'grid-template-columns': '1fr 30px',
         }}
@@ -440,16 +439,16 @@ const UserProfile = () => {
           </Switch>
           <span>{chars.impersonating?.name || user.profile?.handle}</span>
         </Item>
-        <div class="flex justify-center">
-          <Button
-            schema="bordered"
+        <div class="flex items-center">
+          <a
+            class="link"
             onClick={() => {
               settingStore.toggleImpersonate(true)
               settingStore.closeMenu()
             }}
           >
-            <VenetianMask size={20} />
-          </Button>
+            <VenetianMask />
+          </a>
         </div>
       </div>
     </>

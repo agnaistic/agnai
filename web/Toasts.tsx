@@ -65,7 +65,7 @@ const Single: Component<{ toast: Toast }> = (props) => {
         <div class="flex flex-col gap-1">
           <Show when={props.toast.type === 'admin'}>
             <div class="flex gap-1 font-bold">
-              <WizardIcon color="var(--bg-blue-500)" />
+              <WizardIcon color="var(--blue-500)" />
               Admin Notifcation
             </div>
           </Show>

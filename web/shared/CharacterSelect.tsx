@@ -21,6 +21,9 @@ const CharacterSelect: Component<{
   value?: AppSchema.Character | string
   disabled?: boolean
   class?: string
+
+  /** Ignore the active chat - Do not promote current characters to the top of the list */
+  ignoreActive?: boolean
   onChange?: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
   const [opts, setOpts] = createSignal(false)

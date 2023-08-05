@@ -6,7 +6,7 @@ const Badge: Component<{ children: any; bg?: string }> = (props) => {
   return (
     <>
       <span
-        class={`flex h-5 w-5 items-center justify-center rounded-full text-[0.6rem] font-bold ${bg()}`}
+        class={`flex h-5 w-5 items-center justify-center rounded-full text-[0.6rem] font-bold text-white ${bg()}`}
       >
         {props.children}
       </span>

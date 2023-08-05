@@ -43,16 +43,17 @@ const CharacterChats: Component = () => {
     ),
     loaded: s.characters.loaded,
   }))
-  const state = chatStore((s) =>
-    s.allChats.map((chat) => ({
+  const state = chatStore((s) => ({
+    chats: s.allChats.map((chat) => ({
       _id: chat._id,
       name: chat.name,
       createdAt: chat.createdAt,
       updatedAt: chat.updatedAt,
       characterId: chat.characterId,
-      characters: toChatListState(chars.map, chat),
-    }))
-  )
+      characters: toChatListState(s.allChars.map, chat),
+    })),
+    chars: s.allChars.map,
+  }))
 
   const nav = useNavigate()
   const [search, setSearch] = createSignal('')
@@ -92,7 +93,7 @@ const CharacterChats: Component = () => {
   const chats = createMemo(() => {
     const filterCharId = charId()
 
-    return state.filter((chat) => {
+    return state.chats.filter((chat) => {
       if (filterCharId && !chat.characters.some((c) => c._id === filterCharId)) return false
       const trimmed = search().trim().toLowerCase()
       if (!trimmed) return true
@@ -198,7 +199,7 @@ const CharacterChats: Component = () => {
         fallback={<NoChats character={chars.list.find((c) => c._id === params.id)?.name} />}
       >
         <Chats
-          allChars={chars.map}
+          allChars={state.chars}
           chats={chats()}
           chars={chars.list}
           sortField={sortField()}
