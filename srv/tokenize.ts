@@ -92,9 +92,14 @@ export function getTokenCounter(adapter: AIAdapter | 'main', model?: string): To
 }
 
 export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder {
-  if (adapter === 'replicate') {
-    if (!model || model === 'llama') return llama
-    return main
+  if (
+    adapter === 'replicate' ||
+    adapter === 'ooba' ||
+    adapter === 'kobold' ||
+    adapter === 'horde' ||
+    adapter === 'goose'
+  ) {
+    return llama
   }
 
   if (adapter === 'claude') return claude ?? main

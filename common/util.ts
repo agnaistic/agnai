@@ -16,6 +16,18 @@ export function toArray<T>(values?: T | T[]): T[] {
   return [values]
 }
 
+export function distinct<T extends { _id: string }>(values: T[]) {
+  const set = new Set<string>()
+  const next: T[] = []
+
+  for (const item of values) {
+    if (set.has(item._id)) continue
+    next.push(item)
+    set.add(item._id)
+  }
+
+  return next
+}
 export function wait(secs: number) {
   return new Promise((res) => setTimeout(res, secs * 1000))
 }

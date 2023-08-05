@@ -190,6 +190,7 @@ const CreateChatForm: Component<{
                 label="Character"
                 helperText="The conversation's main character"
                 onChange={(c) => setSelected(c?._id)}
+                ignoreActive
               />
             </Card>
           </Show>

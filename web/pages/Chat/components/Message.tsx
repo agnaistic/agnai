@@ -229,7 +229,7 @@ const SingleMessage: Component<
                 <Match when={ctx.char && !!props.msg.characterId}>
                   <CharacterAvatar
                     char={
-                      ctx.botMap[props.msg.characterId!] ||
+                      ctx.activeMap[props.msg.characterId!] ||
                       ctx.tempMap[props.msg.characterId!] ||
                       ctx.char
                     }

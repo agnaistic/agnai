@@ -15,6 +15,7 @@ export type Option<T extends string = string> = {
 const CharacterSelectList: Component<{
   items: AppSchema.Character[]
   emptyLabel?: string
+  ignoreActive?: boolean
   onSelect: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
   const chats = chatStore()
@@ -22,7 +23,7 @@ const CharacterSelectList: Component<{
   const [search, setSearch] = createSignal('')
 
   const current = createMemo(() => {
-    if (!chats.active?.chat) return
+    if (!chats.active?.chat || props.ignoreActive) return
 
     const chars: AppSchema.Character[] = []
     const map = chats.active.chat.characters || {}

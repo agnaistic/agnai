@@ -51,7 +51,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   })
 
   it('will exclude lowest priority memory to fit in budget', () => {
-    const limit = getTokenCounter('kobold')(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`) - 1
+    const limit = getTokenCounter('main')(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`) - 1
     const actual = build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
       {

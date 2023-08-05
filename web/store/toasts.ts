@@ -4,7 +4,7 @@ import { subscribe } from './socket'
 export type Toast = {
   id: number
   message: string
-  type: 'default' | 'warn' | 'success' | 'error'
+  type: 'default' | 'warn' | 'success' | 'error' | 'admin'
   ttl: number
 }
 
@@ -76,6 +76,7 @@ export const toastStore = createStore<ToastState>('toasts', {
     warn: addToast('warn'),
     success: addToast('success'),
     error: addToast('error'),
+    admin: addToast('admin'),
   }
 })
 
@@ -104,5 +105,11 @@ function getLevel(type: Toast['type']) {
       return 3
     case 'error':
       return 4
+    case 'admin':
+      return 5
   }
 }
+
+subscribe('admin-notification', { message: 'string' }, (body) => {
+  toastStore.admin(body.message)
+})

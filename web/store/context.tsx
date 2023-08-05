@@ -8,6 +8,7 @@ import { getSettingColor, userStore } from './user'
 import { hexToRgb, toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
+import { distinct } from '/common/util'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -94,7 +95,11 @@ export function ContextProvider(props: { children: any }) {
 
   const activeBots = createMemo(() => {
     const list = chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : []
-    return list
+    const curr = chars.chatChars.list
+    const temps = Object.values(chats.active?.chat.tempCharacters || {})
+
+    const all = list.concat(curr).concat(temps)
+    return distinct(all)
   })
 
   createEffect(() => {

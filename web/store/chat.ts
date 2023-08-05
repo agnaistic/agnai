@@ -4,7 +4,7 @@ import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import type { ChatModal } from '../pages/Chat/ChatOptions'
 import { clearDraft } from '../shared/hooks'
-import { storage } from '../shared/util'
+import { storage, toMap } from '../shared/util'
 import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
@@ -23,6 +23,7 @@ export type ChatState = {
   loaded: boolean
   // All user chats a user owns or is a member of
   allChats: AllChat[]
+  allChars: { map: Record<string, AppSchema.Character>; list: AppSchema.Character[] }
   // All chats for a particular character
   char?: {
     chats: AppSchema.Chat[]
@@ -77,6 +78,7 @@ const initState: ChatState = {
   lastChatId: null,
   loaded: false,
   allChats: [],
+  allChars: { map: {}, list: [] },
   char: undefined,
   active: undefined,
 
@@ -106,6 +108,7 @@ export const chatStore = createStore<ChatState>('chat', {
   lastChatId: storage.localGetItem('lastChatId'),
   loaded: false,
   allChats: [],
+  allChars: { map: {}, list: [] },
   chatProfiles: [],
   memberIds: {},
   opts: {
@@ -304,8 +307,12 @@ export const chatStore = createStore<ChatState>('chat', {
       }
 
       if (res.result) {
-        events.emit(EVENTS.charsReceived, res.result.characters)
-        return { allChats: res.result.chats.sort(sortDesc) }
+        events.emit(EVENTS.allChars, res.result.characters)
+        const allChars = {
+          map: toMap(res.result.characters),
+          list: res.result.characters,
+        }
+        return { allChats: res.result.chats.sort(sortDesc), allChars }
       }
     },
     getBotChats: async (_, characterId: string) => {
@@ -672,7 +679,7 @@ subscribe('service-prompt', { id: 'string', prompt: 'any' }, (body) => {
   })
 })
 
-subscribe('chat-temp-chararacter', { chatId: 'string', character: 'any' }, (body) => {
+subscribe('chat-temp-character', { chatId: 'string', character: 'any' }, (body) => {
   const { active, allChats } = chatStore.getState()
   const nextChats = allChats.map((chat) => {
     if (chat._id !== body.chatId) return chat
