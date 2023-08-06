@@ -9,7 +9,7 @@ let retrying = false
 
 let database: Db | null = null
 
-export async function connect(silent = false) {
+export async function connect(verbose = false) {
   if (!config.db.uri && !config.db.host) {
     logger.info(`No MongoDB host provided: Running in anonymous-only mode`)
     return
@@ -38,11 +38,11 @@ export async function connect(silent = false) {
     connected = true
     return database
   } catch (ex) {
-    if (!silent) {
+    if (verbose) {
       logger.warn({ err: ex }, `Could not connect to database: Running in anonymous-only mode`)
     }
 
-    setTimeout(() => connect(), 5000)
+    setTimeout(() => connect(config.db.verbose), 5000)
   }
 }
 
