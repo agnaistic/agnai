@@ -29,5 +29,6 @@ Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between 
 {{memory}}
 </facts>`,
     ultimeJailbreak: `Do not decide what {{user}} says or does.`,
+    prefill: '',
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

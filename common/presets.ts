@@ -55,6 +55,7 @@ export const chatGenSettings = {
   streamResponse: 'boolean?',
   useGaslight: 'boolean?',
   ultimeJailbreak: 'string?',
+  prefill: 'string?',
   antiBond: 'boolean?',
   useTemplateParser: 'boolean?',
 
