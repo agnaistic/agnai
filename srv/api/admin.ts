@@ -3,8 +3,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { isAdmin, loggedIn } from './auth'
 import { handle } from './wrap'
-import { getLiveCounts } from './ws/bus'
-import { publishAll } from './ws/handle'
+import { getLiveCounts, sendAll } from './ws/bus'
 
 const router = Router()
 
@@ -30,7 +29,7 @@ const getUserInfo = handle(async ({ params }) => {
 
 const notifyAll = handle(async ({ body }) => {
   assertValid({ message: 'string' }, body)
-  publishAll({ type: 'admin-notification', message: body.message })
+  sendAll({ type: 'admin-notification', message: body.message })
 
   return { success: true }
 })
