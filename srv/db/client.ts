@@ -42,7 +42,7 @@ export async function connect(silent = false) {
       logger.warn({ err: ex }, `Could not connect to database: Running in anonymous-only mode`)
     }
 
-    setTimeout(() => connect(true), 5000)
+    setTimeout(() => connect(), 5000)
   }
 }
 
