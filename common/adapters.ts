@@ -251,7 +251,7 @@ export const adapterSettings: {
     'goose',
     'openrouter',
   ],
-  ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter'],
+  ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel'],
   ignoreCharacterUjb: ['openai', 'claude', 'kobold', 'openrouter'],
 
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel'],
