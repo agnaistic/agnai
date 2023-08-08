@@ -105,8 +105,8 @@ const Slot: Component<{
     }
 
     const container = document.getElementById(id())
-    const player = document.getElementById(id() + '-player')
-    const ad = document.getElementById(id() + '-ad')
+    const player: any = document.getElementById(id() + '-player')
+    const ad: any = document.getElementById(id() + '-ad')
 
     if (!container || !player || !ad) {
       log('Video not ready')
@@ -115,8 +115,35 @@ const Slot: Component<{
 
     log('Attempting video request')
     try {
+      const win: any = window
       const imaAd = new google.ima.AdDisplayContainer(ad, player)
       const loader = new google.ima.AdsLoader(imaAd)
+      let manager: any
+
+      loader.addEventListener(
+        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+        (evt: any) => {
+          const mgr = evt.getAdsManager(player)
+          manager = mgr
+          win.mgr = mgr
+
+          player.load?.()
+          ad.initialize?.()
+
+          mgr.init(player.clientWidth, player.clientHeight, google.ima.ViewMode.NORMAL)
+          mgr.start()
+        },
+        false
+      )
+
+      loader.addEventListener(
+        google.ima.AdErrorEvent.Type.AD_ERROR,
+        (error: any) => {
+          log(error.getError())
+          manager?.destroy()
+        },
+        false
+      )
 
       player.addEventListener('ended', function () {
         loader.contentComplete()
