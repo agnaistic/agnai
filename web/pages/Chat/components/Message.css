@@ -42,6 +42,7 @@ em {
   background-color: unset;
   border-radius: unset;
   padding: unset;
+  white-space: pre-wrap;
 }
 
 .rendered-markdown ul {
