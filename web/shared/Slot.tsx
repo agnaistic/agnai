@@ -275,8 +275,6 @@ const Slot: Component<{
           slot.addService(googletag.pubads())
           googletag.pubads().collapseEmptyDivs()
           googletag.pubads().enableVideoAds()
-          // if (!user.user?.admin) {
-          // }
 
           googletag.enableServices()
           setSlot(slot)
@@ -322,11 +320,14 @@ const Slot: Component<{
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}
-            style={{ ...style(), ...specs()!.css, position: 'relative' }}
+            style={{
+              ...style(),
+              ...specs()!.css,
+              position: 'relative',
+            }}
             data-slot={specs()!.id}
           >
             <video
-              ref={() => tryVideo()}
               id={`${id()}-player`}
               class="h-full w-full"
               style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
@@ -407,9 +408,8 @@ function toSize(size: string): [number, number] {
 }
 
 function toPixels(size: string) {
-  // const [w, h] = size.split('x')
-  // return { width: `${+w + 2}px`, height: `${+h + 2}px` }
-  return {}
+  const [w, h] = size.split('x')
+  return { width: `${+w + 2}px`, height: `${+h + 2}px` }
 }
 
 const win: any = window
@@ -445,7 +445,6 @@ const gtmReady = new Promise(async (resolve) => {
 const imaReady = new Promise(async (resolve) => {
   do {
     if (typeof google !== 'undefined' && typeof google.ima !== 'undefined') {
-      console.log('***IMA_READY***')
       return resolve(true)
     }
     await wait(0.05)
