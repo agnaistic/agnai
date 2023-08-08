@@ -154,7 +154,7 @@ const AvatarIcon: Component<Props> = (props) => {
       <Switch>
         <Match when={avatar()}>
           <div
-            class={`overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+            class={`avatar-icon overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
               props.class || ''
             }`}
             data-bot-avatar={props.bot}
