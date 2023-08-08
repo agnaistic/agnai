@@ -15,6 +15,8 @@ import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
 
+declare const google: { ima: any }
+
 export type SlotKind = 'menu' | 'leaderboard' | 'content' | 'video'
 export type SlotSize = 'sm' | 'lg' | 'xl'
 
@@ -50,6 +52,7 @@ const Slot: Component<{
   const [stick, setStick] = createSignal(props.sticky)
   const [id] = createSignal(`${props.slot}-${v4().slice(0, 8)}`)
   const [done, setDone] = createSignal(false)
+  const [videoDone, setVideoDone] = createSignal(false)
   const [adslot, setSlot] = createSignal<googletag.Slot>()
   const [viewable, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
@@ -88,6 +91,52 @@ const Slot: Component<{
     setActualId(spec.id)
     return spec
   })
+
+  const tryVideo = () => {
+    const isVideo = specs()!.video && !!cfg.slots.gtmVideoTag
+    if (!isVideo) {
+      log('Invalid attempt')
+      return
+    }
+
+    if (videoDone()) {
+      log('[Video] Already done')
+      return
+    }
+
+    const container = document.getElementById(id())
+    const player = document.getElementById(id() + '-player')
+    const ad = document.getElementById(id() + '-ad')
+
+    if (!container || !player || !ad) {
+      log('Video not ready')
+      return
+    }
+
+    log('Attempting video request')
+    try {
+      const imaAd = new google.ima.AdDisplayContainer(ad, player)
+      const loader = new google.ima.AdsLoader(imaAd)
+
+      player.addEventListener('ended', function () {
+        loader.contentComplete()
+      })
+
+      const request = new google.ima.AdsRequest()
+      request.adTagUrl = cfg.slots.gtmVideoTag
+
+      request.linearAdSlotWidth = player.clientWidth
+      request.linearAdSlotHeight = player.clientHeight
+      request.nonLinearAdSlotWidth = player.clientWidth
+      request.nonLinearAdSlotHeight = player.clientHeight / 3
+
+      loader.requestAds(request)
+      setVideoDone(true)
+      log('Video requested')
+    } catch (ex: any) {
+      log('Video error:', ex?.message || ex)
+    }
+  }
 
   const tryRefresh = () => {
     const slot = adslot()
@@ -208,34 +257,40 @@ const Slot: Component<{
       return
     }
 
-    gtmReady.then(() => {
-      googletag.cmd.push(function () {
-        const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
-        setSlotId(slotId)
-        const slot = googletag.defineSlot(slotId, spec.wh, id())
-        if (!slot) {
-          log(`No slot created`)
-          return
-        }
-
-        slot.addService(googletag.pubads())
-        googletag.pubads().collapseEmptyDivs()
-        googletag.pubads().enableVideoAds()
-        // if (!user.user?.admin) {
-        // }
-
-        googletag.enableServices()
-        setSlot(slot)
+    if (specs()?.video) {
+      imaReady.then(() => {
+        tryVideo()
       })
+    } else {
+      gtmReady.then(() => {
+        googletag.cmd.push(function () {
+          const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
+          setSlotId(slotId)
+          const slot = googletag.defineSlot(slotId, spec.wh, id())
+          if (!slot) {
+            log(`No slot created`)
+            return
+          }
 
-      googletag.cmd.push(function () {
-        if (adslot()) {
-          log('Displaying')
-          googletag.display(id())
-          googletag.pubads().refresh([adslot()!])
-        }
+          slot.addService(googletag.pubads())
+          googletag.pubads().collapseEmptyDivs()
+          googletag.pubads().enableVideoAds()
+          // if (!user.user?.admin) {
+          // }
+
+          googletag.enableServices()
+          setSlot(slot)
+        })
+
+        googletag.cmd.push(function () {
+          if (adslot()) {
+            log('Displaying')
+            googletag.display(id())
+            googletag.pubads().refresh([adslot()!])
+          }
+        })
       })
-    })
+    }
 
     if (stick() && props.parent) {
       props.parent.classList.add('slot-sticky')
@@ -265,9 +320,26 @@ const Slot: Component<{
       <Switch>
         <Match when={!user.user || !specs()}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
-          <video id={id()} style={{ ...style(), ...specs()!.css }} data-slot={specs()!.id} muted>
-            <source src={cfg.slots.gtmVideoTag} />
-          </video>
+          <div
+            id={id()}
+            style={{ ...style(), ...specs()!.css, position: 'relative' }}
+            data-slot={specs()!.id}
+          >
+            <video
+              ref={() => tryVideo()}
+              id={`${id()}-player`}
+              class="h-full w-full"
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              muted
+              crossorigin="anonymous"
+            >
+              <source src={cfg.slots.gtmVideoTag} />
+            </video>
+            <div
+              id={`${id()}-ad`}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%' }}
+            />
+          </div>
         </Match>
         <Match when={cfg.flags.reporting}>
           <div
@@ -364,6 +436,16 @@ function getSlotId(id: string) {
 const gtmReady = new Promise(async (resolve) => {
   do {
     if (typeof googletag.pubads === 'function') {
+      return resolve(true)
+    }
+    await wait(0.05)
+  } while (true)
+})
+
+const imaReady = new Promise(async (resolve) => {
+  do {
+    if (typeof google !== 'undefined' && typeof google.ima !== 'undefined') {
+      console.log('***IMA_READY***')
       return resolve(true)
     }
     await wait(0.05)
