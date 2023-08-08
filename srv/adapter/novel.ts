@@ -79,18 +79,18 @@ export const handleNovel: ModelAdapter = async function* ({
     const { encode } = getEncoder('novel', model)
     const stops: Array<number[]> = []
     const biases: any[] = [
-      {
-        bias: -0.1,
-        ensure_sequence_finish: false,
-        generate_once: false,
-        sequence: encode('***'),
-      },
-      {
-        bias: -0.1,
-        ensure_sequence_finish: false,
-        generate_once: false,
-        sequence: encode('⁂'),
-      },
+      // {
+      //   bias: -0.1,
+      //   ensure_sequence_finish: false,
+      //   generate_once: false,
+      //   sequence: encode('***'),
+      // },
+      // {
+      //   bias: -0.1,
+      //   ensure_sequence_finish: false,
+      //   generate_once: false,
+      //   sequence: encode('⁂'),
+      // },
     ]
 
     const added = new Set<string>()
@@ -198,7 +198,7 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     use_cache: false,
     use_string: true,
     return_full_text: false,
-    prefix: 'special_instruct',
+    prefix: 'vanilla',
     order: gen.order,
     bad_words_ids: clioBadWordsId,
     repetition_penalty_whitelist: penaltyWhitelist,

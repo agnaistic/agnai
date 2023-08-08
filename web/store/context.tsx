@@ -16,18 +16,19 @@ export type ContextState = {
 
   /** Current chat temporary bots */
   tempMap: Record<string, AppSchema.Character>
-  /** Current chat temporary bots */
-  tempBots: AppSchema.Character[]
 
   /** Current chat bots */
   activeMap: Record<string, AppSchema.Character>
   /** Current chat bots */
   activeBots: AppSchema.Character[]
 
+  /** All bots from user, chats, current chat */
+  allBots: Record<string, AppSchema.Character>
+
   /** All user-owned bots */
-  botMap: Record<string, AppSchema.Character>
+  // botMap: Record<string, AppSchema.Character>
   /** All user-owned bots */
-  chatBots: AppSchema.Character[]
+  // chatBots: AppSchema.Character[]
 
   handle: string
   impersonate?: AppSchema.Character
@@ -47,11 +48,9 @@ export type ContextState = {
 const initial: ContextState = {
   anonymize: false,
   tempMap: {},
-  botMap: {},
-  activeMap: {},
+  allBots: {},
 
-  chatBots: [],
-  tempBots: [],
+  activeMap: {},
   activeBots: [],
 
   handle: 'You',
@@ -93,13 +92,23 @@ export function ContextProvider(props: { children: any }) {
     }
   })
 
-  const activeBots = createMemo(() => {
-    const list = chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : []
+  const allBots = createMemo(() => {
     const curr = chars.chatChars.list
     const temps = Object.values(chats.active?.chat.tempCharacters || {})
 
-    const all = list.concat(curr).concat(temps)
-    return distinct(all)
+    const all = chars.characters.list.concat(curr).concat(temps)
+    return toMap(all)
+  })
+
+  const activeBots = createMemo<AppSchema.Character[]>(() => {
+    if (!chats.active?.chat) return []
+
+    const list = chars.characters.map
+    const curr = chars.chatChars.map
+    const temps = chats.active?.chat.tempCharacters || {}
+
+    const active = getActiveBots(chats.active.chat, { ...list, ...curr, ...temps })
+    return distinct(active)
   })
 
   createEffect(() => {
@@ -108,10 +117,8 @@ export function ContextProvider(props: { children: any }) {
       flags: cfg.flags,
       anonymize: cfg.anonymize,
       tempMap: chats.active?.chat.tempCharacters || {},
-      tempBots: Object.values(chats.active?.chat.tempCharacters || {}),
 
-      botMap: chars.characters.map,
-      chatBots: chars.characters.list,
+      allBots: allBots(),
 
       activeMap: toMap(activeBots()),
       activeBots: activeBots(),

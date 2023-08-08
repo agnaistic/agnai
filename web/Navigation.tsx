@@ -145,9 +145,7 @@ const UserNavigation: Component = () => {
 
       <CharacterLink />
 
-      <Item href="/chats">
-        <MessageCircle fill="var(--bg-100)" /> Chats
-      </Item>
+      <ChatLink />
 
       <Library />
 
@@ -155,9 +153,16 @@ const UserNavigation: Component = () => {
         <MailPlus /> Invites <InviteBadge />
       </Item>
 
-      <Item href="/presets">
-        <Sliders /> Presets
-      </Item>
+      <MultiItem>
+        <Item href="/presets">
+          <Sliders /> Presets
+        </Item>
+        <EndItem>
+          <A class="icon-button" href="/presets/new">
+            <Plus />
+          </A>
+        </EndItem>
+      </MultiItem>
 
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics">
@@ -248,15 +253,20 @@ const GuestNavigation: Component = () => {
           </Item>
         </Show>
 
-        <Item href="/chats">
-          <MessageCircle /> Chats
-        </Item>
+        <ChatLink />
 
         <Library />
 
-        <Item href="/presets">
-          <Sliders /> Presets
-        </Item>
+        <MultiItem>
+          <Item href="/presets">
+            <Sliders /> Presets
+          </Item>
+          <EndItem>
+            <A class="icon-button" href="/presets/new">
+              <Plus />
+            </A>
+          </EndItem>
+        </MultiItem>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
@@ -391,16 +401,31 @@ const Library = () => {
 
 const CharacterLink = () => {
   return (
-    <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
+    <MultiItem>
       <Item href="/character/list">
         <WizardIcon /> Characters
       </Item>
-      <div class="flex items-center">
-        <A class="link" href="/editor">
+      <EndItem>
+        <A class="icon-button" href="/editor">
           <Plus />
         </A>
-      </div>
-    </div>
+      </EndItem>
+    </MultiItem>
+  )
+}
+
+const ChatLink = () => {
+  return (
+    <MultiItem>
+      <Item href="/chats">
+        <MessageCircle fill="var(--bg-100)" /> Chats
+      </Item>
+      <EndItem>
+        <A class="icon-button" href="/chats/create">
+          <Plus />
+        </A>
+      </EndItem>
+    </MultiItem>
   )
 }
 
@@ -441,7 +466,7 @@ const UserProfile = () => {
         </Item>
         <div class="flex items-center">
           <a
-            class="link"
+            class="icon-button"
             onClick={() => {
               settingStore.toggleImpersonate(true)
               settingStore.closeMenu()
@@ -453,6 +478,18 @@ const UserProfile = () => {
       </div>
     </>
   )
+}
+
+const MultiItem: Component<{ children: any }> = (props) => {
+  return (
+    <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
+      {props.children}
+    </div>
+  )
+}
+
+const EndItem: Component<{ children: any }> = (props) => {
+  return <div class="flex items-center">{props.children}</div>
 }
 
 const Slots: Component = (props) => {
@@ -476,7 +513,7 @@ const Slots: Component = (props) => {
 
   return (
     <div ref={ref!} class="h-full w-full">
-      <Slot parent={ref!} slot="menu" />
+      <Slot parent={ref!} slot="video" />
     </div>
   )
 }

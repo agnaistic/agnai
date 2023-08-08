@@ -3,7 +3,9 @@ import * as Purify from 'dompurify'
 import {
   Check,
   DownloadCloud,
+  GitFork,
   Info,
+  MoreHorizontal,
   PauseCircle,
   Pencil,
   RefreshCw,
@@ -23,6 +25,7 @@ import {
   onCleanup,
   onMount,
   Show,
+  Signal,
   Switch,
 } from 'solid-js'
 import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
@@ -38,6 +41,7 @@ import { trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
+import { DropMenu } from '/web/shared/DropMenu'
 
 type MessageProps = {
   msg: SplitMessage
@@ -112,19 +116,29 @@ const SingleMessage: Component<
       setImg(`calc(${Math.min(avatarRef?.clientHeight, 10000)}px + 1em)`)
     })
   )
+  const opts = createSignal(false)
 
   const [ctx] = useAppContext()
 
   onMount(() => obs().observe(avatarRef))
   onCleanup(() => obs().disconnect())
 
-  const bgStyles = createMemo(() =>
-    props.msg.characterId && !props.msg.userId
-      ? ctx.bg.bot
-      : props.msg.ooc
-      ? ctx.bg.ooc
-      : ctx.bg.user
-  )
+  const bgStyles = createMemo(() => {
+    const base: JSX.CSSProperties =
+      props.msg.characterId && !props.msg.userId
+        ? ctx.bg.bot
+        : props.msg.ooc
+        ? ctx.bg.ooc
+        : ctx.bg.user
+
+    const styles = { ...base }
+    const show = opts[0]()
+    if (show) {
+      styles['backdrop-filter'] = ''
+    }
+
+    return styles
+  })
 
   const msgText = createMemo(() => {
     let msg = props.msg.msg
@@ -216,10 +230,10 @@ const SingleMessage: Component<
                   {props.avatars![props.msg.characterId!]}
                 </Match>
 
-                <Match when={!!ctx.botMap[props.msg.characterId!]}>
+                <Match when={!!ctx.allBots[props.msg.characterId!]}>
                   <CharacterAvatar
                     openable
-                    char={ctx.botMap[props.msg.characterId!]}
+                    char={ctx.allBots[props.msg.characterId!]}
                     format={format()}
                     bot={!props.msg.userId}
                     zoom={1.75}
@@ -264,9 +278,7 @@ const SingleMessage: Component<
                 >
                   <Switch>
                     <Match when={props.msg.characterId}>
-                      {ctx.botMap[props.msg.characterId!]?.name ||
-                        ctx.tempMap[props.msg.characterId!]?.name ||
-                        ctx.char?.name!}
+                      {ctx.allBots[props.msg.characterId!]?.name || ctx.char?.name!}
                     </Match>
                     <Match when={true}>{handleToShow()}</Match>
                   </Switch>
@@ -281,7 +293,7 @@ const SingleMessage: Component<
                 leading-none
                 ${visibilityClass()}
               `}
-                  data-bot-time={isBot}
+                  data-bot-time={isBot()}
                   data-user-time={isUser()}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
@@ -323,6 +335,7 @@ const SingleMessage: Component<
                     last={props.last}
                     tts={!!props.tts}
                     partial={props.partial}
+                    show={opts}
                   />
                 </Match>
 
@@ -439,7 +452,7 @@ export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: s
 
 function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): SplitMessage[] {
   const charName =
-    (incoming.characterId ? ctx.botMap[incoming.characterId]?.name : ctx.char?.name) || ''
+    (incoming.characterId ? ctx.allBots[incoming.characterId]?.name : ctx.char?.name) || ''
 
   const CHARS = [`{{char}}:`]
   if (charName) CHARS.push(`${charName}:`)
@@ -526,8 +539,16 @@ const MessageOptions: Component<{
   lastSplit: boolean
   last?: boolean
   partial?: string
+  show: Signal<boolean>
   onRemove: () => void
 }> = (props) => {
+  const wrap = (fn: Function) => {
+    return () => {
+      props.show[1](false)
+      fn()
+    }
+  }
+
   return (
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
@@ -574,6 +595,39 @@ const MessageOptions: Component<{
           <RefreshCw size={18} />
         </div>
       </Show>
+
+      <Show when={props.chatEditing && props.original.adapter !== 'image'}>
+        <div class="icon-button" onClick={props.startEdit}>
+          <Pencil size={18} />
+        </div>
+      </Show>
+
+      <div class="icon-button" onClick={() => props.show[1](true)}>
+        <MoreHorizontal />
+      </div>
+
+      <DropMenu show={props.show[0]()} close={() => props.show[1](false)} horz="left">
+        <div class="flex gap-1 p-1 text-sm">
+          <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
+            <Button size="sm" schema="secondary">
+              <GitFork size={18} />
+            </Button>
+
+            <Button
+              size="sm"
+              schema="secondary"
+              onClick={wrap(() => !props.partial && chatStore.showPrompt(props.original))}
+              disabled={!!props.partial}
+            >
+              <Terminal size={18} />
+            </Button>
+          </Show>
+
+          <Button size="sm" schema="secondary" onClick={wrap(props.onRemove)}>
+            <Trash size={18} />
+          </Button>
+        </div>
+      </DropMenu>
     </div>
   )
 }

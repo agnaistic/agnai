@@ -29,7 +29,7 @@ const ColorPicker: Component<{
             <div class={props.helperText ? '' : 'pb-1'}>{props.label}</div>
           </Show>
           <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-2 text-sm text-[var(--text-700)]">{props.helperText}</p>
+            <p class="helper-text mt-[-0.125rem] pb-2 text-sm">{props.helperText}</p>
           </Show>
         </label>
       </Show>

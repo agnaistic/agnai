@@ -125,7 +125,7 @@ const TextInput: Component<{
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>
-            <div class={props.helperText ? '' : 'pb-1'}>
+            <div class={props.helperText ? '' : ' pb-1'}>
               {props.label}{' '}
               <Show when={props.tokenCount}>
                 <em class="ml-1 text-xs">({tokens()} tokens)</em>
@@ -136,7 +136,7 @@ const TextInput: Component<{
             </div>
           </Show>
           <Show when={!!props.helperText}>
-            <p class="mt-[-0.125rem] pb-1 text-sm text-[var(--text-700)]">{props.helperText}</p>
+            <p class="helper-text mt-[-0.125rem] pb-1 text-sm">{props.helperText}</p>
           </Show>
         </label>
       </Show>

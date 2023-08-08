@@ -65,3 +65,7 @@
   position: sticky;
   top: 0;
 }
+
+.helper-text {
+  @apply text-[var(--text-600)];
+}

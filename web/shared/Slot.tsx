@@ -30,6 +30,7 @@ type SlotSpec = { size: string; id: SlotId; fallbacks?: string[] }
 type SlotDef = {
   calc?: (parent: HTMLElement) => SlotSize | null
   platform: 'page' | 'container'
+  video?: boolean
   sm?: SlotSpec
   lg?: SlotSpec
   xl?: SlotSpec
@@ -57,7 +58,7 @@ const Slot: Component<{
 
   const cfg = settingStore((s) => ({
     publisherId: s.slots.publisherId,
-    newSlots: s.slots,
+    slots: s.slots,
     slotsLoaded: s.slotsLoaded,
     flags: s.flags,
     ready: s.initLoading === false,
@@ -263,6 +264,11 @@ const Slot: Component<{
     <>
       <Switch>
         <Match when={!user.user || !specs()}>{null}</Match>
+        <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
+          <video id={id()} style={{ ...style(), ...specs()!.css }} data-slot={specs()!.id} muted>
+            <source src={cfg.slots.gtmVideoTag} />
+          </video>
+        </Match>
         <Match when={cfg.flags.reporting}>
           <div
             class={`flex w-full justify-center border-[var(--bg-700)] bg-[var(--text-200)]`}
@@ -293,9 +299,9 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     platform: 'page',
     calc: (parent) => {
       const def = window.innerWidth > 1024 ? (window.innerHeight > 1010 ? 'xl' : 'lg') : 'sm'
-      console.log('video', def)
       return def
     },
+    video: true,
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x300', id: 'agn-video-sm' },
     xl: { size: '300x600', id: 'agn-video-sm' },
@@ -385,26 +391,31 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   return getBestFit(def, platform)
 }
 
-type SlotFit = { css: JSX.CSSProperties; wh: Array<[number, number]> } & SlotSpec
+type SlotFit = { css: JSX.CSSProperties; wh: Array<[number, number]>; video?: boolean } & SlotSpec
 
 function getBestFit(def: SlotDef, desired: SlotSize): SlotFit | null {
   switch (desired) {
     case 'xl': {
       const spec = def.xl || def.lg || def.sm
       if (!spec) return null
-      return { css: toPixels(spec.size), wh: getSizes(def.xl, def.lg, def.sm), ...spec }
+      return {
+        css: toPixels(spec.size),
+        wh: getSizes(def.xl, def.lg, def.sm),
+        ...spec,
+        video: def.video,
+      }
     }
 
     case 'lg': {
       const spec = def.lg || def.sm
       if (!spec) return null
-      return { css: toPixels(spec.size), wh: getSizes(def.lg, def.sm), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.lg, def.sm), ...spec, video: def.video }
     }
 
     default: {
       const spec = def.sm
       if (!spec) return null
-      return { css: toPixels(spec.size), wh: getSizes(def.sm), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.sm), ...spec, video: def.video }
     }
   }
 }
