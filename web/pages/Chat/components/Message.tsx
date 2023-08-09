@@ -364,7 +364,7 @@ const SingleMessage: Component<
                 </Match>
                 <Match when={props.retrying?._id === props.original._id && props.partial}>
                   <p
-                    class="rendered-markdown px-1"
+                    class="rendered-markdown streaming-markdown px-1"
                     data-bot-message={isBot()}
                     data-user-message={isUser()}
                     innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
@@ -382,7 +382,7 @@ const SingleMessage: Component<
                       fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
                     >
                       <p
-                        class="rendered-markdown px-1"
+                        class="rendered-markdown streaming-markdown px-1"
                         data-bot-message={isBot()}
                         data-user-message={isUser()}
                         innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
