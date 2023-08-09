@@ -106,7 +106,7 @@ IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
 Random "random" = "random"i ":"? WS words:CSV { return { kind: "random", values: words } }
-Roll "roll" = ("roll"i / "dice"i) WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
+Roll "roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
 
 // Iterable entities
 Bots "bots" = ( "bots"i ) { return "bots" }
