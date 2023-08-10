@@ -488,13 +488,14 @@ function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Char
 
   if (replyAs.postHistoryInstructions && !settings.ignoreCharacterUjb) {
     parts.ujb = replyAs.postHistoryInstructions
-    parts.ujb = parts.ujb?.replace(/{{original}}/gi, settings.ultimeJailbreak || '')
   }
 
   if (replyAs.systemPrompt && !settings.ignoreCharacterSystemPrompt) {
     parts.system = replyAs.systemPrompt
-    parts.system = parts.system?.replace(/{{original}}/gi, settings.systemPrompt || '')
   }
+
+  parts.ujb = parts.ujb?.replace(/{{original}}/gi, settings.ultimeJailbreak || '')
+  parts.system = parts.system?.replace(/{{original}}/gi, settings.systemPrompt || '')
 
   return parts
 }
