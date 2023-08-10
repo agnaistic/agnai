@@ -435,8 +435,9 @@ function toSize(size: string): [number, number] {
 }
 
 function toPixels(size: string) {
-  const [w, h] = size.split('x')
-  return { width: `${+w + 2}px`, height: `${+h + 2}px` }
+  // const [w, h] = size.split('x')
+  // return { width: `${+w + 2}px`, height: `${+h + 2}px` }
+  return {}
 }
 
 const win: any = window
