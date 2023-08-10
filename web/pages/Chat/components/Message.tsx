@@ -255,7 +255,7 @@ const SingleMessage: Component<
                 class={`flex min-w-0 shrink flex-col overflow-hidden ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()} ${oocNameClass()}`}
               >
                 <b
-                  class={`text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameClasses()}`}
+                  class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameClasses()}`}
                   // Necessary to override text-md and text-lg's line height, for proper alignment
                   style="line-height: 1;"
                   data-bot-name={isBot()}
@@ -327,11 +327,11 @@ const SingleMessage: Component<
                 </Match>
 
                 <Match when={edit()}>
-                  <div class="mr-4 flex items-center gap-4 text-sm">
+                  <div class="cancel-edit-btn mr-4 flex items-center gap-4 text-sm">
                     <div class="icon-button text-red-500" onClick={cancelEdit}>
                       <X size={22} />
                     </div>
-                    <div class="icon-button text-green-500" onClick={saveEdit}>
+                    <div class="confirm-edit-btn icon-button text-green-500" onClick={saveEdit}>
                       <Check size={22} />
                     </div>
                   </div>
@@ -364,7 +364,7 @@ const SingleMessage: Component<
                 </Match>
                 <Match when={props.retrying?._id === props.original._id && props.partial}>
                   <p
-                    class="rendered-markdown px-1"
+                    class="rendered-markdown streaming-markdown px-1"
                     data-bot-message={isBot()}
                     data-user-message={isUser()}
                     innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
@@ -382,7 +382,7 @@ const SingleMessage: Component<
                       fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
                     >
                       <p
-                        class="rendered-markdown px-1"
+                        class="rendered-markdown streaming-markdown px-1"
                         data-bot-message={isBot()}
                         data-user-message={isUser()}
                         innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
@@ -415,6 +415,7 @@ const SingleMessage: Component<
                 </Match>
                 <Match when={edit()}>
                   <div
+                    class="msg-edit-text-box"
                     ref={editRef!}
                     contentEditable={true}
                     onKeyUp={(ev) => {
@@ -532,7 +533,7 @@ const MessageOptions: Component<{
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
         <div
           onClick={() => !props.partial && chatStore.showPrompt(props.original)}
-          class="icon-button"
+          class="icon-button prompt-btn"
           classList={{ disabled: !!props.partial }}
         >
           <Terminal size={16} />
@@ -540,13 +541,13 @@ const MessageOptions: Component<{
       </Show>
 
       <Show when={props.chatEditing && props.original.adapter !== 'image'}>
-        <div class="icon-button" onClick={props.startEdit}>
+        <div class="edit-btn icon-button" onClick={props.startEdit}>
           <Pencil size={18} />
         </div>
       </Show>
 
       <Show when={props.chatEditing}>
-        <div class="icon-button" onClick={props.onRemove}>
+        <div class="delete-btn icon-button" onClick={props.onRemove}>
           <Trash size={18} />
         </div>
       </Show>
@@ -558,7 +559,7 @@ const MessageOptions: Component<{
         }
       >
         <div
-          class="icon-button"
+          class="icon-button refresh-btn"
           onClick={() => !props.partial && retryMessage(props.original, props.msg)}
         >
           <RefreshCw size={18} />

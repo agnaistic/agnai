@@ -553,6 +553,7 @@ const ChatDetail: Component = () => {
                   size="md"
                   schema="bordered"
                   onClick={() => settingStore.toggleImpersonate(true)}
+                  classList={{ 'impersonate-btn': true }}
                 >
                   <VenetianMask size={16} />
                 </Button>

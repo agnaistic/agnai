@@ -15,7 +15,7 @@ export const CharacterPill: Component<{
   return (
     <Show when={props.char}>
       <div
-        class={`flex min-w-[100px] max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} bg-900 items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
+        class={`flex min-w-[100px] max-w-[200px] overflow-hidden px-2 py-1 ${cursor()} bg-900 character-reply-btn items-center rounded-md border-[1px] border-[var(--bg-800)] hover:bg-[var(--bg-800)]`}
         onclick={() => !props.disabled && props.onClick(props.char._id)}
       >
         <CharacterAvatar

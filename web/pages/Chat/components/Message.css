@@ -16,6 +16,7 @@ em {
 .rendered-markdown q::before,
 .rendered-markdown q::after {
   content: '';
+  border: none; /* necessary for th escreenshot feature or we see weird white borders */
 }
 
 .rendered-markdown p:not(:last-child) {
@@ -42,6 +43,7 @@ em {
   background-color: unset;
   border-radius: unset;
   padding: unset;
+  white-space: pre-wrap;
 }
 
 .rendered-markdown ul {
