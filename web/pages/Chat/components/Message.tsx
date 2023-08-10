@@ -539,12 +539,12 @@ const MessageOptions: Component<{
   show: Signal<boolean>
   onRemove: () => void
 }> = (props) => {
-  const wrap = (fn: Function) => {
-    return () => {
-      props.show[1](false)
-      fn()
-    }
-  }
+  // const wrap = (fn: Function) => {
+  //   return () => {
+  //     props.show[1](false)
+  //     fn()
+  //   }
+  // }
 
   return (
     <div class="flex items-center gap-3 text-sm">
