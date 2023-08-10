@@ -335,6 +335,7 @@ export namespace AppSchema {
     gaslight?: string
     useGaslight?: boolean
     ultimeJailbreak?: string
+    prefill?: string
     ignoreCharacterUjb?: boolean
     antiBond?: boolean
 

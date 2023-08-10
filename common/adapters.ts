@@ -252,6 +252,7 @@ export const adapterSettings: {
     'openrouter',
   ],
   ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel'],
+  prefill: ['claude'],
   ignoreCharacterUjb: ['openai', 'claude', 'kobold', 'openrouter'],
 
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel'],
@@ -331,6 +332,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   thirdPartyFormat: 'Third Party Format',
   thirdPartyUrl: 'Third Party URL',
   ultimeJailbreak: 'Jailbreak',
+  prefill: 'Bot response prefilling',
   useTemplateParser: 'Use V2 Prompt Parser',
 }
 

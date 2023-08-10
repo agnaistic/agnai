@@ -259,10 +259,14 @@ function createClaudePrompt(opts: AdapterProps): string {
     characters: opts.characters || {},
   })
 
+  const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
+  const prefillCost = encoder()(prefill)
+
   const maxBudget =
     maxContextLength -
     maxResponseTokens -
     gaslightCost -
+    prefillCost -
     encoder()(ujb) -
     encoder()(opts.replyAs.name + ':')
 
@@ -301,7 +305,9 @@ function createClaudePrompt(opts: AdapterProps): string {
       : ''
 
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
-  return messages.join('\n\n') + continueAddon + '\n\n' + 'Assistant: ' + replyAs.name + ':'
+  return (
+    messages.join('\n\n') + continueAddon + '\n\n' + 'Assistant: ' + prefill + replyAs.name + ':'
+  )
 }
 
 type LineType = 'system' | 'char' | 'user' | 'example'
