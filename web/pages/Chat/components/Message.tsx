@@ -584,10 +584,6 @@ const MessageOptions: Component<{
         </div>
       </Show>
 
-      <div class="icon-button" onClick={wrap(props.onRemove)}>
-        <Trash size={18} />
-      </div>
-
       <Show when={props.last && !props.msg.characterId}>
         <div
           class="icon-button"
