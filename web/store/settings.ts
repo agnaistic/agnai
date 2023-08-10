@@ -42,6 +42,7 @@ export type SettingState = {
 
   slotsLoaded: boolean
   slots: { publisherId: string } & Record<string, string>
+  overlay: boolean
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -77,6 +78,7 @@ const initState: SettingState = {
   showSettings: false,
   slotsLoaded: false,
   slots: { publisherId: '' },
+  overlay: false,
 }
 
 export const settingStore = createStore<SettingState>(
@@ -128,8 +130,11 @@ export const settingStore = createStore<SettingState>(
         setTimeout(() => settingStore.init(), 2500)
       }
     },
+    toggleOverlay({ overlay }, next?: boolean) {
+      return { overlay: next === undefined ? !overlay : next }
+    },
     menu({ showMenu }) {
-      return { showMenu: !showMenu }
+      return { showMenu: !showMenu, overlay: !showMenu }
     },
     closeMenu: () => {
       return { showMenu: false }

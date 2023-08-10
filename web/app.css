@@ -23,7 +23,7 @@
   /* top: 48px; */
   left: 0;
   transition: opacity 250ms ease;
-  transition: left 250ms ease;
+  transition: left 400ms ease;
   @apply bg-[var(--bg-800)] sm:relative sm:top-0 sm:clear-none;
   @apply z-20 sm:z-0;
 }
@@ -37,7 +37,7 @@
 
 .drawer--hide {
   animation-fill-mode: forwards;
-  animation: hideDrawer 0s ease 200ms;
+  animation: hideDrawer 0s ease 800ms;
   @apply left-[-100vw] sm:left-0 sm:opacity-100;
 }
 
