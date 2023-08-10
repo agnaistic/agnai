@@ -168,11 +168,10 @@ export const generateMessageV2 = handle(async (req, res) => {
     })
 
     if (body.parent) {
-      chat.tree = await store.chats.assignMessageParent({
+      await store.tree.assignMessageParent({
         chatId: chat._id,
         parentId: body.parent,
         messageId: userMsg._id,
-        tree: chat.tree,
       })
     }
 
@@ -355,11 +354,10 @@ export const generateMessageV2 = handle(async (req, res) => {
       })
 
       if (body.parent && userMsg) {
-        await store.chats.assignMessageParent({
+        await store.tree.assignMessageParent({
           chatId: chat._id,
           parentId: userMsg._id,
           messageId: msg._id,
-          tree: chat.tree,
         })
       }
 

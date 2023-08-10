@@ -16,7 +16,17 @@ export const BasePresetOptions: PresetOption[] = [
   { label: 'System Built-in Preset (Horde)', value: AutoPreset.service, custom: false },
 ]
 
-export function getClientPreset(chat?: AppSchema.Chat) {
+export type PresetInfo = {
+  preset: Partial<AppSchema.UserGenPreset>
+  adapter: AIAdapter
+  model: string
+  contextLimit: number
+  name?: string
+  presetLabel: string
+  isThirdParty?: boolean
+}
+
+export function getClientPreset(chat?: AppSchema.Chat): PresetInfo | undefined {
   const user = userStore.getState()
   const presets = presetStore((s) => s.presets)
 

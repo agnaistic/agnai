@@ -27,12 +27,9 @@ import DeleteMsgModal from './DeleteMsgModal'
 import { DropMenu } from '../../shared/DropMenu'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
-import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { cycleArray } from '/common/util'
-import { HOLDERS } from '/common/prompt'
-import { getActiveBots, canConvertGaslightV2 } from './util'
 import { usePane, useResizeObserver } from '/web/shared/hooks'
 import {
   emptyMsg,
@@ -48,6 +45,7 @@ import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
 import Slot from '/web/shared/Slot'
 import ChatPanes from './components/ChatPanes'
+import { useAppContext } from '/web/store/context'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -69,14 +67,14 @@ const ChatDetail: Component = () => {
   const isPaneOrPopup = usePane()
   const slots = useResizeObserver()
 
+  const [ctx] = useAppContext()
+
   const chats = chatStore((s) => ({
     ...(s.active?.chat._id === params.id ? s.active : undefined),
     lastId: s.lastChatId,
     members: s.chatProfiles,
     loaded: s.loaded,
     opts: s.opts,
-    activeBots: getActiveBots(s.active?.chat!, chars.botMap),
-    tempBots: Object.values(s.active?.chat?.tempCharacters! || {}),
   }))
 
   const msgs = msgStore((s) => ({
@@ -217,49 +215,23 @@ const ChatDetail: Component = () => {
     setSwipe(next)
   }
 
-  const chatPreset = createMemo(() => getClientPreset(chats.chat))
-
   createEffect(() => {
     if (!msgs.inference) return
-    const opts = chatPreset()
-    if (!opts) return
+    if (!ctx.info) return
 
     // express.classify(opts.preset, msgs.inference.text)
     msgStore.clearLastInference()
   })
 
-  const shouldForceV2Gaslight = createMemo(() => {
-    const cfg = chatPreset()
-    if (!cfg) return false
-
-    if (!canConvertGaslightV2(cfg.preset)) return false
-    const gaslight = cfg.preset.gaslight!
-
-    const characterHasSystemPrompt = chars.chatBots.some(
-      (char) => char.systemPrompt !== undefined && char.systemPrompt !== ''
-    )
-
-    const gaslightHasSystemPrompt = !!gaslight.match(HOLDERS.systemPrompt)
-    return characterHasSystemPrompt && !gaslightHasSystemPrompt
-  })
-
   const adapterLabel = createMemo(() => {
-    const data = chatPreset()
-    if (!data) return ''
+    if (!ctx.info) return ''
 
-    const { name, adapter, isThirdParty, presetLabel } = data
+    const { name, adapter, isThirdParty, presetLabel } = ctx.info
 
     const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
       name || presetLabel
     }`
     return label
-  })
-
-  createEffect(() => {
-    if (shouldForceV2Gaslight()) {
-      setShowOpts(false)
-      chatStore.option('modal', 'updateGaslightToUseSystemPrompt')
-    }
   })
 
   createEffect(() => {
@@ -296,15 +268,12 @@ const ChatDetail: Component = () => {
 
         case '/devShowHiddenEvents':
           setShowHiddenEvents(!showHiddenEvents())
+          break
       }
     }
 
     // If the number of active bots is 1 or fewer then always request a response
-    const kind = ooc
-      ? 'ooc'
-      : chats.replyAs || chats.activeBots.length <= 1
-      ? 'send'
-      : 'send-noreply'
+    const kind = ooc ? 'ooc' : chats.replyAs || ctx.activeBots.length <= 1 ? 'send' : 'send-noreply'
     if (!ooc) setSwipe(0)
     msgStore.send(chats.chat?._id!, message, kind, onSuccess)
     return
@@ -543,7 +512,7 @@ const ChatDetail: Component = () => {
                 You have been removed from the conversation
               </div>
             </Show>
-            <Show when={isOwner() && (chats.activeBots.length > 1 || chats.tempBots.length > 0)}>
+            <Show when={isOwner() && ctx.activeBots.length > 1}>
               <div
                 class={`flex justify-center gap-2 overflow-x-auto py-1 ${
                   msgs.waiting ? 'opacity-70 saturate-0' : ''
@@ -557,15 +526,18 @@ const ChatDetail: Component = () => {
                 >
                   <VenetianMask size={16} />
                 </Button>
-                <For each={chats.activeBots}>
-                  {(bot) => (
-                    <CharacterPill
-                      char={bot}
-                      onClick={requestMessage}
-                      disabled={!!msgs.waiting}
-                      active={chats.replyAs === bot._id}
-                    />
-                  )}
+                <For each={ctx.activeBots}>
+                  {(bot) => {
+                    if (ctx.tempMap[bot._id]?.favorite === false) return null
+                    return (
+                      <CharacterPill
+                        char={bot}
+                        onClick={requestMessage}
+                        disabled={!!msgs.waiting}
+                        active={chats.replyAs === bot._id}
+                      />
+                    )
+                  }}
                 </For>
               </div>
             </Show>
@@ -579,7 +551,7 @@ const ChatDetail: Component = () => {
               setOoc={setOoc}
               showOocToggle={isGroupChat()}
               request={requestMessage}
-              bots={chats.activeBots}
+              bots={ctx.activeBots}
               botMap={chars.botMap}
             />
           </div>

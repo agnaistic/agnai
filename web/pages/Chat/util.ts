@@ -1,4 +1,3 @@
-import { SUPPORTS_INSTRUCT } from '/common/adapters'
 import { AppSchema } from '/common/types'
 
 /**
@@ -61,7 +60,6 @@ export function canConvertGaslightV2(preset: Partial<AppSchema.UserGenPreset>) {
 
   // Do not upgrade presets with an unknown service -- only models that support instruct are supported
   if (!preset.service) return false
-  if (!SUPPORTS_INSTRUCT[preset.service]) return false
 
   return true
 }

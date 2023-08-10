@@ -39,32 +39,71 @@ export const Dropdown: Component<{ children: any }> = (props) => {
   )
 }
 
+type Horz = 'left' | 'right'
+type Vert = 'up' | 'down'
+
 export const DropMenu: Component<{
   show: boolean
   close: () => void
   children: any
-  horz?: 'left' | 'right'
-  vert?: 'up' | 'down'
+  horz?: Horz
+  vert?: Vert
   customPosition?: string
   class?: string
 }> = (props) => {
-  const position = createMemo(
-    () =>
-      props.customPosition ??
-      `${props.vert === 'up' ? 'bottom-6' : ''} ${props.horz === 'left' ? 'right-0' : ''}`
-  )
+  const [auto, setAuto] = createSignal<{ horz?: Horz; vert?: Vert }>()
+
+  const onRef = (el: HTMLDivElement) => {
+    const rect = el.getBoundingClientRect()
+
+    if (props.customPosition) {
+      setAuto()
+      return
+    }
+
+    let vert: Vert = 'down'
+    let horz: Horz | undefined
+
+    if (props.vert) {
+      vert = props.vert
+    } else if (rect.y + rect.height > window.innerHeight) {
+      vert = 'up'
+    } else if (rect.y - rect.height < 0) {
+      vert = 'down'
+    }
+
+    if (props.horz) {
+      horz = props.horz
+    } else if (rect.x + rect.width > window.innerWidth) {
+      horz = 'left'
+    } else if (rect.x - rect.width < 0) {
+      horz = 'right'
+    }
+
+    return setAuto({ vert, horz })
+  }
+
+  const position = createMemo(() => {
+    if (props.customPosition) return props.customPosition
+
+    const vert = auto() ? auto()?.vert : props.vert
+    const horz = auto() ? auto()?.horz : props.horz
+
+    return `${vert === 'up' ? 'bottom-6' : ''} ${horz === 'left' ? 'right-0' : ''}`
+  })
 
   return (
     <>
       <Show when={props.show}>
         <div
-          class="fixed bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
+          class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
           onClick={props.close}
         ></div>
       </Show>
       <div class="relative z-50 text-sm">
         <Show when={props.show}>
           <div
+            ref={onRef}
             class={`absolute ${position()} bg-800 w-fit rounded-md border-[1px] border-[var(--bg-600)] ${
               props.class || ''
             }`}

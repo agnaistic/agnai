@@ -59,6 +59,10 @@ body {
   @apply cursor-pointer text-[var(--hl-500)] hover:text-[var(--hl-300)];
 }
 
+.base-link {
+  @apply cursor-pointer hover:text-[var(--hl-300)];
+}
+
 .highlight {
   @apply text-[var(--hl-400)];
 }

@@ -43,11 +43,12 @@ export const removeCharacter = handle(async ({ params, userId }, _) => {
   const chat = await store.chats.getChatOnly(params.id)
 
   if (!chat) throw errors.NotFound
+  if (chat.userId !== userId) throw errors.Forbidden
+
   if (!chat.characters) {
     chat.characters = {}
   }
 
-  if (chat.userId !== userId) throw errors.Forbidden
   if (!chat.characters[charId]) return { success: true }
 
   await store.chats.setChatCharacter(chatId, charId, false)

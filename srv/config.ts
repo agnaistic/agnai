@@ -67,6 +67,7 @@ export const config = {
     host: env('DB_HOST', '127.0.0.1'),
     port: env('DB_PORT', '27017'),
     uri: env('DB_URI', ''),
+    verbose: !!env('DB_VERBOSE', ''),
   },
   redis: {
     host: env('REDIS_HOST', '127.0.0.1'),

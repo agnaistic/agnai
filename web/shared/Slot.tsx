@@ -15,6 +15,8 @@ import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
 
+declare const google: { ima: any }
+
 export type SlotKind = 'menu' | 'leaderboard' | 'content' | 'video'
 export type SlotSize = 'sm' | 'lg' | 'xl'
 
@@ -30,6 +32,7 @@ type SlotSpec = { size: string; id: SlotId; fallbacks?: string[] }
 type SlotDef = {
   calc?: (parent: HTMLElement) => SlotSize | null
   platform: 'page' | 'container'
+  video?: boolean
   sm?: SlotSpec
   lg?: SlotSpec
   xl?: SlotSpec
@@ -49,6 +52,7 @@ const Slot: Component<{
   const [stick, setStick] = createSignal(props.sticky)
   const [id] = createSignal(`${props.slot}-${v4().slice(0, 8)}`)
   const [done, setDone] = createSignal(false)
+  const [videoDone, setVideoDone] = createSignal(false)
   const [adslot, setSlot] = createSignal<googletag.Slot>()
   const [viewable, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
@@ -57,7 +61,7 @@ const Slot: Component<{
 
   const cfg = settingStore((s) => ({
     publisherId: s.slots.publisherId,
-    newSlots: s.slots,
+    slots: s.slots,
     slotsLoaded: s.slotsLoaded,
     flags: s.flags,
     ready: s.initLoading === false,
@@ -87,6 +91,79 @@ const Slot: Component<{
     setActualId(spec.id)
     return spec
   })
+
+  const tryVideo = () => {
+    const isVideo = specs()!.video && !!cfg.slots.gtmVideoTag
+    if (!isVideo) {
+      log('Invalid attempt')
+      return
+    }
+
+    if (videoDone()) {
+      log('[Video] Already done')
+      return
+    }
+
+    const container = document.getElementById(id())
+    const player: any = document.getElementById(id() + '-player')
+    const ad: any = document.getElementById(id() + '-ad')
+
+    if (!container || !player || !ad) {
+      log('Video not ready')
+      return
+    }
+
+    log('Attempting video request')
+    try {
+      const win: any = window
+      const imaAd = new google.ima.AdDisplayContainer(ad, player)
+      const loader = new google.ima.AdsLoader(imaAd)
+      let manager: any
+
+      loader.addEventListener(
+        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
+        (evt: any) => {
+          const mgr = evt.getAdsManager(player)
+          manager = mgr
+          win.mgr = mgr
+
+          player.load?.()
+          ad.initialize?.()
+
+          mgr.init(player.clientWidth, player.clientHeight, google.ima.ViewMode.NORMAL)
+          mgr.start()
+        },
+        false
+      )
+
+      loader.addEventListener(
+        google.ima.AdErrorEvent.Type.AD_ERROR,
+        (error: any) => {
+          log(error.getError())
+          manager?.destroy()
+        },
+        false
+      )
+
+      player.addEventListener('ended', function () {
+        loader.contentComplete()
+      })
+
+      const request = new google.ima.AdsRequest()
+      request.adTagUrl = cfg.slots.gtmVideoTag
+
+      request.linearAdSlotWidth = player.clientWidth
+      request.linearAdSlotHeight = player.clientHeight
+      request.nonLinearAdSlotWidth = player.clientWidth
+      request.nonLinearAdSlotHeight = player.clientHeight / 3
+
+      loader.requestAds(request)
+      setVideoDone(true)
+      log('Video requested')
+    } catch (ex: any) {
+      log('Video error:', ex?.message || ex)
+    }
+  }
 
   const tryRefresh = () => {
     const slot = adslot()
@@ -207,34 +284,38 @@ const Slot: Component<{
       return
     }
 
-    gtmReady.then(() => {
-      googletag.cmd.push(function () {
-        const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
-        setSlotId(slotId)
-        const slot = googletag.defineSlot(slotId, spec.wh, id())
-        if (!slot) {
-          log(`No slot created`)
-          return
-        }
-
-        slot.addService(googletag.pubads())
-        googletag.pubads().collapseEmptyDivs()
-        googletag.pubads().enableVideoAds()
-        // if (!user.user?.admin) {
-        // }
-
-        googletag.enableServices()
-        setSlot(slot)
+    if (specs()?.video) {
+      imaReady.then(() => {
+        tryVideo()
       })
+    } else {
+      gtmReady.then(() => {
+        googletag.cmd.push(function () {
+          const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
+          setSlotId(slotId)
+          const slot = googletag.defineSlot(slotId, spec.wh, id())
+          if (!slot) {
+            log(`No slot created`)
+            return
+          }
 
-      googletag.cmd.push(function () {
-        if (adslot()) {
-          log('Displaying')
-          googletag.display(id())
-          googletag.pubads().refresh([adslot()!])
-        }
+          slot.addService(googletag.pubads())
+          googletag.pubads().collapseEmptyDivs()
+          googletag.pubads().enableVideoAds()
+
+          googletag.enableServices()
+          setSlot(slot)
+        })
+
+        googletag.cmd.push(function () {
+          if (adslot()) {
+            log('Displaying')
+            googletag.display(id())
+            googletag.pubads().refresh([adslot()!])
+          }
+        })
       })
-    })
+    }
 
     if (stick() && props.parent) {
       props.parent.classList.add('slot-sticky')
@@ -263,6 +344,31 @@ const Slot: Component<{
     <>
       <Switch>
         <Match when={!user.user || !specs()}>{null}</Match>
+        <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
+          <div
+            id={id()}
+            style={{
+              ...style(),
+              ...specs()!.css,
+              position: 'relative',
+            }}
+            data-slot={specs()!.id}
+          >
+            <video
+              id={`${id()}-player`}
+              class="h-full w-full"
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              muted
+              crossorigin="anonymous"
+            >
+              <source src={cfg.slots.gtmVideoTag} />
+            </video>
+            <div
+              id={`${id()}-ad`}
+              style={{ position: 'absolute', top: 0, left: 0, width: '100%' }}
+            />
+          </div>
+        </Match>
         <Match when={cfg.flags.reporting}>
           <div
             class={`flex w-full justify-center border-[var(--bg-700)] bg-[var(--text-200)]`}
@@ -293,9 +399,9 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     platform: 'page',
     calc: (parent) => {
       const def = window.innerWidth > 1024 ? (window.innerHeight > 1010 ? 'xl' : 'lg') : 'sm'
-      console.log('video', def)
       return def
     },
+    video: true,
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x300', id: 'agn-video-sm' },
     xl: { size: '300x600', id: 'agn-video-sm' },
@@ -329,9 +435,8 @@ function toSize(size: string): [number, number] {
 }
 
 function toPixels(size: string) {
-  // const [w, h] = size.split('x')
-  // return { width: `${+w + 2}px`, height: `${+h + 2}px` }
-  return {}
+  const [w, h] = size.split('x')
+  return { width: `${+w + 2}px`, height: `${+h + 2}px` }
 }
 
 const win: any = window
@@ -364,6 +469,15 @@ const gtmReady = new Promise(async (resolve) => {
   } while (true)
 })
 
+const imaReady = new Promise(async (resolve) => {
+  do {
+    if (typeof google !== 'undefined' && typeof google.ima !== 'undefined') {
+      return resolve(true)
+    }
+    await wait(0.05)
+  } while (true)
+})
+
 function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   const def = slotDefs[slot]
 
@@ -385,26 +499,31 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   return getBestFit(def, platform)
 }
 
-type SlotFit = { css: JSX.CSSProperties; wh: Array<[number, number]> } & SlotSpec
+type SlotFit = { css: JSX.CSSProperties; wh: Array<[number, number]>; video?: boolean } & SlotSpec
 
 function getBestFit(def: SlotDef, desired: SlotSize): SlotFit | null {
   switch (desired) {
     case 'xl': {
       const spec = def.xl || def.lg || def.sm
       if (!spec) return null
-      return { css: toPixels(spec.size), wh: getSizes(def.xl, def.lg, def.sm), ...spec }
+      return {
+        css: toPixels(spec.size),
+        wh: getSizes(def.xl, def.lg, def.sm),
+        ...spec,
+        video: def.video,
+      }
     }
 
     case 'lg': {
       const spec = def.lg || def.sm
       if (!spec) return null
-      return { css: toPixels(spec.size), wh: getSizes(def.lg, def.sm), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.lg, def.sm), ...spec, video: def.video }
     }
 
     default: {
       const spec = def.sm
       if (!spec) return null
-      return { css: toPixels(spec.size), wh: getSizes(def.sm), ...spec }
+      return { css: toPixels(spec.size), wh: getSizes(def.sm), ...spec, video: def.video }
     }
   }
 }

@@ -9,6 +9,7 @@ import { hexToRgb, toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
+import { PresetInfo, getClientPreset } from '../shared/adapter'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -16,18 +17,19 @@ export type ContextState = {
 
   /** Current chat temporary bots */
   tempMap: Record<string, AppSchema.Character>
-  /** Current chat temporary bots */
-  tempBots: AppSchema.Character[]
 
   /** Current chat bots */
   activeMap: Record<string, AppSchema.Character>
   /** Current chat bots */
   activeBots: AppSchema.Character[]
 
+  /** All bots from user, chats, current chat */
+  allBots: Record<string, AppSchema.Character>
+
   /** All user-owned bots */
-  botMap: Record<string, AppSchema.Character>
+  // botMap: Record<string, AppSchema.Character>
   /** All user-owned bots */
-  chatBots: AppSchema.Character[]
+  // chatBots: AppSchema.Character[]
 
   handle: string
   impersonate?: AppSchema.Character
@@ -35,6 +37,7 @@ export type ContextState = {
   flags: FeatureFlags
   char?: AppSchema.Character
   chat?: AppSchema.Chat
+  replyAs?: string
   trimSentences: boolean
   bg: {
     bot: JSX.CSSProperties
@@ -42,16 +45,15 @@ export type ContextState = {
     ooc: JSX.CSSProperties
   }
   promptHistory: any
+  info?: PresetInfo
 }
 
 const initial: ContextState = {
   anonymize: false,
   tempMap: {},
-  botMap: {},
-  activeMap: {},
+  allBots: {},
 
-  chatBots: [],
-  tempBots: [],
+  activeMap: {},
   activeBots: [],
 
   handle: 'You',
@@ -93,25 +95,34 @@ export function ContextProvider(props: { children: any }) {
     }
   })
 
-  const activeBots = createMemo(() => {
-    const list = chats.active?.chat ? getActiveBots(chats.active.chat, chars.characters.map) : []
+  const allBots = createMemo(() => {
     const curr = chars.chatChars.list
     const temps = Object.values(chats.active?.chat.tempCharacters || {})
 
-    const all = list.concat(curr).concat(temps)
-    return distinct(all)
+    const all = chars.characters.list.concat(curr).concat(temps)
+    return toMap(all)
+  })
+
+  const activeBots = createMemo<AppSchema.Character[]>(() => {
+    if (!chats.active?.chat) return []
+
+    const list = chars.characters.map
+    const curr = chars.chatChars.map
+    const temps = chats.active?.chat.tempCharacters || {}
+
+    const active = getActiveBots(chats.active.chat, { ...list, ...curr, ...temps })
+    return distinct(active)
   })
 
   createEffect(() => {
+    const info = getClientPreset(chats.active?.chat)
     const next: Partial<ContextState> = {
       bg: visuals(),
       flags: cfg.flags,
       anonymize: cfg.anonymize,
       tempMap: chats.active?.chat.tempCharacters || {},
-      tempBots: Object.values(chats.active?.chat.tempCharacters || {}),
 
-      botMap: chars.characters.map,
-      chatBots: chars.characters.list,
+      allBots: allBots(),
 
       activeMap: toMap(activeBots()),
       activeBots: activeBots(),
@@ -119,10 +130,12 @@ export function ContextProvider(props: { children: any }) {
       impersonate: chars.impersonating,
       char: chats.active?.char,
       chat: chats.active?.chat,
+      replyAs: chats.active?.replyAs,
       profile: users.profile,
       handle: chars.impersonating?.name || users.profile?.handle || 'You',
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
+      info,
     }
 
     setState(next)
@@ -132,7 +145,9 @@ export function ContextProvider(props: { children: any }) {
 }
 
 export function useAppContext() {
-  return useContext(AppContext)
+  const [state, setState] = useContext(AppContext)
+
+  return [state, { setState }] as const
 }
 
 function getRgbaFromVar(cssVar: string, opacity: number): JSX.CSSProperties {

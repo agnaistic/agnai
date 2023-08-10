@@ -7,7 +7,6 @@ import { scenarioStore } from './scenario'
 import { toastStore } from './toasts'
 import { chatStore } from './chat'
 import { weightedRandom } from '../shared/util'
-import { settingStore } from './settings'
 
 export type ChatEvent = {
   charId: string
@@ -67,9 +66,6 @@ export const eventStore = createStore<ChatEventState>('events', { events: [], pr
         chat: AppSchema.Chat,
         messagesSinceLastEvent: number
       ) {
-        const { flags } = settingStore.getState()
-        if (!flags.events) return
-
         if (preventLoop) {
           yield { preventLoop: false }
           return

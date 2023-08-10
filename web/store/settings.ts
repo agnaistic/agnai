@@ -11,26 +11,6 @@ import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { wait } from '/common/util'
 
-type SlotSpec = {
-  id: string
-  size: string
-  calc?: { platform: 'container' | 'page'; height?: number; width?: number }
-}
-
-type SlotConfig = {
-  publisherId: string
-
-  /**
-   * Override SlotKinds
-   */
-  definitions: Record<string, { sm?: SlotSpec; lg?: SlotSpec; xl?: SlotSpec }>
-}
-
-const emptySlots: SlotConfig = {
-  publisherId: '',
-  definitions: {},
-}
-
 export type SettingState = {
   guestAccessAllowed: boolean
   initLoading: boolean
@@ -61,7 +41,7 @@ export type SettingState = {
   showSettings: boolean
 
   slotsLoaded: boolean
-  slots: typeof emptySlots
+  slots: { publisherId: string } & Record<string, string>
 }
 
 const HORDE_URL = `https://stablehorde.net/api/v2`
@@ -96,7 +76,7 @@ const initState: SettingState = {
   flags: getFlags(),
   showSettings: false,
   slotsLoaded: false,
-  slots: { ...emptySlots },
+  slots: { publisherId: '' },
 }
 
 export const settingStore = createStore<SettingState>(
@@ -315,7 +295,7 @@ function canUseStorage(noThrow?: boolean) {
 loadSlotConfig()
 
 async function loadSlotConfig() {
-  const slots: any = { ...emptySlots }
+  const slots: any = { publisherId: '' }
 
   try {
     const content = await fetch('/slots.txt').then((res) => res.text())
