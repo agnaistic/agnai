@@ -220,14 +220,6 @@ export type PresetAISettings = Omit<
   | 'useGaslight'
 >
 
-export const SUPPORTS_INSTRUCT: { [key in AIAdapter]?: (user: AppSchema.User) => boolean } = {
-  claude: () => true,
-  openai: () => true,
-  kobold: (opts) => opts.thirdPartyFormat !== 'kobold',
-  openrouter: () => true,
-  scale: () => true,
-}
-
 /**
  * This is al
  */

@@ -9,6 +9,8 @@ export const EVENTS = {
   allChars: 'all-chars-recieved',
   setInputText: 'set-input-text',
   charUpdated: 'character-updated',
+  clearMsgs: 'clear-messages',
+  receiveMsgs: 'receive-messages',
 }
 
 export const events = new EventEmitter()

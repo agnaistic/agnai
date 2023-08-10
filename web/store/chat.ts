@@ -9,6 +9,7 @@ import { api } from './api'
 import { createStore, getStore } from './create'
 import { AllChat, chatsApi } from './data/chats'
 import { msgsApi } from './data/messages'
+import { treesApi } from './data/tree'
 import { usersApi } from './data/user'
 import { msgStore } from './message'
 import { subscribe } from './socket'
@@ -179,15 +180,12 @@ export const chatStore = createStore<ChatState>('chat', {
         },
       }
     },
-    async *getChat(prev, id: string, clear = true) {
+    async *getChat(_, id: string, clear = true) {
       if (clear) {
         yield { loaded: false, active: undefined }
       }
-      msgStore.setState({
-        msgs: [],
-        activeChatId: id,
-        activeCharId: undefined,
-      })
+
+      events.emit(EVENTS.clearMsgs, id)
       const res = await chatsApi.getChat(id)
 
       yield { loaded: true }
@@ -198,10 +196,10 @@ export const chatStore = createStore<ChatState>('chat', {
 
         storage.localSetItem('lastChatId', id)
 
-        msgStore.setState({
-          msgs: res.result.messages,
-          activeChatId: id,
-          activeCharId: res.result.character._id,
+        events.emit(EVENTS.receiveMsgs, {
+          chatId: id,
+          characterId: res.result.character._id,
+          messages: res.result.messages,
         })
 
         const isMultiChars =
@@ -500,6 +498,18 @@ export const chatStore = createStore<ChatState>('chat', {
 
     closePrompt() {
       return { prompt: undefined }
+    },
+
+    async forkChat({ active }, messageId: string) {
+      if (!active) return
+      const res = await treesApi.forkChat(active.chat._id, messageId)
+      if (res.result) {
+        events.emit(EVENTS.receiveMsgs, {
+          characterId: active.chat.characterId,
+          chatId: active.chat._id,
+          messages: res.result.messages,
+        })
+      }
     },
   }
 })

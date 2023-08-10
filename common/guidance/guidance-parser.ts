@@ -4,7 +4,7 @@ import { grammar } from './grammar'
 type PNode = VarNode | TextNode
 
 type TextNode = { kind: 'text'; text: string }
-type VarNode = { kind: 'variable'; name: string; pipe?: Pipe; tokens?: number }
+type VarNode = { kind: 'variable'; name: string; pipe?: Pipe; tokens?: number; temp?: number }
 
 type Pipe = { type: 'sentence' } | { type: 'words'; value: number }
 

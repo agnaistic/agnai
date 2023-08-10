@@ -74,6 +74,7 @@ type InferenceRequest = {
   log: AppLog
   retries?: number
   maxTokens?: number
+  temp?: number
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -142,7 +143,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
   settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
   settings.streamResponse = false
-  settings.temp = 0.5
+  settings.temp = opts.temp ?? 0.5
 
   if (settings.service === 'openai') {
     settings.topP = 1

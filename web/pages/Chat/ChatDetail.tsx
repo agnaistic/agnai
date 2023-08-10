@@ -27,12 +27,9 @@ import DeleteMsgModal from './DeleteMsgModal'
 import { DropMenu } from '../../shared/DropMenu'
 import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
-import { getClientPreset } from '../../shared/adapter'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { cycleArray } from '/common/util'
-import { HOLDERS } from '/common/prompt'
-import { canConvertGaslightV2 } from './util'
 import { usePane, useResizeObserver } from '/web/shared/hooks'
 import {
   emptyMsg,
@@ -218,49 +215,23 @@ const ChatDetail: Component = () => {
     setSwipe(next)
   }
 
-  const chatPreset = createMemo(() => getClientPreset(chats.chat))
-
   createEffect(() => {
     if (!msgs.inference) return
-    const opts = chatPreset()
-    if (!opts) return
+    if (!ctx.info) return
 
     // express.classify(opts.preset, msgs.inference.text)
     msgStore.clearLastInference()
   })
 
-  const shouldForceV2Gaslight = createMemo(() => {
-    const cfg = chatPreset()
-    if (!cfg) return false
-
-    if (!canConvertGaslightV2(cfg.preset)) return false
-    const gaslight = cfg.preset.gaslight!
-
-    const characterHasSystemPrompt = chars.chatBots.some(
-      (char) => char.systemPrompt !== undefined && char.systemPrompt !== ''
-    )
-
-    const gaslightHasSystemPrompt = !!gaslight.match(HOLDERS.systemPrompt)
-    return characterHasSystemPrompt && !gaslightHasSystemPrompt
-  })
-
   const adapterLabel = createMemo(() => {
-    const data = chatPreset()
-    if (!data) return ''
+    if (!ctx.info) return ''
 
-    const { name, adapter, isThirdParty, presetLabel } = data
+    const { name, adapter, isThirdParty, presetLabel } = ctx.info
 
     const label = `${ADAPTER_LABELS[adapter]}${isThirdParty ? ' (3rd party)' : ''} - ${
       name || presetLabel
     }`
     return label
-  })
-
-  createEffect(() => {
-    if (shouldForceV2Gaslight()) {
-      setShowOpts(false)
-      chatStore.option('modal', 'updateGaslightToUseSystemPrompt')
-    }
   })
 
   createEffect(() => {
@@ -297,6 +268,7 @@ const ChatDetail: Component = () => {
 
         case '/devShowHiddenEvents':
           setShowHiddenEvents(!showHiddenEvents())
+          break
       }
     }
 

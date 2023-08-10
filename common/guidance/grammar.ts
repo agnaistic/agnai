@@ -29,10 +29,12 @@ Variable "variable"	= "[" val:Char+ pipes:Pipe* "]" {
     return result
 }
 
-Pipe = Sep pipe:(WordPipe / SentencePipe / TokensPipe) _ { return pipe }
+Pipe = Sep pipe:(WordPipe / SentencePipe / TokensPipe / TempPipe) _ { return pipe }
+
 WordPipe = ("words" / "word"i) _ "=" _ value:Number { return { pipe: { type: "words", value } } }
 SentencePipe = "sentence"i { return { pipe: { type: "sentence" } } }
 TokensPipe "max-tokens" = "tokens"i _ "=" _ value:Number { return { tokens: value } }
+TempPipe "temp" = "temp"i _ "=" _ value:Number { return { temp: value } }
 
 Number "number" = nums:[0-9]+ { return +nums.join('') }
 Text "text" = !(Variable) ch:(.) { return ch }

@@ -9,6 +9,7 @@ import { hexToRgb, toMap } from '../shared/util'
 import { getActiveBots } from '../pages/Chat/util'
 import { FeatureFlags } from './flags'
 import { distinct } from '/common/util'
+import { PresetInfo, getClientPreset } from '../shared/adapter'
 
 export type ContextState = {
   tooltip?: string | JSX.Element
@@ -36,6 +37,7 @@ export type ContextState = {
   flags: FeatureFlags
   char?: AppSchema.Character
   chat?: AppSchema.Chat
+  replyAs?: string
   trimSentences: boolean
   bg: {
     bot: JSX.CSSProperties
@@ -43,6 +45,7 @@ export type ContextState = {
     ooc: JSX.CSSProperties
   }
   promptHistory: any
+  info?: PresetInfo
 }
 
 const initial: ContextState = {
@@ -112,6 +115,7 @@ export function ContextProvider(props: { children: any }) {
   })
 
   createEffect(() => {
+    const info = getClientPreset(chats.active?.chat)
     const next: Partial<ContextState> = {
       bg: visuals(),
       flags: cfg.flags,
@@ -126,10 +130,12 @@ export function ContextProvider(props: { children: any }) {
       impersonate: chars.impersonating,
       char: chats.active?.char,
       chat: chats.active?.chat,
+      replyAs: chats.active?.replyAs,
       profile: users.profile,
       handle: chars.impersonating?.name || users.profile?.handle || 'You',
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
+      info,
     }
 
     setState(next)
@@ -139,7 +145,9 @@ export function ContextProvider(props: { children: any }) {
 }
 
 export function useAppContext() {
-  return useContext(AppContext)
+  const [state, setState] = useContext(AppContext)
+
+  return [state, { setState }] as const
 }
 
 function getRgbaFromVar(cssVar: string, opacity: number): JSX.CSSProperties {

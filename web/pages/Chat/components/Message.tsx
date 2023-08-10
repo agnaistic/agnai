@@ -3,9 +3,7 @@ import * as Purify from 'dompurify'
 import {
   Check,
   DownloadCloud,
-  GitFork,
   Info,
-  MoreHorizontal,
   PauseCircle,
   Pencil,
   RefreshCw,
@@ -41,7 +39,6 @@ import { trimSentence } from '/common/util'
 import { EVENTS, events } from '/web/emitter'
 import TextInput from '/web/shared/TextInput'
 import { Card } from '/web/shared/Card'
-import { DropMenu } from '/web/shared/DropMenu'
 
 type MessageProps = {
   msg: SplitMessage
@@ -587,6 +584,10 @@ const MessageOptions: Component<{
         </div>
       </Show>
 
+      <div class="icon-button" onClick={wrap(props.onRemove)}>
+        <Trash size={18} />
+      </div>
+
       <Show when={props.last && !props.msg.characterId}>
         <div
           class="icon-button"
@@ -596,13 +597,7 @@ const MessageOptions: Component<{
         </div>
       </Show>
 
-      <Show when={props.chatEditing && props.original.adapter !== 'image'}>
-        <div class="icon-button" onClick={props.startEdit}>
-          <Pencil size={18} />
-        </div>
-      </Show>
-
-      <div class="icon-button" onClick={() => props.show[1](true)}>
+      {/* <div class="icon-button" onClick={() => props.show[1](true)}>
         <MoreHorizontal />
       </div>
 
@@ -627,7 +622,7 @@ const MessageOptions: Component<{
             <Trash size={18} />
           </Button>
         </div>
-      </DropMenu>
+      </DropMenu> */}
     </div>
   )
 }

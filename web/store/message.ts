@@ -18,6 +18,7 @@ import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, pauseSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
 import { findOne, replace } from '/common/util'
+import { sortAsc } from '/common/chat'
 
 type ChatId = string
 
@@ -54,6 +55,8 @@ export type MsgState = {
     text: string
   }
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
+  cache: Record<string, AppSchema.ChatMessage>
+  branch?: AppSchema.ChatMessage[]
 
   /**
    * Ephemeral image messages
@@ -76,6 +79,7 @@ const initState: MsgState = {
   retrying: undefined,
   speaking: undefined,
   queue: [],
+  cache: {},
 }
 
 export const msgStore = createStore<MsgState>(
@@ -93,6 +97,29 @@ export const msgStore = createStore<MsgState>(
   events.on(EVENTS.init, (init) => {
     msgStore.setState({ imagesSaved: init.config.imagesSaved })
   })
+
+  events.on(EVENTS.clearMsgs, (chatId: string) => {
+    msgStore.setState({ activeChatId: chatId, activeCharId: undefined, msgs: [], cache: {} })
+  })
+
+  events.on(
+    EVENTS.receiveMsgs,
+    (data: { characterId: string; chatId: string; messages: AppSchema.ChatMessage[] }) => {
+      const { cache } = msgStore.getState()
+
+      const nextCache: MsgState['cache'] = data.messages.reduce(
+        (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
+        { ...cache }
+      )
+
+      msgStore.setState({
+        activeCharId: data.characterId,
+        activeChatId: data.chatId,
+        msgs: data.messages.sort(sortAsc),
+        cache: nextCache,
+      })
+    }
+  )
 
   return {
     async *getNextMessages({ msgs, activeChatId, nextLoading }) {

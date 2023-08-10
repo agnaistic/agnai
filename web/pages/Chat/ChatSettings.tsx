@@ -114,13 +114,13 @@ const ChatSettings: Component<{
 
   const Footer = (
     <>
-      <div class="flex w-full justify-between">
+      <div class="flex w-full justify-between gap-2">
         <div>
           <Button schema="secondary" onClick={revert}>
             Reset Character
           </Button>
         </div>
-        <div class="flex gap-4">
+        <div class="flex gap-2">
           <Button schema="secondary" onClick={props.close}>
             Cancel
           </Button>
@@ -216,7 +216,7 @@ const ChatSettings: Component<{
         />
       </Card>
 
-      <Show when={cfg.flags.events && scenarios().length > 1}>
+      <Show when={scenarios().length > 1}>
         <Card>
           <Select
             fieldName="scenarioId"

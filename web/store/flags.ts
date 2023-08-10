@@ -4,7 +4,6 @@ export type FeatureFlags = typeof defaultFlags
 
 export const defaultFlags = {
   chub: false,
-  events: false,
   reporting: false,
   naiModel: false,
   actions: false,
