@@ -90,7 +90,7 @@ export const config = {
   },
   adapters: env(
     'ADAPTERS',
-    'novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate'
+    'novel,horde,kobold,openai,openrouter,scale,claude,ooba,goose,replicate,mancer'
   )
     .split(',')
     .filter((i) => !!i && i in ADAPTER_LABELS) as AIAdapter[],

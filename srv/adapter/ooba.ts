@@ -48,7 +48,7 @@ export const handleOoba: ModelAdapter = async function* ({
   }).catch((err) => ({ error: err }))
 
   if ('error' in resp) {
-    logger.error({ err: resp.error }, ``)
+    logger.error({ err: resp.error }, `Textgen request failed`)
     yield { error: `Textgen request failed: ${resp.error?.message || resp.error}` }
     return
   }

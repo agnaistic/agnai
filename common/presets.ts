@@ -299,6 +299,24 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     frequencyPenalty: '',
     gaslight: '',
   },
+  mancer: {
+    maxTokens: 'max_new_tokens',
+    topP: 'top_p',
+    temp: 'temperature',
+    typicalP: 'typical_p',
+    repetitionPenalty: 'repetition_penalty',
+    encoderRepitionPenalty: 'encoder_repetition_penalty',
+    topK: 'top_k',
+    penaltyAlpha: 'penalty_alpha',
+    addBosToken: 'add_bos_token',
+    banEosToken: 'ban_eos_token',
+    skipSpecialTokens: 'skip_special_tokens',
+    topA: '',
+    order: '',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+  },
 }
 
 export function isDefaultPreset(value?: string): value is GenerationPreset {
@@ -336,6 +354,9 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
     /** TODO: Create default preset for OpenRouter... */
     case 'openrouter':
       return defaultPresets.openai
+
+    case 'mancer':
+      return defaultPresets.mancer
   }
 }
 
@@ -375,5 +396,8 @@ export function getInferencePreset(
     /** TODO: Create default preset for OpenRouter... */
     case 'openrouter':
       return defaultPresets.openai
+
+    case 'mancer':
+      return defaultPresets.mancer
   }
 }
