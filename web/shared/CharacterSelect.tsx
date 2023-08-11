@@ -6,6 +6,7 @@ import Button from './Button'
 import { ChevronDown, Users } from 'lucide-solid'
 import { FormLabel } from './FormLabel'
 import CharacterSelectList from './CharacterSelectList'
+import { settingStore } from '../store'
 
 export type Option<T extends string = string> = {
   label: string
@@ -26,6 +27,7 @@ const CharacterSelect: Component<{
   ignoreActive?: boolean
   onChange?: (item: AppSchema.Character | undefined) => void
 }> = (props) => {
+  const menu = settingStore()
   const [opts, setOpts] = createSignal(false)
 
   const match = createMemo(() =>
@@ -36,6 +38,10 @@ const CharacterSelect: Component<{
     if (!props.onChange) return
     props.onChange(value)
     setOpts(false)
+
+    if (menu.overlay) {
+      settingStore.toggleOverlay(false)
+    }
   }
 
   return (

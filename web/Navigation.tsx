@@ -202,7 +202,7 @@ const UserNavigation: Component = () => {
 
         <Item
           onClick={() => {
-            settingStore.closeMenu()
+            if (menu.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
         >
@@ -302,7 +302,7 @@ const GuestNavigation: Component = () => {
 
         <Item
           onClick={() => {
-            settingStore.closeMenu()
+            if (menu.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
         >
@@ -331,6 +331,7 @@ const GuestNavigation: Component = () => {
 const Item: Component<{ href?: string; children: string | JSX.Element; onClick?: () => void }> = (
   props
 ) => {
+  const menu = settingStore()
   return (
     <>
       <Show when={!props.href}>
@@ -338,7 +339,7 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
           class="flex min-h-[2.5rem] cursor-pointer items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
           onClick={() => {
             if (props.onClick) props.onClick()
-            else settingStore.closeMenu()
+            else if (menu.showMenu) settingStore.closeMenu()
           }}
         >
           {props.children}
@@ -348,7 +349,9 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
         <A
           href={props.href!}
           class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
-          onClick={settingStore.closeMenu}
+          onClick={() => {
+            if (menu.showMenu) settingStore.closeMenu()
+          }}
         >
           {props.children}
         </A>
@@ -438,6 +441,7 @@ const ChatLink = () => {
 const UserProfile = () => {
   const chars = characterStore()
   const user = userStore()
+  const menu = settingStore()
 
   return (
     <>
@@ -449,7 +453,7 @@ const UserProfile = () => {
       >
         <Item
           onClick={() => {
-            settingStore.closeMenu()
+            if (menu.showMenu) settingStore.closeMenu()
             userStore.modal(true)
           }}
         >
@@ -475,7 +479,7 @@ const UserProfile = () => {
             class="icon-button"
             onClick={() => {
               settingStore.toggleImpersonate(true)
-              settingStore.closeMenu()
+              if (menu.showMenu) settingStore.closeMenu()
             }}
           >
             <VenetianMask />

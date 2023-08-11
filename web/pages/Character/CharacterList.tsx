@@ -100,7 +100,7 @@ const CharacterList: Component = () => {
     characterStore.getCharacters()
   })
 
-  createEffect(() => {
+  onMount(() => {
     tagStore.updateTags(state.list)
   })
 
