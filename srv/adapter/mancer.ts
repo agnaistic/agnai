@@ -106,7 +106,7 @@ registerAdapter('mancer', handleMancer, {
     },
     {
       field: 'urlOverride',
-      label: 'URL Override',
+      label: 'URL Override (See: https://mancer.tech/models.html)',
       helperText:
         '(Optional) Overrides the URL from the model selected above - Leave empty if unsure.',
       secret: false,
