@@ -774,6 +774,9 @@ export function getContextLimit(
       }
 
       return Math.min(configuredMax, 4096) - genAmount
+
+    case 'mancer':
+      return Math.min(configuredMax, 8000) - genAmount
   }
 }
 

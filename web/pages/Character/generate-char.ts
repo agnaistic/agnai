@@ -1,4 +1,3 @@
-import { toGeneratedCharacter } from './util'
 import { AIAdapter, INSTRUCT_SERVICES } from '/common/adapters'
 import { modernJailbreak } from '/common/templates'
 import { NewCharacter } from '/web/store'
@@ -30,11 +29,6 @@ export async function generateChar(description: string, service: string) {
     msgsApi.guidance({ prompt, service }, (err, res) => {
       if (err || !res) {
         return reject(err || `No response received`)
-      }
-
-      if (typeof res === 'string') {
-        const char = toGeneratedCharacter(res, description)
-        return resolve(char)
       }
 
       const vars = res.values

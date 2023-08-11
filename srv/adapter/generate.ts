@@ -27,6 +27,7 @@ import { handleGooseAI } from './goose'
 import { handleReplicate } from './replicate'
 import { getAppConfig } from '../api/settings'
 import { handleOpenRouter } from './openrouter'
+import { handleMancer } from './mancer'
 
 let version = ''
 
@@ -59,6 +60,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   goose: handleGooseAI,
   replicate: handleReplicate,
   openrouter: handleOpenRouter,
+  mancer: handleMancer,
 }
 
 type InferenceRequest = {

@@ -690,7 +690,12 @@ export const CreateCharacterForm: Component<{
       </Show>
 
       <Show when={converted()}>
-        <DownloadModal show close={() => setConverted(undefined)} char={converted()!} />
+        <DownloadModal
+          show
+          close={() => setConverted(undefined)}
+          char={converted()!}
+          charId={converted()!._id}
+        />
       </Show>
       <ImportCharacterModal
         show={showImport()}

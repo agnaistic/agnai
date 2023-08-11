@@ -55,6 +55,7 @@ export const AI_ADAPTERS = [
   'goose',
   'replicate',
   'openrouter',
+  'mancer',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -197,6 +198,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   goose: 'Goose AI',
   replicate: 'Replicate',
   openrouter: 'OpenRouter',
+  mancer: 'Mancer',
 }
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
