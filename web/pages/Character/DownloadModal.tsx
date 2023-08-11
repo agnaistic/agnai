@@ -37,7 +37,7 @@ export const DownloadModal: Component<{
   )
 
   onMount(async () => {
-    if (!props.char) return
+    if (props.char) return
     const res = await charsApi.getCharacterDetail(props.charId)
     if (res.result) {
       setChar(res.result)
