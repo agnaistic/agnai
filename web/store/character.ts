@@ -121,6 +121,7 @@ export const characterStore = createStore<CharacterState>(
     },
     async *getCharacters(state) {
       if (state.loading) return
+      if (state.characters.loaded) return
 
       yield { loading: true }
       const res = await charsApi.getCharacters()
