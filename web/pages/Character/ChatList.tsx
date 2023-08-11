@@ -283,9 +283,11 @@ const Chats: Component<{
                           {chat.characters.map((c) => c.name).join(', ')}
                         </div>
                         <div class="flex gap-2 overflow-hidden text-ellipsis whitespace-nowrap text-sm leading-4">
-                          <span>{chat.name || 'Untitled'} </span>
+                          <Show when={chat.name}>
+                            <span>{chat.name || ''} </span>
+                          </Show>
                           <span class="flex text-xs italic text-[var(--text-600)]">
-                            {toDuration(new Date(chat.updatedAt))} ago.
+                            {toDuration(new Date(chat.updatedAt))} ago
                           </span>
                         </div>
                       </div>
