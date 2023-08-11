@@ -264,6 +264,7 @@ export async function generateResponseV2(opts: GenerateOpts) {
 
   const activePrompt = await createActiveChatPrompt(opts).catch((err) => ({ err }))
   if ('err' in activePrompt) {
+    console.error(activePrompt.err)
     return localApi.error(activePrompt.err.message || activePrompt.err)
   }
 
@@ -671,7 +672,7 @@ async function getGuestEntities() {
 
   const {
     impersonating,
-    characters: { list, map },
+    chatChars: { list, map },
   } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, map)
@@ -715,7 +716,7 @@ function getAuthedPromptEntities() {
 
   const {
     impersonating,
-    characters: { list, map },
+    chatChars: { list, map },
   } = getStore('character').getState()
 
   const characters = getBotsForChat(chat, char, map)

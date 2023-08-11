@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
 import { settingStore } from '../store'
 
 export const Dropup: Component<{ children: any }> = (props) => {
