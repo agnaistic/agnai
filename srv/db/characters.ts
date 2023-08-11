@@ -96,6 +96,7 @@ export async function getCharacters(userId: string) {
       name: 1,
       avatar: 1,
       description: 1,
+      favorite: 1,
       tags: 1,
       createdAt: 1,
       updatedAt: 1,

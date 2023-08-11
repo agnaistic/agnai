@@ -46,6 +46,10 @@ export async function getCharacters() {
     description: ch.description,
     tags: ch.tags,
     avatar: ch.avatar,
+    favorite: ch.favorite,
+    userId: ch.userId,
+    createdAt: ch.createdAt,
+    updatedAt: ch.updatedAt,
   }))
   return localApi.result({ characters: result })
 }
