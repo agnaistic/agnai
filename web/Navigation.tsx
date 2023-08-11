@@ -70,6 +70,12 @@ const Navigation: Component = () => {
   const chat = chatStore()
   const size = useWindowSize()
 
+  createEffect(() => {
+    if (!state.overlay && state.showMenu) {
+      settingStore.menu()
+    }
+  })
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (!parent || !content) return

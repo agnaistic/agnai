@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp } from 'lucide-solid'
-import { Component, createMemo, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, onCleanup, Show } from 'solid-js'
+import { settingStore } from '../store'
 
 export const Dropup: Component<{ children: any }> = (props) => {
   const [show, setShow] = createSignal(false)
@@ -51,10 +52,14 @@ export const DropMenu: Component<{
   customPosition?: string
   class?: string
 }> = (props) => {
+  const state = settingStore()
   const [auto, setAuto] = createSignal<{ horz?: Horz; vert?: Vert }>()
+  const [opened, setOpened] = createSignal(false)
 
   const onRef = (el: HTMLDivElement) => {
     const rect = el.getBoundingClientRect()
+    setOpened(true)
+    settingStore.toggleOverlay(true)
 
     if (props.customPosition) {
       setAuto()
@@ -83,6 +88,17 @@ export const DropMenu: Component<{
     return setAuto({ vert, horz })
   }
 
+  onCleanup(() => {
+    settingStore.toggleOverlay(false)
+  })
+
+  createEffect(() => {
+    if (!state.overlay && opened()) {
+      setOpened(false)
+      props.close()
+    }
+  })
+
   const position = createMemo(() => {
     if (props.customPosition) return props.customPosition
 
@@ -94,12 +110,6 @@ export const DropMenu: Component<{
 
   return (
     <>
-      <Show when={props.show}>
-        <div
-          class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
-          onClick={props.close}
-        ></div>
-      </Show>
       <div class="relative z-50 text-sm">
         <Show when={props.show}>
           <div
