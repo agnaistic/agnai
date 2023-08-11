@@ -59,7 +59,7 @@ export const DropMenu: Component<{
   const onRef = (el: HTMLDivElement) => {
     const rect = el.getBoundingClientRect()
     setOpened(true)
-    settingStore.toggleOverlay(true)
+    // settingStore.toggleOverlay(true)
 
     if (props.customPosition) {
       setAuto()
@@ -87,10 +87,6 @@ export const DropMenu: Component<{
 
     return setAuto({ vert, horz })
   }
-
-  onCleanup(() => {
-    settingStore.toggleOverlay(false)
-  })
 
   createEffect(() => {
     if (!state.overlay && opened()) {
