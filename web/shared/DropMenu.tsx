@@ -59,7 +59,7 @@ export const DropMenu: Component<{
   const onRef = (el: HTMLDivElement) => {
     const rect = el.getBoundingClientRect()
     setOpened(true)
-    // settingStore.toggleOverlay(true)
+    settingStore.toggleOverlay(true)
 
     if (props.customPosition) {
       setAuto()

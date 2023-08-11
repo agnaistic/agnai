@@ -189,12 +189,12 @@ const Layout: Component = () => {
         <ImageModal />
         <For each={rootModals.modals}>{(modal) => modal.element}</For>
       </div>
-      <Show when={cfg.overlay}>
-        <div
-          class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
-          onClick={() => settingStore.toggleOverlay(false)}
-        ></div>
-      </Show>
+
+      <div
+        class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"
+        classList={{ hidden: !cfg.overlay }}
+        onClick={() => settingStore.toggleOverlay(false)}
+      ></div>
     </ContextProvider>
   )
 }
