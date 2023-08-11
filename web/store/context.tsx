@@ -106,11 +106,10 @@ export function ContextProvider(props: { children: any }) {
   const activeBots = createMemo<AppSchema.Character[]>(() => {
     if (!chats.active?.chat) return []
 
-    const list = chars.characters.map
     const curr = chars.chatChars.map
     const temps = chats.active?.chat.tempCharacters || {}
 
-    const active = getActiveBots(chats.active.chat, { ...list, ...curr, ...temps })
+    const active = getActiveBots(chats.active.chat, { ...curr, ...temps })
     return distinct(active)
   })
 
