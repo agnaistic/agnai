@@ -1,7 +1,11 @@
-import { toArray } from '/common/util'
 import { AppSchema } from '/common/types'
-import { storage } from '/web/shared/util'
-import { NewCharacter } from '/web/store'
+import { getAssetUrl, storage } from '/web/shared/util'
+import { toastStore } from '/web/store'
+import { ALLOWED_TYPES, charsApi, getImageData } from '/web/store/data/chars'
+import { exportCharacter } from '/common/characters'
+import text from 'png-chunk-text'
+import extract from 'png-chunks-extract'
+import encode from 'png-chunks-encode'
 
 const CACHE_KEY = 'agnai-chatlist-cache'
 
@@ -126,57 +130,160 @@ export function saveListCache(cache: ListCache) {
   storage.localSetItem(CACHE_KEY, JSON.stringify(cache))
 }
 
-export function toGeneratedCharacter(response: string, description: string): NewCharacter {
-  const lines = response.split('\n')
-  const name = extract(lines, 'FirstName')
-
-  const re = new RegExp(name, 'g')
-
-  const char: NewCharacter = {
-    originalAvatar: undefined,
-    description,
-    appearance: extract(lines, 'Appearance'),
-    scenario: extract(lines, 'Scenario').replace(re, '{{char}}'),
-    greeting: extract(lines, 'Greeting').replace(re, '{{char}}'),
-    name,
-    sampleChat: extract(lines, 'ExampleSpeech1', 'ExampleSpeech2', 'ExampleSpeech3')
-      .split('\n')
-      .map((line) => `{{char}}: ${line}`)
-      .join('\n'),
-    persona: {
-      kind: 'wpp',
-      attributes: {
-        personality: extract(lines, 'Personality').replace(re, '{{char}}').split(', '),
-        behaviours: extract(lines, 'Behaviours', 'Behaviors').replace(re, '{{char}}').split(', '),
-        description: toArray(extract(lines, 'Description').replace(re, '{{char}}')),
-        speech: extract(lines, 'Speech').replace(re, '{{char}}').split(', '),
-      },
-    },
-  }
-
-  return char
-}
-
-function extract(from: string[], ...match: string[]) {
-  const matches: string[] = []
-  for (const search of match) {
-    for (const line of from) {
-      const start = line.indexOf(`${search}:`)
-      if (start === -1) continue
-
-      const text = line.slice(start + search.length + 1).trim()
-      if (match.length === 1) return text
-      matches.push(text)
-    }
-  }
-
-  return matches.join('\n')
-}
-
 export function toCharacterMap(bots: AppSchema.Character[]) {
   const map = bots.reduce<Record<string, AppSchema.Character>>(
     (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
     {}
   )
   return map
+}
+
+export async function convertCharToJSON(
+  char: AppSchema.Character | string,
+  format: string,
+  schema: string
+) {
+  if (typeof char === 'string') {
+    const res = await charsApi.getCharacterDetail(char)
+    if (res.error) {
+      return toastStore.error(`Failed to download character: ${res.error}`)
+    }
+
+    if (res.result) {
+      const json = charToJson(res.result, format, schema)
+      return `data:text/json:charset=utf-8,${encodeURIComponent(json)}`
+    }
+  } else {
+    const json = charToJson(char, format, schema)
+    return `data:text/json:charset=utf-8,${encodeURIComponent(json)}`
+  }
+}
+
+export async function downloadCharCard(
+  input: string | AppSchema.Character,
+  format: string,
+  schema: string
+) {
+  let char: AppSchema.Character
+
+  if (typeof input === 'string') {
+    const res = await charsApi.getCharacterDetail(input)
+    if (res.error) {
+      return toastStore.error(`Failed to download character: ${res.error}`)
+    } else {
+      char = res.result!
+    }
+  } else {
+    char = input
+  }
+
+  const json = charToJson(char, format, schema)
+  const image = getAssetUrl(char.avatar!)
+  /**
+   * Only PNG and APNG files can contain embedded character information
+   * If the avatar image is not either of these formats, we must convert it
+   */
+
+  const dataurl = await imageToDataURL(image)
+  const base64 = dataurl.split(',')[1]
+  const imgBuffer = Buffer.from(window.atob(base64), 'binary')
+  const chunks = extract(imgBuffer).filter((chunk) => chunk.name !== 'tEXt')
+  const output = Buffer.from(json, 'utf8').toString('base64')
+  const lastChunkIndex = chunks.length - 1
+  const chunksToExport = [
+    ...chunks.slice(0, lastChunkIndex),
+    text.encode('chara', output),
+    chunks[lastChunkIndex],
+  ]
+  const anchor = document.createElement('a')
+  anchor.href = URL.createObjectURL(new Blob([Buffer.from(encode(chunksToExport))]))
+  anchor.download = `${char.name}.card.png`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
+async function imageToDataURL(image: string) {
+  const { ext } = getExt(image)
+
+  const base64 = await getImageBase64(image)
+  const apng = await isAPNG(base64)
+  if (apng || ext === 'apng') {
+    return base64
+  }
+
+  const element = await asyncImage(base64)
+
+  const canvas = document.createElement('canvas')
+  canvas.width = element.image.naturalWidth
+  canvas.height = element.image.naturalHeight
+  const ctx = canvas.getContext('2d')
+  ctx?.drawImage(element.image, 0, 0)
+  const dataUrl = canvas.toDataURL('image/png')
+  return dataUrl
+}
+
+function charToJson(char: AppSchema.Character, format: string, schema: string) {
+  const { _id, ...json } = char
+
+  const copy = { ...char }
+  copy.persona.kind = schema as any
+
+  if (format === 'native') {
+    return JSON.stringify(json, null, 2)
+  }
+
+  const content = exportCharacter(copy, format as any)
+  return JSON.stringify(content, null, 2)
+}
+
+function getExt(url: string): { type: 'base64' | 'url'; ext: string } {
+  if (url.startsWith('data:')) {
+    const [header] = url.split(',')
+    const ext = header.slice(11, -7)
+    return ALLOWED_TYPES.has(ext) ? { type: 'base64', ext } : { type: 'base64', ext: 'unknown' }
+  }
+
+  const ext = url.split('.').slice(-1)[0]
+  if (ALLOWED_TYPES.has(ext)) return { type: 'url', ext }
+  return { type: 'url', ext: 'unknown' }
+}
+
+async function getImageBase64(image: string) {
+  if (image.startsWith('data:')) return image
+
+  if (!image.startsWith('http')) {
+    image = getAssetUrl(image)
+  }
+
+  const base64 = await getImageData(image)
+  return base64!
+}
+
+function asyncImage(src: string) {
+  return new Promise<{ name: string; image: HTMLImageElement }>(async (resolve, reject) => {
+    const data = await getImageBase64(src)
+    const image = new Image()
+    image.setAttribute('crossorigin', 'anonymous')
+    image.src = data
+
+    image.onload = () => resolve({ name: src, image })
+    image.onerror = (ev) => reject(ev)
+  })
+}
+
+async function isAPNG(base64: string) {
+  if (base64.startsWith('data:')) {
+    base64 = base64.split(',')[1]
+  }
+  const buffer = Buffer.from(window.atob(base64), 'binary')
+  try {
+    for (const chunk of extract(buffer)) {
+      if (chunk.name === 'IDAT') return false
+      if (chunk.name === 'acTL') return true
+    }
+
+    return false
+  } catch (ex) {
+    return false
+  }
 }

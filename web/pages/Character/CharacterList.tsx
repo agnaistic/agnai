@@ -319,7 +319,7 @@ const Characters: Component<{
       </Switch>
 
       <Show when={download()}>
-        <DownloadModal show close={() => setDownload()} char={download()!} />
+        <DownloadModal show close={() => setDownload()} charId={download()!._id} />
       </Show>
       <DeleteCharacterModal
         char={showDelete()}
