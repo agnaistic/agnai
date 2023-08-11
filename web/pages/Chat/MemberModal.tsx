@@ -70,6 +70,7 @@ const MemberModal: Component<{
       props.close()
     } else {
       setView('list')
+      setFooter(Footer)
     }
   }
 

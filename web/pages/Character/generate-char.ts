@@ -43,11 +43,9 @@ export async function generateChar(description: string, service: string) {
         description,
         name: vars.firstname,
         persona: {
-          kind: 'wpp',
+          kind: 'text',
           attributes: {
-            personality: [vars.personality],
-            speech: [vars.speech],
-            behaviour: [vars.behaviour],
+            text: [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`],
           },
         },
         appearance: vars.appearance,
@@ -102,7 +100,7 @@ export async function regenerateCharProp(char: NewCharacter, service: string, fi
         persona: {
           kind: 'text',
           attributes: {
-            text: [`${vars.personality}\n${vars.behaviour}\n${vars.speech}`],
+            text: [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`],
           },
         },
         appearance: vars.appearance,

@@ -6,6 +6,7 @@ import { loadItem, localApi } from './storage'
 import { appendFormOptional, getAssetUrl, strictAppendFormOptional } from '/web/shared/util'
 
 export const charsApi = {
+  getCharacterDetail,
   getCharacters,
   removeAvatar,
   editAvatar,
@@ -16,6 +17,22 @@ export const charsApi = {
   setFavorite,
 }
 
+async function getCharacterDetail(charId: string) {
+  if (isLoggedIn()) {
+    const res = await api.get(`/character/${charId}`)
+    return res
+  }
+
+  const chars = await loadItem('characters')
+  const char = chars.find((ch) => ch._id === charId)
+
+  if (char) {
+    return localApi.result(char)
+  } else {
+    return localApi.error(`Character not found`)
+  }
+}
+
 export async function getCharacters() {
   if (isLoggedIn()) {
     const res = await api.get('/character')
@@ -23,7 +40,14 @@ export async function getCharacters() {
   }
 
   const characters = await localApi.loadItem('characters')
-  return localApi.result({ characters })
+  const result = characters.map((ch) => ({
+    _id: ch._id,
+    name: ch.name,
+    description: ch.description,
+    tags: ch.tags,
+    avatar: ch.avatar,
+  }))
+  return localApi.result({ characters: result })
 }
 
 export async function removeAvatar(charId: string) {

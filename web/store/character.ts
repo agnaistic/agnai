@@ -19,6 +19,7 @@ type CharacterState = {
     list: AppSchema.Character[]
     map: Record<string, AppSchema.Character>
   }
+  editing?: AppSchema.Character
   chatChars: {
     list: AppSchema.Character[]
     map: Record<string, AppSchema.Character>
@@ -99,6 +100,25 @@ export const characterStore = createStore<CharacterState>(
   })
 
   return {
+    clearCharacter() {
+      return { editing: undefined }
+    },
+    async *getCharacter(_, characterId: string, chat?: AppSchema.Chat) {
+      if (chat?.tempCharacters && characterId.startsWith('temp-')) {
+        const char = chat.tempCharacters[characterId]
+        if (!char) return toastStore.error(`Temp character not found`)
+        return { editing: char }
+      }
+      yield { editing: undefined }
+      const res = await charsApi.getCharacterDetail(characterId)
+      if (res.result) {
+        return { editing: res.result }
+      }
+
+      if (res.error) {
+        return toastStore.error(res.error)
+      }
+    },
     async *getCharacters(state) {
       if (state.loading) return
 

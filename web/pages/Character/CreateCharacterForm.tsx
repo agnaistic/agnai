@@ -89,14 +89,12 @@ export const CreateCharacterForm: Component<{
 
   const tagState = tagStore()
   const state = characterStore((s) => {
-    const edit = s.characters.list.find((ch) => ch._id === srcId())
-    const tempChar =
-      props.temp && props.editId ? props.chat?.tempCharacters?.[props.editId] : undefined
+    const edit = s.editing
 
     return {
       avatar: s.generate,
       creating: s.creating,
-      edit: props.temp ? tempChar : forceNew() ? undefined : edit,
+      edit: forceNew() ? undefined : edit,
       list: s.characters.list,
       loaded: s.characters.loaded,
     }
@@ -139,12 +137,14 @@ export const CreateCharacterForm: Component<{
   }
 
   onMount(async () => {
-    /**
-     * Character importing from CharacterHub
-     */
     characterStore.clearGeneratedAvatar()
-    characterStore.getCharacters()
+    characterStore.clearCharacter()
 
+    if (srcId()) {
+      characterStore.getCharacter(srcId(), props.chat)
+    }
+
+    /* Character importing from CharacterHub */
     if (!query.import) return
     try {
       const { file, json } = await downloadCharacterHub(query.import)
@@ -171,8 +171,6 @@ export const CreateCharacterForm: Component<{
     // We know we're waiting for a character to edit, so let's just wait
     if (!state.edit && srcId()) return
 
-    editor.update('editId', srcId())
-
     // If this is our first pass: load something no matter what
     if (!editor.original()) {
       if (!srcId()) {
@@ -192,7 +190,8 @@ export const CreateCharacterForm: Component<{
     // We want to avoid unnecessarily clearing/reseting state due to a websocket reconnect
 
     if (!state.edit) return
-    if (editor.state.editId !== state.edit._id) {
+    if (editor.state.editId !== state.edit._id && state.edit._id === srcId()) {
+      editor.update('editId', srcId())
       editor.load(ref, state.edit)
       setImage(state.edit?.avatar)
       return
