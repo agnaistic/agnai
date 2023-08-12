@@ -77,11 +77,10 @@ export const PresetSelect: Component<{
   return (
     <div class="flex flex-col gap-2 py-3 text-sm">
       <div class="text-lg">Preset</div>
-      <div>
-        Selected: <strong>{selectedLabel()}</strong>
-      </div>
       <div class="inline-block">
-        <Button onClick={() => setShowSelectModal(true)}>Choose a preset</Button>
+        <Button onClick={() => setShowSelectModal(true)}>
+          Selected: <strong>{selectedLabel()}</strong>
+        </Button>
       </div>
 
       {props.warning ?? <></>}

@@ -103,6 +103,7 @@ registerAdapter('mancer', handleMancer, {
       label: 'Model',
       secret: false,
       setting: { type: 'list', options: modelOptions },
+      preset: true,
     },
     {
       field: 'urlOverride',
@@ -111,6 +112,7 @@ registerAdapter('mancer', handleMancer, {
         '(Optional) Overrides the URL from the model selected above - Leave empty if unsure.',
       secret: false,
       setting: { type: 'text', placeholder: 'https://neuro.mancer.tech/webui/...../api' },
+      preset: true,
     },
     {
       field: 'apiKey',

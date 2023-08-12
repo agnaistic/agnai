@@ -21,6 +21,7 @@ export type AdapterSetting = {
   hidden?: boolean
 
   setting: SettingType
+  preset?: boolean
 }
 
 type SettingType =

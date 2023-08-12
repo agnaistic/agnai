@@ -1,7 +1,3 @@
-/**
- * WIP
- */
-
 import { AdapterOptions, AIAdapter, RegisteredAdapter } from '../../common/adapters'
 import { config } from '../config'
 import { logger } from '../logger'
