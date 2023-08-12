@@ -3,7 +3,27 @@ import { presetStore, userStore } from '../store'
 import { AppSchema } from '../../common/types/schema'
 import { defaultPresets } from '../../common/presets'
 import { Option } from './Select'
-import { ADAPTER_LABELS, AIAdapter } from '../../common/adapters'
+import { ADAPTER_LABELS, AIAdapter, AdapterSetting } from '../../common/adapters'
+import { storage } from './util'
+
+const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
+  novel: [
+    {
+      field: 'module',
+      label: 'AI Module',
+      secret: false,
+      setting: {
+        type: 'list',
+        options: [
+          { label: 'None', value: 'vanilla' },
+          { label: 'Instruct', value: 'special_instruct' },
+          { label: 'Prose', value: 'special_proseaugmenter' },
+          { label: 'Text Adventure', value: 'theme_textadventure' },
+        ],
+      },
+    },
+  ],
+}
 
 export const AutoPreset = {
   chat: 'chat',
@@ -97,4 +117,19 @@ export function sortByName(left: { name: string }, right: { name: string }) {
 
 export function sortByLabel(left: { label: string }, right: { label: string }) {
   return left.label.localeCompare(right.label)
+}
+
+export function getServiceTempConfig(service?: AIAdapter) {
+  if (!service) return []
+
+  const cfg = tempSettings[service]
+  if (!cfg) return []
+
+  const values: Array<AdapterSetting & { value: any }> = []
+  for (const opt of cfg) {
+    const prev = storage.localGetItem(`${service}.temp.${opt.field}`)
+    values.push({ ...opt, value: prev ? JSON.parse(prev) : undefined })
+  }
+
+  return values
 }

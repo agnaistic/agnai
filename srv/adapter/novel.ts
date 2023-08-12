@@ -123,7 +123,7 @@ export const handleNovel: ModelAdapter = async function* ({
     )
   }
 
-  yield { prompt: processedPrompt }
+  yield { prompt: body.input }
 
   const endTokens = ['***', 'Scenario:', '----', '⁂']
 
@@ -180,6 +180,8 @@ export const handleNovel: ModelAdapter = async function* ({
 }
 
 function getModernParams(gen: Partial<AppSchema.GenSettings>) {
+  const module = gen.temporary?.module || 'vanilla'
+
   const payload: any = {
     temperature: gen.temp,
     max_length: gen.maxTokens,
@@ -198,7 +200,8 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     use_cache: false,
     use_string: true,
     return_full_text: false,
-    prefix: 'vanilla',
+    prefix: module,
+    phrase_rep_pen: 'aggressive',
     order: gen.order,
     bad_words_ids: clioBadWordsId,
     repetition_penalty_whitelist: penaltyWhitelist,

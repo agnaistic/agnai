@@ -40,6 +40,7 @@ import { HordeDetails } from '../pages/Settings/components/HordeAISettings'
 import Button from './Button'
 import Accordian from './Accordian'
 import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
+import { getServiceTempConfig } from './adapter'
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -918,45 +919,22 @@ const SamplerOrder: Component<{
 
 type TempSetting = AdapterSetting & { value: any }
 
-const tempSettings: { [key in AIAdapter]?: Array<AdapterSetting> } = {
-  novel: [
-    {
-      field: 'module',
-      label: 'AI Module',
-      secret: false,
-      setting: {
-        type: 'list',
-        options: [
-          { label: 'None', value: 'vanilla' },
-          { label: 'Instruct', value: 'special_instruct' },
-          { label: 'Prose', value: 'special_proseaugmenter' },
-          { label: 'Text Adventure', value: 'theme_textadventure' },
-        ],
-      },
-    },
-  ],
-}
-
 const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
   const [settings, setSettings] = createStore({
     service: props.service,
-    values: loadTempServiceConfig(props.service),
+    values: getServiceTempConfig(props.service),
   })
 
   createEffect(() => {
     if (settings.service === props.service) return
 
-    const values = loadTempServiceConfig(props.service)
+    const values = getServiceTempConfig(props.service)
     setSettings({ service: props.service, values })
   })
 
   return (
     <Show when={settings.values.length}>
-      <Accordian
-        title={<b>{ADAPTER_LABELS[props.service!]} Settings</b>}
-        titleClickOpen
-        open={false}
-      >
+      <Accordian title={<b>{ADAPTER_LABELS[props.service!]} Settings</b>} titleClickOpen open>
         <For each={settings.values}>
           {(opt) => (
             <ServiceOption
@@ -976,21 +954,6 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
       </Accordian>
     </Show>
   )
-}
-
-function loadTempServiceConfig(service?: AIAdapter) {
-  if (!service) return []
-
-  const cfg = tempSettings[service]
-  if (!cfg) return []
-
-  const values: Array<TempSetting> = []
-  for (const opt of cfg) {
-    const prev = storage.localGetItem(`${service}.temp.${opt.field}`)
-    values.push({ ...opt, value: prev ? JSON.parse(prev) : undefined })
-  }
-
-  return values
 }
 
 function updateValue(values: TempSetting[], service: AIAdapter, field: string, nextValue: any) {

@@ -183,7 +183,7 @@ export function selectOnChatOpenedEvent(
     entries,
     'onChatOpened',
     states,
-    (e) => e.trigger.awayHours >= diffInHours
+    (e) => e.trigger.awayHours <= diffInHours
   )
   if (applicableEvents.length) {
     const entry = applicableEvents.reduce((prev, curr) =>
