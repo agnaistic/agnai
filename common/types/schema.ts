@@ -327,6 +327,9 @@ export namespace AppSchema {
     topP: number
     topK: number
     topA: number
+    topG?: number
+    mirostatTau?: number
+    mirostatLR?: number
     tailFreeSampling: number
     encoderRepitionPenalty?: number
     penaltyAlpha?: number

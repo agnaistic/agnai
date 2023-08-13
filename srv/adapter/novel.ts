@@ -22,6 +22,8 @@ const streamUrl = (model: string) => `${getBaseUrl(model)}/ai/generate-stream`
  * 4. Top A Sampling
  * 5. Typical Sampling
  * 6. CFG Scale
+ * 7. Top G
+ * 8. Mirostat
  */
 
 const statuses: Record<number, string> = {
@@ -205,6 +207,9 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     order: gen.order,
     bad_words_ids: clioBadWordsId,
     repetition_penalty_whitelist: penaltyWhitelist,
+    top_g: gen.topG,
+    mirostat_tau: gen.mirostatTau,
+    mirotsat_lr: gen.mirostatLR,
   }
 
   if (gen.cfgScale) {
