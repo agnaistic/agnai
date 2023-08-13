@@ -1,4 +1,7 @@
+import needle from 'needle'
+import { publishOne } from '../api/ws/handle'
 import { getTokenCounter } from '../tokenize'
+import { needleToSSE } from './stream'
 import { AdapterProps } from './type'
 import { OPENAI_MODELS } from '/common/adapters'
 import { defaultPresets } from '/common/default-preset'
@@ -12,6 +15,7 @@ import {
 } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
+import { AppLog } from '../logger'
 
 type Role = 'user' | 'assistant' | 'system'
 type CompletionItem = { role: Role; content: string; name?: string }
@@ -23,6 +27,31 @@ type SplitSampleChatProps = {
   budget?: number
 }
 
+type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
+type Inference = { message: { content: string; role: Role } }
+type AsyncDelta = { delta: Partial<Inference['message']> }
+
+type Completion<T = Inference> = {
+  id: string
+  created: number
+  model: string
+  object: string
+  choices: CompletionContent<T>
+  error?: { message: string }
+}
+
+type CompletionGenerator = (
+  userId: string,
+  url: string,
+  headers: Record<string, string | string[] | number>,
+  body: any,
+  service: string,
+  log: AppLog
+) => AsyncGenerator<
+  { error: string } | { error?: undefined; token: string },
+  Completion | undefined
+>
+
 // We only ever use the OpenAI gpt-3 encoder
 // Don't bother passing it around since we know this already
 const encoder = () => getTokenCounter('openai', OPENAI_MODELS.Turbo)
@@ -30,6 +59,96 @@ const encoder = () => getTokenCounter('openai', OPENAI_MODELS.Turbo)
 const sampleChatMarkerCompletionItem: CompletionItem = {
   role: 'system',
   content: SAMPLE_CHAT_MARKER.replace('System: ', ''),
+}
+
+/**
+ * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
+ * once the stream is finished.
+ */
+export const streamCompletion: CompletionGenerator = async function* (
+  userId,
+  url,
+  headers,
+  body,
+  service,
+  log
+) {
+  const resp = needle.post(url, JSON.stringify(body), {
+    parse: false,
+    headers: {
+      ...headers,
+      Accept: 'text/event-stream',
+    },
+  })
+
+  const tokens = []
+  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+
+  try {
+    const events = needleToSSE(resp)
+    for await (const event of events) {
+      if (!event.data) {
+        continue
+      }
+
+      if (event.type === 'ping') {
+        continue
+      }
+
+      if (event.data === '[DONE]') {
+        break
+      }
+
+      const parsed: Completion<AsyncDelta> = JSON.parse(event.data)
+      const { choices, ...evt } = parsed
+      if (!choices || !choices[0]) {
+        log.warn({ sse: event }, `[${service}] Received invalid SSE during stream`)
+
+        const message = evt.error?.message
+          ? `${service} interrupted the response: ${evt.error.message}`
+          : `${service} interrupted the response`
+
+        if (!tokens.length) {
+          yield { error: message }
+          return
+        }
+
+        publishOne(userId, { type: 'notification', level: 'warn', message })
+        break
+      }
+
+      const { finish_reason, index, ...choice } = choices[0]
+
+      meta = { ...evt, finish_reason, index }
+
+      if ('text' in choice) {
+        const token = choice.text
+        tokens.push(token)
+        yield { token }
+      } else if ('delta' in choice && choice.delta.content) {
+        const token = choice.delta.content
+        tokens.push(token)
+        yield { token }
+      }
+    }
+  } catch (err: any) {
+    yield { error: `OpenAI streaming request failed: ${err.message}` }
+    return
+  }
+
+  return {
+    id: meta.id,
+    created: meta.created,
+    model: meta.model,
+    object: meta.object,
+    choices: [
+      {
+        finish_reason: meta.finish_reason,
+        index: meta.index,
+        text: tokens.join(''),
+      },
+    ],
+  }
 }
 
 export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): CompletionItem[] {

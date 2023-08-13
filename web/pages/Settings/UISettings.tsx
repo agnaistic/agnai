@@ -276,12 +276,6 @@ const UISettings: Component = () => {
         value={state.ui.imageWrap}
       />
 
-      <Toggle
-        fieldName="logPromptsToBrowserConsole"
-        label="Log Prompts to Console"
-        value={state.ui?.logPromptsToBrowserConsole ?? false}
-        onChange={(enabled) => userStore.saveUI({ logPromptsToBrowserConsole: enabled })}
-      />
       <Divider />
       <div class="text-lg font-bold">Preview</div>
       <Show when={chars.characters.list.length > 0}>

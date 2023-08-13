@@ -172,3 +172,42 @@ export function getBotName(
 
   return char.name
 }
+
+const DONE = Symbol('EventGeneratorDone')
+
+export function eventGenerator<T = any>() {
+  let done = false
+  let resolve = (_value: any) => {}
+  let defer = new Promise((r) => {
+    resolve = r
+  })
+
+  const reset = () => {
+    defer = new Promise((r) => {
+      resolve = r
+    })
+  }
+
+  const stream = (async function* () {
+    while (!done) {
+      const result = await defer
+      if (result === DONE) {
+        return
+      }
+
+      yield result
+    }
+  })()
+
+  return {
+    stream,
+    push: (value: T) => {
+      resolve(value)
+      reset()
+    },
+    done: () => {
+      resolve(DONE)
+      done = true
+    },
+  }
+}

@@ -4,13 +4,10 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { OPENAI_CHAT_MODELS } from '../../common/adapters'
-import { StatusError } from '../api/wrap'
 import { AppSchema } from '../../common/types/schema'
-import { needleToSSE } from './stream'
 import { config } from '../config'
 import { AppLog } from '../logger'
-import { publishOne } from '../api/ws/handle'
-import { toChatCompletionPayload } from './chat-completion'
+import { streamCompletion, toChatCompletionPayload } from './chat-completion'
 
 const baseUrl = `https://api.openai.com`
 
@@ -19,7 +16,6 @@ type Role = 'user' | 'assistant' | 'system'
 type CompletionItem = { role: Role; content: string; name?: string }
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
 type Inference = { message: { content: string; role: Role } }
-type AsyncDelta = { delta: Partial<Inference['message']> }
 
 type Completion<T = Inference> = {
   id: string
@@ -102,7 +98,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
 
   const iter = body.stream
-    ? streamCompletion(opts.user._id, url, headers, body, opts.log)
+    ? streamCompletion(opts.user._id, url, headers, body, 'OpenAI', opts.log)
     : requestFullCompletion(opts.user._id, url, headers, body, opts.log)
   let accumulated = ''
   let response: Completion<Inference> | undefined
@@ -166,37 +162,6 @@ export type OAIUsage = {
   total_usage: number
 }
 
-export async function getOpenAIUsage(oaiKey: string, guest: boolean): Promise<OAIUsage> {
-  const key = guest ? oaiKey : decryptText(oaiKey)
-  const headers = {
-    'Content-Type': 'application/json',
-    Authorization: `Bearer ${key}`,
-  }
-
-  const date = new Date()
-  date.setDate(1)
-  const start_date = date.toISOString().slice(0, 10)
-
-  date.setMonth(date.getMonth() + 1)
-  const end_date = date.toISOString().slice(0, 10)
-
-  const res = await needle(
-    'get',
-    `${baseUrl}/dashboard/billing/usage?start_date=${start_date}&end_date=${end_date}`,
-    {
-      headers,
-    }
-  )
-  if (res.statusCode && res.statusCode >= 400) {
-    throw new StatusError(
-      `Failed to retrieve usage (${res.statusCode}): ${res.body?.message || res.statusMessage}`,
-      400
-    )
-  }
-
-  return res.body
-}
-
 const requestFullCompletion: CompletionGenerator = async function* (
   _userId,
   url,
@@ -222,89 +187,6 @@ const requestFullCompletion: CompletionGenerator = async function* (
     return
   }
   return resp.body
-}
-
-/**
- * Yields individual tokens as OpenAI sends them, and ultimately returns a full completion object
- * once the stream is finished.
- */
-const streamCompletion: CompletionGenerator = async function* (userId, url, headers, body, log) {
-  const resp = needle.post(url, JSON.stringify(body), {
-    parse: false,
-    headers: {
-      ...headers,
-      Accept: 'text/event-stream',
-    },
-  })
-
-  const tokens = []
-  let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
-
-  try {
-    const events = needleToSSE(resp)
-    for await (const event of events) {
-      if (!event.data) {
-        continue
-      }
-
-      if (event.type === 'ping') {
-        continue
-      }
-
-      if (event.data === '[DONE]') {
-        break
-      }
-
-      const parsed: Completion<AsyncDelta> = JSON.parse(event.data)
-      const { choices, ...evt } = parsed
-      if (!choices || !choices[0]) {
-        log.warn({ sse: event }, `[OpenAI] Received invalid SSE during stream`)
-
-        const message = evt.error?.message
-          ? `OpenAI interrupted the response: ${evt.error.message}`
-          : `OpenAI interrupted the response`
-
-        if (!tokens.length) {
-          yield { error: message }
-          return
-        }
-
-        publishOne(userId, { type: 'notification', level: 'warn', message })
-        break
-      }
-
-      const { finish_reason, index, ...choice } = choices[0]
-
-      meta = { ...evt, finish_reason, index }
-
-      if ('text' in choice) {
-        const token = choice.text
-        tokens.push(token)
-        yield { token }
-      } else if ('delta' in choice && choice.delta.content) {
-        const token = choice.delta.content
-        tokens.push(token)
-        yield { token }
-      }
-    }
-  } catch (err: any) {
-    yield { error: `OpenAI streaming request failed: ${err.message}` }
-    return
-  }
-
-  return {
-    id: meta.id,
-    created: meta.created,
-    model: meta.model,
-    object: meta.object,
-    choices: [
-      {
-        finish_reason: meta.finish_reason,
-        index: meta.index,
-        text: tokens.join(''),
-      },
-    ],
-  }
 }
 
 function getCompletionContent(completion: Completion<Inference> | undefined, log: AppLog) {

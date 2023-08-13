@@ -50,8 +50,6 @@ const AvatarContainer: Component<{
   })
 
   const getStyle = createMemo(() => {
-    // console.log('W', props.container?.clientWidth, ',', bound.clientWidth, ',', max.w)
-    // console.log('H', props.container?.clientHeight, ',', bound.clientHeight, ',', max.h)
     const { w, h } = bounds()
     const calc = calcBounds(w, h)
     return {

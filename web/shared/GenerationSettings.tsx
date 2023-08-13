@@ -995,11 +995,9 @@ function rememberOpen(setting: string, next?: boolean) {
   const id = `accordian.opened.${setting}`
   const prev = storage.localGetItem(id)
   if (next === undefined) {
-    console.log(id, '===', !!prev)
     return !!prev
   }
 
-  console.log(id, '-->', next)
   if (next) {
     storage.localSetItem(id, 'open')
     return true
