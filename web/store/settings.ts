@@ -131,11 +131,6 @@ export const settingStore = createStore<SettingState>(
       }
     },
     toggleOverlay({ overlay }, next?: boolean) {
-      const ex = new Error()
-
-      console.log('Overlay:', !!next)
-      console.log(ex.stack)
-
       return { overlay: next === undefined ? !overlay : next }
     },
     menu({ showMenu }) {
