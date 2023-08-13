@@ -604,6 +604,7 @@ function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
 const THIRD_PARTY_ADAPTERS: { [key in AIAdapter]?: boolean } = {
   openai: true,
   claude: true,
+  ooba: true,
 }
 
 export function getChatPreset(

@@ -46,7 +46,7 @@ export const chatGenSettings = {
   cfgOppose: 'string?',
 
   thirdPartyUrl: 'string?',
-  thirdPartyFormat: ['kobold', 'openai', 'claude', null],
+  thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', null],
 
   novelModel: 'string?',
   novelModelOverride: 'string?',

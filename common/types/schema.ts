@@ -95,7 +95,7 @@ export namespace AppSchema {
     useLocalPipeline: boolean
 
     koboldUrl: string
-    thirdPartyFormat: 'kobold' | 'openai' | 'claude'
+    thirdPartyFormat: 'kobold' | 'openai' | 'claude' | 'ooba'
     thirdPartyPassword: string
     thirdPartyPasswordSet?: boolean
     oobaUrl: string
@@ -357,7 +357,7 @@ export namespace AppSchema {
     openRouterModel?: OpenRouterModel
 
     thirdPartyUrl?: string
-    thirdPartyFormat?: 'kobold' | 'openai' | 'claude'
+    thirdPartyFormat?: 'kobold' | 'openai' | 'claude' | 'ooba'
 
     replicateModelName?: string
     replicateModelType?: string

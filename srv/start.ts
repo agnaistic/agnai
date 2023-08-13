@@ -28,7 +28,7 @@ export async function start() {
     logger.error({ err: ex?.message || ex }, 'Unhandled rejection')
   })
 
-  await prepareTokenizers()
+  prepareTokenizers()
   await Promise.allSettled([initDb(), initMessageBus()])
 
   server.on('error', (err) => {

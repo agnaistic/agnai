@@ -1,3 +1,6 @@
+import { WebSocket } from 'ws'
+import { eventGenerator } from '/common/util'
+
 /**
  * Converts a Needle readable stream to an async generator which yields server-sent events.
  * Operates on Needle events, not NodeJS ReadableStream events.
@@ -88,4 +91,40 @@ function parseLine(event: ServerSentEvent, line: string) {
   }
 
   return event
+}
+
+export async function websocketStream(opts: { url: string; body: any }) {
+  const socket = new WebSocket(opts.url.replace('https:', 'wss:').replace('http:', 'ws:'))
+
+  const emitter = eventGenerator()
+  let accum = ''
+
+  socket.on('error', (err) => {
+    emitter.push({ error: err.message })
+    emitter.done()
+  })
+
+  socket.on('open', () => {
+    socket.send(JSON.stringify(opts.body))
+  })
+
+  socket.on('close', () => {
+    emitter.done()
+  })
+
+  socket.on('message', (data: any) => {
+    const obj = JSON.parse(data)
+
+    if (obj.event === 'text_stream') {
+      emitter.push({ token: obj.text })
+      accum += obj.text
+    }
+    if (obj.event === 'stream_end') {
+      emitter.push(accum)
+      emitter.done()
+      socket.close()
+    }
+  })
+
+  return emitter.stream
 }

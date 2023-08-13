@@ -231,9 +231,10 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           helperText="Re-formats the prompt to the desired output format."
           items={[
             { label: 'None', value: '' },
-            { label: 'Kobold/Ooba', value: 'kobold' },
+            { label: 'Kobold', value: 'kobold' },
             { label: 'OpenAI', value: 'openai' },
             { label: 'Claude', value: 'claude' },
+            { label: 'Textgen (Ooba)', value: 'ooba' },
           ]}
           value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}
@@ -995,11 +996,9 @@ function rememberOpen(setting: string, next?: boolean) {
   const id = `accordian.opened.${setting}`
   const prev = storage.localGetItem(id)
   if (next === undefined) {
-    console.log(id, '===', !!prev)
     return !!prev
   }
 
-  console.log(id, '-->', next)
   if (next) {
     storage.localSetItem(id, 'open')
     return true

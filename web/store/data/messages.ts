@@ -252,7 +252,6 @@ export type GenerateOpts =
   | { kind: 'summary' }
 
 export async function generateResponse(opts: GenerateOpts) {
-  const { ui } = userStore.getState()
   const { active } = chatStore.getState()
 
   if (!active) {
@@ -282,11 +281,6 @@ export async function generateResponse(opts: GenerateOpts) {
         ' and '
       )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
     )
-  }
-
-  if (ui?.logPromptsToBrowserConsole) {
-    console.log(`=== Sending the following prompt: ===`)
-    console.log(`${prompt.template}`)
   }
 
   const request: GenerateRequestV2 = {

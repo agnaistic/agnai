@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { toChatCompletionPayload } from './chat-completion'
+import { streamCompletion, toChatCompletionPayload } from './chat-completion'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '../api/chat/common'
@@ -43,7 +43,11 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     'HTTP-Referer': 'https://agnai.chat',
   }
 
-  const res = getCompletion(payload, headers)
+  const res =
+    false ?? opts.gen.streamResponse
+      ? streamCompletion(user._id, chatUrl, headers, payload, 'OpenRouter', opts.log)
+      : getCompletion(payload, headers)
+
   let accum = ''
   let response: any
 
