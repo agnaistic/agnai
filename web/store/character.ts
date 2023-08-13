@@ -15,7 +15,7 @@ type CharacterState = {
   loading?: boolean
   impersonating?: AppSchema.Character
   characters: {
-    loaded: boolean
+    loaded: number
     list: AppSchema.Character[]
     map: Record<string, AppSchema.Character>
   }
@@ -59,7 +59,7 @@ export type UpdateCharacter = Partial<
 
 const initState: CharacterState = {
   creating: false,
-  characters: { loaded: false, list: [], map: {} },
+  characters: { loaded: 0, list: [], map: {} },
   chatChars: { list: [], map: {} },
   generate: {
     image: null,
@@ -84,7 +84,7 @@ export const characterStore = createStore<CharacterState>(
     }
 
     const nextChars = receiveChars(characterStore.getState().characters.map, init.characters)
-    set({ characters: { ...nextChars, loaded: true } })
+    set({ characters: { ...nextChars, loaded: Date.now() } })
 
     const impersonateId = await storage.getItem(IMPERSONATE_KEY)
     if (!impersonateId) return
@@ -121,13 +121,15 @@ export const characterStore = createStore<CharacterState>(
     },
     async *getCharacters(state) {
       if (state.loading) return
-      if (state.characters.loaded) return
+
+      const age = Date.now() - state.characters.loaded
+      if (age < 30000) return
 
       yield { loading: true }
       const res = await charsApi.getCharacters()
-      yield { loading: false }
 
       if (res.error) {
+        yield { loading: false }
         return toastStore.error('Failed to retrieve characters')
       }
 
@@ -137,8 +139,9 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             ...next,
-            loaded: true,
+            loaded: Date.now(),
           },
+          loading: false,
         }
       }
 
@@ -149,9 +152,10 @@ export const characterStore = createStore<CharacterState>(
         return {
           characters: {
             ...next,
-            loaded: true,
+            loaded: Date.now(),
           },
           impersonating,
+          loading: false,
         }
       }
     },
@@ -162,7 +166,7 @@ export const characterStore = createStore<CharacterState>(
     },
 
     async *createCharacter(
-      { creating, characters: { list } },
+      { creating, characters: { list, loaded } },
       char: NewCharacter,
       onSuccess?: (result: AppSchema.Character) => void
     ) {
@@ -178,14 +182,14 @@ export const characterStore = createStore<CharacterState>(
           characters: {
             list: list.concat(res.result),
             map: toCharacterMap(list.concat(res.result)),
-            loaded: true,
+            loaded,
           },
         }
         onSuccess?.(res.result)
       }
     },
     async *editCharacter(
-      { characters: { list, map } },
+      { characters: { list, map, loaded } },
       characterId: string,
       char: UpdateCharacter,
       onSuccess?: () => void
@@ -200,7 +204,7 @@ export const characterStore = createStore<CharacterState>(
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, ...res.result } : ch)),
             map: replace(map, characterId, res.result),
-            loaded: true,
+            loaded,
           },
         }
         onSuccess?.()
@@ -223,7 +227,7 @@ export const characterStore = createStore<CharacterState>(
         }
       }
     },
-    async *editAvatar({ characters: { list, map } }, characterId: string, file: File) {
+    async *editAvatar({ characters: { list, map, loaded } }, characterId: string, file: File) {
       const res = await charsApi.editAvatar(characterId, file)
       if (res.error) {
         toastStore.error(`Failed to update avatar: ${res.error}`)
@@ -234,12 +238,12 @@ export const characterStore = createStore<CharacterState>(
           characters: {
             list: list.map((ch) => (ch._id === characterId ? res.result : ch)),
             map: replace(map, characterId, res.result),
-            loaded: true,
+            loaded,
           },
         }
       }
     },
-    async *removeAvatar({ characters: { list, map } }, characterId: string) {
+    async *removeAvatar({ characters: { list, map, loaded } }, characterId: string) {
       const res = await charsApi.removeAvatar(characterId)
       if (res.error) {
         toastStore.error(`Failed to remove avatar: ${res.error}`)
@@ -250,13 +254,13 @@ export const characterStore = createStore<CharacterState>(
           characters: {
             list: list.map((ch) => (ch._id === characterId ? { ...ch, avatar: '' } : ch)),
             map: replace(map, characterId, { avatar: '' }),
-            loaded: true,
+            loaded,
           },
         }
       }
     },
     deleteCharacter: async (
-      { characters: { list, map } },
+      { characters: { list, map, loaded } },
       charId: string,
       onSuccess?: () => void
     ) => {
@@ -268,7 +272,7 @@ export const characterStore = createStore<CharacterState>(
         onSuccess?.()
         delete map[charId]
         return {
-          characters: { loaded: true, list: next, map },
+          characters: { loaded, list: next, map },
         }
       }
     },
