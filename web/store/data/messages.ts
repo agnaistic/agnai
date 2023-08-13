@@ -22,6 +22,7 @@ import { settingStore } from '../settings'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { replace } from '/common/util'
 import { toMap } from '/web/shared/util'
+import { getServiceTempConfig } from '/web/shared/adapter'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -45,7 +46,7 @@ export const msgsApi = {
   editMessageProps,
   getMessages,
   getPromptEntities,
-  generateResponseV2,
+  generateResponse,
   deleteMessages,
   basicInference,
   createActiveChatPrompt,
@@ -250,7 +251,7 @@ export type GenerateOpts =
   | { kind: 'self' }
   | { kind: 'summary' }
 
-export async function generateResponseV2(opts: GenerateOpts) {
+export async function generateResponse(opts: GenerateOpts) {
   const { ui } = userStore.getState()
   const { active } = chatStore.getState()
 
@@ -490,6 +491,16 @@ async function getGenerateProps(
   active: NonNullable<ChatState['active']>
 ): Promise<GenerateProps> {
   const entities = await getPromptEntities()
+
+  const temporary = getServiceTempConfig(entities.settings.service)
+  if (!entities.settings.temporary) {
+    entities.settings.temporary = {}
+  }
+
+  for (const temp of temporary) {
+    entities.settings.temporary[temp.field] = temp.value
+  }
+
   const [secondLastMsg, lastMsg] = entities.messages.slice(-2)
   const lastCharMsg = entities.messages.reduceRight<AppSchema.ChatMessage | void>((prev, curr) => {
     if (prev) return prev

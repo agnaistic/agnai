@@ -376,6 +376,8 @@ export namespace AppSchema {
     images?: {
       adapter: string
     }
+
+    temporary?: Record<string, any>
   }
 
   export interface MemoryBook {

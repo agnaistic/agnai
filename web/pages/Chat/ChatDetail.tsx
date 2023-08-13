@@ -62,6 +62,7 @@ const ChatDetail: Component = () => {
     chatBots: s.characters.list,
     botMap: s.characters.map,
     impersonate: s.impersonating,
+    ready: s.characters.loaded > 0,
   }))
 
   const isPaneOrPopup = usePane()
@@ -143,7 +144,7 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     // On Connect Events
-    if (evented() || !chats.chat || !chats.char) return
+    if (evented() || !chats.chat || !chats.char || !chars.ready) return
     setEvented(true)
 
     const messages = msgs.msgs

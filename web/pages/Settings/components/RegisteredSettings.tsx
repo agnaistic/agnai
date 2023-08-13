@@ -28,13 +28,17 @@ const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) =>
 
 export default RegisteredSettings
 
-const ServiceOption: Component<{
+export const ServiceOption: Component<{
   service: string
   opt: AdapterSetting
   value?: any
   config?: Record<string, any>
+  field?: (field: string) => string
+  onChange?: (value: any) => void
 }> = (props) => {
-  const field = createMemo(() => `adapterConfig.${props.service}.${props.opt.field}`)
+  const field = createMemo(
+    () => props.field?.(props.opt.field) || `adapterConfig.${props.service}.${props.opt.field}`
+  )
   const options = createMemo(() =>
     props.opt.setting.type === 'list' ? props.opt.setting.options : []
   )
@@ -79,6 +83,7 @@ const ServiceOption: Component<{
           type={props.opt.secret ? 'password' : undefined}
           placeholder={placeholder()}
           value={props.value}
+          onChange={(ev) => props.onChange?.(ev.currentTarget.value)}
         />
       </Match>
 
@@ -88,6 +93,7 @@ const ServiceOption: Component<{
           label={props.opt.label}
           helperText={props.opt.helperText}
           value={props.value}
+          onChange={props.onChange}
         />
       </Match>
 
@@ -98,6 +104,7 @@ const ServiceOption: Component<{
           helperText={props.opt.helperText}
           items={options()}
           value={props.value}
+          onChange={(opt) => props.onChange?.(opt.value)}
         />
       </Match>
     </Switch>

@@ -68,11 +68,14 @@ const ChatSettings: Component<{
     const noScenario = [{ value: '', label: "None (use character's scenario)" }]
     if (scenarioState.loading || scenarioState.partial) {
       return noScenario.concat(
-        (state.chat?.scenarioIds ?? []).map((id) => ({ value: id, label: id }))
+        (state.chat?.scenarioIds ?? []).map((id) => ({
+          value: id,
+          label: '...',
+        }))
       )
     } else {
       return noScenario.concat(
-        scenarioState.scenarios.map((s) => ({ label: s.name, value: s._id }))
+        scenarioState.scenarios.map((s) => ({ label: s.name || 'Untitled scenario', value: s._id }))
       )
     }
   })
@@ -97,7 +100,7 @@ const ChatSettings: Component<{
     const payload = {
       ...body,
       overrides,
-      scenarioIds: scenarioId ? [scenarioId] : undefined,
+      scenarioIds: scenarioId ? [scenarioId] : [],
       scenarioStates: states(),
     }
     chatStore.editChat(state.chat?._id!, payload, useOverrides(), () => {

@@ -203,7 +203,7 @@ export const msgStore = createStore<MsgState>(
 
       addMsgToRetries(replace)
 
-      const res = await msgsApi.generateResponseV2({ kind: 'continue' })
+      const res = await msgsApi.generateResponse({ kind: 'continue' })
 
       if (res.error) {
         toastStore.error(`(Continue) Generation request failed: ${res.error}`)
@@ -221,7 +221,7 @@ export const msgStore = createStore<MsgState>(
       }
       yield { partial: undefined, waiting: { chatId, mode: 'request', characterId } }
 
-      const res = await msgsApi.generateResponseV2({ kind: 'request', characterId })
+      const res = await msgsApi.generateResponse({ kind: 'request', characterId })
 
       if (res.error) {
         toastStore.error(`(Bot) Generation request failed: ${res.error}`)
@@ -259,7 +259,7 @@ export const msgStore = createStore<MsgState>(
 
       if (replace) addMsgToRetries(replace)
 
-      const res = await msgsApi.generateResponseV2({ kind: 'retry', messageId })
+      const res = await msgsApi.generateResponse({ kind: 'retry', messageId })
 
       if (res.error) {
         toastStore.error(`(Retry) Generation request failed: ${res.error}`)
@@ -310,19 +310,19 @@ export const msgStore = createStore<MsgState>(
       switch (mode) {
         case 'self':
         case 'retry':
-          res = await msgsApi.generateResponseV2({ kind: mode })
+          res = await msgsApi.generateResponse({ kind: mode })
           break
 
         case 'send':
         case 'send-event:world':
         case 'send-event:character':
         case 'send-event:hidden':
-          res = await msgsApi.generateResponseV2({ kind: mode, text: message })
+          res = await msgsApi.generateResponse({ kind: mode, text: message })
           break
 
         case 'ooc':
         case 'send-noreply':
-          res = await msgsApi.generateResponseV2({ kind: mode, text: message })
+          res = await msgsApi.generateResponse({ kind: mode, text: message })
           yield { partial: undefined, waiting: undefined }
           break
 

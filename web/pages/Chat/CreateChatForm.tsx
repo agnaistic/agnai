@@ -317,7 +317,7 @@ const CreateChatForm: Component<{
             <div class="w-full text-sm">
               <Show when={state.char}>
                 <PersonaAttributes
-                  value={state.char!.persona.attributes}
+                  value={state.char?.persona.attributes}
                   hideLabel
                   plainText={state.char?.persona?.kind === 'text'}
                   disabled={!useOverrides()}

@@ -401,11 +401,7 @@ export function toMap<T extends { _id: string }>(list: T[]): Record<string, T> {
   return map
 }
 
-export const alphaCaseInsensitiveSort = (
-  a: string,
-  b: string,
-  direction: 'asc' | 'desc' = 'asc'
-) => {
+export function alphaCaseInsensitiveSort(a: string, b: string, direction: 'asc' | 'desc' = 'asc') {
   const modifier = direction === 'asc' ? 1 : -1
   if (a.toLowerCase() < b.toLowerCase()) {
     return -1 * modifier

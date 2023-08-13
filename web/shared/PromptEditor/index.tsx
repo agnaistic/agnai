@@ -224,7 +224,7 @@ const PromptEditor: Component<
       <textarea
         id={props.fieldName}
         name={props.fieldName}
-        class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+        class="form-field focusable-field text-900 min-h-[4rem] w-full rounded-xl px-4 py-2 text-sm"
         classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}

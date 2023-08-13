@@ -191,6 +191,8 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId, opts.settings)
+    entities.gen.temporary = opts.settings?.temporary
+
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
     const encoder = getTokenCounter(adapter, model)
     opts.parts = getPromptParts(
