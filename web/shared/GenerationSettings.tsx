@@ -28,7 +28,7 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
-import { presetStore, settingStore } from '../store'
+import { chatStore, presetStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
@@ -53,6 +53,7 @@ type Props = {
 
 const GenerationSettings: Component<Props> = (props) => {
   const state = settingStore((s) => s.config)
+  const opts = chatStore((s) => s.opts)
 
   const [service, setService] = createSignal(props.inherit?.service)
 
@@ -90,10 +91,27 @@ const GenerationSettings: Component<Props> = (props) => {
             disabled={props.disabled || props.disableService}
           />
         </Card>
-        <TempSettings service={props.inherit?.service} />
-        <GeneralSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
-        <PromptSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
-        <GenSettings disabled={props.disabled} inherit={props.inherit} service={service()} />
+        <Show when={!!opts.pane}>
+          <TempSettings service={props.inherit?.service} />
+        </Show>
+        <GeneralSettings
+          disabled={props.disabled}
+          inherit={props.inherit}
+          service={service()}
+          pane={!!opts.pane}
+        />
+        <PromptSettings
+          disabled={props.disabled}
+          inherit={props.inherit}
+          service={service()}
+          pane={!!opts.pane}
+        />
+        <GenSettings
+          disabled={props.disabled}
+          inherit={props.inherit}
+          service={service()}
+          pane={!!opts.pane}
+        />
       </div>
     </>
   )
@@ -125,7 +143,7 @@ export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Eleme
   )
 }
 
-const GeneralSettings: Component<Props> = (props) => {
+const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
   const cfg = settingStore()
   const presets = presetStore()
 
@@ -381,10 +399,15 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
   return pairs
 }
 
-const PromptSettings: Component<Props> = (props) => {
+const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
   return (
     <div class="flex flex-col gap-4">
-      <Accordian title={<b>Prompt Settings</b>} open={false} titleClickOpen>
+      <Accordian
+        title={<b>Prompt Settings</b>}
+        open={props.pane ? rememberOpen('promptSettings') : true}
+        onChange={(next) => props.pane && rememberOpen('promptSettings', next)}
+        titleClickOpen
+      >
         <div class="flex flex-col gap-2">
           <Card
             class="flex flex-col gap-4"
@@ -492,7 +515,12 @@ const PromptSettings: Component<Props> = (props) => {
         </div>
       </Accordian>
 
-      <Accordian title={<b>Memory Book Settings</b>} titleClickOpen open={false}>
+      <Accordian
+        title={<b>Memory Book Settings</b>}
+        titleClickOpen
+        open={props.pane ? rememberOpen('memoryBookSettings') : true}
+        onChange={(next) => props.pane && rememberOpen('memoryBookSettings', next)}
+      >
         <div class="flex flex-col gap-2">
           <RangeInput
             fieldName="memoryContextLimit"
@@ -562,7 +590,7 @@ const PromptSettings: Component<Props> = (props) => {
   )
 }
 
-const GenSettings: Component<Props> = (props) => {
+const GenSettings: Component<Props & { pane: boolean }> = (props) => {
   const [_useV2, _setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
 
   return (
@@ -961,4 +989,22 @@ function updateValue(values: TempSetting[], service: AIAdapter, field: string, n
   return values.map<TempSetting>((val) =>
     val.field === field ? { ...val, value: nextValue } : val
   )
+}
+
+function rememberOpen(setting: string, next?: boolean) {
+  const id = `accordian.opened.${setting}`
+  const prev = storage.localGetItem(id)
+  if (next === undefined) {
+    console.log(id, '===', !!prev)
+    return !!prev
+  }
+
+  console.log(id, '-->', next)
+  if (next) {
+    storage.localSetItem(id, 'open')
+    return true
+  }
+
+  storage.localRemoveItem(id)
+  return false
 }

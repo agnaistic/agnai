@@ -100,7 +100,7 @@ const ChatSettings: Component<{
     const payload = {
       ...body,
       overrides,
-      scenarioIds: scenarioId ? [scenarioId] : undefined,
+      scenarioIds: scenarioId ? [scenarioId] : [],
       scenarioStates: states(),
     }
     chatStore.editChat(state.chat?._id!, payload, useOverrides(), () => {
