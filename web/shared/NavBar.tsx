@@ -26,11 +26,13 @@ const NavBar: Component = () => {
   const setModal = (modal: ChatModal) => {
     setShowOpts(false)
     chatStore.option('modal', modal)
+    settingStore.toggleOverlay(false)
   }
 
   const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
     chatStore.option('pane', chatStore.getState().opts.pane === paneType ? undefined : paneType)
+    settingStore.toggleOverlay(false)
   }
 
   const Title = (
