@@ -1,4 +1,5 @@
-import * as sp from 'sentencepiece-js'
+import { SentencePieceProcessor } from '@agnai/sentencepiece-js'
+import * as mlc from '@agnai/web-tokenizers'
 import fs, { readFileSync } from 'fs'
 import { init } from '@dqbd/tiktoken/lite/init'
 import { encoding_for_model } from '@dqbd/tiktoken'
@@ -6,21 +7,12 @@ import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from '../common/adapters'
 import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 import { Encoder, TokenCounter, Tokenizer } from '../common/tokenize'
-import * as mlc from '@mlc-ai/web-tokenizers'
 import * as nai from 'nai-js-tokenizer'
+import { logger } from './logger'
 
 const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
 const pileJson = readFileSync(resolve(__dirname, 'sp-models', 'pile_tokenizer.json'))
 const gpt2Json = readFileSync(resolve(__dirname, 'sp-models', 'gpt2_tokenizer.json'))
-
-const nerdstash = new sp.SentencePieceProcessor()
-nerdstash.load(resolve(__dirname, './sp-models/novelai.model'))
-
-const nerdstashV2 = new sp.SentencePieceProcessor()
-nerdstashV2.load(resolve(__dirname, './sp-models/novelai_v2.model'))
-
-const llamaModel = new sp.SentencePieceProcessor()
-llamaModel.load(resolve(__dirname, './sp-models/llama.model'))
 
 let claudeEncoder: Tokenizer
 let krake: Encoder
@@ -37,44 +29,9 @@ const main: Encoder = {
   count: (value: string) => gpt.encode(value).length,
 }
 
-const novel: Encoder = {
-  decode: (tokens: number[]) => {
-    return nerdstash.decodeIds(tokens)
-  },
-  encode: (value: string) => {
-    // const cleaned = sp.cleanText(value)
-    return nerdstash.encodeIds(value)
-  },
-  count: (value: string) => {
-    // const cleaned = sp.cleanText(value)
-    return nerdstash.encodeIds(value).length
-  },
-}
-
-const novelModern: Encoder = {
-  encode: (value: string) => {
-    // const cleaned = sp.cleanText(value)
-    return nerdstashV2.encodeIds(value)
-  },
-  decode: (tokens) => nerdstashV2.decodeIds(tokens),
-  count: (value: string) => {
-    // const cleaned = sp.cleanText(value)
-    return nerdstashV2.encodeIds(value).length
-  },
-}
-
-const llama: Encoder = {
-  encode: (value: string) => {
-    // const cleaned = sp.cleanText(value)
-    return llamaModel.encodeIds(value)
-  },
-  decode: (tokens) => llamaModel.decodeIds(tokens),
-  count: (value) => {
-    // const cleaned = sp.cleanText(value)
-    return llamaModel.encodeIds(value).length
-  },
-}
-
+let novel: Encoder
+let novelModern: Encoder
+let llama: Encoder
 let claude: Encoder
 let davinci: Encoder
 let turbo: Encoder
@@ -152,10 +109,12 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
   }
 }
 
-async function prepareTokenizers() {
+export async function prepareTokenizers() {
   try {
+    novel = createEncoder('novelai.model')
+    novelModern = createEncoder('novelai_v2.model')
+    llama = createEncoder('llama.model')
     await init((imports) => WebAssembly.instantiate(wasm!, imports))
-
     {
       davinci = {
         decode: (tokens) => davinciEncoder.decode(Uint32Array.from(tokens)).toString(),
@@ -169,7 +128,6 @@ async function prepareTokenizers() {
         },
       }
     }
-
     {
       turbo = {
         decode: (tokens) => turboEncoder.decode(Uint32Array.from(tokens)).toString(),
@@ -197,13 +155,11 @@ async function prepareTokenizers() {
         },
       }
     }
-  } catch (ex) {
-    console.warn(`Failed to load OAI tokenizers`)
-    console.warn(ex)
+  } catch (ex: any) {
+    logger.warn(`Failed to load OAI tokenizers`)
+    logger.warn(ex?.message || ex)
   }
 }
-
-prepareTokenizers()
 
 function getWasm() {
   try {
@@ -216,4 +172,23 @@ function getWasm() {
     const wasm = fs.readFileSync(path)
     return wasm
   } catch (ex) {}
+}
+
+function createEncoder(filename: string): Encoder {
+  const tokenizer = new SentencePieceProcessor()
+  tokenizer.load(resolve(__dirname, 'sp-models', filename))
+  const encoder: Encoder = {
+    decode: (tokens: number[]) => {
+      return tokenizer.decodeIds(tokens)
+    },
+    encode: (value: string) => {
+      // const cleaned = sp.cleanText(value)
+      return tokenizer.encodeIds(value)
+    },
+    count: (value: string) => {
+      // const cleaned = sp.cleanText(value)
+      return tokenizer.encodeIds(value).length
+    },
+  }
+  return encoder
 }

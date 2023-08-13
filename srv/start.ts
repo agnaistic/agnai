@@ -1,5 +1,5 @@
 import 'module-alias/register'
-import './tokenize'
+import { prepareTokenizers } from './tokenize'
 import lt from 'localtunnel'
 import * as os from 'os'
 import throng from 'throng'
@@ -16,11 +16,24 @@ export async function start() {
   // Allow as many responses currently generating to complete as possible during the shutdown window
   // The shutdown window is ~10 seconds
   process.on('SIGTERM', () => {
-    console.warn(`Received SIGTERM. Server shutting down.`)
+    logger.warn(`Received SIGTERM. Server shutting down.`)
     server.close()
   })
 
+  process.on('uncaughtException', (ex) => {
+    logger.error({ err: ex.message || ex }, 'Unhandled exception')
+  })
+
+  process.on('unhandledRejection', (ex: any) => {
+    logger.error({ err: ex?.message || ex }, 'Unhandled rejection')
+  })
+
+  await prepareTokenizers()
   await Promise.allSettled([initDb(), initMessageBus()])
+
+  server.on('error', (err) => {
+    logger.error({ cause: err.message }, 'Failed to start API')
+  })
 
   server.listen(config.port, '0.0.0.0', async () => {
     logger.info(
