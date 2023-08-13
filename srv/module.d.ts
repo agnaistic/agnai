@@ -1,4 +1,4 @@
-declare module 'sentencepiece-js' {
+declare module '@agnai/sentencepiece-js' {
   export function cleanText(text: string): string
 
   export class SentencePieceProcessor {
