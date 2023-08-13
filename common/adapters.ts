@@ -258,6 +258,10 @@ export const adapterSettings: {
   topA: ['horde', 'novel', 'kobold'],
   topK: ['horde', 'novel', 'kobold', 'ooba', 'claude'],
   typicalP: ['horde', 'novel', 'kobold', 'ooba'],
+
+  topG: ['novel'],
+  mirostatLR: ['novel'],
+  mirostatTau: ['novel'],
   cfgScale: ['novel'],
   cfgOppose: ['novel'],
 
@@ -329,9 +333,22 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   ultimeJailbreak: 'Jailbreak',
   prefill: 'Bot response prefilling',
   useTemplateParser: 'Use V2 Prompt Parser',
+  topG: 'Top G',
+  mirostatTau: 'Mirostat Tau',
+  mirostatLR: 'Mirostat LR',
 }
 
 export const samplerOrders: { [key in AIAdapter]?: Array<keyof PresetAISettings> } = {
   kobold: ['topK', 'topA', 'topP', 'tailFreeSampling', 'typicalP', 'temp', 'repetitionPenalty'],
-  novel: ['temp', 'topK', 'topP', 'tailFreeSampling', 'topA', 'typicalP', 'cfgScale'],
+  novel: [
+    'temp',
+    'topK',
+    'topP',
+    'tailFreeSampling',
+    'topA',
+    'typicalP',
+    'cfgScale',
+    'topG',
+    'mirostatTau',
+  ],
 }

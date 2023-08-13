@@ -26,6 +26,7 @@ export const chatGenSettings = {
   topP: 'number',
   topK: 'number',
   topA: 'number',
+
   tailFreeSampling: 'number',
   encoderRepitionPenalty: 'number?',
   addBosToken: 'boolean?',
@@ -42,6 +43,9 @@ export const chatGenSettings = {
   oaiModel: 'string',
   openRouterModel: 'any?',
 
+  topG: 'number?',
+  mirostatTau: 'number?',
+  mirostatLR: 'number?',
   cfgScale: 'number?',
   cfgOppose: 'string?',
 

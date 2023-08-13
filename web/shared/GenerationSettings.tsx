@@ -691,6 +691,42 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           aiSetting={'topA'}
         />
         <RangeInput
+          fieldName="topG"
+          label="Top G"
+          helperText="Functions similarly to Top K, but acts on groups of tokens with equal probabilities (0 to disable)"
+          min={0}
+          max={20}
+          step={1}
+          value={props.inherit?.topG ?? 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'topG'}
+        />
+        <RangeInput
+          fieldName="mirostatTau"
+          label="Mirostat Tau"
+          helperText="Mirostat aims to keep the text at a fixed complexity set by tau."
+          min={0}
+          max={6}
+          step={0.01}
+          value={props.inherit?.mirostatTau ?? 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'mirostatTau'}
+        />
+        <RangeInput
+          fieldName="mirostatLR"
+          label="Mirostat LR"
+          helperText="Mirostat aims to keep the text at a fixed complexity set by tau."
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.inherit?.mirostatLR ?? 1}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'mirostatLR'}
+        />
+        <RangeInput
           fieldName="tailFreeSampling"
           label="Tail Free Sampling"
           helperText="Increases the consistency of the output by working from the bottom and trimming the lowest probability tokens. (Put this value on 1 to disable its effect)"
