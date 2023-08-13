@@ -77,7 +77,6 @@ export const streamCompletion: CompletionGenerator = async function* (
     parse: false,
     headers: {
       ...headers,
-      'Content-Type': undefined,
       Accept: 'text/event-stream',
     },
   })
@@ -133,6 +132,7 @@ export const streamCompletion: CompletionGenerator = async function* (
       }
     }
   } catch (err: any) {
+    log.error({ err }, `${service} streaming request failed`)
     yield { error: `${service} streaming request failed: ${err.message}` }
     return
   }
