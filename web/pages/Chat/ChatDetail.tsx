@@ -196,6 +196,7 @@ const ChatDetail: Component = () => {
   const clearModal = () => {
     setShowOpts(false)
     chatStore.option('modal', 'none')
+    settingStore.toggleOverlay(false)
   }
 
   const togglePane = (paneType: ChatRightPane) => {
@@ -380,7 +381,10 @@ const ChatDetail: Component = () => {
                       adapterLabel={adapterLabel()}
                       setModal={setModal}
                       togglePane={togglePane}
-                      close={() => setShowOpts(false)}
+                      close={() => {
+                        setShowOpts(false)
+                        settingStore.toggleOverlay(false)
+                      }}
                     />
                   </DropMenu>
                 </div>
