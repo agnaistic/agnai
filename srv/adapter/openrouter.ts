@@ -43,9 +43,10 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     'HTTP-Referer': 'https://agnai.chat',
   }
 
-  const res = opts.gen.streamResponse
-    ? streamCompletion(user._id, chatUrl, headers, payload, 'OpenRouter', opts.log)
-    : getCompletion(payload, headers)
+  const res =
+    false ?? opts.gen.streamResponse
+      ? streamCompletion(user._id, chatUrl, headers, payload, 'OpenRouter', opts.log)
+      : getCompletion(payload, headers)
 
   let accum = ''
   let response: any

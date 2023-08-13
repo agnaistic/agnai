@@ -77,6 +77,7 @@ export const streamCompletion: CompletionGenerator = async function* (
     parse: false,
     headers: {
       ...headers,
+      'Content-Type': undefined,
       Accept: 'text/event-stream',
     },
   })
@@ -132,7 +133,7 @@ export const streamCompletion: CompletionGenerator = async function* (
       }
     }
   } catch (err: any) {
-    yield { error: `OpenAI streaming request failed: ${err.message}` }
+    yield { error: `${service} streaming request failed: ${err.message}` }
     return
   }
 
