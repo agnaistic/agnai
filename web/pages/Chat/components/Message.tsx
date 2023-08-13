@@ -402,7 +402,11 @@ const SingleMessage: Component<
                 </Match>
                 <Match when={!edit() && !isImage()}>
                   <p
-                    class="rendered-markdown px-1"
+                    class={`rendered-markdown px-1 ${
+                      props.partial || props.msg._id === 'partial'
+                        ? 'streaming-markdown'
+                        : 'not-streaming'
+                    }`}
                     data-bot-message={isBot()}
                     data-user-message={isUser()}
                     innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
