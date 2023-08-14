@@ -1,71 +1,64 @@
 import { WebSocket } from 'ws'
 import { eventGenerator } from '/common/util'
 
+export type ServerSentEvent = { id?: string; type?: string; data: string; error?: string }
+
 /**
  * Converts a Needle readable stream to an async generator which yields server-sent events.
  * Operates on Needle events, not NodeJS ReadableStream events.
  * https://github.com/tomas/needle#events
  **/
-export async function* needleToSSE(needleStream: NodeJS.ReadableStream) {
-  let msgBuffer = ''
-  let chunks: string[] = []
-  let done = false
+export function requestStream(stream: NodeJS.ReadableStream) {
+  const emitter = eventGenerator<ServerSentEvent | { type?: string; error: string; data?: any }>()
 
-  let tick: () => void
-  let waitForData = new Promise<void>((resolve) => (tick = resolve))
-
-  let error: Error | undefined
-
-  needleStream.on('header', (statusCode, headers) => {
+  stream.on('header', (statusCode, headers) => {
     if (statusCode > 201) {
-      needleStream.emit('err', new Error(`SSE request failed with status code ${statusCode}`))
+      emitter.push({ error: `SSE request failed with status code ${statusCode}` })
+      emitter.done()
     } else if (!headers['content-type']?.startsWith('text/event-stream')) {
-      needleStream.emit(
-        'err',
-        new Error(`SSE request received unexpected content-type ${headers['content-type']}`)
-      )
+      emitter.push({
+        error: `SSE request received unexpected content-type ${headers['content-type']}`,
+      })
+      emitter.done()
     }
   })
 
-  needleStream.on('err', (err) => {
-    error = err
+  stream.on('done', () => {
+    emitter.done()
   })
 
-  needleStream.on('done', () => {
-    done = true
-    tick()
-  })
+  stream.on('data', (chunk: Buffer) => {
+    const data = chunk.toString()
+    const messages = data.split(/\r?\n\r?\n/)
 
-  needleStream.on('data', (chunk: Buffer) => {
-    chunks.push(chunk.toString())
-    tick()
-    waitForData = new Promise((resolve) => (tick = resolve))
-  })
+    for (const msg of messages) {
+      const event: any = parseEvent(msg)
 
-  while (!done) {
-    await waitForData
-    if (error) {
-      // Needle will emit data chunks containing the error body before emitting the error event.
-      const errorPayload = chunks.join('')
-      throw new Error(`${error.message}: ${errorPayload}`)
+      if (!event.data) continue
+      if (event.event) {
+        event.type = event.event
+      }
+
+      console.log(event)
+      emitter.push(event)
     }
+  })
 
-    const newMsgs = (msgBuffer + chunks.join('')).split(/\r?\n\r?\n/)
-
-    chunks = []
-    msgBuffer = newMsgs.pop() || ''
-
-    for (const msg of newMsgs) {
-      yield parseEvent(msg)
-    }
-  }
+  return emitter.stream
 }
 
-export type ServerSentEvent = { id?: string; type?: string; data: string }
-
 function parseEvent(msg: string) {
-  const buffer: ServerSentEvent = { data: '' }
-  return msg.split(/\r?\n/).reduce(parseLine, buffer)
+  const event: any = {}
+  for (const line of msg.split(/\r?\n/)) {
+    const pos = line.indexOf(':')
+    if (pos === -1) continue
+
+    const prop = line.slice(0, pos)
+    const value = line.slice(pos + 1).trim()
+    event[prop] = prop === 'data' ? value.trimStart() : value.trim()
+  }
+
+  return event
 }
 
 function parseLine(event: ServerSentEvent, line: string) {

@@ -340,6 +340,7 @@ export namespace AppSchema {
     disabledSamplers?: number[]
 
     skipSpecialTokens?: boolean
+    phrase_rep_penalty?: string
     cfgScale?: number
     cfgOppose?: string
 

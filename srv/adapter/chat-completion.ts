@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { publishOne } from '../api/ws/handle'
 import { getTokenCounter } from '../tokenize'
-import { needleToSSE } from './stream'
+import { requestStream } from './stream'
 import { AdapterProps } from './type'
 import { OPENAI_MODELS } from '/common/adapters'
 import { defaultPresets } from '/common/default-preset'
@@ -85,7 +85,7 @@ export const streamCompletion: CompletionGenerator = async function* (
   let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
 
   try {
-    const events = needleToSSE(resp)
+    const events = requestStream(resp)
     for await (const event of events) {
       if (!event.data) {
         continue

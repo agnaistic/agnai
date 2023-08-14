@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { sanitiseAndTrim } from '../api/chat/common'
-import { needleToSSE } from './stream'
+import { requestStream } from './stream'
 import { ModelAdapter, AdapterProps } from './type'
 import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
@@ -183,7 +183,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
   }
 
   try {
-    const events = needleToSSE(resp)
+    const events = requestStream(resp)
 
     // https://docs.anthropic.com/claude/reference/streaming
     for await (const event of events) {
