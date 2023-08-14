@@ -1,7 +1,6 @@
 import { AIAdapter, INSTRUCT_SERVICES, PersonaFormat } from '/common/adapters'
 import { modernJailbreak } from '/common/templates'
 import { AppSchema } from '/common/types'
-import { attributes } from '/web/asset/sprite'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 

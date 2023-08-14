@@ -102,7 +102,7 @@ async function getChatSummary(service: AIAdapter) {
   if (!template) throw new Error(`No chat summary template available for "${service}"`)
 
   const prompt = parseTemplate(template, opts)
-  const { values } = await msgsApi.guidanceAsync<{ summary: string }>({ prompt, service })
+  const values = await msgsApi.guidance<{ summary: string }>({ prompt, service })
   return values.summary
 }
 
