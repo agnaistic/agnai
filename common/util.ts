@@ -192,20 +192,23 @@ export function eventGenerator<T = any>() {
     while (!done) {
       const result = await defer
       if (result === DONE) {
+        done = true
         return
       }
 
       yield result
     }
-  })()
+  })() as AsyncGenerator<T, T>
 
   return {
     stream,
     push: (value: T) => {
+      if (done) return
       resolve(value)
       reset()
     },
     done: () => {
+      if (done) return
       resolve(DONE)
       done = true
     },

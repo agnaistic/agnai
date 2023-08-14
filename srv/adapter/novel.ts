@@ -5,7 +5,7 @@ import { badWordIds, clioBadWordsId, penaltyWhitelist } from './novel-bad-words'
 import { ModelAdapter } from './type'
 import { AppSchema } from '../../common/types/schema'
 import { NOVEL_MODELS } from '/common/adapters'
-import { needleToSSE } from './stream'
+import { requestStream } from './stream'
 import { AppLog } from '../logger'
 import { getEncoder } from '../tokenize'
 
@@ -94,6 +94,15 @@ export const handleNovel: ModelAdapter = async function* ({
       //   sequence: encode('⁂'),
       // },
     ]
+
+    for (const { bias, seq } of opts.gen.phraseBias || []) {
+      biases.push({
+        bias,
+        sequence: encode(seq),
+        generate_once: true,
+        ensure_sequence_finish: false,
+      })
+    }
 
     const added = new Set<string>()
 
@@ -203,7 +212,7 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     use_string: true,
     return_full_text: false,
     prefix: module,
-    phrase_rep_pen: 'aggressive',
+    phrase_rep_pen: gen.phraseRepPenalty || 'aggressive',
     order: gen.order,
     bad_words_ids: clioBadWordsId,
     repetition_penalty_whitelist: penaltyWhitelist,
@@ -233,7 +242,7 @@ const streamCompletition = async function* (headers: any, body: any, _log: AppLo
   const tokens = []
 
   try {
-    const events = needleToSSE(resp)
+    const events = requestStream(resp)
     for await (const event of events) {
       if (event.type !== 'newToken') continue
       const data = JSON.parse(event.data) as {

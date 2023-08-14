@@ -3,7 +3,7 @@ import { defaultPresets } from '../../common/presets'
 import { logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
-import { needleToSSE } from './stream'
+import { requestStream } from './stream'
 
 /**
  * Sampler order
@@ -177,7 +177,7 @@ const streamCompletition = async function* (streamUrl: any, body: any) {
   const tokens = []
 
   try {
-    const events = needleToSSE(resp)
+    const events = requestStream(resp)
 
     for await (const event of events) {
       if (!event.data) continue

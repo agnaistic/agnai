@@ -48,6 +48,7 @@ export const chatGenSettings = {
   mirostatLR: 'number?',
   cfgScale: 'number?',
   cfgOppose: 'string?',
+  phraseRepPenalty: 'string?',
 
   thirdPartyUrl: 'string?',
   thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', null],
