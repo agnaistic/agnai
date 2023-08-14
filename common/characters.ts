@@ -118,6 +118,14 @@ export function formatCharacter(
       return attrs.join(' + ')
     }
 
+    case 'attributes': {
+      const attrs = Object.entries(persona.attributes)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n')
+
+      return `Name: ${name}\n${attrs}`
+    }
+
     case 'text': {
       const text = persona.attributes.text?.[0]
       return text || ''

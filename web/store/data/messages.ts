@@ -51,7 +51,6 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
-  guidanceAsync,
   rerunGuidance,
   generateActions,
   getActiveTemplateParts,
@@ -111,19 +110,15 @@ export async function basicInference(
   }
 }
 
-export async function guidance<T = any>(
-  { prompt, service, maxTokens }: InferenceOpts,
-  onComplete?: (err: any | null, response?: { result: string; values: T }) => void
-): Promise<void> {
+export async function guidance<T = any>({ prompt, service, maxTokens }: InferenceOpts): Promise<T> {
   const requestId = v4()
   const { user } = userStore.getState()
 
   if (!user) {
-    toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return
+    throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const res = await api.method('post', `/chat/guidance`, {
+  const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
     prompt,
@@ -131,46 +126,25 @@ export async function guidance<T = any>(
     maxTokens,
   })
 
-  if (res.error) {
-    onComplete?.(res.error)
-    if (!onComplete) {
-      throw new Error(`Guidance failed: ${res.error}`)
-    }
-  }
-
-  onComplete?.(null, res.result)
+  if (res.error) throw new Error(res.error)
+  return res.result!.values
 }
 
-export async function guidanceAsync<T = any>(
-  opts: InferenceOpts
-): Promise<{ result: string; values: T }> {
-  return new Promise((resolve, reject) => {
-    guidance<T>(opts, (err, result) => {
-      if (err) return reject(err)
-      if (result) resolve(result)
-    })
-  })
-}
-
-export async function rerunGuidance<T = any>(
-  {
-    prompt,
-    service,
-    maxTokens,
-    rerun,
-    previous,
-  }: InferenceOpts & { previous?: any; rerun: string[] },
-  onComplete?: (err: any | null, response?: { result: string; values: T }) => void
-) {
+export async function rerunGuidance<T = any>({
+  prompt,
+  service,
+  maxTokens,
+  rerun,
+  previous,
+}: InferenceOpts & { previous?: any; rerun: string[] }): Promise<T> {
   const requestId = v4()
   const { user } = userStore.getState()
 
   if (!user) {
-    toastStore.error(`Could not get user settings. Refresh and try again.`)
-    return
+    throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const res = await api.method('post', `/chat/reguidance`, {
+  const res = await api.method<{ result: string; values: T }>('post', `/chat/reguidance`, {
     requestId,
     user,
     prompt,
@@ -179,17 +153,9 @@ export async function rerunGuidance<T = any>(
     rerun,
     previous,
   })
-  if (res.error) {
-    onComplete?.(res.error)
-    if (!onComplete) {
-      throw new Error(`Guidance failed: ${res.error}`)
-    }
-  }
 
-  if (res.result) {
-    onComplete?.(null, res.result)
-    return res.result
-  }
+  if (res.error) throw new Error(res.error)
+  return res.result!.values
 }
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {

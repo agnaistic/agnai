@@ -36,12 +36,13 @@ export type AdapterOptions = {
   options: Array<keyof PresetAISettings>
 }
 
-export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'text'] as const
+export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'attributes', 'text'] as const
 
 export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   boostyle: 'Boostyle',
   wpp: 'W++',
   sbf: 'SBF',
+  attributes: 'Attributes (NovelAI)',
   text: 'Plain Text',
 }
 

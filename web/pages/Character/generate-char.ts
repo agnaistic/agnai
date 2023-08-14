@@ -1,5 +1,7 @@
-import { AIAdapter, INSTRUCT_SERVICES } from '/common/adapters'
+import { AIAdapter, INSTRUCT_SERVICES, PersonaFormat } from '/common/adapters'
 import { modernJailbreak } from '/common/templates'
+import { AppSchema } from '/common/types'
+import { attributes } from '/web/asset/sprite'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 
@@ -15,7 +17,7 @@ export type GenField =
   | 'example2'
   | 'example3'
 
-export async function generateChar(description: string, service: string) {
+export async function generateChar(description: string, service: string, kind: PersonaFormat) {
   const [svc, _model] = service?.split('/') as [AIAdapter, string]
   const template =
     svc === 'novel'
@@ -25,35 +27,27 @@ export async function generateChar(description: string, service: string) {
       : genTemplate
   const prompt = template.replace(`{{description}}`, description)
 
-  return new Promise<NewCharacter>((resolve, reject) => {
-    msgsApi.guidance({ prompt, service }, (err, res) => {
-      if (err || !res) {
-        return reject(err || `No response received`)
-      }
+  const vars = await msgsApi.guidance({ prompt, service })
+  const char: NewCharacter = {
+    originalAvatar: undefined,
+    description,
+    name: vars.firstname,
+    persona: toAttributes(kind, vars),
+    appearance: vars.appearance,
+    greeting: vars.greeting,
+    sampleChat: `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`,
+    scenario: vars.scenario,
+  }
 
-      const vars = res.values
-      const char: NewCharacter = {
-        originalAvatar: undefined,
-        description,
-        name: vars.firstname,
-        persona: {
-          kind: 'text',
-          attributes: {
-            text: [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`],
-          },
-        },
-        appearance: vars.appearance,
-        greeting: vars.greeting,
-        sampleChat: `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`,
-        scenario: vars.scenario,
-      }
-
-      return resolve(char)
-    })
-  })
+  return char
 }
 
-export async function regenerateCharProp(char: NewCharacter, service: string, fields: GenField[]) {
+export async function regenerateCharProp(
+  char: NewCharacter,
+  service: string,
+  kind: PersonaFormat,
+  fields: GenField[]
+) {
   const [adapter] = service?.split('/') as AIAdapter[]
   const template =
     adapter === 'novel'
@@ -65,7 +59,7 @@ export async function regenerateCharProp(char: NewCharacter, service: string, fi
   const prompt = template.replace(`{{description}}`, char.description || '')
 
   const attrs: any = char.persona.attributes
-  const vars = {
+  const prev = {
     description: char.description,
     firstname: char.name,
     personality: attrs?.personality || '',
@@ -76,36 +70,43 @@ export async function regenerateCharProp(char: NewCharacter, service: string, fi
     scenario: char.scenario || '',
   }
 
-  return new Promise<NewCharacter>((resolve, reject) => {
-    msgsApi.rerunGuidance({ prompt, service, rerun: fields, previous: vars }, (err, res) => {
-      if (err || !res) {
-        return reject(err || `No response received`)
-      }
+  const vars = await msgsApi.rerunGuidance({ prompt, service, rerun: fields, previous: prev })
+  const sampleChat =
+    vars.example1 && vars.example2 && vars.example3
+      ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
+      : char.sampleChat
+  const newchar: NewCharacter = {
+    originalAvatar: undefined,
+    description: char.description || '',
+    name: vars.firstname,
+    persona: toAttributes(kind, vars),
+    appearance: vars.appearance,
+    greeting: vars.greeting,
+    sampleChat,
+    scenario: vars.scenario,
+  }
 
-      const vars = res.values
-      const sampleChat =
-        vars.example1 && vars.example2 && vars.example3
-          ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
-          : char.sampleChat
-      const newchar: NewCharacter = {
-        originalAvatar: undefined,
-        description: char.description || '',
-        name: vars.firstname,
-        persona: {
-          kind: 'text',
-          attributes: {
-            text: [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`],
-          },
-        },
-        appearance: vars.appearance,
-        greeting: vars.greeting,
-        sampleChat,
-        scenario: vars.scenario,
-      }
+  return newchar
+}
 
-      return resolve(newchar)
-    })
-  })
+function toAttributes(kind: PersonaFormat, vars: any) {
+  const persona: AppSchema.Persona = {
+    kind,
+    attributes: {},
+  }
+
+  const attrs: Record<string, string[]> = {}
+
+  if (!kind || kind === 'text') {
+    attrs.text = [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`]
+  } else {
+    attrs.personality = [vars.personality]
+    attrs.behavior = [vars.behaviour]
+    attrs.speech = [vars.speech]
+  }
+
+  persona.attributes = attrs
+  return persona
 }
 
 const genTemplate = `

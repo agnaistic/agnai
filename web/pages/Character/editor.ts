@@ -186,10 +186,14 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const prevSprite = state.sprite
 
     if (fields?.length) {
-      const result = await regenerateCharProp(char, service, fields)
+      const result = await regenerateCharProp(char, service, state.personaKind, fields)
       load(ref, result)
     } else {
-      const result = await generateChar(char.description || 'a random character', service)
+      const result = await generateChar(
+        char.description || 'a random character',
+        service,
+        state.personaKind
+      )
       load(ref, result)
     }
     setState('avatar', prevAvatar)
