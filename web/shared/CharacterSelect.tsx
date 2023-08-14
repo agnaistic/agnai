@@ -38,10 +38,6 @@ const CharacterSelect: Component<{
     if (!props.onChange) return
     props.onChange(value)
     setOpts(false)
-
-    if (menu.overlay) {
-      settingStore.toggleOverlay(false)
-    }
   }
 
   return (

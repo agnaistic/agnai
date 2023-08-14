@@ -134,6 +134,7 @@ const PromptEditor: Component<
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
     setInput(ev.currentTarget.value)
+    resize()
   }
 
   createEffect(() => {
