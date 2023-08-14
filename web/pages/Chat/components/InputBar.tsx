@@ -1,19 +1,10 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Zap } from 'lucide-solid'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  onCleanup,
-  Setter,
-  Show,
-} from 'solid-js'
+import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
 import TextInput from '../../../shared/TextInput'
-import { chatStore, settingStore, toastStore, userStore } from '../../../store'
+import { chatStore, toastStore, userStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
@@ -79,12 +70,6 @@ const InputBar: Component<{
   const [saveDraft, disposeSaveDraftDebounce] = createDebounce((text: string) => {
     draft.update(text)
   }, 50)
-
-  createEffect(() => {
-    if (!menu()) {
-      settingStore.toggleOverlay(false)
-    }
-  })
 
   const updateText = () => {
     if (!ref) return

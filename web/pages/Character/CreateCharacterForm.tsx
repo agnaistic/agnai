@@ -54,6 +54,7 @@ const options = [
   { id: 'wpp', label: 'W++' },
   { id: 'boostyle', label: 'Boostyle' },
   { id: 'sbf', label: 'SBF' },
+  { id: 'attributes', label: 'Attributes' },
   { id: 'text', label: 'Plain Text' },
 ]
 

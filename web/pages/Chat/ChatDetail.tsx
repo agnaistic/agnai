@@ -190,20 +190,17 @@ const ChatDetail: Component = () => {
   const setModal = (modal: ChatModal) => {
     setShowOpts(false)
     chatStore.option('modal', modal)
-    settingStore.toggleOverlay(false)
   }
 
   const clearModal = () => {
     setShowOpts(false)
     chatStore.option('modal', 'none')
-    settingStore.toggleOverlay(false)
   }
 
   const togglePane = (paneType: ChatRightPane) => {
     setShowOpts(false)
     chatStore.option('pane', chats.opts.pane === paneType ? undefined : paneType)
     setSearch({ pane: paneType })
-    settingStore.toggleOverlay(false)
   }
 
   const clickSwipe = (dir: -1 | 1) => () => {
@@ -383,7 +380,6 @@ const ChatDetail: Component = () => {
                       togglePane={togglePane}
                       close={() => {
                         setShowOpts(false)
-                        settingStore.toggleOverlay(false)
                       }}
                     />
                   </DropMenu>

@@ -34,12 +34,13 @@ export function requestStream(stream: NodeJS.ReadableStream) {
     for (const msg of messages) {
       const event: any = parseEvent(msg)
 
-      if (!event.data) continue
+      if (!event.data) {
+        continue
+      }
+
       if (event.event) {
         event.type = event.event
       }
-
-      console.log(event)
       emitter.push(event)
     }
   })
@@ -51,7 +52,9 @@ function parseEvent(msg: string) {
   const event: any = {}
   for (const line of msg.split(/\r?\n/)) {
     const pos = line.indexOf(':')
-    if (pos === -1) continue
+    if (pos === -1) {
+      continue
+    }
 
     const prop = line.slice(0, pos)
     const value = line.slice(pos + 1).trim()
