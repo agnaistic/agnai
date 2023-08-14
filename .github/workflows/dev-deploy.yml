@@ -57,3 +57,20 @@ jobs:
           space_region: ${{ secrets.S3_REGION }}
           permission: public-read
           source: dist
+
+      - name: Build image
+        run: |
+          docker build -f Dockerfile -t ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest --build-arg SHA=$GITHUB_SHA .
+          docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
+
+      - name: Log in to Container Registry
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
+
+      - name: Publish
+        run: |
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:dev
+          docker push ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
+
+      # - name: Update Service
+      #   run: |
+      #     sh .github/dev-deploy.sh ${{ secrets.SSH_SERVER }}

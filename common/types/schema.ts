@@ -340,7 +340,9 @@ export namespace AppSchema {
     disabledSamplers?: number[]
 
     skipSpecialTokens?: boolean
-    phrase_rep_penalty?: string
+
+    phraseBias?: Array<{ bias: number; seq: string }>
+    phraseRepPenalty?: string
     cfgScale?: number
     cfgOppose?: string
 

@@ -95,6 +95,15 @@ export const handleNovel: ModelAdapter = async function* ({
       // },
     ]
 
+    for (const { bias, seq } of opts.gen.phraseBias || []) {
+      biases.push({
+        bias,
+        sequence: encode(seq),
+        generate_once: true,
+        ensure_sequence_finish: false,
+      })
+    }
+
     const added = new Set<string>()
 
     for (const [, char] of Object.entries(opts.characters || {})) {
@@ -203,7 +212,7 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     use_string: true,
     return_full_text: false,
     prefix: module,
-    phrase_rep_pen: gen.phrase_rep_penalty || 'aggressive',
+    phrase_rep_pen: gen.phraseRepPenalty || 'aggressive',
     order: gen.order,
     bad_words_ids: clioBadWordsId,
     repetition_penalty_whitelist: penaltyWhitelist,

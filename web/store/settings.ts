@@ -137,7 +137,7 @@ export const settingStore = createStore<SettingState>(
       return { showMenu: !showMenu, overlay: !showMenu }
     },
     closeMenu: () => {
-      return { showMenu: false }
+      return { showMenu: false, overlay: false }
     },
     toggleImpersonate: ({ showImpersonate }, show?: boolean) => {
       return { showImpersonate: show ?? !showImpersonate }

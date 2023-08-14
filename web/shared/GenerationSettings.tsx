@@ -654,6 +654,24 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           aiSetting={'cfgScale'}
         />
 
+        <Select
+          fieldName="phraseRepPenalty"
+          label={'Phrase Repetition Penalty'}
+          helperText={
+            'Penalizes token sequences, reducing the chance of generations repeating earlier text.'
+          }
+          items={[
+            { label: 'Very Aggressive', value: 'very_aggressive' },
+            { label: 'Aggressive', value: 'aggressive' },
+            { label: 'Medium', value: 'medium' },
+            { label: 'Light', value: 'light' },
+            { label: 'Very Light', value: 'very_light' },
+          ]}
+          value={props.inherit?.phraseRepPenalty || 'aggressive'}
+          service={props.service}
+          aiSetting="phraseRepPenalty"
+        />
+
         <RangeInput
           fieldName="topP"
           label="Top P"

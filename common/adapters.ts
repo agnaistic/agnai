@@ -264,6 +264,8 @@ export const adapterSettings: {
   mirostatTau: ['novel'],
   cfgScale: ['novel'],
   cfgOppose: ['novel'],
+  phraseRepPenalty: ['novel'],
+  phraseBias: ['novel'],
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
@@ -333,7 +335,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   ultimeJailbreak: 'Jailbreak',
   prefill: 'Bot response prefilling',
   useTemplateParser: 'Use V2 Prompt Parser',
-  phrase_rep_penalty: 'Phrase Repetition Penality',
+  phraseRepPenalty: 'Phrase Repetition Penality',
   topG: 'Top G',
   mirostatTau: 'Mirostat Tau',
   mirostatLR: 'Mirostat LR',
