@@ -61,31 +61,6 @@ function parseEvent(msg: string) {
   return event
 }
 
-function parseLine(event: ServerSentEvent, line: string) {
-  const sep = line.indexOf(':')
-  const field = sep === -1 ? line : line.slice(0, sep)
-  const value = sep === -1 ? '' : line.slice(sep + 1)
-
-  switch (field) {
-    case 'id':
-      event.id = value.trim()
-      break
-
-    case 'event':
-      event.type = value.trim()
-      break
-
-    case 'data':
-      event.data += value.trimStart()
-      break
-
-    default:
-      break
-  }
-
-  return event
-}
-
 export async function websocketStream(opts: { url: string; body: any }) {
   const socket = new WebSocket(opts.url.replace('https:', 'wss:').replace('http:', 'ws:'))
 
