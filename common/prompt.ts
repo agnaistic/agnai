@@ -730,6 +730,7 @@ export function getContextLimit(
 
   switch (adapter) {
     // Any LLM could be used here so don't max any assumptions
+    case 'petals':
     case 'kobold':
     case 'horde':
     case 'ooba':

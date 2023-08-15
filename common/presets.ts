@@ -324,6 +324,20 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     repetitionPenaltySlope: '',
     tailFreeSampling: '',
   },
+  petals: {
+    maxTokens: '',
+    repetitionPenalty: '',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+    temp: '',
+    topK: '',
+    topP: '',
+    typicalP: '',
+    topA: '',
+    gaslight: '',
+    claudeModel: '',
+  },
 }
 
 export function isDefaultPreset(value?: string): value is GenerationPreset {
@@ -333,6 +347,7 @@ export function isDefaultPreset(value?: string): value is GenerationPreset {
 
 export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSettings> {
   switch (adapter) {
+    case 'petals':
     case 'horde':
       return defaultPresets.horde
 
@@ -373,6 +388,7 @@ export function getInferencePreset(
   model?: string
 ): Partial<AppSchema.GenSettings> {
   switch (adapter) {
+    case 'petals':
     case 'horde':
       return defaultPresets.horde
 
