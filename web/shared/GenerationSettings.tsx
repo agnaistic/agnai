@@ -904,12 +904,13 @@ const SamplerOrder: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
-  const [order, setOrder] = createSignal(
+  const presetOrder = createMemo(() => {
+    if (!props.inherit?.order) return ''
     // Guests persist the string instead of the array for some reason
-    typeof props.inherit?.order === 'string'
-      ? props.inherit.order
-      : (props.inherit?.order || []).join(',')
-  )
+    if (typeof props.inherit.order === 'string') return props.inherit.order
+    return props.inherit.order.join(',')
+  })
+  const [order, setOrder] = createSignal(presetOrder())
 
   const [value, setValue] = createSignal(order())
   const [disabled, setDisabled] = createSignal(props.inherit?.disabledSamplers || [])
@@ -917,7 +918,7 @@ const SamplerOrder: Component<{
 
   createEffect(() => {
     // Try to detect if the inherited settings change
-    const inherited = (props.inherit?.order || []).join(',')
+    const inherited = presetOrder()
     if (inherited !== order()) {
       setOrder(inherited)
       setValue(inherited)
