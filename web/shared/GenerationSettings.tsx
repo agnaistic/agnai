@@ -926,12 +926,16 @@ const SamplerOrder: Component<{
   }
 
   const toggleSampler = (id: number) => {
+    if (!props.service) return
+    const temp = samplerOrders[props.service]?.findIndex((val) => val === 'temp')!
+
     if (disabled().includes(id)) {
-      const next = disabled().filter((sampler) => sampler !== id)
+      const next = disabled().filter((sampler) => sampler !== temp && sampler !== id)
       setDisabled(next)
       return
     }
-    const next = disabled().concat(id)
+
+    const next = id === temp ? disabled() : disabled().concat(id)
     setDisabled(next)
   }
 
