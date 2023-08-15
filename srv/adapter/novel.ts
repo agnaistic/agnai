@@ -130,7 +130,7 @@ export const handleNovel: ModelAdapter = async function* ({
 
   if (opts.gen.order && opts.gen.disabledSamplers) {
     body.parameters.order = opts.gen.order.filter(
-      (sampler) => !opts.gen.disabledSamplers?.includes(sampler)
+      (sampler) => sampler === 0 || !opts.gen.disabledSamplers?.includes(sampler)
     )
   }
 
