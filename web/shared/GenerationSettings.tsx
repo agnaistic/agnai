@@ -904,7 +904,12 @@ const SamplerOrder: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
-  const [order, setOrder] = createSignal((props.inherit?.order || []).join(','))
+  const [order, setOrder] = createSignal(
+    // Guests persist the string instead of the array for some reason
+    typeof props.inherit?.order === 'string'
+      ? props.inherit.order
+      : (props.inherit?.order || []).join(',')
+  )
 
   const [value, setValue] = createSignal(order())
   const [disabled, setDisabled] = createSignal(props.inherit?.disabledSamplers || [])
