@@ -651,9 +651,10 @@ function renderMessage(ctx: ContextState, text: string, isUser: boolean, adapter
 
 function wrapWithQuoteElement(str: string) {
   return str.replace(
-    // we first match code blocks to ensure we do NOTHING to what's inside them
+    // we first match code blocks AND html tags
+    // to ensure we do NOTHING to what's inside them
     // then we match "regular quotes" and“'pretty quotes” as capture group
-    /```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
+    /<[\s\S]*?>|```[\s\S]*?```|``[\s\S]*?``|`[\s\S]*?`|(\".+?\")|(\u201C.+?\u201D)/gm,
     wrapCaptureGroups
   )
 }

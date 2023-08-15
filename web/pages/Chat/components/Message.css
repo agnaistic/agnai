@@ -13,6 +13,10 @@ em {
   color: var(--text-quote-color);
 }
 
+.rendered-markdown img {
+  display: inline-block; /* markdown images are expected to be inline-block */
+}
+
 .rendered-markdown q::before,
 .rendered-markdown q::after {
   content: '';
