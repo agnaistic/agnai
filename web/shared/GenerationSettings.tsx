@@ -881,6 +881,15 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           service={props.service}
           aiSetting={'encoderRepitionPenalty'}
         />
+        <Toggle
+          fieldName="doSample"
+          label="Do Sample"
+          helperText="If doing contrastive search, disable this."
+          value={props.inherit?.doSample ?? true}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'doSample'}
+        />
         <RangeInput
           fieldName="penaltyAlpha"
           label="Penalty Alpha"
