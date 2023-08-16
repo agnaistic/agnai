@@ -71,6 +71,7 @@ export const chatGenSettings = {
 
   order: 'string?',
   disabledSamplers: 'string?',
+  registered: 'any?',
 } as const
 
 export const presetValidator = {

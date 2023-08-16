@@ -34,13 +34,13 @@ export const handlePetals: ModelAdapter = async function* (opts) {
     num_beams: 1,
   }
 
-  const url = opts.user.adapterConfig?.petals?.url
+  const url = opts.gen.registered?.petals?.url || opts.user.adapterConfig?.petals?.url
   if (!url) {
     yield { error: `Petals request failed: URL not set` }
     return
   }
 
-  const model = opts.user.adapterConfig?.petals?.model
+  const model = opts.gen.registered?.petals?.model || opts.user.adapterConfig?.petals?.model
   if (!model) {
     yield { error: `Petals request failed: Model not set` }
     return
@@ -85,8 +85,13 @@ function generateStream(url: string, model: string, opts: AdapterProps, body: Pe
   let init = false
   let accum = ''
 
+  const endTokens: string[] = []
+  for (const char of Object.values(opts.characters || {})) {
+    if (char.name === opts.replyAs.name) continue
+    endTokens.push(`${char.name}:`)
+  }
+
   socket.on('open', () => {
-    logger.warn('OPENED')
     socket.send(
       JSON.stringify({
         type: 'open_inference_session',
@@ -97,7 +102,6 @@ function generateStream(url: string, model: string, opts: AdapterProps, body: Pe
   })
 
   socket.on('message', (data) => {
-    logger.warn({}, data.toString())
     const msg = JSON.parse(data.toString()) as any
 
     if (!init && msg.ok) {
@@ -112,16 +116,18 @@ function generateStream(url: string, model: string, opts: AdapterProps, body: Pe
       emitter.push({ token: msg.outputs })
     }
 
-    const trimmed = trimResponseV2(accum, opts.replyAs, opts.members, opts.characters)
-    if (trimmed !== accum.trim()) {
-      emitter.done()
+    if (msg.stop) {
       socket.close()
+      emitter.done()
       return
     }
 
-    if (msg.stop) {
-      emitter.done()
-      return
+    for (const endToken of endTokens) {
+      if (accum.includes(endToken)) {
+        socket.close()
+        emitter.done()
+        return
+      }
     }
   })
 

@@ -1,14 +1,5 @@
 import Sorter from 'sortablejs'
-import {
-  Component,
-  createEffect,
-  createMemo,
-  createSignal,
-  For,
-  JSX,
-  onMount,
-  Show,
-} from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
@@ -28,11 +19,11 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
-import { chatStore, presetStore, settingStore } from '../store'
+import { chatStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
-import { serviceHasSetting, storage } from './util'
+import { getFormEntries, serviceHasSetting, storage } from './util'
 import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/templates'
 import Sortable, { SortItem } from './Sortable'
@@ -41,6 +32,8 @@ import Button from './Button'
 import Accordian from './Accordian'
 import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
 import { getServiceTempConfig } from './adapter'
+
+export { GenerationSettings as default }
 
 type Props = {
   inherit?: Partial<AppSchema.GenSettings>
@@ -71,7 +64,7 @@ const GenerationSettings: Component<Props> = (props) => {
 
   return (
     <>
-      <div class="flex flex-col gap-6">
+      <div class="flex flex-col gap-4">
         <Card>
           <Select
             fieldName="service"
@@ -91,6 +84,7 @@ const GenerationSettings: Component<Props> = (props) => {
             disabled={props.disabled || props.disableService}
           />
         </Card>
+        <RegisteredSettings service={service()} inherit={props.inherit} />
         <Show when={!!opts.pane}>
           <TempSettings service={props.inherit?.service} />
         </Show>
@@ -116,7 +110,6 @@ const GenerationSettings: Component<Props> = (props) => {
     </>
   )
 }
-export default GenerationSettings
 
 export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
   const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale']
@@ -145,7 +138,6 @@ export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Eleme
 
 const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
   const cfg = settingStore()
-  const presets = presetStore()
 
   const [replicate, setReplicate] = createStore({
     model: props.inherit?.replicateModelName,
@@ -162,9 +154,9 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
   )
 
   const openRouterModels = createMemo(() => {
-    if (!presets.openRouterModels) return []
+    if (!cfg.config.openRouter.models) return []
 
-    const options = presets.openRouterModels.map((model) => ({
+    const options = cfg.config.openRouter.models.map((model) => ({
       value: model.id,
       label: model.id,
     }))
@@ -198,10 +190,6 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
     }
 
     return base
-  })
-
-  onMount(() => {
-    presetStore.getOpenRouterModels()
   })
 
   return (
@@ -1054,6 +1042,54 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
           )}
         </For>
       </Accordian>
+    </Show>
+  )
+}
+
+export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {
+  if (!service) return
+
+  const prefix = `registered.${service}.`
+  const values = getFormEntries(ref).reduce((prev, [key, value]) => {
+    if (!key.startsWith(prefix)) return prev
+    const field = key.replace(prefix, '')
+
+    return Object.assign(prev, { [field]: value })
+  }, {})
+
+  return values
+}
+
+const RegisteredSettings: Component<{
+  service?: AIAdapter
+  inherit?: Partial<AppSchema.GenSettings>
+}> = (props) => {
+  const state = settingStore((s) => s.config)
+
+  const options = createMemo(() => {
+    if (!props.service) return []
+
+    const svc = state.registered.find((reg) => reg.name === props.service)
+    if (!svc) return []
+
+    return svc.settings.filter((s) => s.preset)
+  })
+
+  return (
+    <Show when={options().length}>
+      <div>
+        <h4 class="text-xl font-bold">{ADAPTER_LABELS[props.service!]} Settings</h4>
+        <For each={options()}>
+          {(opt) => (
+            <ServiceOption
+              opt={opt}
+              service={props.service!}
+              field={(field) => `registered.${props.service!}.${field}`}
+              value={props.inherit?.registered?.[props.service!]?.[opt.field]}
+            />
+          )}
+        </For>
+      </div>
     </Show>
   )
 }

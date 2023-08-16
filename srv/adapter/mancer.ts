@@ -4,12 +4,26 @@ import { decryptText } from '../db/util'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { registerAdapter } from './register'
 
-const mancerModels = {
+const mancerOptions: Record<string, string> = {
   'OpenAssistant ORCA': 'https://neuro.mancer.tech/webui/oa-orca/api',
   'Wizard Vicuna': 'https://neuro.mancer.tech/webui/wizvic/api',
 }
 
-const modelOptions = Object.entries(mancerModels).map(([label, value]) => ({ label, value }))
+let modelCache: MancerModel[]
+
+export type MancerModel = {
+  id: string
+  name: string
+  perToken: number
+  paidOnly: boolean
+  context: number
+  online: boolean
+  hasDocs: boolean
+  streaming: boolean
+  description: string
+}
+
+const modelOptions = Object.entries(mancerOptions).map(([label, value]) => ({ label, value }))
 
 export const handleMancer: ModelAdapter = async function* (opts) {
   const body = {
@@ -35,7 +49,12 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     seed: -1,
   }
 
-  const url = opts.user.adapterConfig?.mancer?.altUrl || opts.user.adapterConfig?.mancer?.url
+  const url =
+    opts.gen.registered?.mancer?.url ||
+    opts.gen.registered?.mancer?.model ||
+    opts.user.adapterConfig?.mancer?.altUrl ||
+    opts.user.adapterConfig?.mancer?.url
+
   if (!url) {
     yield { error: `Mancer request failed: Model/URL not set` }
     return
@@ -137,3 +156,31 @@ registerAdapter('mancer', handleMancer, {
     'penaltyAlpha',
   ],
 })
+
+export async function getMancerModels() {
+  if (modelCache) return modelCache
+
+  try {
+    const res = await needle('get', 'https://mancer.tech/internal/api/models', {})
+    if (res.body) {
+      modelCache = res.body.models
+
+      modelOptions.length = 0
+      for (const model of res.body.models as MancerModel[]) {
+        const url = `https://neuro.mancer.tech/webui/${model.id}/api`
+        mancerOptions[model.name] = url
+        modelOptions.push({
+          label: `${model.paidOnly ? '(Paid) ' : ''} ${model.name} (${model.perToken}cr/token)`,
+          value: url,
+        })
+      }
+    }
+
+    return modelCache
+  } catch (ex) {
+    return modelCache || []
+  }
+}
+
+setInterval(getMancerModels, 60000 * 2)
+getMancerModels()
