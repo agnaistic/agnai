@@ -332,6 +332,7 @@ export namespace AppSchema {
     mirostatLR?: number
     tailFreeSampling: number
     encoderRepitionPenalty?: number
+    doSample?: boolean
     penaltyAlpha?: number
     addBosToken?: boolean
     banEosToken?: boolean

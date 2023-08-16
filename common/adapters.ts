@@ -280,6 +280,7 @@ export const adapterSettings: {
 
   addBosToken: ['ooba'],
   banEosToken: ['ooba'],
+  doSample: ['ooba'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
 

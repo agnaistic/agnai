@@ -32,6 +32,7 @@ export const chatGenSettings = {
   addBosToken: 'boolean?',
   banEosToken: 'boolean?',
   skipSpecialTokens: 'boolean?',
+  doSample: 'boolean?',
   penaltyAlpha: 'number?',
 
   frequencyPenalty: 'number',
@@ -175,6 +176,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     temp: 'temperature',
     typicalP: 'typical_p',
     repetitionPenalty: 'repetition_penalty',
+    doSample: 'do_sample',
     encoderRepitionPenalty: 'encoder_repetition_penalty',
     topK: 'top_k',
     penaltyAlpha: 'penalty_alpha',
