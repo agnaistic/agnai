@@ -72,6 +72,7 @@ const initState: SettingState = {
     pipelineProxyEnabled: false,
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
     horde: { workers: [], models: [] },
+    openRouter: { models: [] },
   },
   replicate: {},
   flags: getFlags(),

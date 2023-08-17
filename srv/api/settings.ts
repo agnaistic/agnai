@@ -9,6 +9,7 @@ import { AppSchema } from '../../common/types/schema'
 import { store } from '../db'
 import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHoredeModels } from './horde'
+import { getOpenRouterModels } from '../adapter/openrouter'
 
 const router = Router()
 
@@ -27,6 +28,7 @@ export async function getAppConfig() {
   const canAuth = isConnected()
   const workers = getHordeWorkers()
   const models = getHoredeModels()
+  const openRouter = await getOpenRouterModels()
 
   if (!appConfig) {
     appConfig = {
@@ -48,9 +50,12 @@ export async function getAppConfig() {
         models,
         workers: workers.filter((w) => w.type === 'text'),
       },
+      openRouter: { models: openRouter },
     }
   }
 
+  appConfig.registered = getRegisteredAdapters().map(toRegisteredAdapter)
+  appConfig.openRouter.models = openRouter
   appConfig.horde = {
     models,
     workers: workers.filter((w) => w.type === 'text'),

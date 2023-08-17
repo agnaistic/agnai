@@ -28,6 +28,7 @@ import { handleReplicate } from './replicate'
 import { getAppConfig } from '../api/settings'
 import { handleOpenRouter } from './openrouter'
 import { handleMancer } from './mancer'
+import { handlePetals } from './petals'
 
 let version = ''
 
@@ -61,6 +62,7 @@ const handlers: { [key in AIAdapter]: ModelAdapter } = {
   replicate: handleReplicate,
   openrouter: handleOpenRouter,
   mancer: handleMancer,
+  petals: handlePetals,
 }
 
 type InferenceRequest = {

@@ -57,6 +57,7 @@ export namespace AppSchema {
       models: HordeModel[]
       workers: HordeWorker[]
     }
+    openRouter: { models: OpenRouterModel[] }
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -385,6 +386,7 @@ export namespace AppSchema {
     }
 
     temporary?: Record<string, any>
+    registered?: Record<AIAdapter, Record<string, any>>
   }
 
   export interface MemoryBook {

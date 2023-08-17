@@ -58,6 +58,7 @@ export const AI_ADAPTERS = [
   'replicate',
   'openrouter',
   'mancer',
+  'petals',
 ] as const
 export const CHAT_ADAPTERS = ['default', ...AI_ADAPTERS] as const
 
@@ -201,6 +202,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   replicate: 'Replicate',
   openrouter: 'OpenRouter',
   mancer: 'Mancer',
+  petals: 'Petals',
 }
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
@@ -248,7 +250,7 @@ export const adapterSettings: {
     'openrouter',
   ],
   ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel'],
-  prefill: ['claude'],
+  prefill: ['claude', 'kobold'],
   ignoreCharacterUjb: ['openai', 'claude', 'kobold', 'openrouter'],
 
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel'],

@@ -5,13 +5,13 @@ import { defaultPresets, isDefaultPreset, presetValidator } from '../../../commo
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
-import GenerationSettings from '../../shared/GenerationSettings'
+import GenerationSettings, { getRegisteredSettings } from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore, toastStore } from '../../store'
-import { AI_ADAPTERS } from '../../../common/adapters'
+import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
 
@@ -131,6 +131,10 @@ export const GenerationPresetsPage: Component = () => {
     }
 
     const prev = editing()
+    const registered = getRegisteredSettings(body.service as AIAdapter, ref)
+    body.registered = { ...prev?.registered }
+    body.registered[body.service] = registered
+
     if (prev?._id) {
       presetStore.updatePreset(prev._id, body as any)
     } else {
