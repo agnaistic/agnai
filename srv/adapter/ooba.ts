@@ -16,7 +16,7 @@ export const handleOoba: ModelAdapter = async function* ({
   const body = {
     prompt,
     max_new_tokens: gen.maxTokens,
-    do_sample: mappedSettings.do_sample ?? true,
+    do_sample: gen.doSample ?? true,
     temperature: gen.temp,
     top_p: gen.topP,
     typical_p: gen.typicalP || 1,
