@@ -654,6 +654,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
             { label: 'Medium', value: 'medium' },
             { label: 'Light', value: 'light' },
             { label: 'Very Light', value: 'very_light' },
+            { label: 'Off', value: 'off' },
           ]}
           value={props.inherit?.phraseRepPenalty || 'aggressive'}
           service={props.service}
