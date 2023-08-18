@@ -10,7 +10,7 @@ import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { presetStore, toastStore } from '../../store'
+import { presetStore, settingStore, toastStore } from '../../store'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
@@ -32,10 +32,11 @@ export const GenerationPresetsPage: Component = () => {
     nav(`/presets/${preset._id}`)
   }
 
-  const state = presetStore(({ presets, saving, openRouterModels }) => ({
+  const cfg = settingStore((s) => s.config)
+
+  const state = presetStore(({ presets, saving }) => ({
     saving,
     presets,
-    openRouterModels,
     items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
     editing: isDefaultPreset(query.preset)
       ? defaultPresets[query.preset]
@@ -116,7 +117,7 @@ export const GenerationPresetsPage: Component = () => {
     body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
 
     if (body.openRouterModel) {
-      const actual = state.openRouterModels?.find((or) => or.id === body.openRouterModel)
+      const actual = cfg.openRouter.models.find((or) => or.id === body.openRouterModel)
       body.openRouterModel = actual || undefined
     }
 

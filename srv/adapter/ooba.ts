@@ -43,10 +43,10 @@ export const handleOoba: ModelAdapter = async function* ({
   log.debug(`Prompt:\n${body.prompt}`)
 
   const url = gen.thirdPartyUrl || user.koboldUrl
-  const fullUrl = `${normalizeUrl(url)}/api/v1/generate`
+  const baseUrl = normalizeUrl(url)
   const resp = gen.streamResponse
-    ? await websocketStream({ url: normalizeUrl(url) + '/api/v1/stream', body })
-    : getCompletion(fullUrl, body, {})
+    ? await websocketStream({ url: baseUrl + '/api/v1/stream', body })
+    : getCompletion(`${baseUrl}/api/v1/generate`, body, {})
 
   let accumulated = ''
   let result = ''

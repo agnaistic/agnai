@@ -20,7 +20,7 @@ import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import GenerationSettings from '../../shared/GenerationSettings'
 import { getStrictForm } from '../../shared/util'
-import { chatStore, toastStore, userStore } from '../../store'
+import { chatStore, settingStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { getAdapter, getChatPreset } from '../../../common/prompt'
 import { AIAdapter, AI_ADAPTERS, adapterSettings } from '../../../common/adapters'
@@ -45,10 +45,10 @@ export const ChatGenSettings: Component<{
   let ref: any
   const user = userStore()
   const pane = usePane()
-  const state = presetStore(({ presets, openRouterModels }) => ({
+  const cfg = settingStore((s) => s.config)
+  const state = presetStore(({ presets }) => ({
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
-    openRouterModels,
   }))
 
   const presetOptions = createMemo(() =>
@@ -125,7 +125,7 @@ export const ChatGenSettings: Component<{
       }
 
       if (update.openRouterModel) {
-        const actual = state.openRouterModels?.find((or) => or.id === update.openRouterModel)
+        const actual = cfg.openRouter.models.find((or) => or.id === update.openRouterModel)
         update.openRouterModel = actual || undefined
       }
 
@@ -164,7 +164,7 @@ export const ChatGenSettings: Component<{
       }
 
       if (update.openRouterModel) {
-        const actual = state.openRouterModels?.find((or) => or.id === update.openRouterModel)
+        const actual = cfg.openRouter.models.find((or) => or.id === update.openRouterModel)
         update.openRouterModel = actual || undefined
       }
 
