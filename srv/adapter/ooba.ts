@@ -15,25 +15,25 @@ export const handleOoba: ModelAdapter = async function* ({
 }) {
   const body = {
     prompt,
-    max_new_tokens: mappedSettings.maxTokens,
-    do_sample: mappedSettings.do_sample ?? true,
-    temperature: mappedSettings.temperature,
-    top_p: mappedSettings.top_p,
-    typical_p: mappedSettings.typical_p || 1,
-    repetition_penalty: mappedSettings.repetition_penalty,
-    encoder_repetition_penalty: mappedSettings.encoder_repetition_penalty,
-    top_k: mappedSettings.top_k,
+    max_new_tokens: gen.maxTokens,
+    do_sample: gen.doSample ?? true,
+    temperature: gen.temp,
+    top_p: gen.topP,
+    typical_p: gen.typicalP || 1,
+    repetition_penalty: gen.repetitionPenalty,
+    encoder_repetition_penalty: gen.encoderRepitionPenalty,
+    top_k: gen.topK,
     min_length: 0,
     no_repeat_ngram_size: 0,
     num_beams: 1,
-    penalty_alpha: mappedSettings.penalty_alpha,
+    penalty_alpha: gen.penaltyAlpha,
     length_penalty: 1,
     early_stopping: true,
     seed: -1,
-    add_bos_token: mappedSettings.add_bos_token || false,
-    truncation_length: mappedSettings.maxContextLength || 2048,
-    ban_eos_token: mappedSettings.ban_eos_token || false,
-    skip_special_tokens: mappedSettings.skipSpecialTokens ?? true,
+    add_bos_token: gen.addBosToken || false,
+    truncation_length: gen.maxContextLength || 2048,
+    ban_eos_token: gen.banEosToken || false,
+    skip_special_tokens: gen.skipSpecialTokens ?? true,
     stopping_strings: [],
   }
 
@@ -43,10 +43,10 @@ export const handleOoba: ModelAdapter = async function* ({
   log.debug(`Prompt:\n${body.prompt}`)
 
   const url = gen.thirdPartyUrl || user.koboldUrl
-  const fullUrl = `${normalizeUrl(url)}/api/v1/generate`
+  const baseUrl = normalizeUrl(url)
   const resp = gen.streamResponse
-    ? await websocketStream({ url: normalizeUrl(url) + '/api/v1/stream', body })
-    : getCompletion(fullUrl, body, {})
+    ? await websocketStream({ url: baseUrl + '/api/v1/stream', body })
+    : getCompletion(`${baseUrl}/api/v1/generate`, body, {})
 
   let accumulated = ''
   let result = ''

@@ -127,7 +127,6 @@ export function sanitise(generated: string) {
   return generated.trim()
 }
 
-export function normalizeUrl(url: string, defaultUrl?: string) {
-  if (!url) return defaultUrl
+export function normalizeUrl(url: string) {
   return url.replace(/\/$/, '')
 }
