@@ -224,6 +224,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
             { label: 'OpenAI', value: 'openai' },
             { label: 'Claude', value: 'claude' },
             { label: 'Textgen (Ooba)', value: 'ooba' },
+            { label: 'Llama.cpp', value: 'llamacpp' },
           ]}
           value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}

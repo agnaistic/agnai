@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { ModelAdapter } from './type'
+import { AdapterProps, ModelAdapter } from './type'
 import { websocketStream } from './stream'
 import { getStoppingStrings } from './prompt'
 
@@ -110,4 +110,53 @@ async function* getCompletion(url: string, payload: any, headers: any): AsyncGen
   } catch (ex: any) {
     yield { error: `Textgen request failed: ${ex.message || ex}` }
   }
+}
+
+function getPayload({ gen, prompt }: AdapterProps) {
+  if (gen.thirdPartyFormat === 'llamacpp') {
+    const body = {
+      prompt,
+      temperature: gen.temp,
+      top_k: gen.topK,
+      top_p: gen.topP,
+      n_predict: gen.maxTokens,
+      stop: [],
+      stream: true,
+      frequency_penality: gen.frequencyPenalty,
+      presence_penalty: gen.presencePenalty,
+      mirostat: gen.mirostatTau ? 2 : 0,
+      mirostat_tau: gen.mirostatTau,
+      mirostat_eta: gen.mirostatLR,
+      seed: -1,
+      typical_p: gen.typicalP,
+      ignore_eos: gen.banEosToken,
+      repeat_penality: gen.repetitionPenalty,
+    }
+    return body
+  }
+
+  const body = {
+    prompt,
+    max_new_tokens: gen.maxTokens,
+    do_sample: gen.doSample ?? true,
+    temperature: gen.temp,
+    top_p: gen.topP,
+    typical_p: gen.typicalP || 1,
+    repetition_penalty: gen.repetitionPenalty,
+    encoder_repetition_penalty: gen.encoderRepitionPenalty,
+    top_k: gen.topK,
+    min_length: 0,
+    no_repeat_ngram_size: 0,
+    num_beams: 1,
+    penalty_alpha: gen.penaltyAlpha,
+    length_penalty: 1,
+    early_stopping: true,
+    seed: -1,
+    add_bos_token: gen.addBosToken || false,
+    truncation_length: gen.maxContextLength || 2048,
+    ban_eos_token: gen.banEosToken || false,
+    skip_special_tokens: gen.skipSpecialTokens ?? true,
+    stopping_strings: [],
+  }
+  return body
 }
