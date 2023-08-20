@@ -187,6 +187,19 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
 
     // https://docs.anthropic.com/claude/reference/streaming
     for await (const event of events) {
+      if (event.error !== undefined) {
+        log.warn({ error: event.error }, '[Claude] Received SSE error event')
+        const message = event.error
+          ? `Anthropic interrupted the response: ${event.error}`
+          : `Anthropic interrupted the response.`
+        if (!tokens.length) {
+          yield { error: message }
+          return
+        }
+        publishOne(userId, { type: 'notification', level: 'warn', message })
+        break
+      }
+
       switch (event.type) {
         case 'completion':
           const delta: Partial<ClaudeCompletion> = JSON.parse(event.data)
@@ -212,6 +225,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
           break
         case 'ping':
           break
+
         default:
           log.warn({ event }, '[Claude] Received unrecognized SSE event')
           break
