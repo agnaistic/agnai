@@ -348,7 +348,7 @@ const ChatDetail: Component = () => {
                   <ChevronLeft />
                   <div class="ellipsis flex flex-col">
                     <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                      {chats.char?.name} #{msgs.msgs.length}
+                      {chats.char?.name}
                     </span>
                     <Show when={chats.chat!.name}>
                       <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
