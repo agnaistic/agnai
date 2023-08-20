@@ -90,6 +90,11 @@ export async function websocketStream(opts: { url: string; body: any }) {
       emitter.push({ token: obj.text })
       accum += obj.text
     }
+
+    if (obj.event === 'error') {
+      emitter.push({ error: obj.error })
+    }
+
     if (obj.event === 'stream_end') {
       emitter.push(accum)
       emitter.done()

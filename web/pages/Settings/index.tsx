@@ -220,7 +220,7 @@ export default Settings
 const settingsForm = {
   defaultPreset: 'string?',
   koboldUrl: 'string?',
-  thirdPartyFormat: ['kobold', 'openai', 'claude'],
+  thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', 'llamacpp'],
   oobaUrl: 'string?',
   thirdPartyPassword: 'string?',
   novelApiKey: 'string?',

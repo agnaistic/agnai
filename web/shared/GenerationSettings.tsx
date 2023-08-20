@@ -153,6 +153,8 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
     props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength
   )
 
+  const [format, setFormat] = createSignal<string | undefined>(props.inherit?.thirdPartyFormat)
+
   const openRouterModels = createMemo(() => {
     if (!cfg.config.openRouter.models) return []
 
@@ -224,10 +226,12 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
             { label: 'OpenAI', value: 'openai' },
             { label: 'Claude', value: 'claude' },
             { label: 'Textgen (Ooba)', value: 'ooba' },
+            { label: 'Llama.cpp', value: 'llamacpp' },
           ]}
           value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}
           aiSetting={'thirdPartyFormat'}
+          onChange={(ev) => setFormat(ev.value)}
         />
       </Card>
 
@@ -253,6 +257,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'oaiModel'}
+          hide={format() !== 'openai'}
         />
 
         <Select
@@ -296,6 +301,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'claudeModel'}
+          hide={format() !== 'claude'}
         />
 
         <Show when={replicateModels().length > 1}>

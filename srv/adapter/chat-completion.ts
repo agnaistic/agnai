@@ -83,6 +83,7 @@ export const streamCompletion: CompletionGenerator = async function* (
 
   const tokens = []
   let meta = { id: '', created: 0, model: '', object: '', finish_reason: '', index: 0 }
+  let current: any = {}
 
   try {
     const events = requestStream(resp)
@@ -99,6 +100,7 @@ export const streamCompletion: CompletionGenerator = async function* (
         break
       }
 
+      current = event
       const parsed: Completion<AsyncDelta> = JSON.parse(event.data)
       const { choices, ...evt } = parsed
       if (!choices || !choices[0]) {
@@ -132,7 +134,7 @@ export const streamCompletion: CompletionGenerator = async function* (
       }
     }
   } catch (err: any) {
-    log.error({ err }, `${service} streaming request failed`)
+    log.error({ err, current }, `${service} streaming request failed`)
     yield { error: `${service} streaming request failed: ${err.message}` }
     return
   }

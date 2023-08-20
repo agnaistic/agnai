@@ -52,7 +52,7 @@ export const chatGenSettings = {
   phraseRepPenalty: 'string?',
 
   thirdPartyUrl: 'string?',
-  thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', null],
+  thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', 'llamacpp', null],
 
   novelModel: 'string?',
   novelModelOverride: 'string?',
