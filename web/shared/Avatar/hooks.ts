@@ -1,10 +1,7 @@
 import { createSignal } from 'solid-js'
 import { useEffect } from '../hooks'
-import { altJailbreak, classifyTemplate } from '/common/templates'
 import { AppSchema } from '/common/types'
-import { EmoteType, FullSprite, SpriteAttr, classifyEmotes } from '/common/types/sprite'
-import { toastStore } from '/web/store'
-import { msgsApi } from '/web/store/data/messages'
+import { EmoteType, FullSprite, SpriteAttr } from '/common/types/sprite'
 
 export const Y_OFFSET = 0
 export const HEIGHT = 1200 + Y_OFFSET
@@ -44,29 +41,7 @@ export function useAutoExpression() {
     setExpr(emote)
   }
 
-  const classify = async (settings: Partial<AppSchema.GenSettings>, message: string) => {
-    const prompt = (
-      settings.service === 'openai' ? `${altJailbreak}\n\n${classifyTemplate}` : classifyTemplate
-    ).replace(`{{message}}`, message)
-
-    await msgsApi.basicInference({ settings, prompt }, (err, resp) => {
-      if (err) {
-        toastStore.warn(`Could not classify message: ${err}`)
-        return
-      }
-
-      if (resp) {
-        const lowered = resp.trim().toLowerCase()
-        const match = classifyEmotes.find((emote) => lowered.includes(emote))
-        if (match) {
-          console.log('Classifiation:', match)
-          update(match)
-        } else {
-          console.warn(`Classify returned noise: ${resp}`)
-        }
-      }
-    })
-  }
+  const classify = async (settings: Partial<AppSchema.GenSettings>, message: string) => {}
 
   useEffect(() => {
     const timer = setInterval(() => {

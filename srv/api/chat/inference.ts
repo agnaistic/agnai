@@ -1,8 +1,8 @@
 import { StatusError, errors, wrap } from '../wrap'
-import { sendGuest, sendMany, sendOne } from '../ws'
+import { sendMany } from '../ws'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { assertValid } from '/common/valid'
-import { createInferenceStream, inferenceAsync } from '/srv/adapter/generate'
+import { inferenceAsync } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
 import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
@@ -103,6 +103,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
       maxTokens: tokens,
       prompt: text,
       service: body.service,
+      settings: body.settings,
       guest: userId ? undefined : socketId,
     })
 
@@ -138,6 +139,7 @@ export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
       log,
       prompt: text,
       service: body.service,
+      settings: body.settings,
       guest: userId ? undefined : socketId,
     })
 
@@ -163,7 +165,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     body.user = user
   }
 
-  const { stream } = await createInferenceStream({
+  const inference = await inferenceAsync({
     user: body.user,
     log,
     prompt: body.prompt,
@@ -171,48 +173,7 @@ export const inference = wrap(async ({ socketId, userId, body, log }, res) => {
     guest: userId ? undefined : socketId,
   })
 
-  let generated = ''
-  let error = false
-  let meta = {}
-
-  for await (const gen of stream) {
-    if (typeof gen === 'string') {
-      generated = gen
-      continue
-    }
-
-    if ('partial' in gen) {
-      continue
-    }
-
-    if ('meta' in gen) {
-      Object.assign(meta, gen.meta)
-      continue
-    }
-
-    if ('error' in gen) {
-      error = true
-      const payload = {
-        type: 'inference-complete',
-        requestId: body.requestId,
-        error: gen.error,
-      }
-      if (userId) sendOne(userId, payload)
-      else sendGuest(socketId, payload)
-      continue
-    }
-  }
-
-  if (error) return
-
-  const payload = {
-    type: 'inference-complete',
-    requestId: body.requestId,
-    response: generated,
-    meta,
-  }
-  if (userId) sendOne(userId, payload)
-  else sendGuest(socketId, payload)
+  return { response: inference.generated, meta: inference.meta }
 })
 
 async function assertSettings(body: any, userId: string) {

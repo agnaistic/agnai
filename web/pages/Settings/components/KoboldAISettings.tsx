@@ -22,6 +22,7 @@ const KoboldAISettings: Component = () => {
         helperText="Re-formats the prompt to the desired output format."
         items={[
           { label: 'Kobold', value: 'kobold' },
+          { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'Claude', value: 'claude' },
         ]}

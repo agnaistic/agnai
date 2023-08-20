@@ -32,6 +32,10 @@ export function wait(secs: number) {
   return new Promise((res) => setTimeout(res, secs * 1000))
 }
 
+export function waitMs(ms: number) {
+  return new Promise((res) => setTimeout(res, ms))
+}
+
 export function isObject(val: unknown) {
   return Object.prototype.toString.call(val) === '[object Object]'
 }
@@ -176,12 +180,18 @@ export function getBotName(
 export function eventGenerator<T = any>() {
   const queue: Array<Promise<any>> = []
   let done = false
+  let signal = false
 
   const stream = (async function* () {
     while (!done) {
-      await wait(0.001)
+      await waitMs(1)
       const promise = queue.shift()
-      if (!promise) continue
+      if (!promise) {
+        if (signal) {
+          done = true
+        }
+        continue
+      }
 
       const result = await promise
       yield result
@@ -196,7 +206,7 @@ export function eventGenerator<T = any>() {
     },
     done: () => {
       if (done) return
-      done = true
+      signal = true
     },
   }
 }

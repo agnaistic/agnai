@@ -1,6 +1,7 @@
 import { TokenCounter } from '../../common/tokenize'
 import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
+import { AdapterProps } from './type'
 
 type PromptOpts = {
   chat: AppSchema.Chat
@@ -51,4 +52,30 @@ function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Pro
   const member = members.find((mem) => chat.userId === mem.userId)
 
   return chat.characterId ? `${bot}: ` : `${member?.handle}: `
+}
+
+export function getStoppingStrings(opts: AdapterProps) {
+  const seen = new Set<string>()
+  const ends: string[] = []
+
+  const chars = Object.values(opts.characters || {})
+  if (opts.impersonate) {
+    chars.push(opts.impersonate)
+  }
+
+  for (const char of chars) {
+    if (seen.has(char.name)) continue
+    if (char.name === opts.replyAs.name) continue
+    ends.push(`${char.name}:`)
+    seen.add(char.name)
+  }
+
+  for (const member of opts.members) {
+    if (seen.has(member.handle)) continue
+    if (member.handle === opts.replyAs.name) continue
+    ends.push(`${member.handle}:`)
+    seen.add(member.handle)
+  }
+
+  return ends
 }

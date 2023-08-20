@@ -14,7 +14,6 @@ import { getStore } from '../create'
 import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
-import { subscribe } from '../socket'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
 import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
@@ -22,7 +21,7 @@ import { settingStore } from '../settings'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { replace } from '/common/util'
 import { toMap } from '/web/shared/util'
-import { getServiceTempConfig } from '/web/shared/adapter'
+import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -84,30 +83,24 @@ export async function generateActions() {
   })
 }
 
-export async function basicInference(
-  { prompt, settings }: InferenceOpts,
-  onComplete: (err?: any, response?: string) => void
-) {
+export async function basicInference({ prompt, settings }: InferenceOpts) {
   const requestId = v4()
   const { user } = userStore.getState()
 
+  const preset = getUserPreset(user?.defaultPreset)
   if (!user) {
     toastStore.error(`Could not get user settings. Refresh and try again.`)
     return
   }
 
-  subscribe(
-    'inference-complete',
-    { requestId: 'string', response: 'string?', error: 'string?' },
-    (body) => onComplete(body.error, body.response),
-    (body) => body.requestId === requestId
-  )
+  const res = await api.method<{ response: string; meta: any }>('post', `/chat/inference`, {
+    requestId,
+    user,
+    prompt,
+    settings: settings || preset,
+  })
 
-  const res = await api.method('post', `/chat/inference`, { requestId, user, prompt, settings })
-  if (res.error) {
-    onComplete(res.error)
-    return
-  }
+  return res
 }
 
 export async function guidance<T = any>({ prompt, service, maxTokens }: InferenceOpts): Promise<T> {
@@ -118,9 +111,12 @@ export async function guidance<T = any>({ prompt, service, maxTokens }: Inferenc
     throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
+  const settings = service === 'default' ? getUserPreset(user.defaultPreset) : undefined
+
   const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
+    settings,
     prompt,
     service,
     maxTokens,
@@ -144,12 +140,15 @@ export async function rerunGuidance<T = any>({
     throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
+  const settings = service === 'default' ? getUserPreset(user.defaultPreset) : undefined
+
   const res = await api.method<{ result: string; values: T }>('post', `/chat/reguidance`, {
     requestId,
     user,
     prompt,
     service,
     maxTokens,
+    settings,
     rerun,
     previous,
   })

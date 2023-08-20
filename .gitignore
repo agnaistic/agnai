@@ -21,3 +21,4 @@ settings.json
 !.github/*.js
 !sprites.js
 /auth
+*.tsbuildinfo

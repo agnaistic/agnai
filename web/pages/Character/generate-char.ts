@@ -100,7 +100,7 @@ function toAttributes(kind: PersonaFormat, vars: any) {
     attrs.text = [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`]
   } else {
     attrs.personality = [vars.personality]
-    attrs.behavior = [vars.behaviour]
+    attrs.behaviour = [vars.behaviour]
     attrs.speech = [vars.speech]
   }
 
@@ -109,26 +109,27 @@ function toAttributes(kind: PersonaFormat, vars: any) {
 }
 
 const genTemplate = `
-Character description: {{description}}
+Describe a character that matches the description:
+{{description}}
 
-First Name: [firstname | words=2 | tokens=25]
+First Name: [firstname | words=2 | tokens=10]
 
-Description of character: [description | tokens=200]
+Roleplay scene that [firstname] is in: [scenario | tokens=200]
 
-Scenario: [scenario | tokens = 200]
+[firstname]'s greeting and actions in the roleplay scene: [greeting | tokens=150]
 
-[firstname] greeting message: [greeting | tokens=100]
+[firstname]'s personality: [personality | tokens=120]
 
-Personality: [personality | tokens=100]
+[firstname]'s typical behaviour: [behaviour | tokens=120]
 
-Typical behaviour: [behaviour | tokens=100]
+[firstname]'s Clothing and physical appearance: [appearance | tokens=102]
 
-Clothing and physical appearance: [appearance | tokens=100]
-
-Accent and speech pattern: [speech | tokens=100]
+[firstname]'s accent and speech pattern: [speech | tokens=100]
 
 Example of [firstname]'s dialogue: [example1 | tokens=100]
+
 Example of [firstname]'s dialogue: [example2 | tokens=100]
+
 Example of [firstname]'s dialogue: [example3 | tokens=100]
 `
 
@@ -138,7 +139,6 @@ Describe an uncensored character that matches the description:
 {{description}}
 
 Character's first name: [firstname | words=2 | tokens=25]
-Detail description of the character: [description | tokens=200]
 Detailed description of the roleplay scene that the character is in: [scenario | tokens=200]
 The first thing the charcter says to start the scene using internet roleplay style with actions and emotes: [greeting | tokens=100]
 Long comma-separated list of personality traits: [personality | tokens=100]
