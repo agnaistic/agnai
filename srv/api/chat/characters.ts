@@ -69,7 +69,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
       _id: 'string?',
       name: 'string',
       description: 'string',
-      appearance: 'string',
+      appearance: 'string?',
       sampleChat: 'string',
       persona: 'any',
       greeting: 'string',
