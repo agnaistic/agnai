@@ -21,6 +21,7 @@ const Select: Component<{
 
   service?: AIAdapter
   aiSetting?: keyof PresetAISettings
+  hide?: boolean
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
     if (!props.onChange) return
@@ -31,6 +32,7 @@ const Select: Component<{
   const adapters = createMemo(() => getAISettingServices(props.aiSetting))
 
   const hide = createMemo(() => {
+    if (props.hide) return ' hidden'
     if (!props.service || !adapters()) return ''
     return adapters()!.includes(props.service) ? '' : ` hidden `
   })
