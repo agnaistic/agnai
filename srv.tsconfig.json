@@ -3,6 +3,7 @@
     "strict": true,
     "target": "ES2020",
     "module": "CommonJS",
+    "incremental": true,
     "moduleResolution": "node",
     "noEmit": false,
     "allowSyntheticDefaultImports": true,

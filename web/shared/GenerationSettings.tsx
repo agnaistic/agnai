@@ -207,6 +207,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           fieldName="thirdPartyUrl"
           label="Third Party URL"
           helperText="Typically a Kobold, Ooba, or other URL"
+          placeholder="E.g. https://some-tunnel-url.loca.lt"
           value={props.inherit?.thirdPartyUrl || ''}
           disabled={props.disabled}
           service={props.service}

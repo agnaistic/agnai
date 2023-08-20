@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "strict": true,
+    "incremental": true,
     "target": "ES2020" /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */,
     "jsx": "preserve" /* Specify what JSX code is generated. */,
     "jsxImportSource": "solid-js" /* Specify module specifier used to import the JSX factory functions when using 'jsx: react-jsx*'. */,

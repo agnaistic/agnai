@@ -69,6 +69,7 @@ type InferenceRequest = {
   prompt: string
   guest?: string
   user: AppSchema.User
+  settings?: Partial<AppSchema.UserGenPreset>
 
   /** Follows the formats:
    * - [service]/[model] E.g. novel/krake-v2
@@ -127,7 +128,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 
 export async function createInferenceStream(opts: InferenceRequest) {
   const [service, model] = opts.service.split('/')
-  const settings = getInferencePreset(opts.user, service as AIAdapter, model)
+  const settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
 
   if (model) {
     switch (service as AIAdapter) {
@@ -146,7 +147,6 @@ export async function createInferenceStream(opts: InferenceRequest) {
   }
 
   settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
-  settings.streamResponse = false
   settings.temp = opts.temp ?? 0.5
 
   if (settings.service === 'openai') {

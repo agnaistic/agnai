@@ -3,13 +3,7 @@ import { createStore } from 'solid-js/store'
 import { AppSchema, VoiceSettings } from '/common/types'
 import { FullSprite } from '/common/types/sprite'
 import { defaultCulture } from '/web/shared/CultureCodes'
-import {
-  ADAPTER_LABELS,
-  AIAdapter,
-  NOVEL_MODELS,
-  OPENAI_MODELS,
-  PERSONA_FORMATS,
-} from '/common/adapters'
+import { ADAPTER_LABELS, PERSONA_FORMATS } from '/common/adapters'
 import { getStrictForm, setFormField } from '/web/shared/util'
 import { getAttributeMap } from '/web/shared/PersonaAttributes'
 import { NewCharacter, characterStore, presetStore, toastStore, userStore } from '/web/store'
@@ -124,9 +118,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const opts: Option[] = []
 
     if (preset?.service) {
-      const model = getModelForService(preset.service!)
-      const value = model ? `${preset.service}/${model}` : preset.service!
-      opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value })
+      opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value: 'default' })
     }
 
     if (user.user.oaiKeySet) {
@@ -332,14 +324,4 @@ async function generateAvatar(char: NewCharacter) {
       reject(err)
     })
   })
-}
-
-function getModelForService(service: AIAdapter) {
-  switch (service) {
-    case 'openai':
-      return OPENAI_MODELS.Turbo0301
-
-    case 'novel':
-      return NOVEL_MODELS.kayra_v1
-  }
 }

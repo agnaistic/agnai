@@ -2,17 +2,10 @@ import needle from 'needle'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { websocketStream } from './stream'
+import { getStoppingStrings } from './prompt'
 
-export const handleOoba: ModelAdapter = async function* ({
-  char,
-  members,
-  user,
-  prompt,
-  mappedSettings,
-  log,
-  gen,
-  ...opts
-}) {
+export const handleOoba: ModelAdapter = async function* (opts) {
+  const { char, members, user, prompt, log, gen } = opts
   const body = {
     prompt,
     max_new_tokens: gen.maxTokens,
@@ -34,12 +27,17 @@ export const handleOoba: ModelAdapter = async function* ({
     truncation_length: gen.maxContextLength || 2048,
     ban_eos_token: gen.banEosToken || false,
     skip_special_tokens: gen.skipSpecialTokens ?? true,
-    stopping_strings: [],
+    stopping_strings: getStoppingStrings(opts),
   }
 
   yield { prompt: body.prompt }
 
   log.debug({ ...body, prompt: null }, 'Textgen payload')
+
+  if (opts.kind === 'continue') {
+    body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
+  }
+
   log.debug(`Prompt:\n${body.prompt}`)
 
   const url = gen.thirdPartyUrl || user.koboldUrl

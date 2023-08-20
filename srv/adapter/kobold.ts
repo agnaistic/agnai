@@ -132,9 +132,7 @@ async function checkStreamSupported(versioncheckURL: any) {
       sensitivity: 'base',
     }) > -1
 
-  if (!isSupportedVersion) return false
-
-  return true
+  return isSupportedVersion
 }
 
 const fullCompletion = async function* (genURL: string, body: any) {

@@ -1,7 +1,7 @@
 import { getAdapter, getChatPreset } from '../../common/prompt'
 import { presetStore, userStore } from '../store'
 import { AppSchema } from '../../common/types/schema'
-import { defaultPresets } from '../../common/presets'
+import { defaultPresets, isDefaultPreset } from '../../common/presets'
 import { Option } from './Select'
 import { ADAPTER_LABELS, AIAdapter, AdapterSetting } from '../../common/adapters'
 import { storage } from './util'
@@ -44,6 +44,14 @@ export type PresetInfo = {
   name?: string
   presetLabel: string
   isThirdParty?: boolean
+}
+
+export function getUserPreset(presetId?: string) {
+  if (!presetId) return
+  if (isDefaultPreset(presetId)) return defaultPresets[presetId]
+
+  const { presets } = presetStore.getState()
+  return presets.find((pre) => pre._id === presetId)
 }
 
 export function getClientPreset(chat?: AppSchema.Chat): PresetInfo | undefined {
