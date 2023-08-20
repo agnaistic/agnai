@@ -601,10 +601,11 @@ function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
   return l.createdAt > r.createdAt ? -1 : l.createdAt === r.createdAt ? 0 : 1
 }
 
-const THIRD_PARTY_ADAPTERS: { [key in AIAdapter]?: boolean } = {
+const THIRD_PARTY_ADAPTERS: { [key in AIAdapter | 'llamacpp']?: boolean } = {
   openai: true,
   claude: true,
   ooba: true,
+  llamacpp: true,
 }
 
 export function getChatPreset(
@@ -678,7 +679,7 @@ export function getAdapter(
   const isThirdParty = THIRD_PARTY_ADAPTERS[thirdPartyFormat] && adapter === 'kobold'
 
   if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
-    adapter = config.thirdPartyFormat
+    adapter = config.thirdPartyFormat === 'llamacpp' ? 'ooba' : config.thirdPartyFormat
   }
 
   let model = ''
