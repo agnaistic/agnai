@@ -153,8 +153,6 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
     props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength
   )
 
-  const [format, setFormat] = createSignal<string | undefined>(props.inherit?.thirdPartyFormat)
-
   const openRouterModels = createMemo(() => {
     if (!cfg.config.openRouter.models) return []
 
@@ -231,7 +229,6 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}
           aiSetting={'thirdPartyFormat'}
-          onChange={(ev) => setFormat(ev.value)}
         />
       </Card>
 
