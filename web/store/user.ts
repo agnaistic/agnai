@@ -181,11 +181,9 @@ export const userStore = createStore<UserState>(
         yield { ui: res.result.user.ui }
       }
 
-      // TODO: Work out why this is here
-      events.emit(EVENTS.loggedOut)
-
       onSuccess?.(res.result.token)
       publish({ type: 'login', token: res.result.token })
+      events.emit(EVENTS.loggedIn)
     },
     async *register(
       _,
@@ -213,18 +211,18 @@ export const userStore = createStore<UserState>(
       onSuccess?.()
       publish({ type: 'login', token: res.result.token })
     },
-    async logout() {
-      events.emit(EVENTS.loggedOut)
+    async *logout() {
       clearAuth()
       publish({ type: 'logout' })
       const ui = await getUIsettings(true)
-      return {
+      yield {
         jwt: '',
         profile: undefined,
         user: undefined,
         loggedIn: false,
         ui,
       }
+      events.emit(EVENTS.loggedOut)
     },
 
     async saveUI({ ui }, update: Partial<UI.UISettings>) {

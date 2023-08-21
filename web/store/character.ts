@@ -58,6 +58,7 @@ export type UpdateCharacter = Partial<
 >
 
 const initState: CharacterState = {
+  loading: false,
   creating: false,
   characters: { loaded: 0, list: [], map: {} },
   chatChars: { list: [], map: {} },
@@ -74,25 +75,17 @@ export const characterStore = createStore<CharacterState>(
   initState
 )((get, set) => {
   events.on(EVENTS.loggedOut, () => {
-    characterStore.setState(initState)
+    characterStore.setState({ ...initState })
+    characterStore.getCharacters(true)
+  })
+
+  events.on(EVENTS.loggedIn, () => {
+    characterStore.setState({ ...initState })
   })
 
   events.on(EVENTS.init, async (init) => {
-    if (!init.characters) {
-      characterStore.getCharacters()
-      return
-    }
-
-    const nextChars = receiveChars(characterStore.getState().characters.map, init.characters)
-    set({ characters: { ...nextChars, loaded: Date.now() } })
-
-    const impersonateId = await storage.getItem(IMPERSONATE_KEY)
-    if (!impersonateId) return
-
-    const impersonating = init.characters?.find(
-      (ch: AppSchema.Character) => ch._id === impersonateId
-    )
-    set({ impersonating })
+    characterStore.getCharacters(true)
+    return
   })
 
   events.on(EVENTS.charsReceived, (chars: AppSchema.Character[]) => {
@@ -119,11 +112,11 @@ export const characterStore = createStore<CharacterState>(
         return toastStore.error(res.error)
       }
     },
-    async *getCharacters(state) {
-      if (state.loading) return
+    async *getCharacters(state, force?: boolean) {
+      if (!force && state.loading) return
 
       const age = Date.now() - state.characters.loaded
-      if (age < 30000) return
+      if (!force && age < 30000) return
 
       yield { loading: true }
       const res = await charsApi.getCharacters()
@@ -133,12 +126,11 @@ export const characterStore = createStore<CharacterState>(
         return toastStore.error('Failed to retrieve characters')
       }
 
-      const next = receiveChars(state.characters.map, res.result.characters)
-
       if (res.result && state.impersonating) {
         return {
           characters: {
-            ...next,
+            list: res.result.characters,
+            map: toMap(res.result.characters),
             loaded: Date.now(),
           },
           loading: false,
@@ -151,7 +143,8 @@ export const characterStore = createStore<CharacterState>(
 
         return {
           characters: {
-            ...next,
+            list: res.result.characters,
+            map: toMap(res.result.characters),
             loaded: Date.now(),
           },
           impersonating,
@@ -358,19 +351,4 @@ function replace(
 ): Record<string, AppSchema.Character> {
   const next = map[id] || {}
   return { ...map, [id]: { ...next, ...char } }
-}
-
-function receiveChars(
-  current: Record<string, AppSchema.Character>,
-  received: AppSchema.Character[]
-) {
-  const next: Record<string, AppSchema.Character> = Object.assign({}, current)
-  for (const char of received) {
-    next[char._id] = char
-  }
-
-  return {
-    list: Object.values(next),
-    map: next,
-  }
 }
