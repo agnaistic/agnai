@@ -68,6 +68,10 @@ export const handleNovel: ModelAdapter = async function* ({
     opts.gen.order = (opts.gen.order as string).split(',').map((val) => +val)
   }
 
+  if (typeof opts.gen.disabledSamplers === 'string') {
+    opts.gen.disabledSamplers = (opts.gen.disabledSamplers as string).split(',').map((val) => +val)
+  }
+
   const model = opts.gen.novelModel || user.novelModel || NOVEL_MODELS.clio_v1
 
   const processedPrompt = processNovelAIPrompt(prompt)
