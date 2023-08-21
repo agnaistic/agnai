@@ -87,6 +87,7 @@ export const streamCompletion: CompletionGenerator = async function* (
 
   try {
     const events = requestStream(resp)
+    let prev = ''
     for await (const event of events) {
       if (!event.data) {
         continue
@@ -101,7 +102,17 @@ export const streamCompletion: CompletionGenerator = async function* (
       }
 
       current = event
-      const parsed: Completion<AsyncDelta> = JSON.parse(event.data)
+      prev += event.data
+
+      // If we fail to parse we might need to parse with this bad data and the next event's data...
+      // So we'll keep it and try again next iteration
+      // tryParse() will attempt to parse with the current .data payload _before_ prepending with the previous attempt (if present)
+      const parsed = tryParse<Completion<AsyncDelta>>(event.data, prev)
+      if (!parsed) continue
+
+      // If we successfully parsed, ensure 'prev' is cleared so subsequent tryParse attempts don't have dangling data
+      prev = ''
+
       const { choices, ...evt } = parsed
       if (!choices || !choices[0]) {
         log.warn({ sse: event }, `[${service}] Received invalid SSE during stream`)
@@ -363,4 +374,18 @@ function getCharLooks(char: AppSchema.Character) {
 
   if (!visuals.length) return
   return `${char.name}'s appearance: ${visuals.join(', ')}`
+}
+
+function tryParse<T = any>(value: string, prev?: string): T | undefined {
+  try {
+    const parsed = tryParse(value)
+    if (parsed) return parsed
+
+    if (!prev) return
+
+    const joined = JSON.parse(prev + value)
+    return joined
+  } catch (ex) {
+    return
+  }
 }
