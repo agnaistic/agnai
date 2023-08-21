@@ -257,7 +257,6 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'oaiModel'}
-          hide={format() !== 'openai'}
         />
 
         <Select
@@ -301,7 +300,6 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'claudeModel'}
-          hide={format() !== 'claude'}
         />
 
         <Show when={replicateModels().length > 1}>
