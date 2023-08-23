@@ -1,5 +1,6 @@
 import { WebSocket } from 'ws'
 import { eventGenerator } from '/common/util'
+import { logger } from '../logger'
 
 export type ServerSentEvent = { id?: string; type?: string; data: string; error?: string }
 

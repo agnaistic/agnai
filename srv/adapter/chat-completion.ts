@@ -381,7 +381,7 @@ function tryParse<T = any>(value: string, prev?: string): T | undefined {
     const parsed = tryParse(value)
     if (parsed) return parsed
 
-    if (!prev) return
+    if (!prev) return JSON.parse(value)
 
     const joined = JSON.parse(prev + value)
     return joined
