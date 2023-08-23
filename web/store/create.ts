@@ -71,7 +71,9 @@ export function send(name: string, action: any, state: any) {
     next[name] = store.getState()
   }
 
-  next[name] = state
+  if (name in next) {
+    next[name] = state
+  }
   devTools.send({ ...action, type: `${print.padEnd(15, '.')}.${action.type}` }, next)
 }
 
