@@ -22,7 +22,7 @@ export const handleOoba: ModelAdapter = async function* (opts) {
   const url = gen.thirdPartyUrl || user.koboldUrl
   const baseUrl = normalizeUrl(url)
   const resp =
-    opts.gen.thirdPartyFormat === 'llamacpp'
+    opts.gen.service === 'kobold' && opts.gen.thirdPartyFormat === 'llamacpp'
       ? llamaStream(baseUrl, body)
       : gen.streamResponse
       ? await websocketStream({ url: baseUrl + '/api/v1/stream', body })
@@ -96,7 +96,7 @@ async function* getCompletion(url: string, payload: any, headers: any): AsyncGen
 
 function getPayload(opts: AdapterProps) {
   const { gen, prompt } = opts
-  if (gen.thirdPartyFormat === 'llamacpp') {
+  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {
       prompt,
       temperature: gen.temp,
