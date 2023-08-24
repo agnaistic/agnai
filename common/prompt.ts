@@ -552,7 +552,14 @@ export function getLinesForPrompt(
       ? opts.impersonate.name
       : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
-    const botName = getBotName(opts.chat, msg, opts.characters, opts.replyAs, char)
+    const botName = getBotName(
+      opts.chat,
+      msg,
+      opts.characters,
+      opts.replyAs,
+      char,
+      opts.impersonate
+    )
 
     return fillPlaceholders(msg, botName, sender).trim()
   }
