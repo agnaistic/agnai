@@ -178,7 +178,7 @@ const ChatSettings: Component<{
         </Card>
       </Show>
 
-      <Show when={activePreset()?.service === 'openai'}>
+      <Show when={activePreset()?.service !== 'horde'}>
         <Card>
           <Select
             fieldName="mode"

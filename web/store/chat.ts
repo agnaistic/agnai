@@ -129,7 +129,14 @@ export const chatStore = createStore<ChatState>('chat', {
   })
 
   events.on(EVENTS.init, (init) => {
-    chatStore.setState({ ...initState })
+    chatStore.setState({
+      allChats: [],
+      allChars: { ...initState.allChars },
+      loaded: false,
+      lastFetched: 0,
+      lastChatId: null,
+    })
+
     if (init.chats) {
       chatStore.setState({ allChats: init.chats })
     }

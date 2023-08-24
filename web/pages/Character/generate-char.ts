@@ -109,28 +109,37 @@ function toAttributes(kind: PersonaFormat, vars: any) {
 }
 
 const genTemplate = `
-Describe a character that matches the description:
+Describe a character matching the following description:
 {{description}}
 
-First Name: [firstname | words=2 | tokens=10]
+Character's first name: [firstname | words=2 | tokens=10]
 
-Roleplay scene that [firstname] is in: [scenario | tokens=200]
+Detailed description of the roleplay scene that the character is in:
+[scenario | tokens=200]
 
-[firstname]'s greeting and actions in the roleplay scene: [greeting | tokens=150]
+[firstname]'s greeting in the scenario:
+[greeting | tokens=150]
 
-[firstname]'s personality: [personality | tokens=120]
+[firstname]'s personality:
+[personality | tokens=120]
 
-[firstname]'s typical behaviour: [behaviour | tokens=120]
+[firstname]'s typical behaviour:
+[behaviour | tokens=120]
 
-[firstname]'s Clothing and physical appearance: [appearance | tokens=102]
+[firstname]'s Clothing and physical appearance:
+[appearance | tokens=102]
 
-[firstname]'s accent and speech pattern: [speech | tokens=100]
+[firstname]'s accent and speech pattern:
+[speech | tokens=100]
 
-Example of [firstname]'s dialogue: [example1 | tokens=100]
+Example of [firstname]'s dialogue:
+[example1 | tokens=100]
 
-Example of [firstname]'s dialogue: [example2 | tokens=100]
+Example of [firstname]'s dialogue:
+[example2 | tokens=100]
 
-Example of [firstname]'s dialogue: [example3 | tokens=100]
+Example of [firstname]'s dialogue:
+[example3 | tokens=100]
 `
 
 const instructGenTemplate = `

@@ -8,6 +8,7 @@ import { pipelineApi } from './pipeline'
 import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
 import { neat } from '/common/util'
+import { AppSchema } from '/common/types'
 
 type GenerateOpts = {
   chatId?: string
@@ -63,6 +64,11 @@ export async function generateImageWithPrompt(prompt: string, onDone: (image: st
 const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean } = {
   openai: () => true,
   novel: () => true,
+  ooba: () => true,
+  kobold: () => true,
+  openrouter: () => true,
+  claude: () => true,
+  mancer: () => true,
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
@@ -81,7 +87,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   if (canUseService && opts.user.images?.summariseChat) {
     console.log('Using', opts.settings?.service, 'to summarise')
 
-    const summary = await getChatSummary(opts.settings.service!)
+    const summary = await getChatSummary(opts.settings)
     console.log('Image caption: ', summary)
     return summary
   }
@@ -90,7 +96,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   return prompt
 }
 
-async function getChatSummary(service: AIAdapter) {
+async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   const opts = await msgsApi.getActiveTemplateParts()
   opts.limit = {
     context: 1024,
@@ -98,16 +104,32 @@ async function getChatSummary(service: AIAdapter) {
   }
   opts.lines = opts.lines.reverse()
 
-  const template = getSummaryTemplate(service)
-  if (!template) throw new Error(`No chat summary template available for "${service}"`)
+  const template = getSummaryTemplate(settings.service!)
+  if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
   const prompt = parseTemplate(template, opts)
-  const values = await msgsApi.guidance<{ summary: string }>({ prompt, service })
+  const values = await msgsApi.guidance<{ summary: string }>({
+    prompt,
+    settings,
+    service: settings.service,
+  })
   return values.summary
 }
 
 function getSummaryTemplate(service: AIAdapter) {
   switch (service) {
+    case 'ooba':
+    case 'kobold':
+      return neat`
+      {{char}}'s personality: {{personality}}
+      [ Style: chat ]
+      ***
+      <START>
+      {{history}}
+      <END>
+
+      Detailed image caption of the current scene with a description of each character's appearance: [summary | tokens=250]`
+
     case 'novel':
       return neat`
       {{char}}'s personality: {{personality}}
