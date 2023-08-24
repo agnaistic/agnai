@@ -129,10 +129,13 @@ export const chatStore = createStore<ChatState>('chat', {
   })
 
   events.on(EVENTS.init, (init) => {
+    chatStore.setState({ ...initState })
     if (init.chats) {
       chatStore.setState({ allChats: init.chats })
     }
   })
+
+  events.on(EVENTS.loggedIn, () => {})
 
   events.on(EVENTS.charUpdated, (char: AppSchema.Character) => {
     const { active } = get()

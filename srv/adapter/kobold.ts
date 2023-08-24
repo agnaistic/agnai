@@ -60,6 +60,10 @@ export const handleKobold: ModelAdapter = async function* ({
 
   // Kobold sampler order parameter must contain all 6 samplers to be valid
   // If the sampler order is provided, but incomplete, add the remaining samplers.
+  if (typeof body.sampler_order === 'string') {
+    body.sampler_order = (body.sampler_order as string).split(',').map((val) => +val)
+  }
+
   if (body.sampler_order && body.sampler_order.length !== 6) {
     for (const sampler of REQUIRED_SAMPLERS) {
       if (body.sampler_order.includes(sampler)) continue

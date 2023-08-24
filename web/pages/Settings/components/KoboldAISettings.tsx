@@ -25,7 +25,6 @@ const KoboldAISettings: Component = () => {
           { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'Claude', value: 'claude' },
-          { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'Llama.cpp', value: 'llamacpp' },
         ]}
         value={state.user?.thirdPartyFormat ?? 'kobold'}

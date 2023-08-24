@@ -63,7 +63,7 @@ const InputBar: Component<{
 
   const placeholder = createMemo(() => {
     if (props.ooc) return 'Send a message... (OOC)'
-    if (chats.replyAs) return `Send a message to ${props.botMap[chats.replyAs]?.name}...`
+    if (chats.replyAs) return `Send a message to ${ctx.allBots[chats.replyAs]?.name}...`
     return `Send a message...`
   })
 

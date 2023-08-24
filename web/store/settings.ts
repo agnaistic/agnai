@@ -92,6 +92,12 @@ export const settingStore = createStore<SettingState>(
     settingStore.init()
   })
 
+  events.on(EVENTS.loggedIn, () => {
+    const prev = get()
+    settingStore.setState({ ...initState, slots: prev.slots, slotsLoaded: prev.slotsLoaded })
+    settingStore.init()
+  })
+
   return {
     modal({ showSettings }, show?: boolean) {
       const next = show ?? !showSettings

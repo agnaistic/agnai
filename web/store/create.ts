@@ -51,7 +51,13 @@ export function getStore<TKey extends keyof StoreMap>(name: TKey): StoreMap[TKey
   return stores[name] as any
 }
 
-function send(name: string, action: any, state: any) {
+let lastState: any
+export function send(name: string, action: any, state: any) {
+  if (state) {
+    lastState = state
+  }
+
+  state = state || lastState
   const print = name
 
   if (name.startsWith('[ IN]') || name.startsWith('[OUT]')) {
@@ -65,7 +71,9 @@ function send(name: string, action: any, state: any) {
     next[name] = store.getState()
   }
 
-  next[name] = state
+  if (name in next) {
+    next[name] = state
+  }
   devTools.send({ ...action, type: `${print.padEnd(15, '.')}.${action.type}` }, next)
 }
 
