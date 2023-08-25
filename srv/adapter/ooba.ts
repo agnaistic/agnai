@@ -113,7 +113,9 @@ function getPayload(opts: AdapterProps) {
       seed: -1,
       typical_p: gen.typicalP,
       ignore_eos: gen.banEosToken,
-      repeat_penality: gen.repetitionPenalty,
+      repeat_penalty: gen.repetitionPenalty,
+      repeat_last_n: gen.repetitionPenaltyRange,
+      tfs_z: gen.tailFreeSampling,
     }
     return body
   }
@@ -127,6 +129,7 @@ function getPayload(opts: AdapterProps) {
     typical_p: gen.typicalP || 1,
     repetition_penalty: gen.repetitionPenalty,
     encoder_repetition_penalty: gen.encoderRepitionPenalty,
+    repetition_penalty_range: gen.repetitionPenaltyRange,
     top_k: gen.topK,
     min_length: 0,
     no_repeat_ngram_size: 0,
@@ -140,6 +143,7 @@ function getPayload(opts: AdapterProps) {
     ban_eos_token: gen.banEosToken || false,
     skip_special_tokens: gen.skipSpecialTokens ?? true,
     stopping_strings: getStoppingStrings(opts),
+    tfs: gen.tailFreeSampling,
   }
   return body
 }
