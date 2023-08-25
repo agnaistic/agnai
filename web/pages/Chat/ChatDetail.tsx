@@ -326,7 +326,7 @@ const ChatDetail: Component = () => {
 
   return (
     <>
-      <Show when={!chats.loaded}>
+      <Show when={!chats.loaded && !chats.chat}>
         <div>
           <div>Loading conversation...</div>
         </div>
