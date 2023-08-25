@@ -252,18 +252,26 @@ const streamCompletition = async function* (headers: any, body: any, _log: AppLo
   try {
     const events = requestStream(resp)
     for await (const event of events) {
-      if (event.type !== 'newToken') continue
+      if (event.error) {
+        yield { error: `NovelAI streaming request failed: ${event.error}` }
+        return
+      }
+
+      if (event.type !== 'newToken') {
+        continue
+      }
+
       const data = JSON.parse(event.data) as {
         token: string
         final: boolean
         ptr: number
         error?: string
       }
+
       if (data.error) {
         yield { error: `NovelAI streaming request failed: ${data.error}` }
         return
       }
-
       tokens.push(data.token)
       yield { token: data.token }
     }
