@@ -39,7 +39,7 @@ type CompletionGenerator = (
 
 export const handleOAI: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, guest, gen, kind, isThirdParty } = opts
-  const base = getBaseUrl(user, isThirdParty)
+  const base = getBaseUrl(user, !!gen.thirdPartyUrlNoSuffix, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
@@ -95,7 +95,11 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   log.debug(body, 'OpenAI payload')
 
-  const url = useChat ? `${base.url}/chat/completions` : `${base.url}/completions`
+  const url = gen.thirdPartyUrlNoSuffix
+    ? base.url
+    : useChat
+    ? `${base.url}/chat/completions`
+    : `${base.url}/completions`
 
   const iter = body.stream
     ? streamCompletion(opts.user._id, url, headers, body, 'OpenAI', opts.log)
@@ -145,7 +149,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 }
 
-function getBaseUrl(user: AppSchema.User, isThirdParty?: boolean) {
+function getBaseUrl(user: AppSchema.User, noSuffix: boolean, isThirdParty?: boolean) {
+  if (noSuffix) return { url: user.koboldUrl, changed: true }
   if (isThirdParty && user.thirdPartyFormat === 'openai' && user.koboldUrl) {
     // If the user provides a versioned API URL for their third-party API, use that. Otherwise
     // fall back to the standard /v1 URL.
