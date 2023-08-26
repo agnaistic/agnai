@@ -366,6 +366,7 @@ export namespace AppSchema {
 
     thirdPartyUrl?: string
     thirdPartyFormat?: 'kobold' | 'openai' | 'claude' | 'ooba' | 'llamacpp'
+    thirdPartyUrlNoSuffix?: boolean
 
     replicateModelName?: string
     replicateModelType?: string

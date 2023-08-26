@@ -53,6 +53,7 @@ export const chatGenSettings = {
 
   thirdPartyUrl: 'string?',
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
+  thirdPartyUrlNoSuffix: 'boolean?',
 
   novelModel: 'string?',
   novelModelOverride: 'string?',

@@ -226,24 +226,35 @@ const GeneralSettings: Component<
           aiSetting={'thirdPartyUrl'}
         />
 
-        <Select
-          fieldName="thirdPartyFormat"
-          label="Kobold / 3rd-party Format"
-          helperText="Re-formats the prompt to the desired output format."
-          items={[
-            { label: 'None', value: '' },
-            { label: 'Kobold', value: 'kobold' },
-            { label: 'OpenAI', value: 'openai' },
-            { label: 'Claude', value: 'claude' },
-            { label: 'Textgen (Ooba)', value: 'ooba' },
-            { label: 'Llama.cpp', value: 'llamacpp' },
-          ]}
-          value={props.inherit?.thirdPartyFormat ?? ''}
-          service={props.service}
-          format={props.inherit?.thirdPartyFormat}
-          aiSetting={'thirdPartyFormat'}
-          onChange={(ev) => props.setFormat(ev.value as ThirdPartyFormat)}
-        />
+        <div class="flex flex-wrap items-start gap-2">
+          <Select
+            fieldName="thirdPartyFormat"
+            label="Kobold / 3rd-party Format"
+            helperText="Re-formats the prompt to the desired output format."
+            items={[
+              { label: 'None', value: '' },
+              { label: 'Kobold', value: 'kobold' },
+              { label: 'OpenAI', value: 'openai' },
+              { label: 'Claude', value: 'claude' },
+              { label: 'Textgen (Ooba)', value: 'ooba' },
+              { label: 'Llama.cpp', value: 'llamacpp' },
+            ]}
+            value={props.inherit?.thirdPartyFormat ?? ''}
+            service={props.service}
+            format={props.inherit?.thirdPartyFormat}
+            aiSetting={'thirdPartyFormat'}
+            onChange={(ev) => props.setFormat(ev.value as ThirdPartyFormat)}
+          />
+
+          <Toggle
+            fieldName="thirdPartyUrlNoSuffix"
+            label="Disable Auto-URL"
+            helperText="No paths will be added to your URL."
+            value={props.inherit?.thirdPartyUrlNoSuffix}
+            service={props.service}
+            aiSetting="thirdPartyUrl"
+          />
+        </div>
       </Card>
 
       <Card
