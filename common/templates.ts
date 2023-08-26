@@ -8,10 +8,7 @@ Scenario: {{scenario}}
 Facts:{{memory}}
 
 How {{char}} speaks: {{example_dialogue}}
-<START>
-{{history}}
-{{ujb}}
-{{post}}`.trim()
+<START>`.trim()
 
 export const adventureAmble = `[System note: In addition provide 3 possible consistent responses that {{user}} could give to {{char}}'s response that drive the story forward. Respond in this strict format:
 {{char}}: {{{char}}'s response. Provide at least two paragraphs}

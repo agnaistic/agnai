@@ -1,8 +1,8 @@
 import { Component, For, JSX, Show, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import './toggle.css'
-import { AIAdapter, PresetAISettings } from '../../common/adapters'
-import { getAISettingServices } from './util'
+import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
+import { isValidServiceSetting } from './util'
 import { Option } from './Select'
 
 export const Toggle: Component<{
@@ -15,6 +15,7 @@ export const Toggle: Component<{
   disabled?: boolean
 
   service?: AIAdapter
+  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: HTMLInputElement }) => {
@@ -22,13 +23,9 @@ export const Toggle: Component<{
     props.onChange?.(ev.currentTarget.checked)
   }
 
-  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
-
   const hide = createMemo(() => {
-    if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) || shouldShow(props.aiSetting, props.value)
-      ? ''
-      : ` hidden `
+    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
+    return isValid ? '' : ' hidden'
   })
 
   return (
@@ -50,12 +47,6 @@ export const Toggle: Component<{
       </label>
     </div>
   )
-}
-
-function shouldShow(setting?: keyof PresetAISettings, value?: boolean) {
-  if (!setting) return false
-  if (setting === 'gaslight' && value === true) return true
-  return false
 }
 
 export const ToggleButtons: Component<{

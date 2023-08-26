@@ -3,6 +3,7 @@ import { AppSchema } from './types/schema'
 export type AIAdapter = (typeof AI_ADAPTERS)[number]
 export type ChatAdapter = (typeof CHAT_ADAPTERS)[number]
 export type PersonaFormat = (typeof PERSONA_FORMATS)[number]
+export type ThirdPartyFormat = (typeof THIRDPARTY_FORMATS)[number]
 
 export type AdapterSetting = {
   /** The name of the field within the settings object */
@@ -45,6 +46,8 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   attributes: 'Attributes (NovelAI)',
   text: 'Plain Text',
 }
+
+export const THIRDPARTY_FORMATS = ['kobold', 'openai', 'claude', 'ooba', 'llamacpp'] as const
 
 export const AI_ADAPTERS = [
   'kobold',
@@ -248,10 +251,21 @@ export const adapterSettings: {
     'ooba',
     'goose',
     'openrouter',
+    'mancer',
   ],
-  ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel'],
+  ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel', 'ooba', 'mancer'],
   prefill: ['claude', 'kobold'],
-  ignoreCharacterUjb: ['openai', 'claude', 'kobold', 'openrouter'],
+  ignoreCharacterUjb: [
+    'openai',
+    'novel',
+    'scale',
+    'kobold',
+    'claude',
+    'ooba',
+    'goose',
+    'openrouter',
+    'mancer',
+  ],
 
   topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel'],
   repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba'],

@@ -1,5 +1,5 @@
 import { AppSchema } from './types/schema'
-import { AIAdapter, AI_ADAPTERS, ChatAdapter } from './adapters'
+import { AIAdapter, AI_ADAPTERS, ChatAdapter, THIRDPARTY_FORMATS } from './adapters'
 import { defaultPresets } from './default-preset'
 
 export { defaultPresets }
@@ -52,7 +52,7 @@ export const chatGenSettings = {
   phraseRepPenalty: 'string?',
 
   thirdPartyUrl: 'string?',
-  thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', 'llamacpp', null],
+  thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
 
   novelModel: 'string?',
   novelModelOverride: 'string?',

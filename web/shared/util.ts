@@ -4,6 +4,7 @@ import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '..
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
 import { UserState, settingStore } from '../store'
+import { AppSchema } from '/common/types'
 
 export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
   switch (chatWidth) {
@@ -487,6 +488,24 @@ export function getAISettingServices(prop?: keyof PresetAISettings) {
   const services = cfg.registered.filter((reg) => reg.options.includes(prop)).map((reg) => reg.name)
 
   return base?.concat(services)
+}
+
+export function isValidServiceSetting(
+  service?: AIAdapter,
+  format?: AppSchema.GenSettings['thirdPartyFormat'],
+  prop?: keyof PresetAISettings
+) {
+  const services = getAISettingServices(prop)
+
+  // Setting does not declare itself as a service setting
+  if (!services || !service) return true
+
+  if (services.includes(service)) return true
+  if (!format) return false
+
+  if (service !== 'kobold') return false
+  const included = services.some((s) => s === format)
+  return included
 }
 
 export function applyDotProperty<T>(obj: T, property: string, value: any) {

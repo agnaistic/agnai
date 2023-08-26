@@ -18,6 +18,7 @@ import { VoiceSettings } from './Voice/VoiceSettings'
 import { toArray } from '/common/util'
 import { useSearchParams } from '@solidjs/router'
 import Modal from '/web/shared/Modal'
+import { THIRDPARTY_FORMATS } from '/common/adapters'
 
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
@@ -220,7 +221,7 @@ export default Settings
 const settingsForm = {
   defaultPreset: 'string?',
   koboldUrl: 'string?',
-  thirdPartyFormat: ['kobold', 'openai', 'claude', 'ooba', 'llamacpp'],
+  thirdPartyFormat: THIRDPARTY_FORMATS,
   oobaUrl: 'string?',
   thirdPartyPassword: 'string?',
   novelApiKey: 'string?',

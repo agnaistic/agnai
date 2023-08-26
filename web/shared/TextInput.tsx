@@ -1,6 +1,6 @@
 import { Component, Show, createMemo, JSX, createEffect, createSignal } from 'solid-js'
 import IsVisible from './IsVisible'
-import { AIAdapter, PresetAISettings } from '../../common/adapters'
+import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { getAISettingServices } from './util'
 import { getEncoder } from '/common/tokenize'
 
@@ -40,6 +40,7 @@ const TextInput: Component<{
   ) => void
 
   service?: AIAdapter
+  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
 }> = (props) => {
   let inputRef: any
