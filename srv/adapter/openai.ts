@@ -150,8 +150,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 }
 
 function getBaseUrl(user: AppSchema.User, noSuffix: boolean, isThirdParty?: boolean) {
-  if (noSuffix) return { url: user.koboldUrl, changed: true }
   if (isThirdParty && user.thirdPartyFormat === 'openai' && user.koboldUrl) {
+    if (noSuffix) return { url: user.koboldUrl, changed: true }
+
     // If the user provides a versioned API URL for their third-party API, use that. Otherwise
     // fall back to the standard /v1 URL.
     const version = user.koboldUrl.match(/\/v\d+$/) ? '' : '/v1'
