@@ -3,8 +3,8 @@ import { Component, Show, createSignal, createEffect, createMemo } from 'solid-j
 import type { JSX } from 'solid-js'
 import Tooltip from './Tooltip'
 import { CreateTooltip } from './GenerationSettings'
-import { AIAdapter, PresetAISettings } from '../../common/adapters'
-import { getAISettingServices } from './util'
+import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
+import { getAISettingServices, isValidServiceSetting } from './util'
 
 const RangeInput: Component<{
   label: string
@@ -16,7 +16,9 @@ const RangeInput: Component<{
   step: number
   disabled?: boolean
   onChange?: (value: number) => void
+
   service?: AIAdapter
+  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
   parentClass?: string
 }> = (props) => {
@@ -40,8 +42,8 @@ const RangeInput: Component<{
   createEffect(updateRangeSliders)
 
   const hide = createMemo(() => {
-    if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : ` hidden `
+    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
+    return isValid ? '' : ' hidden'
   })
 
   return (

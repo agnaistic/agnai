@@ -1,8 +1,8 @@
 import { Component, JSX, For, createMemo } from 'solid-js'
 import { FormLabel } from './FormLabel'
 import { ChevronDown } from 'lucide-solid'
-import { AIAdapter, PresetAISettings } from '../../common/adapters'
-import { getAISettingServices } from './util'
+import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
+import { getAISettingServices, isValidServiceSetting } from './util'
 
 export type Option<T extends string = string> = {
   label: string
@@ -20,6 +20,7 @@ const Select: Component<{
   onChange?: (item: Option) => void
 
   service?: AIAdapter
+  format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
   hide?: boolean
 }> = (props) => {
@@ -29,12 +30,10 @@ const Select: Component<{
     props.onChange(item!)
   }
 
-  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
-
   const hide = createMemo(() => {
     if (props.hide) return ' hidden'
-    if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : ` hidden `
+    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
+    return isValid ? '' : ' hidden'
   })
 
   return (

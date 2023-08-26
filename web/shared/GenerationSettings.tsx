@@ -4,7 +4,7 @@ import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
 import { AppSchema } from '../../common/types/schema'
-import { defaultPresets } from '../../common/presets'
+import { defaultPresets, getFallbackPreset } from '../../common/presets'
 import {
   OPENAI_MODELS,
   CLAUDE_MODELS,
@@ -15,6 +15,7 @@ import {
   samplerOrders,
   settingLabels,
   AdapterSetting,
+  ThirdPartyFormat,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
@@ -49,6 +50,7 @@ const GenerationSettings: Component<Props> = (props) => {
   const opts = chatStore((s) => s.opts)
 
   const [service, setService] = createSignal(props.inherit?.service)
+  const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
 
   const services = createMemo<Option[]>(() => {
     const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
@@ -92,18 +94,22 @@ const GenerationSettings: Component<Props> = (props) => {
           disabled={props.disabled}
           inherit={props.inherit}
           service={service()}
+          format={format()}
           pane={!!opts.pane}
+          setFormat={setFormat}
         />
         <PromptSettings
           disabled={props.disabled}
           inherit={props.inherit}
           service={service()}
+          format={format()}
           pane={!!opts.pane}
         />
         <GenSettings
           disabled={props.disabled}
           inherit={props.inherit}
           service={service()}
+          format={format()}
           pane={!!opts.pane}
         />
       </div>
@@ -136,7 +142,13 @@ export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Eleme
   )
 }
 
-const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
+const GeneralSettings: Component<
+  Props & {
+    pane: boolean
+    setFormat: (format: ThirdPartyFormat) => void
+    format?: ThirdPartyFormat
+  }
+> = (props) => {
   const cfg = settingStore()
 
   const [replicate, setReplicate] = createStore({
@@ -228,7 +240,9 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           ]}
           value={props.inherit?.thirdPartyFormat ?? ''}
           service={props.service}
+          format={props.inherit?.thirdPartyFormat}
           aiSetting={'thirdPartyFormat'}
+          onChange={(ev) => props.setFormat(ev.value as ThirdPartyFormat)}
         />
       </Card>
 
@@ -253,6 +267,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.oaiModel ?? defaultPresets.basic.oaiModel}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'oaiModel'}
         />
 
@@ -264,6 +279,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.openRouterModel?.id || ''}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'openRouterModel'}
         />
 
@@ -275,6 +291,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
             value={props.inherit?.novelModel || ''}
             disabled={props.disabled}
             service={props.service}
+            format={props.format}
             aiSetting={'novelModel'}
           />
           <Show when={cfg.flags.naiModel}>
@@ -283,6 +300,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
               helperText="Advanced: Use a custom NovelAI model"
               label="NovelAI Model Override"
               aiSetting={'novelModel'}
+              format={props.format}
               service={props.service}
             />
           </Show>
@@ -296,6 +314,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'claudeModel'}
         />
 
@@ -311,6 +330,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
               </>
             }
             service={props.service}
+            format={props.format}
             aiSetting="replicateModelVersion"
             onChange={(ev) => setReplicate('model', ev.value)}
           />
@@ -325,6 +345,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={!!replicate.model || props.disabled}
           service={props.service}
           aiSetting={'replicateModelType'}
+          format={props.format}
           onChange={(ev) => setReplicate('type', ev.value)}
         />
 
@@ -337,6 +358,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={!!replicate.model || props.disabled}
           service={props.service}
           aiSetting={'replicateModelVersion'}
+          format={props.format}
           onInput={(ev) => setReplicate('version', ev.currentTarget.value)}
         />
       </Card>
@@ -351,6 +373,7 @@ const GeneralSettings: Component<Props & { pane: boolean }> = (props) => {
           step={1}
           value={props.inherit?.maxTokens || defaultPresets.basic.maxTokens}
           disabled={props.disabled}
+          format={props.format}
           onChange={(val) => setTokens(val)}
         />
         <RangeInput
@@ -390,7 +413,13 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
   return pairs
 }
 
-const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
+const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat }> = (props) => {
+  const fallbackTemplate = createMemo(() => {
+    if (!props.service) return defaultTemplate
+    const preset = getFallbackPreset(props.service)
+    return preset?.gaslight || defaultTemplate
+  })
+
   return (
     <div class="flex flex-col gap-4">
       <Accordian
@@ -433,6 +462,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
               }
               value={props.inherit?.useGaslight ?? false}
               disabled={props.disabled}
+              format={props.format}
               service={props.service}
             />
           </Card>
@@ -440,7 +470,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
           <Card class="flex flex-col gap-4">
             <PromptEditor
               fieldName="gaslight"
-              value={props.inherit?.gaslight}
+              value={props.inherit?.gaslight || fallbackTemplate()}
               placeholder={defaultTemplate}
               exclude={['post', 'history', 'ujb']}
               disabled={props.disabled}
@@ -464,6 +494,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
               value={props.inherit?.ultimeJailbreak ?? ''}
               disabled={props.disabled}
               service={props.service}
+              format={props.format}
               class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
               aiSetting={'ultimeJailbreak'}
             />
@@ -481,6 +512,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
               value={props.inherit?.prefill ?? ''}
               disabled={props.disabled}
               service={props.service}
+              format={props.format}
               class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
               aiSetting={'prefill'}
             />
@@ -498,6 +530,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
                 label="Override Character Jailbreak"
                 value={props.inherit?.ignoreCharacterUjb ?? false}
                 disabled={props.disabled}
+                format={props.format}
                 service={props.service}
                 aiSetting={'ignoreCharacterUjb'}
               />
@@ -574,6 +607,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.antiBond ?? false}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'antiBond'}
         />
       </Card>
@@ -581,9 +615,7 @@ const PromptSettings: Component<Props & { pane: boolean }> = (props) => {
   )
 }
 
-const GenSettings: Component<Props & { pane: boolean }> = (props) => {
-  const [_useV2, _setV2] = createSignal(props.inherit?.useTemplateParser ?? false)
-
+const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat }> = (props) => {
   return (
     <div class="flex flex-col gap-4">
       <div class="text-xl font-bold">Generation Settings</div>
@@ -623,6 +655,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'cfgScale'}
+          format={props.format}
         />
 
         <TextInput
@@ -642,6 +675,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'cfgScale'}
+          format={props.format}
         />
 
         <Select
@@ -661,6 +695,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.phraseRepPenalty || 'aggressive'}
           service={props.service}
           aiSetting="phraseRepPenalty"
+          format={props.format}
         />
 
         <RangeInput
@@ -673,6 +708,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.topP ?? defaultPresets.basic.topP}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'topP'}
         />
         <RangeInput
@@ -685,6 +721,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.topK ?? defaultPresets.basic.topK}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'topK'}
         />
         <RangeInput
@@ -697,6 +734,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.topA ?? defaultPresets.basic.topA}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'topA'}
         />
         <RangeInput
@@ -709,6 +747,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           value={props.inherit?.topG ?? 0}
           disabled={props.disabled}
           service={props.service}
+          format={props.format}
           aiSetting={'topG'}
         />
         <RangeInput
@@ -722,6 +761,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'mirostatTau'}
+          format={props.format}
         />
         <RangeInput
           fieldName="mirostatLR"
@@ -734,6 +774,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'mirostatLR'}
+          format={props.format}
         />
         <RangeInput
           fieldName="tailFreeSampling"
@@ -746,6 +787,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'tailFreeSampling'}
+          format={props.format}
         />
         <RangeInput
           fieldName="typicalP"
@@ -758,6 +800,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'typicalP'}
+          format={props.format}
         />
         <RangeInput
           fieldName="repetitionPenalty"
@@ -770,6 +813,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'repetitionPenalty'}
+          format={props.format}
         />
         <RangeInput
           fieldName="repetitionPenaltyRange"
@@ -784,6 +828,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'repetitionPenaltyRange'}
+          format={props.format}
         />
         <RangeInput
           fieldName="repetitionPenaltySlope"
@@ -798,6 +843,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'repetitionPenaltySlope'}
+          format={props.format}
         />
         <Show when={!props.service}>
           <Divider />
@@ -814,6 +860,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'frequencyPenalty'}
+          format={props.format}
         />
         <RangeInput
           fieldName="presencePenalty"
@@ -826,6 +873,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'presencePenalty'}
+          format={props.format}
         />
         <Show when={!props.service}>
           <Divider />
@@ -839,6 +887,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'addBosToken'}
+          format={props.format}
         />
         <Toggle
           fieldName="banEosToken"
@@ -848,6 +897,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'banEosToken'}
+          format={props.format}
         />
         <Toggle
           fieldName="skipSpecialTokens"
@@ -857,6 +907,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting="skipSpecialTokens"
+          format={props.format}
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
@@ -871,6 +922,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'encoderRepitionPenalty'}
+          format={props.format}
         />
         <Toggle
           fieldName="doSample"
@@ -880,6 +932,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'doSample'}
+          format={props.format}
         />
         <RangeInput
           fieldName="penaltyAlpha"
@@ -892,6 +945,7 @@ const GenSettings: Component<Props & { pane: boolean }> = (props) => {
           disabled={props.disabled}
           service={props.service}
           aiSetting={'penaltyAlpha'}
+          format={props.format}
         />
 
         <SamplerOrder service={props.service} inherit={props.inherit} />
