@@ -24,6 +24,7 @@ export type AllDoc =
   | AppSchema.ChatMember
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
+  | AppSchema.SubscriptionPreset
   | AppSchema.MemoryBook
   | AppSchema.ScenarioBook
   | AppSchema.ApiKey
@@ -38,6 +39,13 @@ export type ChatBranch = {
 }
 
 export namespace AppSchema {
+  export interface Subscription {
+    _id: string
+    name: string
+    level: number
+    service: AIAdapter
+  }
+
   export interface AppConfig {
     adapters: AIAdapter[]
     version: string
@@ -58,6 +66,7 @@ export namespace AppSchema {
       workers: HordeWorker[]
     }
     openRouter: { models: OpenRouterModel[] }
+    subs?: Array<Subscription>
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -138,6 +147,10 @@ export namespace AppSchema {
     adapterConfig?: { [key in AIAdapter]?: Record<string, any> }
 
     ui?: UISettings
+
+    sub?: {
+      tier: string
+    }
   }
 
   export interface ApiKey {
@@ -310,6 +323,13 @@ export namespace AppSchema {
     _id: string
     kind: 'gen-setting'
     userId: string
+  }
+
+  export interface SubscriptionPreset extends GenSettings {
+    _id: string
+    kind: 'subscription-setting'
+    subLevel: number
+    deletedAt?: string
   }
 
   export interface GenSettings {

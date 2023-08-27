@@ -7,6 +7,7 @@ import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore } from '../../store'
 import { AppSchema } from '/common/types'
+import Select from '/web/shared/Select'
 
 const UsersPage: Component = () => {
   let ref: any
@@ -37,16 +38,29 @@ const UsersPage: Component = () => {
       <div class="flex flex-col gap-2 pb-4">
         <form ref={ref} class="flex justify-between" onSubmit={search}>
           <div class="flex flex-col">
-            <TextInput fieldName="username" placeholder="Username" />
+            <TextInput class="text-xs" fieldName="username" placeholder="Username" />
           </div>
           <Button onClick={search}>Search</Button>
         </form>
         <For each={state.users}>
           {(user) => (
             <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl">
-              <div class="w-4/12 px-4 text-xs">{user._id}</div>
-              <div class="w-2/12 px-4">{user.username}</div>
+              <div class="flex w-6/12 px-2">
+                <div>
+                  <span class="text-600 text-[0.5rem]">{user._id}</span> {user.username}
+                </div>
+              </div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">
+                <Select
+                  class="text-xs"
+                  fieldName="subTier"
+                  value={user.sub?.tier ?? ''}
+                  items={[
+                    { label: 'No Subscription', value: '' },
+                    { label: 'Free/Trial', value: 'free' },
+                    { label: 'Tier One', value: 'one' },
+                  ]}
+                />
                 <Button size="sm" onClick={() => setPw(user)}>
                   Set Password
                 </Button>

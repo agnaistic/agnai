@@ -10,7 +10,7 @@ const OobaAISettings: Component = () => {
       <TextInput
         fieldName="oobaUrl"
         label="Text-Generation-WebUI Compatible URL"
-        helperText="Fully qualified URL. This URL must be publicly accessible."
+        helperText="This URL must be publicly accessible. Overriden by 'Third Party URL' in presets."
         placeholder="E.g. https://random-cloudflare-generated-words.trycloudflare.com"
         value={state.user?.oobaUrl}
       />

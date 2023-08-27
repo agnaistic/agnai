@@ -1,15 +1,17 @@
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
+import { api } from './api'
 import { createStore } from './create'
-import { PresetCreate, PresetUpdate, presetApi } from './data/presets'
+import { PresetCreate, PresetUpdate, SubscriptionUpdate, presetApi } from './data/presets'
 import { toastStore } from './toasts'
 
 type PresetState = {
   presets: AppSchema.UserGenPreset[]
+  subs: AppSchema.SubscriptionPreset[]
   saving: boolean
 }
 
-const initState: PresetState = { presets: [], saving: false }
+const initState: PresetState = { presets: [], subs: [], saving: false }
 
 export const presetStore = createStore<PresetState>(
   'presets',
@@ -77,6 +79,35 @@ export const presetStore = createStore<PresetState>(
         const next = presets.filter((pre) => pre._id !== presetId)
         yield { presets: next }
         onSuccess?.(res.result)
+      }
+    },
+    async getSubscriptions() {
+      const res = await api.get('/admin/subscriptions')
+      if (res.error) toastStore.error(`Failed to retrieve subscriptions`)
+      if (res.result) {
+        return { subs: res.result.subscriptions }
+      }
+    },
+    async *createSubscription({ subs }, sub: SubscriptionUpdate, level: number) {
+      const create = {
+        ...sub,
+        sub: {
+          tier: sub.name,
+          level: level,
+        },
+      }
+
+      const res = await api.post('/admin/subscriptions', create)
+      if (res.error) toastStore.error(`Failed to create subscription: ${res.error}`)
+      if (res.result) {
+        return { subs: subs.concat(res.result) }
+      }
+    },
+    async *updateSubscription({ subs }, id: string, update: SubscriptionUpdate) {
+      const res = await api.post(`/admin/subscriptions/${id}`, update)
+      if (res.error) toastStore.error(`Failed to update subscription: ${res.error}`)
+      if (res.result) {
+        return { subs: subs.filter((sub) => (sub._id === id ? { ...sub, ...update } : sub)) }
       }
     },
   }

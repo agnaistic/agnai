@@ -1,4 +1,3 @@
-import Select from '../../shared/Select'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import { presetStore, settingStore, userStore } from '../../store'
 import Tabs from '../../shared/Tabs'
@@ -25,6 +24,7 @@ import { A, useSearchParams } from '@solidjs/router'
 import { Toggle } from '/web/shared/Toggle'
 import OpenRouterOauth from './OpenRouterOauth'
 import { TitleCard } from '/web/shared/Card'
+import { PresetSelect } from '/web/shared/PresetSelect'
 
 const AISettings: Component<{
   onHordeWorkersChange: (workers: string[]) => void
@@ -39,9 +39,13 @@ const AISettings: Component<{
     const tabs = cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a)
     setTabs(tabs)
 
+    const defaultPreset = presets.find((pre) => pre._id === state.user?.defaultPreset)
+
     if (!ready() && cfg.config.adapters?.length) {
       const queryTab = tabs.findIndex((label) => label.toLowerCase() === query.service)
-      const defaultTab = cfg.config.adapters.indexOf(state.user?.defaultAdapter!)
+      const defaultTab = cfg.config.adapters.indexOf(
+        defaultPreset?.service || state.user?.defaultAdapter!
+      )
       setTab(queryTab !== -1 ? queryTab : defaultTab === -1 ? 0 : defaultTab)
       setReady(true)
     }
@@ -52,13 +56,13 @@ const AISettings: Component<{
   const [ready, setReady] = createSignal(false)
 
   const currentTab = createMemo(() => cfg.config.adapters[tab()])
-  const presetOptions = createMemo(() =>
-    [{ label: 'None', value: '' }].concat(
-      getPresetOptions(presets, { builtin: true }).filter(
-        (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
-      )
+  const presetOptions = createMemo(() => {
+    const opts = getPresetOptions(presets, { builtin: true }).filter(
+      (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
     )
-  )
+    return [{ label: 'None', value: '', custom: false }].concat(opts)
+  })
+  const [presetId, setPresetId] = createSignal(state.user?.defaultPreset || '')
 
   const tabClass = `flex flex-col gap-4`
 
@@ -69,12 +73,13 @@ const AISettings: Component<{
       </Show>
 
       <Show when={ready()}>
-        <Select
+        <PresetSelect
           fieldName="defaultPreset"
-          items={presetOptions()}
           label="Default Preset"
-          helperText="The default preset your chats will use. If your preset is not in this list, it needs to be assigned an AI SERVICE."
-          value={state.user?.defaultPreset || ''}
+          helperText="The default preset your chats will use"
+          options={presetOptions()}
+          selected={presetId()}
+          setPresetId={setPresetId}
         />
 
         <Toggle

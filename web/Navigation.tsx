@@ -153,7 +153,7 @@ const UserNavigation: Component = () => {
 
       <ChatLink />
 
-      <Library />
+      <Library pipeline={user.user?.useLocalPipeline} />
 
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
@@ -172,7 +172,7 @@ const UserNavigation: Component = () => {
 
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics">
-          <Activity /> Metrics
+          <Activity /> Admin
         </Item>
       </Show>
 
@@ -388,7 +388,7 @@ const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }
   </a>
 )
 
-const Library = () => {
+const Library: Component<{ pipeline?: boolean }> = (props) => {
   const cfg = settingStore()
 
   return (
@@ -397,10 +397,10 @@ const Library = () => {
         <Book /> Library{' '}
       </Item>
       <div class="flex items-center">
-        <Show when={cfg.pipelineOnline}>
+        <Show when={props.pipeline && cfg.pipelineOnline}>
           <Signal color="green" />
         </Show>
-        <Show when={!cfg.pipelineOnline}>
+        <Show when={props.pipeline && !cfg.pipelineOnline}>
           <Power onClick={() => pipelineApi.reconnect(true)} class="cursor-pointer opacity-30" />
         </Show>
       </div>

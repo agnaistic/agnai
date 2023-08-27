@@ -209,7 +209,13 @@ export const settingStore = createStore<SettingState>(
   }
 })
 
+let firstConnection = true
 subscribe('connected', { uid: 'string' }, (body) => {
+  if (firstConnection) {
+    firstConnection = false
+    return
+  }
+
   const { initLoading } = settingStore.getState()
   if (initLoading) return
 

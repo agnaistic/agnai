@@ -24,7 +24,7 @@ import { chatStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
-import { getFormEntries, serviceHasSetting, storage } from './util'
+import { getFormEntries, isValidServiceSetting, serviceHasSetting, storage } from './util'
 import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/templates'
 import Sortable, { SortItem } from './Sortable'
@@ -37,7 +37,7 @@ import { getServiceTempConfig } from './adapter'
 export { GenerationSettings as default }
 
 type Props = {
-  inherit?: Partial<AppSchema.GenSettings>
+  inherit?: Partial<Omit<AppSchema.SubscriptionPreset, 'kind'>>
   disabled?: boolean
   service?: AIAdapter
   onService?: (service?: AIAdapter) => void
@@ -214,7 +214,7 @@ const GeneralSettings: Component<
         </Card>
       </Show>
 
-      <Card hide={!serviceHasSetting(props.service, 'thirdPartyUrl')}>
+      <Card hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl')}>
         <TextInput
           fieldName="thirdPartyUrl"
           label="Third Party URL"
@@ -246,19 +246,7 @@ const GeneralSettings: Component<
         />
       </Card>
 
-      <Card
-        class="flex flex-wrap gap-5"
-        hide={
-          !serviceHasSetting(
-            props.service,
-            'oaiModel',
-            'openRouterModel',
-            'novelModel',
-            'claudeModel',
-            'replicateModelName'
-          )
-        }
-      >
+      <Card class="flex flex-wrap gap-5">
         <Select
           fieldName="oaiModel"
           label="OpenAI Model"
@@ -283,7 +271,10 @@ const GeneralSettings: Component<
           aiSetting={'openRouterModel'}
         />
 
-        <div class="flex flex-wrap gap-2">
+        <div
+          class="flex flex-wrap gap-2"
+          classList={{ hidden: !isValidServiceSetting(props.service, props.format, 'novelModel') }}
+        >
           <Select
             fieldName="novelModel"
             label="NovelAI Model"
@@ -395,7 +386,7 @@ const GeneralSettings: Component<
           onChange={(val) => setContext(val)}
         />
       </Card>
-      <Card hide={!serviceHasSetting(props.service, 'streamResponse')}>
+      <Card hide={!serviceHasSetting(props.service, props.format, 'streamResponse')}>
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
@@ -431,7 +422,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
         <div class="flex flex-col gap-2">
           <Card
             class="flex flex-col gap-4"
-            hide={!serviceHasSetting(props.service, 'systemPrompt')}
+            hide={!serviceHasSetting(props.service, props.format, 'systemPrompt')}
           >
             <FormLabel
               label="System Prompt"
@@ -446,7 +437,10 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
             />
           </Card>
 
-          <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'gaslight')}>
+          <Card
+            class="flex flex-col gap-4"
+            hide={!serviceHasSetting(props.service, props.format, 'gaslight')}
+          >
             <Toggle
               fieldName="useGaslight"
               label="Use Prompt Template"
@@ -593,7 +587,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
         </div>
       </Accordian>
 
-      <Card hide={!serviceHasSetting(props.service, 'antiBond')}>
+      <Card hide={!serviceHasSetting(props.service, props.format, 'antiBond')}>
         <Toggle
           fieldName="antiBond"
           label="Anti-Bond"
@@ -911,7 +905,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat 
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
-          label="Encoder Repition Penalty"
+          label="Encoder Repetion Penalty"
           helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge"
           min={0.8}
           max={1.5}

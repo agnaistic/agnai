@@ -254,7 +254,7 @@ export const adapterSettings: {
     'mancer',
   ],
   ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel', 'ooba', 'mancer'],
-  prefill: ['claude', 'kobold'],
+  prefill: ['claude'],
   ignoreCharacterUjb: [
     'openai',
     'novel',
@@ -286,9 +286,9 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  claudeModel: ['claude', 'kobold'],
+  claudeModel: ['claude'],
   novelModel: ['novel'],
-  oaiModel: ['openai', 'kobold'],
+  oaiModel: ['openai'],
   frequencyPenalty: ['openai', 'kobold', 'novel'],
   presencePenalty: ['openai', 'kobold', 'novel'],
   streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba'],
