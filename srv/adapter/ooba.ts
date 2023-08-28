@@ -7,7 +7,7 @@ import { eventGenerator } from '/common/util'
 
 export const handleOoba: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen } = opts
-  const body = getPayload(opts)
+  const body = getTextgenPayload(opts)
 
   yield { prompt: body.prompt }
 
@@ -26,7 +26,7 @@ export const handleOoba: ModelAdapter = async function* (opts) {
       ? llamaStream(baseUrl, body)
       : gen.streamResponse
       ? await websocketStream({ url: baseUrl + '/api/v1/stream', body })
-      : getCompletion(`${baseUrl}/api/v1/generate`, body, {})
+      : getTextgenCompletion(`${baseUrl}/api/v1/generate`, body, {})
 
   let accumulated = ''
   let result = ''
@@ -61,7 +61,11 @@ export const handleOoba: ModelAdapter = async function* (opts) {
   yield trimmed || parsed
 }
 
-async function* getCompletion(url: string, payload: any, headers: any): AsyncGenerator<any> {
+export async function* getTextgenCompletion(
+  url: string,
+  payload: any,
+  headers: any
+): AsyncGenerator<any> {
   const resp = await needle('post', url, JSON.stringify(payload), {
     json: true,
     headers: Object.assign(headers, { Accept: 'application/json' }),
@@ -94,7 +98,7 @@ async function* getCompletion(url: string, payload: any, headers: any): AsyncGen
   }
 }
 
-function getPayload(opts: AdapterProps) {
+export function getTextgenPayload(opts: AdapterProps) {
   const { gen, prompt } = opts
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {

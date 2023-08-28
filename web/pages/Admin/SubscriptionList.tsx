@@ -12,7 +12,7 @@ const SubscriptionList: Component = () => {
   setComponentPageTitle('Subscriptions')
   const nav = useNavigate()
   const state = presetStore((s) => ({
-    presets: s.subs
+    subs: s.subs
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
@@ -44,26 +44,26 @@ const SubscriptionList: Component = () => {
       </div>
 
       <div class="flex flex-col items-center gap-2">
-        <For each={state.presets}>
-          {(preset) => (
+        <For each={state.subs}>
+          {(sub) => (
             <div class="flex w-full items-center gap-2">
               <A
-                href={`/presets/${preset._id}`}
+                href={`/admin/subscriptions/${sub._id}`}
                 class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
               >
                 <div class="ml-4 flex w-full items-center">
                   <div>
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                      {getServiceName(preset.service)}
+                      {getServiceName(sub.service)}
                     </span>
-                    {preset.name}
+                    {sub.name}
                   </div>
                 </div>
               </A>
               <Button
                 schema="clear"
                 size="sm"
-                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
+                onClick={() => nav(`/admin/subscriptions/new?preset=${sub._id}`)}
                 class="icon-button"
               >
                 <Copy />
@@ -71,7 +71,7 @@ const SubscriptionList: Component = () => {
               <Button
                 schema="clear"
                 size="sm"
-                onClick={() => setDeleting(preset._id)}
+                onClick={() => setDeleting(sub._id)}
                 class="icon-button"
               >
                 <Trash />

@@ -88,19 +88,16 @@ export const presetStore = createStore<PresetState>(
         return { subs: res.result.subscriptions }
       }
     },
-    async *createSubscription({ subs }, sub: SubscriptionUpdate, level: number) {
-      const create = {
-        ...sub,
-        sub: {
-          tier: sub.name,
-          level: level,
-        },
-      }
-
-      const res = await api.post('/admin/subscriptions', create)
+    async *createSubscription(
+      { subs },
+      sub: SubscriptionUpdate,
+      onSuccess?: (sub: AppSchema.SubscriptionPreset) => void
+    ) {
+      const res = await api.post('/admin/subscriptions', sub)
       if (res.error) toastStore.error(`Failed to create subscription: ${res.error}`)
       if (res.result) {
-        return { subs: subs.concat(res.result) }
+        yield { subs: subs.concat(res.result) }
+        onSuccess?.(res.result)
       }
     },
     async *updateSubscription({ subs }, id: string, update: SubscriptionUpdate) {
@@ -108,6 +105,21 @@ export const presetStore = createStore<PresetState>(
       if (res.error) toastStore.error(`Failed to update subscription: ${res.error}`)
       if (res.result) {
         return { subs: subs.filter((sub) => (sub._id === id ? { ...sub, ...update } : sub)) }
+      }
+    },
+    async *deleteSubscription(
+      { subs },
+      subscriptionId: string,
+      onSuccess?: (preset: AppSchema.UserGenPreset) => void
+    ) {
+      const res = await api.method('delete', `/admin/subscriptions/${subscriptionId}`)
+      if (res.error) toastStore.error(`Failed to delete subscription: ${res.error}`)
+      if (res.result) {
+        toastStore.success('Successfully deleted subscription')
+
+        const next = subs.filter((sub) => sub._id !== subscriptionId)
+        yield { subs: next }
+        onSuccess?.(res.result)
       }
     },
   }

@@ -172,7 +172,7 @@ const UserNavigation: Component = () => {
 
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics">
-          <Activity /> Admin
+          <Activity /> Manage
         </Item>
       </Show>
 

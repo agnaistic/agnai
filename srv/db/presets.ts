@@ -40,6 +40,14 @@ export async function updateUserPreset(
   presetId: string,
   update: AppSchema.GenSettings
 ) {
+  if (update.registered) {
+    const prev = await getUserPreset(presetId)
+    update.registered = {
+      ...prev?.registered,
+      ...update.registered,
+    }
+  }
+
   await db('gen-setting').updateOne({ _id: presetId, userId }, { $set: update })
   const updated = await db('gen-setting').findOne({ _id: presetId })
   return updated
@@ -57,6 +65,11 @@ export async function getSubscriptions() {
     .find({ deletedAt: { $exists: false } })
     .toArray()
   return subs
+}
+
+export async function getSubscription(id: string) {
+  const sub = await db('subscription-setting').findOne({ _id: id })
+  return sub
 }
 
 export async function createSubscription(settings: Partial<AppSchema.SubscriptionPreset>) {
@@ -102,9 +115,10 @@ export function getCachedSubscriptions(): AppSchema.Subscription[] {
   return subs
 }
 
-prepCache()
-
-async function prepCache() {
+let prepared = false
+export async function prepSubscriptionCache() {
+  if (prepared) return
+  prepared = true
   const presets = await getSubscriptions()
   for (const preset of presets) {
     subCache.set(preset._id, preset)

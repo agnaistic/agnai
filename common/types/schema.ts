@@ -149,7 +149,8 @@ export namespace AppSchema {
     ui?: UISettings
 
     sub?: {
-      tier: string
+      level: number
+      last: string
     }
   }
 

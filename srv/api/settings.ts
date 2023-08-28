@@ -10,7 +10,8 @@ import { store } from '../db'
 import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHoredeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
-import { getCachedSubscriptions } from '../db/presets'
+import { getCachedSubscriptions, prepSubscriptionCache } from '../db/presets'
+import { updateRegisteredSubs } from '../adapter/agnaistic'
 
 const router = Router()
 
@@ -32,6 +33,8 @@ export async function getAppConfig() {
   const openRouter = await getOpenRouterModels()
 
   if (!appConfig) {
+    await prepSubscriptionCache()
+    updateRegisteredSubs()
     appConfig = {
       adapters: config.adapters,
       version: '',

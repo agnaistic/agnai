@@ -737,6 +737,8 @@ export function getContextLimit(
   const genAmount = gen?.maxTokens || getFallbackPreset(adapter)?.maxTokens || 80
 
   switch (adapter) {
+    case 'agnaistic':
+      return Math.min(configuredMax, 4090) - genAmount
     // Any LLM could be used here so don't max any assumptions
     case 'petals':
     case 'kobold':

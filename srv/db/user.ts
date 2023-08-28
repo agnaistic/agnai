@@ -204,3 +204,19 @@ export function verifyJwt(token: string): any {
 
   throw errors.Unauthorized
 }
+
+export async function updateLimit(userId: string) {
+  const last = new Date().toISOString()
+  const res = await db('user').updateOne(
+    { _id: userId },
+    { $set: { 'sub.last': last } },
+    { upsert: false }
+  )
+  if (res.modifiedCount === 0) {
+    throw new Error(`User not found`)
+  }
+}
+
+export async function updateSubLevel(userId: string, level: number) {
+  await db('user').updateOne({ _id: userId }, { $set: { 'sub.level': level } }, { upsert: false })
+}

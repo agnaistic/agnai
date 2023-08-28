@@ -18,7 +18,7 @@ import {
 } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
-import GenerationSettings from '../../shared/GenerationSettings'
+import GenerationSettings, { getRegisteredSettings } from '../../shared/GenerationSettings'
 import { getStrictForm } from '../../shared/util'
 import { chatStore, settingStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
@@ -110,6 +110,9 @@ export const ChatGenSettings: Component<{
     if (isDefaultPreset(preset)) {
       const original = defaultPresets[preset] as AppSchema.GenSettings
       const update = getStrictForm(ref, { ...chatGenValidator, thirdPartyFormat: 'string?' })
+      const registered = getRegisteredSettings(update.service as AIAdapter, ref)
+      update.registered = {}
+      update.registered[update.service] = registered
 
       update.thirdPartyFormat = update.thirdPartyFormat || (null as any)
 
@@ -157,6 +160,9 @@ export const ChatGenSettings: Component<{
       })
 
       const update = getStrictForm(ref, { ...chatGenValidator, thirdPartyFormat: 'string?' })
+      const registered = getRegisteredSettings(update.service as AIAdapter, ref)
+      update.registered = {}
+      update.registered[update.service] = registered
       update.thirdPartyFormat = update.thirdPartyFormat || (null as any)
       if (update.service === '') {
         toastStore.error(`You must select an AI service before saving`)

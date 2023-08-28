@@ -153,6 +153,8 @@ const AISettings: Component<{
                   to get started.
                 </TitleCard>
               </Match>
+
+              <Match when={each.name === 'agnaistic'}>...</Match>
             </Switch>
 
             <RegisteredSettings service={each} />

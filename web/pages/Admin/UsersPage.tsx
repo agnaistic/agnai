@@ -1,19 +1,20 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { adminStore } from '../../store'
+import { adminStore, settingStore } from '../../store'
 import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
 
 const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
-  const [pw, setPw] = createSignal<AppSchema.User>()
   const state = adminStore()
+  const cfg = settingStore()
+  const [pw, setPw] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
 
   const loadInfo = (id: string, name: string) => {
@@ -29,6 +30,16 @@ const UsersPage: Component = () => {
 
   createEffect(() => {
     adminStore.getUsers('')
+  })
+
+  const subTiers = createMemo(() => {
+    const base = [{ label: 'None', value: '-1' }]
+    const tiers =
+      cfg.config.subs?.map((sub) => ({
+        label: `[${sub.level}] ${sub.name}`,
+        value: sub.level.toString(),
+      })) || []
+    return base.concat(tiers).sort((l, r) => +l.value - +r.value)
   })
 
   return (
@@ -54,12 +65,11 @@ const UsersPage: Component = () => {
                 <Select
                   class="text-xs"
                   fieldName="subTier"
-                  value={user.sub?.tier ?? ''}
-                  items={[
-                    { label: 'No Subscription', value: '' },
-                    { label: 'Free/Trial', value: 'free' },
-                    { label: 'Tier One', value: 'one' },
-                  ]}
+                  value={user.sub?.level.toString() ?? ''}
+                  items={subTiers()}
+                  onChange={(ev) => {
+                    adminStore.changeUserLevel(user._id, +ev.value)
+                  }}
                 />
                 <Button size="sm" onClick={() => setPw(user)}>
                   Set Password

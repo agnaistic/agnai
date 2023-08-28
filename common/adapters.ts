@@ -50,6 +50,7 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
 export const THIRDPARTY_FORMATS = ['kobold', 'openai', 'claude', 'ooba', 'llamacpp'] as const
 
 export const AI_ADAPTERS = [
+  'agnaistic',
   'kobold',
   'novel',
   'ooba',
@@ -206,6 +207,7 @@ export const ADAPTER_LABELS: { [key in AIAdapter]: string } = {
   openrouter: 'OpenRouter',
   mancer: 'Mancer',
   petals: 'Petals',
+  agnaistic: 'Agnaistic',
 }
 
 export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
