@@ -42,7 +42,6 @@ type Props = {
   service?: AIAdapter
   onService?: (service?: AIAdapter) => void
   disableService?: boolean
-  saveToChatId?: string
 }
 
 const GenerationSettings: Component<Props> = (props) => {
@@ -376,7 +375,7 @@ const GeneralSettings: Component<
         <RangeInput
           fieldName="maxTokens"
           label="Max New Tokens"
-          helperText="Number of tokens the AI should generate. Higher numbers will take longer to generate. This value is subtracted from your context limit."
+          helperText="Number of tokens the AI should generate. Higher numbers will take longer to generate."
           min={16}
           max={1024}
           step={1}
@@ -408,7 +407,7 @@ const GeneralSettings: Component<
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
-          helperText="Whether to stream the AI's response token-by-token instead of waiting for the entire message."
+          helperText="Stream the AI's response as it is generated"
           value={props.inherit?.streamResponse ?? false}
           disabled={props.disabled}
         />
