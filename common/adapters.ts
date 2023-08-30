@@ -343,7 +343,6 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   oaiModel: 'OpenAI Model',
   openRouterModel: 'OpenRouter Model',
   penaltyAlpha: 'Penalty Alpha',
-
   presencePenalty: 'Presence Penalty',
   replicateModelName: 'Replicate Model',
   replicateModelType: 'Replicate Model Type',
