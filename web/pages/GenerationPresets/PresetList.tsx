@@ -5,7 +5,7 @@ import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { defaultPresets } from '../../../common/presets'
-import { presetStore } from '../../store'
+import { presetStore, settingStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 
@@ -17,8 +17,13 @@ const PresetList: Component = () => {
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
+  const cfg = settingStore((s) => s.config)
 
   const defaults = Object.entries(defaultPresets)
+    .filter(([_, pre]) => {
+      if (pre.service !== 'agnaistic') return true
+      return cfg.subs.length > 0
+    })
     .map(([id, cfg]) => ({ ...cfg, label: `[${cfg.service}] ${cfg.name}`, _id: id }))
     .sort(sortByLabel)
   const [deleting, setDeleting] = createSignal<string>()
