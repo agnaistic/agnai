@@ -5,7 +5,7 @@ import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { adminStore, presetStore, settingStore } from '../../store'
+import { adminStore, presetStore } from '../../store'
 import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
 
@@ -13,7 +13,6 @@ const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
   const state = adminStore()
-  const cfg = settingStore()
   const subs = presetStore((s) => s.subs)
   const [pw, setPw] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
