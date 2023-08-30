@@ -124,11 +124,8 @@ registerAdapter('agnaistic', handleAgnaistic, {
   settings,
   load: (user) => {
     if (!user) return empty
-    const subs = getCachedSubscriptions()
-    const level = user.sub?.level ?? 0
-    const opts = subs
-      .filter((sub) => sub.level <= level)
-      .map((sub) => ({ label: sub.name, value: sub._id }))
+    const subs = getCachedSubscriptions(user)
+    const opts = subs.map((sub) => ({ label: sub.name, value: sub._id }))
     return [
       {
         preset: true,

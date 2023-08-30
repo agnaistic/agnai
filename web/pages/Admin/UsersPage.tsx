@@ -5,7 +5,7 @@ import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { adminStore, settingStore } from '../../store'
+import { adminStore, presetStore, settingStore } from '../../store'
 import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
 
@@ -14,6 +14,7 @@ const UsersPage: Component = () => {
   setComponentPageTitle('Users')
   const state = adminStore()
   const cfg = settingStore()
+  const subs = presetStore((s) => s.subs)
   const [pw, setPw] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
 
@@ -30,14 +31,15 @@ const UsersPage: Component = () => {
 
   createEffect(() => {
     adminStore.getUsers('')
+    presetStore.getSubscriptions()
   })
 
   const subTiers = createMemo(() => {
     const base = [{ label: '[-1] None', value: '-1' }]
     const tiers =
-      cfg.config.subs?.map((sub) => ({
-        label: `[${sub.level}] ${sub.name}`,
-        value: sub.level.toString(),
+      subs.map((sub) => ({
+        label: `[${sub.subLevel}] ${sub.name}`,
+        value: sub.subLevel.toString(),
       })) || []
     return base.concat(tiers).sort((l, r) => +l.value - +r.value)
   })
