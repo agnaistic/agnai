@@ -74,11 +74,17 @@ export async function regenerateCharProp(
     vars.example1 && vars.example2 && vars.example3
       ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
       : char.sampleChat
+
+  vars.behaviour ??= prev.behaviour
+  vars.speech ??= prev.speech
+  vars.personality ??= prev.personality
+  vars.greeting ??= prev.greeting
+
   const newchar: NewCharacter = {
     originalAvatar: undefined,
     description: char.description || '',
     name: vars.firstname,
-    persona: toAttributes(kind, vars),
+    persona: fields.includes('personality') ? toAttributes(kind, vars) : char.persona,
     appearance: vars.appearance,
     greeting: vars.greeting,
     sampleChat,
@@ -115,31 +121,31 @@ Describe a character matching the following description:
 Character's first name: [firstname | words=2 | tokens=10]
 
 Detailed description of the roleplay scene that the character is in:
-[scenario | tokens=200]
+[scenario | tokens=200 | sentence]
+
+[firstname]'s clothing and physical appearance:
+[appearance | tokens=120 | sentence]
 
 [firstname]'s greeting in the scenario:
-[greeting | tokens=150]
+[greeting | tokens=150 | sentence]
 
 [firstname]'s personality:
-[personality | tokens=120]
+[personality | tokens=120 | sentence]
 
 [firstname]'s typical behaviour:
-[behaviour | tokens=120]
-
-[firstname]'s Clothing and physical appearance:
-[appearance | tokens=102]
+[behaviour | tokens=120 | sentence]
 
 [firstname]'s accent and speech pattern:
-[speech | tokens=100]
+[speech | tokens=100 | sentence]
 
 Example of [firstname]'s dialogue:
-[example1 | tokens=100]
+[example1 | tokens=100 | sentence]
 
 Example of [firstname]'s dialogue:
-[example2 | tokens=100]
+[example2 | tokens=100 | sentence]
 
 Example of [firstname]'s dialogue:
-[example3 | tokens=100]
+[example3 | tokens=100 | sentence]
 `
 
 const instructGenTemplate = `

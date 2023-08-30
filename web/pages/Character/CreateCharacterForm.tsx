@@ -529,7 +529,7 @@ export const CreateCharacterForm: Component<{
                     <>
                       Persona Schema{' '}
                       <Regenerate
-                        fields={['behaviour', 'personality', 'speech']}
+                        fields={['personality', 'behaviour', 'speech']}
                         regen={generateCharacter}
                         allowed={editor.canGuidance}
                       />{' '}

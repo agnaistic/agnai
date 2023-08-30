@@ -272,14 +272,26 @@ export const generateMessageV2 = handle(async (req, res) => {
     }
   } catch (ex: any) {
     error = true
-    log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
-    sendMany(members, {
-      type: 'message-error',
-      requestId,
-      error: `Unhandled exception: ${ex?.message || ex}`,
-      adapter,
-      chatId,
-    })
+
+    if (ex instanceof StatusError) {
+      log.warn({ err: ex }, `[${ex.status}] Stream handler exception`)
+      sendMany(members, {
+        type: 'message-error',
+        requestId,
+        error: `[${ex.status}] Message failed: ${ex?.message || ex}`,
+        adapter,
+        chatId,
+      })
+    } else {
+      log.error({ err: ex }, 'Unhandled exception occurred during stream handler')
+      sendMany(members, {
+        type: 'message-error',
+        requestId,
+        error: `Unhandled exception: ${ex?.message || ex}`,
+        adapter,
+        chatId,
+      })
+    }
   }
 
   if (error) {

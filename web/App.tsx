@@ -93,6 +93,14 @@ const App: Component = () => {
                 path="/admin/users"
                 component={lazy(() => import('./pages/Admin/UsersPage'))}
               />
+              <Route
+                path="/admin/subscriptions"
+                component={lazy(() => import('./pages/Admin/SubscriptionList'))}
+              />
+              <Route
+                path="/admin/subscriptions/:id"
+                component={lazy(() => import('./pages/Admin/Subscription'))}
+              />
             </Show>
           </Show>
           <Show when={cfg.config.canAuth}>
@@ -128,7 +136,6 @@ const Layout: Component = () => {
 
   createEffect(() => {
     settingStore.init()
-    settingStore.getConfig()
   })
 
   const isChat = createMemo(() => {

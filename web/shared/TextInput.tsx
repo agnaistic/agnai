@@ -1,7 +1,7 @@
 import { Component, Show, createMemo, JSX, createEffect, createSignal } from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
-import { getAISettingServices } from './util'
+import { isValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 
 const MIN_HEIGHT = 40
@@ -46,7 +46,6 @@ const TextInput: Component<{
   let inputRef: any
   const [tokens, setTokens] = createSignal(0)
   const placeholder = createMemo(() => (props.placeholder !== undefined ? props.placeholder : ''))
-  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
 
   const value = createMemo(() =>
     props.value !== undefined ? props.value : (null as unknown as undefined)
@@ -117,8 +116,8 @@ const TextInput: Component<{
   }
 
   const hide = createMemo(() => {
-    if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : ` hidden `
+    const isValid = isValidServiceSetting(props.service, props.format, props.aiSetting)
+    return isValid ? '' : ' hidden'
   })
 
   return (

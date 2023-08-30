@@ -94,7 +94,7 @@ Scenario "scenario" = "scenario"i { return "scenario" }
 Impersonate "impersonating" = ("impersonate"i / "impersonating"i) { return "impersonating" }
 Persona "personality" = ("personality"i / "persona"i) { return "personality" }
 AllPersona "all_personalities" = ("all_personas"i / "all_personalities"i) { return "all_personalities" }
-Dialogue "example_dialogue" = ("samplechat"i / "example_dialogue"i) { return "example_dialogue" }
+Dialogue "example_dialogue" = ("samplechat"i / "example_dialogue"i / "sample_chat"i / "example_dialog"i / "example_chat"i) { return "example_dialogue" }
 
 Instruction "instruction" = "system_prompt"i { return "system_prompt" }
 Jailbreak "ujb" = ("ujb"i / "system_note"i) { return "ujb" }
@@ -109,7 +109,7 @@ Random "random" = "random"i ":"? WS words:CSV { return { kind: "random", values:
 Roll "roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
 
 // Iterable entities
-Bots "bots" = ( "bots"i ) { return "bots" }
+Bots "bots" = ( "bots"i / "bot"i ) { return "bots" }
 History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "history" }
 
 Interp "interp"

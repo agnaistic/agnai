@@ -10,6 +10,8 @@ import { store } from '../db'
 import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHoredeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
+import { getCachedSubscriptions, prepSubscriptionCache } from '../db/presets'
+import { updateRegisteredSubs } from '../adapter/agnaistic'
 
 const router = Router()
 
@@ -24,13 +26,15 @@ router.get('/', getSettings)
 
 export default router
 
-export async function getAppConfig() {
+export async function getAppConfig(user?: AppSchema.User) {
   const canAuth = isConnected()
   const workers = getHordeWorkers()
   const models = getHoredeModels()
   const openRouter = await getOpenRouterModels()
 
   if (!appConfig) {
+    await prepSubscriptionCache()
+    updateRegisteredSubs()
     appConfig = {
       adapters: config.adapters,
       version: '',
@@ -40,7 +44,7 @@ export async function getAppConfig() {
       assetPrefix: config.storage.enabled
         ? `https://${config.storage.bucket}.${config.storage.endpoint}`
         : '',
-      registered: getRegisteredAdapters().map(toRegisteredAdapter),
+      registered: getRegisteredAdapters(user).map(toRegisteredAdapter),
       maintenance: config.ui.maintenance,
       patreon: config.ui.patreon,
       policies: config.ui.policies,
@@ -51,10 +55,12 @@ export async function getAppConfig() {
         workers: workers.filter((w) => w.type === 'text'),
       },
       openRouter: { models: openRouter },
+      subs: getCachedSubscriptions(user),
     }
   }
 
-  appConfig.registered = getRegisteredAdapters().map(toRegisteredAdapter)
+  appConfig.subs = getCachedSubscriptions(user)
+  appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter
   appConfig.horde = {
     models,

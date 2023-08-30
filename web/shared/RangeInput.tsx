@@ -1,10 +1,7 @@
-import { Info } from 'lucide-solid'
 import { Component, Show, createSignal, createEffect, createMemo } from 'solid-js'
 import type { JSX } from 'solid-js'
-import Tooltip from './Tooltip'
-import { CreateTooltip } from './GenerationSettings'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
-import { getAISettingServices, isValidServiceSetting } from './util'
+import { isValidServiceSetting } from './util'
 
 const RangeInput: Component<{
   label: string
@@ -22,7 +19,6 @@ const RangeInput: Component<{
   aiSetting?: keyof PresetAISettings
   parentClass?: string
 }> = (props) => {
-  const adapters = createMemo(() => getAISettingServices(props.aiSetting))
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
 
@@ -51,11 +47,6 @@ const RangeInput: Component<{
       <ul class="w-full">
         <div class="flex flex-row gap-2">
           <label class="form-label block-block">{props.label}</label>
-          <Show when={adapters()}>
-            <Tooltip tip={CreateTooltip(adapters()!)} position="right">
-              <Info size={20} color={'var(--hl-500)'} />
-            </Tooltip>
-          </Show>
         </div>
         <input
           id={props.fieldName}

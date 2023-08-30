@@ -12,8 +12,8 @@ import {
 } from './util'
 
 export function isValid<T extends Validator>(type: T, compare: any): compare is UnwrapBody<T> {
-  const errors = validateBody(type, compare, { notThrow: true })
-  return errors.length === 0
+  const valid = validateBody(type, compare, { notThrow: true })
+  return valid.errors.length === 0
 }
 
 export function assertValid<T extends Validator>(
@@ -21,7 +21,7 @@ export function assertValid<T extends Validator>(
   compare: any,
   partial?: boolean
 ): asserts compare is UnwrapBody<T> {
-  const errors = validateBody(type, compare, { notThrow: true, partial })
+  const { errors } = validateBody(type, compare, { notThrow: true, partial })
   if (errors.length) {
     throw new Error(`Request body is invalid: ${errors.join(', ')}`)
   }
@@ -31,20 +31,21 @@ export function isValidPartial<T extends Validator>(
   type: T,
   compare: any
 ): compare is Partial<UnwrapBody<T>> {
-  const errors = validateBody(type, compare, { notThrow: true, partial: true })
-  return errors.length === 0
+  const valid = validateBody(type, compare, { notThrow: true, partial: true })
+  return valid.errors.length === 0
 }
 
 export function validateBody<T extends Validator>(
   type: T,
   compare: any,
   opts: { partial?: boolean; prefix?: string; notThrow?: boolean } = {}
-) {
+): { errors: string[]; actual: UnwrapBody<T> } {
   const prefix = opts.prefix ? `${opts.prefix}.` : ''
   const errors: string[] = []
+  const actual: any = {}
 
   if (!compare && '?' in type && (type as any)['?'] === '?') {
-    return errors
+    return { errors, actual }
   }
 
   start: for (const key in type) {
@@ -53,6 +54,7 @@ export function validateBody<T extends Validator>(
     let value
     try {
       value = compare?.[key]
+      actual[key] = value
     } catch (ex: any) {
       throw new Error(`${ex.message}: ${prop}`)
     }
@@ -143,13 +145,14 @@ export function validateBody<T extends Validator>(
           continue start
         }
 
-        const innerErrors = validateBody(innerBody, tupleValue, {
+        const valid = validateBody(innerBody, tupleValue, {
           prefix: prop,
           notThrow: true,
           partial: opts.partial,
         })
-        if (!innerErrors.length) continue
-        errors.push(...innerErrors)
+        actual[key] = valid.actual
+        if (!valid.errors.length) continue
+        errors.push(...valid.errors)
         continue start
       }
 
@@ -199,12 +202,13 @@ export function validateBody<T extends Validator>(
         continue
       }
 
-      const innerErrors = validateBody(bodyType as any, value, {
+      const valid = validateBody(bodyType as any, value, {
         prefix: prop,
         partial: opts.partial,
         notThrow: true,
       })
-      errors.push(...innerErrors)
+      errors.push(...valid.errors)
+      actual[key] = valid.actual
       continue
     }
   }
@@ -213,5 +217,5 @@ export function validateBody<T extends Validator>(
     throw new Error(`Object does not match type: ${errors.join(', ')}`)
   }
 
-  return errors
+  return { errors, actual }
 }

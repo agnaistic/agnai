@@ -74,6 +74,7 @@ export async function rerunGuidanceValues<
 
         const results = await opts.infer(prompt.trim(), node.tokens)
         const value = handlePipe(results.trim(), node.pipe)
+        prompt += value
         values[node.name] = value
         done.add(node.name)
 
@@ -215,8 +216,8 @@ function handlePipe(value: string, pipe?: Pipe) {
 
   switch (pipe.type) {
     case 'sentence': {
-      const [first] = value.split('.')
-      return first + '.'
+      const [first] = value.split('\n')
+      return first
     }
 
     case 'words': {

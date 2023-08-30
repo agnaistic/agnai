@@ -121,6 +121,10 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value: 'default' })
     }
 
+    if (user.user.sub?.level! > 0) {
+      opts.push({ label: 'Agnastic', value: 'agnaistic' })
+    }
+
     if (user.user.oaiKeySet) {
       opts.push({ label: 'OpenAI - Turbo', value: 'openai/gpt-3.5-turbo-0301' })
       opts.push({ label: 'OpenAI - GPT-4', value: 'openai/gpt-4' })

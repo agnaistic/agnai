@@ -20,11 +20,11 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
-import { chatStore, settingStore } from '../store'
+import { chatStore, settingStore, userStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
-import { getFormEntries, serviceHasSetting, storage } from './util'
+import { getFormEntries, isValidServiceSetting, serviceHasSetting, storage } from './util'
 import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/templates'
 import Sortable, { SortItem } from './Sortable'
@@ -37,7 +37,7 @@ import { getServiceTempConfig } from './adapter'
 export { GenerationSettings as default }
 
 type Props = {
-  inherit?: Partial<AppSchema.GenSettings>
+  inherit?: Partial<Omit<AppSchema.SubscriptionPreset, 'kind'>>
   disabled?: boolean
   service?: AIAdapter
   onService?: (service?: AIAdapter) => void
@@ -47,13 +47,20 @@ type Props = {
 
 const GenerationSettings: Component<Props> = (props) => {
   const state = settingStore((s) => s.config)
+  const user = userStore()
   const opts = chatStore((s) => s.opts)
 
   const [service, setService] = createSignal(props.inherit?.service)
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
 
   const services = createMemo<Option[]>(() => {
-    const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    const list = state.adapters
+      .filter((adp) => {
+        if (adp !== 'agnaistic') return true
+        if (!user.user?.sub || !state.subs.length) return false
+        return true
+      })
+      .map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     if (props.inherit?.service) return list
 
     return [{ value: '', label: 'None' }].concat(list)
@@ -214,7 +221,7 @@ const GeneralSettings: Component<
         </Card>
       </Show>
 
-      <Card hide={!serviceHasSetting(props.service, 'thirdPartyUrl')}>
+      <Card hide={!serviceHasSetting(props.service, props.format, 'thirdPartyUrl')}>
         <TextInput
           fieldName="thirdPartyUrl"
           label="Third Party URL"
@@ -257,19 +264,7 @@ const GeneralSettings: Component<
         </div>
       </Card>
 
-      <Card
-        class="flex flex-wrap gap-5"
-        hide={
-          !serviceHasSetting(
-            props.service,
-            'oaiModel',
-            'openRouterModel',
-            'novelModel',
-            'claudeModel',
-            'replicateModelName'
-          )
-        }
-      >
+      <Card class="flex flex-wrap gap-5">
         <Select
           fieldName="oaiModel"
           label="OpenAI Model"
@@ -294,7 +289,10 @@ const GeneralSettings: Component<
           aiSetting={'openRouterModel'}
         />
 
-        <div class="flex flex-wrap gap-2">
+        <div
+          class="flex flex-wrap gap-2"
+          classList={{ hidden: !isValidServiceSetting(props.service, props.format, 'novelModel') }}
+        >
           <Select
             fieldName="novelModel"
             label="NovelAI Model"
@@ -406,7 +404,7 @@ const GeneralSettings: Component<
           onChange={(val) => setContext(val)}
         />
       </Card>
-      <Card hide={!serviceHasSetting(props.service, 'streamResponse')}>
+      <Card hide={!serviceHasSetting(props.service, props.format, 'streamResponse')}>
         <Toggle
           fieldName="streamResponse"
           label="Stream Response"
@@ -440,10 +438,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
         titleClickOpen
       >
         <div class="flex flex-col gap-2">
-          <Card
-            class="flex flex-col gap-4"
-            hide={!serviceHasSetting(props.service, 'systemPrompt')}
-          >
+          <Card class="flex flex-col gap-4">
             <FormLabel
               label="System Prompt"
               helperText="General instructions for how the AI should respond. This will be inserted into your Prompt Template."
@@ -457,7 +452,10 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
             />
           </Card>
 
-          <Card class="flex flex-col gap-4" hide={!serviceHasSetting(props.service, 'gaslight')}>
+          <Card
+            class="flex flex-col gap-4"
+            hide={!serviceHasSetting(props.service, props.format, 'gaslight')}
+          >
             <Toggle
               fieldName="useGaslight"
               label="Use Prompt Template"
@@ -473,8 +471,6 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
               }
               value={props.inherit?.useGaslight ?? false}
               disabled={props.disabled}
-              format={props.format}
-              service={props.service}
             />
           </Card>
 
@@ -504,10 +500,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
               isMultiline
               value={props.inherit?.ultimeJailbreak ?? ''}
               disabled={props.disabled}
-              service={props.service}
-              format={props.format}
               class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-              aiSetting={'ultimeJailbreak'}
             />
             <TextInput
               fieldName="prefill"
@@ -533,17 +526,12 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
                 label="Override Character System Prompt"
                 value={props.inherit?.ignoreCharacterSystemPrompt ?? false}
                 disabled={props.disabled}
-                service={props.service}
-                aiSetting={'ignoreCharacterSystemPrompt'}
               />
               <Toggle
                 fieldName="ignoreCharacterUjb"
                 label="Override Character Jailbreak"
                 value={props.inherit?.ignoreCharacterUjb ?? false}
                 disabled={props.disabled}
-                format={props.format}
-                service={props.service}
-                aiSetting={'ignoreCharacterUjb'}
               />
             </div>
           </Card>
@@ -604,7 +592,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
         </div>
       </Accordian>
 
-      <Card hide={!serviceHasSetting(props.service, 'antiBond')}>
+      <Card hide={!serviceHasSetting(props.service, props.format, 'antiBond')}>
         <Toggle
           fieldName="antiBond"
           label="Anti-Bond"
@@ -922,7 +910,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat 
         />
         <RangeInput
           fieldName="encoderRepitionPenalty"
-          label="Encoder Repition Penalty"
+          label="Encoder Repetion Penalty"
           helperText="Also known as the 'Hallucinations filter'. Used to penalize tokens that are *not* in the prior text. Higher value = more likely to stay in context, lower value = more likely to diverge"
           min={0.8}
           max={1.5}
