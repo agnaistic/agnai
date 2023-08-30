@@ -975,9 +975,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat 
           min={1}
           max={20}
           step={1}
-          value={
-            props.inherit?.numBeams ?? 1
-          }
+          value={props.inherit?.numBeams ?? 1}
           disabled={props.disabled}
           service={props.service}
           aiSetting={'numBeams'}
