@@ -26,6 +26,7 @@ const emptyCfg: AppSchema.AppConfig = {
     models: [],
   },
   openRouter: { models: [] },
+  subs: [],
 }
 
 let SELF_HOSTING = false

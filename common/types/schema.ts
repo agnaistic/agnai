@@ -66,7 +66,7 @@ export namespace AppSchema {
       workers: HordeWorker[]
     }
     openRouter: { models: OpenRouterModel[] }
-    subs?: Array<Subscription>
+    subs: Array<Subscription>
   }
 
   export type ChatMode = 'standard' | 'adventure'

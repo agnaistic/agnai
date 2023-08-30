@@ -136,7 +136,6 @@ const Layout: Component = () => {
 
   createEffect(() => {
     settingStore.init()
-    settingStore.getConfig()
   })
 
   const isChat = createMemo(() => {

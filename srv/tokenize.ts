@@ -50,6 +50,7 @@ export function getTokenCounter(adapter: AIAdapter | 'main', model?: string): To
 
 export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder {
   if (
+    adapter === 'agnaistic' ||
     adapter === 'replicate' ||
     adapter === 'ooba' ||
     adapter === 'kobold' ||
@@ -76,7 +77,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
     return turbo ?? main
   }
 
-  return main
+  return llama
 }
 
 {

@@ -26,7 +26,7 @@ router.get('/', getSettings)
 
 export default router
 
-export async function getAppConfig() {
+export async function getAppConfig(user?: AppSchema.User) {
   const canAuth = isConnected()
   const workers = getHordeWorkers()
   const models = getHoredeModels()
@@ -44,7 +44,7 @@ export async function getAppConfig() {
       assetPrefix: config.storage.enabled
         ? `https://${config.storage.bucket}.${config.storage.endpoint}`
         : '',
-      registered: getRegisteredAdapters().map(toRegisteredAdapter),
+      registered: getRegisteredAdapters(user).map(toRegisteredAdapter),
       maintenance: config.ui.maintenance,
       patreon: config.ui.patreon,
       policies: config.ui.policies,
@@ -55,12 +55,12 @@ export async function getAppConfig() {
         workers: workers.filter((w) => w.type === 'text'),
       },
       openRouter: { models: openRouter },
-      subs: getCachedSubscriptions(),
+      subs: getCachedSubscriptions(user),
     }
   }
 
-  appConfig.subs = getCachedSubscriptions()
-  appConfig.registered = getRegisteredAdapters().map(toRegisteredAdapter)
+  appConfig.subs = getCachedSubscriptions(user)
+  appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter
   appConfig.horde = {
     models,

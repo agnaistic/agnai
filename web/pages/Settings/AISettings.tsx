@@ -36,17 +36,22 @@ const AISettings: Component<{
   const presets = presetStore((s) => s.presets.filter((pre) => !!pre.service))
 
   createEffect(() => {
-    const tabs = cfg.config.adapters.map((a) => ADAPTER_LABELS[a] || a)
-    setTabs(tabs)
+    const tabs = cfg.config.adapters
+      .filter((adp) => {
+        const reg = cfg.config.registered.find((r) => r.name === adp)
+        if (!reg) return true
+        for (const opt of reg.settings) {
+          if (!opt.preset) return true
+        }
+        return false
+      })
+      .map((a) => ADAPTER_LABELS[a] || a)
 
-    const defaultPreset = presets.find((pre) => pre._id === state.user?.defaultPreset)
+    setTabs(tabs)
 
     if (!ready() && cfg.config.adapters?.length) {
       const queryTab = tabs.findIndex((label) => label.toLowerCase() === query.service)
-      const defaultTab = cfg.config.adapters.indexOf(
-        defaultPreset?.service || state.user?.defaultAdapter!
-      )
-      setTab(queryTab !== -1 ? queryTab : defaultTab === -1 ? 0 : defaultTab)
+      setTab(queryTab !== -1 ? queryTab : 0)
       setReady(true)
     }
   })
@@ -55,7 +60,12 @@ const AISettings: Component<{
   const [tab, setTab] = createSignal(-1)
   const [ready, setReady] = createSignal(false)
 
-  const currentTab = createMemo(() => cfg.config.adapters[tab()])
+  const currentTab = createMemo(() => {
+    const list = tabs()
+    const next = list[tab()]
+    console.log({ next })
+    return next
+  })
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter(
       (pre) => pre.value !== AutoPreset.chat && pre.value !== AutoPreset.service
@@ -111,33 +121,33 @@ const AISettings: Component<{
         />
       </div>
 
-      <div class={currentTab() === 'kobold' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.kobold ? tabClass : 'hidden'}>
         <KoboldAISettings />
       </div>
 
-      <div class={currentTab() === 'ooba' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.ooba ? tabClass : 'hidden'}>
         <OobaAISettings />
       </div>
 
-      <div class={currentTab() === 'openai' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.openai ? tabClass : 'hidden'}>
         <OpenAISettings />
       </div>
 
-      <div class={currentTab() === 'scale' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.scale ? tabClass : 'hidden'}>
         <ScaleSettings />
       </div>
 
-      <div class={currentTab() === 'novel' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.novel ? tabClass : 'hidden'}>
         <NovelAISettings />
       </div>
 
-      <div class={currentTab() === 'claude' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.claude ? tabClass : 'hidden'}>
         <ClaudeSettings />
       </div>
 
       <For each={cfg.config.registered}>
         {(each) => (
-          <div class={currentTab() === each.name ? tabClass : 'hidden'}>
+          <div class={currentTab() === ADAPTER_LABELS[each.name] ? tabClass : 'hidden'}>
             {/** Optionally show adapter specific information for registered adapters */}
             <Switch>
               <Match when={each.name === 'openrouter'}>
@@ -153,8 +163,6 @@ const AISettings: Component<{
                   to get started.
                 </TitleCard>
               </Match>
-
-              <Match when={each.name === 'agnaistic'}>...</Match>
             </Switch>
 
             <RegisteredSettings service={each} />

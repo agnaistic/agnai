@@ -246,7 +246,7 @@ export default Subscription
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
-  ...defaultPresets.llama,
+  ...defaultPresets.agnai,
   name: '',
   temp: 0.85,
   topK: 0,

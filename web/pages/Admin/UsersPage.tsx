@@ -33,7 +33,7 @@ const UsersPage: Component = () => {
   })
 
   const subTiers = createMemo(() => {
-    const base = [{ label: 'None', value: '-1' }]
+    const base = [{ label: '[-1] None', value: '-1' }]
     const tiers =
       cfg.config.subs?.map((sub) => ({
         label: `[${sub.level}] ${sub.name}`,

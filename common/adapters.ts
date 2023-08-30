@@ -35,6 +35,7 @@ export type AdapterOptions = {
   label: string
   settings: AdapterSetting[]
   options: Array<keyof PresetAISettings>
+  load?: (user?: AppSchema.User | null) => AdapterSetting[]
 }
 
 export const PERSONA_FORMATS = ['boostyle', 'wpp', 'sbf', 'attributes', 'text'] as const
@@ -237,50 +238,25 @@ export type PresetAISettings = Omit<
 export const adapterSettings: {
   [key in keyof PresetAISettings]: AIAdapter[]
 } = {
-  temp: ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale', 'claude', 'goose'],
+  temp: ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale', 'claude', 'goose', 'agnaistic'],
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   antiBond: ['openai', 'scale'],
 
-  gaslight: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose', 'openrouter'],
-  systemPrompt: ['openai', 'novel', 'scale', 'kobold', 'claude', 'ooba', 'goose', 'openrouter'],
-  ignoreCharacterSystemPrompt: [
-    'openai',
-    'novel',
-    'scale',
-    'kobold',
-    'claude',
-    'ooba',
-    'goose',
-    'openrouter',
-    'mancer',
-  ],
-  ultimeJailbreak: ['openai', 'claude', 'kobold', 'scale', 'openrouter', 'novel', 'ooba', 'mancer'],
   prefill: ['claude'],
-  ignoreCharacterUjb: [
-    'openai',
-    'novel',
-    'scale',
-    'kobold',
-    'claude',
-    'ooba',
-    'goose',
-    'openrouter',
-    'mancer',
-  ],
 
-  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel'],
-  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba'],
-  repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba'],
+  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'agnaistic'],
+  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
+  repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
   repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
-  tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba'],
-  topA: ['horde', 'novel', 'kobold', 'ooba'],
-  topK: ['horde', 'novel', 'kobold', 'ooba', 'claude'],
-  typicalP: ['horde', 'novel', 'kobold', 'ooba'],
+  tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
+  topA: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
+  topK: ['horde', 'novel', 'kobold', 'ooba', 'claude', 'agnaistic'],
+  typicalP: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
 
   topG: ['novel'],
-  mirostatLR: ['novel', 'ooba'],
-  mirostatTau: ['novel', 'ooba'],
+  mirostatLR: ['novel', 'ooba', 'agnaistic'],
+  mirostatTau: ['novel', 'ooba', 'agnaistic'],
   cfgScale: ['novel', 'ooba'],
   cfgOppose: ['novel', 'ooba'],
   phraseRepPenalty: ['novel'],
@@ -291,14 +267,14 @@ export const adapterSettings: {
   claudeModel: ['claude'],
   novelModel: ['novel'],
   oaiModel: ['openai'],
-  frequencyPenalty: ['openai', 'kobold', 'novel'],
+  frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic'],
   presencePenalty: ['openai', 'kobold', 'novel'],
-  streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba'],
+  streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba', 'agnaistic'],
   openRouterModel: ['openrouter'],
 
-  addBosToken: ['ooba'],
-  banEosToken: ['ooba'],
-  doSample: ['ooba'],
+  addBosToken: ['ooba', 'agnaistic'],
+  banEosToken: ['ooba', 'agnaistic'],
+  doSample: ['ooba', 'agnaistic'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
 
@@ -312,6 +288,7 @@ export type RegisteredAdapter = {
   name: AIAdapter
   settings: AdapterSetting[]
   options: Array<keyof PresetAISettings>
+  load?: (user?: AppSchema.User | null) => AdapterSetting[]
 }
 
 export const settingLabels: { [key in keyof PresetAISettings]: string } = {

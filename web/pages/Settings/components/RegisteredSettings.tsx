@@ -64,6 +64,7 @@ export const ServiceOption: Component<{
 
   return (
     <Switch>
+      <Match when={props.opt.preset}>{null}</Match>
       <Match when={props.opt.setting.type === 'text'}>
         <TextInput
           fieldName={field()}

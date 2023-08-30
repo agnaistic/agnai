@@ -20,7 +20,7 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
-import { chatStore, settingStore } from '../store'
+import { chatStore, settingStore, userStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
@@ -47,13 +47,20 @@ type Props = {
 
 const GenerationSettings: Component<Props> = (props) => {
   const state = settingStore((s) => s.config)
+  const user = userStore()
   const opts = chatStore((s) => s.opts)
 
   const [service, setService] = createSignal(props.inherit?.service)
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
 
   const services = createMemo<Option[]>(() => {
-    const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    const list = state.adapters
+      .filter((adp) => {
+        if (adp !== 'agnaistic') return true
+        if (!user.user?.sub || !state.subs.length) return false
+        return true
+      })
+      .map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     if (props.inherit?.service) return list
 
     return [{ value: '', label: 'None' }].concat(list)
@@ -420,10 +427,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
         titleClickOpen
       >
         <div class="flex flex-col gap-2">
-          <Card
-            class="flex flex-col gap-4"
-            hide={!serviceHasSetting(props.service, props.format, 'systemPrompt')}
-          >
+          <Card class="flex flex-col gap-4">
             <FormLabel
               label="System Prompt"
               helperText="General instructions for how the AI should respond. This will be inserted into your Prompt Template."
@@ -456,8 +460,6 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
               }
               value={props.inherit?.useGaslight ?? false}
               disabled={props.disabled}
-              format={props.format}
-              service={props.service}
             />
           </Card>
 
@@ -487,10 +489,7 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
               isMultiline
               value={props.inherit?.ultimeJailbreak ?? ''}
               disabled={props.disabled}
-              service={props.service}
-              format={props.format}
               class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
-              aiSetting={'ultimeJailbreak'}
             />
             <TextInput
               fieldName="prefill"
@@ -516,17 +515,12 @@ const PromptSettings: Component<Props & { pane: boolean; format?: ThirdPartyForm
                 label="Override Character System Prompt"
                 value={props.inherit?.ignoreCharacterSystemPrompt ?? false}
                 disabled={props.disabled}
-                service={props.service}
-                aiSetting={'ignoreCharacterSystemPrompt'}
               />
               <Toggle
                 fieldName="ignoreCharacterUjb"
                 label="Override Character Jailbreak"
                 value={props.inherit?.ignoreCharacterUjb ?? false}
                 disabled={props.disabled}
-                format={props.format}
-                service={props.service}
-                aiSetting={'ignoreCharacterUjb'}
               />
             </div>
           </Card>

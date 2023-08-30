@@ -20,9 +20,9 @@ import { publishOne } from '../ws/handle'
 import { getLanguageModels } from '/srv/adapter/replicate'
 
 export const getInitialLoad = handle(async ({ userId }) => {
-  const appConfig = await getAppConfig()
   const replicate = await getLanguageModels()
   if (config.ui.maintenance) {
+    const appConfig = await getAppConfig()
     return { config: appConfig, replicate }
   }
 
@@ -33,6 +33,8 @@ export const getInitialLoad = handle(async ({ userId }) => {
     store.memory.getBooks(userId!),
     store.scenario.getScenarios(userId!),
   ])
+
+  const appConfig = await getAppConfig(user)
 
   return { profile, user, presets, config: appConfig, books, scenarios, replicate }
 })

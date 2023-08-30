@@ -12,7 +12,7 @@ import { AppSchema } from '/common/types'
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const { char, members, prompt, log, gen } = opts
-  const level = opts.user.sub?.level ?? 0
+  const level = opts.user.sub?.level ?? -1
   if (level < 0) {
     yield { error: 'Forbidden' }
     return
@@ -29,7 +29,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts)
+  const body = getTextgenPayload(opts, ['## ', 'Instruction:', 'Response:'])
 
   yield { prompt: body.prompt }
 
@@ -43,8 +43,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   await checkLimit(opts.user)
 
   const resp = gen.streamResponse
-    ? await websocketStream({ url: preset.thirdPartyUrl + '/api/v1/stream', body })
-    : getTextgenCompletion(`${preset.thirdPartyUrl}/api/v1/generate`, body, {})
+    ? await websocketStream({
+        url: `${preset.thirdPartyUrl}/api/v1/stream?key=${config.auth.inferenceKey}&id=${opts.user._id}`,
+        body,
+      })
+    : getTextgenCompletion(
+        `${preset.thirdPartyUrl}/api/v1/generate?key=${config.auth.inferenceKey}&id=${opts.user._id}`,
+        body,
+        {}
+      )
 
   let accumulated = ''
   let result = ''
@@ -89,6 +96,16 @@ const settings: AdapterSetting[] = [
   },
 ]
 
+const empty: AdapterSetting[] = [
+  {
+    preset: true,
+    field: 'subscriptionId',
+    secret: false,
+    label: 'Level',
+    setting: { type: 'list', options: [] },
+  },
+]
+
 registerAdapter('agnaistic', handleAgnaistic, {
   label: 'Agnaistic',
   options: [
@@ -105,6 +122,23 @@ registerAdapter('agnaistic', handleAgnaistic, {
     'tailFreeSampling',
   ],
   settings,
+  load: (user) => {
+    if (!user) return empty
+    const subs = getCachedSubscriptions()
+    const level = user.sub?.level ?? 0
+    const opts = subs
+      .filter((sub) => sub.level <= level)
+      .map((sub) => ({ label: sub.name, value: sub._id }))
+    return [
+      {
+        preset: true,
+        field: 'subscriptionId',
+        secret: false,
+        label: 'Level',
+        setting: { type: 'list', options: opts },
+      },
+    ]
+  },
 })
 
 setInterval(updateRegisteredSubs, 5000)

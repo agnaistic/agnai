@@ -8,8 +8,10 @@ import { openaiPresets } from './presets/openai'
 import { replicatePresets } from './presets/replicate'
 import { scalePresets } from './presets/scale'
 import { openRouterPresets } from './presets/openrouter'
+import { agnaiPresets } from './presets/agnaistic'
 
 const builtinPresets = {
+  ...agnaiPresets,
   ...hordePresets,
   ...koboldPresets,
   ...novelPresets,

@@ -157,7 +157,15 @@ export async function createInferenceStream(opts: InferenceRequest) {
     settings.presencePenalty = 0
   }
 
-  const handler = handlers[settings.service!]
+  if (settings.thirdPartyUrl) {
+    opts.user.koboldUrl = settings.thirdPartyUrl
+  }
+
+  if (opts.settings?.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
+  }
+
+  const handler = getHandlers(settings)
   const stream = handler({
     kind: 'plain',
     requestId: '',
@@ -357,4 +365,31 @@ async function getGenerationSettings(
     ...getFallbackPreset(adapter),
     src: guest ? 'guest-fallback-last' : 'user-fallback-last',
   }
+}
+
+function getHandlers(settings: Partial<AppSchema.GenSettings>) {
+  switch (settings.service!) {
+    case 'agnaistic':
+    case 'claude':
+    case 'goose':
+    case 'replicate':
+    case 'horde':
+    case 'ooba':
+    case 'openrouter':
+    case 'openai':
+    case 'scale':
+    case 'petals':
+    case 'mancer':
+    case 'novel':
+      return handlers[settings.service]
+  }
+
+  switch (settings.thirdPartyFormat!) {
+    case 'claude':
+    case 'kobold':
+    case 'openai':
+      return handlers[settings.thirdPartyFormat!]
+  }
+
+  return handlers.ooba
 }

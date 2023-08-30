@@ -2,6 +2,7 @@ import { AdapterOptions, AIAdapter, RegisteredAdapter } from '../../common/adapt
 import { config } from '../config'
 import { logger } from '../logger'
 import { ModelAdapter } from './type'
+import { AppSchema } from '/common/types'
 
 const adapters = new Map<AIAdapter, RegisteredAdapter & { handler: ModelAdapter }>()
 
@@ -18,11 +19,18 @@ export function registerAdapter(name: AIAdapter, handler: ModelAdapter, options:
     handler,
     options: options.options,
     settings: options.settings,
+    load: options.load,
   })
 }
 
-export function getRegisteredAdapters() {
-  const all = Array.from(adapters.values()).filter(filterAdapter)
+export function getRegisteredAdapters(user?: AppSchema.User | null) {
+  const all = Array.from(adapters.values())
+    .filter((a) => filterAdapter(a, user))
+    .map((adp) => {
+      const settings = adp.load?.(user) ?? adp.settings
+      return { ...adp, settings }
+    })
+
   return all
 }
 
@@ -30,6 +38,7 @@ export function getRegisteredAdapter(name: AIAdapter): RegisteredAdapter | undef
   return adapters.get(name)
 }
 
-function filterAdapter(adp: RegisteredAdapter) {
-  return config.adapters.includes(adp.name)
+function filterAdapter(adp: RegisteredAdapter, user?: AppSchema.User | null) {
+  const included = config.adapters.includes(adp.name)
+  return included
 }

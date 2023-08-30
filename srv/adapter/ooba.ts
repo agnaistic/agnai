@@ -98,7 +98,7 @@ export async function* getTextgenCompletion(
   }
 }
 
-export function getTextgenPayload(opts: AdapterProps) {
+export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen, prompt } = opts
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {
@@ -107,7 +107,7 @@ export function getTextgenPayload(opts: AdapterProps) {
       top_k: gen.topK,
       top_p: gen.topP,
       n_predict: gen.maxTokens,
-      stop: getStoppingStrings(opts),
+      stop: getStoppingStrings(opts).concat(stops),
       stream: true,
       frequency_penality: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
@@ -146,7 +146,7 @@ export function getTextgenPayload(opts: AdapterProps) {
     truncation_length: gen.maxContextLength || 2048,
     ban_eos_token: gen.banEosToken || false,
     skip_special_tokens: gen.skipSpecialTokens ?? true,
-    stopping_strings: getStoppingStrings(opts),
+    stopping_strings: getStoppingStrings(opts).concat(stops),
     tfs: gen.tailFreeSampling,
   }
   return body
