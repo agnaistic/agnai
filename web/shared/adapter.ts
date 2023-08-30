@@ -136,7 +136,7 @@ export function getServiceTempConfig(service?: AIAdapter) {
   const values: Array<AdapterSetting & { value: any }> = []
   for (const opt of cfg) {
     const prev = storage.localGetItem(`${service}.temp.${opt.field}`)
-    values.push({ ...opt, value: prev ? JSON.parse(prev) : undefined })
+    values.push({ ...opt, preset: true, value: prev ? JSON.parse(prev) : undefined })
   }
 
   return values

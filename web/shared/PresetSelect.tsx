@@ -119,7 +119,7 @@ const OptionList: Component<{
             class={
               (props.selected && props.selected === option.value
                 ? 'bg-[var(--hl-800)]'
-                : 'bg-700') + ` w-full cursor-pointer gap-4 rounded-xl px-2 py-1 text-sm`
+                : 'bg-700') + ` w-full cursor-pointer gap-4 rounded-md px-2 py-1 text-sm`
             }
             onClick={() => props.onSelect(option.value)}
           >

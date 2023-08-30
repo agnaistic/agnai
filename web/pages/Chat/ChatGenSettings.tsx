@@ -229,7 +229,6 @@ export const ChatGenSettings: Component<{
           <Match when={selected() === AutoPreset.service && servicePreset()}>
             <GenerationSettings
               inherit={servicePreset()!.preset}
-              saveToChatId={props.chat._id}
               onService={setAdapter}
               disableService
             />
