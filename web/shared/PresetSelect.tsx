@@ -5,8 +5,12 @@ import { uniqBy } from '../../common/util'
 import { useRootModal } from './hooks'
 import Button from './Button'
 import Modal from './Modal'
+import { FormLabel } from './FormLabel'
 
 export const PresetSelect: Component<{
+  label?: JSX.Element | string
+  helperText?: JSX.Element | string
+  fieldName?: string
   options: PresetOption[]
   setPresetId: (id: string) => void
   warning?: JSX.Element
@@ -76,7 +80,17 @@ export const PresetSelect: Component<{
 
   return (
     <div class="flex flex-col gap-2 py-3 text-sm">
-      <div class="text-lg">Preset</div>
+      <Show
+        when={props.label && props.helperText}
+        fallback={<div class="text-lg">{props.label || 'Preset'}</div>}
+      >
+        <FormLabel label={props.label} helperText={props.helperText} />
+      </Show>
+
+      <Show when={props.fieldName}>
+        <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
+      </Show>
+
       <div class="inline-block">
         <Button onClick={() => setShowSelectModal(true)}>
           Selected: <strong>{selectedLabel()}</strong>

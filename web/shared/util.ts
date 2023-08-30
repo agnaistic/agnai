@@ -1,6 +1,12 @@
 import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
-import { ADAPTER_LABELS, AIAdapter, PresetAISettings, adapterSettings } from '../../common/adapters'
+import {
+  ADAPTER_LABELS,
+  AIAdapter,
+  PresetAISettings,
+  ThirdPartyFormat,
+  adapterSettings,
+} from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
 import { UserState, settingStore } from '../store'
@@ -464,18 +470,13 @@ export function isDirty<T extends {}>(original: T, compare: T): boolean {
 
 export function serviceHasSetting(
   service: AIAdapter | undefined,
+  format: ThirdPartyFormat | undefined,
   ...props: Array<keyof PresetAISettings>
 ) {
   if (!service) return true
-  const { config } = settingStore.getState()
 
   for (const prop of props) {
-    const base = adapterSettings[prop]
-    const services = config.registered
-      .filter((reg) => reg.options.includes(prop))
-      .map((reg) => reg.name)
-
-    if (base?.includes(service) || services.includes(service)) return true
+    if (isValidServiceSetting(service, format, prop)) return true
   }
 
   return false

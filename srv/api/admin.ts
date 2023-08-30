@@ -49,7 +49,14 @@ const getMetrics = handle(async () => {
   }
 })
 
+const updateLevel = handle(async (req) => {
+  assertValid({ level: 'number' }, req.body)
+  await store.users.updateSubLevel(req.params.userId, req.body.level)
+  return { success: true }
+})
+
 router.post('/users', searchUsers)
+router.post('/users/:userId/level', updateLevel)
 router.get('/metrics', getMetrics)
 router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)

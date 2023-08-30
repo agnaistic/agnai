@@ -344,6 +344,25 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     gaslight: '',
     claudeModel: '',
   },
+  agnaistic: {
+    maxTokens: 'max_tokens',
+    temp: 'temperature',
+    repetitionPenalty: '',
+    repetitionPenaltyRange: '',
+    repetitionPenaltySlope: '',
+    tailFreeSampling: '',
+    topA: '',
+    topK: '',
+    topP: '',
+    typicalP: '',
+    addBosToken: '',
+    antiBond: '',
+    banEosToken: '',
+    claudeModel: '',
+    encoderRepitionPenalty: '',
+    frequencyPenalty: '',
+    gaslight: '',
+  },
 }
 
 export function isDefaultPreset(value?: string): value is GenerationPreset {
@@ -360,6 +379,9 @@ export function getFallbackPreset(adapter: AIAdapter): Partial<AppSchema.GenSett
     case 'kobold':
     case 'ooba':
       return defaultPresets.basic
+
+    case 'agnaistic':
+      return defaultPresets.agnai
 
     case 'openai':
       return defaultPresets.openai
@@ -397,6 +419,9 @@ export function getInferencePreset(
     case 'petals':
     case 'horde':
       return defaultPresets.horde
+
+    case 'agnaistic':
+      return defaultPresets.agnai
 
     case 'kobold':
     case 'ooba':

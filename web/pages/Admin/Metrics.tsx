@@ -30,6 +30,9 @@ const MetricsPage: Component = () => {
     <>
       <PageHeader title="Metrics" />
       <div class="mb-4 flex gap-4">
+        <A href="/admin/subscriptions">
+          <Button>Subscriptions</Button>
+        </A>
         <A href="/admin/users">
           <Button>User Management</Button>
         </A>

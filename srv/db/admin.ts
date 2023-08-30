@@ -14,7 +14,10 @@ export async function getUsers(opts: UsersOpts = {}) {
   const skip = (opts.page || 0) * 200
 
   if (opts.username) {
-    filter.username = { $regex: new RegExp(opts.username, 'gi') }
+    filter.$or = [
+      { username: { $regex: new RegExp(opts.username.trim(), 'gi') } },
+      { _id: opts.username.trim() },
+    ]
   }
 
   const list = await db('user').find(filter).skip(skip).limit(200).toArray()

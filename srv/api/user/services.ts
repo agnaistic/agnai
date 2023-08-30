@@ -85,7 +85,7 @@ export const updateService = handle(async ({ userId, body, params }) => {
   const service = params.service as AIAdapter
   const user = await store.users.getUser(userId)
 
-  const adapter = getRegisteredAdapters().find((adp) => adp.name === service)
+  const adapter = getRegisteredAdapters(user).find((adp) => adp.name === service)
   if (!adapter) {
     throw new StatusError(`Service (${service}) does not exist or is not enabled`, 400)
   }

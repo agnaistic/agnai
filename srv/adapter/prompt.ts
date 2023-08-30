@@ -67,6 +67,7 @@ export function getStoppingStrings(opts: AdapterProps) {
     if (seen.has(char.name)) continue
     if (char.name === opts.replyAs.name) continue
     ends.push(`${char.name}:`)
+    ends.push(`\n${char.name}`)
     seen.add(char.name)
   }
 
@@ -74,6 +75,7 @@ export function getStoppingStrings(opts: AdapterProps) {
     if (seen.has(member.handle)) continue
     if (member.handle === opts.replyAs.name) continue
     ends.push(`${member.handle}:`)
+    ends.push(`\n${member.handle}`)
     seen.add(member.handle)
   }
 

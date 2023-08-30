@@ -50,6 +50,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
   }
 
   const url =
+    opts.gen.registered?.mancer?.urlOverride ||
     opts.gen.registered?.mancer?.url ||
     opts.gen.registered?.mancer?.model ||
     opts.user.adapterConfig?.mancer?.altUrl ||

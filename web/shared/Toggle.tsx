@@ -13,7 +13,7 @@ export const Toggle: Component<{
   class?: string
   onChange?: (value: boolean) => void
   disabled?: boolean
-
+  reverse?: boolean
   service?: AIAdapter
   format?: ThirdPartyFormat
   aiSetting?: keyof PresetAISettings
@@ -28,9 +28,11 @@ export const Toggle: Component<{
     return isValid ? '' : ' hidden'
   })
 
+  const justify = createMemo(() => (props.reverse ? 'sm:justify-start' : 'sm:justify-between'))
+
   return (
-    <div class={`sm: flex flex-col gap-2 sm:flex-row ${hide()} sm:items-center sm:justify-between`}>
-      <Show when={props.label}>
+    <div class={`sm: flex flex-col gap-2 sm:flex-row ${hide()} sm:items-center ${justify()}`}>
+      <Show when={props.label && !props.reverse}>
         <FormLabel label={props.label} helperText={props.helperText} />
       </Show>
       <label class={`toggle ${props.disabled ? 'toggle-disabled' : ''}`}>
@@ -45,6 +47,9 @@ export const Toggle: Component<{
         />
         <div class={`toggle-switch ${props.disabled ? 'toggle-disabled' : ''}`}></div>
       </label>
+      <Show when={props.label && props.reverse}>
+        <FormLabel label={props.label} helperText={props.helperText} />
+      </Show>
     </div>
   )
 }

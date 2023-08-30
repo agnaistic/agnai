@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, Show } from 'solid-js'
+import { Component, createEffect, createSignal, Match, Show, Switch } from 'solid-js'
 import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -13,10 +13,9 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore, settingStore, toastStore } from '../../store'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
-import { TitleCard } from '/web/shared/Card'
 
-export const GenerationPresetsPage: Component = () => {
-  const { updateTitle } = setComponentPageTitle('Preset')
+export const Subscription: Component = () => {
+  const { updateTitle } = setComponentPageTitle('Subscription')
   let ref: any
 
   const params = useParams()
@@ -24,40 +23,38 @@ export const GenerationPresetsPage: Component = () => {
 
   const nav = useNavigate()
   const [edit, setEdit] = createSignal(false)
-  const [editing, setEditing] = createSignal<AppSchema.UserGenPreset>()
+  const [editing, setEditing] = createSignal<AppSchema.SubscriptionPreset>()
   const [deleting, setDeleting] = createSignal(false)
   const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
 
-  const onEdit = (preset: AppSchema.UserGenPreset) => {
-    nav(`/presets/${preset._id}`)
+  const onEdit = (preset: AppSchema.SubscriptionPreset) => {
+    nav(`/admin/subscriptions/${preset._id}`)
   }
 
   const cfg = settingStore((s) => s.config)
 
-  const state = presetStore(({ presets, saving }) => ({
+  const state = presetStore(({ subs, saving }) => ({
     saving,
-    presets,
-    items: presets.map<Option>((p) => ({ label: p.name, value: p._id })),
-    editing: isDefaultPreset(query.preset)
-      ? defaultPresets[query.preset]
-      : presets.find((pre) => pre._id === query.preset || params.id),
+    subs,
+    items: subs.map<Option>((p) => ({ label: p.name, value: p._id })),
+    editing: subs.find((pre) => pre._id === query.preset || params.id),
   }))
 
   createEffect(async () => {
     if (params.id === 'new') {
       const copySource = query.preset
       if (copySource) {
-        updateTitle(`Copy preset ${copySource}`)
+        updateTitle(`Copy subscription ${copySource}`)
       } else {
-        updateTitle(`Create preset`)
+        updateTitle(`Create subscription`)
       }
       setEditing()
       await Promise.resolve()
       const template = isDefaultPreset(query.preset)
         ? defaultPresets[query.preset]
-        : state.presets.find((p) => p._id === query.preset)
+        : state.subs.find((p) => p._id === query.preset)
       const preset = template ? { ...template } : { ...emptyPreset }
-      setEditing({ ...emptyPreset, ...preset, _id: '', kind: 'gen-setting', userId: '' })
+      setEditing({ ...emptyPreset, ...preset, _id: '', kind: 'subscription-setting', subLevel: 0 })
       return
     } else if (params.id === 'default') {
       setEditing()
@@ -67,42 +64,46 @@ export const GenerationPresetsPage: Component = () => {
         ...emptyPreset,
         ...defaultPresets[query.preset],
         _id: '',
-        kind: 'gen-setting',
-        userId: 'SYSTEM',
+        subLevel: 0,
+        kind: 'subscription-setting',
       })
       return
     }
 
-    const preset = editing()
+    const subscription = editing()
 
-    if (params.id && !preset) {
-      const preset = state.presets.find((p) => p._id === params.id)
-      setEditing(preset)
+    if (params.id && !subscription) {
+      const match = state.subs.find((p) => p._id === params.id)
+
+      if (!match) {
+        presetStore.getSubscriptions()
+      }
+
+      setEditing(match)
       return
     }
 
-    if (params.id && preset && preset._id !== params.id) {
+    if (params.id && subscription && subscription._id !== params.id) {
       setEditing()
       await Promise.resolve()
-      const preset = state.presets.find((p) => p._id === params.id)
+      const preset = state.subs.find((p) => p._id === params.id)
       setEditing(preset)
     }
 
-    if (params.id && preset) {
-      updateTitle(`Edit preset ${preset.name}`)
+    if (params.id && subscription) {
+      updateTitle(`Edit subscription ${subscription.name}`)
     }
   })
 
   const startNew = () => {
-    nav('/presets/new')
+    nav('/admin/subscriptions/new')
   }
 
   const deletePreset = () => {
     const preset = editing()
     if (!preset) return
 
-    presetStore.deletePreset(preset._id, () => nav('/presets'))
-    setEditing()
+    presetStore.deleteSubscription(preset._id, () => nav('/admin/subscriptions'))
   }
 
   const onSave = (_ev: Event, force?: boolean) => {
@@ -110,6 +111,7 @@ export const GenerationPresetsPage: Component = () => {
     const validator = {
       ...presetValidator,
       service: ['', ...AI_ADAPTERS],
+      subLevel: 'number',
       thirdPartyFormat: 'string?',
     } as const
     const body = getStrictForm(ref, validator)
@@ -137,79 +139,81 @@ export const GenerationPresetsPage: Component = () => {
     body.registered[body.service] = registered
 
     if (prev?._id) {
-      presetStore.updatePreset(prev._id, body as any)
+      presetStore.updateSubscription(prev._id, body as any)
     } else {
-      presetStore.createPreset(body as any, (newPreset) => {
-        nav(`/presets/${newPreset._id}`)
+      presetStore.createSubscription(body as any, (newPreset) => {
+        nav(`/admin/subscriptions/${newPreset._id}`)
       })
     }
     setMissingPlaceholder(false)
   }
 
-  if (params.id && params.id !== 'new' && !state.editing) {
-    return (
-      <>
-        <PageHeader title="Generation Presets" />
-        <Loading />
-      </>
-    )
-  }
-
   return (
     <>
-      <PageHeader title="Generation Presets" />
-      <div class="flex flex-col gap-2 pb-10">
-        <Show when={params.id === 'default'}>
-          <TitleCard type="orange" class="font-bold">
-            This is a built-in preset and cannot be saved.{' '}
-            <A class="link" href={`/presets/new?preset=${query.preset}`}>
-              Click here
-            </A>{' '}
-            if you'd like to create a copy of this preset.
-          </TitleCard>
-        </Show>
-        <div class="flex flex-col gap-4 p-2">
-          <Show when={editing()}>
-            <form ref={ref} onSubmit={onSave} class="flex flex-col gap-4">
-              <div class="flex gap-4">
-                <Show when={state.presets.length > 1}>
-                  <Button onClick={() => setEdit(true)}>Load Preset</Button>
-                </Show>
-                <Button onClick={startNew}>
-                  <Plus />
-                  New Preset
-                </Button>
-              </div>
-              <div class="flex flex-col">
-                <div>ID: {editing()?._id || 'New Preset'}</div>
-                <TextInput
-                  fieldName="id"
-                  value={editing()?._id || 'New Preset'}
-                  disabled
-                  class="hidden"
-                />
-                <TextInput
-                  fieldName="name"
-                  label="Name"
-                  helperText="A name or short description of your preset"
-                  placeholder="E.g. Pygmalion Creative"
-                  value={editing()?.name}
-                  required
-                  parentClass="mb-2"
-                />
-                <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
-              </div>
-              <Show when={editing()?.userId !== 'SYSTEM'}>
-                <div class="flex flex-row justify-end">
-                  <Button disabled={state.saving} onClick={onSave}>
-                    <Save /> Save
-                  </Button>
-                </div>
+      <PageHeader
+        title={
+          <A class="link" href="/admin/subscriptions">
+            Subscription
+          </A>
+        }
+      />
+      <Switch>
+        <Match when={params.id && params.id !== 'new' && !state.editing}>
+          <Loading />
+        </Match>
+        <Match when>
+          <div class="flex flex-col gap-2 pb-10">
+            <div class="flex flex-col gap-4 p-2">
+              <Show when={editing()}>
+                <form ref={ref} onSubmit={onSave} class="flex flex-col gap-4">
+                  <div class="flex gap-4">
+                    <Show when={state.subs.length > 1}>
+                      <Button onClick={() => setEdit(true)}>Load Preset</Button>
+                    </Show>
+                    <Button onClick={startNew}>
+                      <Plus />
+                      New Subscription
+                    </Button>
+                  </div>
+                  <div class="flex flex-col">
+                    <div>ID: {editing()?._id || 'New Subscription'}</div>
+                    <TextInput
+                      fieldName="id"
+                      value={editing()?._id || ''}
+                      disabled
+                      class="hidden"
+                    />
+                    <TextInput
+                      fieldName="name"
+                      label="Name"
+                      helperText="A name or short description of your preset"
+                      placeholder="E.g. Premium+++++"
+                      value={editing()?.name}
+                      required
+                      parentClass="mb-2"
+                    />
+                    <TextInput
+                      type="number"
+                      fieldName="subLevel"
+                      label="Subscription Level"
+                      placeholder="0"
+                      value={editing()?.subLevel ?? 0}
+                      required
+                    />
+                    <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
+                  </div>
+                  <div class="flex flex-row justify-end">
+                    <Button disabled={state.saving} onClick={onSave}>
+                      <Save /> Save
+                    </Button>
+                  </div>
+                </form>
               </Show>
-            </form>
-          </Show>
-        </div>
-      </div>
+            </div>
+          </div>
+        </Match>
+      </Switch>
+
       <EditPreset show={edit()} close={() => setEdit(false)} select={onEdit} />
       <ConfirmModal
         show={deleting()}
@@ -238,18 +242,27 @@ export const GenerationPresetsPage: Component = () => {
   )
 }
 
-export default GenerationPresetsPage
+export default Subscription
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
+  ...defaultPresets.agnai,
   name: '',
-  maxTokens: 80,
+  temp: 0.85,
+  topK: 0,
+  topP: 1,
+  tailFreeSampling: 0.95,
+  repetitionPenalty: 1.1,
+  repetitionPenaltyRange: 64,
+  maxContextLength: 4090,
+  maxTokens: 250,
+  streamResponse: true,
 }
 
 const EditPreset: Component<{
   show: boolean
   close: () => void
-  select: (preset: AppSchema.UserGenPreset) => void
+  select: (preset: AppSchema.SubscriptionPreset) => void
 }> = (props) => {
   const params = useParams()
 
@@ -258,7 +271,7 @@ const EditPreset: Component<{
 
   const select = () => {
     const body = getStrictForm(ref, { preset: 'string' })
-    const preset = state.presets.find((preset) => preset._id === body.preset)
+    const preset = state.subs.find((preset) => preset._id === body.preset)
     props.select(preset!)
     props.close()
   }

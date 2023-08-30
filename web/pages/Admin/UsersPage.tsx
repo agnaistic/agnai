@@ -1,18 +1,20 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { adminStore } from '../../store'
+import { adminStore, presetStore } from '../../store'
 import { AppSchema } from '/common/types'
+import Select from '/web/shared/Select'
 
 const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
-  const [pw, setPw] = createSignal<AppSchema.User>()
   const state = adminStore()
+  const subs = presetStore((s) => s.subs)
+  const [pw, setPw] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
 
   const loadInfo = (id: string, name: string) => {
@@ -28,6 +30,17 @@ const UsersPage: Component = () => {
 
   createEffect(() => {
     adminStore.getUsers('')
+    presetStore.getSubscriptions()
+  })
+
+  const subTiers = createMemo(() => {
+    const base = [{ label: '[-1] None', value: '-1' }]
+    const tiers =
+      subs.map((sub) => ({
+        label: `[${sub.subLevel}] ${sub.name}`,
+        value: sub.subLevel.toString(),
+      })) || []
+    return base.concat(tiers).sort((l, r) => +l.value - +r.value)
   })
 
   return (
@@ -37,16 +50,28 @@ const UsersPage: Component = () => {
       <div class="flex flex-col gap-2 pb-4">
         <form ref={ref} class="flex justify-between" onSubmit={search}>
           <div class="flex flex-col">
-            <TextInput fieldName="username" placeholder="Username" />
+            <TextInput class="text-xs" fieldName="username" placeholder="Username" />
           </div>
           <Button onClick={search}>Search</Button>
         </form>
         <For each={state.users}>
           {(user) => (
             <div class="bg-800 flex h-12 flex-row items-center gap-2 rounded-xl">
-              <div class="w-4/12 px-4 text-xs">{user._id}</div>
-              <div class="w-2/12 px-4">{user.username}</div>
+              <div class="flex w-6/12 px-2">
+                <div>
+                  <span class="text-600 text-[0.5rem]">{user._id}</span> {user.username}
+                </div>
+              </div>
               <div class="flex w-6/12 justify-end gap-2 pr-2">
+                <Select
+                  class="text-xs"
+                  fieldName="subTier"
+                  value={user.sub?.level.toString() ?? ''}
+                  items={subTiers()}
+                  onChange={(ev) => {
+                    adminStore.changeUserLevel(user._id, +ev.value)
+                  }}
+                />
                 <Button size="sm" onClick={() => setPw(user)}>
                   Set Password
                 </Button>

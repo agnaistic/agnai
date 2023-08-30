@@ -73,6 +73,7 @@ const initState: SettingState = {
     authUrls: ['https://chara.cards', 'https://dev.chara.cards'],
     horde: { workers: [], models: [] },
     openRouter: { models: [] },
+    subs: [],
   },
   replicate: {},
   flags: getFlags(),
@@ -209,11 +210,17 @@ export const settingStore = createStore<SettingState>(
   }
 })
 
+let firstConnection = true
 subscribe('connected', { uid: 'string' }, (body) => {
+  if (firstConnection) {
+    firstConnection = false
+    return
+  }
+
   const { initLoading } = settingStore.getState()
   if (initLoading) return
 
-  settingStore.init()
+  settingStore.getConfig()
 })
 
 window.flag = function (flag: keyof FeatureFlags, value) {

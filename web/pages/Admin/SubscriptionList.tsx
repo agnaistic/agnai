@@ -4,75 +4,66 @@ import { Component, createSignal, For, onMount } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { defaultPresets } from '../../../common/presets'
-import { presetStore, settingStore } from '../../store'
+import { presetStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 
-const PresetList: Component = () => {
-  setComponentPageTitle('Presets')
+const SubscriptionList: Component = () => {
+  setComponentPageTitle('Subscriptions')
   const nav = useNavigate()
   const state = presetStore((s) => ({
-    presets: s.presets
+    subs: s.subs
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
-  const cfg = settingStore((s) => s.config)
 
-  const defaults = Object.entries(defaultPresets)
-    .filter(([_, pre]) => {
-      if (pre.service !== 'agnaistic') return true
-      return cfg.subs.length > 0
-    })
-    .map(([id, cfg]) => ({ ...cfg, label: `[${cfg.service}] ${cfg.name}`, _id: id }))
-    .sort(sortByLabel)
   const [deleting, setDeleting] = createSignal<string>()
 
   const deletePreset = () => {
     const presetId = deleting()
     if (!presetId) return
 
-    presetStore.deletePreset(presetId, () => nav('/presets'))
+    presetStore.deletePreset(presetId, () => nav('/admin/subscriptions'))
     setDeleting()
   }
 
   onMount(() => {
-    presetStore.getPresets()
+    presetStore.getSubscriptions()
   })
 
   return (
     <>
-      <PageHeader title="Generation Presets" />
+      <PageHeader title="Subscription Presets" />
       <div class="mb-4 flex w-full justify-end">
-        <A href="/presets/new">
+        <A href="/admin/subscriptions/new">
           <Button>
             <Plus />
-            New Preset
+            New Subscription
           </Button>
         </A>
       </div>
 
       <div class="flex flex-col items-center gap-2">
-        <For each={state.presets}>
-          {(preset) => (
+        <For each={state.subs}>
+          {(sub) => (
             <div class="flex w-full items-center gap-2">
               <A
-                href={`/presets/${preset._id}`}
+                href={`/admin/subscriptions/${sub._id}`}
                 class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
               >
                 <div class="ml-4 flex w-full items-center">
                   <div>
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                      {getServiceName(preset.service)}
+                      {getServiceName(sub.service)}
                     </span>
-                    {preset.name}
+                    {sub.name}
                   </div>
                 </div>
               </A>
               <Button
                 schema="clear"
                 size="sm"
-                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
+                onClick={() => nav(`/admin/subscriptions/new?preset=${sub._id}`)}
                 class="icon-button"
               >
                 <Copy />
@@ -80,38 +71,10 @@ const PresetList: Component = () => {
               <Button
                 schema="clear"
                 size="sm"
-                onClick={() => setDeleting(preset._id)}
+                onClick={() => setDeleting(sub._id)}
                 class="icon-button"
               >
                 <Trash />
-              </Button>
-            </div>
-          )}
-        </For>
-
-        <div>Built-in Presets</div>
-        <For each={defaults}>
-          {(preset) => (
-            <div class="flex w-full items-center gap-2">
-              <A
-                href={`/presets/default?preset=${preset._id}`}
-                class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
-              >
-                <div class="ml-4 flex w-full items-center">
-                  {' '}
-                  <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                    {getServiceName(preset.service)}
-                  </span>
-                  {preset.name}
-                </div>
-              </A>
-              <Button
-                schema="clear"
-                size="sm"
-                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
-                class="icon-button"
-              >
-                <Copy />
               </Button>
             </div>
           )}
@@ -128,4 +91,4 @@ const PresetList: Component = () => {
   )
 }
 
-export default PresetList
+export default SubscriptionList
