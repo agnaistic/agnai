@@ -19,7 +19,7 @@ export const handleOoba: ModelAdapter = async function* (opts) {
 
   log.debug(`Prompt:\n${body.prompt}`)
 
-  const url = gen.thirdPartyUrl || user.koboldUrl
+  const url = user.oobaUrl
   const baseUrl = normalizeUrl(url)
   const resp =
     opts.gen.service === 'kobold' && opts.gen.thirdPartyFormat === 'llamacpp'
@@ -133,10 +133,10 @@ function getPayload(opts: AdapterProps) {
     top_k: gen.topK,
     min_length: 0,
     no_repeat_ngram_size: 0,
-    num_beams: 1,
+    num_beams: gen.numBeams || 1,
     penalty_alpha: gen.penaltyAlpha,
     length_penalty: 1,
-    early_stopping: true,
+    early_stopping: gen.earlyStopping || false,
     seed: -1,
     add_bos_token: gen.addBosToken || false,
     truncation_length: gen.maxContextLength || 2048,

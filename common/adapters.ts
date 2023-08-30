@@ -299,6 +299,8 @@ export const adapterSettings: {
   doSample: ['ooba'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
+  earlyStopping: ['ooba'],
+  numBeams: ['ooba'],
 
   replicateModelVersion: ['replicate'],
   replicateModelType: ['replicate'],
@@ -341,6 +343,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   oaiModel: 'OpenAI Model',
   openRouterModel: 'OpenRouter Model',
   penaltyAlpha: 'Penalty Alpha',
+
   presencePenalty: 'Presence Penalty',
   replicateModelName: 'Replicate Model',
   replicateModelType: 'Replicate Model Type',

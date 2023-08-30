@@ -958,6 +958,31 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat 
           aiSetting={'penaltyAlpha'}
           format={props.format}
         />
+        <Toggle
+          fieldName="earlyStopping"
+          label="Early Stopping"
+          helperText="Controls the stopping condition for beam-based methods, like beam-search."
+          value={props.inherit?.earlyStopping ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'earlyStopping'}
+          format={props.format}
+        />
+        <RangeInput
+          fieldName="numBeams"
+          label="Number of Beams"
+          helperText="Number of beams for beam search. 1 means no beam search."
+          min={1}
+          max={20}
+          step={1}
+          value={
+            props.inherit?.numBeams ?? 1
+          }
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'numBeams'}
+          format={props.format}
+        />
 
         <SamplerOrder service={props.service} inherit={props.inherit} />
       </Card>
