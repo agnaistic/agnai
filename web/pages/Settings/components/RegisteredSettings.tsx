@@ -5,7 +5,9 @@ import { Toggle } from '/web/shared/Toggle'
 import Select from '/web/shared/Select'
 import { userStore } from '/web/store'
 
-const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) => {
+const RegisteredSettings: Component<{ service: RegisteredAdapter; forConfig?: boolean }> = (
+  props
+) => {
   const user = userStore((s) => s.user?.adapterConfig)
 
   return (
@@ -18,6 +20,7 @@ const RegisteredSettings: Component<{ service: RegisteredAdapter }> = (props) =>
               opt={each}
               value={user?.[props.service.name]?.[each.field]}
               config={user?.[props.service.name]}
+              forConfig={props.forConfig}
             />
           </Show>
         )}
@@ -33,6 +36,7 @@ export const ServiceOption: Component<{
   opt: AdapterSetting
   value?: any
   config?: Record<string, any>
+  forConfig?: boolean
   field?: (field: string) => string
   onChange?: (value: any) => void
 }> = (props) => {
@@ -64,7 +68,7 @@ export const ServiceOption: Component<{
 
   return (
     <Switch>
-      <Match when={!props.opt.preset}>{null}</Match>
+      <Match when={props.opt.preset && props.forConfig}>{null}</Match>
       <Match when={props.opt.setting.type === 'text'}>
         <TextInput
           fieldName={field()}

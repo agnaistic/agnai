@@ -63,7 +63,6 @@ const AISettings: Component<{
   const currentTab = createMemo(() => {
     const list = tabs()
     const next = list[tab()]
-    console.log({ next })
     return next
   })
   const presetOptions = createMemo(() => {
@@ -114,7 +113,7 @@ const AISettings: Component<{
         </div>
       </Show>
 
-      <div class={currentTab() === 'horde' ? tabClass : 'hidden'}>
+      <div class={currentTab() === ADAPTER_LABELS.horde ? tabClass : 'hidden'}>
         <HordeAISettings
           onHordeWorkersChange={props.onHordeWorkersChange}
           onHordeModelsChange={props.onHordeModelsChange}
@@ -165,7 +164,7 @@ const AISettings: Component<{
               </Match>
             </Switch>
 
-            <RegisteredSettings service={each} />
+            <RegisteredSettings service={each} forConfig />
           </div>
         )}
       </For>

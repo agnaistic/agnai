@@ -102,6 +102,7 @@ registerAdapter('goose', handleGooseAI, {
       helperText: 'GooseAI Engine (Model)',
       secret: false,
       setting: { type: 'list', options: engines },
+      preset: true,
     },
   ],
   options: [
