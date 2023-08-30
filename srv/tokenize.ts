@@ -77,7 +77,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
     return turbo ?? main
   }
 
-  return llama
+  return main
 }
 
 {
