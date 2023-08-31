@@ -104,6 +104,7 @@ export const presetStore = createStore<PresetState>(
       const res = await api.post(`/admin/subscriptions/${id}`, update)
       if (res.error) toastStore.error(`Failed to update subscription: ${res.error}`)
       if (res.result) {
+        toastStore.success(`Subscription updated`)
         return { subs: subs.filter((sub) => (sub._id === id ? { ...sub, ...update } : sub)) }
       }
     },

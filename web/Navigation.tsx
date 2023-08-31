@@ -45,22 +45,27 @@ import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
 import { pipelineApi } from './store/data/pipeline'
 
-const MobileNavHeader = () => (
-  <div class="flex min-h-[2rem] justify-between sm:hidden">
-    <div class="w-8"></div>
-    <div>
-      {' '}
-      <span class="w-full text-center text-[1rem]">
-        Agn<span class="text-[var(--hl-500)]">ai</span>stic
-      </span>
-    </div>
-    <div class="w-8">
-      <div class="icon-button">
-        <X onClick={settingStore.menu} />
+const MobileNavHeader = () => {
+  const user = userStore()
+  const suffix = createMemo(() => (user.user?.sub?.level ?? 0 > 0 ? '+' : ''))
+
+  return (
+    <div class="flex min-h-[2rem] justify-between sm:hidden">
+      <div class="w-8"></div>
+      <div>
+        {' '}
+        <span class="w-full text-center text-[1rem]">
+          Agn<span class="text-[var(--hl-500)]">ai</span>stic{suffix()}
+        </span>
+      </div>
+      <div class="w-8">
+        <div class="icon-button">
+          <X onClick={settingStore.menu} />
+        </div>
       </div>
     </div>
-  </div>
-)
+  )
+}
 
 const Navigation: Component = () => {
   let parent: any
@@ -69,6 +74,8 @@ const Navigation: Component = () => {
   const user = userStore()
   const chat = chatStore()
   const size = useWindowSize()
+
+  const suffix = createMemo(() => (user.user?.sub?.level ?? 0 > 0 ? '+' : ''))
 
   createEffect(() => {
     if (!state.overlay && state.showMenu) {
@@ -113,7 +120,7 @@ const Navigation: Component = () => {
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
               <div class="h-8 w-fit items-center justify-center rounded-lg font-bold">
-                Agn<span class="text-[var(--hl-500)]">ai</span>stic
+                Agn<span class="text-[var(--hl-500)]">ai</span>stic{suffix()}
               </div>
             </A>
           </div>

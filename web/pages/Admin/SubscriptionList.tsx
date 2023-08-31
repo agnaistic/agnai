@@ -19,7 +19,7 @@ const SubscriptionList: Component = () => {
 
   const [deleting, setDeleting] = createSignal<string>()
 
-  const deletePreset = () => {
+  const deleteSub = () => {
     const presetId = deleting()
     if (!presetId) return
 
@@ -54,7 +54,7 @@ const SubscriptionList: Component = () => {
                 <div class="ml-4 flex w-full items-center">
                   <div>
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                      {getServiceName(sub.service)}
+                      Tier {sub.subLevel}. {getServiceName(sub.service)}
                     </span>
                     {sub.name}
                   </div>
@@ -84,8 +84,8 @@ const SubscriptionList: Component = () => {
       <ConfirmModal
         show={!!deleting()}
         close={() => setDeleting()}
-        confirm={deletePreset}
-        message="Are you sure you wish to delete this preset?"
+        confirm={deleteSub}
+        message="Are you sure you wish to delete this subscription?"
       />
     </>
   )
