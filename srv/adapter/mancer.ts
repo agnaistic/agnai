@@ -67,16 +67,19 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     return
   }
 
+  const apiKey = opts.guest ? key : decryptText(key)
   opts.log.debug({ ...body, prompt: null }, 'Mancer payload')
   opts.log.debug(`Prompt:\n${body.prompt}`)
   yield { prompt: body.prompt }
 
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-API-KEY': apiKey,
+  }
+
   const resp = await needle('post', `${url}/v1/generate`, body, {
     json: true,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-KEY': opts.guest ? key : decryptText(key),
-    },
+    headers,
   }).catch((error) => ({ error }))
 
   if ('error' in resp) {
@@ -86,7 +89,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
-    opts.log.error({ err: resp.body }, `Mancer request failed {${resp.statusCode}}`)
+    opts.log.error({ err: resp.body }, `Mancer request failed [${resp.statusCode}]`)
     yield {
       error: `Mancer request failed (${resp.statusCode}) ${
         resp.body.error || resp.body.message || resp.statusMessage

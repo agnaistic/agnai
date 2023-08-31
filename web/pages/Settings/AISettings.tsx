@@ -164,7 +164,7 @@ const AISettings: Component<{
               </Match>
             </Switch>
 
-            <RegisteredSettings service={each} forConfig />
+            <RegisteredSettings service={each} />
           </div>
         )}
       </For>
