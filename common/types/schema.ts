@@ -330,6 +330,7 @@ export namespace AppSchema {
     _id: string
     kind: 'subscription-setting'
     subLevel: number
+    subModel: string
     deletedAt?: string
   }
 

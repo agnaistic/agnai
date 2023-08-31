@@ -14,7 +14,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const { char, members, prompt, log, gen } = opts
   const level = opts.user.sub?.level ?? -1
   if (level < 0) {
-    yield { error: 'Forbidden' }
+    yield { error: 'Your account does not meet the requirements for this service' }
     return
   }
 
@@ -29,7 +29,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, ['## ', 'Instruction:', 'Response:'])
+  const body = getTextgenPayload(opts, ['## ', 'Instruction:', 'Response:', 'USER:', 'ASSISTANT:'])
 
   yield { prompt: body.prompt }
 
@@ -44,11 +44,11 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const resp = gen.streamResponse
     ? await websocketStream({
-        url: `${preset.thirdPartyUrl}/api/v1/stream?key=${config.auth.inferenceKey}&id=${opts.user._id}`,
+        url: `${preset.thirdPartyUrl}/api/v1/stream?key=${config.auth.inferenceKey}&id=${opts.user._id}&model=${preset.subModel}`,
         body,
       })
     : getTextgenCompletion(
-        `${preset.thirdPartyUrl}/api/v1/generate?key=${config.auth.inferenceKey}&id=${opts.user._id}`,
+        `${preset.thirdPartyUrl}/api/v1/generate?key=${config.auth.inferenceKey}&id=${opts.user._id}&model=${preset.subModel}`,
         body,
         {}
       )
@@ -96,16 +96,6 @@ const settings: AdapterSetting[] = [
   },
 ]
 
-const empty: AdapterSetting[] = [
-  {
-    preset: true,
-    field: 'subscriptionId',
-    secret: false,
-    label: 'Level',
-    setting: { type: 'list', options: [] },
-  },
-]
-
 registerAdapter('agnaistic', handleAgnaistic, {
   label: 'Agnaistic',
   options: [
@@ -123,7 +113,6 @@ registerAdapter('agnaistic', handleAgnaistic, {
   ],
   settings,
   load: (user) => {
-    if (!user) return empty
     const subs = getCachedSubscriptions(user)
     const opts = subs.map((sub) => ({ label: sub.name, value: sub._id }))
     return [

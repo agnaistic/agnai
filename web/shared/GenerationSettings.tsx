@@ -20,7 +20,7 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { Check, X } from 'lucide-solid'
-import { chatStore, settingStore, userStore } from '../store'
+import { chatStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
@@ -46,20 +46,13 @@ type Props = {
 
 const GenerationSettings: Component<Props> = (props) => {
   const state = settingStore((s) => s.config)
-  const user = userStore()
   const opts = chatStore((s) => s.opts)
 
   const [service, setService] = createSignal(props.inherit?.service)
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
 
   const services = createMemo<Option[]>(() => {
-    const list = state.adapters
-      .filter((adp) => {
-        if (adp !== 'agnaistic') return true
-        if (!user.user?.sub || !state.subs.length) return false
-        return true
-      })
-      .map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
     if (props.inherit?.service) return list
 
     return [{ value: '', label: 'None' }].concat(list)

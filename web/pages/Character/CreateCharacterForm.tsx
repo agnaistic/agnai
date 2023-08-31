@@ -44,7 +44,7 @@ import AvatarBuilder from '../../shared/Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
 import { getRandomBody } from '../../asset/sprite'
 import AvatarContainer from '../../shared/Avatar/Container'
-import { useCharEditor } from './editor'
+import { CharEditor, useCharEditor } from './editor'
 import { downloadCharacterHub, jsonToCharacter } from './port'
 import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
@@ -131,7 +131,7 @@ export const CreateCharacterForm: Component<{
   const generateCharacter = async (fields?: GenField[]) => {
     setCreating(true)
     try {
-      await editor.generateCharacter(ref, genService(), fields)
+      await editor.generateCharacter(genService(), fields)
     } finally {
       setCreating(false)
     }
@@ -151,7 +151,7 @@ export const CreateCharacterForm: Component<{
       const { file, json } = await downloadCharacterHub(query.import)
       const imageData = await getImageData(file)
       const char = jsonToCharacter(json)
-      editor.load(ref, char)
+      editor.load(char)
       editor.update({
         book: json.characterBook,
         alternateGreetings: json.alternateGreetings || [],
@@ -182,7 +182,7 @@ export const CreateCharacterForm: Component<{
       // We have a `srcId`, we need to wait to receive the character we're editing
       if (!state.edit) return
 
-      editor.load(ref, state.edit)
+      editor.load(state.edit)
       setImage(state.edit?.avatar)
       return
     }
@@ -193,7 +193,7 @@ export const CreateCharacterForm: Component<{
     if (!state.edit) return
     if (editor.state.editId !== state.edit._id && state.edit._id === srcId()) {
       editor.update('editId', srcId())
-      editor.load(ref, state.edit)
+      editor.load(state.edit)
       setImage(state.edit?.avatar)
       return
     }
@@ -219,7 +219,7 @@ export const CreateCharacterForm: Component<{
   }
 
   const onSubmit = async (ev: Event) => {
-    const payload = editor.payload(ref)
+    const payload = editor.payload()
     payload.avatar = state.avatar.blob || editor.state.avatar
 
     if (props.temp && props.chat) {
@@ -281,7 +281,14 @@ export const CreateCharacterForm: Component<{
           }
         />
       </Show>
-      <form class="text-base" onSubmit={onSubmit} ref={ref}>
+      <form
+        class="text-base"
+        onSubmit={onSubmit}
+        ref={(form) => {
+          ref = form
+          editor.prepare(form)
+        }}
+      >
         <div class="flex flex-col gap-4">
           <Show when={!isPage}>
             <div> {props.children} </div>
@@ -315,7 +322,7 @@ export const CreateCharacterForm: Component<{
                 <Import /> Import
               </Button>
 
-              <Button onClick={() => setConverted(editor.convert(ref))}>
+              <Button onClick={() => setConverted(editor.convert())}>
                 <Download /> Export
               </Button>
 
@@ -323,7 +330,7 @@ export const CreateCharacterForm: Component<{
                 <Button
                   onClick={() => {
                     setForceNew(true)
-                    editor.clear(ref)
+                    editor.clear()
                   }}
                 >
                   <Plus />
@@ -451,7 +458,8 @@ export const CreateCharacterForm: Component<{
                           <>
                             <Regenerate
                               fields={['appearance']}
-                              regen={generateCharacter}
+                              service={genService()}
+                              editor={editor}
                               allowed={editor.canGuidance}
                             />
                           </>
@@ -460,7 +468,7 @@ export const CreateCharacterForm: Component<{
                         placeholder="Appearance"
                         value={editor.state.appearance}
                       />
-                      <Button class="w-fit self-end" onClick={() => editor.createAvatar(ref)}>
+                      <Button class="w-fit self-end" onClick={() => editor.createAvatar()}>
                         Generate
                       </Button>
                     </div>
@@ -483,7 +491,8 @@ export const CreateCharacterForm: Component<{
                     Scenario{' '}
                     <Regenerate
                       fields={['scenario']}
-                      regen={generateCharacter}
+                      service={genService()}
+                      editor={editor}
                       allowed={editor.canGuidance}
                     />
                   </>
@@ -504,7 +513,8 @@ export const CreateCharacterForm: Component<{
                     Greeting{' '}
                     <Regenerate
                       fields={['greeting']}
-                      regen={generateCharacter}
+                      service={genService()}
+                      editor={editor}
                       allowed={editor.canGuidance}
                     />
                   </>
@@ -530,7 +540,8 @@ export const CreateCharacterForm: Component<{
                       Persona Schema{' '}
                       <Regenerate
                         fields={['personality', 'behaviour', 'speech']}
-                        regen={generateCharacter}
+                        service={genService()}
+                        editor={editor}
                         allowed={editor.canGuidance}
                       />{' '}
                     </>
@@ -572,7 +583,8 @@ export const CreateCharacterForm: Component<{
                     Sample Conversation{' '}
                     <Regenerate
                       fields={['example1', 'example2', 'example3']}
-                      regen={generateCharacter}
+                      service={genService()}
+                      editor={editor}
                       allowed={editor.canGuidance}
                     />
                   </>
@@ -702,7 +714,7 @@ export const CreateCharacterForm: Component<{
         show={showImport()}
         close={() => setImport(false)}
         onSave={(char, imgs) => {
-          editor.load(ref, char[0])
+          editor.load(char[0])
           editor.update('avatar', imgs[0])
           setImage(imgs[0] as any)
           setImport(false)
@@ -714,21 +726,31 @@ export const CreateCharacterForm: Component<{
 }
 
 const Regenerate: Component<{
+  service: string
   fields: GenField[]
-  regen: (fields: GenField[]) => any
+  editor: CharEditor
   allowed: boolean
 }> = (props) => {
-  const flags = settingStore((s) => s.flags)
   return (
-    <>
-      <Show when={props.allowed && flags.regen}>
-        (
-        <span class="link" onClick={() => props.regen(props.fields)}>
+    <Switch>
+      <Match when={!props.allowed}>{null}</Match>
+      <Match when={props.editor.generating()}>
+        <span
+          class="cursor-not-allowed text-[var(--hl-700)]"
+          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
+        >
+          Regenerating...
+        </span>
+      </Match>
+      <Match when={props.allowed && !props.editor.generating()}>
+        <span
+          class="link"
+          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
+        >
           Regenerate
         </span>
-        )
-      </Show>
-    </>
+      </Match>
+    </Switch>
   )
 }
 

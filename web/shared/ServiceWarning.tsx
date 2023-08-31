@@ -1,11 +1,20 @@
-import { Component, Show, createMemo } from 'solid-js'
+import { Component, Match, Switch, createMemo } from 'solid-js'
 import { AIAdapter } from '/common/adapters'
 import { userStore } from '../store/user'
 import { A } from '@solidjs/router'
 import { TitleCard } from './Card'
+import { settingStore } from '../store'
 
 const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) => {
   const user = userStore((s) => ({ ...s.user }))
+  const cfg = settingStore((s) => s.config)
+
+  const noSub = createMemo(() => {
+    if (props.service !== 'agnaistic') return false
+    const userLevel = user.sub?.level ?? -1
+    const usable = cfg.subs.some((sub) => userLevel >= sub.level)
+    return !usable
+  })
 
   const isKeySet = createMemo(() => {
     const svc = props.service
@@ -26,8 +35,12 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
   })
 
   return (
-    <>
-      <Show when={!isKeySet()}>
+    <Switch>
+      <Match when={props.service === 'agnaistic' && noSub()}>
+        <TitleCard type="rose">Your account not meet the requirements for this service.</TitleCard>
+      </Match>
+
+      <Match when={!isKeySet()}>
         <span class="text-orange-500">
           This service requires an API key to be set. Go to your{' '}
           <A class="link" href="/settings">
@@ -35,8 +48,9 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
           </A>{' '}
           to set the API key.
         </span>
-      </Show>
-      <Show when={props.service === 'horde' && !user?.hordeName}>
+      </Match>
+
+      <Match when={props.service === 'horde' && !user?.hordeName}>
         <TitleCard type="orange">
           Register at{' '}
           <a class="link" href="https://aihorde.net/register" target="_blank">
@@ -44,8 +58,8 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
           </a>{' '}
           for a better Horde experience.
         </TitleCard>
-      </Show>
-    </>
+      </Match>
+    </Switch>
   )
 }
 

@@ -105,18 +105,14 @@ export async function deleteSubscription(id: string) {
   subCache.delete(id)
 }
 
-export function getCachedSubscriptions(user?: AppSchema.User): AppSchema.Subscription[] {
-  const subs = Array.from(subCache.values())
-    .map((sub) => ({
-      _id: sub._id,
-      name: sub.name,
-      level: sub.subLevel,
-      service: sub.service!,
-    }))
-    .filter((sub) => {
-      if (!user?.sub) return false
-      return user.sub.level >= sub.level
-    })
+export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.Subscription[] {
+  const subs = Array.from(subCache.values()).map((sub) => ({
+    _id: sub._id,
+    name: sub.name,
+    level: sub.subLevel,
+    service: sub.service!,
+  }))
+
   return subs
 }
 
