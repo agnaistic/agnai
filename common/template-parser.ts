@@ -285,7 +285,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     return id
   }
 
-  return output.join('\n')
+  return output.join('')
 }
 
 function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unknown, i: number) {

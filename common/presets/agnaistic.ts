@@ -1,26 +1,6 @@
 import { OPENAI_MODELS } from '../adapters'
 import { AppSchema } from '../types'
-import { neat } from '../util'
-
-const gaslight = neat`
-Below is an instruction that describes a task. Write a response that appropriately completes the request.
-
-Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
-
-{{char}}'s Persona: {{personality}}
-
-This scenario of the conversation: {{scenario}}
-
-This is how {{char}} should talk: {{example_dialogue}}
-
-Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
-
-{{#each msg}}{{#if .isbot}}## Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}## Instruction:\n{{.name}}: {{.msg}}{{/if}}
-{{/each}}
-{{ujb}}
-## Response:
-{{post}}
-`
+import { gaslights } from './common'
 
 export const agnaiPresets = {
   agnai: {
@@ -44,7 +24,7 @@ export const agnaiPresets = {
     skipSpecialTokens: true,
     frequencyPenalty: 0,
     presencePenalty: 0,
-    gaslight: gaslight,
+    gaslight: gaslights.alpaca,
     ultimeJailbreak: '',
     oaiModel: OPENAI_MODELS.Turbo,
     streamResponse: true,

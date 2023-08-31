@@ -21,6 +21,7 @@ const PresetList: Component = () => {
 
   const defaults = Object.entries(defaultPresets)
     .filter(([_, pre]) => {
+      if (!cfg.adapters.includes(pre.service)) return false
       if (pre.service !== 'agnaistic') return true
       return cfg.subs.length > 0
     })
