@@ -82,7 +82,7 @@ export const PresetSelect: Component<{
     <div class="flex flex-col gap-2 py-3 text-sm">
       <Show
         when={props.label && props.helperText}
-        fallback={<div class="text-lg">{props.label || 'Preset'}</div>}
+        fallback={<div class="text-lg">{props.label || ''}</div>}
       >
         <FormLabel label={props.label} helperText={props.helperText} />
       </Show>

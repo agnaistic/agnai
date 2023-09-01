@@ -1,7 +1,7 @@
 import { neat } from '../util'
 
 export const gaslights = {
-  alpaca: neat`
+  Alpaca: neat`
   Below is an instruction that describes a task. Write a response that appropriately completes the request.
   
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
@@ -19,7 +19,7 @@ export const gaslights = {
   {{ujb}}
   ### Response:
   {{post}}`,
-  airoboros: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.
+  Airoboros: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.
   
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
   
@@ -35,7 +35,7 @@ export const gaslights = {
   {{/each}}
   {{#if ujb}}USER:{{ujb}}{{/if}}
   ASSISTANT: {{post}}`,
-  novel: neat`{{char}} Memory: {{memory}}
+  NovelAI: neat`{{char}} Memory: {{memory}}
   Description of {{char}}: {{personality}}
   
   How {{char}} speaks: {{example_dialogue}}
@@ -46,7 +46,7 @@ export const gaslights = {
   {{history}}
   {{ujb}}
   {{post}}`,
-  pyg: neat`{{char}}'s Persona: {{personality}}
+  Pyg: neat`{{char}}'s Persona: {{personality}}
   Scenario: {{scenario}}
   Facts:{{memory}}
   
@@ -56,4 +56,20 @@ export const gaslights = {
   {{ujb}}
   {{post}}
   `,
+  Metharme: neat`<|system|>Below is an instruction that describes a task. Write a response that appropriately completes the request.
+
+  Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+  
+  {{char}}'s Persona: {{personality}}
+  
+  This scenario of the conversation: {{scenario}}
+  
+  This is how {{char}} should talk: {{example_dialogue}}
+  
+  Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+  
+  {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
+  {{/each}}
+  {{#if ujb}}<|system|>{{ujb}}{{/if}}
+  <|model|>{{post}}`,
 }

@@ -120,7 +120,7 @@ registerAdapter('agnaistic', handleAgnaistic, {
         preset: true,
         field: 'subscriptionId',
         secret: false,
-        label: 'Level',
+        label: 'Tier/Model',
         setting: { type: 'list', options: opts },
       },
     ]

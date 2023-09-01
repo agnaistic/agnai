@@ -3,6 +3,7 @@ import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { isValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
+import { useEffect } from './hooks'
 
 const MIN_HEIGHT = 40
 
@@ -61,6 +62,14 @@ const TextInput: Component<{
       props.tokenCount(count)
     }
   }
+
+  useEffect(() => {
+    const tick = setInterval(() => {
+      resize()
+    }, 1000)
+
+    return () => clearInterval(tick)
+  })
 
   const resize = () => {
     if (inputRef?.value === '') {

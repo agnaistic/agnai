@@ -1,9 +1,10 @@
-import { Component, For, createMemo, createSignal } from 'solid-js'
+import { Component, For, JSX, createMemo, createSignal } from 'solid-js'
 
 const Tabs: Component<{
   tabs: string[] | readonly string[]
   selected: () => number
   select: (idx: number) => void
+  titles?: Array<JSX.Element | string>
   class?: string
 }> = (props) => {
   return (
@@ -21,7 +22,7 @@ const Tabs: Component<{
               props.selected() === i()
             )} rounded-t-md px-4`}
           >
-            {tab}
+            {props.titles ? props.titles[i()] : tab}
           </div>
         )}
       </For>

@@ -119,9 +119,11 @@ export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.
 let prepared = false
 export async function prepSubscriptionCache() {
   if (prepared) return
-  prepared = true
-  const presets = await getSubscriptions()
-  for (const preset of presets) {
-    subCache.set(preset._id, preset)
-  }
+  try {
+    const presets = await getSubscriptions()
+    prepared = true
+    for (const preset of presets) {
+      subCache.set(preset._id, preset)
+    }
+  } catch (ex) {}
 }

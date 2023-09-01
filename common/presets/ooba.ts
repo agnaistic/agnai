@@ -30,6 +30,6 @@ export const oobaPresets = {
     topA: 0,
     typicalP: 1,
     useGaslight: true,
-    gaslight: gaslights.alpaca,
+    gaslight: gaslights.Alpaca,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
