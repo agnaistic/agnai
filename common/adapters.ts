@@ -277,6 +277,8 @@ export const adapterSettings: {
   doSample: ['ooba', 'agnaistic'],
   encoderRepitionPenalty: ['ooba'],
   penaltyAlpha: ['ooba'],
+  earlyStopping: ['ooba'],
+  numBeams: ['ooba'],
 
   replicateModelVersion: ['replicate'],
   replicateModelType: ['replicate'],

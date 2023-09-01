@@ -356,8 +356,10 @@ export namespace AppSchema {
     encoderRepitionPenalty?: number
     doSample?: boolean
     penaltyAlpha?: number
+    numBeams?: number
     addBosToken?: boolean
     banEosToken?: boolean
+    earlyStopping?: boolean
 
     order?: number[]
     disabledSamplers?: number[]
