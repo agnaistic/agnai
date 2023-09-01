@@ -9,6 +9,7 @@ const subSetting = {
   ...chatGenSettings,
   name: 'string',
   subLevel: 'number',
+  subModel: 'string?',
 } as const
 
 const get = handle(async () => {

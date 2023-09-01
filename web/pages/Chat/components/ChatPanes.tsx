@@ -155,12 +155,7 @@ const ChatPanes: Component<{
         </Match>
 
         <Match when={chats.opts.pane === 'preset'}>
-          <Convertible
-            kind="partial"
-            title={'Preset Settings'}
-            close={closePane}
-            footer={paneFooter()}
-          >
+          <Convertible kind="partial" close={closePane} footer={paneFooter()}>
             <ChatGenSettings chat={chats.chat!} close={closePane} footer={setPaneFooter} />
           </Convertible>
         </Match>

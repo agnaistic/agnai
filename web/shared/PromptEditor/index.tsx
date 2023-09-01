@@ -11,7 +11,7 @@ import {
 import { FormLabel } from '../FormLabel'
 import { AIAdapter, PresetAISettings } from '/common/adapters'
 import { getAISettingServices, toMap } from '../util'
-import { useRootModal } from '../hooks'
+import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
 import { TitleCard } from '../Card'
@@ -21,6 +21,9 @@ import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } fro
 import { ensureValidTemplate, getPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
+import { gaslights } from '/common/presets/common'
+import Select from '../Select'
+import TextInput from '../TextInput'
 
 type Placeholder = {
   required: boolean
@@ -123,6 +126,7 @@ const PromptEditor: Component<
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
   const [input, setInput] = createSignal<string>(props.value || '')
   const [help, showHelp] = createSignal(false)
+  const [templates, setTemplates] = createSignal(false)
   const [preview, setPreview] = createSignal(false)
 
   const rendered = createMemo(() => {
@@ -176,6 +180,14 @@ const PromptEditor: Component<
     ref.focus()
   }
 
+  useEffect(() => {
+    const tick = setInterval(() => {
+      resize()
+    }, 500)
+
+    return () => clearInterval(tick)
+  })
+
   const resize = () => {
     if (!ref) return
 
@@ -199,9 +211,14 @@ const PromptEditor: Component<
               <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
                 Prompt Template (formerly gaslight) <HelpCircle size={16} />
               </div>
-              <Button size="sm" onClick={() => setPreview(!preview())}>
-                Toggle Preview
-              </Button>
+              <div class="flex gap-2">
+                <Button size="sm" onClick={() => setPreview(!preview())}>
+                  Toggle Preview
+                </Button>
+                <Button size="sm" onClick={() => setTemplates(true)}>
+                  Use Existing Template
+                </Button>
+              </div>
             </>
           }
           helperText={
@@ -248,6 +265,14 @@ const PromptEditor: Component<
         show={help()}
         close={() => showHelp(false)}
       />
+
+      <TemplateModal
+        show={templates()}
+        close={() => setTemplates(false)}
+        select={(template) => {
+          ref.value = template
+        }}
+      />
     </div>
   )
 }
@@ -285,6 +310,57 @@ const Placeholder: Component<
       {props.name}
     </div>
   )
+}
+
+const TemplateModal: Component<{
+  show: boolean
+  close: () => void
+  select: (template: string) => void
+}> = (props) => {
+  const options = Object.keys(gaslights).map((key) => ({ label: key, value: key }))
+
+  const [opt, setOpt] = createSignal('Alpaca')
+  const [template, setTemplate] = createSignal(gaslights.Alpaca)
+
+  const Footer = (
+    <>
+      <Button schema="secondary" onClick={props.close}>
+        Cancel
+      </Button>
+      <Button
+        schema="primary"
+        onClick={() => {
+          props.select(template())
+          props.close()
+        }}
+      >
+        Use Template
+      </Button>
+    </>
+  )
+
+  useRootModal({
+    id: 'predefined-prompt-templates',
+    element: (
+      <Modal title={'Prompt Templates'} show={props.show} close={props.close} footer={Footer}>
+        <div class="flex flex-col gap-4 text-sm">
+          <Select
+            fieldName="templateId"
+            items={options}
+            value={opt()}
+            onChange={(ev) => {
+              const key = ev.label as keyof typeof gaslights
+              setOpt(ev.value)
+              setTemplate(gaslights[key])
+            }}
+          />
+          <TextInput fieldName="template" value={template()} disabled isMultiline />
+        </div>
+      </Modal>
+    ),
+  })
+
+  return null
 }
 
 const HelpModal: Component<{

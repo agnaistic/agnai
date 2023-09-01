@@ -54,7 +54,14 @@ export const Subscription: Component = () => {
         ? defaultPresets[query.preset]
         : state.subs.find((p) => p._id === query.preset)
       const preset = template ? { ...template } : { ...emptyPreset }
-      setEditing({ ...emptyPreset, ...preset, _id: '', kind: 'subscription-setting', subLevel: 0 })
+      setEditing({
+        ...emptyPreset,
+        ...preset,
+        _id: '',
+        kind: 'subscription-setting',
+        subLevel: 0,
+        subModel: '',
+      })
       return
     } else if (params.id === 'default') {
       setEditing()
@@ -65,6 +72,7 @@ export const Subscription: Component = () => {
         ...defaultPresets[query.preset],
         _id: '',
         subLevel: 0,
+        subModel: '',
         kind: 'subscription-setting',
       })
       return
@@ -112,6 +120,7 @@ export const Subscription: Component = () => {
       ...presetValidator,
       service: ['', ...AI_ADAPTERS],
       subLevel: 'number',
+      subModel: 'string',
       thirdPartyFormat: 'string?',
     } as const
     const body = getStrictForm(ref, validator)
@@ -200,6 +209,16 @@ export const Subscription: Component = () => {
                       value={editing()?.subLevel ?? 0}
                       required
                     />
+                    <TextInput
+                      fieldName="subModel"
+                      label="Model"
+                      helperText="(Optional) Model to use"
+                      placeholder=""
+                      value={editing()?.subModel}
+                      required
+                      parentClass="mb-2"
+                    />
+
                     <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
                   </div>
                   <div class="flex flex-row justify-end">

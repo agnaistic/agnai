@@ -101,12 +101,16 @@ const initState: EditState = {
   persona: { kind: 'text', attributes: { text: [''] } },
 }
 
+export type CharEditor = ReturnType<typeof useCharEditor>
+
 export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const user = userStore()
   const presets = presetStore()
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
+  const [form, setForm] = createSignal<any>()
+  const [generating, setGenerating] = createSignal(false)
 
   const genOptions = createMemo(() => {
     if (!user.user) return []
@@ -166,8 +170,8 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   })
 
-  const createAvatar = async (ref: any) => {
-    const char = payload(ref)
+  const createAvatar = async () => {
+    const char = payload()
     const avatar = await generateAvatar(char)
 
     if (avatar) {
@@ -175,39 +179,49 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
   }
 
-  const generateCharacter = async (ref: any, service: string, fields?: GenField[]) => {
-    const char = payload(ref)
+  const generateCharacter = async (service: string, fields?: GenField[]) => {
+    try {
+      if (generating()) {
+        toastStore.warn(`Cannot generate: Already generating`)
+        return
+      }
 
-    const prevAvatar = state.avatar
-    const prevSprite = state.sprite
+      setGenerating(true)
+      const char = payload()
 
-    if (fields?.length) {
-      const result = await regenerateCharProp(char, service, state.personaKind, fields)
-      load(ref, result)
-    } else {
-      const result = await generateChar(
-        char.description || 'a random character',
-        service,
-        state.personaKind
-      )
-      load(ref, result)
+      const prevAvatar = state.avatar
+      const prevSprite = state.sprite
+
+      if (fields?.length) {
+        const result = await regenerateCharProp(char, service, state.personaKind, fields)
+        load(result)
+      } else {
+        const result = await generateChar(
+          char.description || 'a random character',
+          service,
+          state.personaKind
+        )
+        load(result)
+      }
+      setState('avatar', prevAvatar)
+      setState('sprite', prevSprite)
+    } finally {
+      setGenerating(false)
     }
-    setState('avatar', prevAvatar)
-    setState('sprite', prevSprite)
   }
 
-  const reset = (ref: any) => {
+  const reset = () => {
     const char = original()
     setState({ ...initState })
 
     const personaKind = char?.persona.kind || state.personaKind
     for (const [key, field] of fieldMap.entries()) {
-      if (!char) setFormField(ref, field, '')
-      else setFormField(ref, field, char[key] || '')
+      if (!char) setFormField(form(), field, '')
+      else setFormField(form(), field, char[key] || '')
     }
 
     setState('personaKind', personaKind)
-    setFormField(ref, 'kind', personaKind)
+    setFormField(form(), 'kind', personaKind)
 
     // We set fields that aren't properly managed by form elements
     setState({
@@ -222,29 +236,29 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     })
   }
 
-  const clear = (ref: any) => {
+  const clear = () => {
     setImageData()
-    load(ref, { ...initState, originalAvatar: undefined })
+    load({ ...initState, originalAvatar: undefined })
   }
 
-  const load = (ref: any, char: NewCharacter | AppSchema.Character) => {
+  const load = (char: NewCharacter | AppSchema.Character) => {
     if ('_id' in char) {
       const { avatar, ...incoming } = char
       setOriginal({ ...incoming, originalAvatar: avatar })
-      reset(ref)
+      reset()
       return
     }
 
     setOriginal(char)
-    reset(ref)
+    reset()
   }
 
-  const payload = (ref: any) => {
-    return getPayload(ref, state, original())
+  const payload = () => {
+    return getPayload(form(), state, original())
   }
 
-  const convert = (ref: any): AppSchema.Character => {
-    const payload = getPayload(ref, state, original())
+  const convert = (): AppSchema.Character => {
+    const payload = getPayload(form(), state, original())
 
     return {
       _id: '',
@@ -269,9 +283,11 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     genOptions,
     createAvatar,
     avatar: imageData,
+    generating,
     canGuidance: genOptions().length > 0,
     generateCharacter,
     generateAvatar,
+    prepare: setForm,
   }
 }
 

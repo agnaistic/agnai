@@ -24,7 +24,7 @@ export const agnaiPresets = {
     skipSpecialTokens: true,
     frequencyPenalty: 0,
     presencePenalty: 0,
-    gaslight: gaslights.alpaca,
+    gaslight: gaslights.Alpaca,
     ultimeJailbreak: '',
     oaiModel: OPENAI_MODELS.Turbo,
     streamResponse: true,

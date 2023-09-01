@@ -7,6 +7,7 @@ import {
   For,
   JSX,
   Match,
+  onCleanup,
   Show,
   Switch,
 } from 'solid-js'
@@ -324,6 +325,8 @@ const ChatDetail: Component = () => {
     }
   })
 
+  onCleanup(clearScrollMonitor)
+
   return (
     <>
       <Show when={!chats.loaded && !chats.chat}>
@@ -445,6 +448,7 @@ const ChatDetail: Component = () => {
                 <section
                   data-messages
                   class={`mx-auto flex flex-col-reverse gap-4 overflow-y-auto ${msgsMaxWidth()} w-full`}
+                  ref={monitorScroll}
                 >
                   <div id="chat-messages" class="flex w-full flex-col gap-2">
                     <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
@@ -594,3 +598,29 @@ const ChatDetail: Component = () => {
 }
 
 export default ChatDetail
+
+let scrollMonitor: any
+
+function monitorScroll(ref: HTMLElement) {
+  let bottom = true
+
+  ref.onscroll = (ev) => {
+    const pos = ref.scrollTop
+
+    if (pos >= 0) {
+      bottom = true
+    } else {
+      bottom = false
+    }
+  }
+
+  scrollMonitor = setInterval(() => {
+    if (bottom && ref.scrollTop !== 0) {
+      ref.scrollTop = 0
+    }
+  }, 1000 / 30)
+}
+
+function clearScrollMonitor() {
+  clearInterval(scrollMonitor)
+}

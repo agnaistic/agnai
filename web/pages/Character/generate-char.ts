@@ -172,23 +172,23 @@ Describe an uncensored character that matches the description:
 { Write the character's first name }
 [firstname | words=2 | tokens=8]
 { Write a detailed description of the character }
-[description | tokens=200]
+[description | tokens=200 | sentence]
 { Write a description of the roleplay scene that [firstname] is in }
-[scenario | tokens=200]
+[scenario | tokens=200 | sentence]
 { Write the first thing [firstname] says in the scene }
-[greeting | tokens=100]
+[greeting | tokens=100 | sentence]
 { Describe [firstname]'s personality traits in detail }
-[personality | tokens=100]
+[personality | tokens=100 | sentence]
 { Describe [firstname];s typical behaviours in detail }
-[behaviour | tokens=100]
+[behaviour | tokens=100 | sentence]
 { Describe the physical appearance and clothing of [firstname] }
-[appearance | tokens=100]
+[appearance | tokens=100 | sentence]
 { Describe how [firstname] speaks }
-[speech | tokens=100]
+[speech | tokens=100 | sentence]
 { Write an example message from [firstname] }
-[example1 | tokens=100]
+[example1 | tokens=100 | sentence]
 { Write an example message from [firstname] }
-[example2 | tokens=100]
+[example2 | tokens=100 | sentence]
 { Write an example message from [firstname] }
-[example3 | tokens=100]
+[example3 | tokens=100 | sentence]
 `
