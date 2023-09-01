@@ -26,7 +26,7 @@ export const handleOoba: ModelAdapter = async function* (opts) {
       ? llamaStream(baseUrl, body)
       : gen.streamResponse
       ? await websocketStream({ url: baseUrl + '/api/v1/stream', body })
-      : getTextgenCompletion(`${baseUrl}/api/v1/generate`, body, {})
+      : getTextgenCompletion('Textgen', `${baseUrl}/api/v1/generate`, body, {})
 
   let accumulated = ''
   let result = ''
@@ -62,6 +62,7 @@ export const handleOoba: ModelAdapter = async function* (opts) {
 }
 
 export async function* getTextgenCompletion(
+  service: string,
   url: string,
   payload: any,
   headers: any
@@ -72,14 +73,19 @@ export async function* getTextgenCompletion(
   }).catch((err) => ({ err }))
 
   if ('err' in resp) {
-    yield { error: `Textgen request failed: ${resp.err.message || resp.err}` }
+    if ('syscall' in resp.err && 'code' in resp.err) {
+      yield { error: `${service} request failed: Service unreachable - ${resp.err.code}` }
+      return
+    }
+
+    yield { error: `${service} request failed: ${resp.err.message || resp.err}` }
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
     const msg =
       resp.body.message || resp.body.error?.message || resp.statusMessage || 'Unknown error'
-    yield { error: `Textgen request failed (${resp.statusCode}): ${msg}` }
+    yield { error: `${service} request failed (${resp.statusCode}): ${msg}` }
     return
   }
 

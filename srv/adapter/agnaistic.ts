@@ -48,6 +48,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
         body,
       })
     : getTextgenCompletion(
+        'Agnastic',
         `${preset.thirdPartyUrl}/api/v1/generate?key=${config.auth.inferenceKey}&id=${opts.user._id}&model=${preset.subModel}`,
         body,
         {}
@@ -65,6 +66,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
 
     if (generated.value.error) {
+      opts.log.error({ err: generated.value.error }, 'Agnaistic request failed')
       yield generated.value
       return
     }

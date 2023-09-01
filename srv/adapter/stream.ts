@@ -71,6 +71,11 @@ export async function websocketStream(opts: { url: string; body: any }) {
   let accum = ''
 
   socket.on('error', (err) => {
+    if ('syscall' in err && 'code' in err) {
+      emitter.push({ error: `Service unreachable - ${err.code}` })
+      return
+    }
+
     emitter.push({ error: err.message })
     emitter.done()
   })
