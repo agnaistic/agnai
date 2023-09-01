@@ -264,15 +264,17 @@ const GeneralSettings: Component<
 
       <Card
         class="flex flex-wrap gap-5"
-        hide={serviceHasSetting(
-          props.service,
-          props.format,
-          'oaiModel',
-          'openRouterModel',
-          'novelModel',
-          'claudeModel',
-          'replicateModelName'
-        )}
+        hide={
+          !serviceHasSetting(
+            props.service,
+            props.format,
+            'oaiModel',
+            'openRouterModel',
+            'novelModel',
+            'claudeModel',
+            'replicateModelName'
+          )
+        }
       >
         <Select
           fieldName="oaiModel"
