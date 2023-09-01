@@ -19,7 +19,7 @@ export const handleOoba: ModelAdapter = async function* (opts) {
 
   log.debug(`Prompt:\n${body.prompt}`)
 
-  const url = user.oobaUrl
+  const url = gen.thirdPartyUrl || user.oobaUrl
   const baseUrl = normalizeUrl(url)
   const resp =
     opts.gen.service === 'kobold' && opts.gen.thirdPartyFormat === 'llamacpp'
