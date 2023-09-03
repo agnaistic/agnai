@@ -13,10 +13,6 @@ import { AppSchema } from '/common/types'
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const { char, members, prompt, log, gen } = opts
   const level = opts.user.sub?.level ?? -1
-  if (level < 0) {
-    yield { error: 'Your account does not meet the requirements for this service' }
-    return
-  }
 
   const preset = await store.presets.getSubscription(opts.gen.registered?.agnaistic?.subscriptionId)
   if (!preset) {
@@ -25,7 +21,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   if (preset.subLevel > level) {
-    yield { error: 'Forbidden - Subscription tier insufficient' }
+    yield { error: 'Your account is ineligible for this model - sub tier insufficient' }
     return
   }
 
@@ -63,6 +59,10 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     // Both the streaming and non-streaming generators return a full completion and yield errors.
     if (generated.done) {
       break
+    }
+
+    if (generated.value.meta) {
+      yield { meta: generated.value.meta }
     }
 
     if (generated.value.error) {
