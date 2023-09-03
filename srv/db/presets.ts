@@ -106,12 +106,14 @@ export async function deleteSubscription(id: string) {
 }
 
 export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.Subscription[] {
-  const subs = Array.from(subCache.values()).map((sub) => ({
-    _id: sub._id,
-    name: sub.name,
-    level: sub.subLevel,
-    service: sub.service!,
-  }))
+  const subs = Array.from(subCache.values())
+    .map((sub) => ({
+      _id: sub._id,
+      name: `${sub.name}`,
+      level: sub.subLevel,
+      service: sub.service!,
+    }))
+    .sort((l, r) => (l.level === r.level ? l.name.localeCompare(r.name) : l.level - r.level))
 
   return subs
 }

@@ -196,7 +196,7 @@ const CreateChatForm: Component<{
               options={presetOptions()}
               selected={presetId()}
               setPresetId={setPresetId}
-              warning={<ServiceWarning service={selectedPreset()?.service} />}
+              warning={<ServiceWarning preset={selectedPreset()} />}
             />
           </Card>
 

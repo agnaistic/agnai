@@ -199,6 +199,8 @@ export const ChatGenSettings: Component<{
     props.footer?.(footer)
   })
 
+  const activePreset = createMemo(() => presets().find((pre) => pre._id === selected()))
+
   return (
     <div class="text-sm">
       <form ref={ref} class="flex flex-col gap-4">
@@ -214,7 +216,7 @@ export const ChatGenSettings: Component<{
             }}
           />
 
-          <ServiceWarning service={servicePreset()?.preset.service} />
+          <ServiceWarning preset={activePreset()} />
           <Show when={isDefaultPreset(selected())}>
             <TitleCard type="orange">
               You are using a built-in preset which cannot be modified. Modifying this will create a

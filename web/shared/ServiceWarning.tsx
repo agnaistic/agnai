@@ -1,23 +1,29 @@
 import { Component, Match, Switch, createMemo } from 'solid-js'
-import { AIAdapter } from '/common/adapters'
 import { userStore } from '../store/user'
 import { A } from '@solidjs/router'
 import { TitleCard } from './Card'
 import { settingStore } from '../store'
+import { AppSchema } from '/common/types'
 
-const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) => {
+const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (props) => {
   const user = userStore((s) => ({ ...s.user }))
   const cfg = settingStore((s) => s.config)
 
   const noSub = createMemo(() => {
-    if (props.service !== 'agnaistic') return false
+    if (!props.preset) return false
+    if (props.preset.service !== 'agnaistic') return false
     const userLevel = user.sub?.level ?? -1
-    const usable = cfg.subs.some((sub) => userLevel >= sub.level)
-    return !usable
+    const sub = cfg.subs.find(
+      (sub) => sub._id === props.preset?.registered?.agnaistic?.subscriptionId
+    )
+    if (!sub) return false
+    const ineligible = userLevel < sub.level
+    return ineligible
   })
 
   const isKeySet = createMemo(() => {
-    const svc = props.service
+    if (!props.preset) return true
+    const svc = props.preset.service
     if (!svc) return true
 
     if (svc === 'openai' && !user.oaiKeySet && !user.oaiKey) return false
@@ -36,8 +42,8 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
 
   return (
     <Switch>
-      <Match when={props.service === 'agnaistic' && noSub()}>
-        <TitleCard type="rose">Your account not meet the requirements for this service.</TitleCard>
+      <Match when={props.preset?.service === 'agnaistic' && noSub()}>
+        <TitleCard type="orange">Your account is ineligible for this tier/model.</TitleCard>
       </Match>
 
       <Match when={!isKeySet()}>
@@ -50,7 +56,7 @@ const ServiceWarning: Component<{ service: AIAdapter | undefined }> = (props) =>
         </span>
       </Match>
 
-      <Match when={props.service === 'horde' && !user?.hordeName}>
+      <Match when={props.preset?.service === 'horde' && !user?.hordeName}>
         <TitleCard type="orange">
           Register at{' '}
           <a class="link" href="https://aihorde.net/register" target="_blank">
