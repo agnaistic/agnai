@@ -131,9 +131,9 @@ registerAdapter('agnaistic', handleAgnaistic, {
   },
 })
 
-setInterval(updateRegisteredSubs, 5000)
+setInterval(updateRegisteredSubs, 3000)
 
-export function updateRegisteredSubs() {
+export async function updateRegisteredSubs() {
   const subs = getCachedSubscriptions()
   for (const item of settings) {
     if (item.setting.type === 'list' && item.field === 'subscriptionId') {
