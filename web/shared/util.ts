@@ -473,10 +473,14 @@ export function serviceHasSetting(
   format: ThirdPartyFormat | undefined,
   ...props: Array<keyof PresetAISettings>
 ) {
-  if (!service) return true
+  if (!service) {
+    return true
+  }
 
   for (const prop of props) {
-    if (isValidServiceSetting(service, format, prop)) return true
+    if (isValidServiceSetting(service, format, prop)) {
+      return true
+    }
   }
 
   return false
