@@ -95,7 +95,7 @@ const CreateChatForm: Component<{
   }
 
   const [presetId, setPresetId] = createSignal(
-    user.defaultPreset || isEligible() ? 'agnai' : 'horde'
+    user.defaultPreset || (isEligible() ? 'agnai' : 'horde')
   )
   const presets = presetStore((s) => s.presets)
   const presetOptions = createMemo(() => {

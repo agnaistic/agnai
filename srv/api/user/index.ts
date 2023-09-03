@@ -19,6 +19,7 @@ import {
   updateUI,
   updatePartialConfig,
 } from './settings'
+import { deleteUserAccount } from './delete-user'
 
 const router = Router()
 
@@ -36,6 +37,7 @@ router.get('/presets', loggedIn, getUserPresets)
 router.get('/config', loggedIn, getConfig)
 router.get('/:id', loggedIn, getProfile)
 router.post('/config/service/:service', loggedIn, updateService)
+router.delete('/my-account', loggedIn, deleteUserAccount)
 router.delete('/config/scale', loggedIn, deleteScaleKey)
 router.delete('/config/horde', loggedIn, deleteHordeKey)
 router.delete('/config/novel', loggedIn, deleteNovelKey)

@@ -85,7 +85,6 @@ export namespace AppSchema {
     userId: string
     handle: string
     avatar?: string
-    persona?: Persona
   }
 
   export interface User {

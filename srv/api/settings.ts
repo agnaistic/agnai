@@ -59,7 +59,7 @@ export async function getAppConfig(user?: AppSchema.User) {
     }
   }
 
-  appConfig.subs = getCachedSubscriptions(user)
+  appConfig.subs = getCachedSubscriptions()
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter
   appConfig.horde = {

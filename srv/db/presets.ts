@@ -79,7 +79,6 @@ export async function createSubscription(settings: Partial<AppSchema.Subscriptio
     ...settings,
   } as AppSchema.SubscriptionPreset
 
-  subCache.set(preset._id, preset)
   await db('subscription-setting').insertOne(preset)
   return preset
 }
@@ -91,9 +90,6 @@ export async function updateSubscription(
   await db('subscription-setting').updateOne({ _id: id }, { $set: update }, { upsert: false })
   const preset = await db('subscription-setting').findOne({ _id: id })
 
-  if (preset) {
-    subCache.set(preset._id, preset)
-  }
   return preset
 }
 
@@ -102,7 +98,6 @@ export async function deleteSubscription(id: string) {
     { _id: id },
     { $set: { deletedAt: new Date().toISOString() } }
   )
-  subCache.delete(id)
 }
 
 export function getCachedSubscriptionPresets() {
@@ -111,7 +106,8 @@ export function getCachedSubscriptionPresets() {
 }
 
 export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.Subscription[] {
-  const subs = Array.from(subCache.values())
+  const all = Array.from(subCache.values())
+  const subs = all
     .filter((sub) => !sub.subDisabled)
     .map((sub) => ({
       _id: sub._id,
@@ -124,14 +120,22 @@ export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.
   return subs
 }
 
-let prepared = false
+setInterval(async () => {
+  await prepSubscriptionCache().catch(() => null)
+}, 5000)
+
 export async function prepSubscriptionCache() {
-  if (prepared) return
   try {
     const presets = await getSubscriptions()
-    prepared = true
     for (const preset of presets) {
       subCache.set(preset._id, preset)
+    }
+
+    for (const id of Array.from(subCache.keys())) {
+      const exists = presets.some((pre) => pre._id === id)
+      if (!exists) {
+        subCache.delete(id)
+      }
     }
   } catch (ex) {}
 }
