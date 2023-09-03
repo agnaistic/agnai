@@ -13,6 +13,8 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { presetStore, settingStore, toastStore } from '../../store'
 import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
+import { Toggle } from '/web/shared/Toggle'
+import { Card } from '/web/shared/Card'
 
 export const Subscription: Component = () => {
   const { updateTitle } = setComponentPageTitle('Subscription')
@@ -61,6 +63,7 @@ export const Subscription: Component = () => {
         kind: 'subscription-setting',
         subLevel: 0,
         subModel: '',
+        subDisabled: false,
       })
       return
     } else if (params.id === 'default') {
@@ -73,6 +76,7 @@ export const Subscription: Component = () => {
         _id: '',
         subLevel: 0,
         subModel: '',
+        subDisabled: false,
         kind: 'subscription-setting',
       })
       return
@@ -121,6 +125,7 @@ export const Subscription: Component = () => {
       service: ['', ...AI_ADAPTERS],
       subLevel: 'number',
       subModel: 'string',
+      subDisabled: 'boolean',
       thirdPartyFormat: 'string?',
     } as const
     const body = getStrictForm(ref, validator)
@@ -219,8 +224,15 @@ export const Subscription: Component = () => {
                       parentClass="mb-2"
                     />
 
-                    <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
+                    <Card>
+                      <Toggle
+                        fieldName="subDisabled"
+                        label="Disabled"
+                        value={editing()?.subDisabled ?? false}
+                      />
+                    </Card>
                   </div>
+                  <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
                   <div class="flex flex-row justify-end">
                     <Button disabled={state.saving} onClick={onSave}>
                       <Save /> Save

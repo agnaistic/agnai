@@ -1,4 +1,4 @@
-import { Component, Show, createMemo, createSignal } from 'solid-js'
+import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import Modal from '../../shared/Modal'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
@@ -9,6 +9,7 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { A } from '@solidjs/router'
 import ServiceWarning from '/web/shared/ServiceWarning'
+import { isEligible } from './util'
 
 const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: () => void }> = (
   props
@@ -64,6 +65,14 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
     setService(userPreset?.service || '')
     setPreset(userPreset as any)
   }
+
+  onMount(() => {
+    const eligible = isEligible()
+    if (!eligible) return
+
+    setPresetId('agnai')
+    savePreset()
+  })
 
   const Footer = (
     <>

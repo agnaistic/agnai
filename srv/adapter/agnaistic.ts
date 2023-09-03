@@ -1,22 +1,24 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { StatusError } from '../api/wrap'
 import { config } from '../config'
 import { store } from '../db'
-import { getCachedSubscriptions } from '../db/presets'
+import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/presets'
 import { getTextgenCompletion, getTextgenPayload } from './ooba'
 import { registerAdapter } from './register'
 import { websocketStream } from './stream'
 import { ModelAdapter } from './type'
 import { AdapterSetting } from '/common/adapters'
-import { AppSchema } from '/common/types'
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const { char, members, prompt, log, gen } = opts
   const level = opts.user.sub?.level ?? -1
 
-  const preset = await store.presets.getSubscription(opts.gen.registered?.agnaistic?.subscriptionId)
-  if (!preset) {
-    yield { error: 'Invalid request - Subscription invalid' }
+  const subId = opts.gen.registered?.agnaistic?.subscriptionId
+  const preset = subId
+    ? await store.presets.getSubscription(subId)
+    : getCachedSubscriptionPresets().find((sub) => sub.subLevel === -1)
+
+  if (!preset || preset.subDisabled) {
+    yield { error: 'Tier/model selected is invalid or disabled. Try another' }
     return
   }
 
@@ -36,7 +38,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   log.debug(`Prompt:\n${body.prompt}`)
-  await checkLimit(opts.user)
+  // await checkLimit(opts.user)
 
   const resp = gen.streamResponse
     ? await websocketStream({
@@ -141,20 +143,20 @@ export function updateRegisteredSubs() {
   }
 }
 
-async function checkLimit(user: AppSchema.User) {
-  const prev = new Date(user.sub?.last || 0)
-  const diff = Date.now() - prev.valueOf()
+// async function checkLimit(user: AppSchema.User) {
+//   const prev = new Date(user.sub?.last || 0)
+//   const diff = Date.now() - prev.valueOf()
 
-  const level = user.sub?.level ?? 0
+//   const level = user.sub?.level ?? 0
 
-  if (level > 0) return
+//   if (level > 0) return
 
-  /**
-   * @todo Move rate limits to db
-   */
-  if (diff < config.limits.subRate * 1000) {
-    throw new StatusError(`Rate limit exceed - Please try again`, 429)
-  }
+//   /**
+//    * @todo Move rate limits to db
+//    */
+//   if (diff < config.limits.subRate * 1000) {
+//     throw new StatusError(`Rate limit exceed - Please try again`, 429)
+//   }
 
-  await store.users.updateLimit(user._id)
-}
+//   await store.users.updateLimit(user._id)
+// }

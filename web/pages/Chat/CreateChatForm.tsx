@@ -15,7 +15,14 @@ import Select from '../../shared/Select'
 import PersonaAttributes, { getAttributeMap } from '../../shared/PersonaAttributes'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm } from '../../shared/util'
-import { characterStore, chatStore, presetStore, scenarioStore, userStore } from '../../store'
+import {
+  characterStore,
+  chatStore,
+  presetStore,
+  scenarioStore,
+  settingStore,
+  userStore,
+} from '../../store'
 import CharacterSelect from '../../shared/CharacterSelect'
 import { AutoPreset, getPresetOptions } from '../../shared/adapter'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -27,6 +34,7 @@ import Divider from '/web/shared/Divider'
 import PageHeader from '/web/shared/PageHeader'
 import { isLoggedIn } from '/web/store/api'
 import { AppSchema } from '/common/types'
+import { isEligible } from './util'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -44,6 +52,7 @@ const CreateChatForm: Component<{
 
   const nav = useNavigate()
   const scenarios = scenarioStore((s) => s.scenarios)
+  const cfg = settingStore()
   const user = userStore((s) => ({ ...s.user }))
   const state = characterStore((s) => ({
     char: s.editing,
@@ -85,9 +94,10 @@ const CreateChatForm: Component<{
     setScenario(scenarios.find((s) => s._id === scenarioId))
   }
 
-  const [presetId, setPresetId] = createSignal(user.defaultPreset || 'horde')
+  const [presetId, setPresetId] = createSignal(
+    user.defaultPreset || isEligible() ? 'agnai' : 'horde'
+  )
   const presets = presetStore((s) => s.presets)
-
   const presetOptions = createMemo(() => {
     const opts = getPresetOptions(presets, { builtin: true }).filter((pre) => pre.value !== 'chat')
     return [
@@ -97,7 +107,18 @@ const CreateChatForm: Component<{
 
   const selectedPreset = createMemo(() => {
     const id = presetId()
-    if (!id) return defaultPresets.horde
+
+    if (!id) {
+      const userLevel = user.sub?.level ?? -1
+      const eligible = cfg.config.subs.some((sub) => userLevel >= sub.level)
+
+      if (eligible) {
+        return defaultPresets.agnai
+      }
+
+      return defaultPresets.horde
+    }
+
     if (isDefaultPreset(id)) return defaultPresets[id]
     return presets.find((pre) => pre._id === id)
   })
