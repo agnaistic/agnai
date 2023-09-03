@@ -15,8 +15,8 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const level = opts.user.sub?.level ?? -1
 
   const preset = await store.presets.getSubscription(opts.gen.registered?.agnaistic?.subscriptionId)
-  if (!preset) {
-    yield { error: 'Invalid request - Subscription invalid' }
+  if (!preset || preset.subDisabled) {
+    yield { error: 'Tier/model selected is invalid or disabled. Try another' }
     return
   }
 

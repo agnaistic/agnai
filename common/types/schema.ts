@@ -331,6 +331,7 @@ export namespace AppSchema {
     kind: 'subscription-setting'
     subLevel: number
     subModel: string
+    subDisabled: boolean
     deletedAt?: string
   }
 

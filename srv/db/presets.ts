@@ -107,6 +107,7 @@ export async function deleteSubscription(id: string) {
 
 export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.Subscription[] {
   const subs = Array.from(subCache.values())
+    .filter((sub) => !sub.subDisabled)
     .map((sub) => ({
       _id: sub._id,
       name: `${sub.name}`,
