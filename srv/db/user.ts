@@ -235,6 +235,8 @@ export async function deleteUserAccount(userId: string) {
   await db('chat-invite').deleteMany({ byUserId: userId })
   await db('chat-invite').deleteMany({ invitedId: userId })
   await db('chat').deleteMany({ userId })
-  await db('profile').updateOne({ userId }, { $set: { handle: 'Unknown', avatar: '' } })
   await db('user').deleteOne({ _id: userId })
+
+  // We keep the user profile in a skeleton state to ensure no issues occur in chats they were a participant of.
+  await db('profile').updateOne({ userId }, { $set: { handle: 'Unknown', avatar: '' } })
 }
