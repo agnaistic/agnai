@@ -120,15 +120,22 @@ export function getCachedSubscriptions(user?: AppSchema.User | null): AppSchema.
   return subs
 }
 
+setInterval(async () => {
+  await prepSubscriptionCache().catch(() => null)
+}, 5000)
+
 export async function prepSubscriptionCache() {
   try {
     const presets = await getSubscriptions()
     for (const preset of presets) {
       subCache.set(preset._id, preset)
     }
+
+    for (const id of Array.from(subCache.keys())) {
+      const exists = presets.some((pre) => pre._id === id)
+      if (!exists) {
+        subCache.delete(id)
+      }
+    }
   } catch (ex) {}
 }
-
-setInterval(async () => {
-  await prepSubscriptionCache().catch(() => null)
-}, 5000)
