@@ -106,7 +106,7 @@ const ForcePresetModal: Component<{ chat: AppSchema.Chat; show: boolean; close: 
         />
 
         <div class="text-sm">
-          <ServiceWarning service={actual()?.service} />
+          <ServiceWarning preset={actual()} />
         </div>
 
         <Show when={preset() && !preset()?.service}>
