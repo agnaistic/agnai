@@ -280,6 +280,7 @@ export const adapterSettings: {
   earlyStopping: ['ooba'],
   numBeams: ['ooba'],
 
+  replicateModelName: ['replicate'],
   replicateModelVersion: ['replicate'],
   replicateModelType: ['replicate'],
 

@@ -34,6 +34,7 @@ import Accordian from './Accordian'
 import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
 import { getServiceTempConfig } from './adapter'
 import Tabs from './Tabs'
+import { useSearchParams } from '@solidjs/router'
 
 export { GenerationSettings as default }
 
@@ -48,11 +49,12 @@ type Props = {
 const GenerationSettings: Component<Props> = (props) => {
   const state = settingStore((s) => s.config)
   const opts = chatStore((s) => s.opts)
+  const [search, setSearch] = useSearchParams()
 
   const [service, setService] = createSignal(props.inherit?.service)
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
-  const [tab, setTab] = createSignal(0)
+  const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
   const services = createMemo<Option[]>(() => {
     const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
@@ -92,7 +94,14 @@ const GenerationSettings: Component<Props> = (props) => {
         <Show when={!!opts.pane}>
           <TempSettings service={props.inherit?.service} />
         </Show>
-        <Tabs select={setTab} selected={tab} tabs={tabs} />
+        <Tabs
+          select={(ev) => {
+            setTab(ev)
+            setSearch({ tab: ev })
+          }}
+          selected={tab}
+          tabs={tabs}
+        />
         <GeneralSettings
           disabled={props.disabled}
           inherit={props.inherit}
@@ -230,7 +239,6 @@ const GeneralSettings: Component<
           service={props.service}
           aiSetting={'thirdPartyUrl'}
         />
-
         <div class="flex flex-wrap items-start gap-2">
           <Select
             fieldName="thirdPartyFormat"
@@ -287,7 +295,6 @@ const GeneralSettings: Component<
           format={props.format}
           aiSetting={'oaiModel'}
         />
-
         <Select
           fieldName="openRouterModel"
           label="OpenRouter Model"
@@ -299,7 +306,6 @@ const GeneralSettings: Component<
           format={props.format}
           aiSetting={'openRouterModel'}
         />
-
         <div
           class="flex flex-wrap gap-2"
           classList={{ hidden: !isValidServiceSetting(props.service, props.format, 'novelModel') }}
@@ -325,7 +331,22 @@ const GeneralSettings: Component<
             />
           </Show>
         </div>
-
+        <Toggle
+          fieldName="antiBond"
+          label="Anti-Bond"
+          helperText={
+            <>
+              If this option is enabled, OpenAI will be prompted with logit biases to discourage the
+              model from talking about "bonding." This is mostly a problem with GPT-4, but can could
+              also be used with other OpenAI models.
+            </>
+          }
+          value={props.inherit?.antiBond ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'antiBond'}
+        />
         <Select
           fieldName="claudeModel"
           label="Claude Model"
@@ -337,7 +358,6 @@ const GeneralSettings: Component<
           format={props.format}
           aiSetting={'claudeModel'}
         />
-
         <Show when={replicateModels().length > 1}>
           <Select
             fieldName="replicateModelName"
@@ -355,7 +375,6 @@ const GeneralSettings: Component<
             onChange={(ev) => setReplicate('model', ev.value)}
           />
         </Show>
-
         <Select
           fieldName="replicateModelType"
           label="Replicate Model Type"
@@ -368,7 +387,6 @@ const GeneralSettings: Component<
           format={props.format}
           onChange={(ev) => setReplicate('type', ev.value)}
         />
-
         <TextInput
           fieldName="replicateModelVersion"
           label="Replicate Model by Version (SHA)"
@@ -592,25 +610,6 @@ const PromptSettings: Component<
           />
         </Card>
       </div>
-
-      <Card hide={!serviceHasSetting(props.service, props.format, 'antiBond')}>
-        <Toggle
-          fieldName="antiBond"
-          label="Anti-Bond"
-          helperText={
-            <>
-              If this option is enabled, OpenAI will be prompted with logit biases to discourage the
-              model from talking about "bonding." This is mostly a problem with GPT-4, but can could
-              also be used with other OpenAI models.
-            </>
-          }
-          value={props.inherit?.antiBond ?? false}
-          disabled={props.disabled}
-          service={props.service}
-          format={props.format}
-          aiSetting={'antiBond'}
-        />
-      </Card>
     </div>
   )
 }

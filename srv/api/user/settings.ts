@@ -245,8 +245,7 @@ export const updateConfig = handle(async ({ userId, body }) => {
     update.thirdPartyFormat = body.thirdPartyFormat as typeof update.thirdPartyFormat
   }
 
-  const validOobaUrl = await verifyOobaUrl(prevUser, body.oobaUrl)
-  if (validOobaUrl !== undefined) update.oobaUrl = validOobaUrl
+  update.oobaUrl = body.oobaUrl
 
   if (body.images) {
     update.images = body.images
@@ -368,23 +367,6 @@ async function verifyKobldUrl(user: AppSchema.User, incomingUrl?: string) {
   const res = await get({ host: url[0], url: '/api/v1/model' })
   if (res.error) {
     throw new StatusError(`Kobold URL could not be verified: ${res.error.message}`, 400)
-  }
-
-  return url[0]
-}
-
-async function verifyOobaUrl(user: AppSchema.User, incomingUrl?: string) {
-  if (!config.adapters.includes('ooba')) return
-  if (!incomingUrl) return incomingUrl
-  if (user.oobaUrl === incomingUrl) return
-
-  const url = incomingUrl.match(/(http(s{0,1})\:\/\/)([a-z0-9\.\-]+)(\:[0-9]+){0,1}/gm)
-
-  if (!url || !url[0]) {
-    throw new StatusError(
-      `Ooba URL provided could not be verified: Invalid URL format. Use a fully qualified URL. E.g.: https://local-tunnel-url-10-20-30-40.loca.lt`,
-      400
-    )
   }
 
   return url[0]
