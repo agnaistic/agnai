@@ -31,7 +31,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   yield { prompt: body.prompt }
 
-  log.debug({ ...body, prompt: null }, 'Textgen payload')
+  log.debug({ ...body, prompt: null }, 'Agnaistic payload')
 
   if (opts.kind === 'continue') {
     body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
