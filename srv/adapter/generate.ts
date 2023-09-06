@@ -246,9 +246,9 @@ export async function createTextStreamV2(
   }
 
   if (opts.settings.stopSequences) {
-    opts.settings.stopSequences = opts.settings.stopSequences.map((stop) =>
-      stop.replace(/\\n/g, '\n')
-    )
+    opts.settings.stopSequences = opts.settings.stopSequences
+      .map((stop) => stop.replace(/\\n/g, '\n'))
+      .filter((stop) => !!stop)
   }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
