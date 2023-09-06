@@ -1125,7 +1125,7 @@ export function getPresetFormData(ref: any) {
   }
 
   const stopSequences = getFormEntries(ref).reduce<string[]>((prev, [key, value]) => {
-    if (key.startsWith('stop.')) {
+    if (key.startsWith('stop.') && value.length) {
       prev.push(value)
     }
     return prev
