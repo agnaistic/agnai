@@ -1,5 +1,5 @@
 import Sorter from 'sortablejs'
-import { Component, createEffect, createMemo, createSignal, For, JSX, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
