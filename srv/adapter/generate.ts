@@ -245,6 +245,12 @@ export async function createTextStreamV2(
     opts.settings!.useTemplateParser = true
   }
 
+  if (opts.settings.stopSequences) {
+    opts.settings.stopSequences = opts.settings.stopSequences.map((stop) =>
+      stop.replace(/\\n/g, '\n')
+    )
+  }
+
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model)
   const handler = handlers[adapter]

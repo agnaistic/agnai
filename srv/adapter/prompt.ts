@@ -79,5 +79,9 @@ export function getStoppingStrings(opts: AdapterProps) {
     seen.add(member.handle)
   }
 
+  if (opts.gen.stopSequences) {
+    ends.push(...opts.gen.stopSequences)
+  }
+
   return ends
 }

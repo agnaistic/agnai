@@ -10,6 +10,7 @@ export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: strin
 
 export const chatGenSettings = {
   service: AI_ADAPTERS,
+  name: 'string',
   temp: 'number',
   maxTokens: 'number',
   maxContextLength: 'number?',
@@ -78,7 +79,6 @@ export const chatGenSettings = {
 } as const
 
 export const presetValidator = {
-  name: 'string',
   ...chatGenSettings,
 } as const
 

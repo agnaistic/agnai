@@ -1,15 +1,15 @@
 import { Router } from 'express'
 import { StatusError, handle } from './wrap'
-import { chatGenSettings } from '/common/presets'
+import { presetValidator } from '/common/presets'
 import { isAdmin } from './auth'
 import { assertValid } from '/common/valid'
 import { store } from '../db'
 
 const subSetting = {
-  ...chatGenSettings,
-  name: 'string',
+  ...presetValidator,
   subLevel: 'number',
   subModel: 'string?',
+  isDefaultSub: 'boolean?',
 } as const
 
 const get = handle(async () => {

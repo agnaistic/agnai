@@ -4,7 +4,7 @@ import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
 import { AppSchema } from '../../common/types/schema'
-import { defaultPresets, getFallbackPreset } from '../../common/presets'
+import { defaultPresets, getFallbackPreset, presetValidator } from '../../common/presets'
 import {
   OPENAI_MODELS,
   CLAUDE_MODELS,
@@ -16,15 +16,21 @@ import {
   settingLabels,
   AdapterSetting,
   ThirdPartyFormat,
+  THIRDPARTY_FORMATS,
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
-import { Check, X } from 'lucide-solid'
 import { chatStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
-import { getFormEntries, isValidServiceSetting, serviceHasSetting, storage } from './util'
+import {
+  getFormEntries,
+  getStrictForm,
+  isValidServiceSetting,
+  serviceHasSetting,
+  storage,
+} from './util'
 import { createStore } from 'solid-js/store'
 import { defaultTemplate } from '/common/templates'
 import Sortable, { SortItem } from './Sortable'
@@ -35,6 +41,7 @@ import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
 import { getServiceTempConfig } from './adapter'
 import Tabs from './Tabs'
 import { useSearchParams } from '@solidjs/router'
+import { StoppingStrings } from './PhraseBias'
 
 export { GenerationSettings as default }
 
@@ -129,31 +136,6 @@ const GenerationSettings: Component<Props> = (props) => {
         />
       </div>
     </>
-  )
-}
-
-export function CreateTooltip(adapters: string[] | readonly string[]): JSX.Element {
-  const allAdapaters = ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale']
-  return (
-    <div>
-      <For each={allAdapaters}>
-        {(adapter) => (
-          <div class="flex flex-row gap-2">
-            <Show when={adapters.includes(adapter)}>
-              <div class="text-green-500">
-                <Check />
-              </div>
-            </Show>
-            <Show when={!adapters.includes(adapter)}>
-              <div class="text-red-500">
-                <X />
-              </div>
-            </Show>
-            {adapter}
-          </div>
-        )}
-      </For>
-    </div>
   )
 }
 
@@ -439,6 +421,7 @@ const GeneralSettings: Component<
           value={props.inherit?.streamResponse ?? false}
           disabled={props.disabled}
         />
+        <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
       </Card>
     </div>
   )
@@ -1123,6 +1106,32 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
       </Accordian>
     </Show>
   )
+}
+
+export function getPresetFormData(ref: any) {
+  const cfg = settingStore.getState()
+  const data = getStrictForm(ref, {
+    ...presetValidator,
+    thirdPartyFormat: [...THIRDPARTY_FORMATS, ''],
+  })
+  const registered = getRegisteredSettings(data.service as AIAdapter, ref)
+  data.registered = {}
+  data.registered[data.service] = registered
+  data.thirdPartyFormat = data.thirdPartyFormat || (null as any)
+
+  if (data.openRouterModel) {
+    const actual = cfg.config.openRouter.models.find((or) => or.id === data.openRouterModel)
+    data.openRouterModel = actual || undefined
+  }
+
+  const stopSequences = getFormEntries(ref).reduce<string[]>((prev, [key, value]) => {
+    if (key.startsWith('stop.')) {
+      prev.push(value)
+    }
+    return prev
+  }, [])
+
+  return { ...data, stopSequences }
 }
 
 export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {
