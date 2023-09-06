@@ -10,32 +10,20 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import {
-  chatGenSettings,
-  defaultPresets,
-  getFallbackPreset,
-  isDefaultPreset,
-} from '../../../common/presets'
+import { defaultPresets, getFallbackPreset, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
-import GenerationSettings, { getRegisteredSettings } from '../../shared/GenerationSettings'
-import { getStrictForm } from '../../shared/util'
-import { chatStore, settingStore, toastStore, userStore } from '../../store'
+import GenerationSettings, { getPresetFormData } from '../../shared/GenerationSettings'
+import { chatStore, toastStore, userStore } from '../../store'
 import { presetStore } from '../../store'
 import { getAdapter, getChatPreset } from '../../../common/prompt'
-import { AIAdapter, AI_ADAPTERS, adapterSettings } from '../../../common/adapters'
+import { AIAdapter, adapterSettings } from '../../../common/adapters'
 import { AutoPreset, getClientPreset, getPresetOptions } from '../../shared/adapter'
 import ServiceWarning from '/web/shared/ServiceWarning'
 import { PresetSelect } from '/web/shared/PresetSelect'
 import { Card, TitleCard } from '/web/shared/Card'
 import { usePane } from '/web/shared/hooks'
 import TextInput from '/web/shared/TextInput'
-
-const chatGenValidator = {
-  ...chatGenSettings,
-  name: 'string',
-  service: ['', ...AI_ADAPTERS],
-} as const
 
 export const ChatGenSettings: Component<{
   chat: AppSchema.Chat
@@ -45,7 +33,6 @@ export const ChatGenSettings: Component<{
   let ref: any
   const user = userStore()
   const pane = usePane()
-  const cfg = settingStore((s) => s.config)
   const state = presetStore(({ presets }) => ({
     presets,
     options: presets.map((pre) => ({ label: pre.name, value: pre._id })),
@@ -106,15 +93,10 @@ export const ChatGenSettings: Component<{
 
   const onSave = () => {
     const preset = selected()
+    const update = getPresetFormData(ref)
 
     if (isDefaultPreset(preset)) {
       const original = defaultPresets[preset] as AppSchema.GenSettings
-      const update = getStrictForm(ref, { ...chatGenValidator, thirdPartyFormat: 'string?' })
-      const registered = getRegisteredSettings(update.service as AIAdapter, ref)
-      update.registered = {}
-      update.registered[update.service] = registered
-
-      update.thirdPartyFormat = update.thirdPartyFormat || (null as any)
 
       /**
        * The user has selected a default preset and it is unchanged
@@ -125,11 +107,6 @@ export const ChatGenSettings: Component<{
           toastStore.success('Switched preset')
         })
         return
-      }
-
-      if (update.openRouterModel) {
-        const actual = cfg.openRouter.models.find((or) => or.id === update.openRouterModel)
-        update.openRouterModel = actual || undefined
       }
 
       /**
@@ -159,19 +136,9 @@ export const ChatGenSettings: Component<{
         }
       })
 
-      const update = getStrictForm(ref, { ...chatGenValidator, thirdPartyFormat: 'string?' })
-      const registered = getRegisteredSettings(update.service as AIAdapter, ref)
-      update.registered = {}
-      update.registered[update.service] = registered
-      update.thirdPartyFormat = update.thirdPartyFormat || (null as any)
-      if (update.service === '') {
+      if (!update.service) {
         toastStore.error(`You must select an AI service before saving`)
         return
-      }
-
-      if (update.openRouterModel) {
-        const actual = cfg.openRouter.models.find((or) => or.id === update.openRouterModel)
-        update.openRouterModel = actual || undefined
       }
 
       presetStore.updatePreset(preset, update as any)

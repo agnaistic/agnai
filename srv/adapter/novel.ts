@@ -129,12 +129,8 @@ export const handleNovel: ModelAdapter = async function* ({
     }
 
     body.parameters.logit_bias_exp = biases
-    body.parameters.stop_sequences = stops.concat([
-      encode('***'),
-      encode('Scenario:'),
-      encode('----'),
-      encode('⁂'),
-    ])
+    const all = ['***', 'Scenario:', '----', '⁂'].concat(opts.gen.stopSequences || []).map(encode)
+    body.parameters.stop_sequences = stops.concat(all)
   }
 
   if (opts.gen.order && !opts.gen.disabledSamplers) {

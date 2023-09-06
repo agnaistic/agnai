@@ -126,6 +126,7 @@ export const Subscription: Component = () => {
       subLevel: 'number',
       subModel: 'string',
       subDisabled: 'boolean',
+      isDefaultSub: 'boolean',
       thirdPartyFormat: 'string?',
     } as const
     const body = getStrictForm(ref, validator)
@@ -224,11 +225,17 @@ export const Subscription: Component = () => {
                       parentClass="mb-2"
                     />
 
-                    <Card>
+                    <Card class="flex flex-col gap-2">
                       <Toggle
                         fieldName="subDisabled"
                         label="Disabled"
                         value={editing()?.subDisabled ?? false}
+                      />
+                      <Toggle
+                        fieldName="isDefaultSub"
+                        label="Is Default Subscription"
+                        helperText="Is chosen as fallback when no subscription is provided with a request"
+                        value={editing()?.isDefaultSub ?? false}
                       />
                     </Card>
                   </div>

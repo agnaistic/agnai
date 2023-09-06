@@ -331,6 +331,7 @@ export namespace AppSchema {
     subLevel: number
     subModel: string
     subDisabled: boolean
+    isDefaultSub?: boolean
     deletedAt?: string
   }
 
@@ -361,6 +362,7 @@ export namespace AppSchema {
     addBosToken?: boolean
     banEosToken?: boolean
     earlyStopping?: boolean
+    stopSequences?: string[]
 
     order?: number[]
     disabledSamplers?: number[]

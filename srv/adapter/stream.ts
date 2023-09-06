@@ -96,6 +96,10 @@ export async function websocketStream(opts: { url: string; body: any }) {
       accum += obj.text
     }
 
+    if (obj.meta) {
+      emitter.push({ meta: obj.meta })
+    }
+
     if (obj.event === 'error') {
       emitter.push({ error: obj.error })
     }

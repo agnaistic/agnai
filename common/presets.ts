@@ -8,8 +8,9 @@ export type GenerationPreset = keyof typeof defaultPresets
 
 export type GenMap = { [key in keyof Omit<AppSchema.GenSettings, 'name'>]: string }
 
-export const chatGenSettings = {
+export const presetValidator = {
   service: AI_ADAPTERS,
+  name: 'string',
   temp: 'number',
   maxTokens: 'number',
   maxContextLength: 'number?',
@@ -53,6 +54,7 @@ export const chatGenSettings = {
   cfgOppose: 'string?',
   phraseRepPenalty: 'string?',
 
+  stopSequences: ['string?'],
   thirdPartyUrl: 'string?',
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
   thirdPartyUrlNoSuffix: 'boolean?',
@@ -75,11 +77,6 @@ export const chatGenSettings = {
   order: 'string?',
   disabledSamplers: 'string?',
   registered: 'any?',
-} as const
-
-export const presetValidator = {
-  name: 'string',
-  ...chatGenSettings,
 } as const
 
 const disabledValues: { [key in keyof GenMap]?: AppSchema.GenSettings[key] } = {

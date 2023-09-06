@@ -163,7 +163,7 @@ export async function rerunGuidance<T = any>({
 }
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
-  return editMessageProps(msg, { msg: replace })
+  return editMessageProps(msg, { msg: replace.replace(/\r\n/g, '\n') })
 }
 
 export async function editMessageProps(

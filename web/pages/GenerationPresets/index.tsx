@@ -1,17 +1,16 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Show } from 'solid-js'
-import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
+import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
-import GenerationSettings, { getRegisteredSettings } from '../../shared/GenerationSettings'
+import GenerationSettings, { getPresetFormData } from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { presetStore, settingStore, toastStore } from '../../store'
-import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
+import { presetStore, toastStore } from '../../store'
 import Loading from '/web/shared/Loading'
 import { TitleCard } from '/web/shared/Card'
 
@@ -31,8 +30,6 @@ export const GenerationPresetsPage: Component = () => {
   const onEdit = (preset: AppSchema.UserGenPreset) => {
     nav(`/presets/${preset._id}`)
   }
-
-  const cfg = settingStore((s) => s.config)
 
   const state = presetStore(({ presets, saving }) => ({
     saving,
@@ -107,21 +104,9 @@ export const GenerationPresetsPage: Component = () => {
 
   const onSave = (_ev: Event, force?: boolean) => {
     if (state.saving) return
-    const validator = {
-      ...presetValidator,
-      service: ['', ...AI_ADAPTERS],
-      thirdPartyFormat: 'string?',
-    } as const
-    const body = getStrictForm(ref, validator)
+    const body = getPresetFormData(ref)
 
-    body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
-
-    if (body.openRouterModel) {
-      const actual = cfg.openRouter.models.find((or) => or.id === body.openRouterModel)
-      body.openRouterModel = actual || undefined
-    }
-
-    if (body.service === '') {
+    if (!body.service) {
       toastStore.error(`You must select an AI service before saving`)
       return
     }
@@ -132,9 +117,6 @@ export const GenerationPresetsPage: Component = () => {
     }
 
     const prev = editing()
-    const registered = getRegisteredSettings(body.service as AIAdapter, ref)
-    body.registered = { ...prev?.registered }
-    body.registered[body.service] = registered
 
     if (prev?._id) {
       presetStore.updatePreset(prev._id, body as any)

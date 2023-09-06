@@ -7,15 +7,14 @@ import { registerAdapter } from './register'
 import { websocketStream } from './stream'
 import { ModelAdapter } from './type'
 import { AdapterSetting } from '/common/adapters'
+import { AppSchema } from '/common/types'
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const { char, members, prompt, log, gen } = opts
   const level = opts.user.sub?.level ?? -1
 
   const subId = opts.gen.registered?.agnaistic?.subscriptionId
-  const preset = subId
-    ? await store.presets.getSubscription(subId)
-    : getCachedSubscriptionPresets().find((sub) => sub.subLevel === -1)
+  const preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
 
   if (!preset || preset.subDisabled) {
     yield { error: 'Tier/model selected is invalid or disabled. Try another' }
@@ -31,7 +30,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   yield { prompt: body.prompt }
 
-  log.debug({ ...body, prompt: null }, 'Textgen payload')
+  log.debug({ ...body, prompt: null }, 'Agnaistic payload')
 
   if (opts.kind === 'continue') {
     body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
@@ -141,6 +140,31 @@ export async function updateRegisteredSubs() {
       item.setting.options = options
     }
   }
+}
+
+/**
+ * Select the lowest subscription below 0. Prioritise default sub.
+ */
+function getDefaultSubscription() {
+  let match: AppSchema.SubscriptionPreset | undefined
+
+  for (const sub of getCachedSubscriptionPresets()) {
+    if (sub.subLevel >= 0 || sub.subDisabled || sub.deletedAt) continue
+    if (!match) {
+      match = sub
+      continue
+    }
+
+    if (sub.isDefaultSub) {
+      if (!match.isDefaultSub || sub.subLevel < match.subLevel) match = sub
+      continue
+    }
+
+    if (sub.subLevel < match.subLevel) {
+      match = sub
+    }
+  }
+  return match
 }
 
 // async function checkLimit(user: AppSchema.User) {

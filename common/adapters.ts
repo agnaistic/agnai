@@ -271,6 +271,7 @@ export const adapterSettings: {
   presencePenalty: ['openai', 'kobold', 'novel'],
   streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba', 'agnaistic'],
   openRouterModel: ['openrouter'],
+  stopSequences: ['ooba', 'agnaistic', 'novel', 'mancer'],
 
   addBosToken: ['ooba', 'agnaistic'],
   banEosToken: ['ooba', 'agnaistic'],
@@ -336,6 +337,7 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   prefill: 'Bot response prefilling',
   useTemplateParser: 'Use V2 Prompt Parser',
   phraseRepPenalty: 'Phrase Repetition Penality',
+  stopSequences: 'Stop Sequences',
   topG: 'Top G',
   mirostatTau: 'Mirostat Tau',
   mirostatLR: 'Mirostat LR',
