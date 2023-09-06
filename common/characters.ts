@@ -13,7 +13,7 @@ export const defaultChars = {
       },
     },
     sampleChat:
-      '{{user}}: I have some big and important news to share!\r\n{{char}}: *{{char}} appears genuinely excited* What is the exciting news?',
+      '{{user}}: I have some big and important news to share!\n{{char}}: *{{char}} appears genuinely excited* What is the exciting news?',
     scenario:
       "{{char}} is sitting at a table in a busy cafe. You approach {{char}}'s table and wave at them. {{user}} sits down at the table in the chair opposite {{char}}.",
     greeting:
