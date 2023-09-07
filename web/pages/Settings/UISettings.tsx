@@ -92,7 +92,12 @@ const UISettings: Component = () => {
         </div>
       </div>
 
-      <FileInput fieldName="background" label="Background Image" onUpdate={onBackground} />
+      <FileInput
+        fieldName="background"
+        label="Background Image"
+        onUpdate={onBackground}
+        accept="image/png,image/jpeg,image/jpg"
+      />
       <div class="my-2 w-full justify-center">
         <Button onClick={() => userStore.setBackground(null)}>Remove Background</Button>
       </div>

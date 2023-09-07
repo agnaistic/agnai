@@ -121,7 +121,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
 
     const opts: Option[] = []
 
-    if (preset?.service) {
+    if (preset?.service && preset.service !== 'horde') {
       opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value: 'default' })
     }
 
