@@ -52,20 +52,21 @@ const ChubNavigation: Component<{ buttons: boolean }> = (props) => {
               <ArrowLeft />
             </Button>
 
-            <TextInput
-              fieldName="number"
-              class="w-12"
-              value={state.page}
-              onKeyUp={(ev) => {
-                const n = Number(ev.currentTarget.value)
-                if (!isNaN(n) && n !== 0) {
-                  chubStore.setPage(n)
-                  update()
-                } else {
-                  toastStore.error('Not a valid page number.')
-                }
-              }}
-            />
+            <div class="w-12">
+              <TextInput
+                fieldName="number"
+                value={state.page}
+                onKeyUp={(ev) => {
+                  const n = Number(ev.currentTarget.value)
+                  if (!isNaN(n) && n !== 0) {
+                    chubStore.setPage(n)
+                    update()
+                  } else {
+                    toastStore.error('Not a valid page number.')
+                  }
+                }}
+              />
+            </div>
             <Button
               schema="secondary"
               class="rounded-xl"
