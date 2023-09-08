@@ -109,7 +109,7 @@ export function ContextProvider(props: { children: any }) {
     const curr = chars.chatChars.map
     const temps = chats.active?.chat.tempCharacters || {}
 
-    const active = getActiveBots(chats.active.chat, { ...curr, ...temps })
+    const active = getActiveBots(chats.active.chat, { ...curr, ...temps, ...chars.characters.map })
     return distinct(active)
   })
 

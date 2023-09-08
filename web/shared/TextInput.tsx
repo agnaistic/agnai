@@ -23,6 +23,7 @@ const TextInput: Component<{
   lang?: string
   parentClass?: string
   tokenCount?: boolean | ((count: number) => void)
+  step?: number
   ref?: (ref: any) => void
 
   onKeyUp?: (
@@ -172,6 +173,7 @@ const TextInput: Component<{
             spellcheck={props.spellcheck}
             lang={props.lang}
             ref={onRef}
+            step={props.step}
           />
         }
       >

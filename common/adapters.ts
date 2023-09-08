@@ -236,7 +236,7 @@ export type PresetAISettings = Omit<
  * This is al
  */
 export const adapterSettings: {
-  [key in keyof PresetAISettings]: AIAdapter[]
+  [key in keyof PresetAISettings]: Array<AIAdapter | ThirdPartyFormat>
 } = {
   temp: ['kobold', 'novel', 'ooba', 'horde', 'openai', 'scale', 'claude', 'goose', 'agnaistic'],
   maxTokens: AI_ADAPTERS.slice(),
@@ -255,8 +255,8 @@ export const adapterSettings: {
   typicalP: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
 
   topG: ['novel'],
-  mirostatLR: ['novel', 'ooba', 'agnaistic'],
-  mirostatTau: ['novel', 'ooba', 'agnaistic'],
+  mirostatLR: ['novel', 'ooba', 'agnaistic', 'llamacpp'],
+  mirostatTau: ['novel', 'ooba', 'agnaistic', 'llamacpp'],
   cfgScale: ['novel', 'ooba'],
   cfgOppose: ['novel', 'ooba'],
   phraseRepPenalty: ['novel'],

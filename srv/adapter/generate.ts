@@ -251,6 +251,12 @@ export async function createTextStreamV2(
       .filter((stop) => !!stop)
   }
 
+  if (opts.settings.phraseBias) {
+    opts.settings.phraseBias = opts.settings.phraseBias
+      .map(({ seq, bias }) => ({ seq: seq.replace(/\\n/g, '\n'), bias }))
+      .filter((pb) => !!pb.seq)
+  }
+
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model)
   const handler = handlers[adapter]

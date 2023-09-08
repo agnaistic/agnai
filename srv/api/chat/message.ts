@@ -269,6 +269,10 @@ export const generateMessageV2 = handle(async (req, res) => {
         sendMany(members, { type: 'message-error', requestId, error: gen.error, adapter, chatId })
         continue
       }
+
+      if ('warning' in gen) {
+        sendOne(userId, { type: 'message-warning', requestId, warning: gen.warning })
+      }
     }
   } catch (ex: any) {
     error = true
@@ -535,6 +539,11 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     if ('error' in gen) {
       error = true
       sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
+      continue
+    }
+
+    if ('warning' in gen) {
+      sendGuest(guest, { type: 'message-warning', requestId, warning: gen.warning })
       continue
     }
   }

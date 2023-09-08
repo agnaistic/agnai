@@ -73,4 +73,11 @@ export type AdapterProps = {
 
 export type ModelAdapter = (
   opts: AdapterProps
-) => AsyncGenerator<string | { partial: string } | { error: any } | { meta: any } | { prompt: any }>
+) => AsyncGenerator<
+  | string
+  | { partial: string }
+  | { error: any }
+  | { meta: any }
+  | { prompt: any }
+  | { warning: string }
+>

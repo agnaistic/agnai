@@ -4,6 +4,13 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_8 Sept 2023_
+- Add the "Agnaistic" service for models hosted by Agnai
+- Add stop sequences and phrase bias
+- Fix "speak as" buttons not appearing when characters added
+- Improve Ooba(Textgen) support (Add response streaming and add missing paramters) and add Llama.cpp support as third party format.
+- Add sampler order by Kobold and Novel
+
 _29 June 2023_
 - Add character "sprites". These are an alternative to avatar images.
 - "Trim Sentences" option in UI settings. This will trim incomplete sentences.
