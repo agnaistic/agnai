@@ -773,6 +773,10 @@ subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   msgStore.setState({ partial: undefined, waiting: undefined, msgs: nextMsgs, retrying: undefined })
 })
 
+subscribe('message-warning', { warning: 'string' }, (body) => {
+  toastStore.warn(body.warning)
+})
+
 subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   const ids = new Set(body.ids)
   const { msgs } = msgStore.getState()

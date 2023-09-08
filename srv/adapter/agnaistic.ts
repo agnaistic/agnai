@@ -13,12 +13,23 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const { char, members, prompt, log, gen } = opts
   const level = opts.user.sub?.level ?? -1
 
+  const fallback = getDefaultSubscription()
+
   const subId = opts.gen.registered?.agnaistic?.subscriptionId
-  const preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
+  let preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
 
   if (!preset || preset.subDisabled) {
-    yield { error: 'Tier/model selected is invalid or disabled. Try another' }
-    return
+    // If the subscription they're using becomes unavailable, gracefully fallback to the default and let them know
+    if (fallback && !fallback.subDisabled && fallback.subLevel <= level) {
+      preset = fallback
+      yield {
+        warning:
+          'Your configured Agnaistic model/tier is no longer available. Using a fallback. Please update your preset.',
+      }
+    } else {
+      yield { error: 'Tier/model selected is invalid or disabled. Try another' }
+      return
+    }
   }
 
   if (preset.subLevel > level) {

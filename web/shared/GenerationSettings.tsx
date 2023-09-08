@@ -41,7 +41,7 @@ import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
 import { getServiceTempConfig } from './adapter'
 import Tabs from './Tabs'
 import { useSearchParams } from '@solidjs/router'
-import { StoppingStrings } from './PhraseBias'
+import { PhraseBias, StoppingStrings } from './PhraseBias'
 
 export { GenerationSettings as default }
 
@@ -96,6 +96,25 @@ const GenerationSettings: Component<Props> = (props) => {
             onChange={onServiceChange}
             disabled={props.disabled || props.disableService}
           />
+          <Select
+            fieldName="thirdPartyFormat"
+            label="Kobold / 3rd-party Format"
+            helperText="Re-formats the prompt to the desired output format."
+            items={[
+              { label: 'None', value: '' },
+              { label: 'Kobold', value: 'kobold' },
+              { label: 'OpenAI', value: 'openai' },
+              { label: 'Claude', value: 'claude' },
+              { label: 'Textgen (Ooba)', value: 'ooba' },
+              { label: 'Llama.cpp', value: 'llamacpp' },
+            ]}
+            value={props.inherit?.thirdPartyFormat ?? ''}
+            service={props.service}
+            format={props.inherit?.thirdPartyFormat}
+            aiSetting={'thirdPartyFormat'}
+            onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
+          />
+
           <RegisteredSettings service={service()} inherit={props.inherit} />
         </Card>
         <Show when={!!opts.pane}>
@@ -222,25 +241,6 @@ const GeneralSettings: Component<
           aiSetting={'thirdPartyUrl'}
         />
         <div class="flex flex-wrap items-start gap-2">
-          <Select
-            fieldName="thirdPartyFormat"
-            label="Kobold / 3rd-party Format"
-            helperText="Re-formats the prompt to the desired output format."
-            items={[
-              { label: 'None', value: '' },
-              { label: 'Kobold', value: 'kobold' },
-              { label: 'OpenAI', value: 'openai' },
-              { label: 'Claude', value: 'claude' },
-              { label: 'Textgen (Ooba)', value: 'ooba' },
-              { label: 'Llama.cpp', value: 'llamacpp' },
-            ]}
-            value={props.inherit?.thirdPartyFormat ?? ''}
-            service={props.service}
-            format={props.inherit?.thirdPartyFormat}
-            aiSetting={'thirdPartyFormat'}
-            onChange={(ev) => props.setFormat(ev.value as ThirdPartyFormat)}
-          />
-
           <Toggle
             fieldName="thirdPartyUrlNoSuffix"
             label="Disable Auto-URL"
@@ -383,7 +383,7 @@ const GeneralSettings: Component<
         />
       </Card>
 
-      <Card>
+      <Card class="flex flex-col gap-2">
         <RangeInput
           fieldName="maxTokens"
           label="Max New Tokens"
@@ -422,6 +422,7 @@ const GeneralSettings: Component<
           disabled={props.disabled}
         />
         <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
+        <PhraseBias inherit={props.inherit} service={props.service} format={props.format} />
       </Card>
     </div>
   )
@@ -747,7 +748,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         />
         <RangeInput
           fieldName="mirostatLR"
-          label="Mirostat LR"
+          label="Mirostat Learning Rate (ETA)"
           helperText="Mirostat aims to keep the text at a fixed complexity set by tau."
           min={0}
           max={1}
@@ -1124,14 +1125,27 @@ export function getPresetFormData(ref: any) {
     data.openRouterModel = actual || undefined
   }
 
-  const stopSequences = getFormEntries(ref).reduce<string[]>((prev, [key, value]) => {
+  const entries = getFormEntries(ref)
+  const stopSequences = entries.reduce<string[]>((prev, [key, value]) => {
     if (key.startsWith('stop.') && value.length) {
       prev.push(value)
     }
     return prev
   }, [])
 
-  return { ...data, stopSequences }
+  const phraseBias = Object.values(
+    entries.reduce<any>((prev, [key, value]) => {
+      if (!key.startsWith('phraseBias.')) return prev
+      const [, id, prop] = key.split('.')
+      if (!prev[id]) prev[id] = {}
+      prev[id][prop] = prop === 'seq' ? value : +value
+      return prev
+    }, {}) as Array<{ seq: string; bias: number }>
+  ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
+
+  console.log(phraseBias)
+
+  return { ...data, stopSequences, phraseBias }
 }
 
 export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {

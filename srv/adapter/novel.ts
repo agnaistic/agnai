@@ -88,24 +88,12 @@ export const handleNovel: ModelAdapter = async function* ({
   } else {
     const { encode } = getEncoder('novel', model)
     const stops: Array<number[]> = []
-    const biases: any[] = [
-      // {
-      //   bias: -0.1,
-      //   ensure_sequence_finish: false,
-      //   generate_once: false,
-      //   sequence: encode('***'),
-      // },
-      // {
-      //   bias: -0.1,
-      //   ensure_sequence_finish: false,
-      //   generate_once: false,
-      //   sequence: encode('⁂'),
-      // },
-    ]
+    const biases: any[] = []
 
     for (const { bias, seq } of opts.gen.phraseBias || []) {
       biases.push({
-        bias,
+        // Range from -2 to 2
+        bias: Math.min(Math.max(bias, -2), 2),
         sequence: encode(seq),
         generate_once: true,
         ensure_sequence_finish: false,
