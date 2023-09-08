@@ -204,8 +204,8 @@ const HordeGuide: Component<{ close: () => void }> = (props) => (
         Using high values for 'Max New Tokens' is the main cause of timeouts and slow replies.
       </Card>
       <Card>
-        By default we use anonymous access and the <b>Pygmalion 6B</b> model. You can provide your
-        API key or change the model in the Settings page.
+        By default we use anonymous access. You can provide your API key or change the model in the
+        Settings page.
       </Card>
     </div>
   </Modal>
