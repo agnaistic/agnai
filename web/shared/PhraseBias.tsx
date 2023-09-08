@@ -6,7 +6,7 @@ import TextInput from './TextInput'
 import { MinusCircle } from 'lucide-solid'
 import Button from './Button'
 import { isValidServiceSetting } from './util'
-import RangeInput, { InlineRangeInput } from './RangeInput'
+import { InlineRangeInput } from './RangeInput'
 
 export const PhraseBias: Component<{
   inherit?: Partial<AppSchema.GenSettings>
