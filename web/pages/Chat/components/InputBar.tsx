@@ -1,4 +1,4 @@
-import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Zap } from 'lucide-solid'
+import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
@@ -181,7 +181,8 @@ const InputBar: Component<{
         parentClass="flex w-full"
         class="input-bar rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
-          if (ev.key === 'Enter' && !ev.shiftKey) {
+          const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
+          if (ev.key === 'Enter' && !ev.shiftKey && !isMobileDevice) {
             send()
             ev.preventDefault()
           }
@@ -191,7 +192,7 @@ const InputBar: Component<{
 
       <SpeechRecognitionRecorder
         culture={props.char?.culture}
-        class="right-11"
+        class="right-20"
         onText={(value) => setText(value)}
         onSubmit={() => send()}
         cleared={cleared}
@@ -202,6 +203,7 @@ const InputBar: Component<{
       >
         <MoreHorizontal />
       </button>
+
       <DropMenu show={menu()} close={() => setMenu(false)} vert="up" horz="left">
         <div class="flex w-48 flex-col gap-2 p-2">
           {/* <Button schema="secondary" class="w-full" onClick={generateSelf} alignLeft>
@@ -277,6 +279,9 @@ const InputBar: Component<{
           </Show>
         </div>
       </DropMenu>
+      <Button schema="clear">
+        <Send class="icon-button" size={18} onClick={send} />
+      </Button>
     </div>
   )
 }
