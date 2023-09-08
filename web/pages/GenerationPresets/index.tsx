@@ -174,7 +174,7 @@ export const GenerationPresetsPage: Component = () => {
                   fieldName="name"
                   label="Name"
                   helperText="A name or short description of your preset"
-                  placeholder="E.g. Pygmalion Creative"
+                  placeholder="Preset name"
                   value={editing()?.name}
                   required
                   parentClass="mb-2"

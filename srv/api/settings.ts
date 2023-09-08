@@ -8,7 +8,7 @@ import { handle } from './wrap'
 import { AppSchema } from '../../common/types/schema'
 import { store } from '../db'
 import { RegisteredAdapter } from '/common/adapters'
-import { getHordeWorkers, getHoredeModels } from './horde'
+import { getHordeWorkers, getHordeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
 import { getCachedSubscriptions, prepSubscriptionCache } from '../db/presets'
 import { updateRegisteredSubs } from '../adapter/agnaistic'
@@ -29,7 +29,7 @@ export default router
 export async function getAppConfig(user?: AppSchema.User) {
   const canAuth = isConnected()
   const workers = getHordeWorkers()
-  const models = getHoredeModels()
+  const models = getHordeModels()
   const openRouter = await getOpenRouterModels()
 
   if (!appConfig) {

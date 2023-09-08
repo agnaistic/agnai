@@ -104,7 +104,7 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     thirdPartyPassword: '',
     novelModel: NOVEL_MODELS.euterpe,
     oobaUrl: '',
-    hordeModel: 'PygmalionAI/pygmalion-6b',
+    hordeModel: 'any',
     hordeKey: '',
     oaiKey: '',
     defaultPresets: {},
