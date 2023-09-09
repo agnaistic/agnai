@@ -1143,8 +1143,6 @@ export function getPresetFormData(ref: any) {
     }, {}) as Array<{ seq: string; bias: number }>
   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  console.log(phraseBias)
-
   return { ...data, stopSequences, phraseBias }
 }
 
@@ -1166,12 +1164,12 @@ const RegisteredSettings: Component<{
   service?: AIAdapter
   inherit?: Partial<AppSchema.GenSettings>
 }> = (props) => {
-  const state = settingStore((s) => s.config)
+  const state = settingStore()
 
   const options = createMemo(() => {
     if (!props.service) return []
 
-    const svc = state.registered.find((reg) => reg.name === props.service)
+    const svc = state.config.registered.find((reg) => reg.name === props.service)
     if (!svc) return []
 
     return svc.settings.filter((s) => s.preset)

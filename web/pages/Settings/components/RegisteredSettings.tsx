@@ -39,9 +39,10 @@ export const ServiceOption: Component<{
   const field = createMemo(
     () => props.field?.(props.opt.field) || `adapterConfig.${props.service}.${props.opt.field}`
   )
-  const options = createMemo(() =>
-    props.opt.setting.type === 'list' ? props.opt.setting.options : []
-  )
+  const options = createMemo(() => {
+    const opts = props.opt.setting.type === 'list' ? props.opt.setting.options : []
+    return opts
+  })
 
   const isSet = createMemo(() => {
     const prop = `${props.opt.field}Set`
