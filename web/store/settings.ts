@@ -337,3 +337,25 @@ async function loadSlotConfig() {
     settingStore.setState({ slots, slotsLoaded: true })
   }
 }
+
+setInterval(async () => {
+  const { config } = settingStore.getState()
+  if (!config.subs.length) return
+
+  const res = await usersApi.getSubscriptions()
+  if (!res.result) return
+
+  const opts = res.result.subscriptions.map((sub) => ({ label: sub.name, value: sub._id }))
+  const next = {
+    ...config,
+    subs: res.result.subscriptions,
+    registered: config.registered.map((reg) => {
+      if (reg.name !== 'agnaistic') return reg
+      const settings = reg.settings.map((s) =>
+        s.field === 'subscriptionId' ? { ...s, setting: { ...s.setting, options: opts } } : s
+      )
+      return { ...reg, settings }
+    }),
+  }
+  settingStore.setState({ config: next })
+}, 60000)
