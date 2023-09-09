@@ -277,6 +277,7 @@ export namespace AppSchema {
 
     createdAt: string
     updatedAt: string
+    deletedAt?: string
 
     favorite?: boolean
 
