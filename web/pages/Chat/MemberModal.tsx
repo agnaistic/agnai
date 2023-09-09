@@ -1,4 +1,4 @@
-import { ArrowBigLeft, Crown, Eye, EyeOff, Mail, Plus, Trash } from 'lucide-solid'
+import { ArchiveRestore, ArrowBigLeft, Crown, Eye, EyeOff, Mail, Plus, Trash } from 'lucide-solid'
 import { Component, createMemo, createSignal, For, Match, onMount, Show, Switch } from 'solid-js'
 import { AppSchema } from '../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../shared/AvatarIcon'
@@ -14,6 +14,7 @@ import { getActiveBots } from './util'
 import Divider from '/web/shared/Divider'
 import Convertible from './Convertible'
 import { CreateCharacterForm } from '../Character/CreateCharacterForm'
+import Accordian from '/web/shared/Accordian'
 
 type View = 'list' | 'invite_user' | 'add_character' | 'temp_character'
 
@@ -128,15 +129,16 @@ const ParticipantsList: Component<{
 
   const temps = createMemo(() => {
     const chat = state.active?.chat
-    if (!chat) return { active: [], inactive: [] }
+    if (!chat) return { active: [], inactive: [], deleted: [] }
 
-    if (!chat.tempCharacters) return { active: [], inactive: [] }
+    if (!chat.tempCharacters) return { active: [], inactive: [], deleted: [] }
 
     const all = Object.values(chat.tempCharacters)
-    const active = all.filter((char) => char.favorite !== false)
-    const inactive = all.filter((char) => char.favorite === false)
+    const active = all.filter((char) => char.favorite !== false && !char.deletedAt)
+    const inactive = all.filter((char) => char.favorite === false && !char.deletedAt)
+    const deleted = all.filter((ch) => !!ch.deletedAt)
 
-    return { active, inactive }
+    return { active, inactive, deleted }
   })
 
   const isOwner = createMemo(() => self.user?._id === state.active?.chat.userId)
@@ -217,6 +219,27 @@ const ParticipantsList: Component<{
           />
         )}
       </For>
+
+      <Show when={temps().deleted.length > 0}>
+        <Accordian
+          open={false}
+          title={<span class="text-600">Deleted Temporary Characters</span>}
+          class="bg-800"
+        >
+          <For each={temps().deleted}>
+            {(char) => (
+              <CharacterParticipant
+                chat={state.active?.chat}
+                char={char}
+                remove={removeChar}
+                canRemove={false}
+                isMain={props.charId === char._id}
+                edit={props.edit}
+              />
+            )}
+          </For>
+        </Accordian>
+      </Show>
 
       <ConfirmModal
         show={!!deleting()}
@@ -367,6 +390,22 @@ const CharacterParticipant: Component<{
     chatStore.upsertTempCharacter(props.chat._id, { ...props.char, favorite: state })
   }
 
+  const deleteTempChar = () => {
+    if (!props.chat) return
+    chatStore.upsertTempCharacter(props.chat._id, {
+      ...props.char,
+      deletedAt: new Date().toISOString(),
+    })
+  }
+
+  const restoreTempChar = () => {
+    if (!props.chat) return
+    chatStore.upsertTempCharacter(props.chat._id, {
+      ...props.char,
+      deletedAt: '',
+    })
+  }
+
   return (
     <div class="bg-800 flex items-center justify-between gap-2 rounded-md p-1">
       <div
@@ -378,7 +417,9 @@ const CharacterParticipant: Component<{
       >
         <CharacterAvatar format={{ corners: 'circle', size: 'sm' }} char={props.char} openable />
         <div class="ellipsis flex flex-col">
-          <div class="ellipsis">{props.char.name}</div>
+          <div class="ellipsis" classList={{ 'text-600': !!props.char.deletedAt }}>
+            {props.char.name}
+          </div>
           <div class="text-xs italic text-[var(--text-600)]">
             {props.isMain
               ? 'Main Character'
@@ -403,17 +444,31 @@ const CharacterParticipant: Component<{
       </Show>
 
       <Show when={props.chat && isTemp()}>
-        <Show when={props.char.favorite !== false}>
-          <Button schema="clear" onClick={() => toggleTempChar(false)}>
-            <Eye size={16} />
-          </Button>
-        </Show>
+        <div class="flex gap-2">
+          <Show when={!props.char.deletedAt && props.char.favorite !== false}>
+            <Button schema="clear" class="px-2" size="sm" onClick={() => toggleTempChar(false)}>
+              <Eye size={16} />
+            </Button>
+          </Show>
 
-        <Show when={props.char.favorite === false}>
-          <Button schema="clear" onClick={() => toggleTempChar(true)}>
-            <EyeOff size={16} color="var(--bg-500)" />
-          </Button>
-        </Show>
+          <Show when={!props.char.deletedAt && props.char.favorite === false}>
+            <Button schema="clear" class="px-2" size="sm" onClick={() => toggleTempChar(true)}>
+              <EyeOff size={16} color="var(--bg-500)" />
+            </Button>
+          </Show>
+
+          <Show when={!props.char.deletedAt}>
+            <Button schema="clear" class="px-2" size="sm" onClick={() => deleteTempChar()}>
+              <Trash size={16} />
+            </Button>
+          </Show>
+
+          <Show when={!!props.char.deletedAt}>
+            <Button schema="clear" class="px-2" size="sm" onClick={() => restoreTempChar()}>
+              <ArchiveRestore size={16} />
+            </Button>
+          </Show>
+        </div>
       </Show>
     </div>
   )

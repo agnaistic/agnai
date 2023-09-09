@@ -76,6 +76,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
       scenario: 'string',
       avatar: 'string?',
       favorite: 'boolean?',
+      deletedAt: 'string?',
     },
     body
   )
@@ -102,6 +103,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
     description: body.description,
     greeting: body.greeting,
     favorite: body.favorite !== undefined ? body.favorite : prev?.favorite,
+    deletedAt: body.deletedAt,
   }
 
   tempCharacters[upserted._id] = upserted

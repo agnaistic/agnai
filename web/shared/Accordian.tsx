@@ -19,11 +19,7 @@ const Accordian: Component<{
   }
 
   return (
-    <div
-      class={`w-full select-none rounded-md bg-[var(--bg-700)] bg-opacity-50 p-2 ${
-        props.class || ''
-      }`}
-    >
+    <div class={`bg-700 w-full select-none rounded-md bg-opacity-50 p-2 ${props.class || ''}`}>
       <div class="flex cursor-pointer items-center gap-2">
         <div class="icon-button" onClick={toggleOpen}>
           <Show when={open()} fallback={<ChevronUp />}>
