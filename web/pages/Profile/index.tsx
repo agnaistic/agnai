@@ -1,4 +1,4 @@
-import { Save, X } from 'lucide-solid'
+import { AlertTriangle, Save, X } from 'lucide-solid'
 import { Component, Show, createEffect, createSignal, onMount } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
@@ -43,6 +43,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   const nav = useNavigate()
   const state = userStore()
   const [pass, setPass] = createSignal(false)
+  const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
 
   const onAvatar = (files: FileInputResult[]) => {
@@ -132,18 +133,23 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             <Button onClick={() => setPass(true)}>Change Password</Button>
           </div>
 
-          <div class="flex justify-center">
-            <Button
-              schema="warning"
-              onClick={() => {
-                userStore.modal(false)
-                userStore.logout()
-                nav('/')
-              }}
-            >
-              Logout
-            </Button>
-          </div>
+          <Show when={state.user?._id !== 'anon'}>
+            <div class="flex justify-center gap-4">
+              <Button
+                schema="warning"
+                onClick={() => {
+                  userStore.logout()
+                  nav('/')
+                }}
+              >
+                Logout
+              </Button>
+
+              <Button schema="red" onClick={() => setDel(true)}>
+                <AlertTriangle /> Delete Account <AlertTriangle />
+              </Button>
+            </div>
+          </Show>
 
           <Show when={!props.footer}>
             <div class="mt-4 flex w-full justify-end">{footer}</div>
@@ -151,6 +157,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
         </div>
       </form>
       <PasswordModal show={pass()} close={() => setPass(false)} />
+      <DeleteAccountModal show={del()} close={() => setDel(false)} />
     </>
   )
 }
@@ -204,6 +211,60 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
               placeholder="Repeat Password"
             />
           </form>
+        </div>
+      </Modal>
+    ),
+  })
+
+  return null
+}
+
+const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  const state = userStore()
+  const [username, setUsername] = createSignal('')
+
+  const deleteAccount = () => {
+    if (!username()) return
+    if (username() !== state.user?.username) return
+
+    props.close()
+    userStore.deleteAccount()
+  }
+
+  rootModalStore.addModal({
+    id: 'delete-account-modal',
+    element: (
+      <Modal
+        title="Delete Account"
+        show={props.show}
+        close={props.close}
+        footer={
+          <>
+            <Button schema="secondary" onClick={props.close}>
+              Cancel
+            </Button>
+          </>
+        }
+      >
+        <div class="flex flex-col items-center gap-2">
+          <TitleCard type="rose" class="font-bold">
+            This is irreversible! Your account cannot be recovered if it is deleted.
+          </TitleCard>
+
+          <p>Enter your username then click "Confirm" to confirm the deletion of your account</p>
+
+          <TextInput
+            fieldName="delete-username"
+            onInput={(ev) => setUsername(ev.currentTarget.value)}
+            placeholder="Username"
+          />
+          <Button
+            disabled={username() !== state.user?.username}
+            schema="red"
+            onClick={deleteAccount}
+          >
+            Confirm Deletion
+          </Button>
         </div>
       </Modal>
     ),
