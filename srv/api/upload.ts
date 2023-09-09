@@ -58,6 +58,8 @@ export async function entityUpload(kind: string, id: string, attachment?: Attach
 
 export async function entityUploadBase64(kind: string, id: string, content?: string) {
   if (!content) return
+  if (!content.includes(',')) return
+
   const filename = `${kind}-${id}`
   const attachment = toAttachment(content)
   return upload(attachment, filename)
