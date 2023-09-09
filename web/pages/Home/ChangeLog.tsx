@@ -4,6 +4,10 @@ import { markdown } from '../../shared/markdown'
 import { setComponentPageTitle } from '../../shared/util'
 
 const text = `
+_9 Sept 2023_
+- "Enter" no longer sends message on mobile
+- Added ability to delete account
+
 _8 Sept 2023_
 - Add the "Agnaistic" service for models hosted by Agnai
 - Add stop sequences and phrase bias

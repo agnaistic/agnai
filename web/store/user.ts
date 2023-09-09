@@ -195,7 +195,7 @@ export const userStore = createStore<UserState>(
       const res = await api.post('/user/register', newUser)
       yield { loading: false }
       if (res.error) {
-        return toastStore.error(`Failed to register`)
+        return toastStore.error(`Failed to register: ${res.error}`)
       }
 
       setAuth(res.result.token)
@@ -220,9 +220,22 @@ export const userStore = createStore<UserState>(
         profile: undefined,
         user: undefined,
         loggedIn: false,
+        showProfile: false,
         ui,
       }
       events.emit(EVENTS.loggedOut)
+    },
+
+    async *deleteAccount() {
+      const res = await api.method('delete', '/user/my-account')
+      if (res.result) {
+        toastStore.error('Account deleted')
+        userStore.logout()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not delete account: ${res.error}`)
+      }
     },
 
     async saveUI({ ui }, update: Partial<UI.UISettings>) {
