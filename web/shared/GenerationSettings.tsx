@@ -109,8 +109,8 @@ const GenerationSettings: Component<Props> = (props) => {
               { label: 'Llama.cpp', value: 'llamacpp' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? ''}
-            service={props.service}
-            format={props.inherit?.thirdPartyFormat}
+            service={service()}
+            format={format()}
             aiSetting={'thirdPartyFormat'}
             onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
           />
