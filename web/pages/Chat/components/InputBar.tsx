@@ -182,7 +182,8 @@ const InputBar: Component<{
         class="input-bar rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
           const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
-          if (ev.key === 'Enter' && !ev.shiftKey && !isMobileDevice) {
+          const canMobileSend = isMobileDevice ? user.ui.mobileSendOnEnter : true
+          if (ev.key === 'Enter' && !ev.shiftKey && canMobileSend) {
             send()
             ev.preventDefault()
           }

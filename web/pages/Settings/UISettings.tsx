@@ -114,7 +114,7 @@ const UISettings: Component = () => {
       />
 
       <Divider />
-      <h3 class="text-md font-bold">Chat View Settings</h3>
+      <h3 class="text-md font-bold">Chat Settings</h3>
 
       <Toggle
         label="Trim Incomplete Sentences"
@@ -123,12 +123,20 @@ const UISettings: Component = () => {
         onChange={(next) => userStore.saveUI({ trimSentences: next })}
       />
 
+      <Toggle
+        fieldName="mobileSendOnEnter"
+        label="Send Message on Enter on Mobile"
+        helperText='Instead of adding a line break, "Enter" will send the message (Mobile only)'
+        value={state.ui.mobileSendOnEnter}
+        onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
+      />
+
       <Select
         fieldName="chatMode"
         label="View Mode"
         helperText={
           <>
-            <b>Standard</b>: Messages take up the entire chat screen.
+            <b>Standard</b>: Messages take up the entire chat screen.∏
             <br />
             <b>Split</b>: Character's avatar appears at the top of the screen
           </>
