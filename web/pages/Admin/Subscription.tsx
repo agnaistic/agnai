@@ -28,6 +28,7 @@ export const Subscription: Component = () => {
   const [editing, setEditing] = createSignal<AppSchema.SubscriptionPreset>()
   const [deleting, setDeleting] = createSignal(false)
   const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
+  const [service, setService] = createSignal<AIAdapter>()
 
   const onEdit = (preset: AppSchema.SubscriptionPreset) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -63,6 +64,7 @@ export const Subscription: Component = () => {
         kind: 'subscription-setting',
         subLevel: 0,
         subModel: '',
+        subApiKey: '',
         subDisabled: false,
       })
       return
@@ -76,6 +78,7 @@ export const Subscription: Component = () => {
         _id: '',
         subLevel: 0,
         subModel: '',
+        subApiKey: '',
         subDisabled: false,
         kind: 'subscription-setting',
       })
@@ -125,7 +128,9 @@ export const Subscription: Component = () => {
       service: ['', ...AI_ADAPTERS],
       subLevel: 'number',
       subModel: 'string',
+      subServiceUrl: 'string',
       subDisabled: 'boolean',
+      subApiKey: 'string',
       isDefaultSub: 'boolean',
       thirdPartyFormat: 'string?',
     } as const
@@ -207,6 +212,20 @@ export const Subscription: Component = () => {
                       required
                       parentClass="mb-2"
                     />
+
+                    <TextInput
+                      fieldName="subApiKey"
+                      label="API Key"
+                      helperText="(Optional) API Key for your AI service if applicable."
+                      placeholder={
+                        editing()?.subApiKeySet ? 'API Key is set' : 'API Key is not set'
+                      }
+                      type="password"
+                      value={editing()?.subApiKey || ''}
+                      required
+                      parentClass="mb-2"
+                    />
+
                     <TextInput
                       type="number"
                       fieldName="subLevel"
@@ -215,20 +234,34 @@ export const Subscription: Component = () => {
                       value={editing()?.subLevel ?? 0}
                       required
                     />
-                    <TextInput
-                      fieldName="subModel"
-                      label="Model"
-                      helperText="(Optional) Model to use"
-                      placeholder=""
-                      value={editing()?.subModel}
-                      required
-                      parentClass="mb-2"
-                    />
 
-                    <Card class="flex flex-col gap-2">
+                    <Card hide={service() !== 'agnaistic'} class="mt-4">
+                      <TextInput
+                        fieldName="subModel"
+                        label="Model"
+                        helperText="Agnaistic service only"
+                        placeholder=""
+                        value={editing()?.subModel}
+                        required
+                        parentClass="mb-2"
+                      />
+
+                      <TextInput
+                        fieldName="subServiceUrl"
+                        label="Model Service URL"
+                        helperText="Agnaistic service only"
+                        placeholder="https://..."
+                        value={editing()?.subServiceUrl}
+                        required
+                        parentClass="mb-2"
+                      />
+                    </Card>
+
+                    <Card class="mt-4 flex flex-col gap-2">
                       <Toggle
                         fieldName="subDisabled"
-                        label="Disabled"
+                        label="Subscription Disabled"
+                        helperText="Disable the use of this subscription"
                         value={editing()?.subDisabled ?? false}
                       />
                       <Toggle
@@ -239,7 +272,11 @@ export const Subscription: Component = () => {
                       />
                     </Card>
                   </div>
-                  <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
+                  <GenerationSettings
+                    inherit={editing()}
+                    disabled={params.id === 'default'}
+                    onService={setService}
+                  />
                   <div class="flex flex-row justify-end">
                     <Button disabled={state.saving} onClick={onSave}>
                       <Save /> Save

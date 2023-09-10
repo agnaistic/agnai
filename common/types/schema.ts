@@ -331,6 +331,9 @@ export namespace AppSchema {
     kind: 'subscription-setting'
     subLevel: number
     subModel: string
+    subApiKey: string
+    subApiKeySet?: boolean
+    subServiceUrl?: string
     subDisabled: boolean
     isDefaultSub?: boolean
     deletedAt?: string
