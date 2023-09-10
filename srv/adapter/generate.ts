@@ -10,26 +10,14 @@ import { store } from '../db'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
-import { handleHorde } from './horde'
-import { handleKobold } from './kobold'
-import { handleNovel } from './novel'
-import { handleOoba } from './ooba'
-import { handleOAI } from './openai'
-import { handleClaude } from './claude'
-import { GenerateRequestV2, ModelAdapter } from './type'
+import { GenerateRequestV2 } from './type'
 import { createPromptWithParts, getAdapter, getPromptParts } from '../../common/prompt'
-import { handleScale } from './scale'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
-import { handleGooseAI } from './goose'
-import { handleReplicate } from './replicate'
 import { getAppConfig } from '../api/settings'
-import { handleOpenRouter } from './openrouter'
-import { handleMancer } from './mancer'
-import { handlePetals } from './petals'
-import { handleAgnaistic } from './agnaistic'
+import { getHandlers, handlers } from './agnaistic'
 
 let version = ''
 
@@ -50,22 +38,6 @@ configure(async (opts) => {
 
   return { body: res.body, statusCode: res.statusCode, statusMessage: res.statusMessage }
 }, logger)
-
-const handlers: { [key in AIAdapter]: ModelAdapter } = {
-  novel: handleNovel,
-  kobold: handleKobold,
-  ooba: handleOoba,
-  horde: handleHorde,
-  openai: handleOAI,
-  scale: handleScale,
-  claude: handleClaude,
-  goose: handleGooseAI,
-  replicate: handleReplicate,
-  openrouter: handleOpenRouter,
-  mancer: handleMancer,
-  petals: handlePetals,
-  agnaistic: handleAgnaistic,
-}
 
 type InferenceRequest = {
   prompt: string
@@ -377,31 +349,4 @@ async function getGenerationSettings(
     ...getFallbackPreset(adapter),
     src: guest ? 'guest-fallback-last' : 'user-fallback-last',
   }
-}
-
-function getHandlers(settings: Partial<AppSchema.GenSettings>) {
-  switch (settings.service!) {
-    case 'agnaistic':
-    case 'claude':
-    case 'goose':
-    case 'replicate':
-    case 'horde':
-    case 'ooba':
-    case 'openrouter':
-    case 'openai':
-    case 'scale':
-    case 'petals':
-    case 'mancer':
-    case 'novel':
-      return handlers[settings.service]
-  }
-
-  switch (settings.thirdPartyFormat!) {
-    case 'claude':
-    case 'kobold':
-    case 'openai':
-      return handlers[settings.thirdPartyFormat!]
-  }
-
-  return handlers.ooba
 }

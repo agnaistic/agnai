@@ -2,11 +2,23 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { config } from '../config'
 import { store } from '../db'
 import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/presets'
-import { getTextgenCompletion, getTextgenPayload } from './ooba'
+import { decryptText } from '../db/util'
+import { handleClaude } from './claude'
+import { handleGooseAI } from './goose'
+import { handleHorde } from './horde'
+import { handleKobold } from './kobold'
+import { handleMancer } from './mancer'
+import { handleNovel } from './novel'
+import { getTextgenCompletion, getTextgenPayload, handleOoba } from './ooba'
+import { handleOAI } from './openai'
+import { handleOpenRouter } from './openrouter'
+import { handlePetals } from './petals'
 import { registerAdapter } from './register'
+import { handleReplicate } from './replicate'
+import { handleScale } from './scale'
 import { websocketStream } from './stream'
 import { ModelAdapter } from './type'
-import { AdapterSetting } from '/common/adapters'
+import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {
@@ -37,6 +49,57 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
+  const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''
+  if (preset.service && preset.service !== 'ooba' && preset.service !== 'agnaistic') {
+    const handler = handlers[preset.service]
+    const userKey = preset.subApiKey
+
+    opts.user.oaiKey = userKey
+    opts.gen.oaiModel = preset.oaiModel
+
+    opts.user.claudeApiKey = userKey
+    opts.gen.claudeModel = preset.claudeModel
+
+    opts.user.novelApiKey = userKey
+    opts.gen.novelModel = preset.novelModel
+
+    opts.user.scaleApiKey = userKey
+
+    opts.gen.replicateModelType = preset.replicateModelType
+    opts.gen.replicateModelVersion = preset.replicateModelVersion
+    // opts.user.hordeKey = userKey
+
+    if (!opts.user.adapterConfig) {
+      opts.user.adapterConfig = {}
+    }
+
+    if (preset.service === 'goose') {
+      opts.user.adapterConfig.goose = {
+        engine: preset.registered?.goose.engine,
+        apiKey: userKey,
+      }
+    }
+
+    if (preset.service === 'mancer') {
+      opts.user.adapterConfig.mancer = {
+        ...preset.registered?.mancer,
+        apiKey: userKey,
+      }
+    }
+
+    if (preset.service === 'replicate') {
+      opts.user.adapterConfig.replicate = {
+        apiToken: userKey,
+      }
+    }
+
+    const stream = handler(opts)
+    for await (const value of stream) {
+      yield value
+    }
+    return
+  }
+
   const body = getTextgenPayload(opts, ['## ', 'Instruction:', 'Response:', 'USER:', 'ASSISTANT:'])
 
   yield { prompt: body.prompt }
@@ -52,12 +115,16 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const resp = gen.streamResponse
     ? await websocketStream({
-        url: `${preset.thirdPartyUrl}/api/v1/stream?key=${config.auth.inferenceKey}&id=${opts.user._id}&model=${preset.subModel}`,
+        url: `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/stream?key=${key}&id=${
+          opts.user._id
+        }&model=${preset.subModel}`,
         body,
       })
     : getTextgenCompletion(
         'Agnastic',
-        `${preset.thirdPartyUrl}/api/v1/generate?key=${config.auth.inferenceKey}&id=${opts.user._id}&model=${preset.subModel}`,
+        `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/generate?key=${key}&id=${
+          opts.user._id
+        }&model=${preset.subModel}`,
         body,
         {}
       )
@@ -195,3 +262,51 @@ function getDefaultSubscription() {
 
 //   await store.users.updateLimit(user._id)
 // }
+
+/**
+ * These need to be here because the Agnaistic service can invoke any other service
+ *
+ */
+
+export const handlers: { [key in AIAdapter]: ModelAdapter } = {
+  novel: handleNovel,
+  kobold: handleKobold,
+  ooba: handleOoba,
+  horde: handleHorde,
+  openai: handleOAI,
+  scale: handleScale,
+  claude: handleClaude,
+  goose: handleGooseAI,
+  replicate: handleReplicate,
+  openrouter: handleOpenRouter,
+  mancer: handleMancer,
+  petals: handlePetals,
+  agnaistic: handleAgnaistic,
+}
+
+export function getHandlers(settings: Partial<AppSchema.GenSettings>) {
+  switch (settings.service!) {
+    case 'agnaistic':
+    case 'claude':
+    case 'goose':
+    case 'replicate':
+    case 'horde':
+    case 'ooba':
+    case 'openrouter':
+    case 'openai':
+    case 'scale':
+    case 'petals':
+    case 'mancer':
+    case 'novel':
+      return handlers[settings.service]
+  }
+
+  switch (settings.thirdPartyFormat!) {
+    case 'claude':
+    case 'kobold':
+    case 'openai':
+      return handlers[settings.thirdPartyFormat!]
+  }
+
+  return handlers.ooba
+}
