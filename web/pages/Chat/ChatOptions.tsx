@@ -147,7 +147,7 @@ const ChatOptions: Component<{
               <em>Loading, please wait...</em>
             </Show>
           </Item>
-          <Item onClick={() => props.setModal('memory')} hide={!isOwner()}>
+          <Item onClick={() => props.togglePane('memory')} hide={!isOwner()}>
             <Book /> Memory
           </Item>
         </Row>

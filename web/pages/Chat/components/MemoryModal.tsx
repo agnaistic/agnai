@@ -1,10 +1,9 @@
 import { Save } from 'lucide-solid'
-import { Component, createMemo, createSignal, onMount, Show } from 'solid-js'
+import { Component, createMemo, createSignal, JSX, onMount, Show } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import Divider from '../../../shared/Divider'
 import Select, { Option } from '../../../shared/Select'
-import Modal from '../../../shared/Modal'
 import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
@@ -14,8 +13,8 @@ import { A } from '@solidjs/router'
 
 const ChatMemoryModal: Component<{
   chat: AppSchema.Chat
-  show: boolean
   close: () => void
+  footer?: (children: JSX.Element) => void
 }> = (props) => {
   const state = memoryStore((s) => ({
     books: s.books,
@@ -63,12 +62,12 @@ const ChatMemoryModal: Component<{
     chatStore.editChat(props.chat._id, { userEmbedId: embedId() }, undefined)
   }
 
-  const Footer = () => (
+  const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
         Close
       </Button>
-      <Button disabled={id() === ''} type="submit">
+      <Button disabled={id() === ''} type="submit" onClick={onSubmit}>
         <Save />
         Save Memory Book
       </Button>
@@ -81,29 +80,21 @@ const ChatMemoryModal: Component<{
     )
   })
 
+  onMount(() => {
+    props.footer?.(Footer)
+  })
+
   return (
-    <Modal
-      show={props.show}
-      close={props.close}
-      footer={<Footer />}
-      onSubmit={onSubmit}
-      maxWidth="half"
-      fixedHeight
-    >
-      <PageHeader
-        title="Memory"
-        subtitle={
-          <>
-            <A class="link" href="/guides/pipeline">
-              Pipeline Guide
-            </A>{' '}
-            |{' '}
-            <A class="link" href="/guides/memory">
-              Memory Guide
-            </A>
-          </>
-        }
-      />
+    <>
+      <div class="flex gap-4">
+        <A class="link" href="/guides/pipeline">
+          Pipeline Guide
+        </A>{' '}
+        |{' '}
+        <A class="link" href="/guides/memory">
+          Memory Guide
+        </A>
+      </div>
       <div class="flex flex-col gap-2">
         <Select
           fieldName="memoryId"
@@ -155,7 +146,7 @@ const ChatMemoryModal: Component<{
           </div>
         </Show>
       </div>
-    </Modal>
+    </>
   )
 }
 
