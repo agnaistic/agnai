@@ -55,7 +55,8 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
     adapter === 'ooba' ||
     adapter === 'kobold' ||
     adapter === 'horde' ||
-    adapter === 'goose'
+    adapter === 'goose' ||
+    adapter === 'mancer'
   ) {
     return llama
   }

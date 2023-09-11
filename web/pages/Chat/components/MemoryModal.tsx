@@ -8,7 +8,6 @@ import { chatStore } from '../../../store'
 import { memoryStore } from '../../../store'
 import EditMemoryForm, { EntrySort } from '../../Memory/EditMemory'
 import EmbedContent from '../../Memory/EmbedContent'
-import PageHeader from '/web/shared/PageHeader'
 import { A } from '@solidjs/router'
 
 const ChatMemoryModal: Component<{
@@ -102,16 +101,12 @@ const ChatMemoryModal: Component<{
           helperText="The memory book your chat will use"
           items={[{ label: 'None', value: '' }].concat(state.items)}
           value={id()}
-          onChange={(item) => changeBook(item.value)}
+          onChange={(item) => {
+            changeBook(item.value)
+            useMemoryBook()
+          }}
         />
-        <Button
-          disabled={id() === (props.chat.memoryId || '')}
-          class="h-fit w-fit"
-          onClick={useMemoryBook}
-        >
-          <Save />
-          Use Memory Book
-        </Button>
+
         <Divider />
         <Show when={state.embeds.length > 0}>
           <Select

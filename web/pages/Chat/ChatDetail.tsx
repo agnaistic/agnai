@@ -21,7 +21,6 @@ import { getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
 import { characterStore, ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import InputBar from './components/InputBar'
-import ChatMemoryModal from './components/MemoryModal'
 import Message from './components/Message'
 import PromptModal from './components/PromptModal'
 import DeleteMsgModal from './DeleteMsgModal'
@@ -563,10 +562,6 @@ const ChatDetail: Component = () => {
             />
           </div>
         </main>
-      </Show>
-
-      <Show when={chats.opts.modal === 'memory'}>
-        <ChatMemoryModal chat={chats.chat!} show={!!chats.chat} close={clearModal} />
       </Show>
 
       <Show when={chats.opts.modal === 'export'}>
