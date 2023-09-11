@@ -68,16 +68,14 @@ type LocalStorage = {
 const localStore = new Map<keyof LocalStorage, any>()
 
 const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
-  characters: [
-    {
-      _id: v4(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      kind: 'character',
-      userId: 'anon',
-      ...defaultChars.Robot,
-    },
-  ],
+  characters: Object.values(defaultChars).map((char) => ({
+    _id: v4(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    kind: 'character',
+    userId: 'anon',
+    ...char,
+  })),
   chats: [],
   presets: [],
   config: {

@@ -1,19 +1,18 @@
 # Agnaistic
 
-> AI Agnostic Chat with Personalised Characters. Self-hosted or Multi-tenant.
-
-AI Agnostic Chat
+> AI Roleplay Chat with Personalised Characters with your favorite AI services.
 
 [Live Version](https://agnai.chat) | [Discord](https://agnai.chat/discord)
 
-You can visit the hosted version at [Agnai.chat](https://agnai.chat)
+You can visit the live version at [Agnai.chat](https://agnai.chat)
 
 Based upon the early work of https://github.com/PygmalionAI/galatea-ui.
 
 ## Quick Start
 
-(Requires Node.JS)  
-Agnaistic is bundled as an NPM package and can be installed globally:
+**Important!** _MongoDB and Redis are optional! Agnaistic will run in "Guest Only" mode if MongoDB is not available._
+
+**Agnaistic** is published as an NPM package and can be installed globally:
 
 ```sh
 # Install or update:
@@ -34,25 +33,19 @@ E.g. Linux: `/home/sceuick/.agnai/` Mac: `/Users/sceuick/.agnai` Windows: `C:\Us
 ## Features
 
 - **Group Conversations**: Multiple users with multiple bots
-- **Multiple AI services**: Support for Kobold, Novel, AI Horde, LuminAI, OpenAI, Claude
+- **Multiple AI services**: Support for Kobold, Novel, AI Horde, Goose, OpenAI, Claude, Replicate, OpenRouter, Mancer
 - Multiple persona schema formats: W++, Square bracket format (SBF), Boostyle, Plain text
 - Multi-tenancy:
   - User authentication
   - User settings: Which AI service to use and their own settings
-  - User generation settings
-- Chat specific overrides: AI Service, Character, Generation Settings
+  - User generation presets
+- Subscriptions
+- Memory/Lore books
+- Generate characters with AI
+- Image generation using third-party services
 - **Optional pipeline features**
   - Long-term memory
   - Wikipedia Article and PDF embedding
-
-## Running with Docker
-
-1. Clone the project
-2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
-3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 ghcr.io/agnaistic/agnaistic:latest`
-   - `-dt` Run the container detached
-   - `--restart=always` Restart at start up or if the server crashes
-   - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`
 
 ## Running Manually
 
@@ -72,6 +65,15 @@ E.g. Linux: `/home/sceuick/.agnai/` Mac: `/Users/sceuick/.agnai` Windows: `C:\Us
    - Build and run the project with Local Tunnel:
      - Mac/Linux: `npm run start:public`
      - Windows: `npm run start:public:win`
+
+## Running with Docker
+
+1. Clone the project
+2. With MongoDB: `docker compose -p agnai -f self-host.docker-compose.yml up -d`
+3. Without MongoDB: `docker run -dt --restart=always -p 3001:3001 ghcr.io/agnaistic/agnaistic:latest`
+   - `-dt` Run the container detached
+   - `--restart=always` Restart at start up or if the server crashes
+   - `-p 3001:3001` Expose port 3001. Access the app at `http://localhost:3001`
 
 ## Self-Hosting Settings
 

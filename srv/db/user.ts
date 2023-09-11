@@ -7,7 +7,8 @@ import { config } from '../config'
 import { NOVEL_MODELS } from '../../common/adapters'
 import { logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
-import { encryptPassword, now, STARTER_CHARACTER } from './util'
+import { encryptPassword, now } from './util'
+import { defaultChars } from '/common/characters'
 
 export type NewUser = {
   username: string
@@ -112,16 +113,21 @@ export async function createUser(newUser: NewUser, admin?: boolean) {
     createdAt: new Date().toISOString(),
   }
 
-  const startChar: AppSchema.Character = {
-    ...STARTER_CHARACTER,
-    _id: v4(),
-    userId: user._id,
-    createdAt: now(),
-    updatedAt: now(),
-  }
-
   await db('user').insertOne(user)
-  await db('character').insertOne(startChar)
+
+  for (const char of Object.values(defaultChars)) {
+    const nextChar: AppSchema.Character = {
+      _id: v4(),
+      kind: 'character',
+      userId: user._id,
+      favorite: false,
+      visualType: 'avatar',
+      updatedAt: now(),
+      createdAt: now(),
+      ...char,
+    }
+    await db('character').insertOne(nextChar)
+  }
 
   const profile: AppSchema.Profile = {
     _id: v4(),

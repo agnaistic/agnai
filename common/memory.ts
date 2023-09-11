@@ -12,6 +12,7 @@ export type MemoryOpts = {
   settings?: Partial<AppSchema.UserGenPreset>
   books?: Array<AppSchema.MemoryBook | undefined>
   lines: string[]
+  impersonate?: AppSchema.Character
   members: AppSchema.Profile[]
 }
 
@@ -81,7 +82,8 @@ export function buildMemoryPrompt(
   const { chat, settings, members, char, lines, books } = opts
 
   if (!books || !books.length) return
-  const sender = members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
+  const sender =
+    opts.impersonate?.name || members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
 
   const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
   const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
