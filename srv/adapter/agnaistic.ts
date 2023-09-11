@@ -100,7 +100,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, ['## ', 'Instruction:', 'Response:', 'USER:', 'ASSISTANT:'])
+  const body = getTextgenPayload(opts, ['###', 'Instruction:', 'Response:', 'USER:', 'ASSISTANT:'])
 
   yield { prompt: body.prompt }
 
