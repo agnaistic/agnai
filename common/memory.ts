@@ -110,7 +110,7 @@ export function buildMemoryPrompt(
       let index = -1
       for (const keyword of entry.keywords) {
         // const partial = `(${prep(keyword)})`
-        const txt = `\\b(${prep(keyword)})\\b`
+        const txt = `\\b(${prep(keyword.trim())})\\b`
         const re = new RegExp(txt, 'gi')
         const result = re.exec(reversed)
         if (index === -1 && result !== null) {

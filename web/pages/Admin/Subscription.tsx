@@ -43,6 +43,14 @@ export const Subscription: Component = () => {
     editing: subs.find((pre) => pre._id === query.preset || params.id),
   }))
 
+  createEffect(() => {
+    const inherit = editing()
+    const svc = service()
+
+    if (!inherit?.service || !!svc) return
+    setService(inherit.service)
+  })
+
   createEffect(async () => {
     if (params.id === 'new') {
       const copySource = query.preset

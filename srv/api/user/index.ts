@@ -1,7 +1,16 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
 import { changePassword, createApiKey, login, register, remoteLogin, verifyOauthKey } from './auth'
-import { createUserPreset, getUserPresets, updateUserPreset, deleteUserPreset } from './presets'
+import {
+  createUserPreset,
+  getUserPresets,
+  updateUserPreset,
+  deleteUserPreset,
+  createTemplate,
+  updateTemplate,
+  deleteTemplate,
+  getPromptTemplates,
+} from './presets'
 import { hordeStats, novelLogin, openRouterModels, updateService } from './services'
 import {
   deleteHordeKey,
@@ -53,5 +62,9 @@ router.post('/config', loggedIn, updateConfig)
 router.post('/profile', loggedIn, updateProfile)
 router.post('/presets', loggedIn, createUserPreset)
 router.post('/presets/:id', loggedIn, updateUserPreset)
+router.post('/templates', loggedIn, createTemplate)
+router.post('/templates/:id', loggedIn, updateTemplate)
+router.delete('/templates/:id', loggedIn, deleteTemplate)
+router.get('/templates', loggedIn, getPromptTemplates)
 
 export default router

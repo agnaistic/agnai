@@ -6,6 +6,7 @@ import type {
   OpenRouterModel,
   PersonaFormat,
   RegisteredAdapter,
+  ThirdPartyFormat,
 } from '../adapters'
 import type { GenerationPreset } from '../presets'
 import type { ImageSettings } from './image-schema'
@@ -28,6 +29,7 @@ export type AllDoc =
   | AppSchema.MemoryBook
   | AppSchema.ScenarioBook
   | AppSchema.ApiKey
+  | AppSchema.PromptTemplate
 
 export type OAuthScope = keyof typeof oauthScopes
 
@@ -104,7 +106,7 @@ export namespace AppSchema {
     useLocalPipeline: boolean
 
     koboldUrl: string
-    thirdPartyFormat: 'kobold' | 'openai' | 'claude' | 'ooba' | 'llamacpp'
+    thirdPartyFormat: ThirdPartyFormat
     thirdPartyPassword: string
     thirdPartyPasswordSet?: boolean
     oobaUrl: string
@@ -418,6 +420,17 @@ export namespace AppSchema {
 
     temporary?: Record<string, any>
     registered?: Record<AIAdapter, Record<string, any>>
+  }
+
+  export interface PromptTemplate {
+    kind: 'prompt-template'
+    _id: string
+    name: string
+    template: string
+    userId: string
+    public?: boolean
+    createdAt: string
+    updatedAt: string
   }
 
   export interface MemoryBook {

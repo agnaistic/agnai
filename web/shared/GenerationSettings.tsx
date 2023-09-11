@@ -481,7 +481,7 @@ const PromptSettings: Component<
                 </p>
               </>
             }
-            value={props.inherit?.useGaslight ?? false}
+            value={props.inherit?.useGaslight ?? !!props.inherit?.gaslight}
             disabled={props.disabled}
           />
         </Card>

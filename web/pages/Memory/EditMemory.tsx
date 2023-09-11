@@ -187,9 +187,12 @@ const EntryCard: Component<{
           required
           placeholder="Comma separated words. E.g.: circle, shape, round, cylinder, oval"
           class="border-[1px]"
-          value={props.entry.keywords.join(', ')}
+          value={props.entry.keywords.map((k) => k.trim()).join(', ')}
           onChange={(e) => {
-            props.onChange({ ...props.entry, keywords: e.currentTarget.value.split(',') })
+            props.onChange({
+              ...props.entry,
+              keywords: e.currentTarget.value.split(',').map((k) => k.trim()),
+            })
           }}
         />
         <div class="flex flex-row gap-4">
