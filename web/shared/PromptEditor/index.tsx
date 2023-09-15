@@ -387,7 +387,7 @@ const SelectTemplate: Component<{
               return
             }
 
-            presetStore.updateTemplate(opt(), { name: template.name, template: update }, () => {
+            presetStore.updateTemplate(opt(), { name: orig.name, template: update }, () => {
               toastStore.success('Prompt template updated')
               props.select(update)
               props.close()
