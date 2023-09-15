@@ -476,7 +476,7 @@ export function getPromptParts(opts: PromptPartsOptions, lines: string[], encode
 }
 
 function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Character) {
-  const { settings } = opts
+  const { settings, chat } = opts
   const parts = {
     ujb: '' as string | undefined,
     system: '' as string | undefined,
@@ -493,6 +493,11 @@ function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Char
 
   if (replyAs.systemPrompt && !settings.ignoreCharacterSystemPrompt) {
     parts.system = replyAs.systemPrompt
+  }
+
+  if (chat.overrides) {
+    if (chat.systemPrompt) parts.system = chat.systemPrompt
+    if (chat.postHistoryInstructions) parts.ujb = chat.postHistoryInstructions
   }
 
   parts.ujb = parts.ujb?.replace(/{{original}}/gi, settings.ultimeJailbreak || '')
