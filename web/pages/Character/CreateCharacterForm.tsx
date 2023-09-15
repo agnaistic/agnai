@@ -8,7 +8,7 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { MinusCircle, Plus, Save, X, ChevronUp, ChevronDown, Import, Download } from 'lucide-solid'
+import { MinusCircle, Plus, Save, X, Import, Download } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -115,9 +115,6 @@ export const CreateCharacterForm: Component<{
   const [showBuilder, setShowBuilder] = createSignal(false)
   const [converted, setConverted] = createSignal<AppSchema.Character>()
   const [showImport, setImport] = createSignal(false)
-  const [showAdvanced, setShowAdvanced] = createSignal(false)
-  const toggleShowAdvanced = () => setShowAdvanced(!showAdvanced())
-  const advancedVisibility = createMemo(() => (showAdvanced() ? '' : 'hidden'))
 
   const totalTokens = createMemo(() => {
     const t = tokens()

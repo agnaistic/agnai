@@ -145,7 +145,7 @@ const HomePage: Component = () => {
 
         <Card border>
           <div class="mb-2 flex justify-center text-xl font-bold">Getting Started</div>
-          <div class="flex flex-col gap-2 leading-6">
+          <div class="flex flex-col items-center gap-2 leading-6">
             <p>
               First time here? Head to the{' '}
               <A class="link" href="/chats">
