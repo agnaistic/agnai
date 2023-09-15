@@ -24,6 +24,7 @@ import { v4 } from 'uuid'
 import { gaslights } from '/common/presets/common'
 import Select from '../Select'
 import TextInput from '../TextInput'
+import { presetStore, toastStore } from '/web/store'
 
 type Placeholder = {
   required: boolean
@@ -112,7 +113,8 @@ const PromptEditor: Component<
     aiSetting?: keyof PresetAISettings
     showHelp?: boolean
     placeholder?: string
-    v2?: boolean
+    minHeight?: number
+    showTemplates?: boolean
 
     /** Hide the meanings of "green" "yellow" "red" placeholder helper text */
     hideHelperText?: boolean
@@ -190,8 +192,9 @@ const PromptEditor: Component<
 
   const resize = () => {
     if (!ref) return
+    const min = props.minHeight ?? 40
 
-    const next = +ref.scrollHeight < 40 ? 40 : ref.scrollHeight
+    const next = +ref.scrollHeight < min ? min : ref.scrollHeight
     ref.style.height = `${next}px`
   }
 
@@ -215,9 +218,11 @@ const PromptEditor: Component<
                 <Button size="sm" onClick={() => setPreview(!preview())}>
                   Toggle Preview
                 </Button>
-                <Button size="sm" onClick={() => setTemplates(true)}>
-                  Use Existing Template
-                </Button>
+                <Show when={props.showTemplates}>
+                  <Button size="sm" onClick={() => setTemplates(true)}>
+                    Use Existing Template
+                  </Button>
+                </Show>
               </div>
             </>
           }
@@ -260,13 +265,12 @@ const PromptEditor: Component<
       </div>
 
       <HelpModal
-        v2={props.v2}
         interps={usable().map((item) => item[0])}
         show={help()}
         close={() => showHelp(false)}
       />
 
-      <TemplateModal
+      <SelectTemplate
         show={templates()}
         close={() => setTemplates(false)}
         select={(template) => {
@@ -311,51 +315,139 @@ const Placeholder: Component<
     </div>
   )
 }
+const builtinTemplates = Object.keys(gaslights).map((key) => ({
+  label: `(Built-in) ${key}`,
+  value: key,
+}))
 
-const TemplateModal: Component<{
+const SelectTemplate: Component<{
   show: boolean
   close: () => void
   select: (template: string) => void
 }> = (props) => {
-  const options = Object.keys(gaslights).map((key) => ({ label: key, value: key }))
+  const state = presetStore((s) => ({ templates: s.templates }))
 
   const [opt, setOpt] = createSignal('Alpaca')
   const [template, setTemplate] = createSignal(gaslights.Alpaca)
+  const [original, setOriginal] = createSignal(gaslights.Alpaca)
+  const [filter, setFilter] = createSignal('')
+
+  const templates = createMemo(() => {
+    const base = Object.entries(gaslights).reduce(
+      (prev, [id, template]) => Object.assign(prev, { [id]: { name: id, template, user: false } }),
+      {} as Record<string, { name: string; template: string; user: boolean }>
+    )
+
+    const all = state.templates.reduce(
+      (prev, temp) =>
+        Object.assign(prev, {
+          [temp._id]: { name: temp.name, template: temp.template, user: true },
+        }),
+      base
+    )
+
+    return all
+  })
+
+  const options = createMemo(() => {
+    return Object.entries(templates()).map(([id, temp]) => ({
+      label: temp.user ? temp.name : `(Built-in) ${temp.name}`,
+      value: id,
+    }))
+  })
+
+  const canSaveTemplate = createMemo(() => {
+    if (opt() in gaslights === true) return false
+    return original() !== template()
+  })
+
+  createEffect<number>((prev) => {
+    const opts = options()
+    if (prev !== opts.length) {
+      setOpt(state.templates[0]._id)
+      setTemplate(state.templates[0].template)
+      setOriginal(state.templates[0].template)
+    }
+
+    return opts.length
+  }, builtinTemplates.length)
 
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
         Cancel
       </Button>
-      <Button
-        schema="primary"
-        onClick={() => {
-          props.select(template())
-          props.close()
-        }}
-      >
-        Use Template
-      </Button>
+      <Show when={canSaveTemplate()}>
+        <Button
+          onClick={() => {
+            const orig = state.templates.find((t) => t._id === opt())
+            const update = template()
+            if (!orig) {
+              toastStore.error(`Cannot find template to save`)
+              return
+            }
+
+            presetStore.updateTemplate(opt(), { name: template.name, template: update }, () => {
+              toastStore.success('Prompt template updated')
+              props.select(update)
+              props.close()
+            })
+          }}
+        >
+          Save and Use
+        </Button>
+      </Show>
+
+      <Show when={!canSaveTemplate()}>
+        <Button
+          schema="primary"
+          onClick={() => {
+            props.select(template())
+            props.close()
+          }}
+        >
+          Use
+        </Button>
+      </Show>
     </>
   )
 
   useRootModal({
     id: 'predefined-prompt-templates',
     element: (
-      <Modal title={'Prompt Templates'} show={props.show} close={props.close} footer={Footer}>
+      <Modal
+        title={'Prompt Templates'}
+        show={props.show}
+        close={props.close}
+        footer={Footer}
+        maxWidth="half"
+      >
         <div class="flex flex-col gap-4 text-sm">
-          <Select
-            fieldName="templateId"
-            items={options}
-            value={opt()}
-            onChange={(ev) => {
-              const key = ev.label as keyof typeof gaslights
-              setOpt(ev.value)
-              setTemplate(gaslights[key])
-            }}
+          <TextInput
+            fieldName="filter"
+            placeholder="Filter templates"
+            onInput={(ev) => setFilter(ev.currentTarget.value)}
           />
-          <TextInput fieldName="template" value={template()} disabled isMultiline />
+          <div class="h-min-[6rem]">
+            <Select
+              fieldName="templateId"
+              items={options().filter((opt) => opt.label.toLowerCase().includes(filter()))}
+              value={opt()}
+              onChange={(ev) => {
+                setOpt(ev.value)
+                setTemplate(templates()[ev.value].template)
+                setOriginal(templates()[ev.value].template)
+              }}
+            />
+          </div>
+          <TextInput
+            fieldName="template"
+            value={template()}
+            isMultiline
+            onInput={(ev) => setTemplate(ev.currentTarget.value)}
+          />
         </div>
+        <div class="flex justify-end gap-2"></div>
       </Modal>
     ),
   })
@@ -368,7 +460,6 @@ const HelpModal: Component<{
   close: () => void
   interps: Interp[]
   inherit?: Partial<AppSchema.GenSettings>
-  v2?: boolean
 }> = (props) => {
   const [id] = createSignal(v4())
   const items = createMemo(() => {
@@ -381,7 +472,12 @@ const HelpModal: Component<{
   useRootModal({
     id: `prompt-editor-help-${id()}`,
     element: (
-      <Modal show={props.show} close={props.close} title={<div>Placeholder Definitions</div>}>
+      <Modal
+        show={props.show}
+        close={props.close}
+        title={<div>Placeholder Definitions</div>}
+        maxWidth="half"
+      >
         <div class="flex w-full flex-col gap-1 text-sm">
           <For each={items()}>
             {([interp, help]) => (

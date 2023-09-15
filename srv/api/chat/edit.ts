@@ -21,6 +21,8 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
       useOverrides: 'boolean?',
       userEmbedId: 'string?',
       scenarioStates: ['string?'],
+      systemPrompt: 'string?',
+      postHistoryInstructions: 'string?',
     },
     body,
     true
@@ -54,6 +56,8 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     update.greeting = null
     update.scenario = null
     update.sampleChat = null
+    update.systemPrompt = null
+    update.postHistoryInstructions = null
   }
 
   if (body.useOverrides === true) {
@@ -61,6 +65,8 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
     update.scenario = body.scenario || ''
     update.sampleChat = body.sampleChat || ''
     update.overrides = body.overrides
+    update.systemPrompt = body.systemPrompt || ''
+    update.postHistoryInstructions = body.postHistoryInstructions || ''
   }
 
   const chat = await store.chats.update(id, update)

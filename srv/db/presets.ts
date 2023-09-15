@@ -26,7 +26,10 @@ export async function updateTemplate(
   id: string,
   update: { name: string; template: string }
 ) {
-  const result = await db('prompt-template').updateOne({ userId, _id: id }, { $set: update })
+  const result = await db('prompt-template').updateOne(
+    { userId, _id: id },
+    { $set: { ...update, updatedAt: now() } }
+  )
   if (result.modifiedCount === 0) throw new StatusError('Prompt template not found', 404)
 }
 
@@ -34,10 +37,12 @@ export async function deleteTemplate(userId: string, id: string) {
   const result = await db('prompt-template').deleteOne({ _id: id, userId })
   if (result.deletedCount === 0) throw new StatusError('Prompt template not found', 404)
 }
+
 export async function getTemplate(id: string) {
   const template = await db('prompt-template').findOne({ _id: id })
   return template
 }
+
 export async function getUserTemplates(userId: string) {
   const templates = await db('prompt-template').find({ userId }).toArray()
   return templates

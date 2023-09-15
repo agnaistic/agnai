@@ -83,11 +83,6 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState({ ...initState })
   })
 
-  events.on(EVENTS.init, async (init) => {
-    characterStore.getCharacters(true)
-    return
-  })
-
   events.on(EVENTS.charsReceived, (chars: AppSchema.Character[]) => {
     set({ chatChars: { list: chars, map: toMap(chars) } })
   })

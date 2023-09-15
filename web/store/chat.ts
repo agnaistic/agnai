@@ -21,6 +21,7 @@ export { AllChat }
 export type ChatState = {
   lastChatId: string | null
   lastFetched: number
+  allLoading: boolean
   loaded: boolean
   // All user chats a user owns or is a member of
   allChats: AllChat[]
@@ -84,6 +85,7 @@ const initState: ChatState = {
   lastFetched: 0,
   lastChatId: null,
   loaded: false,
+  allLoading: false,
   allChats: [],
   allChars: { map: {}, list: [] },
   char: undefined,
@@ -113,6 +115,7 @@ const EDITING_KEY = 'chat-detail-settings'
 export const chatStore = createStore<ChatState>('chat', {
   lastFetched: 0,
   lastChatId: storage.localGetItem('lastChatId'),
+  allLoading: false,
   loaded: false,
   allChats: [],
   allChars: { map: {}, list: [] },
@@ -137,7 +140,7 @@ export const chatStore = createStore<ChatState>('chat', {
   events.on(EVENTS.init, (init) => {
     chatStore.setState({
       allChats: [],
-      allChars: { ...initState.allChars },
+      allChars: { map: {}, list: [] },
       loaded: false,
       lastFetched: 0,
       lastChatId: null,
@@ -145,6 +148,8 @@ export const chatStore = createStore<ChatState>('chat', {
 
     if (init.chats) {
       chatStore.setState({ allChats: init.chats })
+    } else {
+      chatStore.getAllChats()
     }
   })
 
@@ -309,12 +314,13 @@ export const chatStore = createStore<ChatState>('chat', {
       }
     },
     async *getAllChats({ allChats, lastFetched }) {
+      yield { allLoading: true }
       const diff = Date.now() - lastFetched
       if (diff < 30000) return
 
       yield { loaded: false }
       const res = await chatsApi.getAllChats()
-      yield { lastFetched: Date.now(), loaded: true }
+      yield { lastFetched: Date.now(), loaded: true, allLoading: false }
       if (res.error) {
         toastStore.error(`Could not retrieve chats: ${res.error}`)
         return { allChats }

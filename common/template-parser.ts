@@ -66,6 +66,7 @@ type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
 type BotsProp = 'i' | 'personality' | 'name'
 
 export type TemplateOpts = {
+  continue?: boolean
   parts: Partial<PromptParts>
   chat: AppSchema.Chat
 
@@ -127,6 +128,7 @@ export function parseTemplate(template: string, opts: TemplateOpts) {
 function render(template: string, opts: TemplateOpts) {
   try {
     const ast = parser.parse(template, {}) as PNode[]
+
     const output: string[] = []
     for (const parent of ast) {
       const result = renderNode(parent, opts)

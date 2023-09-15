@@ -7,11 +7,17 @@ import { toastStore } from './toasts'
 
 type PresetState = {
   presets: AppSchema.UserGenPreset[]
+  templates: AppSchema.PromptTemplate[]
   subs: AppSchema.SubscriptionPreset[]
   saving: boolean
 }
 
-const initState: PresetState = { presets: [], subs: [], saving: false }
+const initState: PresetState = {
+  presets: [],
+  templates: [],
+  subs: [],
+  saving: false,
+}
 
 export const presetStore = createStore<PresetState>(
   'presets',
@@ -121,6 +127,58 @@ export const presetStore = createStore<PresetState>(
         const next = subs.filter((sub) => sub._id !== subscriptionId)
         yield { subs: next }
         onSuccess?.(res.result)
+      }
+    },
+    async getTemplates() {
+      const res = await presetApi.getTemplates()
+      if (res.result) {
+        return { templates: res.result.templates }
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not retrieve templates: ${res.error}`)
+      }
+    },
+    async *createTemplate({ templates }, name: string, template: string, done?: () => void) {
+      const res = await presetApi.createTemplate({ name, template })
+      if (res.result) {
+        yield { templates: templates.concat(res.result) }
+        done?.()
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(`Failed to create template: ${res.error}`)
+      }
+    },
+
+    async *updateTemplate(
+      { templates },
+      id: string,
+      update: { name: string; template: string },
+      done?: () => void
+    ) {
+      const res = await presetApi.updateTemplate(id, update)
+      if (res.result) {
+        const next = templates.map((t) => (t._id === id ? { ...t, ...update } : t))
+        yield { templates: next }
+        done?.()
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(`Failed to update template: ${res.error}`)
+      }
+    },
+
+    async *deleteTemplate({ templates }, id: string) {
+      const res = await presetApi.deleteTemplate(id)
+      if (res.result) {
+        return { templates: templates.filter((t) => t._id !== id) }
+      }
+
+      if (res.error) {
+        toastStore.error(`Failed to delete template: ${res.error}`)
       }
     },
   }

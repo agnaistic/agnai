@@ -258,6 +258,7 @@ export function injectPlaceholders(template: string, inject: InjectOpts) {
 
   const result = parseTemplate(template, {
     ...opts,
+    continue: opts.kind === 'continue',
     sender: inject.opts.sender,
     parts,
     lines,

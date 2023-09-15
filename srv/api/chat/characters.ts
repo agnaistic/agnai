@@ -6,6 +6,7 @@ import { AppSchema } from '/common/types'
 import { v4 } from 'uuid'
 import { now } from '/srv/db/util'
 import { entityUploadBase64 } from '../upload'
+import { toArray } from '/common/util'
 
 export const addCharacter = handle(async ({ body, params, userId }) => {
   assertValid({ charId: 'string' }, body)
@@ -77,6 +78,14 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
       avatar: 'string?',
       favorite: 'boolean?',
       deletedAt: 'string?',
+      voice: 'any?',
+      systemPrompt: 'string?',
+      postHistoryInstructions: 'string?',
+      alternateGreetings: 'string?',
+      characterBook: 'string?',
+      visualType: 'string?',
+      sprite: 'any?',
+      culture: 'string?',
     },
     body
   )
@@ -104,6 +113,14 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
     greeting: body.greeting,
     favorite: body.favorite !== undefined ? body.favorite : prev?.favorite,
     deletedAt: body.deletedAt,
+    voice: body.voice,
+    postHistoryInstructions: body.postHistoryInstructions,
+    systemPrompt: body.systemPrompt,
+    alternateGreetings: body.alternateGreetings ? toArray(body.alternateGreetings) : undefined,
+    characterBook: body.characterBook ? JSON.parse(body.characterBook) : undefined,
+    visualType: body.visualType,
+    sprite: body.sprite,
+    culture: body.culture,
   }
 
   tempCharacters[upserted._id] = upserted

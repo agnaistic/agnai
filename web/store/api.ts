@@ -100,7 +100,7 @@ async function callApi<T = any>(
 
   const json = await res.json()
 
-  if (res.status === 401) {
+  if (res.status === 401 && fullUrl.includes(baseUrl)) {
     events.emit(EVENTS.sessionExpired)
     return {
       result: undefined,

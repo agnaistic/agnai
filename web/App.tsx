@@ -67,7 +67,7 @@ const App: Component = () => {
           />
           <Route path="/profile" component={ProfilePage} />
           <Route path="/settings" component={Settings} />
-          <Route path="/memory" component={lazy(() => import('./pages/Memory'))} />
+          <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />
           <Route
             path="/memory/:id"
             component={lazy(() => import('./pages/Memory/EditMemoryPage'))}
