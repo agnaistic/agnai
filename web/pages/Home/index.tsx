@@ -44,11 +44,9 @@ const HomePage: Component = () => {
         </div>
 
         <Show when={cfg.config.patreon}>
-          <TitleCard type="hl">
-            <div class="flex w-full justify-center">
-              Agnaistic now hosts its own models! Use them for free by using the{' '}
-              <b>&nbsp;Agnaistic&nbsp;</b> service in your presets!
-            </div>
+          <TitleCard type="hl" class="flex w-full items-center">
+            Agnaistic now hosts its own models! Use them for free by using the{' '}
+            <span class="font-bold">&nbsp;Agnaistic&nbsp;</span> service in your presets!
           </TitleCard>
         </Show>
 
