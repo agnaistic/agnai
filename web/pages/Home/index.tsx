@@ -8,11 +8,6 @@ import { AlertTriangle } from 'lucide-solid'
 import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import Modal from '/web/shared/Modal'
 
-// const text = `
-// ## Kobold
-
-// If you're self-hosting KoboldAI or using Colab, you can use the LocalTunnel URL in the **Kobold URL** field in the Settings page.`
-
 const enum Sub {
   None,
   OpenAI,
@@ -47,6 +42,16 @@ const HomePage: Component = () => {
         <div class="hidden justify-center text-6xl sm:flex">
           Agn<span class="text-[var(--hl-500)]">ai</span>stic
         </div>
+
+        <Show when={cfg.config.patreon}>
+          <TitleCard type="hl">
+            <div class="flex w-full justify-center">
+              Agnaistic now hosts its own models! Use them for free by using the{' '}
+              <b>&nbsp;Agnaistic&nbsp;</b> service in your presets!
+            </div>
+          </TitleCard>
+        </Show>
+
         <Card border>
           <div class="leading-6">
             <b>Agnaistic</b> is a "bring your own AI" chat service. It is completely open-source and
@@ -83,7 +88,7 @@ const HomePage: Component = () => {
             </div>
           </TitleCard>
 
-          <TitleCard type="bg" title="Useful Links" center>
+          <TitleCard type="bg" title="Links" center>
             <div class="flex flex-wrap justify-center gap-2">
               <a href="/discord" target="_blank">
                 <Pill inverse>Discord</Pill>
@@ -140,7 +145,7 @@ const HomePage: Component = () => {
 
         <Card border>
           <div class="mb-2 flex justify-center text-xl font-bold">Getting Started</div>
-          <div class="flex flex-col gap-2 leading-6">
+          <div class="flex flex-col items-center gap-2 leading-6">
             <p>
               First time here? Head to the{' '}
               <A class="link" href="/chats">

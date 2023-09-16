@@ -23,6 +23,7 @@ export function getActiveBots(
     if (exclude && id in exclude) continue
     if (!active) continue
     if (active.favorite === false) continue
+    if (active.deletedAt) continue
     unique.add(id)
   }
 

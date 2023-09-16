@@ -7,9 +7,8 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  onMount,
 } from 'solid-js'
-import { NewCharacter, characterStore } from '../../store'
+import { NewCharacter, characterStore, chatStore, userStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
@@ -69,7 +68,13 @@ const CharacterList: Component = () => {
 
   const [query, setQuery] = useSearchParams()
 
-  const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
+  const user = userStore()
+  // const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
+  const state = chatStore((s) => ({
+    list: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
+    loading: s.allLoading,
+    loaded: s.loaded,
+  }))
 
   const cached = getListCache()
   const [view, setView] = createSignal(cached.view || 'list')
@@ -96,11 +101,8 @@ const CharacterList: Component = () => {
 
   const getNextView = () => (view() === 'list' ? 'cards' : 'list')
 
-  onMount(() => {
-    characterStore.getCharacters()
-  })
-
-  onMount(() => {
+  createEffect(() => {
+    if (!state.list.length) return
     tagStore.updateTags(state.list)
   })
 

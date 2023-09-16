@@ -1,5 +1,5 @@
 import Sorter from 'sortablejs'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, For, onMount, Show } from 'solid-js'
 import RangeInput from './RangeInput'
 import TextInput from './TextInput'
 import Select, { Option } from './Select'
@@ -20,7 +20,7 @@ import {
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
-import { chatStore, settingStore } from '../store'
+import { chatStore, presetStore, settingStore } from '../store'
 import PromptEditor from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
@@ -74,6 +74,13 @@ const GenerationSettings: Component<Props> = (props) => {
     setService(opt.value as any)
     props.onService?.(opt.value as any)
   }
+
+  onMount(() => {
+    const { templates } = presetStore.getState()
+    if (!templates.length) {
+      presetStore.getTemplates()
+    }
+  })
 
   return (
     <>
@@ -495,8 +502,9 @@ const PromptSettings: Component<
             disabled={props.disabled}
             showHelp
             inherit={props.inherit}
-            v2
+            showTemplates
           />
+
           <TextInput
             fieldName="ultimeJailbreak"
             label="Jailbreak (UJB) Prompt"

@@ -357,7 +357,6 @@ const CreateScenario: Component = () => {
                       noDummyPreview
                       value={entry().text}
                       onChange={(ev) => updateEntry(index, { text: ev })}
-                      v2
                       include={['char', 'user', 'random', 'roll', 'idle_duration', 'chat_age']}
                     />
 

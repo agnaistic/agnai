@@ -199,6 +199,8 @@ export namespace AppSchema {
     greeting?: string
     scenario?: string
     sampleChat?: string
+    systemPrompt?: string
+    postHistoryInstructions?: string
     overrides?: Persona
 
     createdAt: string

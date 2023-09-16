@@ -8,6 +8,7 @@ import { charsApi, getImageData } from './data/chars'
 import { imageApi } from './data/image'
 import { getAssetUrl, storage, toMap } from '../shared/util'
 import { toCharacterMap } from '../pages/Character/util'
+import { getUserId } from './api'
 
 const IMPERSONATE_KEY = 'agnai-impersonate'
 
@@ -83,13 +84,40 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState({ ...initState })
   })
 
-  events.on(EVENTS.init, async (init) => {
-    characterStore.getCharacters(true)
-    return
-  })
+  events.on(
+    EVENTS.charsReceived,
+    async (chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
+      const state = get()
+      const id = await storage.getItem(IMPERSONATE_KEY)
+      let impersonating =
+        !state.impersonating && id
+          ? chars.concat(temps).find((ch) => ch._id === id)
+          : state.impersonating
 
-  events.on(EVENTS.charsReceived, (chars: AppSchema.Character[]) => {
-    set({ chatChars: { list: chars, map: toMap(chars) } })
+      if (id?.startsWith('temp') && temps.every((ch) => ch._id !== id)) {
+        impersonating = undefined
+      }
+
+      set({ chatChars: { list: chars, map: toMap(chars) }, impersonating })
+    }
+  )
+
+  events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
+    const state = get()
+    const id = await storage.getItem(IMPERSONATE_KEY)
+    const userId = getUserId()
+
+    const impersonating =
+      !state.impersonating && id ? chars.find((ch) => ch._id === id) : state.impersonating
+
+    set({
+      characters: {
+        map: toMap(chars),
+        list: chars.filter((ch) => ch.userId === userId),
+        loaded: Date.now(),
+      },
+      impersonating,
+    })
   })
 
   return {

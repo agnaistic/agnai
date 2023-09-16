@@ -14,6 +14,7 @@ const MultiDropdown: Component<{
   values?: string[]
   class?: string
   disabled?: boolean
+  multiple?: boolean
   onChange?: (selected: DropdownItem[]) => void
 }> = (props) => {
   const onChange = (ev: Event & { currentTarget: EventTarget & HTMLSelectElement }) => {
@@ -33,8 +34,10 @@ const MultiDropdown: Component<{
       <FormLabel label={props.label} helperText={props.helperText} />
       <select
         name={props.fieldName}
-        class={`form-field h-max max-w-full rounded-sm bg-[var(--hl-700)] p-2 shadow-none`}
-        multiple
+        class={`form-field h-max max-w-full rounded-sm bg-[var(--hl-700)] p-2 shadow-none ${
+          props.class || ''
+        }`}
+        multiple={props.multiple ?? true}
         onChange={onChange}
         disabled={props.disabled}
       >
@@ -51,7 +54,6 @@ const MultiDropdown: Component<{
         </For>
       </select>
     </div>
-    // </div>
   )
 }
 

@@ -220,3 +220,7 @@ export function eventGenerator<T = any>() {
 export function clamp(toClamp: number, max: number, min?: number) {
   return Math.max(Math.min(toClamp, max), min ?? -max)
 }
+
+export function now() {
+  return new Date().toISOString()
+}

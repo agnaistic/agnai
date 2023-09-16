@@ -50,6 +50,7 @@ export const KEYS = {
   memory: 'memory',
   scenario: 'scenario',
   trees: 'chat-trees',
+  templates: 'templates',
 }
 
 type LocalStorage = {
@@ -63,6 +64,7 @@ type LocalStorage = {
   memory: AppSchema.MemoryBook[]
   scenario: AppSchema.ScenarioBook[]
   trees: AppSchema.ChatTree[]
+  templates: AppSchema.PromptTemplate[]
 }
 
 const localStore = new Map<keyof LocalStorage, any>()
@@ -102,6 +104,7 @@ const fallbacks: { [key in StorageKey]: LocalStorage[key] } = {
   memory: [],
   scenario: [],
   trees: [],
+  templates: [],
 }
 
 export async function handleGuestInit() {
@@ -177,10 +180,11 @@ async function getGuestInitEntities() {
   const characters = await localApi.loadItem('characters', true)
   const chats = await localApi.loadItem('chats', true)
   const trees = await localApi.loadItem('trees', true)
+  const templates = await localApi.loadItem('templates', true)
 
   user._id = 'anon'
 
-  return { user, presets, profile, books, scenario, characters, chats, trees }
+  return { user, presets, profile, books, scenario, characters, chats, trees, templates }
 }
 
 async function migrateLegacyItems() {
@@ -281,6 +285,10 @@ export async function saveScenarios(state: AppSchema.ScenarioBook[]) {
   await saveItem('scenario', state)
 }
 
+export async function saveTemplates(state: AppSchema.PromptTemplate[]) {
+  await saveItem('templates', state)
+}
+
 export async function deleteChatMessages(chatId: string) {
   await storage.removeItem(`messages-${chatId}`)
 }
@@ -346,6 +354,7 @@ export const localApi = {
   savePresets,
   saveProfile,
   saveBooks,
+  saveTemplates,
   saveScenarios,
   saveTrees,
   deleteChatMessages,

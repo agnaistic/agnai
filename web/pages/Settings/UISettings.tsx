@@ -136,7 +136,7 @@ const UISettings: Component = () => {
         label="View Mode"
         helperText={
           <>
-            <b>Standard</b>: Messages take up the entire chat screen.∏
+            <b>Standard</b>: Messages take up the entire chat screen.
             <br />
             <b>Split</b>: Character's avatar appears at the top of the screen
           </>

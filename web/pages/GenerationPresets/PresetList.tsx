@@ -56,17 +56,14 @@ const PresetList: Component = () => {
       <div class="flex flex-col items-center gap-2">
         <For each={state.presets}>
           {(preset) => (
-            <div class="flex w-full items-center gap-2">
-              <A
-                href={`/presets/${preset._id}`}
-                class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
-              >
-                <div class="ml-4 flex w-full items-center">
+            <div class="bg-800 flex w-full items-center gap-2 rounded-xl py-1 hover:bg-[var(--bg-600)]">
+              <A href={`/presets/${preset._id}`} class=" flex w-full">
+                <div class="ml-4 flex w-full flex-col items-start">
                   <div>
-                    <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                    <div>{preset.name}</div>
+                    <div class="mr-1 text-xs italic text-[var(--text-600)]">
                       {getServiceName(preset.service)}
-                    </span>
-                    {preset.name}
+                    </div>
                   </div>
                 </div>
               </A>
@@ -95,25 +92,17 @@ const PresetList: Component = () => {
           {(preset) => (
             <div class="flex w-full items-center gap-2">
               <A
-                href={`/presets/default?preset=${preset._id}`}
-                class="bg-800 flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
+                href={`/presets/new?preset=${preset._id}`}
+                class="bg-800 flex w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
               >
-                <div class="ml-4 flex w-full items-center">
+                <div class="x ml-4 flex w-full flex-col items-start">
                   {' '}
-                  <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                  <div class="text-md">{preset.name}</div>
+                  <div class="mr-1 text-xs italic text-[var(--text-600)]">
                     {getServiceName(preset.service)}
-                  </span>
-                  {preset.name}
+                  </div>
                 </div>
               </A>
-              <Button
-                schema="clear"
-                size="sm"
-                onClick={() => nav(`/presets/new?preset=${preset._id}`)}
-                class="icon-button"
-              >
-                <Copy />
-              </Button>
             </div>
           )}
         </For>
