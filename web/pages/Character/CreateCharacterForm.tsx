@@ -339,9 +339,7 @@ export const CreateCharacterForm: Component<{
               </Show>
             </div>
 
-            <div class="sticky top-0 z-20">
-              <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
-            </div>
+            <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Basic' }}>
               <Card>
