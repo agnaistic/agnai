@@ -675,6 +675,8 @@ subscribe(
         },
       },
     })
+
+    events.emit(EVENTS.charAdded, body.character)
   }
 )
 
