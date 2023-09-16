@@ -495,7 +495,7 @@ function getSupplementaryParts(opts: PromptPartsOptions, replyAs: AppSchema.Char
     parts.system = replyAs.systemPrompt
   }
 
-  if (chat.overrides) {
+  if (chat.overrides && opts.char._id === opts.replyAs._id) {
     if (chat.systemPrompt) parts.system = chat.systemPrompt
     if (chat.postHistoryInstructions) parts.ujb = chat.postHistoryInstructions
   }

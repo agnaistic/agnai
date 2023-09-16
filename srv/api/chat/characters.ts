@@ -81,7 +81,7 @@ export const upsertTempCharacter = handle(async ({ body, params, userId }) => {
       voice: 'any?',
       systemPrompt: 'string?',
       postHistoryInstructions: 'string?',
-      alternateGreetings: 'string?',
+      alternateGreetings: 'any?',
       characterBook: 'string?',
       visualType: 'string?',
       sprite: 'any?',
