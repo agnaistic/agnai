@@ -320,7 +320,10 @@ export const chatStore = createStore<ChatState>('chat', {
     async *getAllChats({ allChats, lastFetched }) {
       yield { allLoading: true }
       const diff = Date.now() - lastFetched
-      if (diff < 30000) return
+      if (diff < 30000) {
+        yield { allLoading: false }
+        return
+      }
 
       yield { loaded: false }
       const res = await chatsApi.getAllChats()
