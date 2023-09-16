@@ -84,6 +84,16 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState({ ...initState })
   })
 
+  events.on(EVENTS.charAdded, (char: AppSchema.Character) => {
+    const { chatChars: prev } = get()
+    set({
+      chatChars: {
+        list: prev.list.concat(char),
+        map: Object.assign({}, prev.map, { [char._id]: char }),
+      },
+    })
+  })
+
   events.on(
     EVENTS.charsReceived,
     async (chars: AppSchema.Character[], temps: AppSchema.Character[]) => {

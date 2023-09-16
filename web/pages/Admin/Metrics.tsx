@@ -7,6 +7,7 @@ import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { adminStore } from '../../store'
 import { Card } from '/web/shared/Card'
 import TextInput from '/web/shared/TextInput'
+import { ConfirmModal } from '/web/shared/Modal'
 
 const MetricsPage: Component = () => {
   let refForm: any
@@ -14,10 +15,9 @@ const MetricsPage: Component = () => {
   setComponentPageTitle('Metrics')
   const state = adminStore()
   const [refMsg, setRefMsg] = createSignal<any>()
+  const [confirm, setConfirm] = createSignal(false)
 
-  onMount(() => {
-    adminStore.getMetrics()
-  })
+  onMount(() => adminStore.getMetrics())
 
   const sendAll = () => {
     const { message } = getStrictForm(refForm, { message: 'string' })
@@ -64,10 +64,17 @@ const MetricsPage: Component = () => {
           <form ref={refForm}>
             <FormLabel label="Message All Users" />
             <TextInput ref={setRefMsg} fieldName="message" isMultiline />
-            <Button onClick={sendAll}>Send</Button>
+            <Button onClick={() => setConfirm(true)}>Send</Button>
           </form>
         </Card>
       </div>
+
+      <ConfirmModal
+        show={confirm()}
+        close={() => setConfirm(false)}
+        confirm={sendAll}
+        message="Are you sure you wish to send a message to all users?"
+      />
     </>
   )
 }
