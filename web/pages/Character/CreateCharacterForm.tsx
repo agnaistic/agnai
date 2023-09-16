@@ -226,7 +226,7 @@ export const CreateCharacterForm: Component<{
         payload.avatar = data
       }
       chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, () => {
-        props.close?.()
+        if (paneOrPopup() === 'popup') props.close?.()
       })
     } else if (!forceNew() && props.editId) {
       characterStore.editCharacter(props.editId, payload, () => {

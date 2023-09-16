@@ -84,9 +84,23 @@ export const characterStore = createStore<CharacterState>(
     characterStore.setState({ ...initState })
   })
 
-  events.on(EVENTS.charsReceived, (chars: AppSchema.Character[]) => {
-    set({ chatChars: { list: chars, map: toMap(chars) } })
-  })
+  events.on(
+    EVENTS.charsReceived,
+    async (chars: AppSchema.Character[], temps: AppSchema.Character[]) => {
+      const state = get()
+      const id = await storage.getItem(IMPERSONATE_KEY)
+      let impersonating =
+        !state.impersonating && id
+          ? chars.concat(temps).find((ch) => ch._id === id)
+          : state.impersonating
+
+      if (id?.startsWith('temp') && temps.every((ch) => ch._id !== id)) {
+        impersonating = undefined
+      }
+
+      set({ chatChars: { list: chars, map: toMap(chars) }, impersonating })
+    }
+  )
 
   events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
     const state = get()

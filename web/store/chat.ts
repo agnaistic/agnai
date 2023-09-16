@@ -226,7 +226,11 @@ export const chatStore = createStore<ChatState>('chat', {
         const isMultiChars =
           res.result.chat.characters && Object.keys(res.result.chat.characters).length
 
-        events.emit(EVENTS.charsReceived, res.result.characters)
+        events.emit(
+          EVENTS.charsReceived,
+          res.result.characters,
+          Object.values(res.result.chat.tempCharacters || {})
+        )
 
         yield {
           lastChatId: id,
@@ -411,13 +415,13 @@ export const chatStore = createStore<ChatState>('chat', {
           yield {
             active: {
               ...active,
-              chat: replaceTemp(active.chat, char),
+              chat: Object.assign({}, replaceTemp(active.chat, char)),
             },
           }
         }
 
         const nextChats = allChats.map((chat) =>
-          chat._id === chatId ? replaceTemp(chat, char) : chat
+          chat._id === chatId ? Object.assign({}, replaceTemp(chat, char)) : chat
         )
         yield { allChats: nextChats }
       }
