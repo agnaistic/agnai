@@ -111,11 +111,9 @@ const InputBar: Component<{
   }
 
   const playVoice = () => {
-    const voice = props.char?.voice
-    if (!voice) return
     const lastTextMsg = state.msgs.reduceRight<AppSchema.ChatMessage | void>((prev, curr) => {
       if (prev) return prev
-      if (curr.adapter === 'image' || curr.userId) return
+      if (curr.adapter === 'image' || !curr.characterId) return
       return curr
     }, undefined)
 
@@ -124,10 +122,14 @@ const InputBar: Component<{
       return
     }
 
+    if (!lastTextMsg.characterId) return
+    const char = ctx.allBots[lastTextMsg.characterId]
+    if (!char?.voice) return
+
     msgStore.textToSpeech(
       lastTextMsg._id,
       lastTextMsg.msg,
-      voice,
+      char.voice,
       props.char?.culture || defaultCulture
     )
     setMenu(false)

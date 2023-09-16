@@ -35,7 +35,7 @@ export default Tabs
 const border = (selected: boolean) =>
   selected
     ? `bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]`
-    : `hover:bg-[var(--bg-800)] border-[var(--bg-800)] hover:border-[var(--bg-700)]`
+    : `bg-900 hover:bg-[var(--bg-800)] border-[var(--bg-800)] hover:border-[var(--bg-700)]`
 
 export function useTabs(tabs: string[], initial: number = 0) {
   const [tab, setTabs] = createSignal(initial)

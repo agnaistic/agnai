@@ -282,7 +282,7 @@ export const CreateCharacterForm: Component<{
         />
       </Show>
       <form
-        class="text-base"
+        class="relative text-base"
         onSubmit={onSubmit}
         ref={(form) => {
           ref = form
@@ -317,7 +317,7 @@ export const CreateCharacterForm: Component<{
               </TitleCard>
             </Show>
 
-            <div class="flex gap-2 text-[1em]">
+            <div class="flex justify-end gap-2 text-[1em]">
               <Button onClick={() => setImport(true)}>
                 <Import /> Import
               </Button>
@@ -339,7 +339,9 @@ export const CreateCharacterForm: Component<{
               </Show>
             </div>
 
-            <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
+            <div class="sticky top-0 z-20">
+              <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
+            </div>
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Basic' }}>
               <Card>
@@ -364,12 +366,13 @@ export const CreateCharacterForm: Component<{
                       </span>
                       <Show when={editor.canGuidance}>
                         <p>
-                          To generate a character, describe the character below then click{' '}
-                          <b>Generate</b>. It can take 30-60 seconds. You can choose which AI
-                          Service performs the generation in the Dropdown.
-                        </p>
-                        <p>
-                          <em>Note: Kobold and Novel character generation are experimental</em>
+                          <b>AI-Driven Character Generation:</b> Describe the character below then
+                          click <b>Generate</b>. It can take 30-60 seconds. Select which AI Service
+                          performs the generation in the Dropdown.
+                          <br />
+                          Update this description and click{' '}
+                          <b class="text-[var(--hl-500)]">Regenerate</b> to regenerate one specific
+                          field.
                         </p>
                       </Show>
                     </div>
