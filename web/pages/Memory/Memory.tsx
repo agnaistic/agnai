@@ -174,7 +174,7 @@ function encodeBook(book: AppSchema.MemoryBook) {
 function validateBookJson(json: any) {
   const book = json as AppSchema.MemoryBook
 
-  const entries = book?.entries || []
+  const entries: AppSchema.MemoryEntry[] = []
 
   /**
    * - Attempt to convert any "should-be" numbers to numbers
