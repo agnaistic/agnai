@@ -172,6 +172,33 @@ function encodeBook(book: AppSchema.MemoryBook) {
 }
 
 function validateBookJson(json: any) {
+  const book = json as AppSchema.MemoryBook
+
+  const entries = book?.entries || []
+
+  /**
+   * - Attempt to convert any "should-be" numbers to numbers
+   * - Remove entries with no prompt text
+   * - Remove entries with no keywords
+   * - Coalesce enable to true
+   * - Coalese name to empty string
+   */
+
+  if (Array.isArray(book?.entries)) {
+    for (const entry of book.entries) {
+      entry.priority = toNumber(entry.priority)
+      entry.weight = toNumber(entry.weight)
+      if (entry.enabled === undefined) entry.enabled = true
+      if (!entry.name) entry.name = ''
+      if (!entry.entry) continue
+      if (!Array.isArray(entry.keywords)) continue
+
+      entries.push(entry)
+    }
+  }
+
+  book.entries = entries
+
   assertValid(
     {
       kind: ['memory'],
@@ -190,4 +217,12 @@ function validateBookJson(json: any) {
     },
     json
   )
+}
+
+function toNumber(value: any) {
+  if (!isNaN(value)) return value
+  const num = +value
+
+  if (isNaN(num)) return 0
+  return num
 }
