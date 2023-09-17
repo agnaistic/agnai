@@ -197,7 +197,7 @@ function validateBookJson(json: any) {
     }
   }
 
-  book.entries = entries
+  json.entries = entries
 
   assertValid(
     {
@@ -220,7 +220,6 @@ function validateBookJson(json: any) {
 }
 
 function toNumber(value: any) {
-  if (!isNaN(value)) return value
   const num = +value
 
   if (isNaN(num)) return 0
