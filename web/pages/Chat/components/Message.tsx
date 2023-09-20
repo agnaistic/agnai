@@ -60,7 +60,13 @@ type MessageProps = {
 
 const Message: Component<MessageProps> = (props) => {
   const [ctx] = useAppContext()
-  const splits = createMemo(() => splitMessage(ctx, props.msg), { equals: false })
+  const splits = createMemo(
+    () => {
+      if (!props.retrying) return splitMessage(ctx, props.msg)
+      return [props.msg]
+    },
+    { equals: false }
+  )
 
   return (
     <>
@@ -242,7 +248,7 @@ const SingleMessage: Component<
                     char={
                       ctx.activeMap[props.msg.characterId!] ||
                       ctx.tempMap[props.msg.characterId!] ||
-                      ctx.char
+                      {}
                     }
                     openable
                     zoom={1.75}
@@ -275,7 +281,9 @@ const SingleMessage: Component<
                 >
                   <Switch>
                     <Match when={props.msg.characterId}>
-                      {ctx.allBots[props.msg.characterId!]?.name || ctx.char?.name!}
+                      {ctx.allBots[props.msg.characterId!]?.name ||
+                        (props.msg.split && props.msg.characterId) ||
+                        ctx.char?.name!}
                     </Match>
                     <Match when={true}>{handleToShow()}</Match>
                   </Switch>
@@ -455,8 +463,8 @@ function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): Split
   const charName =
     (incoming.characterId ? ctx.allBots[incoming.characterId]?.name : ctx.char?.name) || ''
 
-  const CHARS = [`{{char}}:`]
-  if (charName) CHARS.push(`${charName}:`)
+  // const CHARS = [`{{char}}:`]
+  // if (charName) CHARS.push(`${charName}:`)
 
   const USERS = [`${ctx.handle}:`, `{{user}}:`]
 
@@ -473,20 +481,36 @@ function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): Split
 
   for (const split of splits) {
     const trim = split.trim()
+    const match = trim.match(/^[a-z]+: /gi)?.[0]
+    const currName = match ? match.slice(0, -2) : null
+
     let newMsg: AppSchema.ChatMessage | undefined
 
-    for (const CHAR of CHARS) {
-      if (newMsg) break
-      if (trim.startsWith(CHAR)) {
-        newMsg = {
-          ...msg,
-          msg: trim.replace(CHAR, ''),
-          characterId: ctx.char?._id,
-          userId: undefined,
+    if (match && currName) {
+      for (const CHAR of ctx.activeBots) {
+        if (currName === CHAR.name) {
+          newMsg = {
+            ...msg,
+            msg: trim.replace(match, ''),
+            characterId: CHAR._id,
+            state: CHAR._id,
+          }
         }
-        break
       }
     }
+
+    // for (const CHAR of CHARS) {
+    //   if (newMsg) break
+    //   if (trim.startsWith(CHAR)) {
+    //     newMsg = {
+    //       ...msg,
+    //       msg: trim.replace(CHAR, ''),
+    //       characterId: ctx.char?._id,
+    //       userId: undefined,
+    //     }
+    //     break
+    //   }
+    // }
 
     for (const USER of USERS) {
       if (newMsg) break
@@ -496,19 +520,46 @@ function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): Split
           msg: trim.replace(USER, ''),
           userId: ctx.profile?.userId || '',
           characterId: undefined,
+          state: 'user',
         }
         break
       }
     }
 
-    if (!next.length && !newMsg) return [msg]
-    if (!newMsg) {
-      const lastMsg = next.slice(-1)[0]
-      lastMsg.msg += ` ${trim}`
-      continue
+    if (!newMsg && match && currName) {
+      newMsg = {
+        ...msg,
+        msg: trim.replace(match, ''),
+        userId: '',
+        characterId: match.slice(0, -2),
+        state: currName,
+      }
     }
 
-    next.push(newMsg)
+    // if (!next.length && !newMsg) return [msg]
+    if (!newMsg) {
+      newMsg = {
+        ...msg,
+        msg: trim,
+        characterId: incoming.characterId,
+        userId: incoming.userId,
+        state: incoming.characterId,
+      }
+    }
+
+    if (next.length) {
+      const lastMsg = next.slice(-1)[0]
+      if (lastMsg.state === newMsg.state) {
+        lastMsg.msg += ` ${trim}`
+        continue
+      }
+    }
+
+    if (newMsg?.msg.length) {
+      const suffix = next.length === 0 ? '' : `-${next.length}`
+      newMsg._id = `${newMsg._id}${suffix}`
+      next.push(newMsg)
+    }
     continue
   }
 

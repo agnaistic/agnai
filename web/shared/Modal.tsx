@@ -1,17 +1,19 @@
 import { Check, X } from 'lucide-solid'
-import { Component, Show, JSX, createMemo } from 'solid-js'
+import { Component, Show, JSX, createMemo, Switch, Match, createSignal } from 'solid-js'
 import Button from './Button'
 import './modal.css'
+import Tabs from './Tabs'
 
 interface Props {
   title?: string | JSX.Element
   show: boolean
-  children: JSX.Element
+  children?: JSX.Element
   close: () => void
   footer?: JSX.Element
   maxWidth?: 'full' | 'half'
   fixedHeight?: boolean
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
+  tabs?: Array<{ name: string; content: JSX.Element }>
 
   /**
    * If set to false, the close button 'X' will be omitted
@@ -20,7 +22,9 @@ interface Props {
 }
 
 const Modal: Component<Props> = (props) => {
+  const [tab, setTab] = createSignal(0)
   let ref: any
+
   const width = createMemo(() => {
     if (!props.maxWidth) return `sm:max-w-lg`
 
@@ -45,20 +49,38 @@ const Modal: Component<Props> = (props) => {
             onSubmit={props.onSubmit || defaultSubmit}
             class={`modal-height bg-900 z-50 my-auto w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
           >
-            <div class="flex flex-row justify-between p-4 text-lg font-bold">
-              <div>{props.title}</div>
-              <Show when={props.dismissable !== false}>
-                <div onClick={props.close} class="cursor-pointer">
-                  <X />
+            <Switch>
+              <Match when={props.tabs}>
+                <div class="flex h-[56px] flex-row justify-between text-lg font-bold">
+                  <Tabs selected={tab} select={setTab} tabs={props.tabs!.map((t) => t.name)} />
+                  <Show when={props.dismissable !== false}>
+                    <div onClick={props.close} class="cursor-pointer p-4">
+                      <X />
+                    </div>
+                  </Show>
                 </div>
-              </Show>
-            </div>
+              </Match>
+
+              <Match when>
+                <div class="flex flex-row justify-between p-4 text-lg font-bold">
+                  <div>{props.title}</div>
+                  <Show when={props.dismissable !== false}>
+                    <div onClick={props.close} class="cursor-pointer">
+                      <X />
+                    </div>
+                  </Show>
+                </div>
+              </Match>
+            </Switch>
 
             {/* 132px is the height of the title + footer*/}
             <div class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}>
-              {props.children}
-            </div>
+              <Switch>
+                <Match when={props.tabs}>{props.tabs![tab()].content}</Match>
 
+                <Match when>{props.children}</Match>
+              </Switch>
+            </div>
             <Show when={props.footer}>
               <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
             </Show>

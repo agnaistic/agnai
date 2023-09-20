@@ -8,7 +8,7 @@ export const gaslights = {
   
   {{char}}'s Persona: {{personality}}
   
-  This scenario of the conversation: {{scenario}}
+  The scenario of the conversation: {{scenario}}
   
   This is how {{char}} should talk: {{example_dialogue}}
   

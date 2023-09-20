@@ -69,6 +69,7 @@ const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean
   openrouter: () => true,
   claude: () => true,
   mancer: () => true,
+  agnaistic: () => true,
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
@@ -153,6 +154,27 @@ function getSummaryTemplate(service: AIAdapter) {
       {{ujb}}
       (System: Write an image caption of the current scene including the character's appearance)
       Image caption: [summary]
+      `
+
+    case 'agnaistic':
+      return neat`
+      Below is an instruction that describes a task. Write a response that completes the request.
+
+      {{char}}'s Persona: {{personality}}
+
+      The scenario of the conversation: {{scenario}}
+
+      Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+  
+      {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
+      {{/each}}
+      
+
+      ### Instruction:
+      Write an image caption of the current scene including the character's appearance.
+
+      ### Response:
+      [summary | tokens=250]
       `
   }
 }

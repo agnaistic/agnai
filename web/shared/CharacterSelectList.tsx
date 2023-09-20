@@ -35,6 +35,7 @@ const CharacterSelectList: Component<{
 
     for (const char of Object.values(chats.active.chat.tempCharacters || {})) {
       // Ignore 'hidden' temporary characters
+      if (char.deletedAt) continue
       if (char.favorite === false) continue
       chars.push(char)
     }

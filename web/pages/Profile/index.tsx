@@ -1,4 +1,4 @@
-import { AlertTriangle, Save, X } from 'lucide-solid'
+import { AlertTriangle, Save, VenetianMask, X } from 'lucide-solid'
 import { Component, Show, createEffect, createSignal, onMount } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
@@ -16,6 +16,16 @@ export const ProfileModal: Component = () => {
   const state = userStore()
   const [footer, setFooter] = createSignal<any>()
 
+  const profile = {
+    name: 'Profile',
+    content: <ProfilePage footer={setFooter} />,
+  }
+
+  const subscription = {
+    name: 'Subscription',
+    content: <div class="flex h-20 w-full items-center justify-center">$$$</div>,
+  }
+
   return (
     <Modal
       show={state.showProfile}
@@ -30,9 +40,8 @@ export const ProfileModal: Component = () => {
       }
       fixedHeight
       maxWidth="half"
-    >
-      <ProfilePage footer={setFooter} />
-    </Modal>
+      tabs={[profile, subscription]}
+    ></Modal>
   )
 }
 
@@ -87,14 +96,15 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
           </div>
 
           <TitleCard type="orange">
-            <div class="flex flex-wrap">
+            <div class="flex flex-wrap items-center">
               You can{' '}
               <div class="inline">
                 <Button class="mx-1" size="sm" onClick={() => settingStore.toggleImpersonate(true)}>
                   Impersonate
                 </Button>{' '}
               </div>
-              characters by clicking MASK icon at the top of the main menu.
+              characters by clicking the <VenetianMask size={16} class="mx-1" /> icon at the top of
+              the main menu.
             </div>
           </TitleCard>
 

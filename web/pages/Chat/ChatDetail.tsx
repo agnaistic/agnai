@@ -30,7 +30,7 @@ import ChatOptions, { ChatModal } from './ChatOptions'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
 import { cycleArray } from '/common/util'
-import { usePane, useResizeObserver } from '/web/shared/hooks'
+import { useEffect, usePane, useResizeObserver } from '/web/shared/hooks'
 import {
   emptyMsg,
   getChatWidth,
@@ -301,6 +301,49 @@ const ChatDetail: Component = () => {
 
   const chatMargin = createMemo(() => ' ' || (!!chats.opts.pane ? 'xs:mr-auto mx-auto' : 'mx-auto'))
 
+  const characterPills = createMemo(() => {
+    const bots = ctx.activeBots.filter((bot) => {
+      if (ctx.tempMap[bot._id]?.favorite === false) return false
+      return true
+    })
+    return bots
+  })
+
+  useEffect(() => {
+    function keyboardShortcuts(ev: KeyboardEvent) {
+      if (!ev.altKey) return
+
+      const num = +ev.key
+      if (num >= 1) {
+        const pill = characterPills()[num - 1]
+        if (!pill) return
+
+        ev.preventDefault()
+        if (msgs.retrying || msgs.partial) return
+        requestMessage(pill._id)
+      }
+
+      if (ev.key === 'r' || ev.key === 'R') {
+        ev.preventDefault()
+        if (msgs.retrying || msgs.partial) return
+        const last = indexOfLastRPMessage()
+        const msg = msgs.msgs[last]
+        if (!msg) return
+        if (msg.adapter === 'image') {
+          msgStore.createImage(msg._id)
+        } else if (msg.characterId) {
+          msgStore.retry(msg.chatId, msg._id)
+        } else {
+          msgStore.resend(msg.chatId, msg._id)
+        }
+      }
+    }
+
+    document.addEventListener('keydown', keyboardShortcuts)
+
+    return () => document.removeEventListener('keydown', keyboardShortcuts)
+  })
+
   const contentStyles = createMemo((): JSX.CSSProperties => {
     if (chats.opts.pane && isPaneOrPopup() === 'pane') {
       return {
@@ -532,18 +575,15 @@ const ChatDetail: Component = () => {
                 >
                   <VenetianMask size={16} />
                 </Button>
-                <For each={ctx.activeBots}>
-                  {(bot) => {
-                    if (ctx.tempMap[bot._id]?.favorite === false) return null
-                    return (
-                      <CharacterPill
-                        char={bot}
-                        onClick={requestMessage}
-                        disabled={!!msgs.waiting}
-                        active={chats.replyAs === bot._id}
-                      />
-                    )
-                  }}
+                <For each={characterPills()}>
+                  {(bot) => (
+                    <CharacterPill
+                      char={bot}
+                      onClick={requestMessage}
+                      disabled={!!msgs.waiting}
+                      active={chats.replyAs === bot._id}
+                    />
+                  )}
                 </For>
               </div>
             </Show>

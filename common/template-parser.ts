@@ -240,7 +240,13 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
   const entities =
     holder === 'bots'
-      ? Object.values(opts.characters).filter((b) => !!b && b._id !== opts.replyAs._id)
+      ? Object.values(opts.characters).filter(
+          (b) =>
+            !!b &&
+            b._id !== opts.replyAs._id &&
+            !b.deletedAt &&
+            (b._id.startsWith('temp-') ? b.favorite !== false : true)
+        )
       : opts.lines
 
   let i = 0
@@ -287,7 +293,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     return id
   }
 
-  return output.join('\n')
+  return holder === 'history' ? output.join('\n') : output.join('')
 }
 
 function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unknown, i: number) {
