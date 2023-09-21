@@ -41,6 +41,8 @@ const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo0301,
   OPENAI_MODELS.Turbo0613,
   OPENAI_MODELS.Turbo_16k,
+  OPENAI_MODELS.Turbo_Instruct,
+  OPENAI_MODELS.Turbo_Intruct914,
 ])
 
 export function getTokenCounter(adapter: AIAdapter | 'main', model?: string): TokenCounter {

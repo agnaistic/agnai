@@ -95,6 +95,8 @@ export const OPENAI_MODELS = {
   Turbo0301: 'gpt-3.5-turbo-0301',
   Turbo0613: 'gpt-3.5-turbo-0613',
   Turbo_16k: 'gpt-3.5-turbo-16k',
+  Turbo_Instruct: 'gpt-3.5-turbo-instruct',
+  Turbo_Intruct914: 'gpt-3.5-turbo-instruct-0914',
   GPT4: 'gpt-4',
   GPT4_0314: 'gpt-4-0314',
   GPT4_0613: 'gpt-4-0613',
