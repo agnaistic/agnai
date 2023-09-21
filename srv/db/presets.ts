@@ -133,6 +133,13 @@ export async function updateSubscription(
   id: string,
   update: Partial<AppSchema.SubscriptionPreset>
 ) {
+  // Set all other subscriptions to false if this subscription is the default
+  if (update.isDefaultSub) {
+    await db('subscription-setting').updateMany(
+      { isDefaultSub: true, _id: { $ne: id } },
+      { $set: { isDefaultSub: false } }
+    )
+  }
   await db('subscription-setting').updateOne({ _id: id }, { $set: update }, { upsert: false })
   const preset = await db('subscription-setting').findOne({ _id: id })
 

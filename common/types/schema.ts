@@ -339,6 +339,7 @@ export namespace AppSchema {
     subApiKeySet?: boolean
     subServiceUrl?: string
     subDisabled: boolean
+    allowGuestUsage?: boolean
     isDefaultSub?: boolean
     deletedAt?: string
   }

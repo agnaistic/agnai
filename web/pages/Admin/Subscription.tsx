@@ -74,6 +74,7 @@ export const Subscription: Component = () => {
         subModel: '',
         subApiKey: '',
         subDisabled: false,
+        allowGuestUsage: false,
       })
       return
     } else if (params.id === 'default') {
@@ -141,6 +142,7 @@ export const Subscription: Component = () => {
       subApiKey: 'string',
       isDefaultSub: 'boolean',
       thirdPartyFormat: 'string?',
+      allowGuestUsage: 'boolean',
     } as const
     const body = getStrictForm(ref, validator)
 
@@ -238,6 +240,7 @@ export const Subscription: Component = () => {
                       type="number"
                       fieldName="subLevel"
                       label="Subscription Level"
+                      helperText='Anything above -1 requires a "subscription". All users by default are -1.'
                       placeholder="0"
                       value={editing()?.subLevel ?? 0}
                       required
@@ -277,6 +280,15 @@ export const Subscription: Component = () => {
                         label="Is Default Subscription"
                         helperText="Is chosen as fallback when no subscription is provided with a request"
                         value={editing()?.isDefaultSub ?? false}
+                      />
+
+                      <Toggle
+                        fieldName="allowGuestUsage"
+                        label="Allow Guest Usage"
+                        helperText={
+                          'Typically for default subscriptions. Require users to sign in to use this subscription.'
+                        }
+                        value={editing()?.allowGuestUsage === false ? false : true}
                       />
                     </Card>
                   </div>

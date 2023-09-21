@@ -26,9 +26,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const level = opts.user.sub?.level ?? -1
 
   const fallback = getDefaultSubscription()
-
   const subId = opts.gen.registered?.agnaistic?.subscriptionId
   let preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
+
+  if (opts.guest && preset?.allowGuestUsage === false) {
+    yield { error: 'Please sign in to use the Agnaistic models' }
+    return
+  }
 
   if (!preset || preset.subDisabled) {
     // If the subscription they're using becomes unavailable, gracefully fallback to the default and let them know
