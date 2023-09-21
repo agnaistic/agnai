@@ -115,20 +115,22 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   log.debug(`Prompt:\n${body.prompt}`)
-  // await checkLimit(opts.user)
+
+  const params = [
+    `key=${key}`,
+    `id=${opts.user._id}`,
+    `model=${preset.subModel}`,
+    `level=${level}`,
+  ].join('&')
 
   const resp = gen.streamResponse
     ? await websocketStream({
-        url: `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/stream?key=${key}&id=${
-          opts.user._id
-        }&model=${preset.subModel}`,
+        url: `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/stream?${params}`,
         body,
       })
     : getTextgenCompletion(
         'Agnastic',
-        `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/generate?key=${key}&id=${
-          opts.user._id
-        }&model=${preset.subModel}`,
+        `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/generate?${params}`,
         body,
         {}
       )
@@ -249,27 +251,9 @@ function getDefaultSubscription() {
   return match
 }
 
-// async function checkLimit(user: AppSchema.User) {
-//   const prev = new Date(user.sub?.last || 0)
-//   const diff = Date.now() - prev.valueOf()
-
-//   const level = user.sub?.level ?? 0
-
-//   if (level > 0) return
-
-//   /**
-//    * @todo Move rate limits to db
-//    */
-//   if (diff < config.limits.subRate * 1000) {
-//     throw new StatusError(`Rate limit exceed - Please try again`, 429)
-//   }
-
-//   await store.users.updateLimit(user._id)
-// }
-
 /**
  * These need to be here because the Agnaistic service can invoke any other service
- *
+ * Placing these in a 'common' module would cause a circular dependency graph between `generate.ts` and this module.
  */
 
 export const handlers: { [key in AIAdapter]: ModelAdapter } = {
