@@ -311,7 +311,7 @@ const fullCompletition = async function* (headers: any, body: any, log: AppLog) 
 }
 
 function processNovelAIPrompt(prompt: string) {
-  return prompt.replace(/^\<START\>$/gm, '***')
+  return prompt.replace(/^\<START\>$/gm, '***').replace(/\n\n+/gi, '\n\n')
 }
 
 function getBaseUrl(model: string) {
