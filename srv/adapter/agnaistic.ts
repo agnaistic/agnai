@@ -30,7 +30,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   let preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
 
   if (opts.guest && preset?.allowGuestUsage === false) {
-    yield { error: 'Please sign in to use the Agnaistic models' }
+    yield { error: 'Please sign in to use this model' }
     return
   }
 
