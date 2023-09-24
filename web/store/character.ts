@@ -112,6 +112,11 @@ export const characterStore = createStore<CharacterState>(
     }
   )
 
+  events.on(EVENTS.init, (data) => {
+    if (!data.characters) return
+    events.emit(EVENTS.allChars, data.characters)
+  })
+
   events.on(EVENTS.allChars, async (chars: AppSchema.Character[]) => {
     const state = get()
     const id = await storage.getItem(IMPERSONATE_KEY)
@@ -209,6 +214,7 @@ export const characterStore = createStore<CharacterState>(
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
         toastStore.success(`Successfully created character`)
+        events.emit(EVENTS.charUpdated, res.result, 'created')
         yield {
           characters: {
             list: list.concat(res.result),
@@ -229,7 +235,7 @@ export const characterStore = createStore<CharacterState>(
 
       if (res.error) toastStore.error(`Failed to create character: ${res.error}`)
       if (res.result) {
-        events.emit(EVENTS.charUpdated, res.result)
+        events.emit(EVENTS.charUpdated, res.result, 'updated')
         toastStore.success(`Successfully updated character`)
         yield {
           characters: {
@@ -298,6 +304,7 @@ export const characterStore = createStore<CharacterState>(
       const res = await charsApi.deleteCharacter(charId)
       if (res.error) return toastStore.error(`Failed to delete character`)
       if (res.result) {
+        events.emit(EVENTS.charDeleted, charId)
         const next = list.filter((char) => char._id !== charId)
         toastStore.success('Successfully deleted character')
         onSuccess?.()

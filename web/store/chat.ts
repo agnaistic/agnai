@@ -147,7 +147,14 @@ export const chatStore = createStore<ChatState>('chat', {
     })
 
     if (init.chats) {
-      chatStore.setState({ allChats: init.chats })
+      chatStore.setState({
+        allChats: init.chats,
+        allChars: {
+          map: toMap(init.characters),
+          list: init.characters,
+        },
+        loaded: true,
+      })
     } else {
       chatStore.getAllChats()
     }
@@ -155,11 +162,28 @@ export const chatStore = createStore<ChatState>('chat', {
 
   events.on(EVENTS.loggedIn, () => {})
 
-  events.on(EVENTS.charUpdated, (char: AppSchema.Character) => {
-    const { active } = get()
-    if (active?.char?._id !== char._id) return
+  events.on(EVENTS.charUpdated, (char: AppSchema.Character, action: 'created' | 'updated') => {
+    const { active, allChars } = get()
+    const list =
+      action === 'created'
+        ? allChars.list.concat(char)
+        : allChars.list.map((ch) => (ch._id === char._id ? char : ch))
 
-    set({ active: { ...active, char } })
+    const map = Object.assign({}, allChars.map, { [char._id]: char })
+    if (active?.char?._id !== char._id) {
+      set({ allChars: { list, map } })
+      return
+    }
+
+    set({ active: { ...active, char }, allChars: { list, map } })
+  })
+
+  events.on(EVENTS.charDeleted, (id: string) => {
+    const { allChars } = get()
+    const list = allChars.list.filter((ch) => ch._id !== id)
+    const map = Object.assign({}, allChars.map, { [id]: undefined })
+
+    set({ allChars: { list, map } })
   })
 
   return {

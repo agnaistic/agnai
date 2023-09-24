@@ -13,6 +13,7 @@ export const EVENTS = {
   clearMsgs: 'clear-messages',
   receiveMsgs: 'receive-messages',
   charAdded: 'char-added',
+  charDeleted: 'char-deleted',
 }
 
 export const events = new EventEmitter()

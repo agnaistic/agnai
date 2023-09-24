@@ -43,6 +43,7 @@ import Divider from '../../shared/Divider'
 import TagSelect from '../../shared/TagSelect'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { DownloadModal } from './DownloadModal'
+
 const CACHE_KEY = 'agnai-charlist-cache'
 
 type ViewTypes = 'list' | 'cards'
@@ -69,7 +70,6 @@ const CharacterList: Component = () => {
   const [query, setQuery] = useSearchParams()
 
   const user = userStore()
-  // const state = characterStore((s) => ({ ...s.characters, loading: s.loading }))
   const state = chatStore((s) => ({
     list: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
     loading: s.allLoading,

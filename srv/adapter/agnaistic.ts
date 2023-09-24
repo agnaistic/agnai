@@ -9,10 +9,11 @@ import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
-import { getTextgenCompletion, getTextgenPayload, handleOoba } from './ooba'
+import { getTextgenCompletion, handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleOpenRouter } from './openrouter'
 import { handlePetals } from './petals'
+import { getStoppingStrings } from './prompt'
 import { registerAdapter } from './register'
 import { handleReplicate } from './replicate'
 import { handleScale } from './scale'
@@ -104,7 +105,30 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, ['###', 'Instruction:', 'Response:', 'USER:', 'ASSISTANT:'])
+  const body = {
+    prompt,
+    temperature: gen.temp,
+    top_k: gen.topK,
+    top_p: gen.topP,
+    n_predict: gen.maxTokens,
+    stop: getStoppingStrings(opts).concat(['###', 'USER:', 'ASSISTANT:']),
+    stream: true,
+    frequency_penality: gen.frequencyPenalty,
+    presence_penalty: gen.presencePenalty,
+    mirostat: gen.mirostatTau ? 2 : 0,
+    mirostat_tau: gen.mirostatTau,
+    mirostat_eta: gen.mirostatLR,
+    seed: -1,
+    typical_p: gen.typicalP,
+    ignore_eos: gen.banEosToken,
+    repeat_penalty: gen.repetitionPenalty,
+    repeat_last_n: gen.repetitionPenaltyRange,
+    tfs_z: gen.tailFreeSampling,
+  }
+
+  if (preset.stopSequences) {
+    body.stop.push(...preset.stopSequences)
+  }
 
   yield { prompt: body.prompt }
 
