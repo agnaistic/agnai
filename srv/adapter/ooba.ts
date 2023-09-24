@@ -150,6 +150,9 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
     skip_special_tokens: gen.skipSpecialTokens ?? true,
     stopping_strings: getStoppingStrings(opts).concat(stops),
     tfs: gen.tailFreeSampling,
+    mirostat_mode: gen.mirostatTau ? 2 : 0,
+    mirostat_tau: gen.mirostatTau,
+    mirostat_eta: gen.mirostatLR,
   }
   return body
 }
