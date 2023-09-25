@@ -63,7 +63,8 @@ type InferenceOpts = {
 }
 
 export async function generateActions() {
-  const { settings, impersonating, profile, user, messages } = await getPromptEntities()
+  const { settings, impersonating, profile, user, messages, ...entities } =
+    await getPromptEntities()
   const { prompt } = await createActiveChatPrompt({ kind: 'continue' }, 1024)
 
   const last = messages.slice(-1)[0]
@@ -73,14 +74,18 @@ export async function generateActions() {
     return
   }
 
-  await api.post<{ actions: AppSchema.ChatAction[] }>(`/chat/${last._id}/actions`, {
+  const res = await api.post<{ actions: AppSchema.ChatAction[] }>(`/chat/${last._id}/actions`, {
     service: settings.service,
     settings,
     impersonating,
     profile,
     user,
     lines: prompt.lines,
+    char: entities.char,
+    chat: entities.chat,
+    characters: entities.characters,
   })
+  return res
 }
 
 export async function basicInference({ prompt, settings }: InferenceOpts) {

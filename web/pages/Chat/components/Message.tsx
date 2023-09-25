@@ -6,6 +6,7 @@ import {
   Info,
   PauseCircle,
   Pencil,
+  PlusCircle,
   RefreshCw,
   Terminal,
   Trash,
@@ -374,11 +375,28 @@ const SingleMessage: Component<
             <div ref={avatarRef}>
               <Switch>
                 <Match when={isImage()}>
-                  <img
-                    class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
-                    src={getAssetUrl(props.msg.msg)}
-                    onClick={() => settingStore.showImage(props.original.msg)}
-                  />
+                  <div class="flex flex-wrap gap-2">
+                    <img
+                      class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
+                      src={getAssetUrl(props.msg.msg)}
+                      onClick={() => settingStore.showImage(props.original.msg)}
+                    />
+                    <For each={props.original.extras || []}>
+                      {(src) => (
+                        <img
+                          class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
+                          src={getAssetUrl(src)}
+                          onClick={() => settingStore.showImage(src)}
+                        />
+                      )}
+                    </For>
+                    <div
+                      class="icon-button mx-2 flex items-center"
+                      onClick={() => msgStore.createImage(props.msg._id, true)}
+                    >
+                      <PlusCircle size={20} />
+                    </div>
+                  </div>
                 </Match>
                 <Match when={props.retrying?._id === props.original._id && props.partial}>
                   <p

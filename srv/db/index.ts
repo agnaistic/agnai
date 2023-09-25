@@ -9,6 +9,7 @@ import * as memory from './memory'
 import * as scenario from './scenario'
 import * as oauth from './oauth'
 import * as tree from './tree'
+import * as subs from './subscriptions'
 
 export { db } from './client'
 
@@ -24,4 +25,5 @@ export const store = {
   scenario,
   oauth,
   tree,
+  subs,
 }

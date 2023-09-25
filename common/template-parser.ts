@@ -312,7 +312,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
 
   switch (node.value) {
     case 'char':
-      return opts.replyAs.name
+      return opts.replyAs.name || ''
 
     case 'user':
       return opts.impersonate?.name || opts.sender?.handle || 'You'
@@ -321,7 +321,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return opts.parts.sampleChat?.join('\n') || ''
 
     case 'scenario':
-      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario
+      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario || ''
 
     case 'memory':
       return opts.parts.memory || ''
@@ -330,7 +330,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return opts.parts.impersonality || ''
 
     case 'personality':
-      return opts.parts.persona
+      return opts.parts.persona || ''
 
     case 'ujb':
       return opts.parts.ujb || ''

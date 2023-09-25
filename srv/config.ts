@@ -63,6 +63,11 @@ export const config = {
   port: +env('PORT', '3001'),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
   extraFolder: env('EXTRA_FOLDER', ''),
+  billing: {
+    private: env('STRIPE_PRIVATE_KEY', ''),
+    public: env('STRIPE_PUBLIC_KEY', ''),
+    domain: env('STRIPE_DOMAIN', ''),
+  },
   db: {
     name: env('DB_NAME', 'agnai'),
     host: env('DB_HOST', '127.0.0.1'),

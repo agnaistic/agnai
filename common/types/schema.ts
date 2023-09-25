@@ -26,6 +26,7 @@ export type AllDoc =
   | AppSchema.ChatInvite
   | AppSchema.UserGenPreset
   | AppSchema.SubscriptionPreset
+  | AppSchema.SubscriptionTier
   | AppSchema.MemoryBook
   | AppSchema.ScenarioBook
   | AppSchema.ApiKey
@@ -41,7 +42,24 @@ export type ChatBranch = {
 }
 
 export namespace AppSchema {
-  export interface Subscription {
+  export interface SubscriptionTier {
+    kind: 'subscription-tier'
+    _id: string
+
+    productId: string
+    priceId: string
+
+    name: string
+    description: string
+    cost: number
+    level: number
+    enabled: boolean
+    createdAt: string
+    deletedAt?: string
+    updatedAt: string
+  }
+
+  export interface SubscriptionOption {
     _id: string
     name: string
     level: number
@@ -68,7 +86,7 @@ export namespace AppSchema {
       workers: HordeWorker[]
     }
     openRouter: { models: OpenRouterModel[] }
-    subs: Array<Subscription>
+    subs: Array<SubscriptionOption>
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -150,8 +168,11 @@ export namespace AppSchema {
     ui?: UISettings
 
     sub?: {
+      tierId: string
       level: number
       last: string
+      lastRenewed: string
+      customerId: string
     }
   }
 
@@ -230,6 +251,7 @@ export namespace AppSchema {
     kind: 'chat-message'
     chatId: string
     msg: string
+    extras?: string[]
     characterId?: string
     userId?: string
 

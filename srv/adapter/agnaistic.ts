@@ -1,7 +1,7 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { config } from '../config'
 import { store } from '../db'
-import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/presets'
+import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/subscriptions'
 import { decryptText } from '../db/util'
 import { handleClaude } from './claude'
 import { handleGooseAI } from './goose'
@@ -28,7 +28,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const fallback = getDefaultSubscription()
   const subId = opts.gen.registered?.agnaistic?.subscriptionId
-  let preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
+  let preset = subId ? await store.subs.getSubscription(subId) : getDefaultSubscription()
 
   if (opts.guest && preset?.allowGuestUsage === false) {
     yield { error: 'Please sign in to use this model' }

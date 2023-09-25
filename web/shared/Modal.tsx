@@ -51,7 +51,7 @@ const Modal: Component<Props> = (props) => {
           >
             <Switch>
               <Match when={props.tabs}>
-                <div class="flex h-[56px] flex-row justify-between text-lg font-bold">
+                <div class="flex h-[56px] flex-row justify-between text-lg">
                   <Tabs selected={tab} select={setTab} tabs={props.tabs!.map((t) => t.name)} />
                   <Show when={props.dismissable !== false}>
                     <div onClick={props.close} class="cursor-pointer p-4">

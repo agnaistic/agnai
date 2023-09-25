@@ -1,5 +1,15 @@
 import { ImagePlus, Megaphone, MoreHorizontal, PlusCircle, Send, Zap } from 'lucide-solid'
-import { Component, createMemo, createSignal, For, onCleanup, Setter, Show } from 'solid-js'
+import {
+  Component,
+  createMemo,
+  createSignal,
+  For,
+  Match,
+  onCleanup,
+  Setter,
+  Show,
+  Switch,
+} from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
 import Button from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
@@ -192,14 +202,6 @@ const InputBar: Component<{
         }}
         onInput={updateText}
       />
-
-      <SpeechRecognitionRecorder
-        culture={props.char?.culture}
-        class="right-20"
-        onText={(value) => setText(value)}
-        onSubmit={() => send()}
-        cleared={cleared}
-      />
       <button
         onClick={onButtonClick}
         class="h-full rounded-l-none rounded-r-md border-l border-[var(--bg-700)] bg-[var(--bg-800)] px-2 py-2 hover:bg-[var(--bg-700)]"
@@ -282,9 +284,22 @@ const InputBar: Component<{
           </Show>
         </div>
       </DropMenu>
-      <Button schema="clear">
-        <Send class="icon-button" size={18} onClick={send} />
-      </Button>
+      <Switch>
+        <Match when={text() === ''}>
+          <SpeechRecognitionRecorder
+            culture={props.char?.culture}
+            onText={(value) => setText(value)}
+            onSubmit={() => send()}
+            cleared={cleared}
+          />
+        </Match>
+
+        <Match when>
+          <Button schema="clear">
+            <Send class="icon-button" size={18} onClick={send} />
+          </Button>
+        </Match>
+      </Switch>
     </div>
   )
 }

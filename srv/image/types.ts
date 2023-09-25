@@ -7,6 +7,7 @@ export type ImageGenerateRequest = {
   chatId?: string
   messageId?: string
   ephemeral?: boolean
+  append?: boolean
 }
 
 export type ImageAdapter = (

@@ -40,7 +40,9 @@ export async function getInit() {
 }
 
 export async function getSubscriptions() {
-  const res = await api.get<{ subscriptions: AppSchema.Subscription[] }>('/settings/subscriptions')
+  const res = await api.get<{ subscriptions: AppSchema.SubscriptionOption[] }>(
+    '/settings/subscriptions'
+  )
   return res
 }
 

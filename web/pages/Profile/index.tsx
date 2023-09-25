@@ -1,5 +1,5 @@
 import { AlertTriangle, Save, VenetianMask, X } from 'lucide-solid'
-import { Component, Show, createEffect, createSignal, onMount } from 'solid-js'
+import { Component, For, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -8,13 +8,21 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
 import { settingStore, toastStore, userStore } from '../../store'
-import { TitleCard } from '/web/shared/Card'
+import { SolidCard, TitleCard } from '/web/shared/Card'
 import { rootModalStore } from '/web/store/root-modal'
 import { useNavigate } from '@solidjs/router'
+import { TierCard } from './TierCard'
+import { isLoggedIn } from '/web/store/api'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
+  const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
+
   const [footer, setFooter] = createSignal<any>()
+
+  onMount(() => {
+    userStore.getTiers()
+  })
 
   const profile = {
     name: 'Profile',
@@ -22,9 +30,15 @@ export const ProfileModal: Component = () => {
   }
 
   const subscription = {
-    name: 'Subscription',
-    content: <div class="flex h-20 w-full items-center justify-center">$$$</div>,
+    name: 'Account',
+    content: <SubscriptionPage />,
   }
+
+  const tabs = createMemo(() => {
+    if (!config.tiers.length || !isLoggedIn()) return
+
+    return [profile, subscription]
+  })
 
   return (
     <Modal
@@ -40,8 +54,85 @@ export const ProfileModal: Component = () => {
       }
       fixedHeight
       maxWidth="half"
-      tabs={[profile, subscription]}
-    ></Modal>
+      tabs={tabs()}
+    >
+      <Show when={!tabs()}>
+        <ProfilePage footer={setFooter} />
+      </Show>
+    </Modal>
+  )
+}
+
+const SubscriptionPage: Component = (props) => {
+  const user = userStore()
+  const cfg = userStore((s) => ({ tiers: s.tiers.sort((l, r) => r.level - l.level) }))
+
+  const level = createMemo(() => (!user.user?.sub ? -1 : user.user?.sub?.level))
+  const tier = createMemo(() =>
+    cfg.tiers.find((t) => t._id === user.user?.sub?.tierId || t.level === level())
+  )
+  const canUpgrade = createMemo(() => level() < 0 || cfg.tiers.some((t) => t.level > level()))
+
+  const onSubscribe = (tierId: string) => {
+    userStore.startCheckout(tierId)
+  }
+
+  return (
+    <div class="flex flex-col gap-2">
+      <div class="flex w-full flex-col items-center gap-4">
+        <Show when={tier()}>
+          <h3 class="font-bold">Current Subscription</h3>
+          <TierCard tier={tier()!}>
+            <div class="flex justify-center">
+              <SolidCard
+                bg="bg-700"
+                class="flex w-1/2 justify-center text-lg font-bold text-[var(--green-600)]"
+              >
+                Subscribed!
+              </SolidCard>
+            </div>
+          </TierCard>
+        </Show>
+
+        <SolidCard class="flex flex-col gap-2">
+          <p class="flex justify-center text-[var(--hl-500)]">
+            <strong>Why subscribe?</strong>
+          </p>
+          <p>Subscribing to Agnaistic grants you access to higher quality models.</p>
+          <p>
+            In the future you'll also have access to additional features! Such as: Image generation,
+            image storage, and with third-party apps like Discord, Slack, and WhatsApp, and more!
+          </p>
+          <p>Subscribing allows me to spend more time developing and enhancing Agnaistic.</p>
+        </SolidCard>
+
+        <div class="flex w-full flex-wrap justify-center">
+          <For each={cfg.tiers}>
+            {(each) => (
+              <>
+                <TierCard tier={each} class="w-1/3">
+                  <div class="mt-4 flex justify-center">
+                    <Button
+                      schema="success"
+                      disabled={false && each._id === tier()?._id}
+                      onClick={() => onSubscribe(each._id)}
+                    >
+                      Subscribe
+                    </Button>
+                  </div>
+                </TierCard>
+              </>
+            )}
+          </For>
+        </div>
+
+        <Show when={tier()}>
+          <Button class="mt-4" schema="red">
+            Unsubscribe
+          </Button>
+        </Show>
+      </div>
+    </div>
   )
 }
 

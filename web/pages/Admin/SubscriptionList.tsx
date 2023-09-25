@@ -1,12 +1,14 @@
 import { A, useNavigate } from '@solidjs/router'
 import { Copy, Plus, Trash } from 'lucide-solid'
-import { Component, createSignal, For, onMount } from 'solid-js'
+import { Component, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { presetStore } from '../../store'
+import { presetStore, userStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
+import Divider from '/web/shared/Divider'
+import { SolidCard } from '/web/shared/Card'
 
 const SubscriptionList: Component = () => {
   setComponentPageTitle('Subscriptions')
@@ -16,6 +18,8 @@ const SubscriptionList: Component = () => {
       .map((pre) => ({ ...pre, label: `[${getServiceName(pre.service)}] ${pre.name}` }))
       .sort(sortByLabel),
   }))
+
+  const cfg = userStore()
 
   const [deleting, setDeleting] = createSignal<string>()
 
@@ -29,21 +33,56 @@ const SubscriptionList: Component = () => {
 
   onMount(() => {
     presetStore.getSubscriptions()
+    userStore.getTiers()
   })
 
   return (
     <>
-      <PageHeader title="Subscription Presets" />
-      <div class="mb-4 flex w-full justify-end">
+      <PageHeader title="Subscriptions" />
+      <A href="/admin/metrics" class="link">
+        ← Back to Manage
+      </A>
+      <div class="mb-4 flex w-full justify-end gap-2">
+        <A href="/admin/tiers/new">
+          <Button>
+            <Plus />
+            Subscription Tier
+          </Button>
+        </A>
         <A href="/admin/subscriptions/new">
           <Button>
             <Plus />
-            New Subscription
+            Subscription Preset
           </Button>
         </A>
       </div>
-
       <div class="flex flex-col items-center gap-2">
+        <Show when={cfg.tiers.length === 0}>
+          <div class="flex justify-center text-xl font-bold">No Tiers</div>
+        </Show>
+        <Show when={cfg.tiers.length > 0}>
+          <div class="flex justify-center text-xl font-bold">Tiers</div>
+          <div class="flex w-full flex-col gap-2">
+            <For each={cfg.tiers}>
+              {(each) => (
+                <A href={`/admin/tiers/${each._id}`}>
+                  <SolidCard
+                    bg={each.enabled ? 'bg-800' : 'rose-900'}
+                    hover="bg-700"
+                    class="cursor-pointer"
+                  >
+                    {each.name}
+                    <Show when={!each.enabled}>
+                      <span class="text-600 ml-2 text-xs italic">disabled</span>
+                    </Show>
+                  </SolidCard>
+                </A>
+              )}
+            </For>
+          </div>
+        </Show>
+        <Divider />
+        <div class="flex justify-center font-bold">Subscription Presets</div>
         <For each={state.subs}>
           {(sub) => (
             <div class="flex w-full items-center gap-2">
@@ -55,10 +94,13 @@ const SubscriptionList: Component = () => {
                 <div class="ml-4 flex w-full items-center">
                   <div>
                     <span class="mr-1 text-xs italic text-[var(--text-600)]">
-                      Tier {sub.subLevel}. {getServiceName(sub.service)}
+                      [Level: {sub.subLevel}] {getServiceName(sub.service)}
                     </span>
                     {sub.name}
-                    {sub.subDisabled ? ' (disabled)' : ''}
+                    <span class="mr-1 text-xs italic text-[var(--text-600)]">
+                      {sub.isDefaultSub ? ' default' : ''}
+                      {sub.subDisabled ? ' (disabled)' : ''}
+                    </span>
                   </div>
                 </div>
               </A>
@@ -82,7 +124,6 @@ const SubscriptionList: Component = () => {
           )}
         </For>
       </div>
-
       <ConfirmModal
         show={!!deleting()}
         close={() => setDeleting()}

@@ -5,15 +5,17 @@ import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getAssetUrl, getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { adminStore, presetStore } from '../../store'
+import { adminStore, presetStore, userStore } from '../../store'
 import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
+import { A } from '@solidjs/router'
 
 const UsersPage: Component = () => {
   let ref: any
   setComponentPageTitle('Users')
   const state = adminStore()
-  const subs = presetStore((s) => s.subs)
+  const config = userStore()
+
   const [pw, setPw] = createSignal<AppSchema.User>()
   const [info, setInfo] = createSignal<{ name: string; id: string }>()
 
@@ -36,9 +38,9 @@ const UsersPage: Component = () => {
   const subTiers = createMemo(() => {
     const base = [{ label: '[-1] None', value: '-1' }]
     const tiers =
-      subs.map((sub) => ({
-        label: `[${sub.subLevel}] ${sub.name}`,
-        value: sub.subLevel.toString(),
+      config.tiers.map((sub) => ({
+        label: `[${sub.level}] ${sub.name}`,
+        value: sub.level.toString(),
       })) || []
     return base.concat(tiers).sort((l, r) => +l.value - +r.value)
   })
@@ -46,6 +48,10 @@ const UsersPage: Component = () => {
   return (
     <div>
       <PageHeader title="User Management" />
+
+      <A href="/admin/metrics" class="link">
+        ← Back to Manage
+      </A>
 
       <div class="flex flex-col gap-2 pb-4">
         <form ref={ref} class="flex justify-between" onSubmit={search}>

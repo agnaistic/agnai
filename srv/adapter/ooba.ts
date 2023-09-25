@@ -122,6 +122,7 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
       repeat_penalty: gen.repetitionPenalty,
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
+      min_length: gen.maxTokens,
     }
     return body
   }

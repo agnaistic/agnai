@@ -78,6 +78,7 @@ export async function generateImage(
           memberIds: broadcastIds,
           messageId,
           imagePrompt: opts.prompt,
+          append: opts.append,
         })
 
         if (msg) return
@@ -107,6 +108,7 @@ async function createImageMessage(opts: {
   messageId?: string
   memberIds: string[]
   imagePrompt: string
+  append?: boolean
 }) {
   const chat = opts.chatId ? await store.chats.getChatOnly(opts.chatId) : undefined
   if (!chat) return
@@ -114,7 +116,7 @@ async function createImageMessage(opts: {
   const char = await store.characters.getCharacter(chat.userId, chat.characterId)
   if (!char) return
 
-  if (opts.messageId) {
+  if (opts.messageId && !opts.append) {
     const msg = await store.msgs.editMessage(opts.messageId, {
       msg: opts.filename,
       adapter: 'image',
@@ -127,6 +129,21 @@ async function createImageMessage(opts: {
       adapter: 'image',
     })
     return msg
+  } else if (opts.messageId && opts.append) {
+    const prev = await store.msgs.getMessage(opts.messageId)
+    const extras = prev?.extras || []
+    extras.push(opts.filename)
+    await store.msgs.editMessage(opts.messageId, { adapter: 'image', extras })
+    sendMany(opts.memberIds, {
+      type: 'message-retry',
+      chatId: opts.chatId,
+      messageId: opts.messageId,
+      message: prev?.msg || '',
+      extras,
+      adapter: 'image',
+    })
+    if (prev) prev.extras = extras
+    return prev
   } else {
     const msg = await store.msgs.createChatMessage({
       chatId: opts.chatId!,

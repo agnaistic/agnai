@@ -219,6 +219,10 @@ export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
   claude: true,
   scale: true,
   novel: true,
+  agnaistic: true,
+  mancer: true,
+  kobold: true,
+  ooba: true,
 }
 
 export type PresetAISettings = Omit<

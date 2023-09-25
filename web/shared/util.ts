@@ -1,3 +1,4 @@
+import { createHooks, recommended } from '@css-hooks/solid'
 import * as lf from 'localforage'
 import { UnwrapBody, Validator, assertValid } from '/common/valid'
 import {
@@ -11,6 +12,10 @@ import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
 import { UserState, settingStore } from '../store'
 import { AppSchema } from '/common/types'
+
+const [css, hooks] = createHooks(recommended)
+
+export { hooks, css }
 
 export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
   switch (chatWidth) {

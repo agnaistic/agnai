@@ -44,6 +44,7 @@ export type UserState = {
   oaiUsageLoading: boolean
   hordeStatsLoading: boolean
   showProfile: boolean
+  tiers: AppSchema.SubscriptionTier[]
 }
 
 export const userStore = createStore<UserState>(
@@ -85,6 +86,35 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async getTiers() {
+      const res = await api.get('/admin/tiers')
+      if (res.result) {
+        return { tiers: res.result.tiers }
+      }
+    },
+
+    async startCheckout(_, tierId: string) {
+      const res = await api.post(`/admin/billing/checkout`, { tierId })
+      if (res.result) {
+        checkout(res.result.sessionUrl)
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not start checkout: ${res.error}`)
+      }
+    },
+    async finishCheckout({ user }, sessionId: string, state: string) {
+      const res = await api.post(`/admin/billing/checkout/finish`, { sessionId, state })
+      if (res.result && state === 'success') {
+        return {
+          user: { ...user!, sub: res.result },
+        }
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not complete checkout: ${res.error}`)
+      }
+    },
     async getConfig({ ui }) {
       const res = await usersApi.getConfig()
 
@@ -429,6 +459,7 @@ function init(): UserState {
       metadata: {},
       current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
       showProfile: false,
+      tiers: [],
     }
   }
 
@@ -443,6 +474,7 @@ function init(): UserState {
     metadata: {},
     current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
     showProfile: false,
+    tiers: [],
   }
 }
 
@@ -585,3 +617,38 @@ function getUIKey(guest = false) {
 subscribe('ui-update', { ui: 'any' }, (body) => {
   userStore.receiveUI(body.ui)
 })
+
+events.on(EVENTS.tierReceived, (tier: AppSchema.SubscriptionTier) => {
+  const { tiers } = userStore.getState()
+  const existing = tiers.some((t) => t._id === tier._id)
+
+  const next = existing ? tiers.map((t) => (t._id === tier._id ? tier : t)) : tiers.concat(tier)
+
+  userStore.setState({ tiers: next })
+})
+
+async function checkout(sessionUrl: string) {
+  const child = window.open(
+    sessionUrl,
+    `_blank`,
+    `width=600,height=800,scrollbar=yess,top=100,left=100`
+  )!
+
+  const interval = setInterval(() => {
+    try {
+      if (child.closed) {
+        clearInterval(interval)
+        return
+      }
+
+      const path = child.location.pathname
+      if (!path.includes('/checkout')) return
+      clearInterval(interval)
+
+      const success = path.includes('/success')
+      if (success) {
+        userStore.getConfig()
+      }
+    } catch (ex) {}
+  })
+}

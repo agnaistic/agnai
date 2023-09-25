@@ -20,3 +20,8 @@ declare interface Window {
   flags: Record<string, boolean>
   usePipeline: boolean
 }
+
+type NoId<T> = Omit<T, '_id' | 'kind'>
+type OmitId<T, U extends string> = Omit<T, '_id' | 'kind' | U>
+
+type Dates = 'createdAt' | 'updatedAt' | 'deletedAt' | 'kind'

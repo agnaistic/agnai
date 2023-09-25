@@ -531,7 +531,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const encoder = await getEncoder()
       const replyAs = active.replyAs?.startsWith('temp-')
         ? entities.chat.tempCharacters![active.replyAs]
-        : entities.characters[active.replyAs ?? active.char._id]
+        : entities.characters[active.replyAs!] || active.char
 
       const prompt = createPrompt(
         {
