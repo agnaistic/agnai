@@ -66,7 +66,9 @@ export const config = {
   billing: {
     private: env('STRIPE_PRIVATE_KEY', ''),
     public: env('STRIPE_PUBLIC_KEY', ''),
-    domain: env('STRIPE_DOMAIN', ''),
+    domains: env('STRIPE_DOMAINS', '')
+      .split(',')
+      .filter((d) => !!d),
   },
   db: {
     name: env('DB_NAME', 'agnai'),

@@ -9,7 +9,9 @@ export const CheckoutSuccess: Component = (props) => {
   const [query] = useSearchParams()
 
   onMount(() => {
-    userStore.finishCheckout(query.session_id, 'success')
+    userStore.finishCheckout(query.session_id, 'success', () => {
+      window.close()
+    })
   })
 
   return (
@@ -24,7 +26,7 @@ export const CheckoutSuccess: Component = (props) => {
             preset.
           </p>
         </SolidCard>
-        <Button onClick={() => window.close()}>Return</Button>
+        <Button onClick={() => window.close()}>Close Window</Button>
       </div>
     </>
   )
@@ -45,7 +47,7 @@ export const CheckoutCancel: Component = (props) => {
         <SolidCard class="flex flex-col items-center gap-4" bg="orange-600">
           <p>Your attempt to subscribe was cancelled. You have not been charged.</p>
         </SolidCard>
-        <Button onClick={() => window.close()}>Return</Button>
+        <Button onClick={() => window.close()}>Close Window</Button>
       </div>
     </>
   )

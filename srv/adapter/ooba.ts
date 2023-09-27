@@ -158,7 +158,7 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
   return body
 }
 
-function llamaStream(host: string, payload: any) {
+export function llamaStream(host: string, payload: any) {
   const accums: string[] = []
   const resp = needle.post(host + '/completion', JSON.stringify(payload), {
     parse: false,

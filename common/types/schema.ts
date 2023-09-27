@@ -170,9 +170,16 @@ export namespace AppSchema {
     sub?: {
       tierId: string
       level: number
-      last: string
+      last?: string
+    }
+
+    billing?: {
+      status: 'active' | 'cancelled'
+      cancelling?: boolean
+      validUntil: string
       lastRenewed: string
       customerId: string
+      subscriptionId: string
     }
   }
 

@@ -270,7 +270,7 @@ body {
   }
 
   .btn-green {
-    @apply btn-base bg-green-700 active:bg-green-300 enabled:hover:bg-green-400;
+    @apply btn-base bg-green-600 active:bg-green-300 enabled:hover:bg-green-400;
     @apply disabled:bg-green-900 disabled:text-[var(--text-600)];
   }
 

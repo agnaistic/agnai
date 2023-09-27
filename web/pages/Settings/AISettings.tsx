@@ -110,7 +110,7 @@ const AISettings: Component<{
         />
 
         <div class="my-2">
-          <SolidCard bg="premium-700" class="mb-2">
+          <SolidCard bg="orange-500" class="mb-2">
             Are you using an external AI service such as OpenAI, NovelAI, or Horde? Provide your API
             key below.
           </SolidCard>

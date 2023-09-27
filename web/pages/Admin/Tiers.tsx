@@ -19,7 +19,7 @@ const TiersPage: Component = (props) => {
   const admin = adminStore()
 
   const products = createMemo(() => {
-    return admin.products.map((product) => {
+    const list = admin.products.map((product) => {
       const price = admin.prices.find((price) => price.id === product.default_price)
       const cost = price?.unit_amount ? `$${price.unit_amount / 100}` : ''
       return {
@@ -27,6 +27,8 @@ const TiersPage: Component = (props) => {
         value: product.id,
       }
     })
+
+    return [{ label: 'No payment required', value: '' }].concat(list)
   })
 
   const [editing, setEditing] = createSignal(
@@ -48,17 +50,22 @@ const TiersPage: Component = (props) => {
     const price = admin.prices.find((p) => p.id === product?.default_price!)
 
     if (!product) {
-      toastStore.error(`Cannot submit: Product "${data.productId}" not found`)
-      return
+      if (data.productId) {
+        toastStore.error(`Cannot submit: Product "${data.productId}" not found`)
+        return
+      }
     }
 
-    if (!product.default_price) {
+    const productId = data.productId
+    const priceId = product ? (product.default_price as string) : ''
+
+    if (!product?.default_price && data.productId) {
       toastStore.error(`Cannot submit: Product "${data.productId}" does not have a price`)
       return
     }
 
-    if (!price) {
-      toastStore.error(`Cannot submit: Price "${product.default_price}" not found`)
+    if (!price && data.productId) {
+      toastStore.error(`Cannot submit: Price "${product?.default_price}" not found`)
       return
     }
 
@@ -66,9 +73,9 @@ const TiersPage: Component = (props) => {
 
     const tier = {
       ...data,
-      cost: price.unit_amount!,
-      priceId: product.default_price as string,
-      productId: product.id,
+      cost: price ? price.unit_amount! : 0,
+      priceId,
+      productId,
     }
 
     if (id) {
@@ -115,7 +122,12 @@ const TiersPage: Component = (props) => {
 
           <TierCard tier={{ name: name(), description: desc(), cost: 1000 }} />
 
-          <Select fieldName="productId" label="Stripe Product" items={products()} />
+          <Select
+            fieldName="productId"
+            label="Stripe Product"
+            items={products()}
+            value={editing()?.productId}
+          />
 
           <TextInput type="number" fieldName="level" label="Level" value={editing()?.level ?? -1} />
 

@@ -3,6 +3,7 @@ import { logger } from '../logger'
 import { getDb } from '../db/client'
 import { Provider, createDomainV2 } from 'evtstore'
 import { billingAgg } from './billing/agg'
+import { subsAgg } from './subs/agg'
 
 let resolver: (provider: any) => void
 
@@ -26,8 +27,8 @@ export async function setupDomain() {
 }
 
 const { domain, createHandler } = createDomainV2(
-  { provider: providerAsync, useCache: false },
-  { billing: billingAgg }
+  { provider: providerAsync, useCache: true },
+  { billing: billingAgg, subscription: subsAgg }
 )
 
 export { domain, createHandler }

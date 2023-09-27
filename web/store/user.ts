@@ -45,6 +45,19 @@ export type UserState = {
   hordeStatsLoading: boolean
   showProfile: boolean
   tiers: AppSchema.SubscriptionTier[]
+  billingLoading: boolean
+  subStatus?: {
+    status: 'active' | 'cancelling' | 'cancelled' | 'new'
+    tierId: string
+    customerId: string
+    subscriptionId: string
+    priceId: string
+    downgrading?: {
+      tierId: string
+      requestedAt: string
+      activeAt: string
+    }
+  }
 }
 
 export const userStore = createStore<UserState>(
@@ -93,8 +106,12 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async startCheckout(_, tierId: string) {
-      const res = await api.post(`/admin/billing/checkout`, { tierId })
+    async *startCheckout({ billingLoading }, tierId: string) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const callback = location.origin
+      const res = await api.post(`/admin/billing/subscribe/checkout`, { tierId, callback })
+      yield { billingLoading: false }
       if (res.result) {
         checkout(res.result.sessionUrl)
       }
@@ -103,9 +120,18 @@ export const userStore = createStore<UserState>(
         toastStore.error(`Could not start checkout: ${res.error}`)
       }
     },
-    async finishCheckout({ user }, sessionId: string, state: string) {
-      const res = await api.post(`/admin/billing/checkout/finish`, { sessionId, state })
+    async *finishCheckout(
+      { user, billingLoading },
+      sessionId: string,
+      state: string,
+      onSuccess?: Function
+    ) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post(`/admin/billing/subscribe/finish`, { sessionId, state })
+      yield { billingLoading: false }
       if (res.result && state === 'success') {
+        onSuccess?.()
         return {
           user: { ...user!, sub: res.result },
         }
@@ -115,6 +141,73 @@ export const userStore = createStore<UserState>(
         toastStore.error(`Could not complete checkout: ${res.error}`)
       }
     },
+    async *stopSubscription({ billingLoading }) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/cancel')
+      yield { billingLoading: false }
+      if (res.result) {
+        toastStore.normal('Subscription has been stopped')
+        userStore.getConfig()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not modify subsctiption: ${res.error}`)
+      }
+    },
+    async *resumeSubscription({ billingLoading }) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/resume')
+      yield { billingLoading: false }
+      if (res.result) {
+        toastStore.success('Your subscription has been resumed!')
+        userStore.getConfig()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not resume subscription: ${res.error}`)
+      }
+    },
+
+    async *modifySubscription({ billingLoading }, tierId: string) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/modify', { tierId })
+      yield { billingLoading: false }
+
+      if (res.result) {
+        toastStore.success('Your subscription has been changed')
+        userStore.getConfig()
+        userStore.subscriptionStatus()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not change subscription: ${res.error}`)
+      }
+    },
+
+    async *validateSubscription({ billingLoading }) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/verify')
+      yield { billingLoading: false }
+      if (res.result) {
+        toastStore.success('You are currently subscribed')
+      }
+
+      if (res.error) {
+        toastStore.error(res.error)
+      }
+    },
+
+    async subscriptionStatus() {
+      const res = await api.get('/admin/billing/subscribe/status')
+      if (res.result) {
+        return { subStatus: res.result }
+      }
+    },
+
     async getConfig({ ui }) {
       const res = await usersApi.getConfig()
 
@@ -460,6 +553,7 @@ function init(): UserState {
       current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
       showProfile: false,
       tiers: [],
+      billingLoading: false,
     }
   }
 
@@ -475,6 +569,7 @@ function init(): UserState {
     current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
     showProfile: false,
     tiers: [],
+    billingLoading: false,
   }
 }
 
@@ -609,6 +704,11 @@ export function getSettingColor(color: string) {
   return getRootVariable(color)
 }
 
+export function getAsCssVar(color: string) {
+  if (color.startsWith('--')) return `var(${color})`
+  return `var(--${color})`
+}
+
 function getUIKey(guest = false) {
   const userId = guest ? 'anon' : getUserId()
   return `ui-settings-${userId}`
@@ -631,24 +731,26 @@ async function checkout(sessionUrl: string) {
   const child = window.open(
     sessionUrl,
     `_blank`,
-    `width=600,height=800,scrollbar=yess,top=100,left=100`
+    `width=600,height=1080,scrollbar=yes,top=100,left=100`
   )!
 
+  let success = false
   const interval = setInterval(() => {
     try {
       if (child.closed) {
         clearInterval(interval)
+        if (success) {
+          userStore.getConfig()
+          toastStore.success('Subscription successful!')
+        }
         return
       }
 
       const path = child.location.pathname
       if (!path.includes('/checkout')) return
-      clearInterval(interval)
 
-      const success = path.includes('/success')
-      if (success) {
-        userStore.getConfig()
-      }
+      const result = path.includes('/success')
+      success = result
     } catch (ex) {}
   })
 }

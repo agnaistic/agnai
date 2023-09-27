@@ -232,7 +232,7 @@ const CreateChatForm: Component<{
                     may not work as intended with other models.
                   </TitleCard>
                   <TitleCard>
-                    <b>COMPANION:</b>Everything is permanent. You will not be able to: Edit Chat,
+                    <b>COMPANION:</b> Everything is permanent. You will not be able to: Edit Chat,
                     Retry Message, Delete Messages, etc.
                   </TitleCard>
                 </div>

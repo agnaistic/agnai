@@ -1,5 +1,5 @@
 import { Component, JSX, Show, createMemo } from 'solid-js'
-import { getSettingColor, userStore } from '../store'
+import { getSettingColor, getAsCssVar, userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
 
@@ -39,10 +39,10 @@ export const SolidCard: Component<{
   hover?: string | boolean
   border?: boolean
 }> = (props) => {
-  const bg = createMemo(() => getSettingColor(props.bg || 'bg-800'))
+  const bg = createMemo(() => (props.bg ? getAsCssVar(props.bg) : '--bg-800'))
   const hover = createMemo(() => {
     if (!props.hover) return {}
-    if (props.hover === true) return { background: getSettingColor('bg-600'), cursor: 'pointer' }
+    if (props.hover === true) return { background: getAsCssVar('--bg-600'), cursor: 'pointer' }
     return { background: getSettingColor(props.hover), cursor: 'pointer' }
   })
 
