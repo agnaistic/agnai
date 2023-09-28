@@ -128,7 +128,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     temperature: gen.temp,
     top_k: gen.topK,
     top_p: gen.topP,
-    n_predict: gen.maxTokens,
+    max_new_tokens: gen.maxTokens,
     stop: getStoppingStrings(opts).concat(['###', 'USER:', 'ASSISTANT:']),
     stream: true,
     frequency_penality: gen.frequencyPenalty,
