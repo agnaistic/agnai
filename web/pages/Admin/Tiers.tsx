@@ -1,6 +1,6 @@
 import { A, useParams } from '@solidjs/router'
-import { Component, createMemo, createSignal, onMount } from 'solid-js'
-import { adminStore, toastStore, userStore } from '/web/store'
+import { Component, Show, createMemo, createSignal, onMount } from 'solid-js'
+import { adminStore, settingStore, toastStore, userStore } from '/web/store'
 import PageHeader from '/web/shared/PageHeader'
 import TextInput from '/web/shared/TextInput'
 import { Toggle } from '/web/shared/Toggle'
@@ -17,6 +17,7 @@ const TiersPage: Component = (props) => {
   const params = useParams()
   const cfg = userStore()
   const admin = adminStore()
+  const settings = settingStore()
 
   const products = createMemo(() => {
     const list = admin.products.map((product) => {
@@ -44,6 +45,7 @@ const TiersPage: Component = (props) => {
       level: 'number',
       productId: 'string',
       enabled: 'boolean',
+      disableSlots: 'boolean?',
     })
 
     const product = admin.products.find((p) => p.id === data.productId)
@@ -120,7 +122,7 @@ const TiersPage: Component = (props) => {
 
           <div class="text-lg font-bold">Preview</div>
 
-          <TierCard tier={{ name: name(), description: desc(), cost: 1000 }} />
+          <TierCard tier={{ name: name(), description: desc(), cost: 1000, disableSlots: false }} />
 
           <Select
             fieldName="productId"
@@ -131,7 +133,21 @@ const TiersPage: Component = (props) => {
 
           <TextInput type="number" fieldName="level" label="Level" value={editing()?.level ?? -1} />
 
-          <Toggle fieldName="enabled" label="Enabled" value={editing()?.enabled} />
+          <Toggle
+            fieldName="enabled"
+            label="Enabled"
+            helperText="If disabled, this tier will not be available to users for selection."
+            value={editing()?.enabled}
+          />
+
+          <Show when={!!settings.slots.publisherId}>
+            <Toggle
+              fieldName="disableSlots"
+              label="Disable Slots"
+              helperText="This tier will prevent slots from rendering"
+              value={editing()?.disableSlots}
+            />
+          </Show>
 
           <div class="flex w-full justify-end">
             <Button onClick={onSubmit}>Save</Button>

@@ -4,6 +4,7 @@ import { EVENTS, events } from '../emitter'
 import { api } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
+import type { SubsAgg } from '/srv/domains/subs/types'
 
 type UserInfo = {
   userId: string
@@ -11,6 +12,10 @@ type UserInfo = {
   characters: number
   handle: string
   avatar: string
+  state: SubsAgg
+  username: string
+  sub: AppSchema.User['sub']
+  billing: AppSchema.User['billing']
 }
 
 type AdminState = {
@@ -29,8 +34,12 @@ type AdminState = {
 export const adminStore = createStore<AdminState>('admin', { users: [], products: [], prices: [] })(
   (_) => {
     return {
-      async getUsers(_, username: string, page = 0) {
-        const res = await api.post<{ users: AppSchema.User[] }>('/admin/users', { username, page })
+      async getUsers(
+        _,
+        opts: { username: string; subscribed: boolean; customerId: string },
+        page = 0
+      ) {
+        const res = await api.post<{ users: AppSchema.User[] }>('/admin/users', { ...opts, page })
         if (res.error) return toastStore.error(`Unable to retrieve users: ${res.error}`)
         if (res.result) {
           return { users: res.result.users }

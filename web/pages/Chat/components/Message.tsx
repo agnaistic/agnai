@@ -379,14 +379,22 @@ const SingleMessage: Component<
                     <img
                       class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
                       src={getAssetUrl(props.msg.msg)}
-                      onClick={() => settingStore.showImage(props.original.msg)}
+                      onClick={() =>
+                        settingStore.showImage(props.original.msg, [
+                          toImageDeleteButton(props.msg._id, 0),
+                        ])
+                      }
                     />
                     <For each={props.original.extras || []}>
-                      {(src) => (
+                      {(src, i) => (
                         <img
                           class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
                           src={getAssetUrl(src)}
-                          onClick={() => settingStore.showImage(src)}
+                          onClick={() =>
+                            settingStore.showImage(src, [
+                              toImageDeleteButton(props.msg._id, i() + 1),
+                            ])
+                          }
                         />
                       )}
                     </For>
@@ -833,4 +841,15 @@ function canShowMeta(msg: AppSchema.ChatMessage, history: any) {
   if (!msg) return false
   if (msg._id === 'partial') return false
   return !!msg.adapter || !!history || (!!msg.meta && Object.keys(msg.meta).length >= 1)
+}
+
+function toImageDeleteButton(msgId: string, position: number) {
+  return {
+    schema: 'red' as const,
+    text: 'Delete Image',
+    onClick: () => {
+      msgStore.removeMessageImage(msgId, position)
+      settingStore.clearImage()
+    },
+  }
 }

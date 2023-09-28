@@ -23,15 +23,6 @@ export const resumeSubscription = handle(async ({ body, userId }) => {
     throw new StatusError(`Cannot resume subscription - No longer in cancelation period`, 400)
   }
 
-  const tier = await store.subs.getTier(user.sub.tierId)
-  if (!tier.enabled) {
-    throw new StatusError('Cannot resume subscription, tier is no longer available', 400)
-  }
-
-  if (!tier.priceId || !tier.productId) {
-    throw new StatusError('Cannot resume subscription, tier is no longer valid', 400)
-  }
-
   const result = await stripe.subscriptions.update(user.billing.subscriptionId, {
     cancel_at_period_end: false,
   })

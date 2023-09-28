@@ -1,6 +1,6 @@
 import { Save, X } from 'lucide-solid'
-import { Component, createEffect, createMemo, createSignal, For, Show } from 'solid-js'
-import Button from '../../shared/Button'
+import { Component, createMemo, createSignal, For, onMount, Show } from 'solid-js'
+import Button, { ToggleButton } from '../../shared/Button'
 import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -9,6 +9,7 @@ import { adminStore, presetStore, userStore } from '../../store'
 import { AppSchema } from '/common/types'
 import Select from '/web/shared/Select'
 import { A } from '@solidjs/router'
+import { elapsedSince } from '/common/util'
 
 const UsersPage: Component = () => {
   let ref: any
@@ -26,20 +27,25 @@ const UsersPage: Component = () => {
 
   const search = (ev: Event) => {
     ev?.preventDefault()
-    const { username } = getStrictForm(ref, { username: 'string' })
-    adminStore.getUsers(username)
+    const opts = getStrictForm(ref, {
+      username: 'string',
+      subscribed: 'boolean',
+      customerId: 'string',
+    })
+    adminStore.getUsers(opts)
   }
 
-  createEffect(() => {
-    adminStore.getUsers('')
+  onMount(() => {
+    adminStore.getUsers({ username: '', subscribed: false, customerId: '' })
     presetStore.getSubscriptions()
+    userStore.getTiers()
   })
 
   const subTiers = createMemo(() => {
     const base = [{ label: '[-1] None', value: '-1' }]
     const tiers =
       config.tiers.map((sub) => ({
-        label: `[${sub.level}] ${sub.name}`,
+        label: `[${sub.level}] ${sub.name} ${!sub.enabled ? '(disabled)' : ''}`,
         value: sub.level.toString(),
       })) || []
     return base.concat(tiers).sort((l, r) => +l.value - +r.value)
@@ -55,8 +61,10 @@ const UsersPage: Component = () => {
 
       <div class="flex flex-col gap-2 pb-4">
         <form ref={ref} class="flex justify-between" onSubmit={search}>
-          <div class="flex flex-col">
+          <div class="flex flex-wrap gap-2">
             <TextInput class="text-xs" fieldName="username" placeholder="Username" />
+            <TextInput class="text-xs" fieldName="customerId" placeholder="Customer ID" />
+            <ToggleButton fieldName="subscribed">Subscribed</ToggleButton>
           </div>
           <Button onClick={search}>Search</Button>
         </form>
@@ -106,6 +114,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
   props
 ) => {
   const state = adminStore()
+  const tiers = userStore((s) => ({ list: s.tiers }))
 
   return (
     <Modal
@@ -113,22 +122,108 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
       close={props.close}
       title={`${props.name}: ${state.info?.handle || '...'}`}
       footer={<Button onClick={props.close}>Close</Button>}
+      maxWidth="half"
     >
-      <div class="flex flex-col gap-4">
-        <TextInput fieldName="id" label="User ID" value={state.info?.userId} disabled />
-        <TextInput fieldName="handle" label="Handle" value={state.info?.handle} disabled />
-        <TextInput fieldName="chats" label="Chats" value={state.info?.chats} disabled />
-        <TextInput
-          fieldName="characters"
-          label="Characters"
-          value={state.info?.characters}
-          disabled
-        />
+      <div class="flex flex-col items-center gap-4">
         <Show when={state.info?.avatar}>
           <div class="flex w-full justify-center">
-            <img src={getAssetUrl(state.info?.avatar!)} height="128px" />
+            <img src={getAssetUrl(state.info?.avatar!)} class="h-[128px]" />
           </div>
         </Show>
+        <table class="w-full table-auto">
+          <tbody>
+            <tr>
+              <th>User ID</th>
+              <td>{state.info?.userId}</td>
+            </tr>
+
+            <tr>
+              <th>Handle</th>
+              <td>{state.info?.handle}</td>
+            </tr>
+
+            <tr>
+              <th>Characters</th>
+              <td>{state.info?.characters}</td>
+            </tr>
+            <tr>
+              <th>Chats</th>
+              <td>{state.info?.chats}</td>
+            </tr>
+
+            <Show when={state.info?.sub}>
+              <tr>
+                <td colSpan={2}>
+                  <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
+                </td>
+              </tr>
+              <tr>
+                <th>Subscription Level</th>
+                <td>{state.info?.sub?.level}</td>
+              </tr>
+            </Show>
+
+            <Show when={state.info?.billing}>
+              <tr>
+                <th>Customer ID</th>
+                <td>{state.info?.billing?.customerId}</td>
+              </tr>
+
+              <tr>
+                <th>Period Start</th>
+                <td>{new Date(state.info?.billing?.lastRenewed!).toLocaleString()}</td>
+              </tr>
+
+              <tr>
+                <th>
+                  {state.info?.state.downgrade
+                    ? 'Downgrading at'
+                    : state.info?.state.state === 'cancelled'
+                    ? 'Cancelled at'
+                    : state.info?.billing?.cancelling
+                    ? 'Cancels at'
+                    : 'Renews at'}
+                </th>
+                <td>{new Date(state.info?.billing?.validUntil!).toLocaleString()}</td>
+              </tr>
+            </Show>
+
+            <Show when={state.info?.state.state !== 'new'}>
+              <tr>
+                <th>State</th>
+                <td>{state.info?.state.state}</td>
+              </tr>
+              <tr>
+                <td colSpan={2}>
+                  <div class="bg-700 mt-4 flex justify-center">History</div>
+                </td>
+              </tr>
+              <For each={state.info?.state.history}>
+                {(item) => {
+                  const tier = item.tierId
+                    ? tiers.list.find((t) => t._id === item.tierId)
+                    : undefined
+                  return (
+                    <tr>
+                      <th>
+                        {new Date(item.time).toLocaleString()}{' '}
+                        <span class="text-500 text-xs">
+                          {elapsedSince(new Date(item.time!))} ago
+                        </span>
+                      </th>
+                      <td>
+                        {item.type}{' '}
+                        <span class="text-[var(--hl-700)]">
+                          {tier ? `(tier #${tier.level} ${tier.name})` : ''}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                }}
+              </For>
+            </Show>
+          </tbody>
+        </table>
       </div>
     </Modal>
   )

@@ -85,6 +85,7 @@ const SubscriptionPage: Component = (props) => {
 
   const [showUnsub, setUnsub] = createSignal(false)
   const [showUpgrade, setUpgrade] = createSignal<AppSchema.SubscriptionTier>()
+  const [showDowngrade, setDowngrade] = createSignal<AppSchema.SubscriptionTier>()
 
   const candidates = createMemo(() => {
     return cfg.tiers
@@ -214,7 +215,7 @@ const SubscriptionPage: Component = (props) => {
                           <Button
                             schema="gray"
                             disabled={canResume() || user.billingLoading}
-                            onClick={() => userStore.modifySubscription(each._id)}
+                            onClick={() => setDowngrade(each)}
                           >
                             Downgrade
                           </Button>
@@ -240,9 +241,9 @@ const SubscriptionPage: Component = (props) => {
           </div>
 
           <div class="mt-4 flex gap-4">
-            <Button onClick={userStore.validateSubscription} disabled={user.billingLoading}>
+            {/* <Button onClick={userStore.validateSubscription} disabled={user.billingLoading}>
               Validate
-            </Button>
+            </Button> */}
             <Show when={cfg.tier}>
               <Button schema="red" onClick={() => setUnsub(true)} disabled={user.billingLoading}>
                 Unsubscribe
@@ -268,6 +269,21 @@ const SubscriptionPage: Component = (props) => {
           </div>
         }
         confirm={() => userStore.modifySubscription(showUpgrade()!._id)}
+      />
+
+      <ConfirmModal
+        show={!!showDowngrade()}
+        close={() => setDowngrade()}
+        message={
+          <div class="flex flex-col items-center justify-center gap-2">
+            <p>
+              Your downgrade will take affect at the beginning of your next billing period. You will
+              retain access to your current subscription tier until your downgrade takes affect.
+            </p>
+            <p>Are you sure you wish to downgrade?</p>
+          </div>
+        }
+        confirm={() => userStore.modifySubscription(showDowngrade()!._id)}
       />
     </>
   )

@@ -54,6 +54,7 @@ export namespace AppSchema {
     cost: number
     level: number
     enabled: boolean
+    disableSlots?: boolean
     createdAt: string
     deletedAt?: string
     updatedAt: string

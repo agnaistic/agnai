@@ -10,6 +10,7 @@ import { subscribe } from './socket'
 import { FeatureFlags, defaultFlags } from './flags'
 import { ReplicateModel } from '/common/types/replicate'
 import { wait } from '/common/util'
+import { ButtonSchema } from '../shared/Button'
 
 export type SettingState = {
   guestAccessAllowed: boolean
@@ -35,7 +36,10 @@ export type SettingState = {
     config: AppSchema.AppConfig
     books: AppSchema.MemoryBook[]
   }
-  showImage?: string
+  showImage?: {
+    url: string
+    options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }>
+  }
   flags: FeatureFlags
   replicate: Record<string, ReplicateModel>
   showSettings: boolean
@@ -198,8 +202,15 @@ export const settingStore = createStore<SettingState>(
     toggleAnonymize({ anonymize }) {
       return { anonymize: !anonymize }
     },
-    showImage(_, image?: string) {
-      return { showImage: image }
+    showImage(
+      _,
+      image: string,
+      options: Array<{ schema: ButtonSchema; text: string; onClick: () => void }> = []
+    ) {
+      return { showImage: { url: image, options } }
+    },
+    clearImage() {
+      return { showImage: undefined }
     },
     flag({ flags }, flag: keyof FeatureFlags, value: boolean) {
       const nextFlags = { ...flags, [flag]: value }

@@ -87,6 +87,7 @@ const createTier = handle(async ({ body }) => {
       cost: 'number',
       level: 'number',
       enabled: 'boolean',
+      disableSlots: 'boolean',
       description: 'string',
     },
     body
@@ -103,6 +104,7 @@ const updateTier = handle(async ({ body, params }) => {
       priceId: 'string',
       level: 'number',
       enabled: 'boolean',
+      disableSlots: 'boolean',
       description: 'string',
     },
     body

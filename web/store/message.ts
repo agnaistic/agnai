@@ -169,6 +169,27 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
+    async *removeMessageImage({ msgs }, msgId: string, position: number) {
+      const prev = msgs.find((m) => m._id === msgId)
+      if (!prev) return toastStore.error(`Cannot find message`)
+
+      const extras = (prev.extras || []).slice()
+
+      if (position === 0) {
+        if (!extras.length) {
+          msgStore.deleteMessages(msgId, true)
+          return
+        }
+
+        const msg = extras.shift()
+        msgStore.editMessageProp(msgId, { msg, extras })
+        return
+      }
+
+      extras.splice(position - 1, 1)
+      msgStore.editMessageProp(msgId, { extras })
+    },
+
     async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)
@@ -798,7 +819,13 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 
 subscribe(
   'message-edited',
-  { messageId: 'string', message: 'string?', imagePrompt: 'string?', actions: 'any?' },
+  {
+    messageId: 'string',
+    message: 'string?',
+    imagePrompt: 'string?',
+    actions: 'any?',
+    extras: ['string?'],
+  },
   (body) => {
     const { msgs } = msgStore.getState()
     const prev = findOne(body.messageId, msgs)
@@ -807,6 +834,7 @@ subscribe(
       msg: body.message || prev?.msg,
       actions: body.actions || prev?.actions,
       voiceUrl: undefined,
+      extras: body.extras || prev?.extras,
     })
 
     msgStore.setState({ msgs: nextMsgs })

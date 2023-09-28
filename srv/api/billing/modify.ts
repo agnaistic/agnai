@@ -71,8 +71,9 @@ export const verifySubscription = handle(async ({ userId }) => {
   return { success: true }
 })
 
-export const subscriptionStatus = handle(async ({ userId }) => {
-  const agg = await domain.subscription.getAggregate(userId)
+export const subscriptionStatus = handle(async ({ userId, params, user }) => {
+  const id = user?.admin && params.id ? params.id : userId
+  const agg = await domain.subscription.getAggregate(id)
 
   return {
     status: agg.state,

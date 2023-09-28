@@ -95,7 +95,7 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
 })
 
 export const updateMessageProps = handle(async ({ body, params, userId }) => {
-  assertValid({ imagePrompt: 'string?', msg: 'string?' }, body)
+  assertValid({ imagePrompt: 'string?', msg: 'string?', extras: ['string?'] }, body)
 
   const prev = await store.chats.getMessageAndChat(params.id)
 
@@ -105,6 +105,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
   const update: Partial<AppSchema.ChatMessage> = {
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
     msg: body.msg ?? prev.msg.msg,
+    extras: body.extras || prev.msg.extras,
   }
 
   const message = await store.msgs.editMessage(params.id, {
@@ -117,6 +118,7 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     messageId: params.id,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
     message: body.msg || prev.msg.msg,
+    extras: body.extras || prev.msg.extras,
   })
 
   return message

@@ -10,8 +10,15 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
     subscriptionId: '',
     tierId: '',
     periodStart: '',
+    history: [],
   }),
   fold: (ev, prev, meta) => {
+    const tierId = 'tierId' in ev ? ev.tierId : undefined
+    const history = prev.history.concat({
+      type: ev.type,
+      time: meta.timestamp.toISOString(),
+      tierId,
+    })
     switch (ev.type) {
       case 'subscribed': {
         return {
@@ -21,6 +28,7 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
           subscriptionId: ev.subscriptionId,
           tierId: ev.tierId,
           periodStart: ev.periodStart,
+          history,
         }
       }
 
@@ -29,18 +37,24 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
         endAt.setFullYear(meta.timestamp.getFullYear())
         endAt.setMonth(meta.timestamp.getMonth() + 1)
         if (endAt.valueOf() > Date.now()) {
-          return { state: 'active', cancelledAt: meta.timestamp, downgrade: undefined }
+          return { state: 'active', cancelledAt: meta.timestamp, downgrade: undefined, history }
         }
 
-        return { state: 'cancelled', cancelledAt: meta.timestamp, tierId: '', downgrade: undefined }
+        return {
+          state: 'cancelled',
+          cancelledAt: meta.timestamp,
+          tierId: '',
+          downgrade: undefined,
+          history,
+        }
       }
 
       case 'resumed': {
-        return { state: 'active' }
+        return { state: 'active', history }
       }
 
       case 'upgraded': {
-        return { tierId: ev.tierId, priceId: ev.priceId, downgrade: undefined }
+        return { tierId: ev.tierId, priceId: ev.priceId, downgrade: undefined, history }
       }
 
       case 'downgraded': {
@@ -50,6 +64,7 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
             priceId: ev.priceId,
             tierId: ev.tierId,
             downgrade: undefined,
+            history,
           }
         }
 
@@ -60,6 +75,7 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
             tierId: ev.tierId,
             requestedAt: new Date(meta.timestamp.valueOf()),
           },
+          history,
         }
       }
     }

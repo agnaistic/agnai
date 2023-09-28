@@ -43,4 +43,6 @@ export type SubsAgg = {
     activeAt: Date
     tierId: string
   }
+
+  history: Array<{ type: string; time: string; tierId?: string }>
 }

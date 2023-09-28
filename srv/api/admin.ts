@@ -11,8 +11,16 @@ router.use(loggedIn, isAdmin)
 
 const searchUsers = handle(async (req) => {
   const { body } = req
-  assertValid({ username: 'string?', page: 'number?' }, body)
-  const users = await store.admin.getUsers({ username: body.username, page: body.page })
+  assertValid(
+    { username: 'string?', page: 'number?', customerId: 'string?', subscribed: 'boolean?' },
+    body
+  )
+  const users = await store.admin.getUsers({
+    username: body.username,
+    customerId: body.customerId,
+    subscribed: body.subscribed,
+    page: body.page,
+  })
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
 })
 
