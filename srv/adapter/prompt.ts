@@ -54,9 +54,9 @@ function prefix(chat: AppSchema.ChatMessage, bot: string, members: AppSchema.Pro
   return chat.characterId ? `${bot}: ` : `${member?.handle}: `
 }
 
-export function getStoppingStrings(opts: AdapterProps) {
-  const seen = new Set<string>()
-  const ends: string[] = []
+export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
+  const seen = new Set<string>(extras)
+  const ends: string[] = extras
 
   const chars = Object.values(opts.characters || {})
   if (opts.impersonate) {
@@ -80,8 +80,10 @@ export function getStoppingStrings(opts: AdapterProps) {
   }
 
   if (opts.gen.stopSequences) {
-    ends.push(...opts.gen.stopSequences)
+    for (const stop of opts.gen.stopSequences) {
+      seen.add(stop)
+    }
   }
 
-  return ends
+  return Array.from(seen.values())
 }

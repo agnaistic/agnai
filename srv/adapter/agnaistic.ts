@@ -9,11 +9,10 @@ import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
-import { getTextgenCompletion, handleOoba } from './ooba'
+import { getTextgenCompletion, getTextgenPayload, handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleOpenRouter } from './openrouter'
 import { handlePetals } from './petals'
-import { getStoppingStrings } from './prompt'
 import { registerAdapter } from './register'
 import { handleReplicate } from './replicate'
 import { handleScale } from './scale'
@@ -65,6 +64,12 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.maxContextLength = Math.min(preset.maxContextLength!, opts.gen.maxContextLength!)
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
+  const stops = preset.stopSequences || []
+  if (opts.gen.stopSequences) {
+    stops.push(...opts.gen.stopSequences)
+    stops.push('###', 'USER:', 'ASSISTANT:')
+  }
+  opts.gen.stopSequences = stops
 
   const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''
   if (preset.service && preset.service !== 'agnaistic') {
@@ -123,30 +128,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = {
-    prompt,
-    temperature: gen.temp,
-    top_k: gen.topK,
-    top_p: gen.topP,
-    max_new_tokens: gen.maxTokens,
-    stop: getStoppingStrings(opts).concat(['###', 'USER:', 'ASSISTANT:']),
-    stream: true,
-    frequency_penality: gen.frequencyPenalty,
-    presence_penalty: gen.presencePenalty,
-    mirostat: gen.mirostatTau ? 2 : 0,
-    mirostat_tau: gen.mirostatTau,
-    mirostat_eta: gen.mirostatLR,
-    seed: -1,
-    typical_p: gen.typicalP,
-    ignore_eos: gen.banEosToken,
-    repeat_penalty: gen.repetitionPenalty,
-    repeat_last_n: gen.repetitionPenaltyRange,
-    tfs_z: gen.tailFreeSampling,
-  }
-
-  if (preset.stopSequences) {
-    body.stop.push(...preset.stopSequences)
-  }
+  const body = getTextgenPayload(opts, stops)
 
   yield { prompt: body.prompt }
 

@@ -109,7 +109,7 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
       top_k: gen.topK,
       top_p: gen.topP,
       n_predict: gen.maxTokens,
-      stop: getStoppingStrings(opts).concat(stops),
+      stop: getStoppingStrings(opts, stops),
       stream: true,
       frequency_penality: gen.frequencyPenalty,
       presence_penalty: gen.presencePenalty,
@@ -122,7 +122,6 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
       repeat_penalty: gen.repetitionPenalty,
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
-      min_length: gen.maxTokens,
     }
     return body
   }
@@ -149,7 +148,7 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
     truncation_length: gen.maxContextLength || 2048,
     ban_eos_token: gen.banEosToken || false,
     skip_special_tokens: gen.skipSpecialTokens ?? true,
-    stopping_strings: getStoppingStrings(opts).concat(stops),
+    stopping_strings: getStoppingStrings(opts, stops),
     tfs: gen.tailFreeSampling,
     mirostat_mode: gen.mirostatTau ? 2 : 0,
     mirostat_tau: gen.mirostatTau,
