@@ -227,8 +227,13 @@ export async function updateLimit(userId: string) {
   }
 }
 
-export async function updateSubLevel(userId: string, level: number) {
-  await db('user').updateOne({ _id: userId }, { $set: { 'sub.level': level } }, { upsert: false })
+export async function updateUserTier(userId: string, tierId: string) {
+  const tier = await getTier(tierId)
+  await db('user').updateOne(
+    { _id: userId },
+    { $set: { 'sub.level': tier.level, 'sub.tierId': tierId } },
+    { upsert: false }
+  )
 }
 
 export async function deleteUserAccount(userId: string) {

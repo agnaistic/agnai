@@ -71,8 +71,8 @@ export const adminStore = createStore<AdminState>('admin', { users: [], products
           toastStore.error(`Failed to send: ${res.error}`)
         }
       },
-      async changeUserLevel(_, userId: string, level: number) {
-        const res = await api.post(`/admin/users/${userId}/level`, { level })
+      async changeUserTier(_, userId: string, tierId: string) {
+        const res = await api.post(`/admin/users/${userId}/tier`, { tierId })
         if (res.error) toastStore.error(`Failed to update user: ${res.error}`)
         if (res.result) toastStore.success(`User updated`)
       },

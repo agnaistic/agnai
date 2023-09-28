@@ -44,9 +44,9 @@ const UsersPage: Component = () => {
   const subTiers = createMemo(() => {
     const base = [{ label: '[-1] None', value: '-1' }]
     const tiers =
-      config.tiers.map((sub) => ({
-        label: `[${sub.level}] ${sub.name} ${!sub.enabled ? '(disabled)' : ''}`,
-        value: sub.level.toString(),
+      config.tiers.map((tier) => ({
+        label: `[${tier.level}] ${tier.name} ${!tier.enabled ? '(disabled)' : ''}`,
+        value: tier._id,
       })) || []
     return base.concat(tiers).sort((l, r) => +l.value - +r.value)
   })
@@ -80,10 +80,10 @@ const UsersPage: Component = () => {
                 <Select
                   class="text-xs"
                   fieldName="subTier"
-                  value={user.sub?.level.toString() ?? ''}
+                  value={user.sub?.tierId ?? ''}
                   items={subTiers()}
                   onChange={(ev) => {
-                    adminStore.changeUserLevel(user._id, +ev.value)
+                    adminStore.changeUserTier(user._id, ev.value)
                   }}
                 />
                 <Button size="sm" onClick={() => setPw(user)}>

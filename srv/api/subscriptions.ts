@@ -6,6 +6,7 @@ import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { encryptText } from '../db/util'
 import billing, { stripe } from './billing'
+import { config } from '../config'
 
 const subSetting = {
   ...presetValidator,
@@ -114,6 +115,8 @@ const updateTier = handle(async ({ body, params }) => {
 })
 
 const getProducts = handle(async (req) => {
+  if (!config.billing.private) return { products: [], prices: [] }
+
   const products = await stripe.products.list()
   const prices = await stripe.prices.list()
   return { products: products.data, prices: prices.data }
