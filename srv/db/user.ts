@@ -258,7 +258,7 @@ export async function deleteUserAccount(userId: string) {
 
 export async function validateSubscription(user: AppSchema.User) {
   if (!user.sub?.tierId) {
-    return new Error(`No subscription present`)
+    return -1
   }
 
   const tier = await getTier(user.sub.tierId)
