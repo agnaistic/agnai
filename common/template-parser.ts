@@ -235,6 +235,7 @@ function renderCondition(node: ConditionNode, children: PNode[], opts: TemplateO
 
 function renderIterator(holder: IterableHolder, children: CNode[], opts: TemplateOpts) {
   if (opts.repeatable) return ''
+  let lineBreaks = holder === 'history'
 
   const output: string[] = []
 
@@ -268,6 +269,13 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
         case 'bot-prop':
         case 'history-prop': {
+          if (
+            child.prop === 'personality' ||
+            child.prop === 'message' ||
+            child.prop === 'dialogue'
+          ) {
+            lineBreaks = true
+          }
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
           break
@@ -293,7 +301,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     return id
   }
 
-  return holder === 'history' ? output.join('\n') : output.join('')
+  return lineBreaks ? output.join('\n') : output.join('')
 }
 
 function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unknown, i: number) {
