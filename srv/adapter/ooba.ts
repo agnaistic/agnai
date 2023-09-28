@@ -122,6 +122,7 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
       repeat_penalty: gen.repetitionPenalty,
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
+      min_length: gen.maxTokens,
     }
     return body
   }
@@ -157,7 +158,7 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
   return body
 }
 
-function llamaStream(host: string, payload: any) {
+export function llamaStream(host: string, payload: any) {
   const accums: string[] = []
   const resp = needle.post(host + '/completion', JSON.stringify(payload), {
     parse: false,

@@ -4,6 +4,8 @@ import { logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { requestStream } from './stream'
+import { getTextgenPayload, llamaStream } from './ooba'
+import { getStoppingStrings } from './prompt'
 
 /**
  * Sampler order
@@ -26,49 +28,34 @@ const base = {
   use_world_info: false,
 }
 
-export const handleKobold: ModelAdapter = async function* ({
-  char,
-  members,
-  characters,
-  user,
-  prompt,
-  mappedSettings,
-  log,
-  ...opts
-}) {
-  const body = { ...base, ...mappedSettings, prompt }
+export const handleKobold: ModelAdapter = async function* (opts) {
+  const { members, characters, user, prompt, mappedSettings } = opts
+
+  const body =
+    opts.gen.thirdPartyFormat === 'llamacpp'
+      ? getTextgenPayload(opts)
+      : { ...base, ...mappedSettings, prompt }
 
   const baseURL = `${normalizeUrl(user.koboldUrl)}`
 
   // Kobold has a stop requence parameter which automatically
   // halts generation when a certain token is generated
-  const stop_sequence = ['END_OF_DIALOG', 'You:']
+  if (opts.gen.thirdPartyFormat !== 'llamacpp') {
+    const stop_sequence = getStoppingStrings(opts).concat('END_OF_DIALOG')
+    body.stop_sequence = stop_sequence
 
-  for (const [id, char] of Object.entries(characters || {})) {
-    if (!char) continue
-    if (id === opts.replyAs._id) continue
-    stop_sequence.push(char.name + ':')
-  }
+    // Kobold sampler order parameter must contain all 6 samplers to be valid
+    // If the sampler order is provided, but incomplete, add the remaining samplers.
+    if (typeof body.sampler_order === 'string') {
+      body.sampler_order = (body.sampler_order as string).split(',').map((val) => +val)
+    }
 
-  for (const member of members) {
-    if (!member.handle) continue
-    if (member.handle === opts.replyAs.name) continue
-    stop_sequence.push(member.handle + ':')
-  }
+    if (body.sampler_order && body.sampler_order.length !== 6) {
+      for (const sampler of REQUIRED_SAMPLERS) {
+        if (body.sampler_order.includes(sampler)) continue
 
-  body.stop_sequence = stop_sequence
-
-  // Kobold sampler order parameter must contain all 6 samplers to be valid
-  // If the sampler order is provided, but incomplete, add the remaining samplers.
-  if (typeof body.sampler_order === 'string') {
-    body.sampler_order = (body.sampler_order as string).split(',').map((val) => +val)
-  }
-
-  if (body.sampler_order && body.sampler_order.length !== 6) {
-    for (const sampler of REQUIRED_SAMPLERS) {
-      if (body.sampler_order.includes(sampler)) continue
-
-      body.sampler_order.push(sampler)
+        body.sampler_order.push(sampler)
+      }
     }
   }
 
@@ -78,10 +65,15 @@ export const handleKobold: ModelAdapter = async function* ({
   logger.debug(`Prompt:\n${body.prompt}`)
 
   // Only KoboldCPP at version 1.30 and higher has streaming support
-  const isStreamSupported = await checkStreamSupported(`${baseURL}/api/extra/version`)
+  const isStreamSupported =
+    opts.gen.thirdPartyFormat === 'llamacpp'
+      ? true
+      : await checkStreamSupported(`${baseURL}/api/extra/version`)
 
   const stream =
-    opts.gen.streamResponse && isStreamSupported
+    opts.gen.thirdPartyFormat === 'llamacpp'
+      ? llamaStream(baseURL, body)
+      : opts.gen.streamResponse && isStreamSupported
       ? streamCompletition(`${baseURL}/api/extra/generate/stream`, body)
       : fullCompletion(`${baseURL}/api/v1/generate`, body)
 
@@ -91,6 +83,11 @@ export const handleKobold: ModelAdapter = async function* ({
     const generated = await stream.next()
 
     if (!generated || !generated.value) break
+
+    if (typeof generated.value === 'string') {
+      accum = generated.value
+      break
+    }
 
     if ('error' in generated.value) {
       yield { error: generated.value.error }

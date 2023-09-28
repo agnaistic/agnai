@@ -219,6 +219,10 @@ export const INSTRUCT_SERVICES: { [key in AIAdapter]?: boolean } = {
   claude: true,
   scale: true,
   novel: true,
+  agnaistic: true,
+  mancer: true,
+  kobold: true,
+  ooba: true,
 }
 
 export type PresetAISettings = Omit<
@@ -273,7 +277,7 @@ export const adapterSettings: {
   presencePenalty: ['openai', 'kobold', 'novel'],
   streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba', 'agnaistic'],
   openRouterModel: ['openrouter'],
-  stopSequences: ['ooba', 'agnaistic', 'novel', 'mancer'],
+  stopSequences: ['ooba', 'agnaistic', 'novel', 'mancer', 'llamacpp', 'horde'],
 
   addBosToken: ['ooba', 'agnaistic'],
   banEosToken: ['ooba', 'agnaistic'],

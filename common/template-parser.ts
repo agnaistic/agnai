@@ -235,12 +235,19 @@ function renderCondition(node: ConditionNode, children: PNode[], opts: TemplateO
 
 function renderIterator(holder: IterableHolder, children: CNode[], opts: TemplateOpts) {
   if (opts.repeatable) return ''
+  let lineBreaks = holder === 'history'
 
   const output: string[] = []
 
   const entities =
     holder === 'bots'
-      ? Object.values(opts.characters).filter((b) => !!b && b._id !== opts.replyAs._id)
+      ? Object.values(opts.characters).filter(
+          (b) =>
+            !!b &&
+            b._id !== opts.replyAs._id &&
+            !b.deletedAt &&
+            (b._id.startsWith('temp-') ? b.favorite !== false : true)
+        )
       : opts.lines
 
   let i = 0
@@ -262,6 +269,13 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
         case 'bot-prop':
         case 'history-prop': {
+          if (
+            child.prop === 'personality' ||
+            child.prop === 'message' ||
+            child.prop === 'dialogue'
+          ) {
+            lineBreaks = true
+          }
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
           break
@@ -287,7 +301,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     return id
   }
 
-  return output.join('\n')
+  return lineBreaks ? output.join('\n') : output.join('')
 }
 
 function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unknown, i: number) {
@@ -306,7 +320,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
 
   switch (node.value) {
     case 'char':
-      return opts.replyAs.name
+      return opts.replyAs.name || ''
 
     case 'user':
       return opts.impersonate?.name || opts.sender?.handle || 'You'
@@ -315,7 +329,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return opts.parts.sampleChat?.join('\n') || ''
 
     case 'scenario':
-      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario
+      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario || ''
 
     case 'memory':
       return opts.parts.memory || ''
@@ -324,7 +338,7 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return opts.parts.impersonality || ''
 
     case 'personality':
-      return opts.parts.persona
+      return opts.parts.persona || ''
 
     case 'ujb':
       return opts.parts.ujb || ''

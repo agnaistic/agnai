@@ -68,6 +68,7 @@ export const CreateCharacterForm: Component<{
   temp?: boolean
   footer?: (children: JSX.Element) => void
   close?: () => void
+  onSuccess?: (char: AppSchema.Character) => void
 }> = (props) => {
   let ref: any
   const nav = useNavigate()
@@ -225,7 +226,8 @@ export const CreateCharacterForm: Component<{
         const data = await getImageData(payload.avatar)
         payload.avatar = data
       }
-      chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, () => {
+      chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, (result) => {
+        props.onSuccess?.(result)
         if (paneOrPopup() === 'popup') props.close?.()
       })
     } else if (!forceNew() && props.editId) {

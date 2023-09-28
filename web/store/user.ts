@@ -44,6 +44,20 @@ export type UserState = {
   oaiUsageLoading: boolean
   hordeStatsLoading: boolean
   showProfile: boolean
+  tiers: AppSchema.SubscriptionTier[]
+  billingLoading: boolean
+  subStatus?: {
+    status: 'active' | 'cancelling' | 'cancelled' | 'new'
+    tierId: string
+    customerId: string
+    subscriptionId: string
+    priceId: string
+    downgrading?: {
+      tierId: string
+      requestedAt: string
+      activeAt: string
+    }
+  }
 }
 
 export const userStore = createStore<UserState>(
@@ -82,6 +96,115 @@ export const userStore = createStore<UserState>(
       if (res.error) return toastStore.error(`Failed to get profile`)
       if (res.result) {
         return { profile: res.result }
+      }
+    },
+
+    async getTiers() {
+      const res = await api.get('/admin/tiers')
+      if (res.result) {
+        return { tiers: res.result.tiers }
+      }
+    },
+
+    async *startCheckout({ billingLoading }, tierId: string) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const callback = location.origin
+      const res = await api.post(`/admin/billing/subscribe/checkout`, { tierId, callback })
+      yield { billingLoading: false }
+      if (res.result) {
+        checkout(res.result.sessionUrl)
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not start checkout: ${res.error}`)
+      }
+    },
+    async *finishCheckout(
+      { user, billingLoading },
+      sessionId: string,
+      state: string,
+      onSuccess?: Function
+    ) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post(`/admin/billing/subscribe/finish`, { sessionId, state })
+      yield { billingLoading: false }
+      if (res.result && state === 'success') {
+        onSuccess?.()
+        return {
+          user: { ...user!, sub: res.result },
+        }
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not complete checkout: ${res.error}`)
+      }
+    },
+    async *stopSubscription({ billingLoading }) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/cancel')
+      yield { billingLoading: false }
+      if (res.result) {
+        toastStore.normal('Subscription has been stopped')
+        userStore.getConfig()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not modify subsctiption: ${res.error}`)
+      }
+    },
+    async *resumeSubscription({ billingLoading }) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/resume')
+      yield { billingLoading: false }
+      if (res.result) {
+        toastStore.success('Your subscription has been resumed!')
+        userStore.getConfig()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not resume subscription: ${res.error}`)
+      }
+    },
+
+    async *modifySubscription({ billingLoading }, tierId: string) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/modify', { tierId })
+      yield { billingLoading: false }
+
+      if (res.result) {
+        toastStore.success('Your subscription has been changed')
+        userStore.getConfig()
+        userStore.subscriptionStatus()
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not change subscription: ${res.error}`)
+      }
+    },
+
+    async *validateSubscription({ billingLoading }) {
+      if (billingLoading) return
+      yield { billingLoading: true }
+      const res = await api.post('/admin/billing/subscribe/verify')
+      yield { billingLoading: false }
+      if (res.result) {
+        toastStore.success('You are currently subscribed')
+      }
+
+      if (res.error) {
+        toastStore.error(res.error)
+      }
+    },
+
+    async subscriptionStatus() {
+      const res = await api.get('/admin/billing/subscribe/status')
+      if (res.result) {
+        return { subStatus: res.result }
       }
     },
 
@@ -429,6 +552,8 @@ function init(): UserState {
       metadata: {},
       current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
       showProfile: false,
+      tiers: [],
+      billingLoading: false,
     }
   }
 
@@ -443,6 +568,8 @@ function init(): UserState {
     metadata: {},
     current: ui[ui.mode] || UI.defaultUIsettings[ui.mode],
     showProfile: false,
+    tiers: [],
+    billingLoading: false,
   }
 }
 
@@ -577,6 +704,11 @@ export function getSettingColor(color: string) {
   return getRootVariable(color)
 }
 
+export function getAsCssVar(color: string) {
+  if (color.startsWith('--')) return `var(${color})`
+  return `var(--${color})`
+}
+
 function getUIKey(guest = false) {
   const userId = guest ? 'anon' : getUserId()
   return `ui-settings-${userId}`
@@ -585,3 +717,40 @@ function getUIKey(guest = false) {
 subscribe('ui-update', { ui: 'any' }, (body) => {
   userStore.receiveUI(body.ui)
 })
+
+events.on(EVENTS.tierReceived, (tier: AppSchema.SubscriptionTier) => {
+  const { tiers } = userStore.getState()
+  const existing = tiers.some((t) => t._id === tier._id)
+
+  const next = existing ? tiers.map((t) => (t._id === tier._id ? tier : t)) : tiers.concat(tier)
+
+  userStore.setState({ tiers: next })
+})
+
+async function checkout(sessionUrl: string) {
+  const child = window.open(
+    sessionUrl,
+    `_blank`,
+    `width=600,height=1080,scrollbar=yes,top=100,left=100`
+  )!
+
+  let success = false
+  const interval = setInterval(() => {
+    try {
+      if (child.closed) {
+        clearInterval(interval)
+        if (success) {
+          userStore.getConfig()
+          toastStore.success('Subscription successful!')
+        }
+        return
+      }
+
+      const path = child.location.pathname
+      if (!path.includes('/checkout')) return
+
+      const result = path.includes('/success')
+      success = result
+    } catch (ex) {}
+  })
+}

@@ -238,11 +238,8 @@ export const SpeechRecognitionRecorder: Component<{
     <>
       <Show when={speechRecognition() && settings.enabled}>
         <Button
-          class={`absolute ${
-            props.class
-          } top-1/2 -translate-y-1/2 transform rounded bg-transparent ${
-            isListening() ? 'text-red-500' : 'text-gray-500'
-          }`}
+          schema="clear"
+          class={`${isListening() ? 'text-red-500' : 'text-gray-500'}`}
           onClick={toggleListening}
         >
           <Mic

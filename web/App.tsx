@@ -29,7 +29,7 @@ import { chatStore } from './store'
 import { usePane } from './shared/hooks'
 import { rootModalStore } from './store/root-modal'
 import { For } from 'solid-js'
-import { getMaxChatWidth } from './shared/util'
+import { css, getMaxChatWidth } from './shared/util'
 import FAQ from './pages/Home/FAQ'
 import CreateChatForm from './pages/Chat/CreateChatForm'
 import Modal from './shared/Modal'
@@ -38,6 +38,7 @@ import PipelineGuide from './pages/Guides/Pipeline'
 import MemoryGuide from './pages/Guides/Memory'
 import NovelGuide from './pages/Guides/NovelAI'
 import { ImageModal } from './pages/Chat/ImageModal'
+import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
 
 const App: Component = () => {
   const state = userStore()
@@ -76,6 +77,10 @@ const App: Component = () => {
             path="/terms-of-service"
             component={lazy(() => import('./pages/TermsOfService'))}
           />
+          <Route path="/checkout">
+            <Route path="/success" component={CheckoutSuccess} />
+            <Route path="/cancel" component={CheckoutCancel} />
+          </Route>
           <Route path="/privacy-policy" component={lazy(() => import('./pages/PrivacyPolicy'))} />
           <Route path="/guides">
             <Route path="/pipeline" component={PipelineGuide} />
@@ -100,6 +105,10 @@ const App: Component = () => {
               <Route
                 path="/admin/subscriptions/:id"
                 component={lazy(() => import('./pages/Admin/Subscription'))}
+              />
+              <Route
+                path="/admin/tiers/:id"
+                component={lazy(() => import('./pages/Admin/Tiers'))}
               />
             </Show>
           </Show>
@@ -156,6 +165,7 @@ const Layout: Component = () => {
 
   return (
     <ContextProvider>
+      <style>{css}</style>
       <div class="scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-[var(--hl-900)] app flex flex-col justify-between">
         <NavBar />
         <div class="flex w-full grow flex-row overflow-y-hidden">

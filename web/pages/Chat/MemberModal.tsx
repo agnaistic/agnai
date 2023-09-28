@@ -95,6 +95,7 @@ const MemberModal: Component<{
                 footer={setFooter}
                 close={closeEditor}
                 temp={editCharId()?.startsWith('temp') || !editCharId()}
+                onSuccess={(char) => setEditCharId(char._id)}
               />
             </Match>
             <Match when={view() === 'add_character'}>

@@ -1,7 +1,7 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { config } from '../config'
 import { store } from '../db'
-import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/presets'
+import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/subscriptions'
 import { decryptText } from '../db/util'
 import { handleClaude } from './claude'
 import { handleGooseAI } from './goose'
@@ -28,7 +28,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
   const fallback = getDefaultSubscription()
   const subId = opts.gen.registered?.agnaistic?.subscriptionId
-  let preset = subId ? await store.presets.getSubscription(subId) : getDefaultSubscription()
+  let preset = subId ? await store.subs.getSubscription(subId) : getDefaultSubscription()
 
   if (opts.guest && preset?.allowGuestUsage === false) {
     yield { error: 'Please sign in to use this model' }
@@ -49,14 +49,27 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     }
   }
 
-  if (preset.subLevel > level) {
+  const newLevel = await store.users.validateSubscription(opts.user)
+  if (newLevel instanceof Error) {
+    yield { error: newLevel.message }
+    return
+  }
+
+  if (preset.subLevel > newLevel) {
     yield { error: 'Your account is ineligible for this model - sub tier insufficient' }
     return
   }
 
+  // Max tokens and max context limit are decided by the subscription preset
+  opts.gen.maxTokens = Math.min(preset.maxTokens, opts.gen.maxTokens || 80)
+  opts.gen.maxContextLength = Math.min(preset.maxContextLength!, opts.gen.maxContextLength!)
+  opts.gen.thirdPartyUrl = preset.thirdPartyUrl
+  opts.gen.thirdPartyFormat = preset.thirdPartyFormat
+
   const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''
-  if (preset.service && preset.service !== 'ooba' && preset.service !== 'agnaistic') {
-    const handler = handlers[preset.service]
+  if (preset.service && preset.service !== 'agnaistic') {
+    let handler = handlers[preset.service]
+
     const userKey = preset.subApiKey
 
     opts.user.oaiKey = userKey
@@ -76,6 +89,11 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     if (!opts.user.adapterConfig) {
       opts.user.adapterConfig = {}
+    }
+
+    if (preset.service === 'kobold' && preset.thirdPartyFormat === 'llamacpp') {
+      opts.gen.service = 'kobold'
+      handler = handleOoba
     }
 
     if (preset.service === 'goose') {

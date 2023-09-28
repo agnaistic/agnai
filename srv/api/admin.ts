@@ -11,8 +11,16 @@ router.use(loggedIn, isAdmin)
 
 const searchUsers = handle(async (req) => {
   const { body } = req
-  assertValid({ username: 'string?', page: 'number?' }, body)
-  const users = await store.admin.getUsers({ username: body.username, page: body.page })
+  assertValid(
+    { username: 'string?', page: 'number?', customerId: 'string?', subscribed: 'boolean?' },
+    body
+  )
+  const users = await store.admin.getUsers({
+    username: body.username,
+    customerId: body.customerId,
+    subscribed: body.subscribed,
+    page: body.page,
+  })
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
 })
 
@@ -49,14 +57,14 @@ const getMetrics = handle(async () => {
   }
 })
 
-const updateLevel = handle(async (req) => {
-  assertValid({ level: 'number' }, req.body)
-  await store.users.updateSubLevel(req.params.userId, req.body.level)
+const updateTier = handle(async (req) => {
+  assertValid({ tierId: 'string' }, req.body)
+  await store.users.updateUserTier(req.params.userId, req.body.tierId)
   return { success: true }
 })
 
 router.post('/users', searchUsers)
-router.post('/users/:userId/level', updateLevel)
+router.post('/users/:userId/tier', updateTier)
 router.get('/metrics', getMetrics)
 router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)

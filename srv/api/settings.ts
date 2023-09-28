@@ -10,7 +10,6 @@ import { store } from '../db'
 import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHordeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
-import { getCachedSubscriptions, prepSubscriptionCache } from '../db/presets'
 import { updateRegisteredSubs } from '../adapter/agnaistic'
 
 const router = Router()
@@ -23,7 +22,7 @@ const getSettings = handle(async () => {
 })
 
 export const getPublicSubscriptions = handle(async () => {
-  const subscriptions = getCachedSubscriptions()
+  const subscriptions = store.subs.getCachedSubscriptions()
   return { subscriptions }
 })
 
@@ -39,7 +38,8 @@ export async function getAppConfig(user?: AppSchema.User) {
   const openRouter = await getOpenRouterModels()
 
   if (!appConfig) {
-    await prepSubscriptionCache()
+    await store.subs.prepSubscriptionCache()
+    const subs = store.subs.getCachedSubscriptions(user)
     updateRegisteredSubs()
     appConfig = {
       adapters: config.adapters,
@@ -61,11 +61,13 @@ export async function getAppConfig(user?: AppSchema.User) {
         workers: workers.filter((w) => w.type === 'text'),
       },
       openRouter: { models: openRouter },
-      subs: getCachedSubscriptions(user),
+      subs,
     }
   }
 
-  appConfig.subs = getCachedSubscriptions()
+  const subs = store.subs.getCachedSubscriptions()
+
+  appConfig.subs = subs
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter
   appConfig.horde = {

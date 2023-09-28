@@ -99,7 +99,9 @@ export async function deleteMessages(messageIds: string[]) {
 
 export async function editMessage(
   id: string,
-  update: Partial<Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter' | 'meta' | 'state'>>
+  update: Partial<
+    Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras'>
+  >
 ) {
   const edit: any = { ...update, updatedAt: now() }
 

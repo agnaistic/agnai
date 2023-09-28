@@ -15,6 +15,7 @@ type GenerateOpts = {
   ephemeral?: boolean
   messageId?: string
   prompt?: string
+  append?: boolean
   onDone: (image: string) => void
 }
 
@@ -37,6 +38,7 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
     user: entities.user,
     messageId,
     ephemeral: opts.ephemeral,
+    append: opts.append,
   })
   return res
 }
@@ -69,6 +71,7 @@ const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean
   openrouter: () => true,
   claude: () => true,
   mancer: () => true,
+  agnaistic: () => true,
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
@@ -118,18 +121,6 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
 
 function getSummaryTemplate(service: AIAdapter) {
   switch (service) {
-    case 'ooba':
-    case 'kobold':
-      return neat`
-      {{char}}'s personality: {{personality}}
-      [ Style: chat ]
-      ***
-      <START>
-      {{history}}
-      <END>
-
-      Detailed image caption of the current scene with a description of each character's appearance: [summary | tokens=250]`
-
     case 'novel':
       return neat`
       {{char}}'s personality: {{personality}}
@@ -145,14 +136,36 @@ function getSummaryTemplate(service: AIAdapter) {
     case 'claude':
     case 'scale':
       return neat`
-      {{personality}}
-      
-      (System note: Start of conversation)
-      {{history}}
-      
-      {{ujb}}
-      (System: Write an image caption of the current scene including the character's appearance)
-      Image caption: [summary]
+              {{personality}}
+              
+              (System note: Start of conversation)
+              {{history}}
+              
+              {{ujb}}
+              (System: Write an image caption of the current scene including the character's appearance)
+              Image caption: [summary]
+              `
+
+    case 'ooba':
+    case 'kobold':
+    case 'agnaistic':
+      return neat`
+      Below is an instruction that describes a task. Write a response that completes the request.
+
+      {{char}}'s Persona: {{personality}}
+
+      The scenario of the conversation: {{scenario}}
+
+      Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
+  
+      {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
+      {{/each}}
+
+      ### Instruction:
+      Write an image caption of the current scene including the character's appearance.
+
+      ### Response:
+      Image caption: [summary | tokens=250]
       `
   }
 }

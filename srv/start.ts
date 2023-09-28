@@ -9,6 +9,7 @@ import { config } from './config'
 import { store } from './db'
 import { connect, createIndexes } from './db/client'
 import { logger } from './logger'
+import { setupDomain } from './domains'
 const pkg = require('../package.json')
 
 export async function start() {
@@ -60,6 +61,7 @@ async function initDb() {
   const db = await connect()
   if (db) {
     await createIndexes()
+    await setupDomain()
     // Initialise settings if empty
     await store.users.ensureInitialUser()
   }

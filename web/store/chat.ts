@@ -431,13 +431,13 @@ export const chatStore = createStore<ChatState>('chat', {
       char: Omit<AppSchema.Character, '_id' | 'kind' | 'createdAt' | 'updatedAt' | 'userId'> & {
         _id?: string
       },
-      onSuccess?: () => void
+      onSuccess?: (char: AppSchema.Character) => void
     ) {
       const res = await chatsApi.upsertTempCharacter(chatId, char)
       if (res.result) {
         const char = res.result.char
 
-        onSuccess?.()
+        onSuccess?.(char)
         if (active?.chat._id === chatId) {
           yield {
             active: {
@@ -531,7 +531,7 @@ export const chatStore = createStore<ChatState>('chat', {
       const encoder = await getEncoder()
       const replyAs = active.replyAs?.startsWith('temp-')
         ? entities.chat.tempCharacters![active.replyAs]
-        : entities.characters[active.replyAs ?? active.char._id]
+        : entities.characters[active.replyAs!] || active.char
 
       const prompt = createPrompt(
         {

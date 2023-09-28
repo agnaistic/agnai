@@ -23,7 +23,7 @@ import RegisteredSettings from './components/RegisteredSettings'
 import { A, useSearchParams } from '@solidjs/router'
 import { Toggle } from '/web/shared/Toggle'
 import OpenRouterOauth from './OpenRouterOauth'
-import { TitleCard } from '/web/shared/Card'
+import { SolidCard, TitleCard } from '/web/shared/Card'
 import { PresetSelect } from '/web/shared/PresetSelect'
 
 const AISettings: Component<{
@@ -38,6 +38,7 @@ const AISettings: Component<{
   createEffect(() => {
     const tabs = cfg.config.adapters
       .filter((adp) => {
+        if (adp === 'ooba') return false
         const reg = cfg.config.registered.find((r) => r.name === adp)
         if (!reg) return true
         for (const opt of reg.settings) {
@@ -109,6 +110,10 @@ const AISettings: Component<{
         />
 
         <div class="my-2">
+          <SolidCard bg="orange-500" class="mb-2">
+            Are you using an external AI service such as OpenAI, NovelAI, or Horde? Provide your API
+            key below.
+          </SolidCard>
           <Tabs tabs={tabs()} selected={tab} select={setTab} />
         </div>
       </Show>

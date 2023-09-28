@@ -1,17 +1,18 @@
 import { Component, JSX, Show, createMemo } from 'solid-js'
-import { getSettingColor, userStore } from '../store'
+import { getSettingColor, getAsCssVar, userStore } from '../store'
 import { useBgStyle } from './hooks'
+import { hooks } from './util'
 
 export const Card: Component<{
   children: JSX.Element
   class?: string
-  bg?: string
   bgOpacity?: number
   border?: boolean
+  bg?: string
   hide?: boolean
 }> = (props) => {
   const cardBg = useBgStyle({
-    hex: 'bg-500',
+    hex: props.bg ? getSettingColor(props.bg) : 'bg-800',
     blur: false,
     opacity: props.bgOpacity ?? 0.08,
   })
@@ -22,8 +23,8 @@ export const Card: Component<{
     <div
       class={`rounded-lg p-3 ${props.class ?? ''} ${hide()}`}
       style={{
-        ...cardBg(),
         border: props.border ? '1px solid var(--bg-600)' : 0,
+        ...cardBg(),
       }}
     >
       {props.children}
@@ -31,15 +32,29 @@ export const Card: Component<{
   )
 }
 
-export const SolidCard: Component<{ children: JSX.Element; class?: string; bg?: string }> = (
-  props
-) => {
-  const cardBg = useBgStyle({
-    hex: getSettingColor(props.bg || 'bg-500'),
-    blur: false,
+export const SolidCard: Component<{
+  children: JSX.Element
+  class?: string
+  bg?: string
+  hover?: string | boolean
+  border?: boolean
+}> = (props) => {
+  const bg = createMemo(() => (props.bg ? getAsCssVar(props.bg) : '--bg-800'))
+  const hover = createMemo(() => {
+    if (!props.hover) return {}
+    if (props.hover === true) return { background: getAsCssVar('--bg-600'), cursor: 'pointer' }
+    return { background: getSettingColor(props.hover), cursor: 'pointer' }
   })
+
   return (
-    <div class={`rounded-lg p-3 ${props.class ?? ''}`} style={cardBg()}>
+    <div
+      class={`rounded-lg p-3 ${props.class ?? ''}`}
+      style={hooks({
+        border: props.border ? '1px solid var(--bg-600)' : 0,
+        background: bg(),
+        hover: hover(),
+      })}
+    >
       {props.children}
     </div>
   )

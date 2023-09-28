@@ -14,6 +14,7 @@ export const EVENTS = {
   receiveMsgs: 'receive-messages',
   charAdded: 'char-added',
   charDeleted: 'char-deleted',
+  tierReceived: 'tier-received',
 }
 
 export const events = new EventEmitter()

@@ -48,7 +48,10 @@ const Slot: Component<{
   size?: SlotSize
 }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
-  const user = userStore()
+  const user = userStore((s) => ({
+    tier: s.tiers.find((t) => t._id === s.user?.sub?.tierId),
+    user: s.user,
+  }))
   const [stick, setStick] = createSignal(props.sticky)
   const [id] = createSignal(`${props.slot}-${v4().slice(0, 8)}`)
   const [done, setDone] = createSignal(false)
@@ -266,6 +269,10 @@ const Slot: Component<{
       return log('No publisher id')
     }
 
+    if (user.tier?.disableSlots) {
+      return log('Slots are tier disabled')
+    }
+
     resize.size()
 
     if (ref && !resize.loaded()) {
@@ -343,7 +350,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!user.user || !specs()}>{null}</Match>
+        <Match when={!user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}

@@ -169,6 +169,27 @@ export const msgStore = createStore<MsgState>(
       }
     },
 
+    async *removeMessageImage({ msgs }, msgId: string, position: number) {
+      const prev = msgs.find((m) => m._id === msgId)
+      if (!prev) return toastStore.error(`Cannot find message`)
+
+      const extras = (prev.extras || []).slice()
+
+      if (position === 0) {
+        if (!extras.length) {
+          msgStore.deleteMessages(msgId, true)
+          return
+        }
+
+        const msg = extras.shift()
+        msgStore.editMessageProp(msgId, { msg, extras })
+        return
+      }
+
+      extras.splice(position - 1, 1)
+      msgStore.editMessageProp(msgId, { extras })
+    },
+
     async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
       const prev = msgs.find((m) => m._id === msgId)
       if (!prev) return toastStore.error(`Cannot find message`)
@@ -428,19 +449,30 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request text to speech: ${res.error}`)
       }
     },
-    async *createImage({ msgs, activeChatId, activeCharId }, messageId?: string) {
+    async *createImage(
+      { msgs, activeChatId, activeCharId, waiting },
+      messageId?: string,
+      append?: boolean
+    ) {
+      if (waiting) return
+
       const onDone = (image: string) => handleImage(activeChatId, image)
       yield { waiting: { chatId: activeChatId, mode: 'send', characterId: activeCharId } }
 
       const prev = messageId ? msgs.find((msg) => msg._id === messageId) : undefined
-      const res = await imageApi.generateImage({ messageId, prompt: prev?.imagePrompt, onDone })
+      const res = await imageApi.generateImage({
+        messageId,
+        prompt: prev?.imagePrompt,
+        append,
+        onDone,
+      })
       if (res.error) {
         yield { waiting: undefined }
         toastStore.error(`Failed to request image: ${res.error}`)
       }
     },
-    generateActions() {
-      msgsApi.generateActions()
+    async generateActions() {
+      await msgsApi.generateActions()
     },
   }
 })
@@ -581,6 +613,7 @@ subscribe(
     message: 'string',
     continue: 'boolean?',
     adapter: 'string',
+    extras: ['string?'],
     meta: 'any?',
     actions: [{ emote: 'string', action: 'string' }, '?'],
   },
@@ -618,6 +651,7 @@ subscribe(
       actions: body.actions,
       voiceUrl: undefined,
       meta: body.meta,
+      extras: body.extras || prev?.extras,
     }
 
     if (retrying?._id === body.messageId) {
@@ -785,7 +819,13 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
 
 subscribe(
   'message-edited',
-  { messageId: 'string', message: 'string?', imagePrompt: 'string?', actions: 'any?' },
+  {
+    messageId: 'string',
+    message: 'string?',
+    imagePrompt: 'string?',
+    actions: 'any?',
+    extras: ['string?'],
+  },
   (body) => {
     const { msgs } = msgStore.getState()
     const prev = findOne(body.messageId, msgs)
@@ -794,6 +834,7 @@ subscribe(
       msg: body.message || prev?.msg,
       actions: body.actions || prev?.actions,
       voiceUrl: undefined,
+      extras: body.extras || prev?.extras,
     })
 
     msgStore.setState({ msgs: nextMsgs })

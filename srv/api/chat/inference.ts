@@ -7,6 +7,8 @@ import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
 import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/templates'
+import { AIAdapter } from '/common/adapters'
+import { parseTemplate } from '/common/template-parser'
 
 const validInference = {
   prompt: 'string',
@@ -26,6 +28,9 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
       impersonating: 'any?',
       profile: 'any',
       prompt: 'string?',
+      char: 'any?',
+      chat: 'any?',
+      characters: 'any?',
     },
     body
   )
@@ -46,7 +51,21 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     body.user = user
   }
 
-  const prompt = cyoaTemplate(body.service!, settings.service === 'openai' ? settings.oaiModel : '')
+  const prompt = cyoaTemplate(
+    body.service! as AIAdapter,
+    settings.service === 'openai' ? settings.oaiModel : ''
+  )
+
+  const parsed = parseTemplate(prompt, {
+    chat: both.chat || body.chat || ({} as any),
+    characters: body.characters || {},
+    char: body.char || {},
+    lines: body.lines,
+    parts: {},
+    impersonate: body.impersonating,
+    sender: body.profile,
+    replyAs: body.char || ({} as any),
+  })
 
   const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({
@@ -57,12 +76,13 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
       guest: userId ? undefined : socketId,
       retries: 2,
       maxTokens: tokens,
+      settings,
     })
 
     return inference.generated
   }
 
-  const { values } = await runGuidance(prompt, {
+  const { values } = await runGuidance(parsed, {
     infer,
     placeholders: {
       history: body.lines.join('\n'),

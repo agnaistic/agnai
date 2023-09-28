@@ -1,15 +1,15 @@
 declare module '*.svg' {
-  declare const mod: string
+  const mod: string
   export default mod
 }
 
 declare module '*.scss' {
-  declare const mod: Record<string, string>
+  const mod: Record<string, string>
   export default mod
 }
 
 declare module '*.png' {
-  declare const mod: any
+  const mod: any
   export default mod
   export { mod }
 }
