@@ -31,7 +31,7 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import { getAssetUrl, getStrictForm } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore, toastStore } from '../../../store'
+import { chatStore, userStore, msgStore, settingStore, toastStore, ChatState } from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
@@ -144,16 +144,18 @@ const SingleMessage: Component<
     return styles
   })
 
-  const msgText = createMemo(() => {
-    let msg = props.msg.msg
-    if (props.last && props.swipe) return props.swipe
-    if (ctx.anonymize) {
-      msg = state.chatProfiles.reduce(anonymizeText, msg).replace(SELF_REPLACE, 'User #1')
-    }
-    if (props.msg.event && !props.showHiddenEvents) {
-      msg = msg.replace(/\(OOC:.+\)/, '')
-    }
-    return msg
+  const content = createMemo(() => {
+    const msgV2 = getMessageContent(ctx, props, state)
+    return msgV2
+    // let msg = props.msg.msg
+    // if (props.last && props.swipe) return props.swipe
+    // if (ctx.anonymize) {
+    //   msg = state.chatProfiles.reduce(anonymizeText, msg).replace(SELF_REPLACE, 'User #1')
+    // }
+    // if (props.msg.event && !props.showHiddenEvents) {
+    //   msg = msg.replace(/\(OOC:.+\)/, '')
+    // }
+    // return msg
   })
 
   const saveEdit = () => {
@@ -406,44 +408,12 @@ const SingleMessage: Component<
                     </div>
                   </div>
                 </Match>
-                <Match when={props.retrying?._id === props.original._id && props.partial}>
+                <Match when={!edit() && content().type !== 'waiting'}>
                   <p
-                    class="rendered-markdown streaming-markdown px-1"
-                    data-bot-message={isBot()}
-                    data-user-message={isUser()}
-                    innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
-                  />
-                </Match>
-                <Match
-                  when={
-                    props.retrying?._id == props.original._id ||
-                    (props.msg._id === 'partial' && !props.msg.msg.length)
-                  }
-                >
-                  <div class="flex h-8 w-12 items-center justify-center">
-                    <Show
-                      when={props.partial}
-                      fallback={<div class="dot-flashing bg-[var(--hl-700)]"></div>}
-                    >
-                      <p
-                        class="rendered-markdown streaming-markdown px-1"
-                        data-bot-message={isBot()}
-                        data-user-message={isUser()}
-                        innerHTML={renderMessage(ctx, props.partial!, isUser(), 'partial')}
-                      />
-                    </Show>
-                  </div>
-                </Match>
-                <Match when={!edit() && !isImage()}>
-                  <p
-                    class={`rendered-markdown px-1 ${
-                      props.partial || props.msg._id === 'partial'
-                        ? 'streaming-markdown'
-                        : 'not-streaming'
-                    }`}
-                    data-bot-message={isBot()}
-                    data-user-message={isUser()}
-                    innerHTML={renderMessage(ctx, msgText(), isUser(), props.original.adapter)}
+                    class={`rendered-markdown px-1 ${content().class}`}
+                    data-bot-message={!props.msg.userId}
+                    data-user-message={!!props.msg.userId}
+                    innerHTML={content().message}
                   />
                   <Show when={!props.partial && props.last && props.lastSplit}>
                     <div class="flex items-center justify-center gap-2">
@@ -460,6 +430,11 @@ const SingleMessage: Component<
                       </For>
                     </div>
                   </Show>
+                </Match>
+                <Match when={!edit() && content().type === 'waiting'}>
+                  <div class="flex h-8 w-12 items-center justify-center">
+                    <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                  </div>
                 </Match>
                 <Match when={edit()}>
                   <div
@@ -507,36 +482,19 @@ function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): Split
 
   for (const split of splits) {
     const trim = split.trim()
-    const match = trim.match(/^[a-z]+: /gi)?.[0]
-    const currName = match ? match.slice(0, -2) : null
 
     let newMsg: AppSchema.ChatMessage | undefined
 
-    if (match && currName) {
-      for (const CHAR of ctx.activeBots) {
-        if (currName === CHAR.name) {
-          newMsg = {
-            ...msg,
-            msg: trim.replace(match, ''),
-            characterId: CHAR._id,
-            state: CHAR._id,
-          }
+    for (const CHAR of ctx.activeBots) {
+      if (trim.startsWith(CHAR.name + ':')) {
+        newMsg = {
+          ...msg,
+          msg: trim.slice(CHAR.name.length + 1).trim(),
+          characterId: CHAR._id,
+          state: CHAR._id,
         }
       }
     }
-
-    // for (const CHAR of CHARS) {
-    //   if (newMsg) break
-    //   if (trim.startsWith(CHAR)) {
-    //     newMsg = {
-    //       ...msg,
-    //       msg: trim.replace(CHAR, ''),
-    //       characterId: ctx.char?._id,
-    //       userId: undefined,
-    //     }
-    //     break
-    //   }
-    // }
 
     for (const USER of USERS) {
       if (newMsg) break
@@ -545,24 +503,13 @@ function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): Split
           ...msg,
           msg: trim.replace(USER, ''),
           userId: ctx.profile?.userId || '',
-          characterId: undefined,
+          characterId: ctx.impersonate?._id,
           state: 'user',
         }
         break
       }
     }
 
-    if (!newMsg && match && currName) {
-      newMsg = {
-        ...msg,
-        msg: trim.replace(match, ''),
-        userId: '',
-        characterId: match.slice(0, -2),
-        state: currName,
-      }
-    }
-
-    // if (!next.length && !newMsg) return [msg]
     if (!newMsg) {
       newMsg = {
         ...msg,
@@ -851,5 +798,51 @@ function toImageDeleteButton(msgId: string, position: number) {
       msgStore.removeMessageImage(msgId, position)
       settingStore.clearImage()
     },
+  }
+}
+
+function getMessageContent(
+  ctx: ContextState,
+  props: MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean },
+  state: ChatState
+) {
+  const isRetry = props.retrying?._id === props.original._id
+  const isPartial = props.msg._id === 'partial'
+
+  if (isRetry || isPartial) {
+    if (props.partial) {
+      return {
+        type: 'partial',
+        message: renderMessage(ctx, props.partial!, false, 'partial'),
+        class: 'streaming-markdown',
+      }
+    }
+
+    if (isPartial && props.msg.msg) {
+      return {
+        type: 'partial',
+        message: renderMessage(ctx, props.msg.msg, false, 'partial'),
+        class: 'streaming-markdown',
+      }
+    }
+
+    return { type: 'waiting', message: '', class: 'not-streaming' }
+  }
+
+  let message = props.msg.msg
+
+  if (props.last && props.swipe) message = props.swipe
+  if (props.msg.event && !props.showHiddenEvents) {
+    message = message.replace(/\(OOC:.+\)/, '')
+  }
+
+  if (ctx.anonymize) {
+    message = state.chatProfiles.reduce(anonymizeText, message).replace(SELF_REPLACE, 'User #1')
+  }
+
+  return {
+    type: 'message',
+    message: renderMessage(ctx, message, !!props.msg.userId, props.original.adapter),
+    class: 'not-streaming',
   }
 }
