@@ -323,7 +323,7 @@ const ChatDetail: Component = () => {
         requestMessage(pill._id)
       }
 
-      if (ev.key === 'r' || ev.key === 'R') {
+      if (ev.key === 'r') {
         ev.preventDefault()
         if (msgs.retrying || msgs.partial) return
         const last = indexOfLastRPMessage()
@@ -336,6 +336,11 @@ const ChatDetail: Component = () => {
         } else {
           msgStore.resend(msg.chatId, msg._id)
         }
+      }
+
+      if (ev.key === 'i') {
+        ev.preventDefault()
+        settingStore.toggleImpersonate(true)
       }
     }
 
@@ -552,54 +557,55 @@ const ChatDetail: Component = () => {
                     </Show>
                   </div>
                 </section>
+
+                <Show when={isSelfRemoved()}>
+                  <div class="flex w-full justify-center">
+                    You have been removed from the conversation
+                  </div>
+                </Show>
+                <Show when={isOwner() && ctx.activeBots.length > 1}>
+                  <div
+                    class={`flex min-h-[42px] justify-center gap-2 overflow-x-auto py-1 ${
+                      msgs.waiting ? 'opacity-70 saturate-0' : ''
+                    }`}
+                  >
+                    <Button
+                      size="md"
+                      schema="bordered"
+                      onClick={() => settingStore.toggleImpersonate(true)}
+                      classList={{ 'impersonate-btn': true }}
+                    >
+                      <VenetianMask size={16} />
+                    </Button>
+                    <For each={characterPills()}>
+                      {(bot) => (
+                        <CharacterPill
+                          char={bot}
+                          onClick={requestMessage}
+                          disabled={!!msgs.waiting}
+                          active={chats.replyAs === bot._id}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </Show>
+                <InputBar
+                  chat={chats.chat!}
+                  swiped={swipe() !== 0}
+                  send={sendMessage}
+                  more={moreMessage}
+                  char={chats.char}
+                  ooc={ooc() ?? isGroupChat()}
+                  setOoc={setOoc}
+                  showOocToggle={isGroupChat()}
+                  request={requestMessage}
+                  bots={ctx.activeBots}
+                  botMap={chars.botMap}
+                />
               </section>
 
               <ChatPanes setShowOpts={setShowOpts} />
             </section>
-            <Show when={isSelfRemoved()}>
-              <div class="flex w-full justify-center">
-                You have been removed from the conversation
-              </div>
-            </Show>
-            <Show when={isOwner() && ctx.activeBots.length > 1}>
-              <div
-                class={`flex justify-center gap-2 overflow-x-auto py-1 ${
-                  msgs.waiting ? 'opacity-70 saturate-0' : ''
-                }`}
-              >
-                <Button
-                  size="md"
-                  schema="bordered"
-                  onClick={() => settingStore.toggleImpersonate(true)}
-                  classList={{ 'impersonate-btn': true }}
-                >
-                  <VenetianMask size={16} />
-                </Button>
-                <For each={characterPills()}>
-                  {(bot) => (
-                    <CharacterPill
-                      char={bot}
-                      onClick={requestMessage}
-                      disabled={!!msgs.waiting}
-                      active={chats.replyAs === bot._id}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-            <InputBar
-              chat={chats.chat!}
-              swiped={swipe() !== 0}
-              send={sendMessage}
-              more={moreMessage}
-              char={chats.char}
-              ooc={ooc() ?? isGroupChat()}
-              setOoc={setOoc}
-              showOocToggle={isGroupChat()}
-              request={requestMessage}
-              bots={ctx.activeBots}
-              botMap={chars.botMap}
-            />
           </div>
         </main>
       </Show>

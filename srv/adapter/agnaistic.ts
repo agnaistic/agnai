@@ -263,9 +263,10 @@ function getDefaultSubscription() {
       continue
     }
 
+    if (match?.isDefaultSub && !sub.isDefaultSub) continue
+
     if (sub.isDefaultSub) {
-      if (!match.isDefaultSub || sub.subLevel < match.subLevel) match = sub
-      continue
+      return sub
     }
 
     if (sub.subLevel < match.subLevel) {

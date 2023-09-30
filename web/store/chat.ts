@@ -247,8 +247,10 @@ export const chatStore = createStore<ChatState>('chat', {
           messages: res.result.messages,
         })
 
-        const isMultiChars =
-          res.result.chat.characters && Object.keys(res.result.chat.characters).length
+        const tempCount = Object.keys(res.result.chat.tempCharacters || {}).length
+        const charCount = Object.keys(res.result.chat.characters || {}).length
+
+        const isMultiChars = charCount > 0 || tempCount > 0
 
         events.emit(
           EVENTS.charsReceived,

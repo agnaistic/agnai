@@ -147,15 +147,6 @@ const SingleMessage: Component<
   const content = createMemo(() => {
     const msgV2 = getMessageContent(ctx, props, state)
     return msgV2
-    // let msg = props.msg.msg
-    // if (props.last && props.swipe) return props.swipe
-    // if (ctx.anonymize) {
-    //   msg = state.chatProfiles.reduce(anonymizeText, msg).replace(SELF_REPLACE, 'User #1')
-    // }
-    // if (props.msg.event && !props.showHiddenEvents) {
-    //   msg = msg.replace(/\(OOC:.+\)/, '')
-    // }
-    // return msg
   })
 
   const saveEdit = () => {
@@ -620,33 +611,6 @@ const MessageOptions: Component<{
           <RefreshCw size={18} />
         </div>
       </Show>
-
-      {/* <div class="icon-button" onClick={() => props.show[1](true)}>
-        <MoreHorizontal />
-      </div>
-
-      <DropMenu show={props.show[0]()} close={() => props.show[1](false)} horz="left">
-        <div class="flex gap-1 p-1 text-sm">
-          <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
-            <Button size="sm" schema="secondary">
-              <GitFork size={18} />
-            </Button>
-
-            <Button
-              size="sm"
-              schema="secondary"
-              onClick={wrap(() => !props.partial && chatStore.showPrompt(props.original))}
-              disabled={!!props.partial}
-            >
-              <Terminal size={18} />
-            </Button>
-          </Show>
-
-          <Button size="sm" schema="secondary" onClick={wrap(props.onRemove)}>
-            <Trash size={18} />
-          </Button>
-        </div>
-      </DropMenu> */}
     </div>
   )
 }
@@ -708,8 +672,6 @@ function parseMessage(msg: string, ctx: ContextState, isUser: boolean, adapter?:
   }
 
   const parsed = msg.replace(BOT_REPLACE, ctx.char?.name || '').replace(SELF_REPLACE, ctx.handle)
-
-  if (ctx.trimSentences && !isUser) return trimSentence(parsed)
   return parsed
 }
 
@@ -838,6 +800,10 @@ function getMessageContent(
 
   if (ctx.anonymize) {
     message = state.chatProfiles.reduce(anonymizeText, message).replace(SELF_REPLACE, 'User #1')
+  }
+
+  if (ctx.trimSentences && !props.msg.userId) {
+    message = trimSentence(message)
   }
 
   return {

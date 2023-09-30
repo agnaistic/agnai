@@ -85,6 +85,7 @@ const ChatPanes: Component<{
 
     for (const bot of chats.activeBots) {
       if (bot.deletedAt) continue
+      console.log(!!bot)
       if (bot._id.startsWith('temp-') && bot.favorite === false) continue
       ids.set(bot._id, bot)
     }

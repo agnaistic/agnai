@@ -26,6 +26,14 @@ export async function createSubscription(settings: Partial<AppSchema.Subscriptio
   } as AppSchema.SubscriptionPreset
 
   await db('subscription-setting').insertOne(preset)
+
+  if (preset.isDefaultSub) {
+    await db('subscription-setting').updateMany(
+      { _id: { $ne: preset._id } },
+      { $set: { isDefaultSub: false } }
+    )
+  }
+
   return preset
 }
 
@@ -34,6 +42,14 @@ export async function updateSubscription(
   update: Partial<AppSchema.SubscriptionPreset>
 ) {
   await db('subscription-setting').updateOne({ _id: id }, { $set: update }, { upsert: false })
+
+  if (update.isDefaultSub) {
+    await db('subscription-setting').updateMany(
+      { _id: { $ne: id } },
+      { $set: { isDefaultSub: false } }
+    )
+  }
+
   const preset = await db('subscription-setting').findOne({ _id: id })
 
   return preset
