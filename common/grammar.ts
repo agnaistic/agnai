@@ -25,7 +25,7 @@ Expression = content:Parent* {
     return results
 }
 
-Parent "parent-node" = v:(BotIterator / HistoryIterator / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(BotIterator / HistoryIterator / HistoryInsert / Condition / Placeholder / Text) { return v }
 
 ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / Roll) CL {
 	return { kind: 'placeholder', value: i }
@@ -36,6 +36,7 @@ BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
 
 HistoryIterator "history-iterator" = OP "#each" WS loop:History CL children:(HistoryChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 HistoryChild = i:(HistoryRef / HistoryCondition / ManyPlaceholder) { return i }
+HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Placeholder / InsertText)* CloseInsert { return { kind: 'history-insert', values: +line.join(''), children } }
   
 Placeholder "placeholder"
   = OP WS interp:Interp WS pipes:Pipe* CL {
@@ -59,7 +60,7 @@ Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)*
   return { kind: 'if', value, children: sub.flat() }
 }
 
-
+InsertText "insert-text" = !(BotChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
 LoopText "loop-text" = !(BotChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
 ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
 Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator) ch:. { return ch }
@@ -70,6 +71,7 @@ WordList = word:Word WS "," WS { return word }
 
 CloseCondition = OP "/if"i CL
 CloseLoop = OP "/each"i CL
+CloseInsert = OP "/insert"i CL
 Word "word" = text:[a-zA-Z_ 0-9\!\?\.\'\#\@\%\"\&\*\=\+]+ { return text.join('') }
 Pipe "pipe" = _ "|" _ fn:Handler {  return fn }
 

@@ -13,11 +13,12 @@ const parser = peggy.generate(grammar.trim(), {
   },
 })
 
-type PNode = PlaceHolder | ConditionNode | IteratorNode | string
+type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | string
 
 type PlaceHolder = { kind: 'placeholder'; value: Holder; values?: any; pipes?: string[] }
 type ConditionNode = { kind: 'if'; value: Holder; values?: any; children: PNode[] }
 type IteratorNode = { kind: 'each'; value: IterableHolder; children: CNode[] }
+type InsertNode = { kind: 'history-insert'; values: number; children: PNode[] }
 
 type CNode =
   | Exclude<PNode, { kind: 'each' }>
@@ -93,6 +94,7 @@ export type TemplateOpts = {
    * Only allow repeatable placeholders. Excludes iterators, conditions, and prompt parts.
    */
   repeatable?: boolean
+  inserts?: Map<number, string>
 }
 
 export function parseTemplate(template: string, opts: TemplateOpts) {
@@ -129,6 +131,18 @@ function render(template: string, opts: TemplateOpts) {
   try {
     const ast = parser.parse(template, {}) as PNode[]
 
+    const inserts = ast.filter(
+      (node) => typeof node !== 'string' && node.kind === 'history-insert'
+    ) as InsertNode[]
+
+    if (!opts.inserts) {
+      opts.inserts = new Map()
+    }
+
+    for (const insert of inserts) {
+      opts.inserts.set(insert.values, renderNodes(insert.children, opts))
+    }
+
     const output: string[] = []
     for (const parent of ast) {
       const result = renderNode(parent, opts)
@@ -139,6 +153,15 @@ function render(template: string, opts: TemplateOpts) {
     console.error({ err }, 'Failed to parse')
     throw err
   }
+}
+
+function renderNodes(nodes: PNode[], opts: TemplateOpts) {
+  const output: string[] = []
+  for (const node of nodes) {
+    const text = renderNode(node, opts)
+    if (text) output.push(text)
+  }
+  return output.join('')
 }
 
 function renderNode(node: PNode, opts: TemplateOpts) {
@@ -235,7 +258,7 @@ function renderCondition(node: ConditionNode, children: PNode[], opts: TemplateO
 
 function renderIterator(holder: IterableHolder, children: CNode[], opts: TemplateOpts) {
   if (opts.repeatable) return ''
-  let lineBreaks = holder === 'history'
+  let isHistory = holder === 'history'
 
   const output: string[] = []
 
@@ -252,6 +275,13 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
   let i = 0
   for (const entity of entities) {
+    const distance = entities.length - i
+
+    if (isHistory && opts.inserts) {
+      const insert = opts.inserts.get(distance)
+      if (insert) output.push(`${insert}\n`)
+    }
+
     let curr = ''
     for (const child of children) {
       if (typeof child === 'string') {
@@ -274,7 +304,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
             child.prop === 'message' ||
             child.prop === 'dialogue'
           ) {
-            lineBreaks = true
+            isHistory = true
           }
           const result = renderProp(child, opts, entity, i)
           if (result) curr += result
@@ -301,7 +331,7 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
     return id
   }
 
-  return lineBreaks ? output.join('\n') : output.join('')
+  return isHistory ? output.join('\n') : output.join('')
 }
 
 function renderEntityCondition(nodes: CNode[], opts: TemplateOpts, entity: unknown, i: number) {
