@@ -15,7 +15,7 @@ import { wait } from '/common/util'
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
 
-let slotCounter = 0
+let slotCounter = 100
 
 declare const google: { ima: any }
 
@@ -74,7 +74,8 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   const id = createMemo(() => {
-    if (cfg.slots.provider === 'ez') return `ezoic-pub-ad-placeholder-${uniqueId()}`
+    if (cfg.slots.provider === 'ez' || cfg.flags.reporting)
+      return `ezoic-pub-ad-placeholder-${uniqueId()}`
     return `${props.slot}-${uniqueId()}`
   })
 
@@ -261,7 +262,7 @@ const Slot: Component<{
     if (!remove) return
     log('Cleanup')
 
-    if (cfg.slots.provider === 'ez') {
+    if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       ezstandalone.destroyPlaceholders(uniqueId())
     } else googletag.destroySlots([remove])
   })
@@ -307,8 +308,13 @@ const Slot: Component<{
         const num = uniqueId()
         log('[ez]', num, 'dispatched')
         ezstandalone.cmd.push(() => {
-          ezstandalone.define(num)
-          ezstandalone.enable()
+          if (!ezstandalone.enabled) {
+            ezstandalone.define(num)
+            ezstandalone.enable()
+            ezstandalone.display()
+          } else {
+            ezstandalone.displayMore(num)
+          }
         })
       })
     } else if (specs()?.video) {
