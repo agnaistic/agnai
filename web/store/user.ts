@@ -3,7 +3,7 @@ import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { FileInputResult } from '../shared/FileInput'
 import { createDebounce, getRootVariable, hexToRgb, storage, setRootVariable } from '../shared/util'
-import { api, clearAuth, getAuth, getUserId, setAuth } from './api'
+import { api, clearAuth, getAuth, getUserId, isLoggedIn, setAuth } from './api'
 import { createStore } from './create'
 import { localApi } from './data/storage'
 import { usersApi } from './data/user'
@@ -202,6 +202,7 @@ export const userStore = createStore<UserState>(
     },
 
     async subscriptionStatus() {
+      if (!isLoggedIn()) return
       const res = await api.get('/admin/billing/subscribe/status')
       if (res.result) {
         return { subStatus: res.result }

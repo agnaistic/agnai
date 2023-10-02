@@ -89,7 +89,11 @@ const SubscriptionList: Component = () => {
               <A
                 href={`/admin/subscriptions/${sub._id}`}
                 class="flex h-12 w-full gap-2 rounded-xl hover:bg-[var(--bg-600)]"
-                classList={{ 'bg-900': sub.subDisabled, 'bg-800': !sub.subDisabled }}
+                classList={{
+                  'bg-900': sub.subDisabled && !sub.isDefaultSub,
+                  'bg-800': !sub.subDisabled && !sub.isDefaultSub,
+                  'bg-[var(--hl-800)]': sub.isDefaultSub,
+                }}
               >
                 <div class="ml-4 flex w-full items-center">
                   <div>

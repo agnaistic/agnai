@@ -156,6 +156,17 @@ const ChatDetail: Component = () => {
     }
   })
 
+  const descriptionText = createMemo(() => {
+    if (!chats.char?.description) return null
+
+    return (
+      <>
+        {chats.char!.description!.split('\n').map((line) => (
+          <div>{line}</div>
+        ))}
+      </>
+    )
+  })
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() =>
@@ -323,7 +334,7 @@ const ChatDetail: Component = () => {
         requestMessage(pill._id)
       }
 
-      if (ev.key === 'r' || ev.key === 'R') {
+      if (ev.key === 'r') {
         ev.preventDefault()
         if (msgs.retrying || msgs.partial) return
         const last = indexOfLastRPMessage()
@@ -336,6 +347,20 @@ const ChatDetail: Component = () => {
         } else {
           msgStore.resend(msg.chatId, msg._id)
         }
+      }
+
+      if (ev.key === 'i') {
+        ev.preventDefault()
+        settingStore.toggleImpersonate(true)
+      }
+
+      if (ev.key === 'a') {
+        ev.preventDefault()
+        const last = indexOfLastRPMessage()
+        const msg = msgs.msgs[last]
+        if (!msg?.characterId) return
+
+        msgStore.request(msg.chatId, msg.characterId)
       }
     }
 
@@ -385,31 +410,26 @@ const ChatDetail: Component = () => {
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
               style={headerBg()}
             >
-              <Show when={isOwner()}>
-                <A
-                  class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
-                  href={`/character/${chats.char?._id}/chats`}
-                >
-                  <ChevronLeft />
-                  <div class="ellipsis flex flex-col">
-                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                      {chats.char?.name}
-                    </span>
-                    <Show when={chats.chat!.name}>
-                      <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                        {chats.chat!.name}
-                      </span>
-                    </Show>
-                  </div>
-                </A>
-              </Show>
+              <A
+                class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
+                href={isOwner() ? `/character/${chats.char?._id}/chats` : `/chats`}
+              >
+                <ChevronLeft />
+                <div class="ellipsis flex flex-col">
+                  <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
+                    {chats.char?.name}
+                  </span>
+
+                  <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                    {chats.chat?.name || ''}
+                  </span>
+                </div>
+              </A>
 
               <div class="flex flex-row gap-3">
-                <Show when={isOwner()}>
-                  <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
-                    {adapterLabel()}
-                  </div>
-                </Show>
+                <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
+                  {isOwner() ? adapterLabel() : ''}
+                </div>
 
                 <div class="" onClick={() => setShowOpts(true)}>
                   <Menu class="icon-button" />
@@ -494,11 +514,9 @@ const ChatDetail: Component = () => {
                 >
                   <div id="chat-messages" class="flex w-full flex-col gap-2">
                     <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
-                      <div class="mx-auto mb-4 text-[var(--text-500)]">
-                        <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
-                        {chats.char!.description!.split('\n').map((paragText) => (
-                          <div>{paragText}</div>
-                        ))}
+                      <div class="mb-4 flex flex-col items-center text-[var(--text-500)]">
+                        <div class="font-bold">Notes from the creator of {chats.char?.name}</div>
+                        {descriptionText()}
                       </div>
                     </Show>
                     <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
@@ -552,54 +570,55 @@ const ChatDetail: Component = () => {
                     </Show>
                   </div>
                 </section>
+
+                <Show when={isSelfRemoved()}>
+                  <div class="flex w-full justify-center">
+                    You have been removed from the conversation
+                  </div>
+                </Show>
+                <Show when={isOwner() && ctx.activeBots.length > 1}>
+                  <div
+                    class={`flex min-h-[42px] justify-center gap-2 overflow-x-auto py-1 ${
+                      msgs.waiting ? 'opacity-70 saturate-0' : ''
+                    }`}
+                  >
+                    <Button
+                      size="md"
+                      schema="bordered"
+                      onClick={() => settingStore.toggleImpersonate(true)}
+                      classList={{ 'impersonate-btn': true }}
+                    >
+                      <VenetianMask size={16} />
+                    </Button>
+                    <For each={characterPills()}>
+                      {(bot) => (
+                        <CharacterPill
+                          char={bot}
+                          onClick={requestMessage}
+                          disabled={!!msgs.waiting}
+                          active={chats.replyAs === bot._id}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </Show>
+                <InputBar
+                  chat={chats.chat!}
+                  swiped={swipe() !== 0}
+                  send={sendMessage}
+                  more={moreMessage}
+                  char={chats.char}
+                  ooc={ooc() ?? isGroupChat()}
+                  setOoc={setOoc}
+                  showOocToggle={isGroupChat()}
+                  request={requestMessage}
+                  bots={ctx.activeBots}
+                  botMap={chars.botMap}
+                />
               </section>
 
               <ChatPanes setShowOpts={setShowOpts} />
             </section>
-            <Show when={isSelfRemoved()}>
-              <div class="flex w-full justify-center">
-                You have been removed from the conversation
-              </div>
-            </Show>
-            <Show when={isOwner() && ctx.activeBots.length > 1}>
-              <div
-                class={`flex justify-center gap-2 overflow-x-auto py-1 ${
-                  msgs.waiting ? 'opacity-70 saturate-0' : ''
-                }`}
-              >
-                <Button
-                  size="md"
-                  schema="bordered"
-                  onClick={() => settingStore.toggleImpersonate(true)}
-                  classList={{ 'impersonate-btn': true }}
-                >
-                  <VenetianMask size={16} />
-                </Button>
-                <For each={characterPills()}>
-                  {(bot) => (
-                    <CharacterPill
-                      char={bot}
-                      onClick={requestMessage}
-                      disabled={!!msgs.waiting}
-                      active={chats.replyAs === bot._id}
-                    />
-                  )}
-                </For>
-              </div>
-            </Show>
-            <InputBar
-              chat={chats.chat!}
-              swiped={swipe() !== 0}
-              send={sendMessage}
-              more={moreMessage}
-              char={chats.char}
-              ooc={ooc() ?? isGroupChat()}
-              setOoc={setOoc}
-              showOocToggle={isGroupChat()}
-              request={requestMessage}
-              bots={ctx.activeBots}
-              botMap={chars.botMap}
-            />
           </div>
         </main>
       </Show>

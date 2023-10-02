@@ -179,6 +179,25 @@ async function getGuestInitEntities() {
   const scenario = await localApi.loadItem('scenario', true)
   const characters = await localApi.loadItem('characters', true)
   const chats = await localApi.loadItem('chats', true)
+
+  let fixed = false
+  for (const chat of chats) {
+    if (!chat.tempCharacters) continue
+    const chars = Object.entries(chat.tempCharacters)
+    for (const [key, char] of chars) {
+      if (char._id) continue
+      fixed = true
+      const id = v4()
+      delete chat.tempCharacters[key]
+      char._id = id
+      chat.tempCharacters[id] = char
+    }
+  }
+
+  if (fixed) {
+    await saveChats(chats)
+  }
+
   const trees = await localApi.loadItem('trees', true)
   const templates = await localApi.loadItem('templates', true)
 

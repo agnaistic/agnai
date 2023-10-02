@@ -324,8 +324,8 @@ export async function upsertTempCharacter(
 
   if (!chat) return localApi.error(`Chat not found`)
   const newchar: AppSchema.Character = {
-    _id: char._id || `temp-${v4().slice(0, 8)}`,
     ...char,
+    _id: char._id || `temp-${v4().slice(0, 8)}`,
     userId: 'anon',
     kind: 'character',
     createdAt: new Date().toISOString(),

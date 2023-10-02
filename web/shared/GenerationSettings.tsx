@@ -105,7 +105,7 @@ const GenerationSettings: Component<Props> = (props) => {
           />
           <Select
             fieldName="thirdPartyFormat"
-            label="Kobold / 3rd-party Format"
+            label="Self-host / 3rd-party Format"
             helperText="Re-formats the prompt to the desired output format."
             items={[
               { label: 'None', value: '' },
