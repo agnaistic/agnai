@@ -1,11 +1,14 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
 import { Component, createEffect, createSignal, Match, Show, Switch } from 'solid-js'
-import { defaultPresets, isDefaultPreset, presetValidator } from '../../../common/presets'
+import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
 import Select, { Option } from '../../shared/Select'
-import GenerationSettings, { getRegisteredSettings } from '../../shared/GenerationSettings'
+import GenerationSettings, {
+  getPresetFormData,
+  getRegisteredSettings,
+} from '../../shared/GenerationSettings'
 import Modal, { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
@@ -133,7 +136,6 @@ export const Subscription: Component = () => {
   const onSave = (_ev: Event, force?: boolean) => {
     if (state.saving) return
     const validator = {
-      ...presetValidator,
       service: ['', ...AI_ADAPTERS],
       subLevel: 'number',
       subModel: 'string',
@@ -144,18 +146,21 @@ export const Subscription: Component = () => {
       thirdPartyFormat: 'string?',
       allowGuestUsage: 'boolean',
     } as const
-    const body = getStrictForm(ref, validator)
+
+    const presetData = getPresetFormData(ref)
+    const subData = getStrictForm(ref, validator)
+    const body = { ...presetData, ...subData }
 
     body.thirdPartyFormat = body.thirdPartyFormat || (null as any)
+
+    if (!body.service) {
+      toastStore.error(`You must select an AI service before saving`)
+      return
+    }
 
     if (body.openRouterModel) {
       const actual = cfg.openRouter.models.find((or) => or.id === body.openRouterModel)
       body.openRouterModel = actual || undefined
-    }
-
-    if (body.service === '') {
-      toastStore.error(`You must select an AI service before saving`)
-      return
     }
 
     if (!force && body.gaslight && !body.gaslight.includes('{{personality}}')) {

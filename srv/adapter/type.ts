@@ -23,6 +23,7 @@ export type GenerateRequestV2 = {
   replyAs: AppSchema.Character
   sender: AppSchema.Profile
   members: AppSchema.Profile[]
+
   parts: PromptParts
   lines: string[]
   text?: string
@@ -62,6 +63,13 @@ export type AdapterProps = {
   impersonate: AppSchema.Character | undefined
   lastMessage?: string
   requestId: string
+
+  subscription?: {
+    level: number
+    preset?: AppSchema.SubscriptionPreset
+    error?: string
+    warning?: string
+  }
 
   /** GenSettings mapped to an object for the target adapter */
   gen: Partial<AppSchema.GenSettings>

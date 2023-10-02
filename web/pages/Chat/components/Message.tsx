@@ -173,15 +173,7 @@ const SingleMessage: Component<
 
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
-  const nameDateFlexDir = createMemo(() =>
-    props.isPaneOpen ? 'sm:flex-col sm:gap-1' : 'sm:flex-row sm:gap-0'
-  )
-
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
-  const visibilityClass = createMemo(() => (ctx.anonymize ? 'invisible' : ''))
-  const nameDateAlignItems = createMemo(() => (props.isPaneOpen ? '' : 'sm:items-end'))
-  const nameClasses = createMemo(() => (props.isPaneOpen ? 'sm:text-base' : 'sm:text-lg'))
-  const oocNameClass = createMemo(() => (props.msg.ooc ? 'italic' : ''))
 
   return (
     <div
@@ -263,15 +255,27 @@ const SingleMessage: Component<
             </span>
             <span class="flex flex-row justify-between pb-1">
               <span
-                class={`flex min-w-0 shrink flex-col overflow-hidden ${nameDateFlexDir()} items-start gap-1 ${nameDateAlignItems()} ${oocNameClass()}`}
+                class={`flex min-w-0 shrink flex-col items-start gap-1 overflow-hidden`}
+                classList={{
+                  'sm:flex-col': props.isPaneOpen,
+                  'sm:gap-1': props.isPaneOpen,
+                  'sm:flex-row': !props.isPaneOpen,
+                  'sm:gap-0': !props.isPaneOpen,
+                  'sm:items-end': !props.isPaneOpen,
+                  italic: props.msg.ooc,
+                }}
               >
                 <b
-                  class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px] ${nameClasses()}`}
+                  class={`chat-name text-900 mr-2 max-w-[160px] overflow-hidden  text-ellipsis whitespace-nowrap sm:max-w-[400px]`}
                   // Necessary to override text-md and text-lg's line height, for proper alignment
                   style="line-height: 1;"
                   data-bot-name={isBot()}
                   data-user-name={isUser()}
-                  classList={{ hidden: !!props.msg.event }}
+                  classList={{
+                    hidden: !!props.msg.event,
+                    'sm:text-base': props.isPaneOpen,
+                    'sm:text-lg': !props.isPaneOpen,
+                  }}
                 >
                   <Switch>
                     <Match when={props.msg.characterId}>
@@ -282,16 +286,10 @@ const SingleMessage: Component<
                     <Match when={true}>{handleToShow()}</Match>
                   </Switch>
                 </b>
+
                 <span
-                  class={`
-                message-date
-                text-600
-                flex
-                items-center
-                text-xs
-                leading-none
-                ${visibilityClass()}
-              `}
+                  classList={{ invisible: ctx.anonymize }}
+                  class={`message-date text-600 flex items-center text-xs leading-none`}
                   data-bot-time={isBot()}
                   data-user-time={isUser()}
                 >
@@ -434,6 +432,10 @@ const SingleMessage: Component<
                     contentEditable={true}
                     onKeyUp={(ev) => {
                       if (ev.key === 'Escape') cancelEdit()
+                      if (ev.altKey && ev.key === 's') {
+                        ev.preventDefault()
+                        saveEdit()
+                      }
                     }}
                   ></div>
                 </Match>
@@ -558,13 +560,6 @@ const MessageOptions: Component<{
   show: Signal<boolean>
   onRemove: () => void
 }> = (props) => {
-  // const wrap = (fn: Function) => {
-  //   return () => {
-  //     props.show[1](false)
-  //     fn()
-  //   }
-  // }
-
   return (
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>

@@ -1,6 +1,7 @@
 import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { config } from '../config'
 import { store } from '../db'
+import { isConnected } from '../db/client'
 import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/subscriptions'
 import { decryptText } from '../db/util'
 import { handleClaude } from './claude'
@@ -21,32 +22,64 @@ import { ModelAdapter } from './type'
 import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
 
-export const handleAgnaistic: ModelAdapter = async function* (opts) {
-  const { char, members, prompt, log, gen } = opts
-  const level = opts.user.sub?.level ?? -1
+export async function getSubscriptionPreset(
+  user: AppSchema.User,
+  guest: boolean,
+  gen?: Partial<AppSchema.GenSettings>
+) {
+  if (!isConnected()) return
+  if (!gen) return
+  if (gen.service !== 'agnaistic') return
+
+  const level = user.sub?.level ?? -1
+  let error: string | undefined = undefined
+  let warning: string | undefined = undefined
 
   const fallback = getDefaultSubscription()
-  const subId = opts.gen.registered?.agnaistic?.subscriptionId
+  const subId = gen.registered?.agnaistic?.subscriptionId
   let preset = subId ? await store.subs.getSubscription(subId) : getDefaultSubscription()
 
-  if (opts.guest && preset?.allowGuestUsage === false) {
-    yield { error: 'Please sign in to use this model' }
-    return
+  if (guest && preset?.allowGuestUsage === false) {
+    error = 'Please sign in to use this model.'
   }
 
   if (!preset || preset.subDisabled) {
     // If the subscription they're using becomes unavailable, gracefully fallback to the default and let them know
     if (fallback && !fallback.subDisabled && fallback.subLevel <= level) {
       preset = fallback
-      yield {
-        warning:
-          'Your configured Agnaistic model/tier is no longer available. Using a fallback. Please update your preset.',
-      }
+      warning =
+        'Your configured Agnaistic model/tier is no longer available. Using a fallback. Please update your preset.'
     } else {
-      yield { error: 'Tier/model selected is invalid or disabled. Try another' }
-      return
+      error = 'Tier/model selected is invalid or disabled. Try another.'
     }
   }
+
+  return { level, preset, error, warning }
+}
+
+export const handleAgnaistic: ModelAdapter = async function* (opts) {
+  const { char, members, prompt, log, gen } = opts
+
+  if ('subscription' in opts === false) {
+    opts.subscription = await getSubscriptionPreset(opts.user, !!opts.guest, opts.gen)
+  }
+
+  if (!opts.subscription || !opts.subscription.preset) {
+    yield { error: 'Subscriptions are not enabled' }
+    return
+  }
+
+  if (opts.subscription.error) {
+    yield { error: opts.subscription.error }
+    return
+  }
+
+  if (opts.subscription.warning) {
+    yield { warning: opts.subscription.warning }
+  }
+
+  const level = opts.subscription.level ?? -1
+  const preset = opts.subscription.preset
 
   const newLevel = await store.users.validateSubscription(opts.user)
   if (newLevel instanceof Error) {

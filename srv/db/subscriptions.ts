@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { db } from './client'
+import { db, isConnected } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { StatusError } from '../api/wrap'
 import { now } from './util'
@@ -15,7 +15,7 @@ export async function getSubscriptions() {
 
 export async function getSubscription(id: string) {
   const sub = await db('subscription-setting').findOne({ _id: id })
-  return sub
+  return sub ? sub : undefined
 }
 
 export async function createSubscription(settings: Partial<AppSchema.SubscriptionPreset>) {
@@ -88,6 +88,7 @@ setInterval(async () => {
 }, 5000)
 
 export async function prepSubscriptionCache() {
+  if (!isConnected()) return
   try {
     const presets = await getSubscriptions()
     for (const preset of presets) {

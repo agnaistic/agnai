@@ -17,7 +17,7 @@ import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
-import { getHandlers, handlers } from './agnaistic'
+import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
 
 let version = ''
 
@@ -100,7 +100,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
   throw new Error(`Could not complete inference: Max retries exceeded`)
 }
 
-export async function createInferenceStream(opts: InferenceRequest) {
+async function createInferenceStream(opts: InferenceRequest) {
   const [service, model] = opts.service.split('/')
   const settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
 
@@ -229,9 +229,18 @@ export async function createTextStreamV2(
       .filter((pb) => !!pb.seq)
   }
 
+  const subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model)
   const handler = handlers[adapter]
+
+  /**
+   * Context limits set by the subscription next to be present before the prompt is finalised
+   */
+  const subContextLimit = subscription?.preset?.maxContextLength
+  if (subContextLimit && opts.settings?.maxContextLength) {
+    opts.settings.maxContextLength = Math.min(subContextLimit, opts.settings.maxContextLength)
+  }
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
 
@@ -261,6 +270,7 @@ export async function createTextStreamV2(
     characters: opts.characters,
     impersonate: opts.impersonate,
     lastMessage: opts.lastMessage,
+    subscription,
   })
 
   return { stream, adapter, settings: gen, user: opts.user }

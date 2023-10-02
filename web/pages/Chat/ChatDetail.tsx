@@ -156,6 +156,17 @@ const ChatDetail: Component = () => {
     }
   })
 
+  const descriptionText = createMemo(() => {
+    if (!chats.char?.description) return null
+
+    return (
+      <>
+        {chats.char!.description!.split('\n').map((line) => (
+          <div>{line}</div>
+        ))}
+      </>
+    )
+  })
   const isOwner = createMemo(() => chats.chat?.userId === user.user?._id)
   const headerBg = createMemo(() => getHeaderBg(user.ui.mode))
   const chatWidth = createMemo(() =>
@@ -342,6 +353,15 @@ const ChatDetail: Component = () => {
         ev.preventDefault()
         settingStore.toggleImpersonate(true)
       }
+
+      if (ev.key === 'a') {
+        ev.preventDefault()
+        const last = indexOfLastRPMessage()
+        const msg = msgs.msgs[last]
+        if (!msg?.characterId) return
+
+        msgStore.request(msg.chatId, msg.characterId)
+      }
     }
 
     document.addEventListener('keydown', keyboardShortcuts)
@@ -390,31 +410,26 @@ const ChatDetail: Component = () => {
               class={`hidden h-9 items-center justify-between rounded-md sm:flex`}
               style={headerBg()}
             >
-              <Show when={isOwner()}>
-                <A
-                  class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
-                  href={`/character/${chats.char?._id}/chats`}
-                >
-                  <ChevronLeft />
-                  <div class="ellipsis flex flex-col">
-                    <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
-                      {chats.char?.name}
-                    </span>
-                    <Show when={chats.chat!.name}>
-                      <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
-                        {chats.chat!.name}
-                      </span>
-                    </Show>
-                  </div>
-                </A>
-              </Show>
+              <A
+                class="ellipsis flex max-w-full cursor-pointer flex-row items-center justify-between gap-4 text-lg font-bold"
+                href={isOwner() ? `/character/${chats.char?._id}/chats` : `/chats`}
+              >
+                <ChevronLeft />
+                <div class="ellipsis flex flex-col">
+                  <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
+                    {chats.char?.name}
+                  </span>
+
+                  <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">
+                    {chats.chat?.name || ''}
+                  </span>
+                </div>
+              </A>
 
               <div class="flex flex-row gap-3">
-                <Show when={isOwner()}>
-                  <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
-                    {adapterLabel()}
-                  </div>
-                </Show>
+                <div class="hidden items-center text-xs italic text-[var(--text-500)] sm:flex">
+                  {isOwner() ? adapterLabel() : ''}
+                </div>
 
                 <div class="" onClick={() => setShowOpts(true)}>
                   <Menu class="icon-button" />
@@ -499,11 +514,9 @@ const ChatDetail: Component = () => {
                 >
                   <div id="chat-messages" class="flex w-full flex-col gap-2">
                     <Show when={chats.loaded && chatMsgs().length < 2 && chats.char?.description}>
-                      <div class="mx-auto mb-4 text-[var(--text-500)]">
-                        <div class="font-bold">Notes from the creator of {chats.char!.name}:</div>
-                        {chats.char!.description!.split('\n').map((paragText) => (
-                          <div>{paragText}</div>
-                        ))}
+                      <div class="mb-4 flex flex-col items-center text-[var(--text-500)]">
+                        <div class="font-bold">Notes from the creator of {chats.char?.name}</div>
+                        {descriptionText()}
                       </div>
                     </Show>
                     <Show when={chats.loaded && chatMsgs().length === 0 && !msgs.waiting}>
