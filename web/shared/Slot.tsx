@@ -306,7 +306,7 @@ const Slot: Component<{
       return
     }
 
-    if (cfg.slots.provider === 'ez') {
+    if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       ezReady.then(() => {
         const num = uniqueId()
         log('[ez]', num, 'dispatched')
