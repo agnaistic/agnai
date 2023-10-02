@@ -263,7 +263,9 @@ const Slot: Component<{
     log('Cleanup')
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
-      ezstandalone.destroyPlaceholders(uniqueId())
+      ezstandalone.cmd.push(() => {
+        ezstandalone.destroyPlaceholders(uniqueId())
+      })
     } else googletag.destroySlots([remove])
   })
 
