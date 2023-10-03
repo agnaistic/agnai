@@ -60,8 +60,8 @@ jobs:
 
       - name: Build image
         run: |
-          docker build -f Dockerfile -t ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest --build-arg SHA=$GITHUB_SHA .
-          docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:latest ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
+          docker build -f Dockerfile -t ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:dev --build-arg SHA=$GITHUB_SHA .
+          docker tag ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:dev ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:$GITHUB_SHA
 
       - name: Log in to Container Registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin

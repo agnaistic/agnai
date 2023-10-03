@@ -45,7 +45,7 @@ export type SettingState = {
   showSettings: boolean
 
   slotsLoaded: boolean
-  slots: { publisherId: string } & Record<string, string>
+  slots: { publisherId: string; provider?: 'google' | 'ez' } & Record<string, string>
   overlay: boolean
 }
 

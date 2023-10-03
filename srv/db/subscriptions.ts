@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { db, isConnected } from './client'
+import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { StatusError } from '../api/wrap'
 import { now } from './util'
@@ -64,7 +64,7 @@ export async function deleteSubscription(id: string) {
 
 export function getCachedSubscriptionPresets() {
   const all = Array.from(subCache.values())
-  return all.filter((sub) => !sub.subDisabled)
+  return all.filter((sub) => !sub.subDisabled && !sub.deletedAt)
 }
 
 export function getCachedSubscriptions(user?: AppSchema.User | null) {
@@ -88,18 +88,11 @@ setInterval(async () => {
 }, 5000)
 
 export async function prepSubscriptionCache() {
-  if (!isConnected()) return
   try {
     const presets = await getSubscriptions()
+    subCache.clear()
     for (const preset of presets) {
       subCache.set(preset._id, preset)
-    }
-
-    for (const id of Array.from(subCache.keys())) {
-      const exists = presets.some((pre) => pre._id === id)
-      if (!exists) {
-        subCache.delete(id)
-      }
     }
   } catch (ex) {}
 }

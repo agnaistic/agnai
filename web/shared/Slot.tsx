@@ -9,11 +9,13 @@ import {
   onCleanup,
 } from 'solid-js'
 import { settingStore, userStore } from '../store'
-import { v4 } from 'uuid'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
 
 window.googletag = window.googletag || { cmd: [] }
+window.ezstandalone = window.ezstandalone || { cmd: [] }
+
+let slotCounter = 100
 
 declare const google: { ima: any }
 
@@ -52,8 +54,17 @@ const Slot: Component<{
     tier: s.tiers.find((t) => t._id === s.user?.sub?.tierId),
     user: s.user,
   }))
+  const cfg = settingStore((s) => ({
+    publisherId: s.slots.publisherId,
+    slots: s.slots,
+    slotsLoaded: s.slotsLoaded,
+    flags: s.flags,
+    ready: s.initLoading === false,
+  }))
+
   const [stick, setStick] = createSignal(props.sticky)
-  const [id] = createSignal(`${props.slot}-${v4().slice(0, 8)}`)
+  const [uniqueId] = createSignal(++slotCounter)
+
   const [done, setDone] = createSignal(false)
   const [videoDone, setVideoDone] = createSignal(false)
   const [adslot, setSlot] = createSignal<googletag.Slot>()
@@ -62,13 +73,11 @@ const Slot: Component<{
   const [slotId, setSlotId] = createSignal<string>()
   const [actualId, setActualId] = createSignal('...')
 
-  const cfg = settingStore((s) => ({
-    publisherId: s.slots.publisherId,
-    slots: s.slots,
-    slotsLoaded: s.slotsLoaded,
-    flags: s.flags,
-    ready: s.initLoading === false,
-  }))
+  const id = createMemo(() => {
+    if (cfg.slots.provider === 'ez' || cfg.flags.reporting)
+      return `ezoic-pub-ad-placeholder-${uniqueId()}`
+    return `${props.slot}-${uniqueId()}`
+  })
 
   const log = (...args: any[]) => {
     if (!cfg.publisherId) return
@@ -252,7 +261,13 @@ const Slot: Component<{
     const remove = adslot()
     if (!remove) return
     log('Cleanup')
-    googletag.destroySlots([remove])
+
+    if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
+      if (!done() || !ref) return
+      ezstandalone.cmd.push(() => {
+        ezstandalone.destroyPlaceholders(uniqueId())
+      })
+    } else googletag.destroySlots([remove])
   })
 
   createEffect(async () => {
@@ -291,7 +306,21 @@ const Slot: Component<{
       return
     }
 
-    if (specs()?.video) {
+    if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
+      ezReady.then(() => {
+        const num = uniqueId()
+        log('[ez]', num, 'dispatched')
+        ezstandalone.cmd.push(() => {
+          if (!ezstandalone.enabled) {
+            ezstandalone.define(num)
+            ezstandalone.enable()
+            ezstandalone.display()
+          } else {
+            ezstandalone.displayMore(num)
+          }
+        })
+      })
+    } else if (specs()?.video) {
       imaReady.then(() => {
         tryVideo()
       })
@@ -471,6 +500,15 @@ function getSlotId(id: string) {
 const gtmReady = new Promise(async (resolve) => {
   do {
     if (typeof googletag.pubads === 'function') {
+      return resolve(true)
+    }
+    await wait(0.05)
+  } while (true)
+})
+
+const ezReady = new Promise(async (resolve) => {
+  do {
+    if (typeof window.ezstandalone.enable !== 'function') {
       return resolve(true)
     }
     await wait(0.05)
