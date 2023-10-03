@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
-import { logger } from '../logger'
+import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
 import { requestStream } from './stream'
@@ -74,8 +74,8 @@ export const handleKobold: ModelAdapter = async function* (opts) {
     opts.gen.thirdPartyFormat === 'llamacpp'
       ? llamaStream(baseURL, body)
       : opts.gen.streamResponse && isStreamSupported
-      ? streamCompletition(`${baseURL}/api/extra/generate/stream`, body)
-      : fullCompletion(`${baseURL}/api/v1/generate`, body)
+      ? streamCompletition(`${baseURL}/api/extra/generate/stream`, body, opts.log)
+      : fullCompletion(`${baseURL}/api/v1/generate`, body, opts.log)
 
   let accum = ''
 
@@ -136,7 +136,7 @@ async function checkStreamSupported(versioncheckURL: any) {
   return isSupportedVersion
 }
 
-const fullCompletion = async function* (genURL: string, body: any) {
+const fullCompletion = async function* (genURL: string, body: any, log: AppLog) {
   const resp = await needle('post', genURL, body, {
     headers: { 'Bypass-Tunnel-Reminder': 'true' },
     json: true,
@@ -144,12 +144,13 @@ const fullCompletion = async function* (genURL: string, body: any) {
 
   if ('error' in resp) {
     yield { error: `Kobold request failed: ${resp.error?.message || resp.error}` }
+    log.error({ error: resp.error }, `Kobold request failed`)
     return
   }
 
   if (resp.statusCode && resp.statusCode >= 400) {
     yield { error: `Kobold request failed: ${resp.statusMessage}` }
-    logger.error({ error: resp.body }, `Kobold request failed`)
+    log.error({ error: resp.body }, `Kobold request failed`)
     return
   }
 
@@ -158,13 +159,13 @@ const fullCompletion = async function* (genURL: string, body: any) {
   if (text) {
     return { tokens: text }
   } else {
-    logger.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
+    log.error({ err: resp.body }, 'Failed to generate text using Kobold adapter')
     yield { error: `Kobold failed to generate a response: ${resp.body}` }
     return
   }
 }
 
-const streamCompletition = async function* (streamUrl: any, body: any) {
+const streamCompletition = async function* (streamUrl: any, body: any, log: AppLog) {
   const resp = needle.post(streamUrl, body, {
     parse: false,
     json: true,
@@ -188,6 +189,7 @@ const streamCompletition = async function* (streamUrl: any, body: any) {
       }
       if (data.error) {
         yield { error: `Kobold streaming request failed: ${data.error}` }
+        log.error({ error: data.error }, 'Kobold streaming request failed')
         return
       }
 
