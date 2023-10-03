@@ -37,7 +37,7 @@ export async function getSubscriptionPreset(
 
   const fallback = getDefaultSubscription()
   const subId = gen.registered?.agnaistic?.subscriptionId
-  let preset = subId ? await store.subs.getSubscription(subId) : getDefaultSubscription()
+  let preset = subId ? await store.subs.getSubscription(subId) : fallback
 
   if (guest && preset?.allowGuestUsage === false) {
     error = 'Please sign in to use this model.'
@@ -97,11 +97,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.maxContextLength = Math.min(preset.maxContextLength!, opts.gen.maxContextLength!)
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
-  const stops = preset.stopSequences || []
-  if (opts.gen.stopSequences) {
+
+  const stops = Array.isArray(preset.stopSequences) ? preset.stopSequences : []
+  if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
     stops.push(...opts.gen.stopSequences)
-    stops.push('###', 'USER:', 'ASSISTANT:')
   }
+
+  stops.push('###', 'USER:', 'ASSISTANT:')
   opts.gen.stopSequences = stops
 
   const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''

@@ -539,7 +539,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     if ('error' in gen) {
       error = true
       sendGuest(guest, { type: 'message-error', error: gen.error, adapter, chatId })
-      continue
+      break
     }
 
     if ('warning' in gen) {
