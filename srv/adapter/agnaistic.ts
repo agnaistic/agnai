@@ -93,8 +93,8 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   // Max tokens and max context limit are decided by the subscription preset
+  // We've already set the max context length prior to calling this handler
   opts.gen.maxTokens = Math.min(preset.maxTokens, opts.gen.maxTokens || 80)
-  opts.gen.maxContextLength = Math.min(preset.maxContextLength!, opts.gen.maxContextLength!)
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
 
