@@ -25,6 +25,10 @@ export const toastStore = createStore<ToastState>('toasts', {
 })((get, set) => {
   const addToast = (kind: Toast['type']) => {
     return (_: ToastState, msg: string, ttl = 5) => {
+      if (kind === 'admin') {
+        ttl = 15
+      }
+
       const id = ++toastId
       const toast: Toast = {
         id,
