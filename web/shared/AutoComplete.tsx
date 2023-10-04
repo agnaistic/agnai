@@ -1,6 +1,5 @@
 import { createSignal, onCleanup, onMount } from 'solid-js'
 import { Component, For } from 'solid-js'
-import { useEffect } from './hooks'
 
 type Option = {
   label: string
