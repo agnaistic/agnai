@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js'
+import { createSignal, onCleanup, onMount } from 'solid-js'
 import { Component, For } from 'solid-js'
 import { useEffect } from './hooks'
 
@@ -32,41 +32,41 @@ export const AutoComplete: Component<{
     return value
   }
 
-  useEffect(() => {
-    console.log('mounted')
+  const listener = (ev: KeyboardEvent) => {
     const mod = props.dir === 'up' ? -1 : 1
-    const listener = (ev: KeyboardEvent) => {
-      console.log('autocomplete', ev.key)
-      const curr = selected()
-      if (ev.key === 'ArrowUp') {
-        ev.preventDefault()
-        setSelected(clamp(curr - 1 * mod))
-        return
-      }
-
-      if (ev.key === 'ArrowDown') {
-        ev.preventDefault()
-        setSelected(clamp(curr + 1 * mod))
-        return
-      }
-
-      if (ev.key === 'Enter') {
-        ev.preventDefault()
-        const option = props.options[curr]
-        props.onSelect(option)
-        props.close()
-        return
-      }
-
+    console.log('autocomplete', ev.key)
+    const curr = selected()
+    if (ev.key === 'ArrowUp') {
       ev.preventDefault()
-      props.close()
+      setSelected(clamp(curr - 1 * mod))
+      return
     }
 
-    document.addEventListener('keydown', listener)
+    if (ev.key === 'ArrowDown') {
+      ev.preventDefault()
+      setSelected(clamp(curr + 1 * mod))
+      return
+    }
 
-    return () => {
+    if (ev.key === 'Enter') {
+      ev.preventDefault()
+      const option = props.options[curr]
+      props.onSelect(option)
       document.removeEventListener('keydown', listener)
+      props.close()
+      return
     }
+
+    props.close()
+    document.removeEventListener('keydown', listener)
+  }
+
+  onMount(() => {
+    document.addEventListener('keydown', listener)
+  })
+
+  onCleanup(() => {
+    document.removeEventListener('keydown', listener)
   })
 
   return (
