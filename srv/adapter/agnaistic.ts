@@ -98,9 +98,17 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
 
-  const userStops = Array.isArray(opts.gen.stopSequences) ? opts.gen.stopSequences : []
-  const subStops = Array.isArray(preset.stopSequences) ? preset.stopSequences.slice() : []
-  const allStops = Array.from(new Set(userStops.concat(subStops).filter((s) => !!s)).values())
+  const stops = Array.isArray(preset.stopSequences)
+    ? new Set(preset.stopSequences)
+    : new Set<string>()
+
+  if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
+    for (const stop of opts.gen.stopSequences) {
+      stops.add(stop)
+    }
+  }
+
+  const allStops = Array.from(stops.values())
 
   const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''
   if (preset.service && preset.service !== 'agnaistic') {
