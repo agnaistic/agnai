@@ -89,14 +89,14 @@ export async function* getTextgenCompletion(
     const text = resp.body.results?.[0]?.text
     if (!text) {
       yield {
-        error: `Textgen request failed: Received empty response (potentially OOM). Try again.`,
+        error: `${service} request failed: Received empty response. Please try again.`,
       }
       return
     }
     yield { token: text }
     return text
   } catch (ex: any) {
-    yield { error: `Textgen request failed: ${ex.message || ex}` }
+    yield { error: `${service} request failed: ${ex.message || ex}` }
   }
 }
 
