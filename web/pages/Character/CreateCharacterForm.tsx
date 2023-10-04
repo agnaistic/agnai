@@ -653,7 +653,7 @@ export const CreateCharacterForm: Component<{
                     <span>{`Prompt to bundle with your character, placed n messages from the bottom of the conversation history, where n is the Insert Depth. Similar to AI Dungeon/NovelAI "Author's note".`}</span>
                   }
                   placeholder="Write like James Joyce."
-                  value={ editor.state.insert.prompt }
+                  value={editor.state.insert.prompt}
                 />
                 <RangeInput
                   fieldName="insertDepth"
@@ -662,9 +662,7 @@ export const CreateCharacterForm: Component<{
                   min={0}
                   max={50}
                   step={1}
-                  value={
-                    editor.state.insert.depth
-                  }
+                  value={editor.state.insert.depth}
                 />
               </Card>
               <Card>

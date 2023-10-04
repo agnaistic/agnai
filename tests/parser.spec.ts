@@ -102,7 +102,7 @@ function test(
   overrides: Partial<TemplateOpts> = {},
   charOverrides: Partial<AppSchema.Character> = {}
 ) {
-  return parseTemplate(template, getParseOpts(overrides, charOverrides))
+  return parseTemplate(template, getParseOpts(overrides, charOverrides)).parsed
 }
 
 function getParseOpts(
