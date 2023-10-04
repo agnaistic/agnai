@@ -314,6 +314,7 @@ const Slot: Component<{
           if (!ezstandalone.enabled) {
             ezstandalone.define(num)
             ezstandalone.enable()
+            ezstandalone.setEzoicAnchorAd(false)
             ezstandalone.display()
           } else {
             ezstandalone.displayMore(num)
