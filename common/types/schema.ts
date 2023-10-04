@@ -340,6 +340,7 @@ export namespace AppSchema {
     extensions?: Record<string, any>
     systemPrompt?: string
     postHistoryInstructions?: string
+    insert?: { depth: number, prompt: string }
     creator?: string
     characterVersion?: string
   }

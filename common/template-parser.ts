@@ -146,6 +146,9 @@ function readInserts(template: string, opts: TemplateOpts, existingAst?: PNode[]
   ) as InsertNode[]
 
   opts.inserts = new Map()
+  if (opts.char.insert) {
+    opts.inserts.set(opts.char.insert.depth, opts.char.insert.prompt)
+  }
   for (const insert of inserts) {
     const oldInsert = opts.inserts.get(insert.values)
     opts.inserts.set(

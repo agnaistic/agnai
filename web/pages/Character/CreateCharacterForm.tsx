@@ -50,6 +50,7 @@ import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
 import { GenField } from './generate-char'
 import Tabs, { useTabs } from '/web/shared/Tabs'
+import RangeInput from '/web/shared/RangeInput'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -643,6 +644,27 @@ export const CreateCharacterForm: Component<{
                   }
                   placeholder="Write at least four paragraphs."
                   value={editor.state.postHistoryInstructions}
+                />
+                <TextInput
+                  isMultiline
+                  fieldName="insertPrompt"
+                  label="Insert / Depth Prompt"
+                  helperText={
+                    <span>{`Prompt to bundle with your character, placed n messages from the bottom of the conversation history, where n is the Insert Depth. Similar to AI Dungeon/NovelAI "Author's note".`}</span>
+                  }
+                  placeholder="Write like James Joyce."
+                  value={ editor.state.insert.prompt }
+                />
+                <RangeInput
+                  fieldName="insertDepth"
+                  label="Insert Depth"
+                  helperText="The number of messages (from the bottom) that should exist under the Insert. Values between 1 and 5 are recommended."
+                  min={0}
+                  max={50}
+                  step={1}
+                  value={
+                    editor.state.insert.depth
+                  }
                 />
               </Card>
               <Card>

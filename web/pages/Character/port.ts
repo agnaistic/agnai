@@ -121,6 +121,7 @@ export function jsonToCharacter(json: any): NewCharacter {
     tags: json.data.tags,
     description: json.data.creator_notes,
     voice: json.data.extensions.agnai?.voice,
+    insert: json.data.extensions.depth_prompt,
   }
 }
 

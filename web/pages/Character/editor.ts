@@ -34,6 +34,10 @@ type EditState = {
   creator: string
   characterVersion: string
   postHistoryInstructions: string
+  insert: {
+    prompt: string
+    depth: number
+  }
   systemPrompt: string
 
   visualType: string
@@ -59,6 +63,7 @@ export const newCharGuard = {
   sampleChat: 'string',
   systemPrompt: 'string',
   postHistoryInstructions: 'string',
+  insert: 'any?',
   creator: 'string',
   characterVersion: 'string',
 } as const
@@ -96,6 +101,10 @@ const initState: EditState = {
   creator: '',
   characterVersion: '',
   postHistoryInstructions: '',
+  insert: {
+    prompt: '',
+    depth: 3,
+  },
   systemPrompt: '',
 
   visualType: 'avatar',
@@ -240,6 +249,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     setFormField(form(), 'kind', personaKind)
 
     // We set fields that aren't properly managed by form elements
+    console.log({ char })
     setState({
       ...char,
       personaKind,
@@ -249,6 +259,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       sprite: char?.sprite || undefined,
       visualType: char?.visualType || 'avatar',
       culture: char?.culture || defaultCulture,
+      insert: char?.insert?.prompt
+        ? { prompt: char.insert.prompt, depth: char.insert.depth }
+        : undefined,
     })
   }
 
@@ -334,6 +347,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     // New fields start here
     systemPrompt: body.systemPrompt ?? '',
     postHistoryInstructions: body.postHistoryInstructions ?? '',
+    insert: body.insert,
     alternateGreetings: state.alternateGreetings ?? [],
     characterBook: state.book,
     creator: body.creator ?? '',

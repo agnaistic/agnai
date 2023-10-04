@@ -48,6 +48,7 @@ export type NewCharacter = UpdateCharacter &
     | 'postHistoryInstructions'
     | 'creator'
     | 'characterVersion'
+    | 'insert'
   > & {
     originalAvatar: any
   }
