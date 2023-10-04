@@ -12,6 +12,7 @@ import {
   SELF_REPLACE,
   ensureValidTemplate,
   injectPlaceholders,
+  insertsDeeperThanConvoHistory,
 } from '/common/prompt'
 import { AppSchema } from '/common/types'
 import { escapeRegex } from '/common/util'
@@ -165,6 +166,12 @@ export const streamCompletion: CompletionGenerator = async function* (
   }
 }
 
+/**
+ * This function contains the inserts logic for Chat models (Turbo, GPT4...)
+ * This logic also exists in other places:
+ * - common/prompt.ts fillPromptWithLines
+ * - srv/adapter/claude.ts createClaudePrompt
+ */
 export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): CompletionItem[] {
   if (opts.kind === 'plain') {
     return [{ role: 'system', content: opts.prompt }]
@@ -176,7 +183,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
   const history: CompletionItem[] = []
 
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
-  const gaslight = injectPlaceholders(
+  const { parsed: gaslight, inserts } = injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, opts.parts, [
       'history',
       'post',
@@ -194,7 +201,10 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
 
   const all = []
 
-  let maxBudget = (gen.maxContextLength || defaultPresets.openai.maxContextLength) - maxTokens
+  let maxBudget =
+    (gen.maxContextLength || defaultPresets.openai.maxContextLength) -
+    maxTokens -
+    encoder()([...inserts.values()].join(' '))
   let tokens = encoder()(gaslight)
 
   if (lines) {
@@ -210,14 +220,27 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
       encoder: encoder(),
-    })
+    }).parsed
     tokens += encoder()(post.content)
     history.push(post)
   }
 
   const examplePos = all.findIndex((l) => l.includes(SAMPLE_CHAT_MARKER))
 
-  for (let i = all.length - 1; i >= 0; i--) {
+  let i = all.length - 1
+  let addedAllInserts = false
+  const addRemainingInserts = () => {
+    const remainingInserts = insertsDeeperThanConvoHistory(inserts, all.length - i)
+    if (remainingInserts) {
+      history.push({
+        role: 'system',
+        content: remainingInserts,
+      })
+    }
+  }
+  while (i >= 0) {
+    const distanceFromBottom = all.length - 1 - i
+
     const line = all[i]
 
     const obj: CompletionItem = {
@@ -229,7 +252,13 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
     const isUser = line.startsWith(handle)
     const isBot = !isUser && !isSystem
 
+    const insert = inserts.get(distanceFromBottom)
+    if (insert) history.push({ role: 'system', content: insert })
+
     if (i === examplePos) {
+      addRemainingInserts()
+      addedAllInserts = true
+
       const { additions, consumed } = splitSampleChat({
         budget: maxBudget - tokens,
         sampleChat: obj.content,
@@ -237,9 +266,13 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
         sender: handle,
       })
 
-      if (tokens + consumed > maxBudget) continue
+      if (tokens + consumed > maxBudget) {
+        --i
+        continue
+      }
       history.push(...additions.reverse())
       tokens += consumed
+      --i
       continue
     } else if (isBot) {
     } else if (line === '<START>') {
@@ -253,11 +286,17 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
     }
 
     const length = encoder()(obj.content)
-    if (tokens + length > maxBudget) break
+    if (tokens + length > maxBudget) {
+      --i
+      break
+    }
     tokens += length
     history.push(obj)
+    --i
   }
-
+  if (!addedAllInserts) {
+    addRemainingInserts()
+  }
   return messages.concat(history.reverse())
 }
 
@@ -321,7 +360,7 @@ function getPostInstruction(
     lastMessage: opts.lastMessage,
     characters: opts.characters || {},
     encoder: encoder(),
-  })
+  }).parsed
 
   switch (opts.kind) {
     // These cases should never reach here

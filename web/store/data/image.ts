@@ -78,7 +78,7 @@ async function createSummarizedImagePrompt(opts: PromptEntities) {
   if (opts.user?.useLocalPipeline && pipelineApi.isAvailable().summary) {
     const { prompt } = await msgsApi.createActiveChatPrompt({ kind: 'summary' }, 1024)
     console.log('Using local summarization')
-    const res = await pipelineApi.summarize(prompt.template)
+    const res = await pipelineApi.summarize(prompt.template.parsed)
     if (res?.result) return res.result.summary
   }
 
@@ -110,7 +110,7 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   const template = getSummaryTemplate(settings.service!)
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
-  const prompt = parseTemplate(template, opts)
+  const prompt = parseTemplate(template, opts).parsed
   const values = await msgsApi.guidance<{ summary: string }>({
     prompt,
     settings,

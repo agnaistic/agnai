@@ -494,7 +494,7 @@ async function getGenerateProps(
       sender: entities.profile,
       impersonate: props.impersonate,
       repeatable: true,
-    })
+    }).parsed
   }
 
   const getBot = (id: string) => {
