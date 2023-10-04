@@ -2,6 +2,8 @@ import { neat } from '../util'
 
 export const gaslights = {
   Alpaca: neat`
+  {{system_prompt}}
+
   Below is an instruction that describes a task. Write a response that appropriately completes the request.
   
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
@@ -19,7 +21,10 @@ export const gaslights = {
   {{ujb}}
   ### Response:
   {{post}}`,
-  Airoboros: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.
+  Airoboros: neat`
+  {{system_prompt}}
+
+  Below is an instruction that describes a task. Write a response that appropriately completes the request.
   
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
   
@@ -35,7 +40,10 @@ export const gaslights = {
   {{/each}}
   {{#if ujb}}USER:{{ujb}}{{/if}}
   ASSISTANT: {{post}}`,
-  NovelAI: neat`{{char}} Memory: {{memory}}
+  NovelAI: neat`
+  {{system_prompt}}
+
+  {{char}} Memory: {{memory}}
   Description of {{char}}: {{personality}}
   
   How {{char}} speaks: {{example_dialogue}}
@@ -56,7 +64,10 @@ export const gaslights = {
   {{ujb}}
   {{post}}
   `,
-  Metharme: neat`<|system|>Below is an instruction that describes a task. Write a response that appropriately completes the request.
+  Metharme: neat`
+  {{system_prompt}}
+
+  <|system|>Below is an instruction that describes a task. Write a response that appropriately completes the request.
 
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
   

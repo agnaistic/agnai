@@ -162,7 +162,7 @@ function getSummaryTemplate(service: AIAdapter) {
       {{/each}}
 
       ### Instruction:
-      Write an image caption of the current scene including the character's appearance.
+      Write an image caption of the current scene using physical descriptions without names.
 
       ### Response:
       Image caption: [summary | tokens=250]

@@ -98,15 +98,9 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
 
-  const stops = Array.isArray(preset.stopSequences) ? preset.stopSequences.slice() : []
-  if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
-    for (const stop of opts.gen.stopSequences) {
-      stops.push(stop)
-    }
-  }
-
-  stops.push('###', 'USER:', 'ASSISTANT:')
-  opts.gen.stopSequences = stops
+  const userStops = Array.isArray(opts.gen.stopSequences) ? opts.gen.stopSequences : []
+  const subStops = Array.isArray(preset.stopSequences) ? preset.stopSequences.slice() : []
+  const allStops = Array.from(new Set(userStops.concat(subStops).filter((s) => !!s)).values())
 
   const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''
   if (preset.service && preset.service !== 'agnaistic') {
@@ -165,7 +159,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, stops)
+  const body = getTextgenPayload(opts, allStops)
 
   yield { prompt: body.prompt }
 
