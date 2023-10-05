@@ -181,9 +181,7 @@ const GeneralSettings: Component<
     version: props.inherit?.replicateModelVersion,
   })
 
-  const [tokens, setTokens] = createSignal(
-    props.inherit?.maxTokens || defaultPresets.basic.maxTokens
-  )
+  const [tokens, setTokens] = createSignal(props.inherit?.maxTokens || 150)
 
   const [context, setContext] = createSignal(
     props.inherit?.maxContextLength || defaultPresets.basic.maxContextLength
@@ -398,7 +396,7 @@ const GeneralSettings: Component<
           min={16}
           max={1024}
           step={1}
-          value={props.inherit?.maxTokens || defaultPresets.basic.maxTokens}
+          value={props.inherit?.maxTokens || 150}
           disabled={props.disabled}
           format={props.format}
           onChange={(val) => setTokens(val)}

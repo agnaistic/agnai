@@ -227,7 +227,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   let generated = ''
   let error = false
-  let meta = {}
+  let meta = { ctx: entities.settings.maxContextLength }
 
   const messageId =
     body.kind === 'retry'
@@ -496,7 +496,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const requestId = v4()
   res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
-  const { stream, adapter } = await createTextStreamV2(
+  const { stream, adapter, ...entities } = await createTextStreamV2(
     { ...body, chat, replyAs, requestId },
     log,
     guest
@@ -506,7 +506,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   let generated = ''
   let error = false
-  let meta = {}
+  let meta = { ctx: entities.settings.maxContextLength }
 
   const messageId =
     body.kind === 'retry'
@@ -580,6 +580,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
         adapter,
         continue: body.kind === 'continue',
         generate: true,
+        meta,
       })
       return
   }
