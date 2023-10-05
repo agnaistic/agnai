@@ -129,7 +129,30 @@ export function parseTemplate(template: string, opts: TemplateOpts) {
 
 function render(template: string, opts: TemplateOpts) {
   try {
-    const ast = parser.parse(template, {}) as PNode[]
+    const orig = parser.parse(template, {}) as PNode[]
+    const ast: PNode[] = []
+
+    /**
+     * When condition nodes are at the beginning a new line then the linebreak should
+     * only be rendered if the condition is rendered
+     * We will move the line break to the beginning of the condition children
+     */
+    for (let i = 0; i < orig.length; i++) {
+      const node = orig[i]
+      if (node !== '\n') {
+        ast.push(node)
+        continue
+      }
+
+      const next = orig[i + 1]
+      if (!next || typeof next === 'string' || next.kind !== 'if') {
+        ast.push(node)
+        continue
+      }
+
+      next.children.unshift('\n')
+      continue
+    }
 
     const inserts = ast.filter(
       (node) => typeof node !== 'string' && node.kind === 'history-insert'
@@ -144,6 +167,7 @@ function render(template: string, opts: TemplateOpts) {
     }
 
     const output: string[] = []
+
     for (const parent of ast) {
       const result = renderNode(parent, opts)
       if (result) output.push(result)
@@ -290,7 +314,14 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
       }
 
       switch (child.kind) {
-        case 'if':
+        case 'if': {
+          const condition = getPlaceholder(child, opts)
+          if (!condition) break
+
+          const result = renderNode(child, opts)
+          if (result) curr += result
+          break
+        }
         case 'placeholder': {
           const result = renderNode(child, opts)
           if (result) curr += result

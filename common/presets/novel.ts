@@ -1,5 +1,6 @@
 import { NOVEL_MODELS } from '../adapters'
 import { AppSchema } from '../types/schema'
+import { templates } from './templates'
 
 export const novelPresets = {
   novel_kayra: {
@@ -24,7 +25,6 @@ export const novelPresets = {
     cfgOppose: '',
     streamResponse: true,
     typicalP: 1,
-    useGaslight: true,
     gaslight: `{{char}} Memory: {{memory}}
 Description of {{char}}: {{personality}}
 
@@ -54,7 +54,6 @@ Summary: {{scenario}}
     topA: 0.075,
     order: [1, 3, 4, 0, 2],
     streamResponse: true,
-    useGaslight: true,
     gaslight: `{{char}} Memory: {{memory}}
 Description of {{char}}: {{personality}}
 
@@ -77,7 +76,7 @@ Summary: {{scenario}}`,
     topK: 20,
     topP: 1,
     order: [0, 1, 2, 3],
-    useGaslight: false,
+    novelModel: templates.NovelAI,
   },
   novel_blueLighter: {
     name: 'Blue Lighter',
@@ -94,6 +93,6 @@ Summary: {{scenario}}`,
     typicalP: 0.965,
     topA: 0.085,
     order: [3, 4, 5, 2, 0],
-    useGaslight: false,
+    gaslight: templates.NovelAI,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

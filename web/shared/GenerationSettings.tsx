@@ -32,7 +32,7 @@ import {
   storage,
 } from './util'
 import { createStore } from 'solid-js/store'
-import { defaultTemplate } from '/common/templates'
+import { defaultTemplate } from '/common/mode-templates'
 import Sortable, { SortItem } from './Sortable'
 import { HordeDetails } from '../pages/Settings/components/HordeAISettings'
 import Button from './Button'
@@ -465,28 +465,6 @@ const PromptSettings: Component<
             include={['char', 'user']}
             placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
             value={props.inherit?.systemPrompt ?? ''}
-            disabled={props.disabled}
-          />
-        </Card>
-
-        <Card
-          class="flex flex-col gap-4"
-          hide={!serviceHasSetting(props.service, props.format, 'gaslight')}
-        >
-          <Toggle
-            fieldName="useGaslight"
-            label="Use Prompt Template"
-            helperText={
-              <>
-                If enabled the <b>Prompt Template</b> text will be the prompt sent to the AI
-                service.
-                <p class="font-bold">
-                  CAUTION: You assume full control of the prompt. If you do not include the{' '}
-                  <b>placeholders</b>, they will not be included in the prompt!
-                </p>
-              </>
-            }
-            value={props.inherit?.useGaslight ?? !!props.inherit?.gaslight}
             disabled={props.disabled}
           />
         </Card>

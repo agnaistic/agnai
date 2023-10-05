@@ -4,7 +4,7 @@ import Button from '/web/shared/Button'
 import { presetStore } from '/web/store/presets'
 import { Copy, Plus, Save, Trash } from 'lucide-solid'
 import Divider from '/web/shared/Divider'
-import { gaslights } from '/common/presets/common'
+import { templates } from '../../../common/presets/templates'
 import { useRootModal } from '/web/shared/hooks'
 import Modal from '/web/shared/Modal'
 import PromptEditor from '/web/shared/PromptEditor'
@@ -23,7 +23,7 @@ const PromptTemplates: Component = () => {
   const [initial, setInitial] = createSignal<string>()
 
   const builtins = createMemo(() =>
-    Object.entries(gaslights).map(([name, template]) => ({
+    Object.entries(templates).map(([name, template]) => ({
       name,
       template,
     }))

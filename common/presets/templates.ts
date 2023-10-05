@@ -1,6 +1,6 @@
 import { neat } from '../util'
 
-export const gaslights = {
+export const templates = {
   Alpaca: neat`
   {{system_prompt}}
 
@@ -9,11 +9,13 @@ export const gaslights = {
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
   
   {{char}}'s Persona: {{personality}}
-  
-  The scenario of the conversation: {{scenario}}
-  
-  This is how {{char}} should talk: {{example_dialogue}}
-  
+
+  {{#if memory}}{{char}}'s Memory: {{memory}}
+  {{/if}}
+  {{#if scenario}}The scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{/if}}
   Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
   
   {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
@@ -30,10 +32,13 @@ export const gaslights = {
   
   {{char}}'s Persona: {{personality}}
   
-  This scenario of the conversation: {{scenario}}
-  
-  This is how {{char}} should talk: {{example_dialogue}}
-  
+  {{#if memory}}{{char}}'s Memories:
+  {{memory}}
+  {{/if}}
+  {{#if scenario}}This scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{/if}}
   Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
   
   {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
@@ -43,7 +48,7 @@ export const gaslights = {
   NovelAI: neat`
   {{system_prompt}}
 
-  {{char}} Memory: {{memory}}
+  {{#if memory}}{{char}}'s Memory: {{memory}}{{/if}}
   Description of {{char}}: {{personality}}
   
   How {{char}} speaks: {{example_dialogue}}
@@ -55,10 +60,14 @@ export const gaslights = {
   {{ujb}}
   {{post}}`,
   Pyg: neat`{{char}}'s Persona: {{personality}}
-  Scenario: {{scenario}}
-  Facts:{{memory}}
-  
-  How {{char}} speaks: {{example_dialogue}}
+
+  {{#if scenario}}Scenario: {{scenario}}
+  {{/if}}
+  {{#if memory}}Facts:{{memory}}
+  {{/if}}
+  {{#if example_dialogue}}How {{char}} speaks: {{example_dialogue}}
+  {{/if}}
+
   <START>
   {{history}}
   {{ujb}}
@@ -72,15 +81,16 @@ export const gaslights = {
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
   
   {{char}}'s Persona: {{personality}}
-  
-  This scenario of the conversation: {{scenario}}
-  
-  This is how {{char}} should talk: {{example_dialogue}}
-  
+  {{#if memory}}{{char}}'s Memory: {{memory}}
+  {{/if}}
+  {{#if scenario}}This scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{/if}}
   Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.
   
   {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
   {{/each}}
-  {{#if ujb}}<|system|>{{ujb}}{{/if}}
-  <|model|>{{post}}`,
+  {{#if ujb}}<|system|>{{ujb}}
+  {{/if}}<|model|>{{post}}`,
 }

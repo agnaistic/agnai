@@ -4,10 +4,11 @@ import { neat } from './util'
 
 export const defaultTemplate = `
 {{char}}'s Persona: {{personality}}
-Scenario: {{scenario}}
-Facts:{{memory}}
 
-How {{char}} speaks: {{example_dialogue}}
+{{#if scenario}}Scenario: {{scenario}}{{/if}}
+{{#if memory}}Facts:{{memory}}{{/if}}
+{{#if example_dialogue}}How {{char}} speaks: {{example_dialogue}}
+{{/if}}
 <START>`.trim()
 
 export const classifyTemplate = `

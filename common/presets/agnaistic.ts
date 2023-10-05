@@ -1,6 +1,6 @@
 import { OPENAI_MODELS } from '../adapters'
 import { AppSchema } from '../types'
-import { gaslights } from './common'
+import { templates } from './templates'
 
 export const agnaiPresets = {
   agnai: {
@@ -24,15 +24,13 @@ export const agnaiPresets = {
     skipSpecialTokens: true,
     frequencyPenalty: 0,
     presencePenalty: 0,
-    useTemplateParser: true,
-    gaslight: gaslights.Alpaca,
+    gaslight: templates.Alpaca,
     ultimeJailbreak: '',
     oaiModel: OPENAI_MODELS.Turbo,
     streamResponse: true,
     memoryDepth: 50,
     memoryContextLimit: 500,
     memoryReverseWeight: false,
-    useGaslight: true,
     antiBond: false,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

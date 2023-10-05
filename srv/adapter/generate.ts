@@ -213,10 +213,6 @@ export async function createTextStreamV2(
     opts.settings = {}
   }
 
-  if (opts.kind.startsWith('send-event:')) {
-    opts.settings!.useTemplateParser = true
-  }
-
   if (opts.settings.stopSequences) {
     opts.settings.stopSequences = opts.settings.stopSequences
       .map((stop) => stop.replace(/\\n/g, '\n'))

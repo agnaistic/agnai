@@ -12,7 +12,6 @@ export const claudePresets = {
     streamResponse: false,
     maxTokens: 500,
     maxContextLength: 7600,
-    useGaslight: true,
     ignoreCharacterSystemPrompt: false,
     ignoreCharacterUjb: false,
     systemPrompt: `<writing_task>

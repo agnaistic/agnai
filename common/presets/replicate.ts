@@ -11,13 +11,7 @@ export const replicatePresets = {
     service: 'replicate',
     maxTokens: 500,
     maxContextLength: 2048,
-    useGaslight: true,
-    gaslight: `{{char}}' Persona: {{personality}}
-Scenario: {{scenario}}
-Facts: {{memory}}
-<START>
-[DIALOGUE HISTORY]
-{{example_dialogue}}`,
+    gaslight: ``,
   },
   replicate_stablelm_7b: {
     name: 'Replicate (StableLM Tuned Alpha 7B)',
@@ -29,13 +23,7 @@ Facts: {{memory}}
     service: 'replicate',
     maxTokens: 100,
     maxContextLength: 2048,
-    useGaslight: true,
-    gaslight: `Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition.
-Description of {{char}}:
-{{personality}}
-Circumstances and context of the dialogue: {{scenario}}
-Facts: {{memory}}
-This is how {{char}} should talk: {{example_dialogue}}`,
+    gaslight: ``,
   },
   replicate_open_assistant_pythia_12b: {
     name: 'Replicate (Open-Assistant Pythia 12B)',
@@ -47,11 +35,6 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     service: 'replicate',
     maxTokens: 500,
     maxContextLength: 2048,
-    useGaslight: true,
-    gaslight: `{{char}}' Persona: {{personality}}
-Scenario: {{scenario}}
-Facts: {{memory}}
-This is how the character should talk:
-{{example_dialogue}}`,
+    gaslight: ``,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

@@ -26,7 +26,6 @@ export const hordePresets = {
     memoryDepth: 50,
     memoryContextLimit: 256,
     memoryReverseWeight: false,
-    useGaslight: false,
     antiBond: false,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
