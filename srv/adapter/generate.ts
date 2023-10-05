@@ -240,7 +240,7 @@ export async function createTextStreamV2(
    */
   const subContextLimit = subscription?.preset?.maxContextLength
   if (subContextLimit) {
-    opts.settings.maxContextLength = Math.min(subContextLimit, subContextLimit)
+    opts.settings.maxContextLength = subContextLimit
   }
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
