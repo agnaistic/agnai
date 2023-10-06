@@ -658,9 +658,9 @@ export const CreateCharacterForm: Component<{
                 <RangeInput
                   fieldName="insertDepth"
                   label="Insert Depth"
-                  helperText="The number of messages (from the bottom) that should exist under the Insert. Values between 1 and 5 are recommended."
+                  helperText="The number of messages that should exist under the Insert. Values between 1 and 5 are recommended."
                   min={0}
-                  max={50}
+                  max={10}
                   step={1}
                   value={editor.state.insert.depth}
                 />

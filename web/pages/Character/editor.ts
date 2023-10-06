@@ -63,7 +63,8 @@ export const newCharGuard = {
   sampleChat: 'string',
   systemPrompt: 'string',
   postHistoryInstructions: 'string',
-  insert: 'any?',
+  insertPrompt: 'string',
+  insertDepth: 'number',
   creator: 'string',
   characterVersion: 'string',
 } as const
@@ -347,7 +348,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     // New fields start here
     systemPrompt: body.systemPrompt ?? '',
     postHistoryInstructions: body.postHistoryInstructions ?? '',
-    insert: body.insert,
+    insert: body.insertPrompt ? { prompt: body.insertPrompt, depth: body.insertDepth } : undefined,
     alternateGreetings: state.alternateGreetings ?? [],
     characterBook: state.book,
     creator: body.creator ?? '',

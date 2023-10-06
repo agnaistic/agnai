@@ -19,10 +19,15 @@ const RangeInput: Component<{
   aiSetting?: keyof PresetAISettings
   parentClass?: string
 }> = (props) => {
+  const [previousPropsValue, setPreviousPropsValue] = createSignal(props.value)
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
 
   function updateRangeSliders() {
+    if (props.value !== previousPropsValue()) {
+      setValue(props.value)
+      setPreviousPropsValue(props.value)
+    }
     if (!input) return
     const value = Math.min(+input.value, +input.max)
     const nextSize = ((value - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
