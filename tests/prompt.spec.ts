@@ -183,8 +183,8 @@ This is how {{char}} should talk: {{example_dialogue}}`,
       },
     })
 
-    expect(actual.template.includes('Scenario')).to.equal(false)
-    expect(actual.template).toMatchSnapshot()
+    expect(actual.template.parsed.includes('Scenario')).to.equal(false)
+    expect(actual.template.parsed).toMatchSnapshot()
   })
 
   it('will include scenario when populated in condition', () => {
@@ -196,8 +196,8 @@ This is how {{char}} should talk: {{example_dialogue}}`,
       },
     })
 
-    expect(actual.template.includes('Populated scenario')).to.equal(true)
-    expect(actual.template).toMatchSnapshot()
+    expect(actual.template.parsed.includes('Populated scenario')).to.equal(true)
+    expect(actual.template.parsed).toMatchSnapshot()
   })
 })
 
