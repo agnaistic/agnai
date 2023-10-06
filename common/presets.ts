@@ -64,11 +64,9 @@ export const presetValidator = {
 
   claudeModel: 'string',
   streamResponse: 'boolean?',
-  useGaslight: 'boolean?',
   ultimeJailbreak: 'string?',
   prefill: 'string?',
   antiBond: 'boolean?',
-  useTemplateParser: 'boolean?',
 
   replicateModelType: 'string?',
   replicateModelVersion: 'string?',

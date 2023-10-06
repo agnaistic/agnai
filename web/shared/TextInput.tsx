@@ -1,7 +1,7 @@
 import { Component, Show, createMemo, JSX, createEffect, createSignal } from 'solid-js'
 import IsVisible from './IsVisible'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
-import { isValidServiceSetting } from './util'
+import { createDebounce, isValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
 
@@ -53,15 +53,19 @@ const TextInput: Component<{
     props.value !== undefined ? props.value : (null as unknown as undefined)
   )
 
-  const updateCount = async () => {
-    if (!props.tokenCount) return
+  const [countTokens] = createDebounce(async (text: string) => {
     const tokenizer = await getEncoder()
-    const count = tokenizer(inputRef?.value || '')
+    const count = tokenizer(text)
     setTokens(count)
 
     if (typeof props.tokenCount === 'function') {
       props.tokenCount(count)
     }
+  }, 500)
+
+  const updateCount = async () => {
+    if (!props.tokenCount) return
+    countTokens(inputRef?.value || '')
   }
 
   useEffect(() => {

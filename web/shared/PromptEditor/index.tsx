@@ -21,7 +21,7 @@ import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } fro
 import { ensureValidTemplate, getPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
-import { gaslights } from '/common/presets/common'
+import { templates } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore, toastStore } from '/web/store'
@@ -229,12 +229,11 @@ const PromptEditor: Component<
           helperText={
             <Show when={!props.hideHelperText}>
               <div>
-                <span class="text-green-600">Green</span> placeholders will be inserted
-                automatically if they are missing.
-              </div>
-              <div>
-                <span class="text-yellow-600">Yellow</span> placeholders will not be automatically
-                included if you do not include them.
+                Placeholders will{' '}
+                <b>
+                  <u>not</u>
+                </b>{' '}
+                be automatically included if you do not include them.
               </div>
             </Show>
           }
@@ -315,7 +314,7 @@ const Placeholder: Component<
     </div>
   )
 }
-const builtinTemplates = Object.keys(gaslights).map((key) => ({
+const builtinTemplates = Object.keys(templates).map((key) => ({
   label: `(Built-in) ${key}`,
   value: key,
 }))
@@ -328,12 +327,12 @@ const SelectTemplate: Component<{
   const state = presetStore((s) => ({ templates: s.templates }))
 
   const [opt, setOpt] = createSignal('Alpaca')
-  const [template, setTemplate] = createSignal(gaslights.Alpaca)
-  const [original, setOriginal] = createSignal(gaslights.Alpaca)
+  const [template, setTemplate] = createSignal(templates.Alpaca)
+  const [original, setOriginal] = createSignal(templates.Alpaca)
   const [filter, setFilter] = createSignal('')
 
-  const templates = createMemo(() => {
-    const base = Object.entries(gaslights).reduce(
+  const templateOpts = createMemo(() => {
+    const base = Object.entries(templates).reduce(
       (prev, [id, template]) => Object.assign(prev, { [id]: { name: id, template, user: false } }),
       {} as Record<string, { name: string; template: string; user: boolean }>
     )
@@ -350,14 +349,14 @@ const SelectTemplate: Component<{
   })
 
   const options = createMemo(() => {
-    return Object.entries(templates()).map(([id, temp]) => ({
+    return Object.entries(templateOpts()).map(([id, temp]) => ({
       label: temp.user ? temp.name : `(Built-in) ${temp.name}`,
       value: id,
     }))
   })
 
   const canSaveTemplate = createMemo(() => {
-    if (opt() in gaslights === true) return false
+    if (opt() in templates === true) return false
     return original() !== template()
   })
 
@@ -435,8 +434,8 @@ const SelectTemplate: Component<{
               value={opt()}
               onChange={(ev) => {
                 setOpt(ev.value)
-                setTemplate(templates()[ev.value].template)
-                setOriginal(templates()[ev.value].template)
+                setTemplate(templateOpts()[ev.value].template)
+                setOriginal(templateOpts()[ev.value].template)
               }}
             />
           </div>

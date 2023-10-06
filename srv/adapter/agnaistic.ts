@@ -93,20 +93,22 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   // Max tokens and max context limit are decided by the subscription preset
+  // We've already set the max context length prior to calling this handler
   opts.gen.maxTokens = Math.min(preset.maxTokens, opts.gen.maxTokens || 80)
-  opts.gen.maxContextLength = Math.min(preset.maxContextLength!, opts.gen.maxContextLength!)
   opts.gen.thirdPartyUrl = preset.thirdPartyUrl
   opts.gen.thirdPartyFormat = preset.thirdPartyFormat
 
-  const stops = Array.isArray(preset.stopSequences) ? preset.stopSequences.slice() : []
+  const stops = Array.isArray(preset.stopSequences)
+    ? new Set(preset.stopSequences)
+    : new Set<string>()
+
   if (Array.isArray(opts.gen.stopSequences) && opts.gen.stopSequences.length) {
     for (const stop of opts.gen.stopSequences) {
-      stops.push(stop)
+      stops.add(stop)
     }
   }
 
-  stops.push('###', 'USER:', 'ASSISTANT:')
-  opts.gen.stopSequences = stops
+  const allStops = Array.from(stops.values())
 
   const key = (preset.subApiKey ? decryptText(preset.subApiKey) : config.auth.inferenceKey) || ''
   if (preset.service && preset.service !== 'agnaistic') {
@@ -165,7 +167,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, stops)
+  const body = getTextgenPayload(opts, allStops)
 
   yield { prompt: body.prompt }
 

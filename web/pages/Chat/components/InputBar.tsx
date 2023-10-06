@@ -26,6 +26,7 @@ import { useAppContext } from '/web/store/context'
 import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 import WizardIcon from '/web/icons/WizardIcon'
 import { EVENTS, events } from '/web/emitter'
+import { AutoComplete } from '/web/shared/AutoComplete'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -40,7 +41,7 @@ const InputBar: Component<{
   more: (msg: string) => void
   request: (charId: string) => void
 }> = (props) => {
-  let ref: any
+  let ref: HTMLTextAreaElement
 
   const [ctx] = useAppContext()
 
@@ -70,6 +71,28 @@ const InputBar: Component<{
   const [text, setText] = createSignal(draft.text)
   const [menu, setMenu] = createSignal(false)
   const [cleared, setCleared] = createSignal(0, { equals: false })
+  const [complete, setComplete] = createSignal(false)
+
+  const completeOpts = createMemo(() => {
+    const list = ctx.activeBots.map((char) => ({ label: char.name, value: char._id }))
+    return list
+  })
+
+  const onCompleteSelect = (opt: { label: string }) => {
+    setComplete(false)
+    let prev = text()
+    const before = prev.slice(0, ref.selectionStart - 1)
+    const after = prev.slice(ref.selectionStart)
+    const next = `${before}${opt.label}${after}`
+    setText(next)
+    saveDraft(next)
+    ref.focus()
+    ref.setSelectionRange(
+      before.length + opt.label.length,
+      before.length + opt.label.length,
+      'none'
+    )
+  }
 
   const placeholder = createMemo(() => {
     if (props.ooc) return 'Send a message... (OOC)'
@@ -182,20 +205,35 @@ const InputBar: Component<{
         </div>
       </Show>
 
+      <Show when={complete()}>
+        <AutoComplete
+          options={completeOpts()}
+          close={() => setComplete(false)}
+          onSelect={onCompleteSelect}
+          dir="up"
+          offset={44}
+        />
+      </Show>
+
       <TextInput
         fieldName="chatInput"
         isMultiline
         spellcheck
         lang={props.char?.culture}
-        ref={ref}
+        ref={ref! as any}
         value={text()}
         placeholder={placeholder()}
         parentClass="flex w-full"
         class="input-bar rounded-r-none hover:bg-[var(--bg-800)] active:bg-[var(--bg-800)]"
         onKeyDown={(ev) => {
+          if (ev.key === '@') {
+            setComplete(true)
+          }
+
           const isMobileDevice = /Mobi/i.test(window.navigator.userAgent)
           const canMobileSend = isMobileDevice ? user.ui.mobileSendOnEnter : true
           if (ev.key === 'Enter' && !ev.shiftKey && canMobileSend) {
+            if (complete()) return
             send()
             ev.preventDefault()
           }

@@ -235,7 +235,6 @@ export type PresetAISettings = Omit<
   | 'memoryReverseWeight'
   | 'src'
   | 'order'
-  | 'useGaslight'
 >
 
 /**
@@ -341,7 +340,6 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   thirdPartyUrl: 'Third Party URL',
   ultimeJailbreak: 'Jailbreak',
   prefill: 'Bot response prefilling',
-  useTemplateParser: 'Use V2 Prompt Parser',
   phraseRepPenalty: 'Phrase Repetition Penality',
   stopSequences: 'Stop Sequences',
   topG: 'Top G',

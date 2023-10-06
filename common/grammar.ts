@@ -93,13 +93,13 @@ HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "is
 Character "character" = ("char"i / "character"i / "bot"i) { return "char" }
 User "user" = "user"i { return "user" }
 Scenario "scenario" = "scenario"i { return "scenario" }
-Impersonate "impersonating" = ("impersonate"i / "impersonating"i) { return "impersonating" }
+Impersonate "impersonating" = ("impersonate"i / "impersonating"i / "impersonality"i) { return "impersonating" }
 Persona "personality" = ("personality"i / "persona"i) { return "personality" }
 AllPersona "all_personalities" = ("all_personas"i / "all_personalities"i) { return "all_personalities" }
 Dialogue "example_dialogue" = ("samplechat"i / "example_dialogue"i / "sample_chat"i / "example_dialog"i / "example_chat"i) { return "example_dialogue" }
 
 Instruction "instruction" = "system_prompt"i { return "system_prompt" }
-Jailbreak "ujb" = ("ujb"i / "system_note"i) { return "ujb" }
+Jailbreak "ujb" = ("ujb"i / "system_note"i / "jailbreak"i) { return "ujb" }
 Post "post" = "post"i { return "post" }
 Memory "memory" = "memory"i { return "memory" }
 Message "message" = ("msg"i / "message"i / "text"i) { return "message" }

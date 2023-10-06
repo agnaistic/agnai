@@ -213,10 +213,6 @@ export async function createTextStreamV2(
     opts.settings = {}
   }
 
-  if (opts.kind.startsWith('send-event:')) {
-    opts.settings!.useTemplateParser = true
-  }
-
   if (opts.settings.stopSequences) {
     opts.settings.stopSequences = opts.settings.stopSequences
       .map((stop) => stop.replace(/\\n/g, '\n'))
@@ -235,11 +231,12 @@ export async function createTextStreamV2(
   const handler = handlers[adapter]
 
   /**
-   * Context limits set by the subscription next to be present before the prompt is finalised
+   * Context limits set by the subscription need to be present before the prompt is finalised.
+   * We never need to use the users context length here as the subscription should contain the maximum possible context length.
    */
   const subContextLimit = subscription?.preset?.maxContextLength
-  if (subContextLimit && opts.settings?.maxContextLength) {
-    opts.settings.maxContextLength = Math.min(subContextLimit, opts.settings.maxContextLength)
+  if (subContextLimit) {
+    opts.settings.maxContextLength = subContextLimit
   }
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)

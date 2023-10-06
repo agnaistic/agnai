@@ -169,7 +169,7 @@ async function processImage(file: FileInputResult) {
   const character = Object.assign(parsed, { avatar: file.file }, { tags: parsed.tags || [] })
 
   toastStore.success(`Tavern card accepted`)
-  return character
+  return sanitiseCharacter(character)
 }
 
 async function processJSON(file: FileInputResult) {
@@ -178,5 +178,19 @@ async function processJSON(file: FileInputResult) {
   const char = jsonToCharacter(json)
   char.tags = char.tags || []
   toastStore.success('Character file accepted')
+  return sanitiseCharacter(char)
+}
+
+function sanitiseCharacter<T>(char: T): T {
+  for (const key in char) {
+    const prop = key as keyof T
+    const value = char[prop]
+    if (typeof value !== 'string') continue
+    char[prop] = (value as string)
+      .replace(/\\n/g, '\n')
+      .replace(/^You:/i, '{{user}}:')
+      .replace(/\nYou:/g, '\n{{user}}:') as any
+  }
+
   return char
 }

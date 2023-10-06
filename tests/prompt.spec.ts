@@ -30,7 +30,6 @@ describe('Prompt building', () => {
         gaslight: `{{char}}'s Persona: {{personality}}
 Scenario: {{scenario}}
 This is how {{char}} should talk: {{example_dialogue}}`,
-        useGaslight: true,
       },
     })
     expect(actual.template).toMatchSnapshot()
@@ -94,7 +93,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     const actual = build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
       {
-        settings: { gaslight: 'GASLIGHT {{user}}', useGaslight: true },
+        settings: { gaslight: 'GASLIGHT {{user}}' },
       }
     )
 
@@ -107,7 +106,6 @@ This is how {{char}} should talk: {{example_dialogue}}`,
       {
         settings: {
           gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts:{{memory}}',
-          useGaslight: true,
         },
       }
     )
@@ -121,7 +119,6 @@ This is how {{char}} should talk: {{example_dialogue}}`,
       {
         settings: {
           gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
-          useGaslight: false,
         },
       }
     )
@@ -152,14 +149,13 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template).toMatchSnapshot()
   })
 
-  it('will include example dialogue with omitted from template', () => {
+  it('will include example dialogue with omitted from template (no longer true)', () => {
     const actual = build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
       {
         char: { ...main, sampleChat: 'Bot: Example_Dialogue' },
         settings: {
           gaslight: 'GASLIGHT\n{{user}}\n{{char}}\nFacts: {{memory}}',
-          useGaslight: false,
         },
       }
     )
@@ -171,12 +167,37 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     const actual = build([botMsg('bot response')], {
       char: main,
       settings: {
-        useGaslight: true,
         gaslight: `GASLIGHT TEMPLATE\n{{user}}\n{{char}}\nAuto-injected text:`,
         ultimeJailbreak: '!!UJB_PROMPT!!',
       },
     })
     expect(actual).to.matchSnapshot()
+  })
+
+  it('will exclude scenario when empty in condition', () => {
+    const actual = build([botMsg('first')], {
+      char: { ...main, scenario: '' },
+      chat: toChat(main, { scenario: '' }),
+      settings: {
+        gaslight: `Roleplay instructions\n{{#if scenario}}Scenario: {{scenario}}{{/if}}`,
+      },
+    })
+
+    expect(actual.template.includes('Scenario')).to.equal(false)
+    expect(actual.template).toMatchSnapshot()
+  })
+
+  it('will include scenario when populated in condition', () => {
+    const actual = build([botMsg('first')], {
+      char: { ...main, scenario: 'Populated scenario' },
+      chat: toChat(main, { overrides: undefined }),
+      settings: {
+        gaslight: `Roleplay instructions\n{{#if scenario}}Scenario: {{scenario}}{{/if}}`,
+      },
+    })
+
+    expect(actual.template.includes('Populated scenario')).to.equal(true)
+    expect(actual.template).toMatchSnapshot()
   })
 })
 

@@ -378,8 +378,6 @@ export namespace AppSchema {
     name: string
     service?: AIAdapter
 
-    useTemplateParser?: boolean
-
     temp: number
     maxTokens: number
     maxContextLength?: number
@@ -416,7 +414,6 @@ export namespace AppSchema {
     systemPrompt?: string
     ignoreCharacterSystemPrompt?: boolean
     gaslight?: string
-    useGaslight?: boolean
     ultimeJailbreak?: string
     prefill?: string
     ignoreCharacterUjb?: boolean

@@ -1,5 +1,5 @@
 import { AppSchema } from '../types/schema'
-import { gaslights } from './common'
+import { templates } from './templates'
 
 export const oobaPresets = {
   llama: {
@@ -14,7 +14,7 @@ export const oobaPresets = {
     topK: 40,
     topP: 0.5,
     typicalP: 1,
-    useGaslight: false,
+    gaslight: templates.Alpaca,
   },
   mancer: {
     name: 'Mancer',
@@ -29,7 +29,6 @@ export const oobaPresets = {
     topP: 0.5,
     topA: 0,
     typicalP: 1,
-    useGaslight: true,
-    gaslight: gaslights.Alpaca,
+    gaslight: templates.Alpaca,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

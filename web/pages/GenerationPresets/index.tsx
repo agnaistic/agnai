@@ -225,7 +225,7 @@ export default GenerationPresetsPage
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
   name: '',
-  maxTokens: 80,
+  maxTokens: 150,
 }
 
 const EditPreset: Component<{
