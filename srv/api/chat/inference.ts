@@ -6,7 +6,7 @@ import { inferenceAsync } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
 import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
-import { cyoaTemplate } from '/common/templates'
+import { cyoaTemplate } from '/common/mode-templates'
 import { AIAdapter } from '/common/adapters'
 import { parseTemplate } from '/common/template-parser'
 
