@@ -149,7 +149,7 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template).toMatchSnapshot()
   })
 
-  it('will include example dialogue with omitted from template', () => {
+  it('will include example dialogue with omitted from template (no longer true)', () => {
     const actual = build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('TIE-TRIGGER'), toMsg('20-TRIGGER')],
       {

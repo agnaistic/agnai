@@ -80,25 +80,24 @@ OtherBot:"
 `;
 
 exports[`Prompt building will exclude scenario when empty in condition 1`] = `
-"OtherBot's Persona: OtherBot replies a lot
+"Roleplay instructions
 
-
-How OtherBot speaks: SAMPLECHAT OtherBot
-
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: first
 OtherBot:"
 `;
 
-exports[`Prompt building will include example dialogue with omitted from template 1`] = `
-"OtherBot's Persona: OtherBot replies a lot
-
-Scenario: MAIN MainChar
-Facts:ENTRY ONE
+exports[`Prompt building will include example dialogue with omitted from template (no longer true) 1`] = `
+"GASLIGHT
+ChatOwner
+OtherBot
+Facts: ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-How OtherBot speaks: SAMPLECHAT OtherBot
-
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
@@ -148,11 +147,10 @@ OtherBot:"
 `;
 
 exports[`Prompt building will include scenario when populated in condition 1`] = `
-"OtherBot's Persona: OtherBot replies a lot
-
+"Roleplay instructions
 Scenario: Populated scenario
-How OtherBot speaks: SAMPLECHAT OtherBot
-
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: first
 OtherBot:"
@@ -210,14 +208,14 @@ OtherBot:"
 `;
 
 exports[`Prompt building will not use the gaslight when set to false 1`] = `
-"OtherBot's Persona: OtherBot replies a lot
-
-Scenario: MAIN MainChar
-Facts:ENTRY ONE
+"GASLIGHT
+ChatOwner
+OtherBot
+Facts: ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-How OtherBot speaks: SAMPLECHAT OtherBot
-
+How OtherBot speaks:
+SAMPLECHAT OtherBot
 <START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
