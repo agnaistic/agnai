@@ -35,7 +35,7 @@ const characterValidator = {
 
   // v2 fields start here
   alternateGreetings: 'string?',
-  characterBook: 'string?',
+  characterBook: 'any?',
   extensions: 'string?',
   systemPrompt: 'string?',
   postHistoryInstructions: 'string?',
@@ -68,8 +68,13 @@ const createCharacter = handle(async (req) => {
   const tags = toArray(body.tags)
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
 
-  const characterBook = body.characterBook ? JSON.parse(body.characterBook) : undefined
-  if (characterBook !== undefined) {
+  const characterBook = body.characterBook
+    ? typeof body.characterBook === 'string'
+      ? JSON.parse(body.characterBook)
+      : body.characterBook
+    : undefined
+
+  if (!!characterBook) {
     assertValid(validBook, characterBook)
   }
 
