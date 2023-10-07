@@ -19,6 +19,7 @@ export type SettingState = {
     loading: boolean
     ttl: number
   }
+  announcements: AppSchema.Announcement[]
   showMenu: boolean
   showImpersonate: boolean
   fullscreen: boolean
@@ -65,6 +66,7 @@ const initState: SettingState = {
   workers: [],
   imageWorkers: [],
   pipelineOnline: false,
+  announcements: [],
   config: {
     registered: [],
     adapters: [],

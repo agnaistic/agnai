@@ -132,7 +132,23 @@ const Navigation: Component = () => {
           </Show>
         </div>
 
-        <div class="absolute bottom-0 flex h-4 w-full flex-col items-center justify-between px-4">
+        <div
+          class="absolute bottom-0 flex w-full flex-col items-center justify-between px-4"
+          classList={{
+            'h-8': state.config.policies,
+            'h-4': !state.config.policies,
+          }}
+        >
+          <Show when={state.config.policies}>
+            <div class="text-500 flex w-full justify-center gap-2 text-xs">
+              <div>
+                <A href="/terms-of-service">Term of Service</A>
+              </div>
+              <div>
+                <A href="/privacy-policy">Privacy Policy</A>
+              </div>
+            </div>
+          </Show>
           <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
         </div>
       </div>

@@ -68,18 +68,18 @@ export function toDuration(valueSecs: number, full?: boolean) {
   }
 
   if (days) {
-    return `${days} days`
+    return `${days} ${days > 1 ? 'days' : 'day'}`
   }
 
   if (hours) {
-    return `${hours} hours`
+    return `${hours} ${hours > 1 ? 'hours' : 'hour'}`
   }
 
   if (minutes) {
-    return `${minutes} mins`
+    return `${minutes} ${minutes > 1 ? 'mins' : 'min'}`
   }
 
-  return `${seconds} seconds`
+  return `${seconds} ${seconds > 1 ? 'seconds' : 'second'}`
 }
 
 export function elapsedSince(date: string | Date, offsetMs: number = 0) {
