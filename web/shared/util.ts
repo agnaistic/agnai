@@ -495,9 +495,12 @@ export function getAISettingServices(prop?: keyof PresetAISettings) {
   if (!prop) return
   const cfg = settingStore((s) => s.config)
   const base = adapterSettings[prop]
-  const services = cfg.registered.filter((reg) => reg.options.includes(prop)).map((reg) => reg.name)
+  const names: Array<AIAdapter | ThirdPartyFormat> = []
+  for (const reg of cfg.registered) {
+    if (reg.options.includes(prop)) names.push(reg.name)
+  }
 
-  return base?.concat(services)
+  return base?.concat(names)
 }
 
 export function isValidServiceSetting(
@@ -514,8 +517,12 @@ export function isValidServiceSetting(
   if (!format) return false
 
   if (service !== 'kobold') return false
-  const included = services.some((s) => s === format)
-  return included
+
+  for (const srv of services) {
+    if (srv === format) return true
+  }
+
+  return false
 }
 
 export function applyDotProperty<T>(obj: T, property: string, value: any) {

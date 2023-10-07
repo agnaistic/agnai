@@ -63,9 +63,7 @@ const HomePage: Component = () => {
           <TitleCard type="bg" title="Guides" class="" center>
             <div class="flex flex-wrap justify-center gap-2">
               <A href="/guides/pipeline">
-                <Pill inverse type="hl">
-                  Pipeline Guide
-                </Pill>
+                <Pill inverse>Pipeline Guide</Pill>
               </A>
               <a>
                 <Pill inverse onClick={() => setSub(Sub.OpenAI)}>

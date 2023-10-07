@@ -93,7 +93,7 @@ export const ServiceOption: Component<{
           fieldName={field()}
           label={props.opt.label}
           helperText={props.opt.helperText}
-          value={props.value}
+          value={!!props.value}
           onChange={props.onChange}
         />
       </Match>
