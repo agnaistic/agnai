@@ -1,6 +1,6 @@
 import { Component, For, Match, Show, Switch, onMount } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
-import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
+import { Eye, EyeOff, Plus, Save, Trash } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import TextInput from '/web/shared/TextInput'
 import { useNavigate, useParams } from '@solidjs/router'
@@ -37,6 +37,14 @@ const AnnoucementList: Component = (props) => {
     announceStore.getAllAdmin()
   })
 
+  const hide = (id: string) => {
+    announceStore.update(id, { hide: true })
+  }
+
+  const unhide = (id: string) => {
+    announceStore.update(id, { hide: false })
+  }
+
   return (
     <>
       <PageHeader title="Manage Announcements" />
@@ -53,7 +61,7 @@ const AnnoucementList: Component = (props) => {
               <div
                 class="flex w-full cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-[var(--bg-700)]"
                 classList={{
-                  hidden: !!item.delatedAt,
+                  hidden: !!item.deletedAt,
                   'bg-900': item.hide,
                   'bg-[var(--hl-700)]': !item.hide && item.showAt >= now(),
                   'bg-800': !item.hide && item.showAt < now(),
@@ -67,16 +75,19 @@ const AnnoucementList: Component = (props) => {
                   {Label(item)}
                 </div>
               </div>
-              <Button>
+              <div class="flex min-w-fit gap-2">
                 <Show when={!item.hide}>
-                  Hide <Eye />
+                  <Button onClick={() => hide(item._id)}>
+                    <Eye /> Hide
+                  </Button>
                 </Show>
-              </Button>
-              <Show when={item.hide}>
-                <Button>
-                  Un-hide <EyeOff />
-                </Button>
-              </Show>
+
+                <Show when={item.hide}>
+                  <Button schema="gray" onClick={() => unhide(item._id)}>
+                    <EyeOff /> Unhide
+                  </Button>
+                </Show>
+              </div>
             </div>
           )}
         </For>
@@ -88,7 +99,7 @@ const AnnoucementList: Component = (props) => {
 function Label(item: AppSchema.Announcement) {
   const date = new Date(item.showAt)
 
-  if (item.delatedAt) return <Pill type="rose">Deleted</Pill>
+  if (item.deletedAt) return <Pill type="rose">Deleted</Pill>
   if (item.hide) return <Pill type="coolgray">Hidden</Pill>
   if (date.valueOf() >= Date.now()) return <Pill type="premium">Pending</Pill>
   return <Pill type="green">Active</Pill>

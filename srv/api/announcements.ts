@@ -26,7 +26,7 @@ const getAdminAnnouncements = handle(async () => {
 
 const updateAnnouncement = handle(async (req) => {
   const id = req.params.id
-  assertValid(valid, req.body)
+  assertValid(valid, req.body, true)
 
   const next = await store.announce.updateAnnouncement(id, req.body)
   return next

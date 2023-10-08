@@ -480,13 +480,13 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   // For authenticated users we will verify parts of the payload
   let newMsg: AppSchema.ChatMessage | undefined
   if (body.kind === 'send' || body.kind === 'ooc') {
-    newMsg = newMessage(messageId, chatId, body.text!, {
+    newMsg = newMessage(v4(), chatId, body.text!, {
       userId: 'anon',
       ooc: body.kind === 'ooc',
       event: undefined,
     })
   } else if (body.kind.startsWith('send-event:')) {
-    newMsg = newMessage(messageId, chatId, body.text!, {
+    newMsg = newMessage(v4(), chatId, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
       event: body.kind.split(':')[1] as AppSchema.EventTypes,

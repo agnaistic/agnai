@@ -10,7 +10,7 @@ export async function getAnnouncements() {
     .sort({ showAt: -1 })
     .toArray()
 
-  return list.filter((l) => !l.delatedAt)
+  return list.filter((l) => !l.deletedAt)
 }
 
 async function getAnnoucement(id: string) {

@@ -56,7 +56,7 @@ export namespace AppSchema {
 
     createdAt: string
     updatedAt: string
-    delatedAt?: string
+    deletedAt?: string
   }
 
   export interface SubscriptionTier {
