@@ -75,6 +75,8 @@ type CardType =
   | 'truegray'
   | 'bluegray'
   | 'coolgray'
+  | 'green'
+  | 'lime'
 
 export const TitleCard: Component<{
   children: JSX.Element

@@ -12,7 +12,7 @@ import {
   Switch,
 } from 'solid-js'
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
-import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Menu, VenetianMask } from 'lucide-solid'
+import { ArrowDownLeft, ArrowUpRight, ChevronLeft, Settings, VenetianMask } from 'lucide-solid'
 import ChatExport from './ChatExport'
 import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
@@ -432,7 +432,7 @@ const ChatDetail: Component = () => {
                 </div>
 
                 <div class="" onClick={() => setShowOpts(true)}>
-                  <Menu class="icon-button" />
+                  <Settings class="icon-button" />
                   <DropMenu
                     show={showOpts()}
                     close={() => setShowOpts(false)}

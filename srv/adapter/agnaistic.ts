@@ -92,6 +92,22 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
+  const useRecommended = !!opts.gen.registered?.agnaistic?.useRecommended
+  if (useRecommended) {
+    const {
+      memoryChatEmbedLimit,
+      memoryContextLimit,
+      memoryDepth,
+      memoryReverseWeight,
+      memoryUserEmbedLimit,
+      ultimeJailbreak,
+      systemPrompt,
+      stopSequences,
+      ...recommended
+    } = preset
+    Object.assign(opts.gen, recommended)
+  }
+
   // Max tokens and max context limit are decided by the subscription preset
   // We've already set the max context length prior to calling this handler
   opts.gen.maxTokens = Math.min(preset.maxTokens, opts.gen.maxTokens || 80)
@@ -272,6 +288,14 @@ registerAdapter('agnaistic', handleAgnaistic, {
         secret: false,
         label: 'Tier/Model',
         setting: { type: 'list', options: opts },
+      },
+      {
+        preset: true,
+        field: 'useRecommended',
+        secret: false,
+        label: 'Use Recommended Settings',
+        helperText: 'Use the settings provided by the subscription',
+        setting: { type: 'boolean' },
       },
     ]
   },

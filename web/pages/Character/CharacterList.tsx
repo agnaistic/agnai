@@ -296,7 +296,7 @@ const Characters: Component<{
                   <Show when={showGrouping()}>
                     <h2 class="text-xl font-bold">{group.label}</h2>
                   </Show>
-                  <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
+                  <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(140px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
                     <For each={group.list}>
                       {(char) => (
                         <Character

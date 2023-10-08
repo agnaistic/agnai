@@ -1,4 +1,4 @@
-import { Component, JSX, For, createSignal, Show, Match, Switch } from 'solid-js'
+import { Component, JSX, For, createSignal, Show } from 'solid-js'
 import { DropMenu } from './DropMenu'
 import Button from './Button'
 import { CheckSquare, ChevronDown, Square, X, XSquare } from 'lucide-solid'
@@ -66,17 +66,22 @@ const TagSelect: Component<{
                       onClick={() => toggle(option.tag)}
                     >
                       <div class="ellipsis flex h-3/4 items-center gap-1">
-                        <Switch>
-                          <Match when={state.filter.includes(option.tag)}>
-                            <CheckSquare />
-                          </Match>
-                          <Match when={state.hidden.includes(option.tag)}>
-                            <XSquare />
-                          </Match>
-                          <Match when={true}>
-                            <Square />
-                          </Match>
-                        </Switch>
+                        <span classList={{ hidden: !state.filter.includes(option.tag) }}>
+                          <CheckSquare />
+                        </span>
+
+                        <span classList={{ hidden: !state.hidden.includes(option.tag) }}>
+                          <XSquare />
+                        </span>
+                        <span
+                          classList={{
+                            hidden:
+                              state.hidden.includes(option.tag) ||
+                              state.filter.includes(option.tag),
+                          }}
+                        >
+                          <Square />
+                        </span>
                         <span
                           classList={{ 'text-neutral-500': option.tag === 'archived' }}
                           class="select-none"

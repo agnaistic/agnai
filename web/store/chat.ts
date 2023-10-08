@@ -147,14 +147,7 @@ export const chatStore = createStore<ChatState>('chat', {
     })
 
     if (init.chats) {
-      chatStore.setState({
-        allChats: init.chats,
-        allChars: {
-          map: toMap(init.characters),
-          list: init.characters,
-        },
-        loaded: true,
-      })
+      chatStore.getAllChats()
     } else {
       chatStore.getAllChats()
     }

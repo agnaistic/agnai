@@ -1,8 +1,9 @@
-import { A } from '@solidjs/router'
+import { A, useLocation } from '@solidjs/router'
 import {
   Activity,
   Bell,
   Book,
+  ChevronRight,
   HeartHandshake,
   HelpCircle,
   LogIn,
@@ -132,7 +133,23 @@ const Navigation: Component = () => {
           </Show>
         </div>
 
-        <div class="absolute bottom-0 flex h-4 w-full flex-col items-center justify-between px-4">
+        <div
+          class="absolute bottom-0 flex w-full flex-col items-center justify-between px-4"
+          classList={{
+            'h-8': state.config.policies,
+            'h-4': !state.config.policies,
+          }}
+        >
+          <Show when={state.config.policies}>
+            <div class="text-500 flex w-full justify-center gap-4 text-xs">
+              <div>
+                <A href="/terms-of-service">Term of Service</A>
+              </div>
+              <div>
+                <A href="/privacy-policy">Privacy Policy</A>
+              </div>
+            </div>
+          </Show>
           <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
         </div>
       </div>
@@ -181,6 +198,17 @@ const UserNavigation: Component = () => {
         <Item href="/admin/metrics">
           <Activity /> Manage
         </Item>
+        <SubMenu>
+          <SubItem href="/admin/users" parent="/admin/">
+            Users
+          </SubItem>
+          <SubItem href="/admin/subscriptions" parent="/admin/">
+            Subscriptions
+          </SubItem>
+          <SubItem href="/admin/announcements" parent="/admin/">
+            Announcements
+          </SubItem>
+        </SubMenu>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
@@ -364,6 +392,32 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
         </A>
       </Show>
     </>
+  )
+}
+
+const SubMenu: Component<{ children: any }> = (props) => <div class="bg-900">{props.children}</div>
+
+const SubItem: Component<{
+  parent: string
+  href: string
+  children: string | JSX.Element
+  onClick?: () => void
+}> = (props) => {
+  const menu = settingStore()
+  const loc = useLocation()
+  return (
+    <Show when={loc.pathname.startsWith(props.parent)}>
+      <A
+        activeClass="bg-[var(--hl-900)]"
+        href={props.href!}
+        class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 pl-4 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
+        onClick={() => {
+          if (menu.showMenu) settingStore.closeMenu()
+        }}
+      >
+        <ChevronRight size={14} /> {props.children}
+      </A>
+    </Show>
   )
 }
 

@@ -130,18 +130,16 @@ export const ChatGenSettings: Component<{
     }
 
     if (!isDefaultPreset(preset)) {
-      chatStore.editChatGenPreset(props.chat._id, preset, () => {
-        if (pane() === 'popup') {
-          props.close?.()
-        }
-      })
-
       if (!update.service) {
         toastStore.error(`You must select an AI service before saving`)
         return
       }
 
-      presetStore.updatePreset(preset, update as any)
+      presetStore.updatePreset(preset, update as any, () => {
+        if (pane() === 'popup') {
+          props.close?.()
+        }
+      })
     }
   }
 

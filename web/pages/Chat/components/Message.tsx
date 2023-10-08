@@ -60,10 +60,9 @@ type MessageProps = {
 }
 
 const Message: Component<MessageProps> = (props) => {
-  const [ctx] = useAppContext()
   const splits = createMemo(
     () => {
-      if (!props.retrying) return splitMessage(ctx, props.msg)
+      if (!props.retrying) return splitMessage(props.msg)
       return [props.msg]
     },
     { equals: false }
@@ -103,6 +102,7 @@ const SingleMessage: Component<
 > = (props) => {
   let editRef: HTMLDivElement
   let avatarRef: any
+  const [ctx] = useAppContext()
   const user = userStore()
   const state = chatStore()
   const voice = msgStore((x) => ({
@@ -115,14 +115,13 @@ const SingleMessage: Component<
   const isUser = createMemo(() => !!props.msg.userId)
   const isImage = createMemo(() => props.original.adapter === 'image')
   const [img, setImg] = createSignal('h-full')
+  const opts = createSignal(false)
+
   const [obs] = createSignal(
     new ResizeObserver(() => {
       setImg(`calc(${Math.min(avatarRef?.clientHeight, 10000)}px + 1em)`)
     })
   )
-  const opts = createSignal(false)
-
-  const [ctx] = useAppContext()
 
   onMount(() => obs().observe(avatarRef))
   onCleanup(() => obs().disconnect())
@@ -453,85 +452,86 @@ export default Message
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
 
-function splitMessage(ctx: ContextState, incoming: AppSchema.ChatMessage): SplitMessage[] {
-  const charName =
-    (incoming.characterId ? ctx.allBots[incoming.characterId]?.name : ctx.char?.name) || ''
+function splitMessage(incoming: AppSchema.ChatMessage): SplitMessage[] {
+  return [incoming]
+  // const charName =
+  //   (incoming.characterId ? ctx.allBots[incoming.characterId]?.name : ctx.char?.name) || ''
 
   // const CHARS = [`{{char}}:`]
   // if (charName) CHARS.push(`${charName}:`)
 
-  const USERS = [`${ctx.handle}:`, `{{user}}:`]
+  // const USERS = [`${ctx.handle}:`, `{{user}}:`]
 
-  const msg = { ...incoming }
-  if (msg.msg.startsWith(`${charName}:`)) {
-    msg.msg = msg.msg.replace(`${charName}:`, '').trim()
-  } else if (msg.msg.startsWith(`${charName} :`)) {
-    msg.msg = msg.msg.replace(`${charName} :`, '').trim()
-  }
+  // const msg = { ...incoming }
+  // if (msg.msg.startsWith(`${charName}:`)) {
+  //   msg.msg = msg.msg.replace(`${charName}:`, '').trim()
+  // } else if (msg.msg.startsWith(`${charName} :`)) {
+  //   msg.msg = msg.msg.replace(`${charName} :`, '').trim()
+  // }
 
-  const next: AppSchema.ChatMessage[] = []
+  // const next: AppSchema.ChatMessage[] = []
 
-  const splits = msg.msg.split('\n')
+  // const splits = msg.msg.split('\n')
 
-  for (const split of splits) {
-    const trim = split.trim()
+  // for (const split of splits) {
+  //   const trim = split.trim()
 
-    let newMsg: AppSchema.ChatMessage | undefined
+  //   let newMsg: AppSchema.ChatMessage | undefined
 
-    for (const CHAR of ctx.activeBots) {
-      if (trim.startsWith(CHAR.name + ':')) {
-        newMsg = {
-          ...msg,
-          msg: trim.slice(CHAR.name.length + 1).trim(),
-          characterId: CHAR._id,
-          state: CHAR._id,
-        }
-      }
-    }
+  //   // for (const CHAR of ctx.activeBots) {
+  //   //   if (trim.startsWith(CHAR.name + ':')) {
+  //   //     newMsg = {
+  //   //       ...msg,
+  //   //       msg: trim.slice(CHAR.name.length + 1).trim(),
+  //   //       characterId: CHAR._id,
+  //   //       state: CHAR._id,
+  //   //     }
+  //   //   }
+  //   // }
 
-    for (const USER of USERS) {
-      if (newMsg) break
-      if (trim.startsWith(USER)) {
-        newMsg = {
-          ...msg,
-          msg: trim.replace(USER, ''),
-          userId: ctx.profile?.userId || '',
-          characterId: ctx.impersonate?._id,
-          state: 'user',
-        }
-        break
-      }
-    }
+  //   for (const USER of USERS) {
+  //     if (newMsg) break
+  //     if (trim.startsWith(USER)) {
+  //       newMsg = {
+  //         ...msg,
+  //         msg: trim.replace(USER, ''),
+  //         userId: ctx.profile?.userId || '',
+  //         characterId: ctx.impersonate?._id,
+  //         state: 'user',
+  //       }
+  //       break
+  //     }
+  //   }
 
-    if (!newMsg) {
-      newMsg = {
-        ...msg,
-        msg: trim,
-        characterId: incoming.characterId,
-        userId: incoming.userId,
-        state: incoming.characterId,
-      }
-    }
+  //   if (!newMsg) {
+  //     newMsg = {
+  //       ...msg,
+  //       msg: trim,
+  //       characterId: incoming.characterId,
+  //       userId: incoming.userId,
+  //       state: incoming.characterId,
+  //     }
+  //   }
 
-    if (next.length) {
-      const lastMsg = next.slice(-1)[0]
-      if (lastMsg.state === newMsg.state) {
-        lastMsg.msg += ` ${trim}`
-        continue
-      }
-    }
+  //   if (next.length) {
+  //     const lastMsg = next.slice(-1)[0]
+  //     if (lastMsg.state === newMsg.state) {
+  //       lastMsg.msg += ` ${trim}`
+  //       continue
+  //     }
+  //   }
 
-    if (newMsg?.msg.length) {
-      const suffix = next.length === 0 ? '' : `-${next.length}`
-      newMsg._id = `${newMsg._id}${suffix}`
-      next.push(newMsg)
-    }
-    continue
-  }
+  //   if (newMsg?.msg.length) {
+  //     const suffix = next.length === 0 ? '' : `-${next.length}`
+  //     newMsg._id = `${newMsg._id}${suffix}`
+  //     next.push(newMsg)
+  //   }
+  //   continue
+  // }
 
-  if (!next.length || next.length === 1) return [msg]
-  const newSplits = next.map((next) => ({ ...next, split: true }))
-  return newSplits
+  // if (!next.length || next.length === 1) return [msg]
+  // const newSplits = next.map((next) => ({ ...next, split: true }))
+  // return newSplits
 }
 
 function getAnonName(members: AppSchema.Profile[], id: string) {
