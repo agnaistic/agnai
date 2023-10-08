@@ -172,6 +172,8 @@ export const SubscriptionPage: Component = (props) => {
             </For>
           </div>
 
+          <div class="flex justify-center">All prices are in USD</div>
+
           <div class="mt-4 flex gap-4">
             {/* <Button onClick={userStore.validateSubscription} disabled={user.billingLoading}>
               Validate
