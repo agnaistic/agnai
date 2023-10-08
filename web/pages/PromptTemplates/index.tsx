@@ -75,7 +75,12 @@ const PromptTemplates: Component = () => {
                 >
                   <Copy />
                 </Button>
-                <Button schema="red">
+                <Button
+                  schema="red"
+                  onClick={() => {
+                    presetStore.deleteTemplate(each._id)
+                  }}
+                >
                   <Trash />
                 </Button>
               </div>
