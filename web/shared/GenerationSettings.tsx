@@ -1161,7 +1161,7 @@ const RegisteredSettings: Component<{
 
   return (
     <Show when={options().length}>
-      <div>
+      <div class="mt-2 flex flex-col gap-2">
         <For each={options()}>
           {(opt) => (
             <ServiceOption

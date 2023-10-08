@@ -10,6 +10,7 @@ import * as scenario from './scenario'
 import * as oauth from './oauth'
 import * as tree from './tree'
 import * as subs from './subscriptions'
+import * as announce from './announcements'
 
 export { db } from './client'
 
@@ -26,4 +27,5 @@ export const store = {
   oauth,
   tree,
   subs,
+  announce,
 }

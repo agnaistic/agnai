@@ -1,0 +1,189 @@
+import { Component, For, Match, Show, Switch, onMount } from 'solid-js'
+import PageHeader from '/web/shared/PageHeader'
+import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
+import Button from '/web/shared/Button'
+import TextInput from '/web/shared/TextInput'
+import { useNavigate, useParams } from '@solidjs/router'
+import { announceStore, toastStore } from '/web/store'
+import { elapsedSince, now } from '/common/util'
+import { Toggle } from '/web/shared/Toggle'
+import { getStrictForm } from '/web/shared/util'
+import { Pill } from '/web/shared/Card'
+import { AppSchema } from '/common/types'
+
+export { AnnoucementPage as default }
+
+const AnnoucementPage: Component = () => {
+  const params = useParams()
+
+  return (
+    <Switch>
+      <Match when={!params.id}>
+        <AnnoucementList />
+      </Match>
+
+      <Match when={!!params.id}>
+        <Announcement />
+      </Match>
+    </Switch>
+  )
+}
+
+const AnnoucementList: Component = (props) => {
+  const state = announceStore()
+  const nav = useNavigate()
+
+  onMount(() => {
+    announceStore.getAllAdmin()
+  })
+
+  const hide = (id: string) => {
+    announceStore.update(id, { hide: true })
+  }
+
+  const unhide = (id: string) => {
+    announceStore.update(id, { hide: false })
+  }
+
+  return (
+    <>
+      <PageHeader title="Manage Announcements" />
+      <div class="flex w-full justify-end">
+        <Button onClick={() => nav('/admin/announcements/new')}>
+          Create <Plus />
+        </Button>
+      </div>
+
+      <div class="mt-2 flex w-full flex-col gap-2">
+        <For each={state.admin}>
+          {(item) => (
+            <div class="flex items-center gap-2">
+              <div
+                class="flex w-full cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-[var(--bg-700)]"
+                classList={{
+                  hidden: !!item.deletedAt,
+                  'bg-900': item.hide,
+                  'bg-[var(--hl-700)]': !item.hide && item.showAt >= now(),
+                  'bg-800': !item.hide && item.showAt < now(),
+                }}
+                onClick={() => nav(`/admin/announcements/${item._id}`)}
+              >
+                <div class="font-bold">{item.title}</div>
+                <div class="flex gap-1">
+                  <Pill>Created: {new Date(item.showAt).toLocaleString()}</Pill>
+                  <Pill>{elapsedSince(new Date(item.showAt))} ago</Pill>
+                  {Label(item)}
+                </div>
+              </div>
+              <div class="flex min-w-fit gap-2">
+                <Show when={!item.hide}>
+                  <Button onClick={() => hide(item._id)}>
+                    <Eye /> Hide
+                  </Button>
+                </Show>
+
+                <Show when={item.hide}>
+                  <Button schema="gray" onClick={() => unhide(item._id)}>
+                    <EyeOff /> Unhide
+                  </Button>
+                </Show>
+              </div>
+            </div>
+          )}
+        </For>
+      </div>
+    </>
+  )
+}
+
+function Label(item: AppSchema.Announcement) {
+  const date = new Date(item.showAt)
+
+  if (item.deletedAt) return <Pill type="rose">Deleted</Pill>
+  if (item.hide) return <Pill type="coolgray">Hidden</Pill>
+  if (date.valueOf() >= Date.now()) return <Pill type="premium">Pending</Pill>
+  return <Pill type="green">Active</Pill>
+}
+
+const Announcement: Component<{}> = (props) => {
+  let ref: HTMLFormElement
+
+  const nav = useNavigate()
+  const params = useParams()
+
+  const state = announceStore((s) => ({ item: s.admin.find((a) => a._id === params.id) }))
+
+  onMount(() => {
+    announceStore.getAllAdmin()
+  })
+
+  const onSave = () => {
+    const body = getStrictForm(ref, {
+      title: 'string',
+      content: 'string',
+      hide: 'boolean',
+      showAt: 'string',
+    })
+
+    const showAt = new Date(body.showAt)
+    if (isNaN(showAt.valueOf())) {
+      toastStore.error(`"Display At" is required`)
+      return
+    }
+
+    body.showAt = showAt.toISOString()
+
+    if (params.id === 'new') {
+      announceStore.create(body, (announce) => {
+        nav(`/admin/announcements/${announce._id}`)
+      })
+    } else {
+      announceStore.update(params.id, body)
+    }
+  }
+
+  return (
+    <>
+      <PageHeader title="Announcement" />
+
+      <form ref={ref!} class="flex flex-col gap-2">
+        <TextInput fieldName="id" disabled value={params.id} label="ID" />
+
+        <TextInput fieldName="title" label="Title" value={state.item?.title} />
+        <TextInput
+          fieldName="content"
+          label="Content"
+          value={state.item?.content}
+          isMultiline
+          class="min-h-[80px]"
+        />
+        <Toggle fieldName="hide" label="Hide Announcement" value={state.item?.hide} />
+        <TextInput
+          type="datetime-local"
+          label="Display At"
+          fieldName="showAt"
+          value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
+          onChange={(ev) => console.log(ev.currentTarget.value)}
+        />
+
+        <div class="flex justify-end gap-2">
+          <Button onClick={onSave}>
+            <Save /> {params.id === 'new' ? 'Create' : 'Update'}
+          </Button>
+        </div>
+      </form>
+    </>
+  )
+}
+
+function toLocalTime(date: string) {
+  const d = new Date(date)
+  const Y = d.getFullYear()
+  const M = (d.getMonth() + 1).toString().padStart(2, '0')
+  const D = d.getDate().toString().padStart(2, '0')
+
+  const h = d.getHours().toString().padStart(2, '0')
+  const m = d.getMinutes().toString().padStart(2, '0')
+
+  return `${Y}-${M}-${D}T${h}:${m}`
+}

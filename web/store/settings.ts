@@ -19,6 +19,7 @@ export type SettingState = {
     loading: boolean
     ttl: number
   }
+
   showMenu: boolean
   showImpersonate: boolean
   fullscreen: boolean
