@@ -83,7 +83,7 @@ export const createMessage = handle(async (req) => {
 
   if (!userId) {
     const guest = req.socketId
-    const newMsg = newMessage(chatId, body.text, {
+    const newMsg = newMessage(v4(), chatId, body.text, {
       userId: impersonate ? undefined : 'anon',
       characterId: impersonate?._id,
       ooc: body.kind === 'ooc',
@@ -466,19 +466,27 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   const chat: AppSchema.Chat = body.chat
   if (!chat) throw errors.NotFound
 
+  const requestId = v4()
+  const messageId =
+    body.kind === 'retry'
+      ? body.replacing?._id ?? requestId
+      : body.kind === 'continue'
+      ? body.continuing?._id
+      : requestId
+
   // Coalesce for backwards compatibly while new UI rolls out
   const replyAs: AppSchema.Character = body.replyAs || body.char
 
   // For authenticated users we will verify parts of the payload
   let newMsg: AppSchema.ChatMessage | undefined
   if (body.kind === 'send' || body.kind === 'ooc') {
-    newMsg = newMessage(chatId, body.text!, {
+    newMsg = newMessage(messageId, chatId, body.text!, {
       userId: 'anon',
       ooc: body.kind === 'ooc',
       event: undefined,
     })
   } else if (body.kind.startsWith('send-event:')) {
-    newMsg = newMessage(chatId, body.text!, {
+    newMsg = newMessage(messageId, chatId, body.text!, {
       characterId: replyAs?._id,
       ooc: false,
       event: body.kind.split(':')[1] as AppSchema.EventTypes,
@@ -493,7 +501,6 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     return { success: true }
   }
 
-  const requestId = v4()
   res.json({ success: true, generating: true, message: 'Generating message', requestId })
 
   const { stream, adapter, ...entities } = await createTextStreamV2(
@@ -507,13 +514,6 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   let generated = ''
   let error = false
   let meta = { ctx: entities.settings.maxContextLength }
-
-  const messageId =
-    body.kind === 'retry'
-      ? body.replacing?._id ?? requestId
-      : body.kind === 'continue'
-      ? body.continuing?._id
-      : requestId
 
   for await (const gen of stream) {
     if (typeof gen === 'string') {
@@ -554,7 +554,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
-  const response = newMessage(chatId, responseText, {
+  const response = newMessage(messageId, chatId, responseText, {
     characterId,
     userId: senderId,
     ooc: false,
@@ -587,6 +587,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 }
 
 function newMessage(
+  messageId: string,
   chatId: string,
   text: string,
   props: {
@@ -598,7 +599,7 @@ function newMessage(
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {
-    _id: v4(),
+    _id: messageId,
     chatId,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),

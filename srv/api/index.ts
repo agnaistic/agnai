@@ -12,6 +12,7 @@ import scenario from './scenario'
 import selfhost from './json'
 import voice from './voice'
 import { config } from '../config'
+import announcements from './announcements'
 
 const router = Router()
 
@@ -26,6 +27,7 @@ router.use('/settings', settings)
 router.use('/memory', memory)
 router.use('/scenario', scenario)
 router.use('/voice', voice)
+router.use('/announce', announcements)
 
 if (config.jsonStorage) {
   router.use('/json', selfhost)
