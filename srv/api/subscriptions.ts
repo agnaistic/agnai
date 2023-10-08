@@ -108,7 +108,8 @@ const updateTier = handle(async ({ body, params }) => {
       disableSlots: 'boolean',
       description: 'string',
     },
-    body
+    body,
+    true
   )
   const tier = await store.subs.updateTier(params.id, body)
   return tier

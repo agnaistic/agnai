@@ -4,7 +4,7 @@ import { Component, createSignal, For, onMount, Show } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
-import { presetStore, userStore } from '../../store'
+import { adminStore, presetStore, userStore } from '../../store'
 import { setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 import Divider from '/web/shared/Divider'
@@ -65,18 +65,38 @@ const SubscriptionList: Component = () => {
           <div class="flex w-full flex-col gap-2">
             <For each={cfg.tiers}>
               {(each) => (
-                <A href={`/admin/tiers/${each._id}`}>
-                  <SolidCard
-                    bg={each.enabled ? 'bg-800' : 'rose-900'}
-                    hover="bg-700"
-                    class="cursor-pointer"
-                  >
-                    {each.name}
-                    <Show when={!each.enabled}>
-                      <span class="text-600 ml-2 text-xs italic">disabled</span>
+                <div class="flex w-full gap-2">
+                  <A href={`/admin/tiers/${each._id}`} class="w-full">
+                    <SolidCard
+                      bg={each.enabled ? 'bg-800' : 'rose-900'}
+                      hover="bg-700"
+                      class="w-full cursor-pointer"
+                    >
+                      {each.name}
+                      <Show when={!each.enabled}>
+                        <span class="text-600 ml-2 text-xs italic">disabled</span>
+                      </Show>
+                    </SolidCard>
+                  </A>
+                  <div class="flex min-w-fit gap-2">
+                    <Show when={each.enabled}>
+                      <Button
+                        schema="green"
+                        onClick={() => adminStore.updateTier(each._id, { enabled: false })}
+                      >
+                        Enabled
+                      </Button>
                     </Show>
-                  </SolidCard>
-                </A>
+                    <Show when={!each.enabled}>
+                      <Button
+                        schema="red"
+                        onClick={() => adminStore.updateTier(each._id, { enabled: true })}
+                      >
+                        Disabled
+                      </Button>
+                    </Show>
+                  </div>
+                </div>
               )}
             </For>
           </div>

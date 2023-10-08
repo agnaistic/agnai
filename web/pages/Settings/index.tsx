@@ -74,7 +74,12 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   const [workers, setWorkers] = createSignal<string[]>(toArray(state.user?.hordeWorkers))
   const [models, setModels] = createSignal<string[]>(toArray(state.user?.hordeModel))
 
-  const tabs: Tab[] = ['ai', 'ui', 'image', 'voice', 'subscription']
+  const tabs: Tab[] = ['ai', 'ui', 'image', 'voice']
+
+  if (state.loggedIn && (state.tiers.length > 0 || state.user?.billing)) {
+    tabs.push('subscription')
+  }
+
   if (!state.loggedIn) tabs.push('guest')
 
   const currentTab = createMemo(() => tabs[tab()])

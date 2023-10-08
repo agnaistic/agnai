@@ -92,7 +92,7 @@ export const adminStore = createStore<AdminState>('admin', { users: [], products
           toastStore.error(`Failed to create tier: ${res.error}`)
         }
       },
-      async updateTier(_, id: string, update: OmitId<AppSchema.SubscriptionTier, Dates>) {
+      async updateTier(_, id: string, update: Partial<OmitId<AppSchema.SubscriptionTier, Dates>>) {
         const res = await api.post(`/admin/tiers/${id}`, update)
         if (res.result) {
           toastStore.success('Tier updated')
