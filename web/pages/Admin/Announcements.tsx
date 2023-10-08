@@ -1,6 +1,6 @@
 import { Component, For, Match, Show, Switch, onMount } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
-import { Eye, EyeOff, Plus, Save, Trash } from 'lucide-solid'
+import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
 import Button from '/web/shared/Button'
 import TextInput from '/web/shared/TextInput'
 import { useNavigate, useParams } from '@solidjs/router'
