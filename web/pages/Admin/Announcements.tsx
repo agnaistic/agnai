@@ -1,4 +1,4 @@
-import { Component, For, Match, Show, Switch, onMount } from 'solid-js'
+import { Component, For, Match, Show, Switch, createSignal, onMount } from 'solid-js'
 import PageHeader from '/web/shared/PageHeader'
 import { Eye, EyeOff, Plus, Save } from 'lucide-solid'
 import Button from '/web/shared/Button'
@@ -10,6 +10,7 @@ import { Toggle } from '/web/shared/Toggle'
 import { getStrictForm } from '/web/shared/util'
 import { Pill } from '/web/shared/Card'
 import { AppSchema } from '/common/types'
+import { markdown } from '/web/shared/markdown'
 
 export { AnnoucementPage as default }
 
@@ -113,6 +114,10 @@ const Announcement: Component<{}> = (props) => {
 
   const state = announceStore((s) => ({ item: s.admin.find((a) => a._id === params.id) }))
 
+  const [title, setTitle] = createSignal(state.item?.title || '')
+  const [content, setContent] = createSignal(state.item?.content || '')
+  const [showAt, setShowAt] = createSignal(new Date(state.item?.showAt || now()))
+
   onMount(() => {
     announceStore.getAllAdmin()
   })
@@ -149,13 +154,19 @@ const Announcement: Component<{}> = (props) => {
       <form ref={ref!} class="flex flex-col gap-2">
         <TextInput fieldName="id" disabled value={params.id} label="ID" />
 
-        <TextInput fieldName="title" label="Title" value={state.item?.title} />
+        <TextInput
+          fieldName="title"
+          label="Title"
+          value={state.item?.title}
+          onInput={(ev) => setTitle(ev.currentTarget.value)}
+        />
         <TextInput
           fieldName="content"
           label="Content"
           value={state.item?.content}
           isMultiline
           class="min-h-[80px]"
+          onInput={(ev) => setContent(ev.currentTarget.value)}
         />
         <Toggle fieldName="hide" label="Hide Announcement" value={state.item?.hide} />
         <TextInput
@@ -163,13 +174,24 @@ const Announcement: Component<{}> = (props) => {
           label="Display At"
           fieldName="showAt"
           value={state.item?.showAt ? toLocalTime(state.item.showAt) : toLocalTime(now())}
-          onChange={(ev) => console.log(ev.currentTarget.value)}
+          onChange={(ev) => setShowAt(new Date(ev.currentTarget.value))}
         />
 
         <div class="flex justify-end gap-2">
           <Button onClick={onSave}>
             <Save /> {params.id === 'new' ? 'Create' : 'Update'}
           </Button>
+        </div>
+
+        <div class="w-1/2 rounded-md border-[1px] border-[var(--bg-600)]">
+          <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
+            <div class="text-lg font-bold">{title()}</div>
+            <div class="text-700 text-xs">{elapsedSince(showAt())} ago</div>
+          </div>
+          <div
+            class="rendered-markdown bg-900 rounded-b-md p-2"
+            innerHTML={markdown.makeHtml(content())}
+          ></div>
         </div>
       </form>
     </>
