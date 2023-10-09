@@ -15,6 +15,7 @@ import { UISettings } from './ui'
 import { FullSprite } from './sprite'
 
 export type AllDoc =
+  | AppSchema.Announcement
   | AppSchema.Chat
   | AppSchema.ChatTree
   | AppSchema.ChatMessage
@@ -42,6 +43,22 @@ export type ChatBranch = {
 }
 
 export namespace AppSchema {
+  export interface Announcement {
+    kind: 'announcement'
+    _id: string
+
+    title: string
+    content: string
+
+    /** Date ISO string */
+    showAt: string
+    hide: boolean
+
+    createdAt: string
+    updatedAt: string
+    deletedAt?: string
+  }
+
   export interface SubscriptionTier {
     kind: 'subscription-tier'
     _id: string

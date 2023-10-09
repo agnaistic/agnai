@@ -143,6 +143,7 @@ export async function handleGuestInit() {
       localStore.set('scenario', res.result.scenario)
       localStore.set('characters', res.result.characters)
       localStore.set('chats', res.result.chats)
+      localStore.set('templates', res.result.templates)
       return res
     }
   }

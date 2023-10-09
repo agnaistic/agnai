@@ -28,6 +28,7 @@ type Props = {
   anonymize?: boolean
   Icon?: (props: LucideProps) => JSX.Element
   openable?: boolean
+  noBorder?: boolean
 }
 
 type Format = {
@@ -38,6 +39,7 @@ type Format = {
 const defaultFormat: Format = { size: 'md', corners: 'circle' }
 
 export const CharacterAvatar: Component<{
+  noBorder?: boolean
   char: AppSchema.Character
   openable?: boolean
   format?: Format
@@ -71,9 +73,14 @@ export const CharacterAvatar: Component<{
         <Match when={props.char.visualType === 'sprite' && props.char.sprite && props.surround}>
           <div
             ref={ref}
-            class={`flex justify-center overflow-hidden border-2 border-[var(--bg-800)] bg-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+            class={`flex justify-center overflow-hidden border-2  bg-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
               props.class || ''
             }`}
+            classList={{
+              'border-2': !props.noBorder,
+              'border-[var(--bg-800)]': !props.noBorder,
+              'border-0': props.noBorder,
+            }}
             data-bot-avatar={props.bot}
             data-user-avatar={!props.bot}
           >
@@ -154,9 +161,14 @@ const AvatarIcon: Component<Props> = (props) => {
       <Switch>
         <Match when={avatar()}>
           <div
-            class={`avatar-icon overflow-hidden border-2 border-[var(--bg-800)]  ${fmtSize()} ${fmtCorners()} shrink-0 ${
+            class={`avatar-icon overflow-hidden ${fmtSize()} ${fmtCorners()} shrink-0 ${
               props.class || ''
             }`}
+            classList={{
+              'border-2': !props.noBorder,
+              'border-[var(--bg-800)]': !props.noBorder,
+              'border-0': props.noBorder,
+            }}
             data-bot-avatar={props.bot}
             data-user-avatar={!props.bot}
             onClick={onImageClick}
@@ -165,11 +177,11 @@ const AvatarIcon: Component<Props> = (props) => {
               data-bot-image={props.bot}
               data-user-image={!props.bot}
               class={`
-            m-auto
             ${format().corners === 'circle' ? fmtSize() : 'max-h-full max-w-full'}
             ${fmtFit()} ${fmtCorners()}
             ${visibilityClass()}
             `}
+              classList={{ 'm-auto': !props.noBorder }}
               src={getAssetUrl(avatar()!)}
               data-bot-avatar={props.bot}
             />
@@ -182,7 +194,12 @@ const AvatarIcon: Component<Props> = (props) => {
             data-user-avatar={!props.bot}
             class={`avatar-${
               format().size
-            } avatar-circle flex shrink-0 items-center justify-center rounded-full border-2 border-[var(--bg-800)] bg-[var(--bg-700)] ${cls()}`}
+            } avatar-circle flex shrink-0 items-center justify-center rounded-full bg-[var(--bg-700)] ${cls()}`}
+            classList={{
+              'border-2': !props.noBorder,
+              'border-[var(--bg-800)]': !props.noBorder,
+              'border-0': props.noBorder,
+            }}
           >
             <Show when={!props.bot}>
               <VenetianMask data-user-icon />

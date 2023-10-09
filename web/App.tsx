@@ -3,7 +3,7 @@ import './tailwind.css'
 import './app.css'
 import './dots.css'
 import '@melloware/coloris/dist/coloris.css'
-import { Component, createEffect, createMemo, JSX, Show, lazy } from 'solid-js'
+import { Component, createMemo, JSX, Show, lazy, onMount } from 'solid-js'
 import { Outlet, Route, Router, Routes, useLocation } from '@solidjs/router'
 import NavBar from './shared/NavBar'
 import Toasts from './Toasts'
@@ -107,6 +107,10 @@ const App: Component = () => {
                 component={lazy(() => import('./pages/Admin/Subscription'))}
               />
               <Route
+                path={['/admin/announcements', '/admin/announcements/:id']}
+                component={lazy(() => import('./pages/Admin/Announcements'))}
+              />
+              <Route
                 path="/admin/tiers/:id"
                 component={lazy(() => import('./pages/Admin/Tiers'))}
               />
@@ -143,7 +147,7 @@ const Layout: Component = () => {
     settingStore.init()
   }
 
-  createEffect(() => {
+  onMount(() => {
     settingStore.init()
   })
 
@@ -172,8 +176,10 @@ const Layout: Component = () => {
           <Navigation />
           <div class="w-full overflow-y-auto" data-background style={bg()}>
             <div
-              class={`mx-auto h-full min-h-full w-full ${maxW()} px-2 sm:px-3`}
-              classList={{ 'content-background': !isChat() }}
+              class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} px-2 sm:px-3`}
+              classList={{
+                'content-background': !isChat(),
+              }}
             >
               <Show when={cfg.init}>
                 <Outlet />
