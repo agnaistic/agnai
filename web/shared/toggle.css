@@ -55,11 +55,11 @@
 }
 
 .toggle-checkbox:checked + .toggle-switch {
-  background: var(--hl-700);
+  background: var(--green-700);
 }
 
 .toggle-checkbox:checked:disabled + .toggle-switch {
-  background: var(--hl-900);
+  background: var(--green-900);
 }
 
 .toggle-checkbox:checked + .toggle-switch:before {

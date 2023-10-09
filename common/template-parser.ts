@@ -124,7 +124,7 @@ export function parseTemplate(template: string, opts: TemplateOpts) {
     }
   }
 
-  return render(output, opts)
+  return render(output, opts).replace(/\n\n+/g, '\n\n')
 }
 
 function render(template: string, opts: TemplateOpts) {
@@ -139,19 +139,46 @@ function render(template: string, opts: TemplateOpts) {
      */
     for (let i = 0; i < orig.length; i++) {
       const node = orig[i]
-      if (node !== '\n') {
+      if (typeof node !== 'string') {
         ast.push(node)
         continue
       }
 
       const next = orig[i + 1]
-      if (!next || typeof next === 'string' || next.kind !== 'if') {
-        ast.push(node)
-        continue
+      const prev = orig[i - 1]
+      let mod = node
+
+      if (isIfNode(next) && node.startsWith('\n')) {
+        next.children.unshift('\n')
+        mod = node.slice(1)
       }
 
-      next.children.unshift('\n')
-      continue
+      if (isIfNode(prev) && node.endsWith('\n')) {
+        prev.children.push('\n')
+        mod = node.slice(0, -1)
+      }
+
+      if (mod) {
+        ast.push(mod)
+      }
+
+      // if (typeof node === 'string' &&node !== '\n') {
+      //   ast.push(node)
+      //   continue
+      // }
+
+      // if (isIfNode(next)) {
+      //   next.children.unshift('\n')
+      //   continue
+      // }
+
+      // if (isIfNode(prev)) {
+      //   prev.children.push('\n')
+      //   continue
+      // }
+
+      // ast.push(node)
+      // continue
     }
 
     const inserts = ast.filter(
@@ -168,8 +195,29 @@ function render(template: string, opts: TemplateOpts) {
 
     const output: string[] = []
 
-    for (const parent of ast) {
+    for (let i = 0; i < ast.length; i++) {
+      const parent = ast[i]
+
       const result = renderNode(parent, opts)
+      if (typeof parent !== 'string' && parent.kind === 'if' && !result) {
+        const post = ast[i + 1]
+
+        /**
+         * If the proceeding node is text that starts with a newline
+         * (I.e. "{{#if ...}}conditionaltext{{/if}}\netc etc")
+         * Then we want to remove the leading linebreak no matter what if the leading node is a conditional
+         * This is to remove unintentional linebreaks using this formnat:
+         *
+         * {{#if scenario}}{{scenario}}{{/if}}
+         * Start the conversation:
+         * {{history}}
+         *
+         * Would result in an extra linebreak after the conditional
+         */
+        if (typeof post !== 'string' || !post.startsWith('\n')) continue
+        ast[i + 1] = post.slice(1)
+      }
+
       if (result) output.push(result)
     }
     return output.join('')
@@ -455,4 +503,9 @@ function lastMessage(value: string) {
   const date = new Date(value)
   if (isNaN(date.valueOf())) return 'unknown'
   return elapsedSince(date)
+}
+
+function isIfNode(node: any): node is ConditionNode {
+  if (!node || typeof node === 'string') return false
+  return node.kind === 'if'
 }
