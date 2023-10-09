@@ -6,6 +6,7 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { TokenCounter } from './tokenize'
 import { v4 } from 'uuid'
+import { isIFrameElement } from 'modern-screenshot/utils'
 
 const parser = peggy.generate(grammar.trim(), {
   error: (stage, msg, loc) => {
@@ -148,37 +149,17 @@ function render(template: string, opts: TemplateOpts) {
       const prev = orig[i - 1]
       let mod = node
 
-      if (isIfNode(next) && node.startsWith('\n')) {
+      if (node === '\n' && isEnclosingNode(next)) {
         next.children.unshift('\n')
-        mod = node.slice(1)
+        continue
       }
 
-      if (isIfNode(prev) && node.endsWith('\n')) {
+      if (node === '\n' && isEnclosingNode(prev)) {
         prev.children.push('\n')
-        mod = node.slice(0, -1)
+        continue
       }
 
-      if (mod) {
-        ast.push(mod)
-      }
-
-      // if (typeof node === 'string' &&node !== '\n') {
-      //   ast.push(node)
-      //   continue
-      // }
-
-      // if (isIfNode(next)) {
-      //   next.children.unshift('\n')
-      //   continue
-      // }
-
-      // if (isIfNode(prev)) {
-      //   prev.children.push('\n')
-      //   continue
-      // }
-
-      // ast.push(node)
-      // continue
+      ast.push(node)
     }
 
     const inserts = ast.filter(
@@ -199,24 +180,6 @@ function render(template: string, opts: TemplateOpts) {
       const parent = ast[i]
 
       const result = renderNode(parent, opts)
-      if (typeof parent !== 'string' && parent.kind === 'if' && !result) {
-        const post = ast[i + 1]
-
-        /**
-         * If the proceeding node is text that starts with a newline
-         * (I.e. "{{#if ...}}conditionaltext{{/if}}\netc etc")
-         * Then we want to remove the leading linebreak no matter what if the leading node is a conditional
-         * This is to remove unintentional linebreaks using this formnat:
-         *
-         * {{#if scenario}}{{scenario}}{{/if}}
-         * Start the conversation:
-         * {{history}}
-         *
-         * Would result in an extra linebreak after the conditional
-         */
-        if (typeof post !== 'string' || !post.startsWith('\n')) continue
-        ast[i + 1] = post.slice(1)
-      }
 
       if (result) output.push(result)
     }
@@ -505,7 +468,7 @@ function lastMessage(value: string) {
   return elapsedSince(date)
 }
 
-function isIfNode(node: any): node is ConditionNode {
+function isEnclosingNode(node: any): node is ConditionNode | IteratorNode {
   if (!node || typeof node === 'string') return false
   return node.kind === 'if'
 }
