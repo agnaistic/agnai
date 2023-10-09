@@ -156,7 +156,7 @@ const RecentChats: Component = (props) => {
     last: s.allChats
       .slice()
       .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
-      .slice(0, 3)
+      .slice(0, 4)
       .map((chat) => ({ chat, char: s.allChars.map[chat.characterId] })),
   }))
 

@@ -185,7 +185,7 @@ const PromptEditor: Component<
   useEffect(() => {
     const tick = setInterval(() => {
       resize()
-    }, 500)
+    }, 100)
 
     return () => clearInterval(tick)
   })
@@ -508,6 +508,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
     toBotMsg(char, 'Hi, nice to meet you!'),
     toUserMsg(profile, 'Nice to meet you too.'),
     toBotMsg(replyAs, 'I am also here.'),
+    toUserMsg(profile, `I'm glad you're here.`),
   ]
 
   const lines = history.map((hist) => {

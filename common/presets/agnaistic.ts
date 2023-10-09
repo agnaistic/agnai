@@ -10,7 +10,7 @@ export const agnaiPresets = {
     maxContextLength: 4090,
     repetitionPenalty: 1.1,
     repetitionPenaltySlope: 0,
-    repetitionPenaltyRange: 128,
+    repetitionPenaltyRange: 512,
     temp: 0.85,
     topK: 0,
     topP: 1,
