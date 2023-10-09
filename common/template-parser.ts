@@ -6,7 +6,6 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { TokenCounter } from './tokenize'
 import { v4 } from 'uuid'
-import { isIFrameElement } from 'modern-screenshot/utils'
 
 const parser = peggy.generate(grammar.trim(), {
   error: (stage, msg, loc) => {
@@ -147,7 +146,6 @@ function render(template: string, opts: TemplateOpts) {
 
       const next = orig[i + 1]
       const prev = orig[i - 1]
-      let mod = node
 
       if (node === '\n' && isEnclosingNode(next)) {
         next.children.unshift('\n')
