@@ -521,7 +521,7 @@ export function getLinesForPrompt(
 
 /** This function is not used for Claude or Chat */
 export function formatInsert(insert: string): string {
-  return `System: ${insert}\n`
+  return `${insert}\n`
 }
 
 /**
@@ -558,7 +558,7 @@ export function fillPromptWithLines(
     adding.push(line)
     linesAddedCount++
   }
-  // We don't yeet inserts with depth > message count in context size
+  // We don't omit inserts with depth > message count in context size
   // instead we put them at the top of the conversation history
   const remainingInserts = insertsDeeperThanConvoHistory(inserts, linesAddedCount)
   if (remainingInserts) {

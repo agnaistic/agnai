@@ -134,7 +134,8 @@ export function parseTemplate(
     }
   }
 
-  return { parsed: render(output, opts), inserts: opts.inserts ?? new Map() }
+  const result = render(output, opts)
+  return { parsed: result, inserts: opts.inserts ?? new Map() }
 }
 
 function readInserts(template: string, opts: TemplateOpts, existingAst?: PNode[]): void {
@@ -201,7 +202,7 @@ function render(template: string, opts: TemplateOpts, existingAst?: PNode[]) {
 
       if (result) output.push(result)
     }
-    return output.join('')
+    return output.join('').replace(/\n\n+/g, '\n\n')
   } catch (err) {
     console.error({ err }, 'Failed to parse')
     throw err
