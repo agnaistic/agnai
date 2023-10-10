@@ -153,6 +153,7 @@ export default HomePage
 const RecentChats: Component = (props) => {
   const nav = useNavigate()
   const state = chatStore((s) => ({
+    chars: s.allChars.list,
     last: s.allChats
       .slice()
       .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
@@ -250,6 +251,15 @@ const RecentChats: Component = (props) => {
             <Plus size={20} />
           </div>
         </Show>
+        <Show when={state.last.length < 3 && state.chars.length <= 1}>
+          <div
+            class="bg-800 text-700 flex h-24 w-full cursor-pointer flex-col items-center justify-center border-[2px] border-dashed border-[var(--bg-700)]"
+            onClick={() => nav('/editor')}
+          >
+            <div>Create a Character</div>
+            <Plus size={20} />
+          </div>
+        </Show>
       </div>
     </div>
   )
@@ -261,7 +271,7 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
       <div class="font-bold">Latest News</div>
       <For each={props.list}>
         {(item) => (
-          <div class="rounded-md border-[1px] border-[var(--bg-600)]">
+          <div class="rounded-md border-[1px] border-[var(--hl-500)]">
             <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
               <div class="text-lg font-bold">{item.title}</div>
               <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div>

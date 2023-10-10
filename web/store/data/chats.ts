@@ -202,7 +202,7 @@ export async function getAllChats() {
     const { chat, msg } = createNewChat(char, {
       mode: 'standard',
       scenarioIds: [],
-      name: 'My first conversation',
+      name: 'Your first conversation',
       greeting: undefined,
       scenario: undefined,
       sampleChat: undefined,

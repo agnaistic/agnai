@@ -120,7 +120,7 @@ export function formatCharacter(
 
     case 'attributes': {
       const attrs = Object.entries(persona.attributes)
-        .map(([key, value]) => `${key}: ${value}`)
+        .map(([key, value]) => `${key}: ${value.join(', ')}`)
         .join('\n')
 
       return `Name: ${name}\n${attrs}`
