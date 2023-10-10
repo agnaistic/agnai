@@ -1,12 +1,12 @@
 import { A, useNavigate } from '@solidjs/router'
 import { Copy, Plus, Trash } from 'lucide-solid'
-import { Component, createSignal, For, onMount } from 'solid-js'
+import { Component, createMemo, createSignal, For, onMount } from 'solid-js'
 import Button from '../../shared/Button'
 import { ConfirmModal } from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import { defaultPresets } from '../../../common/presets'
 import { presetStore, settingStore } from '../../store'
-import { setComponentPageTitle } from '../../shared/util'
+import { getUsableServices, setComponentPageTitle } from '../../shared/util'
 import { getServiceName, sortByLabel } from '/web/shared/adapter'
 
 const PresetList: Component = () => {
@@ -19,9 +19,12 @@ const PresetList: Component = () => {
   }))
   const cfg = settingStore((s) => s.config)
 
+  const useableServices = createMemo(() => getUsableServices())
+
   const defaults = Object.entries(defaultPresets)
     .filter(([_, pre]) => {
       if (!cfg.adapters.includes(pre.service)) return false
+      if (!useableServices().includes(pre.service)) return false
       if (pre.service !== 'agnaistic') return true
       return cfg.subs.length > 0
     })

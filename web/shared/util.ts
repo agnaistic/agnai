@@ -10,7 +10,7 @@ import {
 } from '../../common/adapters'
 import type { Option } from './Select'
 import { createEffect, onCleanup } from 'solid-js'
-import { UserState, settingStore } from '../store'
+import { UserState, settingStore, userStore } from '../store'
 import { AppSchema } from '/common/types'
 
 const [css, hooks] = createHooks(recommended)
@@ -613,4 +613,68 @@ export function deepCloneAndRemoveFields<T, K extends keyof T>(
 
 export function asyncFrame() {
   return new Promise((resolve) => requestAnimationFrame(resolve))
+}
+
+export function getUsableServices() {
+  const { user } = userStore.getState()
+  const { config } = settingStore.getState()
+
+  const services: AIAdapter[] = []
+
+  for (const service of config.adapters) {
+    if (isUsable(service, config, user)) services.push(service)
+  }
+
+  return services
+}
+
+function isUsable(service: AIAdapter, config: AppSchema.AppConfig, user?: AppSchema.User) {
+  switch (service) {
+    case 'agnaistic': {
+      const level = user?.sub?.level ?? -1
+      const match = config.subs.some((sub) => sub.level <= level)
+      return match
+    }
+
+    case 'claude': {
+      return !!user?.claudeApiKeySet
+    }
+
+    case 'goose': {
+      return !!user?.adapterConfig?.goose?.apiKeySet
+    }
+
+    case 'mancer': {
+      return !!user?.adapterConfig?.mancer?.apiKeySet
+    }
+
+    case 'novel': {
+      return !!user?.novelVerified
+    }
+
+    case 'openai': {
+      return !!user?.oaiKeySet
+    }
+
+    case 'openrouter': {
+      return !!user?.adapterConfig?.openrouter?.apiKeySet
+    }
+
+    case 'replicate': {
+      return !!user?.adapterConfig?.replicate?.apiTokenSet
+    }
+
+    case 'scale': {
+      return !!user?.scaleApiKeySet
+    }
+
+    case 'horde':
+    case 'kobold':
+    case 'ooba':
+    case 'petals': {
+      return true
+    }
+  }
+
+  return false
 }
