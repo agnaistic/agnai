@@ -120,6 +120,7 @@ export const Pill: Component<{
   type?: CardType
   children: JSX.Element
   inverse?: boolean
+  small?: boolean
   onClick?: () => void
 }> = (props) => {
   const cfg = userStore((s) => s.ui)
@@ -149,7 +150,11 @@ export const Pill: Component<{
       style={bg()}
       onClick={props.onClick}
       classList={{
+        'border-[1px]': !props.small,
+        'border-0': props.small,
         'cursor-pointer': !!props.onClick,
+        'py-1': !props.small,
+        'py-[2x]': props.small,
       }}
     >
       {props.children}

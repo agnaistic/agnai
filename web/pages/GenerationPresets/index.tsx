@@ -224,6 +224,7 @@ export default GenerationPresetsPage
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,
+  service: '' as any,
   name: '',
   maxTokens: 150,
 }

@@ -27,6 +27,7 @@ import { FormLabel } from './FormLabel'
 import {
   getFormEntries,
   getStrictForm,
+  getUsableServices,
   isValidServiceSetting,
   serviceHasSetting,
   storage,
@@ -54,21 +55,20 @@ type Props = {
 }
 
 const GenerationSettings: Component<Props> = (props) => {
-  const state = settingStore((s) => s.config)
   const opts = chatStore((s) => s.opts)
   const [search, setSearch] = useSearchParams()
 
-  const [service, setService] = createSignal(props.inherit?.service)
+  const services = createMemo<Option[]>(() => {
+    const list = getUsableServices().map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
+    return list
+  })
+
+  const [service, setService] = createSignal(
+    props.inherit?.service || (services()[0].value as AIAdapter)
+  )
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
-
-  const services = createMemo<Option[]>(() => {
-    const list = state.adapters.map((adp) => ({ value: adp, label: ADAPTER_LABELS[adp] }))
-    if (props.inherit?.service) return list
-
-    return [{ value: '', label: 'None' }].concat(list)
-  })
 
   const onServiceChange = (opt: Option<string>) => {
     setService(opt.value as any)
@@ -98,7 +98,7 @@ const GenerationSettings: Component<Props> = (props) => {
                 </Show>
               </>
             }
-            value={props.inherit?.service || ''}
+            value={service()}
             items={services()}
             onChange={onServiceChange}
             disabled={props.disabled || props.disableService}

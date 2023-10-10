@@ -117,6 +117,12 @@ async function createInferenceStream(opts: InferenceRequest) {
       case 'novel':
         settings.novelModel = model
         break
+
+      case 'agnaistic': {
+        if (!settings.registered) settings.registered = {}
+        if (!settings.registered.agnaistic) settings.registered.agnaistic = {}
+        settings.registered.agnaistic.subscriptionId = model
+      }
     }
   }
 

@@ -466,7 +466,7 @@ export namespace AppSchema {
     }
 
     temporary?: Record<string, any>
-    registered?: Record<AIAdapter, Record<string, any>>
+    registered?: { [key in AIAdapter]?: Record<string, any> }
   }
 
   export interface PromptTemplate {
