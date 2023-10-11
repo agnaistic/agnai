@@ -6,6 +6,10 @@ import { useRootModal } from './hooks'
 import Button from './Button'
 import Modal from './Modal'
 import { FormLabel } from './FormLabel'
+import { settingStore, userStore } from '../store'
+import { isUsableService } from './util'
+import { defaultPresets } from '/common/default-preset'
+import { isDefaultPreset } from '/common/presets'
 
 export const PresetSelect: Component<{
   label?: JSX.Element | string
@@ -20,11 +24,19 @@ export const PresetSelect: Component<{
   const custom = createMemo(() =>
     props.options.filter((o) => o.custom && o.label.toLowerCase().includes(filter().toLowerCase()))
   )
+  const config = settingStore((s) => s.config)
+  const user = userStore((s) => ({ user: s.user }))
+
   const builtin = createMemo(() =>
     uniqBy(
-      props.options.filter(
-        (o) => !o.custom && o.label.toLowerCase().includes(filter().toLowerCase())
-      ),
+      props.options.filter((o) => {
+        if (o.custom) return false
+        if (!o.value) return true
+        if (!isDefaultPreset(o.value)) return false
+        const preset = defaultPresets[o.value]
+        if (!isUsableService(preset.service, config, user.user)) return false
+        return o.label.toLowerCase().includes(filter().toLowerCase())
+      }),
       // Remove pesky duplicate builtin Horde or it's difficult to know which
       // one the user selected
       (o) => o.value

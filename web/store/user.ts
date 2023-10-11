@@ -438,6 +438,7 @@ export const userStore = createStore<UserState>(
       if (res.error) return toastStore.error(`Failed to update settings: ${res.error}`)
 
       if (!user) return
+      toastStore.success('Key removed')
       if (kind === 'novel') {
         return { user: { ...user, novelApiKey: '', novelVerified: false } }
       }
@@ -456,6 +457,10 @@ export const userStore = createStore<UserState>(
 
       if (kind === 'elevenlabs') {
         return { user: { ...user, elevenLabsApiKey: '', elevenLabsApiKeySet: false } }
+      }
+
+      if (kind === 'openai') {
+        return { user: { ...user, oaiKey: '', oaiKeySet: false } }
       }
     },
 
