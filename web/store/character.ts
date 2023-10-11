@@ -336,11 +336,11 @@ export const characterStore = createStore<CharacterState>(
           .replace(/,+/g, ', ')
           .replace(/\s+/g, ' ')
         yield { generate: { image: null, loading: true, blob: null } }
-        const res = await imageApi.generateImageWithPrompt(prompt, async (image) => {
+        const res = await imageApi.generateImageWithPrompt(prompt, 'avatar', async (image) => {
           const file = await dataURLtoFile(image)
           const data = await getImageData(file)
           onDone?.(null, data)
-          set({ generate: { image, loading: false, blob: file } })
+          set({ generate: { image: data, loading: false, blob: file } })
         })
         if (res.error) {
           onDone?.(res.error)
@@ -353,7 +353,8 @@ export const characterStore = createStore<CharacterState>(
   }
 })
 
-subscribe('image-generated', { image: 'string' }, async (body) => {
+subscribe('image-generated', { image: 'string', source: 'string' }, async (body) => {
+  if (body.source !== 'avatar') return
   const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
   const file = new File([image], `avatar.png`, { type: 'image/png' })
   characterStore.setState({ generate: { image: body.image, loading: false, blob: file } })
@@ -365,8 +366,12 @@ subscribe('image-failed', { error: 'string' }, (body) => {
 })
 
 async function dataURLtoFile(base64: string) {
+  if (!base64.startsWith('data')) {
+    base64 = `data:image/png;base64,${base64}`
+  }
+
   return fetch(base64)
-    .then((res) => res.arrayBuffer())
+    .then((res) => res.blob())
     .then((buf) => new File([buf], 'avatar.png', { type: 'image/png' }))
 }
 

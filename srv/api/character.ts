@@ -241,7 +241,7 @@ function parseAndValidateVoice(json?: string) {
 }
 
 export const createImage = handle(async ({ body, userId, socketId, log }) => {
-  assertValid({ user: 'any?', prompt: 'string', ephemeral: 'boolean?' }, body)
+  assertValid({ user: 'any?', prompt: 'string', ephemeral: 'boolean?', source: 'string?' }, body)
   const user = userId ? await store.users.getUser(userId) : body.user
 
   const guestId = userId ? undefined : socketId
@@ -250,6 +250,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       user,
       prompt: body.prompt,
       ephemeral: body.ephemeral,
+      source: body.source || 'unknown',
     },
     log,
     guestId

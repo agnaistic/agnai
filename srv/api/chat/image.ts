@@ -11,6 +11,7 @@ export const createImage = handle(async ({ body, userId, socketId, log, params }
       messageId: 'string?',
       ephemeral: 'boolean?',
       append: 'boolean?',
+      source: 'string?',
     },
     body
   )
@@ -25,6 +26,7 @@ export const createImage = handle(async ({ body, userId, socketId, log, params }
       messageId: body.messageId,
       ephemeral: body.ephemeral,
       append: body.append,
+      source: body.source || 'unknown',
     },
     log,
     guestId

@@ -34,7 +34,7 @@ type EditState = {
   creator: string
   characterVersion: string
   postHistoryInstructions: string
-  insert: {
+  insert?: {
     prompt: string
     depth: number
   }
@@ -250,7 +250,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     setFormField(form(), 'kind', personaKind)
 
     // We set fields that aren't properly managed by form elements
-    console.log({ char })
     setState({
       ...char,
       personaKind,

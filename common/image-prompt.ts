@@ -25,10 +25,15 @@ export async function createAppearancePrompt(
 
   const { persona } = avatar
 
+  const lowered: Record<string, string[]> = Object.entries(persona.attributes).reduce(
+    (prev, [key, value]) => Object.assign(prev, { [key.toLowerCase()]: value }),
+    {}
+  )
+
   for (const key of appearanceKeys) {
     if (persona.kind === 'text') break
 
-    const value = persona.attributes[key]
+    const value = lowered[key]
     if (!value) continue
 
     for (const visual of value) {

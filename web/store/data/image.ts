@@ -9,6 +9,7 @@ import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
 import { neat } from '/common/util'
 import { AppSchema } from '/common/types'
+import { localApi } from './storage'
 
 type GenerateOpts = {
   chatId?: string
@@ -16,6 +17,7 @@ type GenerateOpts = {
   messageId?: string
   prompt?: string
   append?: boolean
+  source: string
   onDone: (image: string) => void
 }
 
@@ -39,26 +41,37 @@ export async function generateImage({ chatId, messageId, onDone, ...opts }: Gene
     messageId,
     ephemeral: opts.ephemeral,
     append: opts.append,
+    source: opts.source,
   })
   return res
 }
 
-export async function generateImageWithPrompt(prompt: string, onDone: (image: string) => void) {
+export async function generateImageWithPrompt(
+  prompt: string,
+  source: string,
+  onDone: (image: string) => void
+) {
   const user = getStore('user').getState().user
 
   if (!user) {
     throw new Error('Could not get user settings')
   }
 
-  if (!isLoggedIn()) {
-    const { text: image } = await horde.generateImage(user, prompt)
-    onDone(image)
+  if (!isLoggedIn() && (!user.images || user.images.type === 'horde')) {
+    try {
+      const { text: image } = await horde.generateImage(user, prompt)
+      onDone(image)
+      return localApi.result({})
+    } catch (ex: any) {
+      return localApi.error(ex.message)
+    }
   }
 
   const res = await api.post<{ success: boolean }>(`/character/image`, {
     prompt,
     user,
     ephemeral: true,
+    source,
   })
   return res
 }

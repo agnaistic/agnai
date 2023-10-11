@@ -647,22 +647,26 @@ export const CreateCharacterForm: Component<{
                 />
                 <TextInput
                   isMultiline
+                  class="min-h-[80px]"
                   fieldName="insertPrompt"
                   label="Insert / Depth Prompt"
-                  helperText={
-                    <span>{`Prompt to bundle with your character, placed n messages from the bottom of the conversation history, where n is the Insert Depth. Similar to AI Dungeon/NovelAI "Author's note".`}</span>
-                  }
-                  placeholder="Write like James Joyce."
-                  value={editor.state.insert.prompt}
+                  helperMarkdown={`A.k.a. Author's note. Prompt to be placed near the bottom of the chat history, **Insert Depth** messages from the bottom.`}
+                  placeholder={`E.g. ### Instruction: Write like James Joyce.`}
+                  value={editor.state.insert?.prompt}
                 />
                 <RangeInput
                   fieldName="insertDepth"
                   label="Insert Depth"
-                  helperText="The number of messages that should exist under the Insert. Values between 1 and 5 are recommended."
+                  helperText={
+                    <>
+                      The number of messages that should exist below the <b>Insert Prompt</b>.
+                      Between 1 and 5 is recommended.
+                    </>
+                  }
                   min={0}
                   max={10}
                   step={1}
-                  value={editor.state.insert.depth}
+                  value={editor.state.insert?.depth ?? 3}
                 />
               </Card>
               <Card>
