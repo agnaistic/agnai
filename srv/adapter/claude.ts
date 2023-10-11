@@ -11,6 +11,7 @@ import {
   ensureValidTemplate,
   START_REPLACE,
   SAMPLE_CHAT_MARKER,
+  insertsDeeperThanConvoHistory,
 } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
@@ -240,6 +241,13 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
   return { ...meta, completion: tokens.join('') }
 }
 
+/**
+ * This function contains the inserts logic for Claude
+ * This logic also exists in other places:
+ * - common/prompt.ts fillPromptWithLines
+ * - srv/adapter/chat-completion.ts toChatCompletionPayload
+ */
+
 function createClaudePrompt(opts: AdapterProps): string {
   if (opts.kind === 'plain') {
     return `\n\nHuman: ${opts.prompt}\n\nAssistant:`
@@ -251,7 +259,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
-  const gaslight = injectPlaceholders(
+  const { parsed: gaslight, inserts } = injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
       'history',
       'post',
@@ -271,7 +279,7 @@ function createClaudePrompt(opts: AdapterProps): string {
     parts,
     encoder: encoder(),
     characters: opts.characters || {},
-  })
+  }).parsed
 
   const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
   const prefillCost = encoder()(prefill)
@@ -282,7 +290,8 @@ function createClaudePrompt(opts: AdapterProps): string {
     gaslightCost -
     prefillCost -
     encoder()(ujb) -
-    encoder()(opts.replyAs.name + ':')
+    encoder()(opts.replyAs.name + ':') -
+    encoder()([...inserts.values()].join(' '))
 
   let tokens = 0
   const history: string[] = []
@@ -290,7 +299,19 @@ function createClaudePrompt(opts: AdapterProps): string {
   const sampleAmble = SAMPLE_CHAT_PREAMBLE.replace(BOT_REPLACE, replyAs.name)
   const sender = opts.impersonate?.name ?? opts.sender.handle
 
-  for (const line of lines.slice().reverse()) {
+  const all = lines.slice().reverse()
+  const examplePos = all.findIndex((l) => l.includes(sampleAmble))
+  let i = all.length - 1
+  let addedAllInserts = false
+  const addRemainingInserts = () => {
+    const remainingInserts = insertsDeeperThanConvoHistory(inserts, all.length - i)
+    if (remainingInserts) {
+      history.push(processLine('system', remainingInserts))
+    }
+  }
+
+  for (const line of all) {
+    const distanceFromBottom = all.length - 1 - i
     const lineType: LineType = line.startsWith(sender)
       ? 'user'
       : line.startsWith('System:')
@@ -298,13 +319,24 @@ function createClaudePrompt(opts: AdapterProps): string {
       : line.startsWith(sampleAmble)
       ? 'example'
       : 'char'
+    if (distanceFromBottom === examplePos) {
+      addRemainingInserts()
+      addedAllInserts = true
+    }
 
     const processedLine = processLine(lineType, line)
     const cost = encoder()(processedLine)
     if (cost + tokens >= maxBudget) break
+    const insert = inserts.get(distanceFromBottom)
+    if (insert) history.push(processLine('system', insert))
 
     tokens += cost
     history.push(processedLine)
+    --i
+  }
+  if (!addedAllInserts) {
+    addRemainingInserts()
+    addedAllInserts = true
   }
 
   const messages = [`\n\nHuman: ${gaslight}`, ...history.reverse()]

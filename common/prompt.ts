@@ -32,7 +32,10 @@ export type PromptParts = {
 }
 
 export type Prompt = {
-  template: string
+  template: {
+    parsed: string
+    inserts: Map<number, string>
+  }
   lines: string[]
   parts: PromptParts
 }
@@ -179,11 +182,17 @@ export function createPromptWithParts(
   parts: PromptParts,
   lines: string[],
   encoder: TokenCounter
-) {
+): {
+  lines: string[]
+  prompt: string
+  inserts: Map<number, string>
+  parts: PromptParts
+  post: string[]
+} {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
   const history = { lines, order: 'asc' } as const
-  const prompt = injectPlaceholders(template, {
+  const { parsed, inserts } = injectPlaceholders(template, {
     opts,
     parts,
     history,
@@ -191,7 +200,7 @@ export function createPromptWithParts(
     lastMessage: opts.lastMessage,
     encoder,
   })
-  return { lines: history.lines, prompt, parts, post }
+  return { lines: history.lines, prompt: parsed, inserts, parts, post }
 }
 
 export function getTemplate(
@@ -212,7 +221,13 @@ type InjectOpts = {
   encoder: TokenCounter
 }
 
-export function injectPlaceholders(template: string, inject: InjectOpts) {
+export function injectPlaceholders(
+  template: string,
+  inject: InjectOpts
+): {
+  parsed: string
+  inserts: Map<number, string>
+} {
   const { opts, parts, history: hist, encoder, ...rest } = inject
   const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
 
@@ -504,26 +519,63 @@ export function getLinesForPrompt(
   return lines
 }
 
+/** This function is not used for Claude or Chat */
+export function formatInsert(insert: string): string {
+  return `${insert}\n`
+}
+
+/**
+ * This function contains the inserts logic for all non-chat, non-Claude prompts
+ * In other words, it should work:
+ * - with #each msg
+ * - with all non-chat models regardless of whether you use #each msg or not
+ * This logic also exists in other places:
+ * - srv/adapter/chat-completion.ts toChatCompletionPayload
+ * - srv/adapter/claude.ts createClaudePrompt
+ */
 export function fillPromptWithLines(
   encoder: TokenCounter,
   tokenLimit: number,
   amble: string,
-  lines: string[]
+  lines: string[],
+  inserts: Map<number, string> = new Map()
 ) {
+  const insertsCost = encoder([...inserts.values()].join(' '))
+  const tokenLimitMinusInserts = tokenLimit - insertsCost
   let count = encoder(amble)
   const adding: string[] = []
 
+  let linesAddedCount = 0
   for (const line of lines) {
     const tokens = encoder(line)
-    if (tokens + count > tokenLimit) {
-      return adding
+    if (tokens + count > tokenLimitMinusInserts) {
+      break
     }
+    const insert = inserts.get(linesAddedCount)
+    if (insert) adding.push(formatInsert(insert))
 
     count += tokens
     adding.push(line)
+    linesAddedCount++
+  }
+  // We don't omit inserts with depth > message count in context size
+  // instead we put them at the top of the conversation history
+  const remainingInserts = insertsDeeperThanConvoHistory(inserts, linesAddedCount)
+  if (remainingInserts) {
+    adding.push(formatInsert(remainingInserts))
   }
 
   return adding
+}
+
+export function insertsDeeperThanConvoHistory(
+  inserts: Map<number, string>,
+  nonInsertLines: number
+) {
+  return [...inserts.entries()]
+    .filter(([depth, _]) => depth >= nonInsertLines)
+    .map(([_, prompt]) => prompt)
+    .join('\n')
 }
 
 function fillPlaceholders(chatMsg: AppSchema.ChatMessage, char: string, user: string): string {

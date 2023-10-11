@@ -50,6 +50,7 @@ import { DownloadModal } from './DownloadModal'
 import ImportCharacterModal from './ImportCharacter'
 import { GenField } from './generate-char'
 import Tabs, { useTabs } from '/web/shared/Tabs'
+import RangeInput from '/web/shared/RangeInput'
 
 const options = [
   { id: 'wpp', label: 'W++' },
@@ -643,6 +644,29 @@ export const CreateCharacterForm: Component<{
                   }
                   placeholder="Write at least four paragraphs."
                   value={editor.state.postHistoryInstructions}
+                />
+                <TextInput
+                  isMultiline
+                  class="min-h-[80px]"
+                  fieldName="insertPrompt"
+                  label="Insert / Depth Prompt"
+                  helperMarkdown={`A.k.a. Author's note. Prompt to be placed near the bottom of the chat history, **Insert Depth** messages from the bottom.`}
+                  placeholder={`E.g. ### Instruction: Write like James Joyce.`}
+                  value={editor.state.insert?.prompt}
+                />
+                <RangeInput
+                  fieldName="insertDepth"
+                  label="Insert Depth"
+                  helperText={
+                    <>
+                      The number of messages that should exist below the <b>Insert Prompt</b>.
+                      Between 1 and 5 is recommended.
+                    </>
+                  }
+                  min={0}
+                  max={10}
+                  step={1}
+                  value={editor.state.insert?.depth ?? 3}
                 />
               </Card>
               <Card>

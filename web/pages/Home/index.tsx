@@ -179,6 +179,7 @@ const RecentChats: Component = (props) => {
                 <Show when={char?.avatar}>
                   <AvatarIcon
                     noBorder
+                    class="flex items-center justify-center"
                     format={{ corners: 'md', size: '3xl' }}
                     avatarUrl={getAssetUrl(char?.avatar || '')}
                   />
@@ -259,7 +260,9 @@ const RecentChats: Component = (props) => {
 
         <Show when={state.last.length < 2}>
           <BorderCard href="/settings">
-            <div>Configure your AI Services</div>
+            <div class="flex w-full items-center justify-center text-center">
+              Configure your AI Services
+            </div>
             <Settings size={20} />
           </BorderCard>
         </Show>
@@ -272,7 +275,7 @@ const BorderCard: Component<{ children: any; href: string }> = (props) => {
   const nav = useNavigate()
   return (
     <div
-      class="bg-800 text-700 hover:bg-600 flex h-24 w-full cursor-pointer flex-col items-center justify-center border-[2px] border-dashed border-[var(--bg-700)] transition duration-300"
+      class="bg-800 text-700 hover:bg-600 flex h-24 w-full cursor-pointer flex-col items-center justify-center border-[2px] border-dashed border-[var(--bg-700)] text-center transition duration-300"
       onClick={() => nav(props.href)}
     >
       {props.children}

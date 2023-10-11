@@ -1,7 +1,10 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Placeholder tests will not include duplicates in {{all_personalities}} 1`] = `
-"OtherBot replies a lot
+Object {
+  "inserts": Map {},
+  "parsed": "OtherBot replies a lot
 
-MainChar's personality: MainCharacter talks a lot"
+MainChar's personality: MainCharacter talks a lot",
+}
 `;

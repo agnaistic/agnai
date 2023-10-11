@@ -77,6 +77,7 @@ export type AdapterProps = {
   guest?: string
   log: AppLog
   isThirdParty?: boolean
+  inserts?: Map<number, string>
 }
 
 export type ModelAdapter = (

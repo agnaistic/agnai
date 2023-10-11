@@ -134,7 +134,7 @@ const PromptEditor: Component<
   const rendered = createMemo(() => {
     const opts = getExampleOpts(props.inherit)
     const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
-    const example = parseTemplate(template, opts)
+    const example = parseTemplate(template, opts).parsed
     return example
   })
 

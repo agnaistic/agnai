@@ -89,7 +89,7 @@ export async function generateImage(
   }
 
   const message = image
-    ? { type: 'image-generated', chatId, image: output }
+    ? { type: 'image-generated', chatId, image: output, source: opts.source }
     : { type: 'image-failed', chatId, error: error || 'Invalid image settings (No handler found)' }
 
   if (broadcastIds.length) {

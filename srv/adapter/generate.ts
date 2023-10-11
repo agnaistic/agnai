@@ -247,6 +247,19 @@ export async function createTextStreamV2(
 
   const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
 
+  const size = encoder(
+    [
+      opts.parts.sampleChat,
+      opts.parts.scenario,
+      opts.parts.memory,
+      opts.parts.systemPrompt,
+      opts.parts.ujb,
+      opts.parts.persona,
+    ]
+      .filter((l) => !!l)
+      .join('\n')
+  )
+
   if (opts.impersonate) {
     Object.assign(opts.characters, { impersonated: opts.impersonate })
   }
@@ -276,7 +289,7 @@ export async function createTextStreamV2(
     subscription,
   })
 
-  return { stream, adapter, settings: gen, user: opts.user }
+  return { stream, adapter, settings: gen, user: opts.user, size }
 }
 
 export async function getResponseEntities(

@@ -4,6 +4,7 @@ import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adap
 import { createDebounce, isValidServiceSetting } from './util'
 import { getEncoder } from '/common/tokenize'
 import { useEffect } from './hooks'
+import { markdown } from './markdown'
 
 const MIN_HEIGHT = 40
 
@@ -11,6 +12,7 @@ const TextInput: Component<{
   fieldName: string
   label?: string | JSX.Element
   helperText?: string | JSX.Element
+  helperMarkdown?: string
   placeholder?: string
   isMultiline?: boolean
   type?: string
@@ -150,7 +152,13 @@ const TextInput: Component<{
             </div>
           </Show>
           <Show when={!!props.helperText}>
-            <p class="helper-text mt-[-0.125rem] pb-1 text-sm">{props.helperText}</p>
+            <p class="helper-text">{props.helperText}</p>
+          </Show>
+          <Show when={!!props.helperMarkdown}>
+            <p
+              class="helper-text markdown"
+              innerHTML={markdown.makeHtml(props.helperMarkdown!)}
+            ></p>
           </Show>
         </label>
       </Show>

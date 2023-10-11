@@ -121,7 +121,8 @@ export function getAssetPrefix() {
 }
 
 export function getAssetUrl(filename: string) {
-  if (filename.startsWith('http:') || filename.startsWith('https:')) return filename
+  if (filename.startsWith('http:') || filename.startsWith('https:') || filename.startsWith('data:'))
+    return filename
 
   const isFile =
     filename.startsWith('/assets') ||

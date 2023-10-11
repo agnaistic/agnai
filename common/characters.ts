@@ -64,6 +64,7 @@ export function exportCharacter(char: AppSchema.Character, target: 'tavern' | 'o
           character_version: char.characterVersion ?? '',
           extensions: {
             ...(char.extensions ?? {}),
+            depth_prompt: char.insert,
             agnai: {
               voice: char.voice,
               persona: char.persona,

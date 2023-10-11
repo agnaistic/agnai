@@ -105,6 +105,22 @@ ChatOwner: 20-TRIGGER
 OtherBot:"
 `;
 
+exports[`Prompt building will include example dialogue with omitted from template 1`] = `
+"OtherBot's Persona: OtherBot replies a lot
+Scenario: MAIN MainChar
+Facts:ENTRY ONE
+ENTRY TIE
+ENTRY THREE
+
+How OtherBot speaks: SAMPLECHAT OtherBot
+<START>
+MainChar: FIRST
+ChatOwner: 1-TRIGGER
+ChatOwner: TIE-TRIGGER
+ChatOwner: 20-TRIGGER
+OtherBot:"
+`;
+
 exports[`Prompt building will include gaslight for non-turbo adapter 1`] = `
 "GASLIGHT ChatOwner
 How OtherBot speaks:
@@ -179,7 +195,9 @@ Object {
     "ujb": "",
     "userEmbeds": Array [],
   },
-  "template": "GASLIGHT TEMPLATE
+  "template": Object {
+    "inserts": Map {},
+    "parsed": "GASLIGHT TEMPLATE
 ChatOwner
 OtherBot
 Auto-injected text:
@@ -188,6 +206,7 @@ SAMPLECHAT OtherBot
 <START>
 MainChar: bot response
 OtherBot:",
+  },
 }
 `;
 

@@ -39,6 +39,7 @@ const characterValidator = {
   extensions: 'string?',
   systemPrompt: 'string?',
   postHistoryInstructions: 'string?',
+  insert: 'string?',
   creator: 'string?',
   characterVersion: 'string?',
 } as const
@@ -67,6 +68,9 @@ const createCharacter = handle(async (req) => {
   const voice = parseAndValidateVoice(body.voice)
   const tags = toArray(body.tags)
   const alternateGreetings = body.alternateGreetings ? toArray(body.alternateGreetings) : undefined
+  const insert = body.insert
+    ? (JSON.parse(body.insert) as { prompt: string; depth: number })
+    : undefined
 
   const characterBook = body.characterBook
     ? typeof body.characterBook === 'string'
@@ -104,6 +108,7 @@ const createCharacter = handle(async (req) => {
     postHistoryInstructions: body.postHistoryInstructions,
     creator: body.creator,
     characterVersion: body.characterVersion,
+    insert: insert,
   })
 
   const filename = await entityUpload(
@@ -138,6 +143,9 @@ const editCharacter = handle(async (req) => {
   if (!isObject(extensions) && extensions !== undefined) {
     throw new StatusError('Character `extensions` field must be an object or undefined.', 400)
   }
+  const insert = body.insert
+    ? (JSON.parse(body.insert) as { prompt: string; depth: number })
+    : undefined
 
   const update: CharacterUpdate = {
     name: body.name,
@@ -155,6 +163,7 @@ const editCharacter = handle(async (req) => {
     postHistoryInstructions: body.postHistoryInstructions,
     creator: body.creator,
     characterVersion: body.characterVersion,
+    insert,
   }
 
   if (body.persona) {
@@ -232,7 +241,7 @@ function parseAndValidateVoice(json?: string) {
 }
 
 export const createImage = handle(async ({ body, userId, socketId, log }) => {
-  assertValid({ user: 'any?', prompt: 'string', ephemeral: 'boolean?' }, body)
+  assertValid({ user: 'any?', prompt: 'string', ephemeral: 'boolean?', source: 'string?' }, body)
   const user = userId ? await store.users.getUser(userId) : body.user
 
   const guestId = userId ? undefined : socketId
@@ -241,6 +250,7 @@ export const createImage = handle(async ({ body, userId, socketId, log }) => {
       user,
       prompt: body.prompt,
       ephemeral: body.ephemeral,
+      source: body.source || 'unknown',
     },
     log,
     guestId

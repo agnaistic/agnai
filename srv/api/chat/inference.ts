@@ -65,7 +65,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     impersonate: body.impersonating,
     sender: body.profile,
     replyAs: body.char || ({} as any),
-  })
+  }).parsed
 
   const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({

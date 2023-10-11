@@ -2,12 +2,14 @@ import { Component, Show, createSignal, createEffect, createMemo } from 'solid-j
 import type { JSX } from 'solid-js'
 import { AIAdapter, PresetAISettings, ThirdPartyFormat } from '../../common/adapters'
 import { isValidServiceSetting } from './util'
+import { markdown } from './markdown'
 
 const RangeInput: Component<{
   label: string
   fieldName: string
   value: number
   helperText?: string | JSX.Element
+  helperMarkdown?: string
   min: number
   max: number
   step: number
@@ -19,10 +21,15 @@ const RangeInput: Component<{
   aiSetting?: keyof PresetAISettings
   parentClass?: string
 }> = (props) => {
+  const [previousPropsValue, setPreviousPropsValue] = createSignal(props.value)
   const [value, setValue] = createSignal(props.value)
   let input: HTMLInputElement | undefined
 
   function updateRangeSliders() {
+    if (props.value !== previousPropsValue()) {
+      setValue(props.value)
+      setPreviousPropsValue(props.value)
+    }
     if (!input) return
     const value = Math.min(+input.value, +input.max)
     const nextSize = ((value - +input.min) * 100) / (+input.max - +input.min) + '% 100%'
@@ -62,7 +69,10 @@ const RangeInput: Component<{
         />
       </ul>
       <Show when={props.helperText}>
-        <p class="helper-text mt-[-0.125rem] pb-2 text-sm">{props.helperText}</p>
+        <p class="helper-text">{props.helperText}</p>
+      </Show>
+      <Show when={!!props.helperMarkdown}>
+        <p class="helper-text markdown" innerHTML={markdown.makeHtml(props.helperMarkdown!)}></p>
       </Show>
       <input
         ref={input}

@@ -8,6 +8,7 @@ export type ImageGenerateRequest = {
   messageId?: string
   ephemeral?: boolean
   append?: boolean
+  source: string
 }
 
 export type ImageAdapter = (

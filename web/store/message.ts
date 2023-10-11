@@ -465,6 +465,7 @@ export const msgStore = createStore<MsgState>(
         prompt: prev?.imagePrompt,
         append,
         onDone,
+        source: 'summary',
       })
       if (res.error) {
         yield { waiting: undefined }
