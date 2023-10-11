@@ -80,6 +80,7 @@ _ "whitespace" = [ \t]*
 OP "open" = "{{" WS
 CL "close" = WS "}}" 
 WS "ws" = " "*
+NL "newline" = "\\n" / "\\r" "\\n"?
 
 // Example pipe functions: lowercase, uppercase
 Handler "handler" = "upper" / "lower"

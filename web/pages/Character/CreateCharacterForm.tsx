@@ -35,7 +35,7 @@ import { AppSchema } from '../../../common/types/schema'
 import Loading from '/web/shared/Loading'
 import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
-import { Card, SolidCard, TitleCard } from '../../shared/Card'
+import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
@@ -364,17 +364,6 @@ export const CreateCharacterForm: Component<{
                         A description, label, or notes for your character. This is will not
                         influence your character in any way.
                       </span>
-                      <Show when={editor.canGuidance}>
-                        <p>
-                          <b>AI-Driven Character Generation:</b> Describe the character below then
-                          click <b>Generate</b>. It can take 30-60 seconds. Select which AI Service
-                          performs the generation in the Dropdown.
-                          <br />
-                          Update this description and click{' '}
-                          <b class="text-[var(--hl-500)]">Regenerate</b> to regenerate one specific
-                          field.
-                        </p>
-                      </Show>
                     </div>
                   }
                 />
@@ -386,6 +375,24 @@ export const CreateCharacterForm: Component<{
                     value={editor.state.description}
                   />
                   <Show when={editor.canGuidance}>
+                    <TitleCard class="text-sm" type="hl">
+                      <div class="font-bold">AI Generated Characters</div>
+                      1. Fill out the <Pill small>Description</Pill> field
+                      <br />
+                      2. Select the Service you wish to use
+                      <br />
+                      3. Click{' '}
+                      <Pill inverse type="hl" small>
+                        Generate
+                      </Pill>
+                      &nbsp;- It may take 30-60 seconds to generate.
+                      <br />
+                      4. Adjust the <Pill small>Description</Pill> and click{' '}
+                      <Pill type="hl" inverse small>
+                        Regenerate
+                      </Pill>
+                      &nbsp;to regenerate a specific field.
+                    </TitleCard>
                     <div class="flex justify-end gap-2 sm:justify-start">
                       <Select
                         fieldName="chargenService"

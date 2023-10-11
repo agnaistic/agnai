@@ -6,7 +6,14 @@ import { defaultCulture } from '/web/shared/CultureCodes'
 import { ADAPTER_LABELS, PERSONA_FORMATS } from '/common/adapters'
 import { getStrictForm, setFormField } from '/web/shared/util'
 import { getAttributeMap } from '/web/shared/PersonaAttributes'
-import { NewCharacter, characterStore, presetStore, toastStore, userStore } from '/web/store'
+import {
+  NewCharacter,
+  characterStore,
+  presetStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from '/web/store'
 import { getImageData } from '/web/store/data/chars'
 import { Option } from '/web/shared/Select'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
@@ -106,6 +113,7 @@ export type CharEditor = ReturnType<typeof useCharEditor>
 export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
   const user = userStore()
   const presets = presetStore()
+  const settings = settingStore()
   const [original, setOriginal] = createSignal(editing)
   const [state, setState] = createStore<EditState>({ ...initState })
   const [imageData, setImageData] = createSignal<string>()
@@ -125,8 +133,16 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       opts.push({ label: `Default (${ADAPTER_LABELS[preset.service!]})`, value: 'default' })
     }
 
-    if (user.user.sub?.level! > 0) {
-      opts.push({ label: 'Agnastic', value: 'agnaistic' })
+    {
+      const level = user.user.sub?.level ?? -1
+      const subs = settings.config.subs.filter((s) => s.level <= level)
+
+      for (const sub of subs) {
+        opts.push({ label: `Agnastic: ${sub.name}`, value: `agnaistic/${sub._id}` })
+      }
+
+      if (subs) {
+      }
     }
 
     if (user.user.oaiKeySet) {

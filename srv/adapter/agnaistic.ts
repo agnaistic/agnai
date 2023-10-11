@@ -158,7 +158,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
 
     if (preset.service === 'goose') {
       opts.user.adapterConfig.goose = {
-        engine: preset.registered?.goose.engine,
+        engine: preset.registered?.goose?.engine,
         apiKey: userKey,
       }
     }

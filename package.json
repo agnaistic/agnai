@@ -72,7 +72,7 @@
     "start:debug:win": "set LOG_LEVEL=debug && concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:watch\"",
     "test": "mocha --inline-diffs --exit \"tests/**.spec.js\"",
     "snapshot": "UPDATE_SNAPSHOT=1 mocha --inline-diffs --exit \"tests/**.spec.js\"",
-    "typecheck": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d",
     "deps": "npx --yes pnpm@8.6.2 install --lockfile",

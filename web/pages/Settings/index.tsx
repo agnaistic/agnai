@@ -19,6 +19,7 @@ import { toArray } from '/common/util'
 import { useSearchParams } from '@solidjs/router'
 import Modal from '/web/shared/Modal'
 import { THIRDPARTY_FORMATS } from '/common/adapters'
+import { SubscriptionPage } from '../Profile/SubscriptionPage'
 
 const settingTabs: Record<Tab, string> = {
   ai: 'AI Settings',
@@ -26,6 +27,7 @@ const settingTabs: Record<Tab, string> = {
   image: 'Image Settings',
   voice: 'Voice Settings',
   guest: 'Guest Data',
+  subscription: 'Subscription',
 }
 
 enum MainTab {
@@ -34,6 +36,7 @@ enum MainTab {
   image = 2,
   voice = 3,
   guest = 4,
+  subscription = 5,
 }
 
 type Tab = keyof typeof MainTab
@@ -72,6 +75,11 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
   const [models, setModels] = createSignal<string[]>(toArray(state.user?.hordeModel))
 
   const tabs: Tab[] = ['ai', 'ui', 'image', 'voice']
+
+  if (state.loggedIn && (state.tiers.length > 0 || state.user?.billing)) {
+    tabs.push('subscription')
+  }
+
   if (!state.loggedIn) tabs.push('guest')
 
   const currentTab = createMemo(() => tabs[tab()])
@@ -196,6 +204,10 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
           <div class={currentTab() === 'voice' ? tabClass : 'hidden'}>
             <VoiceSettings />
+          </div>
+
+          <div class={currentTab() === 'subscription' ? tabClass : 'hidden'}>
+            <SubscriptionPage />
           </div>
 
           <div class={currentTab() === 'guest' ? tabClass : 'hidden'}>

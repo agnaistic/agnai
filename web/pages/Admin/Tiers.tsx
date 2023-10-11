@@ -37,6 +37,15 @@ const TiersPage: Component = (props) => {
   )
   const [name, setName] = createSignal(editing()?.name || '')
   const [desc, setDesc] = createSignal(editing()?.description || '')
+  const [productId, setProductId] = createSignal(editing()?.productId)
+
+  const price = createMemo(() => {
+    const product = admin.products.find((p) => p.id === productId())
+    if (!product) return 0
+
+    const price = admin.prices.find((pr) => pr.id === product.default_price)
+    return price?.unit_amount || 0
+  })
 
   const onSubmit = () => {
     const data = getStrictForm(form, {
@@ -122,13 +131,16 @@ const TiersPage: Component = (props) => {
 
           <div class="text-lg font-bold">Preview</div>
 
-          <TierCard tier={{ name: name(), description: desc(), cost: 1000, disableSlots: false }} />
+          <TierCard
+            tier={{ name: name(), description: desc(), cost: price(), disableSlots: false }}
+          />
 
           <Select
             fieldName="productId"
             label="Stripe Product"
             items={products()}
             value={editing()?.productId}
+            onChange={(ev) => setProductId(ev.value)}
           />
 
           <TextInput type="number" fieldName="level" label="Level" value={editing()?.level ?? -1} />

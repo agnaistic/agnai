@@ -124,7 +124,7 @@ export function parseTemplate(template: string, opts: TemplateOpts) {
     }
   }
 
-  return render(output, opts)
+  return render(output, opts).replace(/\n\n+/g, '\n\n')
 }
 
 function render(template: string, opts: TemplateOpts) {
@@ -139,19 +139,25 @@ function render(template: string, opts: TemplateOpts) {
      */
     for (let i = 0; i < orig.length; i++) {
       const node = orig[i]
-      if (node !== '\n') {
+      if (typeof node !== 'string') {
         ast.push(node)
         continue
       }
 
       const next = orig[i + 1]
-      if (!next || typeof next === 'string' || next.kind !== 'if') {
-        ast.push(node)
+      const prev = orig[i - 1]
+
+      if (node === '\n' && isEnclosingNode(next)) {
+        next.children.unshift('\n')
         continue
       }
 
-      next.children.unshift('\n')
-      continue
+      if (node === '\n' && isEnclosingNode(prev)) {
+        prev.children.push('\n')
+        continue
+      }
+
+      ast.push(node)
     }
 
     const inserts = ast.filter(
@@ -168,8 +174,11 @@ function render(template: string, opts: TemplateOpts) {
 
     const output: string[] = []
 
-    for (const parent of ast) {
+    for (let i = 0; i < ast.length; i++) {
+      const parent = ast[i]
+
       const result = renderNode(parent, opts)
+
       if (result) output.push(result)
     }
     return output.join('')
@@ -455,4 +464,9 @@ function lastMessage(value: string) {
   const date = new Date(value)
   if (isNaN(date.valueOf())) return 'unknown'
   return elapsedSince(date)
+}
+
+function isEnclosingNode(node: any): node is ConditionNode | IteratorNode {
+  if (!node || typeof node === 'string') return false
+  return node.kind === 'if'
 }

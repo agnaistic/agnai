@@ -81,7 +81,6 @@ OtherBot:"
 
 exports[`Prompt building will exclude scenario when empty in condition 1`] = `
 "Roleplay instructions
-
 How OtherBot speaks:
 SAMPLECHAT OtherBot
 <START>

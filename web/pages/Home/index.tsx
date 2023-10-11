@@ -4,13 +4,14 @@ import PageHeader from '../../shared/PageHeader'
 import { adaptersToOptions, getAssetUrl, setComponentPageTitle } from '../../shared/util'
 import { announceStore, chatStore, settingStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
-import { AlertTriangle, MoveRight, Plus } from 'lucide-solid'
+import { AlertTriangle, MoveRight, Plus, Settings } from 'lucide-solid'
 import { Card, Pill, SolidCard, TitleCard } from '/web/shared/Card'
 import Modal from '/web/shared/Modal'
 import AvatarIcon from '/web/shared/AvatarIcon'
 import { elapsedSince } from '/common/util'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
+import WizardIcon from '/web/icons/WizardIcon'
 
 const enum Sub {
   None,
@@ -153,10 +154,11 @@ export default HomePage
 const RecentChats: Component = (props) => {
   const nav = useNavigate()
   const state = chatStore((s) => ({
+    chars: s.allChars.list,
     last: s.allChats
       .slice()
       .sort((l, r) => (r.updatedAt > l.updatedAt ? 1 : -1))
-      .slice(0, 3)
+      .slice(0, 4)
       .map((chat) => ({ chat, char: s.allChars.map[chat.characterId] })),
   }))
 
@@ -242,15 +244,38 @@ const RecentChats: Component = (props) => {
           )}
         </For>
         <Show when={state.last.length < 4}>
-          <div
-            class="bg-800 text-700 flex h-24 w-full cursor-pointer flex-col items-center justify-center border-[2px] border-dashed border-[var(--bg-700)]"
-            onClick={() => nav('/chats/create')}
-          >
+          <BorderCard href="/chats/create">
             <div>Start Conversation</div>
             <Plus size={20} />
-          </div>
+          </BorderCard>
+        </Show>
+
+        <Show when={state.last.length < 3}>
+          <BorderCard href="/editor">
+            <div>Create a Character</div>
+            <WizardIcon size={20} />
+          </BorderCard>
+        </Show>
+
+        <Show when={state.last.length < 2}>
+          <BorderCard href="/settings">
+            <div>Configure your AI Services</div>
+            <Settings size={20} />
+          </BorderCard>
         </Show>
       </div>
+    </div>
+  )
+}
+
+const BorderCard: Component<{ children: any; href: string }> = (props) => {
+  const nav = useNavigate()
+  return (
+    <div
+      class="bg-800 text-700 hover:bg-600 flex h-24 w-full cursor-pointer flex-col items-center justify-center border-[2px] border-dashed border-[var(--bg-700)] transition duration-300"
+      onClick={() => nav(props.href)}
+    >
+      {props.children}
     </div>
   )
 }
@@ -261,7 +286,7 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
       <div class="font-bold">Latest News</div>
       <For each={props.list}>
         {(item) => (
-          <div class="rounded-md border-[1px] border-[var(--bg-600)]">
+          <div class="rounded-md border-[1px] border-[var(--hl-500)]">
             <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
               <div class="text-lg font-bold">{item.title}</div>
               <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div>
