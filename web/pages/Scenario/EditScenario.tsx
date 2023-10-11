@@ -2,15 +2,15 @@ import { Component, Show, createSignal, onMount } from 'solid-js'
 import { scenarioStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
-import { Copy, Download, Save, Trash, X, Zap } from 'lucide-solid'
+import { Copy, Download, Trash } from 'lucide-solid'
 import { useNavigate, useParams } from '@solidjs/router'
 import TextInput from '../../shared/TextInput'
-import { deepCloneAndRemoveFields, getStrictForm } from '../../shared/util'
-import { NewScenario } from '/common/types'
+import { deepCloneAndRemoveFields } from '../../shared/util'
 import Divider from '/web/shared/Divider'
 import { Toggle } from '/web/shared/Toggle'
 import { ConfirmModal } from '/web/shared/Modal'
 import { ExportScenarioModal } from './components/DownloadScenarioModal'
+import EditScenarioEvents from './EditScenarioEvents'
 
 const CreateScenario: Component = () => {
   let ref: any
@@ -36,30 +36,6 @@ const CreateScenario: Component = () => {
     if (!state.scenario) return
     const clone = deepCloneAndRemoveFields(state.scenario, ['_id', 'userId', 'kind'])
     scenarioStore.create(clone, (r) => nav(`/scenario/${r._id}/edit`))
-  }
-
-  const onSubmit = (ev: Event) => {
-    if (!state.scenario) return
-
-    const body = getStrictForm(ev, {
-      name: 'string',
-      description: 'string?',
-      text: 'string',
-      overwriteCharacterScenario: 'boolean',
-      instructions: 'string?',
-    } as const)
-
-    const update: NewScenario = {
-      name: body.name,
-      description: body.description,
-      states: [],
-      text: body.text,
-      overwriteCharacterScenario: body.overwriteCharacterScenario,
-      instructions: body.instructions,
-      entries: state.scenario.entries,
-    }
-
-    scenarioStore.update(state.scenario._id, update)
   }
 
   return (
@@ -92,11 +68,7 @@ const CreateScenario: Component = () => {
         }
       />
 
-      {/* <div class="text-lg font-bold">Events</div> */}
       <div class="flex items-center gap-2">
-        <Button schema="primary" onClick={() => nav(`/scenario/${params.editId}/events`)}>
-          <Zap size={16} /> Manage Events
-        </Button>
         <Show
           when={state.scenario?.entries.length ?? 0 > 0}
           fallback={<p>No events attached to this scenario</p>}
@@ -109,7 +81,7 @@ const CreateScenario: Component = () => {
 
       <div class="text-lg font-bold">Scenario Details</div>
 
-      <form class="flex flex-col gap-4" onSubmit={onSubmit} ref={ref}>
+      <form class="flex flex-col gap-4" ref={ref}>
         <TextInput
           fieldName="name"
           required
@@ -152,16 +124,7 @@ const CreateScenario: Component = () => {
           value={state.scenario?.instructions}
         />
 
-        <div class="flex justify-end gap-2">
-          <Button onClick={() => nav('/scenario')} schema="secondary">
-            <X />
-            Cancel
-          </Button>
-          <Button type="submit" disabled={state.loading}>
-            <Save />
-            Update
-          </Button>
-        </div>
+        <EditScenarioEvents editId={params.editId} form={ref} />
       </form>
 
       <ConfirmModal

@@ -11,16 +11,15 @@ import {
   onMount,
 } from 'solid-js'
 import { scenarioStore } from '../../store'
-import PageHeader from '../../shared/PageHeader'
 import Button from '../../shared/Button'
-import { ArrowLeft, ChevronDown, ChevronUp, Plus, Save, X } from 'lucide-solid'
-import { useNavigate, useParams } from '@solidjs/router'
+import { ChevronDown, ChevronUp, Plus, Save, X } from 'lucide-solid'
+import { useNavigate } from '@solidjs/router'
 import TextInput from '../../shared/TextInput'
-import { AppSchema } from '/common/types'
+import { AppSchema, NewScenario } from '/common/types'
 import Accordian from '/web/shared/Accordian'
 import Select, { Option } from '/web/shared/Select'
 import RangeInput from '/web/shared/RangeInput'
-import { getForm } from '/web/shared/util'
+import { getForm, getStrictForm } from '/web/shared/util'
 import TagInput from '/web/shared/TagInput'
 import PromptEditor from '/web/shared/PromptEditor'
 import { FormLabel } from '/web/shared/FormLabel'
@@ -33,7 +32,7 @@ const eventTypeOptions: Option<AppSchema.EventTypes>[] = [
   { value: 'ooc', label: 'Out Of Character (only visible by the user)' },
 ]
 
-const triggerTypeOptions: Option<AppSchema.ScenarioTriggerKind>[] = [
+const triggerTypeOptions: Array<Option<AppSchema.ScenarioTriggerKind>> = [
   {
     value: 'onGreeting',
     label: 'Greeting',
@@ -52,13 +51,11 @@ const triggerTypeOptions: Option<AppSchema.ScenarioTriggerKind>[] = [
   },
 ]
 
-const CreateScenario: Component = () => {
-  let ref: any
+const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> = (props) => {
   const nav = useNavigate()
-  const params = useParams<{ editId: string }>()
   const state = scenarioStore((x) => ({
     loading: x.loading,
-    scenario: x.scenarios.find((s) => s._id === params.editId),
+    scenario: x.scenarios.find((s) => s._id === props.editId),
   }))
 
   const [entries, setEntries] = createSignal<AppSchema.ScenarioEvent[]>([])
@@ -180,10 +177,18 @@ const CreateScenario: Component = () => {
     setEntries(entries().map((e) => (e === entry ? newEntry : e)))
   }
 
-  const onSubmit = (ev: Event) => {
-    ev.preventDefault()
+  const onSubmit = () => {
     if (!state.scenario) return
-    const inputs = getForm<any>(ref)
+
+    const body = getStrictForm(props.form, {
+      name: 'string',
+      description: 'string?',
+      text: 'string',
+      overwriteCharacterScenario: 'boolean',
+      instructions: 'string?',
+    })
+
+    const inputs = getForm<any>(props.form)
 
     const ents = entries()
 
@@ -210,28 +215,21 @@ const CreateScenario: Component = () => {
       }
     }
 
-    const update = { ...state.scenario, entries: ents }
+    const update: NewScenario = {
+      name: body.name,
+      description: body.description,
+      text: body.text,
+      states: [],
+      overwriteCharacterScenario: body.overwriteCharacterScenario,
+      instructions: body.instructions,
+      entries: ents,
+    }
+
     scenarioStore.update(state.scenario._id, update)
   }
 
   return (
     <>
-      <PageHeader
-        title={
-          <div class="flex w-full justify-between">
-            <div>Edit Scenario Events</div>
-            <div class="flex text-base">
-              <div class="px-1">
-                <Button schema="secondary" onClick={() => nav(`/scenario/${params.editId}`)}>
-                  <ArrowLeft />
-                  <span class="hidden sm:inline">Back</span>
-                </Button>
-              </div>
-            </div>
-          </div>
-        }
-      />
-
       <EventsHelp />
 
       <FormLabel label="States Used" helperText="The states you have used in your events so far" />
@@ -244,7 +242,7 @@ const CreateScenario: Component = () => {
         </For>
       </div>
 
-      <form class="relative flex flex-col gap-4" onSubmit={onSubmit} ref={ref}>
+      <div class="relative flex flex-col gap-4">
         <div class="sticky top-0 z-[1] flex items-center justify-between bg-[var(--bg-900)] py-2">
           <div class="text-lg font-bold">Events</div>
           <Button onClick={addEntry}>
@@ -312,7 +310,7 @@ const CreateScenario: Component = () => {
                       />
                       <FormLabel
                         label="Required States"
-                        helperText="Which state(s) are required before this event will trigger."
+                        helperText="Which state(s) are required before this event can be triggered."
                       />
                       <TagInput
                         fieldName={`requires.${index}`}
@@ -324,7 +322,7 @@ const CreateScenario: Component = () => {
                       />
                       <FormLabel
                         label="States to Assign"
-                        helperText="When trigger, which states will be assigned"
+                        helperText="When triggered, which states will be assigned to the chat"
                       />
                       <TagInput
                         fieldName={`assigns.${index}`}
@@ -436,21 +434,21 @@ const CreateScenario: Component = () => {
         </Switch>
 
         <div class="mt-4 flex justify-end gap-2">
-          <Button onClick={() => nav(`/scenario/${params.editId}`)} schema="secondary">
+          <Button onClick={() => nav(`/memory?tab=1`)} schema="secondary">
             <X />
             Cancel
           </Button>
-          <Button type="submit" disabled={state.loading || invalidStates().length > 0}>
+          <Button onClick={onSubmit} disabled={state.loading || invalidStates().length > 0}>
             <Save />
             Update
           </Button>
         </div>
-      </form>
+      </div>
     </>
   )
 }
 
-export default CreateScenario
+export default EditScenarioEvents
 
 const EventsHelp: Component = () => {
   return (

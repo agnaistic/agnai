@@ -21,7 +21,7 @@ const ChatMemoryModal: Component<{
     embeds: s.embeds.filter((em) => em.metadata.type === 'user'),
   }))
 
-  const [id, setId] = createSignal(props.chat.memoryId || '')
+  const [id, setId] = createSignal(props.chat.memoryId || 'new')
   const [embedId, setEmbedId] = createSignal(props.chat.userEmbedId)
   const [book, setBook] = createSignal<AppSchema.MemoryBook>()
   const [entrySort, setEntrySort] = createSignal<EntrySort>('creationDate')
@@ -61,6 +61,21 @@ const ChatMemoryModal: Component<{
     chatStore.editChat(props.chat._id, { userEmbedId: embedId() }, undefined)
   }
 
+  const createMemoryBook = () => {
+    memoryStore.create(
+      {
+        name: 'New Book',
+        entries: [],
+        description: '',
+        extensions: {},
+      },
+      (book) => {
+        setId(book._id)
+        setBook(book)
+      }
+    )
+  }
+
   const Footer = (
     <>
       <Button schema="secondary" onClick={props.close}>
@@ -86,10 +101,6 @@ const ChatMemoryModal: Component<{
   return (
     <>
       <div class="flex gap-4">
-        <A class="link" href="/guides/pipeline">
-          Pipeline Guide
-        </A>{' '}
-        |{' '}
         <A class="link" href="/guides/memory">
           Memory Guide
         </A>
@@ -106,6 +117,9 @@ const ChatMemoryModal: Component<{
             useMemoryBook()
           }}
         />
+        <div>
+          <Button onClick={createMemoryBook}>Create New Memory Book</Button>
+        </div>
 
         <Divider />
         <Show when={state.embeds.length > 0}>
