@@ -128,6 +128,8 @@ export async function getCharacterList(charIds: string[], userId?: string) {
     createdAt: 1,
     updatedAt: 1,
     voice: 1,
+    visualType: 1,
+    sprite: 1,
   }
   if (userId) {
     const list = await db('character')
