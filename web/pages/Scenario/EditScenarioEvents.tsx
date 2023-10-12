@@ -243,7 +243,7 @@ const EditScenarioEvents: Component<{ editId: string; form: HTMLFormElement }> =
       </div>
 
       <div class="relative flex flex-col gap-4">
-        <div class="sticky top-0 z-[1] flex items-center justify-between bg-[var(--bg-900)] py-2">
+        <div class="sticky top-0 z-[1] flex items-center justify-between rounded-md bg-[var(--bg-900)] p-2">
           <div class="text-lg font-bold">Events</div>
           <Button onClick={addEntry}>
             <Plus /> Create Event
