@@ -73,7 +73,7 @@ const Message: Component<MessageProps> = (props) => {
       sendMessage={props.sendMessage}
       isPaneOpen={props.isPaneOpen}
       showHiddenEvents={props.showHiddenEvents}
-      last
+      last={props.last}
       lastSplit
     >
       {props.children}
