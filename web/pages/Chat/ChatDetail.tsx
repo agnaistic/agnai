@@ -40,7 +40,6 @@ import {
   SwipeMessage,
 } from './helpers'
 import { useAutoExpression } from '/web/shared/Avatar/hooks'
-import { useChatAvatars } from './components/ChatAvatar'
 import AvatarContainer from '/web/shared/Avatar/Container'
 import { eventStore } from '/web/store/event'
 import Slot from '/web/shared/Slot'
@@ -95,7 +94,6 @@ const ChatDetail: Component = () => {
   })
 
   const express = useAutoExpression()
-  const avatars = useChatAvatars()
 
   const viewHeight = createMemo(() => {
     const mode = chats.char?.visualType === 'sprite' ? 'sprite' : 'avatar'
@@ -565,7 +563,6 @@ const ChatDetail: Component = () => {
                         editing={chats.opts.editing}
                         sendMessage={sendMessage}
                         isPaneOpen={!!chats.opts.pane}
-                        avatars={avatars.avatars()}
                       />
                     </Show>
                   </div>

@@ -516,7 +516,7 @@ async function handleImage(chatId: string, image: string) {
   }
 
   if (!isImageUrl) {
-    image = `data:image/png;base64,${image}`
+    image = image.startsWith('data') ? image : `data:image/png;base64,${image}`
   }
 
   const newMsg: AppSchema.ChatMessage = {

@@ -66,7 +66,13 @@ export async function generateImage(
    * Otherwise: We will broadcast the image content
    */
   if (image) {
-    if (!opts.ephemeral && config.storage.saveImages) {
+    // Guest images do not get saved under any circumstances
+
+    if (guestId) {
+      if (!output.startsWith('data')) {
+        output = `data:image/image;base64,${image.content.toString('base64')}`
+      }
+    } else if (!opts.ephemeral && config.storage.saveImages) {
       const name = `${v4()}.${image.ext}`
       output = await saveFile(name, image.content)
 

@@ -623,13 +623,17 @@ export function getUsableServices() {
   const services: AIAdapter[] = []
 
   for (const service of config.adapters) {
-    if (isUsable(service, config, user)) services.push(service)
+    if (isUsableService(service, config, user)) services.push(service)
   }
 
   return services
 }
 
-function isUsable(service: AIAdapter, config: AppSchema.AppConfig, user?: AppSchema.User) {
+export function isUsableService(
+  service: AIAdapter,
+  config: AppSchema.AppConfig,
+  user?: AppSchema.User
+) {
   switch (service) {
     case 'agnaistic': {
       const level = user?.sub?.level ?? -1
@@ -638,35 +642,39 @@ function isUsable(service: AIAdapter, config: AppSchema.AppConfig, user?: AppSch
     }
 
     case 'claude': {
-      return !!user?.claudeApiKeySet
+      return !!user?.claudeApiKeySet || !!user?.claudeApiKey
     }
 
     case 'goose': {
-      return !!user?.adapterConfig?.goose?.apiKeySet
+      return !!user?.adapterConfig?.goose?.apiKeySet || !!user?.adapterConfig?.goose?.apiKey
     }
 
     case 'mancer': {
-      return !!user?.adapterConfig?.mancer?.apiKeySet
+      return !!user?.adapterConfig?.mancer?.apiKeySet || !!user?.adapterConfig?.mancer?.apiKey
     }
 
     case 'novel': {
-      return !!user?.novelVerified
+      return !!user?.novelVerified || !!user?.novelApiKey
     }
 
     case 'openai': {
-      return !!user?.oaiKeySet
+      return !!user?.oaiKeySet || !!user?.oaiKey
     }
 
     case 'openrouter': {
-      return !!user?.adapterConfig?.openrouter?.apiKeySet
+      return (
+        !!user?.adapterConfig?.openrouter?.apiKeySet || !!user?.adapterConfig?.openrouter?.apiKey
+      )
     }
 
     case 'replicate': {
-      return !!user?.adapterConfig?.replicate?.apiTokenSet
+      return (
+        !!user?.adapterConfig?.replicate?.apiTokenSet || !!user?.adapterConfig?.replicate?.apiToken
+      )
     }
 
     case 'scale': {
-      return !!user?.scaleApiKeySet
+      return !!user?.scaleApiKeySet || !!user?.scaleApiKey
     }
 
     case 'horde':

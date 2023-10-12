@@ -5,7 +5,6 @@ const ScenarioRoutes: Component = () => (
   <Route path="/scenario">
     <Route path="/" component={lazy(() => import('./ScenarioList'))} />
     <Route path="/:editId" component={lazy(() => import('./EditScenario'))} />
-    <Route path="/:editId/events" component={lazy(() => import('./EditScenarioEvents'))} />
   </Route>
 )
 

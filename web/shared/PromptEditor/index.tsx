@@ -212,7 +212,7 @@ const PromptEditor: Component<
           label={
             <>
               <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
-                Prompt Template (formerly gaslight) <HelpCircle size={16} />
+                Prompt Template <HelpCircle size={16} />
               </div>
               <div class="flex gap-2">
                 <Button size="sm" onClick={() => setPreview(!preview())}>

@@ -77,7 +77,7 @@ export function getPresetOptions(
   userPresets: AppSchema.UserGenPreset[],
   includes: { builtin?: boolean; base?: boolean }
 ): PresetOption[] {
-  const user = userStore((u) => u.user || { defaultPreset: '' })
+  const user = userStore.getState().user || { defaultPreset: '' }
   const presets = userPresets.slice().map((preset) => ({
     label: `[${getServiceName(preset.service)}] ${preset.name} ${
       user.defaultPreset === preset._id ? '(*) ' : ''
