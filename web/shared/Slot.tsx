@@ -15,11 +15,13 @@ import { wait } from '/common/util'
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
 
-let slotCounter = 100
+let slotCounter = 200
+
+const idLocks = new Set<number>()
 
 declare const google: { ima: any }
 
-export type SlotKind = 'menu' | 'leaderboard' | 'content' | 'video'
+export type SlotKind = 'menu' | 'leaderboard' | 'content' | 'video' | 'pane_leaderboard'
 export type SlotSize = 'sm' | 'lg' | 'xl'
 
 type SlotId =
@@ -38,6 +40,7 @@ type SlotDef = {
   sm?: SlotSpec
   lg?: SlotSpec
   xl?: SlotSpec
+  ez: number[]
 }
 
 const MIN_AGE = 60 * 1000
@@ -63,7 +66,7 @@ const Slot: Component<{
   }))
 
   const [stick, setStick] = createSignal(props.sticky)
-  const [uniqueId] = createSignal(++slotCounter)
+  const [uniqueId, setUniqueId] = createSignal<number>()
 
   const [done, setDone] = createSignal(false)
   const [videoDone, setVideoDone] = createSignal(false)
@@ -75,7 +78,7 @@ const Slot: Component<{
 
   const id = createMemo(() => {
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting)
-      return `ezoic-pub-ad-placeholder-${uniqueId()}`
+      return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
     return `${props.slot}-${uniqueId()}`
   })
 
@@ -258,6 +261,7 @@ const Slot: Component<{
   })
 
   onCleanup(() => {
+    idLocks.delete(uniqueId()!)
     const remove = adslot()
     if (!remove) return
     log('Cleanup')
@@ -265,7 +269,7 @@ const Slot: Component<{
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       if (!done() || !ref) return
       ezstandalone.cmd.push(() => {
-        ezstandalone.destroyPlaceholders(uniqueId())
+        ezstandalone.destroyPlaceholders(uniqueId()!)
       })
     } else googletag.destroySlots([remove])
   })
@@ -306,10 +310,12 @@ const Slot: Component<{
       return
     }
 
+    const num = getUniqueId(cfg.slots.provider!, props.slot, uniqueId())
+    setUniqueId(num)
+
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       ezReady.then(() => {
-        const num = uniqueId()
-        log('[ez]', num, 'dispatched')
+        log('[ez]', num, `dispatched #${num}`)
         ezstandalone.cmd.push(() => {
           if (!ezstandalone.enabled) {
             ezstandalone.define(num)
@@ -441,12 +447,14 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x300', id: 'agn-video-sm' },
     xl: { size: '300x600', id: 'agn-video-sm' },
+    ez: [],
   },
   leaderboard: {
     platform: 'container',
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
     lg: { size: '728x90', id: 'agn-leaderboard-lg' },
     xl: { size: '970x90', id: 'agn-leaderboard-xl' },
+    ez: [103],
   },
   menu: {
     calc: (parent) => {
@@ -456,12 +464,19 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     platform: 'page',
     sm: { size: '300x250', id: 'agn-menu-sm' },
     lg: { size: '300x600', id: 'agn-menu-lg' },
+    ez: [106],
   },
   content: {
     platform: 'container',
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
     lg: { size: '728x90', id: 'agn-leaderboard-lg' },
     xl: { size: '970x90', id: 'agn-leaderboard-xl', fallbacks: ['970x66', '960x90', '950x90'] },
+    ez: [104, 105, 107],
+  },
+  pane_leaderboard: {
+    platform: 'container',
+    sm: { size: '320x50', id: 'agn-leaderboard-sm' },
+    ez: [108, 109],
   },
 }
 
@@ -486,6 +501,22 @@ export function getSlotById(id: string) {
     const slotId = slot.getSlotElementId()
     if (slotId === id) return slot
   }
+}
+
+function getUniqueId(prv: 'google' | 'ez', kind: SlotKind, current?: number) {
+  if (current) return current
+  if (prv === 'google') {
+    return ++slotCounter
+  }
+
+  const available = slotDefs[kind]
+  for (const id of available.ez) {
+    if (idLocks.has(id)) continue
+    idLocks.add(id)
+    return id
+  }
+
+  return ++slotCounter
 }
 
 function getSlotId(id: string) {

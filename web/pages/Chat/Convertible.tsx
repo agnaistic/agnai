@@ -64,7 +64,7 @@ const WithinPage: Component<PartialProps> = (props) => {
               <X />
             </div>
           </div>
-          <div class="pl-2">{props.title ?? <PageHeader title={props.title} />}</div>
+          <div class="pl-2">{props.title ?? <PageHeader title={props.title} subPage />}</div>
           <div class="px-2">{body}</div>
           <Footer>{props.footer}</Footer>
         </div>

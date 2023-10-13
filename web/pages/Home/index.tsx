@@ -12,6 +12,7 @@ import { elapsedSince } from '/common/util'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
 import WizardIcon from '/web/icons/WizardIcon'
+import Slot from '/web/shared/Slot'
 
 const enum Sub {
   None,
@@ -284,6 +285,7 @@ const BorderCard: Component<{ children: any; href: string }> = (props) => {
 }
 
 const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => {
+  let ref: any
   return (
     <div>
       <div class="font-bold">Latest News</div>
@@ -301,6 +303,9 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
           </div>
         )}
       </For>
+      <div ref={ref} class="w-full">
+        <Slot slot="leaderboard" parent={ref} />
+      </div>
     </div>
   )
 }
