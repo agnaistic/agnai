@@ -15,6 +15,7 @@ import type { FindUserResponse } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
 
 const BACKGROUND_KEY = 'ui-bg'
+export const ACCOUNT_KEY = 'agnai-username'
 
 type ConfigUpdate = Partial<AppSchema.User & { hordeModels?: string[] }>
 
@@ -214,6 +215,9 @@ export const userStore = createStore<UserState>(
 
       if (res.error) return toastStore.error(`Failed to get user config`)
       if (res.result) {
+        if (res.result.username) {
+          storage.localSetItem(ACCOUNT_KEY, res.result.username)
+        }
         window.usePipeline = res.result.useLocalPipeline
         return { user: res.result }
       }
@@ -292,6 +296,7 @@ export const userStore = createStore<UserState>(
       }
 
       setAuth(res.result.token)
+      storage.localSetItem(ACCOUNT_KEY, username)
 
       yield {
         loading: false,

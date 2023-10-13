@@ -117,7 +117,7 @@ const App: Component = () => {
             </Show>
           </Show>
           <Show when={cfg.config.canAuth}>
-            <Route path="/login" component={LoginPage} />
+            <Route path={['/login', '/login/remember']} component={LoginPage} />
           </Show>
           <Route path="/faq" component={FAQ} />
           <Route path="/builder" component={lazy(() => import('./shared/Avatar/Builder'))} />
