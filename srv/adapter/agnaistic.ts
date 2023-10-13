@@ -10,7 +10,7 @@ import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
-import { getTextgenCompletion, getTextgenPayload, handleOoba } from './ooba'
+import { getTextgenCompletion, getThirdPartyPayload, handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleOpenRouter } from './openrouter'
 import { handlePetals } from './petals'
@@ -183,17 +183,17 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, allStops)
+  const body = getThirdPartyPayload(opts, allStops)
 
-  yield { prompt: body.prompt }
+  yield { prompt }
 
   log.debug({ ...body, prompt: null }, 'Agnaistic payload')
 
-  if (opts.kind === 'continue') {
-    body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
-  }
+  // if (opts.kind === 'continue') {
+  //   body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
+  // }
 
-  log.debug(`Prompt:\n${body.prompt}`)
+  log.debug(`Prompt:\n${prompt}`)
 
   const params = [
     `key=${key}`,

@@ -7,6 +7,7 @@ import { store } from '../db'
 import { encryptText } from '../db/util'
 import billing, { stripe } from './billing'
 import { config } from '../config'
+import { publishAll } from './ws/handle'
 
 const subSetting = {
   ...presetValidator,
@@ -66,6 +67,21 @@ const update = handle(async ({ body, params }) => {
 
 const remove = handle(async (req) => {
   await store.subs.deleteSubscription(req.params.id)
+  return { success: true }
+})
+
+const replaceSubPreset = handle(async ({ body, params }) => {
+  const id = params.id
+  assertValid({ replacementId: 'string' }, body)
+
+  await store.subs.replaceSubscription(id, body.replacementId)
+
+  publishAll({
+    type: 'subscription-replaced',
+    subscriptionId: id,
+    replacementId: body.replacementId,
+  })
+
   return { success: true }
 })
 
@@ -132,6 +148,7 @@ router.use('/billing/subscribe', billing)
 router.use(isAdmin)
 router.get('/subscriptions', get)
 router.post('/subscriptions', create)
+router.post('/subscriptions/:id/replace', replaceSubPreset)
 router.post('/subscriptions/:id', update)
 router.delete('/subscriptions/:id', remove)
 router.post('/tiers', createTier)

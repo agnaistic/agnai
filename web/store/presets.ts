@@ -3,6 +3,7 @@ import { EVENTS, events } from '../emitter'
 import { api } from './api'
 import { createStore } from './create'
 import { PresetCreate, PresetUpdate, SubscriptionUpdate, presetApi } from './data/presets'
+import { subscribe } from './socket'
 import { toastStore } from './toasts'
 
 type PresetState = {
@@ -129,6 +130,19 @@ export const presetStore = createStore<PresetState>(
         onSuccess?.(res.result)
       }
     },
+    async replaceSubscription({ subs }, subId: string, replacementId: string) {
+      const res = await api.post(`/admin/subscriptions/${subId}/replace`, { replacementId })
+      if (res.result) {
+        toastStore.success('Subscription successfully replaced')
+      }
+
+      if (res.error) {
+        toastStore.error(`Tier could not be replaced: ${res.error}`)
+        return {
+          subs: subs.map((sub) => (sub._id === subId ? { ...sub, subDisabled: true } : sub)),
+        }
+      }
+    },
     async getTemplates() {
       const res = await presetApi.getTemplates()
       if (res.result) {
@@ -183,3 +197,20 @@ export const presetStore = createStore<PresetState>(
     },
   }
 })
+
+subscribe(
+  'subscription-replaced',
+  { subscriptionId: 'string', replacementId: 'string' },
+  (body) => {
+    const { presets } = presetStore.getState()
+
+    const next = presets.map((pre) => {
+      if (pre.registered?.agnaistic?.subscriptionId !== body.subscriptionId) return pre
+      const preset = { ...pre }
+      preset.registered!.agnaistic!.subscriptionId = body.replacementId
+      return preset
+    })
+
+    presetStore.setState({ presets: next })
+  }
+)

@@ -114,6 +114,7 @@ const GenerationSettings: Component<Props> = (props) => {
               { label: 'Claude', value: 'claude' },
               { label: 'Textgen (Ooba)', value: 'ooba' },
               { label: 'Llama.cpp', value: 'llamacpp' },
+              { label: 'ExLlamaV2', value: 'exllamav2' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? ''}
             service={service()}

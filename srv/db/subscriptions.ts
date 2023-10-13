@@ -142,3 +142,22 @@ export async function updateTier(id: string, update: Partial<AppSchema.Subscript
   const next = await getTier(id)
   return next
 }
+
+export async function replaceSubscription(id: string, replacementId: string) {
+  const original = await getTier(id)
+  const replacement = await getTier(replacementId)
+
+  if (!original || !replacement) {
+    throw new StatusError('Replacement tier not found', 404)
+  }
+
+  if (!replacement.enabled || replacement.deletedAt) {
+    throw new StatusError('Cannot replace tier with disabled/deleted tier', 400)
+  }
+
+  await db('gen-setting').updateMany(
+    { 'registered.agnaistic.subscriptionId': id },
+    { $set: { 'registered.agnaistic.subscriptionId': replacementId } }
+  )
+  await updateSubscription(id, { subDisabled: true })
+}

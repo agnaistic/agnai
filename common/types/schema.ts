@@ -445,7 +445,7 @@ export namespace AppSchema {
     openRouterModel?: OpenRouterModel
 
     thirdPartyUrl?: string
-    thirdPartyFormat?: 'kobold' | 'openai' | 'claude' | 'ooba' | 'llamacpp'
+    thirdPartyFormat?: ThirdPartyFormat
     thirdPartyUrlNoSuffix?: boolean
 
     replicateModelName?: string

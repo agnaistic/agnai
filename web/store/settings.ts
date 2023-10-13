@@ -371,3 +371,15 @@ setInterval(async () => {
   }
   settingStore.setState({ config: next })
 }, 60000)
+
+subscribe(
+  'subscription-replaced',
+  { subscriptionId: 'string', replacementId: 'string' },
+  (body) => {
+    const { config } = settingStore.getState()
+    const next = config.subs.filter((sub) => sub._id !== body.subscriptionId)
+    return {
+      config: { ...config, subs: next },
+    }
+  }
+)

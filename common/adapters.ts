@@ -48,7 +48,14 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   text: 'Plain Text',
 }
 
-export const THIRDPARTY_FORMATS = ['kobold', 'openai', 'claude', 'ooba', 'llamacpp'] as const
+export const THIRDPARTY_FORMATS = [
+  'kobold',
+  'openai',
+  'claude',
+  'ooba',
+  'llamacpp',
+  'exllamav2',
+] as const
 
 export const AI_ADAPTERS = [
   'agnaistic',
@@ -250,14 +257,14 @@ export const adapterSettings: {
 
   prefill: ['claude'],
 
-  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'agnaistic'],
-  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
+  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'agnaistic', 'exllamav2'],
+  repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'exllamav2'],
   repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
   repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
   tailFreeSampling: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
   topA: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
-  topK: ['horde', 'novel', 'kobold', 'ooba', 'claude', 'agnaistic'],
-  typicalP: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
+  topK: ['horde', 'novel', 'kobold', 'ooba', 'claude', 'agnaistic', 'exllamav2'],
+  typicalP: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'exllamav2'],
 
   topG: ['novel'],
   mirostatLR: ['novel', 'ooba', 'agnaistic', 'llamacpp'],
@@ -276,7 +283,7 @@ export const adapterSettings: {
   presencePenalty: ['openai', 'kobold', 'novel'],
   streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba', 'agnaistic'],
   openRouterModel: ['openrouter'],
-  stopSequences: ['ooba', 'agnaistic', 'novel', 'mancer', 'llamacpp', 'horde'],
+  stopSequences: ['ooba', 'agnaistic', 'novel', 'mancer', 'llamacpp', 'horde', 'exllamav2'],
 
   addBosToken: ['ooba', 'agnaistic'],
   banEosToken: ['ooba', 'agnaistic'],
