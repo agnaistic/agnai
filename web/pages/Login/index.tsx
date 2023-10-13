@@ -1,10 +1,10 @@
 import { Component, createEffect, createMemo, createSignal, Show } from 'solid-js'
-import { A, useNavigate, useSearchParams } from '@solidjs/router'
+import { A, useLocation, useNavigate, useSearchParams } from '@solidjs/router'
 import Alert from '../../shared/Alert'
 import Divider from '../../shared/Divider'
 import PageHeader from '../../shared/PageHeader'
-import { settingStore, toastStore, userStore } from '../../store'
-import { getStrictForm, setComponentPageTitle } from '../../shared/util'
+import { ACCOUNT_KEY, settingStore, toastStore, userStore } from '../../store'
+import { getStrictForm, setComponentPageTitle, storage } from '../../shared/util'
 import TextInput from '../../shared/TextInput'
 import Button from '../../shared/Button'
 import { isLoggedIn } from '/web/store/api'
@@ -139,6 +139,7 @@ const RegisterForm: Component<FormProps> = (props) => {
 const LoginForm: Component<FormProps> = (props) => {
   const navigate = useNavigate()
   const [query] = useSearchParams()
+  const loc = useLocation()
   const state = settingStore()
   const [error, setError] = createSignal<string>()
 
@@ -177,7 +178,12 @@ const LoginForm: Component<FormProps> = (props) => {
   return (
     <form onSubmit={login} class="flex flex-col gap-6">
       <div class="flex flex-col gap-2">
-        <TextInput fieldName="username" placeholder="Username" required />
+        <TextInput
+          fieldName="username"
+          placeholder="Username"
+          required
+          value={loc.pathname.includes('/remember') ? storage.localGetItem(ACCOUNT_KEY) || '' : ''}
+        />
         <TextInput fieldName="password" placeholder="Password" type="password" required />
       </div>
 
