@@ -454,7 +454,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
     lg: { size: '728x90', id: 'agn-leaderboard-lg' },
     xl: { size: '970x90', id: 'agn-leaderboard-xl' },
-    ez: [103],
+    ez: [103, 110, 111],
   },
   menu: {
     calc: (parent) => {

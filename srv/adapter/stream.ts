@@ -90,7 +90,6 @@ export async function websocketStream(opts: { url: string; body: any }) {
 
   socket.on('message', (data: any) => {
     const obj = JSON.parse(data)
-    console.log(obj)
 
     if (obj.response_type === 'chunk') {
       emitter.push({ token: obj.chunk })
