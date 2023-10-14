@@ -8,7 +8,7 @@ import {
   createSignal,
   onCleanup,
 } from 'solid-js'
-import { settingStore, userStore } from '../store'
+import { SettingState, settingStore, userStore } from '../store'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
 
@@ -310,7 +310,7 @@ const Slot: Component<{
       return
     }
 
-    const num = getUniqueId(cfg.slots.provider!, props.slot, uniqueId())
+    const num = getUniqueId(props.slot, cfg.slots, uniqueId())
     setUniqueId(num)
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
@@ -454,7 +454,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
     lg: { size: '728x90', id: 'agn-leaderboard-lg' },
     xl: { size: '970x90', id: 'agn-leaderboard-xl' },
-    ez: [103, 110, 111],
+    ez: [110, 111],
   },
   menu: {
     calc: (parent) => {
@@ -471,7 +471,7 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     sm: { size: '320x50', id: 'agn-leaderboard-sm' },
     lg: { size: '728x90', id: 'agn-leaderboard-lg' },
     xl: { size: '970x90', id: 'agn-leaderboard-xl', fallbacks: ['970x66', '960x90', '950x90'] },
-    ez: [104, 105, 107],
+    ez: [112, 113, 114],
   },
   pane_leaderboard: {
     platform: 'container',
@@ -503,14 +503,17 @@ export function getSlotById(id: string) {
   }
 }
 
-function getUniqueId(prv: 'google' | 'ez', kind: SlotKind, current?: number) {
+function getUniqueId(kind: SlotKind, config: SettingState['slots'], current?: number) {
   if (current) return current
-  if (prv === 'google') {
+  if (config.provider === 'google') {
     return ++slotCounter
   }
 
   const available = slotDefs[kind]
-  for (const id of available.ez) {
+  const inherit: number[] = Array.isArray(config[kind]?.ez) ? config[kind].ez : []
+  const all = inherit.concat(available.ez).filter((v) => !isNaN(v))
+
+  for (const id of all) {
     if (idLocks.has(id)) continue
     idLocks.add(id)
     return id

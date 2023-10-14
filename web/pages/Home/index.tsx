@@ -1,6 +1,5 @@
 import './home.scss'
 import { Component, For, Match, Show, Switch, createSignal, onMount } from 'solid-js'
-import PageHeader from '../../shared/PageHeader'
 import { adaptersToOptions, getAssetUrl, setComponentPageTitle } from '../../shared/util'
 import { announceStore, chatStore, settingStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
@@ -22,6 +21,7 @@ const enum Sub {
 }
 
 const HomePage: Component = () => {
+  let ref: any
   setComponentPageTitle('Information')
   const [sub, setSub] = createSignal(Sub.None)
 
@@ -41,7 +41,9 @@ const HomePage: Component = () => {
 
   return (
     <div>
-      <PageHeader title="" />
+      <div class="w-full" ref={ref}>
+        <Slot slot="leaderboard" parent={ref} />
+      </div>
 
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500">
