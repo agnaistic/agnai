@@ -289,26 +289,28 @@ const BorderCard: Component<{ children: any; href: string }> = (props) => {
 const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => {
   let ref: any
   return (
-    <div>
-      <div class="font-bold">Latest News</div>
-      <For each={props.list}>
-        {(item) => (
-          <div class="rounded-md border-[1px] border-[var(--hl-500)]">
-            <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
-              <div class="text-lg font-bold">{item.title}</div>
-              <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div>
+    <>
+      <div class="flex flex-col gap-2">
+        <div class="flex items-end font-bold leading-[14px]">Announcements</div>
+        <For each={props.list}>
+          {(item, i) => (
+            <div class="rounded-md border-[1px] border-[var(--hl-500)]">
+              <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
+                <div class="text-lg font-bold">{item.title}</div>
+                <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div>
+              </div>
+              <div
+                class="rendered-markdown bg-900 rounded-b-md p-2"
+                innerHTML={markdown.makeHtml(item.content)}
+              ></div>
             </div>
-            <div
-              class="rendered-markdown bg-900 rounded-b-md p-2"
-              innerHTML={markdown.makeHtml(item.content)}
-            ></div>
-          </div>
-        )}
-      </For>
-      <div ref={ref} class="my-1 w-full">
-        <Slot slot="content" parent={ref} />
+          )}
+        </For>
+        <div ref={ref} class="my-1 w-full">
+          <Slot slot="content" parent={ref} />
+        </div>
       </div>
-    </div>
+    </>
   )
 }
 
