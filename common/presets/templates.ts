@@ -23,7 +23,7 @@ export const templates = {
   {{ujb}}
   ### Response:
   {{post}}`,
-  Airoboros: neat`
+  Vicuna: neat`
   {{system_prompt}}
 
   Below is an instruction that describes a task. Write a response that appropriately completes the request.

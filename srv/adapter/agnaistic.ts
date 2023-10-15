@@ -50,7 +50,7 @@ export async function getSubscriptionPreset(
       warning =
         'Your configured Agnaistic model/tier is no longer available. Using a fallback. Please update your preset.'
     } else {
-      error = 'Tier/model selected is invalid or disabled. Try another.'
+      error = 'Model selected is invalid or disabled. Try another.'
     }
   }
 
@@ -279,16 +279,7 @@ registerAdapter('agnaistic', handleAgnaistic, {
   ],
   settings,
   load: (user) => {
-    const subs = getCachedSubscriptions(user)
-    const opts = subs.map((sub) => ({ label: sub.name, value: sub._id }))
     return [
-      {
-        preset: true,
-        field: 'subscriptionId',
-        secret: false,
-        label: 'Tier/Model',
-        setting: { type: 'list', options: opts },
-      },
       {
         preset: true,
         field: 'useRecommended',

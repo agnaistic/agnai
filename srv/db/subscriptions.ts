@@ -144,15 +144,15 @@ export async function updateTier(id: string, update: Partial<AppSchema.Subscript
 }
 
 export async function replaceSubscription(id: string, replacementId: string) {
-  const original = await getTier(id)
-  const replacement = await getTier(replacementId)
+  const original = await getSubscription(id)
+  const replacement = await getSubscription(replacementId)
 
   if (!original || !replacement) {
-    throw new StatusError('Replacement tier not found', 404)
+    throw new StatusError('Replacement subscription not found', 404)
   }
 
-  if (!replacement.enabled || replacement.deletedAt) {
-    throw new StatusError('Cannot replace tier with disabled/deleted tier', 400)
+  if (replacement.subDisabled || replacement.deletedAt) {
+    throw new StatusError('Cannot replace tier with disabled/deleted subscription', 400)
   }
 
   await db('gen-setting').updateMany(

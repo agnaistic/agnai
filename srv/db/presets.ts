@@ -84,7 +84,7 @@ export async function getUserPresets(userId: string) {
 export async function updateUserPreset(
   userId: string,
   presetId: string,
-  update: AppSchema.GenSettings
+  update: Partial<AppSchema.GenSettings>
 ) {
   if (update.registered) {
     const prev = await getUserPreset(presetId)
