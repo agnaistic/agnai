@@ -257,6 +257,7 @@ export async function deleteUserAccount(userId: string) {
 }
 
 export async function validateSubscription(user: AppSchema.User) {
+  if (user.admin) return Infinity
   if (!user.sub?.tierId) {
     return -1
   }
