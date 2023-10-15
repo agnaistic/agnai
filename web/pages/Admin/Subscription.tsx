@@ -1,6 +1,6 @@
 import { A, useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { Edit, Plus, Save, X } from 'lucide-solid'
-import { Component, createEffect, createSignal, Match, Show, Switch } from 'solid-js'
+import { Component, createEffect, createMemo, createSignal, Match, Show, Switch } from 'solid-js'
 import { defaultPresets, isDefaultPreset } from '../../../common/presets'
 import { AppSchema } from '../../../common/types/schema'
 import Button from '../../shared/Button'
@@ -18,6 +18,7 @@ import { AIAdapter, AI_ADAPTERS } from '../../../common/adapters'
 import Loading from '/web/shared/Loading'
 import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
+import { useRootModal } from '/web/shared/hooks'
 
 export const Subscription: Component = () => {
   const { updateTitle } = setComponentPageTitle('Subscription')
@@ -32,6 +33,7 @@ export const Subscription: Component = () => {
   const [deleting, setDeleting] = createSignal(false)
   const [missingPlaceholder, setMissingPlaceholder] = createSignal<boolean>()
   const [service, setService] = createSignal<AIAdapter>()
+  const [replacing, setReplacing] = createSignal(false)
 
   const onEdit = (preset: AppSchema.SubscriptionPreset) => {
     nav(`/admin/subscriptions/${preset._id}`)
@@ -209,6 +211,9 @@ export const Subscription: Component = () => {
                       <Plus />
                       New Subscription
                     </Button>
+                    <Button onClick={() => setReplacing(true)} schema="red">
+                      Replace/Supercede
+                    </Button>
                   </div>
                   <div class="flex flex-col">
                     <div>ID: {editing()?._id || 'New Subscription'}</div>
@@ -315,6 +320,7 @@ export const Subscription: Component = () => {
       </Switch>
 
       <EditPreset show={edit()} close={() => setEdit(false)} select={onEdit} />
+      <SupercedeModal show={replacing()} close={() => setReplacing(false)} />
       <ConfirmModal
         show={deleting()}
         close={() => setDeleting(false)}
@@ -343,6 +349,59 @@ export const Subscription: Component = () => {
 }
 
 export default Subscription
+
+const SupercedeModal: Component<{ show: boolean; close: () => void }> = (props) => {
+  let form: any
+
+  const params = useParams()
+  const nav = useNavigate()
+
+  const state = presetStore((s) => ({ subs: s.subs }))
+  const replacements = createMemo(() =>
+    state.subs
+      .filter((sub) => sub._id !== params.id)
+      .map((sub) => ({ label: `[${sub.subLevel}] ${sub.name}`, value: sub._id }))
+  )
+
+  const onSubmit = () => {
+    const subscriptionId = params.id
+    const { replacementId } = getStrictForm(form, { replacementId: 'string' })
+
+    presetStore.replaceSubscription(subscriptionId, replacementId, () => {
+      props.close()
+      nav(`/admin/subscriptions`)
+    })
+  }
+
+  const Footer = (
+    <>
+      <Button schema="secondary" onClick={props.close}>
+        Cancel
+      </Button>
+      <Button schema="green" onClick={onSubmit}>
+        Replace
+      </Button>
+    </>
+  )
+
+  useRootModal({
+    id: 'replace-subscription',
+    element: (
+      <Modal show={props.show} close={props.close} title="Replace Subscription" footer={Footer}>
+        <form ref={form}>
+          <Select
+            items={replacements()}
+            fieldName="replacementId"
+            label="Replacement Subscription"
+            helperText="The subscription that will supercede the current subscription"
+          />
+        </form>
+      </Modal>
+    ),
+  })
+
+  return null
+}
 
 const emptyPreset: AppSchema.GenSettings = {
   ...defaultPresets.basic,

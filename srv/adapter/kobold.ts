@@ -3,8 +3,8 @@ import { defaultPresets } from '../../common/presets'
 import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { ModelAdapter } from './type'
-import { requestStream } from './stream'
-import { getTextgenPayload, llamaStream } from './ooba'
+import { requestStream, websocketStream } from './stream'
+import { getThirdPartyPayload, llamaStream } from './ooba'
 import { getStoppingStrings } from './prompt'
 
 /**
@@ -32,8 +32,8 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const { members, characters, user, prompt, mappedSettings } = opts
 
   const body =
-    opts.gen.thirdPartyFormat === 'llamacpp'
-      ? getTextgenPayload(opts)
+    opts.gen.thirdPartyFormat === 'llamacpp' || opts.gen.thirdPartyFormat === 'exllamav2'
+      ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
   const baseURL = `${normalizeUrl(user.koboldUrl)}`
@@ -61,8 +61,8 @@ export const handleKobold: ModelAdapter = async function* (opts) {
 
   yield { prompt: body.prompt }
 
-  logger.debug({ ...body, prompt: null }, 'Kobold payload')
   logger.debug(`Prompt:\n${body.prompt}`)
+  logger.debug({ ...body, prompt: null }, 'Kobold payload')
 
   // Only KoboldCPP at version 1.30 and higher has streaming support
   const isStreamSupported =
@@ -73,6 +73,8 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const stream =
     opts.gen.thirdPartyFormat === 'llamacpp'
       ? llamaStream(baseURL, body)
+      : opts.gen.thirdPartyFormat === 'exllamav2'
+      ? await websocketStream({ url: baseURL, body })
       : opts.gen.streamResponse && isStreamSupported
       ? streamCompletition(`${baseURL}/api/extra/generate/stream`, body, opts.log)
       : fullCompletion(`${baseURL}/api/v1/generate`, body, opts.log)

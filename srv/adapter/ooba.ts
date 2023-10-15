@@ -7,13 +7,13 @@ import { eventGenerator } from '/common/util'
 
 export const handleOoba: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen } = opts
-  const body = getTextgenPayload(opts)
+  const body = getThirdPartyPayload(opts)
 
-  yield { prompt: body.prompt }
+  yield { prompt }
 
   log.debug({ ...body, prompt: null }, 'Textgen payload')
 
-  log.debug(`Prompt:\n${body.prompt}`)
+  log.debug(`Prompt:\n${prompt}`)
 
   const url = gen.thirdPartyUrl || user.oobaUrl
   const baseUrl = normalizeUrl(url)
@@ -100,7 +100,7 @@ export async function* getTextgenCompletion(
   }
 }
 
-export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
+export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen, prompt } = opts
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {
@@ -122,6 +122,23 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
       repeat_penalty: gen.repetitionPenalty,
       repeat_last_n: gen.repetitionPenaltyRange,
       tfs_z: gen.tailFreeSampling,
+    }
+    return body
+  }
+
+  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'exllamav2') {
+    const body = {
+      request_id: opts.requestId,
+      action: 'infer',
+      text: prompt,
+      stream: true,
+      temperature: gen.temp,
+      top_k: gen.topK,
+      top_p: gen.topP,
+      max_new_tokens: gen.maxTokens,
+      stop_conditions: getStoppingStrings(opts, stops),
+      typical: gen.typicalP,
+      rep_pen: gen.repetitionPenalty,
     }
     return body
   }
@@ -158,6 +175,48 @@ export function getTextgenPayload(opts: AdapterProps, stops: string[] = []) {
 }
 
 export function llamaStream(host: string, payload: any) {
+  const accums: string[] = []
+  const resp = needle.post(host + '/completion', JSON.stringify(payload), {
+    parse: false,
+    json: true,
+    headers: {
+      Accept: `text/event-stream`,
+    },
+  })
+
+  const emitter = eventGenerator<{ token?: string; response?: string; error?: string } | string>()
+  resp.on('header', (code, _headers) => {
+    if (code >= 201) {
+      emitter.push({ error: `[${code}] Request failed` })
+      emitter.done()
+    }
+  })
+
+  resp.on('done', () => {
+    emitter.push(accums.join(''))
+    emitter.done()
+  })
+
+  resp.on('data', (chunk: Buffer) => {
+    const data = chunk.toString()
+    const messages = data.split(/\r?\n\r?\n/).filter((l) => !!l)
+
+    for (const msg of messages) {
+      const event: any = parseEvent(msg)
+
+      if (!event.content) {
+        continue
+      }
+
+      accums.push(event.content)
+      emitter.push({ token: event.content })
+    }
+  })
+
+  return emitter.stream
+}
+
+export function exllamaStream(host: string, payload: any) {
   const accums: string[] = []
   const resp = needle.post(host + '/completion', JSON.stringify(payload), {
     parse: false,

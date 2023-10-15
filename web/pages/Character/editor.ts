@@ -150,9 +150,6 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       for (const sub of subs) {
         opts.push({ label: `Agnastic: ${sub.name}`, value: `agnaistic/${sub._id}` })
       }
-
-      if (subs) {
-      }
     }
 
     if (user.user.oaiKeySet) {

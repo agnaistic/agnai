@@ -46,6 +46,12 @@ export type PresetInfo = {
   isThirdParty?: boolean
 }
 
+export function getDefaultUserPreset() {
+  const { user } = userStore.getState()
+  const preset = getUserPreset(user?.defaultPreset)
+  return preset
+}
+
 export function getUserPreset(presetId?: string) {
   if (!presetId) return
   if (isDefaultPreset(presetId)) return defaultPresets[presetId]

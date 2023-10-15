@@ -1,6 +1,6 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
 import type { AppSchema } from './types/schema'
-import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS } from './adapters'
+import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS, ThirdPartyFormat } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
@@ -589,11 +589,12 @@ function sortMessagesDesc(l: AppSchema.ChatMessage, r: AppSchema.ChatMessage) {
   return l.createdAt > r.createdAt ? -1 : l.createdAt === r.createdAt ? 0 : 1
 }
 
-const THIRD_PARTY_ADAPTERS: { [key in AIAdapter | 'llamacpp']?: boolean } = {
+const THIRD_PARTY_ADAPTERS: { [key in AIAdapter | ThirdPartyFormat]?: boolean } = {
   openai: true,
   claude: true,
   ooba: true,
   llamacpp: true,
+  exllamav2: true,
 }
 
 export function getChatPreset(
@@ -667,7 +668,12 @@ export function getAdapter(
   const isThirdParty = THIRD_PARTY_ADAPTERS[thirdPartyFormat] && adapter === 'kobold'
 
   if (adapter === 'kobold' && THIRD_PARTY_ADAPTERS[config.thirdPartyFormat]) {
-    adapter = config.thirdPartyFormat === 'llamacpp' ? 'ooba' : config.thirdPartyFormat
+    adapter =
+      config.thirdPartyFormat === 'llamacpp'
+        ? 'ooba'
+        : config.thirdPartyFormat === 'exllamav2'
+        ? 'kobold'
+        : config.thirdPartyFormat
   }
 
   let model = ''

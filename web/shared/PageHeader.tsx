@@ -16,6 +16,9 @@ type Props = {
   subtitle?: string | JSX.Element
   noDivider?: boolean
   sticky?: boolean
+
+  /** Indicates if the header is being used in a modal or pane */
+  subPage?: boolean
 }
 
 const PageHeader: Component<Props> = (props) => {
@@ -48,7 +51,7 @@ const PageHeader: Component<Props> = (props) => {
       <div ref={ref!} class="mb-2 flex w-full justify-center">
         <Switch>
           <Match when={ref!}>
-            <Slot sticky slot="leaderboard" parent={ref!} />
+            <Slot sticky slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'} parent={ref!} />
           </Match>
         </Switch>
       </div>

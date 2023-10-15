@@ -2,7 +2,9 @@ import {
   Component,
   For,
   JSX,
+  Match,
   Show,
+  Switch,
   createEffect,
   createMemo,
   createSignal,
@@ -62,24 +64,24 @@ const v2placeholders = {
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
 } satisfies Record<string, Placeholder>
 
-const helpers: { [key in Interp]?: JSX.Element | string } = {
+const helpers: { [key in InterpAll]?: JSX.Element | string } = {
   char: 'Character name',
   user: `Your character's or profile name`,
+
   system_prompt: `(For instruct models like Turbo, GPT-4, Claude, etc). "Instructions" for how the AI should behave. E.g. "Enter roleplay mode. You will write the {{char}}'s next reply ..."`,
+  ujb: '(Aka: `{{jailbreak}}`) Similar to `system_prompt`, but typically at the bottom of the prompt',
+
   impersonating: `Your character's personality. This only applies when you are using the "character impersonation" feature.`,
   chat_age: `The age of your chat (time elapsed since chat created)`,
   idle_duration: `The time elapsed since you last sent a message`,
-  ujb: `The jailbreak. Typically inserted at the end of the prompt.`,
   all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
-  post: `The "post-amble" text. This gives specific instructions on how the model should respond. E.g. "Respond as {{char}}:"`,
+  post: 'The "post-amble" text. This gives specific instructions on how the model should respond. E.g. Typically reads: `{{char}}:`',
+
   // chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
   user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
-}
-
-const v2helpers: { [key in InterpV2]?: JSX.Element | string } = {
   roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
   random:
-    'Produces a random word from a comma-separated list. E.g.: {{random happy, sad, jealous, angry}}',
+    'Produces a random word from a comma-separated list. E.g.: `{{random happy, sad, jealous, angry}}`',
   'each bot': (
     <>
       Suported properties: <code>{`{{.name}} {{.persona}}`}</code>
@@ -212,7 +214,11 @@ const PromptEditor: Component<
           label={
             <>
               <div class="flex cursor-pointer items-center gap-2" onClick={() => showHelp(true)}>
-                Prompt Template <HelpCircle size={16} />
+                Prompt Template{' '}
+                <div class="link flex items-center gap-1">
+                  <span class="link">Help</span>
+                  <HelpCircle size={14} />
+                </div>
               </div>
               <div class="flex gap-2">
                 <Button size="sm" onClick={() => setPreview(!preview())}>
@@ -462,7 +468,7 @@ const HelpModal: Component<{
 }> = (props) => {
   const [id] = createSignal(v4())
   const items = createMemo(() => {
-    const all = Object.entries(helpers).concat(Object.entries(v2helpers))
+    const all = Object.entries(helpers)
     const entries = all.filter(([interp]) => props.interps.includes(interp as any))
 
     return entries
@@ -481,7 +487,14 @@ const HelpModal: Component<{
           <For each={items()}>
             {([interp, help]) => (
               <TitleCard>
-                <FormLabel label={<b>{interp}</b>} helperText={help} />
+                <Switch>
+                  <Match when={typeof help === 'string'}>
+                    <FormLabel label={<b>{interp}</b>} helperMarkdown={help as string} />
+                  </Match>
+                  <Match when>
+                    <FormLabel label={<b>{interp}</b>} helperText={help} />
+                  </Match>
+                </Switch>
               </TitleCard>
             )}
           </For>

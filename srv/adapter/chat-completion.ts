@@ -392,13 +392,13 @@ function getPostInstruction(
     case 'self':
       return {
         role: 'system',
-        content: `${prefix}Respond as ${opts.impersonate?.name || opts.sender?.handle || 'You'}`,
+        content: `${prefix}${opts.impersonate?.name || opts.sender?.handle || 'You'}:`,
       }
 
     case 'retry':
     case 'send':
     case 'request': {
-      return { role: 'system', content: `${prefix}Respond as ${opts.replyAs.name}` }
+      return { role: 'system', content: `${prefix}${opts.replyAs.name}:` }
     }
   }
 }

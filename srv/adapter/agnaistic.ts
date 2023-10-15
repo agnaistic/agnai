@@ -10,7 +10,7 @@ import { handleHorde } from './horde'
 import { handleKobold } from './kobold'
 import { handleMancer } from './mancer'
 import { handleNovel } from './novel'
-import { getTextgenCompletion, getTextgenPayload, handleOoba } from './ooba'
+import { getTextgenCompletion, getThirdPartyPayload, handleOoba } from './ooba'
 import { handleOAI } from './openai'
 import { handleOpenRouter } from './openrouter'
 import { handlePetals } from './petals'
@@ -50,7 +50,7 @@ export async function getSubscriptionPreset(
       warning =
         'Your configured Agnaistic model/tier is no longer available. Using a fallback. Please update your preset.'
     } else {
-      error = 'Tier/model selected is invalid or disabled. Try another.'
+      error = 'Model selected is invalid or disabled. Try another.'
     }
   }
 
@@ -183,17 +183,17 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  const body = getTextgenPayload(opts, allStops)
+  const body = getThirdPartyPayload(opts, allStops)
 
-  yield { prompt: body.prompt }
+  yield { prompt }
 
   log.debug({ ...body, prompt: null }, 'Agnaistic payload')
 
-  if (opts.kind === 'continue') {
-    body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
-  }
+  // if (opts.kind === 'continue') {
+  //   body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
+  // }
 
-  log.debug(`Prompt:\n${body.prompt}`)
+  log.debug(`Prompt:\n${prompt}`)
 
   const params = [
     `key=${key}`,
@@ -279,16 +279,7 @@ registerAdapter('agnaistic', handleAgnaistic, {
   ],
   settings,
   load: (user) => {
-    const subs = getCachedSubscriptions(user)
-    const opts = subs.map((sub) => ({ label: sub.name, value: sub._id }))
     return [
-      {
-        preset: true,
-        field: 'subscriptionId',
-        secret: false,
-        label: 'Tier/Model',
-        setting: { type: 'list', options: opts },
-      },
       {
         preset: true,
         field: 'useRecommended',

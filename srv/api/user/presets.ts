@@ -3,6 +3,7 @@ import { defaultPresets, presetValidator } from '../../../common/presets'
 import { store } from '../../db'
 import { errors, handle } from '../wrap'
 import { AIAdapter } from '../../../common/adapters'
+import { AppSchema } from '/common/types'
 
 const createPreset = {
   ...presetValidator,
@@ -54,19 +55,23 @@ export const createUserPreset = handle(async ({ userId, body }) => {
 
 export const updateUserPreset = handle(async ({ params, body, userId }) => {
   assertValid(presetValidator, body, true)
-  const service = body.service as AIAdapter
 
   if (body.novelModelOverride) {
     body.novelModel = body.novelModelOverride
     delete body.novelModelOverride
   }
 
-  const preset = await store.presets.updateUserPreset(userId!, params.id, {
-    ...body,
-    service,
-    order: body.order?.split(',').map((i) => +i),
-    disabledSamplers: body.disabledSamplers?.split(',').map((i) => +i),
-  })
+  const { order, disabledSamplers, ...rest } = body
+  const update: Partial<AppSchema.UserGenPreset> = { ...rest }
+  if (order) {
+    update.order = order?.split(',').map((i) => +i)
+  }
+
+  if (disabledSamplers) {
+    update.disabledSamplers = body.disabledSamplers?.split(',').map((i) => +i)
+  }
+
+  const preset = await store.presets.updateUserPreset(userId!, params.id, update)
   return preset
 })
 

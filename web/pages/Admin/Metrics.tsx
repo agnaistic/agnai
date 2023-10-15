@@ -1,4 +1,3 @@
-import { A } from '@solidjs/router'
 import { Component, createSignal, onMount } from 'solid-js'
 import Button from '../../shared/Button'
 import { FormLabel } from '../../shared/FormLabel'
@@ -30,12 +29,6 @@ const MetricsPage: Component = () => {
     <>
       <PageHeader title="Metrics" />
       <div class="mb-4 flex gap-4">
-        <A href="/admin/subscriptions">
-          <Button>Subscriptions</Button>
-        </A>
-        <A href="/admin/users">
-          <Button>User Management</Button>
-        </A>
         <Button onClick={adminStore.getMetrics}>Refresh</Button>
       </div>
 

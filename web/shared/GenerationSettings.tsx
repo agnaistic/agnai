@@ -43,6 +43,7 @@ import { getServiceTempConfig } from './adapter'
 import Tabs from './Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { PhraseBias, StoppingStrings } from './PhraseBias'
+import { AgnaisticSettings } from '../pages/Settings/Agnaistic'
 
 export { GenerationSettings as default }
 
@@ -103,6 +104,9 @@ const GenerationSettings: Component<Props> = (props) => {
             onChange={onServiceChange}
             disabled={props.disabled || props.disableService}
           />
+
+          <AgnaisticSettings service={service()} inherit={props.inherit} />
+
           <Select
             fieldName="thirdPartyFormat"
             label="Self-host / 3rd-party Format"
@@ -114,6 +118,7 @@ const GenerationSettings: Component<Props> = (props) => {
               { label: 'Claude', value: 'claude' },
               { label: 'Textgen (Ooba)', value: 'ooba' },
               { label: 'Llama.cpp', value: 'llamacpp' },
+              { label: 'ExLlamaV2', value: 'exllamav2' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? ''}
             service={service()}
@@ -474,7 +479,6 @@ const PromptSettings: Component<
             fieldName="gaslight"
             value={props.inherit?.gaslight || fallbackTemplate()}
             placeholder={defaultTemplate}
-            exclude={['post', 'history', 'ujb']}
             disabled={props.disabled}
             showHelp
             inherit={props.inherit}

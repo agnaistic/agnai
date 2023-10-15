@@ -91,6 +91,11 @@ export async function websocketStream(opts: { url: string; body: any }) {
   socket.on('message', (data: any) => {
     const obj = JSON.parse(data)
 
+    if (obj.response_type === 'chunk') {
+      emitter.push({ token: obj.chunk })
+      accum += obj.chunk
+    }
+
     if (obj.event === 'text_stream') {
       emitter.push({ token: obj.text })
       accum += obj.text
@@ -104,7 +109,7 @@ export async function websocketStream(opts: { url: string; body: any }) {
       emitter.push({ error: obj.error })
     }
 
-    if (obj.event === 'stream_end') {
+    if (obj.event === 'stream_end' || obj.response_type === 'full') {
       emitter.push(accum)
       emitter.done()
       socket.close()

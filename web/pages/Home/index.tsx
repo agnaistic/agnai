@@ -1,6 +1,5 @@
 import './home.scss'
 import { Component, For, Match, Show, Switch, createSignal, onMount } from 'solid-js'
-import PageHeader from '../../shared/PageHeader'
 import { adaptersToOptions, getAssetUrl, setComponentPageTitle } from '../../shared/util'
 import { announceStore, chatStore, settingStore } from '../../store'
 import { A, useNavigate } from '@solidjs/router'
@@ -12,6 +11,7 @@ import { elapsedSince } from '/common/util'
 import { AppSchema } from '/common/types'
 import { markdown } from '/web/shared/markdown'
 import WizardIcon from '/web/icons/WizardIcon'
+import Slot from '/web/shared/Slot'
 
 const enum Sub {
   None,
@@ -21,6 +21,7 @@ const enum Sub {
 }
 
 const HomePage: Component = () => {
+  let ref: any
   setComponentPageTitle('Information')
   const [sub, setSub] = createSignal(Sub.None)
 
@@ -40,8 +41,6 @@ const HomePage: Component = () => {
 
   return (
     <div>
-      <PageHeader title="" />
-
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500">
           <AlertTriangle class="mb-2 mr-2" />
@@ -53,6 +52,10 @@ const HomePage: Component = () => {
       <div class="flex flex-col gap-4 text-lg">
         <div class="hidden justify-center text-6xl sm:flex">
           Agn<span class="text-[var(--hl-500)]">ai</span>stic
+        </div>
+
+        <div class="w-full" ref={ref}>
+          <Slot slot="leaderboard" parent={ref} />
         </div>
 
         <Show when={cfg.config.patreon}>
@@ -284,6 +287,7 @@ const BorderCard: Component<{ children: any; href: string }> = (props) => {
 }
 
 const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => {
+  let ref: any
   return (
     <div>
       <div class="font-bold">Latest News</div>
@@ -301,6 +305,9 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
           </div>
         )}
       </For>
+      <div ref={ref} class="my-1 w-full">
+        <Slot slot="content" parent={ref} />
+      </div>
     </div>
   )
 }
