@@ -475,7 +475,6 @@ const PromptSettings: Component<
             fieldName="gaslight"
             value={props.inherit?.gaslight || fallbackTemplate()}
             placeholder={defaultTemplate}
-            exclude={['post', 'history', 'ujb']}
             disabled={props.disabled}
             showHelp
             inherit={props.inherit}

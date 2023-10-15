@@ -41,10 +41,6 @@ const HomePage: Component = () => {
 
   return (
     <div>
-      <div class="w-full" ref={ref}>
-        <Slot slot="leaderboard" parent={ref} />
-      </div>
-
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500">
           <AlertTriangle class="mb-2 mr-2" />
@@ -56,6 +52,10 @@ const HomePage: Component = () => {
       <div class="flex flex-col gap-4 text-lg">
         <div class="hidden justify-center text-6xl sm:flex">
           Agn<span class="text-[var(--hl-500)]">ai</span>stic
+        </div>
+
+        <div class="w-full" ref={ref}>
+          <Slot slot="leaderboard" parent={ref} />
         </div>
 
         <Show when={cfg.config.patreon}>

@@ -1,6 +1,7 @@
 import { AIAdapter, INSTRUCT_SERVICES, PersonaFormat } from '/common/adapters'
 import { modernJailbreak } from '/common/mode-templates'
 import { AppSchema } from '/common/types'
+import { getDefaultUserPreset } from '/web/shared/adapter'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
 
@@ -18,12 +19,7 @@ export type GenField =
 
 export async function generateChar(description: string, service: string, kind: PersonaFormat) {
   const [svc, _model] = service?.split('/') as [AIAdapter, string]
-  const template =
-    svc === 'novel'
-      ? novelGenTemplate
-      : INSTRUCT_SERVICES[service as AIAdapter]
-      ? instructGenTemplate
-      : genTemplate
+  const template = getTemplate(svc)
   const prompt = template.replace(`{{description}}`, description)
 
   const vars = await msgsApi.guidance({ prompt, service })
@@ -48,12 +44,7 @@ export async function regenerateCharProp(
   fields: GenField[]
 ) {
   const [adapter] = service?.split('/') as AIAdapter[]
-  const template =
-    adapter === 'novel'
-      ? novelGenTemplate
-      : INSTRUCT_SERVICES[adapter]
-      ? instructGenTemplate
-      : genTemplate
+  const template = getTemplate(adapter)
 
   const prompt = template.replace(`{{description}}`, char.description || '')
 
@@ -113,6 +104,91 @@ function toAttributes(kind: PersonaFormat, vars: any) {
   persona.attributes = attrs
   return persona
 }
+
+function getTemplate(service: AIAdapter | 'default') {
+  if (service === 'default') {
+    const preset = getDefaultUserPreset()
+    service = preset?.service || service
+  }
+
+  const template =
+    service === 'novel'
+      ? novelGenTemplate
+      : service === 'agnaistic' || service === 'ooba' || service === 'kobold'
+      ? alpacaTemplate
+      : INSTRUCT_SERVICES[service as AIAdapter]
+      ? instructGenTemplate
+      : genTemplate
+
+  return template
+}
+
+const alpacaTemplate = `
+Below is an instruction that describes a task. Write a response that completes the request.
+
+Describe a character matching the following description:
+{{description}}
+
+### Instruction:
+Character's first name
+
+### Response:
+[firstname | words=2 | tokens=10]
+
+### Instruction:
+Detailed description of the roleplay scene that the character is in
+
+### Response:
+[scenario | tokens=200 | sentence]
+
+### Instruction:
+[firstname]'s clothing and physical appearance
+
+### Response:
+[appearance | tokens=120 | sentence]
+
+### Instruction:
+[firstname]'s greeting in the scenario:
+
+### Response:
+[greeting | tokens=150 | sentence]
+
+### Instruction
+[firstname]'s personality:
+
+### Response:
+[personality | tokens=120 | sentence]
+
+### Instruction:
+[firstname]'s typical behaviour:
+
+### Response:
+[behaviour | tokens=120 | sentence]
+
+### Instruction:
+[firstname]'s accent and speech pattern:
+
+### Response:
+[speech | tokens=100 | sentence]
+
+### Instruction:
+Example of [firstname]'s dialogue:
+
+### Response:
+[example1 | tokens=100 | sentence]
+
+### Instruction:
+Example of [firstname]'s dialogue:
+
+### Response:
+[example2 | tokens=100 | sentence]
+
+### Instruction:
+Example of [firstname]'s dialogue:
+
+### Response:
+[example3 | tokens=100 | sentence]
+`
 
 const genTemplate = `
 Describe a character matching the following description:
