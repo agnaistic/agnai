@@ -46,6 +46,7 @@ export type UserState = {
   hordeStatsLoading: boolean
   showProfile: boolean
   tiers: AppSchema.SubscriptionTier[]
+  tier?: AppSchema.SubscriptionTier
   billingLoading: boolean
   subStatus?: {
     status: 'active' | 'cancelling' | 'cancelled' | 'new'
@@ -71,6 +72,11 @@ export const userStore = createStore<UserState>(
 
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile })
+
+    if (init.user?._id !== 'anon') {
+      userStore.getTiers()
+    }
+
     window.usePipeline = init.user.useLocalPipeline
 
     /**
@@ -100,10 +106,13 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async getTiers() {
+    async getTiers({ user }) {
       const res = await api.get('/admin/tiers')
       if (res.result) {
-        return { tiers: res.result.tiers }
+        const tier = res.result.tiers.find(
+          (tier: AppSchema.SubscriptionTier) => tier._id === user?.sub?.tierId
+        )
+        return { tiers: res.result.tiers, tier }
       }
     },
 
@@ -210,7 +219,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async getConfig({ ui }) {
+    async getConfig({ ui, tiers }) {
       const res = await usersApi.getConfig()
 
       if (res.error) return toastStore.error(`Failed to get user config`)
@@ -219,7 +228,8 @@ export const userStore = createStore<UserState>(
           storage.localSetItem(ACCOUNT_KEY, res.result.username)
         }
         window.usePipeline = res.result.useLocalPipeline
-        return { user: res.result }
+        const tier = tiers.find((tier) => tier._id === res.result?.sub?.tierId)
+        return { user: res.result, tier }
       }
     },
 
@@ -232,23 +242,25 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateConfig(_, config: ConfigUpdate) {
+    async updateConfig({ tiers }, config: ConfigUpdate) {
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         window.usePipeline = res.result.useLocalPipeline
+        const tier = tiers.find((tier) => tier._id === res.result?.sub?.tierId)
         toastStore.success(`Updated settings`)
-        return { user: res.result }
+        return { user: res.result, tier }
       }
     },
 
-    async updatePartialConfig(_, config: ConfigUpdate) {
+    async updatePartialConfig({ tiers }, config: ConfigUpdate) {
       const res = await usersApi.updatePartialConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
+        const tier = tiers.find((tier) => tier._id === res.result?.sub?.tierId)
         window.usePipeline = res.result.useLocalPipeline
         toastStore.success(`Updated settings`)
-        return { user: res.result }
+        return { user: res.result, tier }
       }
     },
 
