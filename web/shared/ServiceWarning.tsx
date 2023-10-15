@@ -12,7 +12,7 @@ const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (
   const noSub = createMemo(() => {
     if (!props.preset) return false
     if (props.preset.service !== 'agnaistic') return false
-    const userLevel = user.sub?.level ?? -1
+    const userLevel = user.admin ? Infinity : user.sub?.level ?? -1
     const sub = cfg.subs.find(
       (sub) => sub._id === props.preset?.registered?.agnaistic?.subscriptionId
     )
@@ -43,7 +43,7 @@ const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (
   return (
     <Switch>
       <Match when={props.preset?.service === 'agnaistic' && noSub()}>
-        <TitleCard type="orange">Your account is ineligible for this tier/model.</TitleCard>
+        <TitleCard type="orange">Your account is ineligible for this model.</TitleCard>
       </Match>
 
       <Match when={!isKeySet()}>

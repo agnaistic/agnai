@@ -473,6 +473,7 @@ const ChatDetail: Component = () => {
                     slots.load(ref)
                   }}
                   class="sticky top-0 flex h-fit w-full justify-center"
+                  classList={{ hidden: user.tier?.disableSlots }}
                 >
                   <Switch>
                     <Match when={slots.size().w === 0}>{null}</Match>
