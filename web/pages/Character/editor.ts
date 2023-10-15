@@ -344,7 +344,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     // New fields start here
     systemPrompt: body.systemPrompt ?? '',
     postHistoryInstructions: body.postHistoryInstructions ?? '',
-    insert: body.insertPrompt ? { prompt: body.insertPrompt, depth: body.insertDepth } : undefined,
+    insert: { prompt: body.insertPrompt, depth: body.insertDepth },
     alternateGreetings: state.alternateGreetings ?? [],
     characterBook: state.book,
     creator: body.creator ?? '',
