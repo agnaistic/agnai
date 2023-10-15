@@ -305,7 +305,7 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
           </div>
         )}
       </For>
-      <div ref={ref} class="w-full">
+      <div ref={ref} class="my-1 w-full">
         <Slot slot="content" parent={ref} />
       </div>
     </div>

@@ -609,7 +609,7 @@ export const CreateCharacterForm: Component<{
                       teaching your character should speak.
                     </span>
                   }
-                  placeholder="{{user}}: Hello! *waves excitedly* \n{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
+                  placeholder="{{char}}: *smiles and waves back* Hello! I'm so happy you're here!"
                   value={editor.state.sampleChat}
                   tokenCount={(v) => setTokens((prev) => ({ ...prev, sample: v }))}
                 />
