@@ -121,7 +121,7 @@ export const ChatGenSettings: Component<{
           service: original.service,
         } as any,
         (created) => {
-          chatStore.setChat(props.chat._id, { genPreset: created._id })
+          chatStore.editChatGenPreset(props.chat._id, created._id)
           setSelected(created._id)
         }
       )

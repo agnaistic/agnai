@@ -182,17 +182,11 @@ export function createPromptWithParts(
   parts: PromptParts,
   lines: string[],
   encoder: TokenCounter
-): {
-  lines: string[]
-  prompt: string
-  inserts: Map<number, string>
-  parts: PromptParts
-  post: string[]
-} {
+) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
   const history = { lines, order: 'asc' } as const
-  const { parsed, inserts } = injectPlaceholders(template, {
+  const { parsed, inserts, length } = injectPlaceholders(template, {
     opts,
     parts,
     history,
@@ -200,7 +194,7 @@ export function createPromptWithParts(
     lastMessage: opts.lastMessage,
     encoder,
   })
-  return { lines: history.lines, prompt: parsed, inserts, parts, post }
+  return { lines: history.lines, prompt: parsed, inserts, parts, post, length }
 }
 
 export function getTemplate(
@@ -221,13 +215,7 @@ type InjectOpts = {
   encoder: TokenCounter
 }
 
-export function injectPlaceholders(
-  template: string,
-  inject: InjectOpts
-): {
-  parsed: string
-  inserts: Map<number, string>
-} {
+export function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
   const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
 

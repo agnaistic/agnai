@@ -289,7 +289,7 @@ export async function createTextStreamV2(
     subscription,
   })
 
-  return { stream, adapter, settings: gen, user: opts.user, size }
+  return { stream, adapter, settings: gen, user: opts.user, size, length: prompt.length }
 }
 
 export async function getResponseEntities(
