@@ -2,9 +2,16 @@ version: '2'
 
 volumes:
   dbdata:
+  dbconfig:
+  appdb:
+  assets:
+  distassets:
+  extras:
+
 
 networks:
   backend:
+
 
 services:
   app:
@@ -19,13 +26,19 @@ services:
       - INITIAL_USER=admin
       - INITIAL_PASSWORD=password
       - JWT_SECRET=self-hosting
-    networks: 
+    volumes:
+      - appdb:/app/db
+      - assets:/app/assets
+      - distassets:/app/dist/assets
+      - extras:/app/extras
+    networks:
       - backend
-    
+
   mongo:
     image: mongo:6
     restart: always
     volumes:
       - dbdata:/data/db
+      - dbconfig:/data/configdb
     networks:
       - backend
