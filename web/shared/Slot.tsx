@@ -265,7 +265,9 @@ const Slot: Component<{
             if (holders[num]) {
               clearInterval(timer)
             } else {
-              ezstandalone.displayMore(num)
+              ezstandalone.cmd.push(() => {
+                ezstandalone.displayMore(num)
+              })
             }
           }, 50)
         })
