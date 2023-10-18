@@ -10,7 +10,7 @@ import {
 } from '../common/dummy'
 import { getTokenCounter } from '/srv/tokenize'
 import { AppSchema } from '/common/types/schema'
-import { createPrompt, getPromptParts } from '/common/prompt'
+import { createPromptParts, buildPromptParts } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 
 export * from '../common/dummy'
@@ -87,7 +87,7 @@ export function build(
   const overChar = { ...main, ...opts.char }
   const characters = toMap([overChar, replyAs])
 
-  const result = createPrompt(
+  const result = createPromptParts(
     {
       char: overChar,
       members: [profile],
@@ -141,7 +141,7 @@ function getParseOpts(overrides: TestOpts = {}, charOverrides: Partial<AppSchema
   const characters = toMap([overChar, replyAs])
   const parts =
     overrides.parts ||
-    getPromptParts(
+    buildPromptParts(
       {
         char: overChar,
         sender: profile,

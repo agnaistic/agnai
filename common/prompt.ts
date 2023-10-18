@@ -129,7 +129,7 @@ export const HOLDERS = {
  * @param opts
  * @returns
  */
-export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext?: number) {
+export function createPromptParts(opts: PromptOpts, encoder: TokenCounter, maxContext?: number) {
   if (opts.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -155,7 +155,7 @@ export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
   const lines = getLinesForPrompt(opts, encoder, maxContext)
-  const parts = getPromptParts(opts, lines, encoder)
+  const parts = buildPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
 
   const prompt = injectPlaceholders(template, {
@@ -177,7 +177,7 @@ export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export function createPromptWithParts(
+export function assemblePrompt(
   opts: GenerateRequestV2,
   parts: PromptParts,
   lines: string[],
@@ -316,7 +316,7 @@ type PromptPartsOptions = Pick<
   | 'userEmbeds'
 >
 
-export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
+export function buildPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
   const { chat, char, replyAs } = opts
   const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 

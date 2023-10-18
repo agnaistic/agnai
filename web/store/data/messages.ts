@@ -1,9 +1,9 @@
 import { v4 } from 'uuid'
 import {
-  createPrompt,
+  createPromptParts,
   getChatPreset,
   getLinesForPrompt,
-  getPromptParts,
+  buildPromptParts,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -348,7 +348,7 @@ async function getActivePromptOptions(
   }
 
   const lines = getLinesForPrompt(promptOpts, encoder)
-  const parts = getPromptParts(promptOpts, lines, encoder)
+  const parts = buildPromptParts(promptOpts, lines, encoder)
 
   return { lines, parts, entities, props }
 }
@@ -405,7 +405,7 @@ async function createActiveChatPrompt(
   }
 
   const encoder = await getEncoder()
-  const prompt = createPrompt(
+  const prompt = createPromptParts(
     {
       kind: opts.kind,
       char: entities.char,

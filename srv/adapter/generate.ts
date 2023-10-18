@@ -11,7 +11,7 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
-import { createPromptWithParts, getAdapter, getPromptParts } from '../../common/prompt'
+import { assemblePrompt, getAdapter, buildPromptParts } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -185,7 +185,7 @@ export async function createTextStreamV2(
 
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
     const encoder = getTokenCounter(adapter, model)
-    opts.parts = getPromptParts(
+    opts.parts = buildPromptParts(
       {
         ...entities,
         sender: opts.sender,
@@ -245,7 +245,7 @@ export async function createTextStreamV2(
     opts.settings.maxContextLength = subContextLimit
   }
 
-  const prompt = createPromptWithParts(opts, opts.parts, opts.lines, encoder)
+  const prompt = assemblePrompt(opts, opts.parts, opts.lines, encoder)
 
   const size = encoder(
     [

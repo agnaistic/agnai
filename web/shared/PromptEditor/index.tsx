@@ -20,7 +20,7 @@ import { TitleCard } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
-import { ensureValidTemplate, getPromptParts } from '/common/prompt'
+import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
 import { templates } from '../../../common/presets/templates'
@@ -529,7 +529,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
     return `${name}: ${hist.msg}`
   })
 
-  const parts = getPromptParts(
+  const parts = buildPromptParts(
     {
       char,
       characters,

@@ -1,4 +1,4 @@
-import { createPrompt, Prompt } from '../../common/prompt'
+import { createPromptParts, Prompt } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
@@ -528,7 +528,7 @@ export const chatStore = createStore<ChatState>('chat', {
         ? entities.chat.tempCharacters![active.replyAs]
         : entities.characters[active.replyAs!] || active.char
 
-      const prompt = createPrompt(
+      const prompt = createPromptParts(
         {
           ...entities,
           lastMessage: entities.lastMessage?.date || '',

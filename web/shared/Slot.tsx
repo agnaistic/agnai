@@ -69,7 +69,6 @@ const Slot: Component<{
   const [uniqueId, setUniqueId] = createSignal<number>()
 
   const [done, setDone] = createSignal(false)
-  const [videoDone, setVideoDone] = createSignal(false)
   const [adslot, setSlot] = createSignal<googletag.Slot>()
   const [viewable, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
@@ -106,79 +105,6 @@ const Slot: Component<{
     setActualId(spec.id)
     return spec
   })
-
-  const tryVideo = () => {
-    const isVideo = specs()!.video && !!cfg.slots.gtmVideoTag
-    if (!isVideo) {
-      log('Invalid attempt')
-      return
-    }
-
-    if (videoDone()) {
-      log('[Video] Already done')
-      return
-    }
-
-    const container = document.getElementById(id())
-    const player: any = document.getElementById(id() + '-player')
-    const ad: any = document.getElementById(id() + '-ad')
-
-    if (!container || !player || !ad) {
-      log('Video not ready')
-      return
-    }
-
-    log('Attempting video request')
-    try {
-      const win: any = window
-      const imaAd = new google.ima.AdDisplayContainer(ad, player)
-      const loader = new google.ima.AdsLoader(imaAd)
-      let manager: any
-
-      loader.addEventListener(
-        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-        (evt: any) => {
-          const mgr = evt.getAdsManager(player)
-          manager = mgr
-          win.mgr = mgr
-
-          player.load?.()
-          ad.initialize?.()
-
-          mgr.init(player.clientWidth, player.clientHeight, google.ima.ViewMode.NORMAL)
-          mgr.start()
-        },
-        false
-      )
-
-      loader.addEventListener(
-        google.ima.AdErrorEvent.Type.AD_ERROR,
-        (error: any) => {
-          log(error.getError())
-          manager?.destroy()
-        },
-        false
-      )
-
-      player.addEventListener('ended', function () {
-        loader.contentComplete()
-      })
-
-      const request = new google.ima.AdsRequest()
-      request.adTagUrl = cfg.slots.gtmVideoTag
-
-      request.linearAdSlotWidth = player.clientWidth
-      request.linearAdSlotHeight = player.clientHeight
-      request.nonLinearAdSlotWidth = player.clientWidth
-      request.nonLinearAdSlotHeight = player.clientHeight / 3
-
-      loader.requestAds(request)
-      setVideoDone(true)
-      log('Video requested')
-    } catch (ex: any) {
-      log('Video error:', ex?.message || ex)
-    }
-  }
 
   const tryRefresh = () => {
     const slot = adslot()
@@ -289,6 +215,7 @@ const Slot: Component<{
     }
 
     if (user.tier?.disableSlots) {
+      props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
     }
 
@@ -326,11 +253,7 @@ const Slot: Component<{
           }
         })
       })
-    } else if (specs()?.video) {
-      imaReady.then(() => {
-        tryVideo()
-      })
-    } else {
+    } else if (cfg.slots.provider === 'google') {
       gtmReady.then(() => {
         googletag.cmd.push(function () {
           const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
@@ -543,15 +466,6 @@ const gtmReady = new Promise(async (resolve) => {
 const ezReady = new Promise(async (resolve) => {
   do {
     if (typeof window.ezstandalone.enable !== 'function') {
-      return resolve(true)
-    }
-    await wait(0.05)
-  } while (true)
-})
-
-const imaReady = new Promise(async (resolve) => {
-  do {
-    if (typeof google !== 'undefined' && typeof google.ima !== 'undefined') {
       return resolve(true)
     }
     await wait(0.05)
