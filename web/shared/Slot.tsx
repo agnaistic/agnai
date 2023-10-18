@@ -195,6 +195,7 @@ const Slot: Component<{
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       if (!done() || !ref) return
       ezstandalone.cmd.push(() => {
+        log(`destroyed #${remove}`)
         ezstandalone.destroyPlaceholders(uniqueId()!)
       })
     } else googletag.destroySlots([remove])
@@ -246,13 +247,15 @@ const Slot: Component<{
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       ezReady.then(() => {
-        log('[ez]', num, `dispatched #${num}`)
         ezstandalone.cmd.push(() => {
+          log('[ez]', num, `dispatched #${num}`)
           if (!ezstandalone.enabled) {
             ezstandalone.define(num)
             ezstandalone.enable()
             ezstandalone.display()
           } else {
+            log('[ez]', num, `dispatched #${num} (more)`)
+            ezstandalone.define(num)
             ezstandalone.displayMore(num)
           }
         })
