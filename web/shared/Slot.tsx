@@ -219,6 +219,10 @@ const Slot: Component<{
       return log('Slots are tier disabled')
     }
 
+    if (!cfg.slots.provider) {
+      return log('No provider configured')
+    }
+
     resize.size()
 
     if (ref && !resize.loaded()) {
