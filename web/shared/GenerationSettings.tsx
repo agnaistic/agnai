@@ -961,7 +961,7 @@ const SamplerOrder: Component<{
   const [order, setOrder] = createSignal(presetOrder())
 
   const [value, setValue] = createSignal(order())
-  const [disabled, setDisabled] = createSignal(props.inherit?.disabledSamplers || [])
+  const [disabled, setDisabled] = createSignal(ensureArray(props.inherit?.disabledSamplers))
   const [sorter, setSorter] = createSignal<Sorter>()
 
   createEffect(() => {
@@ -1186,4 +1186,16 @@ function updateValue(values: TempSetting[], service: AIAdapter, field: string, n
   return values.map<TempSetting>((val) =>
     val.field === field ? { ...val, value: nextValue } : val
   )
+}
+
+function ensureArray(value: any): number[] {
+  if (!value) return []
+  if (typeof value === 'string') {
+    return value
+      .split(',')
+      .filter((v) => v !== '')
+      .map((v) => +v)
+  }
+
+  return value.map((v: any) => (typeof v === 'number' ? v : +v)).filter((v: number) => isNaN(v))
 }
