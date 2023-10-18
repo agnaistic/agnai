@@ -188,17 +188,18 @@ const Slot: Component<{
 
   onCleanup(() => {
     idLocks.delete(uniqueId()!)
-    const remove = adslot()
-    if (!remove) return
     log('Cleanup')
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       if (!done() || !ref) return
       ezstandalone.cmd.push(() => {
-        log(`destroyed #${remove}`)
         ezstandalone.destroyPlaceholders(uniqueId()!)
       })
-    } else googletag.destroySlots([remove])
+    } else {
+      const remove = adslot()
+      if (!remove) return
+      googletag.destroySlots([remove])
+    }
   })
 
   createEffect(async () => {
@@ -248,8 +249,8 @@ const Slot: Component<{
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       ezReady.then(() => {
         ezstandalone.cmd.push(() => {
-          log('[ez]', num, `dispatched #${num}`)
           if (!ezstandalone.enabled) {
+            log('[ez]', num, `dispatched #${num}`)
             ezstandalone.define(num)
             ezstandalone.enable()
             ezstandalone.display()
