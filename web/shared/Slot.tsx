@@ -256,9 +256,18 @@ const Slot: Component<{
             ezstandalone.display()
           } else {
             log('[ez]', num, `dispatched #${num} (more)`)
-            // ezstandalone.define(num)
+            ezstandalone.define(num)
             ezstandalone.displayMore(num)
           }
+
+          const timer = setInterval(() => {
+            const holders = ezstandalone.getSelectedPlaceholders()
+            if (holders[num]) {
+              clearInterval(timer)
+            } else {
+              ezstandalone.displayMore(num)
+            }
+          }, 50)
         })
       })
     } else if (cfg.slots.provider === 'google') {
