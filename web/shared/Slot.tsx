@@ -255,7 +255,7 @@ const Slot: Component<{
             ezstandalone.display()
           } else {
             log('[ez]', num, `dispatched #${num} (more)`)
-            ezstandalone.define(num)
+            // ezstandalone.define(num)
             ezstandalone.displayMore(num)
           }
         })
