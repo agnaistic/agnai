@@ -308,7 +308,7 @@ const Slot: Component<{
     }
 
     setDone(true)
-    log('Rendered')
+    log('Rendered', !!props.parent)
 
     setTimeout(() => {
       if (props.sticky === 'always') return
@@ -329,7 +329,9 @@ const Slot: Component<{
   return (
     <>
       <Show when={user.user?.admin || cfg.flags.reporting}>
-        <span class="text-red-500">{uniqueId()}</span>
+        <span class="text-red-500">
+          {uniqueId()} {(!!props.parent).toString()}
+        </span>
       </Show>
       <Switch>
         <Match when={!user.user || !specs() || user.tier?.disableSlots}>{null}</Match>

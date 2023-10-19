@@ -1,5 +1,14 @@
 import { AlertTriangle, Save, VenetianMask, X } from 'lucide-solid'
-import { Component, Show, createEffect, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import AvatarIcon from '../../shared/AvatarIcon'
 import Button from '../../shared/Button'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
@@ -13,10 +22,12 @@ import { rootModalStore } from '/web/store/root-modal'
 import { useNavigate } from '@solidjs/router'
 import { isLoggedIn } from '/web/store/api'
 import { SubscriptionPage } from './SubscriptionPage'
+import { useTabs } from '/web/shared/Tabs'
 
 export const ProfileModal: Component = () => {
   const state = userStore()
   const config = userStore((s) => ({ tiers: s.tiers.filter((t) => t.enabled) }))
+  const tabs = useTabs(['Profile', 'Subscription'], 0)
 
   const [footer, setFooter] = createSignal<any>()
 
@@ -24,20 +35,9 @@ export const ProfileModal: Component = () => {
     userStore.getTiers()
   })
 
-  const profile = {
-    name: 'Profile',
-    content: <ProfilePage footer={setFooter} />,
-  }
-
-  const subscription = {
-    name: 'Subscription',
-    content: <SubscriptionPage />,
-  }
-
-  const tabs = createMemo(() => {
-    if (!config.tiers.length || !isLoggedIn()) return
-
-    return [profile, subscription]
+  const displayTabs = createMemo(() => {
+    if (!config.tiers.length || !isLoggedIn()) return false
+    return true
   })
 
   return (
@@ -54,11 +54,19 @@ export const ProfileModal: Component = () => {
       }
       fixedHeight
       maxWidth="half"
-      tabs={tabs()}
+      tabs={displayTabs() ? tabs : undefined}
     >
-      <Show when={!tabs()}>
-        <ProfilePage footer={setFooter} />
-      </Show>
+      <Switch>
+        <Match when={!displayTabs()}>
+          <ProfilePage footer={setFooter} />
+        </Match>
+        <Match when={tabs.current() === 'Profile'}>
+          <ProfilePage footer={setFooter} />
+        </Match>
+        <Match when={tabs.current() === 'Subscription'}>
+          <SubscriptionPage />
+        </Match>
+      </Switch>
     </Modal>
   )
 }
@@ -103,7 +111,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
   return (
     <>
-      <PageHeader title="Your Profile" />
+      <PageHeader title="Your Profile" subPage />
       <form ref={formRef!} onSubmit={submit}>
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">

@@ -1,8 +1,8 @@
 import { Check, X } from 'lucide-solid'
-import { Component, Show, JSX, createMemo, Switch, Match, createSignal } from 'solid-js'
+import { Component, Show, JSX, createMemo, Switch, Match } from 'solid-js'
 import Button from './Button'
 import './modal.css'
-import Tabs from './Tabs'
+import Tabs, { TabHook } from './Tabs'
 
 interface Props {
   title?: string | JSX.Element
@@ -13,7 +13,7 @@ interface Props {
   maxWidth?: 'full' | 'half'
   fixedHeight?: boolean
   onSubmit?: (ev: Event & { currentTarget: HTMLFormElement }) => void
-  tabs?: Array<{ name: string; content: JSX.Element }>
+  tabs?: TabHook
 
   /**
    * If set to false, the close button 'X' will be omitted
@@ -22,7 +22,6 @@ interface Props {
 }
 
 const Modal: Component<Props> = (props) => {
-  const [tab, setTab] = createSignal(0)
   let ref: any
 
   const width = createMemo(() => {
@@ -52,7 +51,11 @@ const Modal: Component<Props> = (props) => {
             <Switch>
               <Match when={props.tabs}>
                 <div class="flex h-[56px] flex-row justify-between text-lg">
-                  <Tabs selected={tab} select={setTab} tabs={props.tabs!.map((t) => t.name)} />
+                  <Tabs
+                    selected={props.tabs?.selected!}
+                    select={props.tabs?.select!}
+                    tabs={props.tabs?.tabs!}
+                  />
                   <Show when={props.dismissable !== false}>
                     <div onClick={props.close} class="cursor-pointer p-4">
                       <X />
@@ -75,11 +78,7 @@ const Modal: Component<Props> = (props) => {
 
             {/* 132px is the height of the title + footer*/}
             <div class={`modal-content ${minHeight()} overflow-y-auto p-4 pt-0 text-lg`}>
-              <Switch>
-                <Match when={props.tabs}>{props.tabs![tab()].content}</Match>
-
-                <Match when>{props.children}</Match>
-              </Switch>
+              {props.children}
             </div>
             <Show when={props.footer}>
               <div class="flex w-full flex-row justify-end gap-2 p-4">{props.footer}</div>
