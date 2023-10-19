@@ -100,7 +100,7 @@ const Slot: Component<{
             adding.push(num)
           }
         }
-        if (ezstandalone.enabled) {
+        if (!ezstandalone.enabled) {
           ezstandalone.define(...adding)
           log('[ez]', self, `dispatched #${adding.join(', ')}`)
           ezstandalone.enable()
