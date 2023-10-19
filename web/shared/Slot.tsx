@@ -260,19 +260,20 @@ const Slot: Component<{
             ezstandalone.define(num)
             ezstandalone.displayMore(num)
           }
-
-          const timer = setInterval(() => {
-            const holders = ezstandalone.getSelectedPlaceholders()
-            const inUse = idLocks.has(num)
-            if (!inUse || holders[num]) {
-              clearInterval(timer)
-            } else {
-              ezstandalone.cmd.push(() => {
-                ezstandalone.displayMore(num)
-              })
-            }
-          }, 50)
         })
+
+        const timer = setInterval(() => {
+          const holders = ezstandalone.getSelectedPlaceholders()
+          const inUse = idLocks.has(num)
+          if (!inUse || holders[num]) {
+            clearInterval(timer)
+          } else {
+            ezstandalone.cmd.push(() => {
+              log('[ez]', num, 'retrying display')
+              ezstandalone.displayMore(num)
+            })
+          }
+        }, 200)
       })
     } else if (cfg.slots.provider === 'google') {
       gtmReady.then(() => {
