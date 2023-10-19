@@ -5,6 +5,7 @@ import {
   toChat,
   toEntry,
   toPersona,
+  toScenarioBook,
   toUser,
   toUserMsg,
 } from '../common/dummy'
@@ -60,6 +61,8 @@ const lines = history.map(
   (h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`
 )
 
+const scenarioBook = toScenarioBook('scenario book', user)
+
 export const entities = {
   chat,
   user,
@@ -67,6 +70,7 @@ export const entities = {
   main,
   replyAs,
   book,
+  scenarioBook
 }
 
 export function build(
