@@ -87,31 +87,10 @@ const Slot: Component<{
     if (!cfg.publisherId) return
     if (!cfg.flags.reporting) return
     let slotid = actualId()
-    console.log.apply(null, [`[${id()}]`, ...args, `| ${slotid}`])
+    const now = new Date()
+    const ts = `${now.toTimeString().slice(0, 8)}.${now.toISOString().slice(-4, -1)}`
+    console.log.apply(null, [`${ts} [${uniqueId()}]`, ...args, `| ${slotid}`])
   }
-
-  const [invoke] = createDebounce((self: number) => {
-    ezReady.then(() => {
-      ezstandalone.cmd.push(() => {
-        const current = ezstandalone.getSelectedPlaceholders()
-        const adding: number[] = [self]
-        for (const num of Object.values(idLocks)) {
-          if (!current[num]) {
-            adding.push(num)
-          }
-        }
-        if (!ezstandalone.enabled) {
-          ezstandalone.define(...adding)
-          log('[ez]', self, `dispatched #${adding.join(', ')}`)
-          ezstandalone.enable()
-          ezstandalone.display()
-        } else {
-          log('[ez]', self, `dispatched #${adding.join(', ')} (more)`)
-          ezstandalone.displayMore(...adding)
-        }
-      })
-    })
-  }, 2000)
 
   const resize = useResizeObserver()
   const parentSize = useResizeObserver()
@@ -216,7 +195,9 @@ const Slot: Component<{
     log('Cleanup')
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
-      if (!done() || !ref) return
+      const id = uniqueId()
+      const holders = ezstandalone.getSelectedPlaceholders()
+      if (!done() || !ref || !holders[id!]) return
       ezstandalone.cmd.push(() => {
         ezstandalone.destroyPlaceholders(uniqueId()!)
       })
@@ -254,7 +235,7 @@ const Slot: Component<{
 
     if (ref && !resize.loaded()) {
       resize.load(ref)
-      log('Not loaded')
+      // log('Not loaded')
       return
     }
 
@@ -272,7 +253,7 @@ const Slot: Component<{
     setUniqueId(num)
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
-      invoke(num)
+      invoke(log, num)
       // ezReady.then(() => {
       // ezstandalone.cmd.push(() => {
       //   if (!ezstandalone.enabled) {
@@ -539,7 +520,7 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   }
 
   const width = parent.clientWidth
-  log('W/H', width, parent.clientHeight)
+  // log('W/H', width, parent.clientHeight)
   const platform = getWidthPlatform(width)
 
   return getBestFit(def, platform)
@@ -589,3 +570,29 @@ function getSizes(...specs: Array<SlotSpec | undefined>) {
 
   return sizes
 }
+
+const [invoke] = createDebounce((log: (typeof console)['log'], self: number) => {
+  ezReady.then(() => {
+    ezstandalone.cmd.push(() => {
+      const current = ezstandalone.getSelectedPlaceholders()
+      const adding = new Set<number>([self])
+
+      for (const num of idLocks.values()) {
+        if (!current[num]) {
+          adding.add(num)
+        }
+      }
+
+      const add = Array.from(adding.values())
+      if (!ezstandalone.enabled) {
+        ezstandalone.define(...add)
+        log('[ez]', `dispatched #${add.join(', ')}`)
+        ezstandalone.enable()
+        ezstandalone.display()
+      } else {
+        log('[ez]', `dispatched #${add.join(', ')} (more)`)
+        ezstandalone.displayMore(...add)
+      }
+    })
+  })
+}, 1000)

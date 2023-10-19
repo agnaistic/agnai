@@ -27,6 +27,7 @@ import { templates } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore, toastStore } from '/web/store'
+import Sortable from '../Sortable'
 
 type Placeholder = {
   required: boolean
@@ -117,6 +118,7 @@ const PromptEditor: Component<
     placeholder?: string
     minHeight?: number
     showTemplates?: boolean
+    hide?: boolean
 
     /** Hide the meanings of "green" "yellow" "red" placeholder helper text */
     hideHelperText?: boolean
@@ -201,8 +203,9 @@ const PromptEditor: Component<
   }
 
   const hide = createMemo(() => {
+    if (props.hide) return 'hidden'
     if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : ` hidden `
+    return adapters()!.includes(props.service) ? '' : `hidden `
   })
 
   onMount(resize)
@@ -287,6 +290,76 @@ const PromptEditor: Component<
 }
 
 export default PromptEditor
+
+const BASIC_LABELS: Record<string, { label: string; id: number }> = {
+  system_prompt: { label: 'System Prompt', id: 0 },
+  scenario: { label: 'Scenario', id: 1 },
+  personality: { label: 'Personality', id: 2 },
+  impersonating: { label: 'Impersonate Personality', id: 3 },
+  memory: { label: 'Memory', id: 4 },
+  example_dialogue: { label: 'Example Dialogue', id: 5 },
+  history: { label: 'Chat History', id: 6 },
+  ujb: { label: 'Jailbreak (UJB)', id: 7 },
+}
+
+const SORTED_LABELS = Object.entries(BASIC_LABELS)
+  .map(([value, spec]) => ({ id: spec.id, label: spec.label, value: value }))
+  .sort((l, r) => l.id - r.id)
+
+export const BasicPromptTemplate: Component<{ inherit?: Partial<AppSchema.GenSettings> }> = (
+  props
+) => {
+  const items = ['Alpaca', 'Vicuna', 'Metharme', 'Pyg/Simple'].map((label) => ({
+    label,
+    value: label,
+  }))
+
+  const [order, setOrder] = createSignal(
+    props.inherit?.promptOrder?.map((o) => ({
+      ...BASIC_LABELS[o.placeholder],
+      value: o.placeholder,
+      enabled: o.enabled,
+    })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
+  )
+
+  const [mod, setMod] = createSignal<number[]>([])
+
+  const updateOrder = (ev: number[]) => {
+    setMod(ev)
+    console.log(ev)
+  }
+
+  const onClick = (id: number) => {
+    const next = order().map((o) => {
+      if (o.id !== id) return o
+      return { ...o, enabled: !o.enabled }
+    })
+    setOrder(next)
+  }
+
+  return (
+    <div>
+      <Select fieldName="basicFormat" label="Prompt Format" items={items} />
+      <Sortable
+        items={order()}
+        onChange={updateOrder}
+        onItemClick={onClick}
+        enabled={order()
+          .filter((o) => o.enabled)
+          .map((o) => o.id)}
+      />
+      <TextInput fieldName="promptOrder.order" parentClass="hidden" value={mod().join(',')} />
+      <TextInput
+        fieldName="promptOrder.enabled"
+        parentClass="hidden"
+        value={order()
+          .filter((o) => o.enabled)
+          .map((o) => o.value)
+          .join(',')}
+      />
+    </div>
+  )
+}
 
 const Placeholder: Component<
   {

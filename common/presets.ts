@@ -18,6 +18,8 @@ export const presetValidator = {
   repetitionPenaltyRange: 'number',
   repetitionPenaltySlope: 'number',
 
+  // usePromptOrder: 'boolean?',
+
   memoryContextLimit: 'number?',
   memoryDepth: 'number?',
   memoryChatEmbedLimit: 'number?',

@@ -432,6 +432,9 @@ export namespace AppSchema {
     systemPrompt?: string
     ignoreCharacterSystemPrompt?: boolean
     gaslight?: string
+    usePromptOrder?: boolean
+    promptOrderFormat?: string
+    promptOrder?: Array<{ placeholder: string; enabled: boolean }>
     ultimeJailbreak?: string
     prefill?: string
     ignoreCharacterUjb?: boolean

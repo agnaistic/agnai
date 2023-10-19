@@ -21,7 +21,7 @@ import {
 import Divider from './Divider'
 import { Toggle } from './Toggle'
 import { chatStore, presetStore, settingStore } from '../store'
-import PromptEditor from './PromptEditor'
+import PromptEditor, { BasicPromptTemplate } from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
 import {
@@ -446,6 +446,8 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 const PromptSettings: Component<
   Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
 > = (props) => {
+  const [useAdvanced, _setAdvanced] = createSignal(!props.inherit?.usePromptOrder)
+
   const fallbackTemplate = createMemo(() => {
     if (!props.service) return defaultTemplate
     const preset = getFallbackPreset(props.service)
@@ -456,6 +458,28 @@ const PromptSettings: Component<
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
         <Card class="flex flex-col gap-4">
+          {/* <Toggle
+            fieldName="usePromptOrder"
+            label="Use Advanced Prompting"
+            value={!props.inherit?.usePromptOrder}
+            onChange={(ev) => setAdvanced(ev)}
+          /> */}
+
+          <Show when={!useAdvanced()}>
+            <BasicPromptTemplate inherit={props.inherit} />
+          </Show>
+
+          <PromptEditor
+            fieldName="gaslight"
+            value={props.inherit?.gaslight || fallbackTemplate()}
+            placeholder={defaultTemplate}
+            disabled={props.disabled}
+            showHelp
+            inherit={props.inherit}
+            hide={!useAdvanced()}
+            showTemplates
+          />
+
           <FormLabel
             label="System Prompt"
             helperText={
@@ -471,18 +495,6 @@ const PromptSettings: Component<
             placeholder="Write {{char}}'s next reply in a fictional chat between {{char}} and {{user}}. Write 1 reply only in internet RP style, italicize actions, and avoid quotation marks. Use markdown. Be proactive, creative, and drive the plot and conversation forward. Write at least 1 paragraph, up to 4. Always stay in character and avoid repetition."
             value={props.inherit?.systemPrompt ?? ''}
             disabled={props.disabled}
-          />
-        </Card>
-
-        <Card class="flex flex-col gap-4">
-          <PromptEditor
-            fieldName="gaslight"
-            value={props.inherit?.gaslight || fallbackTemplate()}
-            placeholder={defaultTemplate}
-            disabled={props.disabled}
-            showHelp
-            inherit={props.inherit}
-            showTemplates
           />
 
           <TextInput
