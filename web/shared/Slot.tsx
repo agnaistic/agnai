@@ -262,18 +262,18 @@ const Slot: Component<{
           }
         })
 
-        const timer = setInterval(() => {
-          const holders = ezstandalone.getSelectedPlaceholders()
-          const inUse = idLocks.has(num)
-          if (!inUse || holders[num]) {
-            clearInterval(timer)
-          } else {
-            ezstandalone.cmd.push(() => {
-              log('[ez]', num, 'retrying display')
-              ezstandalone.displayMore(num)
-            })
-          }
-        }, 200)
+        // const timer = setInterval(() => {
+        //   const holders = ezstandalone.getSelectedPlaceholders()
+        //   const inUse = idLocks.has(num)
+        //   if (!inUse || holders[num]) {
+        //     clearInterval(timer)
+        //   } else {
+        //     ezstandalone.cmd.push(() => {
+        //       log('[ez]', num, 'retrying display')
+        //       ezstandalone.displayMore(num)
+        //     })
+        //   }
+        // }, 200)
       })
     } else if (cfg.slots.provider === 'google') {
       gtmReady.then(() => {
