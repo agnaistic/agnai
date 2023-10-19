@@ -2,6 +2,7 @@ import {
   Component,
   JSX,
   Match,
+  Show,
   Switch,
   createEffect,
   createMemo,
@@ -243,7 +244,7 @@ const Slot: Component<{
       return
     }
 
-    const num = getUniqueId(props.slot, cfg.slots, uniqueId())
+    const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
     setUniqueId(num)
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
@@ -327,6 +328,9 @@ const Slot: Component<{
 
   return (
     <>
+      <Show when={user.user?.admin || cfg.flags.reporting}>
+        <span class="text-red-500">{uniqueId()}</span>
+      </Show>
       <Switch>
         <Match when={!user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
