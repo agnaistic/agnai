@@ -12,6 +12,7 @@ import {
 import { SettingState, settingStore, userStore } from '../store'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
+import { createDebounce } from './util'
 
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
@@ -88,6 +89,29 @@ const Slot: Component<{
     let slotid = actualId()
     console.log.apply(null, [`[${id()}]`, ...args, `| ${slotid}`])
   }
+
+  const [invoke] = createDebounce((self: number) => {
+    ezReady.then(() => {
+      ezstandalone.cmd.push(() => {
+        const current = ezstandalone.getSelectedPlaceholders()
+        const adding: number[] = [self]
+        for (const num of Object.values(idLocks)) {
+          if (!current[num]) {
+            adding.push(num)
+          }
+        }
+        if (ezstandalone.enabled) {
+          ezstandalone.define(...adding)
+          log('[ez]', self, `dispatched #${adding.join(', ')}`)
+          ezstandalone.enable()
+          ezstandalone.display()
+        } else {
+          log('[ez]', self, `dispatched #${adding.join(', ')} (more)`)
+          ezstandalone.displayMore(...adding)
+        }
+      })
+    })
+  }, 2000)
 
   const resize = useResizeObserver()
   const parentSize = useResizeObserver()
@@ -248,34 +272,34 @@ const Slot: Component<{
     setUniqueId(num)
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
-      ezReady.then(() => {
-        ezstandalone.cmd.push(() => {
-          if (!ezstandalone.enabled) {
-            log('[ez]', num, `dispatched #${num}`)
-            ezstandalone.define(num)
-            ezstandalone.enable()
-            ezstandalone.display()
-          } else {
-            log('[ez]', num, `dispatched #${num} (more)`)
-            ezstandalone.define(num)
-            ezstandalone.displayMore(num)
-            ezstandalone.refresh()
-          }
-        })
+      invoke(num)
+      // ezReady.then(() => {
+      // ezstandalone.cmd.push(() => {
+      //   if (!ezstandalone.enabled) {
+      //     log('[ez]', num, `dispatched #${num}`)
+      //     ezstandalone.define(num)
+      //     ezstandalone.enable()
+      //     ezstandalone.display()
+      //   } else {
+      //     log('[ez]', num, `dispatched #${num} (more)`)
+      //     // ezstandalone.define(...nums)
+      //     ezstandalone.displayMore(num)
+      //   }
+      // })
 
-        // const timer = setInterval(() => {
-        //   const holders = ezstandalone.getSelectedPlaceholders()
-        //   const inUse = idLocks.has(num)
-        //   if (!inUse || holders[num]) {
-        //     clearInterval(timer)
-        //   } else {
-        //     ezstandalone.cmd.push(() => {
-        //       log('[ez]', num, 'retrying display')
-        //       ezstandalone.displayMore(num)
-        //     })
-        //   }
-        // }, 200)
-      })
+      // const timer = setInterval(() => {
+      //   const holders = ezstandalone.getSelectedPlaceholders()
+      //   const inUse = idLocks.has(num)
+      //   if (!inUse || holders[num]) {
+      //     clearInterval(timer)
+      //   } else {
+      //     ezstandalone.cmd.push(() => {
+      //       log('[ez]', num, 'retrying display')
+      //       ezstandalone.displayMore(num)
+      //     })
+      //   }
+      // }, 200)
+      // })
     } else if (cfg.slots.provider === 'google') {
       gtmReady.then(() => {
         googletag.cmd.push(function () {
