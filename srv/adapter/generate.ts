@@ -11,7 +11,7 @@ import { AppSchema } from '../../common/types/schema'
 import { AppLog, logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { GenerateRequestV2 } from './type'
-import { assemblePrompt, getAdapter, buildPromptParts } from '../../common/prompt'
+import { assemblePrompt, getAdapter, buildPromptParts, resolveScenario } from '../../common/prompt'
 import { configure } from '../../common/horde-gen'
 import needle from 'needle'
 import { HORDE_GUEST_KEY } from '../api/horde'
@@ -223,6 +223,7 @@ export async function createTextStreamV2(
         characters: opts.characters,
         chatEmbeds: opts.chatEmbeds || [],
         userEmbeds: opts.userEmbeds || [],
+        resolvedScenario: entities.resolvedScenario,
       },
       [...opts.lines].reverse(),
       encoder
@@ -335,7 +336,12 @@ export async function getResponseEntities(
   const genSettings = await getGenerationSettings(user, chat, adapter)
   const settings = mapPresetsToAdapter(genSettings, adapter)
 
-  return { char, user, adapter, settings, gen: genSettings, model, book }
+  const chatScenarios = chat.scenarioIds
+    ? await store.scenario.getScenariosById(chat.scenarioIds)
+    : []
+  const resolvedScenario = resolveScenario(chat, char, chatScenarios)
+
+  return { char, user, adapter, settings, gen: genSettings, model, book, resolvedScenario }
 }
 
 async function getGenerationSettings(

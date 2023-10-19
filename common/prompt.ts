@@ -66,7 +66,8 @@ export type PromptOpts = {
   lastMessage: string
   trimSentences?: boolean
   chatEmbeds: Memory.UserEmbed<{ name: string }>[]
-  userEmbeds: Memory.UserEmbed[]
+  userEmbeds: Memory.UserEmbed[],
+  resolvedScenario: string
 }
 
 export type BuildPromptOpts = {
@@ -315,6 +316,7 @@ type PromptPartsOptions = Pick<
   | 'characters'
   | 'chatEmbeds'
   | 'userEmbeds'
+  | 'resolvedScenario'
 >
 
 export function buildPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
@@ -354,14 +356,10 @@ export function buildPromptParts(opts: PromptPartsOptions, lines: string[], enco
     )
   }
 
-  if (chat.scenario && chat.overrides) {
-    // we use the BOT_REPLACE here otherwise later it'll get replaced with the
-    // replyAs instead of the main character
-    // (we always use the main character's scenario, not replyAs)
-    parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
-  } else {
-    parts.scenario = char.scenario.replace(BOT_REPLACE, char.name)
-  }
+  // we use the BOT_REPLACE here otherwise later it'll get replaced with the
+  // replyAs instead of the main character
+  // (we always use the main character's scenario, not replyAs)
+  parts.scenario = opts.resolvedScenario.replace(BOT_REPLACE, char.name)
 
   parts.sampleChat = (
     replyAs._id === char._id && !!chat.overrides

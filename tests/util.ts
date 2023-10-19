@@ -85,7 +85,8 @@ export function build(
     book?: AppSchema.MemoryBook
     continue?: string
     settings?: Partial<AppSchema.GenSettings>
-    replyAs?: AppSchema.Character
+    replyAs?: AppSchema.Character,
+    resolvedScenario?: string
   } = {}
 ) {
   const overChar = { ...main, ...opts.char }
@@ -108,6 +109,7 @@ export function build(
       lastMessage: '',
       chatEmbeds: [],
       userEmbeds: [],
+      resolvedScenario: opts.resolvedScenario ?? overChar.scenario
     },
     getTokenCounter('main')
   )
@@ -159,6 +161,7 @@ function getParseOpts(overrides: TestOpts = {}, charOverrides: Partial<AppSchema
         kind: 'send',
         chatEmbeds: [],
         userEmbeds: [],
+        resolvedScenario: overChar.scenario
       },
       overrides.lines || lines,
       getTokenCounter('main')

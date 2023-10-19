@@ -1,4 +1,4 @@
-import { createPromptParts, Prompt } from '../../common/prompt'
+import { createPromptParts, Prompt, resolveScenario } from '../../common/prompt'
 import { getEncoder } from '../../common/tokenize'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
@@ -528,6 +528,12 @@ export const chatStore = createStore<ChatState>('chat', {
         ? entities.chat.tempCharacters![active.replyAs]
         : entities.characters[active.replyAs!] || active.char
 
+      const resolvedScenario = resolveScenario(
+        entities.chat,
+        entities.char,
+        entities.scenarios || []
+      )
+
       const prompt = createPromptParts(
         {
           ...entities,
@@ -537,6 +543,7 @@ export const chatStore = createStore<ChatState>('chat', {
           messages: msgs.filter((m) => m.createdAt < msg.createdAt),
           chatEmbeds: [],
           userEmbeds: [],
+          resolvedScenario,
         },
         encoder
       )

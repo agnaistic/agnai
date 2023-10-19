@@ -4,6 +4,7 @@ import {
   getChatPreset,
   getLinesForPrompt,
   buildPromptParts,
+  resolveScenario,
 } from '../../../common/prompt'
 import { getEncoder } from '../../../common/tokenize'
 import { GenerateRequestV2 } from '../../../srv/adapter/type'
@@ -327,6 +328,8 @@ async function getActivePromptOptions(
   const props = await getGenerateProps(opts, active)
   const entities = props.entities
 
+  const resolvedScenario = resolveScenario(entities.chat, entities.char, entities.scenarios || [])
+
   const encoder = await getEncoder()
 
   const promptOpts = {
@@ -346,6 +349,7 @@ async function getActivePromptOptions(
     settings: entities.settings,
     messages: entities.messages,
     lastMessage: entities.lastMessage?.date || '',
+    resolvedScenario,
   }
 
   const lines = getLinesForPrompt(promptOpts, encoder)
@@ -369,10 +373,7 @@ async function createActiveChatPrompt(
   const props = await getGenerateProps(opts, active)
   const entities = props.entities
 
-  const chat = {
-    ...entities.chat,
-    scenario: resolveScenario(entities.chat.scenario || '', entities.scenarios || []),
-  }
+  const resolvedScenario = resolveScenario(entities.chat, entities.char, entities.scenarios || [])
 
   const chatEmbeds: UserEmbed<{ name: string }>[] = []
   const userEmbeds: UserEmbed[] = []
@@ -411,7 +412,7 @@ async function createActiveChatPrompt(
       kind: opts.kind,
       char: entities.char,
       sender: entities.profile,
-      chat,
+      chat: entities.chat,
       user: entities.user,
       members: entities.members.concat([entities.profile]),
       continue: props?.continue,
@@ -426,6 +427,7 @@ async function createActiveChatPrompt(
       trimSentences: ui.trimSentences,
       chatEmbeds,
       userEmbeds,
+      resolvedScenario,
     },
     encoder,
     maxContext
@@ -443,17 +445,6 @@ type GenerateProps = {
   messages: AppSchema.ChatMessage[]
   continue?: string
   impersonate?: AppSchema.Character
-}
-
-function resolveScenario(scenario: string, scenarios: AppSchema.ScenarioBook[]) {
-  const main = scenarios.find((s) => s.overwriteCharacterScenario)
-  if (main) scenario = main.text
-
-  const secondary = scenarios.filter((s) => s.overwriteCharacterScenario === false)
-  if (!secondary.length) return scenario
-
-  scenario += '\n' + secondary.map((s) => s.text).join('\n')
-  return scenario
 }
 
 async function getGenerateProps(
