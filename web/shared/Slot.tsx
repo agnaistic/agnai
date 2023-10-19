@@ -262,7 +262,8 @@ const Slot: Component<{
 
           const timer = setInterval(() => {
             const holders = ezstandalone.getSelectedPlaceholders()
-            if (holders[num]) {
+            const inUse = idLocks.has(num)
+            if (!inUse || holders[num]) {
               clearInterval(timer)
             } else {
               ezstandalone.cmd.push(() => {
