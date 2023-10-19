@@ -252,12 +252,14 @@ const Slot: Component<{
         ezstandalone.cmd.push(() => {
           if (!ezstandalone.enabled) {
             log('[ez]', num, `dispatched #${num}`)
-            ezstandalone.define(...definable)
+            ezstandalone.define(num)
             ezstandalone.enable()
             ezstandalone.display()
           } else {
             log('[ez]', num, `dispatched #${num} (more)`)
+            ezstandalone.define(num)
             ezstandalone.displayMore(num)
+            ezstandalone.refresh()
           }
         })
 
@@ -428,11 +430,6 @@ const slotDefs: Record<SlotKind, SlotDef> = {
     ez: [108, 109],
   },
 }
-
-const definable = Object.values(slotDefs).reduce(
-  (prev, curr) => prev.concat(curr.ez),
-  [] as number[]
-)
 
 function toSize(size: string): [number, number] {
   const [w, h] = size.split('x')
