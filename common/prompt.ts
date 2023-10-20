@@ -713,7 +713,8 @@ export function getContextLimit(
 
   switch (adapter) {
     case 'agnaistic':
-      return Math.min(configuredMax, 4090) - genAmount
+      return configuredMax - genAmount
+
     // Any LLM could be used here so don't max any assumptions
     case 'petals':
     case 'kobold':

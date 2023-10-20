@@ -171,6 +171,7 @@ export async function createTextStreamV2(
   log: AppLog,
   guestSocketId?: string
 ) {
+  let subscription: Awaited<ReturnType<typeof getSubscriptionPreset>>
   /**
    * N.b.: The front-end sends the `lines` and `history` in TIME-ASCENDING order. I.e. Oldest -> Newest
    *
@@ -181,6 +182,17 @@ export async function createTextStreamV2(
    */
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId, opts.settings)
+    subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, entities.gen)
+    const subContextLimit = subscription?.preset?.maxContextLength
+
+    if (!opts.settings) {
+      opts.settings = {}
+    }
+
+    if (subContextLimit) {
+      entities.gen.maxContextLength = subContextLimit
+    }
+
     entities.gen.temporary = opts.settings?.temporary
 
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
@@ -215,23 +227,19 @@ export async function createTextStreamV2(
   if (opts.settings?.thirdPartyFormat) {
     opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
   }
-  if (!opts.settings) {
-    opts.settings = {}
-  }
 
-  if (opts.settings.stopSequences) {
+  if (opts.settings?.stopSequences) {
     opts.settings.stopSequences = opts.settings.stopSequences
       .map((stop) => stop.replace(/\\n/g, '\n'))
       .filter((stop) => !!stop)
   }
 
-  if (opts.settings.phraseBias) {
+  if (opts.settings?.phraseBias) {
     opts.settings.phraseBias = opts.settings.phraseBias
       .map(({ seq, bias }) => ({ seq: seq.replace(/\\n/g, '\n'), bias }))
       .filter((pb) => !!pb.seq)
   }
 
-  const subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
   const encoder = getTokenCounter(adapter, model)
   const handler = handlers[adapter]
@@ -240,10 +248,6 @@ export async function createTextStreamV2(
    * Context limits set by the subscription need to be present before the prompt is finalised.
    * We never need to use the users context length here as the subscription should contain the maximum possible context length.
    */
-  const subContextLimit = subscription?.preset?.maxContextLength
-  if (subContextLimit) {
-    opts.settings.maxContextLength = subContextLimit
-  }
 
   const prompt = assemblePrompt(opts, opts.parts, opts.lines, encoder)
 
