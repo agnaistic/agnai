@@ -1,6 +1,5 @@
 import { customSettings } from '../../config'
 import { AppSchema } from '../../../common/types/schema'
-import { neat } from '/common/util'
 
 export const personaValidator = {
   kind: ['wpp', 'sbf', 'boostyle', 'text'],
