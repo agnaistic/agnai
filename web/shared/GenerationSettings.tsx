@@ -446,7 +446,9 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 const PromptSettings: Component<
   Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
 > = (props) => {
-  const [useAdvanced, _setAdvanced] = createSignal(!props.inherit?.usePromptOrder)
+  const [useAdvanced, setAdvanced] = createSignal(
+    !props.inherit ? false : props.inherit?.useAdvancedPrompt ?? true
+  )
 
   const fallbackTemplate = createMemo(() => {
     if (!props.service) return defaultTemplate
@@ -458,16 +460,14 @@ const PromptSettings: Component<
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
         <Card class="flex flex-col gap-4">
-          {/* <Toggle
-            fieldName="usePromptOrder"
+          <Toggle
+            fieldName="useAdvancedPrompt"
             label="Use Advanced Prompting"
-            value={!props.inherit?.usePromptOrder}
+            value={useAdvanced()}
             onChange={(ev) => setAdvanced(ev)}
-          /> */}
+          />
 
-          <Show when={!useAdvanced()}>
-            <BasicPromptTemplate inherit={props.inherit} />
-          </Show>
+          <BasicPromptTemplate inherit={props.inherit} hide={useAdvanced()} />
 
           <PromptEditor
             fieldName="gaslight"
@@ -1111,10 +1111,18 @@ const TempSettings: Component<{ service?: AIAdapter }> = (props) => {
 
 export function getPresetFormData(ref: any) {
   const cfg = settingStore.getState()
-  const data = getStrictForm(ref, {
+  const {
+    promptOrderFormat,
+    promptOrder: order,
+    ...data
+  } = getStrictForm(ref, {
     ...presetValidator,
     thirdPartyFormat: [...THIRDPARTY_FORMATS, ''],
+    useAdvancedPrompt: 'boolean?',
+    promptOrderFormat: 'string?',
+    promptOrder: 'string?',
   })
+
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)
   data.registered = {}
   data.registered[data.service] = registered
@@ -1124,6 +1132,13 @@ export function getPresetFormData(ref: any) {
     const actual = cfg.config.openRouter.models.find((or) => or.id === data.openRouterModel)
     data.openRouterModel = actual || undefined
   }
+
+  const promptOrder: AppSchema.GenSettings['promptOrder'] = order
+    ? order.split(',').map((o) => {
+        const [placeholder, enabled] = o.split('=')
+        return { placeholder, enabled: enabled === 'on' }
+      })
+    : undefined
 
   const entries = getFormEntries(ref)
   const stopSequences = entries.reduce<string[]>((prev, [key, value]) => {
@@ -1143,7 +1158,7 @@ export function getPresetFormData(ref: any) {
     }, {}) as Array<{ seq: string; bias: number }>
   ).filter((pb: any) => 'seq' in pb && 'bias' in pb)
 
-  return { ...data, stopSequences, phraseBias }
+  return { ...data, stopSequences, phraseBias, promptOrder, promptOrderFormat }
 }
 
 export function getRegisteredSettings(service: AIAdapter | undefined, ref: any) {

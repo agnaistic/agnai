@@ -136,7 +136,7 @@ export function parseTemplate(
 
   const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n')
   return {
-    parsed: result,
+    parsed: result.trim(),
     inserts: opts.inserts ?? new Map(),
     length: opts.limit?.encoder?.(result),
   }

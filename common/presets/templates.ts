@@ -43,7 +43,7 @@ export const templates = {
   
   {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
   {{/each}}
-  {{#if ujb}}USER:{{ujb}}{{/if}}
+  {{#if ujb}}SYSTEM:{{ujb}}{{/if}}
   ASSISTANT: {{post}}`,
   NovelAI: neat`
   {{system_prompt}}

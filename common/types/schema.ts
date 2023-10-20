@@ -432,7 +432,7 @@ export namespace AppSchema {
     systemPrompt?: string
     ignoreCharacterSystemPrompt?: boolean
     gaslight?: string
-    usePromptOrder?: boolean
+    useAdvancedPrompt?: boolean
     promptOrderFormat?: string
     promptOrder?: Array<{ placeholder: string; enabled: boolean }>
     ultimeJailbreak?: string

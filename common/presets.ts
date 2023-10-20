@@ -18,7 +18,7 @@ export const presetValidator = {
   repetitionPenaltyRange: 'number',
   repetitionPenaltySlope: 'number',
 
-  // usePromptOrder: 'boolean?',
+  usePromptOrder: 'boolean?',
 
   memoryContextLimit: 'number?',
   memoryDepth: 'number?',

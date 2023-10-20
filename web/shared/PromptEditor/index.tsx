@@ -16,7 +16,7 @@ import { getAISettingServices, toMap } from '../util'
 import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
-import { TitleCard } from '../Card'
+import { Card, TitleCard } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
@@ -278,13 +278,15 @@ const PromptEditor: Component<
         close={() => showHelp(false)}
       />
 
-      <SelectTemplate
-        show={templates()}
-        close={() => setTemplates(false)}
-        select={(template) => {
-          ref.value = template
-        }}
-      />
+      <Show when={props.showTemplates}>
+        <SelectTemplate
+          show={templates()}
+          close={() => setTemplates(false)}
+          select={(template) => {
+            ref.value = template
+          }}
+        />
+      </Show>
     </div>
   )
 }
@@ -306,31 +308,39 @@ const SORTED_LABELS = Object.entries(BASIC_LABELS)
   .map(([value, spec]) => ({ id: spec.id, label: spec.label, value: value }))
   .sort((l, r) => l.id - r.id)
 
-export const BasicPromptTemplate: Component<{ inherit?: Partial<AppSchema.GenSettings> }> = (
-  props
-) => {
+export const BasicPromptTemplate: Component<{
+  inherit?: Partial<AppSchema.GenSettings>
+  hide?: boolean
+}> = (props) => {
   const items = ['Alpaca', 'Vicuna', 'Metharme', 'Pyg/Simple'].map((label) => ({
-    label,
+    label: `Format: ${label}`,
     value: label,
   }))
 
-  const [order, setOrder] = createSignal(
+  const [original, setOrder] = createSignal(
     props.inherit?.promptOrder?.map((o) => ({
       ...BASIC_LABELS[o.placeholder],
       value: o.placeholder,
       enabled: o.enabled,
     })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
   )
-
-  const [mod, setMod] = createSignal<number[]>([])
+  const [mod, setMod] = createSignal(original())
 
   const updateOrder = (ev: number[]) => {
-    setMod(ev)
-    console.log(ev)
+    const order = ev.reduce((prev, curr, i) => {
+      prev.set(curr, i)
+      return prev
+    }, new Map<number, number>())
+
+    const next = original()
+      .slice()
+      .sort((left, right) => order.get(left.id)! - order.get(right.id)!)
+
+    setMod(next)
   }
 
   const onClick = (id: number) => {
-    const next = order().map((o) => {
+    const next = original().map((o) => {
       if (o.id !== id) return o
       return { ...o, enabled: !o.enabled }
     })
@@ -338,26 +348,27 @@ export const BasicPromptTemplate: Component<{ inherit?: Partial<AppSchema.GenSet
   }
 
   return (
-    <div>
-      <Select fieldName="basicFormat" label="Prompt Format" items={items} />
-      <Sortable
-        items={order()}
-        onChange={updateOrder}
-        onItemClick={onClick}
-        enabled={order()
-          .filter((o) => o.enabled)
-          .map((o) => o.id)}
-      />
-      <TextInput fieldName="promptOrder.order" parentClass="hidden" value={mod().join(',')} />
-      <TextInput
-        fieldName="promptOrder.enabled"
-        parentClass="hidden"
-        value={order()
-          .filter((o) => o.enabled)
-          .map((o) => o.value)
-          .join(',')}
-      />
-    </div>
+    <Card border hide={props.hide}>
+      <div class="flex flex-col gap-1">
+        <FormLabel label="Prompt Order" />
+        <Select fieldName="promptOrderFormat" items={items} />
+        <Sortable
+          items={original()}
+          onChange={updateOrder}
+          onItemClick={onClick}
+          enabled={original()
+            .filter((o) => o.enabled)
+            .map((o) => o.id)}
+        />
+        <TextInput
+          fieldName="promptOrder"
+          parentClass="hidden"
+          value={mod()
+            .map((o) => `${o.value}=${o.enabled ? 'on' : 'off'}`)
+            .join(',')}
+        />
+      </div>
+    </Card>
   )
 }
 

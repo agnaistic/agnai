@@ -17,11 +17,10 @@ export const Card: Component<{
     opacity: props.bgOpacity ?? 0.08,
   })
 
-  const hide = createMemo(() => (props.hide ? 'hidden' : ''))
-
   return (
     <div
-      class={`rounded-lg p-3 ${props.class ?? ''} ${hide()}`}
+      class={`rounded-lg p-3 ${props.class ?? ''}`}
+      classList={{ hidden: props.hide }}
       style={{
         border: props.border ? '1px solid var(--bg-600)' : 0,
         ...cardBg(),

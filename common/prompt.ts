@@ -9,6 +9,7 @@ import { parseTemplate } from './template-parser'
 import { TokenCounter } from './tokenize'
 import { getBotName, trimSentence } from './util'
 import { Memory } from './types'
+import { promptOrderToTemplate } from './prompt-order'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -202,6 +203,18 @@ export function getTemplate(
   parts: PromptParts
 ) {
   const fallback = getFallbackPreset(opts.settings?.service!)
+  if (
+    opts.settings?.useAdvancedPrompt === false &&
+    opts.settings.promptOrderFormat &&
+    opts.settings.promptOrder
+  ) {
+    const template = promptOrderToTemplate(
+      opts.settings.promptOrderFormat,
+      opts.settings.promptOrder
+    )
+    return ensureValidTemplate(template, parts)
+  }
+
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
   return ensureValidTemplate(template, parts)
 }
