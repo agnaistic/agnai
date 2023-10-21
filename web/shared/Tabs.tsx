@@ -1,5 +1,12 @@
 import { Component, For, JSX, createMemo, createSignal } from 'solid-js'
 
+export type TabHook = {
+  tabs: string[]
+  select: (tab: number) => void
+  selected: () => number
+  current: () => string
+}
+
 const Tabs: Component<{
   tabs: string[] | readonly string[]
   selected: () => number
@@ -37,7 +44,7 @@ const border = (selected: boolean) =>
     ? `bg-[var(--hl-800)] border-[var(--hl-500)] hover:border-[var(--hl-400)]`
     : `bg-900 hover:bg-[var(--bg-800)] border-[var(--bg-800)] hover:border-[var(--bg-700)]`
 
-export function useTabs(tabs: string[], initial: number = 0) {
+export function useTabs(tabs: string[], initial: number = 0): TabHook {
   const [tab, setTabs] = createSignal(initial)
   const current = createMemo(() => {
     return tabs[tab()]

@@ -20,7 +20,7 @@ const ImpersonateModal: Component<{ show: boolean; close: () => void }> = (props
     id: 'impersonate-modal',
     element: (
       <Modal show={props.show} close={props.close} maxWidth="half" fixedHeight>
-        <PageHeader title="Impersonate a Character" />
+        <PageHeader title="Impersonate a Character" subPage />
         <div class="flex flex-col gap-2 text-sm">
           <span>
             Instead of updating your profile to speak as somebody else, you can <b>impersonate</b> a

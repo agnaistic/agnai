@@ -5,7 +5,7 @@ import { Menu } from 'lucide-solid'
 
 export { Sortable as default }
 
-export type SortItem = { id: number | string; label: string }
+export type SortItem = { id: number | string; label: string; enabled?: boolean }
 
 const Sortable: Component<{
   items: SortItem[]
@@ -13,6 +13,8 @@ const Sortable: Component<{
   helperText?: JSX.Element
   onChange: (order: number[]) => void
   setSorter?: (sort: Sort) => void
+  onItemClick?: (id: number) => void
+  enabled?: number[]
 }> = (props) => {
   let ref: HTMLUListElement
 
@@ -45,8 +47,14 @@ const Sortable: Component<{
               <li
                 class="flex h-10 cursor-pointer items-center gap-2 border-[1px] border-[var(--bg-700)] pl-2"
                 data-id={item.id}
+                onClick={() => props.onItemClick?.(+item.id)}
+                classList={{
+                  'bg-800': !props.enabled || props.enabled?.includes(+item.id),
+                  'bg-900': props.enabled?.includes(+item.id) === false,
+                  'text-[var(--coolgray-800)]': props.enabled?.includes(+item.id) === false,
+                }}
               >
-                <Menu size={16} color="var(--bg-500)" /> {item.id}. {item.label}
+                <Menu size={16} color="var(--bg-500)" /> {item.label}
               </li>
             )}
           </For>

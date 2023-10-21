@@ -550,7 +550,7 @@ export const CreateCharacterForm: Component<{
                 <div>
                   <FormLabel
                     label={
-                      <>
+                      <div class="flex items-center gap-1">
                         Persona Schema{' '}
                         <Regenerate
                           fields={['personality', 'behaviour', 'speech']}
@@ -558,7 +558,7 @@ export const CreateCharacterForm: Component<{
                           editor={editor}
                           allowed={editor.canGuidance}
                         />{' '}
-                      </>
+                      </div>
                     }
                     helperText={
                       <>
@@ -765,21 +765,30 @@ const Regenerate: Component<{
   return (
     <Switch>
       <Match when={!props.allowed}>{null}</Match>
-      <Match when={props.editor.generating()}>
+      {/* <Match when={props.editor.generating()}>
         <span
           class="cursor-not-allowed text-[var(--hl-700)]"
           onClick={() => props.editor.generateCharacter(props.service, props.fields)}
         >
           Regenerating...
         </span>
-      </Match>
-      <Match when={props.allowed && !props.editor.generating()}>
-        <span
+      </Match> */}
+      <Match when={props.allowed}>
+        {/* <span
           class="link"
-          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
+          onClick={() => props.editor.generateCharacter(props.service, props.fields)
         >
           Regenerate
-        </span>
+        </span> */}
+
+        <Button
+          size="pill"
+          class="inline-block"
+          onClick={() => props.editor.generateCharacter(props.service, props.fields)}
+          disabled={props.editor.generating()}
+        >
+          Rengerate
+        </Button>
       </Match>
     </Switch>
   )

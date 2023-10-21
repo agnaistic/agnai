@@ -16,17 +16,18 @@ import { getAISettingServices, toMap } from '../util'
 import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
 import { HelpCircle } from 'lucide-solid'
-import { TitleCard } from '../Card'
+import { Card, TitleCard } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
 import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } from '/common/dummy'
-import { ensureValidTemplate, getPromptParts } from '/common/prompt'
+import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
 import { templates } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore, toastStore } from '/web/store'
+import Sortable from '../Sortable'
 
 type Placeholder = {
   required: boolean
@@ -117,6 +118,7 @@ const PromptEditor: Component<
     placeholder?: string
     minHeight?: number
     showTemplates?: boolean
+    hide?: boolean
 
     /** Hide the meanings of "green" "yellow" "red" placeholder helper text */
     hideHelperText?: boolean
@@ -201,8 +203,9 @@ const PromptEditor: Component<
   }
 
   const hide = createMemo(() => {
+    if (props.hide) return 'hidden'
     if (!props.service || !adapters()) return ''
-    return adapters()!.includes(props.service) ? '' : ` hidden `
+    return adapters()!.includes(props.service) ? '' : `hidden `
   })
 
   onMount(resize)
@@ -275,18 +278,107 @@ const PromptEditor: Component<
         close={() => showHelp(false)}
       />
 
-      <SelectTemplate
-        show={templates()}
-        close={() => setTemplates(false)}
-        select={(template) => {
-          ref.value = template
-        }}
-      />
+      <Show when={props.showTemplates}>
+        <SelectTemplate
+          show={templates()}
+          close={() => setTemplates(false)}
+          select={(template) => {
+            ref.value = template
+          }}
+        />
+      </Show>
     </div>
   )
 }
 
 export default PromptEditor
+
+const BASIC_LABELS: Record<string, { label: string; id: number }> = {
+  system_prompt: { label: 'System Prompt', id: 0 },
+  scenario: { label: 'Scenario', id: 1 },
+  personality: { label: 'Personality', id: 2 },
+  impersonating: { label: 'Impersonate Personality', id: 3 },
+  memory: { label: 'Memory', id: 4 },
+  example_dialogue: { label: 'Example Dialogue', id: 5 },
+  history: { label: 'Chat History', id: 6 },
+  ujb: { label: 'Jailbreak (UJB)', id: 7 },
+}
+
+const SORTED_LABELS = Object.entries(BASIC_LABELS)
+  .map(([value, spec]) => ({ id: spec.id, label: spec.label, value: value }))
+  .sort((l, r) => l.id - r.id)
+
+export const BasicPromptTemplate: Component<{
+  inherit?: Partial<AppSchema.GenSettings>
+  hide?: boolean
+}> = (props) => {
+  const items = ['Alpaca', 'Vicuna', 'Metharme', 'Pyg/Simple'].map((label) => ({
+    label: `Format: ${label}`,
+    value: label,
+  }))
+
+  const [original, setOrder] = createSignal(
+    props.inherit?.promptOrder?.map((o) => ({
+      ...BASIC_LABELS[o.placeholder],
+      value: o.placeholder,
+      enabled: o.enabled,
+    })) || SORTED_LABELS.map((h) => ({ ...h, enabled: true }))
+  )
+  const [mod, setMod] = createSignal(original())
+
+  const updateOrder = (ev: number[]) => {
+    const order = ev.reduce((prev, curr, i) => {
+      prev.set(curr, i)
+      return prev
+    }, new Map<number, number>())
+
+    const next = original()
+      .slice()
+      .sort((left, right) => order.get(left.id)! - order.get(right.id)!)
+
+    setMod(next)
+  }
+
+  const onClick = (id: number) => {
+    const next = original().map((o) => {
+      if (o.id !== id) return o
+      return { ...o, enabled: !o.enabled }
+    })
+    setOrder(next)
+  }
+
+  return (
+    <Card border hide={props.hide}>
+      <div class="flex flex-col gap-1">
+        <FormLabel
+          label="Prompt Order"
+          helperMarkdown="Ordering of elements within your prompt. Click on an element to exclude it.
+          Enable **Advanced Prompting** for full control and customization."
+        />
+        <Select
+          fieldName="promptOrderFormat"
+          items={items}
+          value={props.inherit?.promptOrderFormat || 'Alpaca'}
+        />
+        <Sortable
+          items={original()}
+          onChange={updateOrder}
+          onItemClick={onClick}
+          enabled={original()
+            .filter((o) => o.enabled)
+            .map((o) => o.id)}
+        />
+        <TextInput
+          fieldName="promptOrder"
+          parentClass="hidden"
+          value={mod()
+            .map((o) => `${o.value}=${o.enabled ? 'on' : 'off'}`)
+            .join(',')}
+        />
+      </div>
+    </Card>
+  )
+}
 
 const Placeholder: Component<
   {
@@ -529,7 +621,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
     return `${name}: ${hist.msg}`
   })
 
-  const parts = getPromptParts(
+  const parts = buildPromptParts(
     {
       char,
       characters,

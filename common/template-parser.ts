@@ -104,7 +104,7 @@ export type TemplateOpts = {
 export function parseTemplate(
   template: string,
   opts: TemplateOpts
-): { parsed: string; inserts: Map<number, string> } {
+): { parsed: string; inserts: Map<number, string>; length?: number } {
   if (opts.limit) {
     opts.limit.output = {}
   }
@@ -135,7 +135,11 @@ export function parseTemplate(
   }
 
   const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n')
-  return { parsed: result, inserts: opts.inserts ?? new Map() }
+  return {
+    parsed: result.trim(),
+    inserts: opts.inserts ?? new Map(),
+    length: opts.limit?.encoder?.(result),
+  }
 }
 
 function readInserts(template: string, opts: TemplateOpts, existingAst?: PNode[]): void {

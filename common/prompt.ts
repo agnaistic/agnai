@@ -9,6 +9,7 @@ import { parseTemplate } from './template-parser'
 import { TokenCounter } from './tokenize'
 import { getBotName, trimSentence } from './util'
 import { Memory } from './types'
+import { promptOrderToTemplate } from './prompt-order'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -129,7 +130,7 @@ export const HOLDERS = {
  * @param opts
  * @returns
  */
-export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext?: number) {
+export function createPromptParts(opts: PromptOpts, encoder: TokenCounter, maxContext?: number) {
   if (opts.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -155,7 +156,7 @@ export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
   const lines = getLinesForPrompt(opts, encoder, maxContext)
-  const parts = getPromptParts(opts, lines, encoder)
+  const parts = buildPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
 
   const prompt = injectPlaceholders(template, {
@@ -177,22 +178,16 @@ export function createPrompt(opts: PromptOpts, encoder: TokenCounter, maxContext
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export function createPromptWithParts(
+export function assemblePrompt(
   opts: GenerateRequestV2,
   parts: PromptParts,
   lines: string[],
   encoder: TokenCounter
-): {
-  lines: string[]
-  prompt: string
-  inserts: Map<number, string>
-  parts: PromptParts
-  post: string[]
-} {
+) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
   const history = { lines, order: 'asc' } as const
-  const { parsed, inserts } = injectPlaceholders(template, {
+  const { parsed, inserts, length } = injectPlaceholders(template, {
     opts,
     parts,
     history,
@@ -200,7 +195,7 @@ export function createPromptWithParts(
     lastMessage: opts.lastMessage,
     encoder,
   })
-  return { lines: history.lines, prompt: parsed, inserts, parts, post }
+  return { lines: history.lines, prompt: parsed, inserts, parts, post, length }
 }
 
 export function getTemplate(
@@ -208,6 +203,18 @@ export function getTemplate(
   parts: PromptParts
 ) {
   const fallback = getFallbackPreset(opts.settings?.service!)
+  if (
+    opts.settings?.useAdvancedPrompt === false &&
+    opts.settings.promptOrderFormat &&
+    opts.settings.promptOrder
+  ) {
+    const template = promptOrderToTemplate(
+      opts.settings.promptOrderFormat,
+      opts.settings.promptOrder
+    )
+    return ensureValidTemplate(template, parts)
+  }
+
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
   return ensureValidTemplate(template, parts)
 }
@@ -221,13 +228,7 @@ type InjectOpts = {
   encoder: TokenCounter
 }
 
-export function injectPlaceholders(
-  template: string,
-  inject: InjectOpts
-): {
-  parsed: string
-  inserts: Map<number, string>
-} {
+export function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
   const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
 
@@ -316,7 +317,7 @@ type PromptPartsOptions = Pick<
   | 'userEmbeds'
 >
 
-export function getPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
+export function buildPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
   const { chat, char, replyAs } = opts
   const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
@@ -725,7 +726,8 @@ export function getContextLimit(
 
   switch (adapter) {
     case 'agnaistic':
-      return Math.min(configuredMax, 4090) - genAmount
+      return configuredMax - genAmount
+
     // Any LLM could be used here so don't max any assumptions
     case 'petals':
     case 'kobold':

@@ -144,8 +144,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
 
     {
-      const level = user.user.sub?.level ?? -1
-      const subs = settings.config.subs.filter((s) => s.level <= level)
+      const tier = user.tiers.find((t) => t._id === user.user?.sub?.tierId)
+      const level = tier?.level ?? user.user.sub?.level ?? -1
+      const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= level)
 
       for (const sub of subs) {
         opts.push({ label: `Agnastic: ${sub.name}`, value: `agnaistic/${sub._id}` })
@@ -210,6 +211,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
       }
 
       setGenerating(true)
+      if (state.personaKind === 'text') {
+        setState('personaKind', 'attributes')
+      }
       const char = payload()
 
       const prevAvatar = state.avatar
@@ -344,7 +348,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     // New fields start here
     systemPrompt: body.systemPrompt ?? '',
     postHistoryInstructions: body.postHistoryInstructions ?? '',
-    insert: body.insertPrompt ? { prompt: body.insertPrompt, depth: body.insertDepth } : undefined,
+    insert: { prompt: body.insertPrompt, depth: body.insertDepth },
     alternateGreetings: state.alternateGreetings ?? [],
     characterBook: state.book,
     creator: body.creator ?? '',

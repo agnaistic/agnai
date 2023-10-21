@@ -227,7 +227,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   let generated = ''
   let error = false
-  let meta = { ctx: entities.settings.maxContextLength, char: entities.size }
+  let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
   const messageId =
     body.kind === 'retry'
@@ -513,7 +513,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   let generated = ''
   let error = false
-  let meta = { ctx: entities.settings.maxContextLength, char: entities.size }
+  let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
   for await (const gen of stream) {
     if (typeof gen === 'string') {

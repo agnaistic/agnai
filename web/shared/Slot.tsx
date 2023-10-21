@@ -11,6 +11,7 @@ import {
 import { SettingState, settingStore, userStore } from '../store'
 import { getPagePlatform, getWidthPlatform, useEffect, useResizeObserver } from './hooks'
 import { wait } from '/common/util'
+import { createDebounce } from './util'
 
 window.googletag = window.googletag || { cmd: [] }
 window.ezstandalone = window.ezstandalone || { cmd: [] }
@@ -69,7 +70,6 @@ const Slot: Component<{
   const [uniqueId, setUniqueId] = createSignal<number>()
 
   const [done, setDone] = createSignal(false)
-  const [videoDone, setVideoDone] = createSignal(false)
   const [adslot, setSlot] = createSignal<googletag.Slot>()
   const [viewable, setViewed] = createSignal<number>()
   const [visible, setVisible] = createSignal(false)
@@ -86,7 +86,9 @@ const Slot: Component<{
     if (!cfg.publisherId) return
     if (!cfg.flags.reporting) return
     let slotid = actualId()
-    console.log.apply(null, [`[${id()}]`, ...args, `| ${slotid}`])
+    const now = new Date()
+    const ts = `${now.toTimeString().slice(0, 8)}.${now.toISOString().slice(-4, -1)}`
+    console.log.apply(null, [`${ts} [${uniqueId()}]`, ...args, `| ${slotid}`])
   }
 
   const resize = useResizeObserver()
@@ -106,79 +108,6 @@ const Slot: Component<{
     setActualId(spec.id)
     return spec
   })
-
-  const tryVideo = () => {
-    const isVideo = specs()!.video && !!cfg.slots.gtmVideoTag
-    if (!isVideo) {
-      log('Invalid attempt')
-      return
-    }
-
-    if (videoDone()) {
-      log('[Video] Already done')
-      return
-    }
-
-    const container = document.getElementById(id())
-    const player: any = document.getElementById(id() + '-player')
-    const ad: any = document.getElementById(id() + '-ad')
-
-    if (!container || !player || !ad) {
-      log('Video not ready')
-      return
-    }
-
-    log('Attempting video request')
-    try {
-      const win: any = window
-      const imaAd = new google.ima.AdDisplayContainer(ad, player)
-      const loader = new google.ima.AdsLoader(imaAd)
-      let manager: any
-
-      loader.addEventListener(
-        google.ima.AdsManagerLoadedEvent.Type.ADS_MANAGER_LOADED,
-        (evt: any) => {
-          const mgr = evt.getAdsManager(player)
-          manager = mgr
-          win.mgr = mgr
-
-          player.load?.()
-          ad.initialize?.()
-
-          mgr.init(player.clientWidth, player.clientHeight, google.ima.ViewMode.NORMAL)
-          mgr.start()
-        },
-        false
-      )
-
-      loader.addEventListener(
-        google.ima.AdErrorEvent.Type.AD_ERROR,
-        (error: any) => {
-          log(error.getError())
-          manager?.destroy()
-        },
-        false
-      )
-
-      player.addEventListener('ended', function () {
-        loader.contentComplete()
-      })
-
-      const request = new google.ima.AdsRequest()
-      request.adTagUrl = cfg.slots.gtmVideoTag
-
-      request.linearAdSlotWidth = player.clientWidth
-      request.linearAdSlotHeight = player.clientHeight
-      request.nonLinearAdSlotWidth = player.clientWidth
-      request.nonLinearAdSlotHeight = player.clientHeight / 3
-
-      loader.requestAds(request)
-      setVideoDone(true)
-      log('Video requested')
-    } catch (ex: any) {
-      log('Video error:', ex?.message || ex)
-    }
-  }
 
   const tryRefresh = () => {
     const slot = adslot()
@@ -262,16 +191,20 @@ const Slot: Component<{
 
   onCleanup(() => {
     idLocks.delete(uniqueId()!)
-    const remove = adslot()
-    if (!remove) return
     log('Cleanup')
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
-      if (!done() || !ref) return
+      const id = uniqueId()
+      const holders = ezstandalone.getSelectedPlaceholders()
+      if (!done() || !ref || !holders[id!]) return
       ezstandalone.cmd.push(() => {
         ezstandalone.destroyPlaceholders(uniqueId()!)
       })
-    } else googletag.destroySlots([remove])
+    } else {
+      const remove = adslot()
+      if (!remove) return
+      googletag.destroySlots([remove])
+    }
   })
 
   createEffect(async () => {
@@ -289,14 +222,19 @@ const Slot: Component<{
     }
 
     if (user.tier?.disableSlots) {
+      props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
+    }
+
+    if (!cfg.slots.provider) {
+      return log('No provider configured')
     }
 
     resize.size()
 
     if (ref && !resize.loaded()) {
       resize.load(ref)
-      log('Not loaded')
+      // log('Not loaded')
       return
     }
 
@@ -310,27 +248,39 @@ const Slot: Component<{
       return
     }
 
-    const num = getUniqueId(props.slot, cfg.slots, uniqueId())
+    const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
     setUniqueId(num)
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
-      ezReady.then(() => {
-        log('[ez]', num, `dispatched #${num}`)
-        ezstandalone.cmd.push(() => {
-          if (!ezstandalone.enabled) {
-            ezstandalone.define(num)
-            ezstandalone.enable()
-            ezstandalone.display()
-          } else {
-            ezstandalone.displayMore(num)
-          }
-        })
-      })
-    } else if (specs()?.video) {
-      imaReady.then(() => {
-        tryVideo()
-      })
-    } else {
+      invoke(log, num)
+      // ezReady.then(() => {
+      // ezstandalone.cmd.push(() => {
+      //   if (!ezstandalone.enabled) {
+      //     log('[ez]', num, `dispatched #${num}`)
+      //     ezstandalone.define(num)
+      //     ezstandalone.enable()
+      //     ezstandalone.display()
+      //   } else {
+      //     log('[ez]', num, `dispatched #${num} (more)`)
+      //     // ezstandalone.define(...nums)
+      //     ezstandalone.displayMore(num)
+      //   }
+      // })
+
+      // const timer = setInterval(() => {
+      //   const holders = ezstandalone.getSelectedPlaceholders()
+      //   const inUse = idLocks.has(num)
+      //   if (!inUse || holders[num]) {
+      //     clearInterval(timer)
+      //   } else {
+      //     ezstandalone.cmd.push(() => {
+      //       log('[ez]', num, 'retrying display')
+      //       ezstandalone.displayMore(num)
+      //     })
+      //   }
+      // }, 200)
+      // })
+    } else if (cfg.slots.provider === 'google') {
       gtmReady.then(() => {
         googletag.cmd.push(function () {
           const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
@@ -364,7 +314,7 @@ const Slot: Component<{
     }
 
     setDone(true)
-    log('Rendered')
+    log('Rendered', !!props.parent)
 
     setTimeout(() => {
       if (props.sticky === 'always') return
@@ -549,15 +499,6 @@ const ezReady = new Promise(async (resolve) => {
   } while (true)
 })
 
-const imaReady = new Promise(async (resolve) => {
-  do {
-    if (typeof google !== 'undefined' && typeof google.ima !== 'undefined') {
-      return resolve(true)
-    }
-    await wait(0.05)
-  } while (true)
-})
-
 function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   const def = slotDefs[slot]
 
@@ -573,7 +514,7 @@ function getSpec(slot: SlotKind, parent: HTMLElement, log: typeof console.log) {
   }
 
   const width = parent.clientWidth
-  log('W/H', width, parent.clientHeight)
+  // log('W/H', width, parent.clientHeight)
   const platform = getWidthPlatform(width)
 
   return getBestFit(def, platform)
@@ -623,3 +564,29 @@ function getSizes(...specs: Array<SlotSpec | undefined>) {
 
   return sizes
 }
+
+const [invoke] = createDebounce((log: (typeof console)['log'], self: number) => {
+  ezReady.then(() => {
+    ezstandalone.cmd.push(() => {
+      const current = ezstandalone.getSelectedPlaceholders()
+      const adding = new Set<number>([self])
+
+      for (const num of idLocks.values()) {
+        if (!current[num]) {
+          adding.add(num)
+        }
+      }
+
+      const add = Array.from(adding.values())
+      if (!ezstandalone.enabled) {
+        ezstandalone.define(...add)
+        log('[ez]', `dispatched #${add.join(', ')}`)
+        ezstandalone.enable()
+        ezstandalone.display()
+      } else {
+        log('[ez]', `dispatched #${add.join(', ')} (more)`)
+        ezstandalone.displayMore(...add)
+      }
+    })
+  })
+}, 1000)

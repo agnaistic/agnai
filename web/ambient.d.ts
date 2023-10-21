@@ -53,5 +53,5 @@ declare interface EzStandalone {
   fireEvent: (target: any, type: string) => void
   setBanger: (value: any) => void
   enableConsent: () => void
-  getSelectedPlaceholders: () => any
+  getSelectedPlaceholders: () => Record<number, boolean>
 }

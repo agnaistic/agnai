@@ -6,6 +6,7 @@ import { PresetCreate, PresetUpdate, SubscriptionUpdate, presetApi } from './dat
 import { subscribe } from './socket'
 import { toastStore } from './toasts'
 import { AIAdapter } from '/common/adapters'
+import { defaultPresets, isDefaultPreset } from '/common/presets'
 
 type PresetState = {
   presets: AppSchema.UserGenPreset[]
@@ -64,7 +65,9 @@ export const presetStore = createStore<PresetState>(
       key: string,
       value: any
     ) {
-      const preset = presets.find((p) => p._id === presetId)
+      const preset: Partial<AppSchema.UserGenPreset> | undefined = isDefaultPreset(presetId)
+        ? defaultPresets[presetId]
+        : presets.find((p) => p._id === presetId)
       if (!preset) {
         toastStore.error(`Could not update preset: Preset not found`)
         return
@@ -77,7 +80,9 @@ export const presetStore = createStore<PresetState>(
 
       next[service]![key] = value
 
-      presetStore.updatePreset(presetId, { registered: next })
+      if (!isDefaultPreset(presetId)) {
+        presetStore.updatePreset(presetId, { registered: next })
+      }
     },
     async *createPreset(
       { presets },
