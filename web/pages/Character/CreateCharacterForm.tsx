@@ -787,7 +787,7 @@ const Regenerate: Component<{
           onClick={() => props.editor.generateCharacter(props.service, props.fields)}
           disabled={props.editor.generating()}
         >
-          Rengerate
+          Regenerate
         </Button>
       </Match>
     </Switch>
