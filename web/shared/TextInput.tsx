@@ -141,7 +141,7 @@ const TextInput: Component<{
       <Show when={!!props.label || !!props.helperText}>
         <label for={props.fieldName}>
           <Show when={!!props.label}>
-            <div class={props.helperText ? '' : ' pb-1'}>
+            <div class="flex items-center gap-1" classList={{ 'pb-1': !props.helperText }}>
               {props.label}{' '}
               <Show when={props.tokenCount}>
                 <em class="ml-1 text-xs">({tokens()} tokens)</em>

@@ -198,19 +198,24 @@ export const ChatGenSettings: Component<{
               inherit={servicePreset()!.preset}
               onService={setAdapter}
               disableService
+              onSave={onSave}
             />
           </Match>
 
           <Match when={selected() === AutoPreset.chat}>
             <div class="bold text-md">Using: Chat Settings</div>
-            <GenerationSettings inherit={props.chat.genSettings} onService={setAdapter} />
+            <GenerationSettings
+              inherit={props.chat.genSettings}
+              onService={setAdapter}
+              onSave={onSave}
+            />
           </Match>
 
           <Match when={true}>
             <For each={presets()}>
               {(preset) => (
                 <Show when={selected() === preset._id!}>
-                  <GenerationSettings inherit={preset} onService={setAdapter} />
+                  <GenerationSettings inherit={preset} onService={setAdapter} onSave={onSave} />
                 </Show>
               )}
             </For>

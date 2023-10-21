@@ -179,7 +179,11 @@ export const GenerationPresetsPage: Component = () => {
                   required
                   parentClass="mb-2"
                 />
-                <GenerationSettings inherit={editing()} disabled={params.id === 'default'} />
+                <GenerationSettings
+                  inherit={editing()}
+                  disabled={params.id === 'default'}
+                  onSave={() => {}}
+                />
               </div>
               <Show when={editing()?.userId !== 'SYSTEM'}>
                 <div class="flex flex-row justify-end">

@@ -306,6 +306,7 @@ export const Subscription: Component = () => {
                     inherit={editing()}
                     disabled={params.id === 'default'}
                     onService={setService}
+                    onSave={() => {}}
                   />
                   <div class="flex flex-row justify-end">
                     <Button disabled={state.saving} onClick={onSave}>

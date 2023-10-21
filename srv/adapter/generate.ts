@@ -180,6 +180,19 @@ export async function createTextStreamV2(
    *
    * Everything else should be update to date at this point
    */
+  if (guestSocketId) {
+    subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
+    const subContextLimit = subscription?.preset?.maxContextLength
+
+    if (!opts.settings) {
+      opts.settings = {}
+    }
+
+    if (subContextLimit) {
+      opts.settings.maxContextLength = subContextLimit
+    }
+  }
+
   if (!guestSocketId) {
     const entities = await getResponseEntities(opts.chat, opts.sender.userId, opts.settings)
     subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, entities.gen)

@@ -55,7 +55,7 @@ type Props = {
   disableService?: boolean
 }
 
-const GenerationSettings: Component<Props> = (props) => {
+const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
   const opts = chatStore((s) => s.opts)
   const [search, setSearch] = useSearchParams()
 
@@ -105,7 +105,7 @@ const GenerationSettings: Component<Props> = (props) => {
             disabled={props.disabled || props.disableService}
           />
 
-          <AgnaisticSettings service={service()} inherit={props.inherit} />
+          <AgnaisticSettings service={service()} inherit={props.inherit} onSave={props.onSave} />
 
           <Select
             fieldName="thirdPartyFormat"

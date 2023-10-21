@@ -1,11 +1,12 @@
 import { Component, Show, createMemo } from 'solid-js'
 import { AIAdapter } from '/common/adapters'
-import { presetStore, settingStore, userStore } from '/web/store'
+import { settingStore, userStore } from '/web/store'
 import Select from '/web/shared/Select'
 import { AppSchema } from '/common/types'
 
 export const AgnaisticSettings: Component<{
   service: AIAdapter
+  onSave: () => void
   inherit?: Partial<AppSchema.UserGenPreset>
 }> = (props) => {
   const state = userStore((s) => ({ user: s.user, tiers: s.tiers }))
@@ -21,19 +22,13 @@ export const AgnaisticSettings: Component<{
       .sort((l, r) => r.level - l.level)
   })
 
-  const onChange = (value: string) => {
-    if (!props.inherit?._id) return
-
-    presetStore.updateRegisterPresetProp(props.inherit?._id, 'agnaistic', 'subscriptionId', value)
-  }
-
   return (
     <Show when={props.service === 'agnaistic'}>
       <Select
         label="Model"
         items={opts()}
         fieldName="registered.agnaistic.subscriptionId"
-        onChange={(ev) => onChange(ev.value)}
+        onChange={props.onSave}
         value={props.inherit?.registered?.agnaistic?.subscriptionId}
       />
     </Show>

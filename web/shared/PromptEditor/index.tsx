@@ -351,7 +351,11 @@ export const BasicPromptTemplate: Component<{
     <Card border hide={props.hide}>
       <div class="flex flex-col gap-1">
         <FormLabel label="Prompt Order" />
-        <Select fieldName="promptOrderFormat" items={items} />
+        <Select
+          fieldName="promptOrderFormat"
+          items={items}
+          value={props.inherit?.promptOrderFormat || 'Alpaca'}
+        />
         <Sortable
           items={original()}
           onChange={updateOrder}
