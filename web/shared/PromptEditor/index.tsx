@@ -350,7 +350,11 @@ export const BasicPromptTemplate: Component<{
   return (
     <Card border hide={props.hide}>
       <div class="flex flex-col gap-1">
-        <FormLabel label="Prompt Order" />
+        <FormLabel
+          label="Prompt Order"
+          helperMarkdown="Ordering of elements within your prompt. Click on an element to exclude it.
+          Enable **Advanced Prompting** for full control and customization."
+        />
         <Select
           fieldName="promptOrderFormat"
           items={items}
