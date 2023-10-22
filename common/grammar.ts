@@ -72,7 +72,7 @@ WordList = word:Word WS "," WS { return word }
 CloseCondition = OP "/if"i CL
 CloseLoop = OP "/each"i CL
 CloseInsert = OP "/insert"i CL
-Word "word" = text:[a-zA-Z_ 0-9\!\?\.\'\#\@\%\"\&\*\=\+]+ { return text.join('') }
+Word "word" = text:[a-zA-Z_ 0-9\!\?\.\'\#\@\%\"\&\*\=\+\-]+ { return text.join('') }
 Pipe "pipe" = _ "|" _ fn:Handler {  return fn }
 
 
