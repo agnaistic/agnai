@@ -14,6 +14,7 @@ import Button from '../../../shared/Button'
 import { defaultCulture } from '../../../shared/CultureCodes'
 import { msgStore, toastStore, userStore } from '../../../store'
 import { AppSchema } from '../../../../common/types/schema'
+import { createDebounce } from '/web/shared/util'
 
 const win: any = window
 
@@ -67,6 +68,14 @@ export const SpeechRecognitionRecorder: Component<{
     props.listening(next)
   })
 
+  const [complete] = createDebounce((speech: SpeechRecognition, text: string) => {
+    const transcript = capitalize(text)
+    speech.abort()
+    props.onText(transcript)
+    setPendingRecord(settings.autoRecord)
+    props.onSubmit()
+  }, 1500)
+
   onMount(async () => {
     let speech: SpeechRecognition
     try {
@@ -87,16 +96,23 @@ export const SpeechRecognitionRecorder: Component<{
       const speechEvent = event as SpeechRecognitionEvent
 
       const script = extractTranscript(speechEvent)
-      setScripts(script.texts.map(capitalizeInterim))
+      setScripts(script.texts.map(capitalize))
+      let foo: string[] = []
+      let finals = 0
+      for (const res of speechEvent.results) {
+        if (res.isFinal) finals++
+        for (const item of res) {
+          foo.push(item.transcript)
+        }
+      }
+
       for (let i = speechEvent.resultIndex; i < speechEvent.results.length; ++i) {
         const result = speechEvent.results[i]
-        const transcript = result[0].transcript
+        const transcript = capitalize(result[0].transcript)
+        props.onText(transcript)
 
-        if (result.isFinal) {
-          if (transcript !== '') {
-            speech.abort()
-            setIsListening(false)
-          }
+        if (result.isFinal && transcript !== '' && settings.autoSubmit) {
+          complete(speech, transcript)
         }
       }
     })
@@ -113,23 +129,12 @@ export const SpeechRecognitionRecorder: Component<{
       setIsHearing(true)
     })
 
-    speech.addEventListener('speechend', (_reason) => {
+    speech.addEventListener('speechend', (_event) => {
       setIsHearing(false)
-      let value = composedValue()
-      if (!value) return
+      // let value = composedValue()
+      // if (!value) return
 
-      if (!value.endsWith('.')) {
-        value += '.'
-      }
-
-      props.onText(value)
-
-      if (settings.autoSubmit) {
-        setPendingRecord(settings.autoRecord)
-        setTimeout(() => {
-          props.onSubmit()
-        }, 100)
-      }
+      // props.onText(value)
     })
 
     setSpeechRecognition(speech)
@@ -159,6 +164,7 @@ export const SpeechRecognitionRecorder: Component<{
         if (!speech) return
         const listens = isListening()
         if (listens) {
+          console.log('clear effect')
           speech.abort()
         }
         setScripts([])
@@ -179,19 +185,9 @@ export const SpeechRecognitionRecorder: Component<{
     props.onText(value)
   })
 
-  // createEffect(() => {
-  //   const final = finalValue()
-  //   if (!final) return
-  //   if (settings.autoSubmit) {
-  //     setPendingRecord(settings.autoRecord)
-  //     setTimeout(() => {
-  //       props.onSubmit()
-  //     }, 100)
-  //   }
-  // })
-
   const unsub = msgStore.subscribe((state) => {
     if (state.speaking && isListening()) {
+      console.log('msgstore sub')
       setPendingRecord(true)
       speechRecognition()?.abort()
       setIsListening(false)
@@ -226,6 +222,7 @@ export const SpeechRecognitionRecorder: Component<{
     const speech = speechRecognition()
     setPendingRecord(false)
     if (!speech) return
+    props.listening(true)
     if (listening) {
       speech.abort()
       setIsListening(false)
@@ -264,11 +261,15 @@ function extractTranscript(ev: SpeechRecognitionEvent) {
     texts.push(text)
   }
 
-  const transcript = texts.map(capitalizeInterim)
+  let transcript = texts.map(capitalize).join('. ')
+  if (transcript.length && !transcript.endsWith('.')) {
+    transcript += '.'
+  }
+
   return { texts, transcript }
 }
 
-function capitalizeInterim(text: string) {
+function capitalize(text: string) {
   let capitalizeIndex = -1
   if (text.length > 2 && text[0] === ' ') capitalizeIndex = 1
   else if (text.length > 1) capitalizeIndex = 0
