@@ -48,7 +48,7 @@ const formatHolders: Record<string, Record<string, string>> = {
     {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
     {{/each}}`,
     post: `ASSISTANT: {{post}}`,
-    system_prompt: `{{#if scenario}}SYSTEM: {{system_prompt}}{{/if}}`,
+    system_prompt: `{{#if system_prompt}}SYSTEM: {{system_prompt}}{{/if}}`,
   },
   Metharme: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
@@ -70,7 +70,7 @@ const formatHolders: Record<string, Record<string, string>> = {
 const fallbackHolders: Record<string, string> = {
   system_prompt: `{{#if system_prompt}}{{system_prompt}}{{/if}}`,
   scenario: `{{#if scenario}}The scenario of the conversation: {{scenario}}{{/if}}`,
-  personality: `{{#if personality}}{{char}}'s personality: {{personality}}{{/if}}`,
+  personality: `{{#if personality}}{{char}}'s personality:\n{{personality}}{{/if}}`,
   memory: `{{#if memory}}{{char}}'s memories: {{memory}}{{/if}}`,
   ujb: `{{#if ujb}}{{ujb}}{{/if}}`,
   example_dialogue: `{{#if example_dialogue}}How {{char}} speaks:\n{{example_dialogue}}{{/if}}`,
