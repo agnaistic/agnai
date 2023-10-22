@@ -86,6 +86,7 @@ const ChatDetail: Component = () => {
     speaking: s.speaking,
     retrying: s.retrying,
     inference: s.lastInference,
+    textBeforeGenMore: s.textBeforeGenMore,
   }))
 
   const isGroupChat = createMemo(() => {
@@ -542,6 +543,10 @@ const ChatDetail: Component = () => {
                           partial={msgs.partial}
                           sendMessage={sendMessage}
                           isPaneOpen={!!chats.opts.pane}
+                          textBeforeGenMore={msgs.textBeforeGenMore}
+                          voice={
+                            msg._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
+                          }
                         >
                           {isOwner() &&
                             retries()?.list?.length! > 1 &&

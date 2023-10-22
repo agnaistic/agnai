@@ -8,6 +8,7 @@ import {
   Pencil,
   PlusCircle,
   RefreshCw,
+  Repeat1,
   Terminal,
   Trash,
   X,
@@ -31,7 +32,15 @@ import { BOT_REPLACE, SELF_REPLACE } from '../../../../common/prompt'
 import { AppSchema } from '../../../../common/types/schema'
 import AvatarIcon, { CharacterAvatar } from '../../../shared/AvatarIcon'
 import { getAssetUrl, getStrictForm } from '../../../shared/util'
-import { chatStore, userStore, msgStore, settingStore, toastStore, ChatState } from '../../../store'
+import {
+  chatStore,
+  userStore,
+  msgStore,
+  settingStore,
+  toastStore,
+  ChatState,
+  VoiceState,
+} from '../../../store'
 import { markdown } from '../../../shared/markdown'
 import Button from '/web/shared/Button'
 import { rootModalStore } from '/web/store/root-modal'
@@ -56,45 +65,17 @@ type MessageProps = {
   sendMessage: (msg: string, ooc: boolean) => void
   isPaneOpen: boolean
   showHiddenEvents?: boolean
+  textBeforeGenMore?: string
+  voice?: VoiceState
 }
 
 const Message: Component<MessageProps> = (props) => {
-  return (
-    <SingleMessage
-      msg={props.msg}
-      onRemove={props.onRemove}
-      swipe={props.swipe}
-      confirmSwipe={props.confirmSwipe}
-      cancelSwipe={props.cancelSwipe}
-      original={props.msg}
-      editing={props.editing}
-      retrying={props.retrying}
-      partial={props.partial}
-      sendMessage={props.sendMessage}
-      isPaneOpen={props.isPaneOpen}
-      showHiddenEvents={props.showHiddenEvents}
-      last={props.last}
-      lastSplit
-    >
-      {props.children}
-    </SingleMessage>
-  )
-}
-
-const SingleMessage: Component<
-  MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean }
-> = (props) => {
   let editRef: HTMLDivElement
   let avatarRef: any
 
   const [ctx] = useAppContext()
   const user = userStore()
   const state = chatStore()
-  const voice = msgStore((x) => ({
-    status:
-      props.lastSplit && x.speaking?.messageId === props.msg._id ? x.speaking.status : undefined,
-  }))
-
   const [edit, setEdit] = createSignal(false)
   const isBot = !!props.msg.characterId
   const isUser = !!props.msg.userId
@@ -143,7 +124,7 @@ const SingleMessage: Component<
   const startEdit = () => {
     setEdit(true)
     if (editRef) {
-      editRef.innerText = props.original.msg
+      editRef.innerText = props.msg.msg
     }
     editRef?.focus()
   }
@@ -166,7 +147,7 @@ const SingleMessage: Component<
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
       data-last={props.last?.toString()}
-      data-lastsplit={props.lastSplit?.toString()}
+      data-lastsplit="true"
     >
       <div class={`flex w-full ${opacityClass}`}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>
@@ -186,13 +167,13 @@ const SingleMessage: Component<
                   </div>
                 </Match>
 
-                <Match when={voice.status === 'generating'}>
+                <Match when={props.voice === 'generating'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={DownloadCloud} />
                   </div>
                 </Match>
 
-                <Match when={voice.status === 'playing'}>
+                <Match when={props.voice === 'playing'}>
                   <div class="animate-pulse cursor-pointer" onClick={msgStore.stopSpeech}>
                     <AvatarIcon format={format()} Icon={PauseCircle} />
                   </div>
@@ -283,15 +264,12 @@ const SingleMessage: Component<
                   data-user-time={isUser}
                 >
                   {new Date(props.msg.createdAt).toLocaleString()}
-                  <Show when={canShowMeta(props.original, ctx.promptHistory[props.original._id])}>
+                  <Show when={canShowMeta(props.msg, ctx.promptHistory[props.msg._id])}>
                     <span
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
                         rootModalStore.info(
-                          <Meta
-                            msg={props.original}
-                            history={ctx.promptHistory[props.original._id]}
-                          />
+                          <Meta msg={props.msg} history={ctx.promptHistory[props.msg._id]} />
                         )
                       }
                     >
@@ -311,17 +289,16 @@ const SingleMessage: Component<
                 >
                   <MessageOptions
                     char={ctx.char!}
-                    original={props.original}
                     msg={props.msg}
                     chatEditing={props.editing}
                     edit={edit}
                     startEdit={startEdit}
                     onRemove={props.onRemove}
-                    lastSplit={props.lastSplit}
                     last={props.last}
                     tts={!!props.tts}
                     partial={props.partial}
                     show={opts}
+                    textBeforeGenMore={props.textBeforeGenMore}
                   />
                 </Match>
 
@@ -356,12 +333,12 @@ const SingleMessage: Component<
                       class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
                       src={getAssetUrl(props.msg.msg)}
                       onClick={() =>
-                        settingStore.showImage(props.original.msg, [
+                        settingStore.showImage(props.msg.msg, [
                           toImageDeleteButton(props.msg._id, 0),
                         ])
                       }
                     />
-                    <For each={props.original.extras || []}>
+                    <For each={props.msg.extras || []}>
                       {(src, i) => (
                         <img
                           class={'mt-2 max-h-32 max-w-[unset] cursor-pointer rounded-md'}
@@ -389,9 +366,9 @@ const SingleMessage: Component<
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
-                  <Show when={!props.partial && props.last && props.lastSplit}>
+                  <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
-                      <For each={props.original.actions}>
+                      <For each={props.msg.actions}>
                         {(item) => (
                           <Button
                             size="sm"
@@ -427,7 +404,7 @@ const SingleMessage: Component<
               </Switch>
             </div>
           </div>
-          {props.last && props.lastSplit && props.children}
+          {props.last && props.children}
         </div>
       </div>
     </div>
@@ -453,22 +430,21 @@ function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
 const MessageOptions: Component<{
   msg: SplitMessage
   char: AppSchema.Character
-  original: AppSchema.ChatMessage
   chatEditing: boolean
   tts: boolean
   edit: Accessor<boolean>
   startEdit: () => void
-  lastSplit: boolean
   last?: boolean
   partial?: string
   show: Signal<boolean>
+  textBeforeGenMore?: string
   onRemove: () => void
 }> = (props) => {
   return (
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
         <div
-          onClick={() => !props.partial && chatStore.showPrompt(props.original)}
+          onClick={() => !props.partial && chatStore.showPrompt(props.msg)}
           class="icon-button prompt-btn"
           classList={{ disabled: !!props.partial }}
         >
@@ -476,7 +452,7 @@ const MessageOptions: Component<{
         </div>
       </Show>
 
-      <Show when={props.chatEditing && props.original.adapter !== 'image'}>
+      <Show when={props.chatEditing && props.msg.adapter !== 'image'}>
         <div class="edit-btn icon-button" onClick={props.startEdit}>
           <Pencil size={18} />
         </div>
@@ -496,9 +472,23 @@ const MessageOptions: Component<{
       >
         <div
           class="icon-button refresh-btn"
-          onClick={() => !props.partial && retryMessage(props.original, props.msg)}
+          onClick={() => !props.partial && retryMessage(props.msg, props.msg)}
         >
           <RefreshCw size={18} />
+        </div>
+      </Show>
+      <Show
+        when={
+          (props.last || (props.msg.adapter === 'image' && props.msg.imagePrompt)) &&
+          props.msg.characterId &&
+          !!props.textBeforeGenMore
+        }
+      >
+        <div
+          class="icon-button"
+          onClick={() => !props.partial && msgStore.continuation(props.msg.chatId, undefined, true)}
+        >
+          <Repeat1 size={18} />
         </div>
       </Show>
 
@@ -662,12 +652,8 @@ function toImageDeleteButton(msgId: string, position: number) {
   }
 }
 
-function getMessageContent(
-  ctx: ContextState,
-  props: MessageProps & { original: AppSchema.ChatMessage; lastSplit: boolean },
-  state: ChatState
-) {
-  const isRetry = props.retrying?._id === props.original._id
+function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatState) {
+  const isRetry = props.retrying?._id === props.msg._id
   const isPartial = props.msg._id === 'partial'
 
   if (isRetry || isPartial) {
@@ -707,7 +693,7 @@ function getMessageContent(
 
   return {
     type: 'message',
-    message: renderMessage(ctx, message, !!props.msg.userId, props.original.adapter),
+    message: renderMessage(ctx, message, !!props.msg.userId, props.msg.adapter),
     class: 'not-streaming',
   }
 }
