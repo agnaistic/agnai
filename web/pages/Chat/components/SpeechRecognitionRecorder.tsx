@@ -259,7 +259,9 @@ function extractTranscript(ev: SpeechRecognitionEvent) {
   const results = Array.from(ev.results)
   const texts: string[] = []
   for (const result of results) {
-    texts.push(result[0].transcript)
+    const text = result[0].transcript
+    if (!text) continue
+    texts.push(text)
   }
 
   const transcript = texts.map(capitalizeInterim)
