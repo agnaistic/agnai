@@ -347,6 +347,7 @@ export function createDebounce<T extends (...args: any[]) => void>(
 ): [fn: (...args: Parameters<T>) => void, dispose: () => void] {
   let timeoutId: NodeJS.Timeout | null = null
   let callback: () => void
+
   return [
     (...args: Parameters<T>) => {
       if (timeoutId) {

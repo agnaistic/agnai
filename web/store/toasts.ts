@@ -76,6 +76,7 @@ export const toastStore = createStore<ToastState>('toasts', {
     remove: ({ toasts }, id: number) => {
       return { toasts: toasts.filter((t) => t.id !== id) }
     },
+    info: addToast('default'),
     normal: addToast('default'),
     warn: addToast('warn'),
     success: addToast('success'),
