@@ -55,6 +55,7 @@ export const THIRDPARTY_FORMATS = [
   'ooba',
   'llamacpp',
   'exllamav2',
+  'koboldcpp',
 ] as const
 
 export const AI_ADAPTERS = [

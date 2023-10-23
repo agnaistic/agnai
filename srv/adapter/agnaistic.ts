@@ -87,8 +87,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
-  if (preset.subLevel > newLevel) {
+  if (preset.subLevel > -1 && preset.subLevel > newLevel) {
     yield { error: 'Your account is ineligible for this model - sub tier insufficient' }
+    return
+  }
+
+  if (!preset.allowGuestUsage && opts.guest) {
+    yield { error: 'Please sign in to use this model' }
     return
   }
 

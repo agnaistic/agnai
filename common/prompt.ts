@@ -66,7 +66,7 @@ export type PromptOpts = {
   lastMessage: string
   trimSentences?: boolean
   chatEmbeds: Memory.UserEmbed<{ name: string }>[]
-  userEmbeds: Memory.UserEmbed[],
+  userEmbeds: Memory.UserEmbed[]
   resolvedScenario: string
 }
 
@@ -670,7 +670,7 @@ export function getAdapter(
     adapter =
       config.thirdPartyFormat === 'llamacpp'
         ? 'ooba'
-        : config.thirdPartyFormat === 'exllamav2'
+        : config.thirdPartyFormat === 'exllamav2' || config.thirdPartyFormat === 'koboldcpp'
         ? 'kobold'
         : config.thirdPartyFormat
   }
@@ -818,20 +818,21 @@ export function trimTokens(opts: TrimOpts) {
 /**
  * Resolve scenario for the chat based on chat, main character and scenario settings.
  */
-export function resolveScenario(chat: AppSchema.Chat, mainChar: AppSchema.Character, additional: AppSchema.ScenarioBook[]) {
-
-  if (chat.overrides)
-    return chat.scenario || ""
+export function resolveScenario(
+  chat: AppSchema.Chat,
+  mainChar: AppSchema.Character,
+  additional: AppSchema.ScenarioBook[]
+) {
+  if (chat.overrides) return chat.scenario || ''
 
   let result = mainChar.scenario
 
   // use the first scenario with override flag on
-  const overriding =  additional.find((s) => s.overwriteCharacterScenario)
+  const overriding = additional.find((s) => s.overwriteCharacterScenario)
   if (overriding) result = overriding.text
 
   const secondary = additional.filter((s) => s.overwriteCharacterScenario === false)
-  if (secondary.length)
-    result += '\n' + secondary.map((s) => s.text).join('\n')
+  if (secondary.length) result += '\n' + secondary.map((s) => s.text).join('\n')
 
   return result
 }

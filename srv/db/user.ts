@@ -330,5 +330,5 @@ export async function validateSubscription(user: AppSchema.User) {
   user.sub.level = nextTier.level
   user.sub.tierId = tierId
   await updateUser(user._id, { billing: user.billing, sub: user.sub })
-  return nextTier.level
+  return nextTier.level ?? -1
 }
