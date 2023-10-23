@@ -5,7 +5,7 @@ import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'
 import { defaultCulture, getSampleText } from '/web/shared/CultureCodes'
-import { AudioReference } from '/web/shared/Audio/AudioReference'
+import { AudioSource } from '../../../../shared/Audio/AudioSource'
 import { createSpeech } from '/web/shared/Audio/speech'
 import { voiceApi } from '/web/store/data/voice'
 
@@ -33,7 +33,7 @@ export const VoicePreviewButton: Component<{
     const preview = voicePreviewUrl()
     if (!service || !voiceId) return
 
-    let audio: AudioReference | undefined
+    let audio: AudioSource | undefined
     if (service === 'webspeechsynthesis') {
       const culture = props.culture || defaultCulture
       const voice: VoiceWebSynthesisSettings = {
@@ -42,13 +42,14 @@ export const VoicePreviewButton: Component<{
         ...props.voiceSettings,
       }
       audio = await createSpeech({
+        kind: 'native',
         voice,
         text: getSampleText(culture),
         culture,
         filterAction: false,
       })
     } else if (preview) {
-      audio = await createSpeech({ url: preview })
+      audio = await createSpeech({ kind: 'remote', url: preview })
     } else {
       const culture = props.culture || defaultCulture
       const voice = {
@@ -57,7 +58,7 @@ export const VoicePreviewButton: Component<{
         ...props.voiceSettings,
       } as VoiceSettings
       const { output } = await voiceApi.textToSpeech(getSampleText(culture), voice)
-      audio = await createSpeech({ url: output })
+      audio = await createSpeech({ kind: 'remote', url: output })
     }
     audio?.play()
   }
