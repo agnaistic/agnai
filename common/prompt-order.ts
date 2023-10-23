@@ -38,7 +38,7 @@ const formatHolders: Record<string, Record<string, string>> = {
     {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
     {{/each}}`,
     post: `### Response:\n{{post}}`,
-    system_prompt: `{{#if scenario}}### Instruction:\n{{system_prompt}}{{//if}}`,
+    system_prompt: `{{#if system_prompt}}### Instruction:\n{{system_prompt}}{{/if}}`,
   },
   Vicuna: {
     preamble: neat`Below is an instruction that describes a task. Write a response that appropriately completes the request.\n
@@ -58,7 +58,7 @@ const formatHolders: Record<string, Record<string, string>> = {
     {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
     {{/each}}`,
     post: `<|model|>{{post}}`,
-    system_prompt: `{{#if scenario}}<|system|>{{system_prompt}}{//if}}`,
+    system_prompt: `{{#if system_prompt}}<|system|>{{system_prompt}}{{/if}}`,
   },
   'Pyg/Simple:': {
     preamble: '',
