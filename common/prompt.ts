@@ -821,18 +821,24 @@ export function trimTokens(opts: TrimOpts) {
 export function resolveScenario(
   chat: AppSchema.Chat,
   mainChar: AppSchema.Character,
-  additional: AppSchema.ScenarioBook[]
+  books: AppSchema.ScenarioBook[]
 ) {
   if (chat.overrides) return chat.scenario || ''
 
   let result = mainChar.scenario
 
-  // use the first scenario with override flag on
-  const overriding = additional.find((s) => s.overwriteCharacterScenario)
-  if (overriding) result = overriding.text
+  for (const book of books) {
+    if (book.overwriteCharacterScenario) {
+      result = book.text || ''
+      break
+    }
+  }
 
-  const secondary = additional.filter((s) => s.overwriteCharacterScenario === false)
-  if (secondary.length) result += '\n' + secondary.map((s) => s.text).join('\n')
+  for (const book of books) {
+    if (!book.overwriteCharacterScenario) {
+      result += `\n${book.text}`
+    }
+  }
 
-  return result
+  return result.trim()
 }

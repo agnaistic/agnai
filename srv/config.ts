@@ -48,6 +48,7 @@ if (!process.env.JWT_SECRET) {
 
 export const config = {
   clustering: !!env('CLUSTERING', ''),
+  clusterWorkers: +env('CLUSTERING', ''),
   auth: {
     inferenceKey: env('INFERENCE_KEY', ''),
     urls: env('AUTH_URLS', 'https://chara.cards,https://dev.chara.cards')

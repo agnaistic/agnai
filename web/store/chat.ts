@@ -247,6 +247,7 @@ export const chatStore = createStore<ChatState>('chat', {
 
         events.emit(
           EVENTS.charsReceived,
+          id,
           res.result.characters,
           Object.values(res.result.chat.tempCharacters || {})
         )

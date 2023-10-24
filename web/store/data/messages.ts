@@ -486,6 +486,7 @@ async function getGenerateProps(
       sender: entities.profile,
       impersonate: props.impersonate,
       repeatable: true,
+      lastMessage: entities.lastMessage?.date,
     }).parsed
   }
 
@@ -651,12 +652,9 @@ async function getGuestEntities() {
     (s) => chat.scenarioIds && chat.scenarioIds.includes(s._id)
   )
 
-  const {
-    impersonating,
-    chatChars: { list, map },
-  } = getStore('character').getState()
+  const { impersonating, chatChars } = getStore('character').getState()
 
-  const characters = getBotsForChat(chat, char, map)
+  const characters = getBotsForChat(chat, char, chatChars.map)
 
   return {
     chat,
@@ -667,7 +665,7 @@ async function getGuestEntities() {
     messages,
     settings,
     members: [profile] as AppSchema.Profile[],
-    chatBots: list,
+    chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
     characters,
     impersonating,
@@ -695,12 +693,9 @@ function getAuthedPromptEntities() {
     .getState()
     .scenarios.filter((s) => chat.scenarioIds && chat.scenarioIds.includes(s._id))
 
-  const {
-    impersonating,
-    chatChars: { list, map },
-  } = getStore('character').getState()
+  const { impersonating, chatChars } = getStore('character').getState()
 
-  const characters = getBotsForChat(chat, char, map)
+  const characters = getBotsForChat(chat, char, chatChars.map)
 
   return {
     chat,
@@ -711,7 +706,7 @@ function getAuthedPromptEntities() {
     messages,
     settings,
     members,
-    chatBots: list,
+    chatBots: chatChars.list,
     autoReplyAs: active.replyAs,
     characters,
     impersonating,
@@ -771,6 +766,7 @@ function getLastMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
+    console.log(msg)
     return { msg: msg.msg, date: msg.createdAt }
   }
 }

@@ -61,7 +61,7 @@ const ChatDetail: Component = () => {
     chatBots: s.characters.list,
     botMap: s.characters.map,
     impersonate: s.impersonating,
-    ready: s.characters.loaded > 0,
+    ready: s.characters.loaded > 0 && s.chatChars.chatId === params.id,
   }))
 
   const isPaneOrPopup = usePane()
@@ -75,6 +75,7 @@ const ChatDetail: Component = () => {
     members: s.chatProfiles,
     loaded: s.loaded,
     opts: s.opts,
+    ready: s.allChars.list.length > 0 && (s.active?.char?._id || 'no-id') in s.allChars.map,
   }))
 
   const msgs = msgStore((s) => ({
@@ -143,7 +144,7 @@ const ChatDetail: Component = () => {
 
   createEffect(() => {
     // On Connect Events
-    if (evented() || !chats.chat || !chats.char || !chars.ready) return
+    if (evented() || !chats.chat || !chats.char || !chars.ready || !chats.ready) return
     setEvented(true)
 
     const messages = msgs.msgs
