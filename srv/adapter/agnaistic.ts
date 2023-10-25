@@ -81,14 +81,23 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const level = opts.subscription.level ?? -1
   const preset = opts.subscription.preset
 
-  const newLevel = await store.users.validateSubscription(opts.user)
+  let newLevel = await store.users.validateSubscription(opts.user)
+  if (newLevel === undefined) {
+    newLevel = -1
+  }
+
   if (newLevel instanceof Error) {
     yield { error: newLevel.message }
     return
   }
 
-  if (preset.subLevel > newLevel) {
-    yield { error: 'Your account is ineligible for this model - sub tier insufficient' }
+  if (preset.subLevel > -1 && preset.subLevel > newLevel) {
+    yield { error: 'Your account is ineligible for this model - Subscription tier insufficient' }
+    return
+  }
+
+  if (!preset.allowGuestUsage && opts.guest) {
+    yield { error: 'Please sign in to use this model' }
     return
   }
 

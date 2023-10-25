@@ -65,7 +65,7 @@
     "selfhost:win": "set \"SELF_HOST=1\" && npm run deps && npm run build:all && npm run server",
     "start:debug:win": "set LOG_LEVEL=debug && concurrently -c auto -n web,api,tsc \"parcel web/index.html --no-cache\" \"npm run server:watch\" \"npm run build:watch\"",
     "test": "mocha --inline-diffs --exit \"tests/**.spec.js\"",
-    "snapshot": "UPDATE_SNAPSHOT=1 mocha --inline-diffs --exit \"tests/**.spec.js\"",
+    "snapshot": "mocha --inline-diffs --exit \"tests/**.spec.js\" --update",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "checks": "pnpm format && pnpm typecheck && pnpm test",
     "up": "docker compose -p agnai up -d",

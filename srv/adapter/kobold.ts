@@ -32,7 +32,9 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const { members, characters, user, prompt, mappedSettings } = opts
 
   const body =
-    opts.gen.thirdPartyFormat === 'llamacpp' || opts.gen.thirdPartyFormat === 'exllamav2'
+    opts.gen.thirdPartyFormat === 'llamacpp' ||
+    opts.gen.thirdPartyFormat === 'exllamav2' ||
+    opts.gen.thirdPartyFormat === 'koboldcpp'
       ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
@@ -177,6 +179,8 @@ const streamCompletition = async function* (streamUrl: any, body: any, log: AppL
   })
 
   const tokens = []
+  const start = Date.now()
+  let first = 0
 
   try {
     const events = requestStream(resp)
@@ -196,6 +200,9 @@ const streamCompletition = async function* (streamUrl: any, body: any, log: AppL
       }
 
       tokens.push(data.token)
+      if (!first) {
+        first = Date.now()
+      }
       yield { token: data.token }
     }
   } catch (err: any) {
@@ -203,5 +210,18 @@ const streamCompletition = async function* (streamUrl: any, body: any, log: AppL
     return
   }
 
+  const ttfb = (Date.now() - first) / 1000
+  const total = (Date.now() - start) / 1000
+  const tps = tokens.length / ttfb
+  const total_tps = tokens.length / total
+  log.info(
+    {
+      ttfb: ttfb.toFixed(1),
+      total: total.toFixed(1),
+      tps: tps.toFixed(1),
+      total_tps: total_tps.toFixed(1),
+    },
+    'Performance'
+  )
   return { text: tokens.join('') }
 }

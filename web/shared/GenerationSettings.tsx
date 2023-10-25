@@ -119,6 +119,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'Textgen (Ooba)', value: 'ooba' },
               { label: 'Llama.cpp', value: 'llamacpp' },
               { label: 'ExLlamaV2', value: 'exllamav2' },
+              { label: 'KoboldCpp', value: 'koboldcpp' },
             ]}
             value={props.inherit?.thirdPartyFormat ?? ''}
             service={service()}

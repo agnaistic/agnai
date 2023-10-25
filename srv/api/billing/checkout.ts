@@ -28,7 +28,7 @@ export const startCheckout = handle(async ({ body, userId }) => {
     mode: 'subscription',
     billing_address_collection: 'auto',
     line_items: [{ price: tier.priceId, quantity: 1 }],
-    metadata: { tierId: body.tierId },
+    metadata: { tierId: body.tierId, userId },
   })
 
   await billingCmd.request(session.id, {

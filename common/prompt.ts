@@ -67,6 +67,7 @@ export type PromptOpts = {
   trimSentences?: boolean
   chatEmbeds: Memory.UserEmbed<{ name: string }>[]
   userEmbeds: Memory.UserEmbed[]
+  resolvedScenario: string
 }
 
 export type BuildPromptOpts = {
@@ -315,6 +316,7 @@ type PromptPartsOptions = Pick<
   | 'characters'
   | 'chatEmbeds'
   | 'userEmbeds'
+  | 'resolvedScenario'
 >
 
 export function buildPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
@@ -354,14 +356,10 @@ export function buildPromptParts(opts: PromptPartsOptions, lines: string[], enco
     )
   }
 
-  if (chat.scenario && chat.overrides) {
-    // we use the BOT_REPLACE here otherwise later it'll get replaced with the
-    // replyAs instead of the main character
-    // (we always use the main character's scenario, not replyAs)
-    parts.scenario = chat.scenario.replace(BOT_REPLACE, char.name)
-  } else {
-    parts.scenario = char.scenario.replace(BOT_REPLACE, char.name)
-  }
+  // we use the BOT_REPLACE here otherwise later it'll get replaced with the
+  // replyAs instead of the main character
+  // (we always use the main character's scenario, not replyAs)
+  parts.scenario = opts.resolvedScenario.replace(BOT_REPLACE, char.name)
 
   parts.sampleChat = (
     replyAs._id === char._id && !!chat.overrides
@@ -672,7 +670,7 @@ export function getAdapter(
     adapter =
       config.thirdPartyFormat === 'llamacpp'
         ? 'ooba'
-        : config.thirdPartyFormat === 'exllamav2'
+        : config.thirdPartyFormat === 'exllamav2' || config.thirdPartyFormat === 'koboldcpp'
         ? 'kobold'
         : config.thirdPartyFormat
   }
@@ -815,4 +813,32 @@ export function trimTokens(opts: TrimOpts) {
   }
 
   return output
+}
+
+/**
+ * Resolve scenario for the chat based on chat, main character and scenario settings.
+ */
+export function resolveScenario(
+  chat: AppSchema.Chat,
+  mainChar: AppSchema.Character,
+  books: AppSchema.ScenarioBook[]
+) {
+  if (chat.overrides) return chat.scenario || ''
+
+  let result = mainChar.scenario
+
+  for (const book of books) {
+    if (book.overwriteCharacterScenario) {
+      result = book.text || ''
+      break
+    }
+  }
+
+  for (const book of books) {
+    if (!book.overwriteCharacterScenario) {
+      result += `\n${book.text}`
+    }
+  }
+
+  return result.trim()
 }

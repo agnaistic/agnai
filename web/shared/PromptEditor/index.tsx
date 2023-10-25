@@ -634,6 +634,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
       chatEmbeds: [],
       userEmbeds: [],
       settings: inherit,
+      resolvedScenario: char.scenario,
     },
     lines,
     (text: string) => text.length

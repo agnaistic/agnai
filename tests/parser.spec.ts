@@ -123,6 +123,7 @@ function getParseOpts(
       sender: profile,
       chatEmbeds: [],
       userEmbeds: [],
+      resolvedScenario: overChar.scenario
     },
     lines,
     getTokenCounter('openai', 'turbo')

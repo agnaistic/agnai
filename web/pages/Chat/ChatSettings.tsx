@@ -13,6 +13,7 @@ import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { Card, TitleCard } from '/web/shared/Card'
 import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
+import { usePane } from '/web/shared/hooks'
 
 const options = [
   { value: 'wpp', label: 'W++' },
@@ -33,6 +34,7 @@ const ChatSettings: Component<{
   const [useOverrides, setUseOverrides] = createSignal(!!state.chat?.overrides)
   const [kind, setKind] = createSignal(state.chat?.overrides?.kind || state.char?.persona.kind)
   const scenarioState = scenarioStore()
+  const pane = usePane()
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -109,7 +111,9 @@ const ChatSettings: Component<{
       scenarioStates: states(),
     }
     chatStore.editChat(state.chat?._id!, payload, useOverrides(), () => {
-      props.close()
+      if (pane() !== 'pane') {
+        props.close()
+      }
     })
   }
 

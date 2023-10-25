@@ -155,3 +155,24 @@ export function toPersona(text: string): AppSchema.Persona {
     attributes: { text: [text] },
   }
 }
+
+export function toScenarioBook(
+  name: string,
+  user: AppSchema.User,
+  overrides?: Partial<AppSchema.ScenarioBook>
+
+): AppSchema.ScenarioBook {
+  return {
+    kind: 'scenario',
+    _id: name,
+    userId: user._id,
+    name: name,
+    description: '',
+    text: '',
+    overwriteCharacterScenario: false,
+    instructions: '',
+    entries: [],
+    states: [],
+    ...overrides
+  }
+}

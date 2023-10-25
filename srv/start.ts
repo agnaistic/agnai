@@ -77,11 +77,15 @@ async function startWorker(id?: number) {
 }
 
 if (config.clustering) {
+  const count =
+    !isNaN(config.clusterWorkers) && config.clusterWorkers > 0
+      ? config.clusterWorkers
+      : os.cpus().length
   logger.info('Using clustering')
   throng({
     worker: startWorker,
     lifetime: Infinity,
-    count: os.cpus().length,
+    count,
     grace: 2000,
     signals: ['SIGTERM', 'SIGINT'],
   })

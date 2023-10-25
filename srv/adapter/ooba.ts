@@ -143,6 +143,26 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
+  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'koboldcpp') {
+    const body = {
+      n: 1,
+      max_context_length: gen.maxContextLength,
+      prompt,
+      max_length: gen.maxTokens,
+      rep_pen: gen.repetitionPenalty,
+      temperature: gen.temp,
+      tfs: gen.tailFreeSampling,
+      top_p: gen.topP,
+      top_k: gen.topK,
+      top_a: gen.topA,
+      typical: gen.typicalP,
+      stop_sequence: getStoppingStrings(opts, stops),
+      rep_pen_range: gen.repetitionPenaltyRange,
+      rep_pen_slope: gen.repetitionPenaltySlope,
+    }
+    return body
+  }
+
   const body = {
     prompt,
     max_new_tokens: gen.maxTokens,
