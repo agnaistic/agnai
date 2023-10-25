@@ -1,5 +1,6 @@
 import EasySpeech from 'easy-speech'
 import { AppSchema, VoiceWebSynthesisSettings } from '/common/types'
+import { toastStore } from '/web/store'
 
 export type NativeSpeechOpts = {
   kind: 'native'
@@ -26,11 +27,12 @@ export class NativeSpeech {
     public onerror: (message: string) => void
   ) {}
 
-  play() {
-    ensureSpeechInitialized()
-    EasySpeech.speak({
+  async play() {
+    await EasySpeech.speak({
       ...this.params,
-      start: this.onplaying,
+      start: () => {
+        this.onplaying()
+      },
       end: this.onended,
       error: (e: SpeechSynthesisErrorEvent) => {
         if (e.error === 'interrupted') return
@@ -39,8 +41,8 @@ export class NativeSpeech {
       },
     })
   }
-  stop() {
-    ensureSpeechInitialized()
+
+  async stop() {
     EasySpeech.cancel()
   }
 }
@@ -51,20 +53,19 @@ export function isSupported() {
 }
 
 export async function getVoices(): Promise<AppSchema.VoiceDefinition[]> {
-  await ensureSpeechInitialized()
   return EasySpeech.voices().map(convertToOptions)
 }
 
-export async function createNativeSpeech(
+export function createNativeSpeech(
   opts: NativeSpeechOpts,
   onplaying: () => void,
   onended: () => void,
   onerror: (message: string) => void
-): Promise<NativeSpeech> {
+): NativeSpeech {
   const params = {
     text: opts.filterAction ? filterAction(opts.text) : opts.text,
     lang: opts.culture,
-    voice: await getVoice(opts.voice.voiceId),
+    voice: getVoice(opts.voice.voiceId),
     pitch: opts.voice.pitch || 1,
     rate: opts.voice.rate || 1,
     volume: 1,
@@ -77,12 +78,25 @@ async function ensureSpeechInitialized() {
   await EasySpeech.init({ maxTimeout: 5000, interval: 250 })
 }
 
-async function getVoice(voiceId: string) {
-  await ensureSpeechInitialized()
+function getVoice(voiceId: string) {
   const voices = EasySpeech.voices()
-  const syntheticVoice = voices.find((v) => v.voiceURI === voiceId) ?? null
+
+  let syntheticVoice = voices.find((v) => v.voiceURI === voiceId) ?? null
   if (!syntheticVoice) {
-    throw new Error(`Voice ${voiceId} not found in web speech synthesis`)
+    const fallback = voices.find((v) => v.name.includes('United States'))
+
+    if (!voices.length) {
+      throw new Error(`Voice "${voiceId}" not available: No voices available on this device`)
+    }
+
+    if (!fallback) {
+      throw new Error(`Voice "${voiceId}" not available: Update your character's voice settings.`)
+    }
+
+    toastStore.warn(
+      `Voice "${voiceId}" not available: Using fallback. Update your character to fix this warning.`
+    )
+    syntheticVoice = fallback
   }
   return syntheticVoice
 }
@@ -99,3 +113,5 @@ function convertToOptions(voice: SpeechSynthesisVoice) {
     previewUrl: voice.voiceURI,
   }
 }
+
+ensureSpeechInitialized()

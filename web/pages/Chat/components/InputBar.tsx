@@ -304,7 +304,7 @@ const InputBar: Component<{
             <Button schema="secondary" class="w-full" onClick={more} alignLeft>
               <PlusCircle size={18} /> Generate More
             </Button>
-            <Show when={!!props.char?.voice}>
+            <Show when={!!props.char?.voice?.service}>
               <Button schema="secondary" class="w-full" onClick={playVoice} alignLeft>
                 <Megaphone size={18} /> Play Voice
               </Button>

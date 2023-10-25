@@ -5,7 +5,7 @@ import { FormLabel } from '/web/shared/FormLabel'
 import Button from '/web/shared/Button'
 import { Play } from 'lucide-solid'
 import { defaultCulture, getSampleText } from '/web/shared/CultureCodes'
-import { AudioSource } from '../../../../shared/Audio/AudioSource'
+import { AudioSource } from '../../../../shared/Audio/audio-source'
 import { createSpeech } from '/web/shared/Audio/speech'
 import { voiceApi } from '/web/store/data/voice'
 

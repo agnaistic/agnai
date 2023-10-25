@@ -1,4 +1,4 @@
-import { AudioSource } from './AudioSource'
+import { AudioSource } from './audio-source'
 import { NativeSpeechOpts, isSupported, getVoices } from './native-speech'
 import { RemoteAudioOpts } from './remote-speech'
 

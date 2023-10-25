@@ -20,14 +20,14 @@ interface AudioSourceEventMap extends GlobalEventHandlersEventMap {
 }
 
 export class AudioSource extends EventTarget {
-  source!: Promise<RemoteAudio | NativeSpeech>
+  source!: RemoteAudio | NativeSpeech
 
   private constructor() {
     super()
   }
 
   public static async create(opts: RemoteAudioOpts | NativeSpeechOpts) {
-    let audioSrc: AudioSource = new AudioSource()
+    const audioSrc: AudioSource = new AudioSource()
 
     const onplaying = () => audioSrc.dispatchEvent(new AudioSourceEvent('playing'))
     const onended = () => audioSrc.dispatchEvent(new AudioSourceEvent('ended'))
@@ -47,12 +47,12 @@ export class AudioSource extends EventTarget {
     return audioSrc
   }
 
-  play = () => {
-    this.source.then((source) => source.play())
+  play = async () => {
+    await this.source.play()
   }
 
-  stop = () => {
-    this.source.then((source) => source.stop())
+  stop = async () => {
+    await this.source.stop()
   }
 
   addEventListener<K extends keyof AudioSourceEventMap>(

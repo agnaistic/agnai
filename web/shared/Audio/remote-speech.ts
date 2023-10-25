@@ -8,21 +8,22 @@ export type RemoteAudioOpts = {
 export class RemoteAudio {
   constructor(public audio: HTMLAudioElement) {}
 
-  play() {
-    this.audio.play()
+  async play() {
+    await this.audio.play()
   }
-  stop() {
+
+  async stop() {
     // HTML audio element can only pause
     this.audio.pause()
   }
 }
 
-export async function createRemoteAudio(
+export function createRemoteAudio(
   opts: RemoteAudioOpts,
   onplaying: () => void,
   onended: () => void,
   onerror: (message: string) => void
-): Promise<RemoteAudio> {
+): RemoteAudio {
   const audio = new Audio(getAssetUrl(opts.url))
 
   audio.addEventListener('playing', (_ev) => onplaying())
