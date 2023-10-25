@@ -15,7 +15,7 @@ import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
 import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/texttospeech-schema'
 import { defaultCulture } from '../shared/CultureCodes'
-import { createSpeech, pauseSpeech } from '../shared/Audio/speech'
+import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
 import { findOne, replace } from '/common/util'
 import { sortAsc } from '/common/chat'
@@ -418,7 +418,7 @@ export const msgStore = createStore<MsgState>(
       return { msgs: msgs.filter((msg) => !removed.has(msg._id)) }
     },
     stopSpeech() {
-      pauseSpeech()
+      stopSpeech()
       return { speaking: undefined }
     },
     async *textToSpeech(
@@ -428,7 +428,7 @@ export const msgStore = createStore<MsgState>(
       voice: VoiceSettings,
       culture?: string
     ) {
-      pauseSpeech()
+      stopSpeech()
 
       if (!voice.service) {
         yield { speaking: undefined }
@@ -438,8 +438,7 @@ export const msgStore = createStore<MsgState>(
       yield { speaking: { messageId, status: 'generating' } }
 
       if (voice.service === 'webspeechsynthesis') {
-        const isSuported = !!window.speechSynthesis
-        if (!isSuported) {
+        if (!isNativeSpeechSupported()) {
           toastStore.error(`Speech synthesis not supported on this browser`)
           return
         }
@@ -567,7 +566,7 @@ async function playVoiceFromUrl(chatId: string, messageId: string, url: string) 
     return
   }
   try {
-    const audio = await createSpeech({ url })
+    const audio = await createSpeech({ kind: 'remote', url })
     audio.addEventListener('error', (e) => {
       console.error(e)
       toastStore.error(`Error playing URL: ${e.message}`)
@@ -604,7 +603,7 @@ async function playVoiceFromBrowser(
   const user = userStore.getState().user
   if (!user || user?.texttospeech?.enabled === false) return
   const filterAction = user.texttospeech?.filterActions ?? true
-  const audio = await createSpeech({ voice, text, culture, filterAction })
+  const audio = await createSpeech({ kind: 'native', voice, text, culture, filterAction })
 
   audio.addEventListener('error', (e) => {
     toastStore.error(`Error playing web speech: ${e.message}`)

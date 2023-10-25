@@ -1,6 +1,6 @@
 import { AppSchema } from '../../common/types/schema'
 import { TTSService } from '../../common/types/texttospeech-schema'
-import { getNativeVoices } from '../shared/Audio/speech'
+import { getNativeVoices, isNativeSpeechSupported } from '../shared/Audio/speech'
 import { createStore } from './create'
 import { voiceApi } from './data/voice'
 import { toastStore } from './toasts'
@@ -25,7 +25,7 @@ export const voiceStore = createStore<VoiceState>(
       const user = userStore.getState().user
       const services: VoiceState['services'] = []
 
-      if ('speechSynthesis' in window) {
+      if (isNativeSpeechSupported()) {
         services.push({
           type: 'webspeechsynthesis',
           label: 'Web Speech Synthesis',
