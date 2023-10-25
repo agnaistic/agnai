@@ -110,7 +110,8 @@ export async function websocketStream(opts: { url: string; body: any }) {
     }
 
     if (obj.event === 'stream_end' || obj.response_type === 'full') {
-      emitter.push(accum)
+      const text = obj.text ? obj.text : accum
+      emitter.push(text)
       emitter.done()
       socket.close()
     }
