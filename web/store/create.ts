@@ -12,6 +12,7 @@ import type { msgStore } from './message'
 import type { adminStore } from './admin'
 import type { presetStore } from './presets'
 import type { scenarioStore } from './scenario'
+import type { audioStore } from './audio'
 
 type StoreMap = {
   user: typeof userStore
@@ -25,6 +26,7 @@ type StoreMap = {
   admin: typeof adminStore
   presets: typeof presetStore
   scenario: typeof scenarioStore
+  audio: typeof audioStore
 }
 
 type HandlerReturn<S> =
