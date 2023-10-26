@@ -510,6 +510,8 @@ export const msgStore = createStore<MsgState>(
 
 msgStore.subscribe((state) => {
   if (state.partial) return
+  if (!state.activeChatId) return
+  if (!state.msgs.length) return
   embedApi.embedChat(state.activeChatId, state.msgs)
 })
 
