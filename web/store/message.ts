@@ -342,12 +342,13 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *send(
-      { activeCharId },
+      { activeCharId, waiting },
       chatId: string,
       message: string,
       mode: SendModes,
       onSuccess?: () => void
     ) {
+      if (waiting) return
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }

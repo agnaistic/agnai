@@ -118,7 +118,7 @@ const InputBar: Component<{
     saveDraft(value)
   }
 
-  const send = () => {
+  const [send] = createDebounce(() => {
     if (!ref) return
 
     const value = ref.value.trim() || text().trim()
@@ -134,7 +134,7 @@ const InputBar: Component<{
       setCleared(0)
       draft.clear()
     })
-  }
+  }, 100)
 
   const createImage = () => {
     msgStore.createImage()
