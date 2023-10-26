@@ -1,29 +1,53 @@
+import { Sound } from './soundpack'
+
 let audioContext = new AudioContext()
-let clickSoundBuffer = new AudioBuffer({ length: 1, sampleRate: 22000 })
+let audioBuffers = new Map<string, AudioBuffer>()
+let sfxSoundSource = audioContext.createBufferSource()
 
-export async function loadSounds() {
-  const response = await window.fetch(
-    'https://assets.mixkit.co/active_storage/sfx/1133/1133-preview.mp3'
-  )
+export async function loadSounds(sounds: IterableIterator<Sound>) {
+  for (let sound of sounds) {
+    let soundArrayBuffer: AudioBuffer | undefined
 
-  const data = await response.arrayBuffer()
+    if ('url' in sound.source) {
+      soundArrayBuffer = await loadRemoteSound(sound.source.url)
+    } else if ('path' in sound.source) {
+      // TODO load from file?
+    } else if ('key' in sound.source) {
+      // TODO load from storage
+    }
 
+    if (soundArrayBuffer) {
+      audioBuffers.set(sound.soundId, soundArrayBuffer)
+    }
+  }
+}
+
+async function loadRemoteSound(url: string) {
+  const response = await window.fetch(url)
+  const arrayBuffer = await response.arrayBuffer()
+  return createBuffer(arrayBuffer)
+}
+
+async function createBuffer(arrayBuffer: ArrayBuffer) {
   const bufferPromise = async () => {
     return new Promise<AudioBuffer>((resolve, reject) => {
       audioContext.decodeAudioData(
-        data,
+        arrayBuffer,
         (buffer) => resolve(buffer),
         (err) => reject(err)
       )
     })
   }
-  clickSoundBuffer = await bufferPromise()
+  return await bufferPromise()
 }
 
-export function playClick() {
-  const clickSound = audioContext.createBufferSource()
-  clickSound.buffer = clickSoundBuffer
-  clickSound.connect(audioContext.destination)
-
-  clickSound?.start()
+export function playSoundEffect(sound?: Sound) {
+  if (!sound || !sound.soundId) return
+  const buffer = audioBuffers.get(sound.soundId)
+  if (!buffer) return
+  sfxSoundSource.disconnect()
+  sfxSoundSource = audioContext.createBufferSource()
+  sfxSoundSource.buffer = buffer
+  sfxSoundSource.connect(audioContext.destination)
+  sfxSoundSource.start()
 }
