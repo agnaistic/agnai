@@ -24,9 +24,7 @@ export const EmbedsTab: Component = (props) => {
       <EmbedContent />
 
       <div class="flex flex-col gap-2">
-        <For each={state.embeds.filter((embed) => embed.metadata.type === 'user')}>
-          {(each) => <Card>{each.name}</Card>}
-        </For>
+        <For each={state.embeds}>{(each) => <Card>{each}</Card>}</For>
       </div>
     </>
   )

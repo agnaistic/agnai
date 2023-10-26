@@ -16,14 +16,13 @@ import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
-import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
-import { settingStore } from '../settings'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
+import { embedApi } from '../embeddings'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -363,8 +362,7 @@ async function createActiveChatPrompt(
   maxContext?: number
 ) {
   const { active } = chatStore.getState()
-  const { ui, user } = userStore.getState()
-  const { pipelineOnline } = settingStore.getState()
+  const { ui } = userStore.getState()
 
   if (!active) {
     throw new Error('No active chat. Try refreshing')
@@ -386,23 +384,30 @@ async function createActiveChatPrompt(
       ? opts.text
       : entities.lastMessage?.msg
 
-  if (pipelineOnline && user?.useLocalPipeline) {
-    const created = text ? new Date().toISOString() : entities.messages.slice(-1)[0]?.createdAt
-    const chats = text
-      ? await pipelineApi.chatRecall(entities.chat._id, text, created || new Date().toISOString())
-      : null
+  const chats = text ? await embedApi.query(entities.chat._id, text) : null
 
-    const users =
-      text && entities.chat.userEmbedId
-        ? await pipelineApi.queryEmbedding(entities.chat.userEmbedId, text)
-        : null
+  // @todo support pdf/wiki embeddings using embedApi
+  const users =
+    text && entities.chat.userEmbedId ? await embedApi.query(entities.chat.userEmbedId, text) : null
 
-    if (chats) {
-      chatEmbeds.push(...chats)
+  // text && entities.chat.userEmbedId
+  //   ? await embedApi.queryEmbedding(entities.chat.userEmbedId, text)
+  //   : null
+
+  if (chats?.messages.length) {
+    for (const chat of chats.messages) {
+      const name =
+        entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
+        entities.members.find((m) => m._id === chat.entityId)?.handle ||
+        'You'
+
+      chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
     }
+  }
 
-    if (users) {
-      userEmbeds.push(...users)
+  if (users?.messages.length) {
+    for (const chat of users.messages) {
+      userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
     }
   }
 

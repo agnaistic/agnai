@@ -19,6 +19,7 @@ import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Aud
 import { eventStore } from './event'
 import { findOne, replace } from '/common/util'
 import { sortAsc } from '/common/chat'
+import { embedApi } from './embeddings'
 
 type ChatId = string
 
@@ -58,6 +59,7 @@ export type MsgState = {
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
   cache: Record<string, AppSchema.ChatMessage>
   branch?: AppSchema.ChatMessage[]
+  canImageCaption: boolean
 
   /**
    * Ephemeral image messages
@@ -82,12 +84,17 @@ const initState: MsgState = {
   queue: [],
   cache: {},
   textBeforeGenMore: undefined,
+  canImageCaption: false,
 }
 
 export const msgStore = createStore<MsgState>(
   'messages',
   initState
 )(() => {
+  embedApi.onCaptionReady(() => {
+    msgStore.setState({ canImageCaption: true })
+  })
+
   events.on('logged-out', () => {
     msgStore.setState(initState)
   })
@@ -120,6 +127,8 @@ export const msgStore = createStore<MsgState>(
         msgs: data.messages.sort(sortAsc),
         cache: nextCache,
       })
+
+      embedApi.embedChat(data.chatId, data.messages)
     }
   )
 
@@ -496,6 +505,11 @@ export const msgStore = createStore<MsgState>(
       await msgsApi.generateActions()
     },
   }
+})
+
+msgStore.subscribe((state) => {
+  if (state.partial) return
+  embedApi.embedChat(state.activeChatId, state.msgs)
 })
 
 function processQueue() {

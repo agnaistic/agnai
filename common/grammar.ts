@@ -117,22 +117,23 @@ History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "his
 
 Interp "interp"
 	= Character
+  / UserEmbed
 	/ User
-    / Scenario
-    / Persona
-    / Impersonate
-    / AllPersona
-    / Dialogue
-    / History
-    / Instruction
-    / Jailbreak
-    / Post
-    / Memory
-    / Message
-    / ChatAge
-    / IdleDuration
-    / ChatEmbed
-    / UserEmbed
-    / Random
-    / Roll
+  / Scenario
+  / Persona
+  / Impersonate
+  / AllPersona
+  / Dialogue
+  / History
+  / Instruction
+  / Jailbreak
+  / Post
+  / Memory
+  / Message
+  / ChatAge
+  / IdleDuration
+  / ChatEmbed
+  
+  / Random
+  / Roll
 `

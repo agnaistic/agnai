@@ -18,7 +18,7 @@ const ChatMemoryModal: Component<{
   const state = memoryStore((s) => ({
     books: s.books,
     items: s.books.list.map((book) => ({ label: book.name, value: book._id })),
-    embeds: s.embeds.filter((em) => em.metadata.type === 'user'),
+    embeds: s.embeds,
   }))
 
   const [id, setId] = createSignal(props.chat.memoryId || 'new')
@@ -90,7 +90,7 @@ const ChatMemoryModal: Component<{
 
   const embeds = createMemo(() => {
     return [{ label: 'None', value: '' }].concat(
-      state.embeds.map((em) => ({ label: em.name, value: em.name }))
+      state.embeds.map((em) => ({ label: em, value: em }))
     )
   })
 

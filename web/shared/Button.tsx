@@ -55,6 +55,38 @@ const Button: Component<{
   </button>
 )
 
+export const LabelButton: Component<{
+  children: JSX.Element
+  for: string
+  onClick?: JSX.EventHandler<HTMLLabelElement, MouseEvent>
+  schema?: ButtonSchema
+  type?: 'submit' | 'reset' | 'button'
+  size?: 'sm' | 'md' | 'lg' | 'pill'
+  disabled?: boolean
+  class?: string
+  alignLeft?: boolean
+  classList?: { [key: string]: boolean }
+}> = (props) => (
+  <label
+    for={props.for}
+    class={`${kinds[props.schema || 'primary']} select-none items-center` + (props.class || '')}
+    classList={{
+      ...props.classList,
+      'leading-5': props.size === 'pill',
+      'py-0': props.size === 'pill',
+      'py-1': props.size === 'sm',
+      'py-2': !props.size || props.size === 'md',
+      'py-4': props.size === 'lg',
+      'text-sm': props.size === 'sm' || props.size === 'pill',
+      'text-lg': props.size === 'lg',
+      'justify-center': !props.alignLeft,
+    }}
+    onClick={props.onClick}
+  >
+    {props.children}
+  </label>
+)
+
 export const ToggleButton: Component<{
   fieldName: string
   children: JSX.Element

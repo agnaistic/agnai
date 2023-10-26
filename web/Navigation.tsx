@@ -11,10 +11,8 @@ import {
   MessageCircle,
   Moon,
   Plus,
-  Power,
   Settings,
   ShoppingBag,
-  Signal,
   Sliders,
   Sun,
   VenetianMask,
@@ -44,7 +42,6 @@ import Slot from './shared/Slot'
 import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
-import { pipelineApi } from './store/data/pipeline'
 
 const MobileNavHeader = () => {
   const user = userStore()
@@ -177,7 +174,7 @@ const UserNavigation: Component = () => {
 
       <ChatLink />
 
-      <Library pipeline={user.user?.useLocalPipeline} />
+      <Library />
 
       <Item href="/invites">
         <MailPlus /> Invites <InviteBadge />
@@ -271,7 +268,6 @@ const GuestNavigation: Component = () => {
     config: s.config,
     guest: s.guestAccessAllowed,
     flags: s.flags,
-    pipelineOnline: s.pipelineOnline,
   }))
 
   return (
@@ -449,22 +445,12 @@ const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }
   </a>
 )
 
-const Library: Component<{ pipeline?: boolean }> = (props) => {
-  const cfg = settingStore()
-
+const Library: Component<{}> = (props) => {
   return (
     <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
       <Item href="/memory">
         <Book /> Library{' '}
       </Item>
-      <div class="flex items-center">
-        <Show when={props.pipeline && cfg.pipelineOnline}>
-          <Signal color="green" />
-        </Show>
-        <Show when={props.pipeline && !cfg.pipelineOnline}>
-          <Power onClick={() => pipelineApi.reconnect(true)} class="cursor-pointer opacity-30" />
-        </Show>
-      </div>
     </div>
   )
 }

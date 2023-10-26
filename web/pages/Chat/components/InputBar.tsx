@@ -11,7 +11,7 @@ import {
   Switch,
 } from 'solid-js'
 import { AppSchema } from '../../../../common/types/schema'
-import Button from '../../../shared/Button'
+import Button, { LabelButton } from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, toastStore, userStore } from '../../../store'
@@ -27,6 +27,8 @@ import NoCharacterIcon from '/web/icons/NoCharacterIcon'
 import WizardIcon from '/web/icons/WizardIcon'
 import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
+import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
+import { embedApi } from '/web/store/embeddings'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -46,7 +48,11 @@ const InputBar: Component<{
   const [ctx] = useAppContext()
 
   const user = userStore()
-  const state = msgStore((s) => ({ lastMsg: s.msgs.slice(-1)[0], msgs: s.msgs }))
+  const state = msgStore((s) => ({
+    lastMsg: s.msgs.slice(-1)[0],
+    msgs: s.msgs,
+    canCaption: s.canImageCaption,
+  }))
   const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
 
   useEffect(() => {
@@ -193,6 +199,16 @@ const InputBar: Component<{
     setMenu(false)
   }
 
+  const onFile = async (files: FileInputResult[]) => {
+    const [file] = files
+    if (!file) return
+
+    const buffer = await getFileAsDataURL(file.file)
+    const caption = await embedApi.captionImage(buffer.content)
+    setText(`*{{user}} shows {{char}} a picture that contains: ${caption}*`)
+    send()
+  }
+
   return (
     <div class="relative flex items-center justify-center">
       <Show when={props.showOocToggle}>
@@ -215,7 +231,6 @@ const InputBar: Component<{
           offset={44}
         />
       </Show>
-
       <TextInput
         fieldName="chatInput"
         isMultiline
@@ -320,6 +335,17 @@ const InputBar: Component<{
                 <Zap /> Trigger Event
               </Button>
             </Show>
+          </Show>
+          <Show when={state.canCaption}>
+            <FileInput
+              fieldName="imageCaption"
+              parentClass="hidden"
+              onUpdate={onFile}
+              accept="image/jpg,image/png,image/jpeg"
+            />
+            <LabelButton for="imageCaption" schema="secondary" class="w-full" alignLeft>
+              Send Image
+            </LabelButton>
           </Show>
         </div>
       </DropMenu>

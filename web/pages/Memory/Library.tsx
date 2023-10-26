@@ -1,5 +1,4 @@
 import { Component, Match, Switch, createEffect, createMemo } from 'solid-js'
-import { settingStore } from '/web/store/settings'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import { setComponentPageTitle } from '/web/shared/util'
 import ScenarioList from '../Scenario/ScenarioList'
@@ -12,13 +11,10 @@ export { Library as default }
 const Library: Component = () => {
   const [params, setParams] = useSearchParams()
   setComponentPageTitle('Library')
-  const cfg = settingStore()
 
   const allowed = createMemo(() => {
-    const base = ['Memories', 'Scenarios', 'Prompt Templates']
-    if (cfg.pipelineOnline) {
-      base.push('Embeddings')
-    }
+    const base = ['Memories', 'Scenarios', 'Prompt Templates', 'Embeddings']
+
     return base
   })
 

@@ -2,8 +2,8 @@ import { AppSchema, NewBook } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
 import { createStore } from './create'
 import { memoryApi } from './data/memory'
-import { pipelineApi } from './data/pipeline'
 import { toastStore } from './toasts'
+import { embedApi } from './embeddings'
 
 type MemoryState = {
   show: boolean
@@ -14,7 +14,7 @@ type MemoryState = {
   creating: boolean
   loadingAll: boolean
   updating: boolean
-  embeds: Array<{ id: string; name: string; metadata: { type: string } }>
+  embeds: string[]
 }
 
 const initState: MemoryState = {
@@ -115,13 +115,8 @@ export const memoryStore = createStore<MemoryState>(
     },
 
     async listCollections() {
-      const collections = await pipelineApi.listCollections()
-      return {
-        embeds: collections.map((item: any) => ({
-          ...item,
-          metadata: item.metadata || { type: 'chat' },
-        })),
-      }
+      const ids = await embedApi.cache.getIds()
+      return { embeds: ids }
     },
   }
 })
