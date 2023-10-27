@@ -620,7 +620,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
     if (!entities) throw new Error(`Could not collate data for prompting`)
     return {
       ...entities,
-      messages: entities.messages.filter((msg) => msg.ooc !== true),
+      messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
       lastMessage: getLastMessage(entities.messages),
     }
   }
@@ -629,7 +629,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   if (!entities) throw new Error(`Could not collate data for prompting`)
   return {
     ...entities,
-    messages: entities.messages.filter((msg) => msg.ooc !== true),
+    messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
     lastMessage: getLastMessage(entities.messages),
   }
 }
