@@ -7,7 +7,6 @@ import {
   HeartHandshake,
   HelpCircle,
   LogIn,
-  MailPlus,
   MessageCircle,
   Moon,
   Plus,
@@ -158,6 +157,11 @@ const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
   const toasts = toastStore()
+  const invites = inviteStore()
+
+  const count = createMemo(() => {
+    return toasts.unseen + invites.invites.length
+  })
 
   return (
     <>
@@ -175,11 +179,6 @@ const UserNavigation: Component = () => {
       <ChatLink />
 
       <Library />
-
-      <Item href="/invites">
-        <MailPlus /> Invites <InviteBadge />
-      </Item>
-
       <MultiItem>
         <Item href="/presets">
           <Sliders /> Presets
@@ -239,16 +238,16 @@ const UserNavigation: Component = () => {
           }}
         >
           <Switch>
-            <Match when={toasts.unseen > 0}>
+            <Match when={count() > 0}>
               <div class="relative flex">
                 <Bell fill="var(--bg-100)" />
                 <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
-                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                  <Badge>{count() > 9 ? '9+' : count()}</Badge>
                 </span>
               </div>
             </Match>
 
-            <Match when={!toasts.unseen}>
+            <Match when={!count()}>
               <Bell color="var(--bg-500)" />
             </Match>
           </Switch>
@@ -414,22 +413,6 @@ const SubItem: Component<{
         <ChevronRight size={14} /> {props.children}
       </A>
     </Show>
-  )
-}
-
-const InviteBadge: Component = () => {
-  const inv = inviteStore()
-
-  return (
-    <>
-      <Show when={inv.invites.length}>
-        <span
-          class={`flex h-6 items-center justify-center rounded-xl bg-red-600 px-2 text-xs text-white`}
-        >
-          {inv.invites.length}
-        </span>
-      </Show>
-    </>
   )
 }
 

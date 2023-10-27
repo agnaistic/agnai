@@ -22,7 +22,7 @@ export type WorkerRequest =
   | { type: 'initSimilarity'; model: string }
   | { type: 'initCaptioning'; model: string }
   | { type: 'captionImage'; image: string; requestId: string }
-  | { type: 'query'; chatId: string; text: string; requestId: string }
+  | { type: 'query'; chatId: string; text: string; requestId: string; beforeDate?: string }
   | RequestChatEmbed
   | RequestDocEmbed
 
@@ -38,3 +38,9 @@ export type WorkerResponse =
   | { type: 'init' }
   | { type: 'embedded'; kind: 'chat' | 'document'; id: string }
   | { type: 'caption'; requestId: string; caption: string }
+  | {
+      type: 'status'
+      kind: 'chat' | 'document'
+      id: string
+      status: string
+    }

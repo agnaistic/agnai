@@ -6,6 +6,7 @@ import { v4 } from 'uuid'
 import { slugify } from '/common/util'
 import { toastStore } from '../toasts'
 import { docCache } from './cache'
+import type { MemoryState } from '../memory'
 
 type Callback = () => void
 type QueryResult = Extract<WorkerResponse, { type: 'result' }>
@@ -16,11 +17,18 @@ type WikiItem = {
   items?: WikiItem[]
 }
 
+const models = {
+  embedding: 'Xenova/all-MiniLM-L6-v2',
+  captioning: 'Xenova/vit-gpt2-image-captioning',
+}
+
 // @ts-ignore
 env.allowLocalModels = false
 
 let EMBED_READY = false
 let CAPTION_READY = false
+let MEMORY_SET: (state: Partial<MemoryState>) => void
+let MEMORY_GET: () => MemoryState
 
 let embedQueue: { chatId: string; messages: AppSchema.ChatMessage[] } | undefined
 const documentQueue: string[] = []
@@ -32,9 +40,19 @@ let onEmbedReady: Callback = () => {}
 let onCaptionReady: Callback = () => {}
 
 // @ts-ignore
-const worker = new Worker(new URL('./worker', import.meta.url), { type: 'module' })
+const embedWorker = new Worker(new URL('./worker', import.meta.url), { type: 'module' })
+// @ts-ignore
+const imageWorker = new Worker(new URL('./worker', import.meta.url), { type: 'module' })
 
 export const embedApi = {
+  setup: async (getter: typeof MEMORY_GET, setter: typeof MEMORY_SET) => {
+    MEMORY_GET = getter
+    MEMORY_SET = setter
+
+    const ids = await docCache.getIds()
+    const embeds = ids.map((id) => ({ id, state: 'not-loaded' }))
+    setter({ embeds })
+  },
   embedChat,
   embedArticle,
   embedPdf,
@@ -51,16 +69,23 @@ export const embedApi = {
 }
 
 const handlers: {
-  [key in WorkerResponse['type']]: (msg: Extract<WorkerResponse, { type: key }>) => void
+  [key in WorkerResponse['type']]: (
+    worker: 'embed' | 'image',
+    msg: Extract<WorkerResponse, { type: key }>
+  ) => void
 } = {
-  init: () => {
-    post('initSimilarity', { model: 'Xenova/t5-small' })
+  init: (type) => {
+    if (type === 'embed') {
+      post('initSimilarity', { model: models.embedding })
+    }
+
+    if (type === 'image' && window.flags.caption) {
+      post('initCaptioning', { model: models.captioning })
+    }
   },
   embedLoaded: async () => {
     EMBED_READY = true
     onEmbedReady()
-
-    post('initCaptioning', { model: 'Xenova/vit-gpt2-image-captioning' })
 
     if (embedQueue) {
       post('embedChat', embedQueue)
@@ -79,32 +104,54 @@ const handlers: {
     CAPTION_READY = true
     onCaptionReady()
   },
-  caption: (msg) => {
+  caption: (_, msg) => {
     const callback = captionCallbacks.get(msg.requestId)
     if (!callback) return
 
     callback(msg.caption)
     captionCallbacks.delete(msg.requestId)
   },
-  embedded: (msg) => {
+  embedded: (_, msg) => {
     if (msg.kind === 'chat') return
     toastStore.info(`Embeddeding ready`)
   },
-  progress: (msg) => {},
-  result: (msg) => {
+  progress: (_, msg) => {},
+  result: (_, msg) => {
     const listener = embedCallbacks.get(msg.requestId)
     if (!listener) return
 
     listener(msg)
     embedCallbacks.delete(msg.requestId)
   },
+  status: (_, msg) => {
+    if (!MEMORY_GET || !MEMORY_SET) return
+    const { embeds } = MEMORY_GET()
+    if (msg.kind === 'chat') return
+    const next = embeds
+      .slice()
+      .map((e) => (e.id === msg.id ? { id: msg.id, state: msg.status } : e))
+
+    if (!next.some((e) => e.id === msg.id)) {
+      next.push({ id: msg.id, state: msg.status })
+    }
+
+    MEMORY_SET({ embeds: next })
+  },
 }
 
-worker.onmessage = (event) => {
+embedWorker.onmessage = (event) => {
   const msg = event.data as WorkerResponse
   const handler = handlers[msg.type]
   if (handler) {
-    handler(msg as any)
+    handler('embed', msg as any)
+  }
+}
+
+imageWorker.onmessage = (event) => {
+  const msg = event.data as WorkerResponse
+  const handler = handlers[msg.type]
+  if (handler) {
+    handler('image', msg as any)
   }
 }
 
@@ -112,6 +159,7 @@ function post<T extends WorkerRequest['type']>(
   type: T,
   payload: Omit<Extract<WorkerRequest, { type: T }>, 'type'>
 ) {
+  const worker = type === 'captionImage' || type === 'initCaptioning' ? imageWorker : embedWorker
   worker.postMessage({ type, ...payload })
 }
 
@@ -124,7 +172,7 @@ function embedChat(chatId: string, messages: AppSchema.ChatMessage[]) {
   post('embedChat', { chatId, messages })
 }
 
-async function query(chatId: string, text: string): Promise<QueryResult> {
+async function query(chatId: string, text: string, before?: string): Promise<QueryResult> {
   const requestId = v4()
   if (!EMBED_READY) {
     return { type: 'result', requestId, messages: [] }
@@ -138,7 +186,7 @@ async function query(chatId: string, text: string): Promise<QueryResult> {
     })
   })
 
-  post('query', { requestId, chatId, text })
+  post('query', { requestId, chatId, text, beforeDate: before })
 
   return promise
 }

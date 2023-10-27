@@ -5,7 +5,7 @@ import { memoryApi } from './data/memory'
 import { toastStore } from './toasts'
 import { embedApi } from './embeddings'
 
-type MemoryState = {
+export type MemoryState = {
   show: boolean
   books: {
     loaded: boolean
@@ -14,7 +14,7 @@ type MemoryState = {
   creating: boolean
   loadingAll: boolean
   updating: boolean
-  embeds: string[]
+  embeds: Array<{ id: string; state: string }>
 }
 
 const initState: MemoryState = {
@@ -113,10 +113,7 @@ export const memoryStore = createStore<MemoryState>(
         onSuccess?.()
       }
     },
-
-    async listCollections() {
-      const ids = await embedApi.cache.getIds()
-      return { embeds: ids }
-    },
   }
 })
+
+embedApi.setup(memoryStore.getState, memoryStore.setState)

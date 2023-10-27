@@ -247,9 +247,9 @@ export async function generateResponse(opts: GenerateOpts) {
   const { prompt, props, entities, chatEmbeds, userEmbeds } = activePrompt
 
   const embedWarnings: string[] = []
-  if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0) embedWarnings.push('Chat')
-  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0)
-    embedWarnings.push('User-created')
+  if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0)
+    embedWarnings.push('chat history')
+  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('document')
 
   if (embedWarnings.length) {
     toastStore.warn(
@@ -384,33 +384,6 @@ async function createActiveChatPrompt(
       ? opts.text
       : entities.lastMessage?.msg
 
-  const chats = text ? await embedApi.query(entities.chat._id, text) : null
-
-  // @todo support pdf/wiki embeddings using embedApi
-  const users =
-    text && entities.chat.userEmbedId ? await embedApi.query(entities.chat.userEmbedId, text) : null
-
-  // text && entities.chat.userEmbedId
-  //   ? await embedApi.queryEmbedding(entities.chat.userEmbedId, text)
-  //   : null
-
-  if (chats?.messages.length) {
-    for (const chat of chats.messages) {
-      const name =
-        entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
-        entities.members.find((m) => m._id === chat.entityId)?.handle ||
-        'You'
-
-      chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
-    }
-  }
-
-  if (users?.messages.length) {
-    for (const chat of users.messages) {
-      userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
-    }
-  }
-
   const encoder = await getEncoder()
   const prompt = createPromptParts(
     {
@@ -437,6 +410,32 @@ async function createActiveChatPrompt(
     encoder,
     maxContext
   )
+
+  const retrieveBefore = props.messages[props.messages.length - prompt.lines.length - 1]
+  const chats =
+    !!retrieveBefore && text
+      ? await embedApi.query(entities.chat._id, text, retrieveBefore.createdAt)
+      : null
+
+  const users =
+    text && entities.chat.userEmbedId ? await embedApi.query(entities.chat.userEmbedId, text) : null
+
+  if (chats?.messages.length) {
+    for (const chat of chats.messages) {
+      const name =
+        entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
+        entities.members.find((m) => m._id === chat.entityId)?.handle ||
+        'You'
+
+      chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
+    }
+  }
+
+  if (users?.messages.length) {
+    for (const chat of users.messages) {
+      userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
+    }
+  }
   return { prompt, props, entities, chatEmbeds, userEmbeds }
 }
 
@@ -771,7 +770,6 @@ function getLastMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
-    console.log(msg)
     return { msg: msg.msg, date: msg.createdAt }
   }
 }

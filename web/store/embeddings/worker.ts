@@ -31,6 +31,7 @@ const handlers: {
 } = {
   initSimilarity: async (msg) => {
     Embedder = await pipeline('feature-extraction', msg.model, {
+      // quantized: true,
       progress_callback: (data: { status: string; file: string; progress: number }) => {
         post('progress', data)
       },
@@ -41,6 +42,7 @@ const handlers: {
   initCaptioning: async (msg) => {
     console.log(`[caption] loading`)
     Captioner = await pipeline('image-to-text', msg.model, {
+      // quantized: true,
       progress_callback: (data: { status: string; file: string; progress: number }) => {
         post('progress', data)
       },
@@ -63,7 +65,7 @@ const handlers: {
       console.log(`[caption] done: ${text}`)
       post('caption', { requestId: msg.requestId, caption: text })
     } catch (ex) {
-      console.log(`[captaion] caption failed`)
+      console.log(`[caption] caption failed`)
       console.error(ex)
     }
   },
@@ -94,7 +96,10 @@ const handlers: {
     const start = Date.now()
     if (embeddings[query.chatId]) {
       const embeds = Object.values(embeddings[query.chatId])
-        .filter((msg) => msg.msg !== query.text)
+        .filter((msg) => {
+          const isBefore = !query.beforeDate ? true : msg.meta.created <= query.beforeDate
+          return msg.msg !== query.text && isBefore
+        })
         .map((msg) => {
           const similarity = calculateCosineSimilarity(embed.data, msg.embed.data)
           return { msg: msg.msg, entityId: msg.entityId, similarity, meta: msg.meta }
@@ -159,11 +164,13 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
   const id = msg.type === 'embedChat' ? msg.chatId : msg.documentId
   if (EMBEDDING) {
     embedQueue.push(msg)
+    post('status', { id, kind: type, status: 'queued' })
     console.log(`[${type}] ${id} queued`)
     return
   }
 
   EMBEDDING = true
+  post('status', { id, kind: type, status: 'loading' })
   console.log(`[${type}] ${id} started`)
   if (msg.type === 'embedChat') {
     const cache = embeddings[msg.chatId]
@@ -189,13 +196,18 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
   }
 
   if (msg.type === 'embedDocument') {
+    let embedded = 0
     for (const item of msg.documents) {
       const embed = await Embedder(item.msg, { pooling: 'mean', normalize: true })
+      embedded++
+      const percent = ((embedded / msg.documents.length) * 100).toFixed(1)
+      post('status', { id, kind: type, status: `loading (${percent}%)` })
       documents[msg.documentId].push({ msg: item.msg, embed, meta: item.meta })
     }
     console.log(`[document] ${msg.documentId} embedded`)
   }
 
+  post('status', { id, kind: type, status: 'loaded' })
   EMBEDDING = false
 
   const next = embedQueue.shift()

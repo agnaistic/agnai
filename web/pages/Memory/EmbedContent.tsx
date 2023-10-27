@@ -3,7 +3,6 @@ import { getStrictForm } from '/web/shared/util'
 import { toastStore } from '/web/store/toasts'
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
-import { memoryStore } from '/web/store'
 import FileInput, { FileInputResult } from '/web/shared/FileInput'
 import Divider from '/web/shared/Divider'
 import { slugify } from '/common/util'
@@ -25,7 +24,6 @@ const EmbedContent: Component = (props) => {
       await embedApi.embedArticle(wiki)
       toastStore.success('Successfully created embedding')
       setLoading(false)
-      memoryStore.listCollections()
     } finally {
       setLoading(false)
     }
@@ -44,7 +42,6 @@ const EmbedContent: Component = (props) => {
       const slug = slugify(pdfName)
       await embedApi.embedPdf(slug, pdf)
       toastStore.success(`Successfully created embedding: ${slug}`)
-      memoryStore.listCollections()
     } finally {
       setLoading(false)
     }
