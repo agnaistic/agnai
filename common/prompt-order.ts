@@ -71,10 +71,16 @@ const fallbackHolders: Record<string, string> = {
   system_prompt: `{{#if system_prompt}}{{system_prompt}}{{/if}}`,
   scenario: `{{#if scenario}}The scenario of the conversation: {{scenario}}{{/if}}`,
   personality: `{{#if personality}}{{char}}'s personality:\n{{personality}}{{/if}}`,
-  memory: `{{#if memory}}{{char}}'s memories: {{memory}}{{/if}}`,
+  memory: `{{#if memory}}{{char}}'s memories:\n{{memory}}{{/if}}`,
   ujb: `{{#if ujb}}{{ujb}}{{/if}}`,
   example_dialogue: `{{#if example_dialogue}}How {{char}} speaks:\n{{example_dialogue}}{{/if}}`,
-  impersonating: `{{#if impersonating}}{{user}}'s personality: {{impersonating}}{{/if}}`,
+  impersonating: `{{#if impersonating}}{{user}}'s personality:\n{{impersonating}}{{/if}}`,
   history: `{{history}}`,
   post: `{{post}}`,
+  chat_embed: `{{#if chat_embed}}Relevant past conversation history
+  {{chat_embed}}
+  {{/if}}`,
+  user_embed: `{{#if user_embed}}Relevant information to the conversation
+  {{user_embed}}
+  {{/if}}`,
 }
