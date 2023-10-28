@@ -691,7 +691,7 @@ function getAuthedPromptEntities() {
     .getState()
     .books.list.find((book) => book._id === chat.memoryId)
 
-  const messages = getStore('messages').getState().msgs
+  const { msgs, messageHistory } = getStore('messages').getState()
   const settings = getAuthGenSettings(chat, user)!
   const scenarios = getStore('scenario')
     .getState()
@@ -707,7 +707,7 @@ function getAuthedPromptEntities() {
     user,
     profile,
     book,
-    messages,
+    messages: messageHistory.concat(msgs),
     settings,
     members,
     chatBots: chatChars.list,

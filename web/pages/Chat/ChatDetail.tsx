@@ -531,41 +531,50 @@ const ChatDetail: Component = () => {
                       </div>
                     </Show>
                     {/* Original Slot location */}
-                    <InfiniteScroll />
+
                     <For each={chatMsgs()}>
                       {(msg, i) => (
-                        <Message
-                          msg={msg}
-                          editing={chats.opts.editing}
-                          last={i() === indexOfLastRPMessage()}
-                          onRemove={() => setRemoveId(msg._id)}
-                          swipe={
-                            msg._id === retries()?.msgId && swipe() > 0 && retries()?.list[swipe()]
-                          }
-                          confirmSwipe={() => confirmSwipe(msg._id)}
-                          cancelSwipe={cancelSwipe}
-                          tts={tts()}
-                          retrying={msgs.retrying}
-                          partial={msgs.partial}
-                          sendMessage={sendMessage}
-                          isPaneOpen={!!chats.opts.pane}
-                          textBeforeGenMore={msgs.textBeforeGenMore}
-                          voice={
-                            msg._id === msgs.speaking?.messageId ? msgs.speaking.status : undefined
-                          }
-                        >
-                          {isOwner() &&
-                            retries()?.list?.length! > 1 &&
-                            i() === indexOfLastRPMessage() && (
-                              <SwipeMessage
-                                chatId={chats.chat?._id!}
-                                pos={swipe()}
-                                prev={clickSwipe(-1)}
-                                next={clickSwipe(1)}
-                                list={retries()?.list || []}
-                              />
-                            )}
-                        </Message>
+                        <>
+                          <Show when={i() === 2}>
+                            <InfiniteScroll canFetch={chars.ready} />
+                          </Show>
+                          <Message
+                            msg={msg}
+                            editing={chats.opts.editing}
+                            last={i() === indexOfLastRPMessage()}
+                            onRemove={() => setRemoveId(msg._id)}
+                            swipe={
+                              msg._id === retries()?.msgId &&
+                              swipe() > 0 &&
+                              retries()?.list[swipe()]
+                            }
+                            confirmSwipe={() => confirmSwipe(msg._id)}
+                            cancelSwipe={cancelSwipe}
+                            tts={tts()}
+                            retrying={msgs.retrying}
+                            partial={msgs.partial}
+                            sendMessage={sendMessage}
+                            isPaneOpen={!!chats.opts.pane}
+                            textBeforeGenMore={msgs.textBeforeGenMore}
+                            voice={
+                              msg._id === msgs.speaking?.messageId
+                                ? msgs.speaking.status
+                                : undefined
+                            }
+                          >
+                            {isOwner() &&
+                              retries()?.list?.length! > 1 &&
+                              i() === indexOfLastRPMessage() && (
+                                <SwipeMessage
+                                  chatId={chats.chat?._id!}
+                                  pos={swipe()}
+                                  prev={clickSwipe(-1)}
+                                  next={clickSwipe(1)}
+                                  list={retries()?.list || []}
+                                />
+                              )}
+                          </Message>
+                        </>
                       )}
                     </For>
                     <Show when={waitingMsg()}>

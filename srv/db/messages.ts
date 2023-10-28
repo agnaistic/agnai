@@ -4,8 +4,15 @@ import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { getChatBranchIds } from '/common/chat'
 import { store } from '.'
+import { config } from '../config'
 
-const PAGE_SIZE = 100
+let PAGE_SIZE = config.limits.msgPageSize
+if (PAGE_SIZE < 100) {
+  PAGE_SIZE = 100
+}
+if (isNaN(PAGE_SIZE)) {
+  PAGE_SIZE = 100
+}
 
 export type NewMessage = {
   _id?: string

@@ -21,6 +21,8 @@ import { findOne, replace } from '/common/util'
 import { sortAsc } from '/common/chat'
 import { embedApi } from './embeddings'
 
+const SOFT_PAGE_SIZE = 20
+
 type ChatId = string
 
 export type VoiceState = 'generating' | 'playing'
@@ -40,6 +42,7 @@ type ChatMessageExt = AppSchema.ChatMessage & { voiceUrl?: string }
 export type MsgState = {
   activeChatId: string
   activeCharId: string
+  messageHistory: ChatMessageExt[]
   msgs: ChatMessageExt[]
   partial?: string
   retrying?: AppSchema.ChatMessage
@@ -57,7 +60,7 @@ export type MsgState = {
   }
   textBeforeGenMore: string | undefined
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
-  cache: Record<string, AppSchema.ChatMessage>
+  // cache: Record<string, AppSchema.ChatMessage>
   branch?: AppSchema.ChatMessage[]
   canImageCaption: boolean
 
@@ -72,6 +75,7 @@ export type MsgState = {
 const initState: MsgState = {
   activeChatId: '',
   activeCharId: '',
+  messageHistory: [],
   msgs: [],
   images: {},
   retries: {},
@@ -82,7 +86,6 @@ const initState: MsgState = {
   retrying: undefined,
   speaking: undefined,
   queue: [],
-  cache: {},
   textBeforeGenMore: undefined,
   canImageCaption: false,
 }
@@ -108,24 +111,19 @@ export const msgStore = createStore<MsgState>(
   })
 
   events.on(EVENTS.clearMsgs, (chatId: string) => {
-    msgStore.setState({ activeChatId: chatId, activeCharId: undefined, msgs: [], cache: {} })
+    msgStore.setState({ activeChatId: chatId, activeCharId: undefined, msgs: [] })
   })
 
   events.on(
     EVENTS.receiveMsgs,
     (data: { characterId: string; chatId: string; messages: AppSchema.ChatMessage[] }) => {
-      const { cache } = msgStore.getState()
-
-      const nextCache: MsgState['cache'] = data.messages.reduce(
-        (prev, curr) => Object.assign(prev, { [curr._id]: curr }),
-        { ...cache }
-      )
-
+      data.messages.sort(sortAsc)
+      const trailing = data.messages.splice(-SOFT_PAGE_SIZE)
       msgStore.setState({
         activeCharId: data.characterId,
         activeChatId: data.chatId,
-        msgs: data.messages.sort(sortAsc),
-        cache: nextCache,
+        messageHistory: data.messages,
+        msgs: trailing,
       })
 
       embedApi.embedChat(data.chatId, data.messages)
@@ -133,12 +131,19 @@ export const msgStore = createStore<MsgState>(
   )
 
   return {
-    async *getNextMessages({ msgs, activeChatId, nextLoading }) {
+    async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
       if (nextLoading) return
       const msg = msgs[0]
       if (!msg || msg.first) return
 
       yield { nextLoading: true }
+
+      if (messageHistory.length) {
+        const nextHistory = messageHistory.slice()
+        const trailing = nextHistory.splice(-SOFT_PAGE_SIZE)
+        yield { nextLoading: false, msgs: trailing.concat(msgs), messageHistory: nextHistory }
+        return
+      }
 
       const before = msg.createdAt
 
@@ -523,7 +528,7 @@ msgStore.subscribe((state) => {
   if (state.partial) return
   if (!state.activeChatId) return
   if (!state.msgs.length) return
-  embedApi.embedChat(state.activeChatId, state.msgs)
+  embedApi.embedChat(state.activeChatId, state.messageHistory.concat(state.msgs))
 })
 
 function processQueue() {

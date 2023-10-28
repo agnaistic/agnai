@@ -1,10 +1,16 @@
 import { ChevronLeft, ChevronRight } from 'lucide-solid'
-import { Component, JSX, Show } from 'solid-js'
+import { Component, JSX, Show, createSignal, onMount } from 'solid-js'
 import Button from '/web/shared/Button'
-import { msgStore } from '/web/store'
+import { chatStore, msgStore } from '/web/store'
 import IsVisible from '/web/shared/IsVisible'
 import { AppSchema, UI } from '/common/types'
-import { getRootRgb } from '/web/shared/util'
+import { createDebounce, getRootRgb } from '/web/shared/util'
+
+const [onEnter] = createDebounce((loading: boolean) => {
+  console.log('on-enter')
+  if (loading) return
+  msgStore.getNextMessages()
+}, 250)
 
 export const SwipeMessage: Component<{
   chatId: string
@@ -38,17 +44,27 @@ export const SwipeMessage: Component<{
   )
 }
 
-export const InfiniteScroll: Component = () => {
+export const InfiniteScroll: Component<{ canFetch?: boolean }> = (props) => {
   const state = msgStore((s) => ({ loading: s.nextLoading, msgs: s.msgs }))
-  const onEnter = () => {
-    msgStore.getNextMessages()
-  }
+  const chat = chatStore((s) => ({ loaded: s.loaded }))
+  const [ready, setReady] = createSignal(false)
+
+  onMount(() => {
+    setTimeout(() => {
+      setReady(true)
+    }, 1500)
+  })
 
   return (
-    <Show when={state.msgs.length > 0}>
+    <Show when={chat.loaded && state.msgs.length > 0 && ready()}>
       <div class="flex h-[1px] w-full justify-center overflow-hidden">
         <Show when={!state.loading}>
-          <IsVisible onEnter={onEnter} />
+          <IsVisible
+            onEnter={() => {
+              if (!props.canFetch) return
+              onEnter(state.loading)
+            }}
+          />
         </Show>
         <Show when={state.loading}>
           <div class="dot-flashing bg-[var(--hl-700)]"></div>
