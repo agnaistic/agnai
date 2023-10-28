@@ -246,18 +246,18 @@ export async function generateResponse(opts: GenerateOpts) {
 
   const { prompt, props, entities, chatEmbeds, userEmbeds } = activePrompt
 
-  const embedWarnings: string[] = []
-  if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0)
-    embedWarnings.push('chat history')
-  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('document')
+  // const embedWarnings: string[] = []
+  // if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0)
+  //   embedWarnings.push('chat history')
+  // if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('document')
 
-  if (embedWarnings.length) {
-    toastStore.warn(
-      `Embedding from ${embedWarnings.join(
-        ' and '
-      )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
-    )
-  }
+  // if (embedWarnings.length) {
+  //   toastStore.warn(
+  //     `Embedding from ${embedWarnings.join(
+  //       ' and '
+  //     )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
+  //   )
+  // }
 
   const request: GenerateRequestV2 = {
     requestId: v4(),

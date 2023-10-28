@@ -224,3 +224,10 @@ export function clamp(toClamp: number, max: number, min?: number) {
 export function now() {
   return new Date().toISOString()
 }
+
+export function parseStops(stops?: string[]) {
+  if (!stops) return
+
+  const next = stops.map((stop) => stop.replace(/(\\n|\r\n|\r)/g, '\n'))
+  return next
+}
