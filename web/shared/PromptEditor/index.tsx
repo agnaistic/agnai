@@ -54,7 +54,7 @@ const placeholders = {
   example_dialogue: { required: true, limit: 1 },
   all_personalities: { required: false, limit: 1 },
   impersonating: { required: false, limit: 1 },
-  // chat_embed: { required: false, limit: 1 },
+  longterm_memory: { required: false, limit: 1 },
   user_embed: { required: false, limit: 1 },
 } satisfies Record<string, Placeholder>
 
@@ -78,7 +78,8 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
   all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
   post: 'The "post-amble" text. This gives specific instructions on how the model should respond. E.g. Typically reads: `{{char}}:`',
 
-  // chat_embed: 'Text retrieved from chat history embeddings (I.e., "long-term memory").',
+  longterm_memory:
+    '(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.',
   user_embed: 'Text retrieved from user-specified embeddings (Articles, PDFs, ...)',
   roll: 'Produces a random number. Defaults to "d20". To use a custom number: {{roll [number]}}. E.g.: {{roll 1000}}',
   random:
