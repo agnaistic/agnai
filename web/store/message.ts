@@ -19,6 +19,7 @@ import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Aud
 import { eventStore } from './event'
 import { findOne, replace } from '/common/util'
 import { sortAsc } from '/common/chat'
+import { embedApi } from './embeddings'
 
 type ChatId = string
 
@@ -58,6 +59,7 @@ export type MsgState = {
   queue: Array<{ chatId: string; message: string; mode: SendModes }>
   cache: Record<string, AppSchema.ChatMessage>
   branch?: AppSchema.ChatMessage[]
+  canImageCaption: boolean
 
   /**
    * Ephemeral image messages
@@ -82,12 +84,17 @@ const initState: MsgState = {
   queue: [],
   cache: {},
   textBeforeGenMore: undefined,
+  canImageCaption: false,
 }
 
 export const msgStore = createStore<MsgState>(
   'messages',
   initState
 )(() => {
+  embedApi.onCaptionReady(() => {
+    msgStore.setState({ canImageCaption: true })
+  })
+
   events.on('logged-out', () => {
     msgStore.setState(initState)
   })
@@ -120,6 +127,8 @@ export const msgStore = createStore<MsgState>(
         msgs: data.messages.sort(sortAsc),
         cache: nextCache,
       })
+
+      embedApi.embedChat(data.chatId, data.messages)
     }
   )
 
@@ -333,12 +342,13 @@ export const msgStore = createStore<MsgState>(
     },
 
     async *send(
-      { activeCharId },
+      { activeCharId, waiting },
       chatId: string,
       message: string,
       mode: SendModes,
       onSuccess?: () => void
     ) {
+      if (waiting) return
       if (!chatId) {
         toastStore.error('Could not send message: No active chat')
         yield { partial: undefined }
@@ -492,10 +502,28 @@ export const msgStore = createStore<MsgState>(
         toastStore.error(`Failed to request image: ${res.error}`)
       }
     },
-    async generateActions() {
-      await msgsApi.generateActions()
+    async generateActions({ msgs }) {
+      const last = msgs.slice(-1)[0]
+      if (!last) return
+      const res = await msgsApi.generateActions()
+      if (!res?.result) return
+
+      const next = msgs.map((msg) => {
+        if (msg._id !== last._id) return msg
+        msg.actions = res.result!.actions
+        return msg
+      })
+
+      return { msgs: next }
     },
   }
+})
+
+msgStore.subscribe((state) => {
+  if (state.partial) return
+  if (!state.activeChatId) return
+  if (!state.msgs.length) return
+  embedApi.embedChat(state.activeChatId, state.msgs)
 })
 
 function processQueue() {

@@ -4,7 +4,6 @@ import { api, isLoggedIn } from '../api'
 import { getStore } from '../create'
 import { PromptEntities, getPromptEntities, msgsApi } from './messages'
 import { AIAdapter } from '/common/adapters'
-import { pipelineApi } from './pipeline'
 import { decode, encode, getEncoder } from '/common/tokenize'
 import { parseTemplate } from '/common/template-parser'
 import { neat } from '/common/util'
@@ -88,12 +87,12 @@ const SUMMARY_BACKENDS: { [key in AIAdapter]?: (opts: PromptEntities) => boolean
 }
 
 async function createSummarizedImagePrompt(opts: PromptEntities) {
-  if (opts.user?.useLocalPipeline && pipelineApi.isAvailable().summary) {
-    const { prompt } = await msgsApi.createActiveChatPrompt({ kind: 'summary' }, 2048)
-    console.log('Using local summarization')
-    const res = await pipelineApi.summarize(prompt.template.parsed)
-    if (res?.result) return res.result.summary
-  }
+  // if (opts.user?.useLocalPipeline && pipelineApi.isAvailable().summary) {
+  //   const { prompt } = await msgsApi.createActiveChatPrompt({ kind: 'summary' }, 2048)
+  //   console.log('Using local summarization')
+  //   const res = await pipelineApi.summarize(prompt.template.parsed)
+  //   if (res?.result) return res.result.summary
+  // }
 
   const handler = opts.settings?.service
     ? SUMMARY_BACKENDS[opts.settings?.service]

@@ -12,7 +12,13 @@ export const templates = {
 
   {{#if memory}}{{char}}'s Memory: {{memory}}
   {{/if}}
+  {{#if user_embed}}Relevant information to the conversation
+  {{user_embed}}
+  {{/if}}
   {{#if scenario}}The scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if chat_embed}}Relevant past conversation history
+  {{chat_embed}}
   {{/if}}
   {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
   {{/if}}

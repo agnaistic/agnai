@@ -295,13 +295,14 @@ export default PromptEditor
 
 const BASIC_LABELS: Record<string, { label: string; id: number }> = {
   system_prompt: { label: 'System Prompt', id: 0 },
-  scenario: { label: 'Scenario', id: 1 },
-  personality: { label: 'Personality', id: 2 },
-  impersonating: { label: 'Impersonate Personality', id: 3 },
-  memory: { label: 'Memory', id: 4 },
-  example_dialogue: { label: 'Example Dialogue', id: 5 },
-  history: { label: 'Chat History', id: 6 },
-  ujb: { label: 'Jailbreak (UJB)', id: 7 },
+  scenario: { label: 'Scenario', id: 100 },
+  personality: { label: 'Personality', id: 200 },
+  impersonating: { label: 'Impersonate Personality', id: 300 },
+  chat_embed: { label: 'Long-term Memory', id: 350 },
+  memory: { label: 'Memory', id: 400 },
+  example_dialogue: { label: 'Example Dialogue', id: 500 },
+  history: { label: 'Chat History', id: 600 },
+  ujb: { label: 'Jailbreak (UJB)', id: 700 },
 }
 
 const SORTED_LABELS = Object.entries(BASIC_LABELS)

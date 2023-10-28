@@ -106,7 +106,7 @@ Memory "memory" = "memory"i { return "memory" }
 Message "message" = ("msg"i / "message"i / "text"i) { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
-ChatEmbed "chat-embed" = "chat_embed"i { return "chat_embed" }
+ChatEmbed "chat-embed" = ("chat_embed"i / "ltm"i / "long_memory"i / "longterm_memory"i / "long_term_memory"i) { return "chat_embed" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
 Random "random" = "random"i ":"? WS words:CSV { return { kind: "random", values: words } }
 Roll "roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
@@ -117,22 +117,22 @@ History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "his
 
 Interp "interp"
 	= Character
+  / UserEmbed
 	/ User
-    / Scenario
-    / Persona
-    / Impersonate
-    / AllPersona
-    / Dialogue
-    / History
-    / Instruction
-    / Jailbreak
-    / Post
-    / Memory
-    / Message
-    / ChatAge
-    / IdleDuration
-    / ChatEmbed
-    / UserEmbed
-    / Random
-    / Roll
+  / Scenario
+  / Persona
+  / Impersonate
+  / AllPersona
+  / Dialogue
+  / History
+  / Instruction
+  / Jailbreak
+  / Post
+  / Memory
+  / Message
+  / ChatAge
+  / IdleDuration
+  / ChatEmbed
+  / Random
+  / Roll
 `

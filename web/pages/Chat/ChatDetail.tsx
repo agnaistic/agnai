@@ -45,6 +45,7 @@ import { eventStore } from '/web/store/event'
 import Slot from '/web/shared/Slot'
 import ChatPanes from './components/ChatPanes'
 import { useAppContext } from '/web/store/context'
+import { embedApi } from '/web/store/embeddings'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -153,6 +154,10 @@ const ChatDetail: Component = () => {
       eventStore.onGreeting(chats.chat)
     } else {
       eventStore.onChatOpened(chats.chat, new Date(messages[messages.length - 1].createdAt))
+    }
+
+    if (chats.chat.userEmbedId) {
+      embedApi.loadDocument(chats.chat.userEmbedId)
     }
   })
 

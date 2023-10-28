@@ -1,9 +1,10 @@
 import { Component, For, Show } from 'solid-js'
 import { Toast, toastStore } from './store/toasts'
 import Modal from './shared/Modal'
-import { TitleCard } from './shared/Card'
+import { SolidCard, TitleCard } from './shared/Card'
 import Button from './shared/Button'
 import WizardIcon from './icons/WizardIcon'
+import InvitesPage from './pages/Invite/InvitesPage'
 
 const bgColor = {
   default: 'bg-500',
@@ -22,8 +23,14 @@ const Toasts: Component = () => {
         <For each={state.toasts}>{(toast) => <Single toast={toast} />}</For>
       </div>
 
-      <Modal title="Notifications" show={state.modal} close={() => toastStore.modal(false)}>
-        <div class="flex flex-col gap-2 text-sm">
+      <Modal
+        title="Notifications"
+        show={state.modal}
+        close={() => toastStore.modal(false)}
+        maxWidth="half"
+      >
+        <InvitesPage />
+        <SolidCard border class="mt-2 flex flex-col gap-2 font-bold">
           <Show when={state.history.length === 0}>You have no notifications.</Show>
           <Show when={state.history.length > 0}>
             <div class="flex justify-center">
@@ -60,7 +67,7 @@ const Toasts: Component = () => {
               )}
             </For>
           </Show>
-        </div>
+        </SolidCard>
       </Modal>
     </>
   )

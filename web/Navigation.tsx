@@ -7,14 +7,11 @@ import {
   HeartHandshake,
   HelpCircle,
   LogIn,
-  MailPlus,
   MessageCircle,
   Moon,
   Plus,
-  Power,
   Settings,
   ShoppingBag,
-  Signal,
   Sliders,
   Sun,
   VenetianMask,
@@ -44,7 +41,6 @@ import Slot from './shared/Slot'
 import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
-import { pipelineApi } from './store/data/pipeline'
 
 const MobileNavHeader = () => {
   const user = userStore()
@@ -161,6 +157,11 @@ const UserNavigation: Component = () => {
   const user = userStore()
   const menu = settingStore()
   const toasts = toastStore()
+  const invites = inviteStore()
+
+  const count = createMemo(() => {
+    return toasts.unseen + invites.invites.length
+  })
 
   return (
     <>
@@ -177,12 +178,7 @@ const UserNavigation: Component = () => {
 
       <ChatLink />
 
-      <Library pipeline={user.user?.useLocalPipeline} />
-
-      <Item href="/invites">
-        <MailPlus /> Invites <InviteBadge />
-      </Item>
-
+      <Library />
       <MultiItem>
         <Item href="/presets">
           <Sliders /> Presets
@@ -242,16 +238,16 @@ const UserNavigation: Component = () => {
           }}
         >
           <Switch>
-            <Match when={toasts.unseen > 0}>
+            <Match when={count() > 0}>
               <div class="relative flex">
                 <Bell fill="var(--bg-100)" />
                 <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
-                  <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
+                  <Badge>{count() > 9 ? '9+' : count()}</Badge>
                 </span>
               </div>
             </Match>
 
-            <Match when={!toasts.unseen}>
+            <Match when={!count()}>
               <Bell color="var(--bg-500)" />
             </Match>
           </Switch>
@@ -271,7 +267,6 @@ const GuestNavigation: Component = () => {
     config: s.config,
     guest: s.guestAccessAllowed,
     flags: s.flags,
-    pipelineOnline: s.pipelineOnline,
   }))
 
   return (
@@ -421,22 +416,6 @@ const SubItem: Component<{
   )
 }
 
-const InviteBadge: Component = () => {
-  const inv = inviteStore()
-
-  return (
-    <>
-      <Show when={inv.invites.length}>
-        <span
-          class={`flex h-6 items-center justify-center rounded-xl bg-red-600 px-2 text-xs text-white`}
-        >
-          {inv.invites.length}
-        </span>
-      </Show>
-    </>
-  )
-}
-
 export default Navigation
 
 const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
@@ -449,22 +428,12 @@ const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }
   </a>
 )
 
-const Library: Component<{ pipeline?: boolean }> = (props) => {
-  const cfg = settingStore()
-
+const Library: Component<{}> = (props) => {
   return (
     <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
       <Item href="/memory">
         <Book /> Library{' '}
       </Item>
-      <div class="flex items-center">
-        <Show when={props.pipeline && cfg.pipelineOnline}>
-          <Signal color="green" />
-        </Show>
-        <Show when={props.pipeline && !cfg.pipelineOnline}>
-          <Power onClick={() => pipelineApi.reconnect(true)} class="cursor-pointer opacity-30" />
-        </Show>
-      </div>
     </div>
   )
 }

@@ -18,7 +18,7 @@ const ChatMemoryModal: Component<{
   const state = memoryStore((s) => ({
     books: s.books,
     items: s.books.list.map((book) => ({ label: book.name, value: book._id })),
-    embeds: s.embeds.filter((em) => em.metadata.type === 'user'),
+    embeds: s.embeds,
   }))
 
   const [id, setId] = createSignal(props.chat.memoryId || 'new')
@@ -42,7 +42,6 @@ const ChatMemoryModal: Component<{
 
   onMount(() => {
     changeBook(props.chat.memoryId || '')
-    memoryStore.listCollections()
   })
 
   const onSubmit = (ev: Event) => {
@@ -90,7 +89,7 @@ const ChatMemoryModal: Component<{
 
   const embeds = createMemo(() => {
     return [{ label: 'None', value: '' }].concat(
-      state.embeds.map((em) => ({ label: em.name, value: em.name }))
+      state.embeds.map((em) => ({ label: `${em.id} [${em.state}]`, value: em.id }))
     )
   })
 
@@ -126,7 +125,7 @@ const ChatMemoryModal: Component<{
           <Select
             fieldName="embedId"
             label="Embedding"
-            helperText="Local Pipeline: Which user-created embedding to use."
+            helperText="Which user-created embedding to use."
             items={embeds()}
             onChange={(item) => setEmbedId(item.value)}
             value={embedId()}

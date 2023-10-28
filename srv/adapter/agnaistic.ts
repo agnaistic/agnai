@@ -21,6 +21,7 @@ import { websocketStream } from './stream'
 import { ModelAdapter } from './type'
 import { AIAdapter, AdapterSetting } from '/common/adapters'
 import { AppSchema } from '/common/types'
+import { parseStops } from '/common/util'
 
 export async function getSubscriptionPreset(
   user: AppSchema.User,
@@ -43,12 +44,16 @@ export async function getSubscriptionPreset(
     error = 'Please sign in to use this model.'
   }
 
+  if (preset?.stopSequences) {
+    preset.stopSequences = parseStops(preset.stopSequences)
+  }
+
   if (!preset || preset.subDisabled) {
     // If the subscription they're using becomes unavailable, gracefully fallback to the default and let them know
     if (fallback && !fallback.subDisabled && fallback.subLevel <= level) {
       preset = fallback
       warning =
-        'Your configured Agnaistic model/tier is no longer available. Using a fallback. Please update your preset.'
+        'Your configured Agnaistic model is no longer available. Using a fallback. Please update your preset.'
     } else {
       error = 'Model selected is invalid or disabled. Try another.'
     }

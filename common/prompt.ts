@@ -350,6 +350,10 @@ export function buildPromptParts(opts: PromptPartsOptions, lines: string[], enco
   for (const bot of Object.values(opts.characters || {})) {
     if (!bot) continue
     if (personalities.has(bot._id)) continue
+
+    const temp = opts.chat.tempCharacters?.[bot._id]
+    if (temp?.deletedAt || temp?.favorite === false) continue
+
     personalities.add(bot._id)
     parts.allPersonas.push(
       `${bot.name}'s personality: ${formatCharacter(bot.name, bot.persona, bot.persona.kind)}`

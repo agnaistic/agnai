@@ -448,7 +448,7 @@ const PromptSettings: Component<
   Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
 > = (props) => {
   const [useAdvanced, setAdvanced] = createSignal(
-    !props.inherit ? false : props.inherit?.useAdvancedPrompt ?? true
+    !props.inherit?._id ? false : props.inherit?.useAdvancedPrompt ?? true
   )
 
   const fallbackTemplate = createMemo(() => {

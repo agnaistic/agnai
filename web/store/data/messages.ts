@@ -16,14 +16,13 @@ import { userStore } from '../user'
 import { loadItem, localApi } from './storage'
 import { toastStore } from '../toasts'
 import { getActiveBots, getBotsForChat } from '/web/pages/Chat/util'
-import { pipelineApi } from './pipeline'
 import { UserEmbed } from '/common/types/memory'
-import { settingStore } from '../settings'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { replace } from '/common/util'
 import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
+import { embedApi } from '../embeddings'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -247,18 +246,18 @@ export async function generateResponse(opts: GenerateOpts) {
 
   const { prompt, props, entities, chatEmbeds, userEmbeds } = activePrompt
 
-  const embedWarnings: string[] = []
-  if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0) embedWarnings.push('Chat')
-  if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0)
-    embedWarnings.push('User-created')
+  // const embedWarnings: string[] = []
+  // if (chatEmbeds.length > 0 && prompt.parts.chatEmbeds.length === 0)
+  //   embedWarnings.push('chat history')
+  // if (userEmbeds.length > 0 && prompt.parts.userEmbeds.length === 0) embedWarnings.push('document')
 
-  if (embedWarnings.length) {
-    toastStore.warn(
-      `Embedding from ${embedWarnings.join(
-        ' and '
-      )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
-    )
-  }
+  // if (embedWarnings.length) {
+  //   toastStore.warn(
+  //     `Embedding from ${embedWarnings.join(
+  //       ' and '
+  //     )} did not fit in prompt. Check your Preset -> Memory Embed context limits.`
+  //   )
+  // }
 
   const request: GenerateRequestV2 = {
     requestId: v4(),
@@ -363,8 +362,7 @@ async function createActiveChatPrompt(
   maxContext?: number
 ) {
   const { active } = chatStore.getState()
-  const { ui, user } = userStore.getState()
-  const { pipelineOnline } = settingStore.getState()
+  const { ui } = userStore.getState()
 
   if (!active) {
     throw new Error('No active chat. Try refreshing')
@@ -385,26 +383,6 @@ async function createActiveChatPrompt(
     opts.kind === 'send-event:hidden'
       ? opts.text
       : entities.lastMessage?.msg
-
-  if (pipelineOnline && user?.useLocalPipeline) {
-    const created = text ? new Date().toISOString() : entities.messages.slice(-1)[0]?.createdAt
-    const chats = text
-      ? await pipelineApi.chatRecall(entities.chat._id, text, created || new Date().toISOString())
-      : null
-
-    const users =
-      text && entities.chat.userEmbedId
-        ? await pipelineApi.queryEmbedding(entities.chat.userEmbedId, text)
-        : null
-
-    if (chats) {
-      chatEmbeds.push(...chats)
-    }
-
-    if (users) {
-      userEmbeds.push(...users)
-    }
-  }
 
   const encoder = await getEncoder()
   const prompt = createPromptParts(
@@ -432,6 +410,32 @@ async function createActiveChatPrompt(
     encoder,
     maxContext
   )
+
+  const retrieveBefore = props.messages[props.messages.length - prompt.lines.length - 1]
+  const chats =
+    !!retrieveBefore && text
+      ? await embedApi.query(entities.chat._id, text, retrieveBefore.createdAt)
+      : null
+
+  const users =
+    text && entities.chat.userEmbedId ? await embedApi.query(entities.chat.userEmbedId, text) : null
+
+  if (chats?.messages.length) {
+    for (const chat of chats.messages) {
+      const name =
+        entities.chatBots.find((b) => b._id === chat.entityId)?.name ||
+        entities.members.find((m) => m._id === chat.entityId)?.handle ||
+        'You'
+
+      chatEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, name, id: '' })
+    }
+  }
+
+  if (users?.messages.length) {
+    for (const chat of users.messages) {
+      userEmbeds.push({ date: '', distance: chat.similarity, text: chat.msg, id: '' })
+    }
+  }
   return { prompt, props, entities, chatEmbeds, userEmbeds }
 }
 
@@ -616,7 +620,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
     if (!entities) throw new Error(`Could not collate data for prompting`)
     return {
       ...entities,
-      messages: entities.messages.filter((msg) => msg.ooc !== true),
+      messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
       lastMessage: getLastMessage(entities.messages),
     }
   }
@@ -625,7 +629,7 @@ export async function getPromptEntities(): Promise<PromptEntities> {
   if (!entities) throw new Error(`Could not collate data for prompting`)
   return {
     ...entities,
-    messages: entities.messages.filter((msg) => msg.ooc !== true),
+    messages: entities.messages.filter((msg) => msg.ooc !== true && msg.adapter !== 'image'),
     lastMessage: getLastMessage(entities.messages),
   }
 }
@@ -766,7 +770,6 @@ function getLastMessage(messages: AppSchema.ChatMessage[]) {
   for (let i = messages.length - 1; i >= 0; i--) {
     const msg = messages[i]
     if (!msg.userId) continue
-    console.log(msg)
     return { msg: msg.msg, date: msg.createdAt }
   }
 }

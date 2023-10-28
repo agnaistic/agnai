@@ -18,6 +18,7 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
+import { parseStops } from '/common/util'
 
 let version = ''
 
@@ -243,9 +244,7 @@ export async function createTextStreamV2(
   }
 
   if (opts.settings?.stopSequences) {
-    opts.settings.stopSequences = opts.settings.stopSequences
-      .map((stop) => stop.replace(/\\n/g, '\n'))
-      .filter((stop) => !!stop)
+    opts.settings.stopSequences = parseStops(opts.settings.stopSequences)
   }
 
   if (opts.settings?.phraseBias) {

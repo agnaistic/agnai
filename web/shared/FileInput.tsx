@@ -4,7 +4,7 @@ import { FormLabel } from './FormLabel'
 export type FileInputResult = { file: File; content: string }
 
 const FileInput: Component<{
-  ref?: any
+  ref?: (ref: HTMLInputElement) => void
   class?: string
   fieldName: string
   required?: boolean
@@ -13,6 +13,7 @@ const FileInput: Component<{
   accept?: string
   multiple?: boolean
   onUpdate?: (files: FileInputResult[]) => void
+  parentClass?: string
 }> = (props) => {
   const onFile = async (list: FileList | null) => {
     if (!props.onUpdate) return
@@ -25,15 +26,21 @@ const FileInput: Component<{
   }
 
   return (
-    <div class="w-full">
+    <div class={`w-full ${props.parentClass || ''}`}>
       <FormLabel fieldName={props.fieldName} label={props.label} helperText={props.helperText} />
       <input
-        ref={props.ref}
+        ref={(ref) => {
+          props.ref?.(ref)
+        }}
         id={props.fieldName}
         name={props.fieldName}
         type="file"
         accept={props.accept}
-        class={`w-full rounded-xl bg-[var(--bg-800)] ${props.class}`}
+        class={`w-full rounded-xl bg-[var(--bg-800)] ${props.class || ''}`}
+        // onClick={(ev) => {
+        //   ev.preventDefault()
+
+        // }}
         onChange={(ev) => onFile(ev.currentTarget.files)}
         {...(props.multiple ? { multiple: true } : {})}
         {...(props.required ? { required: true } : {})}

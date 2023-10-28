@@ -137,6 +137,7 @@
     "@types/throng": "^5.0.4",
     "@types/uuid": "^9.0.0",
     "@types/ws": "^8.5.4",
+    "@xenova/transformers": "^2.7.0",
     "assert": "^2.0.0",
     "babel-preset-solid": "^1.6.9",
     "browserify-zlib": "^0.2.0",

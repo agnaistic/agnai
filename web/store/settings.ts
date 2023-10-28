@@ -28,7 +28,6 @@ export type SettingState = {
   workers: HordeWorker[]
   imageWorkers: HordeWorker[]
   anonymize: boolean
-  pipelineOnline: boolean
 
   init?: {
     profile: AppSchema.Profile
@@ -65,7 +64,6 @@ const initState: SettingState = {
   models: [],
   workers: [],
   imageWorkers: [],
-  pipelineOnline: false,
   config: {
     registered: [],
     adapters: [],
