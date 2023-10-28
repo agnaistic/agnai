@@ -94,7 +94,7 @@ export const StoppingStrings: Component<{
   const removeString = (i: number) => {
     const next = strings()
     next.splice(i, 1)
-    setStrings(next.slice(0, i).concat(next.slice(i + 1)))
+    setStrings(next.slice())
   }
 
   const hide = createMemo(() => {
