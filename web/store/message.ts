@@ -745,7 +745,7 @@ subscribe(
     actions: [{ emote: 'string', action: 'string' }, '?'],
   } as const,
   async (body) => {
-    const { msgs, activeChatId } = msgStore.getState()
+    const { msgs, activeChatId, messageHistory } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     const msg = body.msg as AppSchema.ChatMessage
@@ -780,7 +780,7 @@ subscribe(
     }
 
     if (!isLoggedIn()) {
-      await localApi.saveMessages(body.chatId, nextMsgs)
+      await localApi.saveMessages(body.chatId, messageHistory.concat(nextMsgs))
     }
 
     addMsgToRetries(msg)
@@ -951,7 +951,7 @@ subscribe(
   'guest-message-created',
   { msg: 'any', chatId: 'string', continue: 'boolean?', requestId: 'string?' },
   async (body) => {
-    const { msgs, activeChatId, retrying } = msgStore.getState()
+    const { messageHistory, msgs, activeChatId, retrying } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     if (retrying) {
@@ -964,7 +964,7 @@ subscribe(
 
     const chats = await localApi.loadItem('chats')
     await localApi.saveChats(replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
-    await localApi.saveMessages(body.chatId, next)
+    await localApi.saveMessages(body.chatId, messageHistory.concat(next))
 
     addMsgToRetries(msg)
 
