@@ -11,7 +11,7 @@ export type ChannelState = {
 export type AudioState = {
   soundsLoaded: boolean
   global: ChannelState
-  channels: {
+  tracks: {
     ambient: ChannelState
     sfx: ChannelState
   }
@@ -27,7 +27,7 @@ export type AudioState = {
 const initAudioStore: AudioState = {
   soundsLoaded: false,
   global: { mute: true, volume: 1 },
-  channels: {
+  tracks: {
     ambient: { mute: false, volume: 1 },
     sfx: { mute: false, volume: 1 },
   },
