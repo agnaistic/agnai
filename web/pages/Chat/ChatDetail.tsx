@@ -46,6 +46,7 @@ import Slot from '/web/shared/Slot'
 import ChatPanes from './components/ChatPanes'
 import { useAppContext } from '/web/store/context'
 import { embedApi } from '/web/store/embeddings'
+import Loading from '/web/shared/Loading'
 
 const ChatDetail: Component = () => {
   const { updateTitle } = setComponentPageTitle('Chat')
@@ -81,6 +82,7 @@ const ChatDetail: Component = () => {
 
   const msgs = msgStore((s) => ({
     msgs: s.msgs,
+    history: s.messageHistory.length,
     images: s.images,
     partial: s.partial,
     waiting: s.waiting,
@@ -403,7 +405,7 @@ const ChatDetail: Component = () => {
     <>
       <Show when={!chats.loaded && !chats.chat}>
         <div>
-          <div>Loading conversation...</div>
+          <Loading />
         </div>
       </Show>
       <Show when={chats.chat}>
@@ -423,6 +425,11 @@ const ChatDetail: Component = () => {
                 <div class="ellipsis flex flex-col">
                   <span class="overflow-hidden text-ellipsis whitespace-nowrap leading-5">
                     {chats.char?.name}
+                    <Show when={cfg.flags.debug}>
+                      <span class="ml-2 text-sm font-normal">
+                        {msgs.msgs.length}/{msgs.msgs.length + msgs.history}
+                      </span>
+                    </Show>
                   </span>
 
                   <span class="flex-row items-center gap-4 overflow-hidden text-ellipsis whitespace-nowrap text-sm">

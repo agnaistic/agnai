@@ -8,12 +8,11 @@ import {
   Show,
   Switch,
 } from 'solid-js'
-import { MinusCircle, Plus, Save, X, Import, Download } from 'lucide-solid'
+import { MinusCircle, Plus, Save, X, Import, Download, HelpCircle } from 'lucide-solid'
 import Button from '../../shared/Button'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
-import RadioGroup from '../../shared/RadioGroup'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
 import {
   characterStore,
@@ -51,13 +50,14 @@ import ImportCharacterModal from './ImportCharacter'
 import { GenField } from './generate-char'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
+import { rootModalStore } from '/web/store/root-modal'
 
-const options = [
-  { id: 'wpp', label: 'W++' },
-  { id: 'boostyle', label: 'Boostyle' },
-  { id: 'sbf', label: 'SBF' },
-  { id: 'attributes', label: 'Attributes' },
-  { id: 'text', label: 'Plain Text' },
+const formatOptions = [
+  { value: 'wpp', label: 'W++' },
+  { value: 'boostyle', label: 'Boostyle' },
+  { value: 'sbf', label: 'SBF' },
+  { value: 'attributes', label: 'Attributes' },
+  { value: 'text', label: 'Plain Text' },
 ]
 
 export const CreateCharacterForm: Component<{
@@ -345,6 +345,37 @@ export const CreateCharacterForm: Component<{
             <Tabs select={tabs.select} selected={tabs.selected} tabs={tabs.tabs} />
 
             <div class="flex flex-col gap-2" classList={{ hidden: tabs.current() !== 'Basic' }}>
+              <Button
+                size="sm"
+                class="w-fit"
+                onClick={() => {
+                  rootModalStore.info(
+                    'AI Character Generation',
+                    <>
+                      <TitleCard class="text-sm" type="hl">
+                        <div class="font-bold">AI Generated Characters</div>
+                        1. Fill out the <Pill small>Description</Pill> field
+                        <br />
+                        2. Select the Service you wish to use
+                        <br />
+                        3. Click{' '}
+                        <Pill inverse type="hl" small>
+                          Generate
+                        </Pill>
+                        &nbsp;- It may take 30-60 seconds to generate.
+                        <br />
+                        4. Adjust the <Pill small>Description</Pill> and click{' '}
+                        <Pill type="hl" inverse small>
+                          Regenerate
+                        </Pill>
+                        &nbsp;to regenerate a specific field.
+                      </TitleCard>
+                    </>
+                  )
+                }}
+              >
+                <HelpCircle size={16} /> AI Character Generation
+              </Button>
               <Card>
                 <TextInput
                   fieldName="name"
@@ -376,24 +407,6 @@ export const CreateCharacterForm: Component<{
                     value={editor.state.description}
                   />
                   <Show when={editor.canGuidance}>
-                    <TitleCard class="text-sm" type="hl">
-                      <div class="font-bold">AI Generated Characters</div>
-                      1. Fill out the <Pill small>Description</Pill> field
-                      <br />
-                      2. Select the Service you wish to use
-                      <br />
-                      3. Click{' '}
-                      <Pill inverse type="hl" small>
-                        Generate
-                      </Pill>
-                      &nbsp;- It may take 30-60 seconds to generate.
-                      <br />
-                      4. Adjust the <Pill small>Description</Pill> and click{' '}
-                      <Pill type="hl" inverse small>
-                        Regenerate
-                      </Pill>
-                      &nbsp;to regenerate a specific field.
-                    </TitleCard>
                     <div class="flex justify-end gap-2 sm:justify-start">
                       <Select
                         fieldName="chargenService"
@@ -571,10 +584,9 @@ export const CreateCharacterForm: Component<{
                       </>
                     }
                   />
-                  <RadioGroup
-                    name="kind"
-                    horizontal
-                    options={options}
+                  <Select
+                    fieldName="kind"
+                    items={formatOptions}
                     value={editor.state.personaKind}
                     onChange={(kind) => editor.update({ personaKind: kind as any })}
                   />

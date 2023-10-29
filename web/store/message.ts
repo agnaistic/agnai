@@ -469,7 +469,7 @@ export const msgStore = createStore<MsgState>(
 
       const msg = msgs.find((m) => m._id === messageId)
       if (msg?.voiceUrl) {
-        playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl)
+        playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl, voice.rate)
         return
       }
 
@@ -593,13 +593,19 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
+async function playVoiceFromUrl(
+  chatId: string,
+  messageId: string,
+  url: string,
+  rate: number | undefined
+) {
   if (chatId != msgStore.getState().activeChatId) {
     msgStore.setState({ speaking: undefined })
     return
   }
   try {
     const audio = await createSpeech({ kind: 'remote', url })
+
     audio.addEventListener('error', (e) => {
       console.error(e)
       toastStore.error(`Error playing URL: ${e.message}`)
@@ -620,7 +626,7 @@ async function playVoiceFromUrl(chatId: string, messageId: string, url: string) 
       msgStore.setState({ speaking: undefined })
     })
     msgStore.setState({ speaking: { messageId, status: 'generating' } })
-    audio.play()
+    audio.play(rate)
   } catch (e: any) {
     toastStore.error(`Error playing URL: ${e.message}`)
     msgStore.setState({ speaking: undefined })
@@ -648,7 +654,7 @@ async function playVoiceFromBrowser(
   )
   audio.addEventListener('ended', () => msgStore.setState({ speaking: undefined }))
 
-  audio.play()
+  audio.play(voice.rate)
 }
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
@@ -739,7 +745,7 @@ subscribe(
     actions: [{ emote: 'string', action: 'string' }, '?'],
   } as const,
   async (body) => {
-    const { msgs, activeChatId } = msgStore.getState()
+    const { msgs, activeChatId, messageHistory } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     const msg = body.msg as AppSchema.ChatMessage
@@ -774,7 +780,7 @@ subscribe(
     }
 
     if (!isLoggedIn()) {
-      await localApi.saveMessages(body.chatId, nextMsgs)
+      await localApi.saveMessages(body.chatId, messageHistory.concat(nextMsgs))
     }
 
     addMsgToRetries(msg)
@@ -848,10 +854,14 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
   toastStore.error(body.error)
 })
 
-subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
-  if (msgStore.getState().speaking?.messageId != body.messageId) return
-  playVoiceFromUrl(body.chatId, body.messageId, body.url)
-})
+subscribe(
+  'voice-generated',
+  { chatId: 'string', messageId: 'string', url: 'string', rate: 'number?' },
+  (body) => {
+    if (msgStore.getState().speaking?.messageId != body.messageId) return
+    playVoiceFromUrl(body.chatId, body.messageId, body.url, body.rate)
+  }
+)
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   const { msgs } = msgStore.getState()
@@ -941,7 +951,7 @@ subscribe(
   'guest-message-created',
   { msg: 'any', chatId: 'string', continue: 'boolean?', requestId: 'string?' },
   async (body) => {
-    const { msgs, activeChatId, retrying } = msgStore.getState()
+    const { messageHistory, msgs, activeChatId, retrying } = msgStore.getState()
     if (activeChatId !== body.chatId) return
 
     if (retrying) {
@@ -954,7 +964,7 @@ subscribe(
 
     const chats = await localApi.loadItem('chats')
     await localApi.saveChats(replace(body.chatId, chats, { updatedAt: new Date().toISOString() }))
-    await localApi.saveMessages(body.chatId, next)
+    await localApi.saveMessages(body.chatId, messageHistory.concat(next))
 
     addMsgToRetries(msg)
 

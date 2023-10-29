@@ -66,8 +66,7 @@ export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
   for (const char of chars) {
     if (seen.has(char.name)) continue
     if (char.name === opts.replyAs.name) continue
-    unique.add(`${char.name}:`)
-    unique.add(`\n${char.name}`)
+    unique.add(`\n${char.name}:`)
     seen.add(char.name)
   }
 

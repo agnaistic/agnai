@@ -269,6 +269,7 @@ const Message: Component<MessageProps> = (props) => {
                       class="text-600 hover:text-900 ml-1 cursor-pointer"
                       onClick={() =>
                         rootModalStore.info(
+                          'Message Information',
                           <Meta msg={props.msg} history={ctx.promptHistory[props.msg._id]} />
                         )
                       }

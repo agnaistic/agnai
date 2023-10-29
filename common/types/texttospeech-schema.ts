@@ -15,6 +15,7 @@ export type VoiceSettings =
 
 export type VoiceDisabledSettings = {
   service: undefined
+  rate?: number
 }
 
 export type VoiceElevenLabsSettings = {
@@ -23,6 +24,7 @@ export type VoiceElevenLabsSettings = {
   model?: ElevenLabsModel
   stability?: number
   similarityBoost?: number
+  rate?: number
 }
 
 export type VoiceWebSynthesisSettings = {
@@ -36,6 +38,7 @@ export type NovelTtsSettings = {
   service: 'novel'
   voiceId: string
   seed?: string
+  rate?: number
 }
 
 export type SpecificVoiceSetting<T extends VoiceSettings['service']> = Extract<
