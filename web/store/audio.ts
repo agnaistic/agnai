@@ -10,8 +10,8 @@ export type ChannelState = {
 
 export type AudioState = {
   soundsLoaded: boolean
+  global: ChannelState
   channels: {
-    all: ChannelState
     ambient: ChannelState
     sfx: ChannelState
   }
@@ -26,8 +26,8 @@ export type AudioState = {
 
 const initAudioStore: AudioState = {
   soundsLoaded: false,
+  global: { mute: true, volume: 1 },
   channels: {
-    all: { mute: false, volume: 1 },
     ambient: { mute: false, volume: 1 },
     sfx: { mute: false, volume: 1 },
   },
@@ -70,6 +70,14 @@ export const audioStore = createStore<AudioState>(
       const sound = findSoundForEvent(state.currentSoundpack, event)
 
       playSoundEffect(sound)
+    },
+    toggleMuteAll(state) {
+      return {
+        global: {
+          ...state.global,
+          mute: !state.global.mute,
+        },
+      }
     },
   }
 })

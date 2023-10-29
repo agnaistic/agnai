@@ -13,8 +13,11 @@ import {
   Settings,
   ShoppingBag,
   Sliders,
+  Speaker,
   Sun,
   VenetianMask,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-solid'
 import {
@@ -30,6 +33,7 @@ import {
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
+  audioStore,
   characterStore,
   chatStore,
   inviteStore,
@@ -201,6 +205,10 @@ const UserNavigation: Component = () => {
         </EndItem>
       </MultiItem>
 
+      <Show when={menu.flags.sounds}>
+        <Sounds />
+      </Show>
+
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics" ariaLabel="Manage">
           <Activity aria-hidden="true" />
@@ -329,6 +337,10 @@ const GuestNavigation: Component = () => {
             </A>
           </EndItem>
         </MultiItem>
+
+        <Show when={menu.flags.sounds}>
+          <Sounds />
+        </Show>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
@@ -492,6 +504,28 @@ const Library: Component<{}> = (props) => {
         <span aria-hidden="true"> Library </span>
       </Item>
     </div>
+  )
+}
+
+const Sounds: Component<{}> = (props) => {
+  const audioSettings = audioStore()
+
+  return (
+    <MultiItem>
+      <Item href="/sounds" onClick={() => soundEmitter.emit('menu-item-clicked', 'sounds')}>
+        <Speaker /> Sounds
+      </Item>
+      <EndItem>
+        <a class="icon-button" onClick={() => audioStore.toggleMuteAll()}>
+          <Show when={audioSettings.global.mute}>
+            <VolumeX />
+          </Show>
+          <Show when={!audioSettings.global.mute}>
+            <Volume2 />
+          </Show>
+        </a>
+      </EndItem>
+    </MultiItem>
   )
 }
 

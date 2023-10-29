@@ -1,7 +1,15 @@
 import { TypedEventEmitter, TypedEventMap } from 'common/typed-event-emitter'
 
 interface PlayableEvent extends TypedEventMap {
-  'menu-item-clicked': 'login' | 'user' | 'profile' | 'characters' | 'chats' | 'library' | 'presets'
+  'menu-item-clicked':
+    | 'login'
+    | 'user'
+    | 'profile'
+    | 'characters'
+    | 'chats'
+    | 'library'
+    | 'presets'
+    | 'sounds'
 }
 
 class SoundEmitter extends TypedEventEmitter<PlayableEvent> {}
