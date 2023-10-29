@@ -36,7 +36,7 @@ const Button: Component<{
 }> = (props) => (
   <button
     type={props.type || 'button'}
-    class={`${kinds[props.schema || 'primary']} select-none items-center` + (props.class || '')}
+    class={`${kinds[props.schema || 'primary']} select-none items-center ${props.class || ''}`}
     classList={{
       ...props.classList,
       'leading-5': props.size === 'pill',

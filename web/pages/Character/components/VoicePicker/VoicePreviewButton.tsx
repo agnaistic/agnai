@@ -34,6 +34,7 @@ export const VoicePreviewButton: Component<{
     if (!service || !voiceId) return
 
     let audio: AudioSource | undefined
+    let rate = 1
     if (service === 'webspeechsynthesis') {
       const culture = props.culture || defaultCulture
       const voice: VoiceWebSynthesisSettings = {
@@ -57,10 +58,11 @@ export const VoicePreviewButton: Component<{
         voiceId,
         ...props.voiceSettings,
       } as VoiceSettings
+      rate = voice.rate ?? 1
       const { output } = await voiceApi.textToSpeech(getSampleText(culture), voice)
       audio = await createSpeech({ kind: 'remote', url: output })
     }
-    audio?.play()
+    audio?.play(rate)
   }
 
   return (

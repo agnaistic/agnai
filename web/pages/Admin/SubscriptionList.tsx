@@ -27,7 +27,7 @@ const SubscriptionList: Component = () => {
     const presetId = deleting()
     if (!presetId) return
 
-    presetStore.deletePreset(presetId, () => nav('/admin/subscriptions'))
+    presetStore.deleteSubscription(presetId, () => nav('/admin/subscriptions'))
     setDeleting()
   }
 

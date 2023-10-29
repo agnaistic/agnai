@@ -47,8 +47,8 @@ export class AudioSource extends EventTarget {
     return audioSrc
   }
 
-  play = async () => {
-    await this.source.play()
+  play = async (rate?: number) => {
+    await this.source.play(rate)
   }
 
   stop = async () => {

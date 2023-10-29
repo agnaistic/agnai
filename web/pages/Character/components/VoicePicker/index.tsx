@@ -150,14 +150,12 @@ export const VoicePicker: Component<{
           onChange={(update) => setElevenLabsSettings(update)}
         />
       </Show>
-
       <Show when={service() === 'webspeechsynthesis' && !!webSpeechSettings()}>
         <WebSpeechSynthesisSettings
           settings={webSpeechSettings()!}
           onChange={(update) => setWebSpeechSettings(update)}
         />
       </Show>
-
       <Show when={service() === 'novel' && !!novelTtsSettings()}>
         <NovelTtsSettings
           settings={novelTtsSettings()!}

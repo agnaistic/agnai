@@ -27,7 +27,7 @@ export class NativeSpeech {
     public onerror: (message: string) => void
   ) {}
 
-  async play() {
+  async play(_rate?: number) {
     await EasySpeech.speak({
       ...this.params,
       start: () => {

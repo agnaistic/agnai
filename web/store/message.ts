@@ -469,7 +469,7 @@ export const msgStore = createStore<MsgState>(
 
       const msg = msgs.find((m) => m._id === messageId)
       if (msg?.voiceUrl) {
-        playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl)
+        playVoiceFromUrl(activeChatId, messageId, msg.voiceUrl, voice.rate)
         return
       }
 
@@ -593,13 +593,19 @@ async function handleImage(chatId: string, image: string) {
   })
 }
 
-async function playVoiceFromUrl(chatId: string, messageId: string, url: string) {
+async function playVoiceFromUrl(
+  chatId: string,
+  messageId: string,
+  url: string,
+  rate: number | undefined
+) {
   if (chatId != msgStore.getState().activeChatId) {
     msgStore.setState({ speaking: undefined })
     return
   }
   try {
     const audio = await createSpeech({ kind: 'remote', url })
+
     audio.addEventListener('error', (e) => {
       console.error(e)
       toastStore.error(`Error playing URL: ${e.message}`)
@@ -620,7 +626,7 @@ async function playVoiceFromUrl(chatId: string, messageId: string, url: string) 
       msgStore.setState({ speaking: undefined })
     })
     msgStore.setState({ speaking: { messageId, status: 'generating' } })
-    audio.play()
+    audio.play(rate)
   } catch (e: any) {
     toastStore.error(`Error playing URL: ${e.message}`)
     msgStore.setState({ speaking: undefined })
@@ -648,7 +654,7 @@ async function playVoiceFromBrowser(
   )
   audio.addEventListener('ended', () => msgStore.setState({ speaking: undefined }))
 
-  audio.play()
+  audio.play(voice.rate)
 }
 
 subscribe('message-partial', { partial: 'string', chatId: 'string' }, (body) => {
@@ -848,10 +854,14 @@ subscribe('voice-failed', { chatId: 'string', error: 'string' }, (body) => {
   toastStore.error(body.error)
 })
 
-subscribe('voice-generated', { chatId: 'string', messageId: 'string', url: 'string' }, (body) => {
-  if (msgStore.getState().speaking?.messageId != body.messageId) return
-  playVoiceFromUrl(body.chatId, body.messageId, body.url)
-})
+subscribe(
+  'voice-generated',
+  { chatId: 'string', messageId: 'string', url: 'string', rate: 'number?' },
+  (body) => {
+    if (msgStore.getState().speaking?.messageId != body.messageId) return
+    playVoiceFromUrl(body.chatId, body.messageId, body.url, body.rate)
+  }
+)
 
 subscribe('message-error', { error: 'any', chatId: 'string' }, (body) => {
   const { msgs } = msgStore.getState()

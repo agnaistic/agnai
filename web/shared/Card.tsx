@@ -12,7 +12,7 @@ export const Card: Component<{
   hide?: boolean
 }> = (props) => {
   const cardBg = useBgStyle({
-    hex: props.bg ? getSettingColor(props.bg) : 'bg-800',
+    hex: props.bg ? getSettingColor(props.bg) : 'bg-700',
     blur: false,
     opacity: props.bgOpacity ?? 0.08,
   })
@@ -21,10 +21,10 @@ export const Card: Component<{
     <div
       class={`rounded-lg p-3 ${props.class ?? ''}`}
       classList={{ hidden: props.hide }}
-      style={{
+      style={hooks({
         border: props.border ? '1px solid var(--bg-600)' : 0,
         ...cardBg(),
-      }}
+      })}
     >
       {props.children}
     </div>

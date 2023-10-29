@@ -39,6 +39,7 @@ import MemoryGuide from './pages/Guides/Memory'
 import NovelGuide from './pages/Guides/NovelAI'
 import { ImageModal } from './pages/Chat/ImageModal'
 import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
+import { markdown } from './shared/markdown'
 
 const App: Component = () => {
   const state = userStore()
@@ -227,12 +228,14 @@ const InfoModal: Component = (props) => {
 
   return (
     <Modal
-      title="Information"
+      title={state.infoTitle || 'Information'}
       show={state.info}
-      close={() => rootModalStore.info()}
+      close={() => rootModalStore.closeInfo()}
       maxWidth="half"
     >
-      {state.info}
+      <Show when={typeof state.info === 'string'} fallback={state.info}>
+        <div class="markdown" innerHTML={markdown.makeHtml(state.info)} />
+      </Show>
     </Modal>
   )
 }

@@ -3,6 +3,7 @@ import { VoiceSettingForm } from '../../../../../common/types/texttospeech-schem
 import TextInput from '/web/shared/TextInput'
 import Button from '/web/shared/Button'
 import { RefreshCw } from 'lucide-solid'
+import RangeInput from '/web/shared/RangeInput'
 
 export const NovelTtsSettings: Component<{
   settings: VoiceSettingForm<'novel'>
@@ -35,6 +36,17 @@ export const NovelTtsSettings: Component<{
           <RefreshCw size={24} />
         </Button>
       </div>
+
+      <RangeInput
+        fieldName="novelRate"
+        label="Playback Rate"
+        helperText=""
+        min={0.5}
+        max={2}
+        step={0.01}
+        value={props.settings.rate ?? 1}
+        onChange={(value) => update({ rate: value })}
+      />
     </>
   )
 }

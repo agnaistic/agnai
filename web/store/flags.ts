@@ -9,4 +9,5 @@ export const defaultFlags = {
   actions: false,
   regen: false,
   caption: false,
+  debug: false,
 } satisfies { [key: string]: boolean }

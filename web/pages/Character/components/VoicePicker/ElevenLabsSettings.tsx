@@ -59,6 +59,17 @@ export const ElevenLabsSettings: Component<{
         step={0.01}
         onChange={(value) => update({ similarityBoost: value })}
       />
+
+      <RangeInput
+        fieldName="elevenLabsRate"
+        label="Playback Rate"
+        helperText=""
+        min={0.5}
+        max={2}
+        step={0.01}
+        value={props.settings.rate ?? 1}
+        onChange={(value) => update({ rate: value })}
+      />
     </>
   )
 }

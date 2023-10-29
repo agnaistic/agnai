@@ -8,7 +8,11 @@ export type RemoteAudioOpts = {
 export class RemoteAudio {
   constructor(public audio: HTMLAudioElement) {}
 
-  async play() {
+  async play(rate?: number) {
+    if (typeof rate === 'number') {
+      this.audio.playbackRate = rate
+    }
+
     await this.audio.play()
   }
 

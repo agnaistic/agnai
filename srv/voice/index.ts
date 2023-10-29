@@ -129,7 +129,13 @@ export async function generateVoice(
     return { output: undefined }
   }
 
-  send(broadcastIds, guestId, { type: 'voice-generated', chatId, messageId, url: output })
+  send(broadcastIds, guestId, {
+    type: 'voice-generated',
+    chatId,
+    messageId,
+    url: output,
+    rate: voice.rate,
+  })
 
   return { output }
 }
