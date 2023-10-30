@@ -588,7 +588,7 @@ export const CreateCharacterForm: Component<{
                     fieldName="kind"
                     items={formatOptions}
                     value={editor.state.personaKind}
-                    onChange={(kind) => editor.update({ personaKind: kind as any })}
+                    onChange={(kind) => editor.update({ personaKind: kind.value as any })}
                   />
                 </div>
 
