@@ -51,7 +51,7 @@ const HomePage: Component = () => {
 
       <div class="flex flex-col gap-4 text-lg">
         <div class="hidden justify-center text-6xl sm:flex">
-          Agn<span class="text-[var(--hl-500)]">ai</span>stic
+          Agn<span class="text-[var(--hl-500)]">ai</span>
         </div>
 
         <div class="w-full" ref={ref}>

@@ -52,7 +52,8 @@ const MobileNavHeader = () => {
       <div>
         {' '}
         <span class="w-full text-center text-[1rem]">
-          Agn<span class="text-[var(--hl-500)]">ai</span>stic{suffix()}
+          Agn<span class="text-[var(--hl-500)]">ai</span>
+          {suffix()}
         </span>
       </div>
       <div class="w-8">
@@ -117,7 +118,8 @@ const Navigation: Component = () => {
           <div class="hidden w-full items-center justify-center sm:flex">
             <A href="/">
               <div class="h-8 w-fit items-center justify-center rounded-lg font-bold">
-                Agn<span class="text-[var(--hl-500)]">ai</span>stic{suffix()}
+                Agn<span class="text-[var(--hl-500)]">ai</span>
+                {suffix()}
               </div>
             </A>
           </div>

@@ -2,7 +2,7 @@ import { sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
 import { config } from '../config'
 import { store } from '../db'
 import { isConnected } from '../db/client'
-import { getCachedSubscriptionPresets, getCachedSubscriptions } from '../db/subscriptions'
+import { getCachedSubscriptions } from '../db/subscriptions'
 import { decryptText } from '../db/util'
 import { handleClaude } from './claude'
 import { handleGooseAI } from './goose'
@@ -36,7 +36,7 @@ export async function getSubscriptionPreset(
   let error: string | undefined = undefined
   let warning: string | undefined = undefined
 
-  const fallback = getDefaultSubscription()
+  const fallback = await store.subs.getDefaultSubscription()
   const subId = gen.registered?.agnaistic?.subscriptionId
   let preset = subId ? await store.subs.getSubscription(subId) : fallback
 
@@ -97,6 +97,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   }
 
   if (preset.subLevel > -1 && preset.subLevel > newLevel) {
+    opts.log.error(
+      {
+        preset: preset.name,
+        presetLevel: preset.subLevel,
+        newLevel,
+        userLevel: opts.user.sub?.level,
+      },
+      `Subscription insufficient`
+    )
     yield { error: 'Your account is ineligible for this model - Subscription tier insufficient' }
     return
   }
@@ -316,32 +325,6 @@ export async function updateRegisteredSubs() {
       item.setting.options = options
     }
   }
-}
-
-/**
- * Select the lowest subscription below 0. Prioritise default sub.
- */
-function getDefaultSubscription() {
-  let match: AppSchema.SubscriptionPreset | undefined
-
-  for (const sub of getCachedSubscriptionPresets()) {
-    if (sub.subLevel >= 0 || sub.subDisabled || sub.deletedAt) continue
-    if (!match) {
-      match = sub
-      continue
-    }
-
-    if (match?.isDefaultSub && !sub.isDefaultSub) continue
-
-    if (sub.isDefaultSub) {
-      return sub
-    }
-
-    if (sub.subLevel < match.subLevel) {
-      match = sub
-    }
-  }
-  return match
 }
 
 /**

@@ -18,6 +18,11 @@ export async function getSubscription(id: string) {
   return sub ? sub : undefined
 }
 
+export async function getDefaultSubscription() {
+  const sub = await db('subscription-setting').findOne({ isDefaultSub: true })
+  return sub ? sub : undefined
+}
+
 export async function createSubscription(settings: Partial<AppSchema.SubscriptionPreset>) {
   const preset = {
     _id: v4(),
