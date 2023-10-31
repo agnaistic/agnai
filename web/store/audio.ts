@@ -3,18 +3,24 @@ import { loadSounds, playSoundEffect } from '../shared/Audio/player'
 import { Soundpack, findSoundForEvent, getAllSounds, getSoundpack } from '../shared/Audio/soundpack'
 import { createStore } from './create'
 
-export type ChannelState = {
+export type AudioTrackState = {
   mute: boolean
   volume: number
 }
 
+export type AudioTracks = {
+  master: AudioTrackState
+  background: AudioTrackState
+  randomAmbient: AudioTrackState
+  interaction: AudioTrackState
+  speech: AudioTrackState
+}
+
+export type AudioTrackId = keyof AudioTracks
+
 export type AudioState = {
   soundsLoaded: boolean
-  global: ChannelState
-  tracks: {
-    ambient: ChannelState
-    sfx: ChannelState
-  }
+  tracks: AudioTracks
   soundpacks: {
     global: Soundpack | undefined
     scenario: Soundpack | undefined
@@ -26,10 +32,12 @@ export type AudioState = {
 
 const initAudioStore: AudioState = {
   soundsLoaded: false,
-  global: { mute: true, volume: 1 },
   tracks: {
-    ambient: { mute: false, volume: 1 },
-    sfx: { mute: false, volume: 1 },
+    master: { mute: true, volume: 100 },
+    background: { mute: false, volume: 100 },
+    randomAmbient: { mute: false, volume: 100 },
+    interaction: { mute: false, volume: 100 },
+    speech: { mute: false, volume: 100 },
   },
   soundpacks: {
     global: undefined,
@@ -64,6 +72,7 @@ export const audioStore = createStore<AudioState>(
         currentSoundpack: soundpack,
       }
     },
+
     handlePlayableEvent(state, event, _args) {
       if (!state.soundsLoaded || !state.currentSoundpack) return
 
@@ -71,13 +80,19 @@ export const audioStore = createStore<AudioState>(
 
       playSoundEffect(sound)
     },
-    toggleMuteAll(state) {
-      return {
-        global: {
-          ...state.global,
-          mute: !state.global.mute,
-        },
-      }
+
+    toggleMuteTrack({ tracks }, trackId: AudioTrackId): Partial<AudioState> {
+      const updated = { ...tracks }
+      updated[trackId].mute = !tracks[trackId]
+      return { tracks: updated }
+    },
+
+    setTrackVolume({ tracks }, trackId: AudioTrackId, volume: number) {
+      if (volume < 0 || volume > 100) throw new Error(`volume parameter out of range ${volume}`)
+
+      const updated = { ...tracks }
+      updated[trackId].volume = volume
+      return { tracks: updated }
     },
   }
 })

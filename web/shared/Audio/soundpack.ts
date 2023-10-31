@@ -13,14 +13,20 @@ export type Sound = {
 type EventId = string
 type SoundId = string
 
+export type RandomAmbientSounds = {}
+
 export type Soundpack = {
-  events: Map<EventId, SoundId>
+  backgroundAmbience?: SoundId
+  randomAmbientSounds: RandomAmbientSounds
+  interactionSounds: Map<EventId, SoundId>
   sounds: Map<SoundId, Sound>
 }
 
 export function createEmptySoundpack(): Soundpack {
   return {
-    events: new Map<EventId, SoundId>(),
+    backgroundAmbience: undefined,
+    randomAmbientSounds: [],
+    interactionSounds: new Map<EventId, SoundId>(),
     sounds: new Map<SoundId, Sound>(),
   }
 }
@@ -29,7 +35,7 @@ export function getSoundpack(_id: string) {
   // TODO: load soundpack
   // return an example for now
   const soundpack = createEmptySoundpack()
-  soundpack.events.set('menu-item-clicked', 'click.wav')
+  soundpack.interactionSounds.set('menu-item-clicked', 'click.wav')
   soundpack.sounds.set('click.wav', {
     soundId: 'click.wav',
     type: 'mp3',
@@ -45,7 +51,7 @@ export function getAllSounds(soundpack: Soundpack) {
 
 export function findSoundForEvent(soundpack: Soundpack, event: string): Sound | undefined {
   if (!event) return undefined
-  const soundId = soundpack.events.get(event)
+  const soundId = soundpack.interactionSounds.get(event)
   if (!soundId) return undefined
   return soundpack.sounds.get(soundId)
 }
