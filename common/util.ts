@@ -232,17 +232,24 @@ export function parseStops(stops?: string[]) {
   return next
 }
 
-export function deepClone<T>(obj: T): T {
+const copyables: Record<string, boolean> = {
+  string: true,
+  boolean: true,
+  function: true,
+  undefined: true,
+  number: true,
+}
+
+export function deepClone<T extends object>(obj: T): T {
   let copy: any = {}
 
-  for (const key in obj) {
-    const value: any = obj[key]
-    if (Object.keys(value).length) {
-      copy[key] = deepClone(value)
+  for (const [key, value] of Object.entries(obj)) {
+    if (copyables[typeof value] || !value) {
+      copy[key] = value
       continue
     }
 
-    copy[key] = value
+    copy[key] = deepClone(value)
   }
 
   return copy
