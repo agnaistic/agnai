@@ -231,3 +231,19 @@ export function parseStops(stops?: string[]) {
   const next = stops.map((stop) => stop.replace(/(\\n|\r\n|\r)/g, '\n'))
   return next
 }
+
+export function deepClone<T>(obj: T): T {
+  let copy: any = {}
+
+  for (const key in obj) {
+    const value: any = obj[key]
+    if (Object.keys(value).length) {
+      copy[key] = deepClone(value)
+      continue
+    }
+
+    copy[key] = value
+  }
+
+  return copy
+}
