@@ -123,9 +123,11 @@ export const generateMessageV2 = handle(async (req, res) => {
   }
 
   const impersonateId: string | undefined = body.impersonate?._id
-  const impersonate: AppSchema.Character | undefined = impersonateId?.startsWith('temp-')
+  const impersonate: AppSchema.Character | undefined = !impersonateId
+    ? undefined
+    : impersonateId.startsWith('temp-')
     ? body.impersonate
-    : await store.characters.getCharacter(userId, body.impersonate?._id)
+    : await store.characters.getCharacter(userId, impersonateId)
 
   const user = await store.users.getUser(userId)
   body.user = user
