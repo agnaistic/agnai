@@ -224,6 +224,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
         load(result)
       } else {
         const result = await generateChar(
+          char.name,
           char.description || 'a random character',
           service,
           state.personaKind

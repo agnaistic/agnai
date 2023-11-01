@@ -108,7 +108,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid({ ...validInference, placeholders: 'any?' }, body)
+  assertValid({ ...validInference, placeholders: 'any?', previous: 'any?' }, body)
 
   if (userId) {
     const user = await store.users.getUser(userId)
@@ -130,7 +130,11 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     return inference.generated
   }
 
-  const result = await runGuidance(body.prompt, { infer, placeholders: body.placeholders })
+  const result = await runGuidance(body.prompt, {
+    infer,
+    placeholders: body.placeholders,
+    previous: body.previous,
+  })
   return result
 })
 

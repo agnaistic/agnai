@@ -114,7 +114,8 @@ export async function guidance<T = any>({
   service,
   maxTokens,
   settings,
-}: InferenceOpts): Promise<T> {
+  previous,
+}: InferenceOpts & { previous?: any }): Promise<T> {
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -131,6 +132,7 @@ export async function guidance<T = any>({
     prompt,
     service,
     maxTokens,
+    previous,
   })
 
   if (res.error) throw new Error(res.error)

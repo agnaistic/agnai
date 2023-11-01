@@ -17,12 +17,18 @@ export type GenField =
   | 'example2'
   | 'example3'
 
-export async function generateChar(description: string, service: string, kind: PersonaFormat) {
+export async function generateChar(
+  name: string,
+  description: string,
+  service: string,
+  kind: PersonaFormat
+) {
   const [svc, _model] = service?.split('/') as [AIAdapter, string]
   const template = getTemplate(svc)
   const prompt = template.replace(`{{description}}`, description)
 
-  const vars = await msgsApi.guidance({ prompt, service })
+  const previous = name ? { firstname: name } : undefined
+  const vars = await msgsApi.guidance({ prompt, service, previous })
   const char: NewCharacter = {
     originalAvatar: undefined,
     description,

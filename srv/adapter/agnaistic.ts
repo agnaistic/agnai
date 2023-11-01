@@ -226,10 +226,13 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   ].join('&')
 
   const resp = gen.streamResponse
-    ? await websocketStream({
-        url: `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/stream?${params}`,
-        body,
-      })
+    ? await websocketStream(
+        {
+          url: `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/stream?${params}`,
+          body,
+        },
+        60000
+      )
     : getTextgenCompletion(
         'Agnastic',
         `${preset.subServiceUrl || preset.thirdPartyUrl}/api/v1/generate?${params}`,

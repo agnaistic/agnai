@@ -118,7 +118,7 @@ export const SubscriptionPage: Component = (props) => {
             <For each={candidates()}>
               {(each) => (
                 <>
-                  <TierCard tier={each} class="w-1/3">
+                  <TierCard tier={each} class="sm:w-1/3">
                     <div class="mt-4 flex justify-center">
                       <Switch>
                         <Match when={cfg.tier && cfg.level < each.level}>
