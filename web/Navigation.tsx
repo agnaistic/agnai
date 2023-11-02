@@ -517,10 +517,10 @@ const Sounds: Component<{}> = (props) => {
       </Item>
       <EndItem>
         <a class="icon-button" onClick={() => audioStore.toggleMuteTrack('master')}>
-          <Show when={audioSettings.tracks.master.mute}>
+          <Show when={audioSettings.tracks.master.muted}>
             <VolumeX />
           </Show>
-          <Show when={!audioSettings.tracks.master.mute}>
+          <Show when={!audioSettings.tracks.master.muted}>
             <Volume2 />
           </Show>
         </a>

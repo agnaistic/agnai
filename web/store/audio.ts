@@ -4,7 +4,7 @@ import { Soundpack, findSoundForEvent, getAllSounds, getSoundpack } from '../sha
 import { createStore } from './create'
 
 export type AudioTrackState = {
-  mute: boolean
+  muted: boolean
   volume: number
 }
 
@@ -33,11 +33,11 @@ export type AudioState = {
 const initAudioStore: AudioState = {
   soundsLoaded: false,
   tracks: {
-    master: { mute: true, volume: 100 },
-    background: { mute: false, volume: 100 },
-    randomAmbient: { mute: false, volume: 100 },
-    interaction: { mute: false, volume: 100 },
-    speech: { mute: false, volume: 100 },
+    master: { muted: true, volume: 100 },
+    background: { muted: false, volume: 100 },
+    randomAmbient: { muted: false, volume: 100 },
+    interaction: { muted: false, volume: 100 },
+    speech: { muted: false, volume: 100 },
   },
   soundpacks: {
     global: undefined,
@@ -82,17 +82,14 @@ export const audioStore = createStore<AudioState>(
     },
 
     toggleMuteTrack({ tracks }, trackId: AudioTrackId): Partial<AudioState> {
-      const updated = { ...tracks }
-      updated[trackId].mute = !tracks[trackId]
-      return { tracks: updated }
+      return {
+        tracks: { ...tracks, [trackId]: { ...tracks[trackId], muted: !tracks[trackId].muted } },
+      }
     },
 
     setTrackVolume({ tracks }, trackId: AudioTrackId, volume: number) {
       if (volume < 0 || volume > 100) throw new Error(`volume parameter out of range ${volume}`)
-
-      const updated = { ...tracks }
-      updated[trackId].volume = volume
-      return { tracks: updated }
+      return { tracks: { ...tracks, [trackId]: { ...tracks[trackId], volume } } }
     },
   }
 })

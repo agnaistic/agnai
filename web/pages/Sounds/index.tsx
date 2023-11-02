@@ -7,8 +7,8 @@ import { Card } from '../../shared/Card'
 import Accordian from '../../shared/Accordian'
 import Button from '../../shared/Button'
 import { Play } from 'lucide-solid'
-import { FormLabel } from '/web/shared/FormLabel'
-import TextInput from '/web/shared/TextInput'
+import { FormLabel } from '../../shared/FormLabel'
+import TextInput from '../../shared/TextInput'
 
 const SoundsPage: Component<{}> = (props) => {
   return (
@@ -17,41 +17,41 @@ const SoundsPage: Component<{}> = (props) => {
 
       <Card>
         <VolumeControl
+          trackId="master"
           parentClass="w-full"
           label="Master Volume"
           helperText="Adjust the overall volume of the application."
-          track="master"
         />
       </Card>
       <Divider />
 
       <Card>
         <VolumeControl
+          trackId="background"
           parentClass="w-full"
           label="Background Ambience"
           helperText="Adjust the volume of the continuous background music and ambient sounds."
-          track="background"
         />
 
         <VolumeControl
+          trackId="randomAmbient"
           parentClass="w-full"
           label="Random Ambient Events"
           helperText="Adjust the volume of randomly occurring ambient sounds."
-          track="randomAmbient"
         />
 
         <VolumeControl
+          trackId="interaction"
           parentClass="w-full"
           label="Interaction Sound Effects"
           helperText="Adjust the volume of sound effects triggered by user interactions."
-          track="interaction"
         />
 
         <VolumeControl
+          trackId="speech"
           parentClass="w-full"
           label="Narration & Speech"
           helperText="Adjust the volume of text-to-speech narration and character dialogues."
-          track="speech"
         />
       </Card>
 
@@ -89,7 +89,7 @@ const SoundsPage: Component<{}> = (props) => {
         </p>
       </Card>
 
-      <Card>
+      <Card class="flex flex-col gap-3">
         <div>Background Ambience</div>
         <SoundPreview source="http://example.com/bg.mp3" />
       </Card>
