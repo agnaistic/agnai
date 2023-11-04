@@ -1,6 +1,6 @@
 import { TypedEventEmitter, TypedEventMap } from 'common/typed-event-emitter'
 
-interface PlayableEvent extends TypedEventMap {
+export interface PlayableEvent extends TypedEventMap {
   'menu-item-clicked':
     | 'login'
     | 'user'
