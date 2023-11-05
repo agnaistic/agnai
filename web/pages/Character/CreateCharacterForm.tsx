@@ -29,7 +29,7 @@ import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
-import Modal, { NoTitleModal } from '/web/shared/Modal'
+import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 import { ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
@@ -812,7 +812,7 @@ const AvatarModal: Component<{ url?: string; close: () => void }> = (props) => {
   rootModalStore.addModal({
     id: 'char-avatar-modal',
     element: (
-      <Modal show={!!props.url} close={props.close} maxWidth="half">
+      <Modal show={!!props.url} close={props.close} maxWidth="half" fixedHeight>
         <div class="flex justify-center p-4">
           <img class="rounded-md" src={getAssetUrl(props.url!)} />
         </div>
