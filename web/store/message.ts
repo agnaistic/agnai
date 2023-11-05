@@ -1,7 +1,7 @@
 import { v4 } from 'uuid'
 import { AppSchema } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { getAssetUrl } from '../shared/util'
+import { createDebounce, getAssetUrl } from '../shared/util'
 import { isLoggedIn } from './api'
 import { createStore, getStore } from './create'
 import { getImageData } from './data/chars'
@@ -524,11 +524,15 @@ export const msgStore = createStore<MsgState>(
   }
 })
 
+const [debouncedEmbed] = createDebounce((chatId: string, history: any) => {
+  embedApi.embedChat(chatId, history)
+}, 250)
+
 msgStore.subscribe((state) => {
   if (state.partial) return
   if (!state.activeChatId) return
   if (!state.msgs.length) return
-  embedApi.embedChat(state.activeChatId, state.messageHistory.concat(state.msgs))
+  debouncedEmbed(state.activeChatId, state.messageHistory.concat(state.msgs))
 })
 
 function processQueue() {

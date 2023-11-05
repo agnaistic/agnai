@@ -7,7 +7,6 @@ import { AppSchema, UI } from '/common/types'
 import { createDebounce, getRootRgb } from '/web/shared/util'
 
 const [onEnter] = createDebounce((loading: boolean) => {
-  console.log('on-enter')
   if (loading) return
   msgStore.getNextMessages()
 }, 250)

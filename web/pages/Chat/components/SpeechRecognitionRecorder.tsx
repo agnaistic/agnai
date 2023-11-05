@@ -187,7 +187,6 @@ export const SpeechRecognitionRecorder: Component<{
 
   const unsub = msgStore.subscribe((state) => {
     if (state.speaking && isListening()) {
-      console.log('msgstore sub')
       setPendingRecord(true)
       speechRecognition()?.abort()
       setIsListening(false)

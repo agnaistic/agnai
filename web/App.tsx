@@ -212,7 +212,7 @@ const Layout: Component = () => {
       <InfoModal />
       <ProfileModal />
       <For each={rootModals.modals}>{(modal) => modal.element}</For>
-      <ImageModal useState />
+      <ImageModal />
 
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"

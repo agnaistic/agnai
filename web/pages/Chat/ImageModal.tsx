@@ -4,13 +4,10 @@ import { settingStore } from '../../store'
 import { getAssetUrl } from '../../shared/util'
 import Button from '/web/shared/Button'
 
-export const ImageModal: Component<{ useState?: boolean; url?: string; close?: () => void }> = (
-  props
-) => {
+export const ImageModal: Component = (props) => {
   const state = settingStore()
 
   const footer = createMemo(() => {
-    if (!props.useState) return null
     if (!state.showImage?.options?.length) return null
 
     return (
@@ -28,19 +25,13 @@ export const ImageModal: Component<{ useState?: boolean; url?: string; close?: (
 
   return (
     <NoTitleModal
-      show={props.useState ? !!state.showImage : !!props.url}
-      close={() => {
-        settingStore.clearImage()
-        props.close?.()
-      }}
+      show={!!state.showImage}
+      close={settingStore.clearImage}
       maxWidth="half"
       footer={footer()}
     >
       <div class="flex justify-center p-4">
-        <img
-          class="rounded-md"
-          src={getAssetUrl(props.useState ? state.showImage!.url! : props.url!)}
-        />
+        <img class="rounded-md" src={getAssetUrl(state.showImage!.url!)} />
       </div>
     </NoTitleModal>
   )

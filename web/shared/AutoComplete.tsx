@@ -33,7 +33,6 @@ export const AutoComplete: Component<{
 
   const listener = (ev: KeyboardEvent) => {
     const mod = props.dir === 'up' ? -1 : 1
-    console.log('autocomplete', ev.key)
     const curr = selected()
     if (ev.key === 'ArrowUp') {
       ev.preventDefault()
