@@ -8,16 +8,16 @@ type SoundSource = RemoteSound | LocalStorageSound | FileSound
 
 export type Sound = {
   soundId: string
+  name: string
   type: string
   source: SoundSource
 }
 
-export type EventId = keyof PlayableEvent
+export type EventId = keyof PlayableEvent & string
 export type SoundId = string
 export type SoundpackId = string
 
 export type RandomAmbientSound = {
-  name: string
   soundId: SoundId
   frequencyMinSecs: number
   frequencyMaxSecs: number
@@ -61,19 +61,16 @@ export function getSoundpack(_id: string) {
     'Step into a world of magic and adventure with the "Enchanted Kingdom" soundpack. Immerse yourself in the medieval atmosphere enriched by the harmonious blend of melodic background tunes, the gentle rustling of leaves in an ancient forest, and the distant chatter of a bustling marketplace.'
   soundpack.backgroundAmbience = 'atmo.mp3'
   soundpack.randomAmbientSounds.push({
-    name: 'Dragon roar',
     soundId: 'dragon.mp3',
     frequencyMinSecs: 90,
     frequencyMaxSecs: 360,
   })
   soundpack.randomAmbientSounds.push({
-    name: 'Mystic chimes',
     soundId: 'chimes.mp3',
     frequencyMinSecs: 30,
     frequencyMaxSecs: 60,
   })
   soundpack.randomAmbientSounds.push({
-    name: 'Bird song',
     soundId: 'birds.mp3',
     frequencyMinSecs: 20,
     frequencyMaxSecs: 120,
@@ -81,6 +78,7 @@ export function getSoundpack(_id: string) {
   soundpack.interactionSounds.push({ eventId: 'menu-item-clicked', soundId: 'click.mp3' })
   soundpack.sounds.push({
     soundId: 'atmo.mp3',
+    name: 'Chatter',
     type: 'mp3',
     source: {
       url: '',
@@ -88,12 +86,14 @@ export function getSoundpack(_id: string) {
   })
   soundpack.sounds.push({
     soundId: 'click.mp3',
+    name: 'Click',
     type: 'mp3',
     source: { url: '' },
   })
 
   soundpack.sounds.push({
     soundId: 'dragon.mp3',
+    name: 'Dragon roar',
     type: 'mp3',
     source: {
       url: '',
@@ -102,12 +102,14 @@ export function getSoundpack(_id: string) {
 
   soundpack.sounds.push({
     soundId: 'chimes.mp3',
+    name: 'Magic chimes',
     type: 'mp3',
     source: { url: '' },
   })
 
   soundpack.sounds.push({
     soundId: 'birds.mp3',
+    name: 'Bird song',
     type: 'mp3',
     source: { url: '' },
   })

@@ -1,8 +1,7 @@
 import { Component } from 'solid-js'
 import PageHeader from '../../shared/PageHeader'
-import VolumeControl from '../../shared/VolumeControl'
+import VolumeControl from './VolumeControl'
 import Divider from '../../shared/Divider'
-
 import { Card } from '../../shared/Card'
 import SoundpackPreview from './SoundpackPreview'
 import { audioStore } from '/web/store'

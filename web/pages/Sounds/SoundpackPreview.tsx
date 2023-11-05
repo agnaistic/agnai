@@ -7,6 +7,7 @@ import TextInput from '/web/shared/TextInput'
 import Accordian from '/web/shared/Accordian'
 import { EventId, Sound, SoundId, SoundpackId } from '/web/shared/Audio/soundpack'
 import { audioStore } from '/web/store'
+import { SoundPreview, getSoundSource } from './SoundPreview'
 
 const SoundpackPreview: Component<{
   soundpackId?: SoundpackId
@@ -39,7 +40,7 @@ const SoundpackPreview: Component<{
         <Show when={soundpack()?.backgroundAmbience}>
           <Card class="flex flex-col gap-3">
             <div>Background Ambience</div>
-            <SoundPreview sound={getSound(soundpack()?.backgroundAmbience)} />
+            <BackgroundAmbience sound={getSound(soundpack()?.backgroundAmbience)} />
           </Card>
         </Show>
 
@@ -50,7 +51,6 @@ const SoundpackPreview: Component<{
             <For each={soundpack()?.randomAmbientSounds || []}>
               {(amb, _) => (
                 <RandomAmbientEvent
-                  name={amb.name}
                   sound={getSound(amb.soundId)}
                   frequencyMinSecs={amb.frequencyMinSecs}
                   frequencyMaxSecs={amb.frequencyMaxSecs}
@@ -66,10 +66,7 @@ const SoundpackPreview: Component<{
 
             <For each={soundpack()?.interactionSounds || []}>
               {(int, _) => (
-                <InteractionSoundEffect
-                  event={getEventDescription(int.eventId)}
-                  sound={getSound(int.soundId)}
-                />
+                <InteractionSoundEffect eventId={int.eventId} sound={getSound(int.soundId)} />
               )}
             </For>
           </Card>
@@ -81,82 +78,88 @@ const SoundpackPreview: Component<{
 
 export default SoundpackPreview
 
-const SoundPreview: Component<{
-  sound?: Sound | undefined
+const BackgroundAmbience: Component<{
+  sound: Sound | undefined
 }> = (props) => {
   return (
     <div class="flex w-full flex-row gap-5">
-      <TextInput
-        fieldName="audioBgSound"
-        type="text"
-        readonly={true}
-        class="border-[1px]"
-        parentClass="grow"
-        value={displaySoundSource(props.sound)}
-      />
-      <Button>
-        <Play />
-      </Button>
+      <Accordian title={props.sound?.name} open={false} class="grow">
+        <TextInput
+          fieldName="audioBgSound"
+          type="text"
+          readonly={true}
+          class="border-[1px]"
+          parentClass="grow"
+          value={getSoundSource(props.sound)}
+        />
+      </Accordian>
+      <SoundPreview sound={props.sound} />
     </div>
   )
 }
 
 const RandomAmbientEvent: Component<{
-  name: string
   sound: Sound | undefined
   frequencyMinSecs: number
   frequencyMaxSecs: number
 }> = (props) => {
   return (
-    <Accordian title={props.name} open={false}>
+    <div class="flex w-full flex-row gap-5">
+      <Accordian title={props.sound?.name} open={false} class="grow">
+        <TextInput
+          fieldName="audioBgSound"
+          type="text"
+          readonly={true}
+          class="border-[1px]"
+          parentClass="grow"
+          value={getSoundSource(props.sound)}
+        />
+        <div class="flex flex-row gap-7">
+          <TextInput
+            fieldName="audioRandomEventFreqMin"
+            type="number"
+            readonly={true}
+            label="Minimum interval (seconds)"
+            value={props.frequencyMinSecs}
+            parentClass="grow"
+          />
+          <TextInput
+            fieldName="audioRandomEventFreqMax"
+            type="number"
+            readonly={true}
+            label="Maximum interval (seconds)"
+            value={props.frequencyMaxSecs}
+            parentClass="grow"
+          />
+        </div>
+      </Accordian>
       <SoundPreview sound={props.sound} />
-      <div class="flex flex-row gap-7">
-        <TextInput
-          fieldName="audioRandomEventFreqMin"
-          type="number"
-          readonly={true}
-          label="Minimum interval (seconds)"
-          value={props.frequencyMinSecs}
-          parentClass="grow"
-        />
-        <TextInput
-          fieldName="audioRandomEventFreqMax"
-          type="number"
-          readonly={true}
-          label="Maximum interval (seconds)"
-          value={props.frequencyMaxSecs}
-          parentClass="grow"
-        />
-      </div>
-    </Accordian>
+    </div>
   )
 }
 
 const InteractionSoundEffect: Component<{
-  event: string
+  eventId: string
   sound: Sound | undefined
 }> = (props) => {
   return (
-    <Accordian title={props.event} open={false}>
+    <div class="flex w-full flex-row gap-5">
+      <Accordian
+        title={`${getEventDescription(props.eventId)} - ${props.sound?.name}`}
+        open={false}
+      >
+        <TextInput
+          fieldName="audioBgSound"
+          type="text"
+          readonly={true}
+          class="border-[1px]"
+          parentClass="grow"
+          value={getSoundSource(props.sound)}
+        />
+      </Accordian>
       <SoundPreview sound={props.sound} />
-    </Accordian>
+    </div>
   )
-}
-
-function displaySoundSource(sound: Sound | undefined) {
-  if (!sound) return ''
-
-  if ('url' in sound.source) {
-    return sound.source.url
-  }
-  if ('key' in sound.source) {
-    return sound.source.key
-  }
-  if ('path' in sound.source) {
-    return sound.source.path
-  }
-
-  return ''
 }
 
 function getEventDescription(eventId: EventId) {

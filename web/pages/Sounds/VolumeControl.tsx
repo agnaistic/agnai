@@ -1,7 +1,7 @@
 import { Component, Show, JSX } from 'solid-js'
-import { markdown } from './markdown'
+import { markdown } from '../../shared/markdown'
 import { Volume2, VolumeX } from 'lucide-solid'
-import { AudioTrackId, audioStore } from '../store'
+import { AudioTrackId, audioStore } from '../../store'
 
 const VolumeControl: Component<{
   trackId: AudioTrackId
