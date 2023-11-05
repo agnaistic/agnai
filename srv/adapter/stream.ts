@@ -70,6 +70,7 @@ export async function websocketStream(opts: { url: string; body: any }, timeoutM
   const emitter = eventGenerator()
   let accum = ''
 
+  // Terminate the request if the first token is not received without the timeout window
   const ttfbTimer = timeoutMs
     ? setTimeout(() => {
         emitter.push({ error: `request cancelled - timed out` })
