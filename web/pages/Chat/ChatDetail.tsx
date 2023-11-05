@@ -538,13 +538,11 @@ const ChatDetail: Component = () => {
                       </div>
                     </Show>
                     {/* Original Slot location */}
+                    <InfiniteScroll canFetch={chars.ready} />
 
                     <For each={chatMsgs()}>
                       {(msg, i) => (
                         <>
-                          <Show when={i() === 2}>
-                            <InfiniteScroll canFetch={chars.ready} />
-                          </Show>
                           <Message
                             msg={msg}
                             editing={chats.opts.editing}
