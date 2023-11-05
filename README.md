@@ -144,6 +144,10 @@ The important parts of the stack are:
 > npm run start:all:win # Windows
 ```
 
+At this point, you should be able to access http://localhost:3001 in your browser to see the UI.
+
+You can also try to access the frontend with hot reloading at http://localhost:1234
+
 ### Recommended Developer Tooling
 
 - Redux Dev Tools
