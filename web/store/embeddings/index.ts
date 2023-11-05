@@ -56,6 +56,8 @@ export const embedApi = {
   embedChat,
   embedArticle,
   embedPdf,
+  embedFile,
+  embedPlainText,
   query,
   loadDocument,
   removeDocument: async (docId: string) => {
@@ -276,6 +278,29 @@ async function embedPdf(name: string, file: File) {
 
   const slug = name ? name : slugify(file.name)
   post('embedDocument', { documentId: slug, documents: embed })
+}
+
+async function embedFile(name: string, file: File) {
+  const buffer = await file.arrayBuffer().then((b) => Buffer.from(b))
+  const text = buffer.toString()
+  const dot = file.name.lastIndexOf('.')
+  const filename = dot > -1 ? file.name.slice(0, dot) : file.name
+
+  return embedPlainText(name || filename, text)
+}
+
+async function embedPlainText(name: string, text: string) {
+  const lines = text
+    .replace(/(\\n|\r\n|\r)/g, '\n')
+    .replace(/\n+/g, '\n')
+    .split('\n')
+    .filter((l) => !!l.trim())
+
+  const embeds = lines.map((line, i) => ({ msg: line, meta: { line: i + 1 } }))
+  const slug = slugify(name)
+
+  post('embedDocument', { documentId: slug, documents: embeds })
+  console.log(lines)
 }
 
 function addSection<T>(

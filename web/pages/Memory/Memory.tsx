@@ -32,8 +32,8 @@ export const EmbedsTab: Component = (props) => {
             >
               <div class="ellipsis">{each.id}</div>
               <div>
-                <Button schema="red">
-                  <Trash size={14} onClick={() => setDeleting(each.id)} />
+                <Button schema="red" onClick={() => setDeleting(each.id)}>
+                  <Trash size={14} />
                 </Button>
               </div>
             </SolidCard>
