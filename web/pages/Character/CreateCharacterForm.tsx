@@ -29,7 +29,7 @@ import { JSX, For } from 'solid-js'
 import { BUNDLED_CHARACTER_BOOK_ID, emptyBookWithEmptyEntry } from '/common/memory'
 import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
-import Modal from '/web/shared/Modal'
+import Modal, { NoTitleModal } from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
 import { ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
@@ -44,7 +44,7 @@ import { GenField } from './generate-char'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
-import { ImageModal } from '../Chat/ImageModal'
+import { getAssetUrl } from '/web/shared/util'
 
 const formatOptions = [
   { value: 'wpp', label: 'W++' },
@@ -763,7 +763,8 @@ export const CreateCharacterForm: Component<{
         }}
         single
       />
-      <ImageModal url={imgUrl()} close={() => setImageUrl('')} />
+
+      <AvatarModal url={imgUrl()} close={() => setImageUrl('')} />
     </>
   )
 }
@@ -805,6 +806,21 @@ const Regenerate: Component<{
       </Match>
     </Switch>
   )
+}
+
+const AvatarModal: Component<{ url?: string; close: () => void }> = (props) => {
+  rootModalStore.addModal({
+    id: 'char-avatar-modal',
+    element: (
+      <Modal show={!!props.url} close={props.close} maxWidth="half">
+        <div class="flex justify-center p-4">
+          <img class="rounded-md" src={getAssetUrl(props.url!)} />
+        </div>
+      </Modal>
+    ),
+  })
+
+  return null
 }
 
 const AlternateGreetingsInput: Component<{
