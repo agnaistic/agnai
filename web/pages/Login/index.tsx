@@ -33,7 +33,7 @@ const LoginPage: Component = () => {
       <PageHeader
         title={<div class="flex w-full justify-center">Welcome</div>}
         subtitle={
-          <div class="flex items-center">
+          <div class="flex flex-wrap items-center justify-center">
             <Button size="pill" onClick={() => setRegister(false)}>
               Login
             </Button>
