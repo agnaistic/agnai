@@ -6,6 +6,7 @@ export type ViewProps = {
   toggleFavorite: (id: string, state: boolean) => void
   setDelete: (char: AppSchema.Character) => void
   setDownload: (char: AppSchema.Character) => void
+  setEdit: (char: AppSchema.Character) => void
 }
 
 export type CardProps = {
@@ -13,6 +14,7 @@ export type CardProps = {
   delete: () => void
   download: () => void
   toggleFavorite: (value: boolean) => void
+  edit: () => void
 }
 
 export type ViewType = 'list' | 'cards' | 'folders'

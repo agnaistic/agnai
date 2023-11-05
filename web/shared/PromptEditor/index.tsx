@@ -314,7 +314,7 @@ export const BasicPromptTemplate: Component<{
   inherit?: Partial<AppSchema.GenSettings>
   hide?: boolean
 }> = (props) => {
-  const items = ['Alpaca', 'Vicuna', 'Metharme', 'Pyg/Simple'].map((label) => ({
+  const items = ['Alpaca', 'Vicuna', 'Metharme', 'ChatML', 'Pyg/Simple'].map((label) => ({
     label: `Format: ${label}`,
     value: label,
   }))

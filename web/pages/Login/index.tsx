@@ -34,13 +34,13 @@ const LoginPage: Component = () => {
         title={<div class="flex w-full justify-center">Welcome</div>}
         subtitle={
           <span>
-            <a class="link" onClick={() => setRegister(false)}>
+            <Button size="pill" onClick={() => setRegister(false)}>
               Login
-            </a>{' '}
+            </Button>{' '}
             to your account or&nbsp;
-            <a class="link" onClick={() => setRegister(true)}>
+            <Button size="pill" onClick={() => setRegister(true)}>
               register
-            </a>
+            </Button>
             &nbsp;or continue as a guest.
           </span>
         }

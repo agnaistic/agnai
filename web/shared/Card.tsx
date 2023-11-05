@@ -3,6 +3,8 @@ import { getSettingColor, getAsCssVar, userStore } from '../store'
 import { useBgStyle } from './hooks'
 import { hooks } from './util'
 
+type Size = 'sm' | 'md' | 'lg'
+
 export const Card: Component<{
   children: JSX.Element
   class?: string
@@ -10,6 +12,7 @@ export const Card: Component<{
   border?: boolean
   bg?: string
   hide?: boolean
+  size?: Size
 }> = (props) => {
   const cardBg = useBgStyle({
     hex: props.bg ? getSettingColor(props.bg) : 'bg-700',
@@ -19,8 +22,13 @@ export const Card: Component<{
 
   return (
     <div
-      class={`rounded-lg p-3 ${props.class ?? ''}`}
-      classList={{ hidden: props.hide }}
+      class={`rounded-lg ${props.class ?? ''}`}
+      classList={{
+        hidden: props.hide,
+        'p-1': props.size === 'sm',
+        'p-2': props.size === 'md',
+        'p-3': !props.size || props.size === 'lg',
+      }}
       style={hooks({
         border: props.border ? '1px solid var(--bg-600)' : 0,
         ...cardBg(),
@@ -34,6 +42,7 @@ export const Card: Component<{
 export const SolidCard: Component<{
   children: JSX.Element
   class?: string
+  size?: Size
   bg?: string
   hover?: string | boolean
   border?: boolean
@@ -47,7 +56,12 @@ export const SolidCard: Component<{
 
   return (
     <div
-      class={`rounded-lg p-3 ${props.class ?? ''}`}
+      class={`rounded-lg ${props.class ?? ''}`}
+      classList={{
+        'p-1': props.size === 'sm',
+        'p-2': props.size === 'md',
+        'p-3': !props.size || props.size === 'lg',
+      }}
       style={hooks({
         border: props.border ? '1px solid var(--bg-600)' : 0,
         background: bg(),

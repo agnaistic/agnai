@@ -20,6 +20,7 @@ export const CharacterCardView: Component<ViewProps> = (props) => {
             <For each={group.list}>
               {(char) => (
                 <Character
+                  edit={() => props.setEdit(char)}
                   char={char}
                   delete={() => props.setDelete(char)}
                   download={() => props.setDownload(char)}
@@ -124,7 +125,7 @@ const Character: Component<CardProps> = (props) => {
               >
                 <Download /> Download
               </Button>
-              <Button alignLeft onClick={() => nav(`/character/${props.char._id}/edit`)} size="sm">
+              <Button alignLeft onClick={props.edit} size="sm">
                 <Edit /> Edit
               </Button>
               <Button

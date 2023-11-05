@@ -14,14 +14,7 @@ import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { FormLabel } from '../../shared/FormLabel'
 import FileInput, { FileInputResult } from '../../shared/FileInput'
-import {
-  characterStore,
-  tagStore,
-  settingStore,
-  toastStore,
-  memoryStore,
-  chatStore,
-} from '../../store'
+import { characterStore, tagStore, toastStore, memoryStore, chatStore } from '../../store'
 import { useNavigate } from '@solidjs/router'
 import PersonaAttributes from '../../shared/PersonaAttributes'
 import AvatarIcon from '../../shared/AvatarIcon'
@@ -51,6 +44,7 @@ import { GenField } from './generate-char'
 import Tabs, { useTabs } from '/web/shared/Tabs'
 import RangeInput from '/web/shared/RangeInput'
 import { rootModalStore } from '/web/store/root-modal'
+import { ImageModal } from '../Chat/ImageModal'
 
 const formatOptions = [
   { value: 'wpp', label: 'W++' },
@@ -67,6 +61,7 @@ export const CreateCharacterForm: Component<{
   import?: string
   children?: JSX.Element
   temp?: boolean
+  noTitle?: boolean
   footer?: (children: JSX.Element) => void
   close?: () => void
   onSuccess?: (char: AppSchema.Character) => void
@@ -103,6 +98,8 @@ export const CreateCharacterForm: Component<{
       loaded: s.characters.loaded,
     }
   })
+
+  const [imgUrl, setImageUrl] = createSignal<string>()
 
   const [tokens, setTokens] = createSignal({
     name: 0,
@@ -270,7 +267,7 @@ export const CreateCharacterForm: Component<{
 
   return (
     <>
-      <Show when={isPage || paneOrPopup() === 'pane'}>
+      <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
           title={`${
             forceNew() ? 'Create' : props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'
@@ -433,30 +430,35 @@ export const CreateCharacterForm: Component<{
               </Card>
 
               <Card class="flex w-full flex-col gap-4 sm:flex-row">
-                <Switch>
-                  <Match when={editor.state.visualType === 'sprite'}>
-                    <div class="flex h-24 w-full justify-center sm:w-24" ref={spriteRef}>
-                      <AvatarContainer body={editor.state.sprite} container={spriteRef} />
-                    </div>
-                  </Match>
-                  <Match when={!state.avatar.loading}>
-                    <div
-                      class="flex items-baseline justify-center"
-                      style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                      onClick={() => settingStore.showImage(state.avatar.image || image())}
-                    >
-                      <AvatarIcon
-                        format={{ corners: 'sm', size: '3xl' }}
-                        avatarUrl={state.avatar.image || image()}
-                      />
-                    </div>
-                  </Match>
-                  <Match when={state.avatar.loading}>
-                    <div class="flex w-[80px] items-center justify-center">
-                      <Loading />
-                    </div>
-                  </Match>
-                </Switch>
+                <div class="flex flex-col items-center gap-1">
+                  <Switch>
+                    <Match when={editor.state.visualType === 'sprite'}>
+                      <div class="flex h-24 w-full justify-center sm:w-24" ref={spriteRef}>
+                        <AvatarContainer body={editor.state.sprite} container={spriteRef} />
+                      </div>
+                    </Match>
+                    <Match when={!state.avatar.loading}>
+                      <div
+                        class="flex items-baseline justify-center"
+                        style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
+                        onClick={() => setImageUrl(state.avatar.image || image())}
+                      >
+                        <AvatarIcon
+                          format={{ corners: 'sm', size: '3xl' }}
+                          avatarUrl={state.avatar.image || image()}
+                        />
+                      </div>
+                    </Match>
+                    <Match when={state.avatar.loading}>
+                      <div class="flex w-[80px] items-center justify-center">
+                        <Loading />
+                      </div>
+                    </Match>
+                  </Switch>
+                  <Button size="pill" class="w-fit" onClick={() => editor.createAvatar()}>
+                    Generate Image
+                  </Button>
+                </div>
                 <div class="flex w-full flex-col gap-2">
                   <ToggleButtons
                     items={[
@@ -491,13 +493,10 @@ export const CreateCharacterForm: Component<{
                               />
                             </>
                           }
-                          helperText={`Leave the prompt empty to use your character's W++ "looks" / "appearance" attributes`}
-                          placeholder="Appearance"
+                          helperText={`Leave the prompt empty to use your character's persona "looks" / "appearance" attributes`}
+                          placeholder="Appearance Prompt (used for Avatar Generation)"
                           value={editor.state.appearance}
                         />
-                        <Button class="w-fit self-end" onClick={() => editor.createAvatar()}>
-                          Generate
-                        </Button>
                       </div>
                     </Match>
                     <Match when={true}>
@@ -764,6 +763,7 @@ export const CreateCharacterForm: Component<{
         }}
         single
       />
+      <ImageModal url={imgUrl()} close={() => setImageUrl('')} />
     </>
   )
 }
@@ -773,6 +773,7 @@ const Regenerate: Component<{
   fields: GenField[]
   editor: CharEditor
   allowed: boolean
+  children?: any
 }> = (props) => {
   return (
     <Switch>
@@ -799,7 +800,7 @@ const Regenerate: Component<{
           onClick={() => props.editor.generateCharacter(props.service, props.fields)}
           disabled={props.editor.generating()}
         >
-          Regenerate
+          {props.children || 'Regenerate'}
         </Button>
       </Match>
     </Switch>

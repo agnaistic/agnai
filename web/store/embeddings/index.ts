@@ -58,6 +58,12 @@ export const embedApi = {
   embedPdf,
   query,
   loadDocument,
+  removeDocument: async (docId: string) => {
+    await docCache.deleteDoc(docId)
+    const { embeds } = MEMORY_GET()
+    const next = embeds.filter((e) => e.id !== docId)
+    MEMORY_SET({ embeds: next })
+  },
   cache: docCache,
   captionImage,
   onEmbedReady: (cb: Callback) => {

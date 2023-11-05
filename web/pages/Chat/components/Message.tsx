@@ -189,30 +189,6 @@ const Message: Component<MessageProps> = (props) => {
                   />
                 </Match>
 
-                {/* <Match when={!!ctx.allBots[props.msg.characterId!]}>
-                  <CharacterAvatar
-                    openable
-                    char={ctx.allBots[props.msg.characterId!]}
-                    format={format()}
-                    bot={!props.msg.userId}
-                    zoom={1.75}
-                  />
-                </Match> */}
-
-                {/* <Match when={ctx.char && !!props.msg.characterId}>
-                  <CharacterAvatar
-                    char={
-                      ctx.activeMap[props.msg.characterId!] ||
-                      ctx.tempMap[props.msg.characterId!] ||
-                      {}
-                    }
-                    openable
-                    zoom={1.75}
-                    bot={true}
-                    format={format()}
-                  />
-                </Match> */}
-
                 <Match when={!props.msg.characterId}>
                   <AvatarIcon
                     format={format()}

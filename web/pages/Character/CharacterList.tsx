@@ -1,5 +1,5 @@
 import { Component, Match, Show, Switch, createEffect, createMemo, createSignal } from 'solid-js'
-import { NewCharacter, characterStore, chatStore, userStore } from '../../store'
+import { NewCharacter, characterStore, chatStore, settingStore, userStore } from '../../store'
 import { tagStore } from '../../store'
 import PageHeader from '../../shared/PageHeader'
 import Select, { Option } from '../../shared/Select'
@@ -18,6 +18,8 @@ import { SortDirection, SortField, ViewType } from './components/types'
 import { CharacterListView } from './components/CharacterListView'
 import { CharacterCardView } from './components/CharacterCardView'
 import { CharacterFolderView } from './components/CharacterFolderView'
+import Modal from '/web/shared/Modal'
+import { CreateCharacterForm } from './CreateCharacterForm'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -40,6 +42,7 @@ const CharacterList: Component = () => {
 
   const [query, setQuery] = useSearchParams()
 
+  const cfg = settingStore()
   const user = userStore()
   const state = chatStore((s) => ({
     list: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
@@ -72,7 +75,11 @@ const CharacterList: Component = () => {
 
   const getNextView = (): ViewType => {
     const curr = view()
-    return curr === 'list' ? 'cards' : curr === 'cards' ? 'folders' : 'list'
+    if (cfg.flags.folders) {
+      return curr === 'list' ? 'cards' : curr === 'cards' ? 'folders' : 'list'
+    }
+
+    return curr === 'list' ? 'cards' : 'list'
   }
 
   createEffect(() => {
@@ -201,6 +208,7 @@ const Characters: Component<{
   sortDirection: SortDirection
 }> = (props) => {
   const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
+  const [editChar, setEditChar] = createSignal<AppSchema.Character>()
   const [showGrouping, setShowGrouping] = createSignal(false)
   const groups = createMemo(() => {
     const list = props.characters
@@ -247,6 +255,7 @@ const Characters: Component<{
               toggleFavorite={toggleFavorite}
               setDownload={setDownload}
               setDelete={setDelete}
+              setEdit={setEditChar}
             />
           </Show>
 
@@ -257,6 +266,7 @@ const Characters: Component<{
               toggleFavorite={toggleFavorite}
               setDelete={setDelete}
               setDownload={setDownload}
+              setEdit={setEditChar}
             />
           </Show>
 
@@ -269,6 +279,7 @@ const Characters: Component<{
               setDownload={setDownload}
               sort={props.sortDirection}
               characters={props.characters}
+              setEdit={setEditChar}
             />
           </Show>
         </Match>
@@ -277,12 +288,36 @@ const Characters: Component<{
       <Show when={download()}>
         <DownloadModal show close={() => setDownload()} charId={download()!._id} />
       </Show>
+      <Show when={editChar()}>
+        <EditCharacter char={editChar()} close={() => setEditChar()} />
+      </Show>
       <DeleteCharacterModal
         char={showDelete()}
         show={!!showDelete()}
         close={() => setDelete(undefined)}
       />
     </>
+  )
+}
+
+const EditCharacter: Component<{ char?: AppSchema.Character; close: () => void }> = (props) => {
+  const [footer, setFooter] = createSignal<any>()
+
+  return (
+    <Modal
+      title={`Editing: ${props.char?.name}`}
+      show
+      close={props.close}
+      maxWidth="half"
+      footer={footer()}
+    >
+      <CreateCharacterForm
+        editId={props.char?._id}
+        close={props.close}
+        noTitle
+        footer={setFooter}
+      />
+    </Modal>
   )
 }
 

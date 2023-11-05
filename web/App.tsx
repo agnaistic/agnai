@@ -203,16 +203,16 @@ const Layout: Component = () => {
             </div>
           </div>
         </div>
-        <Toasts />
-        <ImpersonateModal
-          show={cfg.showImpersonate}
-          close={() => settingStore.toggleImpersonate(false)}
-        />
-        <InfoModal />
-        <ProfileModal />
-        <ImageModal />
-        <For each={rootModals.modals}>{(modal) => modal.element}</For>
       </div>
+      <Toasts />
+      <ImpersonateModal
+        show={cfg.showImpersonate}
+        close={() => settingStore.toggleImpersonate(false)}
+      />
+      <InfoModal />
+      <ProfileModal />
+      <For each={rootModals.modals}>{(modal) => modal.element}</For>
+      <ImageModal useState />
 
       <div
         class="absolute bottom-0 left-0 right-0 top-0 z-10 h-[100vh] w-full bg-black bg-opacity-5"

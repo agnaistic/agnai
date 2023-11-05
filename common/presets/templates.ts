@@ -99,4 +99,33 @@ export const templates = {
   {{/each}}
   {{#if ujb}}<|system|>{{ujb}}
   {{/if}}<|model|>{{post}}`,
+  ChatML: neat`
+  {{#if system_prompt}}<|im_start|>system
+  {{system_prompt}}<|im_end|>{{/if}}
+
+  <|im_start|>system
+  Below is an instruction that describes a task. Write a response that appropriately completes the request.<|im_end|>
+
+  <|im_start|>system
+  Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+  
+  {{char}}'s Persona:
+  {{personality}}
+
+  {{#if memory}}{{char}}'s Memory: {{memory}}
+  {{/if}}
+  {{#if scenario}}This scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{/if}}
+  Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.<|im_end|>
+  
+  {{#each msg}}{{#if .isbot}}<|im_start|>assistant{{/if}}{{#if .isuser}}<|im_start|>user{{/if}}
+  {{.name}}: {{.msg}}<|im_end|>
+  {{/each}}
+  {{#if ujb}}<|im_start|>system
+  {{ujb}}<|im_end|>
+  {{/if}}
+  <|im_start|>assistant
+  {{post}}`,
 }
