@@ -3,6 +3,7 @@ import { Component, Show, JSX, createMemo, Switch, Match } from 'solid-js'
 import Button from './Button'
 import './modal.css'
 import Tabs, { TabHook } from './Tabs'
+import { markdown } from './markdown'
 
 interface Props {
   title?: string | JSX.Element
@@ -171,7 +172,15 @@ export const ConfirmModal: Component<{
         </>
       }
     >
-      <div class="mb-8 flex justify-center">{props.message}</div>
+      <Show
+        when={typeof props.message === 'string'}
+        fallback={<div class="mb-8 flex justify-center">{props.message}</div>}
+      >
+        <div
+          class="markdown mb-8 flex flex-col items-center"
+          innerHTML={markdown.makeHtml(props.message as string)}
+        />
+      </Show>
     </Modal>
   )
 }

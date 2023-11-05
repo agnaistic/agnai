@@ -189,30 +189,6 @@ const Message: Component<MessageProps> = (props) => {
                   />
                 </Match>
 
-                {/* <Match when={!!ctx.allBots[props.msg.characterId!]}>
-                  <CharacterAvatar
-                    openable
-                    char={ctx.allBots[props.msg.characterId!]}
-                    format={format()}
-                    bot={!props.msg.userId}
-                    zoom={1.75}
-                  />
-                </Match> */}
-
-                {/* <Match when={ctx.char && !!props.msg.characterId}>
-                  <CharacterAvatar
-                    char={
-                      ctx.activeMap[props.msg.characterId!] ||
-                      ctx.tempMap[props.msg.characterId!] ||
-                      {}
-                    }
-                    openable
-                    zoom={1.75}
-                    bot={true}
-                    format={format()}
-                  />
-                </Match> */}
-
                 <Match when={!props.msg.characterId}>
                   <AvatarIcon
                     format={format()}
@@ -367,6 +343,11 @@ const Message: Component<MessageProps> = (props) => {
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
+                  <Show when={content().type === 'partial'}>
+                    <div class="flex h-8 w-full items-center justify-center">
+                      <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                    </div>
+                  </Show>
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={props.msg.actions}>

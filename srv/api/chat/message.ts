@@ -316,7 +316,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   if (chat.mode === 'adventure') {
     const lines = fillPromptWithLines(
       getTokenCounter('main'),
-      1024,
+      2048,
       '',
       body.lines.concat(`${body.replyAs.name}: ${responseText}`)
     )
@@ -331,6 +331,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         prompt: text,
         log,
         service: entities.settings.service!,
+        settings: entities.settings,
         user: entities.user,
       })
       return res.generated

@@ -33,16 +33,16 @@ const LoginPage: Component = () => {
       <PageHeader
         title={<div class="flex w-full justify-center">Welcome</div>}
         subtitle={
-          <span>
-            <a class="link" onClick={() => setRegister(false)}>
+          <div class="flex flex-wrap items-center justify-center">
+            <Button size="pill" onClick={() => setRegister(false)}>
               Login
-            </a>{' '}
-            to your account or&nbsp;
-            <a class="link" onClick={() => setRegister(true)}>
-              register
-            </a>
+            </Button>
+            &nbsp; to your account or&nbsp;
+            <Button size="pill" onClick={() => setRegister(true)}>
+              Register
+            </Button>
             &nbsp;or continue as a guest.
-          </span>
+          </div>
         }
       />
       <div class="w-full max-w-sm">
@@ -62,7 +62,7 @@ const LoginPage: Component = () => {
 
       <Show when={cfg.config.policies}>
         <div class="mt-2">
-          By logging in or registering, you agree that are 18 years or older and agree to the{' '}
+          By logging in or registering, you agree that you are 18 years or older and agree to the{' '}
           <A class="link" href="/terms-of-service">
             Terms
           </A>{' '}

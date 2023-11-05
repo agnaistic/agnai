@@ -548,7 +548,7 @@ function processQueue() {
  * @param chatId
  * @param image base64 encoded image or image url
  */
-async function handleImage(chatId: string, image: string) {
+async function handleImage(chatId: string, image: string, messageId?: string) {
   const { msgs, activeCharId, images, imagesSaved } = msgStore.getState()
 
   const chatImages = images[chatId] || []
@@ -835,9 +835,13 @@ subscribe('image-failed', { chatId: 'string', error: 'string' }, (body) => {
   toastStore.error(body.error)
 })
 
-subscribe('image-generated', { chatId: 'string', image: 'string' }, (body) => {
-  handleImage(body.chatId, body.image)
-})
+subscribe(
+  'image-generated',
+  { chatId: 'string', image: 'string', messageId: 'string?' },
+  (body) => {
+    handleImage(body.chatId, body.image, body.messageId)
+  }
+)
 
 subscribe('voice-generating', { chatId: 'string', messageId: 'string' }, (body) => {
   const activeChatId = msgStore.getState().activeChatId

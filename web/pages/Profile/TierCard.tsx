@@ -16,7 +16,7 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
     return 'None'
   })
   return (
-    <TitleCard class={`flex w-1/2 flex-col gap-2 ${props.class || ''}`}>
+    <TitleCard class={`flex w-full flex-col gap-2 sm:w-1/2 ${props.class || ''}`}>
       <div class="flex justify-center text-lg font-bold text-[var(--hl-500)]">
         {props.tier.name}
       </div>

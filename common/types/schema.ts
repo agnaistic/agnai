@@ -343,6 +343,7 @@ export namespace AppSchema {
     insert?: { depth: number; prompt: string }
     creator?: string
     characterVersion?: string
+    folder?: string
   }
 
   export interface ChatInvite {

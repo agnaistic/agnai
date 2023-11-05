@@ -2,15 +2,17 @@ import { neat } from '../util'
 
 export const templates = {
   Alpaca: neat`
-  {{system_prompt}}
-
+  {{#if system_prompt}}{{system_prompt}}
+  {{/if}}
   Below is an instruction that describes a task. Write a response that appropriately completes the request.
   
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
   
-  {{char}}'s Persona: {{personality}}
+  {{char}}'s Persona:
+  {{personality}}
 
-  {{#if memory}}{{char}}'s Memory: {{memory}}
+  {{#if memory}}{{char}}'s Memory:
+  {{memory}}
   {{/if}}
   {{#if user_embed}}Relevant information to the conversation
   {{user_embed}}
@@ -26,12 +28,14 @@ export const templates = {
   
   {{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
   {{/each}}
+  {{#if ujb}}### Instruction:
   {{ujb}}
+  {{/if}}
   ### Response:
   {{post}}`,
   Vicuna: neat`
-  {{system_prompt}}
-
+  {{#if system_prompt}}{{system_prompt}}
+  {{/if}}
   Below is an instruction that describes a task. Write a response that appropriately completes the request.
   
   Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
@@ -52,12 +56,15 @@ export const templates = {
   {{#if ujb}}SYSTEM:{{ujb}}{{/if}}
   ASSISTANT: {{post}}`,
   NovelAI: neat`
-  {{system_prompt}}
-
-  {{#if memory}}{{char}}'s Memory: {{memory}}{{/if}}
-  Description of {{char}}: {{personality}}
+  {{#if system_prompt}}{{system_prompt}}
+  {{/if}}
+  {{#if memory}}{{char}}'s Memory:
+  {{memory}}{{/if}}
+  Description of {{char}}:
+  {{personality}}
   
-  How {{char}} speaks: {{example_dialogue}}
+  How {{char}} speaks:
+  {{example_dialogue}}
   
   [ Title: Dialogue between {{char}} and {{user}}; Tags: conversation; Genre: online roleplay ]
   ***
@@ -65,7 +72,8 @@ export const templates = {
   {{history}}
   {{ujb}}
   {{post}}`,
-  Pyg: neat`{{char}}'s Persona: {{personality}}
+  Pyg: neat`{{char}}'s Persona:
+  {{personality}}
 
   {{#if scenario}}Scenario: {{scenario}}
   {{/if}}
@@ -76,7 +84,9 @@ export const templates = {
 
   <START>
   {{history}}
-  {{ujb}}
+
+  {{#if ujb}}{{ujb}
+  {{/if}}
   {{post}}
   `,
   Metharme: neat`
@@ -99,4 +109,33 @@ export const templates = {
   {{/each}}
   {{#if ujb}}<|system|>{{ujb}}
   {{/if}}<|model|>{{post}}`,
+  ChatML: neat`
+  {{#if system_prompt}}<|im_start|>system
+  {{system_prompt}}<|im_end|>{{/if}}
+
+  <|im_start|>system
+  Below is an instruction that describes a task. Write a response that appropriately completes the request.<|im_end|>
+
+  <|im_start|>system
+  Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+  
+  {{char}}'s Persona:
+  {{personality}}
+
+  {{#if memory}}{{char}}'s Memory: {{memory}}
+  {{/if}}
+  {{#if scenario}}This scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{/if}}
+  Then the roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}} begins.<|im_end|>
+  
+  {{#each msg}}{{#if .isbot}}<|im_start|>assistant{{/if}}{{#if .isuser}}<|im_start|>user{{/if}}
+  {{.name}}: {{.msg}}<|im_end|>
+  {{/each}}
+  {{#if ujb}}<|im_start|>system
+  {{ujb}}<|im_end|>
+  {{/if}}
+  <|im_start|>assistant
+  {{post}}`,
 }

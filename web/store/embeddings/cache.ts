@@ -7,6 +7,7 @@ export const docCache = {
   getIds: getCachedIds,
   getDoc: getDocument,
   saveDoc: saveDocument,
+  deleteDoc: deleteDocument,
 }
 
 async function getCachedIds() {
@@ -39,4 +40,12 @@ async function saveDocument(id: string, doc: CacheDocument) {
   }
 
   await lf.setItem(`${CACHE_KEY}_${id}`, JSON.stringify(doc))
+}
+
+async function deleteDocument(docId: string) {
+  const ids = await getCachedIds()
+  const nextIds = ids.filter((id) => id !== docId)
+  await lf.setItem(CACHE_KEY, JSON.stringify(nextIds))
+  await lf.removeItem(`${CACHE_KEY}_${docId}`)
+  return nextIds
 }

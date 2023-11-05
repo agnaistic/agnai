@@ -97,42 +97,43 @@ Provide a hypothetical realstic one-word reaction for {{user}}'s reaction to the
 const alpacaCyoa = neat`
 Below is an instruction that describes a task. Write a response that completes the request.
 
-{{#each msg}}{{#if .isbot}}### Response:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}### Instruction:\n{{.name}}: {{.msg}}{{/if}}
-{{/each}}
+Recent conversation history:
+{{history}}
+(End of history)
 
 ### Instruction:
-Provide 1 word positive emotion to describe {{user}}'s reaction to the last message 
+Provide 1 word strong positive emotion to describe {{user}}'s reaction to the last message 
 
 ### Response:
 Emotion: [emote1 | words=1 | tokens=5]
 
 ### Instruction:
-Provide 1 word negative emotion to describe {{user}}'s reaction to the last message
+Provide 1 word strong negative emotion to describe {{user}}'s reaction to the last message
 
 ### Response:
 Emotion: [emote2 | words=1 | tokens=5]
 
 ### Instruction:
-Provide 1 word realstic emotion to describe {{user}}'s reaction to the last message
+Provide 1 word unpredictable emotion to describe {{user}}'s reaction to the last message
 
 ### Response:
 Emotion: [emote3 | words=1 | tokens=5]
 
 ### Instruction:
-{{user}}'s natural, long, and detailed response expressing "[emote1]" emotion
+{{user}}'s next dialogue in the conversation while feeling the emotion "[emote1]"
 
 ### Response:
-{{user}}: [action1 | tokens=100]
+{{user}}: [action1 | tokens=150]
 
 ### Instruction:
-{{user}}'s natural, long, and detailed response expressing "[emote2]" emotion
+{{user}}'s next dialogue in the conversation while feeling the emotion "[emote2]"
 
 ### Response:
-{{user}}: [action2 | tokens=100]
+{{user}}: [action2 | tokens=150]
 
 ### Instruction:
-{{user}}'s natural, long, and detailed response expressing "[emote3]" emotion
+{{user}}'s next dialogue in the conversation while feeling the emotion "[emote3]"
 
 ### Response:
-{{user}}: [action3 | tokens=100]
+{{user}}: [action3 | tokens=150]
 `

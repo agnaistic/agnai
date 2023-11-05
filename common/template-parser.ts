@@ -322,13 +322,13 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
   const entities =
     holder === 'bots'
-      ? Object.values(opts.characters).filter(
-          (b) =>
-            !!b &&
-            b._id !== opts.replyAs._id &&
-            !b.deletedAt &&
-            (b._id.startsWith('temp-') ? b.favorite !== false : true)
-        )
+      ? Object.values(opts.characters).filter((b) => {
+          if (!b) return false
+          if (b._id === opts.replyAs._id) return false
+          if (b.deletedAt) return false
+          if (b._id.startsWith('temp-') && b.favorite === false) return false
+          return true
+        })
       : opts.lines
 
   let i = 0
