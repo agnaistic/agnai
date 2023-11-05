@@ -343,6 +343,11 @@ const Message: Component<MessageProps> = (props) => {
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}
                   />
+                  <Show when={content().type === 'partial'}>
+                    <div class="flex h-8 w-full items-center justify-center">
+                      <div class="dot-flashing bg-[var(--hl-700)]"></div>
+                    </div>
+                  </Show>
                   <Show when={!props.partial && props.last}>
                     <div class="flex items-center justify-center gap-2">
                       <For each={props.msg.actions}>
