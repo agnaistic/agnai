@@ -156,6 +156,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     const userKey = preset.subApiKey
 
     opts.user.oaiKey = userKey
+    opts.gen.thirdPartyModel = preset.thirdPartyModel
     opts.gen.oaiModel = preset.oaiModel
 
     opts.user.claudeApiKey = userKey

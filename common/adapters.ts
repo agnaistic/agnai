@@ -277,6 +277,7 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
+  thirdPartyModel: ['openai'],
   claudeModel: ['claude'],
   novelModel: ['novel'],
   oaiModel: ['openai'],
@@ -335,6 +336,8 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   memoryUserEmbedLimit: 'Memory: User-specific Embed Context Limit',
   novelModel: 'NovelAI Model',
   oaiModel: 'OpenAI Model',
+  thirdPartyModel: 'OpenAI Model Override',
+  thirdPartyKey: 'Third Party Key/Password',
   openRouterModel: 'OpenRouter Model',
   penaltyAlpha: 'Penalty Alpha',
   presencePenalty: 'Presence Penalty',

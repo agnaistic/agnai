@@ -53,7 +53,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 
   const prompt = cyoaTemplate(
     body.service! as AIAdapter,
-    settings.service === 'openai' ? settings.oaiModel : ''
+    settings.service === 'openai' ? settings.thirdPartyModel || settings.oaiModel : ''
   )
 
   const parsed = parseTemplate(prompt, {

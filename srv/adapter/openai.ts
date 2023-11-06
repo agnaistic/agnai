@@ -45,7 +45,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
-  const oaiModel = gen.oaiModel ?? defaultPresets.openai.oaiModel
+  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
   const maxResponseLength =
     opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens

@@ -288,6 +288,18 @@ const GeneralSettings: Component<
           format={props.format}
           aiSetting={'oaiModel'}
         />
+
+        <TextInput
+          fieldName="oaiModel"
+          label="OpenAI Model Override"
+          helperText="OpenAI Model Override (typically for 3rd party APIs)"
+          value={props.inherit?.thirdPartyModel ?? ''}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'thirdPartyModel'}
+        />
+
         <Select
           fieldName="openRouterModel"
           label="OpenRouter Model"
