@@ -50,6 +50,8 @@ const Character: Component<{
       <A
         class="ellipsis flex h-3/4 grow cursor-pointer items-center gap-4"
         href={`/character/${props.char._id}/chats`}
+        role="link"
+        aria-label={`Open chats with ${props.char.name}`}
       >
         <CharacterAvatar char={props.char} zoom={1.75} />
         <div class="flex max-w-full flex-col overflow-hidden">
@@ -82,27 +84,63 @@ const CharacterListOptions: Component<{
     <div>
       <div class="hidden flex-row items-center justify-center gap-2 sm:flex">
         <Show when={props.char.favorite}>
-          <Star
-            class="icon-button fill-[var(--text-900)] text-[var(--text-900)]"
+          <a
+            href="#"
             onClick={() => props.toggleFavorite(false)}
-          />
+            role="button"
+            aria-label={`Remove ${props.char.name} from favorite characters`}
+          >
+            <Star class="icon-button fill-[var(--text-900)] text-[var(--text-900)]" />
+          </a>
         </Show>
         <Show when={!props.char.favorite}>
-          <Star class="icon-button" onClick={() => props.toggleFavorite(true)} />
+          <a
+            href="#"
+            onClick={() => props.toggleFavorite(true)}
+            role="button"
+            aria-label={`Add ${props.char.name} to favorite characters`}
+          >
+            <Star class="icon-button" />
+          </a>
         </Show>
-        <A href={`/chats/create/${props.char._id}`}>
+        <A
+          href={`/chats/create/${props.char._id}`}
+          role="button"
+          aria-label={`Create new chat with ${props.char.name}`}
+        >
           <MessageCircle class="icon-button" />
         </A>
-        <a onClick={props.download}>
+        <a
+          href="#"
+          onClick={props.download}
+          role="button"
+          aria-label={`Download character ${props.char.name}`}
+        >
           <Download class="icon-button" />
         </a>
-        <a onClick={props.edit}>
+        <a
+          href="#"
+          onClick={props.edit}
+          role="button"
+          aria-label={`Edit character ${props.char.name}`}
+        >
           <Edit class="icon-button" />
         </a>
-        <A href={`/character/create/${props.char._id}`}>
+        <A
+          href={`/character/create/${props.char._id}`}
+          role="button"
+          aria-label={`Duplicate character ${props.char.name}`}
+        >
           <Copy class="icon-button" />
         </A>
-        <Trash class="icon-button" onClick={props.delete} />
+        <a
+          href="#"
+          onClick={props.delete}
+          role="button"
+          aria-label={`Delete character ${props.char.name}`}
+        >
+          <Trash class="icon-button" />
+        </a>
       </div>
       <div class="flex items-center sm:hidden" onClick={() => setListOpts(true)}>
         <MoreHorizontal class="icon-button" />

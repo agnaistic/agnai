@@ -33,6 +33,7 @@ const Button: Component<{
   class?: string
   alignLeft?: boolean
   classList?: { [key: string]: boolean }
+  ariaLabel?: string
 }> = (props) => (
   <button
     type={props.type || 'button'}
@@ -50,6 +51,7 @@ const Button: Component<{
     }}
     disabled={props.disabled}
     onClick={props.onClick}
+    aria-label={props.ariaLabel}
   >
     {props.children}
   </button>

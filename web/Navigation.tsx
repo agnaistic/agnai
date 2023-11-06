@@ -113,11 +113,16 @@ const Navigation: Component = () => {
       <div
         ref={parent}
         class={`drawer bg-800 flex flex-col gap-2 px-2 pt-2 ${hide()} ${fullscreen()}`}
+        role="navigation"
+        aria-label="Main"
       >
         <div ref={content} class="drawer__content sm:text-md text-md flex flex-col gap-0  sm:gap-1">
           <div class="hidden w-full items-center justify-center sm:flex">
-            <A href="/">
-              <div class="h-8 w-fit items-center justify-center rounded-lg font-bold">
+            <A href="/" role="link" aria-label="Agnaistic main page">
+              <div
+                class="h-8 w-fit items-center justify-center rounded-lg font-bold"
+                aria-hidden="true"
+              >
                 Agn<span class="text-[var(--hl-500)]">ai</span>
                 {suffix()}
               </div>
@@ -170,8 +175,8 @@ const UserNavigation: Component = () => {
       <UserProfile />
 
       <Show when={menu.flags.chub}>
-        <Item href="/chub">
-          <ShoppingBag />
+        <Item href="/chub" ariaLabel="Character hub">
+          <ShoppingBag aria-hidden="true" />
           CHUB
         </Item>
       </Show>
@@ -274,8 +279,8 @@ const GuestNavigation: Component = () => {
   return (
     <>
       <Show when={menu.config.canAuth}>
-        <Item href="/login">
-          <LogIn /> Login
+        <Item href="/login" ariaLabel="Login to the application">
+          <LogIn aria-hidden="true" /> Login
         </Item>
       </Show>
 
@@ -285,8 +290,8 @@ const GuestNavigation: Component = () => {
         <CharacterLink />
 
         <Show when={menu.flags.chub}>
-          <Item href="/chub">
-            <ShoppingBag />
+          <Item href="/chub" ariaLabel="Character hub">
+            <ShoppingBag aria-hidden="true" />
             CHUB
           </Item>
         </Show>
@@ -296,39 +301,41 @@ const GuestNavigation: Component = () => {
         <Library />
 
         <MultiItem>
-          <Item href="/presets">
-            <Sliders /> Presets
+          <Item href="/presets" ariaLabel="Presets">
+            <Sliders aria-hidden="true" />
+            <span aria-hidden="true">Presets</span>
           </Item>
           <EndItem>
-            <A class="icon-button" href="/presets/new">
-              <Plus />
+            <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
+              <Plus aria-hidden="true" />
             </A>
           </EndItem>
         </MultiItem>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
-        <Item href="/faq">
-          <HelpCircle />
+        <Item href="/faq" ariaLabel="Open FAQ page">
+          <HelpCircle aria-hidden="true" />
         </Item>
 
         <Show when={menu.config.patreon}>
           <ExternalLink href="https://patreon.com/Agnaistic" newtab>
-            <HeartHandshake />
+            <HeartHandshake aria-hidden="true" />
           </ExternalLink>
         </Show>
 
-        <Item href="/settings">
-          <Settings />
+        <Item href="/settings" ariaLabel="Open settings page">
+          <Settings aria-hidden="true" />
         </Item>
 
         <Item
+          ariaLabel="Toggle between light and dark mode"
           onClick={() => {
             userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
         >
           <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
-            <Moon />
+            <Moon aria-hidden="true" />
           </Show>
         </Item>
 
@@ -337,19 +344,24 @@ const GuestNavigation: Component = () => {
             if (menu.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
+          ariaLabel="Show notification list"
         >
           <Switch>
             <Match when={toasts.unseen > 0}>
-              <div class="relative flex">
-                <Bell fill="var(--bg-100)" />
-                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+              <div
+                class="relative flex"
+                role="status"
+                aria-label={`Status: You have ${toasts.unseen} new notifications`}
+              >
+                <Bell fill="var(--bg-100)" aria-hidden="true" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
                   <Badge>{toasts.unseen > 9 ? '9+' : toasts.unseen}</Badge>
                 </span>
               </div>
             </Match>
 
             <Match when={!toasts.unseen}>
-              <Bell color="var(--bg-500)" />
+              <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
             </Match>
           </Switch>
         </Item>
@@ -360,9 +372,12 @@ const GuestNavigation: Component = () => {
   )
 }
 
-const Item: Component<{ href?: string; children: string | JSX.Element; onClick?: () => void }> = (
-  props
-) => {
+const Item: Component<{
+  href?: string
+  ariaLabel?: string
+  children: string | JSX.Element
+  onClick?: () => void
+}> = (props) => {
   const menu = settingStore()
   return (
     <>
@@ -373,6 +388,9 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
             if (props.onClick) props.onClick()
             else if (menu.showMenu) settingStore.closeMenu()
           }}
+          tabindex={0}
+          role="button"
+          aria-label={props.ariaLabel}
         >
           {props.children}
         </div>
@@ -384,6 +402,8 @@ const Item: Component<{ href?: string; children: string | JSX.Element; onClick?:
           onClick={() => {
             if (menu.showMenu) settingStore.closeMenu()
           }}
+          role="button"
+          aria-label={props.ariaLabel}
         >
           {props.children}
         </A>
@@ -433,8 +453,9 @@ const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }
 const Library: Component<{}> = (props) => {
   return (
     <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
-      <Item href="/memory">
-        <Book /> Library{' '}
+      <Item href="/memory" ariaLabel="Library">
+        <Book aria-hidden="true" />
+        <span aria-hidden="true"> Library </span>
       </Item>
     </div>
   )
@@ -443,12 +464,13 @@ const Library: Component<{}> = (props) => {
 const CharacterLink = () => {
   return (
     <MultiItem>
-      <Item href="/character/list">
-        <WizardIcon /> Characters
+      <Item href="/character/list" ariaLabel="Characters">
+        <WizardIcon aria-hidden="true" />
+        <span aria-hidden="true"> Characters </span>
       </Item>
       <EndItem>
-        <A class="icon-button" href="/editor">
-          <Plus />
+        <A class="icon-button" href="/editor" role="button" aria-label="Add a new character">
+          <Plus aria-hidden="true" />
         </A>
       </EndItem>
     </MultiItem>
@@ -458,12 +480,13 @@ const CharacterLink = () => {
 const ChatLink = () => {
   return (
     <MultiItem>
-      <Item href="/chats">
-        <MessageCircle fill="var(--bg-100)" /> Chats
+      <Item href="/chats" ariaLabel="Chats">
+        <MessageCircle fill="var(--bg-100)" aria-hidden="true" />
+        <span aria-hidden="true"> Chats </span>
       </Item>
       <EndItem>
-        <A class="icon-button" href="/chats/create">
-          <Plus />
+        <A class="icon-button" href="/chats/create" role="button" aria-label="Create a new chat">
+          <Plus aria-hidden="true" />
         </A>
       </EndItem>
     </MultiItem>
@@ -484,6 +507,7 @@ const UserProfile = () => {
         }}
       >
         <Item
+          ariaLabel="Edit user profile"
           onClick={() => {
             if (menu.showMenu) settingStore.closeMenu()
             userStore.modal(true)
@@ -504,17 +528,20 @@ const UserProfile = () => {
               />
             </Match>
           </Switch>
-          <span>{chars.impersonating?.name || user.profile?.handle}</span>
+          <span aria-hidden="true">{chars.impersonating?.name || user.profile?.handle}</span>
         </Item>
         <div class="flex items-center">
           <a
+            href="#"
+            role="button"
+            aria-label="Open impersonation menu"
             class="icon-button"
             onClick={() => {
               settingStore.toggleImpersonate(true)
               if (menu.showMenu) settingStore.closeMenu()
             }}
           >
-            <VenetianMask />
+            <VenetianMask aria-hidden="true" />
           </a>
         </div>
       </div>
