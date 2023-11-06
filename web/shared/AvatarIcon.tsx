@@ -172,6 +172,7 @@ const AvatarIcon: Component<Props> = (props) => {
             data-bot-avatar={props.bot}
             data-user-avatar={!props.bot}
             onClick={onImageClick}
+            aria-hidden="true"
           >
             <img
               data-bot-image={props.bot}
@@ -200,6 +201,7 @@ const AvatarIcon: Component<Props> = (props) => {
               'border-[var(--bg-800)]': !props.noBorder,
               'border-0': props.noBorder,
             }}
+            aria-hidden="true"
           >
             <Show when={!props.bot}>
               <VenetianMask data-user-icon />
