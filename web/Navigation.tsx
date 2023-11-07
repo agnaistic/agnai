@@ -153,7 +153,9 @@ const Navigation: Component = () => {
               </div>
             </div>
           </Show>
-          <div class="text-500 mb-1 text-[0.6rem] italic">{state.config.version}</div>
+          <div class="text-500 mb-1 text-[0.6rem] italic" role="contentinfo" aria-label="Version">
+            {state.config.version}
+          </div>
         </div>
       </div>
     </>

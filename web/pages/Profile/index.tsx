@@ -55,6 +55,7 @@ export const ProfileModal: Component = () => {
       fixedHeight
       maxWidth="half"
       tabs={displayTabs() ? tabs : undefined}
+      ariaLabel="Your profile"
     >
       <Switch>
         <Match when={!displayTabs()}>
