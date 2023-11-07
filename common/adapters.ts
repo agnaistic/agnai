@@ -111,6 +111,7 @@ export const OPENAI_MODELS = {
   GPT4_32k: 'gpt-4-32k',
   GPT4_32k_0314: 'gpt-4-32k-0314',
   GPT4_32k_0613: 'gpt-4-32k-0613',
+  GPT45_1106: 'gpt-4-1106-preview',
 } as const
 
 export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
@@ -124,6 +125,7 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
   [OPENAI_MODELS.GPT4_32k]: true,
   [OPENAI_MODELS.GPT4_32k_0314]: true,
   [OPENAI_MODELS.GPT4_32k_0613]: true,
+  [OPENAI_MODELS.GPT45_1106]: true,
 }
 
 /** Note: claude-v1 and claude-instant-v1 not included as they may point
