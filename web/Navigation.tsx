@@ -189,54 +189,57 @@ const UserNavigation: Component = () => {
 
       <Library />
       <MultiItem>
-        <Item href="/presets">
-          <Sliders /> Presets
+        <Item href="/presets" ariaLabel="Presets">
+          <Sliders aria-hidden="true" />
+          <span aria-hidden="true">Presets</span>
         </Item>
         <EndItem>
-          <A class="icon-button" href="/presets/new">
-            <Plus />
+          <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
+            <Plus aria-hidden="true" />
           </A>
         </EndItem>
       </MultiItem>
 
       <Show when={user.user?.admin}>
-        <Item href="/admin/metrics">
-          <Activity /> Manage
+        <Item href="/admin/metrics" ariaLabel="Manage">
+          <Activity aria-hidden="true" />
+          <span aria-hidden="true">Manage</span>
         </Item>
         <SubMenu>
-          <SubItem href="/admin/users" parent="/admin/">
+          <SubItem href="/admin/users" parent="/admin/" ariaLabel="Users">
             Users
           </SubItem>
-          <SubItem href="/admin/subscriptions" parent="/admin/">
+          <SubItem href="/admin/subscriptions" parent="/admin/" ariaLabel="Subscriptions">
             Subscriptions
           </SubItem>
-          <SubItem href="/admin/announcements" parent="/admin/">
+          <SubItem href="/admin/announcements" parent="/admin/" ariaLabel="Announcements">
             Announcements
           </SubItem>
         </SubMenu>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
-        <Item href="/faq">
-          <HelpCircle />
+        <Item href="/faq" ariaLabel="Open FAQ page">
+          <HelpCircle aria-hidden="true" />
         </Item>
 
         <Show when={menu.config.patreon}>
-          <ExternalLink href="https://patreon.com/Agnaistic" newtab>
-            <HeartHandshake />
+          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel="Patreon">
+            <HeartHandshake aria-hidden="true" />
           </ExternalLink>
         </Show>
-        <Item href="/settings">
-          <Settings />
+        <Item href="/settings" ariaLabel="Open settings page">
+          <Settings aria-hidden="true" />
         </Item>
 
         <Item
+          ariaLabel="Toggle between light and dark mode"
           onClick={() => {
             userStore.saveUI({ mode: user.ui.mode === 'light' ? 'dark' : 'light' })
           }}
         >
           <Show when={user.ui.mode === 'dark'} fallback={<Sun />}>
-            <Moon />
+            <Moon aria-hidden="true" />
           </Show>
         </Item>
 
@@ -245,19 +248,24 @@ const UserNavigation: Component = () => {
             if (menu.showMenu) settingStore.closeMenu()
             toastStore.modal(true)
           }}
+          ariaLabel="Show notification list"
         >
           <Switch>
             <Match when={count() > 0}>
-              <div class="relative flex">
-                <Bell fill="var(--bg-100)" />
-                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]">
+              <div
+                class="relative flex"
+                role="status"
+                aria-label={`Status: You have ${count()} new notifications`}
+              >
+                <Bell fill="var(--bg-100)" aria-hidden="true" />
+                <span class="absolute bottom-[-0.5rem] right-[-0.5rem]" aria-hidden="true">
                   <Badge>{count() > 9 ? '9+' : count()}</Badge>
                 </span>
               </div>
             </Match>
 
             <Match when={!count()}>
-              <Bell color="var(--bg-500)" />
+              <Bell color="var(--bg-500)" role="status" aria-label="Status: No new notifications" />
             </Match>
           </Switch>
         </Item>
@@ -304,8 +312,7 @@ const GuestNavigation: Component = () => {
 
         <MultiItem>
           <Item href="/presets" ariaLabel="Presets">
-            <Sliders aria-hidden="true" />
-            <span aria-hidden="true">Presets</span>
+            <Sliders aria-hidden="true" /> Presets
           </Item>
           <EndItem>
             <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
@@ -321,7 +328,7 @@ const GuestNavigation: Component = () => {
         </Item>
 
         <Show when={menu.config.patreon}>
-          <ExternalLink href="https://patreon.com/Agnaistic" newtab>
+          <ExternalLink href="https://patreon.com/Agnaistic" newtab ariaLabel="Patreon">
             <HeartHandshake aria-hidden="true" />
           </ExternalLink>
         </Show>
@@ -419,6 +426,7 @@ const SubMenu: Component<{ children: any }> = (props) => <div class="bg-900">{pr
 const SubItem: Component<{
   parent: string
   href: string
+  ariaLabel?: string
   children: string | JSX.Element
   onClick?: () => void
 }> = (props) => {
@@ -433,8 +441,11 @@ const SubItem: Component<{
         onClick={() => {
           if (menu.showMenu) settingStore.closeMenu()
         }}
+        role="button"
+        aria-label={props.ariaLabel}
       >
-        <ChevronRight size={14} /> {props.children}
+        <ChevronRight aria-hidden="true" size={14} />
+        <span aria-hidden="true">{props.children}</span>
       </A>
     </Show>
   )
@@ -442,11 +453,18 @@ const SubItem: Component<{
 
 export default Navigation
 
-const ExternalLink: Component<{ href: string; newtab?: boolean; children?: any }> = (props) => (
+const ExternalLink: Component<{
+  href: string
+  newtab?: boolean
+  ariaLabel?: string
+  children?: any
+}> = (props) => (
   <a
     class="flex h-10 items-center justify-start gap-4 rounded-xl px-2 hover:bg-[var(--bg-700)] sm:h-12"
     href={props.href}
     target={props.newtab ? '_blank' : ''}
+    role="link"
+    aria-label={props.ariaLabel}
   >
     {props.children}
   </a>
