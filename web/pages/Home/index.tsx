@@ -43,7 +43,7 @@ const HomePage: Component = () => {
     <div>
       <Show when={!cfg.guest}>
         <div class="flex text-orange-500" role="alert">
-          <AlertTriangle class="mb-2 mr-2" />
+          <AlertTriangle class="mb-2 mr-2" aria-hidden="true" />
           Your browser does not support local storage. You will need to login/register to use
           Agnaistic.
         </div>
@@ -66,7 +66,12 @@ const HomePage: Component = () => {
         </div>
 
         <Show when={cfg.config.patreon}>
-          <TitleCard type="hl" class="flex w-full items-center">
+          <TitleCard
+            type="hl"
+            class="flex w-full items-center"
+            ariaRole="region"
+            ariaLabel="Models"
+          >
             Agnaistic now hosts its own models! Use them for free by using the{' '}
             <span class="font-bold">&nbsp;Agnaistic&nbsp;</span> service in your presets
           </TitleCard>
@@ -320,7 +325,9 @@ const Announcements: Component<{ list: AppSchema.Announcement[] }> = (props) => 
           {(item, i) => (
             <div class="rounded-md border-[1px] border-[var(--hl-500)]">
               <div class="flex flex-col rounded-t-md bg-[var(--hl-800)] p-2">
-                <div class="text-lg font-bold">{item.title}</div>
+                <div class="text-lg font-bold" role="heading">
+                  {item.title}
+                </div>
                 <div class="text-700 text-xs">{elapsedSince(item.showAt)} ago</div>
               </div>
               <div
