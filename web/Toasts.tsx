@@ -28,6 +28,7 @@ const Toasts: Component = () => {
         show={state.modal}
         close={() => toastStore.modal(false)}
         maxWidth="half"
+        ariaLabel="Notifications"
       >
         <InvitesPage />
         <SolidCard border class="mt-2 flex flex-col gap-2 font-bold">
