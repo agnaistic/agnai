@@ -171,6 +171,7 @@ const TextInput: Component<{
             type={props.type || 'text'}
             required={props.required}
             placeholder={placeholder()}
+            aria-placeholder={placeholder()}
             value={value()}
             class={'form-field focusable-field w-full rounded-xl px-4 py-2 ' + (props.class || '')}
             onkeyup={(ev) => {
@@ -195,6 +196,7 @@ const TextInput: Component<{
           ref={onRef}
           required={props.required}
           placeholder={placeholder()}
+          aria-placeholder={placeholder()}
           value={value()}
           class={
             'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 py-2 ' +

@@ -56,6 +56,7 @@ export const ProfileModal: Component = () => {
       maxWidth="half"
       tabs={displayTabs() ? tabs : undefined}
       ariaLabel="Your profile"
+      ariaDescription="Update your profile information."
     >
       <Switch>
         <Match when={!displayTabs()}>
@@ -104,16 +105,16 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   })
 
   const footer = (
-    <Button onClick={submit}>
-      <Save />
-      Update Profile
+    <Button onClick={submit} ariaLabel="Update profile">
+      <Save aria-hidden="true" />
+      <span aria-hidden="true">Update Profile</span>
     </Button>
   )
 
   return (
     <>
       <PageHeader title="Your Profile" subPage />
-      <form ref={formRef!} onSubmit={submit}>
+      <form ref={formRef!} onSubmit={submit} aria-label="Edit profile">
         <div class="flex flex-col gap-4">
           <div class="flex flex-col gap-2">
             <div class="flex flex-row gap-2">
@@ -122,7 +123,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
             </div>
           </div>
 
-          <TitleCard type="orange">
+          <TitleCard type="orange" ariaRole="note" ariaLabel="Impersonate">
             <div class="flex flex-wrap items-center">
               You can{' '}
               <div class="inline">
@@ -130,8 +131,8 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
                   Impersonate
                 </Button>{' '}
               </div>
-              characters by clicking the <VenetianMask size={16} class="mx-1" /> icon at the top of
-              the main menu.
+              characters by clicking the <VenetianMask size={16} class="mx-1" aria-hidden="true" />{' '}
+              icon at the top of the main menu.
             </div>
           </TitleCard>
 
@@ -220,6 +221,8 @@ const PasswordModal: Component<{ show: boolean; close: () => void }> = (props) =
         show={props.show}
         close={props.close}
         title="Change Password"
+        ariaLabel="Change Password"
+        ariaDescription="This window lets you change your account password"
         footer={
           <>
             {' '}
@@ -282,6 +285,8 @@ const DeleteAccountModal: Component<{ show: boolean; close: () => void }> = (pro
             </Button>
           </>
         }
+        ariaLabel="Delete account"
+        ariaDescription="Warning: This window deletes your current account"
       >
         <div class="flex flex-col items-center gap-2">
           <TitleCard type="rose" class="font-bold">

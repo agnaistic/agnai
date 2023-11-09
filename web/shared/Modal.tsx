@@ -70,7 +70,7 @@ const Modal: Component<Props> = (props) => {
                       onClick={props.close}
                       class="cursor-pointer p-4"
                       role="button"
-                      aria-label="Close window"
+                      aria-label="Close dialog window"
                     >
                       <X aria-hidden="true" />
                     </div>
