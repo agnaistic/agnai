@@ -1,8 +1,9 @@
 import { Component, createEffect, createSignal, onMount } from 'solid-js'
-import { TokenCounter, getEncoder } from '../../../../common/tokenize'
+import { getEncoder } from '../../../../common/tokenize'
 import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, userStore } from '../../../store'
+import { TokenCounter } from '/common/types'
 
 const PromptModal: Component = () => {
   const user = userStore()

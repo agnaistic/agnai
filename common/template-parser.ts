@@ -1,10 +1,9 @@
 import { formatCharacter } from './characters'
 import { grammar } from './grammar'
 import { PromptParts, fillPromptWithLines } from './prompt'
-import { AppSchema, Memory } from '/common/types'
+import { AppSchema, Memory, TokenCounter } from '/common/types'
 import peggy from 'peggy'
 import { elapsedSince } from './util'
-import { TokenCounter } from './tokenize'
 import { v4 } from 'uuid'
 
 const parser = peggy.generate(grammar.trim(), {

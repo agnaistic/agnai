@@ -1,6 +1,5 @@
-import { TokenCounter } from '../../common/tokenize'
+import { AppSchema, TokenCounter } from '../../common/types'
 import { store } from '../db'
-import { AppSchema } from '../../common/types/schema'
 import { AdapterProps } from './type'
 
 type PromptOpts = {

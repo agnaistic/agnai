@@ -1,7 +1,6 @@
-import { AppSchema } from './types/schema'
+import { TokenCounter, AppSchema } from './types'
 import { defaultPresets } from './presets'
 import { BOT_REPLACE, SELF_REPLACE } from './prompt'
-import { TokenCounter } from './tokenize'
 
 export const BUNDLED_CHARACTER_BOOK_ID = '__bundled__characterbook__'
 
