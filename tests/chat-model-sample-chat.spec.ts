@@ -33,7 +33,7 @@ describe('Chat Completion Example Dialogue::', () => {
       <START>
       Sam: hey
       Vader: hi!`
-    const outputWithStart = testInput(inputWithStart)
+    const outputWithStart = await testInput(inputWithStart)
     expect(outputWithStart).toMatchSnapshot()
   })
 
@@ -73,7 +73,8 @@ describe('Chat Completion Example Dialogue::', () => {
       Sam: Oh, interesting!
       Vader: I also talk like this! *smiles* But this is far too long to include in our budget!
       Sam: More interesting!`
-    expect(testInput(input, 25)).to.matchSnapshot()
+    const actual = await testInput(input, 25)
+    expect(actual).to.matchSnapshot()
   })
 
   it('should correctly separate out system messages it is explicitly handed, such as a post-sample marker string', async () => {
