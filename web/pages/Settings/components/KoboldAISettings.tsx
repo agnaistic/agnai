@@ -24,6 +24,7 @@ const KoboldAISettings: Component = () => {
           { label: 'Kobold', value: 'kobold' },
           { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'OpenAI', value: 'openai' },
+          { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
           { label: 'Claude', value: 'claude' },
           { label: 'Llama.cpp', value: 'llamacpp' },
         ]}

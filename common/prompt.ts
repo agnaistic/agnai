@@ -693,6 +693,8 @@ export function getAdapter(
         ? 'ooba'
         : config.thirdPartyFormat === 'exllamav2' || config.thirdPartyFormat === 'koboldcpp'
         ? 'kobold'
+        : config.thirdPartyFormat === 'openai-chat'
+        ? 'openai'
         : config.thirdPartyFormat
   }
 

@@ -115,6 +115,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'None', value: '' },
               { label: 'Kobold', value: 'kobold' },
               { label: 'OpenAI', value: 'openai' },
+              { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
               { label: 'Claude', value: 'claude' },
               { label: 'Textgen (Ooba)', value: 'ooba' },
               { label: 'Llama.cpp', value: 'llamacpp' },
