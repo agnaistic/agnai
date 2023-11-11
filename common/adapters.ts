@@ -51,6 +51,7 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
 export const THIRDPARTY_FORMATS = [
   'kobold',
   'openai',
+  'openai-chat',
   'claude',
   'ooba',
   'llamacpp',
@@ -260,7 +261,17 @@ export const adapterSettings: {
 
   prefill: ['claude'],
 
-  topP: ['horde', 'kobold', 'claude', 'ooba', 'openai', 'novel', 'agnaistic', 'exllamav2'],
+  topP: [
+    'horde',
+    'kobold',
+    'claude',
+    'ooba',
+    'openai',
+    'novel',
+    'agnaistic',
+    'exllamav2',
+    'openai-chat',
+  ],
   repetitionPenalty: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'exllamav2'],
   repetitionPenaltyRange: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic'],
   repetitionPenaltySlope: ['horde', 'novel', 'kobold'],
@@ -279,13 +290,13 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai'],
+  thirdPartyModel: ['openai', 'openai-chat'],
   claudeModel: ['claude'],
   novelModel: ['novel'],
-  oaiModel: ['openai'],
-  frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic'],
-  presencePenalty: ['openai', 'kobold', 'novel'],
-  streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba', 'agnaistic'],
+  oaiModel: ['openai', 'openai-chat'],
+  frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic', 'openai-chat'],
+  presencePenalty: ['openai', 'kobold', 'novel', 'openai-chat'],
+  streamResponse: ['openai', 'kobold', 'novel', 'claude', 'ooba', 'agnaistic', 'openai-chat'],
   openRouterModel: ['openrouter'],
   stopSequences: ['ooba', 'agnaistic', 'novel', 'mancer', 'llamacpp', 'horde', 'exllamav2'],
 

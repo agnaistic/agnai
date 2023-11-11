@@ -61,7 +61,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     stop: `\n${handle}:`,
   }
 
-  const useChat = !!OPENAI_CHAT_MODELS[oaiModel]
+  const useChat =
+    (isThirdParty && gen.thirdPartyFormat === 'openai-chat') || !!OPENAI_CHAT_MODELS[oaiModel]
 
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
