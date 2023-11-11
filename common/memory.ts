@@ -75,10 +75,10 @@ type CharacterBookEntry = CharacterBook['entries'][number]
 
 export const MEMORY_PREFIX = 'Facts: '
 
-export function buildMemoryPrompt(
+export async function buildMemoryPrompt(
   opts: MemoryOpts,
   encoder: TokenCounter
-): MemoryPrompt | undefined {
+): Promise<MemoryPrompt | undefined> {
   const { chat, settings, members, char, lines, books } = opts
 
   if (!books || !books.length) return
@@ -93,7 +93,7 @@ export function buildMemoryPrompt(
 
   const finalPrompts: string[] = []
   const finalEntries: Match[] = []
-  let finalTokens = encoder(MEMORY_PREFIX)
+  let finalTokens = await encoder(MEMORY_PREFIX)
 
   for (const book of books) {
     if (!book) continue
@@ -125,7 +125,7 @@ export function buildMemoryPrompt(
 
       if (index > -1) {
         const text = entry.entry.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
-        const tokens = encoder(text)
+        const tokens = await encoder(text)
         matches.push({ index, entry, id: ++id, tokens, text })
       }
     }

@@ -35,6 +35,8 @@ const documentQueue: string[] = []
 
 const embedCallbacks = new Map<string, (msg: Extract<WorkerResponse, { type: 'result' }>) => void>()
 const captionCallbacks = new Map<string, (caption: string) => void>()
+const encodeCallbacks = new Map<string, (tokens: number[]) => void>()
+const decodeCallbacks = new Map<string, (text: string) => void>()
 
 let onEmbedReady: Callback = () => {}
 let onCaptionReady: Callback = () => {}
@@ -53,6 +55,8 @@ export const embedApi = {
     const embeds = ids.map((id) => ({ id, state: 'not-loaded' }))
     setter({ embeds })
   },
+  encode,
+  decode,
   embedChat,
   embedArticle,
   embedPdf,
@@ -82,6 +86,16 @@ const handlers: {
     msg: Extract<WorkerResponse, { type: key }>
   ) => void
 } = {
+  encoding: (_type, msg) => {
+    const cb = encodeCallbacks.get(msg.id)
+    cb?.(msg.tokens)
+    encodeCallbacks.delete(msg.id)
+  },
+  decoding: (_type, msg) => {
+    const cb = decodeCallbacks.get(msg.id)
+    cb?.(msg.text)
+    decodeCallbacks.delete(msg.id)
+  },
   init: (type) => {
     if (type === 'embed') {
       post('initSimilarity', { model: models.embedding })
@@ -197,6 +211,22 @@ async function query(chatId: string, text: string, before?: string): Promise<Que
   post('query', { requestId, chatId, text, beforeDate: before })
 
   return promise
+}
+
+async function encode(text: string): Promise<number[]> {
+  const id = v4()
+  return new Promise<number[]>((resolve) => {
+    encodeCallbacks.set(id, resolve)
+    post('encode', { id, text })
+  })
+}
+
+async function decode(tokens: number[]): Promise<string> {
+  const id = v4()
+  return new Promise<string>((resolve) => {
+    decodeCallbacks.set(id, resolve)
+    post('decode', { id, tokens })
+  })
 }
 
 async function loadDocument(documentId: string) {

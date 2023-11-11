@@ -35,7 +35,7 @@ export async function getMessagesForPrompt(
     const history = messages.map(formatMsg)
 
     for (const hist of history) {
-      const nextTokens = encoder(hist)
+      const nextTokens = await encoder(hist)
       if (nextTokens + tokens > maxContext) break
       tokens += nextTokens
       lines.unshift(hist)

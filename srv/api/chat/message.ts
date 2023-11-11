@@ -314,7 +314,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   const actions: AppSchema.ChatAction[] = []
 
   if (chat.mode === 'adventure') {
-    const lines = fillPromptWithLines(
+    const lines = await fillPromptWithLines(
       getTokenCounter('main'),
       2048,
       '',

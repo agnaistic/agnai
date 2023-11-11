@@ -148,7 +148,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
         .replace(new RegExp(`^${opts.members[0].handle || 'You'}:`, 'gm'), '\n<|USER|>')
       input = {
         prompt,
-        max_tokens: encoder(opts.prompt) + (opts.gen.maxTokens || 500),
+        max_tokens: (await encoder(opts.prompt)) + (opts.gen.maxTokens || 500),
         temperature: opts.gen.temp,
         top_p: opts.gen.topP,
         repetition_penalty: opts.gen.repetitionPenalty,
@@ -166,7 +166,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
         )
       input = {
         prompt,
-        max_length: encoder(opts.prompt) + (opts.gen.maxTokens || 500),
+        max_length: (await encoder(opts.prompt)) + (opts.gen.maxTokens || 500),
         decoding: 'top_p',
         temperature: opts.gen.temp,
         top_p: opts.gen.topP,
@@ -178,7 +178,7 @@ export const handleReplicate: ModelAdapter = async function* (opts) {
     case 'llama': {
       input = {
         prompt: opts.prompt,
-        max_length: encoder(opts.prompt) + (opts.gen.maxTokens || 500),
+        max_length: (await encoder(opts.prompt)) + (opts.gen.maxTokens || 500),
         temperature: opts.gen.temp,
         top_p: opts.gen.topP,
         repetition_penalty: opts.gen.repetitionPenalty,

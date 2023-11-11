@@ -57,7 +57,7 @@ const TextInput: Component<{
 
   const [countTokens] = createDebounce(async (text: string) => {
     const tokenizer = await getEncoder()
-    const count = tokenizer(text)
+    const count = await tokenizer(text)
     setTokens(count)
 
     if (typeof props.tokenCount === 'function') {

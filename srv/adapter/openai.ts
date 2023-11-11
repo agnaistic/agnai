@@ -66,7 +66,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : toChatCompletionPayload(opts, body.max_tokens)
+      : await toChatCompletionPayload(opts, body.max_tokens)
 
     body.messages = messages
     yield { prompt: messages }

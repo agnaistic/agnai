@@ -81,7 +81,7 @@ export const ImageSettings: Component = () => {
 
       <TextInput
         fieldName="imageSuffix"
-        value={state.user?.images?.prefix}
+        value={state.user?.images?.suffix}
         label="Prompt Suffix"
         helperText="(Optional) Text to append to your image prompt"
         placeholder={`E.g.: full body, visible legs, dramatic lighting`}
@@ -89,7 +89,7 @@ export const ImageSettings: Component = () => {
 
       <TextInput
         fieldName="imageNegative"
-        value={state.user?.images?.prefix}
+        value={state.user?.images?.negative}
         label="Negative Prompt"
         helperText="(Optional) Negative Prompt"
         placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}

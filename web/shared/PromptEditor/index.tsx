@@ -135,12 +135,13 @@ const PromptEditor: Component<
   const [help, showHelp] = createSignal(false)
   const [templates, setTemplates] = createSignal(false)
   const [preview, setPreview] = createSignal(false)
+  const [rendered, setRendered] = createSignal('')
 
-  const rendered = createMemo(() => {
-    const opts = getExampleOpts(props.inherit)
+  createEffect(async () => {
+    const opts = await getExampleOpts(props.inherit)
     const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
-    const example = parseTemplate(template, opts).parsed
-    return example
+    const { parsed } = await parseTemplate(template, opts)
+    setRendered(parsed)
   })
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
@@ -600,7 +601,7 @@ const HelpModal: Component<{
   return null
 }
 
-function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
+async function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
   const char = toChar('Rory', {
     scenario: 'Rory is strolling in the park',
     persona: toPersona('Rory is very talkative.'),
@@ -623,7 +624,7 @@ function getExampleOpts(inherit?: Partial<AppSchema.GenSettings>) {
     return `${name}: ${hist.msg}`
   })
 
-  const parts = buildPromptParts(
+  const parts = await buildPromptParts(
     {
       char,
       characters,

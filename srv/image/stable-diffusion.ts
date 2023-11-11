@@ -4,7 +4,7 @@ import { SD_SAMPLER, SD_SAMPLER_REV } from '../../common/image'
 import { SDSettings } from '../../common/types/image-schema'
 import { logger } from '../logger'
 
-const negative_prompt = `disfigured, deformed, poorly, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
+const negative_prompt = `disfigured, deformed, poorly, blurry, lowres, fused, malformed, misshapen, duplicated, grainy, distorted`
 
 const defaultSettings: SDSettings = {
   type: 'sd',

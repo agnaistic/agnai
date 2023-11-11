@@ -172,7 +172,10 @@ export const streamCompletion: CompletionGenerator = async function* (
  * - common/prompt.ts fillPromptWithLines
  * - srv/adapter/claude.ts createClaudePrompt
  */
-export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): CompletionItem[] {
+export async function toChatCompletionPayload(
+  opts: AdapterProps,
+  maxTokens: number
+): Promise<CompletionItem[]> {
   if (opts.kind === 'plain') {
     return [{ role: 'system', content: opts.prompt }]
   }
@@ -183,7 +186,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
   const history: CompletionItem[] = []
 
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
-  const { parsed: gaslight, inserts } = injectPlaceholders(
+  const { parsed: gaslight, inserts } = await injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, opts.parts, [
       'history',
       'post',
@@ -204,24 +207,27 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
   let maxBudget =
     (gen.maxContextLength || defaultPresets.openai.maxContextLength) -
     maxTokens -
-    encoder()([...inserts.values()].join(' '))
-  let tokens = encoder()(gaslight)
+    (await encoder()([...inserts.values()].join(' ')))
+  let tokens = await encoder()(gaslight)
 
   if (lines) {
     all.push(...lines)
   }
 
   // Append 'postamble' and system prompt (ujb)
-  const post = getPostInstruction(opts, messages)
+  const post = await getPostInstruction(opts, messages)
   if (post) {
-    post.content = injectPlaceholders(post.content, {
-      opts,
-      parts: opts.parts,
-      lastMessage: opts.lastMessage,
-      characters: opts.characters || {},
-      encoder: encoder(),
-    }).parsed
-    tokens += encoder()(post.content)
+    const encode = encoder()
+    post.content = (
+      await injectPlaceholders(post.content, {
+        opts,
+        parts: opts.parts,
+        lastMessage: opts.lastMessage,
+        characters: opts.characters || {},
+        encoder: encode,
+      })
+    ).parsed
+    tokens += await encode(post.content)
     history.push(post)
   }
 
@@ -259,7 +265,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
       addRemainingInserts()
       addedAllInserts = true
 
-      const { additions, consumed } = splitSampleChat({
+      const { additions, consumed } = await splitSampleChat({
         budget: maxBudget - tokens,
         sampleChat: obj.content,
         char: replyAs.name,
@@ -285,7 +291,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
       obj.role = 'user'
     }
 
-    const length = encoder()(obj.content)
+    const length = await encoder()(obj.content)
     if (tokens + length > maxBudget) {
       --i
       break
@@ -300,7 +306,7 @@ export function toChatCompletionPayload(opts: AdapterProps, maxTokens: number): 
   return messages.concat(history.reverse())
 }
 
-export function splitSampleChat(opts: SplitSampleChatProps) {
+export async function splitSampleChat(opts: SplitSampleChatProps) {
   const { sampleChat, char, sender, budget } = opts
   const regex = new RegExp(
     `(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|System:|<start>)`,
@@ -318,10 +324,10 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
     if (trimmed.toLowerCase().startsWith('<start>')) {
       const afterStart = trimmed.slice(7).trim()
       additions.push(sampleChatMarkerCompletionItem)
-      tokens += encoder()(sampleChatMarkerCompletionItem.content)
+      tokens += await encoder()(sampleChatMarkerCompletionItem.content)
       if (afterStart) {
         additions.push({ role: 'system' as const, content: afterStart })
-        tokens += encoder()(afterStart)
+        tokens += await encoder()(afterStart)
       }
       continue
     }
@@ -338,7 +344,7 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
       content: sample.replace(BOT_REPLACE, char).replace(SELF_REPLACE, sender),
     }
 
-    const length = encoder()(msg.content)
+    const length = await encoder()(msg.content)
     if (budget && tokens + length > budget) break
 
     additions.push(msg)
@@ -348,19 +354,21 @@ export function splitSampleChat(opts: SplitSampleChatProps) {
   return { additions, consumed: tokens }
 }
 
-function getPostInstruction(
+async function getPostInstruction(
   opts: AdapterProps,
   messages: CompletionItem[]
-): CompletionItem | undefined {
+): Promise<CompletionItem | undefined> {
   let prefix = opts.parts.ujb ? `${opts.parts.ujb}\n\n` : ''
 
-  prefix = injectPlaceholders(prefix, {
-    opts,
-    parts: opts.parts,
-    lastMessage: opts.lastMessage,
-    characters: opts.characters || {},
-    encoder: encoder(),
-  }).parsed
+  prefix = (
+    await injectPlaceholders(prefix, {
+      opts,
+      parts: opts.parts,
+      lastMessage: opts.lastMessage,
+      characters: opts.characters || {},
+      encoder: encoder(),
+    })
+  ).parsed
 
   switch (opts.kind) {
     // These cases should never reach here

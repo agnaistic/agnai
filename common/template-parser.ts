@@ -101,10 +101,10 @@ export type TemplateOpts = {
  * This function also returns inserts because Chat and Claude discard the
  * parsed string and use the inserts for their own prompt builders
  */
-export function parseTemplate(
+export async function parseTemplate(
   template: string,
   opts: TemplateOpts
-): { parsed: string; inserts: Map<number, string>; length?: number } {
+): Promise<{ parsed: string; inserts: Map<number, string>; length?: number }> {
   if (opts.limit) {
     opts.limit.output = {}
   }
@@ -132,12 +132,14 @@ export function parseTemplate(
     // }
 
     for (const [id, lines] of Object.entries(opts.limit.output)) {
-      const trimmed = fillPromptWithLines(
-        opts.limit.encoder,
-        opts.limit.context,
-        output,
-        lines,
-        opts.inserts
+      const trimmed = (
+        await fillPromptWithLines(
+          opts.limit.encoder,
+          opts.limit.context,
+          output,
+          lines,
+          opts.inserts
+        )
       ).reverse()
       output = output.replace(id, trimmed.join('\n'))
     }
@@ -147,7 +149,7 @@ export function parseTemplate(
   return {
     parsed: result,
     inserts: opts.inserts ?? new Map(),
-    length: opts.limit?.encoder?.(result),
+    length: await opts.limit?.encoder?.(result),
   }
 }
 
