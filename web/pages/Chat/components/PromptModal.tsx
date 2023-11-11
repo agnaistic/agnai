@@ -1,25 +1,28 @@
-import { Component, createMemo, createSignal, onMount } from 'solid-js'
-import { TokenCounter, getEncoder } from '../../../../common/tokenize'
+import { Component, createEffect, createSignal, onMount } from 'solid-js'
+import { getEncoder } from '../../../../common/tokenize'
 import Modal from '../../../shared/Modal'
 import TextInput from '../../../shared/TextInput'
 import { chatStore, userStore } from '../../../store'
+import { TokenCounter } from '/common/types'
 
 const PromptModal: Component = () => {
   const user = userStore()
   const state = chatStore((s) => ({ prompt: s.prompt, chat: s.active?.chat }))
   const [encoder, setEncoder] = createSignal<TokenCounter>()
+  const [tokens, setTokens] = createSignal(0)
 
   onMount(async () => {
     const enc = await getEncoder()
     setEncoder(() => enc)
   })
 
-  const tokens = createMemo(() => {
+  createEffect(async () => {
     if (!state.chat) return '...'
     if (!user.user) return '....'
     if (!encoder()) return '.....'
 
-    return encoder()!(state.prompt?.template.parsed || '')
+    const count = await encoder()!(state.prompt?.template.parsed || '')
+    setTokens(count)
   })
 
   return (

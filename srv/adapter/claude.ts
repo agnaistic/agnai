@@ -56,7 +56,7 @@ export const handleClaude: ModelAdapter = async function* (opts) {
     model: claudeModel,
     temperature: Math.min(1, Math.max(0, gen.temp ?? defaultPresets.claude.temp)),
     max_tokens_to_sample: gen.maxTokens ?? defaultPresets.claude.maxTokens,
-    prompt: createClaudePrompt(opts),
+    prompt: await createClaudePrompt(opts),
     stop_sequences: Array.from(stops),
     top_p: Math.min(1, Math.max(0, gen.topP ?? defaultPresets.claude.topP)),
     top_k: Math.min(1, Math.max(0, gen.topK ?? defaultPresets.claude.topK)),
@@ -248,7 +248,7 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
  * - srv/adapter/chat-completion.ts toChatCompletionPayload
  */
 
-function createClaudePrompt(opts: AdapterProps): string {
+async function createClaudePrompt(opts: AdapterProps) {
   if (opts.kind === 'plain') {
     return `\n\nHuman: ${opts.prompt}\n\nAssistant:`
   }
@@ -259,7 +259,7 @@ function createClaudePrompt(opts: AdapterProps): string {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
-  const { parsed: gaslight, inserts } = injectPlaceholders(
+  const { parsed: gaslight, inserts } = await injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
       'history',
       'post',
@@ -272,26 +272,28 @@ function createClaudePrompt(opts: AdapterProps): string {
       encoder: encoder(),
     }
   )
-  const gaslightCost = encoder()('Human: ' + gaslight)
+  const gaslightCost = await encoder()('Human: ' + gaslight)
   let ujb = parts.ujb ? `Human: <system_note>${parts.ujb}</system_note>` : ''
-  ujb = injectPlaceholders(ujb, {
-    opts,
-    parts,
-    encoder: encoder(),
-    characters: opts.characters || {},
-  }).parsed
+  ujb = (
+    await injectPlaceholders(ujb, {
+      opts,
+      parts,
+      encoder: encoder(),
+      characters: opts.characters || {},
+    })
+  ).parsed
 
   const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
-  const prefillCost = encoder()(prefill)
+  const prefillCost = await encoder()(prefill)
 
   const maxBudget =
     maxContextLength -
     maxResponseTokens -
     gaslightCost -
     prefillCost -
-    encoder()(ujb) -
-    encoder()(opts.replyAs.name + ':') -
-    encoder()([...inserts.values()].join(' '))
+    (await encoder()(ujb)) -
+    (await encoder()(opts.replyAs.name + ':')) -
+    (await encoder()([...inserts.values()].join(' ')))
 
   let tokens = 0
   const history: string[] = []
@@ -325,7 +327,7 @@ function createClaudePrompt(opts: AdapterProps): string {
     }
 
     const processedLine = processLine(lineType, line)
-    const cost = encoder()(processedLine)
+    const cost = await encoder()(processedLine)
     if (cost + tokens >= maxBudget) break
     const insert = inserts.get(distanceFromBottom)
     if (insert) history.push(processLine('system', insert))

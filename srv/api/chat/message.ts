@@ -314,7 +314,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   const actions: AppSchema.ChatAction[] = []
 
   if (chat.mode === 'adventure') {
-    const lines = fillPromptWithLines(
+    const lines = await fillPromptWithLines(
       getTokenCounter('main'),
       2048,
       '',
@@ -323,7 +323,9 @@ export const generateMessageV2 = handle(async (req, res) => {
 
     const prompt = cyoaTemplate(
       body.settings.service,
-      body.settings.service === 'openai' ? body.settings.oaiModel : ''
+      body.settings.service === 'openai'
+        ? body.settings.thirdPartyModel || body.settings.oaiModel
+        : ''
     )
 
     const infer = async (text: string) => {

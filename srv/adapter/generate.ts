@@ -211,7 +211,7 @@ export async function createTextStreamV2(
 
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
     const encoder = getTokenCounter(adapter, model)
-    opts.parts = buildPromptParts(
+    opts.parts = await buildPromptParts(
       {
         ...entities,
         sender: opts.sender,
@@ -262,7 +262,7 @@ export async function createTextStreamV2(
    * We never need to use the users context length here as the subscription should contain the maximum possible context length.
    */
 
-  const prompt = assemblePrompt(opts, opts.parts, opts.lines, encoder)
+  const prompt = await assemblePrompt(opts, opts.parts, opts.lines, encoder)
 
   const size = encoder(
     [

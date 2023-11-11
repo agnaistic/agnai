@@ -114,18 +114,6 @@ const HomePage: Component = () => {
           <div class="mb-2 flex justify-center text-xl font-bold">Getting Started</div>
           <div class="flex flex-col items-center gap-2 leading-6">
             <p>
-              First time here? Head to the{' '}
-              <A class="link" href="/chats">
-                Chats Page
-              </A>{' '}
-              and try chatting to AI characters for free using{' '}
-              {location.host.toLowerCase().includes('agnai.chat') ? 'our own models or' : ''}{' '}
-              <a class="link" href="https://aihorde.net" target="_blank">
-                Horde
-              </a>
-              !
-            </p>
-            <p>
               Already have OpenAI, NovelAI, GooseAI, Scale, Claude? Head to the{' '}
               <A class="link" href="/settings?tab=ai">
                 Settings Page

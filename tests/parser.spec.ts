@@ -25,21 +25,21 @@ const lines = history.map(
   (h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`
 )
 
-describe('Template parser tests', () => {
+describe('Template parser tests', async () => {
   before(reset)
 
-  it('will render a basic template', () => {
-    const actual = test(`Scenario: {{scenario}}\nPersona: {{personality}}`)
+  it('will render a basic template', async () => {
+    const actual = await test(`Scenario: {{scenario}}\nPersona: {{personality}}`)
     expect(actual).toMatchSnapshot()
   })
 
-  it('will render conditional', () => {
-    const actual = test(`{{#if scenario}}Scenario: {{scenario}}{{/if}}`)
+  it('will render conditional', async () => {
+    const actual = await test(`{{#if scenario}}Scenario: {{scenario}}{{/if}}`)
     expect(actual).toMatchSnapshot()
   })
 
-  it('will not render missing conditional', () => {
-    const actual = test(
+  it('will not render missing conditional', async () => {
+    const actual = await test(
       `{{#if scenario}}Scenario: {{scenario}}{{/if}}Persona: {{persona}}`,
       { char: toChar('Name', { scenario: '' }) },
       { scenario: '' }
@@ -47,14 +47,14 @@ describe('Template parser tests', () => {
     expect(actual).toMatchSnapshot()
   })
 
-  it('will iterate over messages', () => {
-    const actual = test(`Scenario: {{scenario}}
+  it('will iterate over messages', async () => {
+    const actual = await test(`Scenario: {{scenario}}
 {{#each history}}{{.i}} {{.dialogue}}{{/each}}`)
     expect(actual).toMatchSnapshot()
   })
 
-  it('will create a full template', () => {
-    const actual = test(
+  it('will create a full template', async () => {
+    const actual = await test(
       `
 Scenario: {{scenario}}
 {{char}}'s persona: {{persona}}
@@ -69,8 +69,8 @@ Scenario: {{scenario}}
     expect(actual).toMatchSnapshot()
   })
 
-  it('will handle history conditions correctly', () => {
-    const actual = test(
+  it('will handle history conditions correctly', async () => {
+    const actual = await test(
       `
 Scenario: {{scenario}}
 {{char}}'s persona: {{persona}}
@@ -82,36 +82,37 @@ Scenario: {{scenario}}
     expect(actual).toMatchSnapshot()
   })
 
-  it('will render a random placeholder', () => {
+  it('will render a random placeholder', async () => {
     {
       setRand(1 / 3)
-      const actual = test(`Random {{random: one, two, three}}`)
+      const actual = await test(`Random {{random: one, two, three}}`)
       expect(actual).to.equal('Random two')
     }
 
     {
       setRand(2 / 3)
-      const actual = test(`Random {{random: one, two, three}}`)
+      const actual = await test(`Random {{random: one, two, three}}`)
       expect(actual).to.equal('Random three')
     }
   })
 })
 
-function test(
+async function test(
   template: string,
   overrides: Partial<TemplateOpts> = {},
   charOverrides: Partial<AppSchema.Character> = {}
 ) {
-  return parseTemplate(template, getParseOpts(overrides, charOverrides)).parsed
+  const { parsed } = await parseTemplate(template, await getParseOpts(overrides, charOverrides))
+  return parsed
 }
 
-function getParseOpts(
+async function getParseOpts(
   overrides: Partial<TemplateOpts> = {},
   charOverrides: Partial<AppSchema.Character> = {}
 ) {
   const overChat = overrides.char ? toChat(overrides.char) : chat
   const overChar = { ...char, ...charOverrides }
-  const parts = buildPromptParts(
+  const parts = await buildPromptParts(
     {
       char: overChar,
       characters,
@@ -123,7 +124,7 @@ function getParseOpts(
       sender: profile,
       chatEmbeds: [],
       userEmbeds: [],
-      resolvedScenario: overChar.scenario
+      resolvedScenario: overChar.scenario,
     },
     lines,
     getTokenCounter('openai', 'turbo')

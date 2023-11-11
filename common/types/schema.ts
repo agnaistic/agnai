@@ -451,6 +451,8 @@ export namespace AppSchema {
     thirdPartyUrl?: string
     thirdPartyFormat?: ThirdPartyFormat
     thirdPartyUrlNoSuffix?: boolean
+    thirdPartyModel?: string
+    thirdPartyKey?: string
 
     replicateModelName?: string
     replicateModelType?: string

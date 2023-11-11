@@ -353,8 +353,8 @@ async function getActivePromptOptions(
     resolvedScenario,
   }
 
-  const lines = getLinesForPrompt(promptOpts, encoder)
-  const parts = buildPromptParts(promptOpts, lines, encoder)
+  const lines = await getLinesForPrompt(promptOpts, encoder)
+  const parts = await buildPromptParts(promptOpts, lines, encoder)
 
   return { lines, parts, entities, props }
 }
@@ -387,7 +387,7 @@ async function createActiveChatPrompt(
       : entities.lastMessage?.msg
 
   const encoder = await getEncoder()
-  const prompt = createPromptParts(
+  const prompt = await createPromptParts(
     {
       kind: opts.kind,
       char: entities.char,
@@ -441,7 +441,7 @@ async function createActiveChatPrompt(
   return { prompt, props, entities, chatEmbeds, userEmbeds }
 }
 
-type GenerateProps = {
+export type GenerateProps = {
   retry?: AppSchema.ChatMessage
   continuing?: AppSchema.ChatMessage
   replacing?: AppSchema.ChatMessage
@@ -482,7 +482,7 @@ async function getGenerateProps(
   }
 
   if ('text' in opts) {
-    opts.text = parseTemplate(opts.text, {
+    const parsed = await parseTemplate(opts.text, {
       char: active.char,
       characters: entities.characters,
       chat: active.chat,
@@ -493,7 +493,8 @@ async function getGenerateProps(
       impersonate: props.impersonate,
       repeatable: true,
       lastMessage: entities.lastMessage?.date,
-    }).parsed
+    })
+    opts.text = parsed.parsed
   }
 
   const getBot = (id: string) => {

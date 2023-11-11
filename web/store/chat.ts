@@ -535,7 +535,7 @@ export const chatStore = createStore<ChatState>('chat', {
         entities.scenarios || []
       )
 
-      const prompt = createPromptParts(
+      const prompt = await createPromptParts(
         {
           ...entities,
           lastMessage: entities.lastMessage?.date || '',

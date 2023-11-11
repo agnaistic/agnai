@@ -53,10 +53,10 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 
   const prompt = cyoaTemplate(
     body.service! as AIAdapter,
-    settings.service === 'openai' ? settings.oaiModel : ''
+    settings.service === 'openai' ? settings.thirdPartyModel || settings.oaiModel : ''
   )
 
-  const parsed = parseTemplate(prompt, {
+  const { parsed } = await parseTemplate(prompt, {
     chat: both.chat || body.chat || ({} as any),
     characters: body.characters || {},
     char: body.char || {},
@@ -65,7 +65,7 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     impersonate: body.impersonating,
     sender: body.profile,
     replyAs: body.char || ({} as any),
-  }).parsed
+  })
 
   const infer = async (text: string, tokens?: number) => {
     const inference = await inferenceAsync({

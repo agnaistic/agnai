@@ -61,6 +61,7 @@ export const presetValidator = {
   thirdPartyUrl: 'string?',
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
   thirdPartyUrlNoSuffix: 'boolean?',
+  thirdPartyModel: 'string?',
 
   novelModel: 'string?',
   novelModelOverride: 'string?',

@@ -122,7 +122,8 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
   const template = getSummaryTemplate(settings.service!)
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)
 
-  const prompt = parseTemplate(template, opts).parsed
+  const parsed = await parseTemplate(template, opts)
+  const prompt = parsed.parsed
   const values = await msgsApi.guidance<{ summary: string }>({
     prompt,
     settings,

@@ -45,7 +45,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
-  const oaiModel = gen.oaiModel ?? defaultPresets.openai.oaiModel
+  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
   const maxResponseLength =
     opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
@@ -66,7 +66,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   if (useChat) {
     const messages: CompletionItem[] = config.inference.flatChatCompletion
       ? [{ role: 'system', content: opts.prompt }]
-      : toChatCompletionPayload(opts, body.max_tokens)
+      : await toChatCompletionPayload(opts, body.max_tokens)
 
     body.messages = messages
     yield { prompt: messages }

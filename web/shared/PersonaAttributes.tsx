@@ -61,7 +61,7 @@ const PersonaAttributes: Component<{
       { kind: props.schema || 'text', attributes },
       props.schema
     )
-    const count = encoder(formatted)
+    const count = await encoder(formatted)
     setTokens(count)
     if (typeof props.tokenCount === 'function') {
       props.tokenCount(count)

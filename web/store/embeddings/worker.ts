@@ -1,3 +1,4 @@
+import { decode, encode } from 'gpt-3-encoder'
 import { pipeline, Pipeline, env, RawImage } from '@xenova/transformers'
 import {
   EmbedDocument,
@@ -29,6 +30,14 @@ const documents: Record<string, Array<EmbedDocument & { embed: Tensor }>> = {}
 const handlers: {
   [key in WorkerRequest['type']]: (msg: Extract<WorkerRequest, { type: key }>) => Promise<void>
 } = {
+  encode: async (msg) => {
+    const result = encode(msg.text)
+    post('encoding', { id: msg.id, tokens: result })
+  },
+  decode: async (msg) => {
+    const result = decode(msg.tokens)
+    post('decoding', { id: msg.id, text: result })
+  },
   initSimilarity: async (msg) => {
     Embedder = await pipeline('feature-extraction', msg.model, {
       // quantized: true,

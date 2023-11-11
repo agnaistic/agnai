@@ -19,6 +19,8 @@ export type RequestDocEmbed = {
 }
 
 export type WorkerRequest =
+  | { type: 'encode'; id: string; text: string }
+  | { type: 'decode'; id: string; tokens: number[] }
   | { type: 'initSimilarity'; model: string }
   | { type: 'initCaptioning'; model: string }
   | { type: 'captionImage'; image: string; requestId: string }
@@ -27,6 +29,8 @@ export type WorkerRequest =
   | RequestDocEmbed
 
 export type WorkerResponse =
+  | { type: 'encoding'; id: string; tokens: number[] }
+  | { type: 'decoding'; id: string; text: string }
   | {
       type: 'result'
       requestId: string

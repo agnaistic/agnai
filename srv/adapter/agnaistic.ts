@@ -156,7 +156,8 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     const userKey = preset.subApiKey
 
     opts.user.oaiKey = userKey
-    opts.gen.oaiModel = preset.oaiModel
+    opts.gen.thirdPartyModel = preset.thirdPartyModel
+    opts.gen.oaiModel = preset.thirdPartyModel || preset.oaiModel
 
     opts.user.claudeApiKey = userKey
     opts.gen.claudeModel = preset.claudeModel
@@ -206,15 +207,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
+  // if (opts.kind === 'continue') {
+  //   opts.prompt = opts.prompt.trim() + ' '
+  // }
+
   const body = getThirdPartyPayload(opts, allStops)
 
   yield { prompt }
 
   log.debug({ ...body, prompt: null }, 'Agnaistic payload')
-
-  // if (opts.kind === 'continue') {
-  //   body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
-  // }
 
   log.debug(`Prompt:\n${prompt}`)
 

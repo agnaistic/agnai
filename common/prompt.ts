@@ -1,12 +1,11 @@
 import type { GenerateRequestV2 } from '../srv/adapter/type'
-import type { AppSchema } from './types/schema'
+import type { AppSchema, TokenCounter } from './types'
 import { AIAdapter, NOVEL_MODELS, OPENAI_MODELS, ThirdPartyFormat } from './adapters'
 import { formatCharacter } from './characters'
 import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
-import { TokenCounter } from './tokenize'
 import { getBotName, trimSentence } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate } from './prompt-order'
@@ -131,7 +130,11 @@ export const HOLDERS = {
  * @param opts
  * @returns
  */
-export function createPromptParts(opts: PromptOpts, encoder: TokenCounter, maxContext?: number) {
+export async function createPromptParts(
+  opts: PromptOpts,
+  encoder: TokenCounter,
+  maxContext?: number
+) {
   if (opts.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -156,11 +159,11 @@ export function createPromptParts(opts: PromptOpts, encoder: TokenCounter, maxCo
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
-  const lines = getLinesForPrompt(opts, encoder, maxContext)
-  const parts = buildPromptParts(opts, lines, encoder)
+  const lines = await getLinesForPrompt(opts, encoder, maxContext)
+  const parts = await buildPromptParts(opts, lines, encoder)
   const template = getTemplate(opts, parts)
 
-  const prompt = injectPlaceholders(template, {
+  const prompt = await injectPlaceholders(template, {
     opts,
     parts,
     history: { lines, order: 'desc' },
@@ -179,7 +182,7 @@ export function createPromptParts(opts: PromptOpts, encoder: TokenCounter, maxCo
  * @param lines Always in time-ascending order (oldest to newest)
  * @returns
  */
-export function assemblePrompt(
+export async function assemblePrompt(
   opts: GenerateRequestV2,
   parts: PromptParts,
   lines: string[],
@@ -188,7 +191,7 @@ export function assemblePrompt(
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
   const history = { lines, order: 'asc' } as const
-  const { parsed, inserts, length } = injectPlaceholders(template, {
+  const { parsed, inserts, length } = await injectPlaceholders(template, {
     opts,
     parts,
     history,
@@ -229,7 +232,7 @@ type InjectOpts = {
   encoder: TokenCounter
 }
 
-export function injectPlaceholders(template: string, inject: InjectOpts) {
+export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
   const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
 
@@ -259,7 +262,7 @@ export function injectPlaceholders(template: string, inject: InjectOpts) {
     ? hist.lines.slice()
     : hist.lines.slice().reverse()
 
-  const result = parseTemplate(template, {
+  const result = await parseTemplate(template, {
     ...opts,
     continue: opts.kind === 'continue',
     sender: inject.opts.sender,
@@ -319,7 +322,11 @@ type PromptPartsOptions = Pick<
   | 'resolvedScenario'
 >
 
-export function buildPromptParts(opts: PromptPartsOptions, lines: string[], encoder: TokenCounter) {
+export async function buildPromptParts(
+  opts: PromptPartsOptions,
+  lines: string[],
+  encoder: TokenCounter
+) {
   const { chat, char, replyAs } = opts
   const sender = opts.impersonate ? opts.impersonate.name : opts.sender?.handle || 'You'
 
@@ -392,7 +399,7 @@ export function buildPromptParts(opts: PromptPartsOptions, lines: string[], enco
   if (char.characterBook) books.push(char.characterBook)
   if (opts.book) books.push(opts.book)
 
-  const memory = buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
+  const memory = await buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
   parts.memory = memory?.prompt
 
   const supplementary = getSupplementaryParts(opts, replyAs)
@@ -403,13 +410,23 @@ export function buildPromptParts(opts: PromptPartsOptions, lines: string[], enco
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
-    const fit = fillPromptWithLines(encoder, opts.settings?.memoryUserEmbedLimit || 500, '', embeds)
+    const fit = await fillPromptWithLines(
+      encoder,
+      opts.settings?.memoryUserEmbedLimit || 500,
+      '',
+      embeds
+    )
     parts.userEmbeds = fit
   }
 
   if (opts.chatEmbeds) {
     const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const fit = fillPromptWithLines(encoder, opts.settings?.memoryChatEmbedLimit || 500, '', embeds)
+    const fit = await fillPromptWithLines(
+      encoder,
+      opts.settings?.memoryChatEmbedLimit || 500,
+      '',
+      embeds
+    )
     parts.chatEmbeds = fit
   }
 
@@ -481,7 +498,7 @@ function removeEmpty(value?: string) {
  *
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
-export function getLinesForPrompt(
+export async function getLinesForPrompt(
   { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
   encoder: TokenCounter,
   maxContext?: number
@@ -513,7 +530,7 @@ export function getLinesForPrompt(
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
-  const lines = fillPromptWithLines(encoder, maxContext, '', history)
+  const lines = await fillPromptWithLines(encoder, maxContext, '', history)
 
   if (opts.trimSentences) {
     return lines.map(trimSentence)
@@ -536,21 +553,21 @@ export function formatInsert(insert: string): string {
  * - srv/adapter/chat-completion.ts toChatCompletionPayload
  * - srv/adapter/claude.ts createClaudePrompt
  */
-export function fillPromptWithLines(
+export async function fillPromptWithLines(
   encoder: TokenCounter,
   tokenLimit: number,
   amble: string,
   lines: string[],
   inserts: Map<number, string> = new Map()
 ) {
-  const insertsCost = encoder([...inserts.values()].join(' '))
+  const insertsCost = await encoder([...inserts.values()].join(' '))
   const tokenLimitMinusInserts = tokenLimit - insertsCost
-  let count = encoder(amble)
+  let count = await encoder(amble)
   const adding: string[] = []
 
   let linesAddedCount = 0
   for (const line of lines) {
-    const tokens = encoder(line)
+    const tokens = await encoder(line)
     if (tokens + count > tokenLimitMinusInserts) {
       break
     }
@@ -691,7 +708,7 @@ export function getAdapter(
   }
 
   if (adapter === 'openai') {
-    model = preset?.oaiModel || defaultPresets.openai.oaiModel
+    model = preset?.thirdPartyModel || preset?.oaiModel || defaultPresets.openai.oaiModel
   }
 
   if (chat.genPreset) {
@@ -801,7 +818,7 @@ export type TrimOpts = {
 /**
  * Remove lines from a body of text that contains line breaks
  */
-export function trimTokens(opts: TrimOpts) {
+export async function trimTokens(opts: TrimOpts) {
   const text = Array.isArray(opts.input) ? opts.input.slice() : opts.input.split('\n')
   if (opts.start === 'bottom') text.reverse()
 
@@ -809,7 +826,7 @@ export function trimTokens(opts: TrimOpts) {
   let output: string[] = []
 
   for (const line of text) {
-    tokens += opts.encoder(line)
+    tokens += await opts.encoder(line)
     if (tokens > opts.tokenLimit) break
 
     if (opts.start === 'top') output.push(line)
