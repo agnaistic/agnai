@@ -207,15 +207,15 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
     return
   }
 
+  // if (opts.kind === 'continue') {
+  //   opts.prompt = opts.prompt.trim() + ' '
+  // }
+
   const body = getThirdPartyPayload(opts, allStops)
 
   yield { prompt }
 
   log.debug({ ...body, prompt: null }, 'Agnaistic payload')
-
-  // if (opts.kind === 'continue') {
-  //   body.prompt = body.prompt.split('\n').slice(0, -1).join('\n')
-  // }
 
   log.debug(`Prompt:\n${prompt}`)
 

@@ -6,6 +6,10 @@ export type ImageSettings = {
   summaryPrompt?: string
   summariseChat?: boolean
 
+  prefix?: string
+  suffix?: string
+  negative?: string
+
   template?: string
   width: number
   height: number

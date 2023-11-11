@@ -122,6 +122,15 @@ export function parseTemplate(
   let output = render(template, opts, ast)
 
   if (opts.limit && opts.limit.output) {
+    // const lastIndex = Object.keys(opts.limit.output).reduce((prev, curr) => {
+    //   const index = output.lastIndexOf(curr) + curr.length
+    //   return index > prev ? index : prev
+    // }, -1)
+
+    // if (lastIndex > -1 && opts.continue) {
+    //   output = output.slice(0, lastIndex)
+    // }
+
     for (const [id, lines] of Object.entries(opts.limit.output)) {
       const trimmed = fillPromptWithLines(
         opts.limit.encoder,
@@ -136,7 +145,7 @@ export function parseTemplate(
 
   const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n')
   return {
-    parsed: result.trim(),
+    parsed: result,
     inserts: opts.inserts ?? new Map(),
     length: opts.limit?.encoder?.(result),
   }
@@ -431,8 +440,9 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
     case 'ujb':
       return opts.parts.ujb || ''
 
-    case 'post':
+    case 'post': {
       return opts.parts.post?.join('\n') || ''
+    }
 
     case 'history': {
       if (opts.limit) {

@@ -72,6 +72,30 @@ export const ImageSettings: Component = () => {
       />
 
       <TextInput
+        fieldName="imagePrefix"
+        value={state.user?.images?.prefix}
+        label="Prompt Prefix"
+        helperText="(Optional) Text to prepend to your image prompt"
+        placeholder={`E.g.: best quality, masterpiece`}
+      />
+
+      <TextInput
+        fieldName="imageSuffix"
+        value={state.user?.images?.prefix}
+        label="Prompt Suffix"
+        helperText="(Optional) Text to append to your image prompt"
+        placeholder={`E.g.: full body, visible legs, dramatic lighting`}
+      />
+
+      <TextInput
+        fieldName="imageNegative"
+        value={state.user?.images?.prefix}
+        label="Negative Prompt"
+        helperText="(Optional) Negative Prompt"
+        placeholder={`E.g.: painting, drawing, illustration, glitch, deformed, mutated, cross-eyed, disfigured`}
+      />
+
+      <TextInput
         fieldName="summaryPrompt"
         value={state.user?.images?.summaryPrompt}
         label="Summary Prompt"
