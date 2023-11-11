@@ -290,7 +290,7 @@ const GeneralSettings: Component<
         />
 
         <TextInput
-          fieldName="oaiModel"
+          fieldName="thirdPartyModel"
           label="OpenAI Model Override"
           helperText="OpenAI Model Override (typically for 3rd party APIs)"
           value={props.inherit?.thirdPartyModel ?? ''}

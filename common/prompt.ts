@@ -709,7 +709,7 @@ export function getAdapter(
   }
 
   if (adapter === 'openai') {
-    model = preset?.oaiModel || defaultPresets.openai.oaiModel
+    model = preset?.thirdPartyModel || preset?.oaiModel || defaultPresets.openai.oaiModel
   }
 
   if (chat.genPreset) {
