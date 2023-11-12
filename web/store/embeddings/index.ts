@@ -292,18 +292,24 @@ async function embedPdf(name: string, file: File) {
   const data = await extractPdf(file)
   const embed: EmbedDocument[] = []
 
-  if (!data.text || !data.outline) {
+  if (!data.text) {
     throw new Error(`Could not embed PDF: Could not extract pages`)
   }
 
   for (let i = 0; i < data.text.length; i++) {
-    const text = data.text[i]
-    const page = data.outline.find((sect: any) => (sect.page == null ? false : sect.page >= i))
+    let text = data.text[i]
+    if (!text) continue
+    text = text.replace(/(\r\n|\r|\n)/g, ' ').replace(/ +/g, ' ')
 
-    embed.push({
-      msg: text.replace(/\n/g, ' ').replace(/ +/g, ' '),
-      meta: { page: i, section: page?.title },
-    })
+    const page = data.outline?.find((sect: any) => (sect.page == null ? false : sect.page >= i))
+
+    const sentences = text.split('.').filter((t) => !!t.trim())
+    for (let j = 0; j < sentences.length; j++) {
+      embed.push({
+        msg: sentences[j].replace(/\n/g, ' ').replace(/ +/g, ' '),
+        meta: { page: i, section: page?.title, line: j + 1 },
+      })
+    }
   }
 
   const slug = name ? name : slugify(file.name)
