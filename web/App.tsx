@@ -40,6 +40,7 @@ import NovelGuide from './pages/Guides/NovelAI'
 import { ImageModal } from './pages/Chat/ImageModal'
 import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
 import { markdown } from './shared/markdown'
+import SoundsPage from './pages/Sounds'
 
 const App: Component = () => {
   const state = userStore()
@@ -67,6 +68,9 @@ const App: Component = () => {
             path="/presets"
             component={lazy(() => import('./pages/GenerationPresets/PresetList'))}
           />
+          <Show when={cfg.flags.sounds}>
+            <Route path="/sounds" component={SoundsPage} />
+          </Show>
           <Route path="/profile" component={ProfilePage} />
           <Route path="/settings" component={Settings} />
           <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />

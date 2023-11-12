@@ -13,8 +13,11 @@ import {
   Settings,
   ShoppingBag,
   Sliders,
+  Speaker,
   Sun,
   VenetianMask,
+  Volume2,
+  VolumeX,
   X,
 } from 'lucide-solid'
 import {
@@ -30,6 +33,7 @@ import {
 } from 'solid-js'
 import AvatarIcon, { CharacterAvatar } from './shared/AvatarIcon'
 import {
+  audioStore,
   characterStore,
   chatStore,
   inviteStore,
@@ -41,6 +45,7 @@ import Slot from './shared/Slot'
 import { useEffect, useResizeObserver, useWindowSize } from './shared/hooks'
 import WizardIcon from './icons/WizardIcon'
 import Badge from './shared/Badge'
+import { soundEmitter } from './shared/Audio/playable-events'
 
 const MobileNavHeader = () => {
   const user = userStore()
@@ -200,6 +205,10 @@ const UserNavigation: Component = () => {
         </EndItem>
       </MultiItem>
 
+      <Show when={menu.flags.sounds}>
+        <Sounds />
+      </Show>
+
       <Show when={user.user?.admin}>
         <Item href="/admin/metrics" ariaLabel="Manage">
           <Activity aria-hidden="true" />
@@ -289,8 +298,12 @@ const GuestNavigation: Component = () => {
   return (
     <>
       <Show when={menu.config.canAuth}>
-        <Item href="/login" ariaLabel="Login to the application">
-          <LogIn aria-hidden="true" /> Login
+        <Item
+          href="/login"
+          ariaLabel="Login to the application"
+          onClick={() => soundEmitter.emit('menu-item-clicked', 'login')}
+        >
+          <LogIn /> Login
         </Item>
       </Show>
 
@@ -311,8 +324,12 @@ const GuestNavigation: Component = () => {
         <Library />
 
         <MultiItem>
-          <Item href="/presets" ariaLabel="Presets">
-            <Sliders aria-hidden="true" /> Presets
+          <Item
+            href="/presets"
+            ariaLabel="Presets"
+            onClick={() => soundEmitter.emit('menu-item-clicked', 'presets')}
+          >
+            <Sliders /> Presets
           </Item>
           <EndItem>
             <A class="icon-button" href="/presets/new" role="button" aria-label="Add a new preset">
@@ -320,6 +337,10 @@ const GuestNavigation: Component = () => {
             </A>
           </EndItem>
         </MultiItem>
+
+        <Show when={menu.flags.sounds}>
+          <Sounds />
+        </Show>
       </Show>
 
       <div class="flex flex-wrap justify-center gap-[2px] text-sm">
@@ -409,6 +430,7 @@ const Item: Component<{
           href={props.href!}
           class="flex min-h-[2.5rem] items-center justify-start gap-4 rounded-lg px-2 hover:bg-[var(--bg-700)] sm:min-h-[2.5rem]"
           onClick={() => {
+            if (props.onClick) props.onClick()
             if (menu.showMenu) settingStore.closeMenu()
           }}
           role="button"
@@ -473,7 +495,11 @@ const ExternalLink: Component<{
 const Library: Component<{}> = (props) => {
   return (
     <div class="grid w-full gap-2" style={{ 'grid-template-columns': '1fr 30px' }}>
-      <Item href="/memory" ariaLabel="Library">
+      <Item
+        href="/memory"
+        ariaLabel="Library"
+        onClick={() => soundEmitter.emit('menu-item-clicked', 'library')}
+      >
         <Book aria-hidden="true" />
         <span aria-hidden="true"> Library </span>
       </Item>
@@ -481,10 +507,36 @@ const Library: Component<{}> = (props) => {
   )
 }
 
+const Sounds: Component<{}> = (props) => {
+  const audioSettings = audioStore()
+
+  return (
+    <MultiItem>
+      <Item href="/sounds" onClick={() => soundEmitter.emit('menu-item-clicked', 'sounds')}>
+        <Speaker /> Sounds
+      </Item>
+      <EndItem>
+        <a class="icon-button" onClick={() => audioStore.toggleMuteTrack('master')}>
+          <Show when={audioSettings.tracks.master.muted}>
+            <VolumeX />
+          </Show>
+          <Show when={!audioSettings.tracks.master.muted}>
+            <Volume2 />
+          </Show>
+        </a>
+      </EndItem>
+    </MultiItem>
+  )
+}
+
 const CharacterLink = () => {
   return (
     <MultiItem>
-      <Item href="/character/list" ariaLabel="Characters">
+      <Item
+        href="/character/list"
+        ariaLabel="Characters"
+        onClick={() => soundEmitter.emit('menu-item-clicked', 'characters')}
+      >
         <WizardIcon aria-hidden="true" />
         <span aria-hidden="true"> Characters </span>
       </Item>
@@ -500,7 +552,11 @@ const CharacterLink = () => {
 const ChatLink = () => {
   return (
     <MultiItem>
-      <Item href="/chats" ariaLabel="Chats">
+      <Item
+        href="/chats"
+        ariaLabel="Chats"
+        onClick={() => soundEmitter.emit('menu-item-clicked', 'chats')}
+      >
         <MessageCircle fill="var(--bg-100)" aria-hidden="true" />
         <span aria-hidden="true"> Chats </span>
       </Item>
@@ -530,6 +586,7 @@ const UserProfile = () => {
           ariaLabel="Edit user profile"
           onClick={() => {
             if (menu.showMenu) settingStore.closeMenu()
+            soundEmitter.emit('menu-item-clicked', 'profile')
             userStore.modal(true)
           }}
         >
