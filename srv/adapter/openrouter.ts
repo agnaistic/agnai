@@ -35,7 +35,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.model = opts.gen.openRouterModel.id
   }
 
-  payload.messages = toChatCompletionPayload(opts, payload.max_tokens)
+  payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
   yield { prompt: payload.messages }
 
   const headers = {
