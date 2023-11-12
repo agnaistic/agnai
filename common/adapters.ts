@@ -48,6 +48,17 @@ export const PERSONA_LABELS: { [key in PersonaFormat]: string } = {
   text: 'Plain Text',
 }
 
+export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
+  openai: 'openai',
+  'openai-chat': 'openai',
+  claude: 'claude',
+  exllamav2: 'kobold',
+  kobold: 'kobold',
+  koboldcpp: 'kobold',
+  llamacpp: 'ooba',
+  ooba: 'ooba',
+}
+
 export const THIRDPARTY_FORMATS = [
   'kobold',
   'openai',
