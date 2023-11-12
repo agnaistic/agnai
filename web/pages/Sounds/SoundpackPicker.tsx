@@ -2,15 +2,16 @@ import { Component, createEffect, createMemo, createSignal } from 'solid-js'
 import Select from '../../shared/Select'
 import { SoundpackLevel, audioStore } from '/web/store'
 
+const __none_soundpack__ = '__none_soundpack__'
+
 export const SoundpackPicker: Component<{
   fieldName: string
   label?: string
   helperText?: string
   level: SoundpackLevel
 }> = (props) => {
-  const __none_soundpack__ = '__none_soundpack__'
-
   const audio = audioStore()
+  const [selectedId, setSelectedId] = createSignal<string>(__none_soundpack__)
 
   const getSoundpackOptions = createMemo(() => {
     return [
@@ -20,8 +21,6 @@ export const SoundpackPicker: Component<{
       }),
     ]
   })
-
-  let [selectedId, setSelectedId] = createSignal<string>(__none_soundpack__)
 
   const selectSoundpack = ({ value: id }: { value: string }) => {
     setSelectedId(id)

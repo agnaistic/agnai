@@ -1,4 +1,4 @@
-import { Component, Show, JSX } from 'solid-js'
+import { Component, Show, JSX, createMemo } from 'solid-js'
 import { markdown } from '../../shared/markdown'
 import { Volume2, VolumeX } from 'lucide-solid'
 import { AudioTrackId, audioStore } from '../../store'
@@ -15,11 +15,13 @@ const VolumeControl: Component<{
 
   const audio = audioStore()
 
-  const isMaster = () => props.trackId === 'master'
-  const masterMuted = () => audio.tracks.master.muted
-  const trackMuted = () => audio.tracks[props.trackId].muted
-  const disabled = () => trackMuted() || masterMuted()
-  const displayedVolume = () => (disabled() ? 0 : audio.tracks[props.trackId].volume) + '%'
+  const isMaster = createMemo(() => props.trackId === 'master')
+  const masterMuted = createMemo(() => audio.tracks.master.muted)
+  const trackMuted = createMemo(() => audio.tracks[props.trackId].muted)
+  const disabled = createMemo(() => trackMuted() || masterMuted())
+  const displayedVolume = createMemo(
+    () => (disabled() ? 0 : audio.tracks[props.trackId].volume) + '%'
+  )
 
   const onInput: JSX.EventHandler<HTMLInputElement, InputEvent> = (event) => {
     audioStore.setTrackVolume(props.trackId, +event.currentTarget.value)

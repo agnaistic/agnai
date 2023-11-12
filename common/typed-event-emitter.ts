@@ -15,7 +15,7 @@ type GlobalEventListener<T extends TypedEventMap> = (
   args: T[keyof T]
 ) => void
 
-export abstract class TypedEventEmitter<T extends TypedEventMap> {
+export class TypedEventEmitter<T extends TypedEventMap> {
   private internal = new EventEmitter()
   private global: GlobalEventListener<T> | null = null
 

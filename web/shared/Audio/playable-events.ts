@@ -12,6 +12,4 @@ export interface PlayableEvent extends TypedEventMap {
     | 'sounds'
 }
 
-class SoundEmitter extends TypedEventEmitter<PlayableEvent> {}
-
-export const soundEmitter = new SoundEmitter()
+export const soundEmitter = new TypedEventEmitter<PlayableEvent>()
