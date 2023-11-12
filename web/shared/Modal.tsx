@@ -20,11 +20,11 @@ interface Props {
    * If set to false, the close button 'X' will be omitted
    */
   dismissable?: boolean
+  ariaLabel?: string
+  ariaDescription?: string
 }
 
 const Modal: Component<Props> = (props) => {
-  let ref: any
-
   const width = createMemo(() => {
     if (!props.maxWidth) return `sm:max-w-lg`
 
@@ -37,6 +37,9 @@ const Modal: Component<Props> = (props) => {
     ev.preventDefault
   }
 
+  // on-screen readers require focusing on the dialog to work
+  const autofocus = (ref: HTMLFormElement) => setTimeout(() => ref.focus())
+
   return (
     <Show when={props.show}>
       <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
@@ -45,9 +48,14 @@ const Modal: Component<Props> = (props) => {
         </div>
         <div class="modal-body">
           <form
-            ref={ref}
+            ref={autofocus}
             onSubmit={props.onSubmit || defaultSubmit}
             class={`modal-height bg-900 z-50 my-auto w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all ${width()} `}
+            role="dialog"
+            aria-modal="true"
+            aria-label={props.ariaLabel}
+            aria-description={props.ariaDescription}
+            tabindex="-1"
           >
             <Switch>
               <Match when={props.tabs}>
@@ -58,8 +66,13 @@ const Modal: Component<Props> = (props) => {
                     tabs={props.tabs?.tabs!}
                   />
                   <Show when={props.dismissable !== false}>
-                    <div onClick={props.close} class="cursor-pointer p-4">
-                      <X />
+                    <div
+                      onClick={props.close}
+                      class="cursor-pointer p-4"
+                      role="button"
+                      aria-label="Close dialog window"
+                    >
+                      <X aria-hidden="true" />
                     </div>
                   </Show>
                 </div>
@@ -69,8 +82,13 @@ const Modal: Component<Props> = (props) => {
                 <div class="flex flex-row justify-between p-4 text-lg font-bold">
                   <div>{props.title}</div>
                   <Show when={props.dismissable !== false}>
-                    <div onClick={props.close} class="cursor-pointer">
-                      <X />
+                    <div
+                      onClick={props.close}
+                      class="cursor-pointer"
+                      role="button"
+                      aria-label="Close window"
+                    >
+                      <X aria-hidden="true" />
                     </div>
                   </Show>
                 </div>
@@ -94,7 +112,6 @@ const Modal: Component<Props> = (props) => {
 export default Modal
 
 export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
-  let ref: any
   const width = createMemo(() => {
     if (!props.maxWidth) return `sm:max-w-lg`
 
@@ -109,6 +126,9 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
     ev.preventDefault()
   }
 
+  // on-screen readers require focusing on the dialog to work
+  const autofocus = (ref: HTMLFormElement) => setTimeout(() => ref.focus())
+
   return (
     <Show when={props.show}>
       <div class="fixed inset-x-0 top-0 z-[100] items-center justify-center px-4 sm:inset-0 sm:flex sm:items-center sm:justify-center">
@@ -117,9 +137,14 @@ export const NoTitleModal: Component<Omit<Props, 'title'>> = (props) => {
         </div>
         <div class="modal-body">
           <form
-            ref={ref}
+            ref={autofocus}
             onSubmit={props.onSubmit || defaultSubmit}
             class={`bg-900 my-auto max-h-[80vh] w-[calc(100vw-16px)] overflow-hidden rounded-lg shadow-md shadow-black transition-all sm:max-h-[90vh] ${width()} `}
+            role="dialog"
+            aria-modal="true"
+            aria-label={props.ariaLabel}
+            aria-description={props.ariaDescription}
+            tabindex="-1"
           >
             <div class="flex flex-row justify-end pr-4 pt-4 text-lg font-bold">
               <div onClick={props.close} class="cursor-pointer">
@@ -149,6 +174,8 @@ export const ConfirmModal: Component<{
   close: () => void
   confirm: () => void
   message: string | JSX.Element
+  ariaLabel?: string
+  ariaDescription?: string
 }> = (props) => {
   const confirm = () => {
     props.confirm()
@@ -171,6 +198,8 @@ export const ConfirmModal: Component<{
           </Button>
         </>
       }
+      aria-label={props.ariaLabel}
+      aria-description={props.ariaDescription}
     >
       <Show
         when={typeof props.message === 'string'}

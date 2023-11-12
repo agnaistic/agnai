@@ -175,7 +175,7 @@ const Layout: Component = () => {
         <NavBar />
         <div class="flex w-full grow flex-row overflow-y-hidden">
           <Navigation />
-          <div class="w-full overflow-y-auto" data-background style={bg()}>
+          <main class="w-full overflow-y-auto" data-background style={bg()}>
             <div
               class={`mx-auto h-full min-h-full ${isChat() ? maxW() : 'max-w-8xl'} px-2 sm:px-3`}
               classList={{
@@ -201,7 +201,7 @@ const Layout: Component = () => {
                 </div>
               </Show>
             </div>
-          </div>
+          </main>
         </div>
       </div>
       <Toasts />

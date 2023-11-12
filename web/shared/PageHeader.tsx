@@ -42,7 +42,9 @@ const PageHeader: Component<Props> = (props) => {
       </Show>
 
       <Show when={!!props.subtitle}>
-        <p class="text-[var(--text-700)]">{props.subtitle}</p>
+        <p class="text-[var(--text-700)]" role="heading" aria-level={2}>
+          {props.subtitle}
+        </p>
       </Show>
       <Show when={!props.noDivider && (!!props.title || !!props.subtitle)}>
         <Divider />
