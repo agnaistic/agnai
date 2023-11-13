@@ -1,6 +1,6 @@
 import needle from 'needle'
 import { decryptText } from '../db/util'
-import { streamCompletion, toChatCompletionPayload } from './chat-completion'
+import { streamCompletion } from './chat-completion'
 import { registerAdapter } from './register'
 import { ModelAdapter } from './type'
 import { sanitiseAndTrim } from '../api/chat/common'
@@ -35,7 +35,7 @@ export const handleOpenRouter: ModelAdapter = async function* (opts) {
     payload.model = opts.gen.openRouterModel.id
   }
 
-  payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
+  // payload.messages = await toChatCompletionPayload(opts, payload.max_tokens)
   yield { prompt: payload.messages }
 
   const headers = {

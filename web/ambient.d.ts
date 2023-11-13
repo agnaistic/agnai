@@ -55,3 +55,8 @@ declare interface EzStandalone {
   enableConsent: () => void
   getSelectedPlaceholders: () => Record<number, boolean>
 }
+
+declare type FormEvent<T = HTMLInputElement | HTMLTextAreaElement> = Event & {
+  target: Element
+  currentTarget: T
+}

@@ -43,6 +43,20 @@ export function usePane() {
   return paneDisplay
 }
 
+export function useDeviceType() {
+  const [isMobile, setMobile] = createSignal(/Mobi/i.test(window.navigator.userAgent))
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setMobile(/Mobi/i.test(window.navigator.userAgent))
+    }, 100)
+
+    return () => clearInterval(timer)
+  })
+
+  return isMobile
+}
+
 export function useDraft(id: string) {
   const key = `chat:${id}:draft`
   const text = localStorage.getItem(key) || ''

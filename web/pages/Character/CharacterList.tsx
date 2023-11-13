@@ -20,6 +20,7 @@ import { CharacterCardView } from './components/CharacterCardView'
 import { CharacterFolderView } from './components/CharacterFolderView'
 import Modal from '/web/shared/Modal'
 import { CreateCharacterForm } from './CreateCharacterForm'
+import { ManualPaginate, usePagination } from '/web/shared/Paginate'
 
 const CACHE_KEY = 'agnai-charlist-cache'
 
@@ -45,7 +46,9 @@ const CharacterList: Component = () => {
   const cfg = settingStore()
   const user = userStore()
   const state = chatStore((s) => ({
-    list: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
+    allChars: s.allChars.list,
+    list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
+    favorites: s.allChars.list.filter((ch) => ch.favorite),
     loading: s.allLoading,
     loaded: s.loaded,
   }))
@@ -58,6 +61,11 @@ const CharacterList: Component = () => {
   const [showImport, setImport] = createSignal(false)
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
   const importQueue: NewCharacter[] = []
+
+  const pageChars = createMemo(() => state.list.slice())
+  const [pageSize, _setPageSize] = createSignal(50)
+
+  const pager = usePagination({ name: 'character-list', items: pageChars, pageSize: pageSize() })
 
   const onImport = (chars: NewCharacter[]) => {
     importQueue.push(...chars)
@@ -83,8 +91,8 @@ const CharacterList: Component = () => {
   }
 
   createEffect(() => {
-    if (!state.list.length) return
-    tagStore.updateTags(state.list)
+    if (!state.allChars.length) return
+    tagStore.updateTags(state.allChars)
   })
 
   createEffect(() => {
@@ -179,15 +187,23 @@ const CharacterList: Component = () => {
           </div>
         </div>
       </div>
+      <div class="flex justify-center">
+        <ManualPaginate pager={pager} />
+      </div>
       <Characters
-        characters={state.list}
+        characters={pager.items()}
         loading={state.loading || false}
         loaded={!!state.loaded}
         type={view()}
         filter={search()}
         sortField={sortField()}
         sortDirection={sortDirection()}
+        favorites={state.favorites}
       />
+      <div class="flex justify-center">
+        <ManualPaginate pager={pager} />
+      </div>
+
       <ImportCharacterModal
         charhubPath={importPath()}
         show={showImport() || !!importPath()}
@@ -200,6 +216,7 @@ const CharacterList: Component = () => {
 
 const Characters: Component<{
   characters: AppSchema.Character[]
+  favorites: AppSchema.Character[]
   loading: boolean
   loaded: boolean
   type: ViewType
@@ -219,7 +236,7 @@ const Characters: Component<{
       .sort(getSortFunction(props.sortField, props.sortDirection))
 
     const groups = [
-      { label: 'Favorites', list: list.filter((c) => c.favorite) },
+      { label: 'Favorites', list: props.favorites },
       { label: '', list: list.filter((c) => !c.favorite) },
     ]
     if (groups[0].list.length === 0) {
