@@ -16,7 +16,7 @@ export const CharacterCardView: Component<ViewProps> = (props) => {
           <Show when={props.showGrouping}>
             <h2 class="text-xl font-bold">{group.label}</h2>
           </Show>
-          <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(140px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
+          <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(160px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
             <For each={group.list}>
               {(char) => (
                 <Character
@@ -46,7 +46,10 @@ const Character: Component<CardProps> = (props) => {
   let ref: any
 
   return (
-    <div ref={ref} class="bg-800 flex flex-col items-center justify-between gap-1 rounded-md p-1">
+    <div
+      ref={ref}
+      class="bg-800 flex flex-col items-center justify-between gap-1 rounded-lg border-[1px] border-[var(--bg-600)]"
+    >
       <div class="w-full">
         <Switch>
           <Match when={props.char.visualType === 'sprite' && props.char.sprite}>
@@ -60,7 +63,7 @@ const Character: Component<CardProps> = (props) => {
           <Match when={props.char.avatar}>
             <A
               href={`/character/${props.char._id}/chats`}
-              class="block h-32 w-full justify-center overflow-hidden rounded-lg"
+              class="block h-32 w-full justify-center overflow-hidden rounded-lg rounded-b-none"
             >
               <img
                 src={getAssetUrl(props.char.avatar!)}
@@ -72,7 +75,7 @@ const Character: Component<CardProps> = (props) => {
           <Match when>
             <A
               href={`/character/${props.char._id}/chats`}
-              class="bg-700 flex h-32 w-full items-center justify-center rounded-md"
+              class="bg-700 flex h-32 w-full items-center justify-center rounded-lg rounded-b-none"
             >
               <VenetianMask size={24} />
             </A>
@@ -80,18 +83,21 @@ const Character: Component<CardProps> = (props) => {
         </Switch>
       </div>
       <div class="w-full text-sm">
-        <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 font-bold">
+        <div class="overflow-hidden text-ellipsis whitespace-nowrap px-1 text-center font-bold">
           {props.char.name}
+        </div>
+        <div class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal">
+          {props.char.description}
         </div>
         {/* hacky positioning shenanigans are necessary as opposed to using an
             absolute positioning because if any of the DropMenu parent is
             positioned, then DropMenu breaks because it relies on the nearest
             positioned parent to be the sitewide container */}
         <div
-          class="float-right mr-[3px] mt-[-149px] flex justify-end"
+          class="float-right mr-[3px] mt-[-195px] flex justify-end"
           onClick={() => setOpts(true)}
         >
-          <div class="rounded-md bg-[var(--bg-500)] p-[2px]">
+          <div class="rounded-md border-[1px] border-[var(--bg-400)] bg-[var(--bg-700)] p-[2px]">
             <Menu size={24} class="icon-button" color="var(--bg-100)" />
           </div>
           <DropMenu

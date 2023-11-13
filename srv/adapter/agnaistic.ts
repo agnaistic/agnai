@@ -291,6 +291,8 @@ registerAdapter('agnaistic', handleAgnaistic, {
   options: [
     'repetitionPenalty',
     'repetitionPenaltyRange',
+    'repetitionPenaltySlope',
+    'topA',
     'topK',
     'topP',
     'streamResponse',
