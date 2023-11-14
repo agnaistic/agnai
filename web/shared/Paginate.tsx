@@ -176,13 +176,22 @@ function getButtonIds(page: number, max: number, span: number) {
   let start = clamp(page - span, max, 1)
   let end = clamp(page + span, max, 1)
   const size = end - start + 1
-  const remainder = span * 2 + 1 - size
+  let remainder = span * 2 + 1 - size
+
+  const init = { start, end }
 
   if (remainder > 0) {
+    console.log('rem', remainder, { start, end, max })
     if (start <= 3) {
+      console.log('start', start)
       end = clamp(end + remainder, max, 1)
-    } else if (end >= max - 2) {
+      remainder = Math.abs(remainder - (end - init.end))
+      if (remainder > 0) start = clamp(start - remainder, max, 1)
+    } else if (end >= max - 3) {
+      console.log('end', end, max, remainder)
       start = clamp(start - remainder, max, 1)
+      remainder = Math.abs(remainder - (init.start - start))
+      if (remainder > 0) end = clamp(end + remainder, max, 1)
     }
   }
 

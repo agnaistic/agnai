@@ -2,7 +2,7 @@ import { customSettings } from '../../config'
 import { AppSchema } from '../../../common/types/schema'
 
 export const personaValidator = {
-  kind: ['wpp', 'sbf', 'boostyle', 'text'],
+  kind: ['wpp', 'sbf', 'boostyle', 'text', 'attributes'],
   attributes: 'any',
 } as const
 
