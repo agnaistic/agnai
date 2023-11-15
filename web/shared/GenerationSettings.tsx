@@ -69,7 +69,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
     props.inherit?.service || (services()[0].value as AIAdapter)
   )
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
-  const [userFormat, setUserFormat] = createSignal(userState.user?.thirdPartyFormat)
+  const [userFormat, _] = createSignal(userState.user?.thirdPartyFormat)
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
