@@ -194,6 +194,7 @@ const Slot: Component<{
     log('Cleanup')
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
+      if (!ezstandalone.getSelectedPlaceholders) return
       const id = uniqueId()
       const holders = ezstandalone.getSelectedPlaceholders()
       if (!done() || !ref || !holders[id!]) return

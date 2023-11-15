@@ -93,7 +93,7 @@ const ChatSettings: Component<{
       systemPrompt: 'string?',
       postHistoryInstructions: 'string?',
       scenario: 'string?',
-      schema: ['wpp', 'boostyle', 'sbf', 'text', null],
+      schema: ['wpp', 'boostyle', 'sbf', 'text', 'attributes', null],
       scenarioId: 'string?',
       mode: ['standard', 'adventure', 'companion', null],
     })

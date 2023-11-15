@@ -218,7 +218,14 @@ export function eventGenerator<T = any>() {
  * Will automatically clamp to `-max -> max` if `min` is not provided
  */
 export function clamp(toClamp: number, max: number, min?: number) {
-  return Math.max(Math.min(toClamp, max), min ?? -max)
+  toClamp = Math.min(toClamp, max)
+  if (min !== undefined) {
+    toClamp = Math.max(toClamp, min)
+  } else {
+    toClamp = Math.max(toClamp, -max)
+  }
+
+  return toClamp
 }
 
 export function now() {

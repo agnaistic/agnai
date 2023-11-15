@@ -41,31 +41,59 @@ const sortOptions: Option<SortField>[] = [
 const CharacterList: Component = () => {
   setComponentPageTitle('Characters')
 
-  const [query, setQuery] = useSearchParams()
-
-  const cfg = settingStore()
-  const user = userStore()
-  const state = chatStore((s) => ({
-    allChars: s.allChars.list,
-    list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
-    favorites: s.allChars.list.filter((ch) => ch.favorite),
-    loading: s.allLoading,
-    loaded: s.loaded,
-  }))
-
   const cached = getListCache()
-  const [view, setView] = createSignal(cached.view || 'list')
+  const [query, setQuery] = useSearchParams()
+  const [search, setSearch] = createSignal('')
   const [sortField, setSortField] = createSignal(cached.sort.field)
   const [sortDirection, setSortDirection] = createSignal(cached.sort.direction)
-  const [search, setSearch] = createSignal('')
+
+  const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
+  const cfg = settingStore()
+  const user = userStore()
+  const state = chatStore((s) => {
+    const favorites = s.allChars.list.filter((ch) => ch.favorite)
+    return {
+      allChars: s.allChars.list,
+      list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
+
+      favorites,
+      loading: s.allLoading,
+      loaded: s.loaded,
+    }
+  })
+
+  const sortedChars = createMemo(() => {
+    const field = sortField()
+    const dir = sortDirection()
+    const sorted = state.list
+      .slice()
+      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
+      .sort(getSortFunction(field, dir))
+    return sorted
+  })
+
+  const sortedFaves = createMemo(() => {
+    const field = sortField()
+    const dir = sortDirection()
+    const sorted = state.favorites
+      .slice()
+      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
+      .sort(getSortFunction(field, dir))
+    return sorted
+  })
+
+  const [view, setView] = createSignal(cached.view || 'list')
   const [showImport, setImport] = createSignal(false)
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
   const importQueue: NewCharacter[] = []
 
-  const pageChars = createMemo(() => state.list.slice())
   const [pageSize, _setPageSize] = createSignal(50)
 
-  const pager = usePagination({ name: 'character-list', items: pageChars, pageSize: pageSize() })
+  const pager = usePagination({
+    name: 'character-list',
+    items: sortedChars,
+    pageSize: pageSize(),
+  })
 
   const onImport = (chars: NewCharacter[]) => {
     importQueue.push(...chars)
@@ -198,7 +226,7 @@ const CharacterList: Component = () => {
         filter={search()}
         sortField={sortField()}
         sortDirection={sortDirection()}
-        favorites={state.favorites}
+        favorites={sortedFaves()}
       />
       <div class="flex justify-center">
         <ManualPaginate pager={pager} />
@@ -224,20 +252,12 @@ const Characters: Component<{
   sortField: SortField
   sortDirection: SortDirection
 }> = (props) => {
-  const tags = tagStore((s) => ({ filter: s.filter, hidden: s.hidden }))
   const [editChar, setEditChar] = createSignal<AppSchema.Character>()
   const [showGrouping, setShowGrouping] = createSignal(false)
   const groups = createMemo(() => {
-    const list = props.characters
-      .slice()
-      .filter((ch) => ch.name.toLowerCase().includes(props.filter.toLowerCase()))
-      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
-      .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
-      .sort(getSortFunction(props.sortField, props.sortDirection))
-
     const groups = [
       { label: 'Favorites', list: props.favorites },
-      { label: '', list: list.filter((c) => !c.favorite) },
+      { label: '', list: props.characters },
     ]
     if (groups[0].list.length === 0) {
       setShowGrouping(false)
