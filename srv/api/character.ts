@@ -31,6 +31,7 @@ const characterValidator = {
   persona: 'string?',
   favorite: 'boolean?',
   voice: 'string?',
+  voiceDisabled: 'string?',
   tags: 'string?',
 
   // v2 fields start here
@@ -100,6 +101,7 @@ const createCharacter = handle(async (req) => {
     sprite,
     avatar: body.originalAvatar,
     favorite: false,
+    voiceDisabled: body.voiceDisabled === 'true',
     voice,
     tags,
     alternateGreetings,
@@ -163,6 +165,7 @@ const editCharacter = handle(async (req) => {
     postHistoryInstructions: body.postHistoryInstructions,
     creator: body.creator,
     characterVersion: body.characterVersion,
+    voiceDisabled: body.voiceDisabled === 'true',
     insert,
   }
 

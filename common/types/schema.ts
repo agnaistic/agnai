@@ -333,6 +333,7 @@ export namespace AppSchema {
     favorite?: boolean
 
     voice?: VoiceSettings
+    voiceDisabled?: boolean
 
     // v2 stuff
     alternateGreetings?: string[]

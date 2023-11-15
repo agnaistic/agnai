@@ -31,7 +31,7 @@ import { Card, Pill, SolidCard, TitleCard } from '../../shared/Card'
 import { usePane, useRootModal } from '../../shared/hooks'
 import Modal from '/web/shared/Modal'
 import EditMemoryForm, { EntrySort, getBookUpdate } from '../Memory/EditMemory'
-import { ToggleButtons } from '../../shared/Toggle'
+import { Toggle, ToggleButtons } from '../../shared/Toggle'
 import AvatarBuilder from '../../shared/Avatar/Builder'
 import { FullSprite } from '/common/types/sprite'
 import { getRandomBody } from '../../asset/sprite'
@@ -704,6 +704,12 @@ export const CreateCharacterForm: Component<{
               </Card>
               <Card class="flex flex-col gap-3">
                 <h4 class="text-md font-bold">Voice</h4>
+                <Toggle
+                  fieldName="voiceDisabled"
+                  value={editor.state.voiceDisabled}
+                  label="Disable Character's Voice"
+                  helperText="Toggle on to disable this character from automatically speaking"
+                />
                 <div>
                   <VoicePicker
                     value={editor.state.voice}
