@@ -396,7 +396,7 @@ export async function buildPromptParts(
 
   const linesForMemory = [...lines].reverse()
   const books: AppSchema.MemoryBook[] = []
-  if (char.characterBook) books.push(char.characterBook)
+  if (replyAs.characterBook) books.push(replyAs.characterBook)
   if (opts.book) books.push(opts.book)
 
   const memory = await buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
