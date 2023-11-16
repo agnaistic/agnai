@@ -46,6 +46,7 @@ type EditState = {
 
   tags: string[]
   book?: AppSchema.MemoryBook
+  voiceDisabled?: boolean
   voice: VoiceSettings
   culture: string
   alternateGreetings: string[]
@@ -67,6 +68,7 @@ export const newCharGuard = {
   insertDepth: 'number',
   creator: 'string',
   characterVersion: 'string',
+  voiceDisabled: 'boolean?',
 } as const
 
 const fieldMap: Map<CharKey, GuardKey | 'tags'> = new Map([
@@ -102,6 +104,7 @@ const initState: EditState = {
   creator: '',
   characterVersion: '',
   postHistoryInstructions: '',
+  voiceDisabled: false,
   insert: {
     prompt: '',
     depth: 3,
@@ -344,6 +347,7 @@ function getPayload(ev: any, state: EditState, original?: NewCharacter) {
     greeting: body.greeting,
     sampleChat: body.sampleChat,
     originalAvatar: original?.originalAvatar,
+    voiceDisabled: body.voiceDisabled,
     voice: state.voice,
 
     // New fields start here

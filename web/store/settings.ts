@@ -327,7 +327,7 @@ async function loadSlotConfig() {
   const slots: any = { publisherId: '' }
 
   try {
-    const content = await fetch('/slots.txt').then((res) => res.text())
+    const content = await fetch('/slots.txt', { cache: 'no-cache' }).then((res) => res.text())
     const config = JSON.parse(content)
 
     for (const [prop, value] of Object.entries(config)) {

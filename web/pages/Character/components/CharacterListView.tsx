@@ -10,9 +10,9 @@ import Button from '/web/shared/Button'
 
 export const CharacterListView: Component<ViewProps> = (props) => {
   return (
-    <div class="flex w-full flex-col gap-2 pb-5">
+    <div class="flex w-full flex-col gap-2">
       <For each={props.groups}>
-        {(group) => (
+        {(group, i) => (
           <>
             <Show when={props.showGrouping && group.label}>
               <h2 class="text-xl font-bold">{group.label}</h2>
@@ -29,7 +29,9 @@ export const CharacterListView: Component<ViewProps> = (props) => {
                 />
               )}
             </For>
-            <Divider />
+            <Show when={i() < props.groups.length - 1}>
+              <Divider />
+            </Show>
           </>
         )}
       </For>

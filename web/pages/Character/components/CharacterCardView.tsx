@@ -11,7 +11,7 @@ import Button from '/web/shared/Button'
 export const CharacterCardView: Component<ViewProps> = (props) => {
   return (
     <For each={props.groups}>
-      {(group) => (
+      {(group, i) => (
         <>
           <Show when={props.showGrouping}>
             <h2 class="text-xl font-bold">{group.label}</h2>
@@ -32,7 +32,9 @@ export const CharacterCardView: Component<ViewProps> = (props) => {
               <For each={new Array(4 - group.list.length)}>{() => <div></div>}</For>
             </Show>
           </div>
-          <Divider />
+          <Show when={i() < props.groups.length - 1}>
+            <Divider />
+          </Show>
         </>
       )}
     </For>

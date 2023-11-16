@@ -28,6 +28,7 @@ export type CharacterUpdate = Partial<
     | 'appearance'
     | 'sprite'
     | 'visualType'
+    | 'voiceDisabled'
   >
 >
 
@@ -57,6 +58,7 @@ export async function createCharacter(
     | 'characterVersion'
     | 'sprite'
     | 'visualType'
+    | 'voiceDisabled'
   >
 ) {
   const newChar: AppSchema.Character = {
@@ -103,6 +105,7 @@ export async function getCharacters(userId: string) {
       createdAt: 1,
       updatedAt: 1,
       voice: 1,
+      voiceDisabled: 1,
     })
     .toArray()
 
@@ -130,6 +133,7 @@ export async function getCharacterList(charIds: string[], userId?: string) {
     voice: 1,
     visualType: 1,
     sprite: 1,
+    voiceDisabled: 1,
   }
   if (userId) {
     const list = await db('character')

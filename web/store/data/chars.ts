@@ -146,6 +146,7 @@ export async function editCharacter(charId: string, { avatar: file, ...char }: U
     strictAppendFormOptional(form, 'postHistoryInstructions', char.postHistoryInstructions)
     strictAppendFormOptional(form, 'creator', char.creator)
     strictAppendFormOptional(form, 'characterVersion', char.characterVersion)
+    appendFormOptional(form, 'voiceDisabled', char.voiceDisabled)
 
     const res = await api.upload(`/character/${charId}`, form)
     return res
@@ -213,6 +214,7 @@ export async function createCharacter(char: NewCharacter) {
     appendFormOptional(form, 'postHistoryInstructions', char.postHistoryInstructions)
     appendFormOptional(form, 'creator', char.creator)
     appendFormOptional(form, 'characterVersion', char.characterVersion)
+    appendFormOptional(form, 'voiceDisabled', char.voiceDisabled)
     const res = await api.upload<AppSchema.Character>(`/character`, form)
     return res
   }

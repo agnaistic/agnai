@@ -67,6 +67,7 @@ const CharacterList: Component = () => {
     const dir = sortDirection()
     const sorted = state.list
       .slice()
+      .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .sort(getSortFunction(field, dir))
     return sorted
@@ -77,6 +78,7 @@ const CharacterList: Component = () => {
     const dir = sortDirection()
     const sorted = state.favorites
       .slice()
+      .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .sort(getSortFunction(field, dir))
     return sorted
@@ -215,7 +217,7 @@ const CharacterList: Component = () => {
           </div>
         </div>
       </div>
-      <div class="flex justify-center">
+      <div class="flex justify-center pb-2">
         <ManualPaginate pager={pager} />
       </div>
       <Characters
@@ -228,7 +230,7 @@ const CharacterList: Component = () => {
         sortDirection={sortDirection()}
         favorites={sortedFaves()}
       />
-      <div class="flex justify-center">
+      <div class="flex justify-center pb-5 pt-2">
         <ManualPaginate pager={pager} />
       </div>
 
@@ -397,7 +399,7 @@ function saveListCache(cache: ListCache) {
 
 const NoCharacters: Component = () => (
   <div class="mt-16 flex w-full justify-center rounded-full text-xl">
-    You have no characters!&nbsp;
+    No characters found&nbsp;
     <A class="text-[var(--hl-500)]" href="/character/create">
       Create a character
     </A>

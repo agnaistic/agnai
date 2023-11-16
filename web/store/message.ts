@@ -733,7 +733,8 @@ subscribe(
     const voice = char.voice
 
     if (body.adapter === 'image' || !voice || !user) return
-    if ((user?.texttospeech?.enabled ?? true) && active.char.userId === user._id) {
+    const canSpeak = (user?.texttospeech?.enabled ?? true) && !char.voiceDisabled
+    if (canSpeak && active.char.userId === user._id) {
       msgStore.textToSpeech(body.messageId, body.message, voice, char.culture ?? defaultCulture)
     }
   }
@@ -827,6 +828,8 @@ function getMessageSpeechInfo(msg: AppSchema.ChatMessage, user: AppSchema.User |
 
   if (!char?.voice) return
   if (!user?.texttospeech?.enabled) return
+  if (char.voiceDisabled) return
+
   return {
     voice: char.voice,
     culture: char.culture,
@@ -850,7 +853,7 @@ subscribe(
 subscribe('voice-generating', { chatId: 'string', messageId: 'string' }, (body) => {
   const activeChatId = msgStore.getState().activeChatId
   if (activeChatId != body.chatId) return
-  const user = userStore.getState().user
+  const { user } = userStore.getState()
   if (user?.texttospeech?.enabled === false) return
   msgStore.setState({ speaking: { messageId: body.messageId, status: 'generating' } })
 })
