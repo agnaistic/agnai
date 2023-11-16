@@ -210,6 +210,19 @@ ChatOwner: 1-TRIGGER
 OtherBot:"
 `;
 
+exports[`Prompt building will not use other character book 1`] = `
+"OtherBot's Persona: OtherBot replies a lot
+
+Scenario: MAIN MainChar
+Facts:
+
+How OtherBot speaks: SAMPLECHAT OtherBot
+
+<START>
+ChatOwner: TRIGGER
+OtherBot:"
+`;
+
 exports[`Prompt building will not use the gaslight when set to false 1`] = `
 "GASLIGHT
 ChatOwner
@@ -261,5 +274,18 @@ How OtherBot speaks: SAMPLECHAT OtherBot
 
 <START>
 
+OtherBot:"
+`;
+
+exports[`Prompt building will use currently speaking character book 1`] = `
+"OtherBot's Persona: OtherBot replies a lot
+
+Scenario: MAIN MainChar
+Facts:ENTRY
+
+How OtherBot speaks: SAMPLECHAT OtherBot
+
+<START>
+ChatOwner: TRIGGER
 OtherBot:"
 `;

@@ -2,7 +2,7 @@ import './init'
 import { expect } from 'chai'
 import { OPENAI_MODELS } from '../common/adapters'
 import { BOT_REPLACE, SELF_REPLACE } from '../common/prompt'
-import { toChat, build, botMsg, toMsg, entities, reset } from './util'
+import { toChat, build, botMsg, toMsg, entities, reset, toBook, toEntry } from './util'
 import { getTokenCounter } from '../srv/tokenize'
 
 const { chat, replyAs, main } = entities
@@ -197,6 +197,31 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     })
 
     expect(actual.template.parsed.includes('Populated scenario')).to.equal(true)
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will use currently speaking character book', async () => {
+    const actual = await build([toMsg('TRIGGER')], {
+      char: { ...main, characterBook: toBook('main char book', []) },
+      replyAs: {
+        ...replyAs,
+        characterBook: toBook('other char book', [toEntry(['TRIGGER'], 'ENTRY')]),
+      },
+      settings: { memoryDepth: 1 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY')
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will not use other character book', async () => {
+    const actual = await build([toMsg('TRIGGER')], {
+      char: { ...main, characterBook: toBook('main char book', [toEntry(['TRIGGER'], 'ENTRY')]) },
+      replyAs: { ...replyAs, characterBook: toBook('other char book', []) },
+      settings: { memoryDepth: 1 },
+    })
+
+    expect(actual.template.parsed).not.to.include('ENTRY')
     expect(actual.template.parsed).toMatchSnapshot()
   })
 })
