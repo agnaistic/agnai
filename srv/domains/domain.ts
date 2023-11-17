@@ -1,4 +1,4 @@
-import { createProvider } from 'evtstore/provider/mongo'
+import { createProvider, migrate } from 'evtstore/provider/mongo'
 import { logger } from '../logger'
 import { getDb } from '../db/client'
 import { Provider, createDomainV2 } from 'evtstore'
@@ -14,9 +14,14 @@ export const providerAsync: Promise<Provider<any>> = new Promise((resolve) => {
 export async function setupDomain() {
   const db = getDb()
 
+  const bookmarks = db.collection<any>('evtstore-bookmarks')
+  const events = db.collection<any>('evtstore-events')
+
+  await migrate(events, bookmarks)
+
   const provider = createProvider({
-    bookmarks: db.collection<any>('evtstore-bookmarks'),
-    events: db.collection<any>('evtstore-events'),
+    events,
+    bookmarks,
     limit: 1000,
     onError: (err, stream, bookmark, event) => {
       logger.error({ err, event, stream, bookmark }, `Event failed`)
