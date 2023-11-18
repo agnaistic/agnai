@@ -405,6 +405,7 @@ export namespace AppSchema {
     repetitionPenaltyRange: number
     repetitionPenaltySlope: number
     typicalP: number
+    minP?: number
     topP: number
     topK: number
     topA: number

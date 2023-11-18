@@ -26,6 +26,7 @@ export const presetValidator = {
   memoryChatEmbedLimit: 'number?',
   memoryUserEmbedLimit: 'number?',
 
+  minP: 'number?',
   typicalP: 'number',
   topP: 'number',
   topK: 'number',
@@ -159,6 +160,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical',
     topA: 'top_a',
     order: 'sampler_order',
+    minP: 'min_p',
   },
   novel: {
     maxTokens: 'max_length',
@@ -172,6 +174,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     typicalP: 'typical_p',
     topA: 'top_a',
     order: '',
+    minP: '',
   },
   ooba: {
     maxTokens: 'max_new_tokens',
@@ -193,6 +196,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     repetitionPenaltyRange: '',
     repetitionPenaltySlope: '',
     tailFreeSampling: '',
+    minP: 'min_p',
   },
   horde: {
     maxTokens: 'max_length',
@@ -207,6 +211,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: 'top_a',
     order: 'sampler_order',
     maxContextLength: 'max_context_length',
+    minP: '',
   },
   openai: {
     maxTokens: 'max_tokens',
@@ -225,6 +230,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     gaslight: 'gaslight',
     oaiModel: 'oaiModel',
     streamResponse: 'stream',
+    minP: '',
   },
   claude: {
     maxTokens: 'max_tokens_to_sample',
@@ -239,6 +245,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: '',
     gaslight: 'gaslight',
     claudeModel: 'claudeModel',
+    minP: '',
   },
   scale: {
     maxTokens: '',
@@ -256,6 +263,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     presencePenalty: '',
     gaslight: '',
     oaiModel: '',
+    minP: '',
   },
   goose: {
     maxTokens: 'max_tokens',
@@ -273,6 +281,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     presencePenalty: 'presence_penalty',
     gaslight: '',
     oaiModel: '',
+    minP: '',
   },
   replicate: {
     maxTokens: 'max_tokens',
@@ -291,6 +300,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     gaslight: '',
     replicateModelType: 'replicateModelType',
     replicateModelVersion: 'replicateModelVersion',
+    minP: '',
   },
   openrouter: {
     maxTokens: 'max_tokens',
@@ -310,6 +320,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     encoderRepitionPenalty: '',
     frequencyPenalty: '',
     gaslight: '',
+    minP: '',
   },
   mancer: {
     maxTokens: 'max_new_tokens',
@@ -328,6 +339,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     repetitionPenaltyRange: '',
     repetitionPenaltySlope: '',
     tailFreeSampling: '',
+    minP: 'min_p',
   },
   petals: {
     maxTokens: '',
@@ -342,6 +354,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     topA: '',
     gaslight: '',
     claudeModel: '',
+    minP: '',
   },
   agnaistic: {
     maxTokens: 'max_tokens',
@@ -361,6 +374,7 @@ export const serviceGenMap: Record<Exclude<ChatAdapter, 'default'>, GenMap> = {
     encoderRepitionPenalty: '',
     frequencyPenalty: '',
     gaslight: '',
+    minP: '',
   },
 }
 

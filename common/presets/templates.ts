@@ -53,7 +53,8 @@ export const templates = {
   
   {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
   {{/each}}
-  {{#if ujb}}SYSTEM:{{ujb}}{{/if}}
+  {{#if ujb}}SYSTEM:{{ujb}}
+  {{/if}}
   ASSISTANT: {{post}}`,
   NovelAI: neat`
   {{#if system_prompt}}{{system_prompt}}
@@ -108,7 +109,8 @@ export const templates = {
   {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
   {{/each}}
   {{#if ujb}}<|system|>{{ujb}}
-  {{/if}}<|model|>{{post}}`,
+  {{/if}}
+  <|model|>{{post}}`,
   ChatML: neat`
   {{#if system_prompt}}<|im_start|>system
   {{system_prompt}}<|im_end|>{{/if}}
