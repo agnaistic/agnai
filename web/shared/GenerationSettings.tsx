@@ -696,6 +696,20 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         />
 
         <RangeInput
+          fieldName="minP"
+          label="Min P"
+          helperText="Used to discard unlikely text in the sampling process. Lower values will make text more predictable. (Put this value on 0 to disable its effect)"
+          min={0}
+          max={1}
+          step={0.01}
+          value={props.inherit?.minP ?? 0}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'minP'}
+        />
+
+        <RangeInput
           fieldName="topP"
           label="Top P"
           helperText="Used to discard unlikely text in the sampling process. Lower values will make text more predictable but can become repetitious. (Put this value on 1 to disable its effect)"

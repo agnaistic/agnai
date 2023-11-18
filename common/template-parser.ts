@@ -144,7 +144,7 @@ export async function parseTemplate(
     }
   }
 
-  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n')
+  const result = render(output, opts).replace(/\r\n/g, '\n').replace(/\n\n+/g, '\n\n').trimStart()
   return {
     parsed: result,
     inserts: opts.inserts ?? new Map(),
