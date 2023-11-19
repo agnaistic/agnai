@@ -91,12 +91,10 @@ const CharacterList: Component = () => {
   const [importPath, setImportPath] = createSignal<string | undefined>(query.import)
   const importQueue: NewCharacter[] = []
 
-  const [pageSize, _setPageSize] = createSignal(50)
-
   const pager = usePagination({
     name: 'character-list',
     items: sortedChars,
-    pageSize: pageSize(),
+    pageSize: 50,
   })
 
   const onImport = (chars: NewCharacter[]) => {
