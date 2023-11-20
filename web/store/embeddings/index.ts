@@ -7,7 +7,6 @@ import { slugify } from '/common/util'
 import { toastStore } from '../toasts'
 import { docCache } from './cache'
 import type { MemoryState } from '../memory'
-import * as gpt3 from 'gpt-3-encoder'
 
 type Callback = () => void
 type QueryResult = Extract<WorkerResponse, { type: 'result' }>
@@ -238,8 +237,9 @@ async function encode(text: string): Promise<number[]> {
   const id = v4()
   return new Promise<number[]>((resolve) => {
     const start = Date.now()
-    const timer = setTimeout(() => {
-      resolve(gpt3.encode(text))
+    const timer = setTimeout(async () => {
+      const result = await import('gpt-3-encoder').then((mod) => mod.encode(text))
+      resolve(result)
     }, TOKENIZE_LIMIT)
     const resolver = (tokens: number[]) => {
       clearTimeout(timer)
@@ -253,7 +253,10 @@ async function encode(text: string): Promise<number[]> {
 async function decode(tokens: number[]): Promise<string> {
   const id = v4()
   return new Promise<string>((resolve) => {
-    const timer = setTimeout(() => resolve(gpt3.decode(tokens)), TOKENIZE_LIMIT)
+    const timer = setTimeout(async () => {
+      const result = await import('gpt-3-encoder').then((mod) => mod.decode(tokens))
+      resolve(result)
+    }, TOKENIZE_LIMIT)
     const resolver = (text: string) => {
       clearTimeout(timer)
       resolve(text)
