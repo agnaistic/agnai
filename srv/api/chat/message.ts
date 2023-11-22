@@ -315,7 +315,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   if (chat.mode === 'adventure') {
     const lines = await fillPromptWithLines(
-      getTokenCounter('main'),
+      getTokenCounter('main', undefined),
       2048,
       '',
       body.lines.concat(`${body.replyAs.name}: ${responseText}`)

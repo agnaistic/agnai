@@ -392,6 +392,7 @@ export namespace AppSchema {
     allowGuestUsage?: boolean
     isDefaultSub?: boolean
     deletedAt?: string
+    tokenizer?: string
   }
 
   export interface GenSettings {

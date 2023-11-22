@@ -20,6 +20,15 @@ import { Toggle } from '/web/shared/Toggle'
 import { Card } from '/web/shared/Card'
 import { useRootModal } from '/web/shared/hooks'
 
+const tokenizers = [
+  { label: 'None', value: '' },
+  { label: 'LlamaV1', value: 'llama' },
+  { label: 'Turbo', value: 'turbo' },
+  { label: 'DaVinci', value: 'davinci' },
+  { label: 'Novel Kayra', value: 'novel-modern' },
+  { label: 'Novel (Old)', value: 'novel' },
+]
+
 export const Subscription: Component = () => {
   const { updateTitle } = setComponentPageTitle('Subscription')
   let ref: any
@@ -147,6 +156,7 @@ export const Subscription: Component = () => {
       isDefaultSub: 'boolean',
       thirdPartyFormat: 'string?',
       allowGuestUsage: 'boolean',
+      tokenizer: 'string?',
     } as const
 
     const presetData = getPresetFormData(ref)
@@ -302,6 +312,15 @@ export const Subscription: Component = () => {
                       />
                     </Card>
                   </div>
+
+                  <Select
+                    fieldName="tokenizer"
+                    items={tokenizers}
+                    value={editing()?.tokenizer}
+                    label="Tokenizer Override"
+                    helperText="Optional. For use with custom models."
+                  />
+
                   <GenerationSettings
                     inherit={editing()}
                     disabled={params.id === 'default'}

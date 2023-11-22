@@ -67,6 +67,7 @@ const CharacterList: Component = () => {
     const dir = sortDirection()
     const sorted = state.list
       .slice()
+      .filter((ch) => ch.userId === user.user?._id)
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))

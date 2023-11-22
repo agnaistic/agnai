@@ -10,7 +10,12 @@ import { config } from './config'
 import { createServer } from './server'
 import pipeline from './api/pipeline'
 
-const upload = multer({ limits: { fileSize: config.limits.upload * 1024 * 1024 } })
+const upload = multer({
+  limits: {
+    fileSize: config.limits.upload * 1024 * 1024,
+    fieldSize: config.limits.upload * 1024 * 1024,
+  },
+})
 
 const app = express()
 const server = createServer(app)

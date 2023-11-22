@@ -254,33 +254,6 @@ const Slot: Component<{
 
     if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
       invoke(log, num)
-      // ezReady.then(() => {
-      // ezstandalone.cmd.push(() => {
-      //   if (!ezstandalone.enabled) {
-      //     log('[ez]', num, `dispatched #${num}`)
-      //     ezstandalone.define(num)
-      //     ezstandalone.enable()
-      //     ezstandalone.display()
-      //   } else {
-      //     log('[ez]', num, `dispatched #${num} (more)`)
-      //     // ezstandalone.define(...nums)
-      //     ezstandalone.displayMore(num)
-      //   }
-      // })
-
-      // const timer = setInterval(() => {
-      //   const holders = ezstandalone.getSelectedPlaceholders()
-      //   const inUse = idLocks.has(num)
-      //   if (!inUse || holders[num]) {
-      //     clearInterval(timer)
-      //   } else {
-      //     ezstandalone.cmd.push(() => {
-      //       log('[ez]', num, 'retrying display')
-      //       ezstandalone.displayMore(num)
-      //     })
-      //   }
-      // }, 200)
-      // })
     } else if (cfg.slots.provider === 'google') {
       gtmReady.then(() => {
         googletag.cmd.push(function () {

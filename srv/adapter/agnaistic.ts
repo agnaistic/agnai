@@ -126,6 +126,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       ultimeJailbreak,
       systemPrompt,
       stopSequences,
+      maxTokens,
       ...recommended
     } = preset
     Object.assign(opts.gen, recommended)

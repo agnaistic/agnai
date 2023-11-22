@@ -14,6 +14,7 @@ const subSetting = {
   subLevel: 'number',
   subModel: 'string?',
   subApiKey: 'string?',
+  tokenizer: 'string?',
   isDefaultSub: 'boolean?',
 } as const
 

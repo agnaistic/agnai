@@ -8,7 +8,7 @@ import gpt from 'gpt-3-encoder'
 import { resolve } from 'path'
 import * as nai from 'nai-js-tokenizer'
 import { logger } from './logger'
-import { Encoder, TokenCounter, Tokenizer } from '/common/types'
+import { AppSchema, Encoder, TokenCounter, Tokenizer } from '/common/types'
 
 const claudeJson = readFileSync(resolve(__dirname, 'sp-models', 'claude.json'))
 const pileJson = readFileSync(resolve(__dirname, 'sp-models', 'pile_tokenizer.json'))
@@ -36,6 +36,8 @@ let claude: Encoder
 let davinci: Encoder
 let turbo: Encoder
 
+export type EncoderType = 'novel' | 'novel-modern' | 'llama' | 'claude' | 'davinci' | 'turbo'
+
 const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo,
   OPENAI_MODELS.Turbo0301,
@@ -45,9 +47,39 @@ const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo_Intruct914,
 ])
 
-export function getTokenCounter(adapter: AIAdapter | 'main', model?: string): TokenCounter {
+export function getTokenCounter(
+  adapter: AIAdapter | 'main',
+  model: string | undefined,
+  sub?: AppSchema.SubscriptionPreset
+): TokenCounter {
+  if (sub?.tokenizer) {
+    const tokenizer = getEncoderByName(sub.tokenizer as EncoderType)
+    if (tokenizer) return tokenizer.count
+  }
   const tokenizer = getEncoder(adapter, model)
   return tokenizer.count
+}
+
+export function getEncoderByName(type: EncoderType) {
+  switch (type) {
+    case 'claude':
+      return claude
+
+    case 'davinci':
+      return davinci
+
+    case 'llama':
+      return llama
+
+    case 'novel':
+      return novel
+
+    case 'novel-modern':
+      return novelModern
+
+    case 'turbo':
+      return turbo
+  }
 }
 
 export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder {

@@ -10,3 +10,10 @@ export const isAdmin: any = (req: AppRequest, _: any, next: NextFunction) => {
   if (!req.user?.admin) return next(errors.Forbidden)
   next()
 }
+
+export const apiKeyUsage = async (req: AppRequest, _: any, next: NextFunction) => {
+  const key = req.get('x-api-key')
+  if (!key) {
+    return next(errors.Unauthorized)
+  }
+}

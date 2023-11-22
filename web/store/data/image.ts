@@ -72,6 +72,7 @@ export async function generateImageWithPrompt(
     ephemeral: true,
     source,
   })
+
   return res
 }
 

@@ -254,7 +254,7 @@ export async function createTextStreamV2(
   }
 
   const { adapter, isThirdParty, model } = getAdapter(opts.chat, opts.user, opts.settings)
-  const encoder = getTokenCounter(adapter, model)
+  const encoder = getTokenCounter(adapter, model, subscription?.preset)
   const handler = handlers[adapter]
 
   /**
@@ -304,6 +304,7 @@ export async function createTextStreamV2(
     impersonate: opts.impersonate,
     lastMessage: opts.lastMessage,
     subscription,
+    encoder,
   })
 
   return { stream, adapter, settings: gen, user: opts.user, size, length: prompt.length }

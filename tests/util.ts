@@ -111,7 +111,7 @@ export async function build(
       userEmbeds: [],
       resolvedScenario: opts.resolvedScenario ?? overChar.scenario,
     },
-    getTokenCounter('main')
+    getTokenCounter('main', undefined)
   )
 
   return result
@@ -167,7 +167,7 @@ async function getParseOpts(
         resolvedScenario: overChar.scenario,
       },
       overrides.lines || lines,
-      getTokenCounter('main')
+      getTokenCounter('main', undefined)
     ))
 
   const base: TemplateOpts = {

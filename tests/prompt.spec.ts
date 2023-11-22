@@ -50,7 +50,8 @@ This is how {{char}} should talk: {{example_dialogue}}`,
   })
 
   it('will exclude lowest priority memory to fit in budget', async () => {
-    const limit = (await getTokenCounter('main')(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`)) - 1
+    const limit =
+      (await getTokenCounter('main', undefined)(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`)) - 1
     const actual = await build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
       {
