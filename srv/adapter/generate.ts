@@ -40,7 +40,7 @@ configure(async (opts) => {
   return { body: res.body, statusCode: res.statusCode, statusMessage: res.statusMessage }
 }, logger)
 
-type InferenceRequest = {
+export type InferenceRequest = {
   prompt: string
   guest?: string
   user: AppSchema.User
@@ -101,7 +101,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
   throw new Error(`Could not complete inference: Max retries exceeded`)
 }
 
-async function createInferenceStream(opts: InferenceRequest) {
+export async function createInferenceStream(opts: InferenceRequest) {
   const [service, model] = opts.service.split('/')
   const settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
 

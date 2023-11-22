@@ -12,6 +12,7 @@ type StorageKey = keyof typeof KEYS
 const ID = 'anon'
 
 const emptyCfg: AppSchema.AppConfig = {
+  serverConfig: {} as any,
   adapters: [],
   canAuth: false,
   version: '',

@@ -4,8 +4,6 @@ import { SD_SAMPLER, SD_SAMPLER_REV } from '../../common/image'
 import { SDSettings } from '../../common/types/image-schema'
 import { logger } from '../logger'
 
-const negative_prompt = `disfigured, deformed, poorly, blurry, lowres, fused, malformed, misshapen, duplicated, grainy, distorted`
-
 const defaultSettings: SDSettings = {
   type: 'sd',
   sampler: SD_SAMPLER['DPM++ 2M'],
@@ -33,7 +31,7 @@ type SDRequest = {
   hr_second_pass_steps?: number
 }
 
-export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId) => {
+export const handleSDImage: ImageAdapter = async ({ user, prompt, negative }, log, guestId) => {
   const base = user.images
   const settings = user.images?.sd || defaultSettings
 
@@ -47,7 +45,7 @@ export const handleSDImage: ImageAdapter = async ({ user, prompt }, log, guestId
     width: base?.width ?? 384,
     n_iter: 1,
     batch_size: 1,
-    negative_prompt: user.images?.negative || negative_prompt,
+    negative_prompt: negative,
     sampler_name: (SD_SAMPLER_REV as any)[settings.sampler ?? defaultSettings.sampler],
     cfg_scale: base?.cfg ?? 9,
     seed: Math.trunc(Math.random() * 1_000_000_000),

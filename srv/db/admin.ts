@@ -4,12 +4,41 @@ import { encryptPassword } from './util'
 import { AppSchema } from '../../common/types/schema'
 import { getDb } from './client'
 import { domain } from '../domains'
+import { config } from '../config'
 
 type UsersOpts = {
   username?: string
   page?: number
   subscribed?: boolean
   customerId?: string
+}
+
+export async function getServerConfiguration() {
+  const cfg = await db('configuration').findOne({ kind: 'configuration' })
+  if (cfg) return cfg
+
+  const next: AppSchema.Configuration = {
+    kind: 'configuration',
+    apiAccess: 'off',
+    enabledAdapters: [],
+    maintenance: !!config.ui.maintenance,
+    maintenanceMessage: config.ui.maintenance || '',
+    policiesEnabled: config.ui.policies,
+    privacyStatement: '',
+    privacyUpdated: new Date().toISOString(),
+    slots: '',
+    termsOfService: '',
+    tosUpdated: new Date().toISOString(),
+  }
+
+  await db('configuration').insertOne(next)
+  return next
+}
+
+export async function updateServerConfiguration(update: AppSchema.Configuration) {
+  await db('configuration').updateOne({ kind: 'configuration' }, { $set: update }, { upsert: true })
+  const cfg = await getServerConfiguration()
+  return cfg
 }
 
 export async function getUsers(opts: UsersOpts = {}) {

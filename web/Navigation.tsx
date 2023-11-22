@@ -215,6 +215,9 @@ const UserNavigation: Component = () => {
           <span aria-hidden="true">Manage</span>
         </Item>
         <SubMenu>
+          <SubItem href="/admin/configuration" parent="/admin/" ariaLabel="Configuration">
+            Configuration
+          </SubItem>
           <SubItem href="/admin/users" parent="/admin/" ariaLabel="Users">
             Users
           </SubItem>

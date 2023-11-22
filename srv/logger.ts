@@ -51,17 +51,22 @@ function parentLogger(name: string) {
 
 export function logMiddleware() {
   const middleware = async (req: any, res: Response, next: NextFunction) => {
-    const log = logger.child({ requestId: uuid.v4(), url: req.url, method: req.method })
+    const requestId = uuid.v4()
+    const log = logger.child({ requestId, url: req.url, method: req.method })
 
+    req.requestId = requestId
     req.log = log
 
-    const canLog = req.method !== 'OPTIONS' && req.url.startsWith('/api')
+    const canLog =
+      req.method !== 'OPTIONS' &&
+      (req.url.startsWith('/api') || req.url.startsWith('/v1')) &&
+      !req.url.includes('/subscriptions?')
 
     const socketId = req.get('socket-id') || ''
     req.socketId = socketId
 
     const auth = req.get('authorization')
-    if (auth) {
+    if (auth && !req.url.startsWith('/v1')) {
       /** API Key usage */
       if (auth.startsWith('Key ') && config.auth.oauth) {
         const apikey = auth.replace('Key ', '')

@@ -37,6 +37,8 @@ export async function getAppConfig(user?: AppSchema.User) {
   const models = getHordeModels()
   const openRouter = await getOpenRouterModels()
 
+  const configuration = await store.admin.getServerConfiguration()
+
   if (!appConfig) {
     await store.subs.prepSubscriptionCache()
     const subs = store.subs.getCachedSubscriptions(user)
@@ -62,11 +64,13 @@ export async function getAppConfig(user?: AppSchema.User) {
       },
       openRouter: { models: openRouter },
       subs,
+      serverConfig: configuration,
     }
   }
 
   const subs = store.subs.getCachedSubscriptions()
 
+  appConfig.serverConfig = configuration
   appConfig.subs = subs
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)
   appConfig.openRouter.models = openRouter

@@ -107,6 +107,7 @@ const createTier = handle(async ({ body }) => {
       enabled: 'boolean',
       disableSlots: 'boolean',
       description: 'string',
+      apiAccess: 'boolean',
     },
     body
   )
@@ -124,6 +125,7 @@ const updateTier = handle(async ({ body, params }) => {
       enabled: 'boolean',
       disableSlots: 'boolean',
       description: 'string',
+      apiAccess: 'boolean',
     },
     body,
     true

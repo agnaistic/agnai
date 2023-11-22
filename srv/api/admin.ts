@@ -21,6 +21,7 @@ const searchUsers = handle(async (req) => {
     subscribed: body.subscribed,
     page: body.page,
   })
+
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
 })
 
@@ -57,6 +58,31 @@ const getMetrics = handle(async () => {
   }
 })
 
+const updateConfiguration = handle(async ({ body }) => {
+  assertValid(
+    {
+      slots: 'string',
+      maintenance: 'boolean',
+      maintenanceMessage: 'string',
+      apiAccess: ['off', 'users', 'subscribers', 'admins'],
+      policiesEnabled: 'boolean',
+      termsOfService: 'string',
+      privacyStatement: 'string',
+      enabledAdapters: ['string'],
+    },
+    body
+  )
+
+  const next = await store.admin.updateServerConfiguration({
+    kind: 'configuration',
+    privacyUpdated: '',
+    tosUpdated: '',
+    ...body,
+  })
+
+  return next
+})
+
 const updateTier = handle(async (req) => {
   assertValid({ tierId: 'string' }, req.body)
   await store.users.updateUserTier(req.params.userId, req.body.tierId)
@@ -69,5 +95,6 @@ router.get('/metrics', getMetrics)
 router.get('/users/:id/info', getUserInfo)
 router.post('/user/password', setUserPassword)
 router.post('/notify', notifyAll)
+router.post('/configuration', updateConfiguration)
 
 export default router

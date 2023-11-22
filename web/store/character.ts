@@ -342,11 +342,7 @@ export const characterStore = createStore<CharacterState>(
             ? `full body, ${persona}`
             : await createAppearancePrompt(user, { persona })
 
-        prompt = prompt
-          .replace(/\n+/g, ', ')
-          .replace(/\./g, ',')
-          .replace(/,+/g, ', ')
-          .replace(/\s+/g, ' ')
+        prompt = prompt.replace(/\n+/g, ', ').replace(/\s+/g, ' ')
         yield { generate: { image: null, loading: true, blob: null } }
         imageCallback = onDone
         const res = await imageApi.generateImageWithPrompt(prompt, 'avatar', async (image) => {

@@ -1,5 +1,5 @@
 import { Router } from 'express'
-import { loggedIn } from '../auth'
+import { apiKeyUsage, loggedIn } from '../auth'
 import { createChat, importChat } from './create'
 import {
   restartChat,
@@ -16,11 +16,12 @@ import { generateMessageV2, getMessages, createMessage } from './message'
 import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
-import { generateActions, guidance, inference, rerunGuidance } from './inference'
+import { generateActions, guidance, inference, inferenceApi, rerunGuidance } from './inference'
 
 const router = Router()
 
 router.post('/inference', inference)
+router.post('/completion', apiKeyUsage, inferenceApi)
 router.post('/guidance', guidance)
 router.post('/reguidance', rerunGuidance)
 router.post('/:id/actions', generateActions)

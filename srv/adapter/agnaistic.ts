@@ -32,7 +32,7 @@ export async function getSubscriptionPreset(
   if (!gen) return
   if (gen.service !== 'agnaistic') return
 
-  const level = user.admin ? Infinity : user.sub?.level ?? -1
+  const level = user.admin ? 100 : user.sub?.level ?? -1
   let error: string | undefined = undefined
   let warning: string | undefined = undefined
 

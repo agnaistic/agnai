@@ -58,7 +58,11 @@ export async function generateImageWithPrompt(
 
   if (!isLoggedIn() && (!user.images || user.images.type === 'horde')) {
     try {
-      const { text: image } = await horde.generateImage(user, prompt)
+      const { text: image } = await horde.generateImage(
+        user,
+        prompt,
+        user.images?.negative || horde.defaults.image.negative
+      )
       onDone(image)
       return localApi.result({})
     } catch (ex: any) {

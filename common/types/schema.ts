@@ -32,6 +32,7 @@ export type AllDoc =
   | AppSchema.ScenarioBook
   | AppSchema.ApiKey
   | AppSchema.PromptTemplate
+  | AppSchema.Configuration
 
 export type OAuthScope = keyof typeof oauthScopes
 
@@ -43,6 +44,38 @@ export type ChatBranch = {
 }
 
 export namespace AppSchema {
+  export interface Configuration {
+    kind: 'configuration'
+
+    /** JSON - merges with slots.txt, but this takes precedence when field collisions occur */
+    slots: string
+
+    /** Determines who can use API access for inferencing */
+    apiAccess: 'off' | 'users' | 'subscribers' | 'admins'
+
+    maintenance: boolean
+
+    /** Markdown */
+    maintenanceMessage: string
+
+    /** Not yet implemented */
+    policiesEnabled: boolean
+
+    /** Not yet implemented */
+    tosUpdated: string
+    /** Not yet implemented */
+    termsOfService: string
+
+    /** Not yet implemented */
+    privacyUpdated: string
+    /** Not yet implemented */
+    privacyStatement: string
+
+    /** Concatenated to adapters listed in ADAPTERS envvar */
+    /** Not yet implemented */
+    enabledAdapters: string[]
+  }
+
   export interface Announcement {
     kind: 'announcement'
     _id: string
@@ -65,6 +98,7 @@ export namespace AppSchema {
 
     productId: string
     priceId: string
+    apiAccess: boolean
 
     name: string
     description: string
@@ -82,6 +116,7 @@ export namespace AppSchema {
     name: string
     level: number
     service: AIAdapter
+    preset: GenSettings
   }
 
   export interface AppConfig {
@@ -105,6 +140,7 @@ export namespace AppSchema {
     }
     openRouter: { models: OpenRouterModel[] }
     subs: Array<SubscriptionOption>
+    serverConfig: Configuration
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -133,6 +169,7 @@ export namespace AppSchema {
     kind: 'user'
     username: string
     hash: string
+    apiKey?: string
 
     admin: boolean
 

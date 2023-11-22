@@ -99,6 +99,12 @@ const App: Component = () => {
                 path="/admin/metrics"
                 component={lazy(() => import('./pages/Admin/Metrics'))}
               />
+
+              <Route
+                path="/admin/configuration"
+                component={lazy(() => import('./pages/Admin/Configuration'))}
+              />
+
               <Route
                 path="/admin/users"
                 component={lazy(() => import('./pages/Admin/UsersPage'))}

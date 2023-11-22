@@ -15,6 +15,7 @@ export type ImageAdapter = (
   opts: {
     user: AppSchema.User
     prompt: string
+    negative: string
   },
   log: AppLog,
   guestId?: string
