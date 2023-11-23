@@ -287,6 +287,7 @@ export const inferenceApi = wrap(async (req, res) => {
     mirostatTau: body.mirostat_tau,
     mirostatLR: body.mirostat_eta,
     registered: preset.registered,
+    stopSequences: body.stop,
   }
 
   const request: InferenceRequest = {
