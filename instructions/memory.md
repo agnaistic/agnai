@@ -11,13 +11,20 @@ You can also provide `priority` and `weight`, but we'll get to that later.
 
 - Keywords:
   - These are words that "trigger" the memory to be inserted into your prompt.
-  - E.g. `drink, thrist, hydrate, hydrate`
+  - E.g. `drink, thrist, hydrate, water`
 - Entry:
   - This is the text that is inserted into your prompt when one of your keywords is found.
   - E.g. `{{user}}'s favourite drink is red cordial on the rocks`
 
 Your generation settings will have a **Memory Depth**. This is the maximum number of chat messages that Agnai will scan for keywords.  
 It is important to remember this all happens in your browser.
+
+You can use `*` (matching any character zero or more times) and `?` (matching a single character) wildcards in your keywords, e.g.
+
+- `book*` will match `book`, `books`, `booking`, but not `ebook`
+- `?book` will match `ebook`, but not `book`
+
+In particular the keyword `*` matches anything, as long as Memory settings allow for it.
 
 ### Why is it important to remember this occurs in the browser?
 
