@@ -11,6 +11,7 @@ import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHordeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
 import { updateRegisteredSubs } from '../adapter/agnaistic'
+import { getCachedTiers } from '../db/subscriptions'
 
 const router = Router()
 
@@ -40,7 +41,8 @@ export async function getAppConfig(user?: AppSchema.User) {
   const configuration = await store.admin.getServerConfiguration()
 
   if (!appConfig) {
-    await store.subs.prepSubscriptionCache()
+    await Promise.all([store.subs.prepSubscriptionCache(), store.subs.prepTierCache()])
+
     const subs = store.subs.getCachedSubscriptions(user)
     updateRegisteredSubs()
     appConfig = {
@@ -69,6 +71,30 @@ export async function getAppConfig(user?: AppSchema.User) {
   }
 
   const subs = store.subs.getCachedSubscriptions()
+
+  if (user) {
+    switch (configuration.apiAccess) {
+      case 'off':
+        break
+
+      case 'admins':
+        appConfig.apiAccess = !!user.admin
+        break
+
+      case 'subscribers':
+        if (!user.sub) break
+        if (user.sub.level <= 0) break
+        const tiers = getCachedTiers()
+        const tier = tiers.find((t) => t._id === user.sub?.tierId)
+        if (!tier) break
+        appConfig.apiAccess = !!tier.apiAccess
+        break
+
+      case 'users':
+        appConfig.apiAccess = true
+        break
+    }
+  }
 
   appConfig.serverConfig = configuration
   appConfig.subs = subs

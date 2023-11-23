@@ -5,6 +5,7 @@ import { StatusError } from '../api/wrap'
 import { now } from './util'
 
 const subCache = new Map<string, AppSchema.SubscriptionPreset>()
+const tierCache = new Map<string, AppSchema.SubscriptionTier>()
 
 export async function getSubscriptions() {
   const subs = await db('subscription-setting')
@@ -115,8 +116,13 @@ export function getCachedSubscriptions(user?: AppSchema.User | null) {
   return subs
 }
 
+export function getCachedTiers() {
+  const tiers = Array.from(tierCache.values())
+  return tiers
+}
+
 setInterval(async () => {
-  await prepSubscriptionCache().catch(() => null)
+  await Promise.all([prepSubscriptionCache().catch(() => null), prepTierCache().catch(() => null)])
 }, 5000)
 
 export async function prepSubscriptionCache() {
@@ -125,6 +131,16 @@ export async function prepSubscriptionCache() {
     subCache.clear()
     for (const preset of presets) {
       subCache.set(preset._id, preset)
+    }
+  } catch (ex) {}
+}
+
+export async function prepTierCache() {
+  try {
+    const tiers = await getTiers()
+    tierCache.clear()
+    for (const tier of tiers) {
+      tierCache.set(tier._id, tier)
     }
   } catch (ex) {}
 }

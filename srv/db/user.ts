@@ -261,7 +261,7 @@ export async function validateApiAccess(apiKey: string) {
   if (!config?.apiAccess || config.apiAccess === 'off') return
 
   /** TODO: Replace with api key lookup */
-  const user = await db('user').findOne({ _id: apiKey })
+  const user = await db('user').findOne({ apiKey: apiKey })
   if (!user) return
 
   if (config.apiAccess === 'admins') {

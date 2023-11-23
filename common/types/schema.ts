@@ -130,6 +130,7 @@ export namespace AppSchema {
     maintenance?: string
     patreon?: boolean
     policies?: boolean
+    apiAccess?: boolean
     flags?: string
 
     pipelineProxyEnabled: boolean
