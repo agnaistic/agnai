@@ -2,7 +2,7 @@ import express from 'express'
 import multer from 'multer'
 import cors from 'cors'
 import { logMiddleware } from './logger'
-import api from './api'
+import api, { keyedRouter } from './api'
 import { errors } from './api/wrap'
 import { resolve } from 'path'
 import { setupSockets } from './api/ws'
@@ -10,7 +10,12 @@ import { config } from './config'
 import { createServer } from './server'
 import pipeline from './api/pipeline'
 
-const upload = multer({ limits: { fileSize: config.limits.upload * 1024 * 1024 } })
+const upload = multer({
+  limits: {
+    fileSize: config.limits.upload * 1024 * 1024,
+    fieldSize: config.limits.upload * 1024 * 1024,
+  },
+})
 
 const app = express()
 const server = createServer(app)
@@ -27,6 +32,7 @@ setupSockets(server)
 
 const index = resolve(baseFolder, 'dist', 'index.html')
 
+app.use('/v1', keyedRouter)
 app.use('/api', api)
 
 if (config.pipelineProxy) {
@@ -46,7 +52,7 @@ if (config.extraFolder) {
 }
 
 app.use((req, res, next) => {
-  if (req.url.startsWith('/api')) {
+  if (req.url.startsWith('/api') || req.url.startsWith('/v1')) {
     return next(errors.NotFound)
   }
 

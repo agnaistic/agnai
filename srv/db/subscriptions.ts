@@ -5,6 +5,7 @@ import { StatusError } from '../api/wrap'
 import { now } from './util'
 
 const subCache = new Map<string, AppSchema.SubscriptionPreset>()
+const tierCache = new Map<string, AppSchema.SubscriptionTier>()
 
 export async function getSubscriptions() {
   const subs = await db('subscription-setting')
@@ -82,14 +83,46 @@ export function getCachedSubscriptions(user?: AppSchema.User | null) {
       name: `${sub.name}`,
       level: sub.subLevel,
       service: sub.service!,
+      preset: {
+        name: sub.name,
+        maxContextLength: sub.maxContextLength,
+        maxTokens: sub.maxTokens,
+        frequencyPenalty: sub.frequencyPenalty,
+        presencePenalty: sub.presencePenalty,
+        repetitionPenalty: sub.repetitionPenalty,
+        repetitionPenaltyRange: sub.repetitionPenaltyRange,
+        repetitionPenaltySlope: sub.repetitionPenaltySlope,
+        tailFreeSampling: sub.tailFreeSampling,
+        temp: sub.temp,
+        topA: sub.topA,
+        topK: sub.topK,
+        topP: sub.topP,
+        minP: sub.minP,
+        typicalP: sub.typicalP,
+        addBosToken: sub.addBosToken,
+        antiBond: sub.antiBond,
+        banEosToken: sub.banEosToken,
+        cfgOppose: sub.cfgOppose,
+        cfgScale: sub.cfgScale,
+        doSample: sub.doSample,
+        earlyStopping: sub.earlyStopping,
+        encoderRepitionPenalty: sub.encoderRepitionPenalty,
+        mirostatLR: sub.mirostatLR,
+        mirostatTau: sub.mirostatTau,
+      },
     }))
     .sort((l, r) => (l.level === r.level ? l.name.localeCompare(r.name) : l.level - r.level))
 
   return subs
 }
 
+export function getCachedTiers() {
+  const tiers = Array.from(tierCache.values())
+  return tiers
+}
+
 setInterval(async () => {
-  await prepSubscriptionCache().catch(() => null)
+  await Promise.all([prepSubscriptionCache().catch(() => null), prepTierCache().catch(() => null)])
 }, 5000)
 
 export async function prepSubscriptionCache() {
@@ -98,6 +131,16 @@ export async function prepSubscriptionCache() {
     subCache.clear()
     for (const preset of presets) {
       subCache.set(preset._id, preset)
+    }
+  } catch (ex) {}
+}
+
+export async function prepTierCache() {
+  try {
+    const tiers = await getTiers()
+    tierCache.clear()
+    for (const tier of tiers) {
+      tierCache.set(tier._id, tier)
     }
   } catch (ex) {}
 }

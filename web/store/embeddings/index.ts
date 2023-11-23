@@ -35,7 +35,7 @@ const documentQueue: string[] = []
 
 const embedCallbacks = new Map<string, (msg: Extract<WorkerResponse, { type: 'result' }>) => void>()
 const captionCallbacks = new Map<string, (caption: string) => void>()
-const encodeCallbacks = new Map<string, (tokens: number[]) => void>()
+const encodeCallbacks = new Map<string, { t: number; cb: (tokens: number[]) => void }>()
 const decodeCallbacks = new Map<string, (text: string) => void>()
 
 let onEmbedReady: Callback = () => {}
@@ -45,6 +45,8 @@ let onCaptionReady: Callback = () => {}
 const embedWorker = new Worker(new URL('./worker', import.meta.url), { type: 'module' })
 // @ts-ignore
 const imageWorker = new Worker(new URL('./worker', import.meta.url), { type: 'module' })
+// @ts-ignore
+const tokenWorker = new Worker(new URL('./worker', import.meta.url), { type: 'module' })
 
 export const embedApi = {
   setup: async (getter: typeof MEMORY_GET, setter: typeof MEMORY_SET) => {
@@ -88,7 +90,9 @@ const handlers: {
 } = {
   encoding: (_type, msg) => {
     const cb = encodeCallbacks.get(msg.id)
-    cb?.(msg.tokens)
+    if (cb) {
+      cb.cb(msg.tokens)
+    }
     encodeCallbacks.delete(msg.id)
   },
   decoding: (_type, msg) => {
@@ -177,11 +181,25 @@ imageWorker.onmessage = (event) => {
   }
 }
 
+tokenWorker.onmessage = (event) => {
+  const msg = event.data as WorkerResponse
+  const handler = handlers[msg.type]
+  if (handler) {
+    handler('image', msg as any)
+  }
+}
+
 function post<T extends WorkerRequest['type']>(
   type: T,
   payload: Omit<Extract<WorkerRequest, { type: T }>, 'type'>
 ) {
-  const worker = type === 'captionImage' || type === 'initCaptioning' ? imageWorker : embedWorker
+  const worker =
+    type === 'decode' || type === 'encode'
+      ? tokenWorker
+      : type === 'captionImage' || type === 'initCaptioning'
+      ? imageWorker
+      : embedWorker
+
   worker.postMessage({ type, ...payload })
 }
 
@@ -213,10 +231,21 @@ async function query(chatId: string, text: string, before?: string): Promise<Que
   return promise
 }
 
+const TOKENIZE_LIMIT = 25
+
 async function encode(text: string): Promise<number[]> {
   const id = v4()
   return new Promise<number[]>((resolve) => {
-    encodeCallbacks.set(id, resolve)
+    const start = Date.now()
+    const timer = setTimeout(async () => {
+      const result = await import('gpt-3-encoder').then((mod) => mod.encode(text))
+      resolve(result)
+    }, TOKENIZE_LIMIT)
+    const resolver = (tokens: number[]) => {
+      clearTimeout(timer)
+      resolve(tokens)
+    }
+    encodeCallbacks.set(id, { t: start, cb: resolver })
     post('encode', { id, text })
   })
 }
@@ -224,7 +253,15 @@ async function encode(text: string): Promise<number[]> {
 async function decode(tokens: number[]): Promise<string> {
   const id = v4()
   return new Promise<string>((resolve) => {
-    decodeCallbacks.set(id, resolve)
+    const timer = setTimeout(async () => {
+      const result = await import('gpt-3-encoder').then((mod) => mod.decode(tokens))
+      resolve(result)
+    }, TOKENIZE_LIMIT)
+    const resolver = (text: string) => {
+      clearTimeout(timer)
+      resolve(text)
+    }
+    decodeCallbacks.set(id, resolver)
     post('decode', { id, tokens })
   })
 }
@@ -336,7 +373,6 @@ async function embedPlainText(name: string, text: string) {
   const slug = slugify(name)
 
   post('embedDocument', { documentId: slug, documents: embeds })
-  console.log(lines)
 }
 
 function addSection<T>(

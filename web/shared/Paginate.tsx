@@ -123,6 +123,7 @@ export function usePagination<T = any>(opts: {
   const [pageSize, setPageSize] = createSignal(savedSize)
   const isMobile = useDeviceType()
   const [items, setItems] = createSignal<T[]>(opts.items().slice(0, pageSize()))
+  const [count, setCount] = createSignal(opts.items().length)
 
   const pagerSize = createMemo(() => (isMobile() ? 3 : 5))
 
@@ -145,10 +146,14 @@ export function usePagination<T = any>(opts: {
   }
 
   createEffect(() => {
-    const curr = page()
+    const items = opts.items().slice()
+    const original = count()
+    const itemsChanged = original !== items.length
+    const curr = itemsChanged ? 1 : page()
     const start = (curr - 1) * pageSize()
-    const nextItems = opts.items().slice(start, start + pageSize())
+    const nextItems = items.slice(start, start + pageSize())
     setItems(nextItems)
+    setCount(items.length)
   })
 
   createEffect(() => {

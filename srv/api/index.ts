@@ -13,8 +13,11 @@ import selfhost from './json'
 import voice from './voice'
 import { config } from '../config'
 import announcements from './announcements'
+import { apiKeyUsage } from './auth'
+import { inferenceApi, inferenceModels } from './chat/inference'
 
 const router = Router()
+const keyedRouter = Router()
 
 router.use('/user', user)
 router.use('/chat', chat)
@@ -33,4 +36,9 @@ if (config.jsonStorage) {
   router.use('/json', selfhost)
 }
 
+keyedRouter.post('/completions', apiKeyUsage, inferenceApi)
+keyedRouter.get('/models', apiKeyUsage, inferenceModels)
+
 export default router
+
+export { keyedRouter }

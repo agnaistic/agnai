@@ -7,7 +7,7 @@ import { NovelSettings } from '../../common/types/image-schema'
 
 const baseUrl = `https://api.novelai.net/ai`
 
-const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
+// const negative_prompt = `disfigured, ugly, deformed, poorly, censor, censored, blurry, lowres, fused, malformed, watermark, misshapen, duplicated, grainy, distorted, signature`
 
 const defaultSettings: NovelSettings = {
   type: 'novel',
@@ -37,7 +37,7 @@ type NovelImageRequest = {
   }
 }
 
-export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, guestId) => {
+export const handleNovelImage: ImageAdapter = async ({ user, prompt, negative }, log, guestId) => {
   const base = user.images
   const settings = user.images?.novel || defaultSettings
   const key = guestId ? user.novelApiKey : decryptText(user.novelApiKey)
@@ -62,7 +62,7 @@ export const handleNovelImage: ImageAdapter = async ({ user, prompt }, log, gues
       height: base?.height ?? 384,
       width: base?.width ?? 384,
       n_samples: 1,
-      negative_prompt: user.images?.negative || negative_prompt,
+      negative_prompt: negative,
       sampler: settings.sampler ?? NOVEL_SAMPLER['DPM++ 2M'],
       scale: base?.cfg ?? 9,
       seed: Math.trunc(Math.random() * 1_000_000_000),

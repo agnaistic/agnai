@@ -256,6 +256,29 @@ export async function deleteUserAccount(userId: string) {
   await db('profile').updateOne({ userId }, { $set: { handle: 'Unknown', avatar: '' } })
 }
 
+export async function validateApiAccess(apiKey: string) {
+  const config = await db('configuration').findOne({ kind: 'configuration' })
+  if (!config?.apiAccess || config.apiAccess === 'off') return
+
+  const user = await db('user').findOne({ apiKey })
+  if (!user) return
+
+  if (config.apiAccess === 'admins') {
+    if (!user.admin) return
+    return { user }
+  }
+
+  if (config.apiAccess === 'subscribers') {
+    if (!user.sub || user.sub.level <= 0) return
+    const sub = await db('subscription-tier').findOne({ _id: user.sub?.tierId })
+    if (!sub?.apiAccess) return
+
+    return { user }
+  }
+
+  if (config.apiAccess === 'users') return { user }
+}
+
 export async function validateSubscription(user: AppSchema.User) {
   if (user.admin) return Infinity
   if (!user.sub?.tierId) {

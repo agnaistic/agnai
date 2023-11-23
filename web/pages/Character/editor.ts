@@ -202,7 +202,9 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     const avatar = await generateAvatar(char)
 
     if (avatar) {
-      setImageData(avatar)
+      const base64 = await getImageData(avatar)
+      setState('avatar', avatar)
+      setImageData(base64)
     }
   }
 
@@ -374,7 +376,7 @@ async function generateAvatar(char: NewCharacter) {
     return toastStore.error(`Image generation settings missing`)
   }
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<File>((resolve, reject) => {
     characterStore.generateAvatar(user, char.appearance || char.persona, (err, image) => {
       if (image) return resolve(image)
       reject(err)

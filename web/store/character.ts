@@ -334,7 +334,7 @@ export const characterStore = createStore<CharacterState>(
       { generate: prev },
       user: AppSchema.User,
       persona: AppSchema.Persona | string,
-      onDone?: (err: any, image?: string) => void
+      onDone?: (err: any, image?: File) => void
     ) {
       try {
         let prompt =
@@ -342,16 +342,13 @@ export const characterStore = createStore<CharacterState>(
             ? `full body, ${persona}`
             : await createAppearancePrompt(user, { persona })
 
-        prompt = prompt
-          .replace(/\n+/g, ', ')
-          .replace(/\./g, ',')
-          .replace(/,+/g, ', ')
-          .replace(/\s+/g, ' ')
+        prompt = prompt.replace(/\n+/g, ', ').replace(/\s+/g, ' ')
         yield { generate: { image: null, loading: true, blob: null } }
+        imageCallback = onDone
         const res = await imageApi.generateImageWithPrompt(prompt, 'avatar', async (image) => {
           const file = await dataURLtoFile(image)
           const data = await getImageData(file)
-          onDone?.(null, data)
+          onDone?.(null, file)
           set({ generate: { image: data, loading: false, blob: file } })
         })
         if (res.error) {
@@ -365,11 +362,18 @@ export const characterStore = createStore<CharacterState>(
   }
 })
 
+let imageCallback: ((err: any, image?: File) => void) | undefined = undefined
+
 subscribe('image-generated', { image: 'string', source: 'string' }, async (body) => {
   if (body.source !== 'avatar') return
   const image = await fetch(getAssetUrl(body.image)).then((res) => res.blob())
   const file = new File([image], `avatar.png`, { type: 'image/png' })
   characterStore.setState({ generate: { image: body.image, loading: false, blob: file } })
+
+  if (imageCallback) {
+    imageCallback(null, file)
+    imageCallback = undefined
+  }
 })
 
 subscribe('image-failed', { error: 'string' }, (body) => {

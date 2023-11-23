@@ -937,7 +937,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         />
         <Toggle
           fieldName="doSample"
-          label="Do Sample"
+          label="DO Sample"
           helperText="If doing contrastive search, disable this."
           value={props.inherit?.doSample ?? true}
           disabled={props.disabled}

@@ -58,13 +58,18 @@ const Slot: Component<{
     tier: s.tiers.find((t) => t._id === s.user?.sub?.tierId),
     user: s.user,
   }))
-  const cfg = settingStore((s) => ({
-    publisherId: s.slots.publisherId,
-    slots: s.slots,
-    slotsLoaded: s.slotsLoaded,
-    flags: s.flags,
-    ready: s.initLoading === false,
-  }))
+  const cfg = settingStore((s) => {
+    const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig.slots)
+    return {
+      provider: parsed.provider || s.slots.provider,
+      publisherId: parsed.publisherId || s.slots.publisherId,
+      slots: Object.assign(s.slots, parsed) as SettingState['slots'],
+      slotsLoaded: s.slotsLoaded,
+      flags: s.flags,
+      ready: s.initLoading === false,
+      config: s.config.serverConfig,
+    }
+  })
 
   const [stick, setStick] = createSignal(props.sticky)
   const [uniqueId, setUniqueId] = createSignal<number>()
@@ -77,7 +82,7 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   const id = createMemo(() => {
-    if (cfg.slots.provider === 'ez' || cfg.flags.reporting)
+    if (cfg.provider === 'ez' || cfg.flags.reporting)
       return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
     return `${props.slot}-${uniqueId()}`
   })
@@ -193,7 +198,7 @@ const Slot: Component<{
     idLocks.delete(uniqueId()!)
     log('Cleanup')
 
-    if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
+    if (cfg.provider === 'ez' || cfg.flags.reporting) {
       if (!ezstandalone.getSelectedPlaceholders) return
       const id = uniqueId()
       const holders = ezstandalone.getSelectedPlaceholders()
@@ -227,7 +232,7 @@ const Slot: Component<{
       return log('Slots are tier disabled')
     }
 
-    if (!cfg.slots.provider) {
+    if (!cfg.provider) {
       return log('No provider configured')
     }
 
@@ -252,36 +257,9 @@ const Slot: Component<{
     const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
     setUniqueId(num)
 
-    if (cfg.slots.provider === 'ez' || cfg.flags.reporting) {
+    if (cfg.provider === 'ez' || cfg.flags.reporting) {
       invoke(log, num)
-      // ezReady.then(() => {
-      // ezstandalone.cmd.push(() => {
-      //   if (!ezstandalone.enabled) {
-      //     log('[ez]', num, `dispatched #${num}`)
-      //     ezstandalone.define(num)
-      //     ezstandalone.enable()
-      //     ezstandalone.display()
-      //   } else {
-      //     log('[ez]', num, `dispatched #${num} (more)`)
-      //     // ezstandalone.define(...nums)
-      //     ezstandalone.displayMore(num)
-      //   }
-      // })
-
-      // const timer = setInterval(() => {
-      //   const holders = ezstandalone.getSelectedPlaceholders()
-      //   const inUse = idLocks.has(num)
-      //   if (!inUse || holders[num]) {
-      //     clearInterval(timer)
-      //   } else {
-      //     ezstandalone.cmd.push(() => {
-      //       log('[ez]', num, 'retrying display')
-      //       ezstandalone.displayMore(num)
-      //     })
-      //   }
-      // }, 200)
-      // })
-    } else if (cfg.slots.provider === 'google') {
+    } else if (cfg.provider === 'google') {
       gtmReady.then(() => {
         googletag.cmd.push(function () {
           const slotId = getSlotId(`/${cfg.publisherId}/${spec.id}`)
@@ -591,3 +569,14 @@ const [invoke] = createDebounce((log: (typeof console)['log'], self: number) => 
     })
   })
 }, 1000)
+
+function tryParse<T = any>(json: string) {
+  if (!json) return {} as T
+
+  try {
+    const obj = JSON.parse(json)
+    return obj as T
+  } catch (ex) {
+    return {} as T
+  }
+}

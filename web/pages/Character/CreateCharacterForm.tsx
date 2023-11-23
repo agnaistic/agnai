@@ -211,19 +211,18 @@ export const CreateCharacterForm: Component<{
     const file = files[0].file
     editor.update('avatar', file)
     const data = await getImageData(file)
-
     setImage(data)
   }
 
   const onSubmit = async (ev: Event) => {
     const payload = editor.payload()
-    payload.avatar = state.avatar.blob || editor.state.avatar
+    payload.avatar = editor.state.avatar
 
     if (props.temp && props.chat) {
-      if (payload.avatar) {
-        const data = await getImageData(payload.avatar)
-        payload.avatar = data
-      }
+      // if (payload.avatar) {
+      //   const data = await getImageData(payload.avatar)
+      //   payload.avatar = data
+      // }
       chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, (result) => {
         props.onSuccess?.(result)
         if (paneOrPopup() === 'popup') props.close?.()
@@ -441,11 +440,11 @@ export const CreateCharacterForm: Component<{
                       <div
                         class="flex items-baseline justify-center"
                         style={{ cursor: state.avatar.image || image() ? 'pointer' : 'unset' }}
-                        onClick={() => setImageUrl(state.avatar.image || image())}
+                        onClick={() => setImageUrl(editor.avatar() || image())}
                       >
                         <AvatarIcon
                           format={{ corners: 'sm', size: '3xl' }}
-                          avatarUrl={state.avatar.image || image()}
+                          avatarUrl={editor.avatar() || image()}
                         />
                       </div>
                     </Match>

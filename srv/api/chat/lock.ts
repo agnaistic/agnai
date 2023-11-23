@@ -7,6 +7,8 @@ import { db } from '../../db'
  *
  * This may not be completely fool-proof.
  * We are relying on the database to throw when a unique constraint is violated.
+ *
+ * TTL = seconds
  */
 
 export async function obtainLock(chatId: string, ttl = 10) {

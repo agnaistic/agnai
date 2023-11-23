@@ -98,6 +98,24 @@ export const userStore = createStore<UserState>(
     modal({ showProfile }, show?: boolean) {
       return { showProfile: show ?? !showProfile }
     },
+    async revealApiKey(_, cb: (key: string) => void) {
+      const res = await api.post('/user/config/reveal-key')
+      if (res.result) {
+        cb(res.result.apiKey)
+      }
+      if (res.error) {
+        toastStore.error(`Could get retrieve key: ${res.error}`)
+      }
+    },
+    async generateApiKey(_, cb: (key: string) => void) {
+      const res = await api.post('/user/config/generate-key')
+      if (res.result) {
+        cb(res.result.apiKey)
+      }
+      if (res.error) {
+        toastStore.error(`Could get retrieve key: ${res.error}`)
+      }
+    },
     async getProfile() {
       const res = await usersApi.getProfile()
       if (res.error) return toastStore.error(`Failed to get profile`)

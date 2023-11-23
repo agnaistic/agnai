@@ -1,7 +1,7 @@
 import type { PromptParts } from '../../common/prompt'
 import { AppSchema } from '../../common/types/schema'
 import { AppLog } from '../logger'
-import { Memory } from '/common/types'
+import { Memory, TokenCounter } from '/common/types'
 
 export type GenerateRequestV2 = {
   requestId: string
@@ -63,6 +63,7 @@ export type AdapterProps = {
   impersonate: AppSchema.Character | undefined
   lastMessage?: string
   requestId: string
+  encoder?: TokenCounter
 
   subscription?: {
     level: number

@@ -65,6 +65,7 @@ const initState: SettingState = {
   workers: [],
   imageWorkers: [],
   config: {
+    serverConfig: {} as any,
     registered: [],
     adapters: [],
     canAuth: true,
@@ -100,6 +101,11 @@ export const settingStore = createStore<SettingState>(
     const prev = get()
     settingStore.setState({ ...initState, slots: prev.slots, slotsLoaded: prev.slotsLoaded })
     settingStore.init()
+  })
+
+  events.on(EVENTS.configUpdated, (config) => {
+    const prev = get().config
+    settingStore.setState({ config: { ...prev, serverConfig: config } })
   })
 
   return {
@@ -371,6 +377,16 @@ setInterval(async () => {
   }
   settingStore.setState({ config: next })
 }, 60000)
+
+subscribe('configuration-update', { configuration: 'any' }, (body) => {
+  const { config } = settingStore.getState()
+  settingStore.setState({
+    config: {
+      ...config,
+      serverConfig: body.configuration,
+    },
+  })
+})
 
 subscribe(
   'subscription-replaced',

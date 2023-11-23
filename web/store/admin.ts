@@ -34,6 +34,19 @@ type AdminState = {
 export const adminStore = createStore<AdminState>('admin', { users: [], products: [], prices: [] })(
   (_) => {
     return {
+      async updateServerConfig(
+        _,
+        update: Omit<AppSchema.Configuration, 'kind' | 'tosUpdated' | 'privacyUpdated'>
+      ) {
+        const res = await api.post('/admin/configuration', update)
+        if (res.result) {
+          toastStore.success('Server configuration updated')
+          events.emit(EVENTS.configUpdated, res.result)
+        }
+        if (res.error) {
+          toastStore.error(`Configuration updated failed: ${res.error}`)
+        }
+      },
       async getUsers(
         _,
         opts: { username: string; subscribed: boolean; customerId: string },

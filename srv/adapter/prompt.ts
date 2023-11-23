@@ -72,7 +72,6 @@ export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
   for (const member of opts.members) {
     if (seen.has(member.handle)) continue
     if (member.handle === opts.replyAs.name) continue
-    unique.add(`${member.handle}:`)
     unique.add(`\n${member.handle}`)
     seen.add(member.handle)
   }

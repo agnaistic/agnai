@@ -55,6 +55,7 @@ const TiersPage: Component = (props) => {
       productId: 'string',
       enabled: 'boolean',
       disableSlots: 'boolean?',
+      apiAccess: 'boolean',
     })
 
     const product = admin.products.find((p) => p.id === data.productId)
@@ -129,10 +130,23 @@ const TiersPage: Component = (props) => {
             onInput={(ev) => setDesc(ev.currentTarget.value)}
           />
 
+          <Toggle
+            fieldName="apiAccess"
+            label="API Access Capable"
+            helperText="If enabled, this tier can use API access if the server allows it"
+            value={editing()?.apiAccess ?? false}
+          />
+
           <div class="text-lg font-bold">Preview</div>
 
           <TierCard
-            tier={{ name: name(), description: desc(), cost: price(), disableSlots: false }}
+            tier={{
+              name: name(),
+              description: desc(),
+              cost: price(),
+              disableSlots: false,
+              apiAccess: false,
+            }}
           />
 
           <Select
