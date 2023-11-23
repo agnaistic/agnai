@@ -127,6 +127,14 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
       systemPrompt,
       stopSequences,
       maxTokens,
+      gaslight,
+      allowGuestUsage,
+      images,
+      temporary,
+      useAdvancedPrompt,
+      _id,
+      kind,
+      name,
       ...recommended
     } = preset
     Object.assign(opts.gen, recommended)

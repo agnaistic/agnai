@@ -237,7 +237,6 @@ export async function createTextStreamV2(
     )
     opts.settings = entities.gen
     opts.user = entities.user
-    opts.settings = entities.gen
     opts.char = entities.char
   }
 

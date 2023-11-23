@@ -9,6 +9,7 @@ import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-pars
 import { cyoaTemplate } from '/common/mode-templates'
 import { AIAdapter } from '/common/adapters'
 import { parseTemplate } from '/common/template-parser'
+import { obtainLock, releaseLock } from './lock'
 
 const validInference = {
   prompt: 'string',
@@ -296,19 +297,25 @@ export const inferenceApi = wrap(async (req, res) => {
     settings,
   }
 
+  await obtainLock(req.userId, 20)
   if (!body.stream) {
-    const result = await inferenceAsync(request)
-    return {
-      id: req.requestId,
-      object: 'text_completion',
-      created: Date.now(),
-      model: '',
-      choices: [
-        {
-          text: result.generated,
-          finish_reason: 'stop',
-        },
-      ],
+    try {
+      const result = await inferenceAsync(request)
+      await releaseLock(req.userId)
+      return {
+        id: req.requestId,
+        object: 'text_completion',
+        created: Date.now(),
+        model: '',
+        choices: [
+          {
+            text: result.generated,
+            finish_reason: 'stop',
+          },
+        ],
+      }
+    } catch (ex: any) {
+      throw new StatusError(ex.message, 500)
     }
   }
 
@@ -343,6 +350,7 @@ export const inferenceApi = wrap(async (req, res) => {
     }
 
     if ('error' in gen) {
+      await releaseLock(req.userId)
       const tick = { error: { message: gen.error } }
       res.write(`data: ${JSON.stringify(tick)}`)
       break
