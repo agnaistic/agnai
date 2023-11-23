@@ -22,8 +22,8 @@ export type MemoryPrompt = {
 }
 
 type Match = {
-  /** The position within the prompt that it was found. Larger means closer to the end */
-  index: number
+  /** The age of the message in which the match was found, counting from the last message up. */
+  messageAge: number
   entry: AppSchema.MemoryEntry
   tokens: number
   text: string
@@ -77,12 +77,12 @@ export async function buildMemoryPrompt(opts: MemoryOpts, encoder: TokenCounter)
   const entries = getEnabledEntriesFromBooks(opts.books)
 
   const matches = await findAllMatches(entries, opts.lines, ctx)
-  matches.sort(byPriorityThenIndex)
+  matches.sort(byPriorityThenAge)
 
-  const included = await getMatchesWithinBudget(matches, ctx)
-  included.sort(byWeightThenIndex)
+  const allowed = await getMatchesWithinBudget(matches, ctx)
+  allowed.sort(byWeightThenAge)
 
-  let prompt = included
+  let prompt = allowed
     .map(({ text }) => text)
     .reverse()
     .join('')
@@ -138,43 +138,60 @@ async function findAllMatches(
   ctx: MemoryPromptContext
 ) {
   const matches: Match[] = []
-  const history = lines.slice(-ctx.depth).join(' ').toLowerCase()
+  const history = lines.slice(-ctx.depth).reverse() // oldest messages last
 
   for (const entry of entries) {
-    const match = await findLastMatch(entry, history, ctx)
+    const match = await findMatchWithLowestAge(entry, history, ctx)
     if (match) matches.push(match)
   }
   return matches
 }
 
-async function findLastMatch(
+async function findMatchWithLowestAge(
   entry: AppSchema.MemoryEntry,
-  history: string,
+  history: string[],
   ctx: MemoryPromptContext
 ): Promise<Match | undefined> {
-  let highestIndex = -1
+  let lowestAge = Infinity
 
   for (const keyword of entry.keywords) {
-    const index = history.lastIndexOf(keyword.toLowerCase())
-    if (index < 0) continue
+    const match = findFirstMatchingLineNumber(keyword, history)
+    if (match === undefined) continue
 
-    highestIndex = Math.max(highestIndex, index)
+    lowestAge = Math.min(lowestAge, match)
   }
 
-  if (highestIndex < 0) return
+  if (lowestAge === Infinity) return
 
-  // append the newline now for the token count to match
   const text = entry.entry
     .replace(BOT_REPLACE, ctx.bot)
     .replace(SELF_REPLACE, ctx.sender)
-    .concat('\n')
+    .concat('\n') // append the newline now for the token count to match
 
   return {
-    index: highestIndex,
+    messageAge: lowestAge,
     entry,
     tokens: await ctx.encoder(text),
     text,
   }
+}
+
+function findFirstMatchingLineNumber(keyword: string, history: string[]) {
+  let lineNumber = 0
+  for (const line of history) {
+    if (wildcardMatch(keyword, line)) return lineNumber
+    lineNumber++
+  }
+}
+
+function wildcardMatch(keyword: string, text: string) {
+  const pattern = keyword
+    .trim()
+    .replace(/[\\^$+.()|[\]{}_]/g, '') // escape all special chars except * and ?
+    .replace(/\*/g, '\\w*') // enable searching by *
+    .replace(/\?/g, '\\w') // enable searching by ?
+
+  return text.match(new RegExp(`\\b(${pattern})\\b`, 'giu'))
 }
 
 async function getMatchesWithinBudget(matches: Match[], ctx: MemoryPromptContext) {
@@ -190,19 +207,25 @@ async function getMatchesWithinBudget(matches: Match[], ctx: MemoryPromptContext
   return allowed
 }
 
-function byPriorityThenIndex({ index: li, entry: l }: Match, { index: ri, entry: r }: Match) {
-  // higher priority wins
+function byPriorityThenAge(
+  { messageAge: lAge, entry: l }: Match,
+  { messageAge: rAge, entry: r }: Match
+) {
+  // higher priority first
   if (l.priority !== r.priority) return l.priority > r.priority ? -1 : 1
-  // higher index wins
-  if (li !== ri) return li > ri ? -1 : 1
+  // lower age first
+  if (lAge !== rAge) return lAge < rAge ? -1 : 1
   return 0
 }
 
-function byWeightThenIndex({ index: li, entry: l }: Match, { index: ri, entry: r }: Match) {
-  // higher weight wins
+function byWeightThenAge(
+  { messageAge: lAge, entry: l }: Match,
+  { messageAge: rAge, entry: r }: Match
+) {
+  // higher weight first
   if (l.weight !== r.weight) return l.weight > r.weight ? -1 : 1
-  // higher index wins
-  if (li !== ri) return li > ri ? -1 : 1
+  // lower age first
+  if (lAge !== rAge) return lAge < rAge ? -1 : 1
   return 0
 }
 

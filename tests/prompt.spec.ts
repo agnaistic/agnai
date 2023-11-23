@@ -267,4 +267,65 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     )
     expect(actual.template.parsed).toMatchSnapshot()
   })
+
+  it('will allow using wildcards in keywords', async () => {
+    const char = {
+      ...main,
+      characterBook: toBook('main char book', [
+        toEntry(['?BOOK*'], 'ENTRY 1'),
+        toEntry(['BOOK'], 'ENTRY 2'),
+        toEntry(['?BOOK'], 'ENTRY 3'),
+      ]),
+    }
+
+    const actual = await build([toMsg('ebooks')], {
+      char: char,
+      replyAs: char,
+      settings: { memoryDepth: 100 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY 1')
+    expect(actual.template.parsed).not.to.include('ENTRY 2')
+    expect(actual.template.parsed).not.to.include('ENTRY 3')
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will allow using using Unicode characters in keywords', async () => {
+    const char = {
+      ...main,
+      characterBook: toBook('main char book', [toEntry(['🤣'], '🤣'), toEntry(['🤬'], '🤬')]),
+    }
+
+    const actual = await build([toMsg('🤣')], {
+      char: char,
+      replyAs: char,
+      settings: { memoryDepth: 100 },
+    })
+
+    expect(actual.template.parsed).to.include('🤣')
+    expect(actual.template.parsed).not.to.include('🤬')
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will disallow injecting arbitrary regexes', async () => {
+    const char = {
+      ...main,
+      name: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', //triggers evil regex
+      characterBook: toBook('main char book', [
+        toEntry(['BOOKS'], 'ENTRY 1'),
+        toEntry(['^(a+)+$'], 'evil regex'),
+      ]),
+    }
+
+    // Warning: the evil regex can kill the event loop
+    const actual = await build([botMsg('books')], {
+      char: char,
+      replyAs: char,
+      settings: { memoryDepth: 100 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY 1')
+    expect(actual.template.parsed).not.to.include('evil regex')
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
 })

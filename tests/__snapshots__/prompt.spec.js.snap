@@ -1,5 +1,28 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Prompt building will allow using using Unicode characters in keywords 1`] = `
+"MainChar's Persona: MainCharacter talks a lot
+
+Scenario: MAIN MainChar
+How MainChar speaks: SAMPLECHAT MainChar
+
+<START>
+ChatOwner: 🤣
+MainChar:"
+`;
+
+exports[`Prompt building will allow using wildcards in keywords 1`] = `
+"MainChar's Persona: MainCharacter talks a lot
+
+Scenario: MAIN MainChar
+Facts:ENTRY 1
+How MainChar speaks: SAMPLECHAT MainChar
+
+<START>
+ChatOwner: ebooks
+MainChar:"
+`;
+
 exports[`Prompt building will build a basic prompt 1`] = `
 "OtherBot's Persona: OtherBot replies a lot
 
@@ -22,6 +45,18 @@ How MainChar speaks: SAMPLECHAT MainChar
 MainChar: FIRST
 MainChar: ORIGINAL
 MainChar:"
+`;
+
+exports[`Prompt building will disallow injecting arbitrary regexes 1`] = `
+"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa's Persona: MainCharacter talks a lot
+
+Scenario: MAIN aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+Facts:ENTRY 1
+How aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa speaks: SAMPLECHAT aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+<START>
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: books
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa:"
 `;
 
 exports[`Prompt building will exclude lowest priority memory to fit in budget 1`] = `
