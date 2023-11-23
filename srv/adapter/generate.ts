@@ -190,7 +190,10 @@ export async function createTextStreamV2(
     }
 
     if (subContextLimit) {
-      opts.settings.maxContextLength = subContextLimit
+      opts.settings.maxContextLength = Math.min(
+        subContextLimit,
+        opts.settings.maxContextLength ?? 4096
+      )
     }
   }
 
@@ -204,7 +207,10 @@ export async function createTextStreamV2(
     }
 
     if (subContextLimit) {
-      entities.gen.maxContextLength = subContextLimit
+      entities.gen.maxContextLength = Math.min(
+        subContextLimit,
+        entities.gen.maxContextLength ?? 4096
+      )
     }
 
     entities.gen.temporary = opts.settings?.temporary
