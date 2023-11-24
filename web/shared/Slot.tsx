@@ -83,8 +83,7 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   const id = createMemo(() => {
-    if (cfg.provider === 'ez' || cfg.flags.reporting)
-      return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
+    if (cfg.provider === 'ez') return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
     return `${props.slot}-${uniqueId()}`
   })
 
@@ -105,6 +104,8 @@ const Slot: Component<{
   }
 
   const specs = createMemo(() => {
+    if (!cfg.ready) return null
+
     resize.size()
     props.parent?.clientWidth
     parentSize.size()
@@ -199,7 +200,7 @@ const Slot: Component<{
     idLocks.delete(uniqueId()!)
     log('Cleanup')
 
-    if (cfg.provider === 'ez' || cfg.flags.reporting) {
+    if (cfg.provider === 'ez') {
       if (!ezstandalone.getSelectedPlaceholders) return
       const id = uniqueId()
       const holders = ezstandalone.getSelectedPlaceholders()
