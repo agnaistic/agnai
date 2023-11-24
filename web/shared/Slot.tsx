@@ -316,7 +316,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
+        <Match when={!cfg.ready || !user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}
