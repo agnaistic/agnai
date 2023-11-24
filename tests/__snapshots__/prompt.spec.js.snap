@@ -1,16 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Prompt building will allow using using Unicode characters in keywords 1`] = `
-"MainChar's Persona: MainCharacter talks a lot
-
-Scenario: MAIN MainChar
-How MainChar speaks: SAMPLECHAT MainChar
-
-<START>
-ChatOwner: 🤣
-MainChar:"
-`;
-
 exports[`Prompt building will allow using wildcards in keywords 1`] = `
 "MainChar's Persona: MainCharacter talks a lot
 

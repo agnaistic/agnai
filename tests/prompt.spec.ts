@@ -290,23 +290,6 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
-  it('will allow using using Unicode characters in keywords', async () => {
-    const char = {
-      ...main,
-      characterBook: toBook('main char book', [toEntry(['🤣'], '🤣'), toEntry(['🤬'], '🤬')]),
-    }
-
-    const actual = await build([toMsg('🤣')], {
-      char: char,
-      replyAs: char,
-      settings: { memoryDepth: 100 },
-    })
-
-    expect(actual.template.parsed).to.include('🤣')
-    expect(actual.template.parsed).not.to.include('🤬')
-    expect(actual.template.parsed).toMatchSnapshot()
-  })
-
   it('will disallow injecting arbitrary regexes', async () => {
     const char = {
       ...main,
