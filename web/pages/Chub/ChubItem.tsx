@@ -1,5 +1,4 @@
 import { Component, createSignal } from 'solid-js'
-import Button from '/web/shared/Button'
 import { NewCharacter } from '/web/store'
 import { extractCardData } from '../Character/card-utils'
 import { processBook, processChar } from './util'
@@ -50,7 +49,7 @@ export const ChubItem: Component<{
       <div class="bg-800 flex flex-col items-center justify-between gap-1 rounded-lg border-[1px] border-[var(--bg-600)]">
         <div class="w-full">
           <div
-            class="block h-32 w-full justify-center overflow-hidden rounded-lg rounded-b-none"
+            class="block h-32 w-full cursor-pointer justify-center overflow-hidden rounded-lg rounded-b-none"
             onClick={processItem}
           >
             <img
