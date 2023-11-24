@@ -177,21 +177,23 @@ async function findMatchWithLowestAge(
 }
 
 function findFirstMatchingLineNumber(keyword: string, history: string[]) {
+  const searchPattern = createRegexForKeyword(keyword)
+
   let lineNumber = 0
   for (const line of history) {
-    if (wildcardMatch(keyword, line)) return lineNumber
+    if (searchPattern.test(line)) return lineNumber
     lineNumber++
   }
 }
 
-function wildcardMatch(keyword: string, text: string) {
+function createRegexForKeyword(keyword: string) {
   const pattern = keyword
     .trim()
     .replace(/[\\^$+.()|[\]{}_]/g, '') // escape all special chars except * and ?
     .replace(/\*/g, '\\w*') // enable searching by *
     .replace(/\?/g, '\\w') // enable searching by ?
 
-  return text.match(new RegExp(`\\b(${pattern})\\b`, 'giu'))
+  return new RegExp(`\\b(${pattern})\\b`, 'giu')
 }
 
 async function getMatchesWithinBudget(matches: Match[], ctx: MemoryPromptContext) {
