@@ -60,15 +60,16 @@ const Slot: Component<{
   }))
   const cfg = settingStore((s) => {
     const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig.slots)
-    return {
+    const config = {
       provider: parsed.provider || s.slots.provider,
       publisherId: parsed.publisherId || s.slots.publisherId,
       slots: Object.assign(s.slots, parsed) as SettingState['slots'],
-      slotsLoaded: s.slotsLoaded,
+      slotsLoaded: s.initLoading === false && s.slotsLoaded,
       flags: s.flags,
-      ready: s.initLoading === false,
+      ready: s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
     }
+    return config
   })
 
   const [stick, setStick] = createSignal(props.sticky)
@@ -257,7 +258,7 @@ const Slot: Component<{
     const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
     setUniqueId(num)
 
-    if (cfg.provider === 'ez' || cfg.flags.reporting) {
+    if (cfg.provider === 'ez') {
       invoke(log, num)
     } else if (cfg.provider === 'google') {
       gtmReady.then(() => {
