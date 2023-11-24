@@ -5,6 +5,7 @@ type ChubItem = {
   name: string
   description: string
   fullPath: string
+  tagline?: string
 }
 
 type ChubState = {

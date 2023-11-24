@@ -19,13 +19,14 @@ const CharList: Component<{
           <Loading />
         </div>
       </Show>
-      <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(105px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
+      <div class="grid w-full grid-cols-[repeat(auto-fit,minmax(160px,1fr))] flex-row flex-wrap justify-start gap-2 py-2">
         <For each={state.chars.slice(48 * (state.page - 1))}>
           {(char) => (
             <ChubItem
               loading={props.loading}
               name={char.name}
               fullPath={char.fullPath}
+              description={char.tagline || char.description}
               avatar={
                 `https://avatars.charhub.io/avatars/${char.fullPath}/avatar.webp` ||
                 `https://git.chub.ai/${char.fullPath}/-/raw/main/avatar.webp`

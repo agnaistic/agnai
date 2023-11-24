@@ -27,6 +27,7 @@ const BookList: Component<{
               avatar={`https://avatars.charhub.io/avatars/${book.fullPath}/avatar.webp`}
               book={true}
               setBook={props.setBook}
+              description={book.tagline || book.description}
             />
           )}
         </For>
