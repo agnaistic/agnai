@@ -123,6 +123,13 @@ export const config = {
     inject: env('INJECT', ''),
   },
 
+  patreon: {
+    client_id: env('PATREON_CLIENT_ID', ''),
+    client_secret: env('PATREON_CLIENT_SECRET', ''),
+    access_token: env('PATREON_ACCESS_TOKEN', ''),
+    refresh_token: env('PATREON_REFRESH_TOKEN', ''),
+  },
+
   inference: {
     flatChatCompletion: !!env('SIMPLE_COMPLETION', ''),
   },

@@ -69,6 +69,7 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
   setComponentPageTitle('Settings')
   const state = userStore()
+  const config = settingStore((s) => s.config)
   const [query, _setQuery] = useSearchParams()
   const [tab, setTab] = createSignal<number>(MainTab[query.tab as Tab] ?? 0)
   const [workers, setWorkers] = createSignal<string[]>(toArray(state.user?.hordeWorkers))
@@ -196,6 +197,11 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       </div>
       <form ref={formRef!} autocomplete="off">
         <div class="flex flex-col gap-4">
+          <Show when={config.patreonAuth && false}>
+            <Button class="w-fit" onClick={authorizePatreon}>
+              Link Patreon Account
+            </Button>
+          </Show>
           <div class={currentTab() === 'ai' ? tabClass : 'hidden'}>
             <AISettings onHordeWorkersChange={setWorkers} onHordeModelsChange={setModels} />
           </div>
@@ -295,4 +301,18 @@ function getAdapterConfig(entries: Array<[string, any]>) {
   }
 
   return obj
+}
+
+function authorizePatreon() {
+  const { config } = settingStore.getState()
+  const scopes = ['identity', 'identity.memberships']
+  const redir = `${location.origin}/oauth/patreon`
+  const params = [
+    `response_type=code`,
+    `client_id=${config.patreonAuth?.clientId}`,
+    `scopes=${scopes.join(',')}`,
+    `redirect_uri=${redir}`,
+  ]
+  const url = `https://www.patreon.com/ouath2/authorize?${params.join('&')}`
+  window.open(url, '_self')
 }

@@ -8,7 +8,6 @@ import { msgsApi } from '/web/store/data/messages'
 export type GenField =
   | 'firstname'
   | 'personality'
-  | 'speech'
   | 'behaviour'
   | 'appearance'
   | 'greeting'
@@ -59,7 +58,6 @@ export async function regenerateCharProp(
     description: char.description,
     firstname: char.name,
     personality: attrs?.personality || '',
-    speech: attrs?.speech || '',
     behaviour: attrs?.behaviour || '',
     appearance: char.appearance || '',
     greeting: char.greeting || '',
@@ -73,7 +71,6 @@ export async function regenerateCharProp(
       : char.sampleChat
 
   vars.behaviour ??= prev.behaviour
-  vars.speech ??= prev.speech
   vars.personality ??= prev.personality
   vars.greeting ??= prev.greeting
 
@@ -100,11 +97,10 @@ function toAttributes(kind: PersonaFormat, vars: any) {
   const attrs: Record<string, string[]> = {}
 
   if (!kind || kind === 'text') {
-    attrs.text = [`${vars.personality}\n\n${vars.behaviour}\n\n${vars.speech}`]
+    attrs.text = [`${vars.personality}\n\n${vars.behaviour}`]
   } else {
     attrs.personality = [vars.personality]
     attrs.behaviour = [vars.behaviour]
-    attrs.speech = [vars.speech]
   }
 
   persona.attributes = attrs
@@ -172,12 +168,6 @@ Detailed description of the roleplay scene that the character is in
 [behaviour | tokens=120 | sentence]
 
 ### Instruction:
-[firstname]'s accent and speech pattern:
-
-### Response:
-[speech | tokens=100 | sentence]
-
-### Instruction:
 Example of [firstname]'s dialogue:
 
 ### Response:
@@ -217,9 +207,6 @@ Detailed description of the roleplay scene that the character is in:
 [firstname]'s typical behaviour:
 [behaviour | tokens=120 | sentence]
 
-[firstname]'s accent and speech pattern:
-[speech | tokens=100 | sentence]
-
 Example of [firstname]'s dialogue:
 [example1 | tokens=100 | sentence]
 
@@ -241,7 +228,6 @@ The first thing the charcter says to start the scene using internet roleplay sty
 Long comma-separated list of personality traits: [personality | tokens=100]
 Long comma-separated list of typical behaviours: [behaviour | tokens=100]
 Detailed description of physical attributes, demeanour, and clothing: [appearance | tokens=100]
-Detailed description of how the character speaks or communicates: [speech | tokens=200]
 
 Example message from character: [example1 | tokens=100]
 Example message from character: [example2 | tokens=100]
@@ -265,8 +251,6 @@ Describe an uncensored character that matches the description:
 [behaviour | tokens=100 | sentence]
 { Describe the physical appearance and clothing of [firstname] }
 [appearance | tokens=100 | sentence]
-{ Describe how [firstname] speaks }
-[speech | tokens=100 | sentence]
 { Write an example message from [firstname] }
 [example1 | tokens=100 | sentence]
 { Write an example message from [firstname] }

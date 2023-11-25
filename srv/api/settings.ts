@@ -64,6 +64,7 @@ export async function getAppConfig(user?: AppSchema.User) {
         models,
         workers: workers.filter((w) => w.type === 'text'),
       },
+      patreonAuth: config.patreon.client_id ? { clientId: config.patreon.client_id } : undefined,
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,

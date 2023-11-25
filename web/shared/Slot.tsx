@@ -64,7 +64,6 @@ const Slot: Component<{
       provider: parsed.provider || s.slots.provider,
       publisherId: parsed.publisherId || s.slots.publisherId,
       slots: Object.assign(s.slots, parsed) as SettingState['slots'],
-      slotsLoaded: s.initLoading === false && s.slotsLoaded,
       flags: s.flags,
       ready: s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
@@ -219,10 +218,6 @@ const Slot: Component<{
     if (!cfg.ready) {
       log('Not ready')
       return
-    }
-
-    if (!cfg.slotsLoaded) {
-      return log('Slot not ready')
     }
 
     if (!cfg.publisherId) {

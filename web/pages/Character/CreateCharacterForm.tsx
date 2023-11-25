@@ -219,10 +219,10 @@ export const CreateCharacterForm: Component<{
     payload.avatar = editor.state.avatar
 
     if (props.temp && props.chat) {
-      // if (payload.avatar) {
-      //   const data = await getImageData(payload.avatar)
-      //   payload.avatar = data
-      // }
+      if (editor.state.avatar) {
+        const data = await getImageData(editor.state.avatar)
+        payload.avatar = data
+      }
       chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, (result) => {
         props.onSuccess?.(result)
         if (paneOrPopup() === 'popup') props.close?.()
@@ -564,7 +564,7 @@ export const CreateCharacterForm: Component<{
                       <div class="flex items-center gap-1">
                         Persona Schema{' '}
                         <Regenerate
-                          fields={['personality', 'behaviour', 'speech']}
+                          fields={['personality', 'behaviour']}
                           service={genService()}
                           editor={editor}
                           allowed={editor.canGuidance}

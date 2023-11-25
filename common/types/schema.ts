@@ -132,6 +132,9 @@ export namespace AppSchema {
     policies?: boolean
     apiAccess?: boolean
     flags?: string
+    patreonAuth?: {
+      clientId: string
+    }
 
     pipelineProxyEnabled: boolean
     authUrls: string[]
