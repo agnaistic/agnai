@@ -738,29 +738,17 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="topA"
           label="Top A"
-          helperText="Increases the consistency of the output by removing unlikely tokens based on the highest token probability. (Put this value on 1 to disable its effect)"
+          helperText="Increases the consistency of the output by removing unlikely tokens based on the highest token probability. (Put this value on 0 to disable its effect)"
           min={0}
           max={1}
           step={0.01}
-          value={props.inherit?.topA ?? defaultPresets.basic.topA}
+          value={props.inherit?.topA ?? 0}
           disabled={props.disabled}
           service={props.service}
           format={props.format}
           aiSetting={'topA'}
         />
-        <RangeInput
-          fieldName="topG"
-          label="Top G"
-          helperText="Functions similarly to Top K, but acts on groups of tokens with equal probabilities (0 to disable)"
-          min={0}
-          max={20}
-          step={1}
-          value={props.inherit?.topG ?? 0}
-          disabled={props.disabled}
-          service={props.service}
-          format={props.format}
-          aiSetting={'topG'}
-        />
+
         <RangeInput
           fieldName="mirostatTau"
           label="Mirostat Tau"

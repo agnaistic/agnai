@@ -108,6 +108,7 @@ const createTier = handle(async ({ body }) => {
       disableSlots: 'boolean',
       description: 'string',
       apiAccess: 'boolean',
+      patreonThreshold: 'number',
     },
     body
   )

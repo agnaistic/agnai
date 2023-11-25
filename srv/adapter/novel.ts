@@ -219,7 +219,6 @@ function getModernParams(gen: Partial<AppSchema.GenSettings>) {
     order: gen.order,
     bad_words_ids: clioBadWordsId,
     repetition_penalty_whitelist: penaltyWhitelist,
-    top_g: gen.topG,
     mirostat_tau: gen.mirostatTau,
     mirotsat_lr: gen.mirostatLR,
   }

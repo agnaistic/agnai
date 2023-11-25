@@ -64,7 +64,7 @@ export const verifySubscription = handle(async ({ userId }) => {
   const user = await store.users.getUser(userId)
 
   if (!user?.billing?.subscriptionId) throw new StatusError('No subscription present', 402)
-  const result = await store.users.validateSubscription(user)
+  const result = await store.users.validateNativeSubscription(user)
   if (result instanceof Error) {
     throw new StatusError(result.message, 402)
   }

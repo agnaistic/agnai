@@ -316,6 +316,48 @@ export const userStore = createStore<UserState>(
       }
     },
 
+    async verifyPatreon(_, body: any, onDone: (error?: any) => void) {
+      const res = await api.post(`/user/verify/patreon`, body)
+      if (res.result) {
+        onDone()
+        return
+      }
+
+      if (res.error) {
+        onDone(res.error)
+        return
+      }
+    },
+
+    async unverifyPatreon() {
+      const res = await api.post('/user/unverify/patreon')
+      if (res.result) {
+        toastStore.success('Unlinked Patreon account')
+        userStore.getConfig()
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not unlink Patreon account: ${res.error}`)
+        return
+      }
+    },
+
+    async syncPatreonAccount() {
+      const res = await api.post('/user/resync/patreon')
+      if (res.result) {
+        toastStore.success('Successfully updated Patreon information')
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not sync Patreon info: ${res.error}`)
+        return
+      }
+
+      userStore.getConfig()
+    },
+
     async *login(_, username: string, password: string, onSuccess?: (token: string) => void) {
       yield { loading: true }
 

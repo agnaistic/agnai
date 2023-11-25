@@ -56,6 +56,7 @@ const TiersPage: Component = (props) => {
       enabled: 'boolean',
       disableSlots: 'boolean?',
       apiAccess: 'boolean',
+      patreonThreshold: 'number',
     })
 
     const product = admin.products.find((p) => p.id === data.productId)
@@ -137,6 +138,14 @@ const TiersPage: Component = (props) => {
             value={editing()?.apiAccess ?? false}
           />
 
+          <TextInput
+            type="number"
+            fieldName="patreonThreshold"
+            label="Patreon Threshold (in dollars)"
+            helperText="If Patreon is linked, the minimum pledge required in dollars ($)"
+            value={editing()?.patreonThreshold}
+          />
+
           <div class="text-lg font-bold">Preview</div>
 
           <TierCard
@@ -146,6 +155,7 @@ const TiersPage: Component = (props) => {
               cost: price(),
               disableSlots: false,
               apiAccess: false,
+              patreonThreshold: 10,
             }}
           />
 

@@ -73,6 +73,16 @@ const SubscriptionList: Component = () => {
                       class="w-full cursor-pointer"
                     >
                       {each.name}
+                      <Show when={each.cost > 0 && !!each.priceId}>
+                        <span class="text-600 ml-2 text-xs italic">Stripe: ${each.cost / 100}</span>
+                      </Show>
+
+                      <Show when={each.patreonThreshold > 0}>
+                        <span class="text-600 ml-2 text-xs italic">
+                          Patron: ${each.patreonThreshold}
+                        </span>
+                      </Show>
+
                       <Show when={!each.enabled}>
                         <span class="text-600 ml-2 text-xs italic">disabled</span>
                       </Show>

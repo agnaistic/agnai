@@ -86,7 +86,7 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const level = opts.subscription.level ?? -1
   const preset = opts.subscription.preset
 
-  let newLevel = await store.users.validateSubscription(opts.user)
+  let newLevel = await store.users.validateNativeSubscription(opts.user)
   if (newLevel === undefined) {
     newLevel = -1
   }

@@ -294,7 +294,6 @@ export const adapterSettings: {
   topK: ['horde', 'novel', 'kobold', 'ooba', 'claude', 'agnaistic', 'exllamav2'],
   typicalP: ['horde', 'novel', 'kobold', 'ooba', 'agnaistic', 'exllamav2'],
 
-  topG: ['novel'],
   mirostatLR: ['novel', 'ooba', 'agnaistic', 'llamacpp'],
   mirostatTau: ['novel', 'ooba', 'agnaistic', 'llamacpp'],
   cfgScale: ['novel', 'ooba'],
@@ -381,7 +380,6 @@ export const settingLabels: { [key in keyof PresetAISettings]: string } = {
   prefill: 'Bot response prefilling',
   phraseRepPenalty: 'Phrase Repetition Penality',
   stopSequences: 'Stop Sequences',
-  topG: 'Top G',
   mirostatTau: 'Mirostat Tau',
   mirostatLR: 'Mirostat LR',
 }
@@ -396,7 +394,6 @@ export const samplerOrders: { [key in AIAdapter]?: Array<keyof PresetAISettings>
     'topA',
     'typicalP',
     'cfgScale',
-    'topG',
     'mirostatTau',
   ],
 }

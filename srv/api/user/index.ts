@@ -1,6 +1,16 @@
 import { Router } from 'express'
 import { loggedIn } from '../auth'
-import { changePassword, createApiKey, login, register, remoteLogin, verifyOauthKey } from './auth'
+import {
+  changePassword,
+  createApiKey,
+  login,
+  register,
+  remoteLogin,
+  resyncPatreon,
+  unlinkPatreon,
+  verifyOauthKey,
+  verifyPatreonOauth,
+} from './auth'
 import {
   createUserPreset,
   getUserPresets,
@@ -41,6 +51,9 @@ router.post('/services/novel', novelLogin)
 router.post('/services/horde-stats', hordeStats)
 router.get('/services/openrouter', openRouterModels)
 router.post('/code', loggedIn, createApiKey)
+router.post('/resync/patreon', loggedIn, resyncPatreon)
+router.post('/verify/patreon', loggedIn, verifyPatreonOauth)
+router.post('/unverify/patreon', loggedIn, unlinkPatreon)
 router.post('/verify', verifyOauthKey)
 router.get('/init', loggedIn, getInitialLoad)
 router.get('/', loggedIn, getProfile)

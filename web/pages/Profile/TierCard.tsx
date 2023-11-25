@@ -12,9 +12,18 @@ export const TierCard: Component<{ tier: TierPreview; children?: any; class?: st
   props
 ) => {
   const cost = createMemo(() => {
-    if (props.tier.cost > 0) return '$' + (props.tier.cost / 100).toFixed(2) + '/mo'
+    const prices: string[] = []
+    if (props.tier.cost > 0) {
+      prices.push('$' + (props.tier.cost / 100).toFixed(2) + '/mo')
+    }
+
+    if (prices.length > 0) {
+      return prices.join(' or ')
+    }
+
     return 'None'
   })
+
   return (
     <TitleCard class={`flex w-full flex-col gap-2 sm:w-1/2 ${props.class || ''}`}>
       <div class="flex justify-center text-lg font-bold text-[var(--hl-500)]">

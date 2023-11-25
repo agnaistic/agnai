@@ -5,28 +5,62 @@ import { SolidCard } from '/web/shared/Card'
 import Button from '/web/shared/Button'
 import { TierCard } from './TierCard'
 import { ConfirmModal } from '/web/shared/Modal'
+import { PatreonControls } from '../Settings/PatreonOauth'
 
 export const SubscriptionPage: Component = (props) => {
   const user = userStore()
-  const cfg = userStore((s) => ({
-    tiers: s.tiers.sort((l, r) => r.level - l.level),
-    level: s.user?.sub?.level ?? -1,
-    tier: s.tiers.find((t) => t._id === s.user?.sub?.tierId),
-    downgrade: s.subStatus?.downgrading?.tierId,
-  }))
+  const cfg = userStore((s) => {
+    const nativeLevel = s.user?.sub?.level ?? -1
+    const patronLevel = s.user?.patreon?.sub?.level ?? -1
+
+    const patronTier = s.tiers.find((t) => t._id === s.user?.patreon?.sub?.tierId)
+    const nativeTier = s.tiers.find((t) => t._id === s.user?.sub?.tierId)
+
+    const type =
+      patronTier && nativeTier
+        ? patronLevel > nativeLevel
+          ? 'patreon'
+          : 'native'
+        : !!patronTier
+        ? 'patreon'
+        : !!nativeTier
+        ? 'native'
+        : 'none'
+
+    return {
+      tiers: s.tiers.sort((l, r) => r.level - l.level),
+      type: type as 'patreon' | 'native' | 'none',
+      tier: type === 'patreon' ? patronTier : type === 'native' ? nativeTier : undefined,
+      level: type === 'patreon' ? patronLevel : type === 'native' ? nativeLevel : -1,
+      downgrade: s.subStatus?.downgrading?.tierId,
+    }
+  })
 
   const [showUnsub, setUnsub] = createSignal(false)
   const [showUpgrade, setUpgrade] = createSignal<AppSchema.SubscriptionTier>()
   const [showDowngrade, setDowngrade] = createSignal<AppSchema.SubscriptionTier>()
 
+  const hasExpired = createMemo(() => {
+    if (!user.user?.billing?.cancelling) return false
+    const threshold = new Date(user.user.billing.validUntil)
+    return threshold.valueOf() < Date.now()
+  })
+
   const candidates = createMemo(() => {
     return cfg.tiers
-      .filter((t) => t.level !== cfg.level && t.enabled && !t.deletedAt && !!t.productId)
+      .filter((t) => {
+        const isPatronOf = cfg.type === 'patreon' && cfg.tier?._id === t._id
+        if (isPatronOf) return false
+
+        const usable = t.level === cfg.level ? hasExpired() : true
+        return usable && t.enabled && !t.deletedAt && !!t.productId
+      })
       .sort((l, r) => l.level - r.level)
   })
 
   const renews = createMemo(() => {
     if (!user.user?.billing) return ''
+    if (cfg.type === 'patreon') return ''
     const last = new Date(user.user.billing.validUntil)
     return last.toLocaleDateString()
   })
@@ -36,6 +70,8 @@ export const SubscriptionPage: Component = (props) => {
   }
 
   const currentText = createMemo(() => {
+    if (cfg.type === 'patreon') return `Patreon Subscriber`
+
     if (user.user?.billing?.status === 'active') {
       if (user.user?.billing?.cancelling) return 'Cancels at'
       return `Renews at`
@@ -56,6 +92,9 @@ export const SubscriptionPage: Component = (props) => {
   return (
     <>
       <div class="flex flex-col gap-2">
+        <div class="flex w-full justify-center">
+          <PatreonControls />
+        </div>
         <div class="flex w-full flex-col items-center gap-4">
           <SolidCard class="flex flex-col gap-2" border>
             <p class="flex justify-center text-[var(--hl-500)]">
@@ -70,8 +109,12 @@ export const SubscriptionPage: Component = (props) => {
             <p>Subscribing allows me to spend more time developing and enhancing Agnaistic.</p>
           </SolidCard>
 
-          <Show when={cfg.tier}>
+          <Show when={cfg.tier && !hasExpired()}>
             <h3 class="font-bold">Current Subscription</h3>
+            <div>
+              Subscribed via{' '}
+              {cfg.type === 'patreon' ? 'Patreon' : cfg.type === 'native' ? 'Stripe' : 'None'}
+            </div>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
                 <div class="text-700 text-sm italic">
@@ -112,7 +155,7 @@ export const SubscriptionPage: Component = (props) => {
           </Show>
 
           <Show when={candidates().length > 0}>
-            <div>Subscription Alternatives</div>
+            <div class="font-bold">Subscription Options</div>
           </Show>
           <div class="flex w-full flex-wrap justify-center gap-4">
             <For each={candidates()}>
@@ -143,7 +186,7 @@ export const SubscriptionPage: Component = (props) => {
                           </Button>
                         </Match>
 
-                        <Match when={cfg.tier && cfg.level > each.level}>
+                        <Match when={!hasExpired() && cfg.tier && cfg.level > each.level}>
                           <Button
                             schema="gray"
                             disabled={canResume() || user.billingLoading}

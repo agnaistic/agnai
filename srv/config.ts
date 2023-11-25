@@ -124,6 +124,8 @@ export const config = {
   },
 
   patreon: {
+    redirect: env('PATREON_REDIRECT_URI', 'http://localhost:1234/oauth/patreon'),
+    campaign_id: env('PATREON_CAMPAIGN_ID', ''),
     client_id: env('PATREON_CLIENT_ID', ''),
     client_secret: env('PATREON_CLIENT_SECRET', ''),
     access_token: env('PATREON_ACCESS_TOKEN', ''),

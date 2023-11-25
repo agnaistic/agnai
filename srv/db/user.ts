@@ -279,7 +279,12 @@ export async function validateApiAccess(apiKey: string) {
   if (config.apiAccess === 'users') return { user }
 }
 
-export async function validateSubscription(user: AppSchema.User) {
+export async function findByPatreonUserId(id: string) {
+  const user = await db('user').findOne({ patreonUserId: id })
+  return user
+}
+
+export async function validateNativeSubscription(user: AppSchema.User) {
   if (user.admin) return Infinity
   if (!user.sub?.tierId) {
     return -1

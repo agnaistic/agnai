@@ -32,7 +32,7 @@ export async function setupDomain() {
 }
 
 const { domain, createHandler } = createDomainV2(
-  { provider: providerAsync, useCache: true },
+  { provider: providerAsync, useCache: false },
   { billing: billingAgg, subscription: subsAgg }
 )
 

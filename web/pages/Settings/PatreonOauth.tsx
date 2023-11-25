@@ -1,88 +1,106 @@
-import { Component, Match, Show, Switch, createMemo, createSignal } from 'solid-js'
-import { userStore } from '/web/store'
+import { Component, Match, Show, Switch, createSignal, onMount } from 'solid-js'
+import { settingStore, userStore } from '/web/store'
 import Button from '/web/shared/Button'
-import { TitleCard } from '/web/shared/Card'
+import { useNavigate } from '@solidjs/router'
+import { SolidCard } from '/web/shared/Card'
 
 const PatreonOauth: Component = () => {
-  const users = userStore()
+  const nav = useNavigate()
 
-  const isKeySet = createMemo(() => !!users.user?.adapterConfig?.openrouter?.apiKeySet)
-  const [trying, setTrying] = createSignal(false)
+  const [state, setState] = createSignal<'success' | 'error' | undefined>()
+  const [message, setMessage] = createSignal('')
 
-  const handleCode = async (code: string) => {
-    setTrying(true)
-    const res = await fetch(`https://openrouter.ai/api/v1/auth/keys`, {
-      method: 'POST',
-      body: JSON.stringify({ code }),
-    }).then((res) => res.json())
+  onMount(() => {
+    const result = location.search
+      .slice(1)
+      .split('&')
+      .reduce<any>(
+        (prev, curr) => {
+          const [key, value] = curr.split('=')
+          return Object.assign(prev, { [key]: value })
+        },
+        { url: `${location.origin}/oauth/patreon` }
+      )
 
-    userStore.updateService('openrouter', { apiKey: res.key }, () => {
-      setTrying(false)
+    userStore.verifyPatreon(result, (error) => {
+      if (error) {
+        setMessage(error)
+        setState('error')
+        return
+      }
+
+      setState('success')
+
+      userStore.getConfig()
+
+      setTimeout(() => {
+        nav('/settings')
+      }, 2500)
     })
-  }
-
-  const start = () => {
-    setTrying(true)
-    const url = location.origin
-    const child = window.open(
-      `https://openrouter.ai/auth?callback_url=${url}`,
-      '_blank',
-      'width=600,height=800,scrollbar=yes,top=100,left=100'
-    )!
-
-    const interval = setInterval(() => {
-      try {
-        if (child.closed) {
-          setTrying(false)
-          clearInterval(interval)
-        }
-
-        const query = child.location.search
-        const [, code] = query.split('=')
-        if (!code) return
-
-        handleCode(code)
-        child.close()
-        clearInterval(interval)
-      } catch (ex) {}
-    }, 500)
-  }
+  })
 
   return (
-    <>
-      <Show when={!isKeySet()}>
-        <TitleCard>
-          Click <b class="highlight">Login with OpenRouter</b> or visit{' '}
-          <a class="link" target="_blank" href="https://openrouter.ai/keys">
-            OpenRouter.ai/keys
-          </a>{' '}
-          to create an API key and enter it below.
-          <br />
-          Support for OpenRouter is quite new. Please provide feedback via Discord if you have any
-          issues or questions.
-        </TitleCard>
-      </Show>
-      <Show when={isKeySet()}>
-        <em>You are currently logged in.</em>
-      </Show>
-      <div>
+    <SolidCard>
+      <div class="flex flex-col items-center gap-2">
         <Switch>
-          <Match when={trying()}>
-            <Button disabled>Logging in...</Button>
-          </Match>
-          <Match when={!isKeySet()}>
-            <Button onClick={start}>Login with OpenRouter</Button>
+          <Match when={!state()}>Verifying Patreon account...</Match>
+
+          <Match when={state() === 'error'}>
+            <div class="text-red-500">Unable to verify Patreon account</div>
+            <div>{message()}</div>
+            <div>
+              <Button onClick={() => nav('/settings')}>Return to Settings</Button>
+            </div>
           </Match>
 
-          <Match when={isKeySet()}>
-            <Button onClick={() => userStore.updateService('openrouter', { apiKey: '' })}>
-              Logout
-            </Button>
+          <Match when={state() === 'success'}>
+            <div class="text-green-500">Patreon account verified</div>
+            <div>Redirecting to Settings page...</div>
           </Match>
         </Switch>
       </div>
-    </>
+    </SolidCard>
+  )
+}
+
+export const PatreonControls: Component = () => {
+  const config = settingStore((s) => s.config)
+  const state = userStore()
+
+  return (
+    <Show when={config.patreonAuth}>
+      <Show when={!state.user?.patreon}>
+        <div>Link to Patreon account to receive subscriber benefits</div>
+        <Button class="w-fit" onClick={authorizePatreon}>
+          Link Patreon Account
+        </Button>
+      </Show>
+      <Show when={state.user?.patreon}>
+        <div class="flex gap-2">
+          <Button class="w-fit" onClick={userStore.syncPatreonAccount}>
+            Sync Patreon Subscription
+          </Button>
+          <Button class="w-fit" onClick={userStore.unverifyPatreon}>
+            Unlink Patreon Account
+          </Button>
+        </div>
+      </Show>
+    </Show>
   )
 }
 
 export default PatreonOauth
+
+function authorizePatreon() {
+  const { config } = settingStore.getState()
+  const scopes = ['identity', 'identity.memberships', 'identity[email]']
+  const redir = `${location.origin}/oauth/patreon`
+  const params = [
+    `response_type=code`,
+    `client_id=${config.patreonAuth?.clientId}`,
+    `scope=${scopes.join(' ')}`,
+    `redirect_uri=${redir}`,
+  ]
+  const url = `https://www.patreon.com/oauth2/authorize?${encodeURI(params.join('&'))}`
+  window.open(url, '_self')
+}
