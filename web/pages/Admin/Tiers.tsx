@@ -47,6 +47,19 @@ const TiersPage: Component = (props) => {
     return price?.unit_amount || 0
   })
 
+  const patreonTiers = createMemo(() => {
+    const items = [{ label: 'None', value: '' }]
+
+    for (const tier of admin.patreonTiers) {
+      items.push({
+        label: `$${(tier.attributes.amount_cents / 100).toFixed(2)} ${tier.attributes.title}`,
+        value: tier.id,
+      })
+    }
+
+    return items
+  })
+
   const onSubmit = () => {
     const data = getStrictForm(form, {
       name: 'string',
@@ -56,11 +69,15 @@ const TiersPage: Component = (props) => {
       enabled: 'boolean',
       disableSlots: 'boolean?',
       apiAccess: 'boolean',
-      patreonThreshold: 'number',
+      patreonTier: 'string',
     })
 
     const product = admin.products.find((p) => p.id === data.productId)
     const price = admin.prices.find((p) => p.id === product?.default_price!)
+    const patreonTier = admin.patreonTiers.find((t) => t.id === data.patreonTier)
+    const patreon = patreonTier
+      ? { tierId: patreonTier.id, cost: patreonTier.attributes.amount_cents }
+      : (null as any as undefined)
 
     if (!product) {
       if (data.productId) {
@@ -69,7 +86,6 @@ const TiersPage: Component = (props) => {
       }
     }
 
-    const productId = data.productId
     const priceId = product ? (product.default_price as string) : ''
 
     if (!product?.default_price && data.productId) {
@@ -86,9 +102,14 @@ const TiersPage: Component = (props) => {
 
     const tier = {
       ...data,
+      name: data.name,
+      description: data.description,
+      level: data.level,
+      productId: data.productId,
+      enabled: data.enabled,
       cost: price ? price.unit_amount! : 0,
+      patreon,
       priceId,
-      productId,
     }
 
     if (id) {
@@ -138,12 +159,12 @@ const TiersPage: Component = (props) => {
             value={editing()?.apiAccess ?? false}
           />
 
-          <TextInput
-            type="number"
-            fieldName="patreonThreshold"
-            label="Patreon Threshold (in dollars)"
-            helperText="If Patreon is linked, the minimum pledge required in dollars ($)"
-            value={editing()?.patreonThreshold}
+          <Select
+            fieldName="patreonTier"
+            label="Patreon Tier"
+            helperText="If Patreon is linked, the minimum tier is required"
+            value={editing()?.patreon?.tierId}
+            items={patreonTiers()}
           />
 
           <div class="text-lg font-bold">Preview</div>
@@ -155,7 +176,6 @@ const TiersPage: Component = (props) => {
               cost: price(),
               disableSlots: false,
               apiAccess: false,
-              patreonThreshold: 10,
             }}
           />
 

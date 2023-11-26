@@ -10,6 +10,7 @@ export const patreon = {
   identity,
   revalidatePatron,
   initialVerifyPatron,
+  getCampaignTiers,
 }
 
 async function authorize(code: string, refresh?: boolean) {
@@ -83,14 +84,14 @@ async function identity(token: string) {
     return match
   })
 
-  const contrib = tier.attributes.amount_cents / 100
+  const contrib = tier.attributes.amount_cents
   const sub = getCachedTiers().reduce((prev, curr) => {
     if (!curr.enabled || !curr.deletedAt) return prev
-    if (!curr.patreonThreshold || curr.patreonThreshold <= 0) return prev
-    if (curr.patreonThreshold > contrib) return prev
+    if (!curr.patreon?.tierId) return prev
+    if (curr.patreon.cost > contrib) return prev
 
     if (!prev) return curr
-    if (prev.patreonThreshold > curr.patreonThreshold) return prev
+    if (prev.patreon?.cost! > curr.patreon.cost) return prev
     return curr
   })
 
@@ -159,4 +160,25 @@ async function initialVerifyPatron(userId: string, code: string) {
   })
 
   return next
+}
+
+async function getCampaignTiers() {
+  const query = ['include=tiers', 'fields[tier]=amount_cents,title,description'].join('&')
+  const res = await needle(
+    'get',
+    `https://www.patreon.com/api/oauth2/v2/campaigns/${config.patreon.campaign_id}?${encodeURI(
+      query
+    )}`,
+    {
+      headers: {
+        Authorization: `Bearer ${config.patreon.access_token}`,
+      },
+    }
+  )
+
+  if (res.statusCode && res.statusCode > 200) {
+    return []
+  }
+
+  return res.body.included as Array<Omit<Patreon.Tier, 'relationships'>>
 }

@@ -98,7 +98,10 @@ export namespace AppSchema {
 
     productId: string
     priceId: string
-    patreonThreshold: number
+    patreon?: {
+      tierId: string
+      cost: number
+    }
     apiAccess: boolean
 
     name: string

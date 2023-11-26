@@ -32,6 +32,10 @@ export const SubscriptionPage: Component = (props) => {
       type: type as 'patreon' | 'native' | 'none',
       tier: type === 'patreon' ? patronTier : type === 'native' ? nativeTier : undefined,
       level: type === 'patreon' ? patronLevel : type === 'native' ? nativeLevel : -1,
+      // For testing Patreon logic
+      // type: 'patreon',
+      // tier: patronTier,
+      // level: patronLevel,
       downgrade: s.subStatus?.downgrading?.tierId,
     }
   })

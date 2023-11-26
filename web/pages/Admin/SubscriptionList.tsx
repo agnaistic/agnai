@@ -77,9 +77,9 @@ const SubscriptionList: Component = () => {
                         <span class="text-600 ml-2 text-xs italic">Stripe: ${each.cost / 100}</span>
                       </Show>
 
-                      <Show when={each.patreonThreshold > 0}>
+                      <Show when={each.patreon?.cost! > 0}>
                         <span class="text-600 ml-2 text-xs italic">
-                          Patron: ${each.patreonThreshold}
+                          Patron: ${(each.patreon?.cost! / 100).toFixed(2)}
                         </span>
                       </Show>
 
