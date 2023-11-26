@@ -113,15 +113,15 @@ export const SubscriptionPage: Component = (props) => {
 
           <Show when={cfg.tier && !hasExpired()}>
             <h3 class="font-bold">Current Subscription</h3>
-            <Pill type="green">
-              Subscribed via{' '}
-              {cfg.type === 'patreon' ? 'Patreon' : cfg.type === 'native' ? 'Stripe' : 'None'}
-            </Pill>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
                 <div class="text-700 text-sm italic">
                   {currentText()} {renews()}
                 </div>
+                <Pill type="green">
+                  Subscribed via{' '}
+                  {cfg.type === 'patreon' ? 'Patreon' : cfg.type === 'native' ? 'Stripe' : 'None'}
+                </Pill>
                 <Switch>
                   <Match when={cfg.downgrade && cfg.tier!._id !== cfg.downgrade}>
                     Your subscription is set to downgrade

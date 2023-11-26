@@ -348,24 +348,21 @@ export const CreateCharacterForm: Component<{
                   rootModalStore.info(
                     'AI Character Generation',
                     <>
-                      <TitleCard class="text-sm" type="hl">
-                        <div class="font-bold">AI Generated Characters</div>
-                        1. Fill out the <Pill small>Description</Pill> field
-                        <br />
-                        2. Select the Service you wish to use
-                        <br />
-                        3. Click{' '}
-                        <Pill inverse type="hl" small>
-                          Generate
-                        </Pill>
-                        &nbsp;- It may take 30-60 seconds to generate.
-                        <br />
-                        4. Adjust the <Pill small>Description</Pill> and click{' '}
-                        <Pill type="hl" inverse small>
-                          Regenerate
-                        </Pill>
-                        &nbsp;to regenerate a specific field.
-                      </TitleCard>
+                      1. Fill out the <Pill small>Description</Pill> field
+                      <br />
+                      2. Select the Service you wish to use
+                      <br />
+                      3. Click{' '}
+                      <Pill inverse type="hl" small>
+                        Generate
+                      </Pill>
+                      &nbsp;- It may take 30-60 seconds to generate.
+                      <br />
+                      4. Adjust the <Pill small>Description</Pill> and click{' '}
+                      <Pill type="hl" inverse small>
+                        Regenerate
+                      </Pill>
+                      &nbsp;to regenerate a specific field.
                     </>
                   )
                 }}
