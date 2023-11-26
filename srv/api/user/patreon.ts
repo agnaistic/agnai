@@ -77,6 +77,12 @@ async function identity(token: string) {
 
   if (!tier) return { user }
 
+  const member = identity.body.included?.find((obj: Patreon.Include) => {
+    if (obj.type !== 'member') return false
+    const match = obj.relationships.currently_entitled_tiers?.data?.some((d) => d.id === tier.id)
+    return match
+  })
+
   const contrib = tier.attributes.amount_cents / 100
   const sub = getCachedTiers().reduce((prev, curr) => {
     if (!curr.enabled || !curr.deletedAt) return prev
@@ -88,7 +94,7 @@ async function identity(token: string) {
     return curr
   })
 
-  return { tier, sub, user }
+  return { tier, sub, user, member }
 }
 
 async function revalidatePatron(userId: string) {
@@ -123,6 +129,7 @@ async function revalidatePatron(userId: string) {
     patreon: {
       ...user.patreon,
       user: patron.user,
+      member: patron.member,
       sub: patron.sub ? { tierId: patron.sub._id, level: patron.sub.level } : undefined,
     },
     patreonUserId: patron.user.id,
@@ -145,6 +152,7 @@ async function initialVerifyPatron(userId: string, code: string) {
       ...token,
       expires: new Date(Date.now() + token.expires_in * 1000).toISOString(),
       user: patron.user,
+      member: patron.member,
       sub: patron.sub ? { tierId: patron.sub._id, level: patron.sub.level } : undefined,
     },
     patreonUserId: patron.user.id,

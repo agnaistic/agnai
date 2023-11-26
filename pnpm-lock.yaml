@@ -308,8 +308,8 @@ devDependencies:
     specifier: ^3.3.2
     version: 3.3.2
   typescript:
-    specifier: ^5.2.2
-    version: registry.npmjs.org/typescript@5.2.2
+    specifier: ^5.3.2
+    version: registry.npmjs.org/typescript@5.3.2
   url:
     specifier: ^0.11.0
     version: 0.11.1
@@ -8991,10 +8991,10 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  registry.npmjs.org/typescript@5.2.2:
-    resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/typescript/-/typescript-5.2.2.tgz}
+  registry.npmjs.org/typescript@5.3.2:
+    resolution: {integrity: sha512-6l+RyNy7oAHDfxC4FzSJcz9vnjTKxrLpDG5M2Vu4SHRVNg6xzqZp6LYSR9zjqQTu8DU/f5xwxUdADOkbrIX2gQ==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/typescript/-/typescript-5.3.2.tgz}
     name: typescript
-    version: 5.2.2
+    version: 5.3.2
     engines: {node: '>=14.17'}
     hasBin: true
     dev: true

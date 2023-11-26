@@ -59,7 +59,7 @@ const Slot: Component<{
     user: s.user,
   }))
   const cfg = settingStore((s) => {
-    const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig.slots)
+    const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
     const config = {
       provider: parsed.provider || s.slots.provider,
       publisherId: parsed.publisherId || s.slots.publisherId,

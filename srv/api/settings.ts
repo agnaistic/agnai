@@ -38,7 +38,7 @@ export async function getAppConfig(user?: AppSchema.User) {
   const models = getHordeModels()
   const openRouter = await getOpenRouterModels()
 
-  const configuration = await store.admin.getServerConfiguration()
+  const configuration = await store.admin.getServerConfiguration().catch(() => undefined)
 
   if (!appConfig) {
     await Promise.all([store.subs.prepSubscriptionCache(), store.subs.prepTierCache()])
@@ -81,7 +81,7 @@ export async function getAppConfig(user?: AppSchema.User) {
 
   const subs = store.subs.getCachedSubscriptions()
 
-  if (user) {
+  if (user && configuration) {
     switch (configuration.apiAccess) {
       case 'off':
         break

@@ -417,6 +417,9 @@ export async function getSafeUserConfig(userId: string) {
   if (user.patreon) {
     user.patreon.access_token = ''
     user.patreon.refresh_token = ''
+    user.patreon.member = undefined
+    user.patreon.scope = ''
+    user.patreon.token_type = ''
   }
 
   if (user.novelApiKey) {

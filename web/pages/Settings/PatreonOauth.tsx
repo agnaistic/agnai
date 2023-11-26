@@ -2,7 +2,7 @@ import { Component, Match, Show, Switch, createSignal, onMount } from 'solid-js'
 import { settingStore, userStore } from '/web/store'
 import Button from '/web/shared/Button'
 import { useNavigate } from '@solidjs/router'
-import { SolidCard } from '/web/shared/Card'
+import { Pill, SolidCard } from '/web/shared/Card'
 
 const PatreonOauth: Component = () => {
   const nav = useNavigate()
@@ -69,22 +69,26 @@ export const PatreonControls: Component = () => {
 
   return (
     <Show when={config.patreonAuth}>
-      <Show when={!state.user?.patreon}>
-        <div>Link to Patreon account to receive subscriber benefits</div>
-        <Button class="w-fit" onClick={authorizePatreon}>
-          Link Patreon Account
-        </Button>
-      </Show>
-      <Show when={state.user?.patreon}>
-        <div class="flex gap-2">
-          <Button class="w-fit" onClick={userStore.syncPatreonAccount}>
-            Sync Patreon Subscription
-          </Button>
-          <Button class="w-fit" onClick={userStore.unverifyPatreon}>
-            Unlink Patreon Account
-          </Button>
-        </div>
-      </Show>
+      <div class="flex w-full justify-center">
+        <Show when={!state.user?.patreon}>
+          <div class="flex flex-col items-center gap-1">
+            <Pill type="green">Link your Patreon account to receive subscriber benefits</Pill>
+            <Button class="w-fit" onClick={authorizePatreon}>
+              Link Patreon Account
+            </Button>
+          </div>
+        </Show>
+        <Show when={state.user?.patreon}>
+          <div class="flex gap-2">
+            <Button class="w-fit" onClick={() => userStore.syncPatreonAccount(false)}>
+              Sync Patreon Subscription
+            </Button>
+            <Button class="w-fit" onClick={userStore.unverifyPatreon}>
+              Unlink Patreon Account
+            </Button>
+          </div>
+        </Show>
+      </div>
     </Show>
   )
 }

@@ -1,7 +1,7 @@
 import { Component, For, Match, Show, Switch, createMemo, createSignal, onMount } from 'solid-js'
 import { userStore } from '/web/store'
 import { AppSchema } from '/common/types'
-import { SolidCard } from '/web/shared/Card'
+import { Pill, SolidCard } from '/web/shared/Card'
 import Button from '/web/shared/Button'
 import { TierCard } from './TierCard'
 import { ConfirmModal } from '/web/shared/Modal'
@@ -92,15 +92,15 @@ export const SubscriptionPage: Component = (props) => {
   return (
     <>
       <div class="flex flex-col gap-2">
-        <div class="flex w-full justify-center">
-          <PatreonControls />
-        </div>
         <div class="flex w-full flex-col items-center gap-4">
           <SolidCard class="flex flex-col gap-2" border>
-            <p class="flex justify-center text-[var(--hl-500)]">
+            <p class="flex flex-wrap justify-center text-[var(--hl-500)]">
               <strong>Why subscribe?</strong>
             </p>
-            <p>Subscribing to Agnaistic grants you access to higher quality models.</p>
+            <p>
+              Subscribing grants you access to higher quality models, quicker responses, and larger
+              contexts.
+            </p>
             <p>
               In the future you'll also have access to additional features! Such as: Image
               generation, image storage, and with third-party apps like Discord, Slack, and
@@ -109,12 +109,14 @@ export const SubscriptionPage: Component = (props) => {
             <p>Subscribing allows me to spend more time developing and enhancing Agnaistic.</p>
           </SolidCard>
 
+          <PatreonControls />
+
           <Show when={cfg.tier && !hasExpired()}>
             <h3 class="font-bold">Current Subscription</h3>
-            <div>
+            <Pill type="green">
               Subscribed via{' '}
               {cfg.type === 'patreon' ? 'Patreon' : cfg.type === 'native' ? 'Stripe' : 'None'}
-            </div>
+            </Pill>
             <TierCard tier={cfg.tier!}>
               <div class="flex flex-col items-center gap-2">
                 <div class="text-700 text-sm italic">
@@ -203,7 +205,7 @@ export const SubscriptionPage: Component = (props) => {
                               each._id === cfg.tier?._id ||
                               canResume() ||
                               user.billingLoading ||
-                              hasExpired()
+                              !hasExpired()
                             }
                             onClick={() => onSubscribe(each._id)}
                           >

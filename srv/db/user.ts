@@ -10,9 +10,10 @@ import { errors, StatusError } from '../api/wrap'
 import { encryptPassword, now } from './util'
 import { defaultChars } from '/common/characters'
 import { stripe } from '../api/billing/stripe'
-import { getTier } from './subscriptions'
+import { getCachedTiers, getTier } from './subscriptions'
 import { domain } from '../domains'
 import { store } from '.'
+import { patreon } from '../api/user/patreon'
 
 export type NewUser = {
   username: string
@@ -284,14 +285,32 @@ export async function findByPatreonUserId(id: string) {
   return user
 }
 
-export async function validateNativeSubscription(user: AppSchema.User) {
+export async function validateSubscription(user: AppSchema.User) {
   if (user.admin) return Infinity
   if (!user.sub?.tierId) {
     return -1
   }
 
-  const tier = await getTier(user.sub.tierId)
+  const sub = getSubscriptionTier(user)
+  if (!sub) return -1
+
+  const { type, tier, level } = sub
   if (!tier.productId) return tier.level ?? -1
+
+  if (type === 'patreon') {
+    if (!user.patreon) return -1
+
+    const expiry = new Date(user.patreon.member?.attributes.next_charge_date || 0)
+    if (expiry.valueOf() <= Date.now()) {
+      const next = await patreon.revalidatePatron(user._id)
+      if (!next) return -1
+      const tier = getSubscriptionTier(next)
+      if (!tier) return -1
+      return tier.level
+    }
+
+    return level
+  }
 
   const state = await domain.subscription.getAggregate(user._id)
   if (state.state === 'active') {
@@ -359,4 +378,26 @@ export async function validateNativeSubscription(user: AppSchema.User) {
   user.sub.tierId = tierId
   await updateUser(user._id, { billing: user.billing, sub: user.sub })
   return nextTier.level ?? -1
+}
+
+function getSubscriptionTier(user: AppSchema.User) {
+  const tiers = getCachedTiers()
+  const nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
+  const patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
+
+  if (!nativeTier && !patronTier) return
+
+  if (!nativeTier || !patronTier) {
+    const tier = nativeTier || patronTier
+    const level = tier!.level
+    const type: 'native' | 'patreon' = nativeTier ? 'native' : 'patreon'
+
+    return { tier: tier!, level, type }
+  }
+
+  const type: 'native' | 'patreon' = nativeTier.level >= patronTier.level ? 'native' : 'patreon'
+  const tier = type === 'native' ? nativeTier : patronTier
+  const level = tier.level
+
+  return { type, tier, level }
 }

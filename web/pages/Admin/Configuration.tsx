@@ -15,7 +15,7 @@ const ServerConfiguration: Component = () => {
   const nav = useNavigate()
   const state = settingStore((s) => s.config)
 
-  const [slots, setSlots] = createSignal(state.serverConfig.slots || '{}')
+  const [slots, setSlots] = createSignal(state.serverConfig?.slots || '{}')
 
   if (!user.user?.admin) {
     nav('/')
@@ -57,14 +57,14 @@ const ServerConfiguration: Component = () => {
             { label: 'Subscribers', value: 'subscribers' },
             { label: 'Adminstrators', value: 'admins' },
           ]}
-          value={state.serverConfig.apiAccess || 'off'}
+          value={state.serverConfig?.apiAccess || 'off'}
         />
 
         <Toggle
           fieldName="maintenance"
           label="Maintenace Mode Enabled"
           helperText="Caution: If your database is no available, this flag will not work. Use the environment variable instead."
-          value={state.serverConfig.maintenance}
+          value={state.serverConfig?.maintenance}
         />
 
         <TextInput
@@ -72,7 +72,7 @@ const ServerConfiguration: Component = () => {
           isMultiline
           label="Maintenance Message"
           helperText="Markdown is supported"
-          value={state.serverConfig.maintenanceMessage}
+          value={state.serverConfig?.maintenanceMessage}
         />
 
         <TextInput

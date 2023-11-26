@@ -8,7 +8,9 @@ const Maintenance: Component = () => {
     loading: s.initLoading,
     config: s.config.serverConfig,
   }))
-  const [show, setShow] = createSignal(!!state.init?.config.maintenance || state.config.maintenance)
+  const [show, setShow] = createSignal(
+    !!state.init?.config.maintenance || !!state.config?.maintenance
+  )
 
   return (
     <Modal show={show()} close={() => setShow(false)} title="Maintenance Mode">
@@ -17,7 +19,7 @@ const Maintenance: Component = () => {
 
         <div>You can continue to use the site as a guest.</div>
 
-        <div>Reason: {state.init?.config.maintenance || state.config.maintenanceMessage}</div>
+        <div>Reason: {state.init?.config.maintenance || state.config?.maintenanceMessage}</div>
       </div>
     </Modal>
   )

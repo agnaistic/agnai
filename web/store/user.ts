@@ -73,6 +73,10 @@ export const userStore = createStore<UserState>(
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile })
 
+    if (init.user?.patreonUserId) {
+      userStore.syncPatreonAccount(true)
+    }
+
     if (init.user?._id !== 'anon') {
       userStore.getTiers()
     }
@@ -343,8 +347,10 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async syncPatreonAccount() {
+    async syncPatreonAccount(_, quiet?: boolean) {
       const res = await api.post('/user/resync/patreon')
+      if (quiet) return
+
       if (res.result) {
         toastStore.success('Successfully updated Patreon information')
         return
@@ -836,4 +842,13 @@ async function checkout(sessionUrl: string) {
       success = result
     } catch (ex) {}
   })
+
+  setTimeout(() => {
+    if (!child) {
+      toastStore.error(
+        'Popups are required to open the checkout window. Please check your browser settings.'
+      )
+      clearInterval(interval)
+    }
+  }, 3000)
 }

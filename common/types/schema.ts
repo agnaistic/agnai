@@ -145,7 +145,7 @@ export namespace AppSchema {
     }
     openRouter: { models: OpenRouterModel[] }
     subs: Array<SubscriptionOption>
-    serverConfig: Configuration
+    serverConfig?: Configuration
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -244,6 +244,7 @@ export namespace AppSchema {
       expires: string
       user: Patreon.User
       tier?: Patreon.Tier
+      member?: Patreon.Member
       sub?: {
         tierId: string
         level: number
@@ -697,7 +698,7 @@ export namespace Patreon {
       will_pay_amount_cents: number
     }
     relationships: {
-      currently_entitled_tiers: Array<{ type: 'tier'; id: string }>
+      currently_entitled_tiers: { data: Array<{ type: 'tier'; id: string }> }
     }
   }
 
