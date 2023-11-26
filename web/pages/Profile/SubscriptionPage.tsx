@@ -200,7 +200,10 @@ export const SubscriptionPage: Component = (props) => {
                           <Button
                             schema="success"
                             disabled={
-                              each._id === cfg.tier?._id || canResume() || user.billingLoading
+                              each._id === cfg.tier?._id ||
+                              canResume() ||
+                              user.billingLoading ||
+                              hasExpired()
                             }
                             onClick={() => onSubscribe(each._id)}
                           >
@@ -221,7 +224,7 @@ export const SubscriptionPage: Component = (props) => {
             {/* <Button onClick={userStore.validateSubscription} disabled={user.billingLoading}>
               Validate
             </Button> */}
-            <Show when={cfg.tier}>
+            <Show when={cfg.tier && !hasExpired()}>
               <Button schema="red" onClick={() => setUnsub(true)} disabled={user.billingLoading}>
                 Unsubscribe
               </Button>
