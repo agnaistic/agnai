@@ -198,14 +198,17 @@ export const SubscriptionPage: Component = (props) => {
                           </Button>
                         </Match>
 
+                        <Match when={hasExpired() && each._id === cfg.tier?._id}>
+                          <Button schema="success" onClick={() => onSubscribe(each._id)}>
+                            Re-subscribe
+                          </Button>
+                        </Match>
+
                         <Match when>
                           <Button
                             schema="success"
                             disabled={
-                              each._id === cfg.tier?._id ||
-                              canResume() ||
-                              user.billingLoading ||
-                              !hasExpired()
+                              each._id === cfg.tier?._id || canResume() || user.billingLoading
                             }
                             onClick={() => onSubscribe(each._id)}
                           >
