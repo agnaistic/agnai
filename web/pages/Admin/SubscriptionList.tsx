@@ -79,7 +79,7 @@ const SubscriptionList: Component = () => {
 
                       <Show when={each.patreon?.cost! > 0}>
                         <span class="text-600 ml-2 text-xs italic">
-                          Patron: ${(each.patreon?.cost! / 100).toFixed(2)}
+                          Patreon: ${(each.patreon?.cost! / 100).toFixed(2)}
                         </span>
                       </Show>
 
