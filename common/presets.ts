@@ -51,7 +51,6 @@ export const presetValidator = {
   oaiModel: 'string',
   openRouterModel: 'any?',
 
-  topG: 'number?',
   mirostatTau: 'number?',
   mirostatLR: 'number?',
   cfgScale: 'number?',

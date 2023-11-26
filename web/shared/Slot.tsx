@@ -59,16 +59,16 @@ const Slot: Component<{
     user: s.user,
   }))
   const cfg = settingStore((s) => {
-    const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig.slots)
-    return {
+    const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
+    const config = {
       provider: parsed.provider || s.slots.provider,
       publisherId: parsed.publisherId || s.slots.publisherId,
       slots: Object.assign(s.slots, parsed) as SettingState['slots'],
-      slotsLoaded: s.slotsLoaded,
       flags: s.flags,
-      ready: s.initLoading === false,
+      ready: s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
     }
+    return config
   })
 
   const [stick, setStick] = createSignal(props.sticky)
@@ -82,8 +82,7 @@ const Slot: Component<{
   const [actualId, setActualId] = createSignal('...')
 
   const id = createMemo(() => {
-    if (cfg.provider === 'ez' || cfg.flags.reporting)
-      return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
+    if (cfg.provider === 'ez') return `ezoic-pub-ad-placeholder-${uniqueId() || '###'}`
     return `${props.slot}-${uniqueId()}`
   })
 
@@ -104,6 +103,8 @@ const Slot: Component<{
   }
 
   const specs = createMemo(() => {
+    if (!cfg.ready) return null
+
     resize.size()
     props.parent?.clientWidth
     parentSize.size()
@@ -198,7 +199,7 @@ const Slot: Component<{
     idLocks.delete(uniqueId()!)
     log('Cleanup')
 
-    if (cfg.provider === 'ez' || cfg.flags.reporting) {
+    if (cfg.provider === 'ez') {
       if (!ezstandalone.getSelectedPlaceholders) return
       const id = uniqueId()
       const holders = ezstandalone.getSelectedPlaceholders()
@@ -217,10 +218,6 @@ const Slot: Component<{
     if (!cfg.ready) {
       log('Not ready')
       return
-    }
-
-    if (!cfg.slotsLoaded) {
-      return log('Slot not ready')
     }
 
     if (!cfg.publisherId) {
@@ -257,7 +254,7 @@ const Slot: Component<{
     const num = uniqueId() || getUniqueId(props.slot, cfg.slots, uniqueId())
     setUniqueId(num)
 
-    if (cfg.provider === 'ez' || cfg.flags.reporting) {
+    if (cfg.provider === 'ez') {
       invoke(log, num)
     } else if (cfg.provider === 'google') {
       gtmReady.then(() => {
@@ -314,7 +311,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
+        <Match when={!cfg.ready || !user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}

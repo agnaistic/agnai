@@ -116,7 +116,6 @@ export const settingStore = createStore<SettingState>(
     async *init({ config: prev }) {
       yield { initLoading: true }
       const res = await usersApi.getInit()
-      yield { initLoading: false }
 
       if (res.result) {
         setAssetPrefix(res.result.config.assetPrefix)
@@ -126,7 +125,12 @@ export const settingStore = createStore<SettingState>(
           events.emit(EVENTS.init, res.result)
         }
 
-        yield { init: res.result, config: res.result.config, replicate: res.result.replicate || {} }
+        yield {
+          init: res.result,
+          config: res.result.config,
+          replicate: res.result.replicate || {},
+          initLoading: false,
+        }
 
         const maint = res.result.config?.maintenance
 
@@ -142,6 +146,7 @@ export const settingStore = createStore<SettingState>(
       if (res.error) {
         if (res.status === 500) {
           toastStore.error(`Could not get settings from server.`)
+          yield { initLoading: false }
           return
         }
         setTimeout(() => settingStore.init(), 2500)

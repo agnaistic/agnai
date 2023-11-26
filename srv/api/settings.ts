@@ -38,13 +38,21 @@ export async function getAppConfig(user?: AppSchema.User) {
   const models = getHordeModels()
   const openRouter = await getOpenRouterModels()
 
-  const configuration = await store.admin.getServerConfiguration()
+  const configuration = await store.admin.getServerConfiguration().catch(() => undefined)
 
   if (!appConfig) {
     await Promise.all([store.subs.prepSubscriptionCache(), store.subs.prepTierCache()])
 
     const subs = store.subs.getCachedSubscriptions(user)
     updateRegisteredSubs()
+
+    const patreonEnabled = !!(
+      config.patreon.campaign_id &&
+      config.patreon.client_id &&
+      config.patreon.client_secret &&
+      config.patreon.access_token
+    )
+
     appConfig = {
       adapters: config.adapters,
       version: '',
@@ -64,6 +72,7 @@ export async function getAppConfig(user?: AppSchema.User) {
         models,
         workers: workers.filter((w) => w.type === 'text'),
       },
+      patreonAuth: patreonEnabled ? { clientId: config.patreon.client_id } : undefined,
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
@@ -72,7 +81,7 @@ export async function getAppConfig(user?: AppSchema.User) {
 
   const subs = store.subs.getCachedSubscriptions()
 
-  if (user) {
+  if (user && configuration) {
     switch (configuration.apiAccess) {
       case 'off':
         break

@@ -83,4 +83,5 @@ export async function createIndexes() {
     { unique: true, name: 'configuration_unique_kind' }
   )
   await db('user').createIndex({ apiKey: 1 }, { name: 'user_apiKey' })
+  await db('user').createIndex({ patreonUserId: 1 }, { name: 'user_patreonUserId' })
 }

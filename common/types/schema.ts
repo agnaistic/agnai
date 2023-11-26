@@ -98,6 +98,10 @@ export namespace AppSchema {
 
     productId: string
     priceId: string
+    patreon?: {
+      tierId: string
+      cost: number
+    }
     apiAccess: boolean
 
     name: string
@@ -132,6 +136,9 @@ export namespace AppSchema {
     policies?: boolean
     apiAccess?: boolean
     flags?: string
+    patreonAuth?: {
+      clientId: string
+    }
 
     pipelineProxyEnabled: boolean
     authUrls: string[]
@@ -141,7 +148,7 @@ export namespace AppSchema {
     }
     openRouter: { models: OpenRouterModel[] }
     subs: Array<SubscriptionOption>
-    serverConfig: Configuration
+    serverConfig?: Configuration
   }
 
   export type ChatMode = 'standard' | 'adventure'
@@ -224,9 +231,27 @@ export namespace AppSchema {
     ui?: UISettings
 
     sub?: {
+      type?: 'native' | 'patreon' | 'manual'
       tierId: string
       level: number
       last?: string
+    }
+
+    patreonUserId?: string | null
+    patreon?: {
+      access_token: string
+      refresh_token: string
+      expires_in: number
+      scope: string
+      token_type: string
+      expires: string
+      user: Patreon.User
+      tier?: Patreon.Tier
+      member?: Patreon.Member
+      sub?: {
+        tierId: string
+        level: number
+      }
     }
 
     billing?: {
@@ -448,7 +473,6 @@ export namespace AppSchema {
     topP: number
     topK: number
     topA: number
-    topG?: number
     mirostatTau?: number
     mirostatLR?: number
     tailFreeSampling: number
@@ -633,3 +657,75 @@ export const defaultGenPresets: AppSchema.GenSettings[] = []
 export type NewBook = Omit<AppSchema.MemoryBook, 'userId' | '_id' | 'kind'>
 
 export type NewScenario = Omit<AppSchema.ScenarioBook, 'userId' | '_id' | 'kind'>
+
+export namespace Patreon {
+  export type Include = Tier | Member
+
+  export type Tier = {
+    id: string
+    type: 'tier'
+    attributes: {
+      amount_cents: number
+      description: string
+      title: string
+    }
+    relationships: {
+      campaign: {
+        data: {
+          id: string
+          type: 'campaign'
+        }
+      }
+    }
+  }
+
+  export type Member = {
+    type: 'member'
+    id: string
+    attributes: {
+      campaign_lifetime_support_cents: number
+      campaign_entitled_amount_cents: number
+      last_charge_date: string
+      last_charge_status:
+        | 'Paid'
+        | 'Declined'
+        | 'Deleted'
+        | 'Pending'
+        | 'Refunded'
+        | 'Fraud'
+        | 'Other'
+        | null
+      next_charge_date: string
+      patron_status: 'active_patron' | 'declined_patron' | 'former_patron'
+      pledge_relationship_start: string
+      will_pay_amount_cents: number
+    }
+    relationships: {
+      currently_entitled_tiers: { data: Array<{ type: 'tier'; id: string }> }
+    }
+  }
+
+  export type User = {
+    type: 'user'
+    id: string
+    attributes: {
+      created: string
+      email: string
+      full_name: string
+    }
+    relationships: {
+      memberships: {
+        data: Array<{ id: string; type: 'member' }>
+      }
+    }
+  }
+
+  export type Authorize = {
+    access_token: string
+    refresh_token: string
+    scope: string
+    expires_in: number
+    token_type: string
+    version: string
+  }
+}

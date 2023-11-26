@@ -69,10 +69,17 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
 
   setComponentPageTitle('Settings')
   const state = userStore()
-  const [query, _setQuery] = useSearchParams()
-  const [tab, setTab] = createSignal<number>(MainTab[query.tab as Tab] ?? 0)
+
+  const [query, setQuery] = useSearchParams()
+  const [tab, setTab] = createSignal<number>(+(query.tab ?? '0'))
   const [workers, setWorkers] = createSignal<string[]>(toArray(state.user?.hordeWorkers))
   const [models, setModels] = createSignal<string[]>(toArray(state.user?.hordeModel))
+
+  onMount(() => {
+    if (!query.tab) {
+      setQuery({ tab: tab() })
+    }
+  })
 
   const tabs: Tab[] = ['ai', 'ui', 'image', 'voice']
 
@@ -192,7 +199,14 @@ const Settings: Component<{ footer?: (children: any) => void }> = (props) => {
       />
 
       <div class="my-2">
-        <Tabs tabs={tabs.map((t) => settingTabs[t])} selected={tab} select={setTab} />
+        <Tabs
+          tabs={tabs.map((t) => settingTabs[t])}
+          selected={tab}
+          select={(id) => {
+            setTab(id)
+            setQuery({ tab: id })
+          }}
+        />
       </div>
       <form ref={formRef!} autocomplete="off">
         <div class="flex flex-col gap-4">

@@ -41,6 +41,7 @@ import { ImageModal } from './pages/Chat/ImageModal'
 import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
 import { markdown } from './shared/markdown'
 import SoundsPage from './pages/Sounds'
+import PatreonOauth from './pages/Settings/PatreonOauth'
 
 const App: Component = () => {
   const state = userStore()
@@ -71,6 +72,7 @@ const App: Component = () => {
           <Show when={cfg.flags.sounds}>
             <Route path="/sounds" component={SoundsPage} />
           </Show>
+          <Route path="/oauth/patreon" component={PatreonOauth} />
           <Route path="/profile" component={ProfilePage} />
           <Route path="/settings" component={Settings} />
           <Route path="/memory" component={lazy(() => import('./pages/Memory/Library'))} />

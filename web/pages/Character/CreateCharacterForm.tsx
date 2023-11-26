@@ -219,10 +219,10 @@ export const CreateCharacterForm: Component<{
     payload.avatar = editor.state.avatar
 
     if (props.temp && props.chat) {
-      // if (payload.avatar) {
-      //   const data = await getImageData(payload.avatar)
-      //   payload.avatar = data
-      // }
+      if (editor.state.avatar) {
+        const data = await getImageData(editor.state.avatar)
+        payload.avatar = data
+      }
       chatStore.upsertTempCharacter(props.chat._id, { ...payload, _id: props.editId }, (result) => {
         props.onSuccess?.(result)
         if (paneOrPopup() === 'popup') props.close?.()
@@ -348,24 +348,21 @@ export const CreateCharacterForm: Component<{
                   rootModalStore.info(
                     'AI Character Generation',
                     <>
-                      <TitleCard class="text-sm" type="hl">
-                        <div class="font-bold">AI Generated Characters</div>
-                        1. Fill out the <Pill small>Description</Pill> field
-                        <br />
-                        2. Select the Service you wish to use
-                        <br />
-                        3. Click{' '}
-                        <Pill inverse type="hl" small>
-                          Generate
-                        </Pill>
-                        &nbsp;- It may take 30-60 seconds to generate.
-                        <br />
-                        4. Adjust the <Pill small>Description</Pill> and click{' '}
-                        <Pill type="hl" inverse small>
-                          Regenerate
-                        </Pill>
-                        &nbsp;to regenerate a specific field.
-                      </TitleCard>
+                      1. Fill out the <Pill small>Description</Pill> field
+                      <br />
+                      2. Select the Service you wish to use
+                      <br />
+                      3. Click{' '}
+                      <Pill inverse type="hl" small>
+                        Generate
+                      </Pill>
+                      &nbsp;- It may take 30-60 seconds to generate.
+                      <br />
+                      4. Adjust the <Pill small>Description</Pill> and click{' '}
+                      <Pill type="hl" inverse small>
+                        Regenerate
+                      </Pill>
+                      &nbsp;to regenerate a specific field.
                     </>
                   )
                 }}
@@ -564,7 +561,7 @@ export const CreateCharacterForm: Component<{
                       <div class="flex items-center gap-1">
                         Persona Schema{' '}
                         <Regenerate
-                          fields={['personality', 'behaviour', 'speech']}
+                          fields={['personality', 'behaviour']}
                           service={genService()}
                           editor={editor}
                           allowed={editor.canGuidance}

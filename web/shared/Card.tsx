@@ -47,11 +47,33 @@ export const SolidCard: Component<{
   children: JSX.Element
   class?: string
   size?: Size
+  type?: CardType
   bg?: string
   hover?: string | boolean
   border?: boolean
 }> = (props) => {
-  const bg = createMemo(() => (props.bg ? getAsCssVar(props.bg) : '--bg-800'))
+  const cfg = userStore((s) => s.ui)
+
+  const bg = createMemo((): JSX.CSSProperties => {
+    if (props.bg) {
+      return {
+        'background-color': getAsCssVar(props.bg),
+        border: props.border ? '1px solid var(--bg-600)' : 0,
+      }
+    }
+
+    const type = props.type || 'bg'
+    const base = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? 800 : 100
+    const mod = type === 'bg' || cfg.mode === 'dark' || type === 'hl' ? -200 : 200
+
+    return {
+      'background-color': `var(--${type}-${base})`,
+      border: `1px solid var(--${type}-${base + mod})`,
+    }
+  })
+
+  // const bg = createMemo(() => (props.bg ? getAsCssVar(props.bg) : '--bg-800'))
+
   const hover = createMemo(() => {
     if (!props.hover) return {}
     if (props.hover === true) return { background: getAsCssVar('--bg-600'), cursor: 'pointer' }
@@ -67,8 +89,7 @@ export const SolidCard: Component<{
         'p-3': !props.size || props.size === 'lg',
       }}
       style={hooks({
-        border: props.border ? '1px solid var(--bg-600)' : 0,
-        background: bg(),
+        ...bg(),
         hover: hover(),
       })}
     >

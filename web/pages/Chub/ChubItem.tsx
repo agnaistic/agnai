@@ -1,5 +1,4 @@
 import { Component, createSignal } from 'solid-js'
-import Button from '/web/shared/Button'
 import { NewCharacter } from '/web/store'
 import { extractCardData } from '../Character/card-utils'
 import { processBook, processChar } from './util'
@@ -12,6 +11,7 @@ export const ChubItem: Component<{
   avatar: string
   loading?: () => void
   book?: boolean
+  description: string
   setBook?: (book: AppSchema.MemoryBook, fullPath: string) => void
   setChar?: (char: NewCharacter, fullPath: string) => void
 }> = (props) => {
@@ -46,22 +46,26 @@ export const ChubItem: Component<{
 
   return (
     <>
-      <div class="bg-800 flex flex-col items-center justify-between gap-1 rounded-md p-1">
+      <div class="bg-800 flex flex-col items-center justify-between gap-1 rounded-lg border-[1px] border-[var(--bg-600)]">
         <div class="w-full">
-          <Button
-            schema="clear"
-            class="block h-32 w-full justify-center overflow-hidden rounded-lg"
+          <div
+            class="block h-32 w-full cursor-pointer justify-center overflow-hidden rounded-lg rounded-b-none"
             onClick={processItem}
           >
             <img
               src={props.avatar}
-              class="h-full w-full rounded-md object-cover"
+              class="h-full w-full object-cover"
               style="object-position: 50% 30%;"
             />
-          </Button>
+          </div>
         </div>
-        <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-sm font-bold">
-          {props.name}
+        <div class="w-full text-sm">
+          <div class="w-full overflow-hidden text-ellipsis whitespace-nowrap px-1 text-sm font-bold">
+            {props.name}
+          </div>
+          <div class="text-600 line-clamp-3 h-[3rem] text-ellipsis px-1 text-center text-xs font-normal">
+            {props.description}
+          </div>
         </div>
       </div>
     </>

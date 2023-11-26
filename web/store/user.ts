@@ -73,6 +73,10 @@ export const userStore = createStore<UserState>(
   events.on(EVENTS.init, (init) => {
     userStore.setState({ user: init.user, profile: init.profile })
 
+    if (init.user?.patreonUserId) {
+      userStore.syncPatreonAccount(true)
+    }
+
     if (init.user?._id !== 'anon') {
       userStore.getTiers()
     }
@@ -314,6 +318,50 @@ export const userStore = createStore<UserState>(
       if (res.error) {
         toastStore.error(`Could not authenticate: ${res.error}`)
       }
+    },
+
+    async verifyPatreon(_, body: any, onDone: (error?: any) => void) {
+      const res = await api.post(`/user/verify/patreon`, body)
+      if (res.result) {
+        onDone()
+        return
+      }
+
+      if (res.error) {
+        onDone(res.error)
+        return
+      }
+    },
+
+    async unverifyPatreon() {
+      const res = await api.post('/user/unverify/patreon')
+      if (res.result) {
+        toastStore.success('Unlinked Patreon account')
+        userStore.getConfig()
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not unlink Patreon account: ${res.error}`)
+        return
+      }
+    },
+
+    async syncPatreonAccount(_, quiet?: boolean) {
+      const res = await api.post('/user/resync/patreon')
+      if (quiet) return
+
+      if (res.result) {
+        toastStore.success('Successfully updated Patreon information')
+        return
+      }
+
+      if (res.error) {
+        toastStore.error(`Could not sync Patreon info: ${res.error}`)
+        return
+      }
+
+      userStore.getConfig()
     },
 
     async *login(_, username: string, password: string, onSuccess?: (token: string) => void) {
@@ -794,4 +842,13 @@ async function checkout(sessionUrl: string) {
       success = result
     } catch (ex) {}
   })
+
+  setTimeout(() => {
+    if (!child) {
+      toastStore.error(
+        'Popups are required to open the checkout window. Please check your browser settings.'
+      )
+      clearInterval(interval)
+    }
+  }, 3000)
 }

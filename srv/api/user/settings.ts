@@ -176,6 +176,7 @@ export const updatePartialConfig = handle(async ({ userId, body }) => {
       scaleApiKey: 'string?',
       claudeApiKey: 'string?',
       elevenLabsApiKey: 'string?',
+      patreonToken: 'string?',
     },
     body
   )
@@ -412,6 +413,14 @@ async function verifyHordeKey(key: string) {
 export async function getSafeUserConfig(userId: string) {
   const user = await store.users.getUser(userId!)
   if (!user) return
+
+  if (user.patreon) {
+    user.patreon.access_token = ''
+    user.patreon.refresh_token = ''
+    user.patreon.member = undefined
+    user.patreon.scope = ''
+    user.patreon.token_type = ''
+  }
 
   if (user.novelApiKey) {
     user.novelApiKey = ''
