@@ -47,12 +47,15 @@ import { rootModalStore } from '/web/store/root-modal'
 import { getAssetUrl } from '/web/shared/util'
 
 const formatOptions = [
-  { value: 'wpp', label: 'W++' },
-  { value: 'boostyle', label: 'Boostyle' },
-  { value: 'sbf', label: 'SBF' },
   { value: 'attributes', label: 'Attributes' },
   { value: 'text', label: 'Plain Text' },
 ]
+
+const backupFormats: any = {
+  sbf: { value: 'sbf', label: 'SBF' },
+  wpp: { value: 'wpp', label: 'W++' },
+  boostyle: { value: 'boostyle', label: 'Boostyle' },
+}
 
 export const CreateCharacterForm: Component<{
   chat?: AppSchema.Chat
@@ -114,6 +117,14 @@ export const CreateCharacterForm: Component<{
   const [showBuilder, setShowBuilder] = createSignal(false)
   const [converted, setConverted] = createSignal<AppSchema.Character>()
   const [showImport, setImport] = createSignal(false)
+
+  const personaFormats = createMemo(() => {
+    const options = formatOptions.slice()
+    if (editor.state.personaKind in backupFormats) {
+      options.push(backupFormats[editor.state.personaKind])
+    }
+    return options
+  })
 
   const totalTokens = createMemo(() => {
     const t = tokens()
@@ -581,7 +592,7 @@ export const CreateCharacterForm: Component<{
                   />
                   <Select
                     fieldName="kind"
-                    items={formatOptions}
+                    items={personaFormats()}
                     value={editor.state.personaKind}
                     onChange={(kind) => editor.update({ personaKind: kind.value as any })}
                   />
