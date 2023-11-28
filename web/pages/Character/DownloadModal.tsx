@@ -13,11 +13,7 @@ type CharacterFileType = 'png' | 'json'
 
 const plainFormats = [{ value: 'text', label: 'Plain Text' }]
 
-const formats = [
-  { value: 'boostyle', label: 'Boostyle' },
-  { value: 'wpp', label: 'W++' },
-  { value: 'sbf', label: 'Square Bracket Format' },
-]
+const formats = [{ value: 'attributes', label: 'Key-value' }]
 
 /**
  * WIP: Enable downloading characters in different persona formats for different application targets

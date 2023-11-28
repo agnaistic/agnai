@@ -175,7 +175,10 @@ const TextInput: Component<{
             placeholder={placeholder()}
             aria-placeholder={placeholder()}
             value={value()}
-            class={'form-field focusable-field w-full rounded-xl px-4 py-2 ' + (props.class || '')}
+            class={'form-field focusable-field rounded-xl px-4 py-2 ' + (props.class || '')}
+            classList={{
+              'w-full': !props.class?.includes('w-'),
+            }}
             onkeyup={(ev) => {
               updateCount()
               props.onKeyUp?.(ev)

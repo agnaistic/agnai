@@ -11,7 +11,6 @@ import { RegisteredAdapter } from '/common/adapters'
 import { getHordeWorkers, getHordeModels } from './horde'
 import { getOpenRouterModels } from '../adapter/openrouter'
 import { updateRegisteredSubs } from '../adapter/agnaistic'
-import { getCachedTiers } from '../db/subscriptions'
 
 const router = Router()
 
@@ -68,10 +67,12 @@ export async function getAppConfig(user?: AppSchema.User) {
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
+      subLevel: -1,
     }
   }
 
   const subs = store.subs.getCachedSubscriptions()
+  const userTier = user ? store.users.getUserSubTier(user) : undefined
 
   if (user && configuration) {
     switch (configuration.apiAccess) {
@@ -85,10 +86,8 @@ export async function getAppConfig(user?: AppSchema.User) {
       case 'subscribers':
         if (!user.sub) break
         if (user.sub.level <= 0) break
-        const tiers = getCachedTiers()
-        const tier = tiers.find((t) => t._id === user.sub?.tierId)
-        if (!tier) break
-        appConfig.apiAccess = !!tier.apiAccess
+        if (!userTier) break
+        appConfig.apiAccess = !!userTier.tier.apiAccess
         break
 
       case 'users':
@@ -103,6 +102,8 @@ export async function getAppConfig(user?: AppSchema.User) {
     config.patreon.client_secret &&
     config.patreon.access_token
   )
+
+  appConfig.subLevel = userTier ? userTier.level : -1
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration
   appConfig.subs = subs

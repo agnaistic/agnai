@@ -15,13 +15,16 @@ import { Toggle } from '/web/shared/Toggle'
 import TagInput from '/web/shared/TagInput'
 import { usePane } from '/web/shared/hooks'
 
-const options = [
-  { value: 'wpp', label: 'W++' },
-  { value: 'boostyle', label: 'Boostyle' },
-  { value: 'sbf', label: 'SBF' },
+const formatOptions = [
   { value: 'attributes', label: 'Attributes' },
   { value: 'text', label: 'Plain text' },
 ]
+
+const backupFormats: any = {
+  sbf: { value: 'sbf', label: 'SBF' },
+  wpp: { value: 'wpp', label: 'W++' },
+  boostyle: { value: 'boostyle', label: 'Boostyle' },
+}
 
 const ChatSettings: Component<{
   close: () => void
@@ -35,6 +38,14 @@ const ChatSettings: Component<{
   const [kind, setKind] = createSignal(state.chat?.overrides?.kind || state.char?.persona.kind)
   const scenarioState = scenarioStore()
   const pane = usePane()
+
+  const personaFormats = createMemo(() => {
+    const format = kind()
+
+    if (!format || format in formatOptions === false) return formatOptions
+
+    return formatOptions.concat(backupFormats[format])
+  })
 
   const activePreset = createMemo(() => {
     const presetId = state.chat?.genPreset
@@ -296,7 +307,7 @@ const ChatSettings: Component<{
           <Select
             fieldName="schema"
             label="Persona"
-            items={options}
+            items={personaFormats()}
             value={kind()}
             onChange={(ev) => setKind(ev.value as any)}
           />

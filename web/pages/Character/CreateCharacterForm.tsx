@@ -47,7 +47,7 @@ import { rootModalStore } from '/web/store/root-modal'
 import { getAssetUrl } from '/web/shared/util'
 
 const formatOptions = [
-  { value: 'attributes', label: 'Attributes' },
+  { value: 'attributes', label: 'Attributes (Key: value)' },
   { value: 'text', label: 'Plain Text' },
 ]
 
