@@ -69,8 +69,7 @@ const ChatMemoryModal: Component<{
         extensions: {},
       },
       (book) => {
-        setId(book._id)
-        setBook(book)
+        changeBook(book._id)
       }
     )
   }
