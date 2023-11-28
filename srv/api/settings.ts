@@ -46,13 +46,6 @@ export async function getAppConfig(user?: AppSchema.User) {
     const subs = store.subs.getCachedSubscriptions(user)
     updateRegisteredSubs()
 
-    const patreonEnabled = !!(
-      config.patreon.campaign_id &&
-      config.patreon.client_id &&
-      config.patreon.client_secret &&
-      config.patreon.access_token
-    )
-
     appConfig = {
       adapters: config.adapters,
       version: '',
@@ -72,7 +65,6 @@ export async function getAppConfig(user?: AppSchema.User) {
         models,
         workers: workers.filter((w) => w.type === 'text'),
       },
-      patreonAuth: patreonEnabled ? { clientId: config.patreon.client_id } : undefined,
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
@@ -105,6 +97,13 @@ export async function getAppConfig(user?: AppSchema.User) {
     }
   }
 
+  const patreonEnabled = !!(
+    config.patreon.campaign_id &&
+    config.patreon.client_id &&
+    config.patreon.client_secret &&
+    config.patreon.access_token
+  )
+  appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration
   appConfig.subs = subs
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)

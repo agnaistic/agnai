@@ -86,7 +86,7 @@ async function identity(token: string) {
 
   const contrib = tier.attributes.amount_cents
   const sub = getCachedTiers().reduce((prev, curr) => {
-    if (!curr.enabled || !curr.deletedAt) return prev
+    if (!curr.enabled || curr.deletedAt) return prev
     if (!curr.patreon?.tierId) return prev
     if (curr.patreon.cost > contrib) return prev
 
@@ -131,6 +131,7 @@ async function revalidatePatron(userId: string) {
       ...user.patreon,
       user: patron.user,
       member: patron.member,
+      tier: patron.tier,
       sub: patron.sub ? { tierId: patron.sub._id, level: patron.sub.level } : undefined,
     },
     patreonUserId: patron.user.id,
@@ -154,6 +155,7 @@ async function initialVerifyPatron(userId: string, code: string) {
       expires: new Date(Date.now() + token.expires_in * 1000).toISOString(),
       user: patron.user,
       member: patron.member,
+      tier: patron.tier,
       sub: patron.sub ? { tierId: patron.sub._id, level: patron.sub.level } : undefined,
     },
     patreonUserId: patron.user.id,
