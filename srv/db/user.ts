@@ -287,7 +287,7 @@ export async function findByPatreonUserId(id: string) {
 
 export async function validateSubscription(user: AppSchema.User) {
   if (user.admin) return Infinity
-  if (!user.sub?.tierId) {
+  if (!user.sub?.tierId && !user.patreon?.sub?.tierId) {
     return -1
   }
 
@@ -319,7 +319,7 @@ export async function validateSubscription(user: AppSchema.User) {
      * The aggregate tier id will be the intended tier id.
      * If these differ then a downgrade has occurred.
      */
-    if (state.tierId !== user.sub.tierId) {
+    if (state.tierId !== user.sub?.tierId) {
       const nextTier = state.tierId ? await getTier(state.tierId) : null
       await store.users.updateUser(user._id, {
         sub: {
