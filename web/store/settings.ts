@@ -78,6 +78,7 @@ const initState: SettingState = {
     horde: { workers: [], models: [] },
     openRouter: { models: [] },
     subs: [],
+    subLevel: -1,
   },
   replicate: {},
   flags: getFlags(),

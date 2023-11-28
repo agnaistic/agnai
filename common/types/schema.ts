@@ -148,6 +148,7 @@ export namespace AppSchema {
     }
     openRouter: { models: OpenRouterModel[] }
     subs: Array<SubscriptionOption>
+    subLevel: number
     serverConfig?: Configuration
   }
 

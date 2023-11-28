@@ -291,7 +291,7 @@ export async function validateSubscription(user: AppSchema.User) {
     return -1
   }
 
-  const sub = getSubscriptionTier(user)
+  const sub = getUserSubTier(user)
   if (!sub) return -1
 
   const { type, tier, level } = sub
@@ -304,7 +304,7 @@ export async function validateSubscription(user: AppSchema.User) {
     if (expiry.valueOf() <= Date.now()) {
       const next = await patreon.revalidatePatron(user._id)
       if (!next) return -1
-      const tier = getSubscriptionTier(next)
+      const tier = getUserSubTier(next)
       if (!tier) return -1
       return tier.level
     }
@@ -380,7 +380,7 @@ export async function validateSubscription(user: AppSchema.User) {
   return nextTier.level ?? -1
 }
 
-function getSubscriptionTier(user: AppSchema.User) {
+export function getUserSubTier(user: AppSchema.User) {
   const tiers = getCachedTiers()
   const nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
   const patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
