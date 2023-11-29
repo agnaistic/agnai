@@ -152,19 +152,18 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               <td>{state.info?.chats}</td>
             </tr>
 
-            <Show when={state.info?.sub}>
-              <tr>
-                <td colSpan={2}>
-                  <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
-                </td>
-              </tr>
-              <tr>
-                <th>Subscription Level</th>
-                <td>
-                  {state.info?.sub?.level ?? '-1'} / {state.info?.patreon?.sub?.level ?? '-1'}
-                </td>
-              </tr>
-            </Show>
+            <tr>
+              <td colSpan={2}>
+                <div class="bg-700 mt-4 flex justify-center">Subscription Details</div>
+              </td>
+            </tr>
+            <tr>
+              <th>Subscription Level</th>
+              <td>
+                Native:{state.info?.sub?.level ?? '-1'} / Patreon:
+                {state.info?.patreon?.sub?.level ?? '-1'}
+              </td>
+            </tr>
 
             <Show when={state.info?.billing}>
               <tr>

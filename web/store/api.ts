@@ -216,7 +216,7 @@ export function revertAuth() {
 
   setAuth(prev)
   Cookies.remove('original-auth')
-  location.reload()
+  location.href = `${location.origin}/admin/users`
 }
 
 export function isImpersonating() {

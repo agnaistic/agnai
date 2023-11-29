@@ -63,12 +63,12 @@ const Slot: Component<{
       flags: s.flags,
       ready: s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
-      tier: s.config.tier,
     }
     return config
   })
   const user = userStore((s) => ({
     user: s.user,
+    sub: s.sub,
   }))
 
   const [stick, setStick] = createSignal(props.sticky)
@@ -224,7 +224,7 @@ const Slot: Component<{
       return log('No publisher id')
     }
 
-    if (cfg.tier?.disableSlots) {
+    if (user.sub?.tier?.disableSlots) {
       props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
     }
@@ -311,7 +311,9 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!cfg.ready || !user.user || !specs() || cfg.tier?.disableSlots}>{null}</Match>
+        <Match when={!cfg.ready || !user.user || !specs() || user.sub?.tier?.disableSlots}>
+          {null}
+        </Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}

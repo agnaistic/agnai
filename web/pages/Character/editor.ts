@@ -147,7 +147,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
 
     {
-      const level = settings.config.subLevel ?? -1
+      const level = user.sub?.level ?? -1
       const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= level)
 
       for (const sub of subs) {

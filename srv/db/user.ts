@@ -14,6 +14,7 @@ import { getCachedTiers, getTier } from './subscriptions'
 import { domain } from '../domains'
 import { store } from '.'
 import { patreon } from '../api/user/patreon'
+import { getUserSubscriptionTier } from '/common/util'
 
 export type NewUser = {
   username: string
@@ -379,22 +380,5 @@ export async function validateSubscription(user: AppSchema.User) {
 
 export function getUserSubTier(user: AppSchema.User) {
   const tiers = getCachedTiers()
-  let nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
-  let patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
-
-  if (!nativeTier && !patronTier) return
-
-  if (!nativeTier || !patronTier) {
-    const tier = nativeTier || patronTier
-    const level = tier!.level
-    const type: 'native' | 'patreon' = nativeTier ? 'native' : 'patreon'
-
-    return { tier: tier!, level, type }
-  }
-
-  const type: 'native' | 'patreon' = nativeTier.level >= patronTier.level ? 'native' : 'patreon'
-  const tier = type === 'native' ? nativeTier : patronTier
-  const level = tier.level
-
-  return { type, tier, level }
+  return getUserSubscriptionTier(user, tiers)
 }

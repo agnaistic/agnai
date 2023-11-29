@@ -9,11 +9,11 @@ export const AgnaisticSettings: Component<{
   onSave: () => void
   inherit?: Partial<AppSchema.UserGenPreset>
 }> = (props) => {
-  const state = userStore((s) => ({ user: s.user, tiers: s.tiers }))
+  const state = userStore((s) => ({ user: s.user, tiers: s.tiers, sub: s.sub }))
   const config = settingStore((s) => s.config)
 
   const opts = createMemo(() => {
-    const tierLevel = config.subLevel
+    const tierLevel = state.sub?.level ?? -1
     const level = state.user?.admin ? Infinity : tierLevel
 
     return config.subs
