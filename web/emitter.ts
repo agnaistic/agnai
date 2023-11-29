@@ -16,7 +16,8 @@ export const EVENTS = {
   charDeleted: 'char-deleted',
   tierReceived: 'tier-received',
   configUpdated: 'server-config-updated',
-}
+  tiersReceived: 'tiers-received',
+} as const
 
 export const events = new EventEmitter()
 

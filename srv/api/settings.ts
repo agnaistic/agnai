@@ -68,6 +68,7 @@ export async function getAppConfig(user?: AppSchema.User) {
       subs,
       serverConfig: configuration,
       subLevel: -1,
+      subTierId: '',
     }
   }
 
@@ -104,7 +105,8 @@ export async function getAppConfig(user?: AppSchema.User) {
   )
 
   appConfig.subLevel = userTier ? userTier.level : -1
-  appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
+  ;(appConfig.subTierId = userTier?.tier._id || ''),
+    (appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined)
   appConfig.serverConfig = configuration
   appConfig.subs = subs
   appConfig.registered = getRegisteredAdapters(user).map(toRegisteredAdapter)

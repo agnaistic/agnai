@@ -79,6 +79,7 @@ const initState: SettingState = {
     openRouter: { models: [] },
     subs: [],
     subLevel: -1,
+    subTierId: '',
   },
   replicate: {},
   flags: getFlags(),

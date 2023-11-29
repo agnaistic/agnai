@@ -13,9 +13,8 @@ export const AgnaisticSettings: Component<{
   const config = settingStore((s) => s.config)
 
   const opts = createMemo(() => {
-    const patron = state.tiers.find((s) => s._id === state.user?.patreon?.sub?.tierId)?.level ?? -1
-    const native = state.tiers.find((s) => s._id === state.user?.sub?.tierId)?.level ?? -1
-    const level = state.user?.admin ? Infinity : Math.max(patron, native)
+    const tierLevel = state.tiers.find((s) => s._id === config.subTierId)?.level ?? -1
+    const level = state.user?.admin ? Infinity : tierLevel
 
     return config.subs
       .filter((sub) => sub.level <= level)

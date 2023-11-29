@@ -54,10 +54,6 @@ const Slot: Component<{
   size?: SlotSize
 }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
-  const user = userStore((s) => ({
-    tier: s.tiers.find((t) => t._id === s.user?.sub?.tierId),
-    user: s.user,
-  }))
   const cfg = settingStore((s) => {
     const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
     const config = {
@@ -67,9 +63,14 @@ const Slot: Component<{
       flags: s.flags,
       ready: s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
+      tierId: s.config.subTierId,
     }
     return config
   })
+  const user = userStore((s) => ({
+    tier: s.tiers.find((t) => t._id === cfg.tierId),
+    user: s.user,
+  }))
 
   const [stick, setStick] = createSignal(props.sticky)
   const [uniqueId, setUniqueId] = createSignal<number>()

@@ -46,7 +46,6 @@ export type UserState = {
   hordeStatsLoading: boolean
   showProfile: boolean
   tiers: AppSchema.SubscriptionTier[]
-  tier?: AppSchema.SubscriptionTier
   billingLoading: boolean
   subStatus?: {
     status: 'active' | 'cancelling' | 'cancelled' | 'new'
@@ -128,13 +127,11 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async getTiers({ user }) {
+    async getTiers() {
       const res = await api.get('/admin/tiers')
       if (res.result) {
-        const tier = res.result.tiers.find(
-          (tier: AppSchema.SubscriptionTier) => tier._id === user?.sub?.tierId
-        )
-        return { tiers: res.result.tiers, tier }
+        events.emit(EVENTS.tiersReceived, res.result.tiers)
+        return { tiers: res.result.tiers }
       }
     },
 
