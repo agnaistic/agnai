@@ -18,7 +18,7 @@ export async function connect(verbose = false) {
   retrying = false
   const cli = new MongoClient(uri, { ignoreUndefined: true })
   try {
-    const timer = setTimeout(() => cli.close(), 2000)
+    const timer = setTimeout(() => cli.close(), 10000)
     await cli.connect()
     clearTimeout(timer)
 

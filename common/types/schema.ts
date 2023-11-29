@@ -501,7 +501,8 @@ export namespace AppSchema {
     systemPrompt?: string
     ignoreCharacterSystemPrompt?: boolean
     gaslight?: string
-    useAdvancedPrompt?: boolean
+    promptTemplateId?: string
+    useAdvancedPrompt?: 'basic' | 'validate' | 'no-validation'
     promptOrderFormat?: string
     promptOrder?: Array<{ placeholder: string; enabled: boolean }>
     ultimeJailbreak?: string

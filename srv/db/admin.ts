@@ -56,7 +56,7 @@ export async function getUsers(opts: UsersOpts = {}) {
     }
 
     if (opts.subscribed) {
-      filters.push({ 'sub.level': { $gt: -1 } })
+      filters.push({ $or: [{ 'sub.level': { $gt: -1 } }, { 'patreon.sub.level': { $gt: -1 } }] })
     }
 
     if (opts.customerId) {
@@ -79,7 +79,7 @@ export async function changePassword(opts: { userId: string; password: string })
 export async function getUserInfo(userId: string) {
   const billing = await db('user').findOne(
     { _id: userId },
-    { projection: { username: 1, sub: 1, billing: 1 } }
+    { projection: { username: 1, sub: 1, billing: 1, patreon: 1 } }
   )
   const profile = await db('profile').findOne({ userId })
   const chats = await db('chat').countDocuments({ userId })

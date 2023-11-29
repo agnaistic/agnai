@@ -13,6 +13,7 @@ const Select: Component<{
   fieldName: string
   label?: string
   helperText?: string | JSX.Element
+  helperMarkdown?: string
   items: Option[]
   value?: string
   class?: string
@@ -38,7 +39,11 @@ const Select: Component<{
 
   return (
     <div class={`${hide()} max-w-full`}>
-      <FormLabel label={props.label} helperText={props.helperText} />
+      <FormLabel
+        label={props.label}
+        helperText={props.helperText}
+        helperMarkdown={props.helperMarkdown}
+      />
       <div class="flex items-center">
         <div class="relative overflow-hidden rounded-xl bg-transparent">
           <select

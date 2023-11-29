@@ -44,6 +44,7 @@ import Tabs from './Tabs'
 import { useSearchParams } from '@solidjs/router'
 import { PhraseBias, StoppingStrings } from './PhraseBias'
 import { AgnaisticSettings } from '../pages/Settings/Agnaistic'
+import { templates } from '/common/presets/templates'
 
 export { GenerationSettings as default }
 
@@ -77,10 +78,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
   }
 
   onMount(() => {
-    const { templates } = presetStore.getState()
-    if (!templates.length) {
-      presetStore.getTemplates()
-    }
+    presetStore.getTemplates()
   })
 
   return (
@@ -470,8 +468,15 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
 const PromptSettings: Component<
   Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
 > = (props) => {
+  const gaslights = presetStore((s) => ({ list: s.templates }))
   const [useAdvanced, setAdvanced] = createSignal(
-    !props.inherit?._id ? false : props.inherit?.useAdvancedPrompt ?? true
+    !props.inherit?._id
+      ? 'basic'
+      : typeof props.inherit.useAdvancedPrompt === 'string'
+      ? props.inherit.useAdvancedPrompt
+      : props.inherit?.useAdvancedPrompt === true || props.inherit.useAdvancedPrompt === undefined
+      ? 'validate'
+      : 'basic'
   )
 
   const fallbackTemplate = createMemo(() => {
@@ -480,22 +485,41 @@ const PromptSettings: Component<
     return preset?.gaslight || defaultTemplate
   })
 
+  const promptTemplate = createMemo(() => {
+    const id = props.inherit?.promptTemplateId
+    if (!id) return props.inherit?.gaslight || fallbackTemplate()
+
+    if (id in templates) {
+      return templates[id as keyof typeof templates]
+    }
+
+    const gaslight = gaslights.list.find((g) => g._id === id)
+    return gaslight?.template || props.inherit?.gaslight || fallbackTemplate()
+  })
+
   return (
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
         <Card class="flex flex-col gap-4">
-          <Toggle
+          <Select
             fieldName="useAdvancedPrompt"
             label="Use Advanced Prompting"
+            helperMarkdown="**Validated**: Automatically inserts important (i.e., history and post-amble) placeholders during prompt assembly.
+            **Unvalidated**: No auto-insertion is applied during prompt assembly."
+            items={[
+              { label: 'Basic', value: 'basic' },
+              { label: 'Validated', value: 'validate' },
+              { label: 'Unvalidated', value: 'no-validation' },
+            ]}
             value={useAdvanced()}
-            onChange={(ev) => setAdvanced(ev)}
+            onChange={(ev) => setAdvanced(ev.value as any)}
           />
 
-          <BasicPromptTemplate inherit={props.inherit} hide={useAdvanced()} />
+          <BasicPromptTemplate inherit={props.inherit} hide={useAdvanced() !== 'basic'} />
 
           <PromptEditor
             fieldName="gaslight"
-            value={props.inherit?.gaslight || fallbackTemplate()}
+            value={promptTemplate()}
             placeholder={defaultTemplate}
             disabled={props.disabled}
             showHelp
@@ -1144,9 +1168,10 @@ export function getPresetFormData(ref: any) {
   } = getStrictForm(ref, {
     ...presetValidator,
     thirdPartyFormat: [...THIRDPARTY_FORMATS, ''],
-    useAdvancedPrompt: 'boolean?',
+    useAdvancedPrompt: 'string?',
     promptOrderFormat: 'string?',
     promptOrder: 'string?',
+    promptTemplateId: 'string?',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)

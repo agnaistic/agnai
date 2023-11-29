@@ -32,7 +32,7 @@ export const agnaiPresets = {
     memoryContextLimit: 500,
     memoryReverseWeight: false,
     antiBond: false,
-    useAdvancedPrompt: false,
+    useAdvancedPrompt: 'basic',
     promptOrderFormat: 'Alpaca',
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

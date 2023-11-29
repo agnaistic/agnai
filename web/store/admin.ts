@@ -1,7 +1,7 @@
 import Stripe from 'stripe'
 import { AppSchema, Patreon } from '../../common/types/schema'
 import { EVENTS, events } from '../emitter'
-import { api } from './api'
+import { api, isImpersonating, revertAuth, setAltAuth } from './api'
 import { createStore } from './create'
 import { toastStore } from './toasts'
 import type { SubsAgg } from '/srv/domains/subs/types'
@@ -16,6 +16,7 @@ type UserInfo = {
   username: string
   sub: AppSchema.User['sub']
   billing: AppSchema.User['billing']
+  patreon: AppSchema.User['patreon']
 }
 
 type AdminState = {
@@ -30,6 +31,7 @@ type AdminState = {
   products: Stripe.Product[]
   prices: Stripe.Price[]
   patreonTiers: Patreon.Tier[]
+  impersonating: boolean
 }
 
 export const adminStore = createStore<AdminState>('admin', {
@@ -37,8 +39,25 @@ export const adminStore = createStore<AdminState>('admin', {
   products: [],
   prices: [],
   patreonTiers: [],
+  impersonating: isImpersonating(),
 })((_) => {
   return {
+    async impersonate(_, userId: string) {
+      const res = await api.post(`/admin/impersonate/${userId}`)
+      if (res.error) {
+        toastStore.error(`Error: ${res.error}`)
+        return
+      }
+
+      const token = res.result.token
+      setAltAuth(token)
+    },
+
+    unimpersonate(state) {
+      if (!state.impersonating) return
+      revertAuth()
+    },
+
     async updateServerConfig(
       _,
       update: Omit<AppSchema.Configuration, 'kind' | 'tosUpdated' | 'privacyUpdated'>

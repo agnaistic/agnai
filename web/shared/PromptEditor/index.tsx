@@ -15,7 +15,7 @@ import { AIAdapter, PresetAISettings } from '/common/adapters'
 import { getAISettingServices, toMap } from '../util'
 import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
-import { HelpCircle } from 'lucide-solid'
+import { HelpCircle, RefreshCcw } from 'lucide-solid'
 import { Card, TitleCard } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
@@ -23,7 +23,7 @@ import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } fro
 import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
-import { templates } from '../../../common/presets/templates'
+import { isDefaultTemplate, templates } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore, toastStore } from '/web/store'
@@ -131,11 +131,24 @@ const PromptEditor: Component<
   let ref: HTMLTextAreaElement = null as any
 
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
+  const userTemplates = presetStore((s) => s.templates)
   const [input, setInput] = createSignal<string>(props.value || '')
+  const [templateId, setTemplateId] = createSignal(props.inherit?.promptTemplateId || '')
   const [help, showHelp] = createSignal(false)
   const [templates, setTemplates] = createSignal(false)
   const [preview, setPreview] = createSignal(false)
   const [rendered, setRendered] = createSignal('')
+
+  const templateName = createMemo(() => {
+    const id = templateId()
+    if (!id) return ''
+    if (isDefaultTemplate(id)) {
+      return id
+    }
+
+    const template = userTemplates.find((u) => u._id === id)
+    return template?.name || ''
+  })
 
   createEffect(async () => {
     const opts = await getExampleOpts(props.inherit)
@@ -231,7 +244,10 @@ const PromptEditor: Component<
                 </Button>
                 <Show when={props.showTemplates}>
                   <Button size="sm" onClick={() => setTemplates(true)}>
-                    Use Existing Template
+                    Use Library Template
+                  </Button>
+                  <Button size="sm" onClick={() => setTemplateId('')}>
+                    Use Preset's Template
                   </Button>
                 </Show>
               </div>
@@ -255,6 +271,11 @@ const PromptEditor: Component<
         <pre class="whitespace-pre-wrap break-words text-xs">{rendered()}</pre>
       </Show>
 
+      <Show when={props.fieldName === 'gaslight'}>
+        <TextInput readonly fieldName="promptTemplateName" value={`Template: ${templateName()}`} />
+        <TextInput fieldName="promptTemplateId" value={templateId()} parentClass="hidden" />
+      </Show>
+
       <textarea
         id={props.fieldName}
         name={props.fieldName}
@@ -262,11 +283,11 @@ const PromptEditor: Component<
         classList={{ hidden: preview() }}
         ref={ref}
         onKeyUp={onChange}
-        disabled={props.disabled}
+        disabled={props.disabled || !!templateId()}
         placeholder={props.placeholder?.replace(/\n/g, '\u000A')}
       />
 
-      <div class="flex flex-wrap gap-2">
+      <div class="flex flex-wrap gap-2" classList={{ hidden: !!templateId() }}>
         <For each={usable()}>
           {([name, data]) => (
             <Placeholder name={name} {...data} input={input()} onClick={onPlaceholder} />
@@ -284,7 +305,8 @@ const PromptEditor: Component<
         <SelectTemplate
           show={templates()}
           close={() => setTemplates(false)}
-          select={(template) => {
+          select={(id, template) => {
+            setTemplateId(id)
             ref.value = template
           }}
         />
@@ -423,7 +445,7 @@ const builtinTemplates = Object.keys(templates).map((key) => ({
 const SelectTemplate: Component<{
   show: boolean
   close: () => void
-  select: (template: string) => void
+  select: (id: string, template: string) => void
 }> = (props) => {
   const state = presetStore((s) => ({ templates: s.templates }))
 
@@ -480,7 +502,8 @@ const SelectTemplate: Component<{
       <Show when={canSaveTemplate()}>
         <Button
           onClick={() => {
-            const orig = state.templates.find((t) => t._id === opt())
+            const id = opt()
+            const orig = state.templates.find((t) => t._id === id)
             const update = template()
             if (!orig) {
               toastStore.error(`Cannot find template to save`)
@@ -489,7 +512,7 @@ const SelectTemplate: Component<{
 
             presetStore.updateTemplate(opt(), { name: orig.name, template: update }, () => {
               toastStore.success('Prompt template updated')
-              props.select(update)
+              props.select(id, update)
               props.close()
             })
           }}
@@ -502,7 +525,7 @@ const SelectTemplate: Component<{
         <Button
           schema="primary"
           onClick={() => {
-            props.select(template())
+            props.select(opt(), template())
             props.close()
           }}
         >
@@ -523,11 +546,17 @@ const SelectTemplate: Component<{
         maxWidth="half"
       >
         <div class="flex flex-col gap-4 text-sm">
-          <TextInput
-            fieldName="filter"
-            placeholder="Filter templates"
-            onInput={(ev) => setFilter(ev.currentTarget.value)}
-          />
+          <div class="flex gap-1">
+            <TextInput
+              fieldName="filter"
+              placeholder="Filter templates"
+              onInput={(ev) => setFilter(ev.currentTarget.value)}
+              parentClass="w-full"
+            />
+            <Button>
+              <RefreshCcw onClick={presetStore.getTemplates} />
+            </Button>
+          </div>
           <div class="h-min-[6rem]">
             <Select
               fieldName="templateId"

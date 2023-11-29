@@ -16,7 +16,7 @@ import Modal from '../../shared/Modal'
 import PageHeader from '../../shared/PageHeader'
 import TextInput from '../../shared/TextInput'
 import { getStrictForm, setComponentPageTitle } from '../../shared/util'
-import { settingStore, toastStore, userStore } from '../../store'
+import { adminStore, settingStore, toastStore, userStore } from '../../store'
 import { TitleCard } from '/web/shared/Card'
 import { rootModalStore } from '/web/store/root-modal'
 import { useNavigate } from '@solidjs/router'
@@ -79,6 +79,7 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
   setComponentPageTitle('My profile')
   const nav = useNavigate()
   const state = userStore()
+  const admin = adminStore()
   const [pass, setPass] = createSignal(false)
   const [del, setDel] = createSignal(false)
   const [avatar, setAvatar] = createSignal<File | undefined>()
@@ -173,15 +174,22 @@ const ProfilePage: Component<{ footer?: (children: any) => void }> = (props) => 
 
           <Show when={state.user?._id !== 'anon'}>
             <div class="flex justify-center gap-4">
-              <Button
-                schema="warning"
-                onClick={() => {
-                  userStore.logout()
-                  nav('/')
-                }}
-              >
-                Logout
-              </Button>
+              <Show when={admin.impersonating}>
+                <Button schema="warning" onClick={() => adminStore.unimpersonate()}>
+                  Unimpersonate
+                </Button>
+              </Show>
+              <Show when={!admin.impersonating}>
+                <Button
+                  schema="warning"
+                  onClick={() => {
+                    userStore.logout()
+                    nav('/')
+                  }}
+                >
+                  Logout
+                </Button>
+              </Show>
 
               <Button schema="red" onClick={() => setDel(true)}>
                 <AlertTriangle /> Delete Account <AlertTriangle />

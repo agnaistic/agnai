@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { assertValid } from '/common/valid'
 import { store } from '../db'
 import { isAdmin, loggedIn } from './auth'
-import { handle } from './wrap'
+import { StatusError, handle } from './wrap'
 import { getLiveCounts, sendAll } from './ws/bus'
 
 const router = Router()
@@ -23,6 +23,17 @@ const searchUsers = handle(async (req) => {
   })
 
   return { users: users.map((u) => ({ ...u, hash: undefined })) }
+})
+
+const impersonateUser = handle(async (req) => {
+  const userId = req.params.userId
+  const user = await store.users.getUser(userId)
+  if (!user) {
+    throw new StatusError('User not found', 404)
+  }
+
+  const token = await store.users.createAccessToken(user.username, user)
+  return { token }
 })
 
 const setUserPassword = handle(async (req) => {
@@ -89,6 +100,7 @@ const updateTier = handle(async (req) => {
   return { success: true }
 })
 
+router.post('/impersonate/:userId', impersonateUser)
 router.post('/users', searchUsers)
 router.post('/users/:userId/tier', updateTier)
 router.get('/metrics', getMetrics)
