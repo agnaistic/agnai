@@ -130,6 +130,7 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
             <img src={getAssetUrl(state.info?.avatar!)} class="h-[128px]" />
           </div>
         </Show>
+        <Button onClick={() => adminStore.impersonate(state.info?.userId!)}>Impersonate</Button>
         <table class="w-full table-auto">
           <tbody>
             <tr>
@@ -159,7 +160,9 @@ const InfoModel: Component<{ show: boolean; close: () => void; userId: string; n
               </tr>
               <tr>
                 <th>Subscription Level</th>
-                <td>{state.info?.sub?.level}</td>
+                <td>
+                  {state.info?.sub?.level ?? '-1'} / {state.info?.patreon?.sub?.level ?? '-1'}
+                </td>
               </tr>
             </Show>
 

@@ -208,7 +208,7 @@ export function getTemplate(
 ) {
   const fallback = getFallbackPreset(opts.settings?.service!)
   if (
-    opts.settings?.useAdvancedPrompt === false &&
+    opts.settings?.useAdvancedPrompt === 'basic' &&
     opts.settings.promptOrderFormat &&
     opts.settings.promptOrder
   ) {
@@ -220,6 +220,18 @@ export function getTemplate(
   }
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
+
+  const validate =
+    opts.settings?.useAdvancedPrompt === undefined
+      ? true
+      : typeof opts.settings?.useAdvancedPrompt === 'boolean'
+      ? opts.settings.useAdvancedPrompt
+      : opts.settings?.useAdvancedPrompt === 'validate'
+
+  if (!validate) {
+    return template
+  }
+
   return ensureValidTemplate(template, parts)
 }
 

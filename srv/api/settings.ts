@@ -84,9 +84,7 @@ export async function getAppConfig(user?: AppSchema.User) {
         break
 
       case 'subscribers':
-        if (!user.sub) break
-        if (user.sub.level <= 0) break
-        if (!userTier) break
+        if (!userTier || userTier.level <= 0) break
         appConfig.apiAccess = !!userTier.tier.apiAccess
         break
 

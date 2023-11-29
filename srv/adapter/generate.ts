@@ -19,6 +19,7 @@ import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
 import { parseStops } from '/common/util'
+import { isDefaultTemplate, templates } from '/common/presets/templates'
 
 let version = ''
 
@@ -345,6 +346,17 @@ export async function getResponseEntities(
     ? await store.scenario.getScenariosById(chat.scenarioIds)
     : []
   const resolvedScenario = resolveScenario(chat, char, chatScenarios)
+
+  if (genSettings.promptTemplateId) {
+    if (isDefaultTemplate(genSettings.promptTemplateId)) {
+      genSettings.gaslight = templates[genSettings.promptTemplateId]
+    } else {
+      const template = await store.presets.getTemplate(genSettings.promptTemplateId)
+      if (template?.userId == chat.userId) {
+        genSettings.gaslight = template.template
+      }
+    }
+  }
 
   return { char, user, adapter, settings, gen: genSettings, model, book, resolvedScenario }
 }

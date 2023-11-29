@@ -270,7 +270,8 @@ export async function validateApiAccess(apiKey: string) {
   }
 
   if (config.apiAccess === 'subscribers') {
-    if (!user.sub || user.sub.level <= 0) return
+    const tier = store.users.getUserSubTier(user)
+    if (!tier || tier.level <= 0) return
     const sub = await db('subscription-tier').findOne({ _id: user.sub?.tierId })
     if (!sub?.apiAccess) return
 
@@ -378,8 +379,8 @@ export async function validateSubscription(user: AppSchema.User) {
 
 export function getUserSubTier(user: AppSchema.User) {
   const tiers = getCachedTiers()
-  const nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
-  const patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
+  let nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
+  let patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
 
   if (!nativeTier && !patronTier) return
 

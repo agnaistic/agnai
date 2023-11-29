@@ -1,5 +1,11 @@
 import { neat } from '../util'
 
+type TemplateId = keyof typeof templates
+
+export function isDefaultTemplate(id: string): id is TemplateId {
+  return id in templates
+}
+
 export const templates = {
   Alpaca: neat`
   {{#if system_prompt}}{{system_prompt}}

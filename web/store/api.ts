@@ -196,3 +196,30 @@ function getTokenBody(jwt: string) {
   const data = JSON.parse(window.atob(body))
   return data as any
 }
+
+export function setAltAuth(jwt: string) {
+  const prev = Cookies.get('auth')
+  if (!prev) {
+    return new Error(`Could not get previous auth`)
+  }
+
+  Cookies.set('original-auth', prev, { sameSite: 'strict', expires: 30 })
+  Cookies.set('auth', jwt, { sameSite: 'strict', expires: 30 })
+  location.href = location.origin
+}
+
+export function revertAuth() {
+  const prev = Cookies.get('original-auth')
+  if (!prev) {
+    return new Error(`Could not get previous auth`)
+  }
+
+  setAuth(prev)
+  Cookies.remove('original-auth')
+  location.reload()
+}
+
+export function isImpersonating() {
+  const prev = Cookies.get('original-auth')
+  return !!prev
+}

@@ -109,7 +109,7 @@ const CreateChatForm: Component<{
     const id = presetId()
 
     if (!id) {
-      const userLevel = user.sub?.level ?? -1
+      const userLevel = cfg.config.subLevel ?? -1
       const eligible = cfg.config.subs.some((sub) => userLevel >= sub.level)
 
       if (eligible) {
