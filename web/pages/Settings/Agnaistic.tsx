@@ -13,7 +13,7 @@ export const AgnaisticSettings: Component<{
   const config = settingStore((s) => s.config)
 
   const opts = createMemo(() => {
-    const tierLevel = state.tiers.find((s) => s._id === config.subTierId)?.level ?? -1
+    const tierLevel = config.tier?.level ?? -1
     const level = state.user?.admin ? Infinity : tierLevel
 
     return config.subs

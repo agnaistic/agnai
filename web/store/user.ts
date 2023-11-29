@@ -130,7 +130,6 @@ export const userStore = createStore<UserState>(
     async getTiers() {
       const res = await api.get('/admin/tiers')
       if (res.result) {
-        events.emit(EVENTS.tiersReceived, res.result.tiers)
         return { tiers: res.result.tiers }
       }
     },
@@ -238,7 +237,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async getConfig({ ui, tiers }) {
+    async getConfig() {
       const res = await usersApi.getConfig()
 
       if (res.error) return toastStore.error(`Failed to get user config`)
@@ -247,8 +246,7 @@ export const userStore = createStore<UserState>(
           storage.localSetItem(ACCOUNT_KEY, res.result.username)
         }
         window.usePipeline = res.result.useLocalPipeline
-        const tier = tiers.find((tier) => tier._id === res.result?.sub?.tierId)
-        return { user: res.result, tier }
+        return { user: res.result }
       }
     },
 
@@ -261,25 +259,23 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async updateConfig({ tiers }, config: ConfigUpdate) {
+    async updateConfig(_, config: ConfigUpdate) {
       const res = await usersApi.updateConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
         window.usePipeline = res.result.useLocalPipeline
-        const tier = tiers.find((tier) => tier._id === res.result?.sub?.tierId)
         toastStore.success(`Updated settings`)
-        return { user: res.result, tier }
+        return { user: res.result }
       }
     },
 
-    async updatePartialConfig({ tiers }, config: ConfigUpdate) {
+    async updatePartialConfig(_, config: ConfigUpdate) {
       const res = await usersApi.updatePartialConfig(config)
       if (res.error) toastStore.error(`Failed to update config: ${res.error}`)
       if (res.result) {
-        const tier = tiers.find((tier) => tier._id === res.result?.sub?.tierId)
         window.usePipeline = res.result.useLocalPipeline
         toastStore.success(`Updated settings`)
-        return { user: res.result, tier }
+        return { user: res.result }
       }
     },
 
@@ -827,6 +823,7 @@ async function checkout(sessionUrl: string) {
         clearInterval(interval)
         if (success) {
           userStore.getConfig()
+          events.emit('checkout-success', true)
           toastStore.success('Subscription successful!')
         }
         return

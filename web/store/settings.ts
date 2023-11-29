@@ -79,7 +79,6 @@ const initState: SettingState = {
     openRouter: { models: [] },
     subs: [],
     subLevel: -1,
-    subTierId: '',
   },
   replicate: {},
   flags: getFlags(),
@@ -108,6 +107,10 @@ export const settingStore = createStore<SettingState>(
   events.on(EVENTS.configUpdated, (config) => {
     const prev = get().config
     settingStore.setState({ config: { ...prev, serverConfig: config } })
+  })
+
+  events.on('checkout-success', () => {
+    settingStore.getConfig()
   })
 
   return {
