@@ -222,7 +222,9 @@ export function getTemplate(
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
 
   const validate =
-    typeof opts.settings?.useAdvancedPrompt === 'boolean'
+    opts.settings?.useAdvancedPrompt === undefined
+      ? true
+      : typeof opts.settings?.useAdvancedPrompt === 'boolean'
       ? opts.settings.useAdvancedPrompt
       : opts.settings?.useAdvancedPrompt === 'validate'
 
