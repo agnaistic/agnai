@@ -148,7 +148,8 @@ export namespace AppSchema {
     }
     openRouter: { models: OpenRouterModel[] }
     subs: Array<SubscriptionOption>
-    subLevel: number
+
+    /** @todo remove after next deployment */
     tier?: AppSchema.SubscriptionTier
     serverConfig?: Configuration
   }

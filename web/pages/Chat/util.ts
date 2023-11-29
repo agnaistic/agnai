@@ -1,5 +1,5 @@
 import { AppSchema } from '/common/types'
-import { settingStore } from '/web/store'
+import { settingStore, userStore } from '/web/store'
 
 /**
  * Retrieve the unique set of active bots for a conversation
@@ -72,8 +72,9 @@ function tempSort(a: AppSchema.Character, b: AppSchema.Character) {
 
 export function isEligible() {
   const cfg = settingStore.getState()
+  const user = userStore.getState()
 
-  const userLevel = cfg.config.subLevel ?? -1
+  const userLevel = user.sub?.level ?? -1
   const eligible = cfg.config.subs.some((sub) => userLevel >= sub.level)
 
   return eligible

@@ -48,8 +48,8 @@ import Badge from './shared/Badge'
 import { soundEmitter } from './shared/Audio/playable-events'
 
 const MobileNavHeader = () => {
-  const cfg = settingStore()
-  const suffix = createMemo(() => (cfg.config.subLevel > 0 ? '+' : ''))
+  const user = userStore()
+  const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
   return (
     <div class="flex min-h-[2rem] justify-between sm:hidden">
@@ -78,7 +78,7 @@ const Navigation: Component = () => {
   const chat = chatStore()
   const size = useWindowSize()
 
-  const suffix = createMemo(() => (state.config.subLevel > 0 ? '+' : ''))
+  const suffix = createMemo(() => (user.sub?.level ?? -1 > 0 ? '+' : ''))
 
   createEffect(() => {
     if (!state.overlay && state.showMenu) {

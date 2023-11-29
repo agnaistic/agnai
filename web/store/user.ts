@@ -13,6 +13,7 @@ import { UI } from '/common/types'
 import { defaultUIsettings } from '/common/types/ui'
 import type { FindUserResponse } from '/common/horde-gen'
 import { AIAdapter } from '/common/adapters'
+import { getUserSubscriptionTier } from '/common/util'
 
 const BACKGROUND_KEY = 'ui-bg'
 export const ACCOUNT_KEY = 'agnai-username'
@@ -59,6 +60,7 @@ export type UserState = {
       activeAt: string
     }
   }
+  sub?: { level: number; type: 'native' | 'patreon'; tier: AppSchema.SubscriptionTier }
 }
 
 export const userStore = createStore<UserState>(
@@ -127,10 +129,11 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async getTiers() {
+    async getTiers({ user }) {
       const res = await api.get('/admin/tiers')
       if (res.result) {
-        return { tiers: res.result.tiers }
+        const sub = user ? getUserSubscriptionTier(user, res.result.tiers) : undefined
+        return { tiers: res.result.tiers, sub }
       }
     },
 

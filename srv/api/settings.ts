@@ -67,7 +67,6 @@ export async function getAppConfig(user?: AppSchema.User) {
       openRouter: { models: openRouter },
       subs,
       serverConfig: configuration,
-      subLevel: -1,
     }
   }
 
@@ -101,7 +100,6 @@ export async function getAppConfig(user?: AppSchema.User) {
     config.patreon.access_token
   )
 
-  appConfig.subLevel = userTier ? userTier.level : -1
   appConfig.tier = userTier?.tier
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration

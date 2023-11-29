@@ -6,13 +6,13 @@ import { settingStore } from '../store'
 import { AppSchema } from '/common/types'
 
 const ServiceWarning: Component<{ preset?: Partial<AppSchema.GenSettings> }> = (props) => {
-  const user = userStore((s) => ({ ...s.user }))
+  const user = userStore((s) => ({ ...s.user, sub: s.sub }))
   const cfg = settingStore((s) => s.config)
 
   const noSub = createMemo(() => {
     if (!props.preset) return false
     if (props.preset.service !== 'agnaistic') return false
-    const userLevel = user.admin ? Infinity : cfg.subLevel ?? -1
+    const userLevel = user.admin ? Infinity : user.sub?.level ?? -1
     const sub = cfg.subs.find(
       (sub) => sub._id === props.preset?.registered?.agnaistic?.subscriptionId
     )
