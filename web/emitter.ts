@@ -16,10 +16,20 @@ export const EVENTS = {
   charDeleted: 'char-deleted',
   tierReceived: 'tier-received',
   configUpdated: 'server-config-updated',
+  checkoutSuccess: 'checkout-success',
+} as const
+
+type EventType = (typeof EVENTS)[keyof typeof EVENTS]
+
+const emitter = new EventEmitter()
+
+export const events = {
+  emit: (event: EventType, ...args: any[]) => emitter.emit(event, ...args),
+  on: (event: EventType, callback: (...args: any[]) => void) => emitter.on(event, callback),
+  removeListener: (event: EventType, listener: (...args: any[]) => void) =>
+    emitter.removeListener(event, listener),
 }
 
-export const events = new EventEmitter()
-
 for (const event of Object.values(EVENTS)) {
-  events.on(event, () => send('[***] emitter', { type: event }, undefined))
+  emitter.on(event, () => send('[***] emitter', { type: event }, undefined))
 }

@@ -104,6 +104,7 @@ export async function getAppConfig(user?: AppSchema.User) {
   )
 
   appConfig.subLevel = userTier ? userTier.level : -1
+  appConfig.tier = userTier?.tier
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration
   appConfig.subs = subs

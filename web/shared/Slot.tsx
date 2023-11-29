@@ -54,10 +54,6 @@ const Slot: Component<{
   size?: SlotSize
 }> = (props) => {
   let ref: HTMLDivElement | undefined = undefined
-  const user = userStore((s) => ({
-    tier: s.tiers.find((t) => t._id === s.user?.sub?.tierId),
-    user: s.user,
-  }))
   const cfg = settingStore((s) => {
     const parsed = tryParse<Partial<SettingState['slots']>>(s.config.serverConfig?.slots || '{}')
     const config = {
@@ -67,9 +63,13 @@ const Slot: Component<{
       flags: s.flags,
       ready: s.slotsLoaded && s.initLoading === false,
       config: s.config.serverConfig,
+      tier: s.config.tier,
     }
     return config
   })
+  const user = userStore((s) => ({
+    user: s.user,
+  }))
 
   const [stick, setStick] = createSignal(props.sticky)
   const [uniqueId, setUniqueId] = createSignal<number>()
@@ -224,7 +224,7 @@ const Slot: Component<{
       return log('No publisher id')
     }
 
-    if (user.tier?.disableSlots) {
+    if (cfg.tier?.disableSlots) {
       props.parent.style.display = 'hidden'
       return log('Slots are tier disabled')
     }
@@ -311,7 +311,7 @@ const Slot: Component<{
   return (
     <>
       <Switch>
-        <Match when={!cfg.ready || !user.user || !specs() || user.tier?.disableSlots}>{null}</Match>
+        <Match when={!cfg.ready || !user.user || !specs() || cfg.tier?.disableSlots}>{null}</Match>
         <Match when={specs()!.video && cfg.slots.gtmVideoTag}>
           <div
             id={id()}

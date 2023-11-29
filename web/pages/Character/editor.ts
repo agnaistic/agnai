@@ -147,8 +147,7 @@ export function useCharEditor(editing?: NewCharacter & { _id?: string }) {
     }
 
     {
-      const tier = user.tiers.find((t) => t._id === user.user?.sub?.tierId)
-      const level = tier?.level ?? user.user.sub?.level ?? -1
+      const level = settings.config.tier?.level ?? -1
       const subs = settings.config.subs.filter((s) => user.user?.admin || s.level <= level)
 
       for (const sub of subs) {

@@ -109,6 +109,10 @@ export const settingStore = createStore<SettingState>(
     settingStore.setState({ config: { ...prev, serverConfig: config } })
   })
 
+  events.on('checkout-success', () => {
+    settingStore.getConfig()
+  })
+
   return {
     modal({ showSettings }, show?: boolean) {
       const next = show ?? !showSettings
