@@ -485,6 +485,7 @@ export namespace AppSchema {
     banEosToken?: boolean
     earlyStopping?: boolean
     stopSequences?: string[]
+    trimStop?: boolean
 
     order?: number[]
     disabledSamplers?: number[]

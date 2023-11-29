@@ -58,6 +58,7 @@ export const presetValidator = {
   phraseRepPenalty: 'string?',
 
   stopSequences: ['string?'],
+  trimStop: 'boolean?',
   thirdPartyUrl: 'string?',
   thirdPartyFormat: [...THIRDPARTY_FORMATS, null],
   thirdPartyUrlNoSuffix: 'boolean?',

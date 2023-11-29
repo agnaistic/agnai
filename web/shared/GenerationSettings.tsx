@@ -446,6 +446,16 @@ const GeneralSettings: Component<
           disabled={props.disabled}
         />
         <StoppingStrings inherit={props.inherit} service={props.service} format={props.format} />
+        <Toggle
+          fieldName="trimStop"
+          label="Trim Stop Sequences"
+          helperText="Trim Stop Sequences from the AI's response. Does not work with Streaming responses."
+          value={props.inherit?.trimStop ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          format={props.format}
+          aiSetting={'trimStop'}
+        />
         <PhraseBias inherit={props.inherit} service={props.service} format={props.format} />
       </Card>
     </div>

@@ -160,6 +160,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       top_a: gen.topA,
       typical: gen.typicalP,
       stop_sequence: getStoppingStrings(opts, stops),
+      trim_stop: gen.trimStop,
       rep_pen_range: gen.repetitionPenaltyRange,
       rep_pen_slope: gen.repetitionPenaltySlope,
     }
