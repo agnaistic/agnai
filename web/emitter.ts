@@ -26,6 +26,8 @@ const emitter = new EventEmitter()
 export const events = {
   emit: (event: EventType, ...args: any[]) => emitter.emit(event, ...args),
   on: (event: EventType, callback: (...args: any[]) => void) => emitter.on(event, callback),
+  removeListener: (event: EventType, listener: (...args: any[]) => void) =>
+    emitter.removeListener(event, listener),
 }
 
 for (const event of Object.values(EVENTS)) {
