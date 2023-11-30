@@ -4,6 +4,7 @@ import { db } from './client'
 import { AppSchema } from '../../common/types/schema'
 import { now } from './util'
 import { StatusError, errors } from '../api/wrap'
+import { parseTemplate } from '/common/template-parser'
 
 export async function getChatOnly(id: string) {
   const chat = await db('chat').findOne({ _id: id })
@@ -64,7 +65,9 @@ export async function create(
     | 'overrides'
     | 'genPreset'
     | 'mode'
-  >
+  >,
+  profile: AppSchema.Profile,
+  impersonating?: AppSchema.Character
 ) {
   const id = `${v4()}`
   const char = await getCharacter(props.userId, characterId)
@@ -95,11 +98,21 @@ export async function create(
   await db('chat').insertOne(doc)
 
   if (props.greeting) {
+    const { parsed } = await parseTemplate(props.greeting, {
+      chat: doc,
+      char,
+      characters: {},
+      lines: [],
+      parts: {},
+      replyAs: char,
+      impersonate: impersonating,
+      sender: profile,
+    })
     const msg: AppSchema.ChatMessage = {
       kind: 'chat-message',
       _id: v4(),
       chatId: id,
-      msg: props.greeting,
+      msg: parsed,
       characterId: char._id,
       createdAt: now(),
       updatedAt: now(),

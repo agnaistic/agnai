@@ -4,6 +4,8 @@ import { AppSchema } from '../../../common/types/schema'
 import { api, isLoggedIn } from '../api'
 import { loadItem, localApi, saveChats } from './storage'
 import { replace } from '/common/util'
+import { getStore } from '../create'
+import { parseTemplate } from '/common/template-parser'
 
 export type AllChat = AppSchema.Chat & { character?: { name: string } }
 
@@ -129,6 +131,23 @@ export async function createChat(characterId: string, props: NewChat) {
   if (!char) return localApi.error(`Character not found`)
 
   const { chat, msg } = createNewChat(char, props)
+
+  // If there is a greeting, parse it before persisting
+  if (msg?.msg) {
+    const impersonating = getStore('character').getState().impersonating
+    const profile = getStore('user').getState().profile
+    const { parsed } = await parseTemplate(msg.msg, {
+      chat,
+      char: char!,
+      characters: {},
+      lines: [],
+      parts: {},
+      replyAs: char,
+      sender: profile!,
+      impersonate: impersonating,
+    })
+    msg.msg = parsed
+  }
 
   await localApi.saveChats(chats.concat(chat))
 
