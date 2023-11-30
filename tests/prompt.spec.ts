@@ -44,14 +44,14 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
-  it('will include will two memories by weight when triggered', async () => {
+  it('will include two memories by weight when triggered', async () => {
     const actual = await build([botMsg('FIRST'), toMsg('10-TRIGGER'), toMsg('1-TRIGGER')])
     expect(actual.template.parsed).toMatchSnapshot()
   })
 
   it('will exclude lowest priority memory to fit in budget', async () => {
     const limit =
-      (await getTokenCounter('main', undefined)(`ENTRY ONE. ENTRY TWO. ENTREE THREE.`)) - 1
+      (await getTokenCounter('main', undefined)(`ENTRY ONE\nENTRY TWO\nENTRY THREE`)) - 1
     const actual = await build(
       [botMsg('FIRST'), toMsg('1-TRIGGER'), toMsg('10-TRIGGER'), toMsg('20-TRIGGER')],
       {
@@ -225,9 +225,90 @@ This is how {{char}} should talk: {{example_dialogue}}`,
     expect(actual.template.parsed).not.to.include('ENTRY')
     expect(actual.template.parsed).toMatchSnapshot()
   })
-})
 
-// function expected(...lines: string[]) {
-//   // Replace spaces with dots to help with interpreting test results
-//   return lines.join('\n').replace(/ /g, '.')
-// }
+  it('will put char book entries with higher weight after mem book entries', async () => {
+    const char = {
+      ...main,
+      characterBook: toBook('main char book', [toEntry(['TRIGGER'], 'ENTRY 20', 0, 20)]),
+    }
+
+    const actual = await build([toMsg('TRIGGER')], {
+      char: char,
+      replyAs: char,
+      book: toBook('chat mem book', [toEntry(['TRIGGER'], 'ENTRY 10', 0, 10)]),
+      settings: { memoryDepth: 1 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY 10')
+    expect(actual.template.parsed).to.include('ENTRY 20')
+    expect(actual.template.parsed.indexOf('ENTRY 20')).to.be.greaterThan(
+      actual.template.parsed.indexOf('ENTRY 10')
+    )
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will put mem book entries with higher weight after char book entries', async () => {
+    const char = {
+      ...main,
+      characterBook: toBook('main char book', [toEntry(['TRIGGER'], 'ENTRY 10', 0, 10)]),
+    }
+
+    const actual = await build([toMsg('TRIGGER')], {
+      char: char,
+      replyAs: char,
+      book: toBook('chat mem book', [toEntry(['TRIGGER'], 'ENTRY 20', 0, 20)]),
+      settings: { memoryDepth: 1 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY 10')
+    expect(actual.template.parsed).to.include('ENTRY 20')
+    expect(actual.template.parsed.indexOf('ENTRY 20')).to.be.greaterThan(
+      actual.template.parsed.indexOf('ENTRY 10')
+    )
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will allow using wildcards in keywords', async () => {
+    const char = {
+      ...main,
+      characterBook: toBook('main char book', [
+        toEntry(['?BOOK*'], 'ENTRY 1'),
+        toEntry(['BOOK'], 'ENTRY 2'),
+        toEntry(['?BOOK'], 'ENTRY 3'),
+      ]),
+    }
+
+    const actual = await build([toMsg('ebooks')], {
+      char: char,
+      replyAs: char,
+      settings: { memoryDepth: 100 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY 1')
+    expect(actual.template.parsed).not.to.include('ENTRY 2')
+    expect(actual.template.parsed).not.to.include('ENTRY 3')
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+
+  it('will disallow injecting arbitrary regexes', async () => {
+    const char = {
+      ...main,
+      name: 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', //triggers evil regex
+      characterBook: toBook('main char book', [
+        toEntry(['BOOKS'], 'ENTRY 1'),
+        toEntry(['^(a+)+$'], 'evil regex'),
+      ]),
+    }
+
+    // Warning: the evil regex can kill the event loop
+    const actual = await build([botMsg('books')], {
+      char: char,
+      replyAs: char,
+      settings: { memoryDepth: 100 },
+    })
+
+    expect(actual.template.parsed).to.include('ENTRY 1')
+    expect(actual.template.parsed).not.to.include('evil regex')
+    expect(actual.template.parsed).toMatchSnapshot()
+  })
+})

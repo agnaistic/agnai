@@ -22,14 +22,19 @@ export type MemoryPrompt = {
 }
 
 type Match = {
-  /** The order in which is was found in the book's entry list */
-  id: number
-
-  /** The position within the prompt that it was found. Larger means closer to the end */
-  index: number
+  /** The age of the message in which the match was found, counting from the last message up. */
+  messageAge: number
   entry: AppSchema.MemoryEntry
   tokens: number
   text: string
+}
+
+type MemoryPromptContext = {
+  bot: string
+  sender: string
+  depth: number
+  budget: number
+  encoder: TokenCounter
 }
 
 export type CharacterBook = {
@@ -65,115 +70,165 @@ export type CharacterBook = {
 
 type CharacterBookEntry = CharacterBook['entries'][number]
 
-/**
- * When determine the insertion order of an entry:
- * - Highest priority wins
- * - If there is a priority tie, entry that is "most recently referred to" wins
- * - If there is a tie due to using the same keyword, the earliest entry in the book wins
- */
+export async function buildMemoryPrompt(opts: MemoryOpts, encoder: TokenCounter): Promise<string> {
+  const ctx = getMemoryPromptContext(opts, encoder)
+  if (!ctx) return ''
 
-export const MEMORY_PREFIX = 'Facts: '
+  const entries = getEnabledEntriesFromBooks(opts.books)
 
-export async function buildMemoryPrompt(
+  const matches = await findAllMatches(entries, opts.lines, ctx)
+  matches.sort(byPriorityThenAge)
+
+  const allowed = await getMatchesWithinBudget(matches, ctx)
+  allowed.sort(byWeightThenAge)
+
+  let prompt = allowed
+    .map(({ text }) => text)
+    .reverse()
+    .join('')
+
+  // do not append extra '\n' at the end
+  if (prompt.endsWith('\n')) prompt = prompt.slice(0, -'\n'.length)
+
+  return prompt
+}
+
+function getMemoryPromptContext(
   opts: MemoryOpts,
   encoder: TokenCounter
-): Promise<MemoryPrompt | undefined> {
-  const { chat, settings, members, char, lines, books } = opts
-
-  if (!books || !books.length) return
-  const sender =
-    opts.impersonate?.name || members.find((mem) => mem.userId === chat.userId)?.handle || 'You'
-
-  const depth = settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
-  const memoryBudget = settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
-  // const reveseWeight = settings?.memoryReverseWeight ?? defaultPresets.basic.memoryReverseWeight
-
+): MemoryPromptContext | undefined {
+  const depth = opts.settings?.memoryDepth || defaultPresets.basic.memoryDepth || Infinity
   if (isNaN(depth) || depth <= 0) return
 
-  const finalPrompts: string[] = []
-  const finalEntries: Match[] = []
-  let finalTokens = await encoder(MEMORY_PREFIX)
+  const budget = opts.settings?.memoryContextLimit || defaultPresets.basic.memoryContextLimit
 
+  const bot = opts.char.name
+  const sender =
+    opts.impersonate?.name ||
+    opts.members.find((mem) => mem.userId === opts.chat.userId)?.handle ||
+    'You'
+
+  return {
+    bot,
+    sender,
+    depth,
+    budget,
+    encoder,
+  }
+}
+
+function getEnabledEntriesFromBooks(books: (AppSchema.MemoryBook | undefined)[] | undefined) {
+  if (!books) return []
+
+  const entries = []
   for (const book of books) {
     if (!book) continue
 
-    const matches: Match[] = []
-
-    let id = 0
-    const combinedText = lines.slice().reverse().slice(0, depth).join(' ').toLocaleLowerCase()
-    const reversed = prep(combinedText)
-
     for (const entry of book.entries) {
       if (!entry.enabled) continue
-
-      let index = -1
-      for (const keyword of entry.keywords) {
-        try {
-          const txt = `\\b(${prep(keyword.trim())})\\b`
-          const re = new RegExp(txt, 'gi')
-          const result = re.exec(reversed)
-          if (index === -1 && result !== null) {
-            index = result.index
-          }
-        } catch (ex) {
-          /**
-           * @todo handle failures properly
-           */
-        }
-      }
-
-      if (index > -1) {
-        const text = entry.entry.replace(BOT_REPLACE, char.name).replace(SELF_REPLACE, sender)
-        const tokens = await encoder(text)
-        matches.push({ index, entry, id: ++id, tokens, text })
-      }
+      entries.push(entry)
     }
-
-    matches.sort(byPriorityThenIndex)
-
-    const entries = matches.reduce(
-      (prev, curr) => {
-        if (prev.budget >= memoryBudget) return prev
-        if (prev.budget + curr.tokens > memoryBudget) return prev
-
-        prev.budget += curr.tokens
-        prev.list.push(curr)
-        return prev
-      },
-      { list: [] as Match[], budget: finalTokens }
-    )
-
-    const prompt = entries.list
-      .map(({ text }) => text)
-      .reverse()
-      .join('\n')
-
-    finalPrompts.push(prompt)
-    finalEntries.push(...entries.list)
-    finalTokens += entries.budget
   }
+  return entries
+}
+
+async function findAllMatches(
+  entries: AppSchema.MemoryEntry[],
+  lines: string[],
+  ctx: MemoryPromptContext
+) {
+  const matches: Match[] = []
+  const history = lines.slice(-ctx.depth).reverse() // oldest messages last
+
+  for (const entry of entries) {
+    const match = await findMatchWithLowestAge(entry, history, ctx)
+    if (match) matches.push(match)
+  }
+  return matches
+}
+
+async function findMatchWithLowestAge(
+  entry: AppSchema.MemoryEntry,
+  history: string[],
+  ctx: MemoryPromptContext
+): Promise<Match | undefined> {
+  let lowestAge = Infinity
+
+  for (const keyword of entry.keywords) {
+    const match = findFirstMatchingLineNumber(keyword, history)
+    if (match === undefined) continue
+
+    lowestAge = Math.min(lowestAge, match)
+  }
+
+  if (lowestAge === Infinity) return
+
+  const text = entry.entry
+    .replace(BOT_REPLACE, ctx.bot)
+    .replace(SELF_REPLACE, ctx.sender)
+    .concat('\n') // append the newline now for the token count to match
 
   return {
-    prompt: finalPrompts.join('\n'),
-    entries: finalEntries, // entries.list,
-    tokens: finalTokens, // entries.budget,
+    messageAge: lowestAge,
+    entry,
+    tokens: await ctx.encoder(text),
+    text,
   }
 }
 
-function byPriorityThenIndex(
-  { id: lid, index: li, entry: l }: Match,
-  { id: rid, index: ri, entry: r }: Match
-) {
-  if (l.weight !== r.weight) return l.weight < r.weight ? 1 : -1
-  if (li !== ri) return li > ri ? -1 : 1
-  return lid > rid ? 1 : lid === rid ? 0 : -1
+function findFirstMatchingLineNumber(keyword: string, history: string[]) {
+  const searchPattern = createRegexForKeyword(keyword)
+
+  let lineNumber = 0
+  for (const line of history) {
+    if (searchPattern.test(line)) return lineNumber
+    lineNumber++
+  }
 }
 
-function prep(str: string, safe?: boolean) {
-  let next = ''
-  for (let i = str.length - 1; i >= 0; i--) next += str[i]
-  if (!safe) return next
-  return next.toLowerCase().replace(/\-/g, '\\-')
+function createRegexForKeyword(keyword: string) {
+  const pattern = keyword
+    .trim()
+    .replace(/[\\^$+.()|[\]{}_]/g, '') // escape all special chars except * and ?
+    .replace(/\*/g, '\\w*') // enable searching by *
+    .replace(/\?/g, '\\w') // enable searching by ?
+
+  return new RegExp(`\\b(${pattern})\\b`, 'giu')
+}
+
+async function getMatchesWithinBudget(matches: Match[], ctx: MemoryPromptContext) {
+  let allowed: Match[] = []
+  let tokensUsed = 0
+
+  for (const match of matches) {
+    if (tokensUsed + match.tokens >= ctx.budget) break
+
+    allowed.push(match)
+    tokensUsed += match.tokens
+  }
+  return allowed
+}
+
+function byPriorityThenAge(
+  { messageAge: lAge, entry: l }: Match,
+  { messageAge: rAge, entry: r }: Match
+) {
+  // higher priority first
+  if (l.priority !== r.priority) return l.priority > r.priority ? -1 : 1
+  // lower age first
+  if (lAge !== rAge) return lAge < rAge ? -1 : 1
+  return 0
+}
+
+function byWeightThenAge(
+  { messageAge: lAge, entry: l }: Match,
+  { messageAge: rAge, entry: r }: Match
+) {
+  // higher weight first
+  if (l.weight !== r.weight) return l.weight > r.weight ? -1 : 1
+  // lower age first
+  if (lAge !== rAge) return lAge < rAge ? -1 : 1
+  return 0
 }
 
 export function characterBookToNative(cb: CharacterBook): AppSchema.MemoryBook {

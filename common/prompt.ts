@@ -411,8 +411,7 @@ export async function buildPromptParts(
   if (replyAs.characterBook) books.push(replyAs.characterBook)
   if (opts.book) books.push(opts.book)
 
-  const memory = await buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
-  parts.memory = memory?.prompt
+  parts.memory = await buildMemoryPrompt({ ...opts, books, lines: linesForMemory }, encoder)
 
   const supplementary = getSupplementaryParts(opts, replyAs)
   parts.ujb = supplementary.ujb
