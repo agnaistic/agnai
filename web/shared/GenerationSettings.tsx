@@ -69,8 +69,9 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
   const [service, setService] = createSignal(
     props.inherit?.service || (services()[0].value as AIAdapter)
   )
-  const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
-  const [userFormat, _] = createSignal(userState.user?.thirdPartyFormat)
+  const [format, setFormat] = createSignal(
+    props.inherit?.thirdPartyFormat || userState.user?.thirdPartyFormat
+  )
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
@@ -122,13 +123,11 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'ExLlamaV2', value: 'exllamav2' },
               { label: 'KoboldCpp', value: 'koboldcpp' },
             ]}
-            value={props.inherit?.thirdPartyFormat ?? userFormat() ?? ''}
+            value={props.inherit?.thirdPartyFormat ?? userState.user?.thirdPartyFormat ?? ''}
             service={service()}
             format={format()}
             aiSetting={'thirdPartyFormat'}
-            onChange={(ev) => {
-              setFormat(ev.value as ThirdPartyFormat)
-            }}
+            onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
           />
 
           <RegisteredSettings service={service()} inherit={props.inherit} />

@@ -1,13 +1,11 @@
-import { Component, createSignal } from 'solid-js'
+import { Component } from 'solid-js'
 import Select from '../../../shared/Select'
 import TextInput from '../../../shared/TextInput'
 import { userStore } from '../../../store'
 import Button from '../../../shared/Button'
-import { ThirdPartyFormat } from '/common/adapters'
 
 const KoboldAISettings: Component = () => {
   const state = userStore()
-  const [format, setFormat] = createSignal(state.user?.thirdPartyFormat)
 
   return (
     <>
@@ -33,8 +31,7 @@ const KoboldAISettings: Component = () => {
           { label: 'ExLlamaV2', value: 'exllamav2' },
           { label: 'KoboldCpp', value: 'koboldcpp' },
         ]}
-        value={format() ?? 'kobold'}
-        onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
+        value={state.user?.thirdPartyFormat ?? 'kobold'}
       />
       <TextInput
         fieldName="thirdPartyPassword"
