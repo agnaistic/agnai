@@ -20,7 +20,7 @@ import {
 } from '../../common/adapters'
 import Divider from './Divider'
 import { Toggle } from './Toggle'
-import { chatStore, presetStore, settingStore } from '../store'
+import { chatStore, presetStore, settingStore, userStore } from '../store'
 import PromptEditor, { BasicPromptTemplate } from './PromptEditor'
 import { Card } from './Card'
 import { FormLabel } from './FormLabel'
@@ -58,6 +58,7 @@ type Props = {
 
 const GenerationSettings: Component<Props & { onSave: () => void }> = (props) => {
   const opts = chatStore((s) => s.opts)
+  const userState = userStore()
   const [search, setSearch] = useSearchParams()
 
   const services = createMemo<Option[]>(() => {
@@ -69,6 +70,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
     props.inherit?.service || (services()[0].value as AIAdapter)
   )
   const [format, setFormat] = createSignal(props.inherit?.thirdPartyFormat)
+  const [userFormat, _] = createSignal(userState.user?.thirdPartyFormat)
   const tabs = ['General', 'Prompt', 'Memory', 'Advanced']
   const [tab, setTab] = createSignal(+(search.tab ?? '0'))
 
@@ -120,11 +122,13 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'ExLlamaV2', value: 'exllamav2' },
               { label: 'KoboldCpp', value: 'koboldcpp' },
             ]}
-            value={props.inherit?.thirdPartyFormat ?? ''}
+            value={props.inherit?.thirdPartyFormat ?? userFormat() ?? ''}
             service={service()}
             format={format()}
             aiSetting={'thirdPartyFormat'}
-            onChange={(ev) => setFormat(ev.value as ThirdPartyFormat)}
+            onChange={(ev) => {
+              setFormat(ev.value as ThirdPartyFormat)
+            }}
           />
 
           <RegisteredSettings service={service()} inherit={props.inherit} />
