@@ -302,7 +302,7 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
               </Switch>
             </span>
-            <div ref={avatarRef}>
+            <div ref={avatarRef} classList={{ 'overflow-hidden': !user.ui.imageWrap }}>
               <Switch>
                 <Match when={props.msg.adapter === 'image'}>
                   <div class="flex flex-wrap gap-2">
@@ -338,7 +338,7 @@ const Message: Component<MessageProps> = (props) => {
                 </Match>
                 <Match when={!edit() && content().type !== 'waiting'}>
                   <p
-                    class={`rendered-markdown px-1 ${content().class}`}
+                    class={`rendered-markdown pr-1 ${content().class}`}
                     data-bot-message={!props.msg.userId}
                     data-user-message={!!props.msg.userId}
                     innerHTML={content().message}

@@ -21,12 +21,15 @@ const KoboldAISettings: Component = () => {
         label="Kobold / 3rd-party Format"
         helperText="Re-formats the prompt to the desired output format."
         items={[
+          { label: 'None', value: '' },
           { label: 'Kobold', value: 'kobold' },
-          { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'OpenAI', value: 'openai' },
           { label: 'OpenAI (Chat Format)', value: 'openai-chat' },
           { label: 'Claude', value: 'claude' },
+          { label: 'Textgen (Ooba)', value: 'ooba' },
           { label: 'Llama.cpp', value: 'llamacpp' },
+          { label: 'ExLlamaV2', value: 'exllamav2' },
+          { label: 'KoboldCpp', value: 'koboldcpp' },
         ]}
         value={state.user?.thirdPartyFormat ?? 'kobold'}
       />

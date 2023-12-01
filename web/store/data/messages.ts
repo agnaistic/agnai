@@ -486,8 +486,6 @@ async function getGenerateProps(
       char: active.char,
       characters: entities.characters,
       chat: active.chat,
-      lines: [],
-      parts: {} as any,
       replyAs: props.replyAs,
       sender: entities.profile,
       impersonate: props.impersonate,

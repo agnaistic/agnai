@@ -243,10 +243,25 @@ const PromptEditor: Component<
                   Toggle Preview
                 </Button>
                 <Show when={props.showTemplates}>
-                  <Button size="sm" onClick={() => setTemplates(true)}>
-                    Use Library Template
-                  </Button>
-                  <Button size="sm" onClick={() => setTemplateId('')}>
+                  <Show when={!props.inherit?.promptTemplateId}>
+                    <Button size="sm" onClick={() => setTemplates(true)}>
+                      Use Library Template
+                    </Button>
+                  </Show>
+
+                  <Show when={!!props.inherit?.promptTemplateId}>
+                    <Button size="sm" onClick={() => setTemplates(true)}>
+                      Update Library Template
+                    </Button>
+                  </Show>
+
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setTemplateId('')
+                      ref.value = props.inherit?.gaslight || ''
+                    }}
+                  >
                     Use Preset's Template
                   </Button>
                 </Show>
@@ -309,6 +324,7 @@ const PromptEditor: Component<
             setTemplateId(id)
             ref.value = template
           }}
+          currentTemplate={templateId()}
         />
       </Show>
     </div>
@@ -446,10 +462,11 @@ const SelectTemplate: Component<{
   show: boolean
   close: () => void
   select: (id: string, template: string) => void
+  currentTemplate: string | undefined
 }> = (props) => {
   const state = presetStore((s) => ({ templates: s.templates }))
 
-  const [opt, setOpt] = createSignal('Alpaca')
+  const [opt, setOpt] = createSignal(props.currentTemplate || 'Alpaca')
   const [template, setTemplate] = createSignal(templates.Alpaca)
   const [original, setOriginal] = createSignal(templates.Alpaca)
   const [filter, setFilter] = createSignal('')
@@ -486,9 +503,13 @@ const SelectTemplate: Component<{
   createEffect<number>((prev) => {
     const opts = options()
     if (prev !== opts.length) {
-      setOpt(state.templates[0]._id)
-      setTemplate(state.templates[0].template)
-      setOriginal(state.templates[0].template)
+      const id = props.currentTemplate || state.templates[0]._id
+      const template = state.templates.find((t) => t._id === id)
+      if (!template) return opts.length
+
+      setOpt(id)
+      setTemplate(template.template)
+      setOriginal(template.template)
     }
 
     return opts.length
@@ -547,6 +568,8 @@ const SelectTemplate: Component<{
       >
         <div class="flex flex-col gap-4 text-sm">
           <div class="flex gap-1">
+            <b>Id: {props.currentTemplate}</b>
+            <b>Opt: {opt()}</b>
             <TextInput
               fieldName="filter"
               placeholder="Filter templates"

@@ -86,13 +86,10 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 
   const { parsed } = await parseTemplate(prompt, {
     chat: both.chat || body.chat || ({} as any),
-    characters: body.characters || {},
     char: body.char || {},
     lines: body.lines,
-    parts: {},
     impersonate: body.impersonating,
     sender: body.profile,
-    replyAs: body.char || ({} as any),
   })
 
   const infer = async (text: string, tokens?: number) => {
