@@ -67,16 +67,16 @@ type BotsProp = 'i' | 'personality' | 'name'
 
 export type TemplateOpts = {
   continue?: boolean
-  parts: Partial<PromptParts>
+  parts?: Partial<PromptParts>
   chat: AppSchema.Chat
 
   char: AppSchema.Character
-  replyAs: AppSchema.Character
+  replyAs?: AppSchema.Character
   impersonate?: AppSchema.Character
   sender: AppSchema.Profile
 
-  lines: string[]
-  characters: Record<string, AppSchema.Character>
+  lines?: string[]
+  characters?: Record<string, AppSchema.Character>
   lastMessage?: string
 
   chatEmbed?: Memory.UserEmbed<{ name: string }>[]
@@ -108,12 +108,14 @@ export async function parseTemplate(
     opts.limit.output = {}
   }
 
-  if (opts.parts.systemPrompt) {
-    opts.parts.systemPrompt = render(opts.parts.systemPrompt, opts)
+  const parts = opts.parts || {}
+
+  if (parts.systemPrompt) {
+    parts.systemPrompt = render(parts.systemPrompt, opts)
   }
 
-  if (opts.parts.ujb) {
-    opts.parts.ujb = render(opts.parts.ujb, opts)
+  if (parts.ujb) {
+    parts.ujb = render(parts.ujb, opts)
   }
 
   const ast = parser.parse(template, {}) as PNode[]
@@ -332,14 +334,14 @@ function renderIterator(holder: IterableHolder, children: CNode[], opts: Templat
 
   const entities =
     holder === 'bots'
-      ? Object.values(opts.characters).filter((b) => {
+      ? Object.values(opts.characters || {}).filter((b) => {
           if (!b) return false
-          if (b._id === opts.replyAs._id) return false
+          if (b._id === (opts.replyAs || opts.char)._id) return false
           if (b.deletedAt) return false
           if (b._id.startsWith('temp-') && b.favorite === false) return false
           return true
         })
-      : opts.lines
+      : opts.lines || []
 
   let i = 0
   for (const entity of entities) {
@@ -418,41 +420,41 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
 
   switch (node.value) {
     case 'char':
-      return opts.replyAs.name || ''
+      return (opts.replyAs || opts.char).name || ''
 
     case 'user':
       return opts.impersonate?.name || opts.sender?.handle || 'You'
 
     case 'example_dialogue':
-      return opts.parts.sampleChat?.join('\n') || ''
+      return opts.parts?.sampleChat?.join('\n') || ''
 
     case 'scenario':
-      return opts.parts.scenario || opts.chat.scenario || opts.char.scenario || ''
+      return opts.parts?.scenario || opts.chat.scenario || opts.char.scenario || ''
 
     case 'memory':
-      return opts.parts.memory || ''
+      return opts.parts?.memory || ''
 
     case 'impersonating':
-      return opts.parts.impersonality || ''
+      return opts.parts?.impersonality || ''
 
     case 'personality':
-      return opts.parts.persona || ''
+      return opts.parts?.persona || ''
 
     case 'ujb':
-      return opts.parts.ujb || ''
+      return opts.parts?.ujb || ''
 
     case 'post': {
-      return opts.parts.post?.join('\n') || ''
+      return opts.parts?.post?.join('\n') || ''
     }
 
     case 'history': {
       if (opts.limit) {
         const id = `__${v4()}__`
-        opts.limit.output![id] = opts.lines
+        opts.limit.output![id] = opts.lines || []
         return id
       }
 
-      return opts.lines.join('\n')
+      return opts.lines?.join('\n') || ''
     }
 
     case 'chat_age':
@@ -462,16 +464,16 @@ function getPlaceholder(node: PlaceHolder | ConditionNode, opts: TemplateOpts) {
       return lastMessage(opts.lastMessage || '')
 
     case 'all_personalities':
-      return opts.parts.allPersonas?.join('\n') || ''
+      return opts.parts?.allPersonas?.join('\n') || ''
 
     case 'chat_embed':
-      return opts.parts.chatEmbeds?.join('\n') || ''
+      return opts.parts?.chatEmbeds?.join('\n') || ''
 
     case 'user_embed':
-      return opts.parts.userEmbeds?.join('\n') || ''
+      return opts.parts?.userEmbeds?.join('\n') || ''
 
     case 'system_prompt':
-      return opts.parts.systemPrompt || ''
+      return opts.parts?.systemPrompt || ''
 
     case 'random': {
       const values = node.values as string[]

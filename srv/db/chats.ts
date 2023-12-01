@@ -101,10 +101,6 @@ export async function create(
     const { parsed } = await parseTemplate(props.greeting, {
       chat: doc,
       char,
-      characters: {},
-      lines: [],
-      parts: {},
-      replyAs: char,
       impersonate: impersonating,
       sender: profile,
     })
@@ -214,7 +210,12 @@ export async function setChatCharacter(chatId: string, charId: string, state: bo
   )
 }
 
-export async function restartChat(userId: string, chatId: string) {
+export async function restartChat(
+  userId: string,
+  chatId: string,
+  profile: AppSchema.Profile,
+  impersonate?: AppSchema.Character
+) {
   const chat = await getChatOnly(chatId)
   if (!chat) throw errors.NotFound
 
@@ -224,15 +225,22 @@ export async function restartChat(userId: string, chatId: string) {
   const char = chat.characterId ? await db('character').findOne({ _id: chat.characterId }) : null
   const greeting = char?.greeting
 
-  if (char && greeting) {
-    await db('chat-message').insertOne({
-      _id: v4(),
-      kind: 'chat-message',
-      chatId,
-      msg: greeting,
-      characterId: char._id,
-      createdAt: now(),
-      updatedAt: now(),
-    })
-  }
+  if (!char || !greeting) return
+
+  const { parsed } = await parseTemplate(greeting, {
+    char,
+    chat,
+    sender: profile,
+    impersonate,
+  })
+
+  await db('chat-message').insertOne({
+    _id: v4(),
+    kind: 'chat-message',
+    chatId,
+    msg: parsed,
+    characterId: char._id,
+    createdAt: now(),
+    updatedAt: now(),
+  })
 }

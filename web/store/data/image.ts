@@ -122,7 +122,7 @@ async function getChatSummary(settings: Partial<AppSchema.GenSettings>) {
     context: 1024,
     encoder: await getEncoder(),
   }
-  opts.lines = opts.lines.reverse()
+  opts.lines = (opts.lines || []).reverse()
 
   const template = getSummaryTemplate(settings.service!)
   if (!template) throw new Error(`No chat summary template available for "${settings.service!}"`)

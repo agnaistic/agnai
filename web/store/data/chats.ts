@@ -60,8 +60,11 @@ export async function getChat(id: string) {
 }
 
 export async function restartChat(chatId: string) {
+  const impersonating = getStore('character').getState().impersonating
   if (isLoggedIn()) {
-    const res = await api.method('post', `/chat/${chatId}/restart`)
+    const res = await api.method('post', `/chat/${chatId}/restart`, {
+      impersonating: impersonating?._id,
+    })
     return res
   }
 
@@ -75,11 +78,18 @@ export async function restartChat(chatId: string) {
   const greeting = char?.greeting
 
   if (char && greeting) {
+    const profile = getStore('user').getState().profile
+    const { parsed } = await parseTemplate(greeting, {
+      char,
+      chat,
+      sender: profile!,
+      impersonate: impersonating,
+    })
     await localApi.saveMessages(chatId, [
       {
         _id: v4(),
         kind: 'chat-message',
-        msg: greeting,
+        msg: parsed,
         characterId: char._id,
         chatId,
         createdAt: new Date().toISOString(),
@@ -120,8 +130,13 @@ export async function editChat(
 }
 
 export async function createChat(characterId: string, props: NewChat) {
+  const impersonating = getStore('character').getState().impersonating
   if (isLoggedIn()) {
-    const res = await api.post<AppSchema.Chat>('/chat', { characterId, ...props })
+    const res = await api.post<AppSchema.Chat>('/chat', {
+      characterId,
+      ...props,
+      impersonating: impersonating?._id,
+    })
     return res
   }
 
@@ -134,15 +149,10 @@ export async function createChat(characterId: string, props: NewChat) {
 
   // If there is a greeting, parse it before persisting
   if (msg?.msg) {
-    const impersonating = getStore('character').getState().impersonating
     const profile = getStore('user').getState().profile
     const { parsed } = await parseTemplate(msg.msg, {
       chat,
       char: char!,
-      characters: {},
-      lines: [],
-      parts: {},
-      replyAs: char,
       sender: profile!,
       impersonate: impersonating,
     })
