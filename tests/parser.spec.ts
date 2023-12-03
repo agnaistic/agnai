@@ -5,6 +5,7 @@ import { buildPromptParts } from '/common/prompt'
 import { TemplateOpts, parseTemplate } from '/common/template-parser'
 import { AppSchema } from '/common/types'
 import { getTokenCounter } from '/srv/tokenize'
+import { UserEmbed } from '/common/types/memory'
 
 const chars = [toChar('Robot'), toChar('Otherbot'), toChar('Thirdbot')]
 const char = chars[0]
@@ -21,6 +22,12 @@ const history = [
   toUserMsg(profile, 'User response'),
   toBotMsg(chars[1], 'Multibot message'),
 ]
+const chatEmbeds: UserEmbed<{ name: string }>[] = [
+  { id: '1', distance: 0.1, text: 'Chat Embed 1', date: '2021-01-01', name: 'BotSays' },
+  { id: '2', distance: 0.2, text: 'Chat Embed 2', date: '2021-01-02', name: 'BotSays' },
+  { id: '3', distance: 0.3, text: 'Chat Embed 3', date: '2021-01-03', name: 'BotSays' },
+]
+
 const lines = history.map(
   (h) => `${h.characterId ? characters[h.characterId]?.name : profile.handle}: ${h.msg}`
 )
@@ -50,15 +57,35 @@ describe('Template parser tests', async () => {
   it('will iterate over messages', async () => {
     const actual = await test(`Scenario: {{scenario}}
 {{#each history}}{{.i}} {{.dialogue}}{{/each}}`)
+    expect(actual).not.to.contain('each')
+    expect(actual).not.to.contain('history')
     expect(actual).toMatchSnapshot()
   })
 
+  it('will conditionally render regular chat embeds', async () => {
+    const actual = await test(
+      `Scenario: {{scenario}}
+{{#if chat_embed}}{{chat_embed}}{{/if}}`
+    )
+    expect(actual).not.to.contain('if')
+    expect(actual).not.to.contain('chat_embed')
+    chatEmbeds.map((embed) => {
+      expect(actual).to.contain(embed.name)
+      expect(actual).to.contain(embed.text)
+    })
+  })
+
   it('will iterate over chat embed', async () => {
-    const actual = await test(`Scenario: {{scenario}}
-{{#each chat_embed}}{{.i}} {{.name}}: {{.message}}{{/each}}`)
+    const actual = await test(
+      `Scenario: {{scenario}}
+{{#each chat_embed}}{{.name}}: {{.text}}{{/each}}`
+    )
     expect(actual).not.to.contain('each')
     expect(actual).not.to.contain('chat_embed')
-    expect(actual).toMatchSnapshot()
+    chatEmbeds.map((embed) => {
+      expect(actual).to.contain(embed.name)
+      expect(actual).to.contain(embed.text)
+    })
   })
 
   it('will create a full template', async () => {
@@ -130,7 +157,7 @@ async function getParseOpts(
       user,
       kind: 'send',
       sender: profile,
-      chatEmbeds: [],
+      chatEmbeds: chatEmbeds,
       userEmbeds: [],
       resolvedScenario: overChar.scenario,
     },

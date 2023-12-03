@@ -63,6 +63,7 @@ const v2placeholders = {
   random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
   'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
+  'each chat_embed': { required: false, limit: 1, inserted: `#each chat_embed}} {{/each` },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in InterpAll]?: JSX.Element | string } = {
@@ -100,6 +101,13 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
       <br />
       Full example:{' '}
       <code>{`{{#each msg}}{{#if .isuser}}User: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</code>
+    </>
+  ),
+  'each chat_embed': (
+    <>
+      Supported properties: <code>{`{{.name}} {{.text}}`}</code>
+      <br />
+      Example: <code>{`{{#each chat_embed}}{{.name}} said: {{.text}}{{/each}}`}</code>
     </>
   ),
 }

@@ -25,7 +25,7 @@ Expression = content:Parent* {
     return results
 }
 
-Parent "parent-node" = v:(BotIterator / ChatEmbedIterator / ChatEmbedInsert / HistoryIterator / HistoryInsert / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / Condition / Placeholder / Text) { return v }
 
 ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / Roll) CL {
 	return { kind: 'placeholder', value: i }
@@ -40,7 +40,6 @@ HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL ch
 
 ChatEmbedIterator "chat-embed-iterator" = OP "#each" WS loop:ChatEmbed CL children:(ChatEmbedChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 ChatEmbedChild = i:(ChatEmbedRef / ManyPlaceholder) { return i }
-ChatEmbedInsert "chat-embed-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Placeholder / InsertText)* CloseInsert { return { kind: 'chat-embed-insert', values: +line.join(''), children } }
   
 Placeholder "placeholder"
   = OP WS interp:Interp WS pipes:Pipe* CL {
@@ -64,7 +63,7 @@ Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)*
   return { kind: 'if', value, children: sub.flat() }
 }
 
-InsertText "insert-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
+InsertText "insert-text" = !(BotChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
 LoopText "loop-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
 ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
 Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator / ChatEmbedIterator) ch:. { return ch }
