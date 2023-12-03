@@ -568,8 +568,6 @@ const SelectTemplate: Component<{
       >
         <div class="flex flex-col gap-4 text-sm">
           <div class="flex gap-1">
-            <b>Id: {props.currentTemplate}</b>
-            <b>Opt: {opt()}</b>
             <TextInput
               fieldName="filter"
               placeholder="Filter templates"

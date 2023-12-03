@@ -14,7 +14,7 @@ import { AppSchema } from '../../../../common/types/schema'
 import Button, { LabelButton } from '../../../shared/Button'
 import { DropMenu } from '../../../shared/DropMenu'
 import TextInput from '../../../shared/TextInput'
-import { chatStore, toastStore, userStore } from '../../../store'
+import { chatStore, toastStore, userStore, settingStore, characterStore } from '../../../store'
 import { msgStore } from '../../../store'
 import { SpeechRecognitionRecorder } from './SpeechRecognitionRecorder'
 import { Toggle } from '/web/shared/Toggle'
@@ -29,6 +29,7 @@ import { EVENTS, events } from '/web/emitter'
 import { AutoComplete } from '/web/shared/AutoComplete'
 import FileInput, { FileInputResult, getFileAsDataURL } from '/web/shared/FileInput'
 import { embedApi } from '/web/store/embeddings'
+import AvatarIcon from '/web/shared/AvatarIcon'
 
 const InputBar: Component<{
   chat: AppSchema.Chat
@@ -54,6 +55,7 @@ const InputBar: Component<{
     canCaption: s.canImageCaption,
   }))
   const chats = chatStore((s) => ({ replyAs: s.active?.replyAs }))
+  const chars = characterStore()
 
   useEffect(() => {
     const listener = (text: string) => {
@@ -222,6 +224,21 @@ const InputBar: Component<{
         </div>
       </Show>
 
+      <div class="flex items-center">
+        <a
+          href="#"
+          role="button"
+          aria-label="Open impersonation menu"
+          class="icon-button"
+          onClick={() => settingStore.toggleImpersonate(true)}
+        >
+          <AvatarIcon
+            avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
+            format={{ corners: 'circle', size: 'sm' }}
+            class="mr-2"
+          />
+        </a>
+      </div>
       <Show when={complete()}>
         <AutoComplete
           options={completeOpts()}
