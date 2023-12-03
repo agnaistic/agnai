@@ -230,10 +230,7 @@ const InputBar: Component<{
           role="button"
           aria-label="Open impersonation menu"
           class="icon-button"
-          onClick={() => {
-            settingStore.toggleImpersonate(true)
-            //if (menu.showMenu) settingStore.closeMenu()
-          }}
+          onClick={() => settingStore.toggleImpersonate(true)}
         >
           <AvatarIcon
             avatarUrl={chars.impersonating?.avatar || user.profile?.avatar}
