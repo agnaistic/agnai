@@ -23,6 +23,7 @@ type CNode =
   | Exclude<PNode, { kind: 'each' }>
   | { kind: 'bot-prop'; prop: BotsProp }
   | { kind: 'history-prop'; prop: HistoryProp }
+  | { kind: 'chat-embed-prop'; prop: ChatEmbedProp }
   | { kind: 'history-if'; prop: HistoryProp; children: CNode[] }
   | { kind: 'bot-if'; prop: BotsProp; children: CNode[] }
 
@@ -60,8 +61,9 @@ const repeatableHolders = new Set<RepeatableHolder>([
   'roll',
 ])
 
-type IterableHolder = 'history' | 'bots'
+type IterableHolder = 'history' | 'bots' | 'chat-embed'
 
+type ChatEmbedProp = 'i' | 'name' | 'text'
 type HistoryProp = 'i' | 'message' | 'dialogue' | 'name' | 'isuser' | 'isbot'
 type BotsProp = 'i' | 'personality' | 'name'
 
@@ -272,6 +274,25 @@ function renderProp(node: CNode, opts: TemplateOpts, entity: unknown, i: number)
             bot.persona,
             bot.persona.kind /* || opts.chat.overrides.kind */ // looks like the || operator's left hand side is always truthy - @malfoyslastname
           )
+      }
+    }
+
+    case 'chat-embed-prop': {
+      const line = entity as string
+      switch (node.prop) {
+        case 'i': {
+          return i.toString()
+        }
+
+        case 'text': {
+          const index = line.indexOf(':')
+          return line.slice(index + 1).trim()
+        }
+
+        case 'name': {
+          const index = line.indexOf(':')
+          return line.slice(0, index)
+        }
       }
     }
 
