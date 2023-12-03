@@ -53,6 +53,14 @@ describe('Template parser tests', async () => {
     expect(actual).toMatchSnapshot()
   })
 
+  it('will iterate over chat embed', async () => {
+    const actual = await test(`Scenario: {{scenario}}
+{{#each chat_embed}}{{.i}} {{.name}}: {{.message}}{{/each}}`)
+    expect(actual).not.to.contain('each')
+    expect(actual).not.to.contain('chat_embed')
+    expect(actual).toMatchSnapshot()
+  })
+
   it('will create a full template', async () => {
     const actual = await test(
       `

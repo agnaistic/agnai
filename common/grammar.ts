@@ -25,7 +25,7 @@ Expression = content:Parent* {
     return results
 }
 
-Parent "parent-node" = v:(BotIterator / HistoryIterator / HistoryInsert / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(BotIterator / ChatEmbedIterator / ChatEmbedInsert / HistoryIterator / HistoryInsert / Condition / Placeholder / Text) { return v }
 
 ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / Roll) CL {
 	return { kind: 'placeholder', value: i }
@@ -37,6 +37,10 @@ BotChild = i:(BotRef / BotCondition / ManyPlaceholder) { return i }
 HistoryIterator "history-iterator" = OP "#each" WS loop:History CL children:(HistoryChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 HistoryChild = i:(HistoryRef / HistoryCondition / ManyPlaceholder) { return i }
 HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Placeholder / InsertText)* CloseInsert { return { kind: 'history-insert', values: +line.join(''), children } }
+
+ChatEmbedIterator "chat-embed-iterator" = OP "#each" WS loop:ChatEmbed CL children:(ChatEmbedChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
+ChatEmbedChild = i:(ChatEmbedRef / ManyPlaceholder) { return i }
+ChatEmbedInsert "chat-embed-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL children:(Placeholder / InsertText)* CloseInsert { return { kind: 'chat-embed-insert', values: +line.join(''), children } }
   
 Placeholder "placeholder"
   = OP WS interp:Interp WS pipes:Pipe* CL {
@@ -60,10 +64,10 @@ Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)*
   return { kind: 'if', value, children: sub.flat() }
 }
 
-InsertText "insert-text" = !(BotChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
-LoopText "loop-text" = !(BotChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
+InsertText "insert-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
+LoopText "loop-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
 ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
-Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator) ch:. { return ch }
+Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator / ChatEmbedIterator) ch:. { return ch }
 
 CSV "csv" = words:WordList* WS last:Word { return [...words, last] }
 WordList = word:Word WS "," WS { return word }
@@ -85,9 +89,11 @@ NL "newline" = "\\n" / "\\r" "\\n"?
 // Example pipe functions: lowercase, uppercase
 Handler "handler" = "upper" / "lower"
 
+ChatEmbedRef = OP prop:ChatEmbedProperty CL {return { kind: 'chat-embed-prop', prop } }
 BotRef = OP prop:BotProperty CL {return { kind: 'bot-prop', prop } }
 HistoryRef = OP prop:HistoryProperty CL { return { kind: 'history-prop', prop } }
 
+ChatEmbedProperty "chat-embed-prop" = "." prop:("name"i / "text"i / "i"i) { return prop.toLowerCase() }
 BotProperty "bot-prop" = "." prop:("name"i / Persona / "i"i) { return prop.toLowerCase() }
 HistoryProperty "history-prop" = "." prop:(Message / "dialogue"i / "name"i / "isuser"i / "isbot"i / "i"i) { return prop.toLowerCase() }
 
@@ -106,12 +112,12 @@ Memory "memory" = "memory"i { return "memory" }
 Message "message" = ("msg"i / "message"i / "text"i) { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
-ChatEmbed "chat-embed" = ("chat_embed"i / "ltm"i / "long_memory"i / "longterm_memory"i / "long_term_memory"i) { return "chat_embed" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
 Random "random" = "random"i ":"? WS words:CSV { return { kind: "random", values: words } }
 Roll "roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
 
 // Iterable entities
+ChatEmbed "chat-embed" = ("chat_embed"i / "ltm"i / "long_memory"i / "longterm_memory"i / "long_term_memory"i) { return "chat_embed" }
 Bots "bots" = ( "bots"i / "bot"i ) { return "bots" }
 History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "history" }
 
