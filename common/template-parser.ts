@@ -358,7 +358,7 @@ function getEntities(holder: IterableHolder, opts: TemplateOpts) {
         return true
       })
     case 'chat_embed':
-      return opts.parts.chatEmbeds || []
+      return opts.parts?.chatEmbeds || []
     case 'history':
     default:
       return opts.lines || []
