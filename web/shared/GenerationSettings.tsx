@@ -527,7 +527,7 @@ const PromptSettings: Component<
             disabled={props.disabled}
             showHelp
             inherit={props.inherit}
-            hide={!useAdvanced()}
+            hide={useAdvanced() === 'basic'}
             showTemplates
           />
 
