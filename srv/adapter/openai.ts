@@ -58,7 +58,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
     top_p: gen.topP ?? 1,
-    stop: `\n${handle}:`,
+    stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
   const useChat =
@@ -74,6 +74,29 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   } else {
     body.prompt = prompt
     yield { prompt }
+  }
+
+  const aphrodite = isThirdParty && gen.thirdPartyFormat === 'aphrodite'
+
+  if (aphrodite) {
+    body.best_of = gen.swipesPerGeneration
+    body.n = gen.swipesPerGeneration
+    body.min_p = gen.minP
+    body.top_k = gen.topK
+    body.top_a = gen.topA
+
+    gen.mirostatToggle === true ? (body.mirostat_mode = 2) : (body.mirostat_mode = 0)
+    body.mirostat_tau = gen.mirostatTau
+    body.mirostat_eta = gen.mirostatLR
+
+    body.tfs = gen.tailFreeSampling
+    body.typical_p = gen.typicalP
+    body.repetition_penalty = gen.repetitionPenalty
+    body.ignore_eos = gen.banEosToken
+    body.skip_special_tokens = gen.skipSpecialTokens
+
+    body.eta_cutoff = gen.etaCutoff
+    body.epsilon_cutoff = gen.epsilonCutoff
   }
 
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
@@ -193,6 +216,7 @@ const requestFullCompletion: CompletionGenerator = async function* (
     yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
     return
   }
+
   return resp.body
 }
 

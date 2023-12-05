@@ -493,6 +493,10 @@ export namespace AppSchema {
     earlyStopping?: boolean
     stopSequences?: string[]
     trimStop?: boolean
+    etaCutoff?: number
+    epsilonCutoff?: number
+    swipesPerGeneration?: number
+    mirostatToggle?: boolean
 
     order?: number[]
     disabledSamplers?: number[]

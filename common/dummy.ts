@@ -160,7 +160,6 @@ export function toScenarioBook(
   name: string,
   user: AppSchema.User,
   overrides?: Partial<AppSchema.ScenarioBook>
-
 ): AppSchema.ScenarioBook {
   return {
     kind: 'scenario',
@@ -173,6 +172,6 @@ export function toScenarioBook(
     instructions: '',
     entries: [],
     states: [],
-    ...overrides
+    ...overrides,
   }
 }
