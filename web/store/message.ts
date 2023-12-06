@@ -137,7 +137,9 @@ export const msgStore = createStore<MsgState>(
       msgs.forEach((msg) => {
         const { retries } = msgStore.getState()
         if (msg.retries?.length > 0)
-          msgStore.setState({ retries: { ...retries, [msg._id]: [msg.retries[0]].concat(msg.retries) } })
+          msgStore.setState({
+            retries: { ...retries, [msg._id]: [msg.retries[0]].concat(msg.retries) },
+          })
       })
 
       const msg = msgs[0]

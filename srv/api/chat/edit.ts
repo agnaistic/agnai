@@ -95,7 +95,10 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
 })
 
 export const updateMessageProps = handle(async ({ body, params, userId }) => {
-  assertValid({ imagePrompt: 'string?', msg: 'string?', extras: ['string?'], retries: ['string?'] }, body)
+  assertValid(
+    { imagePrompt: 'string?', msg: 'string?', extras: ['string?'], retries: ['string?'] },
+    body
+  )
 
   const prev = await store.chats.getMessageAndChat(params.id)
 

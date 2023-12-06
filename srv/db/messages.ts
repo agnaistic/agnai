@@ -89,7 +89,7 @@ export async function importMessages(userId: string, messages: NewMessage[]) {
     adapter: msg.adapter,
     createdAt: new Date(start + i).toISOString(),
     updatedAt: new Date(start + i).toISOString(),
-    retries: []
+    retries: [],
   }))
 
   await db('chat-message').insertMany(docs)
@@ -108,7 +108,10 @@ export async function deleteMessages(messageIds: string[]) {
 export async function editMessage(
   id: string,
   update: Partial<
-    Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries'>
+    Pick<
+      AppSchema.ChatMessage,
+      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries'
+    >
   >
 ) {
   const edit: any = { ...update, updatedAt: now() }

@@ -19,7 +19,14 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import { getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
-import { characterStore, ChatRightPane, chatStore, settingStore, toastStore, userStore } from '../../store'
+import {
+  characterStore,
+  ChatRightPane,
+  chatStore,
+  settingStore,
+  toastStore,
+  userStore,
+} from '../../store'
 import { msgStore } from '../../store'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
