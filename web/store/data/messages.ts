@@ -236,6 +236,12 @@ export async function generateResponse(opts: GenerateOpts) {
   //   )
   // }
 
+  if (props.replacing) {
+    const { retries } = msgStore.getState()
+
+    props.replacing.retries = retries[props.replacing._id]
+  }
+
   const request: GenerateRequestV2 = {
     requestId: v4(),
     kind: opts.kind,
@@ -726,6 +732,7 @@ function emptyMsg(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     msg: '',
+    retries: [],
     ...props,
   }
 }

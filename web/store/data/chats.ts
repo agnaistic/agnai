@@ -94,6 +94,7 @@ export async function restartChat(chatId: string) {
         chatId,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        retries: char.alternateGreetings || [],
       },
     ])
   } else {
@@ -197,6 +198,7 @@ export async function importChat(characterId: string, props: ImportChat) {
     userId: msg.userId ? localApi.ID : undefined,
     createdAt: new Date(start + i).toISOString(),
     updatedAt: new Date(start + i).toISOString(),
+    retries: [],
   }))
 
   const nextChats = await localApi.loadItem('chats').then((res) => res.concat(chat))
@@ -311,6 +313,7 @@ export function createNewChat(char: AppSchema.Character, props: NewChat) {
     kind: 'chat-message',
     msg: char.greeting,
     characterId: char._id,
+    retries: char.alternateGreetings || [],
   }
 
   return { chat, msg }

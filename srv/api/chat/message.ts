@@ -409,6 +409,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           adapter,
           meta,
           state: 'retried',
+          retries: body.replacing.retries,
         })
         sendMany(members, {
           type: 'message-retry',
@@ -416,6 +417,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           chatId,
           messageId: body.replacing._id,
           message: responseText,
+          retries: body.replacing.retries,
           actions,
           adapter,
           generate: true,
@@ -609,6 +611,7 @@ function newMessage(
     ooc: boolean
     meta?: any
     event: undefined | AppSchema.EventTypes
+    retries?: string[]
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {
@@ -617,6 +620,7 @@ function newMessage(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kind: 'chat-message',
+    retries: props.retries || [],
     msg: text,
     ...props,
   }

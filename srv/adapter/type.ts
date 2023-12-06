@@ -59,6 +59,7 @@ export type AdapterProps = {
   prompt: string
   parts: PromptParts
   lines: string[]
+  retries?: string[]
   characters?: Record<string, AppSchema.Character>
   impersonate: AppSchema.Character | undefined
   lastMessage?: string

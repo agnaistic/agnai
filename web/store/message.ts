@@ -133,6 +133,13 @@ export const msgStore = createStore<MsgState>(
   return {
     async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
       if (nextLoading) return
+
+      msgs.forEach((msg) => {
+        const { retries } = msgStore.getState()
+        if (msg.retries?.length > 0)
+          msgStore.setState({ retries: { ...retries, [msg._id]: [msg.retries[0]].concat(msg.retries) } })
+      })
+
       const msg = msgs[0]
       if (!msg || msg.first) return
 
@@ -313,7 +320,7 @@ export const msgStore = createStore<MsgState>(
         retrying: replace,
       }
 
-      if (replace) addMsgToRetries(replace)
+      // if (replace) addMsgToRetries(replace)
 
       const res = await msgsApi.generateResponse({ kind: 'retry', messageId })
 
@@ -585,6 +592,7 @@ async function handleImage(chatId: string, image: string, messageId?: string) {
     characterId: activeCharId,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+    retries: [],
   }
 
   chatImages.push(newMsg)
@@ -901,6 +909,7 @@ subscribe(
     imagePrompt: 'string?',
     actions: 'any?',
     extras: ['string?'],
+    retries: ['string?'],
   },
   (body) => {
     const { msgs } = msgStore.getState()
@@ -908,6 +917,7 @@ subscribe(
     const nextMsgs = replace(body.messageId, msgs, {
       imagePrompt: body.imagePrompt || prev?.imagePrompt,
       msg: body.message || prev?.msg,
+      retries: body.retries || prev?.retries,
       actions: body.actions || prev?.actions,
       voiceUrl: undefined,
       extras: body.extras || prev?.extras,
