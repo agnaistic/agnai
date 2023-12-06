@@ -5,7 +5,7 @@ export const defaultChars = {
   Robot: {
     name: 'Robot',
     persona: {
-      kind: 'boostyle',
+      kind: 'attributes',
       attributes: {
         species: ['robot'],
         mind: ['kind', 'compassionate', 'caring', 'tender', 'forgiving', 'enthusiastic'],

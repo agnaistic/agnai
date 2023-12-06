@@ -47,6 +47,10 @@ export type InferenceRequest = {
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
 
+  guidance?: boolean
+  placeholders?: any
+  lists?: Record<string, string[]>
+
   /** Follows the formats:
    * - [service]/[model] E.g. novel/krake-v2
    * - [service] E.g. novel
@@ -163,6 +167,9 @@ export async function createInferenceStream(opts: InferenceRequest) {
     sender: {} as any,
     mappedSettings: mapPresetsToAdapter(settings, settings.service!),
     impersonate: undefined,
+    guidance: opts.guidance,
+    placeholders: opts.placeholders,
+    lists: opts.lists,
   })
 
   return { stream }

@@ -224,7 +224,7 @@ const InputBar: Component<{
         </div>
       </Show>
 
-      <div class="flex items-center">
+      <div class="flex items-center sm:hidden">
         <a
           href="#"
           role="button"

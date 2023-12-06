@@ -133,11 +133,30 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid({ ...validInference, placeholders: 'any?', previous: 'any?' }, body)
+  assertValid(
+    {
+      ...validInference,
+      service: 'string?',
+      placeholders: 'any?',
+      lists: 'any?',
+      previous: 'any?',
+    },
+    body
+  )
+
+  if (!body.service && !userId) {
+    throw errors.BadRequest
+  }
 
   if (userId) {
     const user = await store.users.getUser(userId)
     if (!user) throw errors.Unauthorized
+    if (!body.service) {
+      if (!user.defaultPreset) throw errors.BadRequest
+      const preset = await store.presets.getUserPreset(user.defaultPreset)
+      body.service = preset?.service!
+      body.settings = preset
+    }
     body.user = user
   }
 
@@ -147,12 +166,35 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
       log,
       maxTokens: tokens,
       prompt: text,
-      service: body.service,
+      service: body.service!,
       settings: body.settings,
       guest: userId ? undefined : socketId,
+      guidance: true,
+      placeholders: body.placeholders,
+      lists: body.lists,
     })
 
     return inference.generated
+  }
+
+  if (body.service === 'agnaistic') {
+    const result: any = await inferenceAsync({
+      user: body.user,
+      log,
+      maxTokens: 200,
+      prompt: body.prompt,
+      service: body.service,
+      settings: body.settings,
+      guest: userId ? undefined : socketId,
+      guidance: true,
+      placeholders: body.placeholders,
+      lists: body.lists,
+    })
+
+    if (typeof result.generated === 'string') {
+      result.values = JSON.parse(result.generated)
+    }
+    return result
   }
 
   const result = await runGuidance(body.prompt, {

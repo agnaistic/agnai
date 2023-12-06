@@ -205,9 +205,10 @@ const TextInput: Component<{
           aria-placeholder={placeholder()}
           value={value()}
           class={
-            'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 py-2 ' +
+            'form-field focusable-field text-900 min-h-[40px] w-full rounded-xl px-4 ' +
             (props.class || '')
           }
+          classList={{ 'py-2': !props.class?.includes('py-') }}
           disabled={props.disabled}
           spellcheck={props.spellcheck}
           lang={props.lang}

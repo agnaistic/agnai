@@ -42,6 +42,7 @@ import { CheckoutCancel, CheckoutSuccess } from './pages/Profile/Checkout'
 import { markdown } from './shared/markdown'
 import SoundsPage from './pages/Sounds'
 import PatreonOauth from './pages/Settings/PatreonOauth'
+import { AdventureDetail } from './pages/Modes/Adventure/Detail'
 
 const App: Component = () => {
   const state = userStore()
@@ -61,6 +62,7 @@ const App: Component = () => {
           <Route path="/chats/create/:id?" component={CreateChatForm} />
           <Route path="/chats" component={CharacterChats} />
           <Route path="/chat" component={ChatDetail} />
+          <Route path="/chat/adv/:id" component={AdventureDetail} />
           <Route path="/chat/:id" component={ChatDetail} />
           <Route path={['/info', '/']} component={HomePage} />
           <Route path="/changelog" component={ChangeLog} />

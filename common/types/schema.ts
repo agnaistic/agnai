@@ -326,6 +326,7 @@ export namespace AppSchema {
     scenarioStates?: string[]
 
     treeLeafId?: string
+    values?: Record<string, number | string>
   }
 
   export interface ChatMember {
@@ -460,6 +461,7 @@ export namespace AppSchema {
     isDefaultSub?: boolean
     deletedAt?: string
     tokenizer?: string
+    guidance?: boolean
   }
 
   export interface GenSettings {

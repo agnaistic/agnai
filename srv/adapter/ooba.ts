@@ -198,6 +198,9 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     mirostat_mode: gen.mirostatTau ? 2 : 0,
     mirostat_tau: gen.mirostatTau,
     mirostat_eta: gen.mirostatLR,
+    guidance: opts.guidance,
+    placeholders: opts.placeholders,
+    lists: opts.lists,
   }
   return body
 }
