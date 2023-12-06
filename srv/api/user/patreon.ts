@@ -71,9 +71,15 @@ async function identity(token: string) {
   }
 
   const user: Patreon.User = identity.body.data
-  const tier: Patreon.Tier | undefined = identity.body.included?.find((obj: Patreon.Include) => {
-    if (obj.type !== 'tier') return false
-    return obj.relationships.campaign?.data?.id === config.patreon.campaign_id
+  const tiers: Patreon.Tier[] =
+    identity.body.included?.filter((obj: Patreon.Include) => {
+      if (obj.type !== 'tier') return false
+      return obj.relationships.campaign?.data?.id === config.patreon.campaign_id
+    }) || []
+
+  const tier = tiers.reduce((prev, curr) => {
+    if (!prev) return curr
+    return curr.attributes.amount_cents > prev.attributes.amount_cents ? curr : prev
   })
 
   if (!tier) return { user }
