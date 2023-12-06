@@ -24,7 +24,6 @@ import {
   ChatRightPane,
   chatStore,
   settingStore,
-  toastStore,
   userStore,
 } from '../../store'
 import { msgStore } from '../../store'
