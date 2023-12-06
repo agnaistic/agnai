@@ -132,15 +132,19 @@ export const msgStore = createStore<MsgState>(
 
   return {
     async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
-      if (nextLoading) return
-
       msgs.forEach((msg) => {
         const { retries } = msgStore.getState()
         if (msg.retries?.length > 0)
           msgStore.setState({
-            retries: { ...retries, [msg._id]: [msg.retries[0]].concat(msg.retries) },
+            retries: {
+              ...retries,
+              [msg._id]:
+                msg.retries.length < 3 ? [msg.retries[0]].concat(msg.retries) : msg.retries,
+            },
           })
       })
+
+      if (nextLoading) return
 
       const msg = msgs[0]
       if (!msg || msg.first) return
