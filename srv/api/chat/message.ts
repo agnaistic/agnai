@@ -250,6 +250,17 @@ export const generateMessageV2 = handle(async (req, res) => {
         continue
       }
 
+      if ('gens' in gen) {
+        const gens = gen.gens
+        sendMany(members, {
+          type: 'recieving-gens',
+          messageId: messageId,
+          gens: gens,
+        })
+        generated = gens[0]
+        break
+      }
+
       if ('partial' in gen) {
         const prefix = body.kind === 'continue' ? `${body.continuing.msg} ` : ''
         sendMany(members, {

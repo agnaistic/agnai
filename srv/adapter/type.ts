@@ -91,6 +91,7 @@ export type ModelAdapter = (
   opts: AdapterProps
 ) => AsyncGenerator<
   | string
+  | { gens: string[] }
   | { partial: string }
   | { error: any }
   | { meta: any }

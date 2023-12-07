@@ -416,7 +416,7 @@ const GeneralSettings: Component<
           label="Swipes Per Generation"
           helperText="Number of responses (in swipes) that aphrodite should generate."
           min={1}
-          max={30}
+          max={10}
           step={1}
           value={props.inherit?.swipesPerGeneration || 1}
           disabled={props.disabled}

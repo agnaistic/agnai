@@ -974,6 +974,17 @@ subscribe(
   updateMsgSub
 )
 
+subscribe('recieving-gens', { messageId: 'string', gens: ['string'] }, (body) => {
+  const { retries } = msgStore.getState()
+
+  msgStore.setState({
+    retries: {
+      ...retries,
+      [body.messageId]: body.gens,
+    },
+  })
+})
+
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
   const { msgs, activeChatId, retrying } = msgStore.getState()
 

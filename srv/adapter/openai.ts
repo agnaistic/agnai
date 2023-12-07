@@ -165,6 +165,19 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       return
     }
 
+    if (aphrodite && response?.choices.length! > 1) {
+      let gens: string[] = []
+
+      response?.choices.forEach((choice) => {
+        if ('text' in choice)
+          gens = gens.concat(
+            sanitiseAndTrim(choice.text, prompt, opts.replyAs, opts.characters, members)
+          )
+      })
+
+      yield { gens: gens }
+    }
+
     yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
