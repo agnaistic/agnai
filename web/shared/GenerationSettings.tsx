@@ -911,7 +911,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           helperText="In units of 1e-4; a reasonable value is 3. The main parameter of the special Eta Sampling technique. See [this paper](https://arxiv.org/pdf/2210.15191.pdf) for a description."
           min={0}
           max={20}
-          step={0.01}
+          step={0.0001}
           value={props.inherit?.etaCutoff ?? 0}
           disabled={props.disabled}
           service={props.service}
@@ -924,7 +924,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           helperText="In units of 1e-4; a reasonable value is 3. This sets a probability floor below which tokens are excluded from being sampled."
           min={0}
           max={9}
-          step={0.01}
+          step={0.0001}
           value={props.inherit?.epsilonCutoff ?? 0}
           disabled={props.disabled}
           service={props.service}
