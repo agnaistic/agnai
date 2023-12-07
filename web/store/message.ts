@@ -134,14 +134,18 @@ export const msgStore = createStore<MsgState>(
     async *getNextMessages({ msgs, messageHistory, activeChatId, nextLoading }) {
       msgs.forEach((msg) => {
         const { retries } = msgStore.getState()
-        if (msg.retries?.length > 0)
+        if (msg.retries?.length > 0) {
+          const _retries = msg.retries.includes(msg.msg)
+            ? msg.retries
+            : [msg.msg].concat(msg.retries)
+
           msgStore.setState({
             retries: {
               ...retries,
-              [msg._id]:
-                msg.retries.length < 3 ? [msg.retries[0]].concat(msg.retries) : msg.retries,
+              [msg._id]: _retries.filter((value, index) => _retries.indexOf(value) === index),
             },
           })
+        }
       })
 
       if (nextLoading) return
@@ -217,6 +221,32 @@ export const msgStore = createStore<MsgState>(
 
       extras.splice(position - 1, 1)
       msgStore.editMessageProp(msgId, { extras })
+    },
+
+    async *swapMessage({ msgs, retries }, msgId: string, index: number, onSuccess?: Function) {
+      const msg = msgs.find((m) => m._id === msgId)
+
+      if (!msg) return toastStore.error(`Cannot find message`)
+
+      const _retries = retries
+
+      const original = msg.msg
+      const replacement = retries[msgId][index]
+
+      const originalIndex = _retries[msgId].indexOf(original)
+      // _retries[msgId].slice(index, 1)
+      // _retries[msgId].unshift(original)
+      _retries[msgId][originalIndex] = replacement
+      _retries[msgId][index] = original
+
+      const res = await msgsApi.swapMessage(msg, replacement, _retries[msg._id])
+      if (res.error) {
+        toastStore.error(`Failed to swap message: ${res.error}`)
+      }
+      if (res.result) {
+        yield { retries: _retries }
+        onSuccess?.()
+      }
     },
 
     async *editMessage({ msgs }, msgId: string, msg: string, onSuccess?: Function) {
@@ -326,7 +356,7 @@ export const msgStore = createStore<MsgState>(
         retrying: replace,
       }
 
-      // if (replace) addMsgToRetries(replace)
+      if (replace) addMsgToRetries(replace)
 
       const res = await msgsApi.generateResponse({ kind: 'retry', messageId })
 
@@ -416,18 +446,14 @@ export const msgStore = createStore<MsgState>(
       if ((retries[msgId] ?? []).length > 1) return // already been set
       yield { retries: { ...retries, [msgId]: allGreetings } }
     },
-    async *confirmSwipe({ retries }, msgId: string, position: number, onSuccess?: Function) {
+    async *confirmSwipe({ msgs, retries }, msgId: string, position: number, onSuccess?: Function) {
+      const msg = msgs.find((m) => m._id === msgId)
       const replacement = retries[msgId]?.[position]
-      if (!retries || !replacement) {
+      if (!retries || !replacement || !msg?.msg) {
         return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
       }
 
-      const list = retries[msgId]
-      list.splice(position, 1)
-      const next = [replacement].concat(list)
-
-      yield { retries: { ...retries, [msgId]: next } }
-      msgStore.editMessage(msgId, replacement, onSuccess)
+      msgStore.swapMessage(msgId, position, onSuccess)
     },
     async deleteMessages({ msgs, activeChatId }, fromId: string, deleteOne?: boolean) {
       const index = msgs.findIndex((m) => m._id === fromId)
@@ -907,6 +933,21 @@ subscribe('messages-deleted', { ids: ['string'] }, (body) => {
   msgStore.setState({ msgs: msgs.filter((msg) => !ids.has(msg._id)) })
 })
 
+const updateMsgSub = (body: any) => {
+  const { msgs } = msgStore.getState()
+  const prev = findOne(body.messageId, msgs)
+  const nextMsgs = replace(body.messageId, msgs, {
+    imagePrompt: body.imagePrompt || prev?.imagePrompt,
+    msg: body.message || prev?.msg,
+    retries: body.retries || prev?.retries,
+    actions: body.actions || prev?.actions,
+    voiceUrl: undefined,
+    extras: body.extras || prev?.extras,
+  })
+
+  msgStore.setState({ msgs: nextMsgs })
+}
+
 subscribe(
   'message-edited',
   {
@@ -917,20 +958,20 @@ subscribe(
     extras: ['string?'],
     retries: ['string?'],
   },
-  (body) => {
-    const { msgs } = msgStore.getState()
-    const prev = findOne(body.messageId, msgs)
-    const nextMsgs = replace(body.messageId, msgs, {
-      imagePrompt: body.imagePrompt || prev?.imagePrompt,
-      msg: body.message || prev?.msg,
-      retries: body.retries || prev?.retries,
-      actions: body.actions || prev?.actions,
-      voiceUrl: undefined,
-      extras: body.extras || prev?.extras,
-    })
+  updateMsgSub
+)
 
-    msgStore.setState({ msgs: nextMsgs })
-  }
+subscribe(
+  'message-swapped',
+  {
+    messageId: 'string',
+    message: 'string?',
+    imagePrompt: 'string?',
+    actions: 'any?',
+    extras: ['string?'],
+    retries: ['string?'],
+  },
+  updateMsgSub
 )
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
@@ -1027,6 +1068,8 @@ function addMsgToRetries(msg: Pick<AppSchema.ChatMessage, '_id' | 'msg'>) {
 
   if (!retries[msg._id]) {
     retries[msg._id] = []
+  } else if (retries[msg._id].includes(msg.msg)) {
+    return
   }
 
   const next = retries[msg._id]

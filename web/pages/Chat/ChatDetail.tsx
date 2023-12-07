@@ -19,13 +19,7 @@ import { ADAPTER_LABELS } from '../../../common/adapters'
 import Button from '../../shared/Button'
 import { CharacterPill } from '../../shared/CharacterPill'
 import { getMaxChatWidth, setComponentPageTitle } from '../../shared/util'
-import {
-  characterStore,
-  ChatRightPane,
-  chatStore,
-  settingStore,
-  userStore,
-} from '../../store'
+import { characterStore, ChatRightPane, chatStore, settingStore, userStore } from '../../store'
 import { msgStore } from '../../store'
 import InputBar from './components/InputBar'
 import Message from './components/Message'
@@ -341,7 +335,11 @@ const ChatDetail: Component = () => {
   const cancelSwipe = () => setSwipe(0)
 
   const confirmSwipe = (msgId: string) => {
-    msgStore.confirmSwipe(msgId, swipe(), () => setSwipe(0))
+    msgStore.confirmSwipe(msgId, swipe(), () => {
+      setSwipe(0)
+      const _retries = msgStore.getState().retries
+      retries()!.list = _retries[msgId]
+    })
   }
 
   const indexOfLastRPMessage = createMemo(() => {
