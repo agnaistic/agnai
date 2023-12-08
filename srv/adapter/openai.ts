@@ -71,7 +71,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     try {
       const res = await fetch(`${base.url}/models`, { headers: headers })
       const json = await res.json()
-  
+
       oaiModel = json.data[0].root
     } catch (ex) {
       console.error(ex)

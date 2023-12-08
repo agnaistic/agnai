@@ -722,7 +722,7 @@ subscribe(
     actions: [{ emote: 'string', action: 'string' }, '?'],
   },
   async (body) => {
-    const { retrying, msgs, activeChatId } = msgStore.getState()
+    const { retrying, msgs, activeChatId, retries } = msgStore.getState()
     const { characters } = getStore('character').getState()
     const { active } = getStore('chat').getState()
 
@@ -747,6 +747,9 @@ subscribe(
     })
 
     await Promise.resolve()
+
+    if (retries[body.messageId].includes(body.message))
+      msgStore.swapMessage(body.messageId, retries[body.messageId].indexOf(body.message))
 
     addMsgToRetries({ _id: body.messageId, msg: body.message })
 
@@ -975,7 +978,13 @@ subscribe(
 )
 
 subscribe('recieving-gens', { messageId: 'string', gens: ['string'] }, (body) => {
-  const { retries } = msgStore.getState()
+  const { retries, msgs } = msgStore.getState()
+
+  const prev = msgs.find((m) => m._id === body.messageId)
+  if (prev)
+    msgStore.editMessageProp(body.messageId, {
+      retries: body.gens,
+    })
 
   msgStore.setState({
     retries: {
@@ -986,18 +995,13 @@ subscribe('recieving-gens', { messageId: 'string', gens: ['string'] }, (body) =>
 })
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
-  const { msgs, activeChatId, retrying, retries } = msgStore.getState()
+  const { msgs, activeChatId, retrying } = msgStore.getState()
 
   const replace = msgs.find((msg) => msg._id === body.messageId)
 
   if (activeChatId !== body.chatId) return
   if (retrying) return
   if (!replace) return
-
-  if (retries[body.messageId].includes(replace.msg)) {
-    msgStore.swapMessage(body.messageId, retries[body.messageId].indexOf(replace.msg))
-    return
-  }
 
   msgStore.setState({
     partial: '',

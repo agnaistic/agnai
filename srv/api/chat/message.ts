@@ -233,6 +233,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   log.setBindings({ adapter })
 
   let generated = ''
+  let retries: string[] = []
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
@@ -257,6 +258,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           messageId: messageId,
           gens: gens,
         })
+        retries = gens
         generated = gens[0]
         break
       }
@@ -389,6 +391,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         ooc: false,
         actions,
         meta,
+        retries: retries,
         event: undefined,
       })
 
@@ -444,6 +447,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           actions,
           ooc: false,
           meta,
+          retries: retries,
           event: undefined,
         })
         sendMany(members, {
