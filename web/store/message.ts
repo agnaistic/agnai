@@ -986,13 +986,18 @@ subscribe('recieving-gens', { messageId: 'string', gens: ['string'] }, (body) =>
 })
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
-  const { msgs, activeChatId, retrying } = msgStore.getState()
+  const { msgs, activeChatId, retrying, retries } = msgStore.getState()
 
   const replace = msgs.find((msg) => msg._id === body.messageId)
 
   if (activeChatId !== body.chatId) return
   if (retrying) return
   if (!replace) return
+
+  if (retries[body.messageId].includes(replace.msg)) {
+    msgStore.swapMessage(body.messageId, retries[body.messageId].indexOf(replace.msg))
+    return
+  }
 
   msgStore.setState({
     partial: '',
