@@ -60,6 +60,7 @@ export type ChatRightPane =
   | 'ui'
   | 'chat-settings'
   | 'memory'
+  | 'other'
 
 export type ImportChat = {
   name: string

@@ -1,6 +1,6 @@
-import { Component, JSX, Match, Show, Switch, createMemo } from 'solid-js'
+import { Component, JSX, Match, Show, Switch, createEffect, createMemo } from 'solid-js'
 import Loading from '../Loading'
-import { settingStore, userStore } from '/web/store'
+import { chatStore, settingStore, userStore } from '/web/store'
 import { getHeaderBg } from '/web/pages/Chat/helpers'
 import { usePane, useResizeObserver } from '../hooks'
 import Slot from '../Slot'
@@ -13,8 +13,14 @@ export const ModeDetail: Component<{
 }> = (props) => {
   const cfg = settingStore()
   const user = userStore()
+  const mode = usePane()
 
-  const pane = usePane()
+  createEffect(() => {
+    chatStore.option('pane', props.pane ? 'other' : undefined)
+  })
+
+  const width = createMemo(() => user.ui.chatWidth || 'fill')
+
   const slots = useResizeObserver()
 
   let slotContainer: HTMLDivElement
@@ -32,10 +38,12 @@ export const ModeDetail: Component<{
       <Show when={!props.loading}>
         <main class="mx-auto flex w-full justify-between gap-4">
           <div
-            class="chat-detail mx-auto flex flex-col gap-1 pb-1 xs:flex sm:gap-2 sm:py-2"
+            class="chat-detail flex flex-col gap-1 pb-1 xs:flex sm:gap-2 sm:py-2"
             classList={{
-              'w-full max-w-3xl': user.ui.chatWidth === 'narrow',
-              'w-full max-w-full': user.ui.chatWidth === 'full',
+              // Chat Width
+              'w-full max-w-full': !!props.pane || user.ui.chatWidth === 'full',
+              'w-full max-w-3xl': !props.pane && user.ui.chatWidth === 'narrow',
+              // Chat Margin
               'xs:mr-auto mx-auto': !!props.pane,
               'mx-auto': !props.pane,
             }}
@@ -51,9 +59,9 @@ export const ModeDetail: Component<{
             <section
               class="flex w-full flex-row justify-end gap-1 overflow-y-auto"
               classList={{
-                'justify-center': !!props.pane && pane() === 'popup',
+                'justify-center': !props.pane || mode() === 'popup',
                 'justify-end gap-1 justify-self-center flex-row flex':
-                  !!props.pane && pane() === 'pane',
+                  !!props.pane && mode() === 'pane',
               }}
             >
               <section class="flex h-full w-full flex-col justify-end gap-2">
@@ -72,7 +80,19 @@ export const ModeDetail: Component<{
                     </Match>
                   </Switch>
                 </div>
-                {props.children}
+                <section
+                  data-messages
+                  class="mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto"
+                  classList={{
+                    'max-w-6xl': width() === 'xl',
+                    'max-w-7xl': width() === '2xl',
+                    'max-w-8xl': width() === '3xl',
+                    'max-w-none': width() === 'fill',
+                    'max-w-5xl': width() === 'fill' || width() === 'narrow' || !width(),
+                  }}
+                >
+                  {props.children}
+                </section>
               </section>
               {props.pane}
             </section>

@@ -201,6 +201,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     guidance: opts.guidance,
     placeholders: opts.placeholders,
     lists: opts.lists,
+    previous: opts.previous,
   }
   return body
 }

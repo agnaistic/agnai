@@ -49,6 +49,7 @@ export type InferenceRequest = {
 
   guidance?: boolean
   placeholders?: any
+  previous?: any
   lists?: Record<string, string[]>
 
   /** Follows the formats:
@@ -168,6 +169,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
     mappedSettings: mapPresetsToAdapter(settings, settings.service!),
     impersonate: undefined,
     guidance: opts.guidance,
+    previous: opts.previous,
     placeholders: opts.placeholders,
     lists: opts.lists,
   })

@@ -171,6 +171,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
       guest: userId ? undefined : socketId,
       guidance: true,
       placeholders: body.placeholders,
+      previous: body.previous,
       lists: body.lists,
     })
 
@@ -188,10 +189,12 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
       guest: userId ? undefined : socketId,
       guidance: true,
       placeholders: body.placeholders,
+      previous: body.previous,
       lists: body.lists,
     })
 
     if (typeof result.generated === 'string') {
+      console.log(result.generated)
       result.values = JSON.parse(result.generated)
     }
     return result

@@ -326,7 +326,6 @@ export namespace AppSchema {
     scenarioStates?: string[]
 
     treeLeafId?: string
-    values?: Record<string, number | string>
   }
 
   export interface ChatMember {
@@ -360,6 +359,7 @@ export namespace AppSchema {
     meta?: any
     event?: EventTypes | undefined
     state?: string
+    values?: Record<string, string | number | boolean>
   }
 
   export type EventTypes = 'world' | 'character' | 'hidden' | 'ooc'
