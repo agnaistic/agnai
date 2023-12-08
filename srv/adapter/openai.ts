@@ -45,7 +45,38 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
-  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+
+  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const apiKey = useThirdPartyPassword
+    ? user.thirdPartyPassword
+    : !isThirdParty
+    ? user.oaiKey
+    : null
+
+  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
+
+  const headers: any = {
+    'Content-Type': 'application/json',
+  }
+
+  if (bearer) {
+    headers.Authorization = bearer
+  }
+
+  const aphrodite = isThirdParty && gen.thirdPartyFormat === 'aphrodite'
+
+  let oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
+
+  if (aphrodite) {
+    try {
+      const res = await fetch(`${base.url}/models`, { headers: headers })
+      const json = await res.json()
+  
+      oaiModel = json.data[0].root
+    } catch (ex) {
+      console.error(ex)
+    }
+  }
 
   const maxResponseLength =
     opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
@@ -76,8 +107,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { prompt }
   }
 
-  const aphrodite = isThirdParty && gen.thirdPartyFormat === 'aphrodite'
-
   if (aphrodite) {
     body.best_of = gen.swipesPerGeneration
     body.n = gen.swipesPerGeneration
@@ -100,22 +129,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   }
 
   if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
-
-  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
-  const apiKey = useThirdPartyPassword
-    ? user.thirdPartyPassword
-    : !isThirdParty
-    ? user.oaiKey
-    : null
-  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
-
-  const headers: any = {
-    'Content-Type': 'application/json',
-  }
-
-  if (bearer) {
-    headers.Authorization = bearer
-  }
 
   log.debug(body, 'OpenAI payload')
 

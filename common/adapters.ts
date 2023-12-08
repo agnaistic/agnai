@@ -322,10 +322,10 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite'],
+  thirdPartyModel: ['openai', 'openai-chat'],
   claudeModel: ['claude'],
   novelModel: ['novel'],
-  oaiModel: ['openai', 'openai-chat', 'aphrodite'],
+  oaiModel: ['openai', 'openai-chat'],
   frequencyPenalty: ['openai', 'kobold', 'novel', 'agnaistic', 'openai-chat', 'aphrodite'],
   presencePenalty: ['openai', 'kobold', 'novel', 'openai-chat', 'aphrodite'],
   streamResponse: [
