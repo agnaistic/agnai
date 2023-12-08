@@ -912,7 +912,10 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
             <>
               In units of 1e-4; a reasonable value is 3. The main parameter of the special Eta
               Sampling technique. See {` `}
-              <A class="link" href="https://arxiv.org/pdf/2210.15191.pdf">this paper</A> for a description.
+              <A class="link" href="https://arxiv.org/pdf/2210.15191.pdf">
+                this paper
+              </A>{' '}
+              for a description.
             </>
           }
           min={0}
