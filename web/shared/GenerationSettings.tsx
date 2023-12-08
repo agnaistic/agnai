@@ -41,7 +41,7 @@ import Accordian from './Accordian'
 import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
 import { getServiceTempConfig } from './adapter'
 import Tabs from './Tabs'
-import { useSearchParams } from '@solidjs/router'
+import { A, useSearchParams } from '@solidjs/router'
 import { PhraseBias, StoppingStrings } from './PhraseBias'
 import { AgnaisticSettings } from '../pages/Settings/Agnaistic'
 import { templates } from '/common/presets/templates'
@@ -908,7 +908,13 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
         <RangeInput
           fieldName="etaCutoff"
           label="ETA Cutoff"
-          helperText="In units of 1e-4; a reasonable value is 3. The main parameter of the special Eta Sampling technique. See [this paper](https://arxiv.org/pdf/2210.15191.pdf) for a description."
+          helperText={
+            <>
+              In units of 1e-4; a reasonable value is 3. The main parameter of the special Eta
+              Sampling technique. See {` `}
+              <A href="https://arxiv.org/pdf/2210.15191.pdf">this paper</A> for a description.
+            </>
+          }
           min={0}
           max={20}
           step={0.0001}
