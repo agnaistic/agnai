@@ -461,7 +461,7 @@ export namespace AppSchema {
     isDefaultSub?: boolean
     deletedAt?: string
     tokenizer?: string
-    guidance?: boolean
+    guidanceCapable?: boolean
   }
 
   export interface GenSettings {

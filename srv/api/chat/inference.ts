@@ -2,7 +2,12 @@ import { StatusError, errors, wrap } from '../wrap'
 import { sendMany } from '../ws'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { assertValid } from '/common/valid'
-import { InferenceRequest, createInferenceStream, inferenceAsync } from '/srv/adapter/generate'
+import {
+  InferenceRequest,
+  createInferenceStream,
+  guidanceAsync,
+  inferenceAsync,
+} from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
 import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
@@ -43,6 +48,10 @@ const validInferenceApi = {
   stop: ['string'],
   cfg_scale: 'number?',
   cfg_oppose: 'string?',
+  guidance: 'boolean?',
+  placeholders: 'any?',
+  lists: 'any?',
+  previous: 'any?',
 } as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
@@ -160,52 +169,42 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     body.user = user
   }
 
-  const infer = async (text: string, tokens?: number) => {
-    const inference = await inferenceAsync({
-      user: body.user,
-      log,
-      maxTokens: tokens,
-      prompt: text,
-      service: body.service!,
-      settings: body.settings,
-      guest: userId ? undefined : socketId,
-      guidance: true,
-      placeholders: body.placeholders,
-      previous: body.previous,
-      lists: body.lists,
-    })
-
-    return inference.generated
-  }
-
-  if (body.service === 'agnaistic') {
-    const result: any = await inferenceAsync({
-      user: body.user,
-      log,
-      maxTokens: 200,
-      prompt: body.prompt,
-      service: body.service,
-      settings: body.settings,
-      guest: userId ? undefined : socketId,
-      guidance: true,
-      placeholders: body.placeholders,
-      previous: body.previous,
-      lists: body.lists,
-    })
-
-    if (typeof result.generated === 'string') {
-      console.log(result.generated)
-      result.values = JSON.parse(result.generated)
-    }
-    return result
-  }
-
-  const result = await runGuidance(body.prompt, {
-    infer,
+  const props: InferenceRequest = {
+    user: body.user,
+    log,
+    prompt: body.prompt,
+    service: body.service!,
+    settings: body.settings,
+    guest: userId ? undefined : socketId,
+    guidance: true,
     placeholders: body.placeholders,
     previous: body.previous,
-  })
+    lists: body.lists,
+  }
+
+  const result = await guidanceAsync(props)
   return result
+
+  // if (body.service === 'agnaistic') {
+  //   const result: any = await inferenceAsync({ ...props, maxTokens: 200 })
+
+  //   if (typeof result.generated === 'string') {
+  //     result.values = JSON.parse(result.generated)
+  //   }
+  //   return result
+  // }
+
+  // const infer = async (text: string, tokens?: number) => {
+  //   const inference = await inferenceAsync({ ...props, prompt: text, maxTokens: tokens })
+  //   return inference.generated
+  // }
+
+  // const result = await runGuidance(body.prompt, {
+  //   infer,
+  //   placeholders: body.placeholders,
+  //   previous: body.previous,
+  // })
+  // return result
 })
 
 export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
@@ -338,6 +337,9 @@ export const inferenceApi = wrap(async (req, res) => {
     log: req.log,
     service: preset.service!,
     settings,
+    placeholders: body.placeholders,
+    previous: body.previous,
+    lists: body.lists,
   }
 
   await obtainLock(req.userId, 20)

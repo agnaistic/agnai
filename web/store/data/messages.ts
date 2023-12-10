@@ -115,7 +115,8 @@ export async function guidance<T = any>({
   maxTokens,
   settings,
   previous,
-}: InferenceOpts & { previous?: any }): Promise<T> {
+  lists,
+}: InferenceOpts & { previous?: any; lists?: Record<string, string[]> }): Promise<T> {
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -123,16 +124,17 @@ export async function guidance<T = any>({
     throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const fallback = service === 'default' ? getUserPreset(user.defaultPreset) : undefined
+  const fallback = service === 'default' || !service ? getUserPreset(user.defaultPreset) : undefined
 
   const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
     settings: settings || fallback,
     prompt,
-    service,
+    service: service || settings?.service || fallback?.service,
     maxTokens,
     previous,
+    lists,
   })
 
   if (res.error) throw new Error(res.error)

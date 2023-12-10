@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
-import { createTextStreamV2, inferenceAsync } from '../../adapter/generate'
+import { createTextStreamV2, getResponseEntities, inferenceAsync } from '../../adapter/generate'
 import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
@@ -224,8 +224,9 @@ export const generateMessageV2 = handle(async (req, res) => {
   })
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter, ...entities } = await createTextStreamV2(
-    { ...body, chat, replyAs, impersonate, requestId },
+  const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
+  const { stream, adapter, ...metadata } = await createTextStreamV2(
+    { ...body, chat, replyAs, impersonate, requestId, entities },
     log
   )
 
@@ -233,7 +234,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   let generated = ''
   let error = false
-  let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
+  let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
   const messageId =
     body.kind === 'retry'
@@ -332,9 +333,9 @@ export const generateMessageV2 = handle(async (req, res) => {
       const res = await inferenceAsync({
         prompt: text,
         log,
-        service: entities.settings.service!,
-        settings: entities.settings,
-        user: entities.user,
+        service: metadata.settings.service!,
+        settings: metadata.settings,
+        user: metadata.user,
       })
       return res.generated
     }

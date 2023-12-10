@@ -34,7 +34,7 @@ Variable "variable"	= "[" _ val:Char+ pipes:Pipe* "]" {
     return result
 }
 
-Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / PromptPipe / BooleanPipe) _ { return pipe }
+Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / PromptPipe / BooleanPipe / RandomPipe) _ { return pipe }
 
 TokensPipe "max-tokens" = "tokens"i _ "=" _ value:Number { return { tokens: value } }
 TempPipe "temp" = "temp"i _ "=" _ value:Number { return { temp: value } }
@@ -43,6 +43,7 @@ StopPipe "stop" = "stop"i _ "=" _ value:(Char / Symbols)+  { return { stop: valu
 OptionsPipe "options" = ("from"i / "options"i / "opts"i ) _ "=" _ list:Char+ { return { options: list.join('') } }
 PromptPipe "prompt" = ("prompt"i) _ "=" _ value:(Char / Symbols / " ")+ { return { prompt: value.join('') } }
 BooleanPipe "boolean" = ("boolean"i / "bool"i) { return { boolean: true } }
+RandomPipe "options" = ("random"i / "rand"i) _ "=" _ list:Char+ { return { random: list.join('') } }
 
 Threshold "threshold" = _ kind:("gte"i / "gt"i / "lte"i / "lt"i / "min"i / "max"i) _ "=" _ neg:"-"? value:Number _ {
 	let num = +value

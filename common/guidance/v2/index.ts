@@ -13,8 +13,10 @@ type VarNode = {
   temp?: number
   stop?: string[]
   num?: { min?: number; max?: number }
-  options?: string
   boolean?: boolean
+
+  options?: string
+  random?: string
 }
 
 type Pipe = { type: 'sentence' } | { type: 'words'; value: number }
