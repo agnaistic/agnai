@@ -3,6 +3,8 @@ import {
   TextToSpeechHandler,
   TextToSpeechRequest,
   VoiceListResponse,
+  VoiceModelListResponse,
+  VoiceModelsListRequest,
   VoicesListRequest,
 } from './types'
 import { AppLog } from '../logger'
@@ -28,6 +30,23 @@ export async function getVoicesList(
   try {
     return { voices: await service.getVoices(user, guestId) }
   } catch (ex: any) {
+    log.error({ err: ex }, 'Failed to retrieve voice list')
+    throw new StatusError(ex.message, 500)
+  }
+}
+
+export async function getModelsList(
+  { user, ttsService }: VoiceModelsListRequest,
+  log: AppLog,
+  guestId?: string
+): Promise<VoiceModelListResponse> {
+  const service = getVoiceService(ttsService)
+  if (!service) return { models: [] }
+
+  try {
+    return { models: await service.getModels(user, guestId) }
+  } catch (ex: any) {
+    log.error({ err: ex }, 'Failed to retrieve model list')
     throw new StatusError(ex.message, 500)
   }
 }

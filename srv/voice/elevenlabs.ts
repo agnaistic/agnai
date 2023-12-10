@@ -1,5 +1,5 @@
 import needle from 'needle'
-import { TextToSpeechAdapter, VoiceListResponse } from './types'
+import { TextToSpeechAdapter, VoiceListResponse, VoiceModelListResponse } from './types'
 import { decryptText } from '../db/util'
 import { AppSchema } from '../../common/types/schema'
 import { errors } from '../api/wrap'
@@ -29,6 +29,12 @@ type ElevenLabsVoicesListResponse = {
   voices: { voice_id: string; name: string; preview_url: string }[]
 }
 
+type ElevenLabsModelsListResponse = {
+  model_id: string
+  name: string
+  can_do_text_to_speech: boolean
+}[]
+
 const handleElevenLabsVoicesList = async (
   user: AppSchema.User,
   guestId: string | undefined
@@ -53,6 +59,35 @@ const handleElevenLabsVoicesList = async (
       id: voice.voice_id,
       label: voice.name,
       previewUrl: voice.preview_url,
+    })) ?? []
+  )
+}
+
+const handleElevenLabsModelsList = async (
+  user: AppSchema.User,
+  guestId: string | undefined
+): Promise<VoiceModelListResponse['models']> => {
+  const key = getKey(user, guestId)
+  const result = await needle('get', `${baseUrl}/models`, {
+    headers: {
+      'xi-api-key': key,
+      accept: 'application/json',
+    },
+  })
+  if (result.statusCode !== 200) {
+    throw new Error(
+      result.body.message ||
+        result.body.details?.message ||
+        `Error ${result.statusCode}: ${JSON.stringify(result.body)}`
+    )
+  }
+  const body = result.body as ElevenLabsModelsListResponse
+  const voiceModels = body.filter((model) => model.can_do_text_to_speech === true)
+
+  return (
+    voiceModels?.map((model) => ({
+      id: model.model_id,
+      label: model.name,
     })) ?? []
   )
 }
@@ -114,5 +149,6 @@ function getKey(user: AppSchema.User, guestId: string | undefined) {
 export const elevenlabsHandler = {
   validator,
   getVoices: handleElevenLabsVoicesList,
+  getModels: handleElevenLabsModelsList,
   generateVoice: handleElevenLabsTextToSpeech,
 }

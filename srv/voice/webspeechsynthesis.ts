@@ -13,6 +13,9 @@ export const webSpeechSynthesisHandler = {
   getVoices: () => {
     throw new StatusError('Web Speech Synthesis can only be generated in the browser', 400)
   },
+  getModels: () => {
+    throw new StatusError('Web Speech Synthesis can only be generated in the browser', 400)
+  },
   generateVoice: () => {
     throw new StatusError('Web Speech Synthesis can only be generated in the browser', 400)
   },
