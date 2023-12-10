@@ -4,6 +4,7 @@ exports[`Placeholder tests will not include duplicates in {{all_personalities}} 
 Object {
   "inserts": Map {},
   "length": undefined,
+  "linesAddedCount": 0,
   "parsed": "OtherBot replies a lot
 
 MainChar's personality: MainCharacter talks a lot",
