@@ -67,6 +67,7 @@ type MessageProps = {
   showHiddenEvents?: boolean
   textBeforeGenMore?: string
   voice?: VoiceState
+  firstInserted?: boolean
 }
 
 const anonNames = new Map<string, number>()
@@ -145,9 +146,12 @@ const Message: Component<MessageProps> = (props) => {
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
 
+  const contextWindowIndicatorClass = () =>
+    props.firstInserted && user.ui.contextWindowLine ? 'first-in-ctx-window' : ''
+
   return (
     <div
-      class="flex w-full rounded-md px-2 py-2 pr-2 sm:px-4"
+      class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4 ' + contextWindowIndicatorClass()}
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
@@ -414,7 +418,7 @@ const MessageOptions: Component<{
     <div class="flex items-center gap-3 text-sm">
       <Show when={props.chatEditing && props.msg.characterId && props.msg.adapter !== 'image'}>
         <div
-          onClick={() => !props.partial && chatStore.showPrompt(props.msg)}
+          onClick={() => !props.partial && chatStore.computePrompt(props.msg, true)}
           class="icon-button prompt-btn"
           classList={{ disabled: !!props.partial }}
         >

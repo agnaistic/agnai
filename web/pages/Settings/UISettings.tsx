@@ -131,6 +131,14 @@ const UISettings: Component = () => {
         onChange={(ev) => userStore.saveUI({ mobileSendOnEnter: ev })}
       />
 
+      <Toggle
+        fieldName="contextWindowLine"
+        label="Show context window delineator"
+        helperText="Shows a dotted line above which messages are no longer inserted in the prompt"
+        value={state.ui.contextWindowLine}
+        onChange={(ev) => userStore.saveUI({ contextWindowLine: ev })}
+      />
+
       <Select
         fieldName="chatMode"
         label="View Mode"

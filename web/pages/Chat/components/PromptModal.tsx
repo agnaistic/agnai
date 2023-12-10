@@ -27,7 +27,7 @@ const PromptModal: Component = () => {
 
   return (
     <Modal
-      show={!!state.prompt}
+      show={!!state.prompt?.shown}
       close={chatStore.closePrompt}
       title="Message Prompt"
       maxWidth="half"

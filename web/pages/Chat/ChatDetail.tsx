@@ -78,6 +78,7 @@ const ChatDetail: Component = () => {
     loaded: s.loaded,
     opts: s.opts,
     ready: s.allChars.list.length > 0 && (s.active?.char?._id || 'no-id') in s.allChars.map,
+    linesAddedCount: s.prompt?.template.linesAddedCount,
   }))
 
   const msgs = msgStore((s) => ({
@@ -132,6 +133,7 @@ const ChatDetail: Component = () => {
   const [showOpts, setShowOpts] = createSignal(false)
   const [ooc, setOoc] = createSignal<boolean>()
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
+  const [linesAddedCount, setLinesAddedCount] = createSignal<number | undefined>(undefined)
 
   const chatMsgs = createMemo(() => {
     const self = user.profile
@@ -163,6 +165,16 @@ const ChatDetail: Component = () => {
       if (msg.event === 'hidden' && !doShowHiddenEvents) return false
       return true
     })
+  })
+
+  createEffect(() => {
+    chatStore.computePrompt(msgs.msgs[msgs.msgs.length - 1], false)
+    setLinesAddedCount(chats.linesAddedCount)
+  })
+
+  const firstInsertedMsgIndex = createMemo(() => {
+    const linesAdded = linesAddedCount()
+    if (linesAdded) return chatMsgs().length - 1 - linesAdded
   })
 
   createEffect(() => {
@@ -588,6 +600,7 @@ const ChatDetail: Component = () => {
                                 ? msgs.speaking.status
                                 : undefined
                             }
+                            firstInserted={i() === firstInsertedMsgIndex()}
                           >
                             {isOwner() &&
                               retries()?.list?.length! > 1 &&

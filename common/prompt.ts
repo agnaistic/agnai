@@ -36,9 +36,11 @@ export type Prompt = {
   template: {
     parsed: string
     inserts: Map<number, string>
+    linesAddedCount: number
   }
   lines: string[]
   parts: PromptParts
+  shown: boolean
 }
 
 export type PromptConfig = {
@@ -584,7 +586,7 @@ export async function fillPromptWithLines(
   lines: string[],
   inserts: Map<number, string> = new Map(),
   lowpriority: { idToReplace: string; content: string }[] = []
-): Promise<{ adding: string[]; unusedTokens: number }> {
+) {
   const insertsCost = await encoder([...inserts.values()].join(' '))
   const tokenLimitMinusInserts = tokenLimit - insertsCost
   const ambleWithoutLowPriorityPlaceholders = lowpriority.reduce(
@@ -607,6 +609,7 @@ export async function fillPromptWithLines(
     adding.push(line)
     linesAddedCount++
   }
+
   // We don't omit inserts with depth > message count in context size
   // instead we put them at the top of the conversation history
   const remainingInserts = insertsDeeperThanConvoHistory(inserts, linesAddedCount)
@@ -615,8 +618,7 @@ export async function fillPromptWithLines(
   }
 
   const unusedTokens = tokenLimitMinusInserts - count
-
-  return { adding, unusedTokens }
+  return { adding, unusedTokens, linesAddedCount }
 }
 
 export function insertsDeeperThanConvoHistory(

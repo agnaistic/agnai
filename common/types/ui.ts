@@ -66,6 +66,7 @@ export type UISettings = {
   chatWidth?: ChatWidth
   trimSentences?: boolean
   logPromptsToBrowserConsole: boolean
+  contextWindowLine: boolean
 
   dark: CustomUI
   light: CustomUI
@@ -117,6 +118,7 @@ export const defaultUIsettings: UISettings = {
   chatWidth: 'full',
   chatAvatarMode: true,
   logPromptsToBrowserConsole: false,
+  contextWindowLine: false,
   imageWrap: false,
 
   light: {
