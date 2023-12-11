@@ -157,7 +157,7 @@ function getResponseText(resp: any, log: AppLog) {
 export async function getOpenRouterModels(): Promise<OpenRouterModel[]> {
   if (modelCache) return modelCache
 
-  return await fetchOpenRouterModels()
+  return fetchOpenRouterModels()
 }
 
 async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
