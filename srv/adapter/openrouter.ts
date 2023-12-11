@@ -157,6 +157,10 @@ function getResponseText(resp: any, log: AppLog) {
 export async function getOpenRouterModels(): Promise<OpenRouterModel[]> {
   if (modelCache) return modelCache
 
+  return fetchOpenRouterModels()
+}
+
+async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
   try {
     const res = await needle('get', 'https://openrouter.ai/api/v1/models', {}, { json: true })
     if (res.body) {
@@ -169,5 +173,5 @@ export async function getOpenRouterModels(): Promise<OpenRouterModel[]> {
   }
 }
 
-setInterval(getOpenRouterModels, 60000 * 2)
-getOpenRouterModels()
+setInterval(fetchOpenRouterModels, 60000 * 2)
+fetchOpenRouterModels()
