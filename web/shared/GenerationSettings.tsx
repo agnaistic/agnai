@@ -655,6 +655,19 @@ const PromptSettings: Component<
             />
           </div>
         </Card>
+        <Card class="flex flex-col gap-4">
+          <h3 class="text-lg">Miscellaneous prompts</h3>
+          <TextInput
+            fieldName="continueMessagePrompt"
+            label="'Generate More' prompt"
+            helperText={<>Prompt appended to input when using 'Generate More'</>}
+            placeholder="&#10;{{char}}:"
+            isMultiline
+            value={props.inherit?.continueMessagePrompt ?? '\n{{char}}:'}
+            disabled={props.disabled}
+            class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
+          />
+        </Card>
       </div>
 
       <div classList={{ hidden: props.tab !== 'Memory' }}>

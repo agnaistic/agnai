@@ -7,6 +7,7 @@ import { defaultPresets } from '../../common/presets'
 import {
   SAMPLE_CHAT_PREAMBLE,
   BOT_REPLACE,
+  SELF_REPLACE,
   injectPlaceholders,
   ensureValidTemplate,
   START_REPLACE,
@@ -283,7 +284,7 @@ async function createClaudePrompt(opts: AdapterProps) {
     })
   ).parsed
 
-  const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
+  const prefill = opts.gen.prefill ? opts.gen.prefill : ''
   const prefillCost = await encoder()(prefill)
 
   const maxBudget =
@@ -347,21 +348,18 @@ async function createClaudePrompt(opts: AdapterProps) {
     messages.push(ujb)
   }
 
-  const continueAddon =
-    opts.kind === 'continue'
-      ? `\n\nHuman: <system_note>Continue ${replyAs.name}'s reply.</system_note>`
-      : ''
+  const continuePost = (opts.gen.continueMessagePrompt ?? '\n{{char}}:')
+    .replace(BOT_REPLACE, opts.replyAs.name)
+    .replace(SELF_REPLACE, opts.sender.handle)
 
+  // When rebasing before merging, ensure the changes from #750 are reflected here
   const appendName = opts.gen.prefixNameAppend ?? true
+  const nonContinuePost = appendName ? `\n${replyAs.name}:` : ''
+
+  const post = opts.kind === 'continue' ? continuePost : nonContinuePost
+
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
-  return (
-    messages.join('\n\n') +
-    continueAddon +
-    '\n\n' +
-    'Assistant: ' +
-    prefill +
-    (appendName ? replyAs.name + ':' : '')
-  )
+  return messages.join('\n\n') + '\n\n' + 'Assistant: ' + prefill + post
 }
 
 type LineType = 'system' | 'char' | 'user' | 'example'

@@ -522,6 +522,7 @@ export namespace AppSchema {
     prefill?: string
     ignoreCharacterUjb?: boolean
     antiBond?: boolean
+    continueMessagePrompt?: string
 
     frequencyPenalty?: number
     presencePenalty?: number

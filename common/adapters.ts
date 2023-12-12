@@ -293,6 +293,7 @@ export const adapterSettings: {
   etaCutoff: ['aphrodite'],
 
   prefill: ['claude'],
+  continueMessagePrompt: AI_ADAPTERS.slice(),
 
   topP: [
     'horde',

@@ -488,10 +488,18 @@ function createPostPrompt(
     | 'book'
     | 'replyAs'
     | 'impersonate'
+    | 'sender'
   >
 ) {
   const post = []
-  post.push(`${opts.replyAs.name}:`)
+  if (opts.kind === 'continue') {
+    const continuePrompt = (opts.settings?.continueMessagePrompt ?? '\n{{char}}:')
+      .replace(BOT_REPLACE, opts.replyAs.name)
+      .replace(SELF_REPLACE, opts.sender.handle)
+    if (continuePrompt) post.push(continuePrompt)
+  } else {
+    post.push(`${opts.replyAs.name}:`)
+  }
   return post
 }
 

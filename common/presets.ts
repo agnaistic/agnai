@@ -73,6 +73,7 @@ export const presetValidator = {
   prefixNameAppend: 'boolean?',
   prefill: 'string?',
   antiBond: 'boolean?',
+  continueMessagePrompt: 'string?',
 
   replicateModelType: 'string?',
   replicateModelVersion: 'string?',

@@ -52,6 +52,7 @@ Facts: {{memory}}
 
 Relevant Information: {{user_embed}}
 `,
+    continueMessagePrompt: `Continue {{char}}'s response.`,
   },
   openaiTurbo: {
     name: 'DaVinci',
@@ -74,5 +75,6 @@ Description of {{char}}: {{personality}}
 Circumstances and context of the dialogue: {{scenario}}
 
 Facts: {{memory}}`,
+    continueMessagePrompt: `Continue {{char}}'s response.`,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>

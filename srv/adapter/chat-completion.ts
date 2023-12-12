@@ -378,7 +378,13 @@ async function getPostInstruction(
     }
 
     case 'continue':
-      return { role: 'system', content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` }
+      const prompt = (opts.gen.continueMessagePrompt ?? '\n{{char}}:')
+        .replace(BOT_REPLACE, opts.replyAs.name)
+        .replace(SELF_REPLACE, opts.sender.handle)
+      return {
+        role: 'system',
+        content: `${prefix}\n\n${prompt}`,
+      }
 
     case 'summary': {
       let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
