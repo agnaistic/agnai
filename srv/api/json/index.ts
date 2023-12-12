@@ -20,17 +20,18 @@ const names = {
 }
 
 const loadState = handle(async (req) => {
-  const [user, profile, presets, books, scenario, characters, chats, trees, templates] = await Promise.all([
-    read(names.user),
-    read(names.profile),
-    read(names.presets),
-    read(names.memory),
-    read(names.scenario),
-    read(names.characters),
-    read(names.chats),
-    read(names.trees),
-    read(names.templates),
-  ])
+  const [user, profile, presets, books, scenario, characters, chats, trees, templates] =
+    await Promise.all([
+      read(names.user),
+      read(names.profile),
+      read(names.presets),
+      read(names.memory),
+      read(names.scenario),
+      read(names.characters),
+      read(names.chats),
+      read(names.trees),
+      read(names.templates),
+    ])
 
   const config = await getAppConfig()
 
