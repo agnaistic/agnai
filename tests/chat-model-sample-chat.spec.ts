@@ -95,6 +95,7 @@ async function testInput(input: string, budget?: number) {
     char: TEST_CHARACTER_NAME,
     sender: TEST_USER_NAME,
     budget,
+    prependAuthorNameToMessages: true,
   })
 
   return JSON.stringify(result.additions, null, 2)

@@ -26,6 +26,7 @@ type SplitSampleChatProps = {
   char: string
   sender: string
   budget?: number
+  prependAuthorNameToMessages: boolean
 }
 
 type CompletionContent<T> = Array<{ finish_reason: string; index: number } & ({ text: string } | T)>
@@ -249,14 +250,27 @@ export async function toChatCompletionPayload(
 
     const line = all[i]
 
-    const obj: CompletionItem = {
-      role: 'assistant',
-      content: line.trim().replace(BOT_REPLACE, replyAs.name).replace(SELF_REPLACE, handle),
-    }
-
     const isSystem = line.startsWith('System:')
     const isUser = line.startsWith(handle)
     const isBot = !isUser && !isSystem
+
+    const lineWithPholdersReplaced = line
+      .trim()
+      .replace(BOT_REPLACE, replyAs.name)
+      .replace(SELF_REPLACE, handle)
+
+    const author = isBot ? replyAs.name : isUser ? handle : undefined
+
+    const prependAuthorNameToMessages = opts.gen.prependAuthorNameToMessages ?? true
+
+    const content = prependAuthorNameToMessages
+      ? lineWithPholdersReplaced
+      : lineWithPholdersReplaced.replace(author ? `${author}: ` : '', '')
+
+    const obj: CompletionItem = {
+      role: 'assistant',
+      content,
+    }
 
     const insert = inserts.get(distanceFromBottom)
     if (insert) history.push({ role: 'system', content: insert })
@@ -270,6 +284,7 @@ export async function toChatCompletionPayload(
         sampleChat: obj.content,
         char: replyAs.name,
         sender: handle,
+        prependAuthorNameToMessages: opts.gen.prependAuthorNameToMessages ?? true,
       })
 
       if (tokens + consumed > maxBudget) {
@@ -307,7 +322,7 @@ export async function toChatCompletionPayload(
 }
 
 export async function splitSampleChat(opts: SplitSampleChatProps) {
-  const { sampleChat, char, sender, budget } = opts
+  const { sampleChat, char, sender, budget, prependAuthorNameToMessages } = opts
   const regex = new RegExp(
     `(?<=\\n)(?=${escapeRegex(char)}:|${escapeRegex(sender)}:|System:|<start>)`,
     'gi'
@@ -339,10 +354,17 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
       ? 'user'
       : 'system'
 
-    const msg: CompletionItem = {
-      role: role,
-      content: sample.replace(BOT_REPLACE, char).replace(SELF_REPLACE, sender),
-    }
+    const sampleWithPholdersReplaced = sample
+      .replace(BOT_REPLACE, char)
+      .replace(SELF_REPLACE, sender)
+
+    const author = role === 'assistant' ? char : role === 'user' ? sender : undefined
+
+    const content = prependAuthorNameToMessages
+      ? sampleWithPholdersReplaced
+      : sampleWithPholdersReplaced.replace(author ? `${author}: ` : '', '')
+
+    const msg: CompletionItem = { role, content }
 
     const length = await encoder()(msg.content)
     if (budget && tokens + length > budget) break

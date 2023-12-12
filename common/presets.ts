@@ -71,6 +71,7 @@ export const presetValidator = {
   streamResponse: 'boolean?',
   ultimeJailbreak: 'string?',
   prefixNameAppend: 'boolean?',
+  prependAuthorNameToMessages: 'boolean?',
   prefill: 'string?',
   antiBond: 'boolean?',
 
