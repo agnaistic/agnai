@@ -358,7 +358,7 @@ async function getPostInstruction(
   opts: AdapterProps,
   messages: CompletionItem[]
 ): Promise<CompletionItem | undefined> {
-  let prefix = opts.parts.ujb ? `${opts.parts.ujb}\n\n` : ''
+  let prefix = opts.parts.ujb ?? ''
 
   prefix = (
     await injectPlaceholders(prefix, {
@@ -378,7 +378,7 @@ async function getPostInstruction(
     }
 
     case 'continue':
-      return { role: 'system', content: `${prefix}Continue ${opts.replyAs.name}'s response` }
+      return { role: 'system', content: `${prefix}\n\nContinue ${opts.replyAs.name}'s response` }
 
     case 'summary': {
       let content = opts.user.images?.summaryPrompt || IMAGE_SUMMARY_PROMPT.openai
@@ -400,13 +400,17 @@ async function getPostInstruction(
     case 'self':
       return {
         role: 'system',
-        content: `${prefix}${opts.impersonate?.name || opts.sender?.handle || 'You'}:`,
+        content: `${prefix}\n\n${opts.impersonate?.name || opts.sender?.handle || 'You'}:`,
       }
 
     case 'retry':
     case 'send':
     case 'request': {
-      return { role: 'system', content: `${prefix}${opts.replyAs.name}:` }
+      const appendReplyAsName = opts.gen.appendReplyAsNameToUJB ?? true
+      return {
+        role: 'system',
+        content: appendReplyAsName ? `${prefix}\n\n${opts.replyAs.name}:` : prefix,
+      }
     }
   }
 }

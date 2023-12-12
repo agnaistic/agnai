@@ -352,9 +352,15 @@ async function createClaudePrompt(opts: AdapterProps) {
       ? `\n\nHuman: <system_note>Continue ${replyAs.name}'s reply.</system_note>`
       : ''
 
+  const appendReplyAsName = opts.gen.appendReplyAsNameToUJB ?? true
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
   return (
-    messages.join('\n\n') + continueAddon + '\n\n' + 'Assistant: ' + prefill + replyAs.name + ':'
+    messages.join('\n\n') +
+    continueAddon +
+    '\n\n' +
+    'Assistant: ' +
+    prefill +
+    (appendReplyAsName ? replyAs.name + ':' : '')
   )
 }
 
