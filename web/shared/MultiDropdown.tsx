@@ -32,27 +32,30 @@ const MultiDropdown: Component<{
   return (
     <div>
       <FormLabel label={props.label} helperText={props.helperText} />
-      <select
-        name={props.fieldName}
-        class={`form-field h-max max-w-full rounded-sm bg-[var(--hl-700)] p-2 shadow-none ${
-          props.class || ''
-        }`}
-        multiple={props.multiple ?? true}
-        onChange={onChange}
-        disabled={props.disabled}
-      >
-        <For each={props.items}>
-          {(item) => (
-            <option
-              class="h-6 border-0 border-none bg-[var(--hl-700)]"
-              value={item.value}
-              selected={props.values?.includes(item.value)}
-            >
-              {item.label}
-            </option>
-          )}
-        </For>
-      </select>
+      <div class="max-h-64 w-full overflow-auto p-2">
+        <select
+          name={props.fieldName}
+          class={`form-field h-max overflow-y-auto rounded-sm bg-[var(--hl-700)] shadow-none ${
+            props.class || ''
+          }`}
+          multiple={props.multiple ?? true}
+          onChange={onChange}
+          disabled={props.disabled}
+          size={Math.max(props.items.length, 5)}
+        >
+          <For each={props.items}>
+            {(item) => (
+              <option
+                class="h-6 border-0 border-none bg-[var(--hl-700)]"
+                value={item.value}
+                selected={props.values?.includes(item.value)}
+              >
+                {item.label}
+              </option>
+            )}
+          </For>
+        </select>
+      </div>
     </div>
   )
 }
