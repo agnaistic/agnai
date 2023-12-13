@@ -253,7 +253,8 @@ export async function toChatCompletionPayload(
     const isUser = line.startsWith(handle)
     const isBot = !isUser && !isSystem
 
-    const name = isBot ? replyAs.name : isUser ? handle : undefined
+    const nameInLine: string | undefined = line.split(':')[0]
+    const name = isBot ? nameInLine ?? replyAs.name : isUser ? handle : undefined
 
     const content = line
       .trim()
