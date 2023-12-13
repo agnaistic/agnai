@@ -144,11 +144,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
   let accumulated = ''
   let response: Completion<Inference> | undefined
   const _gens: string[] = []
-  if (gen.swipesPerGeneration && gen.swipesPerGeneration > 1) {
-    for (let i = 0; i < gen.swipesPerGeneration; i++) {
-      _gens.push('')
-    }
-  }
 
   while (true) {
     let generated = await iter.next()
@@ -206,7 +201,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { gens: gens }
     }
 
-    if (_gens[0] != '') {
+    if (_gens[0]) {
       yield { gens: _gens }
     }
 
