@@ -49,7 +49,7 @@ type CompletionGenerator = (
   service: string,
   log: AppLog
 ) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string },
+  { error: string } | { error?: undefined; token: string } | Completion,
   Completion | undefined
 >
 
@@ -101,6 +101,9 @@ export const streamCompletion: CompletionGenerator = async function* (
       if (event.data === '[DONE]') {
         break
       }
+
+      const aphrodite = tryParse<Completion>(event.data)
+      if (aphrodite) yield aphrodite
 
       current = event
       prev += event.data

@@ -33,7 +33,7 @@ type CompletionGenerator = (
   body: any,
   log: AppLog
 ) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string },
+  { error: string } | { error?: undefined; token: string } | Completion,
   Completion | undefined
 >
 
@@ -143,6 +143,12 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     : requestFullCompletion(opts.user._id, url, headers, body, opts.log)
   let accumulated = ''
   let response: Completion<Inference> | undefined
+  const _gens: string[] = []
+  if (gen.swipesPerGeneration && gen.swipesPerGeneration > 1) {
+    for (let i = 0; i < gen.swipesPerGeneration; i++) {
+      _gens.push('')
+    }
+  }
 
   while (true) {
     let generated = await iter.next()
@@ -154,12 +160,21 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (generated.value.error) {
-      yield generated.value
+      yield { error: generated.value.error }
       return
     }
 
+    if (gen.swipesPerGeneration && gen.swipesPerGeneration > 1 && 'choices' in generated.value) {
+      if (generated.value?.choices[0].index == 0 && 'text' in generated.value.choices[0]) {
+        accumulated += generated.value.choices[0].text
+        yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
+      }
+      if ('text' in generated.value.choices[0])
+        _gens[generated.value.choices[0].index] += generated.value.choices[0].text
+    }
+
     // Only the streaming generator yields individual tokens.
-    if ('token' in generated.value) {
+    if (gen.swipesPerGeneration! < 2 && 'token' in generated.value) {
       accumulated += generated.value.token
       yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
     }
@@ -191,7 +206,13 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       yield { gens: gens }
     }
 
-    yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
+    if (_gens[0] != '') {
+      yield { gens: _gens }
+    }
+
+    gen.swipesPerGeneration! > 1
+      ? yield sanitiseAndTrim(accumulated, prompt, char, opts.characters, members)
+      : yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
