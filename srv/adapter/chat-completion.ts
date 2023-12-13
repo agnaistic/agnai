@@ -299,7 +299,8 @@ export async function toChatCompletionPayload(
       obj.role = 'user'
     }
 
-    const length = (await encoder()(obj.content)) + (obj.name ? 1 + (await encoder()(obj.name)) : 0)
+    const nameCost = obj.name ? 1 + (await encoder()(obj.name)) : 0
+    const length = nameCost + (await encoder()(obj.content))
     if (tokens + length > maxBudget) {
       --i
       break
@@ -355,7 +356,8 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
       .replace(name ? `${name}: ` : '', '')
 
     const msg: CompletionItem = { role, content, name }
-    const length = (await encoder()(msg.content)) + (msg.name ? 1 + (await encoder()(msg.name)) : 0)
+    const nameCost = msg.name ? 1 + (await encoder()(msg.name)) : 0
+    const length = nameCost + (await encoder()(msg.content))
     if (budget && tokens + length > budget) break
 
     additions.push(msg)
