@@ -164,8 +164,10 @@ export const handleOAI: ModelAdapter = async function* (opts) {
         accumulated += generated.value.choices[0].text
         yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
       }
-      if ('text' in generated.value.choices[0])
+      if ('text' in generated.value.choices[0]) {
+        if (!_gens[generated.value.choices[0].index]) _gens[generated.value.choices[0].index] = ''
         _gens[generated.value.choices[0].index] += generated.value.choices[0].text
+      }
     }
 
     // Only the streaming generator yields individual tokens.
