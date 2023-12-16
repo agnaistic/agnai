@@ -63,6 +63,8 @@ const v2placeholders = {
   random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
   'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
+  insert: { required: false, limit: Infinity, inserted: `#insert 3}} {{/insert` },
+  lowpriority: { required: false, limit: Infinity, inserted: `#lowpriority}} {{/lowpriority` },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in InterpAll]?: JSX.Element | string } = {
@@ -86,7 +88,7 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
     'Produces a random word from a comma-separated list. E.g.: `{{random happy, sad, jealous, angry}}`',
   'each bot': (
     <>
-      Suported properties: <code>{`{{.name}} {{.persona}}`}</code>
+      Supported properties: <code>{`{{.name}} {{.persona}}`}</code>
       <br />
       Example: <code>{`{{#each bot}}{{.name}}'s personality: {{.persona}}{{/each}}`}</code>
     </>
@@ -100,6 +102,22 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
       <br />
       Full example:{' '}
       <code>{`{{#each msg}}{{#if .isuser}}User: {{.msg}}{{/if}}{{#if .isbot}}Bot: {{.msg}}{{/if}}{{/each}}`}</code>
+    </>
+  ),
+  insert: (
+    <>
+      Similar to character note, inserted n messages from the bottom of the conversation history
+      <br />
+      Example: <code>{`{{#insert 3}}[Genre: Horror]{{/insert}}`}</code>
+    </>
+  ),
+  lowpriority: (
+    <>
+      Text that is only inserted if there still is token budget remaining for it after inserting
+      conversation history.
+      <br />
+      Example:{' '}
+      <code>{`{{#if example_dialogue}}{{#lowpriority}}This is how {{char}} speaks: {{example_dialogue}}{{/lowpriority}}{{/if}}`}</code>
     </>
   ),
 }
