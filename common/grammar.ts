@@ -25,7 +25,7 @@ Expression = content:Parent* {
     return results
 }
 
-Parent "parent-node" = v:(BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / Condition / Placeholder / Text) { return v }
+Parent "parent-node" = v:(BotIterator / ChatEmbedIterator / HistoryIterator / HistoryInsert / LowPriority / Condition / Placeholder / Text) { return v }
 
 ManyPlaceholder "repeatable-placeholder" = OP i:(Character / User / Random / Roll) CL {
 	return { kind: 'placeholder', value: i }
@@ -40,6 +40,8 @@ HistoryInsert "history-insert" = OP "#insert"i WS "="? WS line:[0-9]|1..2| CL ch
 
 ChatEmbedIterator "chat-embed-iterator" = OP "#each" WS loop:ChatEmbed CL children:(ChatEmbedChild / LoopText)* CloseLoop { return { kind: 'each', value: loop, children } }
 ChatEmbedChild = i:(ChatEmbedRef / ManyPlaceholder) { return i }
+
+LowPriority "lowpriority" = OP "#lowpriority"i CL children:(Placeholder / LowPriorityText)* CloseLowPriority { return { kind: 'lowpriority', children } }
   
 Placeholder "placeholder"
   = OP WS interp:Interp WS pipes:Pipe* CL {
@@ -58,12 +60,13 @@ HistoryCondition "history-condition" = OP "#if" WS prop:HistoryProperty CL sub:(
   return { kind: 'history-if', prop, children: sub.flat() }
 }
 
-ConditionChild = Placeholder / Condition
+ConditionChild = Placeholder / Condition / LowPriority
 Condition "if" = OP "#if" WS value:Word CL sub:(ConditionChild / ConditionText)* CloseCondition {
   return { kind: 'if', value, children: sub.flat() }
 }
 
 InsertText "insert-text" = !(BotChild / HistoryChild / CloseCondition / CloseInsert) ch:(.) { return ch }
+LowPriorityText "lowpriority-text" = !(BotChild / HistoryChild / CloseCondition / CloseLowPriority) ch:(.) { return ch }
 LoopText "loop-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseCondition / CloseLoop) ch:(.)  { return ch }
 ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
 Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator / ChatEmbedIterator) ch:. { return ch }
@@ -75,6 +78,7 @@ WordList = word:Word WS "," WS { return word }
 CloseCondition = OP "/if"i CL
 CloseLoop = OP "/each"i CL
 CloseInsert = OP "/insert"i CL
+CloseLowPriority = OP "/lowpriority"i CL
 Word "word" = text:[a-zA-Z_ 0-9\!\?\.\'\#\@\%\"\&\*\=\+\-]+ { return text.join('') }
 Pipe "pipe" = _ "|" _ fn:Handler {  return fn }
 

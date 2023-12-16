@@ -325,12 +325,12 @@ export const generateMessageV2 = handle(async (req, res) => {
   const actions: AppSchema.ChatAction[] = []
 
   if (chat.mode === 'adventure') {
-    const lines = await fillPromptWithLines(
+    const lines = (await fillPromptWithLines(
       getTokenCounter('main', undefined),
       2048,
       '',
       body.lines.concat(`${body.replyAs.name}: ${responseText}`)
-    )
+    )).adding
 
     const prompt = cyoaTemplate(
       body.settings.service,
