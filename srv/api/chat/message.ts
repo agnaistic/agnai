@@ -8,7 +8,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
-import { runGuidance } from '/common/guidance/guidance-parser'
+import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/mode-templates'
 import { fillPromptWithLines } from '/common/prompt'
 import { getTokenCounter } from '/srv/tokenize'
@@ -329,9 +329,11 @@ export const generateMessageV2 = handle(async (req, res) => {
         : ''
     )
 
-    const infer = async (text: string) => {
+    const infer = async (params: GuidanceParams) => {
       const res = await inferenceAsync({
-        prompt: text,
+        prompt: params.prompt,
+        maxTokens: params.tokens,
+        stop: params.stop,
         log,
         service: metadata.settings.service!,
         settings: metadata.settings,

@@ -1,4 +1,13 @@
-import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  For,
+  JSX,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  onMount,
+} from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
 import { AdventureInput } from './Input'
 import { GamePane } from './Pane'
@@ -7,11 +16,13 @@ import { formatResponse, gameStore } from './state'
 import { markdown } from '/web/shared/markdown'
 import { GuidedSession, GuidedTemplate } from '/web/store/data/guided'
 import Modal from '/web/shared/Modal'
+// import { imageApi } from '/web/store/data/image'
 
 export const AdventureDetail: Component = (props) => {
   let input: HTMLTextAreaElement
   const state = gameStore()
   const [load, setLoad] = createSignal(false)
+  const [image, _setImage] = createSignal<string>()
   const canLoad = createMemo(() => state.sessions.some((s) => s.gameId === state.template._id))
 
   const trimResult = (i: number) => () => {
@@ -22,6 +33,27 @@ export const AdventureDetail: Component = (props) => {
 
   onMount(() => {
     gameStore.init()
+  })
+
+  // PoC auto-image generation
+  // createEffect((prev) => {
+  //   const last = state.state.responses.slice(-1)[0]
+  //   if (!last) return ''
+
+  //   const caption = last.summary ? `${last.summary}` : ''
+
+  //   if (caption && prev !== caption) {
+  //     imageApi.generateImageAsync(caption).then((image) => setImage(image.data))
+  //   }
+
+  //   return last.summary
+  // })
+
+  const headerImage = createMemo(() => {
+    const src = image()
+    if (!src) return null
+
+    return <img src={src} class="h-full" />
   })
 
   const undo = () => {
@@ -40,6 +72,8 @@ export const AdventureDetail: Component = (props) => {
         loading={false}
         header={<Header template={state.template} session={state.state} />}
         pane={<GamePane />}
+        split={headerImage()}
+        splitHeight={30}
       >
         <div class="flex flex-col gap-2">
           <Show when={!!state.state.init}>

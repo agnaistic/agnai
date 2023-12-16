@@ -72,6 +72,9 @@ async function createTemplate(template: Omit<GuidedTemplate, '_id'>) {
 async function getTemplates() {
   const all = (await storage.getItem(KEYS.templates)) || '[]'
   const templates = JSON.parse(all) as GuidedTemplate[]
+  for (const template of templates) {
+    template.lists ??= {}
+  }
   return localApi.result({ templates })
 }
 

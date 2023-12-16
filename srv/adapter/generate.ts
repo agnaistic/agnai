@@ -18,9 +18,10 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
-import { parseStops } from '/common/util'
+import { deepClone, parseStops } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
-import { runGuidance } from '/common/guidance/guidance-parser'
+import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
+import { getCachedSubscriptionPresets } from '../db/subscriptions'
 
 let version = ''
 
@@ -64,6 +65,7 @@ export type InferenceRequest = {
   retries?: number
   maxTokens?: number
   temp?: number
+  stop?: string[]
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -120,20 +122,30 @@ export async function inferenceAsync(opts: InferenceRequest) {
 
 export async function guidanceAsync(opts: InferenceRequest) {
   const settings = setRequestService(opts)
-  const subscription = await getSubscriptionPreset(opts.user, !!opts.guest, opts.settings)
+  const subscription = await getSubscriptionPreset(
+    opts.user,
+    !!opts.guest,
+    opts.settings || settings
+  )
 
-  const infer = async (text: string, tokens?: number) => {
-    const inference = await inferenceAsync({ ...opts, prompt: text, settings, maxTokens: tokens })
+  const infer = async (params: GuidanceParams) => {
+    const inference = await inferenceAsync({
+      ...opts,
+      prompt: params.prompt,
+      settings,
+      maxTokens: params.tokens,
+      stop: params.stop,
+    })
     return inference
   }
 
   if (subscription?.preset?.guidanceCapable) {
-    const result = await infer(opts.prompt, 200)
+    const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop })
     return result
   }
 
   const result = await runGuidance(opts.prompt, {
-    infer: (text, tokens) => infer(text, tokens).then((res) => res.generated),
+    infer: (params) => infer(params).then((res) => res.generated),
     placeholders: opts.placeholders,
     previous: opts.previous,
   })
@@ -143,6 +155,10 @@ export async function guidanceAsync(opts: InferenceRequest) {
 
 export async function createInferenceStream(opts: InferenceRequest) {
   const settings = setRequestService(opts)
+
+  if (opts.stop) {
+    settings.stopSequences = opts.stop
+  }
 
   const handler = getHandlers(settings)
   const stream = handler({
@@ -173,7 +189,7 @@ export async function createInferenceStream(opts: InferenceRequest) {
 
 function setRequestService(opts: InferenceRequest) {
   const [service, model] = opts.service.split('/')
-  const settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
+  let settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
 
   if (model) {
     switch (service as AIAdapter) {
@@ -190,6 +206,11 @@ function setRequestService(opts: InferenceRequest) {
         break
 
       case 'agnaistic': {
+        if (model) {
+          const preset = getCachedSubscriptionPresets().find((pre) => pre._id === model)
+          if (preset) settings = deepClone(preset)
+        }
+
         if (!settings.registered) settings.registered = {}
         if (!settings.registered.agnaistic) settings.registered.agnaistic = {}
         settings.registered.agnaistic.subscriptionId = model

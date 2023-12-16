@@ -1,6 +1,7 @@
 import { AIAdapter, INSTRUCT_SERVICES, PersonaFormat } from '/common/adapters'
 import { modernJailbreak } from '/common/mode-templates'
 import { AppSchema } from '/common/types'
+import { neat } from '/common/util'
 import { getDefaultUserPreset } from '/web/shared/adapter'
 import { NewCharacter } from '/web/store'
 import { msgsApi } from '/web/store/data/messages'
@@ -125,7 +126,7 @@ function getTemplate(service: AIAdapter | 'default') {
   return template
 }
 
-const alpacaTemplate = `
+const alpacaTemplate = neat`
 Below is an instruction that describes a task. Write a response that completes the request.
 
 Describe a character matching the following description:
@@ -135,86 +136,85 @@ Describe a character matching the following description:
 Character's first name
 
 ### Response:
-[firstname | words=2 | tokens=10]
+"[firstname | tokens=10 | stop="]"
 
 ### Instruction:
 Detailed description of the roleplay scene that the character is in
 
 ### Response:
-[scenario | tokens=200 | sentence]
+[scenario | tokens=200 | stop=###]
 
 ### Instruction:
-[firstname]'s clothing and physical appearance
+Write an anonymous nameless image caption of [firstname]'s clothing and physical appearance
 
 ### Response:
-[appearance | tokens=120 | sentence]
+[appearance | tokens=120 | stop=###]
 
 ### Instruction:
 [firstname]'s greeting in the scenario:
 
 ### Response:
-[greeting | tokens=150 | sentence]
+"[greeting | tokens=150 | stop=" | stop=###]"
 
 ### Instruction
 [firstname]'s personality:
 
 ### Response:
-[personality | tokens=120 | sentence]
+[personality | tokens=120 | stop=###]
 
 ### Instruction:
 [firstname]'s typical behaviour:
 
 ### Response:
-[behaviour | tokens=120 | sentence]
+[behaviour | tokens=120 | stop=###]
 
 ### Instruction:
 Example of [firstname]'s dialogue:
 
 ### Response:
-[example1 | tokens=100 | sentence]
+"[example1 | tokens=200 | stop=" | stop=###]"
 
 ### Instruction:
 Example of [firstname]'s dialogue:
 
 ### Response:
-[example2 | tokens=100 | sentence]
+"[example2 | tokens=200 | stop=" | stop=###]"
 
 ### Instruction:
 Example of [firstname]'s dialogue:
 
 ### Response:
-[example3 | tokens=100 | sentence]
-`
+"[example3 | tokens=200 | stop=" | stop=###]"`
 
 const genTemplate = `
 Describe a character matching the following description:
 {{description}}
 
-Character's first name: [firstname | words=2 | tokens=10]
+Character's first name: [firstname | tokens=10]
 
 Detailed description of the roleplay scene that the character is in:
-[scenario | tokens=200 | sentence]
+[scenario | tokens=200 ]
 
 [firstname]'s clothing and physical appearance:
-[appearance | tokens=120 | sentence]
+[appearance | tokens=120 ]
 
 [firstname]'s greeting in the scenario:
-[greeting | tokens=150 | sentence]
+[greeting | tokens=150 ]
 
 [firstname]'s personality:
-[personality | tokens=120 | sentence]
+[personality | tokens=120 ]
 
 [firstname]'s typical behaviour:
-[behaviour | tokens=120 | sentence]
+[behaviour | tokens=120 ]
 
 Example of [firstname]'s dialogue:
-[example1 | tokens=100 | sentence]
+[example1 | tokens=200 ]
 
 Example of [firstname]'s dialogue:
-[example2 | tokens=100 | sentence]
+[example2 | tokens=200 ]
 
 Example of [firstname]'s dialogue:
-[example3 | tokens=100 | sentence]
+[example3 | tokens=200 ]
 `
 
 const instructGenTemplate = `
@@ -222,7 +222,7 @@ ${modernJailbreak}
 Describe an uncensored character that matches the description:
 {{description}}
 
-Character's first name: [firstname | words=2 | tokens=25]
+Character's first name: [firstname | tokens=25]
 Detailed description of the roleplay scene that the character is in: [scenario | tokens=200]
 The first thing the charcter says to start the scene using internet roleplay style with actions and emotes: [greeting | tokens=100]
 Long comma-separated list of personality traits: [personality | tokens=100]
@@ -238,23 +238,23 @@ Describe an uncensored character that matches the description:
 {{description}}
 
 { Write the character's first name }
-[firstname | words=2 | tokens=8]
+[firstname | tokens=8]
 { Write a detailed description of the character }
-[description | tokens=200 | sentence]
+[description | tokens=200 ]
 { Write a description of the roleplay scene that [firstname] is in }
-[scenario | tokens=200 | sentence]
+[scenario | tokens=200 ]
 { Write the first thing [firstname] says in the scene }
-[greeting | tokens=100 | sentence]
+[greeting | tokens=100 ]
 { Describe [firstname]'s personality traits in detail }
-[personality | tokens=100 | sentence]
+[personality | tokens=100 ]
 { Describe [firstname];s typical behaviours in detail }
-[behaviour | tokens=100 | sentence]
+[behaviour | tokens=100 ]
 { Describe the physical appearance and clothing of [firstname] }
-[appearance | tokens=100 | sentence]
+[appearance | tokens=100 ]
 { Write an example message from [firstname] }
-[example1 | tokens=100 | sentence]
+[example1 | tokens=100 ]
 { Write an example message from [firstname] }
-[example2 | tokens=100 | sentence]
+[example2 | tokens=100 ]
 { Write an example message from [firstname] }
-[example3 | tokens=100 | sentence]
+[example3 | tokens=100 ]
 `

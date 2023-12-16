@@ -152,9 +152,9 @@ export const gameStore = createStore<GameState>(
         previous,
         lists: template.lists,
       })
+
       const gameId = state.gameId || template._id
-      gameStore.update({ init: result, gameId })
-      yield { busy: false }
+      yield { busy: false, state: blankSession(gameId, { init: result }) }
     },
     undo({ state }) {
       if (!state.responses.length) return
@@ -222,12 +222,13 @@ export const gameStore = createStore<GameState>(
   }
 })
 
-function blankSession(gameId: string): GuidedSession {
+function blankSession(gameId: string, overrides: Partial<GuidedSession> = {}): GuidedSession {
   return {
     _id: v4(),
     gameId,
     overrides: {},
     responses: [],
+    ...overrides,
   }
 }
 
@@ -314,7 +315,13 @@ function exampleTemplate(): GuidedTemplate {
     Where is the main character currently standing?
 
     ### Response:
-    Location: "[location | temp=0.4 | tokens=50 | stop="]"`,
+    Location: "[location | temp=0.4 | tokens=50 | stop="]"
+    
+    ### Instruction:
+    Briefly describe the scene through a camera lens without names:
+
+    ### Response:
+    Image caption: "[summary | temp=0.4 | tokens=100 | stop="]"`,
   }
 }
 

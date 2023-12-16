@@ -51,7 +51,9 @@ export async function getAppConfig(user?: AppSchema.User) {
       selfhosting: config.jsonStorage,
       canAuth: false,
       imagesSaved: config.storage.saveImages,
-      assetPrefix: config.storage.enabled
+      assetPrefix: config.assetUrl
+        ? config.assetUrl
+        : config.storage.enabled
         ? `https://${config.storage.bucket}.${config.storage.endpoint}`
         : '',
       registered: getRegisteredAdapters(user).map(toRegisteredAdapter),

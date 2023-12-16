@@ -10,6 +10,10 @@ export const ModeDetail: Component<{
   children?: JSX.Element
   pane?: JSX.Element
   header?: JSX.Element
+  split?: JSX.Element
+
+  /** Percentage of content pane height */
+  splitHeight?: number
 }> = (props) => {
   const cfg = settingStore()
   const user = userStore()
@@ -17,6 +21,11 @@ export const ModeDetail: Component<{
 
   createEffect(() => {
     chatStore.option('pane', props.pane ? 'other' : undefined)
+  })
+
+  const viewHeight = createMemo(() => {
+    const percent = props.splitHeight ?? 40
+    return `calc(${percent}vh - 24px)`
   })
 
   const width = createMemo(() => user.ui.chatWidth || 'fill')
@@ -80,6 +89,17 @@ export const ModeDetail: Component<{
                     </Match>
                   </Switch>
                 </div>
+
+                <Show when={!!props.split}>
+                  <section
+                    data-avatar-container
+                    class="flex items-end justify-center"
+                    style={{ height: `${viewHeight()}`, 'min-height': viewHeight() }}
+                  >
+                    {props.split}
+                  </section>
+                </Show>
+
                 <section
                   data-messages
                   class="mx-auto flex w-full flex-col-reverse gap-4 overflow-y-auto"

@@ -10,7 +10,7 @@ import {
 } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
-import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
+import { GuidanceParams, rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/mode-templates'
 import { AIAdapter } from '/common/adapters'
 import { parseTemplate } from '/common/template-parser'
@@ -101,16 +101,17 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     sender: body.profile,
   })
 
-  const infer = async (text: string, tokens?: number) => {
+  const infer = async (params: GuidanceParams) => {
     const inference = await inferenceAsync({
       user: body.user,
       service: body.service,
       log,
-      prompt: text,
+      prompt: params.prompt,
       guest: userId ? undefined : socketId,
       retries: 2,
-      maxTokens: tokens,
+      maxTokens: params.tokens,
       settings,
+      stop: params.stop,
     })
 
     return inference.generated
@@ -225,12 +226,13 @@ export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
     body.user = user
   }
 
-  const infer = async (text: string, tokens?: number) => {
+  const infer = async (params: GuidanceParams) => {
     const inference = await inferenceAsync({
       user: body.user,
-      maxTokens: tokens,
+      maxTokens: params.tokens,
       log,
-      prompt: text,
+      prompt: params.prompt,
+      stop: params.stop,
       service: body.service,
       settings: body.settings,
       guest: userId ? undefined : socketId,

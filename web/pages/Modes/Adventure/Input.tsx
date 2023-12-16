@@ -45,11 +45,11 @@ export const AdventureInput: Component<{
           }
         }}
       />
-      <Send
+      {/* <Send
         class="icon-button pb-1"
         color={props.loading ? 'var(--bg-500)' : 'var(--bg-100)'}
         onClick={() => props.onEnter(ref.value, success)}
-      />
+      /> */}
     </div>
   )
 }

@@ -4,7 +4,14 @@ import { grammar } from './grammar'
 type PNode = VarNode | TextNode
 
 type TextNode = { kind: 'text'; text: string }
-type VarNode = { kind: 'variable'; name: string; pipe?: Pipe; tokens?: number; temp?: number }
+type VarNode = {
+  kind: 'variable'
+  name: string
+  pipe?: Pipe
+  tokens?: number
+  temp?: number
+  stop?: string[]
+}
 
 type Pipe = { type: 'sentence' } | { type: 'words'; value: number }
 
@@ -14,8 +21,12 @@ const parser = peggy.generate(grammar.trim(), {
   },
 })
 
-type GuidanceOpts = {
-  infer: (prompt: string, maxTokens?: number) => Promise<string>
+export type GuidanceParams = { prompt: string; tokens?: number; stop?: string[] }
+
+export type GuidanceInferncer = (params: GuidanceParams) => Promise<string>
+
+export type GuidanceOpts = {
+  infer: GuidanceInferncer
 
   /**
    * Will replace {{holders}} with their corresponding values
@@ -72,7 +83,7 @@ export async function rerunGuidanceValues<
           continue
         }
 
-        const results = await opts.infer(prompt.trim(), node.tokens)
+        const results = await opts.infer({ prompt, tokens: node.tokens, stop: node.stop })
         const value = handlePipe(results.trim(), node.pipe)
         prompt += value
         values[node.name] = value
@@ -113,7 +124,7 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
           continue
         }
 
-        const results = await infer(prompt.trim(), node.tokens)
+        const results = await infer({ prompt, tokens: node.tokens, stop: node.stop })
         const result = results.trim()
         const value = handlePipe(result, node.pipe)
         prompt += value

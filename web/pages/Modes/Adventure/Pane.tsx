@@ -24,7 +24,12 @@ export const GamePane: Component = (props) => {
   }, state.state._id)
 
   const lists = createMemo(() => {
-    const list = Object.entries(state.template.lists).map(([name, options]) => ({ name, options }))
+    const list = Object.entries(state.template.lists)
+      .map(([name, options]) => ({ name, options }))
+      .filter((entry) => {
+        const visible = state.template.fields.some((f) => f.visible && f.list === entry.name)
+        return visible
+      })
     return list
   })
 
@@ -219,7 +224,7 @@ export const GamePane: Component = (props) => {
           </Index>
         </div>
 
-        <div class="flex flex-col gap-1">
+        <div class="flex flex-col gap-1" classList={{ hidden: lists().length > 0 }}>
           <b>Lists</b>
           <Index each={lists()}>
             {(list) => (
