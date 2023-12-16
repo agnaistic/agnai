@@ -566,7 +566,13 @@ async function getGenerateProps(
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
       props.impersonate = entities.impersonating
       props.replyAs = getBot(entities.autoReplyAs)
-      props.messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
+      props.messages.push(
+        emptyMsg(entities.chat, {
+          msg: opts.text,
+          userId: entities.user._id,
+          characterId: entities.impersonating?._id,
+        })
+      )
       break
     }
 

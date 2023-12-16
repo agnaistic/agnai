@@ -5,6 +5,7 @@ import {
   createMemo,
   createSignal,
   For,
+  Index,
   JSX,
   Match,
   onCleanup,
@@ -135,7 +136,28 @@ const ChatDetail: Component = () => {
   const [showHiddenEvents, setShowHiddenEvents] = createSignal(false)
 
   const chatMsgs = createMemo(() => {
-    const messages = msgs.msgs
+    const self = user.profile
+    const messages = msgs.msgs.map((msg) => {
+      if (msg.characterId) {
+        if (msg.characterId === ctx.impersonate?._id) {
+          return { ...msg, handle: ctx.impersonate.name }
+        }
+
+        const handle = ctx.allBots[msg.characterId] || ctx.tempMap[msg.characterId]
+        return { ...msg, handle: handle?.name }
+      }
+
+      if (msg.userId) {
+        const profile =
+          msg.userId === self?.userId
+            ? self
+            : chats.members.find((m) => m.userId === msg.userId) || self
+        return { ...msg, handle: profile?.handle || 'You' }
+      }
+
+      return msg
+    })
+
     if (!chats.chat || !chats.char) return []
     const doShowHiddenEvents = showHiddenEvents()
     return insertImageMessages(messages, msgs.images[params.id]).filter((msg) => {
@@ -196,12 +218,22 @@ const ChatDetail: Component = () => {
     if (!msgs.waiting) return
     if (msgs.retrying) return
 
+    const userId = msgs.waiting.userId
+    const charId = msgs.waiting.characterId
+    const profile =
+      user.profile?.userId === userId
+        ? user.profile
+        : chats.members.find((ch) => ch.userId === userId)
+    const char = charId ? ctx.allBots[charId] : undefined
+
+    const handle = msgs.waiting.mode !== 'self' ? char?.name : profile?.handle
     return emptyMsg({
       id: 'partial',
       charId: msgs.waiting?.mode !== 'self' ? msgs.waiting.characterId : undefined,
       userId: msgs.waiting?.mode === 'self' ? msgs.waiting.userId || user.user?._id : undefined,
       message: msgs.partial || '',
       adapter: 'partial',
+      handle: handle || 'You',
     })
   })
 
@@ -540,20 +572,20 @@ const ChatDetail: Component = () => {
                     {/* Original Slot location */}
                     <InfiniteScroll canFetch={chars.ready} />
 
-                    <For each={chatMsgs()}>
+                    <Index each={chatMsgs()}>
                       {(msg, i) => (
                         <>
                           <Message
-                            msg={msg}
+                            msg={msg()}
                             editing={chats.opts.editing}
-                            last={i() === indexOfLastRPMessage()}
-                            onRemove={() => setRemoveId(msg._id)}
+                            last={i === indexOfLastRPMessage()}
+                            onRemove={() => setRemoveId(msg()._id)}
                             swipe={
-                              msg._id === retries()?.msgId &&
+                              msg()._id === retries()?.msgId &&
                               swipe() > 0 &&
                               retries()?.list[swipe()]
                             }
-                            confirmSwipe={() => confirmSwipe(msg._id)}
+                            confirmSwipe={() => confirmSwipe(msg()._id)}
                             cancelSwipe={cancelSwipe}
                             tts={tts()}
                             retrying={msgs.retrying}
@@ -562,14 +594,14 @@ const ChatDetail: Component = () => {
                             isPaneOpen={!!chats.opts.pane}
                             textBeforeGenMore={msgs.textBeforeGenMore}
                             voice={
-                              msg._id === msgs.speaking?.messageId
+                              msg()._id === msgs.speaking?.messageId
                                 ? msgs.speaking.status
                                 : undefined
                             }
                           >
                             {isOwner() &&
                               retries()?.list?.length! > 1 &&
-                              i() === indexOfLastRPMessage() && (
+                              i === indexOfLastRPMessage() && (
                                 <SwipeMessage
                                   chatId={chats.chat?._id!}
                                   pos={swipe()}
@@ -581,7 +613,7 @@ const ChatDetail: Component = () => {
                           </Message>
                         </>
                       )}
-                    </For>
+                    </Index>
                     <Show when={waitingMsg()}>
                       <Message
                         msg={waitingMsg()!}

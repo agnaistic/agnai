@@ -129,12 +129,6 @@ const Message: Component<MessageProps> = (props) => {
     editRef?.focus()
   }
 
-  const handleToShow = () => {
-    if (ctx.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
-    const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
-    return handle
-  }
-
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
@@ -223,14 +217,7 @@ const Message: Component<MessageProps> = (props) => {
                     'sm:text-lg': !props.isPaneOpen,
                   }}
                 >
-                  <Switch>
-                    <Match when={props.msg.characterId}>
-                      {ctx.allBots[props.msg.characterId!]?.name ||
-                        (props.msg.split && props.msg.characterId) ||
-                        ctx.char?.name!}
-                    </Match>
-                    <Match when={true}>{handleToShow()}</Match>
-                  </Switch>
+                  {props.msg.handle || ''}
                 </b>
 
                 <span

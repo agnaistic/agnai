@@ -494,6 +494,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   if (body.kind === 'send' || body.kind === 'ooc') {
     newMsg = newMessage(v4(), chatId, body.text!, {
       userId: 'anon',
+      characterId: body.impersonate?._id,
       ooc: body.kind === 'ooc',
       event: undefined,
     })
