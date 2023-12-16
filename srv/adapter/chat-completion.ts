@@ -167,6 +167,17 @@ export const streamCompletion: CompletionGenerator = async function* (
 }
 
 /**
+ * OpenAI API enforces the following:
+ * "'Firstname Lastname' does not match '^[a-zA-Z0-9_-]{1,64}$' - 'messages.1.name'"
+ */
+function openAiName(inputName?: string): string | undefined {
+  return inputName
+    ?.replace(/ /g, '_')
+    .replace(/[^a-zA-Z0-9_-]/g, '')
+    .substring(0, 64)
+}
+
+/**
  * This function contains the inserts logic for Chat models (Turbo, GPT4...)
  * This logic also exists in other places:
  * - common/prompt.ts fillPromptWithLines
@@ -254,18 +265,18 @@ export async function toChatCompletionPayload(
     const isBot = !isUser && !isSystem
 
     const nameInLine: string | undefined = line.split(':')[0]
-    const name = isBot ? nameInLine ?? replyAs.name : isUser ? handle : undefined
+    const speakerName = isBot ? nameInLine ?? replyAs.name : isUser ? handle : undefined
 
     const content = line
       .trim()
       .replace(BOT_REPLACE, replyAs.name)
       .replace(SELF_REPLACE, handle)
-      .replace(name ? `${name}: ` : '', '')
+      .replace(speakerName ? `${speakerName}: ` : '', '')
 
     const obj: CompletionItem = {
       role: 'assistant',
       content,
-      name,
+      name: openAiName(speakerName),
     }
     const insert = inserts.get(distanceFromBottom)
     if (insert) history.push({ role: 'system', content: insert })
@@ -349,14 +360,14 @@ export async function splitSampleChat(opts: SplitSampleChatProps) {
       ? 'user'
       : 'system'
 
-    const name = role === 'assistant' ? char : role === 'user' ? sender : undefined
+    const speakerName = role === 'assistant' ? char : role === 'user' ? sender : undefined
 
     const content = sample
       .replace(BOT_REPLACE, char)
       .replace(SELF_REPLACE, sender)
-      .replace(name ? `${name}: ` : '', '')
+      .replace(speakerName ? `${speakerName}: ` : '', '')
 
-    const msg: CompletionItem = { role, content, name }
+    const msg: CompletionItem = { role, content, name: openAiName(speakerName) }
     const nameCost = msg.name ? 1 + (await encoder()(msg.name)) : 0
     const length = nameCost + (await encoder()(msg.content))
     if (budget && tokens + length > budget) break
