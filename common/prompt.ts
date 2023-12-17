@@ -751,6 +751,8 @@ export function getContextLimit(
   adapter: AIAdapter,
   model: string
 ): number {
+  if (gen?.maxContextLength) return gen.maxContextLength
+
   const configuredMax =
     gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
 
