@@ -411,18 +411,24 @@ const GeneralSettings: Component<
       </Card>
 
       <Card class="flex flex-col gap-2">
-        <RangeInput
-          fieldName="swipesPerGeneration"
-          label="Swipes Per Generation"
-          helperText="Number of responses (in swipes) that aphrodite should generate."
-          min={1}
-          max={10}
-          step={1}
-          value={props.inherit?.swipesPerGeneration || 1}
-          disabled={props.disabled}
-          format={props.format}
-          onChange={(val) => setSwipesPerGeneration(val)}
-        />
+        <Show
+          when={
+            props.inherit?.service === 'kobold' && props.inherit.thirdPartyFormat === 'aphrodite'
+          }
+        >
+          <RangeInput
+            fieldName="swipesPerGeneration"
+            label="Swipes Per Generation"
+            helperText="Number of responses (in swipes) that aphrodite should generate."
+            min={1}
+            max={10}
+            step={1}
+            value={props.inherit?.swipesPerGeneration || 1}
+            disabled={props.disabled}
+            format={props.format}
+            onChange={(val) => setSwipesPerGeneration(val)}
+          />
+        </Show>
         <RangeInput
           fieldName="maxTokens"
           label="Max New Tokens"
