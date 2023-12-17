@@ -5,7 +5,7 @@ import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { gameStore } from './state'
 import { parseTemplateV2 } from '/common/guidance/v2'
-import { GuidedField } from '/web/store/data/guided'
+import { GuidedField, GuidedSession } from '/web/store/data/guided'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
 
@@ -218,6 +218,7 @@ export const GamePane: Component = (props) => {
                 onChange={onFieldChange(field().name)}
                 override={over[field().name]}
                 setOverride={(text) => updateOver(field().name, text)}
+                session={state.state}
               />
             )}
           </Index>
@@ -251,7 +252,14 @@ const Field: Component<{
   onChange: (next: Partial<GuidedField>) => void
   override?: string
   setOverride: (text: string) => void
+  session: GuidedSession
 }> = (props) => {
+  const value = createMemo(() => {
+    const name = props.field.name
+    const last = props.session.responses.slice(-1)[0]
+    return props.override || last?.[name] || props.session.init?.[name]
+  })
+
   return (
     <div
       class="grid gap-0 rounded-md border-[1px] border-[var(--bg-600)]"
@@ -297,7 +305,7 @@ const Field: Component<{
             fieldName="override"
             value={props.override}
             class="h-[28px] rounded-l-none rounded-r-md"
-            placeholder="(Optional) value"
+            placeholder={value() ? `${value()}` : '(Optional) value'}
             onInput={(ev) => props.setOverride(ev.currentTarget.value)}
           />
         </Match>
