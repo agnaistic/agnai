@@ -279,6 +279,7 @@ export const CreateCharacterForm: Component<{
     <>
       <Show when={!props.noTitle && (isPage || paneOrPopup() === 'pane')}>
         <PageHeader
+          noslot={!!query.import}
           title={`${
             forceNew() ? 'Create' : props.editId ? 'Edit' : props.duplicateId ? 'Copy' : 'Create'
           } a Character`}

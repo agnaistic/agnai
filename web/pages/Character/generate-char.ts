@@ -58,14 +58,14 @@ export async function regenerateCharProp(
   const prev = {
     description: char.description,
     firstname: char.name,
-    personality: attrs?.personality || '',
-    behaviour: attrs?.behaviour || '',
+    personality: ensureString(attrs?.personality || ''),
+    behaviour: ensureString(attrs?.behaviour || ''),
     appearance: char.appearance || '',
     greeting: char.greeting || '',
     scenario: char.scenario || '',
   }
 
-  const vars = await msgsApi.rerunGuidance({ prompt, service, rerun: fields, previous: prev })
+  const vars = await msgsApi.guidance({ prompt, service, rerun: fields, previous: prev })
   const sampleChat =
     vars.example1 && vars.example2 && vars.example3
       ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
@@ -87,6 +87,14 @@ export async function regenerateCharProp(
   }
 
   return newchar
+}
+
+function ensureString(value: any) {
+  if (Array.isArray(value)) {
+    return value.join(', ')
+  }
+
+  return value
 }
 
 function toAttributes(kind: PersonaFormat, vars: any) {
@@ -154,7 +162,7 @@ Write an anonymous nameless image caption of [firstname]'s clothing and physical
 [firstname]'s greeting in the scenario:
 
 ### Response:
-"[greeting | tokens=150 | stop=" | stop=###]"
+[greeting | tokens=150 | stop=###]
 
 ### Instruction
 [firstname]'s personality:
@@ -172,19 +180,19 @@ Write an anonymous nameless image caption of [firstname]'s clothing and physical
 Example of [firstname]'s dialogue:
 
 ### Response:
-"[example1 | tokens=200 | stop=" | stop=###]"
+[example1 | tokens=200 | stop=###]
 
 ### Instruction:
 Example of [firstname]'s dialogue:
 
 ### Response:
-"[example2 | tokens=200 | stop=" | stop=###]"
+[example2 | tokens=200 | stop=###]
 
 ### Instruction:
 Example of [firstname]'s dialogue:
 
 ### Response:
-"[example3 | tokens=200 | stop=" | stop=###]"`
+[example3 | tokens=200 | stop=###]`
 
 const genTemplate = `
 Describe a character matching the following description:

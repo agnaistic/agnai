@@ -66,6 +66,7 @@ export type InferenceRequest = {
   maxTokens?: number
   temp?: number
   stop?: string[]
+  reguidance?: string[]
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -128,26 +129,35 @@ export async function guidanceAsync(opts: InferenceRequest) {
     opts.settings || settings
   )
 
-  const infer = async (params: GuidanceParams) => {
+  const previous = { ...opts.previous }
+
+  for (const name of opts.reguidance || []) {
+    delete previous[name]
+  }
+
+  const infer = async (params: GuidanceParams, v2: boolean) => {
     const inference = await inferenceAsync({
       ...opts,
+      previous,
       prompt: params.prompt,
       settings,
       maxTokens: params.tokens,
       stop: params.stop,
+      guidance: v2,
     })
     return inference
   }
 
   if (subscription?.preset?.guidanceCapable) {
-    const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop })
+    const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop }, true)
     return result
   }
 
   const result = await runGuidance(opts.prompt, {
-    infer: (params) => infer(params).then((res) => res.generated),
+    infer: (params) => infer(params, false).then((res) => res.generated),
+    reguidance: opts.reguidance,
     placeholders: opts.placeholders,
-    previous: opts.previous,
+    previous,
   })
 
   return result

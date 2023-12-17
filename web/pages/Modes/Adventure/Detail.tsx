@@ -1,13 +1,4 @@
-import {
-  Component,
-  For,
-  JSX,
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-  onMount,
-} from 'solid-js'
+import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
 import { AdventureInput } from './Input'
 import { GamePane } from './Pane'
@@ -16,6 +7,8 @@ import { formatResponse, gameStore } from './state'
 import { markdown } from '/web/shared/markdown'
 import { GuidedSession, GuidedTemplate } from '/web/store/data/guided'
 import Modal from '/web/shared/Modal'
+import { GuidanceHelp } from './Help'
+import { Cog, HelpCircle } from 'lucide-solid'
 // import { imageApi } from '/web/store/data/image'
 
 export const AdventureDetail: Component = (props) => {
@@ -66,12 +59,23 @@ export const AdventureDetail: Component = (props) => {
     gameStore.undo()
   }
 
+  const sidePane = createMemo(() => {
+    if (!state.pane) return null
+
+    switch (state.pane) {
+      case 'prompt':
+        return <GamePane />
+    }
+
+    return null
+  })
+
   return (
     <>
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
-        pane={<GamePane />}
+        pane={sidePane()}
         split={headerImage()}
         splitHeight={30}
       >
@@ -149,6 +153,7 @@ export const AdventureDetail: Component = (props) => {
       <Show when={load()}>
         <LoadModal close={() => setLoad(false)} />
       </Show>
+      <GuidanceHelp />
     </>
   )
 }
@@ -173,8 +178,16 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
 
 const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = (props) => {
   return (
-    <div class="flex-colbg-800 flex w-full rounded-md px-1 py-2">
+    <div class="bg-800 flex w-full justify-between rounded-md px-1 py-2">
       <div>{props.template.name || 'Untitled Template'}</div>
+      <div class="flex gap-2">
+        <Button onClick={() => gameStore.setState({ pane: 'prompt' })}>
+          <Cog />
+        </Button>
+        <Button onClick={() => gameStore.setState({ showHelp: true })}>
+          <HelpCircle />
+        </Button>
+      </div>
     </div>
   )
 }

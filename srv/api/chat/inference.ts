@@ -10,7 +10,6 @@ import {
 } from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
-import { GuidanceParams, rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/mode-templates'
 import { AIAdapter } from '/common/adapters'
 import { parseTemplate } from '/common/template-parser'
@@ -49,6 +48,7 @@ const validInferenceApi = {
   cfg_scale: 'number?',
   cfg_oppose: 'string?',
   guidance: 'boolean?',
+  reguidance: ['string?'],
   placeholders: 'any?',
   lists: 'any?',
   previous: 'any?',
@@ -101,24 +101,13 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     sender: body.profile,
   })
 
-  const infer = async (params: GuidanceParams) => {
-    const inference = await inferenceAsync({
-      user: body.user,
-      service: body.service,
-      log,
-      prompt: params.prompt,
-      guest: userId ? undefined : socketId,
-      retries: 2,
-      maxTokens: params.tokens,
-      settings,
-      stop: params.stop,
-    })
-
-    return inference.generated
-  }
-
-  const { values } = await runGuidance(parsed, {
-    infer,
+  const { values } = await guidanceAsync({
+    prompt: parsed,
+    log,
+    service: body.service,
+    user: body.user,
+    guidance: true,
+    settings,
     placeholders: {
       history: body.lines.join('\n'),
       user: body.impersonating?.name || body.profile.handle,
@@ -150,6 +139,7 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
       placeholders: 'any?',
       lists: 'any?',
       previous: 'any?',
+      reguidance: ['string?'],
     },
     body
   )
@@ -181,31 +171,11 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
     placeholders: body.placeholders,
     previous: body.previous,
     lists: body.lists,
+    reguidance: body.reguidance,
   }
 
   const result = await guidanceAsync(props)
   return result
-
-  // if (body.service === 'agnaistic') {
-  //   const result: any = await inferenceAsync({ ...props, maxTokens: 200 })
-
-  //   if (typeof result.generated === 'string') {
-  //     result.values = JSON.parse(result.generated)
-  //   }
-  //   return result
-  // }
-
-  // const infer = async (text: string, tokens?: number) => {
-  //   const inference = await inferenceAsync({ ...props, prompt: text, maxTokens: tokens })
-  //   return inference.generated
-  // }
-
-  // const result = await runGuidance(body.prompt, {
-  //   infer,
-  //   placeholders: body.placeholders,
-  //   previous: body.previous,
-  // })
-  // return result
 })
 
 export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
@@ -216,6 +186,7 @@ export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
       maxTokens: 'number?',
       rerun: ['string'],
       previous: 'any?',
+      lists: 'any?',
     },
     body
   )
@@ -226,25 +197,18 @@ export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
     body.user = user
   }
 
-  const infer = async (params: GuidanceParams) => {
-    const inference = await inferenceAsync({
-      user: body.user,
-      maxTokens: params.tokens,
-      log,
-      prompt: params.prompt,
-      stop: params.stop,
-      service: body.service,
-      settings: body.settings,
-      guest: userId ? undefined : socketId,
-    })
-
-    return inference.generated
-  }
-
-  const result = await rerunGuidanceValues(body.prompt, body.rerun, {
-    infer,
+  const result = await guidanceAsync({
+    prompt: body.prompt,
+    reguidance: body.rerun,
+    log,
+    user: body.user,
+    service: body.service,
+    guidance: true,
     placeholders: body.placeholders,
+    lists: body.lists,
+    guest: userId ? undefined : socketId,
     previous: body.previous,
+    settings: body.settings,
   })
   return result
 })

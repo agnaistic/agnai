@@ -199,10 +199,7 @@ export function getAttributeMap(event: Event | HTMLFormElement) {
       const id = key.replace('attr-value.', '')
       if (!map[id]) map[id] = {}
       map[id].value = [value]
-      map[id].values = value
-        .split(',')
-        .map((i) => i.trim())
-        .filter((i) => !!i)
+      map[id].values = [value]
     }
   }
 

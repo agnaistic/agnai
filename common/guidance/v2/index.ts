@@ -12,12 +12,15 @@ type VarNode = {
   tokens?: number
   temp?: number
   stop?: string[]
-  num?: { min?: number; max?: number }
-  boolean?: boolean
-
   options?: string
-  random?: string
-}
+} & VarType
+
+type VarType =
+  | { type: 'number'; min?: number; max?: number }
+  | { type: 'boolean'; options: 'boolean' }
+  | { type: 'options'; options: string }
+  | { type: 'random'; options: string }
+  | { type: 'string' }
 
 type Pipe = { type: 'sentence' } | { type: 'words'; value: number }
 
@@ -38,13 +41,9 @@ export function parseTemplateV2(template: string): PNode[] {
   for (const node of ast) {
     if (node.kind !== 'variable') continue
 
-    if (node.num) {
+    if (node.type === 'number') {
       // if (!node.stop) throw new Error(`Number ranges must contain a stop character (E.g. stop=,)`)
-      if (
-        node.num.min !== undefined &&
-        node.num.max !== undefined &&
-        node.num.min >= node.num.max
-      ) {
+      if (node.min !== undefined && node.max !== undefined && node.min >= node.max) {
         throw new Error(`Invalid number range provided - Min is above max (Variable: ${node.name})`)
       }
     }

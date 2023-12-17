@@ -70,15 +70,14 @@ export const GamePane: Component = (props) => {
           const exists = fields.some((n) => n.name === node.name)
 
           if (exists) continue
+          const listName = node.options
           fields.push({
             name: node.name,
-            type: node.num ? 'number' : node.boolean ? 'boolean' : 'string',
+            type: node.type === 'options' || node.type === 'random' ? 'string' : node.type,
             visible: false,
             label: '',
-            list: node.options,
+            list: listName,
           })
-
-          const listName = node.options || node.random
 
           if (listName && listName in lists === false) {
             lists[listName] = []
@@ -95,15 +94,15 @@ export const GamePane: Component = (props) => {
           seen[node.name] = true
           const exists = fields.some((n) => n.name === node.name)
           if (exists) continue
+
+          const listName = node.options
           fields.push({
             name: node.name,
-            type: node.num ? 'number' : node.boolean ? 'boolean' : 'string',
+            type: node.type === 'options' || node.type === 'random' ? 'string' : node.type,
             visible: false,
             label: '',
-            list: node.options,
+            list: listName,
           })
-
-          const listName = node.options || node.random
 
           if (listName && listName in lists === false) {
             lists[listName] = []
@@ -140,7 +139,7 @@ export const GamePane: Component = (props) => {
   }
 
   return (
-    <Convertible kind="partial" close={() => {}}>
+    <Convertible kind="partial" close={() => gameStore.setState({ pane: undefined })}>
       <div class="flex flex-col gap-4">
         <div class="flex gap-1">
           <Show when={state.list.length > 0}>
@@ -224,7 +223,7 @@ export const GamePane: Component = (props) => {
           </Index>
         </div>
 
-        <div class="flex flex-col gap-1" classList={{ hidden: lists().length > 0 }}>
+        <div class="flex flex-col gap-1" classList={{ hidden: lists().length === 0 }}>
           <b>Lists</b>
           <Index each={lists()}>
             {(list) => (

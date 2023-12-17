@@ -28,22 +28,32 @@ Variable "variable"	= "[" _ val:Char+ pipes:Pipe* "]" {
        	 result.stop = result.stop || []
          result.stop.push(pipe.stop)
        } else {
+        if (pipe.type && result.type) {
+          throw new Error('Invalid node "' + result.name + '": Cannot assign more than one type (One of: number, boolean, list, random)')
+        }
        	Object.assign(result, pipe)
        }
+    }
+    
+    if (!result.type) {
+    	result.type = 'string'
     }
     return result
 }
 
-Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / PromptPipe / BooleanPipe / RandomPipe) _ { return pipe }
+Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / BooleanPipe / RandomPipe) _ { return pipe }
 
 TokensPipe "max-tokens" = "tokens"i _ "=" _ value:Number { return { tokens: value } }
 TempPipe "temp" = "temp"i _ "=" _ value:Number { return { temp: value } }
-NumPipe "num" = "num"i _ range:Threshold* _ { return { num: range.reduce((p, c) => Object.assign(p, c), {}) } }
 StopPipe "stop" = "stop"i _ "=" _ value:(Char / Symbols)+  { return { stop: value.join('') } }
-OptionsPipe "options" = ("from"i / "options"i / "opts"i ) _ "=" _ list:Char+ { return { options: list.join('') } }
-PromptPipe "prompt" = ("prompt"i) _ "=" _ value:(Char / Symbols / " ")+ { return { prompt: value.join('') } }
-BooleanPipe "boolean" = ("boolean"i / "bool"i) { return { boolean: true } }
-RandomPipe "options" = ("random"i / "rand"i) _ "=" _ list:Char+ { return { random: list.join('') } }
+
+NumPipe "num" =  "type" _ "=" _ ("number"i / "num"i) _ range:Threshold* _ { return { type: 'number', ...range.reduce((p, c) => Object.assign(p, c), {}) } }
+OptionsPipe "options" = "type" _ "=" _ ("list"i / "from"i / "options"i / "opts"i / "selection"i / "sel"i) _ list:Char+ { return { type: 'options', options: list.join('') } }
+BooleanPipe "boolean" = "type" _ "=" _ ("boolean"i / "bool"i) { return { type: 'boolean' } }
+RandomPipe "options" = "type" _ "=" _ ("random"i / "rand"i) _ list:Char+ { return { type: 'random', options: list.join('') } }
+StringPipe "string" = "type" _ "=" _ ("string"i / "str"i) { return { type: 'string' } }
+
+TypePipe "type" = "type"i _ "=" _ 
 
 Threshold "threshold" = _ kind:("gte"i / "gt"i / "lte"i / "lt"i / "min"i / "max"i) _ "=" _ neg:"-"? value:Number _ {
 	let num = +value
@@ -77,11 +87,19 @@ _ "whitespace" = [ \t]*
 
 /**
  * Example:
- * Pipes:
- *  temp=float
- *  stop=char
- *  num min?=num max?=num gte?=num lte?=num gt?=num lt?=num
- *  words=num
+ * Pipes (all optional)
+ *  temp=float [0.1+]
+ *  stop=char | stop=... (stop can be provided multiple times)
+ *  tokens=[number]
+ * 
+ *  plus one of:
+ * 
+ *  type=num min=... max=... (min and max are optional)
+ *  type=boolean
+ *  type=list [list name]
+ *  type=random [list name]
+ *  type=string (default if no type provided)
+
  *
  * Character description:
  * {{desc}}
@@ -89,10 +107,12 @@ _ "whitespace" = [ \t]*
  * Describe a character using the following JSON format:
  *
  * {
- *   "name": "[name | words=2 | tokens=10]",
- *   "age": [age min=18 max=60],
- *   "health": [hp min=0 max=100],
+ *   "name": "[name | tokens=10]",
+ *   "age": [age | type=num min=18 max=60],
+ *   "health": [hp | type=num min=0 max=100],
  *   "clothing": "[appearance | tokens=100 | stop=" | temp=0.8]",
- *   "location": "[location | tokens=200 | stop=" | temp=0.75]"
+ *   "location": "[location | tokens=200 | stop=" | temp=0.75]",
+ *   "is_evil": "[is_evil | type=bool]",
+ *   "mood": "[mood | type=random moods]"
  * }
  */

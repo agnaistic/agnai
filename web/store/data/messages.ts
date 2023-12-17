@@ -51,7 +51,6 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
-  rerunGuidance,
   generateActions,
   getActiveTemplateParts,
 }
@@ -116,7 +115,12 @@ export async function guidance<T = any>({
   settings,
   previous,
   lists,
-}: InferenceOpts & { previous?: any; lists?: Record<string, string[]> }): Promise<T> {
+  rerun,
+}: InferenceOpts & {
+  previous?: any
+  lists?: Record<string, string[]>
+  rerun?: string[]
+}): Promise<T> {
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -135,37 +139,7 @@ export async function guidance<T = any>({
     maxTokens,
     previous,
     lists,
-  })
-
-  if (res.error) throw new Error(res.error)
-  return res.result!.values
-}
-
-export async function rerunGuidance<T = any>({
-  prompt,
-  service,
-  maxTokens,
-  rerun,
-  previous,
-}: InferenceOpts & { previous?: any; rerun: string[] }): Promise<T> {
-  const requestId = v4()
-  const { user } = userStore.getState()
-
-  if (!user) {
-    throw new Error(`Could not get user settings. Refresh and try again.`)
-  }
-
-  const settings = service === 'default' ? getUserPreset(user.defaultPreset) : undefined
-
-  const res = await api.method<{ result: string; values: T }>('post', `/chat/reguidance`, {
-    requestId,
-    user,
-    prompt,
-    service,
-    maxTokens,
-    settings,
-    rerun,
-    previous,
+    reguidance: rerun,
   })
 
   if (res.error) throw new Error(res.error)

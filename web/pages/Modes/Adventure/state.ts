@@ -14,6 +14,8 @@ type GameState = {
   sessions: GuidedSession[]
   inited: boolean
   busy: boolean
+  pane?: 'prompt'
+  showHelp: boolean
 }
 
 const init: GameState = {
@@ -34,6 +36,8 @@ const init: GameState = {
     fields: [],
     lists: {},
   },
+  pane: 'prompt',
+  showHelp: false,
   state: {
     _id: '',
     gameId: '',
