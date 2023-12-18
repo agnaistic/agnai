@@ -31,11 +31,19 @@ export const modifySubscription = handle(async ({ body, userId }) => {
 
   const item = sub.items.data[0]
   if (upgrading) {
-    await stripe.subscriptions.update(sub.id, {
-      proration_behavior: 'always_invoice',
-      metadata: { tierId: body.tierId, upgradedAt: new Date().toISOString() },
-      items: [{ id: item.id, price: tier.priceId }],
-    })
+    const result = await stripe.subscriptions
+      .update(sub.id, {
+        payment_behavior: 'error_if_incomplete',
+        proration_behavior: 'always_invoice',
+        metadata: { tierId: body.tierId, upgradedAt: new Date().toISOString() },
+        items: [{ id: item.id, price: tier.priceId }],
+      })
+      .catch((err) => ({ err }))
+
+    if ('err' in result) {
+      throw new StatusError(`Payment failed: ${result.err.message}`, 402)
+    }
+
     await subsCmd.upgrade(userId, { priceId: tier.priceId, tierId: tier._id })
     await store.users.updateUser(userId, {
       sub: {
