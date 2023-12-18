@@ -49,17 +49,18 @@ export async function resyncSubscription(user: AppSchema.User) {
   }
 
   const now = Date.now()
-  const limit = new Date(subscription.current_period_end * 1000).valueOf()
-
-  // If the subscription has not been renewed and the tier
-  if (now < limit && user.sub?.tierId === expectedTier._id) {
-    user.billing.lastChecked = new Date().toISOString()
-    await store.users.updateUser(user._id, { billing: user.billing })
-    return expectedTier.level
-  }
 
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)
+
+  // If the subscription has not been renewed and the tier
+  if (now < validUntil.valueOf() && user.sub?.tierId === expectedTier._id) {
+    user.billing.lastChecked = new Date().toISOString()
+    user.billing.validUntil = validUntil.toISOString()
+    user.billing.lastRenewed = renewedAt.toISOString()
+    await store.users.updateUser(user._id, { billing: user.billing })
+    return expectedTier.level
+  }
 
   if (validUntil.valueOf() < now) {
     return new Error('Your subscripion has expired')
