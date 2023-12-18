@@ -264,6 +264,7 @@ export namespace AppSchema {
       lastRenewed: string
       customerId: string
       subscriptionId: string
+      lastChecked?: string
     }
   }
 

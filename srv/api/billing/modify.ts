@@ -1,7 +1,7 @@
 import { StatusError, handle } from '../wrap'
 import { assertValid } from '/common/valid'
 import { store } from '../../db'
-import { stripe } from './stripe'
+import { resyncSubscription, stripe } from './stripe'
 import { subsCmd } from '../../domains/subs/cmd'
 import { domain } from '/srv/domains'
 
@@ -64,7 +64,7 @@ export const verifySubscription = handle(async ({ userId }) => {
   const user = await store.users.getUser(userId)
 
   if (!user?.billing?.subscriptionId) throw new StatusError('No subscription present', 402)
-  const result = await store.users.validateSubscription(user)
+  const result = await resyncSubscription(user)
   if (result instanceof Error) {
     throw new StatusError(result.message, 402)
   }

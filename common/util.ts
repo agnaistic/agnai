@@ -266,6 +266,19 @@ export function getUserSubscriptionTier(user: AppSchema.User, tiers: AppSchema.S
   let nativeTier = tiers.find((t) => user.sub && t._id === user.sub.tierId)
   let patronTier = tiers.find((t) => user.patreon?.sub && t._id === user.patreon.sub.tierId)
 
+  const nativeExpired = isExpired(user.billing?.validUntil) || user.billing?.status === 'cancelled'
+  const patronExpired =
+    isExpired(user.patreon?.member?.attributes.next_charge_date) ||
+    user.patreon?.member?.attributes.patron_status !== 'active_patron'
+
+  if (nativeExpired) {
+    nativeTier = undefined
+  }
+
+  if (patronExpired) {
+    patronTier = undefined
+  }
+
   if (!nativeTier && !patronTier) return
 
   if (!nativeTier || !patronTier) {
@@ -281,4 +294,19 @@ export function getUserSubscriptionTier(user: AppSchema.User, tiers: AppSchema.S
   const level = tier.level
 
   return { type, tier, level }
+}
+
+function isExpired(expiresAt?: string) {
+  if (!expiresAt) return true
+
+  const expires = new Date(expiresAt).valueOf()
+  if (Date.now() > expires) return true
+  return false
+}
+
+export function isPastDate(date: Date | string) {
+  const ms = typeof date === 'string' ? new Date(date).valueOf() : date.valueOf()
+
+  if (Date.now() > ms) return true
+  return false
 }
