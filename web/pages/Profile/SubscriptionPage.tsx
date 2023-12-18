@@ -45,6 +45,7 @@ export const SubscriptionPage: Component = (props) => {
   const [showDowngrade, setDowngrade] = createSignal<AppSchema.SubscriptionTier>()
 
   const hasExpired = createMemo(() => {
+    if (cfg.type === 'patreon') return false
     if (!user.user?.billing?.cancelling) return false
     const threshold = new Date(user.user.billing.validUntil)
     return threshold.valueOf() < Date.now()
