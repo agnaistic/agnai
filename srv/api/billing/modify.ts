@@ -4,6 +4,7 @@ import { store } from '../../db'
 import { resyncSubscription, stripe } from './stripe'
 import { subsCmd } from '../../domains/subs/cmd'
 import { domain } from '/srv/domains'
+import { getSafeUserConfig } from '../user/settings'
 
 export const modifySubscription = handle(async ({ body, userId }) => {
   assertValid({ tierId: 'string' }, body)
@@ -68,7 +69,9 @@ export const verifySubscription = handle(async ({ userId }) => {
   if (result instanceof Error) {
     throw new StatusError(result.message, 402)
   }
-  return { success: true }
+
+  const next = await getSafeUserConfig(userId)
+  return next
 })
 
 export const subscriptionStatus = handle(async ({ userId, params, user }) => {
