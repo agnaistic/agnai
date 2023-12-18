@@ -78,6 +78,10 @@ export const userStore = createStore<UserState>(
       userStore.syncPatreonAccount(true)
     }
 
+    if (init.user.billing) {
+      userStore.validateSubscription(true)
+    }
+
     if (init.user?._id !== 'anon') {
       userStore.getTiers()
     }
@@ -218,11 +222,13 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *validateSubscription({ billingLoading }) {
+    async *validateSubscription({ billingLoading }, quiet?: boolean) {
       if (billingLoading) return
       yield { billingLoading: true }
       const res = await api.post('/admin/billing/subscribe/verify')
       yield { billingLoading: false }
+
+      if (quiet) return
       if (res.result) {
         toastStore.success('You are currently subscribed')
       }

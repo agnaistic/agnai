@@ -9,9 +9,8 @@ import { logger } from '../logger'
 import { errors, StatusError } from '../api/wrap'
 import { encryptPassword, now } from './util'
 import { defaultChars } from '/common/characters'
-import { stripe } from '../api/billing/stripe'
+import { resyncSubscription } from '../api/billing/stripe'
 import { getCachedTiers, getTier } from './subscriptions'
-import { domain } from '../domains'
 import { store } from '.'
 import { patreon } from '../api/user/patreon'
 import { getUserSubscriptionTier } from '/common/util'
@@ -287,6 +286,8 @@ export async function findByPatreonUserId(id: string) {
   return user
 }
 
+const ONE_HOUR_MS = 60000 * 60
+
 export async function validateSubscription(user: AppSchema.User) {
   if (user.admin) return Infinity
 
@@ -300,6 +301,9 @@ export async function validateSubscription(user: AppSchema.User) {
     if (!user.patreon) return -1
 
     const expiry = new Date(user.patreon.member?.attributes.next_charge_date || 0)
+
+    // If the next_charge_date has elapsed then we re-check
+    // We regularly re-sync Patron information so we can rely on this date
     if (expiry.valueOf() <= Date.now()) {
       const next = await patreon.revalidatePatron(user._id)
       if (!next) return -1
@@ -311,71 +315,24 @@ export async function validateSubscription(user: AppSchema.User) {
     return level
   }
 
-  const state = await domain.subscription.getAggregate(user._id)
-  if (state.state === 'active') {
-    /**
-     * Downgrades
-     * The aggregate tier id will be the intended tier id.
-     * If these differ then a downgrade has occurred.
-     */
-    if (state.tierId !== sub.tier._id) {
-      const nextTier = state.tierId ? await getTier(state.tierId) : null
-      await store.users.updateUser(user._id, {
-        sub: {
-          last: '',
-          level: nextTier?.level ?? -1,
-          tierId: state.tierId,
-        },
-      })
-      return nextTier?.level ?? -1
+  // We check the billing information regularly and it is updated immediately after up or downgrading
+  // We will check this less frequently
+  // @todo consider using the cached billing info if Stripe fails to respond (e.g. 5xx error)
+  if (user.billing?.lastChecked) {
+    const hourAgo = Date.now() - ONE_HOUR_MS
+    const checked = new Date(user.billing.lastChecked).valueOf()
+
+    if (hourAgo < checked) {
+      return sub?.level ?? -1
     }
-
-    return tier.level ?? -1
   }
 
-  if (!user.billing) {
-    return new Error(`Subscription information is invalid - Contact support`)
+  const nextLevel = await resyncSubscription(user)
+  if (nextLevel instanceof Error) {
+    return nextLevel
   }
 
-  const subscription = await stripe.subscriptions
-    .retrieve(user.billing.subscriptionId)
-    .catch((err) => ({ err }))
-
-  if ('err' in subscription) {
-    logger.error({ err: subscription.err }, 'Subscription information could not be retrieved')
-    return new Error(
-      `Could not retrieve subscription information - Please try again or contact support`
-    )
-  }
-
-  const now = Date.now()
-  const limit = new Date(subscription.current_period_end * 1000).valueOf()
-
-  if (now < limit) return tier.level
-
-  const renewedAt = new Date(subscription.current_period_start * 1000)
-  const validUntil = new Date(subscription.current_period_end * 1000)
-
-  if (validUntil.valueOf() < now) {
-    return new Error('Your subscripion has expired')
-  }
-
-  const tierId = state.tierId || subscription.metadata.tierId
-
-  /**
-   * The subscription in Stripe reports that it has been renewed
-   */
-  const nextTier = await getTier(tierId).catch((err) => ({ err }))
-  if ('err' in nextTier) {
-    return new Error(`Could not retrieve subscription tier - Contact support`)
-  }
-
-  user.billing.lastRenewed = renewedAt.toISOString()
-  user.billing.validUntil = validUntil.toISOString()
-  user.billing.status = subscription.status === 'active' ? 'active' : 'cancelled'
-  user.sub = { level: nextTier.level, tierId }
-  await updateUser(user._id, { billing: user.billing, sub: user.sub })
-  return nextTier.level ?? -1
+  return nextLevel ?? -1
 }
 
 export function getUserSubTier(user: AppSchema.User) {
