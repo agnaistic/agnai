@@ -3,6 +3,7 @@ import { store } from '../../db'
 import { errors, handle, StatusError } from '../wrap'
 import { OAuthScope, oauthScopes } from '/common/types'
 import { patreon } from './patreon'
+import { getSafeUserConfig } from './settings'
 
 export const register = handle(async (req) => {
   assertValid({ handle: 'string', username: 'string', password: 'string' }, req.body)
@@ -58,7 +59,8 @@ export const remoteLogin = handle(async (req) => {
 
 export const resyncPatreon = handle(async (req) => {
   await patreon.revalidatePatron(req.userId)
-  return { success: true }
+  const next = await getSafeUserConfig(req.userId)
+  return next
 })
 
 export const verifyPatreonOauth = handle(async (req) => {

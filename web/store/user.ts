@@ -228,6 +228,10 @@ export const userStore = createStore<UserState>(
       const res = await api.post('/admin/billing/subscribe/verify')
       yield { billingLoading: false }
 
+      if (res.result) {
+        yield { user: res.result }
+      }
+
       if (quiet) return
       if (res.result) {
         toastStore.success('You are currently subscribed')
@@ -349,13 +353,18 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async syncPatreonAccount(_, quiet?: boolean) {
+    async *syncPatreonAccount(_, quiet?: boolean) {
       const res = await api.post('/user/resync/patreon')
+
+      if (res.result) {
+        yield { user: res.result }
+      }
+
       if (quiet) return
 
       if (res.result) {
         toastStore.success('Successfully updated Patreon information')
-        return
+        return { user: res.result }
       }
 
       if (res.error) {
