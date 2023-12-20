@@ -152,6 +152,8 @@ export const OPENAI_CHAT_MODELS: Record<string, boolean> = {
 export const CLAUDE_MODELS = {
   ClaudeV1: 'claude-v1',
   ClaudeV2: 'claude-2',
+  ClaudeV2_0: 'claude-2.0',
+  ClaudeV2_1: 'claude-2.1',
   ClaudeV1_100k: 'claude-v1-100k',
   ClaudeV1_0: 'claude-v1.0',
   ClaudeV1_2: 'claude-v1.2',
