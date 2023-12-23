@@ -67,6 +67,7 @@ export async function resyncSubscription(user: AppSchema.User) {
     user.billing.validUntil = validUntil.toISOString()
     user.billing.lastRenewed = renewedAt.toISOString()
     user.billing.status = 'cancelled'
+    user.billing.cancelling = false
     await store.users.updateUser(user._id, { billing: user.billing })
     return new Error('Your subscripion has expired')
   }
