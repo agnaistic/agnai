@@ -24,6 +24,7 @@ export type GuidedTemplate = {
   byline: string
   description: string
   response: string
+  display: string
   introduction: string
   init: string
   loop: string

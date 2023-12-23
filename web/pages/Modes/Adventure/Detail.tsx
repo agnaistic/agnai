@@ -1,11 +1,21 @@
-import { Component, For, JSX, Show, createMemo, createSignal, onMount } from 'solid-js'
+import {
+  Component,
+  For,
+  JSX,
+  Show,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
 import { AdventureInput } from './Input'
 import { GamePane } from './Pane'
 import Button from '/web/shared/Button'
 import { formatResponse, gameStore } from './state'
 import { markdown } from '/web/shared/markdown'
-import { GuidedSession, GuidedTemplate } from '/web/store/data/guided'
+import { GuidedResponse, GuidedSession, GuidedTemplate } from '/web/store/data/guided'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import { Cog, HelpCircle } from 'lucide-solid'
@@ -19,9 +29,8 @@ export const AdventureDetail: Component = (props) => {
   const canLoad = createMemo(() => state.sessions.some((s) => s.gameId === state.template._id))
 
   const trimResult = (i: number) => () => {
-    const msg = { ...state.state.responses[i] }
-    msg.response = trim(`${msg.response}`)
-    gameStore.update({ responses: state.state.responses.map((r, idx) => (idx === i ? msg : r)) })
+    const msg = state.state.responses[i]
+    gameStore.updateResponse(i, trim(msg.response))
   }
 
   onMount(() => {
@@ -89,10 +98,16 @@ export const AdventureDetail: Component = (props) => {
           <For each={state.state.responses}>
             {(res, i) => (
               <>
-                <UserMsg text={res.input} />
+                <Msg msg={res} text={res.input} user index={i()} />
                 <Msg
+                  msg={res}
+                  index={i()}
                   trim={trimResult(i())}
-                  text={formatResponse(state.template.response, state.state, res)}
+                  text={formatResponse(
+                    state.template.display || state.template.response || '{{response}}',
+                    state.state,
+                    res
+                  )}
                 />
               </>
             )}
@@ -192,41 +207,96 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
   )
 }
 
-const Msg: Component<{ text: string; trim?: () => void; edit?: () => void }> = (props) => {
-  const html = createMemo(() => markdown.makeHtml(props.text))
-  return (
-    <div class="bg-700 rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1">
-      <div innerHTML={html()}></div>
-      <div class="flex w-full justify-end gap-1">
-        <Show when={!!props.trim}>
-          <Button size="pill" schema="secondary" onClick={props.trim}>
-            Trim
-          </Button>
-        </Show>
-        <Show when={!!props.edit}>
-          <Button size="pill" schema="secondary" onClick={props.edit}>
-            Edit
-          </Button>
-        </Show>
-      </div>
-    </div>
-  )
-}
+const Msg: Component<{
+  text: string
+  trim?: () => void
+  index?: number
+  user?: boolean
+  msg?: GuidedResponse
+}> = (props) => {
+  let ref: HTMLDivElement
 
-const UserMsg: Component<{ text: string; trim?: () => void; edit?: () => void }> = (props) => {
+  const canEdit = createMemo(() => props.index !== undefined && !!props.msg)
+
   const html = createMemo(() => markdown.makeHtml(props.text))
+
+  createEffect(
+    on(
+      () => props.text,
+      () => {
+        if (ref.innerText === props.text) return
+        ref.innerText = props.text
+      }
+    )
+  )
+
+  const edit = () => {
+    if (!props.msg) return
+    setEdit(true)
+    ref.innerText = props.user ? props.msg.input : props.msg.response
+    ref.focus()
+  }
+
+  const cancel = () => {
+    ref.innerText = props.text
+    setEdit(false)
+  }
+
+  const save = () => {
+    const candidate = ref.innerText
+    if (props.user) {
+      gameStore.updateInput(props.index!, candidate)
+    } else {
+      gameStore.updateResponse(props.index!, candidate)
+    }
+    setEdit(false)
+  }
+
+  const onKeyUp = (ev: KeyboardEvent) => {
+    if (ev.altKey && ev.key === 's') {
+      ev.preventDefault()
+      save()
+    }
+  }
+
+  const [editing, setEdit] = createSignal(false)
   return (
-    <div class="bg-800 rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1">
-      <div innerHTML={html()}></div>
+    <div
+      class="rendered-markdown flex w-full flex-col gap-1 rounded-md px-2 py-1"
+      classList={{
+        'bg-700': !props.user,
+        'bg-800': !!props.user,
+      }}
+    >
+      <div innerHTML={html()} classList={{ hidden: editing() }} />
+      <div
+        ref={(ele) => {
+          ref = ele
+          ele.innerText = props.text
+        }}
+        contentEditable={editing()}
+        classList={{ hidden: !editing() }}
+        onKeyUp={onKeyUp}
+      />
       <div class="flex w-full justify-end gap-1">
-        <Show when={!!props.trim}>
-          <Button size="pill" schema="secondary" onClick={props.trim}>
-            Trim
-          </Button>
-        </Show>
-        <Show when={!!props.edit}>
-          <Button size="pill" schema="secondary" onClick={props.edit}>
+        <Button
+          size="pill"
+          schema="secondary"
+          onClick={props.trim}
+          classList={{ hidden: editing() }}
+        >
+          Trim
+        </Button>
+
+        <Show when={canEdit()}>
+          <Button size="pill" schema="secondary" onClick={edit} classList={{ hidden: editing() }}>
             Edit
+          </Button>
+          <Button size="pill" schema="success" classList={{ hidden: !editing() }} onClick={save}>
+            Save
+          </Button>
+          <Button size="pill" schema="error" classList={{ hidden: !editing() }} onClick={cancel}>
+            Cancel
           </Button>
         </Show>
       </div>

@@ -190,11 +190,23 @@ export const GamePane: Component = (props) => {
 
         <TextInput
           fieldName="responseFormat"
-          label="Response Format"
-          helperMarkdown="How to format responses for **display** and for **prompting** (`{{history}}*`).\n\nYou can use any field derived from your templates."
+          label="Response Prompt Format"
+          helperMarkdown="How to format responses for **prompting** (`{{history}}*`).
+          You can use any field derived from your templates."
           placeholder="E.g. {{response}}"
           value={state.template.response}
           onInputText={(ev) => gameStore.updateTemplate({ response: ev })}
+          isMultiline
+        />
+
+        <TextInput
+          fieldName="displayFormat"
+          label="Response Display Format (Optional)"
+          helperMarkdown="How to display responses for **display** (Uses **Response Prompt Format** if empty)
+           You can use any field derived from your templates."
+          placeholder="E.g. {{response}}"
+          value={state.template.display}
+          onInputText={(ev) => gameStore.updateTemplate({ display: ev })}
           isMultiline
         />
 

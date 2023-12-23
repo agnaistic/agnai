@@ -30,6 +30,7 @@ const init: GameState = {
     description: '',
     init: '',
     response: '',
+    display: '',
     introduction: `{{response}}`,
     history: '{{response}}',
     loop: '',
@@ -121,6 +122,18 @@ export const gameStore = createStore<GameState>(
         const next = templates.filter((t) => t._id !== template._id).concat(template)
         return { template: res.result, templates: next, state: blankSession(template._id) }
       }
+    },
+    updateInput: ({ state }, index: number, text: string) => {
+      const msg = { ...state.responses[index] }
+      msg.input = text
+      const next = state.responses.map((m, i) => (index === i ? msg : m))
+      return { state: { ...state, responses: next } }
+    },
+    updateResponse: ({ state }, index: number, text: string) => {
+      const msg = { ...state.responses[index] }
+      msg.response = text
+      const next = state.responses.map((m, i) => (index === i ? msg : m))
+      return { state: { ...state, responses: next } }
     },
     saveSession: async ({ state }) => {
       const res = await guidedApi.saveSession(state)
@@ -270,6 +283,7 @@ function blankTemplate(): GuidedTemplate {
     history: '',
     introduction: `{{response}}`,
     response: '`{{response}}',
+    display: '',
     lists: {},
   }
 }
@@ -284,6 +298,7 @@ function exampleTemplate(): GuidedTemplate {
     description: '',
     introduction: `Introduction:\n{{intro}}\n\nOpening:\n{{scene}}`,
     response: '{{response}}',
+    display: '',
     lists: {},
     init: neat`
       Generate the game details for a "detective who-dunnit" RPG.
