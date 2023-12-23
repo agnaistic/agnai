@@ -110,7 +110,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
     if (opts.guidance && opts.service === 'agnaistic') {
       try {
         const values = JSON.parse(generated)
-        return { generated, prompt, meta, values }
+        return { generated, prompt, meta, values: Object.assign({}, opts.previous, values) }
       } catch (ex) {}
     }
 

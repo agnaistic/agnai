@@ -5,9 +5,11 @@ import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { gameStore } from './state'
 import { parseTemplateV2 } from '/common/guidance/v2'
-import { GuidedField, GuidedSession } from '/web/store/data/guided'
+import { BUILTIN_TAGS, GuidedField, GuidedSession } from '/web/store/data/guided'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
+
+const FORMATS = Object.keys(BUILTIN_TAGS).map((label) => ({ label, value: label }))
 
 export const GamePane: Component = (props) => {
   const state = gameStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
@@ -158,6 +160,14 @@ export const GamePane: Component = (props) => {
         </div>
         <div>{state.template._id || 'New'}</div>
         <TextInput fieldName="name" label="Name" onInput={updateName} value={state.template.name} />
+
+        <Select
+          fieldName="format"
+          label="Format"
+          items={FORMATS}
+          value={state.state.format}
+          onChange={(item) => gameStore.update({ format: item.value as any })}
+        />
 
         <TextInput
           fieldName="initTemplate"

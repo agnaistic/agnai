@@ -73,7 +73,7 @@ export const ModeDetail: Component<{
                   !!props.pane && mode() === 'pane',
               }}
             >
-              <section class="flex h-full w-full flex-col justify-end gap-2">
+              <section class="flex h-full w-full flex-col justify-end gap-2 sm:pr-2">
                 <div
                   ref={(ref) => {
                     slotContainer = ref

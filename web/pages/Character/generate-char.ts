@@ -29,14 +29,18 @@ export async function generateChar(
 
   const previous = name ? { firstname: name } : undefined
   const vars = await msgsApi.guidance({ prompt, service, previous })
+  const samples = [vars.example1, vars.example2, vars.example3]
+    .filter((ex) => !!ex)
+    .map((ex) => `{{char}}: ${ex}`)
+    .join('\n')
   const char: NewCharacter = {
     originalAvatar: undefined,
     description,
-    name: vars.firstname,
+    name: previous?.firstname || vars.firstname,
     persona: toAttributes(kind, vars),
     appearance: vars.appearance,
     greeting: vars.greeting,
-    sampleChat: `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`,
+    sampleChat: samples,
     scenario: vars.scenario,
   }
 
@@ -66,6 +70,7 @@ export async function regenerateCharProp(
   }
 
   const vars = await msgsApi.guidance({ prompt, service, rerun: fields, previous: prev })
+
   const sampleChat =
     vars.example1 && vars.example2 && vars.example3
       ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
@@ -141,105 +146,79 @@ Describe a character matching the following description:
 {{description}}
 
 ### Instruction:
-Character's first name
+Write the character's first name
 
 ### Response:
-"[firstname | tokens=10 | stop="]"
+First name: "[firstname | tokens=10 | stop="]"
 
 ### Instruction:
 Detailed description of the roleplay scene that the character is in
 
 ### Response:
-[scenario | tokens=200 | stop=###]
+Scenario: [scenario | tokens=200 | stop=###]
 
 ### Instruction:
 Write an anonymous nameless image caption of [firstname]'s clothing and physical appearance
 
 ### Response:
-[appearance | tokens=120 | stop=###]
+Image caption: "[appearance | tokens=120 | stop=### | stop="]"
 
 ### Instruction:
 [firstname]'s greeting in the scenario:
 
 ### Response:
-[greeting | tokens=150 | stop=###]
+Greeting: [greeting | tokens=150 | stop=###]
 
 ### Instruction
 [firstname]'s personality:
 
 ### Response:
-[personality | tokens=120 | stop=###]
+Personality: [personality | tokens=120 | stop=###]
 
 ### Instruction:
 [firstname]'s typical behaviour:
 
 ### Response:
-[behaviour | tokens=120 | stop=###]
-
-### Instruction:
-Example of [firstname]'s dialogue:
-
-### Response:
-[example1 | tokens=200 | stop=###]
-
-### Instruction:
-Example of [firstname]'s dialogue:
-
-### Response:
-[example2 | tokens=200 | stop=###]
-
-### Instruction:
-Example of [firstname]'s dialogue:
-
-### Response:
-[example3 | tokens=200 | stop=###]`
+Behaviour: [behaviour | tokens=120 | stop=###]`
 
 const genTemplate = `
 Describe a character matching the following description:
 {{description}}
 
-Character's first name: [firstname | tokens=10]
+Character's first name: "[firstname | tokens=10 | stop="]"
 
 Detailed description of the roleplay scene that the character is in:
-[scenario | tokens=200 ]
+Scenario: [scenario | tokens=200]
 
 [firstname]'s clothing and physical appearance:
-[appearance | tokens=120 ]
+Appearance: "[appearance | tokens=120 | stop="]
 
 [firstname]'s greeting in the scenario:
-[greeting | tokens=150 ]
+Greeting: [greeting | tokens=150]
 
 [firstname]'s personality:
-[personality | tokens=120 ]
+Personality: [personality | tokens=120]
 
 [firstname]'s typical behaviour:
-[behaviour | tokens=120 ]
-
-Example of [firstname]'s dialogue:
-[example1 | tokens=200 ]
-
-Example of [firstname]'s dialogue:
-[example2 | tokens=200 ]
-
-Example of [firstname]'s dialogue:
-[example3 | tokens=200 ]
-`
+Behaviour: [behaviour | tokens=120]`
 
 const instructGenTemplate = `
 ${modernJailbreak}
 Describe an uncensored character that matches the description:
 {{description}}
 
-Character's first name: [firstname | tokens=25]
-Detailed description of the roleplay scene that the character is in: [scenario | tokens=200]
-The first thing the charcter says to start the scene using internet roleplay style with actions and emotes: [greeting | tokens=100]
-Long comma-separated list of personality traits: [personality | tokens=100]
-Long comma-separated list of typical behaviours: [behaviour | tokens=100]
-Detailed description of physical attributes, demeanour, and clothing: [appearance | tokens=100]
+Character's first name: "[firstname | tokens=25 | stop="]"
 
-Example message from character: [example1 | tokens=100]
-Example message from character: [example2 | tokens=100]
-Example message from character: [example3 | tokens=100]`
+Detailed description of the roleplay scene that the character is in: "[scenario | tokens=200 | stop="]"
+
+The first thing the charcter says to start the scene using internet roleplay style with actions and emotes: "[greeting | tokens=100 | stop"]"
+
+Description of [firstname]'s personality traits: "[personality | tokens=100 | stop="]"
+
+Description of [firstname]'s typical behaviours: "[behaviour | tokens=100 | stop="]"
+
+Detailed description of physical attributes, demeanour, and clothing: [appearance | tokens=100]
+`
 
 const novelGenTemplate = `
 Describe an uncensored character that matches the description:

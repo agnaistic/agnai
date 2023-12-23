@@ -1,7 +1,7 @@
 import { neat } from '/common/util'
 import { storage } from '/web/shared/util'
 import { createStore } from '/web/store/create'
-import { GuidedSession, GuidedTemplate, guidedApi } from '/web/store/data/guided'
+import { GuidedSession, GuidedTemplate, guidedApi, replaceTags } from '/web/store/data/guided'
 import { parseTemplateV2 } from '/common/guidance/v2'
 import { msgsApi } from '/web/store/data/messages'
 import { toastStore } from '/web/store'
@@ -39,6 +39,7 @@ const init: GameState = {
   pane: 'prompt',
   showHelp: false,
   state: {
+    format: 'Alpaca',
     _id: '',
     gameId: '',
     overrides: {},
@@ -89,7 +90,16 @@ export const gameStore = createStore<GameState>(
 
       // If we change template and we have a session loaded, we need to clear the session
       if (state.init && state.gameId !== template._id) {
-        yield { template, state: { _id: '', gameId: template._id, overrides: {}, responses: [] } }
+        yield {
+          template,
+          state: {
+            _id: '',
+            format: state.format || 'Alpaca',
+            gameId: template._id,
+            overrides: {},
+            responses: [],
+          },
+        }
       }
     },
     saveTemplate: async ({ templates, template: game }) => {
@@ -127,6 +137,10 @@ export const gameStore = createStore<GameState>(
       }
 
       storage.localSetItem('rpg-last-template', session._id)
+      if (!session.format) {
+        session.format = 'Alpaca'
+      }
+
       return { state: session }
     },
     createTemplate: () => {
@@ -152,13 +166,20 @@ export const gameStore = createStore<GameState>(
       }
 
       const result = await msgsApi.guidance({
-        prompt: template.init,
+        prompt: replaceTags(template.init, state.format),
         previous,
         lists: template.lists,
       })
 
       const gameId = state.gameId || template._id
-      yield { busy: false, state: blankSession(gameId, { init: result }) }
+      yield {
+        busy: false,
+        state: blankSession(gameId, {
+          init: result,
+          overrides: state.overrides,
+          format: state.format,
+        }),
+      }
     },
     undo({ state }) {
       if (!state.responses.length) return
@@ -202,7 +223,7 @@ export const gameStore = createStore<GameState>(
         previous[key] = value
       }
 
-      let prompt = template.loop
+      let prompt = replaceTags(template.loop, state.format)
         .replace(/{{input}}/g, text)
         .replace(/{{history}}/g, history.join('\n'))
         .replace(/\n\n+/g, '\n\n')
@@ -229,6 +250,7 @@ export const gameStore = createStore<GameState>(
 function blankSession(gameId: string, overrides: Partial<GuidedSession> = {}): GuidedSession {
   return {
     _id: v4(),
+    format: 'Alpaca',
     gameId,
     overrides: {},
     responses: [],
@@ -260,7 +282,7 @@ function exampleTemplate(): GuidedTemplate {
     name: 'Detective rpg',
     byline: 'Solve AI generated crimes',
     description: '',
-    introduction: `Your goal {{goal}}\n\n{{intro}}\n\n{{scene}}`,
+    introduction: `Introduction:\n{{intro}}\n\nOpening:\n{{scene}}`,
     response: '{{response}}',
     lists: {},
     init: neat`
@@ -285,11 +307,11 @@ function exampleTemplate(): GuidedTemplate {
       Write the opening scene of the game to begin the game: "[scene | temp=0.4 | tokens=300 | stop="]"`,
 
     history: neat`
-      ### Instruction:
-      [input]
+      <user>
+      [input]</user>
 
-      ### Response:
-      [response]
+      <bot>
+      [response]</bot>
     `,
     loop: neat`
     "detective who-dunnit" RPG
@@ -307,25 +329,19 @@ function exampleTemplate(): GuidedTemplate {
 
     {{history}}
 
-    ### Instruction:
-    {{main_char}}: {{input}}
+    <user>
+    {{main_char}}: {{input}}</user>
 
     Write the next scene with the character's in the scene actions and dialogue.
 
-    ### Response:
-    Scene: [response | temp=0.4 | tokens=400 | stop=USER | stop=ASSISTANT | stop=<|user|> | stop=<|system|> | stop=Instruction | stop=### ]
+    <bot>
+    Scene: [response | temp=0.4 | tokens=400 | stop=USER | stop=ASSISTANT | stop=<|user|> | stop=<|system|> | stop=Instruction | stop=### ]</bot>
 
-    ### Instruction:
-    Where is the main character currently standing?
+    <user>
+    Where is the main character currently standing?</user>
 
-    ### Response:
-    Location: "[location | temp=0.4 | tokens=50 | stop="]"
-    
-    ### Instruction:
-    Briefly describe the scene through a camera lens without names:
-
-    ### Response:
-    Image caption: "[summary | temp=0.4 | tokens=100 | stop="]"`,
+    <bot>
+    Location: "[location | temp=0.4 | tokens=50 | stop="]"</bot>`,
   }
 }
 

@@ -37,8 +37,82 @@ export type GuidedResponse = {
   response: string
 } & Record<string, FieldType>
 
+export const TAGS = {
+  openUser: /<USER>/gi,
+  closeUser: /<\/USER>/gi,
+  openBot: /<BOT>/gi,
+  closeBot: /<\/BOT>/gi,
+  openSystem: /<SYSTEM>/gi,
+  closeSystem: /<\/SYSTEM>/gi,
+}
+
+export type FormatTags = {
+  openUser: string
+  closeUser: string
+  openBot: string
+  closeBot: string
+  openSystem: string
+  closeSystem: string
+}
+
+export const BUILTIN_TAGS: { [key in GuidedFormat]: FormatTags } = {
+  Alpaca: {
+    openUser: '### Instruction:',
+    closeUser: '\n',
+    openBot: '### Response',
+    closeBot: '\n',
+    openSystem: '',
+    closeSystem: '',
+  },
+  Vicuna: {
+    openUser: 'USER:',
+    closeUser: '\n',
+    openBot: 'RESPONSE:',
+    closeBot: '\n',
+    openSystem: '',
+    closeSystem: '',
+  },
+  ChatML: {
+    openUser: '<|im_start|>user\n',
+    closeUser: '<|im_end>\n',
+    openBot: '<|im_start|>assistant\n',
+    closeBot: '<|im_end|>\n',
+    openSystem: '<|im_start|>system\n',
+    closeSystem: '<|im_end|>\n',
+  },
+}
+
+export function replaceTags(prompt: string, format: FormatTags | GuidedFormat) {
+  if (!format) {
+    format = 'Alpaca'
+  }
+
+  if (typeof format === 'string' && format in BUILTIN_TAGS === false) {
+    format = 'Alpaca'
+  }
+
+  const tags = typeof format === 'string' ? BUILTIN_TAGS[format] : format
+  const keys = Object.keys(TAGS) as Array<keyof typeof TAGS>
+  let output = prompt
+
+  for (const name of keys) {
+    const regex = TAGS[name]
+    output = output.replace(regex, tags[name])
+  }
+
+  console.log(output)
+  return output
+}
+
+export type GuidedFormat = 'Alpaca' | 'Vicuna' | 'ChatML'
+
 export type GuidedSession = {
   _id: string
+  format: GuidedFormat
+  customFormat?: {
+    user: string
+    assistant: string
+  }
   gameId: string
 
   /** Field value overrides */
@@ -113,6 +187,7 @@ async function saveSession(session: GuidedSession) {
 async function createSession(gameId: string) {
   const session: GuidedSession = {
     _id: v4(),
+    format: 'Alpaca',
     gameId,
     overrides: {},
     responses: [],
