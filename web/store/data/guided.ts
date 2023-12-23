@@ -74,12 +74,12 @@ export const BUILTIN_TAGS: { [key in GuidedFormat]: FormatTags } = {
     closeSystem: '',
   },
   ChatML: {
-    openUser: '<|im_start|>user\n',
-    closeUser: '<|im_end>\n',
-    openBot: '<|im_start|>assistant\n',
-    closeBot: '<|im_end|>\n',
-    openSystem: '<|im_start|>system\n',
-    closeSystem: '<|im_end|>\n',
+    openUser: '<|im_start|>user',
+    closeUser: '<|im_end>',
+    openBot: '<|im_start|>assistant',
+    closeBot: '<|im_end|>',
+    openSystem: '<|im_start|>system',
+    closeSystem: '<|im_end|>',
   },
 }
 

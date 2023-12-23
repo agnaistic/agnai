@@ -236,7 +236,7 @@ export const gameStore = createStore<GameState>(
         previous[key] = value
       }
 
-      let prompt = replaceTags(template.loop, state.format)
+      let prompt = template.loop
         .replace(/{{input}}/g, text)
         .replace(/{{history}}/g, history.join('\n'))
         .replace(/\n\n+/g, '\n\n')
@@ -245,6 +245,7 @@ export const gameStore = createStore<GameState>(
         prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), `${value}`)
       }
 
+      prompt = replaceTags(prompt, state.format)
       console.log(prompt)
       const result = await msgsApi.guidance({ prompt, lists: template.lists })
       console.log(JSON.stringify(result, null, 2))
