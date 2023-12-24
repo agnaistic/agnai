@@ -1,4 +1,4 @@
-import { neat } from '/common/util'
+import { neat, now } from '/common/util'
 import { storage } from '/web/shared/util'
 import { createStore } from '/web/store/create'
 import { GuidedSession, GuidedTemplate, guidedApi, replaceTags } from '/web/store/data/guided'
@@ -45,6 +45,7 @@ const init: GameState = {
     gameId: '',
     overrides: {},
     responses: [],
+    updated: now(),
   },
 }
 
@@ -69,7 +70,7 @@ export const gameStore = createStore<GameState>(
       }
 
       return {
-        sessions: sessions.result.sessions,
+        sessions: sessions.result.sessions.sort(sortByAge),
         templates: [blankTemplate()].concat(templates.result.templates),
         inited: true,
         state: session,
@@ -99,6 +100,7 @@ export const gameStore = createStore<GameState>(
             gameId: template._id,
             overrides: {},
             responses: [],
+            updated: now(),
           },
         }
       }
@@ -136,13 +138,14 @@ export const gameStore = createStore<GameState>(
       return { state: { ...state, responses: next } }
     },
     saveSession: async ({ state }) => {
-      const res = await guidedApi.saveSession(state)
+      const next = { ...state, updated: now() }
+      const res = await guidedApi.saveSession(next)
       if (res.result) {
         storage.localSetItem('rpg-last-template', res.result.session._id)
         return { sessions: res.result.sessions, state: res.result.session }
       }
     },
-    loadSession: async ({ sessions }, id: string) => {
+    loadSession: async ({ sessions, templates }, id: string) => {
       const session = sessions.find((s) => s._id === id)
       if (!session) {
         toastStore.error(`Session not found`)
@@ -154,7 +157,13 @@ export const gameStore = createStore<GameState>(
         session.format = 'Alpaca'
       }
 
-      return { state: session }
+      const template = templates.find((t) => t._id === session.gameId)
+      if (!template) {
+        toastStore.error(`Session template not found`)
+        return
+      }
+
+      return { state: session, template }
     },
     createTemplate: () => {
       const game = exampleTemplate()
@@ -166,7 +175,7 @@ export const gameStore = createStore<GameState>(
     },
 
     update({ state }, update: Partial<GuidedSession>) {
-      const next = { ...state, ...update }
+      const next = { ...state, ...update, updated: now() }
       return { state: next }
     },
     async *start({ template, state }) {
@@ -270,6 +279,7 @@ function blankSession(gameId: string, overrides: Partial<GuidedSession> = {}): G
     gameId,
     overrides: {},
     responses: [],
+    updated: now(),
     ...overrides,
   }
 }
@@ -396,4 +406,10 @@ export function formatResponse(
 
   const output = outputs.join('\n')
   return output
+}
+
+function sortByAge(left: GuidedSession, right: GuidedSession) {
+  const l = new Date(left.updated ?? 0).valueOf()
+  const r = new Date(right.updated ?? 0).valueOf()
+  return r - l
 }

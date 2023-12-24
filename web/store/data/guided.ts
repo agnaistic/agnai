@@ -1,6 +1,7 @@
 import { v4 } from 'uuid'
 import { storage } from '/web/shared/util'
 import { localApi } from './storage'
+import { now } from '/common/util'
 
 const KEYS = {
   templates: 'agnai-guided-templates',
@@ -31,6 +32,24 @@ export type GuidedTemplate = {
   history: string
   fields: Array<GuidedField>
   lists: Record<string, string[]>
+}
+
+export type GuidedFormat = 'Alpaca' | 'Vicuna' | 'ChatML'
+
+export type GuidedSession = {
+  _id: string
+  format: GuidedFormat
+  customFormat?: {
+    user: string
+    assistant: string
+  }
+  gameId: string
+
+  /** Field value overrides */
+  init?: Record<string, string>
+  overrides: Record<string, string>
+  responses: GuidedResponse[]
+  updated: string
 }
 
 export type GuidedResponse = {
@@ -105,23 +124,6 @@ export function replaceTags(prompt: string, format: FormatTags | GuidedFormat) {
   return output
 }
 
-export type GuidedFormat = 'Alpaca' | 'Vicuna' | 'ChatML'
-
-export type GuidedSession = {
-  _id: string
-  format: GuidedFormat
-  customFormat?: {
-    user: string
-    assistant: string
-  }
-  gameId: string
-
-  /** Field value overrides */
-  init?: Record<string, string>
-  overrides: Record<string, string>
-  responses: GuidedResponse[]
-}
-
 export const guidedApi = {
   createTemplate,
   getTemplates,
@@ -192,6 +194,7 @@ async function createSession(gameId: string) {
     gameId,
     overrides: {},
     responses: [],
+    updated: now(),
   }
 
   const { result } = await getSessions()

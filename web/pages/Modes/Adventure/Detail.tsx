@@ -19,6 +19,7 @@ import { GuidedResponse, GuidedSession, GuidedTemplate } from '/web/store/data/g
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import { Cog, HelpCircle } from 'lucide-solid'
+import { toDuration, toMap } from '/web/shared/util'
 // import { imageApi } from '/web/store/data/image'
 
 export const AdventureDetail: Component = (props) => {
@@ -174,7 +175,15 @@ export const AdventureDetail: Component = (props) => {
 }
 
 const LoadModal: Component<{ close: () => void }> = (props) => {
-  const sessions = gameStore((g) => g.sessions.filter((s) => s.gameId === g.template._id))
+  const sessions = gameStore((g) => {
+    const templates = toMap(g.templates)
+    const sessions = g.sessions.map((sess) => ({
+      _id: sess._id,
+      name: templates[sess.gameId].name,
+      age: new Date(sess.updated ?? new Date()),
+    }))
+    return sessions
+  })
   const load = (id: string) => {
     gameStore.loadSession(id)
     props.close()
@@ -184,7 +193,11 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
     <Modal maxWidth="half" show close={props.close}>
       <div class="flex flex-col gap-1">
         <For each={sessions}>
-          {(sess) => <Button onClick={() => load(sess._id)}>{sess._id}</Button>}
+          {(sess) => (
+            <Button onClick={() => load(sess._id)}>
+              {sess.name} {toDuration(sess.age)}
+            </Button>
+          )}
         </For>
       </div>
     </Modal>
