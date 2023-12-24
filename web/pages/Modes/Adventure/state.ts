@@ -211,7 +211,7 @@ export const gameStore = createStore<GameState>(
 
     async *send({ template, state }, text: string, onSuccess: () => void) {
       yield { busy: true }
-      const ast = parseTemplateV2(template.history)
+      const ast = parseTemplateV2(replaceTags(template.history, state.format))
       const history: string[] = []
 
       for (const resp of state.responses) {
@@ -236,10 +236,7 @@ export const gameStore = createStore<GameState>(
         previous[key] = value
       }
 
-      let prompt = template.loop
-        .replace(/{{input}}/g, text)
-        .replace(/{{history}}/g, history.join('\n'))
-        .replace(/\n\n+/g, '\n\n')
+      let prompt = template.loop.replace(/{{input}}/g, text).replace(/\n\n+/g, '\n\n')
 
       for (const [key, value] of Object.entries(previous)) {
         prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), `${value}`)
@@ -247,7 +244,11 @@ export const gameStore = createStore<GameState>(
 
       prompt = replaceTags(prompt, state.format)
       console.log(prompt)
-      const result = await msgsApi.guidance({ prompt, lists: template.lists })
+      const result = await msgsApi.guidance({
+        prompt,
+        lists: template.lists,
+        placeholders: { history },
+      })
       console.log(JSON.stringify(result, null, 2))
       onSuccess()
 
@@ -257,6 +258,7 @@ export const gameStore = createStore<GameState>(
         busy: false,
         state: Object.assign({}, state, { responses: next }),
       }
+      gameStore.saveSession()
     },
   }
 })

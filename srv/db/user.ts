@@ -289,16 +289,16 @@ export async function findByPatreonUserId(id: string) {
 const ONE_HOUR_MS = 60000 * 60
 
 export async function validateSubscription(user: AppSchema.User) {
-  if (user.admin) return { tier: undefined, level: Infinity }
+  if (user.admin) return Infinity
 
   const sub = getUserSubTier(user)
-  if (!sub) return { tier: undefined, level: -1 }
+  if (!sub) return -1
 
   const { type, tier, level } = sub
-  if (!tier.enabled) return { tier, level: tier.level ?? -1 }
+  if (!tier.enabled) return tier.level ?? -1
 
   if (type === 'patreon') {
-    if (!user.patreon) return { tier: undefined, level: -1 }
+    if (!user.patreon) return -1
 
     const expiry = new Date(user.patreon.member?.attributes.next_charge_date || 0)
 
@@ -306,13 +306,13 @@ export async function validateSubscription(user: AppSchema.User) {
     // We regularly re-sync Patron information so we can rely on this date
     if (expiry.valueOf() <= Date.now()) {
       const next = await patreon.revalidatePatron(user._id)
-      if (!next) return { tier: undefined, level: -1 }
+      if (!next) return -1
       const tier = getUserSubTier(next)
-      if (!tier) return { tier: undefined, level: -1 }
-      return { tier: tier.tier, level: tier.level }
+      if (!tier) return -1
+      return tier.level
     }
 
-    return { tier, level }
+    return level
   }
 
   // We check the billing information regularly and it is updated immediately after up or downgrading

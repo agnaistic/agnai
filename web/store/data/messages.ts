@@ -108,19 +108,15 @@ export async function basicInference({ prompt, settings }: InferenceOpts) {
   return res
 }
 
-export async function guidance<T = any>({
-  prompt,
-  service,
-  maxTokens,
-  settings,
-  previous,
-  lists,
-  rerun,
-}: InferenceOpts & {
-  previous?: any
-  lists?: Record<string, string[]>
-  rerun?: string[]
-}): Promise<T> {
+export async function guidance<T = any>(
+  opts: InferenceOpts & {
+    previous?: any
+    lists?: Record<string, string[]>
+    placeholders?: Record<string, string | string[]>
+    rerun?: string[]
+  }
+): Promise<T> {
+  const { prompt, service, maxTokens, settings, previous, lists, rerun, placeholders } = opts
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -139,6 +135,7 @@ export async function guidance<T = any>({
     maxTokens,
     previous,
     lists,
+    placeholders,
     reguidance: rerun,
   })
 

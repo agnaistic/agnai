@@ -169,6 +169,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 
   const body = {
     prompt,
+    context_limit: gen.maxContextLength,
     max_new_tokens: gen.maxTokens,
     do_sample: gen.doSample ?? true,
     temperature: gen.temp,

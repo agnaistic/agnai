@@ -86,15 +86,14 @@ export const handleAgnaistic: ModelAdapter = async function* (opts) {
   const level = opts.subscription.level ?? -1
   const preset = opts.subscription.preset
 
-  let sub = await store.users.validateSubscription(opts.user)
-  if (sub instanceof Error) {
-    yield { error: sub.message }
-    return
-  }
-
-  let newLevel = sub.level
+  let newLevel = await store.users.validateSubscription(opts.user)
   if (newLevel === undefined) {
     newLevel = -1
+  }
+
+  if (newLevel instanceof Error) {
+    yield { error: newLevel.message }
+    return
   }
 
   if (preset.subLevel > -1 && preset.subLevel > newLevel) {
