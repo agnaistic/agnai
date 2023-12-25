@@ -17,6 +17,18 @@ const [css, hooks] = createHooks(recommended)
 
 export { hooks, css }
 
+export function downloadJson(content: string | object, filename: string = 'agnai_export') {
+  const output = encodeURIComponent(
+    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+  )
+
+  const anchor = document.createElement('a')
+  anchor.href = `data:text/json:charset=utf-8,${output}`
+  anchor.download = `${filename}.json`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
 export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
   switch (chatWidth) {
     case 'xl':

@@ -8,10 +8,12 @@ import { parseTemplateV2 } from '/common/guidance/v2'
 import { BUILTIN_TAGS, GuidedField, GuidedSession } from '/web/store/data/guided'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
+import { Card } from '/web/shared/Card'
+import { exportTemplate } from './util'
 
 const FORMATS = Object.keys(BUILTIN_TAGS).map((label) => ({ label, value: label }))
 
-export const GamePane: Component = (props) => {
+export const GamePane: Component<{ close: () => void }> = (props) => {
   const state = gameStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
   const [over, setOver] = createStore<Record<string, string>>(state.state.overrides || {})
 
@@ -140,93 +142,122 @@ export const GamePane: Component = (props) => {
     gameStore.updateTemplate({ fields })
   }
 
+  const bg = 'bg-700'
+  const opacity = 1
+
   return (
-    <Convertible kind="partial" close={() => gameStore.setState({ pane: undefined })}>
+    <Convertible kind="partial" close={props.close}>
       <div class="flex flex-col gap-4">
         <div class="flex gap-1">
-          <Show when={state.list.length > 0}>
-            <Select
-              fieldName="templateId"
-              items={items()}
-              value={templateId()}
-              onChange={(ev) => gameStore.loadTemplate(ev.value)}
-            />
-          </Show>
           <Button onClick={gameStore.createTemplate}>New</Button>
           <Button onClick={gameStore.saveTemplate}>Save</Button>
           <Show when={state.template._id !== ''}>
             <Button onClick={gameStore.saveTemplateCopy}>Copy</Button>
+            <Button onClick={() => exportTemplate(state.template._id)}>Export</Button>
           </Show>
+          <Button onClick={() => gameStore.setState({ showModal: 'import' })}>Import</Button>
         </div>
-        <div>{state.template._id || 'New'}</div>
-        <TextInput fieldName="name" label="Name" onInput={updateName} value={state.template.name} />
+        <Show when={state.list.length > 0}>
+          <Card bg={bg} bgOpacity={opacity}>
+            <Select
+              fieldName="templateId"
+              label="Open Template"
+              items={items()}
+              value={templateId()}
+              onChange={(ev) => gameStore.loadTemplate(ev.value)}
+            />
+          </Card>
+        </Show>
 
-        <Select
-          fieldName="format"
-          label="Format"
-          items={FORMATS}
-          value={state.state.format}
-          onChange={(item) => gameStore.update({ format: item.value as any })}
-        />
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="name"
+            label="Name"
+            onInput={updateName}
+            value={state.template.name}
+          />
+        </Card>
 
-        <TextInput
-          fieldName="initTemplate"
-          label="Initial Template"
-          helperMarkdown="For generating the initial values for your introduction."
-          onInput={updateInit}
-          value={state.template.init}
-          isMultiline
-        />
+        <Card bg={bg} bgOpacity={opacity}>
+          <Select
+            fieldName="format"
+            label="Format"
+            items={FORMATS}
+            value={state.state.format}
+            onChange={(item) => gameStore.update({ format: item.value as any })}
+          />
+        </Card>
 
-        <TextInput
-          fieldName="introFormat"
-          label="Introduction Format"
-          helperMarkdown="How to format your introduction. .\n\nYou can use any field derived from your **Initial Template**."
-          placeholder="E.g. {{response}}"
-          value={state.template.introduction}
-          onInputText={(ev) => gameStore.updateTemplate({ introduction: ev })}
-          isMultiline
-        />
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="initTemplate"
+            label="Initial Template"
+            helperMarkdown="For generating the initial values for your introduction."
+            onInput={updateInit}
+            value={state.template.init}
+            isMultiline
+          />
+        </Card>
 
-        <TextInput
-          fieldName="responseFormat"
-          label="Response Prompt Format"
-          helperMarkdown="How to format responses for **prompting** (`{{history}}*`).
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="introFormat"
+            label="Introduction Format"
+            helperMarkdown="How to format your introduction. .\n\nYou can use any field derived from your **Initial Template**."
+            placeholder="E.g. {{response}}"
+            value={state.template.introduction}
+            onInputText={(ev) => gameStore.updateTemplate({ introduction: ev })}
+            isMultiline
+          />
+        </Card>
+
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="responseFormat"
+            label="Response Prompt Format"
+            helperMarkdown="How to format responses for **prompting** (`{{history}}*`).
           You can use any field derived from your templates."
-          placeholder="E.g. {{response}}"
-          value={state.template.response}
-          onInputText={(ev) => gameStore.updateTemplate({ response: ev })}
-          isMultiline
-        />
+            placeholder="E.g. {{response}}"
+            value={state.template.response}
+            onInputText={(ev) => gameStore.updateTemplate({ response: ev })}
+            isMultiline
+          />
+        </Card>
 
-        <TextInput
-          fieldName="displayFormat"
-          label="Response Display Format (Optional)"
-          helperMarkdown="How to display responses for **display** (Uses **Response Prompt Format** if empty)
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="displayFormat"
+            label="Response Display Format (Optional)"
+            helperMarkdown="How to display responses for **display** (Uses **Response Prompt Format** if empty)
            You can use any field derived from your templates."
-          placeholder="E.g. {{response}}"
-          value={state.template.display}
-          onInputText={(ev) => gameStore.updateTemplate({ display: ev })}
-          isMultiline
-        />
+            placeholder="E.g. {{response}}"
+            value={state.template.display}
+            onInputText={(ev) => gameStore.updateTemplate({ display: ev })}
+            isMultiline
+          />
+        </Card>
 
-        <TextInput
-          fieldName="historyTemplate"
-          label="History Template"
-          helperMarkdown="Use **{{history}}** in the game loop template"
-          onInput={updateHistory}
-          value={state.template.history}
-          isMultiline
-        />
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="historyTemplate"
+            label="History Template"
+            helperMarkdown="Use **{{history}}** in the game loop template"
+            onInput={updateHistory}
+            value={state.template.history}
+            isMultiline
+          />
+        </Card>
 
-        <TextInput
-          fieldName="loopTemplate"
-          label="Game Loop Template"
-          helperMarkdown="Use **{{input}}** to use the user input"
-          onInput={updateLoop}
-          value={state.template.loop}
-          isMultiline
-        />
+        <Card bg={bg} bgOpacity={opacity}>
+          <TextInput
+            fieldName="loopTemplate"
+            label="Game Loop Template"
+            helperMarkdown="Use **{{input}}** to use the user input"
+            onInput={updateLoop}
+            value={state.template.loop}
+            isMultiline
+          />
+        </Card>
 
         <For each={store.errors}>
           {(error) => <div class="my-1 font-bold text-red-500">{error}</div>}

@@ -2,7 +2,9 @@ import {
   Component,
   For,
   JSX,
+  Match,
   Show,
+  Switch,
   createEffect,
   createMemo,
   createSignal,
@@ -20,19 +22,22 @@ import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
 import { Cog, HelpCircle } from 'lucide-solid'
 import { toDuration, toMap } from '/web/shared/util'
+import { useSearchParams } from '@solidjs/router'
+import { ImportTemplate } from './ImportModal'
 // import { imageApi } from '/web/store/data/image'
 
 export const AdventureDetail: Component = (props) => {
   let input: HTMLTextAreaElement
   const state = gameStore()
+  const [params, setParams] = useSearchParams()
   const [load, setLoad] = createSignal(false)
-  const [image, _setImage] = createSignal<string>()
-  const canLoad = createMemo(() => state.sessions.some((s) => s.gameId === state.template._id))
 
   const trimResult = (i: number) => () => {
     const msg = state.state.responses[i]
     gameStore.updateResponse(i, trim(msg.response))
   }
+
+  const closePane = () => setParams({ pane: '' })
 
   onMount(() => {
     gameStore.init()
@@ -52,12 +57,12 @@ export const AdventureDetail: Component = (props) => {
   //   return last.summary
   // })
 
-  const headerImage = createMemo(() => {
-    const src = image()
-    if (!src) return null
+  // const headerImage = createMemo(() => {
+  //   const src = image()
+  //   if (!src) return null
 
-    return <img src={src} class="h-full" />
-  })
+  //   return <img src={src} class="h-full" />
+  // })
 
   const undo = () => {
     const last = state.state.responses.slice(-1)[0]
@@ -70,11 +75,11 @@ export const AdventureDetail: Component = (props) => {
   }
 
   const sidePane = createMemo(() => {
-    if (!state.pane) return null
+    if (!params.pane) return null
 
-    switch (state.pane) {
+    switch (params.pane) {
       case 'prompt':
-        return <GamePane />
+        return <GamePane close={closePane} />
     }
 
     return null
@@ -86,7 +91,7 @@ export const AdventureDetail: Component = (props) => {
         loading={false}
         header={<Header template={state.template} session={state.state} />}
         pane={sidePane()}
-        split={headerImage()}
+        // split={headerImage()}
         splitHeight={30}
       >
         <div class="flex flex-col gap-2">
@@ -123,7 +128,7 @@ export const AdventureDetail: Component = (props) => {
               </Button>
             </Show>
 
-            <Show when={canLoad()}>
+            <Show when={state.sessions.length > 0}>
               <Button size="pill" onClick={() => setLoad(true)}>
                 Load
               </Button>
@@ -169,7 +174,15 @@ export const AdventureDetail: Component = (props) => {
       <Show when={load()}>
         <LoadModal close={() => setLoad(false)} />
       </Show>
-      <GuidanceHelp />
+      <Switch>
+        <Match when={state.showModal === 'help'}>
+          <GuidanceHelp />
+        </Match>
+
+        <Match when={state.showModal === 'import'}>
+          <ImportTemplate />
+        </Match>
+      </Switch>
     </>
   )
 }
@@ -205,14 +218,15 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
 }
 
 const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = (props) => {
+  const [_, setParams] = useSearchParams()
   return (
     <div class="bg-800 flex w-full justify-between rounded-md px-1 py-2">
       <div>{props.template.name || 'Untitled Template'}</div>
       <div class="flex gap-2">
-        <Button onClick={() => gameStore.setState({ pane: 'prompt' })}>
+        <Button onClick={() => setParams({ pane: 'prompt' })}>
           <Cog />
         </Button>
-        <Button onClick={() => gameStore.setState({ showHelp: true })}>
+        <Button onClick={() => gameStore.setState({ showModal: 'help' })}>
           <HelpCircle />
         </Button>
       </div>

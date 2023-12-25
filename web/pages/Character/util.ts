@@ -138,27 +138,6 @@ export function toCharacterMap(bots: AppSchema.Character[]) {
   return map
 }
 
-export async function convertCharToJSON(
-  char: AppSchema.Character | string,
-  format: string,
-  schema: string
-) {
-  if (typeof char === 'string') {
-    const res = await charsApi.getCharacterDetail(char)
-    if (res.error) {
-      return toastStore.error(`Failed to download character: ${res.error}`)
-    }
-
-    if (res.result) {
-      const json = charToJson(res.result, format, schema)
-      return `data:text/json:charset=utf-8,${encodeURIComponent(json)}`
-    }
-  } else {
-    const json = charToJson(char, format, schema)
-    return `data:text/json:charset=utf-8,${encodeURIComponent(json)}`
-  }
-}
-
 export async function downloadCharCard(
   input: string | AppSchema.Character,
   format: string,

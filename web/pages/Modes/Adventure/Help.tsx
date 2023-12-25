@@ -5,15 +5,14 @@ import { markdown } from '/web/shared/markdown'
 import { gameStore } from './state'
 
 export const GuidanceHelp: Component = (props) => {
-  const state = gameStore()
   return (
     <Modal
       maxWidth="half"
-      show={state.showHelp}
-      close={() => gameStore.setState({ showHelp: false })}
+      show
+      close={() => gameStore.setState({ showModal: 'none' })}
       title="Guidance"
     >
-      <div class="rendered-markdown" innerHTML={markdown.makeHtml(text)}></div>
+      <div class="rendered-markdown text-sm" innerHTML={markdown.makeHtml(text)}></div>
     </Modal>
   )
 }
@@ -51,6 +50,6 @@ What kind of personality does "[full name]" have?
 "[personality | type=list personalities]"
 
 Write the background story for "[full_name]":
-"[background | tokens=250 | temp=0.6 | stop="]"
+"[background | tokens=250 | temp=0.6 | stop=" | stop=### | stop=</ | stop=USER]"
 \`\`\`
 `

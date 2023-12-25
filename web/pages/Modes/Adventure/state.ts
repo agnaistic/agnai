@@ -14,8 +14,7 @@ type GameState = {
   sessions: GuidedSession[]
   inited: boolean
   busy: boolean
-  pane?: 'prompt'
-  showHelp: boolean
+  showModal: 'help' | 'import' | 'none'
 }
 
 const init: GameState = {
@@ -37,8 +36,7 @@ const init: GameState = {
     fields: [],
     lists: {},
   },
-  pane: 'prompt',
-  showHelp: false,
+  showModal: 'none',
   state: {
     format: 'Alpaca',
     _id: '',
@@ -111,6 +109,13 @@ export const gameStore = createStore<GameState>(
         const template = res.result
         const next = templates.filter((t) => t._id !== template._id).concat(template)
         return { template: res.result, templates: next }
+      }
+    },
+    importTemplate: async ({ templates }, importing: GuidedTemplate) => {
+      const res = await guidedApi.saveTemplate(importing)
+      if (res.result) {
+        const next = templates.concat(res.result)
+        return { templates: next }
       }
     },
     saveTemplateCopy: async ({ templates, template: game }) => {
@@ -363,7 +368,7 @@ function exampleTemplate(): GuidedTemplate {
     Write the next scene with the character's in the scene actions and dialogue.
 
     <bot>
-    Scene: [response | temp=0.4 | tokens=400 | stop=USER | stop=ASSISTANT | stop=<|user|> | stop=<|system|> | stop=Instruction | stop=### ]</bot>
+    [response | temp=0.4 | tokens=300 | stop=USER | stop=ASSISTANT | stop=</ | stop=<| | stop=### ]</bot>
 
     <user>
     Where is the main character currently standing?</user>
