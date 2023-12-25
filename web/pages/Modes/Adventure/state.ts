@@ -228,6 +228,10 @@ export const gameStore = createStore<GameState>(
       const ast = parseTemplateV2(replaceTags(template.history, state.format))
       const history: string[] = []
 
+      if (state.init) {
+        history.push(formatResponse(template.introduction, state, state.init))
+      }
+
       for (const resp of state.responses) {
         let line = ''
         for (const node of ast) {
