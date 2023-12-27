@@ -102,6 +102,7 @@ export async function* getTextgenCompletion(
 
 export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
   const { gen, prompt } = opts
+
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {
       prompt,
@@ -239,6 +240,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     lists: opts.lists,
     previous: opts.previous,
   }
+
   return body
 }
 

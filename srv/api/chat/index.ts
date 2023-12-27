@@ -18,6 +18,7 @@ import { deleteChat, deleteMessages } from './remove'
 import { textToSpeech } from './texttospeech'
 import { addCharacter, upsertTempCharacter, removeCharacter } from './characters'
 import { generateActions, guidance, inference, inferenceApi } from './inference'
+import { translate } from './translate'
 
 const router = Router()
 
@@ -31,6 +32,8 @@ router.post('/:id/generate', generateMessageV2)
 router.post('/:id/guest-message', guestGenerateMsg)
 router.post('/:id/image', createImage)
 router.post('/:id/voice', textToSpeech)
+router.post('/:id/translate', translate)
+
 router.use(loggedIn)
 router.get('/', getAllChats)
 router.post('/:id/restart', restartChat)

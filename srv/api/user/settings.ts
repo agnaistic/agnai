@@ -158,6 +158,7 @@ const validConfig = {
   elevenLabsApiKey: 'string?',
   speechtotext: 'any?',
   texttospeech: 'any?',
+  translation: 'any?',
   images: 'any?',
   defaultPreset: 'string?',
   adapterConfig: 'any?',
@@ -273,6 +274,10 @@ export const updateConfig = handle(async ({ userId, body }) => {
 
   if (body.speechtotext) {
     update.speechtotext = body.speechtotext
+  }
+
+  if (body.translation) {
+    update.translation = body.translation
   }
 
   if (body.texttospeech) {

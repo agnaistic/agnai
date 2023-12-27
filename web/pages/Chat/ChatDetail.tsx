@@ -136,6 +136,7 @@ const ChatDetail: Component = () => {
   const [linesAddedCount, setLinesAddedCount] = createSignal<number | undefined>(undefined)
 
   const chatMsgs = createMemo(() => {
+
     const self = user.profile
     const messages = msgs.msgs.map((msg) => {
       if (msg.characterId) {
@@ -157,6 +158,7 @@ const ChatDetail: Component = () => {
 
       return msg
     })
+
 
     if (!chats.chat || !chats.char) return []
     const doShowHiddenEvents = showHiddenEvents()
@@ -183,6 +185,7 @@ const ChatDetail: Component = () => {
     setEvented(true)
 
     const messages = msgs.msgs
+
     const isNonEvent = !msgs.msgs[0]?.event
     if (isNonEvent && messages.length <= 1) {
       eventStore.onGreeting(chats.chat)

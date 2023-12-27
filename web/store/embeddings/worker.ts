@@ -83,7 +83,6 @@ const handlers: {
     if (!embeddings[msg.chatId]) {
       embeddings[msg.chatId] = {}
     }
-
     embed(msg)
   },
   embedDocument: async (msg) => {
@@ -180,6 +179,7 @@ async function embed(msg: RequestChatEmbed | RequestDocEmbed) {
 
   EMBEDDING = true
   post('status', { id, kind: type, status: 'loading' })
+
   console.log(`[${type}] ${id} started`)
   if (msg.type === 'embedChat') {
     const cache = embeddings[msg.chatId]

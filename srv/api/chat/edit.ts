@@ -1,10 +1,11 @@
 import { assertValid } from '/common/valid'
 import { config } from '../../config'
 import { store } from '../../db'
-import { StatusError, errors, handle } from '../wrap'
+import { errors, handle, StatusError } from '../wrap'
 import { sendMany } from '../ws'
 import { personaValidator } from './common'
 import { AppSchema } from '/common/types'
+import { translateMessage } from '/srv/translate'
 
 export const updateChat = handle(async ({ params, body, user, userId }) => {
   assertValid(
@@ -76,14 +77,17 @@ export const updateChat = handle(async ({ params, body, user, userId }) => {
 /**
  * @deprecated
  */
-export const updateMessage = handle(async ({ body, params, userId }) => {
+export const updateMessage = handle(async ({ body, log, params, userId }) => {
   assertValid({ message: 'string' }, body)
   const prev = await store.chats.getMessageAndChat(params.id)
 
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
 
-  const message = await store.msgs.editMessage(params.id, { msg: body.message, state: 'edited' })
+  const message = await store.msgs.editMessage(params.id, {
+    msg: body.message,
+    state: 'edited',
+  })
 
   sendMany(prev.chat?.memberIds.concat(prev.chat.userId), {
     type: 'message-edited',
@@ -94,13 +98,14 @@ export const updateMessage = handle(async ({ body, params, userId }) => {
   return message
 })
 
-export const swapMessage = handle(async ({ body, params, userId }) => {
+export const swapMessage = handle(async ({ body, log, params, userId }) => {
   assertValid(
     { imagePrompt: 'string?', msg: 'string?', extras: ['string?'], retries: ['string?'] },
     body
   )
 
   const prev = await store.chats.getMessageAndChat(params.id)
+  const translation = await store.users.getTranslation(userId)
 
   if (!prev || !prev.chat) throw errors.NotFound
   if (prev.chat?.userId !== userId) throw errors.Forbidden
@@ -112,6 +117,11 @@ export const swapMessage = handle(async ({ body, params, userId }) => {
     extras: body.extras || prev.msg.extras,
   }
 
+  const translatedMessage = await translateMessage(params.id, log, 'en', update.msg, translation)
+
+  update.translatedMsg = update.msg
+  update.msg = translatedMessage
+
   const message = await store.msgs.editMessage(params.id, {
     ...update,
     state: body.msg === undefined ? prev.msg.state : 'swapped',
@@ -121,7 +131,8 @@ export const swapMessage = handle(async ({ body, params, userId }) => {
     type: 'message-swapped',
     messageId: params.id,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
-    message: body.msg || prev.msg.msg,
+    message: update.msg || prev.msg.msg,
+    translatedMessage: update.translateMsg,
     extras: body.extras || prev.msg.extras,
   })
 
@@ -146,6 +157,11 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     extras: body.extras || prev.msg.extras,
   }
 
+  const translatedMessage = await translateMessage(params.id, log, 'en', update.msg, translation)
+
+  update.translatedMsg = update.msg
+  update.msg = translatedMessage
+
   const message = await store.msgs.editMessage(params.id, {
     ...update,
     state: body.msg === undefined ? prev.msg.state : 'edited',
@@ -155,22 +171,25 @@ export const updateMessageProps = handle(async ({ body, params, userId }) => {
     type: 'message-edited',
     messageId: params.id,
     imagePrompt: body.imagePrompt || prev.msg.imagePrompt,
-    message: body.msg || prev.msg.msg,
+    message: update.msg || prev.msg.msg,
+    translatedMessage: update.translatedMsg,
     extras: body.extras || prev.msg.extras,
   })
 
   return message
 })
 
-export const restartChat = handle(async ({ params, body, userId }) => {
+export const restartChat = handle(async ({ params, body, log, userId }) => {
   assertValid({ impersonating: 'string?' }, body)
   const profile = await store.users.getProfile(userId)
+  const translation = await store.users.getTranslation(userId)
+
   const impersonate = body.impersonating
     ? await store.characters.getCharacter(userId, body.impersonating)
     : undefined
 
   const chatId = params.id
-  await store.chats.restartChat(userId, chatId, profile!, impersonate)
+  await store.chats.restartChat(userId, chatId, log, profile!, translation, impersonate)
   return { success: true }
 })
 

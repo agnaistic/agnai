@@ -137,7 +137,7 @@ const Message: Component<MessageProps> = (props) => {
   const startEdit = () => {
     setEdit(true)
     if (editRef) {
-      editRef.innerText = props.msg.msg
+      editRef.innerText = props.msg.translatedMsg
     }
     editRef?.focus()
   }
@@ -650,7 +650,7 @@ function getMessageContent(ctx: ContextState, props: MessageProps, state: ChatSt
     return { type: 'waiting', message: '', class: 'not-streaming' }
   }
 
-  let message = props.msg.msg
+  let message = props.msg.translatedMsg
 
   if (props.last && props.swipe) message = props.swipe
   if (props.msg.event && !props.showHiddenEvents) {

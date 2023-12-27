@@ -1,5 +1,5 @@
 import { v4 } from 'uuid'
-import { AppSchema } from '../../common/types/schema'
+import { AppSchema } from '/common/types'
 import { EVENTS, events } from '../emitter'
 import { createDebounce, getAssetUrl } from '../shared/util'
 import { isLoggedIn } from './api'
@@ -13,7 +13,7 @@ import { userStore } from './user'
 import { localApi } from './data/storage'
 import { chatStore } from './chat'
 import { voiceApi } from './data/voice'
-import { VoiceSettings, VoiceWebSynthesisSettings } from '../../common/types/texttospeech-schema'
+import { VoiceSettings, VoiceWebSynthesisSettings } from '/common/types'
 import { defaultCulture } from '../shared/CultureCodes'
 import { createSpeech, isNativeSpeechSupported, stopSpeech } from '../shared/Audio/speech'
 import { eventStore } from './event'
@@ -242,8 +242,17 @@ export const msgStore = createStore<MsgState>(
       if (res.error) {
         toastStore.error(`Failed to update message: ${res.error}`)
       }
+
       if (res.result) {
-        yield { msgs: msgs.map((m) => (m._id === msgId ? { ...m, msg, voiceUrl: undefined } : m)) }
+        const translatedMsg = res.result.translatedMsg
+
+        msg = res.result.msg
+
+        yield {
+          msgs: msgs.map((m) =>
+            m._id === msgId ? { ...m, msg, translatedMsg, voiceUrl: undefined } : m
+          ),
+        }
         onSuccess?.()
       }
     },
@@ -580,6 +589,7 @@ async function handleImage(chatId: string, image: string, messageId?: string) {
     chatId,
     kind: 'chat-message',
     msg: image,
+    translatedMsg: image,
     adapter: 'image',
     characterId: activeCharId,
     createdAt: new Date().toISOString(),
@@ -897,6 +907,7 @@ const updateMsgSub = (body: any) => {
   const nextMsgs = replace(body.messageId, msgs, {
     imagePrompt: body.imagePrompt || prev?.imagePrompt,
     msg: body.message || prev?.msg,
+    translatedMsg: body.translatedMessage,
     retries: body.retries || prev?.retries,
     actions: body.actions || prev?.actions,
     voiceUrl: undefined,
@@ -911,6 +922,7 @@ subscribe(
   {
     messageId: 'string',
     message: 'string?',
+    translatedMessage: 'string?',
     imagePrompt: 'string?',
     actions: 'any?',
     extras: ['string?'],

@@ -67,7 +67,7 @@ export type ImportChat = {
   greeting: string
   scenario: string
   sampleChat: string
-  messages: Array<{ msg: string; characterId?: string; userId?: string }>
+  messages: Array<{ msg: string; translatedMsg: string; characterId?: string; userId?: string }>
   useOverrides?: boolean
 }
 
