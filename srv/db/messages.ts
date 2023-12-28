@@ -24,6 +24,7 @@ export type NewMessage = {
   actions?: AppSchema.ChatMessage['actions']
   meta?: any
   event: AppSchema.EventTypes | undefined
+  retries?: string[]
 }
 
 export type ImportedMessage = NewMessage & { createdAt: string }
@@ -40,6 +41,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     actions,
     meta,
     event,
+    retries,
   } = creating
   const doc: AppSchema.ChatMessage = {
     _id: creating._id || v4(),
@@ -48,6 +50,7 @@ export async function createChatMessage(creating: NewMessage, ephemeral?: boolea
     characterId,
     userId: senderId,
     msg: message,
+    retries: retries || [],
     adapter,
     actions,
     createdAt: new Date().toISOString(),
@@ -86,6 +89,7 @@ export async function importMessages(userId: string, messages: NewMessage[]) {
     adapter: msg.adapter,
     createdAt: new Date(start + i).toISOString(),
     updatedAt: new Date(start + i).toISOString(),
+    retries: [],
   }))
 
   await db('chat-message').insertMany(docs)
@@ -104,7 +108,10 @@ export async function deleteMessages(messageIds: string[]) {
 export async function editMessage(
   id: string,
   update: Partial<
-    Pick<AppSchema.ChatMessage, 'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras'>
+    Pick<
+      AppSchema.ChatMessage,
+      'msg' | 'actions' | 'adapter' | 'meta' | 'state' | 'extras' | 'retries'
+    >
   >
 ) {
   const edit: any = { ...update, updatedAt: now() }

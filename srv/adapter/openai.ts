@@ -1,13 +1,13 @@
 import needle from 'needle'
 import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
-import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { OPENAI_CHAT_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
 import { AppLog } from '../logger'
 import { streamCompletion, toChatCompletionPayload } from './chat-completion'
+import { decryptText } from '../db/util'
 
 const baseUrl = `https://api.openai.com`
 
@@ -38,13 +38,14 @@ type CompletionGenerator = (
 >
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, log, guest, gen, kind, isThirdParty } = opts
+  const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getBaseUrl(user, !!gen.thirdPartyUrlNoSuffix, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {
     yield { error: `OpenAI request failed: No OpenAI API key not set. Check your settings.` }
     return
   }
+
   const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
   const maxResponseLength =
@@ -58,7 +59,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     presence_penalty: gen.presencePenalty ?? defaultPresets.openai.presencePenalty,
     frequency_penalty: gen.frequencyPenalty ?? defaultPresets.openai.frequencyPenalty,
     top_p: gen.topP ?? 1,
-    stop: `\n${handle}:`,
+    stop: [`\n${handle}:`].concat(gen.stopSequences!),
   }
 
   const useChat =
@@ -118,7 +119,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     }
 
     if (generated.value.error) {
-      yield generated.value
+      yield { error: generated.value.error }
       return
     }
 
@@ -142,7 +143,9 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       return
     }
 
-    yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
+    gen.swipesPerGeneration! > 1
+      ? yield sanitiseAndTrim(accumulated, prompt, char, opts.characters, members)
+      : yield sanitiseAndTrim(text, prompt, opts.replyAs, opts.characters, members)
   } catch (ex: any) {
     log.error({ err: ex }, 'OpenAI failed to parse')
     yield { error: `OpenAI request failed: ${ex.message}` }
@@ -193,6 +196,7 @@ const requestFullCompletion: CompletionGenerator = async function* (
     yield { error: `OpenAI request failed (${resp.statusCode}): ${msg}` }
     return
   }
+
   return resp.body
 }
 

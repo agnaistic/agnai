@@ -80,6 +80,11 @@ export const presetValidator = {
   order: 'string?',
   disabledSamplers: 'string?',
   registered: 'any?',
+
+  swipesPerGeneration: 'number?',
+  epsilonCutoff: 'number?',
+  etaCutoff: 'number?',
+  mirostatToggle: 'boolean?',
 } as const
 
 const disabledValues: { [key in keyof GenMap]?: AppSchema.GenSettings[key] } = {

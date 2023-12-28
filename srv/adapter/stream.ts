@@ -1,15 +1,22 @@
 import { WebSocket } from 'ws'
-import { eventGenerator } from '/common/util'
+import { EventGenerator, eventGenerator } from '/common/util'
+import { ThirdPartyFormat } from '/common/adapters'
 
-export type ServerSentEvent = { id?: string; type?: string; data: string; error?: string }
+export type ServerSentEvent = {
+  id?: string
+  type?: string
+  data?: any
+  error?: string
+  index?: number
+}
 
 /**
  * Converts a Needle readable stream to an async generator which yields server-sent events.
  * Operates on Needle events, not NodeJS ReadableStream events.
  * https://github.com/tomas/needle#events
  **/
-export function requestStream(stream: NodeJS.ReadableStream) {
-  const emitter = eventGenerator<ServerSentEvent | { type?: string; error: string; data?: any }>()
+export function requestStream(stream: NodeJS.ReadableStream, format?: ThirdPartyFormat) {
+  const emitter = eventGenerator<ServerSentEvent>()
 
   stream.on('header', (statusCode, headers) => {
     if (statusCode > 201) {
@@ -35,6 +42,21 @@ export function requestStream(stream: NodeJS.ReadableStream) {
     const messages = data.split(/\r?\n\r?\n/)
 
     for (const msg of messages) {
+      if (format === 'aphrodite') {
+        const event = parseAphrodite(incomplete + msg, emitter)
+        if (!event?.data) {
+          incomplete += msg
+          continue
+        }
+
+        const token = getAphroditeToken(event.data)
+        if (!token) continue
+
+        const data = JSON.stringify({ index: token.index, token: token.token })
+        emitter.push({ data })
+        continue
+      }
+
       const event: any = parseEvent(msg)
 
       if (!event.data) {
@@ -55,6 +77,37 @@ export function requestStream(stream: NodeJS.ReadableStream) {
   })
 
   return emitter.stream
+}
+
+function getAphroditeToken(data: any) {
+  const choice = data.choices?.[0]
+  if (!choice) return
+
+  const token = choice.text
+
+  return { token, index: choice.index }
+}
+
+function parseAphrodite(msg: string, emitter: EventGenerator<ServerSentEvent>) {
+  const event: any = {}
+  for (const line of msg.split(/\r?\n/)) {
+    const pos = line.indexOf(':')
+    if (pos === -1) {
+      continue
+    }
+
+    const prop = line.slice(0, pos)
+    const value = line.slice(pos + 1).trim()
+    event[prop] = prop === 'data' ? value.trimStart() : value.trim()
+
+    if (event.data) {
+      try {
+        event.data = JSON.parse(event.data)
+      } catch {}
+    }
+  }
+
+  return event
 }
 
 function parseEvent(msg: string) {

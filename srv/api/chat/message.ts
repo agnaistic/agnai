@@ -233,6 +233,7 @@ export const generateMessageV2 = handle(async (req, res) => {
   log.setBindings({ adapter })
 
   let generated = ''
+  let retries: string[] = []
   let error = false
   let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
@@ -248,6 +249,15 @@ export const generateMessageV2 = handle(async (req, res) => {
       if (typeof gen === 'string') {
         generated = gen
         continue
+      }
+
+      if ('tokens' in gen) {
+        generated = gen.tokens as string
+      }
+
+      if ('gens' in gen) {
+        retries = gen.gens
+        break
       }
 
       if ('partial' in gen) {
@@ -378,6 +388,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         ooc: false,
         actions,
         meta,
+        retries: retries,
         event: undefined,
       })
 
@@ -409,13 +420,18 @@ export const generateMessageV2 = handle(async (req, res) => {
           adapter,
           meta,
           state: 'retried',
+          retries: body.replacing.retries,
         })
+        const nextRetries = [body.replacing.msg]
+          .concat(retries)
+          .concat(body.replacing.retries || [])
         sendMany(members, {
           type: 'message-retry',
           requestId,
           chatId,
           messageId: body.replacing._id,
           message: responseText,
+          retries: nextRetries,
           actions,
           adapter,
           generate: true,
@@ -431,6 +447,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           actions,
           ooc: false,
           meta,
+          retries,
           event: undefined,
         })
         sendMany(members, {
@@ -609,6 +626,7 @@ function newMessage(
     ooc: boolean
     meta?: any
     event: undefined | AppSchema.EventTypes
+    retries?: string[]
   }
 ) {
   const userMsg: AppSchema.ChatMessage = {
@@ -617,6 +635,7 @@ function newMessage(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     kind: 'chat-message',
+    retries: props.retries || [],
     msg: text,
     ...props,
   }

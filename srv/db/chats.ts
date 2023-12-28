@@ -112,6 +112,7 @@ export async function create(
       characterId: char._id,
       createdAt: now(),
       updatedAt: now(),
+      retries: char.alternateGreetings || [],
     }
     await db('chat-message').insertOne(msg)
   }
@@ -242,5 +243,6 @@ export async function restartChat(
     characterId: char._id,
     createdAt: now(),
     updatedAt: now(),
+    retries: [],
   })
 }

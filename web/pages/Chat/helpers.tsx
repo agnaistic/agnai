@@ -112,6 +112,7 @@ export function emptyMsg(opts: {
     characterId: opts.charId,
     userId: opts.userId,
     msg: opts.message || '',
+    retries: [],
     adapter: opts.adapter,
     handle: opts.handle,
     updatedAt: new Date().toISOString(),

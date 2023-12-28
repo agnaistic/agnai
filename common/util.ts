@@ -205,7 +205,13 @@ export function getBotName(
   return char.name
 }
 
-export function eventGenerator<T = any>() {
+export type EventGenerator<T> = {
+  stream: AsyncGenerator<T, T>
+  push: (value: T) => void
+  done: () => void
+}
+
+export function eventGenerator<T = any>(): EventGenerator<T> {
   const queue: Array<Promise<any>> = []
   let done = false
   let signal = false

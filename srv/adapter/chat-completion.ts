@@ -49,7 +49,7 @@ type CompletionGenerator = (
   service: string,
   log: AppLog
 ) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string },
+  { error: string } | { error?: undefined; token: string } | Completion,
   Completion | undefined
 >
 

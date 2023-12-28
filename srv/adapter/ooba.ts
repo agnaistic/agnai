@@ -127,6 +127,41 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     return body
   }
 
+  if (gen.service === 'kobold' && gen.thirdPartyFormat === 'aphrodite') {
+    const body = {
+      model: gen.thirdPartyModel || '',
+      stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
+      temperature: gen.temp ?? 0.5,
+      max_tokens: opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? 200,
+      best_of: gen.swipesPerGeneration,
+      n: gen.swipesPerGeneration,
+      prompt,
+
+      top_p: gen.topP ?? 1,
+      min_p: gen.minP,
+      top_k: gen.topK,
+      top_a: gen.topA,
+      stop: getStoppingStrings(opts, stops),
+
+      mirostat_mode: gen.mirostatToggle ? 2 : 0,
+      mirostat_tau: gen.mirostatTau,
+      mirostat_eta: gen.mirostatLR,
+
+      tfs: gen.tailFreeSampling,
+      typical_p: gen.typicalP,
+
+      repetition_penalty: gen.repetitionPenalty,
+      presence_penality: gen.presencePenalty ?? 0,
+      frequency_penalty: gen.frequencyPenalty ?? 0,
+      ignore_eos: gen.banEosToken,
+      skip_special_tokens: gen.skipSpecialTokens,
+      eta_cutoff: gen.etaCutoff,
+      epsilon_cutoff: gen.epsilonCutoff,
+    }
+
+    return body
+  }
+
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'exllamav2') {
     const body = {
       request_id: opts.requestId,

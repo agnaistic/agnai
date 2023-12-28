@@ -41,7 +41,7 @@ import Accordian from './Accordian'
 import { ServiceOption } from '../pages/Settings/components/RegisteredSettings'
 import { getServiceTempConfig } from './adapter'
 import Tabs from './Tabs'
-import { useSearchParams } from '@solidjs/router'
+import { A, useSearchParams } from '@solidjs/router'
 import { PhraseBias, StoppingStrings } from './PhraseBias'
 import { AgnaisticSettings } from '../pages/Settings/Agnaistic'
 import { templates } from '/common/presets/templates'
@@ -120,6 +120,7 @@ const GenerationSettings: Component<Props & { onSave: () => void }> = (props) =>
               { label: 'Claude', value: 'claude' },
               { label: 'Textgen (Ooba)', value: 'ooba' },
               { label: 'Llama.cpp', value: 'llamacpp' },
+              { label: 'Aphrodite', value: 'aphrodite' },
               { label: 'ExLlamaV2', value: 'exllamav2' },
               { label: 'KoboldCpp', value: 'koboldcpp' },
             ]}
@@ -189,6 +190,7 @@ const GeneralSettings: Component<
     version: props.inherit?.replicateModelVersion,
   })
 
+  const [_, setSwipesPerGeneration] = createSignal(props.inherit?.swipesPerGeneration || 1)
   const [tokens, setTokens] = createSignal(props.inherit?.maxTokens || 150)
 
   const [context, setContext] = createSignal(
@@ -275,7 +277,8 @@ const GeneralSettings: Component<
             'openRouterModel',
             'novelModel',
             'claudeModel',
-            'replicateModelName'
+            'replicateModelName',
+            'thirdPartyModel'
           )
         }
       >
@@ -409,6 +412,24 @@ const GeneralSettings: Component<
       </Card>
 
       <Card class="flex flex-col gap-2">
+        <Show
+          when={
+            props.inherit?.service === 'kobold' && props.inherit.thirdPartyFormat === 'aphrodite'
+          }
+        >
+          <RangeInput
+            fieldName="swipesPerGeneration"
+            label="Swipes Per Generation"
+            helperText="Number of responses (in swipes) that aphrodite should generate."
+            min={1}
+            max={10}
+            step={1}
+            value={props.inherit?.swipesPerGeneration || 1}
+            disabled={props.disabled}
+            format={props.format}
+            onChange={(val) => setSwipesPerGeneration(val)}
+          />
+        </Show>
         <RangeInput
           fieldName="maxTokens"
           label="Max New Tokens"
@@ -786,6 +807,16 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           aiSetting={'topA'}
         />
 
+        <Toggle
+          fieldName="mirostatToggle"
+          label="Use Mirostat"
+          helperText="Activates the Mirostat sampling technique. It aims to control perplexity during sampling. See the [paper](https://arxiv.org/abs/2007.14966). Aphrodite only supports mode 2 (on) or 0 (off)."
+          value={props.inherit?.mirostatToggle ?? false}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'mirostatToggle'}
+          format={props.format}
+        />
         <RangeInput
           fieldName="mirostatTau"
           label="Mirostat Tau"
@@ -862,7 +893,7 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
             props.inherit?.repetitionPenaltyRange ?? defaultPresets.basic.repetitionPenaltyRange
           }
           disabled={props.disabled}
-          service={props.service}
+          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltyRange'}
           format={props.format}
         />
@@ -877,8 +908,43 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
             props.inherit?.repetitionPenaltySlope ?? defaultPresets.basic.repetitionPenaltySlope
           }
           disabled={props.disabled}
-          service={props.service}
+          service={props.format != 'aphrodite' ? props.service : 'openai'} // we dont want this showing if the format is set to aphrodite
           aiSetting={'repetitionPenaltySlope'}
+          format={props.format}
+        />
+        <RangeInput
+          fieldName="etaCutoff"
+          label="ETA Cutoff"
+          helperText={
+            <>
+              In units of 1e-4; a reasonable value is 3. The main parameter of the special Eta
+              Sampling technique. See {` `}
+              <A class="link" href="https://arxiv.org/pdf/2210.15191.pdf">
+                this paper
+              </A>{' '}
+              for a description.
+            </>
+          }
+          min={0}
+          max={20}
+          step={0.0001}
+          value={props.inherit?.etaCutoff ?? 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'etaCutoff'}
+          format={props.format}
+        />
+        <RangeInput
+          fieldName="epsilonCutoff"
+          label="Epsilon Cutoff"
+          helperText="In units of 1e-4; a reasonable value is 3. This sets a probability floor below which tokens are excluded from being sampled."
+          min={0}
+          max={9}
+          step={0.0001}
+          value={props.inherit?.epsilonCutoff ?? 0}
+          disabled={props.disabled}
+          service={props.service}
+          aiSetting={'epsilonCutoff'}
           format={props.format}
         />
         <Show when={!props.service}>
@@ -1084,7 +1150,11 @@ const SamplerOrder: Component<{
   }
 
   return (
-    <div classList={{ hidden: items().length === 0 }}>
+    <div
+      classList={{
+        hidden: items().length === 0 || props.inherit?.thirdPartyFormat === 'aphrodite',
+      }}
+    >
       <Sortable
         label="Sampler Order"
         items={items()}

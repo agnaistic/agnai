@@ -63,6 +63,7 @@ export const importChat = handle(async ({ body, userId }) => {
           userId: 'string?',
           handle: 'string?',
           ooc: 'boolean?',
+          retries: ['string?'],
         },
       ],
     },
@@ -106,6 +107,7 @@ export const importChat = handle(async ({ body, userId }) => {
     senderId: msg.userId ? msg.userId : undefined,
     handle: msg.handle,
     ooc: msg.ooc ?? false,
+    retries: character.alternateGreetings,
     event: undefined,
   }))
 

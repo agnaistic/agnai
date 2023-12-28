@@ -122,7 +122,6 @@ export function replaceTags(prompt: string, format: FormatTags | GuidedFormat) {
     output = output.replace(regex, tags[name])
   }
 
-  console.log(output)
   return output
 }
 

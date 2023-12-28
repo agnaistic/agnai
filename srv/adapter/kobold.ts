@@ -2,10 +2,12 @@ import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { ModelAdapter } from './type'
+import { AdapterProps, ModelAdapter } from './type'
 import { requestStream, websocketStream } from './stream'
 import { getThirdPartyPayload, llamaStream } from './ooba'
 import { getStoppingStrings } from './prompt'
+import { ThirdPartyFormat } from '/common/adapters'
+import { decryptText } from '../db/util'
 
 /**
  * Sampler order
@@ -32,6 +34,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   const { members, characters, user, prompt, mappedSettings } = opts
 
   const body =
+    opts.gen.thirdPartyFormat === 'aphrodite' ||
     opts.gen.thirdPartyFormat === 'llamacpp' ||
     opts.gen.thirdPartyFormat === 'exllamav2' ||
     opts.gen.thirdPartyFormat === 'koboldcpp'
@@ -66,20 +69,48 @@ export const handleKobold: ModelAdapter = async function* (opts) {
   logger.debug(`Prompt:\n${body.prompt}`)
   logger.debug({ ...body, prompt: null }, 'Kobold payload')
 
+  const headers: any = {}
+
+  if (opts.gen.thirdPartyFormat === 'aphrodite' && user.thirdPartyPassword) {
+    const apiKey = decryptText(user.thirdPartyPassword)
+    headers['x-api-key'] = apiKey
+    headers['Authorization'] = `Bearer ${apiKey}`
+  }
+
+  await validateModel(opts, baseURL, body, headers)
+
   // Only KoboldCPP at version 1.30 and higher has streaming support
   const isStreamSupported =
-    opts.gen.thirdPartyFormat === 'llamacpp'
+    opts.gen.thirdPartyFormat === 'llamacpp' ||
+    opts.gen.thirdPartyFormat === 'aphrodite' ||
+    opts.gen.thirdPartyFormat === 'exllamav2'
       ? true
       : await checkStreamSupported(`${baseURL}/api/extra/version`)
 
   const stream =
     opts.gen.thirdPartyFormat === 'llamacpp'
       ? llamaStream(baseURL, body)
+      : opts.gen.thirdPartyFormat === 'aphrodite'
+      ? body.stream
+        ? streamCompletion(
+            `${baseURL}/v1/completions`,
+            body,
+            headers,
+            opts.gen.thirdPartyFormat,
+            opts.log
+          )
+        : fullCompletion(`${baseURL}/v1/completions`, body, headers, opts.log)
       : opts.gen.thirdPartyFormat === 'exllamav2'
       ? await websocketStream({ url: baseURL, body })
       : opts.gen.streamResponse && isStreamSupported
-      ? streamCompletition(`${baseURL}/api/extra/generate/stream`, body, opts.log)
-      : fullCompletion(`${baseURL}/api/v1/generate`, body, opts.log)
+      ? streamCompletion(
+          `${baseURL}/api/extra/generate/stream`,
+          body,
+          'koboldcpp',
+          headers,
+          opts.log
+        )
+      : fullCompletion(`${baseURL}/api/v1/generate`, body, headers, opts.log)
 
   let accum = ''
 
@@ -104,6 +135,11 @@ export const handleKobold: ModelAdapter = async function* (opts) {
     }
 
     if ('tokens' in generated.value) {
+      const gens = 'gens' in generated.value ? generated.value.gens : undefined
+      if (gens) {
+        yield { gens, tokens: generated.value.tokens }
+      }
+
       accum = generated.value.tokens
       break
     }
@@ -140,9 +176,9 @@ async function checkStreamSupported(versioncheckURL: any) {
   return isSupportedVersion
 }
 
-const fullCompletion = async function* (genURL: string, body: any, log: AppLog) {
+const fullCompletion = async function* (genURL: string, body: any, headers: any, log: AppLog) {
   const resp = await needle('post', genURL, body, {
-    headers: { 'Bypass-Tunnel-Reminder': 'true' },
+    headers: { 'Bypass-Tunnel-Reminder': 'true', ...headers },
     json: true,
   }).catch((err) => ({ error: err }))
 
@@ -158,6 +194,18 @@ const fullCompletion = async function* (genURL: string, body: any, log: AppLog) 
     return
   }
 
+  if ('choices' in resp.body) {
+    const text = resp.body.choices[0].text
+
+    const gens: string[] = []
+    for (const choice of resp.body.choices) {
+      if (!choice.index || choice.index === 0) continue
+      gens.push(choice.text)
+    }
+
+    return gens.length ? { tokens: text, gens } : { tokens: text }
+  }
+
   const text = resp.body.results?.[0]?.text as string
 
   if (text) {
@@ -169,12 +217,19 @@ const fullCompletion = async function* (genURL: string, body: any, log: AppLog) 
   }
 }
 
-const streamCompletition = async function* (streamUrl: any, body: any, log: AppLog) {
+const streamCompletion = async function* (
+  streamUrl: any,
+  body: any,
+  headers: any,
+  format: ThirdPartyFormat,
+  log: AppLog
+) {
   const resp = needle.post(streamUrl, body, {
     parse: false,
     json: true,
     headers: {
       Accept: `text/event-stream`,
+      ...headers,
     },
   })
 
@@ -182,12 +237,15 @@ const streamCompletition = async function* (streamUrl: any, body: any, log: AppL
   const start = Date.now()
   let first = 0
 
+  const responses: Record<number, string> = {}
+
   try {
-    const events = requestStream(resp)
+    const events = requestStream(resp, format)
 
     for await (const event of events) {
       if (!event.data) continue
       const data = JSON.parse(event.data) as {
+        index?: number
         token: string
         final: boolean
         ptr: number
@@ -199,10 +257,27 @@ const streamCompletition = async function* (streamUrl: any, body: any, log: AppL
         return
       }
 
-      tokens.push(data.token)
       if (!first) {
         first = Date.now()
       }
+
+      /** Handle batch generations */
+      if (data.index !== undefined) {
+        const index = data.index
+        if (!responses[index]) {
+          responses[index] = ''
+        }
+
+        responses[index] += data.token
+
+        if (index === 0) {
+          tokens.push(data.token)
+          yield { token: data.token }
+        }
+        continue
+      }
+
+      tokens.push(data.token)
       yield { token: data.token }
     }
   } catch (err: any) {
@@ -223,5 +298,20 @@ const streamCompletition = async function* (streamUrl: any, body: any, log: AppL
     },
     'Performance'
   )
-  return { text: tokens.join('') }
+
+  const gens: string[] = []
+  for (const [id, text] of Object.entries(responses)) {
+    if (+id === 0) continue
+    gens.push(text)
+  }
+
+  return gens.length ? { tokens: tokens.join(''), gens } : { tokens: tokens.join('') }
+}
+
+async function validateModel(opts: AdapterProps, baseURL: string, payload: any, headers: any) {
+  if (opts.gen.thirdPartyFormat !== 'aphrodite') return
+  if (payload.model) return
+
+  const res = await fetch(`${baseURL}/v1/models`, { headers }).then((r) => r.json())
+  payload.model = res.data[0].root
 }

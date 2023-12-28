@@ -164,7 +164,6 @@ export const SpeechRecognitionRecorder: Component<{
         if (!speech) return
         const listens = isListening()
         if (listens) {
-          console.log('clear effect')
           speech.abort()
         }
         setScripts([])

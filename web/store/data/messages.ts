@@ -42,6 +42,7 @@ export type PromptEntities = {
 }
 
 export const msgsApi = {
+  swapMessage,
   editMessage,
   editMessageProps,
   getMessages,
@@ -143,6 +144,25 @@ export async function guidance<T = any>(
 
   if (res.error) throw new Error(res.error)
   return res.result!.values
+}
+
+export async function swapMessage(msg: AppSchema.ChatMessage, _msg: string, _retries: string[]) {
+  return swapMessageProps(msg, { msg: _msg, retries: _retries })
+}
+
+export async function swapMessageProps(
+  msg: AppSchema.ChatMessage,
+  update: Partial<AppSchema.ChatMessage>
+) {
+  if (isLoggedIn()) {
+    const res = await api.method('put', `/chat/${msg._id}/message-swap`, update)
+    return res
+  }
+
+  const messages = await localApi.getMessages(msg.chatId)
+  const next = replace(msg._id, messages, update)
+  await localApi.saveMessages(msg.chatId, next)
+  return localApi.result({ success: true })
 }
 
 export async function editMessage(msg: AppSchema.ChatMessage, replace: string) {
@@ -726,6 +746,7 @@ function emptyMsg(
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     msg: '',
+    retries: [],
     ...props,
   }
 }

@@ -83,6 +83,10 @@ export function getStoppingStrings(opts: AdapterProps, extras: string[] = []) {
       seen.add(stop)
       unique.add(stop)
     }
+  } else if (opts.gen.stopSequences) {
+    opts.gen.stopSequences.forEach((seq) => {
+      unique.add(seq)
+    })
   }
 
   return Array.from(unique.values())

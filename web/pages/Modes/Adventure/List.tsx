@@ -21,7 +21,6 @@ export const AdventureList: Component = (props) => {
     const template = state.templates[0]
     if (!template) return
 
-    console.log('base', template)
     gameStore.newSession(template._id, (id) => {})
   })
 
