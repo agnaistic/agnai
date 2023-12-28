@@ -63,7 +63,7 @@ const App: Component = () => {
           <Route path="/chats/create/:id?" component={CreateChatForm} />
           <Route path="/chats" component={CharacterChats} />
           <Route path="/chat" component={ChatDetail} />
-          <Show when={cfg.config.guidanceAccess}>
+          <Show when={cfg.config.guidanceAccess || state.user?.admin}>
             <Route path="/mode/preview" component={AdventureList} />
             <Route path="/mode/preview/:id" component={AdventureDetail} />
           </Show>
