@@ -83,6 +83,7 @@ export function getCachedSubscriptions(user?: AppSchema.User | null) {
       name: `${sub.name}`,
       level: sub.subLevel,
       service: sub.service!,
+      guidance: !!sub.guidanceCapable,
       preset: {
         name: sub.name,
         maxContextLength: sub.maxContextLength,

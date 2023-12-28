@@ -174,6 +174,14 @@ const UserNavigation: Component = () => {
   const toasts = toastStore()
   const invites = inviteStore()
 
+  const guidance = createMemo(() => {
+    const usable = menu.config.subs.some((sub) => sub.guidance)
+    if (!usable) return false
+
+    const access = !!menu.config.guidanceAccess || !!user.user?.admin
+    return access
+  })
+
   const count = createMemo(() => {
     return toasts.unseen + invites.invites.length
   })
@@ -193,7 +201,7 @@ const UserNavigation: Component = () => {
 
       <ChatLink />
 
-      <Show when={menu.config.guidanceAccess}>
+      <Show when={guidance()}>
         <Item href="/mode/preview/" ariaLabel="Mode Preview">
           <FlaskConical aria-hidden="true" />
           Mode Preview
