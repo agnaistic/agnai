@@ -236,6 +236,30 @@ const GeneralSettings: Component<
     return base
   })
 
+  const CLAUDE_LABELS = {
+    ClaudeV2: 'Latest: Claude v2',
+    ClaudeV2_1: 'Claude v2.1',
+    ClaudeV2_0: 'Claude v2.0',
+    ClaudeV1_100k: 'Latest: Claude v1 100K',
+    ClaudeV1_3_100k: 'Claude v1.3 100K',
+    ClaudeV1: 'Latest: Claude v1',
+    ClaudeV1_3: 'Claude v1.3',
+    ClaudeV1_2: 'Claude v1.2',
+    ClaudeV1_0: 'Claude v1.0',
+    ClaudeInstantV1_100k: 'Latest: Claude Instant v1 100K',
+    ClaudeInstantV1_1_100k: 'Claude Instant v1.1 100K',
+    ClaudeInstantV1: 'Latest: Claude Instant v1',
+    ClaudeInstantV1_1: 'Claude Instant v1.1',
+    ClaudeInstantV1_0: 'Claude Instant v1.0',
+  } satisfies Record<keyof typeof CLAUDE_MODELS, string>
+
+  const claudeModels: () => Option<string>[] = createMemo(() => {
+    const models = new Map(Object.entries(CLAUDE_MODELS) as [keyof typeof CLAUDE_MODELS, string][])
+    const labels = Object.entries(CLAUDE_LABELS) as [keyof typeof CLAUDE_MODELS, string][]
+
+    return labels.map(([key, label]) => ({ label, value: models.get(key)! }))
+  })
+
   return (
     <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'General' }}>
       <Show when={props.service === 'horde'}>
@@ -360,8 +384,8 @@ const GeneralSettings: Component<
         <Select
           fieldName="claudeModel"
           label="Claude Model"
-          items={modelsToItems(CLAUDE_MODELS)}
-          helperText="Which Claude model to use"
+          items={claudeModels()}
+          helperText="Which Claude model to use, models marked as 'Latest' will automatically switch when a new minor version is released."
           value={props.inherit?.claudeModel ?? defaultPresets.claude.claudeModel}
           disabled={props.disabled}
           service={props.service}
