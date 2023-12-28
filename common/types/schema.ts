@@ -121,6 +121,7 @@ export namespace AppSchema {
     name: string
     level: number
     service: AIAdapter
+    guidance: boolean
     preset: GenSettings
   }
 
