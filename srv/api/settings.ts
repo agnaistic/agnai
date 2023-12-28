@@ -51,7 +51,9 @@ export async function getAppConfig(user?: AppSchema.User) {
       selfhosting: config.jsonStorage,
       canAuth: false,
       imagesSaved: config.storage.saveImages,
-      assetPrefix: config.storage.enabled
+      assetPrefix: config.assetUrl
+        ? config.assetUrl
+        : config.storage.enabled
         ? `https://${config.storage.bucket}.${config.storage.endpoint}`
         : '',
       registered: getRegisteredAdapters(user).map(toRegisteredAdapter),
@@ -100,6 +102,7 @@ export async function getAppConfig(user?: AppSchema.User) {
     config.patreon.access_token
   )
 
+  appConfig.guidanceAccess = !!userTier?.tier.guidanceAccess
   appConfig.tier = userTier?.tier
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration

@@ -390,7 +390,7 @@
   color: var(--dot-color);
   box-shadow: 9984px 0 0 0 var(--dot-color), 9999px 0 0 0 var(--dot-color),
     10014px 0 0 0 var(--dot-color);
-  animation: dot-typing 1.5s infinite linear;
+  animation: dot-typing 1s infinite ease-in;
 }
 
 @keyframes dot-typing {

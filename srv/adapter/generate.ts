@@ -18,8 +18,10 @@ import { HORDE_GUEST_KEY } from '../api/horde'
 import { getTokenCounter } from '../tokenize'
 import { getAppConfig } from '../api/settings'
 import { getHandlers, getSubscriptionPreset, handlers } from './agnaistic'
-import { parseStops } from '/common/util'
+import { deepClone, parseStops } from '/common/util'
 import { isDefaultTemplate, templates } from '/common/presets/templates'
+import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
+import { getCachedSubscriptionPresets } from '../db/subscriptions'
 
 let version = ''
 
@@ -41,11 +43,18 @@ configure(async (opts) => {
   return { body: res.body, statusCode: res.statusCode, statusMessage: res.statusMessage }
 }, logger)
 
+export type ResponseEntities = Awaited<ReturnType<typeof getResponseEntities>>
+
 export type InferenceRequest = {
   prompt: string
   guest?: string
   user: AppSchema.User
   settings?: Partial<AppSchema.UserGenPreset>
+
+  guidance?: boolean
+  placeholders?: any
+  previous?: any
+  lists?: Record<string, string[]>
 
   /** Follows the formats:
    * - [service]/[model] E.g. novel/krake-v2
@@ -56,6 +65,8 @@ export type InferenceRequest = {
   retries?: number
   maxTokens?: number
   temp?: number
+  stop?: string[]
+  reguidance?: string[]
 }
 
 export async function inferenceAsync(opts: InferenceRequest) {
@@ -95,6 +106,14 @@ export async function inferenceAsync(opts: InferenceRequest) {
         }
       }
     }
+
+    if (opts.guidance && opts.service === 'agnaistic') {
+      try {
+        const values = JSON.parse(generated)
+        return { generated, prompt, meta, values: Object.assign({}, opts.previous, values) }
+      } catch (ex) {}
+    }
+
     return { generated, prompt, meta }
   }
 
@@ -102,47 +121,49 @@ export async function inferenceAsync(opts: InferenceRequest) {
   throw new Error(`Could not complete inference: Max retries exceeded`)
 }
 
+export async function guidanceAsync(opts: InferenceRequest) {
+  const settings = setRequestService(opts)
+  const sub = await getSubscriptionPreset(opts.user, !!opts.guest, opts.settings || settings)
+
+  const previous = { ...opts.previous }
+
+  for (const name of opts.reguidance || []) {
+    delete previous[name]
+  }
+
+  const infer = async (params: GuidanceParams, v2: boolean) => {
+    const inference = await inferenceAsync({
+      ...opts,
+      previous,
+      prompt: params.prompt,
+      settings,
+      maxTokens: params.tokens,
+      stop: params.stop,
+      guidance: v2,
+    })
+    return inference
+  }
+
+  if (sub?.preset?.guidanceCapable && sub.tier?.guidanceAccess) {
+    const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop }, true)
+    return result
+  }
+
+  const result = await runGuidance(opts.prompt, {
+    infer: (params) => infer(params, false).then((res) => res.generated),
+    reguidance: opts.reguidance,
+    placeholders: opts.placeholders,
+    previous,
+  })
+
+  return result
+}
+
 export async function createInferenceStream(opts: InferenceRequest) {
-  const [service, model] = opts.service.split('/')
-  const settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
+  const settings = setRequestService(opts)
 
-  if (model) {
-    switch (service as AIAdapter) {
-      case 'openai':
-        settings.oaiModel = model
-        break
-
-      case 'claude':
-        settings.claudeModel = model
-        break
-
-      case 'novel':
-        settings.novelModel = model
-        break
-
-      case 'agnaistic': {
-        if (!settings.registered) settings.registered = {}
-        if (!settings.registered.agnaistic) settings.registered.agnaistic = {}
-        settings.registered.agnaistic.subscriptionId = model
-      }
-    }
-  }
-
-  settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
-  settings.temp = opts.temp ?? 0.5
-
-  if (settings.service === 'openai') {
-    settings.topP = 1
-    settings.frequencyPenalty = 0
-    settings.presencePenalty = 0
-  }
-
-  if (settings.thirdPartyUrl) {
-    opts.user.koboldUrl = settings.thirdPartyUrl
-  }
-
-  if (opts.settings?.thirdPartyFormat) {
-    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
+  if (opts.stop) {
+    settings.stopSequences = opts.stop
   }
 
   const handler = getHandlers(settings)
@@ -163,59 +184,105 @@ export async function createInferenceStream(opts: InferenceRequest) {
     sender: {} as any,
     mappedSettings: mapPresetsToAdapter(settings, settings.service!),
     impersonate: undefined,
+    guidance: opts.guidance,
+    previous: opts.previous,
+    placeholders: opts.placeholders,
+    lists: opts.lists,
   })
 
   return { stream }
 }
 
+function setRequestService(opts: InferenceRequest) {
+  const [service, model] = opts.service.split('/')
+  let settings = opts.settings || getInferencePreset(opts.user, service as AIAdapter, model)
+
+  if (model) {
+    switch (service as AIAdapter) {
+      case 'openai':
+        settings.oaiModel = model
+        break
+
+      case 'claude':
+        settings.claudeModel = model
+        break
+
+      case 'novel':
+        settings.novelModel = model
+        break
+
+      case 'agnaistic': {
+        if (model) {
+          const preset = getCachedSubscriptionPresets().find((pre) => pre._id === model)
+          if (preset) settings = deepClone(preset)
+        }
+
+        if (!settings.registered) settings.registered = {}
+        if (!settings.registered.agnaistic) settings.registered.agnaistic = {}
+        settings.registered.agnaistic.subscriptionId = model
+        break
+      }
+    }
+  }
+
+  opts.service = service
+
+  settings.maxTokens = opts.maxTokens ? opts.maxTokens : 1024
+  settings.temp = opts.temp ?? 0.5
+
+  if (settings.service === 'openai') {
+    settings.topP = 1
+    settings.frequencyPenalty = 0
+    settings.presencePenalty = 0
+  }
+
+  if (settings.thirdPartyUrl) {
+    opts.user.koboldUrl = settings.thirdPartyUrl
+  }
+
+  if (opts.settings?.thirdPartyFormat) {
+    opts.user.thirdPartyFormat = opts.settings.thirdPartyFormat
+  }
+
+  return settings
+}
+
 export async function createTextStreamV2(
-  opts: GenerateRequestV2,
+  opts: GenerateRequestV2 & { entities?: ResponseEntities },
   log: AppLog,
   guestSocketId?: string
 ) {
-  let subscription: Awaited<ReturnType<typeof getSubscriptionPreset>>
+  const entities = opts.entities
+
+  if (entities) {
+    opts.settings = entities.gen
+    opts.user = entities.user
+    opts.char = entities.char
+    entities.gen.temporary = opts.settings?.temporary
+  }
+
+  const subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
+
+  const subContextLimit = subscription?.preset?.maxContextLength
+  opts.settings = opts.settings || {}
+
+  if (subContextLimit) {
+    opts.settings.maxContextLength = Math.min(
+      subContextLimit,
+      opts.settings.maxContextLength ?? 4096
+    )
+  }
+
   /**
    * N.b.: The front-end sends the `lines` and `history` in TIME-ASCENDING order. I.e. Oldest -> Newest
    *
    * We need to ensure the prompt is always generated using the correct version of the memory book.
    * If a non-owner initiates generation, they will not have the memory book.
    *
-   * Everything else should be update to date at this point
+   * Everything else should be up to date at this point
    */
-  if (guestSocketId) {
-    subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, opts.settings)
-    const subContextLimit = subscription?.preset?.maxContextLength
 
-    if (!opts.settings) {
-      opts.settings = {}
-    }
-
-    if (subContextLimit) {
-      opts.settings.maxContextLength = Math.min(
-        subContextLimit,
-        opts.settings.maxContextLength ?? 4096
-      )
-    }
-  }
-
-  if (!guestSocketId) {
-    const entities = await getResponseEntities(opts.chat, opts.sender.userId, opts.settings)
-    subscription = await getSubscriptionPreset(opts.user, !!guestSocketId, entities.gen)
-    const subContextLimit = subscription?.preset?.maxContextLength
-
-    if (!opts.settings) {
-      opts.settings = {}
-    }
-
-    if (subContextLimit) {
-      entities.gen.maxContextLength = Math.min(
-        subContextLimit,
-        entities.gen.maxContextLength ?? 4096
-      )
-    }
-
-    entities.gen.temporary = opts.settings?.temporary
-
+  if (entities) {
     const { adapter, model } = getAdapter(opts.chat, entities.user, entities.gen)
     const encoder = getTokenCounter(adapter, model)
     opts.parts = await buildPromptParts(
@@ -236,9 +303,6 @@ export async function createTextStreamV2(
       [...opts.lines].reverse(),
       encoder
     )
-    opts.settings = entities.gen
-    opts.user = entities.user
-    opts.char = entities.char
   }
 
   if (opts.settings?.thirdPartyUrl) {

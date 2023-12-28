@@ -169,6 +169,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 
   const body = {
     prompt,
+    context_limit: gen.maxContextLength,
     max_new_tokens: gen.maxTokens,
     do_sample: gen.doSample ?? true,
     temperature: gen.temp,
@@ -198,6 +199,10 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
     mirostat_mode: gen.mirostatTau ? 2 : 0,
     mirostat_tau: gen.mirostatTau,
     mirostat_eta: gen.mirostatLR,
+    guidance: opts.guidance,
+    placeholders: opts.placeholders,
+    lists: opts.lists,
+    previous: opts.previous,
   }
   return body
 }

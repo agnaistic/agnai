@@ -69,6 +69,18 @@ type MessageProps = {
   voice?: VoiceState
 }
 
+const anonNames = new Map<string, number>()
+
+let anonId = 0
+function getAnonName(entityId: string) {
+  if (!anonNames.has(entityId)) {
+    anonNames.set(entityId, ++anonId)
+  }
+
+  const id = anonNames.get(entityId)
+  return `User ${id}`
+}
+
 const Message: Component<MessageProps> = (props) => {
   let editRef: HTMLDivElement
   let avatarRef: any
@@ -129,12 +141,6 @@ const Message: Component<MessageProps> = (props) => {
     editRef?.focus()
   }
 
-  const handleToShow = () => {
-    if (ctx.anonymize) return getAnonName(state.chatProfiles, props.msg.userId!)
-    const handle = state.memberIds[props.msg.userId!]?.handle || props.msg.handle || 'You'
-    return handle
-  }
-
   const opacityClass = props.msg.ooc ? 'opacity-50' : ''
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
@@ -186,6 +192,7 @@ const Message: Component<MessageProps> = (props) => {
                     openable
                     bot
                     zoom={1.75}
+                    anonymize={ctx.anonymize}
                   />
                 </Match>
 
@@ -223,14 +230,9 @@ const Message: Component<MessageProps> = (props) => {
                     'sm:text-lg': !props.isPaneOpen,
                   }}
                 >
-                  <Switch>
-                    <Match when={props.msg.characterId}>
-                      {ctx.allBots[props.msg.characterId!]?.name ||
-                        (props.msg.split && props.msg.characterId) ||
-                        ctx.char?.name!}
-                    </Match>
-                    <Match when={true}>{handleToShow()}</Match>
-                  </Switch>
+                  {ctx.anonymize
+                    ? getAnonName(props.msg.characterId || props.msg.userId!)
+                    : props.msg.handle || ''}
                 </b>
 
                 <span
@@ -391,14 +393,6 @@ const Message: Component<MessageProps> = (props) => {
 export default Message
 
 export type SplitMessage = AppSchema.ChatMessage & { split?: boolean; handle?: string }
-
-function getAnonName(members: AppSchema.Profile[], id: string) {
-  for (let i = 0; i < members.length; i++) {
-    if (members[i].userId === id) return `User #${i + 1}`
-  }
-
-  return `User ??`
-}
 
 function anonymizeText(text: string, profile: AppSchema.Profile, i: number) {
   return text.replace(new RegExp(profile.handle.trim(), 'gi'), 'User ' + (i + 1))

@@ -51,7 +51,6 @@ export const msgsApi = {
   basicInference,
   createActiveChatPrompt,
   guidance,
-  rerunGuidance,
   generateActions,
   getActiveTemplateParts,
 }
@@ -109,13 +108,16 @@ export async function basicInference({ prompt, settings }: InferenceOpts) {
   return res
 }
 
-export async function guidance<T = any>({
-  prompt,
-  service,
-  maxTokens,
-  settings,
-  previous,
-}: InferenceOpts & { previous?: any }): Promise<T> {
+export async function guidance<T = any>(
+  opts: InferenceOpts & {
+    presetId?: string
+    previous?: any
+    lists?: Record<string, string[]>
+    placeholders?: Record<string, string | string[]>
+    rerun?: string[]
+  }
+): Promise<T> {
+  const { prompt, service, maxTokens, settings, previous, lists, rerun, placeholders } = opts
   const requestId = v4()
   const { user } = userStore.getState()
 
@@ -123,47 +125,20 @@ export async function guidance<T = any>({
     throw new Error(`Could not get user settings. Refresh and try again.`)
   }
 
-  const fallback = service === 'default' ? getUserPreset(user.defaultPreset) : undefined
+  const fallback = service === 'default' || !service ? getUserPreset(user.defaultPreset) : undefined
 
   const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
-    settings: settings || fallback,
+    presetId: opts.presetId,
+    settings: opts.presetId ? undefined : settings || fallback,
     prompt,
-    service,
+    service: service || settings?.service || fallback?.service,
     maxTokens,
     previous,
-  })
-
-  if (res.error) throw new Error(res.error)
-  return res.result!.values
-}
-
-export async function rerunGuidance<T = any>({
-  prompt,
-  service,
-  maxTokens,
-  rerun,
-  previous,
-}: InferenceOpts & { previous?: any; rerun: string[] }): Promise<T> {
-  const requestId = v4()
-  const { user } = userStore.getState()
-
-  if (!user) {
-    throw new Error(`Could not get user settings. Refresh and try again.`)
-  }
-
-  const settings = service === 'default' ? getUserPreset(user.defaultPreset) : undefined
-
-  const res = await api.method<{ result: string; values: T }>('post', `/chat/reguidance`, {
-    requestId,
-    user,
-    prompt,
-    service,
-    maxTokens,
-    settings,
-    rerun,
-    previous,
+    lists,
+    placeholders,
+    reguidance: rerun,
   })
 
   if (res.error) throw new Error(res.error)
@@ -564,7 +539,13 @@ async function getGenerateProps(
       if (!entities.autoReplyAs) throw new Error(`No character selected to reply with`)
       props.impersonate = entities.impersonating
       props.replyAs = getBot(entities.autoReplyAs)
-      props.messages.push(emptyMsg(entities.chat, { msg: opts.text, userId: entities.user._id }))
+      props.messages.push(
+        emptyMsg(entities.chat, {
+          msg: opts.text,
+          userId: entities.user._id,
+          characterId: entities.impersonating?._id,
+        })
+      )
       break
     }
 

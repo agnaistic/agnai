@@ -65,6 +65,11 @@ export type AdapterProps = {
   requestId: string
   encoder?: TokenCounter
 
+  guidance?: boolean
+  placeholders?: Record<string, string>
+  lists?: Record<string, string[]>
+  previous?: Record<string, string>
+
   subscription?: {
     level: number
     preset?: AppSchema.SubscriptionPreset

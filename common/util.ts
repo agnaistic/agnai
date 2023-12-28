@@ -155,23 +155,48 @@ export function escapeRegex(string: string) {
   return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&')
 }
 
+export function getMessageAuthor(
+  chat: AppSchema.Chat,
+  msg: AppSchema.ChatMessage,
+  chars: Record<string, AppSchema.Character>,
+  members: Map<string, AppSchema.Profile>,
+  sender: AppSchema.Profile,
+  impersonate?: AppSchema.Character
+) {
+  if (msg.characterId) {
+    const char =
+      msg.characterId === impersonate?._id
+        ? impersonate
+        : chars[msg.characterId] || chat.tempCharacters?.[msg.characterId]
+    return char!.name
+  }
+
+  if (msg.userId) {
+    return members.get(msg.userId)?.handle || sender.handle || 'You'
+  }
+
+  return impersonate?.name || sender.handle || 'You'
+}
+
 export function getBotName(
   chat: AppSchema.Chat,
   msg: AppSchema.ChatMessage,
   chars: Record<string, AppSchema.Character>,
   replyAs: AppSchema.Character,
   main: AppSchema.Character,
+  sender: AppSchema.Profile,
   impersonate?: AppSchema.Character
 ) {
-  if (!msg.characterId) return replyAs?.name || main.name
-  if (msg.characterId.startsWith('temp-')) {
-    const temp = chat.tempCharacters?.[msg.characterId]
+  const charId = msg.characterId || ''
+  if (!charId) return replyAs?.name || main.name
+
+  if (charId.startsWith('temp-')) {
+    const temp = chat.tempCharacters?.[charId]
     if (!temp) return main.name
     return temp.name
   }
 
-  const char =
-    msg.characterId && impersonate?._id === msg.characterId ? impersonate : chars[msg.characterId]
+  const char = msg.characterId && impersonate?._id === msg.characterId ? impersonate : chars[charId]
 
   if (!char) {
     return main.name

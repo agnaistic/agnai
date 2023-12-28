@@ -102,8 +102,9 @@ export function emptyMsg(opts: {
   charId?: string
   userId?: string
   adapter?: string
+  handle?: string
   message: string
-}): AppSchema.ChatMessage {
+}): AppSchema.ChatMessage & { handle?: string } {
   return {
     kind: 'chat-message',
     _id: opts.id || '',
@@ -112,6 +113,7 @@ export function emptyMsg(opts: {
     userId: opts.userId,
     msg: opts.message || '',
     adapter: opts.adapter,
+    handle: opts.handle,
     updatedAt: new Date().toISOString(),
     createdAt: new Date().toISOString(),
   }

@@ -282,7 +282,7 @@ body {
 
   .btn-clear {
     @apply btn-base;
-    @apply border-[var(--bg-500)] bg-transparent;
+    @apply border-[var(--bg-500)] bg-transparent enabled:hover:bg-[var(--bg-600)];
   }
 
   .btn-bordered {

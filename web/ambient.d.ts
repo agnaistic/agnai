@@ -60,3 +60,5 @@ declare type FormEvent<T = HTMLInputElement | HTMLTextAreaElement> = Event & {
   target: Element
   currentTarget: T
 }
+
+declare type FormHandler<T = HTMLInputElement | HTMLTextAreaElement> = (ev: FormEvent<T>) => void

@@ -6,7 +6,7 @@ import { defaultTemplate } from './mode-templates'
 import { buildMemoryPrompt } from './memory'
 import { defaultPresets, getFallbackPreset, isDefaultPreset } from './presets'
 import { parseTemplate } from './template-parser'
-import { getBotName, trimSentence } from './util'
+import { getMessageAuthor, getBotName, trimSentence } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate } from './prompt-order'
 
@@ -510,7 +510,7 @@ function removeEmpty(value?: string) {
  * In `createPrompt()`, we trim this down to fit into the context with all of the chat and character context
  */
 export async function getLinesForPrompt(
-  { settings, char, members, messages, continue: cont, book, ...opts }: PromptOpts,
+  { settings, members, messages, continue: cont, book, ...opts }: PromptOpts,
   encoder: TokenCounter,
   maxContext?: number
 ) {
@@ -523,20 +523,30 @@ export async function getLinesForPrompt(
   }
 
   const formatMsg = (msg: AppSchema.ChatMessage) => {
+    const profile = msg.userId ? profiles.get(msg.userId) : opts.sender
     const sender = opts.impersonate
       ? opts.impersonate.name
       : profiles.get(msg.userId || opts.chat.userId)?.handle || 'You'
 
-    const botName = getBotName(
+    const author = getMessageAuthor(
+      opts.chat,
+      msg,
+      opts.characters,
+      profiles,
+      opts.sender,
+      opts.impersonate
+    )
+    const char = getBotName(
       opts.chat,
       msg,
       opts.characters,
       opts.replyAs,
-      char,
+      opts.char,
+      profile || opts.sender,
       opts.impersonate
     )
 
-    return fillPlaceholders(msg, botName, sender).trim()
+    return fillPlaceholders({ msg, author, char, user: sender }).trim()
   }
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
@@ -609,9 +619,14 @@ export function insertsDeeperThanConvoHistory(
     .join('\n')
 }
 
-function fillPlaceholders(chatMsg: AppSchema.ChatMessage, char: string, user: string): string {
-  const prefix = chatMsg.system ? 'System' : chatMsg.characterId ? char : user
-  const msg = chatMsg.msg.replace(BOT_REPLACE, char).replace(SELF_REPLACE, user)
+function fillPlaceholders(opts: {
+  msg: AppSchema.ChatMessage
+  author: string
+  char: string
+  user: string
+}): string {
+  const prefix = opts.msg.system ? 'System' : opts.author
+  const msg = opts.msg.msg.replace(BOT_REPLACE, opts.char).replace(SELF_REPLACE, opts.user)
 
   return `${prefix}: ${msg}`
 }

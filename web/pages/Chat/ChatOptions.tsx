@@ -153,10 +153,7 @@ const ChatOptions: Component<{
         </Row>
 
         <Row>
-          <Item
-            schema={cfg.anonymize ? 'primary' : undefined}
-            onClick={settingStore.toggleAnonymize}
-          >
+          <Item schema={cfg.anonymize ? 'primary' : 'grey'} onClick={settingStore.toggleAnonymize}>
             <VenetianMask /> Anonymize
           </Item>
           <Item onClick={() => props.togglePane('ui')}>

@@ -40,9 +40,10 @@ const Button: Component<{
   return (
     <button
       type={props.type || 'button'}
-      class={`${schema()} select-none items-center ${props.class || ''}`}
+      class={`select-none items-center ${props.class || ''}`}
       classList={{
         ...props.classList,
+        [schema()]: true,
         'leading-5': props.size === 'pill',
         'py-0': props.size === 'pill',
         'py-1': props.size === 'sm',
@@ -75,9 +76,10 @@ export const LabelButton: Component<{
 }> = (props) => (
   <label
     for={props.for}
-    class={`${kinds[props.schema || 'primary']} select-none items-center` + (props.class || '')}
+    class={`select-none items-center` + (props.class || '')}
     classList={{
       ...props.classList,
+      [kinds[props.schema || 'primary']]: true,
       'leading-5': props.size === 'pill',
       'py-0': props.size === 'pill',
       'py-1': props.size === 'sm',

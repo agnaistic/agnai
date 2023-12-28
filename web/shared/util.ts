@@ -17,6 +17,18 @@ const [css, hooks] = createHooks(recommended)
 
 export { hooks, css }
 
+export function downloadJson(content: string | object, filename: string = 'agnai_export') {
+  const output = encodeURIComponent(
+    typeof content === 'string' ? content : JSON.stringify(content, null, 2)
+  )
+
+  const anchor = document.createElement('a')
+  anchor.href = `data:text/json:charset=utf-8,${output}`
+  anchor.download = `${filename}.json`
+  anchor.click()
+  URL.revokeObjectURL(anchor.href)
+}
+
 export function getMaxChatWidth(chatWidth: UserState['ui']['chatWidth']) {
   switch (chatWidth) {
     case 'xl':
@@ -182,7 +194,7 @@ export function getStrictForm<T extends Validator>(
 
     if (type === 'boolean' || type === 'boolean?') {
       if (value === 'on') value = true
-      if (value === undefined) value = false
+      if (value === undefined || value === 'off') value = false
     }
 
     if ((type === 'number' || type === 'number?') && value !== undefined) {
@@ -224,6 +236,15 @@ export function getFormEntries(evt: Event | HTMLFormElement): Array<[string, str
   const entries = Array.from(form.entries()).map(
     ([key, value]) => [key, value.toString()] as [string, string]
   )
+
+  const dangling = target.querySelectorAll('input[type="checkbox"]') as NodeListOf<HTMLInputElement>
+  for (const input of dangling) {
+    const prev = entries.find((e) => e[0] === input.id)
+    if (prev) continue
+
+    entries.push([input.id, input.checked ? 'on' : ''])
+  }
+
   disable()
 
   return entries

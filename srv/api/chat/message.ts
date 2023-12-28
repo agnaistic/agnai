@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
-import { createTextStreamV2, inferenceAsync } from '../../adapter/generate'
+import { createTextStreamV2, getResponseEntities, inferenceAsync } from '../../adapter/generate'
 import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
@@ -8,7 +8,7 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
-import { runGuidance } from '/common/guidance/guidance-parser'
+import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/mode-templates'
 import { fillPromptWithLines } from '/common/prompt'
 import { getTokenCounter } from '/srv/tokenize'
@@ -224,8 +224,9 @@ export const generateMessageV2 = handle(async (req, res) => {
   })
   res.json({ requestId, success: true, generating: true, message: 'Generating message' })
 
-  const { stream, adapter, ...entities } = await createTextStreamV2(
-    { ...body, chat, replyAs, impersonate, requestId },
+  const entities = await getResponseEntities(chat, body.sender.userId, body.settings)
+  const { stream, adapter, ...metadata } = await createTextStreamV2(
+    { ...body, chat, replyAs, impersonate, requestId, entities },
     log
   )
 
@@ -233,7 +234,7 @@ export const generateMessageV2 = handle(async (req, res) => {
 
   let generated = ''
   let error = false
-  let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
+  let meta = { ctx: metadata.settings.maxContextLength, char: metadata.size, len: metadata.length }
 
   const messageId =
     body.kind === 'retry'
@@ -328,13 +329,15 @@ export const generateMessageV2 = handle(async (req, res) => {
         : ''
     )
 
-    const infer = async (text: string) => {
+    const infer = async (params: GuidanceParams) => {
       const res = await inferenceAsync({
-        prompt: text,
+        prompt: params.prompt,
+        maxTokens: params.tokens,
+        stop: params.stop,
         log,
-        service: entities.settings.service!,
-        settings: entities.settings,
-        user: entities.user,
+        service: metadata.settings.service!,
+        settings: metadata.settings,
+        user: metadata.user,
       })
       return res.generated
     }
@@ -491,6 +494,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   if (body.kind === 'send' || body.kind === 'ooc') {
     newMsg = newMessage(v4(), chatId, body.text!, {
       userId: 'anon',
+      characterId: body.impersonate?._id,
       ooc: body.kind === 'ooc',
       event: undefined,
     })

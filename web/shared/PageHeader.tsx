@@ -15,6 +15,7 @@ type Props = {
   title: string | JSX.Element
   subtitle?: string | JSX.Element
   noDivider?: boolean
+  noslot?: boolean
   sticky?: boolean
 
   /** Indicates if the header is being used in a modal or pane */
@@ -50,13 +51,19 @@ const PageHeader: Component<Props> = (props) => {
         <Divider />
       </Show>
 
-      <div ref={ref!} class="mb-2 flex w-full justify-center">
-        <Switch>
-          <Match when={ref!}>
-            <Slot sticky slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'} parent={ref!} />
-          </Match>
-        </Switch>
-      </div>
+      <Show when={!props.noslot}>
+        <div ref={ref!} class="mb-2 flex w-full justify-center">
+          <Switch>
+            <Match when={ref!}>
+              <Slot
+                sticky
+                slot={props.subPage ? 'pane_leaderboard' : 'leaderboard'}
+                parent={ref!}
+              />
+            </Match>
+          </Switch>
+        </div>
+      </Show>
     </>
   )
 }

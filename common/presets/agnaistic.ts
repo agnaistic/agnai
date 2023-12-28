@@ -16,6 +16,7 @@ export const agnaiPresets = {
     topP: 1,
     typicalP: 1,
     topA: 0,
+    minP: 0,
     tailFreeSampling: 1,
     encoderRepitionPenalty: 1.0,
     penaltyAlpha: 0,

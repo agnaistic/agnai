@@ -113,6 +113,12 @@ export function ContextProvider(props: { children: any }) {
     return distinct(active)
   })
 
+  const handle = createMemo(() => {
+    const impersonate = chars.impersonating?.name
+    const handle = users.profile?.handle
+    return impersonate || handle || 'You'
+  })
+
   createEffect(() => {
     const info = getClientPreset(chats.active?.chat)
     const next: Partial<ContextState> = {
@@ -131,7 +137,7 @@ export function ContextProvider(props: { children: any }) {
       chat: chats.active?.chat,
       replyAs: chats.active?.replyAs,
       profile: users.profile,
-      handle: chars.impersonating?.name || users.profile?.handle || 'You',
+      handle: handle(),
       trimSentences: users.ui.trimSentences ?? false,
       promptHistory: chats.promptHistory,
       info,

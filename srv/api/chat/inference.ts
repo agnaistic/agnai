@@ -2,10 +2,14 @@ import { StatusError, errors, wrap } from '../wrap'
 import { sendMany } from '../ws'
 import { defaultPresets, isDefaultPreset } from '/common/presets'
 import { assertValid } from '/common/valid'
-import { InferenceRequest, createInferenceStream, inferenceAsync } from '/srv/adapter/generate'
+import {
+  InferenceRequest,
+  createInferenceStream,
+  guidanceAsync,
+  inferenceAsync,
+} from '/srv/adapter/generate'
 import { store } from '/srv/db'
 import { AppSchema } from '/common/types'
-import { rerunGuidanceValues, runGuidance } from '/common/guidance/guidance-parser'
 import { cyoaTemplate } from '/common/mode-templates'
 import { AIAdapter } from '/common/adapters'
 import { parseTemplate } from '/common/template-parser'
@@ -16,6 +20,7 @@ const validInference = {
   settings: 'any?',
   user: 'any',
   service: 'string',
+  presetId: 'string?',
 } as const
 
 const validInferenceApi = {
@@ -43,6 +48,11 @@ const validInferenceApi = {
   stop: ['string'],
   cfg_scale: 'number?',
   cfg_oppose: 'string?',
+  guidance: 'boolean?',
+  reguidance: ['string?'],
+  placeholders: 'any?',
+  lists: 'any?',
+  previous: 'any?',
 } as const
 
 export const generateActions = wrap(async ({ userId, log, body, socketId, params }) => {
@@ -92,23 +102,13 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
     sender: body.profile,
   })
 
-  const infer = async (text: string, tokens?: number) => {
-    const inference = await inferenceAsync({
-      user: body.user,
-      service: body.service,
-      log,
-      prompt: text,
-      guest: userId ? undefined : socketId,
-      retries: 2,
-      maxTokens: tokens,
-      settings,
-    })
-
-    return inference.generated
-  }
-
-  const { values } = await runGuidance(parsed, {
-    infer,
+  const { values } = await guidanceAsync({
+    prompt: parsed,
+    log,
+    service: body.service,
+    user: body.user,
+    guidance: true,
+    settings,
     placeholders: {
       history: body.lines.join('\n'),
       user: body.impersonating?.name || body.profile.handle,
@@ -133,73 +133,58 @@ export const generateActions = wrap(async ({ userId, log, body, socketId, params
 })
 
 export const guidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid({ ...validInference, placeholders: 'any?', previous: 'any?' }, body)
-
-  if (userId) {
-    const user = await store.users.getUser(userId)
-    if (!user) throw errors.Unauthorized
-    body.user = user
-  }
-
-  const infer = async (text: string, tokens?: number) => {
-    const inference = await inferenceAsync({
-      user: body.user,
-      log,
-      maxTokens: tokens,
-      prompt: text,
-      service: body.service,
-      settings: body.settings,
-      guest: userId ? undefined : socketId,
-    })
-
-    return inference.generated
-  }
-
-  const result = await runGuidance(body.prompt, {
-    infer,
-    placeholders: body.placeholders,
-    previous: body.previous,
-  })
-  return result
-})
-
-export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
   assertValid(
     {
       ...validInference,
+      service: 'string?',
       placeholders: 'any?',
-      maxTokens: 'number?',
-      rerun: ['string'],
+      lists: 'any?',
       previous: 'any?',
+      reguidance: ['string?'],
     },
     body
   )
 
+  if (!body.service && !userId) {
+    throw errors.BadRequest
+  }
+
   if (userId) {
     const user = await store.users.getUser(userId)
     if (!user) throw errors.Unauthorized
+
     body.user = user
+
+    if (body.presetId) {
+      const preset = await store.presets.getUserPreset(body.presetId)
+      if (!preset) {
+        throw new StatusError(`Preset not found - ${body.presetId}`, 400)
+      }
+
+      body.settings = preset
+    } else if (!body.service) {
+      if (!user.defaultPreset) throw errors.BadRequest
+      const preset = await store.presets.getUserPreset(user.defaultPreset)
+      body.service = preset?.service!
+      body.settings = preset
+    }
   }
 
-  const infer = async (text: string, tokens?: number) => {
-    const inference = await inferenceAsync({
-      user: body.user,
-      maxTokens: tokens,
-      log,
-      prompt: text,
-      service: body.service,
-      settings: body.settings,
-      guest: userId ? undefined : socketId,
-    })
-
-    return inference.generated
-  }
-
-  const result = await rerunGuidanceValues(body.prompt, body.rerun, {
-    infer,
+  const props: InferenceRequest = {
+    user: body.user,
+    log,
+    prompt: body.prompt,
+    service: body.service!,
+    settings: body.settings,
+    guest: userId ? undefined : socketId,
+    guidance: true,
     placeholders: body.placeholders,
     previous: body.previous,
-  })
+    lists: body.lists,
+    reguidance: body.reguidance,
+  }
+
+  const result = await guidanceAsync(props)
   return result
 })
 
@@ -293,6 +278,9 @@ export const inferenceApi = wrap(async (req, res) => {
     log: req.log,
     service: preset.service!,
     settings,
+    placeholders: body.placeholders,
+    previous: body.previous,
+    lists: body.lists,
   }
 
   await obtainLock(req.userId, 20)

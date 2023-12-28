@@ -103,6 +103,7 @@ export namespace AppSchema {
       cost: number
     }
     apiAccess: boolean
+    guidanceAccess: boolean
 
     name: string
     description: string
@@ -135,6 +136,7 @@ export namespace AppSchema {
     patreon?: boolean
     policies?: boolean
     apiAccess?: boolean
+    guidanceAccess?: boolean
     flags?: string
     patreonAuth?: {
       clientId: string
@@ -359,6 +361,7 @@ export namespace AppSchema {
     meta?: any
     event?: EventTypes | undefined
     state?: string
+    values?: Record<string, string | number | boolean>
   }
 
   export type EventTypes = 'world' | 'character' | 'hidden' | 'ooc'
@@ -460,6 +463,7 @@ export namespace AppSchema {
     isDefaultSub?: boolean
     deletedAt?: string
     tokenizer?: string
+    guidanceCapable?: boolean
   }
 
   export interface GenSettings {
