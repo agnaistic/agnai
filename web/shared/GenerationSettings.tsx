@@ -521,10 +521,10 @@ const PromptSettings: Component<
     !props.inherit?._id
       ? 'basic'
       : typeof props.inherit.useAdvancedPrompt === 'string'
-        ? props.inherit.useAdvancedPrompt
-        : props.inherit?.useAdvancedPrompt === true || props.inherit.useAdvancedPrompt === undefined
-          ? 'validate'
-          : 'basic'
+      ? props.inherit.useAdvancedPrompt
+      : props.inherit?.useAdvancedPrompt === true || props.inherit.useAdvancedPrompt === undefined
+      ? 'validate'
+      : 'basic'
   )
 
   const fallbackTemplate = createMemo(() => {
@@ -836,10 +836,12 @@ const GenSettings: Component<Props & { pane: boolean; format?: ThirdPartyFormat;
           label="Use Mirostat"
           helperText={
             <>
-              Activates the Mirostat sampling technique. It aims to control perplexity during sampling. See the {` `}
+              Activates the Mirostat sampling technique. It aims to control perplexity during
+              sampling. See the {` `}
               <A class="link" href="https://arxiv.org/abs/2007.14966">
                 paper
-              </A>{'.'} Aphrodite only supports mode 2 (on) or 0 (off).
+              </A>
+              {'.'} Aphrodite only supports mode 2 (on) or 0 (off).
             </>
           }
           value={props.inherit?.mirostatToggle ?? false}
@@ -1290,9 +1292,9 @@ export function getPresetFormData(ref: any) {
 
   const promptOrder: AppSchema.GenSettings['promptOrder'] = order
     ? order.split(',').map((o) => {
-      const [placeholder, enabled] = o.split('=')
-      return { placeholder, enabled: enabled === 'on' }
-    })
+        const [placeholder, enabled] = o.split('=')
+        return { placeholder, enabled: enabled === 'on' }
+      })
     : undefined
 
   const entries = getFormEntries(ref)
