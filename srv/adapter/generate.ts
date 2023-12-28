@@ -144,7 +144,7 @@ export async function guidanceAsync(opts: InferenceRequest) {
     return inference
   }
 
-  if (sub?.preset?.guidanceCapable && sub.tier?.guidanceAccess) {
+  if (sub?.preset?.guidanceCapable && (sub.tier?.guidanceAccess || opts.user.admin)) {
     const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop }, true)
     return result
   }
