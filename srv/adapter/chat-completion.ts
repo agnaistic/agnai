@@ -102,9 +102,6 @@ export const streamCompletion: CompletionGenerator = async function* (
         break
       }
 
-      const aphrodite = tryParse<Completion>(event.data)
-      if (aphrodite) yield aphrodite
-
       current = event
       prev += event.data
 

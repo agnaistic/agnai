@@ -1,13 +1,13 @@
 import needle from 'needle'
 import { sanitiseAndTrim } from '../api/chat/common'
 import { ModelAdapter } from './type'
-import { decryptText } from '../db/util'
 import { defaultPresets } from '../../common/presets'
 import { OPENAI_CHAT_MODELS } from '../../common/adapters'
 import { AppSchema } from '../../common/types/schema'
 import { config } from '../config'
 import { AppLog } from '../logger'
 import { streamCompletion, toChatCompletionPayload } from './chat-completion'
+import { decryptText } from '../db/util'
 
 const baseUrl = `https://api.openai.com`
 
@@ -33,12 +33,12 @@ type CompletionGenerator = (
   body: any,
   log: AppLog
 ) => AsyncGenerator<
-  { error: string } | { error?: undefined; token: string } | Completion,
+  { error: string } | { error?: undefined; token: string },
   Completion | undefined
 >
 
 export const handleOAI: ModelAdapter = async function* (opts) {
-  const { char, members, user, prompt, log, guest, gen, kind, isThirdParty } = opts
+  const { char, members, user, prompt, log, gen, guest, kind, isThirdParty } = opts
   const base = getBaseUrl(user, !!gen.thirdPartyUrlNoSuffix, isThirdParty)
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   if (!user.oaiKey && !base.changed) {
@@ -46,37 +46,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     return
   }
 
-  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
-  const apiKey = useThirdPartyPassword
-    ? user.thirdPartyPassword
-    : !isThirdParty
-    ? user.oaiKey
-    : null
-
-  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
-
-  const headers: any = {
-    'Content-Type': 'application/json',
-  }
-
-  if (bearer) {
-    headers.Authorization = bearer
-  }
-
-  const aphrodite = isThirdParty && gen.thirdPartyFormat === 'aphrodite'
-
-  let oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
-
-  if (aphrodite) {
-    try {
-      const res = await fetch(`${base.url}/models`, { headers: headers })
-      const json = await res.json()
-
-      oaiModel = json.data[0].root
-    } catch (ex) {
-      console.error(ex)
-    }
-  }
+  const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
   const maxResponseLength =
     opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
@@ -107,28 +77,23 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     yield { prompt }
   }
 
-  if (aphrodite) {
-    body.best_of = gen.swipesPerGeneration
-    body.n = gen.swipesPerGeneration
-    body.min_p = gen.minP
-    body.top_k = gen.topK
-    body.top_a = gen.topA
+  if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
 
-    gen.mirostatToggle === true ? (body.mirostat_mode = 2) : (body.mirostat_mode = 0)
-    body.mirostat_tau = gen.mirostatTau
-    body.mirostat_eta = gen.mirostatLR
+  const useThirdPartyPassword = base.changed && isThirdParty && user.thirdPartyPassword
+  const apiKey = useThirdPartyPassword
+    ? user.thirdPartyPassword
+    : !isThirdParty
+    ? user.oaiKey
+    : null
+  const bearer = !!guest ? `Bearer ${apiKey}` : apiKey ? `Bearer ${decryptText(apiKey)}` : null
 
-    body.tfs = gen.tailFreeSampling
-    body.typical_p = gen.typicalP
-    body.repetition_penalty = gen.repetitionPenalty
-    body.ignore_eos = gen.banEosToken
-    body.skip_special_tokens = gen.skipSpecialTokens
-
-    body.eta_cutoff = gen.etaCutoff
-    body.epsilon_cutoff = gen.epsilonCutoff
+  const headers: any = {
+    'Content-Type': 'application/json',
   }
 
-  if (gen.antiBond) body.logit_bias = { 3938: -50, 11049: -50, 64186: -50, 3717: -25 }
+  if (bearer) {
+    headers.Authorization = bearer
+  }
 
   log.debug(body, 'OpenAI payload')
 
@@ -143,7 +108,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
     : requestFullCompletion(opts.user._id, url, headers, body, opts.log)
   let accumulated = ''
   let response: Completion<Inference> | undefined
-  const _gens: string[] = []
 
   while (true) {
     let generated = await iter.next()
@@ -159,19 +123,8 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       return
     }
 
-    if (gen.swipesPerGeneration && gen.swipesPerGeneration > 1 && 'choices' in generated.value) {
-      if (generated.value?.choices[0].index == 0 && 'text' in generated.value.choices[0]) {
-        accumulated += generated.value.choices[0].text
-        yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
-      }
-      if ('text' in generated.value.choices[0]) {
-        if (!_gens[generated.value.choices[0].index]) _gens[generated.value.choices[0].index] = ''
-        _gens[generated.value.choices[0].index] += generated.value.choices[0].text
-      }
-    }
-
     // Only the streaming generator yields individual tokens.
-    if (gen.swipesPerGeneration! < 2 && 'token' in generated.value) {
+    if ('token' in generated.value) {
       accumulated += generated.value.token
       yield { partial: sanitiseAndTrim(accumulated, prompt, char, opts.characters, members) }
     }
@@ -188,23 +141,6 @@ export const handleOAI: ModelAdapter = async function* (opts) {
       log.error({ body: response }, 'OpenAI request failed: Empty response')
       yield { error: `OpenAI request failed: Received empty response. Try again.` }
       return
-    }
-
-    if (aphrodite && response?.choices.length! > 1) {
-      let gens: string[] = []
-
-      response?.choices.forEach((choice) => {
-        if ('text' in choice)
-          gens = gens.concat(
-            sanitiseAndTrim(choice.text, prompt, opts.replyAs, opts.characters, members)
-          )
-      })
-
-      yield { gens: gens }
-    }
-
-    if (_gens[0]) {
-      yield { gens: _gens }
     }
 
     gen.swipesPerGeneration! > 1

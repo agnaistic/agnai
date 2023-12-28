@@ -52,7 +52,7 @@ export const THIRDPARTY_HANDLERS: { [svc in ThirdPartyFormat]: AIAdapter } = {
   openai: 'openai',
   'openai-chat': 'openai',
   claude: 'claude',
-  aphrodite: 'openai',
+  aphrodite: 'kobold',
   exllamav2: 'kobold',
   kobold: 'kobold',
   koboldcpp: 'kobold',
@@ -322,7 +322,7 @@ export const adapterSettings: {
 
   thirdPartyUrl: ['kobold', 'ooba'],
   thirdPartyFormat: ['kobold'],
-  thirdPartyModel: ['openai', 'openai-chat'],
+  thirdPartyModel: ['openai', 'openai-chat', 'aphrodite'],
   claudeModel: ['claude'],
   novelModel: ['novel'],
   oaiModel: ['openai', 'openai-chat'],

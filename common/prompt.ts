@@ -697,10 +697,7 @@ export function getAdapter(
   config: AppSchema.User,
   preset: Partial<AppSchema.GenSettings> | undefined
 ) {
-  const chatAdapter =
-    !chat.adapter || chat.adapter === 'default' ? config.defaultAdapter : chat.adapter
-
-  let adapter = preset?.service ? preset.service : chatAdapter
+  let adapter = preset?.service!
 
   const thirdPartyFormat = preset?.thirdPartyFormat || config.thirdPartyFormat
   const isThirdParty = thirdPartyFormat in THIRDPARTY_HANDLERS && adapter === 'kobold'
@@ -751,8 +748,6 @@ export function getContextLimit(
   adapter: AIAdapter,
   model: string
 ): number {
-  if (gen?.maxContextLength) return gen.maxContextLength
-
   const configuredMax =
     gen?.maxContextLength || getFallbackPreset(adapter)?.maxContextLength || 2048
 

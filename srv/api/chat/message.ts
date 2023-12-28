@@ -251,15 +251,18 @@ export const generateMessageV2 = handle(async (req, res) => {
         continue
       }
 
+      if ('tokens' in gen) {
+        generated = gen.tokens as string
+      }
+
       if ('gens' in gen) {
         const gens = gen.gens
         sendMany(members, {
-          type: 'recieving-gens',
+          type: 'receiving-gens',
           messageId: messageId,
           gens: gens,
         })
         retries = gens
-        generated = gens[0]
         break
       }
 
@@ -425,13 +428,16 @@ export const generateMessageV2 = handle(async (req, res) => {
           state: 'retried',
           retries: body.replacing.retries,
         })
+        const nextRetries = [body.replacing.msg]
+          .concat(retries)
+          .concat(body.replacing.retries || [])
         sendMany(members, {
           type: 'message-retry',
           requestId,
           chatId,
           messageId: body.replacing._id,
           message: responseText,
-          retries: body.replacing.retries,
+          retries: nextRetries,
           actions,
           adapter,
           generate: true,
@@ -447,7 +453,7 @@ export const generateMessageV2 = handle(async (req, res) => {
           actions,
           ooc: false,
           meta,
-          retries: retries,
+          retries,
           event: undefined,
         })
         sendMany(members, {

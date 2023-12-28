@@ -30,7 +30,6 @@ import { devCycleAvatarSettings, isDevCommand } from './dev-util'
 import ChatOptions, { ChatModal } from './ChatOptions'
 import ForcePresetModal from './ForcePreset'
 import DeleteChatModal from './components/DeleteChat'
-import { cycleArray } from '/common/util'
 import { useEffect, usePane, useResizeObserver } from '/web/shared/hooks'
 import {
   emptyMsg,
@@ -87,7 +86,6 @@ const ChatDetail: Component = () => {
     images: s.images,
     partial: s.partial,
     waiting: s.waiting,
-    retries: s.retries,
     speaking: s.speaking,
     retrying: s.retrying,
     inference: s.lastInference,
@@ -118,15 +116,13 @@ const ChatDetail: Component = () => {
 
   const chatGrid = createMemo(() => (user.ui.chatAvatarMode ? 'avatar-chat-detail' : 'chat-detail'))
   const isGreetingOnlyMsg = createMemo(() => msgs.msgs.length === 1)
-  const botGreeting = createMemo(() => chats.char?.greeting || '')
-  const altGreetings = createMemo(() => chats.char?.alternateGreetings ?? [])
 
   let [evented, setEvented] = createSignal(false)
   const retries = createMemo(() => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last && !isGreetingOnlyMsg()) return
 
-    return { msgId: last._id, list: msgs.retries?.[last._id] || [] }
+    return { msgId: last._id, list: last.retries || [] }
   })
 
   const [swipe, setSwipe] = createSignal(0)
@@ -286,16 +282,6 @@ const ChatDetail: Component = () => {
   })
 
   createEffect(() => {
-    if (isGreetingOnlyMsg() && botGreeting() && altGreetings().length > 0) {
-      const currentChoice = msgs.msgs[0].msg
-      const allGreetings = [botGreeting(), ...altGreetings()].filter((text) => !!text)
-      const currentChoiceIndex = allGreetings.findIndex((greeting) => greeting === currentChoice)
-      const greetingsWithCurrentChoiceFirst = cycleArray(allGreetings, currentChoiceIndex)
-      msgStore.setGreetingSwipes(msgs.msgs[0]._id, greetingsWithCurrentChoiceFirst)
-    }
-  })
-
-  createEffect(() => {
     const charName = chats.char?.name
     updateTitle(charName ? `Chat with ${charName}` : 'Chat')
 
@@ -337,8 +323,6 @@ const ChatDetail: Component = () => {
   const confirmSwipe = (msgId: string) => {
     msgStore.confirmSwipe(msgId, swipe(), () => {
       setSwipe(0)
-      const _retries = msgStore.getState().retries
-      retries()!.list = _retries[msgId]
     })
   }
 

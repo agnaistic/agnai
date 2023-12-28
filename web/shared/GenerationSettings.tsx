@@ -277,7 +277,8 @@ const GeneralSettings: Component<
             'openRouterModel',
             'novelModel',
             'claudeModel',
-            'replicateModelName'
+            'replicateModelName',
+            'thirdPartyModel'
           )
         }
       >
