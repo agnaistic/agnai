@@ -15,18 +15,23 @@ const names = {
   scenario: 'scenario.json',
   characters: 'characters.json',
   chats: 'chats.json',
+  trees: 'trees.json',
+  templates: 'templates.json',
 }
 
 const loadState = handle(async (req) => {
-  const [user, profile, presets, books, scenario, characters, chats] = await Promise.all([
-    read(names.user),
-    read(names.profile),
-    read(names.presets),
-    read(names.memory),
-    read(names.scenario),
-    read(names.characters),
-    read(names.chats),
-  ])
+  const [user, profile, presets, books, scenario, characters, chats, trees, templates] =
+    await Promise.all([
+      read(names.user),
+      read(names.profile),
+      read(names.presets),
+      read(names.memory),
+      read(names.scenario),
+      read(names.characters),
+      read(names.chats),
+      read(names.trees),
+      read(names.templates),
+    ])
 
   const config = await getAppConfig()
 
@@ -39,6 +44,8 @@ const loadState = handle(async (req) => {
     scenario,
     characters,
     chats,
+    trees,
+    templates,
   }
 })
 
@@ -60,6 +67,8 @@ const saveState = handle(async ({ body }) => {
   if (body.characters) await saveFile(names.characters, body.characters)
   if (body.presets) await saveFile(names.presets, body.presets)
   if (body.chats) await saveFile(names.chats, body.chats)
+  if (body.trees) await saveFile(names.trees, body.trees)
+  if (body.templates) await saveFile(names.templates, body.templates)
 
   return { success: true }
 })
