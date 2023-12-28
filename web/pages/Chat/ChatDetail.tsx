@@ -122,7 +122,9 @@ const ChatDetail: Component = () => {
     const last = msgs.msgs.slice(-1)[0]
     if (!last && !isGreetingOnlyMsg()) return
 
-    return { msgId: last._id, list: last.retries || [] }
+    const list = last.retries?.slice() || []
+    list.unshift(last.msg)
+    return { msgId: last._id, list }
   })
 
   const [swipe, setSwipe] = createSignal(0)

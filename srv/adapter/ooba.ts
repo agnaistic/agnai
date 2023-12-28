@@ -4,7 +4,6 @@ import { AdapterProps, ModelAdapter } from './type'
 import { websocketStream } from './stream'
 import { getStoppingStrings } from './prompt'
 import { eventGenerator } from '/common/util'
-import { decryptText } from '../db/util'
 
 export const handleOoba: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen } = opts
@@ -101,8 +100,8 @@ export async function* getTextgenCompletion(
   }
 }
 
-export async function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
-  const { gen, prompt, user, log } = opts
+export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
+  const { gen, prompt } = opts
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {
       prompt,
@@ -158,25 +157,6 @@ export async function getThirdPartyPayload(opts: AdapterProps, stops: string[] =
       skip_special_tokens: gen.skipSpecialTokens,
       eta_cutoff: gen.etaCutoff,
       epsilon_cutoff: gen.epsilonCutoff,
-    }
-
-    if (!body.model) {
-      try {
-        const headers: any = {}
-
-        if (user.thirdPartyPassword) {
-          const apiKey = decryptText(user.thirdPartyPassword)
-          headers['x-api-key'] = apiKey
-          headers['Authorization'] = `Bearer ${apiKey}`
-        }
-
-        const res = await fetch(`${gen.thirdPartyUrl}/v1/models`, { headers })
-        const json = await res.json()
-
-        body.model = json.data[0].root
-      } catch (ex) {
-        log.error(ex)
-      }
     }
 
     return body

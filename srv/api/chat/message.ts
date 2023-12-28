@@ -256,13 +256,7 @@ export const generateMessageV2 = handle(async (req, res) => {
       }
 
       if ('gens' in gen) {
-        const gens = gen.gens
-        sendMany(members, {
-          type: 'receiving-gens',
-          messageId: messageId,
-          gens: gens,
-        })
-        retries = gens
+        retries = gen.gens
         break
       }
 

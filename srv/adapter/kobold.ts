@@ -2,7 +2,7 @@ import needle from 'needle'
 import { defaultPresets } from '../../common/presets'
 import { AppLog, logger } from '../logger'
 import { normalizeUrl, sanitise, sanitiseAndTrim, trimResponseV2 } from '../api/chat/common'
-import { ModelAdapter } from './type'
+import { AdapterProps, ModelAdapter } from './type'
 import { requestStream, websocketStream } from './stream'
 import { getThirdPartyPayload, llamaStream } from './ooba'
 import { getStoppingStrings } from './prompt'
@@ -38,7 +38,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
     opts.gen.thirdPartyFormat === 'llamacpp' ||
     opts.gen.thirdPartyFormat === 'exllamav2' ||
     opts.gen.thirdPartyFormat === 'koboldcpp'
-      ? await getThirdPartyPayload(opts)
+      ? getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
   const baseURL = `${normalizeUrl(user.koboldUrl)}`
@@ -76,6 +76,8 @@ export const handleKobold: ModelAdapter = async function* (opts) {
     headers['x-api-key'] = apiKey
     headers['Authorization'] = `Bearer ${apiKey}`
   }
+
+  await validateModel(opts, baseURL, body, headers)
 
   // Only KoboldCPP at version 1.30 and higher has streaming support
   const isStreamSupported =
@@ -271,8 +273,8 @@ const streamCompletion = async function* (
         if (index === 0) {
           tokens.push(data.token)
           yield { token: data.token }
-          continue
         }
+        continue
       }
 
       tokens.push(data.token)
@@ -304,4 +306,12 @@ const streamCompletion = async function* (
   }
 
   return gens.length ? { tokens: tokens.join(''), gens } : { tokens: tokens.join('') }
+}
+
+async function validateModel(opts: AdapterProps, baseURL: string, payload: any, headers: any) {
+  if (opts.gen.thirdPartyFormat !== 'aphrodite') return
+  if (payload.model) return
+
+  const res = await fetch(`${baseURL}/v1/models`, { headers }).then((r) => r.json())
+  payload.model = res.data[0].root
 }

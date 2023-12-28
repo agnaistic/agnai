@@ -201,7 +201,7 @@ export const msgStore = createStore<MsgState>(
       msgStore.editMessageProp(msgId, { extras })
     },
 
-    async *swapMessage({ msgs }, msgId: string, index: number, onSuccess?: Function) {
+    async *swapMessage({ msgs }, msgId: string, position: number, onSuccess?: Function) {
       const msg = msgs.find((m) => m._id === msgId)
 
       if (!msg) return toastStore.error(`Cannot find message`)
@@ -210,14 +210,14 @@ export const msgStore = createStore<MsgState>(
       }
 
       const original = msg.msg
-      const replacement = msg.retries[index]
+      const replacement = msg.retries[position - 1]
 
       if (!replacement) {
         return toastStore.error(`Cannot swap messages: Replacement message not found`)
       }
 
       const retries = msg.retries.slice()
-      retries[index] = original
+      retries[position - 1] = original
 
       const res = await msgsApi.swapMessage(msg, replacement, retries)
       if (res.error) {
@@ -422,7 +422,7 @@ export const msgStore = createStore<MsgState>(
     },
     async *confirmSwipe({ msgs }, msgId: string, position: number, onSuccess?: Function) {
       const msg = msgs.find((m) => m._id === msgId)
-      const replacement = msg?.retries?.[position]
+      const replacement = msg?.retries?.[position - 1]
       if (!replacement || !msg?.msg) {
         return toastStore.error(`Cannot confirm swipe: Swipe state is stale`)
       }
@@ -698,6 +698,7 @@ subscribe(
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
+    console.log(body.retries)
     const { characters } = getStore('character').getState()
     const { active } = getStore('chat').getState()
 
@@ -945,18 +946,6 @@ subscribe(
   },
   updateMsgSub
 )
-
-subscribe('receiving-gens', { messageId: 'string', gens: ['string'] }, (body) => {
-  const { msgs } = msgStore.getState()
-
-  const prev = msgs.find((m) => m._id === body.messageId)
-  if (prev) {
-    const retries = body.gens.concat(prev.retries || [])
-    msgStore.editMessageProp(body.messageId, {
-      retries,
-    })
-  }
-})
 
 subscribe('message-retrying', { chatId: 'string', messageId: 'string' }, (body) => {
   const { msgs, activeChatId, retrying } = msgStore.getState()
