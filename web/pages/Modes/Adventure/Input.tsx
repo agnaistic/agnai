@@ -1,6 +1,5 @@
 import { Component } from 'solid-js'
 import TextInput from '/web/shared/TextInput'
-import { Send } from 'lucide-solid'
 import { userStore } from '/web/store'
 
 export const AdventureInput: Component<{

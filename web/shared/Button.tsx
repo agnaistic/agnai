@@ -1,5 +1,4 @@
 import { Component, JSX, createMemo, createSignal } from 'solid-js'
-import { hooks } from './util'
 
 export type ButtonSchema = keyof typeof kinds
 
