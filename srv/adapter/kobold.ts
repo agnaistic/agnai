@@ -38,7 +38,7 @@ export const handleKobold: ModelAdapter = async function* (opts) {
     opts.gen.thirdPartyFormat === 'llamacpp' ||
     opts.gen.thirdPartyFormat === 'exllamav2' ||
     opts.gen.thirdPartyFormat === 'koboldcpp'
-      ? getThirdPartyPayload(opts)
+      ? await getThirdPartyPayload(opts)
       : { ...base, ...mappedSettings, prompt }
 
   const baseURL = `${normalizeUrl(user.koboldUrl)}`
@@ -93,8 +93,8 @@ export const handleKobold: ModelAdapter = async function* (opts) {
         ? streamCompletion(
             `${baseURL}/v1/completions`,
             body,
-            opts.gen.thirdPartyFormat,
             headers,
+            opts.gen.thirdPartyFormat,
             opts.log
           )
         : fullCompletion(`${baseURL}/v1/completions`, body, headers, opts.log)

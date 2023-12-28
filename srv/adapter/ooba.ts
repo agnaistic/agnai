@@ -4,6 +4,7 @@ import { AdapterProps, ModelAdapter } from './type'
 import { websocketStream } from './stream'
 import { getStoppingStrings } from './prompt'
 import { eventGenerator } from '/common/util'
+import { decryptText } from '../db/util'
 
 export const handleOoba: ModelAdapter = async function* (opts) {
   const { char, members, user, prompt, log, gen } = opts
@@ -100,8 +101,8 @@ export async function* getTextgenCompletion(
   }
 }
 
-export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
-  const { gen, prompt } = opts
+export async function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
+  const { gen, prompt, user, log } = opts
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'llamacpp') {
     const body = {
       prompt,
@@ -129,7 +130,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
 
   if (gen.service === 'kobold' && gen.thirdPartyFormat === 'aphrodite') {
     const body = {
-      model: gen.thirdPartyModel || gen.oaiModel || '',
+      model: gen.thirdPartyModel || '',
       stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
       temperature: gen.temp ?? 0.5,
       max_tokens: opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? 200,
@@ -157,6 +158,25 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       skip_special_tokens: gen.skipSpecialTokens,
       eta_cutoff: gen.etaCutoff,
       epsilon_cutoff: gen.epsilonCutoff,
+    }
+
+    if (!body.model) {
+      try {
+        const headers: any = {}
+
+        if (user.thirdPartyPassword) {
+          const apiKey = decryptText(user.thirdPartyPassword)
+          headers['x-api-key'] = apiKey
+          headers['Authorization'] = `Bearer ${apiKey}`
+        }
+
+        const res = await fetch(`${gen.thirdPartyUrl}/v1/models`, { headers })
+        const json = await res.json()
+
+        body.model = json.data[0].root
+      } catch (ex) {
+        log.error(ex)
+      }
     }
 
     return body
