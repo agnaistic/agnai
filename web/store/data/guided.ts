@@ -43,7 +43,9 @@ export type GuidedSession = {
     user: string
     assistant: string
   }
+
   gameId: string
+  presetId?: string
 
   /** Field value overrides */
   init?: Record<string, string>
@@ -79,18 +81,18 @@ export const BUILTIN_TAGS: { [key in GuidedFormat]: FormatTags } = {
   Alpaca: {
     openUser: '### Instruction:',
     closeUser: '\n',
-    openBot: '### Response',
+    openBot: '### Response:',
     closeBot: '\n',
-    openSystem: '',
-    closeSystem: '',
+    openSystem: '### System:',
+    closeSystem: '\n',
   },
   Vicuna: {
     openUser: 'USER:',
     closeUser: '\n',
     openBot: 'RESPONSE:',
     closeBot: '\n',
-    openSystem: '',
-    closeSystem: '',
+    openSystem: 'SYSTEM:',
+    closeSystem: '\n',
   },
   ChatML: {
     openUser: '<|im_start|>user',
@@ -137,8 +139,8 @@ export const guidedApi = {
 
 async function createTemplate(template: Omit<GuidedTemplate, '_id'>) {
   const create: GuidedTemplate = {
-    _id: v4(),
     ...template,
+    _id: v4(),
   }
 
   await saveTemplate(create)

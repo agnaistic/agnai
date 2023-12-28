@@ -110,6 +110,7 @@ export async function basicInference({ prompt, settings }: InferenceOpts) {
 
 export async function guidance<T = any>(
   opts: InferenceOpts & {
+    presetId?: string
     previous?: any
     lists?: Record<string, string[]>
     placeholders?: Record<string, string | string[]>
@@ -129,7 +130,8 @@ export async function guidance<T = any>(
   const res = await api.method<{ result: string; values: T }>('post', `/chat/guidance`, {
     requestId,
     user,
-    settings: settings || fallback,
+    presetId: opts.presetId,
+    settings: opts.presetId ? undefined : settings || fallback,
     prompt,
     service: service || settings?.service || fallback?.service,
     maxTokens,

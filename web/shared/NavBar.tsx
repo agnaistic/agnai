@@ -36,7 +36,7 @@ const NavBar: Component = () => {
   const Title = (
     <A href="/">
       <div class="flex w-full justify-center">
-        Agn<span class="text-[var(--hl-500)]">ai</span>stic
+        Agn<span class="text-[var(--hl-500)]">ai</span>
       </div>
     </A>
   )
@@ -68,7 +68,7 @@ const NavBar: Component = () => {
           <div class="ellipsis flex w-full flex-col">
             <Show when={isChat()} fallback={Title}>
               <span class="w-full text-center text-[0.6rem]">
-                Agn<span class="text-[var(--hl-500)]">ai</span>stic
+                Agn<span class="text-[var(--hl-500)]">ai</span>
               </span>
               <span class="w-full overflow-hidden text-ellipsis whitespace-nowrap text-center">
                 {chats.loaded ? chats.char?.name : '...'}

@@ -4,6 +4,7 @@ import {
   Bell,
   Book,
   ChevronRight,
+  FlaskConical,
   HeartHandshake,
   HelpCircle,
   LogIn,
@@ -191,6 +192,13 @@ const UserNavigation: Component = () => {
       <CharacterLink />
 
       <ChatLink />
+
+      <Show when={menu.config.guidanceAccess}>
+        <Item href="/mode/preview/" ariaLabel="Mode Preview">
+          <FlaskConical aria-hidden="true" />
+          Mode Preview
+        </Item>
+      </Show>
 
       <Library />
       <MultiItem>

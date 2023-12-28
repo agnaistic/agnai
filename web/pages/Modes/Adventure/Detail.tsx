@@ -13,31 +13,59 @@ import {
 } from 'solid-js'
 import { ModeDetail } from '/web/shared/Mode/Detail'
 import { AdventureInput } from './Input'
-import { GamePane } from './Pane'
+import { SidePane } from './Pane'
 import Button from '/web/shared/Button'
 import { formatResponse, gameStore } from './state'
 import { markdown } from '/web/shared/markdown'
 import { GuidedResponse, GuidedSession, GuidedTemplate } from '/web/store/data/guided'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
-import { Cog, HelpCircle } from 'lucide-solid'
+import { Cog, HelpCircle, Pencil, RefreshCw, Scissors, Sliders, Trash } from 'lucide-solid'
 import { toDuration, toMap } from '/web/shared/util'
-import { useSearchParams } from '@solidjs/router'
+import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
+import Loading from '/web/shared/Loading'
 // import { imageApi } from '/web/store/data/image'
 
+export function toSessionUrl(id: string) {
+  return `/mode/preview/${id}${location.search}`
+}
+
 export const AdventureDetail: Component = (props) => {
-  let input: HTMLTextAreaElement
   const state = gameStore()
-  const [params, setParams] = useSearchParams()
+  const params = useParams()
+  const nav = useNavigate()
+
   const [load, setLoad] = createSignal(false)
+  const [pane, setPane] = createSignal(false)
+
+  createEffect(() => {
+    if (!state.inited) return
+
+    const id = params.id
+
+    if (!id) {
+      if (!state.state._id) return
+      const exists = state.sessions.some((s) => s._id === id)
+      if (!exists) {
+        nav(toSessionUrl(''))
+        return
+      }
+
+      nav(toSessionUrl(state.state._id))
+      return
+    }
+
+    if (state.state._id !== id) {
+      console.log(state.state._id, '!==', id)
+      gameStore.loadSession(id)
+    }
+  })
 
   const trimResult = (i: number) => () => {
     const msg = state.state.responses[i]
     gameStore.updateResponse(i, trim(msg.response))
   }
-
-  const closePane = () => setParams({ pane: '' })
 
   onMount(() => {
     gameStore.init()
@@ -64,33 +92,13 @@ export const AdventureDetail: Component = (props) => {
   //   return <img src={src} class="h-full" />
   // })
 
-  const undo = () => {
-    const last = state.state.responses.slice(-1)[0]
-
-    if (last?.input && input && !input.value.trim()) {
-      input.value = last.input
-    }
-
-    gameStore.undo()
-  }
-
-  const sidePane = createMemo(() => {
-    if (!params.pane) return null
-
-    switch (params.pane) {
-      case 'prompt':
-        return <GamePane close={closePane} />
-    }
-
-    return null
-  })
-
   return (
     <>
       <ModeDetail
         loading={false}
         header={<Header template={state.template} session={state.state} />}
-        pane={sidePane()}
+        showPane={pane()}
+        pane={<SidePane show={setPane} />}
         // split={headerImage()}
         splitHeight={30}
       >
@@ -108,6 +116,7 @@ export const AdventureDetail: Component = (props) => {
                 <Msg
                   msg={res}
                   index={i()}
+                  siblings={state.state.responses.length}
                   trim={trimResult(i())}
                   text={formatResponse(
                     state.template.display || state.template.response || '{{response}}',
@@ -118,12 +127,15 @@ export const AdventureDetail: Component = (props) => {
               </>
             )}
           </For>
+          <Show when={state.busy}>
+            <Loading type="flashing" />
+          </Show>
           <div class="flex gap-2">
             <Button size="pill" disabled={state.busy} onClick={gameStore.start}>
               {state.state.init ? 'Restart' : 'Start'}
             </Button>
             <Show when={state.state.init}>
-              <Button size="pill" onClick={() => gameStore.update({ responses: [], gameId: '' })}>
+              <Button size="pill" onClick={() => gameStore.newSession(state.template._id)}>
                 Reset
               </Button>
             </Show>
@@ -139,18 +151,6 @@ export const AdventureDetail: Component = (props) => {
                 Save
               </Button>
             </Show>
-
-            <Show when={state.state.responses.length > 0}>
-              <Button size="pill" onClick={gameStore.retry} disabled={state.busy}>
-                Retry
-              </Button>
-            </Show>
-
-            <Show when={state.state.responses.length > 0}>
-              <Button size="pill" onClick={undo} disabled={state.busy}>
-                Undo
-              </Button>
-            </Show>
           </div>
           <div class="flex flex-wrap gap-1">
             <For each={state.template.fields.filter((f) => f.visible)}>
@@ -164,11 +164,7 @@ export const AdventureDetail: Component = (props) => {
               )}
             </For>
           </div>
-          <AdventureInput
-            onEnter={gameStore.send}
-            loading={state.busy}
-            input={(ele) => (input = ele)}
-          />
+          <AdventureInput onEnter={gameStore.send} loading={state.busy} />
         </div>
       </ModeDetail>
       <Show when={load()}>
@@ -188,6 +184,7 @@ export const AdventureDetail: Component = (props) => {
 }
 
 const LoadModal: Component<{ close: () => void }> = (props) => {
+  const nav = useNavigate()
   const sessions = gameStore((g) => {
     const templates = toMap(g.templates)
     const sessions = g.sessions.map((sess) => ({
@@ -198,7 +195,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
     return sessions
   })
   const load = (id: string) => {
-    gameStore.loadSession(id)
+    nav(toSessionUrl(id))
     props.close()
   }
 
@@ -208,7 +205,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
         <For each={sessions}>
           {(sess) => (
             <Button onClick={() => load(sess._id)}>
-              {sess.name} {toDuration(sess.age)}
+              {sess.name} {toDuration(sess.age)} {sess._id} ago
             </Button>
           )}
         </For>
@@ -226,6 +223,9 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
         <Button onClick={() => setParams({ pane: 'prompt' })}>
           <Cog />
         </Button>
+        <Button onClick={() => setParams({ pane: 'preset' })}>
+          <Sliders />
+        </Button>
         <Button onClick={() => gameStore.setState({ showModal: 'help' })}>
           <HelpCircle />
         </Button>
@@ -235,22 +235,29 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
 }
 
 const Msg: Component<{
-  text: string
+  text: string | JSX.Element
   trim?: () => void
   index?: number
   user?: boolean
   msg?: GuidedResponse
+  siblings?: number
 }> = (props) => {
   let ref: HTMLDivElement
 
   const canEdit = createMemo(() => props.index !== undefined && !!props.msg)
+  const canRetry = createMemo(
+    () => props.siblings !== undefined && props.index === props.siblings - 1
+  )
 
-  const html = createMemo(() => markdown.makeHtml(props.text))
+  const html = createMemo(() =>
+    typeof props.text === 'string' ? markdown.makeHtml(props.text) : props.text
+  )
 
   createEffect(
     on(
       () => props.text,
       () => {
+        if (props.text !== 'string') return
         if (ref.innerText === props.text) return
         ref.innerText = props.text
       }
@@ -264,9 +271,14 @@ const Msg: Component<{
     ref.focus()
   }
 
+  const deleteMsg = () => {
+    gameStore.deleteResponse(props.index!)
+  }
+
   const cancel = () => {
-    ref.innerText = props.text
     setEdit(false)
+    if (props.text !== 'string') return
+    ref.innerText = props.text
   }
 
   const save = () => {
@@ -295,10 +307,16 @@ const Msg: Component<{
         'bg-800': !!props.user,
       }}
     >
-      <div innerHTML={html()} classList={{ hidden: editing() }} />
+      <Show when={typeof props.text === 'string'}>
+        <div innerHTML={html() as string} classList={{ hidden: editing() }} />
+      </Show>
+      <Show when={typeof props.text !== 'string'}>
+        <div>{props.text}</div>
+      </Show>
       <div
         ref={(ele) => {
           ref = ele
+          if (props.text !== 'string') return
           ele.innerText = props.text
         }}
         contentEditable={editing()}
@@ -308,17 +326,32 @@ const Msg: Component<{
       <div class="flex w-full justify-end gap-1">
         <Button
           size="pill"
-          schema="secondary"
+          schema="clear"
           onClick={props.trim}
-          classList={{ hidden: editing() }}
+          classList={{ hidden: editing() || !props.trim }}
         >
-          Trim
+          <Scissors size={20} />
         </Button>
 
         <Show when={canEdit()}>
-          <Button size="pill" schema="secondary" onClick={edit} classList={{ hidden: editing() }}>
-            Edit
+          <Button size="pill" schema="clear" onClick={edit} classList={{ hidden: editing() }}>
+            <Pencil size={20} />
           </Button>
+          <Button size="pill" schema="clear" onClick={deleteMsg} classList={{ hidden: editing() }}>
+            <Trash size={20} />
+          </Button>
+
+          <Show when={canRetry()}>
+            <Button
+              size="pill"
+              schema="clear"
+              onClick={gameStore.retry}
+              classList={{ hidden: editing() }}
+            >
+              <RefreshCw size={20} />
+            </Button>
+          </Show>
+
           <Button size="pill" schema="success" classList={{ hidden: !editing() }} onClick={save}>
             Save
           </Button>

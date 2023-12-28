@@ -32,7 +32,8 @@ export async function getSubscriptionPreset(
   if (!gen) return
   if (gen.service !== 'agnaistic') return
 
-  const level = user.admin ? 100 : store.users.getUserSubTier(user)?.level ?? -1
+  const tier = store.users.getUserSubTier(user)
+  const level = user.admin ? 100 : tier?.level ?? -1
   let error: string | undefined = undefined
   let warning: string | undefined = undefined
 
@@ -59,7 +60,7 @@ export async function getSubscriptionPreset(
     }
   }
 
-  return { level, preset, error, warning }
+  return { level, preset, error, warning, tier: tier?.tier }
 }
 
 export const handleAgnaistic: ModelAdapter = async function* (opts) {

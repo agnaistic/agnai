@@ -20,6 +20,7 @@ const validInference = {
   settings: 'any?',
   user: 'any',
   service: 'string',
+  presetId: 'string?',
 } as const
 
 const validInferenceApi = {
@@ -151,13 +152,22 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
   if (userId) {
     const user = await store.users.getUser(userId)
     if (!user) throw errors.Unauthorized
-    if (!body.service) {
+
+    body.user = user
+
+    if (body.presetId) {
+      const preset = await store.presets.getUserPreset(body.presetId)
+      if (!preset) {
+        throw new StatusError(`Preset not found - ${body.presetId}`, 400)
+      }
+
+      body.settings = preset
+    } else if (!body.service) {
       if (!user.defaultPreset) throw errors.BadRequest
       const preset = await store.presets.getUserPreset(user.defaultPreset)
       body.service = preset?.service!
       body.settings = preset
     }
-    body.user = user
   }
 
   const props: InferenceRequest = {
@@ -175,41 +185,6 @@ export const guidance = wrap(async ({ userId, log, body, socketId }) => {
   }
 
   const result = await guidanceAsync(props)
-  return result
-})
-
-export const rerunGuidance = wrap(async ({ userId, log, body, socketId }) => {
-  assertValid(
-    {
-      ...validInference,
-      placeholders: 'any?',
-      maxTokens: 'number?',
-      rerun: ['string'],
-      previous: 'any?',
-      lists: 'any?',
-    },
-    body
-  )
-
-  if (userId) {
-    const user = await store.users.getUser(userId)
-    if (!user) throw errors.Unauthorized
-    body.user = user
-  }
-
-  const result = await guidanceAsync({
-    prompt: body.prompt,
-    reguidance: body.rerun,
-    log,
-    user: body.user,
-    service: body.service,
-    guidance: true,
-    placeholders: body.placeholders,
-    lists: body.lists,
-    guest: userId ? undefined : socketId,
-    previous: body.previous,
-    settings: body.settings,
-  })
   return result
 })
 

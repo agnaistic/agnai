@@ -44,10 +44,12 @@ export const PresetSelect: Component<{
   )
 
   const selectedLabel = createMemo(() => {
-    const selectedOption = props.options.find((o) => o.value === props.selected)
-    return selectedOption === undefined
+    const opt = props.options.find((o) => o.value === props.selected)
+    return opt === undefined
       ? 'None'
-      : `${selectedOption.label} (${selectedOption.custom ? 'Custom' : 'Built-in'})`
+      : opt.value === user.user?.defaultPreset
+      ? `${opt.label} (Default)`
+      : `${opt.label} ${opt.custom ? '' : '(Built-in)'}`
   })
   const [showSelectModal, setShowSelectModal] = createSignal(false)
   const selectIdAndCloseModal = (id: string) => {
@@ -103,11 +105,9 @@ export const PresetSelect: Component<{
         <TextInput class="hidden" fieldName={props.fieldName!} value={props.selected} />
       </Show>
 
-      <div class="inline-block">
-        <Button onClick={() => setShowSelectModal(true)}>
-          Selected: <strong>{selectedLabel()}</strong>
-        </Button>
-      </div>
+      <Button onClick={() => setShowSelectModal(true)} class="w-fit">
+        Selected: <strong>{selectedLabel()}</strong>
+      </Button>
 
       {props.warning ?? <></>}
     </div>

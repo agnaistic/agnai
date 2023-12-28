@@ -43,6 +43,7 @@ import { markdown } from './shared/markdown'
 import SoundsPage from './pages/Sounds'
 import PatreonOauth from './pages/Settings/PatreonOauth'
 import { AdventureDetail } from './pages/Modes/Adventure/Detail'
+import { AdventureList } from './pages/Modes/Adventure/List'
 
 const App: Component = () => {
   const state = userStore()
@@ -62,7 +63,10 @@ const App: Component = () => {
           <Route path="/chats/create/:id?" component={CreateChatForm} />
           <Route path="/chats" component={CharacterChats} />
           <Route path="/chat" component={ChatDetail} />
-          <Route path="/chat/adv/:id" component={AdventureDetail} />
+          <Show when={cfg.config.guidanceAccess}>
+            <Route path="/mode/preview" component={AdventureList} />
+            <Route path="/mode/preview/:id" component={AdventureDetail} />
+          </Show>
           <Route path="/chat/:id" component={ChatDetail} />
           <Route path={['/info', '/']} component={HomePage} />
           <Route path="/changelog" component={ChangeLog} />
@@ -167,7 +171,7 @@ const Layout: Component = () => {
   })
 
   const isChat = createMemo(() => {
-    return location.pathname.startsWith('/chat/')
+    return location.pathname.startsWith('/chat/') || location.pathname.startsWith('/mode/')
   })
 
   const bg = createMemo(() => {

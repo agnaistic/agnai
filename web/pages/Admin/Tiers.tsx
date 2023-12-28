@@ -70,6 +70,7 @@ const TiersPage: Component = (props) => {
       disableSlots: 'boolean?',
       apiAccess: 'boolean',
       patreonTier: 'string',
+      guidanceAccess: 'boolean',
     })
 
     const product = admin.products.find((p) => p.id === data.productId)
@@ -159,6 +160,13 @@ const TiersPage: Component = (props) => {
             value={editing()?.apiAccess ?? false}
           />
 
+          <Toggle
+            fieldName="guidanceAccess"
+            label="Guidance (V2) Access Capable"
+            helperText="If enabled, this tier can use GuidanceV2 if the server/preset allows it"
+            value={editing()?.guidanceAccess ?? false}
+          />
+
           <Select
             fieldName="patreonTier"
             label="Patreon Tier"
@@ -176,6 +184,7 @@ const TiersPage: Component = (props) => {
               cost: price(),
               disableSlots: false,
               apiAccess: false,
+              guidanceAccess: false,
             }}
           />
 

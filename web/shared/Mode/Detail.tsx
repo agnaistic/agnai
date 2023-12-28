@@ -8,6 +8,7 @@ import Slot from '../Slot'
 export const ModeDetail: Component<{
   loading: boolean
   children?: JSX.Element
+  showPane: boolean
   pane?: JSX.Element
   header?: JSX.Element
   split?: JSX.Element
@@ -20,7 +21,7 @@ export const ModeDetail: Component<{
   const mode = usePane()
 
   createEffect(() => {
-    chatStore.option('pane', props.pane ? 'other' : undefined)
+    chatStore.option('pane', props.showPane ? 'other' : undefined)
   })
 
   const viewHeight = createMemo(() => {
@@ -50,11 +51,11 @@ export const ModeDetail: Component<{
             class="chat-detail flex flex-col gap-1 pb-1 xs:flex sm:gap-2 sm:py-2"
             classList={{
               // Chat Width
-              'w-full max-w-full': !!props.pane || user.ui.chatWidth === 'full',
-              'w-full max-w-3xl': !props.pane && user.ui.chatWidth === 'narrow',
+              'w-full max-w-full': props.showPane || user.ui.chatWidth === 'full',
+              'w-full max-w-3xl': !props.showPane && user.ui.chatWidth === 'narrow',
               // Chat Margin
-              'xs:mr-auto mx-auto': !!props.pane,
-              'mx-auto': !props.pane,
+              'xs:mr-auto mx-auto': props.showPane,
+              'mx-auto': !props.showPane,
             }}
           >
             <header
@@ -68,9 +69,9 @@ export const ModeDetail: Component<{
             <section
               class="flex w-full flex-row justify-end gap-1 overflow-y-auto"
               classList={{
-                'justify-center': !props.pane || mode() === 'popup',
+                'justify-center': !props.showPane || mode() === 'popup',
                 'justify-end gap-1 justify-self-center flex-row flex':
-                  !!props.pane && mode() === 'pane',
+                  props.showPane && mode() === 'pane',
               }}
             >
               <section class="flex h-full w-full flex-col justify-end gap-2 sm:pr-2">

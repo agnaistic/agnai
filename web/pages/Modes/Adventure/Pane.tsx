@@ -1,4 +1,17 @@
-import { Component, For, Index, Match, Show, Switch, createEffect, createMemo, on } from 'solid-js'
+import {
+  Component,
+  For,
+  Index,
+  JSX,
+  Match,
+  Show,
+  Switch,
+  createEffect,
+  createMemo,
+  createSignal,
+  on,
+  onMount,
+} from 'solid-js'
 import TextInput from '/web/shared/TextInput'
 import Convertible from '../../Chat/Convertible'
 import Button from '/web/shared/Button'
@@ -10,8 +23,62 @@ import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
 import { Card } from '/web/shared/Card'
 import { exportTemplate } from './util'
+import { useSearchParams } from '@solidjs/router'
+import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
 
 const FORMATS = Object.keys(BUILTIN_TAGS).map((label) => ({ label, value: label }))
+
+export const SidePane: Component<{ show: (show: boolean) => void }> = (props) => {
+  const state = gameStore((s) => s.state)
+  const [params, setParams] = useSearchParams()
+  const [paneFooter, setPaneFooter] = createSignal<JSX.Element>()
+
+  const closePane = () => setParams({ pane: '' })
+
+  const updatePane = (pane: string) => {
+    switch (pane) {
+      case 'prompt':
+      case 'preset':
+        props.show(true)
+        return
+    }
+
+    props.show(false)
+  }
+
+  onMount(() => {
+    updatePane(params.pane)
+  })
+
+  createEffect(
+    on(
+      () => params.pane,
+      () => {
+        const pane = params.pane
+        updatePane(pane)
+      }
+    )
+  )
+
+  return (
+    <Switch>
+      <Match when={params.pane === 'prompt'}>
+        <GamePane close={closePane} />
+      </Match>
+
+      <Match when={params.pane === 'preset'}>
+        <Convertible kind="partial" close={closePane} footer={paneFooter()}>
+          <ModeGenSettings
+            footer={setPaneFooter}
+            presetId={state.presetId}
+            close={closePane}
+            onPresetChanged={(presetId) => gameStore.update({ presetId })}
+          />
+        </Convertible>
+      </Match>
+    </Switch>
+  )
+}
 
 export const GamePane: Component<{ close: () => void }> = (props) => {
   const state = gameStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
@@ -145,18 +212,21 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
   const bg = 'bg-700'
   const opacity = 1
 
+  const Footer = (
+    <div class="flex flex-wrap gap-1">
+      <Button onClick={gameStore.createTemplate}>New</Button>
+      <Button onClick={gameStore.saveTemplate}>Save</Button>
+      <Show when={state.template._id !== ''}>
+        <Button onClick={gameStore.saveTemplateCopy}>Copy</Button>
+        <Button onClick={() => exportTemplate(state.template._id)}>Export</Button>
+      </Show>
+      <Button onClick={() => gameStore.setState({ showModal: 'import' })}>Import</Button>
+    </div>
+  )
+
   return (
-    <Convertible kind="partial" close={props.close}>
+    <Convertible kind="partial" close={props.close} footer={Footer}>
       <div class="flex flex-col gap-4">
-        <div class="flex gap-1">
-          <Button onClick={gameStore.createTemplate}>New</Button>
-          <Button onClick={gameStore.saveTemplate}>Save</Button>
-          <Show when={state.template._id !== ''}>
-            <Button onClick={gameStore.saveTemplateCopy}>Copy</Button>
-            <Button onClick={() => exportTemplate(state.template._id)}>Export</Button>
-          </Show>
-          <Button onClick={() => gameStore.setState({ showModal: 'import' })}>Import</Button>
-        </div>
         <Show when={state.list.length > 0}>
           <Card bg={bg} bgOpacity={opacity}>
             <Select

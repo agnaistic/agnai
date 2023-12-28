@@ -123,11 +123,7 @@ export async function inferenceAsync(opts: InferenceRequest) {
 
 export async function guidanceAsync(opts: InferenceRequest) {
   const settings = setRequestService(opts)
-  const subscription = await getSubscriptionPreset(
-    opts.user,
-    !!opts.guest,
-    opts.settings || settings
-  )
+  const sub = await getSubscriptionPreset(opts.user, !!opts.guest, opts.settings || settings)
 
   const previous = { ...opts.previous }
 
@@ -148,7 +144,7 @@ export async function guidanceAsync(opts: InferenceRequest) {
     return inference
   }
 
-  if (subscription?.preset?.guidanceCapable) {
+  if (sub?.preset?.guidanceCapable && sub.tier?.guidanceAccess) {
     const result = await infer({ prompt: opts.prompt, tokens: 200, stop: opts.stop }, true)
     return result
   }

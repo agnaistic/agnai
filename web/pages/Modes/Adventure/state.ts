@@ -57,22 +57,23 @@ export const gameStore = createStore<GameState>(
 
       const templates = await guidedApi.getTemplates()
       const sessions = await guidedApi.getSessions()
-      const lastSessionId = storage.localGetItem('rpg-last-template')
-
-      const session = sessions.result.sessions.find((s) => s._id === lastSessionId) || prev.state
-      const template =
-        templates.result.templates.find((t) => t._id === session?.gameId) || exampleTemplate()
 
       if (!templates.result.templates.length) {
-        templates.result.templates.push(exampleTemplate())
+        const res = await guidedApi.createTemplate(exampleTemplate())
+        if (res.error) {
+          toastStore.error(`Could not initialise modes: ${res.error}`)
+          return
+        }
+
+        if (res.result) {
+          templates.result.templates.push(res.result)
+        }
       }
 
       return {
         sessions: sessions.result.sessions.sort(sortByAge),
-        templates: [blankTemplate()].concat(templates.result.templates),
+        templates: templates.result.templates,
         inited: true,
-        state: session,
-        template,
       }
     },
     async *loadTemplate({ templates, state }, id: string) {
@@ -112,6 +113,7 @@ export const gameStore = createStore<GameState>(
       }
     },
     importTemplate: async ({ templates }, importing: GuidedTemplate) => {
+      importing.name = `${importing.name} (imported)`
       const res = await guidedApi.saveTemplate(importing)
       if (res.result) {
         const next = templates.concat(res.result)
@@ -142,6 +144,16 @@ export const gameStore = createStore<GameState>(
       const next = state.responses.map((m, i) => (index === i ? msg : m))
       return { state: { ...state, responses: next } }
     },
+    async *newSession({ sessions }, templateId: string, onDone?: (sessionId: string) => void) {
+      const session = blankSession(templateId)
+      const res = await guidedApi.saveSession(session)
+      if (res.result) {
+        storage.localSetItem('rpg-last-template', res.result.session._id)
+        yield { sessions: [res.result.session].concat(sessions), state: res.result.session }
+        onDone?.(res.result.session._id)
+        return
+      }
+    },
     saveSession: async ({ state }) => {
       const next = { ...state, updated: now() }
       const res = await guidedApi.saveSession(next)
@@ -150,10 +162,11 @@ export const gameStore = createStore<GameState>(
         return { sessions: res.result.sessions, state: res.result.session }
       }
     },
-    loadSession: async ({ sessions, templates }, id: string) => {
+    loadSession: async ({ sessions, templates, inited }, id: string) => {
+      if (!inited) return
       const session = sessions.find((s) => s._id === id)
       if (!session) {
-        toastStore.error(`Session not found`)
+        toastStore.error(`Session not found: ${id}`)
         return
       }
 
@@ -171,7 +184,7 @@ export const gameStore = createStore<GameState>(
       return { state: session, template }
     },
     createTemplate: () => {
-      const game = exampleTemplate()
+      const game = blankTemplate()
       return { template: game }
     },
     updateTemplate({ template: game }, update: Partial<GuidedTemplate>) {
@@ -198,20 +211,22 @@ export const gameStore = createStore<GameState>(
         lists: template.lists,
       })
 
-      const gameId = state.gameId || template._id
       yield {
         busy: false,
-        state: blankSession(gameId, {
+        state: {
+          ...state,
           init: result,
-          overrides: state.overrides,
-          format: state.format,
-        }),
+        },
       }
+
+      gameStore.saveSession()
     },
-    undo({ state }) {
+    deleteResponse({ state }, index: number) {
       if (!state.responses.length) return
-      const next = state.responses.slice(0, -1)
-      gameStore.update({ responses: next })
+
+      const head = state.responses.slice(0, index)
+      const tail = state.responses.slice(index + 1)
+      gameStore.update({ responses: head.concat(tail) })
     },
     async *retry({ state }) {
       if (!state.responses.length) return
@@ -264,6 +279,7 @@ export const gameStore = createStore<GameState>(
       console.log(prompt)
       const result = await msgsApi.guidance({
         prompt,
+        presetId: state.presetId,
         lists: template.lists,
         placeholders: { history },
       })
@@ -315,7 +331,7 @@ function exampleTemplate(): GuidedTemplate {
     _id: '',
     fields: [],
 
-    name: 'Detective rpg',
+    name: 'Detective RPG (Example)',
     byline: 'Solve AI generated crimes',
     description: '',
     introduction: `Introduction:\n{{intro}}\n\nOpening:\n{{scene}}`,

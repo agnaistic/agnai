@@ -102,6 +102,7 @@ export async function getAppConfig(user?: AppSchema.User) {
     config.patreon.access_token
   )
 
+  appConfig.guidanceAccess = !!userTier?.tier.guidanceAccess
   appConfig.tier = userTier?.tier
   appConfig.patreonAuth = patreonEnabled ? { clientId: config.patreon.client_id } : undefined
   appConfig.serverConfig = configuration

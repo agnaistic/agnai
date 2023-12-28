@@ -103,6 +103,7 @@ export namespace AppSchema {
       cost: number
     }
     apiAccess: boolean
+    guidanceAccess: boolean
 
     name: string
     description: string
@@ -135,6 +136,7 @@ export namespace AppSchema {
     patreon?: boolean
     policies?: boolean
     apiAccess?: boolean
+    guidanceAccess?: boolean
     flags?: string
     patreonAuth?: {
       clientId: string
