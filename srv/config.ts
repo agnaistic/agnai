@@ -61,6 +61,7 @@ export const config = {
   jwtPrivateKey: env('JWT_PRIVATE_KEY', ''),
   jwtPublicKey: env('JWT_PUBLIC_KEY', ''),
   jwtExpiry: env('JWT_EXPIRY', '30d'),
+  host: env('APP_HOST', '0.0.0.0'),
   port: +env('PORT', '3001'),
   assetUrl: env('ASSET_URL', ''),
   assetFolder: env('ASSET_FOLDER', resolve(__dirname, '..', 'dist', 'assets')),
