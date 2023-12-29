@@ -179,7 +179,19 @@ Personality: [personality | tokens=120 | stop=###]
 [firstname]'s typical behaviour:
 
 ### Response:
-Behaviour: [behaviour | tokens=120 | stop=###]`
+Behaviour: [behaviour | tokens=120 | stop=###]
+
+### Instruction:
+Example of [firstname]'s dialogue:
+
+### Response:
+[firstname]: [example1 | tokens=100 | stop=###]
+
+### Instruction:
+Example of [firstname]'s dialogue:
+
+### Response:
+[firstname]: [example2 | tokens=100 | stop=###]`
 
 const genTemplate = `
 Describe a character matching the following description:
@@ -200,7 +212,14 @@ Greeting: [greeting | tokens=150]
 Personality: [personality | tokens=120]
 
 [firstname]'s typical behaviour:
-Behaviour: [behaviour | tokens=120]`
+Behaviour: [behaviour | tokens=120]
+
+Example of [firstname]'s dialogue:
+[firstname]: [example1 | tokens=100]
+
+Example of [firstname]'s dialogue:
+[firstname]: [example2 | tokens=100]
+`
 
 const instructGenTemplate = `
 ${modernJailbreak}
@@ -218,6 +237,9 @@ Description of [firstname]'s personality traits: "[personality | tokens=100 | st
 Description of [firstname]'s typical behaviours: "[behaviour | tokens=100 | stop="]"
 
 Detailed description of physical attributes, demeanour, and clothing: [appearance | tokens=100]
+
+Example message from character: [example1 | tokens=100]
+Example message from character: [example2 | tokens=100]
 `
 
 const novelGenTemplate = `

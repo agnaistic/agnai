@@ -16,6 +16,7 @@ export const IMAGE_FORMATS: Record<string, boolean> = {
   png: true,
   jpg: true,
   jpeg: true,
+  webp: true,
 }
 
 export const TEXT_FORMATS: Record<string, boolean> = {

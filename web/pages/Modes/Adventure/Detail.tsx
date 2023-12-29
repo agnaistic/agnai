@@ -20,11 +20,21 @@ import { markdown } from '/web/shared/markdown'
 import { GuidedResponse, GuidedSession, GuidedTemplate } from '/web/store/data/guided'
 import Modal from '/web/shared/Modal'
 import { GuidanceHelp } from './Help'
-import { Cog, HelpCircle, Pencil, RefreshCw, Scissors, Sliders, Trash } from 'lucide-solid'
+import {
+  Cog,
+  HelpCircle,
+  MoreHorizontal,
+  Pencil,
+  RefreshCw,
+  Scissors,
+  Sliders,
+  Trash,
+} from 'lucide-solid'
 import { toDuration, toMap } from '/web/shared/util'
 import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
 import Loading from '/web/shared/Loading'
+import { DropMenu } from '/web/shared/DropMenu'
 // import { imageApi } from '/web/store/data/image'
 
 export function toSessionUrl(id: string) {
@@ -57,7 +67,6 @@ export const AdventureDetail: Component = (props) => {
     }
 
     if (state.state._id !== id) {
-      console.log(state.state._id, '!==', id)
       gameStore.loadSession(id)
     }
   })
@@ -151,6 +160,7 @@ export const AdventureDetail: Component = (props) => {
                 Save
               </Button>
             </Show>
+            <MainMenu />
           </div>
           <div class="flex flex-wrap gap-1">
             <For each={state.template.fields.filter((f) => f.visible)}>
@@ -231,6 +241,27 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
         </Button>
       </div>
     </div>
+  )
+}
+
+const MainMenu = () => {
+  const [_, setParams] = useSearchParams()
+  const [open, setOpen] = createSignal(false)
+
+  return (
+    <>
+      <Button size="pill" onClick={() => setOpen(true)}>
+        <MoreHorizontal size={20} />
+      </Button>
+
+      <DropMenu vert="up" horz="left" show={open()} close={() => setOpen(false)}>
+        <div class="flex flex-col gap-1 p-2">
+          <Button onClick={() => setParams({ pane: 'prompt' })}>Prompts</Button>
+          <Button onClick={() => setParams({ pane: 'preset' })}>Preset</Button>
+          <Button onClick={() => gameStore.setState({ showModal: 'help' })}>Help</Button>
+        </div>
+      </DropMenu>
+    </>
   )
 }
 
