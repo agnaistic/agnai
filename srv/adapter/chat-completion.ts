@@ -383,7 +383,7 @@ async function getPostInstruction(
         .replace(SELF_REPLACE, opts.sender.handle)
       return {
         role: 'system',
-        content: `${prefix}\n\n${prompt}`,
+        content: `${prefix}${prompt}`,
       }
 
     case 'summary': {
