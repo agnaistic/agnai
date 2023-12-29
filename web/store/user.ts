@@ -222,7 +222,7 @@ export const userStore = createStore<UserState>(
       }
     },
 
-    async *validateSubscription({ billingLoading }, quiet?: boolean) {
+    async *validateSubscription({ billingLoading, tiers }, quiet?: boolean) {
       if (billingLoading) return
       yield { billingLoading: true }
       const res = await api.post('/admin/billing/subscribe/verify')
@@ -230,6 +230,9 @@ export const userStore = createStore<UserState>(
 
       if (res.result) {
         yield { user: res.result }
+
+        const sub = getUserSubscriptionTier(res.result, tiers)
+        yield { sub }
       }
 
       if (quiet) return
