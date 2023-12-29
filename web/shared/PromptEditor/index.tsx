@@ -61,6 +61,7 @@ const placeholders = {
 const v2placeholders = {
   roll: { required: false, limit: Infinity, inserted: 'roll 20' },
   random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
+  insert: { required: false, limit: Infinity, inserted: `#insert 4}} {{/insert` },
   'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
   'each chat_embed': { required: false, limit: 1, inserted: `#each chat_embed}} {{/each` },
@@ -78,6 +79,9 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
   idle_duration: `The time elapsed since you last sent a message`,
   all_personalities: `Personalities of all characters in the chat EXCEPT the main character.`,
   post: 'The "post-amble" text. This gives specific instructions on how the model should respond. E.g. Typically reads: `{{char}}:`',
+
+  insert:
+    "(Aka author's note) Insert text at a specific depth in the prompt. E.g. `{{#insert=4}}This is 4 rows from the bottom{{/insert}}`",
 
   longterm_memory:
     '(Aka `chat_embed`) Text retrieved from chat history embeddings. Adjust the token budget in the preset `Memory` section.',
