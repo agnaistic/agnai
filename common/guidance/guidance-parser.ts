@@ -102,7 +102,7 @@ export async function runGuidance<T extends Record<string, string> = Record<stri
     }
   }
 
-  return { result: prompt, values }
+  return { result: prompt, values: { ...previous, ...values } }
 }
 
 function inject(template: string, placeholders?: Record<string, string>) {

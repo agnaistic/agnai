@@ -28,29 +28,43 @@ export const AdventureList: Component = (props) => {
     return toEntityMap(state.templates)
   })
 
+  const sessions = createMemo(() => {
+    const temps = templates()
+    const list = state.sessions
+      .filter((s) => {
+        if (!s.updated) return false
+        if (s.gameId in temps === false) return false
+        return true
+      })
+      .map((s) => {
+        return {
+          session: s,
+          template: temps[s.gameId],
+          url: toSessionUrl(s._id),
+          updated: new Date(s.updated),
+        }
+      })
+    return list
+  })
+
   return (
     <>
       <PageHeader title="Preview: Chat Modes" />
       <div class="flex w-full flex-col gap-1">
-        <For each={state.sessions}>
+        <For each={sessions()}>
           {(sess) => (
-            <Link href={toSessionUrl(sess._id)}>
+            <Link href={sess.url}>
               <SolidCard bg="bg-700" class="flex justify-between">
-                <div>{templates()[sess.gameId]?.name}</div>
-                <div>{toDuration(new Date(sess.updated))}</div>
+                <div class="font-bold">{sess.template.name}</div>
+                <div>
+                  <sub>{toDuration(new Date(sess.updated))} ago</sub>
+                </div>
               </SolidCard>
             </Link>
           )}
         </For>
 
         <Divider />
-        <For each={state.templates}>
-          {(each) => (
-            <SolidCard>
-              {each._id} {each.name}
-            </SolidCard>
-          )}
-        </For>
       </div>
     </>
   )
