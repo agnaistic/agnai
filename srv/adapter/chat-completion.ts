@@ -406,10 +406,10 @@ async function getPostInstruction(
     case 'retry':
     case 'send':
     case 'request': {
-      const appendReplyAsName = opts.gen.appendReplyAsNameToUJB ?? true
+      const appendName = opts.gen.prefixNameAppend ?? true
       return {
         role: 'system',
-        content: appendReplyAsName ? `${prefix}\n\n${opts.replyAs.name}:` : prefix,
+        content: appendName ? `${prefix}\n\n${opts.replyAs.name}:` : prefix,
       }
     }
   }

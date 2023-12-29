@@ -518,7 +518,7 @@ export namespace AppSchema {
     promptOrderFormat?: string
     promptOrder?: Array<{ placeholder: string; enabled: boolean }>
     ultimeJailbreak?: string
-    appendReplyAsNameToUJB?: boolean
+    prefixNameAppend?: boolean
     prefill?: string
     ignoreCharacterUjb?: boolean
     antiBond?: boolean
