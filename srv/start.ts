@@ -36,10 +36,10 @@ export async function start() {
     logger.error({ cause: err.message }, 'Failed to start API')
   })
 
-  server.listen(config.port, '0.0.0.0', async () => {
+  server.listen(config.port, config.host, async () => {
     logger.info(
       { port: config.port, version: pkg.version },
-      `Server started http://127.0.0.1:${config.port}`
+      `Server started http://127.0.0.1:${config.port} (Listening: ${config.host})`
     )
 
     if (config.publicTunnel) {
