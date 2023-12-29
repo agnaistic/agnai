@@ -608,6 +608,21 @@ const PromptSettings: Component<
             disabled={props.disabled}
             class="form-field focusable-field text-900 min-h-[8rem] w-full rounded-xl px-4 py-2 text-sm"
           />
+          <Toggle
+            fieldName="prefixNameAppend"
+            label="Append name of replying character to very end of the prompt"
+            helperText={
+              <>
+                For Claude/OpenAI Chat Completion. Appends the name of replying character and a
+                colon to the UJB/prefill.
+              </>
+            }
+            value={props.inherit?.prefixNameAppend ?? true}
+            disabled={props.disabled}
+            service={props.service}
+            format={props.format}
+            aiSetting={'prefixNameAppend'}
+          />
           <TextInput
             fieldName="prefill"
             label="Bot response prefilling"

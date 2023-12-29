@@ -70,6 +70,7 @@ export const presetValidator = {
   claudeModel: 'string',
   streamResponse: 'boolean?',
   ultimeJailbreak: 'string?',
+  prefixNameAppend: 'boolean?',
   prefill: 'string?',
   antiBond: 'boolean?',
 

@@ -286,6 +286,7 @@ export const adapterSettings: {
   maxTokens: AI_ADAPTERS.slice(),
   maxContextLength: AI_ADAPTERS.slice(),
   antiBond: ['openai', 'scale'],
+  prefixNameAppend: ['openai', 'claude'],
 
   swipesPerGeneration: ['aphrodite'],
   epsilonCutoff: ['aphrodite'],
