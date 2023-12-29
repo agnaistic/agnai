@@ -157,7 +157,7 @@ async function getParseOpts(
       user,
       kind: 'send',
       sender: profile,
-      chatEmbeds: chatEmbeds,
+      chatEmbeds,
       userEmbeds: [],
       resolvedScenario: overChar.scenario,
     },
