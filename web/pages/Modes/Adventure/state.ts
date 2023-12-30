@@ -89,19 +89,20 @@ export const gameStore = createStore<GameState>(
 
       yield { template }
 
+      if (state.gameId === template._id) return
+
       // If we change template and we have a session loaded, we need to clear the session
-      if (state.init && state.gameId !== template._id) {
-        yield {
-          template,
-          state: {
-            _id: '',
-            format: state.format || 'Alpaca',
-            gameId: template._id,
-            overrides: {},
-            responses: [],
-            updated: now(),
-          },
-        }
+      yield {
+        state: {
+          _id: 'new',
+          format: state.format || 'Alpaca',
+          overrides: {},
+          gameId: template._id,
+          responses: [],
+          updated: now(),
+          init: undefined,
+          presetId: state.presetId,
+        },
       }
     },
     saveTemplate: async ({ templates, template: game }) => {
@@ -144,11 +145,14 @@ export const gameStore = createStore<GameState>(
       const next = state.responses.map((m, i) => (index === i ? msg : m))
       return { state: { ...state, responses: next } }
     },
-    async *newSession({ sessions }, templateId: string, onDone?: (sessionId: string) => void) {
-      const session = blankSession(templateId)
+    async *newSession(
+      { sessions, state },
+      templateId: string,
+      onDone?: (sessionId: string) => void
+    ) {
+      const session = blankSession(templateId, { overrides: state.overrides, init: state.init })
       const res = await guidedApi.saveSession(session)
       if (res.result) {
-        storage.localSetItem('rpg-last-template', res.result.session._id)
         yield { sessions: [res.result.session].concat(sessions), state: res.result.session }
         onDone?.(res.result.session._id)
         return
@@ -216,6 +220,8 @@ export const gameStore = createStore<GameState>(
         state: {
           ...state,
           init: result,
+          responses: [],
+          updated: now(),
         },
       }
 

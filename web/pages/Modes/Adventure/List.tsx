@@ -10,19 +10,7 @@ import Divider from '/web/shared/Divider'
 export const AdventureList: Component = (props) => {
   const state = gameStore()
 
-  onMount(() => {
-    gameStore.init()
-  })
-
-  createEffect(() => {
-    if (!state.inited) return
-    if (state.sessions.length > 0) return
-
-    const template = state.templates[0]
-    if (!template) return
-
-    gameStore.newSession(template._id, (id) => {})
-  })
+  onMount(() => gameStore.init())
 
   const templates = createMemo(() => {
     return toEntityMap(state.templates)
@@ -45,6 +33,18 @@ export const AdventureList: Component = (props) => {
         }
       })
     return list
+  })
+
+  createEffect(() => {
+    if (!state.inited) return
+
+    const list = sessions()
+    if (list.length > 0) return
+
+    const template = state.templates[0]
+    if (!template) return
+
+    gameStore.newSession(template._id)
   })
 
   return (
