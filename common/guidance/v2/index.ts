@@ -1,7 +1,7 @@
 import peggy from 'peggy'
 import { grammar } from './grammar'
 
-type PNode = VarNode | TextNode
+export type GuidanceNode = VarNode | TextNode
 
 type TextNode = { kind: 'text'; text: string }
 
@@ -35,8 +35,8 @@ const parser = peggy.generate(grammar.trim(), {
  * This cannot be used for guidance yet
  */
 
-export function parseTemplateV2(template: string): PNode[] {
-  const ast = parser.parse(template, {}) as PNode[]
+export function parseTemplateV2(template: string): GuidanceNode[] {
+  const ast = parser.parse(template, {}) as GuidanceNode[]
 
   for (const node of ast) {
     if (node.kind !== 'variable') continue

@@ -17,7 +17,7 @@ import Convertible from '../../Chat/Convertible'
 import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { gameStore } from './state'
-import { parseTemplateV2 } from '/common/guidance/v2'
+import { GuidanceNode, parseTemplateV2 } from '/common/guidance/v2'
 import { BUILTIN_TAGS, GuidedField, GuidedSession } from '/web/store/data/guided'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
@@ -83,6 +83,10 @@ export const SidePane: Component<{ show: (show: boolean) => void }> = (props) =>
 export const GamePane: Component<{ close: () => void }> = (props) => {
   const state = gameStore((g) => ({ list: g.templates, template: g.template, state: g.state }))
   const [over, setOver] = createStore<Record<string, string>>(state.state.overrides || {})
+  const [store, setState] = createStore({
+    errors: [] as string[],
+    seen: {} as Record<string, boolean>,
+  })
 
   const templateId = createMemo<string>((prev) => {
     return state.template._id
@@ -98,7 +102,9 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
     const list = Object.entries(state.template.lists)
       .map(([name, options]) => ({ name, options }))
       .filter((entry) => {
-        const visible = state.template.fields.some((f) => f.visible && f.list === entry.name)
+        const visible = state.template.fields.some(
+          (f) => f.list === entry.name && store.seen[f.name]
+        )
         return visible
       })
     return list
@@ -120,70 +126,61 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
     return state.template.init + state.template.loop
   })
 
-  const [store, setState] = createStore({
-    errors: [] as string[],
-    seen: {} as Record<string, boolean>,
-  })
-
   createEffect(
     on(diff, () => {
-      const fields = state.template.fields.slice()
       const lists = { ...state.template.lists }
       const seen: Record<string, boolean> = {}
       const errors: string[] = []
+      const newFields: GuidedField[] = []
+
+      const nodes: GuidanceNode[] = []
 
       try {
-        const initAst = parseTemplateV2(state.template.init)
-        for (const node of initAst) {
-          if (node.kind !== 'variable') continue
-
-          seen[node.name] = true
-          const exists = fields.some((n) => n.name === node.name)
-
-          if (exists) continue
-          const listName = node.options
-          fields.push({
-            name: node.name,
-            type: node.type === 'options' || node.type === 'random' ? 'string' : node.type,
-            visible: false,
-            label: '',
-            list: listName,
-          })
-
-          if (listName && listName in lists === false) {
-            lists[listName] = []
-          }
-        }
+        const ast = parseTemplateV2(state.template.init || '')
+        nodes.push(...ast)
       } catch (ex: any) {
         errors.push('Init:', ex.message)
       }
 
       try {
-        const loopAst = parseTemplateV2(state.template.loop || ' ')
-        for (const node of loopAst) {
-          if (node.kind !== 'variable') continue
-          seen[node.name] = true
-          const exists = fields.some((n) => n.name === node.name)
-          if (exists) continue
-
-          const listName = node.options
-          fields.push({
-            name: node.name,
-            type: node.type === 'options' || node.type === 'random' ? 'string' : node.type,
-            visible: false,
-            label: '',
-            list: listName,
-          })
-
-          if (listName && listName in lists === false) {
-            lists[listName] = []
-          }
-        }
+        const ast = parseTemplateV2(state.template.loop || '')
+        nodes.push(...ast)
       } catch (ex: any) {
         errors.push('Loop:', ex.message)
       }
 
-      const next = fields.map((field) => (seen[field.name] ? field : { ...field, visible: false }))
+      for (const node of nodes) {
+        if (node.kind !== 'variable') continue
+
+        seen[node.name] = true
+        const exists = newFields.find((n) => n.name === node.name)
+        // Not quite sure if this matters
+        // if (exists && exists.type !== node.type) {
+        //   throw new Error(
+        //     `Duplicate node ("${node.name}") found with mismatching type. Init: ${exists.type}, Loop: ${node.type}`
+        //   )
+        // }
+        if (exists) continue
+
+        const last = state.template.fields.find((n) => n.name === node.name)
+
+        const listName = node.options
+        newFields.push({
+          name: node.name,
+          type: node.type === 'options' || node.type === 'random' ? 'string' : node.type,
+          visible: last?.visible ?? false,
+          label: last?.label ?? '',
+          list: listName,
+        })
+
+        if (listName && listName in lists === false) {
+          lists[listName] = []
+        }
+      }
+
+      const next = newFields.map((field) =>
+        seen[field.name] ? field : { ...field, visible: false }
+      )
 
       setState({ errors, seen })
       gameStore.updateTemplate({ fields: next, lists })
@@ -352,13 +349,14 @@ export const GamePane: Component<{ close: () => void }> = (props) => {
           <Index each={lists()}>
             {(list) => (
               <div class="grid" style={{ 'grid-template-columns': '1fr 3fr' }}>
-                <Button disabled class="rounded-r-none">
+                <Button disabled class="h-full rounded-r-none">
                   {list().name}
                 </Button>
                 <TagInput
                   availableTags={list().options}
                   value={list().options}
                   fieldName="..."
+                  placeholder="Add items..."
                   onSelect={(next) => updateList(list().name, next)}
                 />
               </div>

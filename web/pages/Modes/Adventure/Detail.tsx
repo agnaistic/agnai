@@ -35,7 +35,6 @@ import { useNavigate, useParams, useSearchParams } from '@solidjs/router'
 import { ImportTemplate } from './ImportModal'
 import Loading from '/web/shared/Loading'
 import { DropMenu } from '/web/shared/DropMenu'
-// import { imageApi } from '/web/store/data/image'
 
 export function toSessionUrl(id: string) {
   return `/mode/preview/${id}${location.search}`
@@ -48,15 +47,29 @@ export const AdventureDetail: Component = (props) => {
 
   const [load, setLoad] = createSignal(false)
   const [pane, setPane] = createSignal(false)
+  // const [image, setImage] = createSignal<string>()
 
   createEffect(() => {
     if (!state.inited) return
 
     const id = params.id
 
+    if (state.state._id === 'new') {
+      if (id !== 'new') {
+        nav(toSessionUrl(state.state._id))
+      }
+      return
+    }
+
+    if (state.state._id !== id) {
+      gameStore.loadSession(id)
+      return
+    }
+
     if (!id) {
       if (!state.state._id) return
       const exists = state.sessions.some((s) => s._id === id)
+
       if (!exists) {
         nav(toSessionUrl(''))
         return
@@ -65,10 +78,6 @@ export const AdventureDetail: Component = (props) => {
       nav(toSessionUrl(state.state._id))
       return
     }
-
-    if (state.state._id !== id) {
-      gameStore.loadSession(id)
-    }
   })
 
   const trimResult = (i: number) => () => {
@@ -76,22 +85,20 @@ export const AdventureDetail: Component = (props) => {
     gameStore.updateResponse(i, trim(msg.response))
   }
 
-  onMount(() => {
-    gameStore.init()
-  })
+  onMount(() => gameStore.init())
 
   // PoC auto-image generation
   // createEffect((prev) => {
-  //   const last = state.state.responses.slice(-1)[0]
-  //   if (!last) return ''
+  // const last = state.state.responses.slice(-1)[0]
+  // if (!last) return ''
 
-  //   const caption = last.summary ? `${last.summary}` : ''
+  // const caption = last.caption ? `${last.caption}` : ''
 
-  //   if (caption && prev !== caption) {
-  //     imageApi.generateImageAsync(caption).then((image) => setImage(image.data))
-  //   }
+  // if (caption && prev !== caption) {
+  //   imageApi.generateImageAsync(caption).then((image) => setImage(image.data))
+  // }
 
-  //   return last.summary
+  // return last.summary
   // })
 
   // const headerImage = createMemo(() => {
@@ -144,7 +151,12 @@ export const AdventureDetail: Component = (props) => {
               {state.state.init ? 'Restart' : 'Start'}
             </Button>
             <Show when={state.state.init}>
-              <Button size="pill" onClick={() => gameStore.newSession(state.template._id)}>
+              <Button
+                size="pill"
+                onClick={() =>
+                  gameStore.newSession(state.template._id, (id) => nav(toSessionUrl(id)))
+                }
+              >
                 Reset
               </Button>
             </Show>
@@ -197,11 +209,13 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
   const nav = useNavigate()
   const sessions = gameStore((g) => {
     const templates = toMap(g.templates)
-    const sessions = g.sessions.map((sess) => ({
-      _id: sess._id,
-      name: templates[sess.gameId].name,
-      age: new Date(sess.updated ?? new Date()),
-    }))
+    const sessions = g.sessions
+      .filter((sess) => sess.gameId in templates === true)
+      .map((sess) => ({
+        _id: sess._id,
+        name: templates[sess.gameId].name,
+        age: new Date(sess.updated ?? new Date()),
+      }))
     return sessions
   })
   const load = (id: string) => {
@@ -215,7 +229,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
         <For each={sessions}>
           {(sess) => (
             <Button onClick={() => load(sess._id)}>
-              {sess.name} {toDuration(sess.age)} {sess._id} ago
+              <span class="font-bold">{sess.name}</span> <sub>{toDuration(sess.age)} ago</sub>
             </Button>
           )}
         </For>

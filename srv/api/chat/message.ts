@@ -388,7 +388,7 @@ export const generateMessageV2 = handle(async (req, res) => {
         ooc: false,
         actions,
         meta,
-        retries: retries,
+        retries,
         event: undefined,
       })
 
@@ -542,6 +542,7 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
   log.setBindings({ adapter })
 
   let generated = ''
+  let retries: string[] = []
   let error = false
   let meta = { ctx: entities.settings.maxContextLength, char: entities.size, len: entities.length }
 
@@ -549,6 +550,15 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
     if (typeof gen === 'string') {
       generated = gen
       continue
+    }
+
+    if ('tokens' in gen) {
+      generated = gen.tokens as string
+    }
+
+    if ('gens' in gen) {
+      retries = gen.gens
+      break
     }
 
     if ('partial' in gen) {
@@ -584,12 +594,18 @@ async function handleGuestGenerate(body: GenRequest, req: AppRequest, res: Respo
 
   const characterId = body.kind === 'self' ? undefined : body.replyAs?._id || body.char?._id
   const senderId = body.kind === 'self' ? 'anon' : undefined
+
+  if (body.kind === 'retry' && body.replacing) {
+    retries = [body.replacing.msg].concat(retries).concat(body.replacing.retries || [])
+  }
+
   const response = newMessage(messageId, chatId, responseText, {
     characterId,
     userId: senderId,
     ooc: false,
     meta,
     event: undefined,
+    retries,
   })
 
   switch (body.kind) {
