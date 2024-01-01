@@ -13,6 +13,7 @@ import type { ImageSettings } from './image-schema'
 import type { TTSSettings, VoiceSettings } from './texttospeech-schema'
 import { UISettings } from './ui'
 import { FullSprite } from './sprite'
+import { ModelFormat } from '../presets/templates'
 
 export type AllDoc =
   | AppSchema.Announcement
@@ -514,6 +515,7 @@ export namespace AppSchema {
     ignoreCharacterSystemPrompt?: boolean
     gaslight?: string
     promptTemplateId?: string
+    modelFormat?: ModelFormat
     useAdvancedPrompt?: 'basic' | 'validate' | 'no-validation'
     promptOrderFormat?: string
     promptOrder?: Array<{ placeholder: string; enabled: boolean }>

@@ -3,6 +3,7 @@ import { ModelAdapter } from './type'
 import { decryptText } from '../db/util'
 import { sanitise, trimResponseV2 } from '../api/chat/common'
 import { registerAdapter } from './register'
+import { getStoppingStrings } from './prompt'
 
 const mancerOptions: Record<string, string> = {
   'OpenAssistant ORCA': 'https://neuro.mancer.tech/webui/oa-orca/api',
@@ -47,6 +48,7 @@ export const handleMancer: ModelAdapter = async function* (opts) {
     penalty_alpha: opts.gen.penaltyAlpha,
     num_beams: 1,
     seed: -1,
+    stop: getStoppingStrings(opts),
   }
 
   const url =

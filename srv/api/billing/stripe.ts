@@ -48,7 +48,9 @@ export async function resyncSubscription(user: AppSchema.User) {
     )
   }
 
-  const now = Date.now()
+  // Provide a one hour buffer to allow subscriptions to auto-renew
+  // Automatic invoices seem to be in a draft status for ~1 hour so provide enough time for it to clear
+  const now = Date.now() - 60000 * 120
 
   const renewedAt = new Date(subscription.current_period_start * 1000)
   const validUntil = new Date(subscription.current_period_end * 1000)
