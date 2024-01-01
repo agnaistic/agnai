@@ -247,7 +247,6 @@ const streamCompletion: CompletionGenerator = async function* (url, body, header
  * - common/prompt.ts fillPromptWithLines
  * - srv/adapter/chat-completion.ts toChatCompletionPayload
  */
-
 async function createClaudePrompt(opts: AdapterProps) {
   if (opts.kind === 'plain') {
     return `\n\nHuman: ${opts.prompt}\n\nAssistant:`
@@ -259,7 +258,10 @@ async function createClaudePrompt(opts: AdapterProps) {
   const maxContextLength = gen.maxContextLength || defaultPresets.claude.maxContextLength
   const maxResponseTokens = gen.maxTokens ?? defaultPresets.claude.maxTokens
 
-  const { parsed: gaslight, inserts } = await injectPlaceholders(
+  // Some API keys require that prompts start with this
+  const mandatoryPrefix = '\n\nHuman: '
+
+  const { parsed: rawGaslight, inserts } = await injectPlaceholders(
     ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
       'history',
       'post',
@@ -272,8 +274,9 @@ async function createClaudePrompt(opts: AdapterProps) {
       encoder: encoder(),
     }
   )
-  const gaslightCost = await encoder()('Human: ' + gaslight)
-  let ujb = parts.ujb ? `System: ${parts.ujb}` : ''
+  const gaslight = processLine('system', rawGaslight)
+  const gaslightCost = await encoder()(mandatoryPrefix + gaslight)
+  let ujb = parts.ujb ? processLine('system', parts.ujb) : ''
   ujb = (
     await injectPlaceholders(ujb, {
       opts,
@@ -341,19 +344,20 @@ async function createClaudePrompt(opts: AdapterProps) {
     addedAllInserts = true
   }
 
-  const messages = [`\n\nSystem: ${gaslight}`, ...history.reverse()]
+  const messages = [gaslight, ...history.reverse()]
 
   if (ujb) {
     messages.push(ujb)
   }
 
   const continueAddon =
-    opts.kind === 'continue' ? `\n\nSystem: Continue ${replyAs.name}'s reply.` : ''
+    opts.kind === 'continue' ? processLine('system', `Continue ${replyAs.name}'s reply.`) : ''
 
   const appendName = opts.gen.prefixNameAppend ?? true
   // <https://console.anthropic.com/docs/prompt-design#what-is-a-prompt>
   return (
-    messages.join('\n\n') +
+    mandatoryPrefix +
+    messages.join('') +
     continueAddon +
     '\n\n' +
     'Assistant: ' +
@@ -367,18 +371,18 @@ type LineType = 'system' | 'char' | 'user' | 'example'
 function processLine(type: LineType, line: string) {
   switch (type) {
     case 'user':
-      return `Human: ${line}`
+      return `\n\nHuman: ${line}`
 
     case 'system':
-      return `System: ${line}`
+      return `\n\nSystem: ${line}`
 
     case 'example':
       const mid = line
         .replace(START_REPLACE, '<mod>New conversation started.</mod>')
         .replace('\n' + SAMPLE_CHAT_MARKER, '')
-      return `Human:\n<example_dialogue>\n${mid}\n</example_dialogue>`
+      return `\n\nHuman:\n<example_dialogue>\n${mid}\n</example_dialogue>`
 
     case 'char':
-      return `Assistant: ${line || ''}`
+      return `\n\nAssistant: ${line || ''}`
   }
 }
