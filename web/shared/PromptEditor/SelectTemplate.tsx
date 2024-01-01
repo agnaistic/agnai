@@ -115,7 +115,12 @@ export const SelectTemplate: Component<{
           <Button
             schema="primary"
             onClick={() => {
-              presetStore.createTemplate(`Custom ${opt()}`, template(), (id) => {
+              const matches = state.templates.filter((t) => t.name.startsWith(`Custom ${opt()}`))
+
+              const name =
+                matches.length > 0 ? `Custom ${opt()} #${matches.length + 1}` : `Custom ${opt()}`
+
+              presetStore.createTemplate(name, template(), (id) => {
                 props.select(id, template())
                 props.close()
               })
