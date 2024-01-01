@@ -1,7 +1,7 @@
 import needle from 'needle'
 import { TextToSpeechAdapter, VoiceListResponse } from './types'
 import { AppSchema } from '../../common/types/schema'
-import { errors } from '../api/wrap'
+import { StatusError, errors } from '../api/wrap'
 import { Validator } from '/common/valid'
 import { decryptText } from '../db/util'
 
@@ -83,4 +83,7 @@ export const novelTtsHandler = {
   validator,
   getVoices: handleNovelVoicesList,
   generateVoice: handleNovelTextToSpeech,
+  getModels: () => {
+    throw new StatusError('Novel AI does not support multiple voice models', 400)
+  },
 }

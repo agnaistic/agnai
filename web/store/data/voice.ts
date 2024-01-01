@@ -14,6 +14,7 @@ type GenerateOpts = {
 
 export const voiceApi = {
   voicesList,
+  modelsList,
   chatTextToSpeech,
   textToSpeech,
 }
@@ -22,6 +23,18 @@ async function voicesList(ttsService: TTSService) {
   const user = getUserEntity()
   const res = await api.post<{ voices: AppSchema.VoiceDefinition[] }>(
     `/voice/${ttsService}/voices`,
+    {
+      user,
+      ttsService,
+    }
+  )
+  return res
+}
+
+async function modelsList(ttsService: TTSService) {
+  const user = getUserEntity()
+  const res = await api.post<{ models: AppSchema.VoiceModelDefinition[] }>(
+    `/voice/${ttsService}/models`,
     {
       user,
       ttsService,

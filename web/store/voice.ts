@@ -9,11 +9,13 @@ import { userStore } from './user'
 type VoiceState = {
   services: Array<{ type: TTSService; label: string }>
   voices: Record<string, AppSchema.VoiceDefinition[]>
+  models: Record<string, AppSchema.VoiceModelDefinition[]>
 }
 
 const initialState: VoiceState = {
   services: [],
   voices: {},
+  models: {},
 }
 
 export const voiceStore = createStore<VoiceState>(
@@ -66,6 +68,21 @@ export const voiceStore = createStore<VoiceState>(
         voices: {
           ...voices,
           [type]: result || [{ id: '', label: 'No voices available' }],
+        },
+      }
+    },
+    async getVoiceModels({ models }, type: TTSService | '') {
+      if (type !== 'elevenlabs') return
+
+      let result = undefined
+      const res = await voiceApi.modelsList(type)
+      if (res.error) toastStore.error(`Failed to get voice models list: ${res.error}`)
+      if (res.result) result = res.result!.models
+
+      return {
+        models: {
+          ...models,
+          [type]: result || [{ id: '', label: 'No models available' }],
         },
       }
     },

@@ -9,6 +9,10 @@ export type TextToSpeechHandler = {
     user: AppSchema.User,
     guestId: string | undefined
   ) => Promise<AppSchema.VoiceDefinition[]>
+  getModels: (
+    user: AppSchema.User,
+    guestId: string | undefined
+  ) => Promise<AppSchema.VoiceModelDefinition[]>
   generateVoice: TextToSpeechAdapter
 }
 
@@ -39,3 +43,10 @@ export type VoicesListRequest = {
 }
 
 export type VoiceListResponse = { voices: AppSchema.VoiceDefinition[] }
+
+export type VoiceModelsListRequest = {
+  user: AppSchema.User
+  ttsService: TTSService
+}
+
+export type VoiceModelListResponse = { models: AppSchema.VoiceModelDefinition[] }

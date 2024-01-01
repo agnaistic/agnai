@@ -667,6 +667,11 @@ export namespace AppSchema {
     label: string
     previewUrl?: string
   }
+
+  export interface VoiceModelDefinition {
+    id: string
+    label: string
+  }
 }
 
 export type Doc<T extends AllDoc['kind'] = AllDoc['kind']> = Extract<AllDoc, { kind: T }>
