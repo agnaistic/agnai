@@ -18,15 +18,16 @@ import Button from '/web/shared/Button'
 import { createStore } from 'solid-js/store'
 import { gameStore } from './state'
 import { GuidanceNode, parseTemplateV2 } from '/common/guidance/v2'
-import { BUILTIN_TAGS, GuidedField, GuidedSession } from '/web/store/data/guided'
+import { GuidedField, GuidedSession } from '/web/store/data/guided'
 import Select, { Option } from '/web/shared/Select'
 import TagInput from '/web/shared/TagInput'
 import { Card } from '/web/shared/Card'
 import { exportTemplate } from './util'
 import { useSearchParams } from '@solidjs/router'
 import { ModeGenSettings } from '/web/shared/Mode/ModeGenSettings'
+import { BUILTIN_FORMATS } from '/common/presets/templates'
 
-const FORMATS = Object.keys(BUILTIN_TAGS).map((label) => ({ label, value: label }))
+const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
 
 export const SidePane: Component<{ show: (show: boolean) => void }> = (props) => {
   const state = gameStore((s) => s.state)

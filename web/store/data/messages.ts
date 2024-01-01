@@ -23,6 +23,7 @@ import { toMap } from '/web/shared/util'
 import { getServiceTempConfig, getUserPreset } from '/web/shared/adapter'
 import { msgStore } from '../message'
 import { embedApi } from '../embeddings'
+import { replaceTags } from '/common/presets/templates'
 
 export type PromptEntities = {
   chat: AppSchema.Chat
@@ -407,6 +408,10 @@ async function createActiveChatPrompt(
     encoder,
     maxContext
   )
+
+  if (entities.settings.modelFormat) {
+    prompt.template.parsed = replaceTags(prompt.template.parsed, entities.settings.modelFormat)
+  }
 
   const retrieveBefore = props.messages[props.messages.length - prompt.lines.length - 1]
   const chats =

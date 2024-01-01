@@ -1,11 +1,12 @@
 import { neat, now } from '/common/util'
 import { storage } from '/web/shared/util'
 import { createStore } from '/web/store/create'
-import { GuidedSession, GuidedTemplate, guidedApi, replaceTags } from '/web/store/data/guided'
+import { GuidedSession, GuidedTemplate, guidedApi } from '/web/store/data/guided'
 import { parseTemplateV2 } from '/common/guidance/v2'
 import { msgsApi } from '/web/store/data/messages'
 import { toastStore } from '/web/store'
 import { v4 } from 'uuid'
+import { replaceTags } from '/common/presets/templates'
 
 type GameState = {
   template: GuidedTemplate
@@ -278,7 +279,11 @@ export const gameStore = createStore<GameState>(
       let prompt = template.loop.replace(/{{input}}/g, text).replace(/\n\n+/g, '\n\n')
 
       for (const [key, value] of Object.entries(previous)) {
-        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), `${value}`)
+        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'gi'), `${value}`)
+      }
+
+      for (const [key, value] of Object.entries(previous)) {
+        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'gi'), `${value}`)
       }
 
       prompt = replaceTags(prompt, state.format)
@@ -288,6 +293,7 @@ export const gameStore = createStore<GameState>(
         presetId: state.presetId,
         lists: template.lists,
         placeholders: { history },
+        previous: state.overrides,
       })
       console.log(JSON.stringify(result, null, 2))
       onSuccess()

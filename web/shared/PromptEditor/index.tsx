@@ -15,7 +15,7 @@ import { AIAdapter, PresetAISettings } from '/common/adapters'
 import { getAISettingServices, toMap } from '../util'
 import { useEffect, useRootModal } from '../hooks'
 import Modal from '../Modal'
-import { HelpCircle, RefreshCcw } from 'lucide-solid'
+import { HelpCircle } from 'lucide-solid'
 import { Card, TitleCard } from '../Card'
 import Button from '../Button'
 import { parseTemplate } from '/common/template-parser'
@@ -23,11 +23,12 @@ import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } fro
 import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
-import { isDefaultTemplate, templates } from '../../../common/presets/templates'
+import { isDefaultTemplate } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
-import { presetStore, toastStore } from '/web/store'
+import { presetStore } from '/web/store'
 import Sortable from '../Sortable'
+import { SelectTemplate } from './SelectTemplate'
 
 type Placeholder = {
   required: boolean
@@ -143,13 +144,25 @@ const PromptEditor: Component<
   let ref: HTMLTextAreaElement = null as any
 
   const adapters = createMemo(() => getAISettingServices(props.aiSetting || 'gaslight'))
-  const userTemplates = presetStore((s) => s.templates)
+  const presets = presetStore()
   const [input, setInput] = createSignal<string>(props.value || '')
-  const [templateId, setTemplateId] = createSignal(props.inherit?.promptTemplateId || '')
+
+  const [templateId, setTemplateId] = createSignal('')
+  const [template, setTemplate] = createSignal('')
+
   const [help, showHelp] = createSignal(false)
   const [templates, setTemplates] = createSignal(false)
   const [preview, setPreview] = createSignal(false)
   const [rendered, setRendered] = createSignal('')
+
+  const openTemplate = () => {
+    if (!templateId()) {
+      setTemplateId(props.inherit?.promptTemplateId || '')
+    }
+
+    setTemplates(true)
+    setTemplate(ref.value)
+  }
 
   const templateName = createMemo(() => {
     const id = templateId()
@@ -158,7 +171,7 @@ const PromptEditor: Component<
       return id
     }
 
-    const template = userTemplates.find((u) => u._id === id)
+    const template = presets.templates.find((u) => u._id === id)
     return template?.name || ''
   })
 
@@ -256,13 +269,13 @@ const PromptEditor: Component<
                 </Button>
                 <Show when={props.showTemplates}>
                   <Show when={!props.inherit?.promptTemplateId}>
-                    <Button size="sm" onClick={() => setTemplates(true)}>
+                    <Button size="sm" onClick={openTemplate}>
                       Use Library Template
                     </Button>
                   </Show>
 
                   <Show when={!!props.inherit?.promptTemplateId}>
-                    <Button size="sm" onClick={() => setTemplates(true)}>
+                    <Button size="sm" onClick={openTemplate}>
                       Update Library Template
                     </Button>
                   </Show>
@@ -336,7 +349,8 @@ const PromptEditor: Component<
             setTemplateId(id)
             ref.value = template
           }}
-          currentTemplate={templateId()}
+          currentTemplateId={templateId() || props.inherit?.promptTemplateId}
+          currentTemplate={template()}
         />
       </Show>
     </div>
@@ -464,157 +478,6 @@ const Placeholder: Component<
       {props.name}
     </div>
   )
-}
-const builtinTemplates = Object.keys(templates).map((key) => ({
-  label: `(Built-in) ${key}`,
-  value: key,
-}))
-
-const SelectTemplate: Component<{
-  show: boolean
-  close: () => void
-  select: (id: string, template: string) => void
-  currentTemplate: string | undefined
-}> = (props) => {
-  const state = presetStore((s) => ({ templates: s.templates }))
-
-  const [opt, setOpt] = createSignal(props.currentTemplate || 'Alpaca')
-  const [template, setTemplate] = createSignal(templates.Alpaca)
-  const [original, setOriginal] = createSignal(templates.Alpaca)
-  const [filter, setFilter] = createSignal('')
-
-  const templateOpts = createMemo(() => {
-    const base = Object.entries(templates).reduce(
-      (prev, [id, template]) => Object.assign(prev, { [id]: { name: id, template, user: false } }),
-      {} as Record<string, { name: string; template: string; user: boolean }>
-    )
-
-    const all = state.templates.reduce(
-      (prev, temp) =>
-        Object.assign(prev, {
-          [temp._id]: { name: temp.name, template: temp.template, user: true },
-        }),
-      base
-    )
-
-    return all
-  })
-
-  const options = createMemo(() => {
-    return Object.entries(templateOpts()).map(([id, temp]) => ({
-      label: temp.user ? temp.name : `(Built-in) ${temp.name}`,
-      value: id,
-    }))
-  })
-
-  const canSaveTemplate = createMemo(() => {
-    if (opt() in templates === true) return false
-    return original() !== template()
-  })
-
-  createEffect<number>((prev) => {
-    const opts = options()
-    if (prev !== opts.length) {
-      const id = props.currentTemplate || state.templates[0]._id
-      const template = state.templates.find((t) => t._id === id)
-      if (!template) return opts.length
-
-      setOpt(id)
-      setTemplate(template.template)
-      setOriginal(template.template)
-    }
-
-    return opts.length
-  }, builtinTemplates.length)
-
-  const Footer = (
-    <>
-      <Button schema="secondary" onClick={props.close}>
-        Cancel
-      </Button>
-      <Show when={canSaveTemplate()}>
-        <Button
-          onClick={() => {
-            const id = opt()
-            const orig = state.templates.find((t) => t._id === id)
-            const update = template()
-            if (!orig) {
-              toastStore.error(`Cannot find template to save`)
-              return
-            }
-
-            presetStore.updateTemplate(opt(), { name: orig.name, template: update }, () => {
-              toastStore.success('Prompt template updated')
-              props.select(id, update)
-              props.close()
-            })
-          }}
-        >
-          Save and Use
-        </Button>
-      </Show>
-
-      <Show when={!canSaveTemplate()}>
-        <Button
-          schema="primary"
-          onClick={() => {
-            props.select(opt(), template())
-            props.close()
-          }}
-        >
-          Use
-        </Button>
-      </Show>
-    </>
-  )
-
-  useRootModal({
-    id: 'predefined-prompt-templates',
-    element: (
-      <Modal
-        title={'Prompt Templates'}
-        show={props.show}
-        close={props.close}
-        footer={Footer}
-        maxWidth="half"
-      >
-        <div class="flex flex-col gap-4 text-sm">
-          <div class="flex gap-1">
-            <TextInput
-              fieldName="filter"
-              placeholder="Filter templates"
-              onInput={(ev) => setFilter(ev.currentTarget.value)}
-              parentClass="w-full"
-            />
-            <Button>
-              <RefreshCcw onClick={presetStore.getTemplates} />
-            </Button>
-          </div>
-          <div class="h-min-[6rem]">
-            <Select
-              fieldName="templateId"
-              items={options().filter((opt) => opt.label.toLowerCase().includes(filter()))}
-              value={opt()}
-              onChange={(ev) => {
-                setOpt(ev.value)
-                setTemplate(templateOpts()[ev.value].template)
-                setOriginal(templateOpts()[ev.value].template)
-              }}
-            />
-          </div>
-          <TextInput
-            fieldName="template"
-            value={template()}
-            isMultiline
-            onInput={(ev) => setTemplate(ev.currentTarget.value)}
-          />
-        </div>
-        <div class="flex justify-end gap-2"></div>
-      </Modal>
-    ),
-  })
-
-  return null
 }
 
 const HelpModal: Component<{

@@ -44,7 +44,7 @@ import Tabs from './Tabs'
 import { A, useSearchParams } from '@solidjs/router'
 import { PhraseBias, StoppingStrings } from './PhraseBias'
 import { AgnaisticSettings } from '../pages/Settings/Agnaistic'
-import { templates } from '/common/presets/templates'
+import { BUILTIN_FORMATS, templates } from '/common/presets/templates'
 
 export { GenerationSettings as default }
 
@@ -513,6 +513,8 @@ function modelsToItems(models: Record<string, string>): Option<string>[] {
   return pairs
 }
 
+const FORMATS = Object.keys(BUILTIN_FORMATS).map((label) => ({ label, value: label }))
+
 const PromptSettings: Component<
   Props & { pane: boolean; format?: ThirdPartyFormat; tab: string }
 > = (props) => {
@@ -549,6 +551,14 @@ const PromptSettings: Component<
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-2" classList={{ hidden: props.tab !== 'Prompt' }}>
         <Card class="flex flex-col gap-4">
+          <Select
+            fieldName="modelFormat"
+            label="Model Prompt Format"
+            helperMarkdown={`Which model's formatting to use if use "universal tags" in your prompt templates
+            (E.g. \`<user>...</user>, <bot>...</bot>\`)`}
+            items={FORMATS}
+            value={props.inherit?.modelFormat || 'Alpaca'}
+          />
           <Select
             fieldName="useAdvancedPrompt"
             label="Use Advanced Prompting"
@@ -1293,6 +1303,7 @@ export function getPresetFormData(ref: any) {
     promptOrderFormat: 'string?',
     promptOrder: 'string?',
     promptTemplateId: 'string?',
+    modelFormat: 'string?',
   })
 
   const registered = getRegisteredSettings(data.service as AIAdapter, ref)

@@ -6,7 +6,113 @@ export function isDefaultTemplate(id: string): id is TemplateId {
   return id in templates
 }
 
+export const TAGS = {
+  openUser: /<USER>/gi,
+  closeUser: /<\/USER>/gi,
+  openBot: /<BOT>/gi,
+  closeBot: /<\/BOT>/gi,
+  openSystem: /<SYSTEM>/gi,
+  closeSystem: /<\/SYSTEM>/gi,
+}
+
+export type FormatTags = {
+  openUser: string
+  closeUser: string
+  openBot: string
+  closeBot: string
+  openSystem: string
+  closeSystem: string
+}
+
+export type ModelFormat = 'Alpaca' | 'Vicuna' | 'ChatML' | 'Mistral'
+
+export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
+  Alpaca: {
+    openUser: '### Instruction:\n',
+    closeUser: '\n',
+    openBot: '### Response:\n',
+    closeBot: '\n',
+    openSystem: '### System:\n',
+    closeSystem: '\n',
+  },
+  Vicuna: {
+    openUser: 'USER: ',
+    closeUser: '\n',
+    openBot: 'RESPONSE: ',
+    closeBot: '\n',
+    openSystem: 'SYSTEM: ',
+    closeSystem: '\n',
+  },
+  ChatML: {
+    openUser: '<|im_start|>user\n',
+    closeUser: '<|im_end>',
+    openBot: '<|im_start|>assistant\n',
+    closeBot: '<|im_end|>',
+    openSystem: '<|im_start|>system\n',
+    closeSystem: '<|im_end|>',
+  },
+  Mistral: {
+    openUser: ` [INST] `,
+    closeUser: `[/INST]\n`,
+    openBot: '[INST] ',
+    closeBot: ' [/INST]\n',
+    openSystem: '[INST] ',
+    closeSystem: ' [/INST]\n',
+  },
+}
+
+export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
+  if (!format) {
+    format = 'Alpaca'
+  }
+
+  if (typeof format === 'string' && format in BUILTIN_FORMATS === false) {
+    format = 'Alpaca'
+  }
+
+  const tags = typeof format === 'string' ? BUILTIN_FORMATS[format] : format
+  const keys = Object.keys(TAGS) as Array<keyof typeof TAGS>
+  let output = prompt
+
+  for (const name of keys) {
+    const regex = TAGS[name]
+    output = output.replace(regex, tags[name])
+  }
+
+  return output
+}
+
 export const templates = {
+  Universal: neat`
+  {{#if system_prompt}}<system>{{system_prompt}}</system>
+  {{/if}}
+  Below is an instruction that describes a task. Write a response that appropriately completes the request.
+  
+  Write {{char}}'s next reply in a fictional roleplay chat between {{#each bot}}{{.name}}, {{/each}}{{char}}.
+  
+  {{char}}'s Persona:
+  {{personality}}
+
+  {{#if memory}}{{char}}'s Memory:
+  {{memory}}
+  {{/if}}
+  {{#if user_embed}}Relevant information to the conversation
+  {{user_embed}}
+  {{/if}}
+  {{#if scenario}}The scenario of the conversation: {{scenario}}
+  {{/if}}
+  {{#if chat_embed}}Relevant past conversation history
+  {{chat_embed}}
+  {{/if}}
+  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{/if}}
+  ***  
+  {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
+  {{/each}}
+  {{#if ujb}}<bot>
+  {{ujb}}</bot>
+  {{/if}}
+  <bot>{{post}}`,
   Alpaca: neat`
   {{#if system_prompt}}{{system_prompt}}
   {{/if}}

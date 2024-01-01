@@ -187,11 +187,16 @@ export const presetStore = createStore<PresetState>(
         toastStore.error(`Could not retrieve templates: ${res.error}`)
       }
     },
-    async *createTemplate({ templates }, name: string, template: string, done?: () => void) {
+    async *createTemplate(
+      { templates },
+      name: string,
+      template: string,
+      done?: (templateId: string) => void
+    ) {
       const res = await presetApi.createTemplate({ name, template })
       if (res.result) {
         yield { templates: templates.concat(res.result) }
-        done?.()
+        done?.(res.result._id)
         return
       }
 

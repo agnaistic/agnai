@@ -2,6 +2,7 @@ import { v4 } from 'uuid'
 import { storage } from '/web/shared/util'
 import { localApi } from './storage'
 import { now } from '/common/util'
+import { ModelFormat } from '/common/presets/templates'
 
 const KEYS = {
   templates: 'agnai-guided-templates',
@@ -34,11 +35,9 @@ export type GuidedTemplate = {
   lists: Record<string, string[]>
 }
 
-export type GuidedFormat = 'Alpaca' | 'Vicuna' | 'ChatML'
-
 export type GuidedSession = {
   _id: string
-  format: GuidedFormat
+  format: ModelFormat
   customFormat?: {
     user: string
     assistant: string
@@ -58,72 +57,6 @@ export type GuidedResponse = {
   input: string
   response: string
 } & Record<string, FieldType>
-
-export const TAGS = {
-  openUser: /<USER>/gi,
-  closeUser: /<\/USER>/gi,
-  openBot: /<BOT>/gi,
-  closeBot: /<\/BOT>/gi,
-  openSystem: /<SYSTEM>/gi,
-  closeSystem: /<\/SYSTEM>/gi,
-}
-
-export type FormatTags = {
-  openUser: string
-  closeUser: string
-  openBot: string
-  closeBot: string
-  openSystem: string
-  closeSystem: string
-}
-
-export const BUILTIN_TAGS: { [key in GuidedFormat]: FormatTags } = {
-  Alpaca: {
-    openUser: '### Instruction:',
-    closeUser: '\n',
-    openBot: '### Response:',
-    closeBot: '\n',
-    openSystem: '### System:',
-    closeSystem: '\n',
-  },
-  Vicuna: {
-    openUser: 'USER:',
-    closeUser: '\n',
-    openBot: 'RESPONSE:',
-    closeBot: '\n',
-    openSystem: 'SYSTEM:',
-    closeSystem: '\n',
-  },
-  ChatML: {
-    openUser: '<|im_start|>user',
-    closeUser: '<|im_end>',
-    openBot: '<|im_start|>assistant',
-    closeBot: '<|im_end|>',
-    openSystem: '<|im_start|>system',
-    closeSystem: '<|im_end|>',
-  },
-}
-
-export function replaceTags(prompt: string, format: FormatTags | GuidedFormat) {
-  if (!format) {
-    format = 'Alpaca'
-  }
-
-  if (typeof format === 'string' && format in BUILTIN_TAGS === false) {
-    format = 'Alpaca'
-  }
-
-  const tags = typeof format === 'string' ? BUILTIN_TAGS[format] : format
-  const keys = Object.keys(TAGS) as Array<keyof typeof TAGS>
-  let output = prompt
-
-  for (const name of keys) {
-    const regex = TAGS[name]
-    output = output.replace(regex, tags[name])
-  }
-
-  return output
-}
 
 export const guidedApi = {
   createTemplate,

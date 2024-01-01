@@ -45,7 +45,7 @@ Pipe = Sep pipe:(TokensPipe / TempPipe / StopPipe / NumPipe / OptionsPipe / Bool
 
 TokensPipe "max-tokens" = "tokens"i _ "=" _ value:Number { return { tokens: value } }
 TempPipe "temp" = "temp"i _ "=" _ value:Number { return { temp: value } }
-StopPipe "stop" = "stop"i _ "=" _ value:(Char / Symbols)+  { return { stop: value.join('') } }
+StopPipe "stop" = "stop"i _ "=" _ value:(Char / Symbols)+ { return { stop: value.join('') } }
 
 NumPipe "num" =  "type" _ "=" _ ("number"i / "num"i) _ range:Threshold* _ { return { type: 'number', ...range.reduce((p, c) => Object.assign(p, c), {}) } }
 OptionsPipe "options" = "type" _ "=" _ ("list"i / "from"i / "options"i / "opts"i / "selection"i / "sel"i) _ list:Char+ { return { type: 'options', options: list.join('') } }

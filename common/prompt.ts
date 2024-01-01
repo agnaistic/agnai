@@ -9,6 +9,7 @@ import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate } from './prompt-order'
+import { ModelFormat } from './presets/templates'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -67,6 +68,7 @@ export type PromptOpts = {
   chatEmbeds: Memory.UserEmbed<{ name: string }>[]
   userEmbeds: Memory.UserEmbed[]
   resolvedScenario: string
+  modelFormat?: ModelFormat
 }
 
 export type BuildPromptOpts = {
@@ -171,6 +173,7 @@ export async function createPromptParts(
     characters: opts.characters,
     encoder,
   })
+
   return { lines: lines.reverse(), parts, template: prompt }
 }
 
@@ -190,6 +193,7 @@ export async function assemblePrompt(
 ) {
   const post = createPostPrompt(opts)
   const template = getTemplate(opts, parts)
+
   const history = { lines, order: 'asc' } as const
   const { parsed, inserts, length } = await injectPlaceholders(template, {
     opts,

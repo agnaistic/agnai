@@ -698,7 +698,6 @@ subscribe(
   },
   async (body) => {
     const { retrying, msgs, activeChatId } = msgStore.getState()
-    console.log(body.retries)
     const { characters } = getStore('character').getState()
     const { active } = getStore('chat').getState()
 

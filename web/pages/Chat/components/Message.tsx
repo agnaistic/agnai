@@ -192,7 +192,6 @@ const Message: Component<MessageProps> = (props) => {
                     openable
                     bot
                     zoom={1.75}
-                    anonymize={ctx.anonymize}
                   />
                 </Match>
 
@@ -230,8 +229,8 @@ const Message: Component<MessageProps> = (props) => {
                     'sm:text-lg': !props.isPaneOpen,
                   }}
                 >
-                  {ctx.anonymize
-                    ? getAnonName(props.msg.characterId || props.msg.userId!)
+                  {ctx.anonymize && !props.msg.characterId
+                    ? getAnonName(props.msg.userId!)
                     : props.msg.handle || ''}
                 </b>
 
