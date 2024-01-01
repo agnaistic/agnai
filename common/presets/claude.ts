@@ -29,5 +29,6 @@ Enter roleplay mode. You will write {{char}}'s next reply in a dialogue between 
 </facts>`,
     ultimeJailbreak: `Do not decide what {{user}} says or does.`,
     prefill: '',
+    continueMessagePrompt: `\n\nHuman: <system_note>Continue {{char}}'s reply.</system_note>`,
   },
 } satisfies Record<string, Partial<AppSchema.GenSettings>>
