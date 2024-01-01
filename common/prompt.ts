@@ -9,7 +9,7 @@ import { parseTemplate } from './template-parser'
 import { getMessageAuthor, getBotName, trimSentence } from './util'
 import { Memory } from './types'
 import { promptOrderToTemplate } from './prompt-order'
-import { ModelFormat } from './presets/templates'
+import { ModelFormat, replaceTags } from './presets/templates'
 
 export const SAMPLE_CHAT_MARKER = `System: New conversation started. Previous conversations are examples only.`
 export const SAMPLE_CHAT_PREAMBLE = `How {{char}} speaks:`
@@ -195,7 +195,7 @@ export async function assemblePrompt(
   const template = getTemplate(opts, parts)
 
   const history = { lines, order: 'asc' } as const
-  const { parsed, inserts, length } = await injectPlaceholders(template, {
+  let { parsed, inserts, length } = await injectPlaceholders(template, {
     opts,
     parts,
     history,
@@ -203,6 +203,11 @@ export async function assemblePrompt(
     lastMessage: opts.lastMessage,
     encoder,
   })
+
+  if (opts.settings?.modelFormat) {
+    parsed = replaceTags(parsed, opts.settings.modelFormat)
+  }
+
   return { lines: history.lines, prompt: parsed, inserts, parts, post, length }
 }
 

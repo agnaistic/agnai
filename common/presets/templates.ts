@@ -52,7 +52,7 @@ export const BUILTIN_FORMATS: { [key in ModelFormat]: FormatTags } = {
     closeSystem: '<|im_end|>',
   },
   Mistral: {
-    openUser: ` [INST] `,
+    openUser: `[INST] `,
     closeUser: `[/INST]\n`,
     openBot: '[INST] ',
     closeBot: ' [/INST]\n',
@@ -79,7 +79,7 @@ export function replaceTags(prompt: string, format: FormatTags | ModelFormat) {
     output = output.replace(regex, tags[name])
   }
 
-  return output
+  return output.replace(/\n\n+/g, '\n\n')
 }
 
 export const templates = {
