@@ -20,6 +20,7 @@ export const subsAgg = createAggregate<SubsEvt, SubsAgg, 'subscriptions'>({
       tierId,
     })
     switch (ev.type) {
+      case 'admin-subscribe':
       case 'subscribed': {
         return {
           state: 'active',

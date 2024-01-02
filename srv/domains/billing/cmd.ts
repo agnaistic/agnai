@@ -28,25 +28,27 @@ export const billingCmd = createCommands<BillingEvt, BillingAgg, BillingCmd>(dom
     return { type: 'cancelled' }
   },
   async fail(cmd, agg) {
+    if (agg.state === 'success') return
+
     if (cmd.userId !== agg.userId) {
       throw new CommandError('Unauthorized', 'UNAUTHORIZED')
     }
 
-    if (agg.state !== 'request') {
-      throw new CommandError(`Invalid checkout session status`, 'INVALID_STATUS')
-    }
+    // if (agg.state !== 'request') {
+    //   throw new CommandError(`Invalid checkout session status`, 'INVALID_STATUS')
+    // }
 
-    return { type: 'failed' }
+    return { type: 'failed', session: cmd.session, reason: cmd.reason }
   },
   async success(cmd, agg) {
     if (cmd.userId !== agg.userId) {
       throw new CommandError('Unauthorized', 'UNAUTHORIZED')
     }
 
-    if (agg.state !== 'request') {
-      throw new CommandError(`Invalid checkout session status`, 'INVALID_STATUS')
-    }
+    // if (agg.state !== 'request') {
+    //   throw new CommandError(`Invalid checkout session status`, 'INVALID_STATUS')
+    // }
 
-    return { type: 'succesful', session: cmd.session, tier: cmd.tier }
+    return { type: 'succesful', session: cmd.session, tier: cmd.tier, userId: agg.userId }
   },
 })

@@ -113,6 +113,14 @@ export const adminStore = createStore<AdminState>('admin', {
       if (res.error) toastStore.error(`Failed to update user: ${res.error}`)
       if (res.result) toastStore.success(`User updated`)
     },
+    async manualSubscription(_, userId: string, subscriptionId: string) {
+      const res = await api.post(`/admin/billing/subscribe/admin-manual`, {
+        userId,
+        subscriptionId,
+      })
+      if (res.error) toastStore.error(res.error)
+      if (res.result) toastStore.success(`Successfully assigned subscription`)
+    },
     async createTier(
       _,
       create: OmitId<AppSchema.SubscriptionTier, Dates>,

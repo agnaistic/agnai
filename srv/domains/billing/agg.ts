@@ -30,7 +30,7 @@ export const billingAgg = createAggregate<BillingEvt, BillingAgg, 'billing'>({
         return { state: 'fail' }
 
       case 'succesful':
-        return { state: 'success' }
+        return { state: 'success', session: ev.session }
     }
   },
 })
