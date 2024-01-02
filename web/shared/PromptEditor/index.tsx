@@ -62,11 +62,10 @@ const placeholders = {
 const v2placeholders = {
   roll: { required: false, limit: Infinity, inserted: 'roll 20' },
   random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
-  insert: { required: false, limit: Infinity, inserted: `#insert 4}} {{/insert` },
+  insert: { required: false, limit: Infinity, inserted: `#insert 3}} {{/insert` },
   'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
   'each chat_embed': { required: false, limit: 1, inserted: `#each chat_embed}} {{/each` },
-  insert: { required: false, limit: Infinity, inserted: `#insert 3}} {{/insert` },
   lowpriority: { required: false, limit: Infinity, inserted: `#lowpriority}} {{/lowpriority` },
 } satisfies Record<string, Placeholder>
 

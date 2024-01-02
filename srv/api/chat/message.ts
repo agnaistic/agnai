@@ -1,6 +1,6 @@
 import { UnwrapBody, assertValid } from '/common/valid'
 import { store } from '../../db'
-import { createTextStreamV2, getResponseEntities, inferenceAsync } from '../../adapter/generate'
+import { createTextStreamV2, getResponseEntities } from '../../adapter/generate'
 import { AppRequest, StatusError, errors, handle } from '../wrap'
 import { sendGuest, sendMany, sendOne } from '../ws'
 import { obtainLock, releaseLock } from './lock'
@@ -8,10 +8,6 @@ import { AppSchema } from '../../../common/types/schema'
 import { v4 } from 'uuid'
 import { Response } from 'express'
 import { publishMany } from '../ws/handle'
-import { GuidanceParams, runGuidance } from '/common/guidance/guidance-parser'
-import { cyoaTemplate } from '/common/mode-templates'
-import { fillPromptWithLines } from '/common/prompt'
-import { getTokenCounter } from '/srv/tokenize'
 
 type GenRequest = UnwrapBody<typeof genValidator>
 
@@ -323,46 +319,6 @@ export const generateMessageV2 = handle(async (req, res) => {
   const responseText = body.kind === 'continue' ? `${body.continuing.msg} ${generated}` : generated
 
   const actions: AppSchema.ChatAction[] = []
-
-  if (chat.mode === 'adventure') {
-    const lines = (await fillPromptWithLines(
-      getTokenCounter('main', undefined),
-      2048,
-      '',
-      body.lines.concat(`${body.replyAs.name}: ${responseText}`)
-    )).adding
-
-    const prompt = cyoaTemplate(
-      body.settings.service,
-      body.settings.service === 'openai'
-        ? body.settings.thirdPartyModel || body.settings.oaiModel
-        : ''
-    )
-
-    const infer = async (params: GuidanceParams) => {
-      const res = await inferenceAsync({
-        prompt: params.prompt,
-        maxTokens: params.tokens,
-        stop: params.stop,
-        log,
-        service: metadata.settings.service!,
-        settings: metadata.settings,
-        user: metadata.user,
-      })
-      return res.generated
-    }
-
-    const { values } = await runGuidance(prompt, {
-      infer,
-      placeholders: {
-        history: lines.join('\n'),
-        user: body.impersonate?.name || body.sender.handle,
-      },
-    })
-    actions.push({ emote: values.emote1, action: values.action1 })
-    actions.push({ emote: values.emote2, action: values.action2 })
-    actions.push({ emote: values.emote3, action: values.action3 })
-  }
 
   await releaseLock(chatId)
 
