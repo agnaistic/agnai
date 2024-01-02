@@ -99,14 +99,18 @@ export const templates = {
   {{#if user_embed}}Relevant information to the conversation
   {{user_embed}}
   {{/if}}
-  {{#if scenario}}The scenario of the conversation: {{scenario}}
+  {{#if scenario}}The scenario of the conversation:
+  {{scenario}}
   {{/if}}
   {{#if chat_embed}}Relevant past conversation history
   {{chat_embed}}
   {{/if}}
-  {{#if example_dialogue}}This is how {{char}} should talk: {{example_dialogue}}
+  {{#if example_dialogue}}This is how {{char}} should talk:
+  {{example_dialogue}}
   {{/if}}
-  ***  
+  
+  Then the roleplay chat between {{char}} and {{user}} begins.
+
   {{#each msg}}{{#if .isbot}}<bot>{{.name}}: {{.msg}}</bot>{{/if}}{{#if .isuser}}<user>{{.name}}: {{.msg}}</user>{{/if}}
   {{/each}}
   {{#if ujb}}<bot>
@@ -163,7 +167,7 @@ export const templates = {
   {{#if example_dialogue}}This is how {{char}} should talk:
   {{example_dialogue}}
   {{/if}}
-  ***
+  
   {{#each msg}}{{#if .isbot}}ASSISTANT:\n{{.name}}: {{.msg}}{{/if}}{{#if .isuser}}USER:\n{{.name}}: {{.msg}}{{/if}}
   {{/each}}
   {{#if ujb}}SYSTEM:{{ujb}}
@@ -221,7 +225,7 @@ export const templates = {
   {{#if example_dialogue}}This is how {{char}} should talk:
   {{example_dialogue}}
   {{/if}}
-  ***
+  
   {{#each msg}}{{#if .isbot}}<|model|>{{/if}}{{#if .isuser}}<|user|>{{/if}}{{.name}}: {{.msg}}
   {{/each}}
   {{#if ujb}}<|system|>{{ujb}}
