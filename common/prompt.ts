@@ -432,17 +432,23 @@ export async function buildPromptParts(
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
-    const fit = (
-      await fillPromptWithLines(encoder, opts.settings?.memoryUserEmbedLimit || 500, '', embeds)
-    ).adding
+    const { adding: fit } = await fillPromptWithLines(
+      encoder,
+      opts.settings?.memoryUserEmbedLimit || 500,
+      '',
+      embeds
+    )
     parts.userEmbeds = fit
   }
 
   if (opts.chatEmbeds) {
     const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const fit = (
-      await fillPromptWithLines(encoder, opts.settings?.memoryChatEmbedLimit || 500, '', embeds)
-    ).adding
+    const { adding: fit } = await fillPromptWithLines(
+      encoder,
+      opts.settings?.memoryChatEmbedLimit || 500,
+      '',
+      embeds
+    )
     parts.chatEmbeds = fit
   }
 
@@ -556,7 +562,7 @@ export async function getLinesForPrompt(
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
-  const lines = (await fillPromptWithLines(encoder, maxContext, '', history)).adding
+  const { adding: lines } = await fillPromptWithLines(encoder, maxContext, '', history)
 
   if (opts.trimSentences) {
     return lines.map(trimSentence)

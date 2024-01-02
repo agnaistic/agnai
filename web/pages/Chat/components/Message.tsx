@@ -146,18 +146,18 @@ const Message: Component<MessageProps> = (props) => {
 
   const format = createMemo(() => ({ size: user.ui.avatarSize, corners: user.ui.avatarCorners }))
 
-  const contextWindowIndicatorClass = () =>
-    props.firstInserted && user.ui.contextWindowLine ? 'first-in-ctx-window' : ''
-
   return (
     <div
-      class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4 ' + contextWindowIndicatorClass()}
+      class={'flex w-full rounded-md px-2 py-2 pr-2 sm:px-4'}
       style={bgStyles()}
       data-sender={props.msg.characterId ? 'bot' : 'user'}
       data-bot={props.msg.characterId ? ctx.char?.name : ''}
       data-user={props.msg.userId ? state.memberIds[props.msg.userId]?.handle : ''}
       data-last={props.last?.toString()}
       data-lastsplit="true"
+      classList={{
+        'first-in-ctx-window': user.ui.contextWindowLine && props.firstInserted,
+      }}
     >
       <div class={`flex w-full ${opacityClass}`}>
         <div class={`flex h-fit w-full select-text flex-col gap-1`}>

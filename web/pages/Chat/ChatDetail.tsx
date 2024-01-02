@@ -600,7 +600,7 @@ const ChatDetail: Component = () => {
                                 ? msgs.speaking.status
                                 : undefined
                             }
-                            firstInserted={i() === firstInsertedMsgIndex()}
+                            firstInserted={i === firstInsertedMsgIndex()}
                           >
                             {isOwner() &&
                               retries()?.list?.length! > 1 &&
