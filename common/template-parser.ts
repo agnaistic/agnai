@@ -159,7 +159,6 @@ export async function parseTemplate(
       unusedTokens = filled.unusedTokens
       const trimmed = filled.adding.reverse()
       output = output.replace(id, trimmed.join('\n'))
-      const outputLen = await opts.limit!.encoder(output)
     }
 
     // Adding the low priority blocks if we still have the budget for them,
