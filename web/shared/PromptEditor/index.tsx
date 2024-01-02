@@ -23,7 +23,7 @@ import { toBotMsg, toChar, toChat, toPersona, toProfile, toUser, toUserMsg } fro
 import { ensureValidTemplate, buildPromptParts } from '/common/prompt'
 import { AppSchema } from '/common/types/schema'
 import { v4 } from 'uuid'
-import { isDefaultTemplate } from '../../../common/presets/templates'
+import { isDefaultTemplate, replaceTags } from '../../../common/presets/templates'
 import Select from '../Select'
 import TextInput from '../TextInput'
 import { presetStore } from '/web/store'
@@ -185,12 +185,30 @@ const PromptEditor: Component<
     return template?.name || ''
   })
 
-  createEffect(async () => {
+  const togglePreview = async () => {
     const opts = await getExampleOpts(props.inherit)
     const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
-    const { parsed } = await parseTemplate(template, opts)
+    let { parsed } = await parseTemplate(template, opts)
+
+    if (props.inherit?.modelFormat) {
+      parsed = replaceTags(parsed, props.inherit.modelFormat)
+    }
+
     setRendered(parsed)
-  })
+    setPreview(!preview())
+  }
+
+  // createEffect(async () => {
+  //   const opts = await getExampleOpts(props.inherit)
+  //   const template = props.noDummyPreview ? input() : ensureValidTemplate(input(), opts.parts)
+  //   let { parsed } = await parseTemplate(template, opts)
+
+  //   if (props.inherit?.modelFormat) {
+  //     parsed = replaceTags(parsed, props.inherit.modelFormat)
+  //   }
+
+  //   setRendered(parsed)
+  // })
 
   const onChange = (ev: Event & { currentTarget: HTMLTextAreaElement }) => {
     setInput(ev.currentTarget.value)
@@ -274,7 +292,7 @@ const PromptEditor: Component<
                 </div>
               </div>
               <div class="flex gap-2">
-                <Button size="sm" onClick={() => setPreview(!preview())}>
+                <Button size="sm" onClick={togglePreview}>
                   Toggle Preview
                 </Button>
                 <Show when={props.showTemplates}>
