@@ -519,7 +519,7 @@ export const chatStore = createStore<ChatState>('chat', {
       await api.get(`/chat/${chatId}/summary`)
     },
 
-    async showPrompt({ active }, msg: AppSchema.ChatMessage) {
+    async computePrompt({ active }, msg: AppSchema.ChatMessage, shown: boolean) {
       if (!active) return
 
       const { msgs } = msgStore.getState()
@@ -550,7 +550,7 @@ export const chatStore = createStore<ChatState>('chat', {
         encoder
       )
 
-      return { prompt }
+      return { prompt: { ...prompt, shown } }
     },
 
     closePrompt() {

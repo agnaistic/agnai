@@ -117,7 +117,12 @@ export type TemplateOpts = {
 export async function parseTemplate(
   template: string,
   opts: TemplateOpts
-): Promise<{ parsed: string; inserts: Map<number, string>; length?: number }> {
+): Promise<{
+  parsed: string
+  inserts: Map<number, string>
+  length?: number
+  linesAddedCount: number
+}> {
   if (opts.limit) {
     opts.limit.output = {}
   }
@@ -136,6 +141,7 @@ export async function parseTemplate(
   readInserts(template, opts, ast)
   let output = render(template, opts, ast)
   let unusedTokens = 0
+  let linesAddedCount = 0
 
   if (opts.limit && opts.limit.output) {
     // const lastIndex = Object.keys(opts.limit.output).reduce((prev, curr) => {
@@ -157,8 +163,9 @@ export async function parseTemplate(
         opts.lowpriority
       )
       unusedTokens = filled.unusedTokens
-      const trimmed = filled.adding.reverse()
+      const trimmed = filled.adding.slice().reverse()
       output = output.replace(id, trimmed.join('\n'))
+      linesAddedCount += filled.linesAddedCount
     }
 
     // Adding the low priority blocks if we still have the budget for them,
@@ -181,6 +188,7 @@ export async function parseTemplate(
     parsed: result,
     inserts: opts.inserts ?? new Map(),
     length: await opts.limit?.encoder?.(result),
+    linesAddedCount,
   }
 }
 

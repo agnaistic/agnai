@@ -36,9 +36,11 @@ export type Prompt = {
   template: {
     parsed: string
     inserts: Map<number, string>
+    linesAddedCount: number
   }
   lines: string[]
   parts: PromptParts
+  shown: boolean
 }
 
 export type PromptConfig = {
@@ -430,17 +432,23 @@ export async function buildPromptParts(
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
-    const fit = (
-      await fillPromptWithLines(encoder, opts.settings?.memoryUserEmbedLimit || 500, '', embeds)
-    ).adding
+    const { adding: fit } = await fillPromptWithLines(
+      encoder,
+      opts.settings?.memoryUserEmbedLimit || 500,
+      '',
+      embeds
+    )
     parts.userEmbeds = fit
   }
 
   if (opts.chatEmbeds) {
     const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const fit = (
-      await fillPromptWithLines(encoder, opts.settings?.memoryChatEmbedLimit || 500, '', embeds)
-    ).adding
+    const { adding: fit } = await fillPromptWithLines(
+      encoder,
+      opts.settings?.memoryChatEmbedLimit || 500,
+      '',
+      embeds
+    )
     parts.chatEmbeds = fit
   }
 
@@ -554,7 +562,7 @@ export async function getLinesForPrompt(
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
-  const lines = (await fillPromptWithLines(encoder, maxContext, '', history)).adding
+  const { adding: lines } = await fillPromptWithLines(encoder, maxContext, '', history)
 
   if (opts.trimSentences) {
     return lines.map(trimSentence)
@@ -584,7 +592,7 @@ export async function fillPromptWithLines(
   lines: string[],
   inserts: Map<number, string> = new Map(),
   lowpriority: { idToReplace: string; content: string }[] = []
-): Promise<{ adding: string[]; unusedTokens: number }> {
+) {
   const insertsCost = await encoder([...inserts.values()].join(' '))
   const tokenLimitMinusInserts = tokenLimit - insertsCost
   const ambleWithoutLowPriorityPlaceholders = lowpriority.reduce(
@@ -607,6 +615,7 @@ export async function fillPromptWithLines(
     adding.push(line)
     linesAddedCount++
   }
+
   // We don't omit inserts with depth > message count in context size
   // instead we put them at the top of the conversation history
   const remainingInserts = insertsDeeperThanConvoHistory(inserts, linesAddedCount)
@@ -615,8 +624,7 @@ export async function fillPromptWithLines(
   }
 
   const unusedTokens = tokenLimitMinusInserts - count
-
-  return { adding, unusedTokens }
+  return { adding, unusedTokens, linesAddedCount }
 }
 
 export function insertsDeeperThanConvoHistory(

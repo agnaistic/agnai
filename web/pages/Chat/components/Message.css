@@ -119,3 +119,12 @@ em {
     max-width: calc(100% - 16px - theme('width.24'));
   }
 }
+
+.first-in-ctx-window::before {
+  content: '';
+  border-top: 2px dotted var(--bg-600);
+  width: 100%;
+  position: absolute;
+  top: -5px;
+  left: 0;
+}
