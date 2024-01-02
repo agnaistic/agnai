@@ -71,15 +71,22 @@ LoopText "loop-text" = !(BotChild / ChatEmbedChild / HistoryChild / CloseConditi
 ConditionText = !(ConditionChild / CloseCondition) ch:. { return ch }
 Text "text" = !(Placeholder / Condition / BotIterator / HistoryIterator / ChatEmbedIterator) ch:. { return ch }
 
-CSV "csv" = words:WordList* WS last:Word { return [...words, last] }
-WordList = word:Word WS "," WS { return word }
+DelimitedWords "csv" = head:Phrase tail:("," WS p:Phrase { return p })* { return [head, ...tail] }
 
+Symbol = ch:("'" / "_" / "-" / "?" / "!" / "#" / "@" / "$" / "^" / "&" / "*" / "(" / ")" / "=" / "+" / "%" / "~" / ":" / ";" / "<" / ">" / "." / "/" / "|" / "\`" / "[" / "]") {
+	return ch
+}
+
+Phrase = text:(QuotedPhrase / CommalessPhrase) { return text }
+QuotedPhrase = '"' text:(BasicChar / Symbol / "," / " ")+ '"' { return text.join('') }
+CommalessPhrase = text:(BasicChar / Symbol / '"' / " ")+ { return text.join('') }
 
 CloseCondition = OP "/if"i CL
 CloseLoop = OP "/each"i CL
 CloseInsert = OP "/insert"i CL
 CloseLowPriority = OP "/lowpriority"i CL
-Word "word" = text:[a-zA-Z_ 0-9\!\?\.\'\#\@\%\"\&\*\=\+\-]+ { return text.join('') }
+BasicChar = [a-zA-Z0-9]
+Word "word" = text:([a-zA-Z_ 0-9] / Symbol)+ { return text.join('') }
 Pipe "pipe" = _ "|" _ fn:Handler {  return fn }
 
 
@@ -116,7 +123,7 @@ Message "message" = ("msg"i / "message"i / "text"i) { return "message" }
 ChatAge "chat-age" = "chat_age"i { return "chat_age" }
 IdleDuration "idle-duration" = "idle_duration"i { return "idle_duration" }
 UserEmbed "user-embed" = "user_embed"i { return "user_embed" }
-Random "random" = "random"i ":"? WS words:CSV { return { kind: "random", values: words } }
+Random "random" = ("random"i) ":"? WS words:DelimitedWords { return { kind: "random", values: words } }
 Roll "roll" = ("roll"i / "dice"i) ":"? WS "d"|0..1| max:[0-9]|0..10| { return { kind: 'roll', values: +max.join('') || 20 } }
 
 // Iterable entities
@@ -127,7 +134,7 @@ History "history" = ( "history"i / "messages"i / "msgs"i / "msg"i) { return "his
 Interp "interp"
 	= Character
   / UserEmbed
-	/ User
+  / User
   / Scenario
   / Persona
   / Impersonate

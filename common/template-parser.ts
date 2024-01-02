@@ -6,11 +6,21 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 
-const parser = peggy.generate(grammar.trim(), {
-  error: (stage, msg, loc) => {
-    console.error({ loc, stage }, msg)
-  },
-})
+const parser = loadParser()
+
+function loadParser() {
+  try {
+    const parser = peggy.generate(grammar.trim(), {
+      error: (stage, msg, loc) => {
+        console.error({ loc, stage }, msg)
+      },
+    })
+    return parser
+  } catch (ex) {
+    console.error(ex)
+    throw ex
+  }
+}
 
 type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | LowPriorityNode | string
 
