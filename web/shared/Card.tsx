@@ -17,7 +17,7 @@ export const Card: Component<{
   ariaLabel?: string
 }> = (props) => {
   const cardBg = useBgStyle({
-    hex: props.bg ? getSettingColor(props.bg) : 'bg-700',
+    hex: props.bg ? props.bg : 'bg-700',
     blur: false,
     opacity: props.bgOpacity ?? 0.08,
   })
