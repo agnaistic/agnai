@@ -62,10 +62,11 @@ const placeholders = {
 const v2placeholders = {
   roll: { required: false, limit: Infinity, inserted: 'roll 20' },
   random: { required: false, limit: Infinity, inserted: 'random: a,b,c' },
-  insert: { required: false, limit: Infinity, inserted: `#insert 4}} {{/insert` },
+  insert: { required: false, limit: Infinity, inserted: `#insert 3}} {{/insert` },
   'each message': { required: false, limit: 1, inserted: `#each msg}} {{/each` },
   'each bot': { required: false, limit: 1, inserted: `#each bot}} {{/each` },
   'each chat_embed': { required: false, limit: 1, inserted: `#each chat_embed}} {{/each` },
+  lowpriority: { required: false, limit: Infinity, inserted: `#lowpriority}} {{/lowpriority` },
 } satisfies Record<string, Placeholder>
 
 const helpers: { [key in InterpAll]?: JSX.Element | string } = {
@@ -92,7 +93,7 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
     'Produces a random word from a comma-separated list. E.g.: `{{random happy, sad, jealous, angry}}`',
   'each bot': (
     <>
-      Suported properties: <code>{`{{.name}} {{.persona}}`}</code>
+      Supported properties: <code>{`{{.name}} {{.persona}}`}</code>
       <br />
       Example: <code>{`{{#each bot}}{{.name}}'s personality: {{.persona}}{{/each}}`}</code>
     </>
@@ -113,6 +114,15 @@ const helpers: { [key in InterpAll]?: JSX.Element | string } = {
       Supported properties: <code>{`{{.name}} {{.text}}`}</code>
       <br />
       Example: <code>{`{{#each chat_embed}}{{.name}} said: {{.text}}{{/each}}`}</code>
+    </>
+  ),
+  lowpriority: (
+    <>
+      Text that is only inserted if there still is token budget remaining for it after inserting
+      conversation history.
+      <br />
+      Example:{' '}
+      <code>{`{{#if example_dialogue}}{{#lowpriority}}This is how {{char}} speaks: {{example_dialogue}}{{/lowpriority}}{{/if}}`}</code>
     </>
   ),
 }

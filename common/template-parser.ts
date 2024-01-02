@@ -6,18 +6,29 @@ import peggy from 'peggy'
 import { elapsedSince } from './util'
 import { v4 } from 'uuid'
 
-const parser = peggy.generate(grammar.trim(), {
-  error: (stage, msg, loc) => {
-    console.error({ loc, stage }, msg)
-  },
-})
+const parser = loadParser()
 
-type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | string
+function loadParser() {
+  try {
+    const parser = peggy.generate(grammar.trim(), {
+      error: (stage, msg, loc) => {
+        console.error({ loc, stage }, msg)
+      },
+    })
+    return parser
+  } catch (ex) {
+    console.error(ex)
+    throw ex
+  }
+}
+
+type PNode = PlaceHolder | ConditionNode | IteratorNode | InsertNode | LowPriorityNode | string
 
 type PlaceHolder = { kind: 'placeholder'; value: Holder; values?: any; pipes?: string[] }
 type ConditionNode = { kind: 'if'; value: Holder; values?: any; children: PNode[] }
 type IteratorNode = { kind: 'each'; value: IterableHolder; children: CNode[] }
 type InsertNode = { kind: 'history-insert'; values: number; children: PNode[] }
+type LowPriorityNode = { kind: 'lowpriority'; children: PNode[] }
 
 type CNode =
   | Exclude<PNode, { kind: 'each' }>
@@ -96,6 +107,7 @@ export type TemplateOpts = {
    */
   repeatable?: boolean
   inserts?: Map<number, string>
+  lowpriority?: { idToReplace: string; content: string }[]
 }
 
 /**
@@ -123,6 +135,7 @@ export async function parseTemplate(
   const ast = parser.parse(template, {}) as PNode[]
   readInserts(template, opts, ast)
   let output = render(template, opts, ast)
+  let unusedTokens = 0
 
   if (opts.limit && opts.limit.output) {
     // const lastIndex = Object.keys(opts.limit.output).reduce((prev, curr) => {
@@ -135,16 +148,31 @@ export async function parseTemplate(
     // }
 
     for (const [id, lines] of Object.entries(opts.limit.output)) {
-      const trimmed = (
-        await fillPromptWithLines(
-          opts.limit.encoder,
-          opts.limit.context,
-          output,
-          lines,
-          opts.inserts
-        )
-      ).reverse()
+      const filled = await fillPromptWithLines(
+        opts.limit.encoder,
+        opts.limit.context,
+        output,
+        lines,
+        opts.inserts,
+        opts.lowpriority
+      )
+      unusedTokens = filled.unusedTokens
+      const trimmed = filled.adding.reverse()
       output = output.replace(id, trimmed.join('\n'))
+    }
+
+    // Adding the low priority blocks if we still have the budget for them,
+    // now that we inserted the conversation history.
+    // We start from the bottom (somewhat arbitrary design choice),
+    // hence the reverse().
+    for (const { idToReplace, content } of (opts.lowpriority ?? []).reverse()) {
+      const contentLength = await opts.limit!.encoder(content)
+      if (contentLength > unusedTokens) {
+        output = output.replace(idToReplace, '')
+      } else {
+        output = output.replace(idToReplace, content)
+        unusedTokens -= contentLength
+      }
     }
   }
 
@@ -251,7 +279,32 @@ function renderNode(node: PNode, opts: TemplateOpts) {
 
     case 'if':
       return renderCondition(node, node.children, opts)
+
+    case 'lowpriority':
+      return renderLowPriority(node, opts)
   }
+}
+
+/**
+ * This only returns an UUID, but adds the string meant to replace the UUID to the
+ * opts object. The UUID is only replaced with the actual content (or object) after
+ * the prompt is built once, because low priority content is NOT added if the
+ * rest of the prompt takes up the token budget already.
+ * It's up to the rest of the prompt-building to remove the UUIDs when
+ * calculating their token budget.
+ * This somewhat  grungy string manipulation but unavoidable with the way prompt
+ * segments get turned into strings at the same time as their tokens are counted.
+ */
+function renderLowPriority(node: LowPriorityNode, opts: TemplateOpts) {
+  const output: string[] = []
+  for (const child of node.children) {
+    const result = renderNode(child, opts)
+    if (result) output.push(result)
+  }
+  opts.lowpriority = opts.lowpriority ?? []
+  const lowpriorityBlockId = '__' + v4() + '__'
+  opts.lowpriority.push({ idToReplace: lowpriorityBlockId, content: output.join('') })
+  return lowpriorityBlockId
 }
 
 function renderProp(node: CNode, opts: TemplateOpts, entity: unknown, i: number) {

@@ -430,23 +430,17 @@ export async function buildPromptParts(
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
-    const fit = await fillPromptWithLines(
-      encoder,
-      opts.settings?.memoryUserEmbedLimit || 500,
-      '',
-      embeds
-    )
+    const fit = (
+      await fillPromptWithLines(encoder, opts.settings?.memoryUserEmbedLimit || 500, '', embeds)
+    ).adding
     parts.userEmbeds = fit
   }
 
   if (opts.chatEmbeds) {
     const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const fit = await fillPromptWithLines(
-      encoder,
-      opts.settings?.memoryChatEmbedLimit || 500,
-      '',
-      embeds
-    )
+    const fit = (
+      await fillPromptWithLines(encoder, opts.settings?.memoryChatEmbedLimit || 500, '', embeds)
+    ).adding
     parts.chatEmbeds = fit
   }
 
@@ -560,7 +554,7 @@ export async function getLinesForPrompt(
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
-  const lines = await fillPromptWithLines(encoder, maxContext, '', history)
+  const lines = (await fillPromptWithLines(encoder, maxContext, '', history)).adding
 
   if (opts.trimSentences) {
     return lines.map(trimSentence)
@@ -588,11 +582,16 @@ export async function fillPromptWithLines(
   tokenLimit: number,
   amble: string,
   lines: string[],
-  inserts: Map<number, string> = new Map()
-) {
+  inserts: Map<number, string> = new Map(),
+  lowpriority: { idToReplace: string; content: string }[] = []
+): Promise<{ adding: string[]; unusedTokens: number }> {
   const insertsCost = await encoder([...inserts.values()].join(' '))
   const tokenLimitMinusInserts = tokenLimit - insertsCost
-  let count = await encoder(amble)
+  const ambleWithoutLowPriorityPlaceholders = lowpriority.reduce(
+    (amble, { idToReplace }) => amble.replace(idToReplace, ''),
+    amble
+  )
+  let count = await encoder(ambleWithoutLowPriorityPlaceholders)
   const adding: string[] = []
 
   let linesAddedCount = 0
@@ -615,7 +614,9 @@ export async function fillPromptWithLines(
     adding.push(formatInsert(remainingInserts))
   }
 
-  return adding
+  const unusedTokens = tokenLimitMinusInserts - count
+
+  return { adding, unusedTokens }
 }
 
 export function insertsDeeperThanConvoHistory(

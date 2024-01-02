@@ -48,8 +48,7 @@ export const handleOAI: ModelAdapter = async function* (opts) {
 
   const oaiModel = gen.thirdPartyModel || gen.oaiModel || defaultPresets.openai.oaiModel
 
-  const maxResponseLength =
-    opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? defaultPresets.openai.maxTokens
+  const maxResponseLength = gen.maxTokens ?? defaultPresets.openai.maxTokens
 
   const body: any = {
     model: oaiModel,

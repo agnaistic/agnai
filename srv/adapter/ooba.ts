@@ -132,7 +132,7 @@ export function getThirdPartyPayload(opts: AdapterProps, stops: string[] = []) {
       model: gen.thirdPartyModel || '',
       stream: opts.kind === 'summary' ? false : gen.streamResponse ?? true,
       temperature: gen.temp ?? 0.5,
-      max_tokens: opts.chat.mode === 'adventure' ? 400 : gen.maxTokens ?? 200,
+      max_tokens: gen.maxTokens ?? 200,
       best_of: gen.swipesPerGeneration,
       n: gen.swipesPerGeneration,
       prompt,
