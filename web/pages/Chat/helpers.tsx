@@ -113,6 +113,7 @@ export function emptyMsg(opts: {
     userId: opts.userId,
     msg: opts.message || '',
     retries: [],
+    translatedMsg: opts.message || '',
     adapter: opts.adapter,
     handle: opts.handle,
     updatedAt: new Date().toISOString(),
