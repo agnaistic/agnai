@@ -51,15 +51,24 @@ const CharacterList: Component = () => {
   const cfg = settingStore()
   const user = userStore()
   const state = chatStore((s) => {
-    const favorites = s.allChars.list.filter((ch) => ch.favorite)
     return {
-      allChars: s.allChars.list,
+      allChars: s.allChars.list.filter((ch) => ch.userId === user.user?._id),
       list: s.allChars.list.filter((ch) => ch.userId === user.user?._id && !ch.favorite),
 
-      favorites,
       loading: s.allLoading,
       loaded: s.loaded,
     }
+  })
+
+  const favorites = createMemo(() => {
+    const field = sortField()
+    const dir = sortDirection()
+    return state.allChars
+      .filter((ch) => !!ch.favorite)
+      .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
+      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
+      .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
+      .sort(getSortFunction(field, dir))
   })
 
   const sortedChars = createMemo(() => {
@@ -68,18 +77,6 @@ const CharacterList: Component = () => {
     const sorted = state.list
       .slice()
       .filter((ch) => ch.userId === user.user?._id)
-      .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
-      .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
-      .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
-      .sort(getSortFunction(field, dir))
-    return sorted
-  })
-
-  const sortedFaves = createMemo(() => {
-    const field = sortField()
-    const dir = sortDirection()
-    const sorted = state.favorites
-      .slice()
       .filter((ch) => ch.name.toLowerCase().includes(search().toLowerCase().trim()))
       .filter((ch) => tags.filter.length === 0 || ch.tags?.some((t) => tags.filter.includes(t)))
       .filter((ch) => !ch.tags || !ch.tags.some((t) => tags.hidden.includes(t)))
@@ -229,7 +226,7 @@ const CharacterList: Component = () => {
         filter={search()}
         sortField={sortField()}
         sortDirection={sortDirection()}
-        favorites={sortedFaves()}
+        favorites={favorites()}
       />
       <div class="flex justify-center pb-5 pt-2">
         <ManualPaginate pager={pager} />

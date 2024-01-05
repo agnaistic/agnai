@@ -105,9 +105,6 @@ OtherBot:"
 
 exports[`Prompt building will exclude scenario when empty in condition 1`] = `
 "Roleplay instructions
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: first
 OtherBot:"
 `;
@@ -119,9 +116,6 @@ OtherBot
 Facts: ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
 ChatOwner: TIE-TRIGGER
@@ -131,9 +125,6 @@ OtherBot:"
 
 exports[`Prompt building will include gaslight for non-turbo adapter 1`] = `
 "GASLIGHT ChatOwner
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
 ChatOwner: TIE-TRIGGER
@@ -148,9 +139,6 @@ OtherBot
 Facts:ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
 ChatOwner: TIE-TRIGGER
@@ -160,9 +148,6 @@ OtherBot:"
 
 exports[`Prompt building will include sample chat when gaslight does not contain sample chat placeholder 1`] = `
 "Gaslight
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-System: New conversation started. Previous conversations are examples only.
 MainChar: FIRST
 ChatOwner: SECOND
 MainChar: ORIGINAL
@@ -172,9 +157,6 @@ OtherBot:"
 exports[`Prompt building will include scenario when populated in condition 1`] = `
 "Roleplay instructions
 Scenario: Populated scenario
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: first
 OtherBot:"
 `;
@@ -219,16 +201,16 @@ Object {
     "userEmbeds": Array [],
   },
   "template": Object {
+    "history": Array [
+      "MainChar: bot response",
+    ],
     "inserts": Map {},
-    "length": 48,
-    "linesAddedCount": 2,
+    "length": 31,
+    "linesAddedCount": 1,
     "parsed": "GASLIGHT TEMPLATE
 ChatOwner
 OtherBot
 Auto-injected text:
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: bot response
 OtherBot:",
   },
@@ -253,9 +235,6 @@ OtherBot
 Facts: ENTRY ONE
 ENTRY TIE
 ENTRY THREE
-How OtherBot speaks:
-SAMPLECHAT OtherBot
-<START>
 MainChar: FIRST
 ChatOwner: 1-TRIGGER
 ChatOwner: TIE-TRIGGER

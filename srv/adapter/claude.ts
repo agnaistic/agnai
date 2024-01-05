@@ -261,42 +261,41 @@ async function createClaudePrompt(opts: AdapterProps) {
   // Some API keys require that prompts start with this
   const mandatoryPrefix = '\n\nHuman: '
 
+  const enc = encoder()
+
   const { parsed: rawGaslight, inserts } = await injectPlaceholders(
-    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, opts.parts, [
-      'history',
-      'post',
-    ]),
+    ensureValidTemplate(gen.gaslight || defaultPresets.claude.gaslight, ['history', 'post']),
     {
       opts,
       parts,
       lastMessage: opts.lastMessage,
       characters: opts.characters || {},
-      encoder: encoder(),
+      encoder: enc,
     }
   )
   const gaslight = processLine('system', rawGaslight)
   const gaslightCost = await encoder()(mandatoryPrefix + gaslight)
   let ujb = parts.ujb ? processLine('system', parts.ujb) : ''
-  ujb = (
-    await injectPlaceholders(ujb, {
-      opts,
-      parts,
-      encoder: encoder(),
-      characters: opts.characters || {},
-    })
-  ).parsed
+  const { parsed } = await injectPlaceholders(ujb, {
+    opts,
+    parts,
+    encoder: enc,
+    characters: opts.characters || {},
+  })
+
+  ujb = parsed
 
   const prefill = opts.gen.prefill ? opts.gen.prefill + '\n' : ''
-  const prefillCost = await encoder()(prefill)
+  const prefillCost = await enc(prefill)
 
   const maxBudget =
     maxContextLength -
     maxResponseTokens -
     gaslightCost -
     prefillCost -
-    (await encoder()(ujb)) -
-    (await encoder()(opts.replyAs.name + ':')) -
-    (await encoder()([...inserts.values()].join(' ')))
+    (await enc(ujb)) -
+    (await enc(opts.replyAs.name + ':')) -
+    (await enc([...inserts.values()].join(' ')))
 
   let tokens = 0
   const history: string[] = []
@@ -330,7 +329,7 @@ async function createClaudePrompt(opts: AdapterProps) {
     }
 
     const processedLine = processLine(lineType, line)
-    const cost = await encoder()(processedLine)
+    const cost = await enc(processedLine)
     if (cost + tokens >= maxBudget) break
     const insert = inserts.get(distanceFromBottom)
     if (insert) history.push(processLine('system', insert))

@@ -615,7 +615,7 @@ export const CreateCharacterForm: Component<{
                     <>
                       Sample Conversation{' '}
                       <Regenerate
-                        fields={['example1', 'example2', 'example3']}
+                        fields={['example1', 'example2']}
                         service={genService()}
                         editor={editor}
                         allowed={editor.canGuidance}

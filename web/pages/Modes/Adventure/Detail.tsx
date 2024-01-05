@@ -43,49 +43,30 @@ export function toSessionUrl(id: string) {
 export const AdventureDetail: Component = (props) => {
   const state = gameStore()
   const params = useParams()
+  const [search, setSearch] = useSearchParams()
   const nav = useNavigate()
 
   const [load, setLoad] = createSignal(false)
   const [pane, setPane] = createSignal(false)
   // const [image, setImage] = createSignal<string>()
 
-  createEffect(() => {
-    if (!state.inited) return
-
-    const id = params.id
-
-    if (state.state._id === 'new') {
-      if (id !== 'new') {
-        nav(toSessionUrl(state.state._id))
-      }
-      return
-    }
-
-    if (state.state._id !== id) {
-      gameStore.loadSession(id)
-      return
-    }
-
-    if (!id) {
-      if (!state.state._id) return
-      const exists = state.sessions.some((s) => s._id === id)
-
-      if (!exists) {
-        nav(toSessionUrl(''))
-        return
-      }
-
-      nav(toSessionUrl(state.state._id))
-      return
-    }
-  })
-
   const trimResult = (i: number) => () => {
     const msg = state.state.responses[i]
     gameStore.updateResponse(i, trim(msg.response))
   }
 
-  onMount(() => gameStore.init())
+  onMount(() => {
+    gameStore.init(params.id)
+    if (params.id === 'new' && !search.pane) {
+      setSearch({ pane: 'prompt' })
+    }
+  })
+
+  const onSave = (session: GuidedSession) => {
+    if (session._id !== params.id) {
+      nav(toSessionUrl(session._id))
+    }
+  }
 
   // PoC auto-image generation
   // createEffect((prev) => {
@@ -151,12 +132,7 @@ export const AdventureDetail: Component = (props) => {
               {state.state.init ? 'Restart' : 'Start'}
             </Button>
             <Show when={state.state.init}>
-              <Button
-                size="pill"
-                onClick={() =>
-                  gameStore.newSession(state.template._id, (id) => nav(toSessionUrl(id)))
-                }
-              >
+              <Button size="pill" onClick={() => gameStore.newSession(state.template._id)}>
                 Reset
               </Button>
             </Show>
@@ -168,7 +144,11 @@ export const AdventureDetail: Component = (props) => {
             </Show>
 
             <Show when={state.state.init}>
-              <Button size="pill" onClick={gameStore.saveSession} disabled={state.busy}>
+              <Button
+                size="pill"
+                onClick={() => gameStore.saveSession(onSave)}
+                disabled={state.busy}
+              >
                 Save
               </Button>
             </Show>
@@ -219,6 +199,7 @@ const LoadModal: Component<{ close: () => void }> = (props) => {
     return sessions
   })
   const load = (id: string) => {
+    gameStore.loadSession(id)
     nav(toSessionUrl(id))
     props.close()
   }
@@ -242,7 +223,7 @@ const Header: Component<{ template: GuidedTemplate; session: GuidedSession }> = 
   const [_, setParams] = useSearchParams()
   return (
     <div class="bg-800 flex w-full justify-between rounded-md px-1 py-2">
-      <div>{props.template.name || 'Untitled Template'}</div>
+      <div class="flex items-center font-bold">{props.template.name || 'Untitled Template'}</div>
       <div class="flex gap-2">
         <Button onClick={() => setParams({ pane: 'prompt' })}>
           <Cog />

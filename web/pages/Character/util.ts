@@ -18,6 +18,7 @@ export type ChatLine = {
   createdAt: string
   updatedAt: string
   characterId: string
+  messageCount?: number
 }
 
 export type SortType =

@@ -22,11 +22,12 @@ import { useRootModal } from '/web/shared/hooks'
 
 const tokenizers = [
   { label: 'None', value: '' },
-  { label: 'LlamaV1', value: 'llama' },
+  { label: 'Llama', value: 'llama' },
   { label: 'Turbo', value: 'turbo' },
   { label: 'DaVinci', value: 'davinci' },
   { label: 'Novel Kayra', value: 'novel-modern' },
   { label: 'Novel (Old)', value: 'novel' },
+  { label: 'Mistral', value: 'mistral' },
 ]
 
 export const Subscription: Component = () => {

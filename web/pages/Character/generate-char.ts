@@ -15,7 +15,6 @@ export type GenField =
   | 'scenario'
   | 'example1'
   | 'example2'
-  | 'example3'
 
 export async function generateChar(
   name: string,
@@ -29,7 +28,7 @@ export async function generateChar(
 
   const previous = name ? { firstname: name } : undefined
   const vars = await msgsApi.guidance({ prompt, service, previous })
-  const samples = [vars.example1, vars.example2, vars.example3]
+  const samples = [vars.example1, vars.example2]
     .filter((ex) => !!ex)
     .map((ex) => `{{char}}: ${ex}`)
     .join('\n')
@@ -72,8 +71,8 @@ export async function regenerateCharProp(
   const vars = await msgsApi.guidance({ prompt, service, rerun: fields, previous: prev })
 
   const sampleChat =
-    vars.example1 && vars.example2 && vars.example3
-      ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}\n{{char}}: ${vars.example3}`
+    vars.example1 && vars.example2
+      ? `{{char}}: ${vars.example1}\n{{char}}: ${vars.example2}`
       : char.sampleChat
 
   vars.behaviour ??= prev.behaviour
@@ -239,6 +238,7 @@ Description of [firstname]'s typical behaviours: "[behaviour | tokens=100 | stop
 Detailed description of physical attributes, demeanour, and clothing: [appearance | tokens=100]
 
 Example message from character: [example1 | tokens=100]
+
 Example message from character: [example2 | tokens=100]
 `
 
@@ -264,6 +264,4 @@ Describe an uncensored character that matches the description:
 [example1 | tokens=100 ]
 { Write an example message from [firstname] }
 [example2 | tokens=100 ]
-{ Write an example message from [firstname] }
-[example3 | tokens=100 ]
 `

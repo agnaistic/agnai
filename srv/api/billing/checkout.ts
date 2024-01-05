@@ -22,7 +22,10 @@ export const startCheckout = handle(async ({ body, userId }) => {
     throw new StatusError(`Invalid checkout callback URL`, 400)
   }
 
+  const user = await store.users.getUser(userId)
+
   const session = await stripe.checkout.sessions.create({
+    customer: user?.billing?.customerId,
     success_url: `${domain}/checkout/success?session_id={CHECKOUT_SESSION_ID}&request_id=${requestId}`,
     cancel_url: `${domain}/checkout/cancel?session_id={CHECKOUT_SESSION_ID}&request_id=${requestId}`,
     mode: 'subscription',
@@ -39,24 +42,104 @@ export const startCheckout = handle(async ({ body, userId }) => {
     userId,
   })
 
+  if (user) {
+    const sessions = user.stripeSessions || []
+    sessions.push(session.id)
+    await store.users.updateUser(userId, { stripeSessions: sessions })
+  }
+
   return { requestId, sessionUrl: session.url }
+})
+
+export const viewSession = handle(async ({ body }) => {
+  assertValid({ sessionId: 'string' }, body)
+
+  const session = await stripe.checkout.sessions.retrieve(body.sessionId)
+  if (!session) {
+    throw new StatusError(`Session not found`, 404)
+  }
+  return session
+})
+
+export const manualSubscribe = handle(async ({ body, log }) => {
+  assertValid({ subscriptionId: 'string', userId: 'string' }, body)
+
+  const subscription = await stripe.subscriptions.retrieve(body.subscriptionId)
+  if (!subscription) {
+    throw new StatusError('Subscription not found', 404)
+  }
+
+  if (subscription.status !== 'active') {
+    throw new StatusError(`Subscription is not active. Currently ${subscription.status}`, 400)
+  }
+
+  const user = await store.users.getUser(body.userId)
+
+  if (!user) {
+    throw new StatusError('Cannot find user', 404)
+  }
+
+  const lastRenewed = new Date(subscription.current_period_start * 1000).toISOString()
+  const validUntil = new Date(subscription.current_period_end * 1000).toISOString()
+  const customerId = subscription.customer as string
+  const priceId = subscription.items.data[0].price.id
+  const productId = subscription.items.data[0].price.product as string
+
+  if (!customerId || !priceId || !productId) {
+    log.error({ customerId, priceId, productId }, 'Failed to assign subscription manually')
+    throw new StatusError(`Subscription is missing information`, 400)
+  }
+
+  const tier = await store.subs.getCachedTiers().find((t) => t.productId === productId)
+
+  if (!tier) {
+    throw new StatusError(`Cannot find matching tier for subscription (by product id)`, 400)
+  }
+
+  await subsCmd.adminSubscribe(body.userId, {
+    customerId,
+    priceId,
+    productId,
+    subscription,
+    subscriptionId: body.subscriptionId,
+    tierId: tier._id,
+  })
+
+  const next = await store.users.updateUser(user._id, {
+    sub: {
+      tierId: tier._id,
+      level: tier.level,
+    },
+    billing: {
+      status: 'active',
+      customerId,
+      lastRenewed,
+      validUntil,
+      subscriptionId: body.subscriptionId,
+      lastChecked: new Date().toISOString(),
+    },
+  })
+
+  if (!next) {
+    throw new StatusError(`Failed to update user`, 400)
+  }
+
+  return next.sub
 })
 
 export const finishCheckout = handle(async ({ body, userId }) => {
   assertValid({ sessionId: 'string', state: 'string' }, body)
 
   const session = await stripe.checkout.sessions.retrieve(body.sessionId)
+
   if (!session) {
     throw new StatusError(`Invalid checkout`, 400)
   }
 
   const agg = await domain.billing.getAggregate(body.sessionId)
-  if (agg.state !== 'request') {
-    throw new StatusError(`Invalid checkout status (${agg.state})`, 400)
-  }
-
   if (body.state === 'success') {
     if (session.payment_status !== 'paid') {
+      await billingCmd.fail(body.sessionId, { userId, session, reason: 'payment status not paid' })
       throw new StatusError(
         `Unable to update subscription: Payment status invalid (${session.payment_status})`,
         400

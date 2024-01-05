@@ -195,12 +195,6 @@ const InputBar: Component<{
     disposeSaveDraftDebounce()
   })
 
-  const genActions = () => {
-    msgStore.generateActions()
-    toastStore.normal('Generating...')
-    setMenu(false)
-  }
-
   const onFile = async (files: FileInputResult[]) => {
     const [file] = files
     if (!file) return
@@ -319,11 +313,6 @@ const InputBar: Component<{
             >
               <div>Stop Bot Reply</div>
               <Toggle fieldName="ooc" value={props.ooc} onChange={toggleOoc} />
-            </Button>
-          </Show>
-          <Show when={ctx.flags.actions}>
-            <Button schema="secondary" class="w-full" onClick={genActions} alignLeft>
-              Generate Actions
             </Button>
           </Show>
           <Button schema="secondary" class="w-full" onClick={createImage} alignLeft>

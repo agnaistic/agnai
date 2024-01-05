@@ -14,6 +14,15 @@ export type SubsEvt =
   | { type: 'downgraded'; tierId: string; priceId: string; activeAt: string }
   /** Only available during a cancellation period */
   | { type: 'resumed' }
+  /** Manually assign a subscription ID to a user in the case of a failed update */
+  | {
+      type: 'admin-subscribe'
+      tierId: string
+      customerId: string
+      subscriptionId: string
+      priceId: string
+      periodStart: string
+    }
 
 export type SubsCmd =
   | {
@@ -29,6 +38,15 @@ export type SubsCmd =
   | { type: 'resume' }
   | { type: 'upgrade'; tierId: string; priceId: string }
   | { type: 'downgrade'; tierId: string; priceId: string; activeAt: string }
+  | {
+      type: 'adminSubscribe'
+      tierId: string
+      subscriptionId: string
+      customerId: string
+      priceId: string
+      productId: string
+      subscription: Stripe.Subscription
+    }
 
 export type SubsAgg = {
   state: 'active' | 'cancelled' | 'cancelling' | 'new'

@@ -51,9 +51,7 @@ export const msgsApi = {
   generateResponse,
   deleteMessages,
   basicInference,
-  createActiveChatPrompt,
   guidance,
-  generateActions,
   getActiveTemplateParts,
 }
 
@@ -62,32 +60,6 @@ type InferenceOpts = {
   settings?: Partial<AppSchema.GenSettings>
   service?: string
   maxTokens?: number
-}
-
-export async function generateActions() {
-  const { settings, impersonating, profile, user, messages, ...entities } =
-    await getPromptEntities()
-  const { prompt } = await createActiveChatPrompt({ kind: 'continue' }, 1024)
-
-  const last = messages.slice(-1)[0]
-
-  if (!last) {
-    toastStore.warn('Cannot generate actions: No messages')
-    return
-  }
-
-  const res = await api.post<{ actions: AppSchema.ChatAction[] }>(`/chat/${last._id}/actions`, {
-    service: settings.service,
-    settings,
-    impersonating,
-    profile,
-    user,
-    lines: prompt.lines,
-    char: entities.char,
-    chat: entities.chat,
-    characters: entities.characters,
-  })
-  return res
 }
 
 export async function basicInference({ prompt, settings }: InferenceOpts) {
@@ -356,8 +328,7 @@ async function getActivePromptOptions(
 }
 
 async function createActiveChatPrompt(
-  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>,
-  maxContext?: number
+  opts: Exclude<GenerateOpts, { kind: 'ooc' | 'send-noreply' }>
 ) {
   const { active } = chatStore.getState()
   const { ui } = userStore.getState()
@@ -405,22 +376,16 @@ async function createActiveChatPrompt(
       userEmbeds,
       resolvedScenario,
     },
-    encoder,
-    maxContext
+    encoder
   )
 
   if (entities.settings.modelFormat) {
     prompt.template.parsed = replaceTags(prompt.template.parsed, entities.settings.modelFormat)
   }
 
-  const retrieveBefore = props.messages[props.messages.length - prompt.lines.length - 1]
-  const chats =
-    !!retrieveBefore && text
-      ? await embedApi.query(entities.chat._id, text, retrieveBefore.createdAt)
-      : null
+  const embedLines = (prompt.template.history || prompt.lines).slice()
 
-  const users =
-    text && entities.chat.userEmbedId ? await embedApi.query(entities.chat.userEmbedId, text) : null
+  const { users, chats } = await getRetrievalBreakpoint(text, entities, props.messages, embedLines)
 
   if (chats?.messages.length) {
     for (const chat of chats.messages) {
@@ -439,6 +404,38 @@ async function createActiveChatPrompt(
     }
   }
   return { prompt, props, entities, chatEmbeds, userEmbeds }
+}
+
+async function getRetrievalBreakpoint(
+  text: string | undefined,
+  { settings, chat }: PromptEntities,
+  messages: AppSchema.ChatMessage[],
+  lines: string[]
+) {
+  if (!text) return { users: undefined, chats: undefined }
+
+  const embedLimit = (settings.memoryChatEmbedLimit ?? 0) + (settings.memoryUserEmbedLimit ?? 0)
+
+  const encoder = await getEncoder()
+  let removed = 0
+  let count = 0
+  for (const line of lines) {
+    const size = await encoder(line)
+    removed += size
+    count++
+
+    if (removed > embedLimit) break
+  }
+
+  const users = text && chat.userEmbedId ? await embedApi.query(chat.userEmbedId, text) : undefined
+
+  const bp = messages[messages.length - count - 1]
+  if (!bp) return { users, chats: undefined }
+
+  const chats = settings.memoryChatEmbedLimit
+    ? await embedApi.query(chat._id, text, bp.createdAt)
+    : undefined
+  return { users, chats }
 }
 
 export type GenerateProps = {

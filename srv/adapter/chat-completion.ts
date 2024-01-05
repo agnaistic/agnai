@@ -187,10 +187,7 @@ export async function toChatCompletionPayload(
 
   const handle = opts.impersonate?.name || opts.sender?.handle || 'You'
   const { parsed: gaslight, inserts } = await injectPlaceholders(
-    ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, opts.parts, [
-      'history',
-      'post',
-    ]),
+    ensureValidTemplate(gen.gaslight || defaultPresets.openai.gaslight, ['history', 'post']),
     {
       opts,
       parts,

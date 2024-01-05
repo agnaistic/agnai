@@ -31,5 +31,5 @@ export const events = {
 }
 
 for (const event of Object.values(EVENTS)) {
-  emitter.on(event, () => send('[***] emitter', { type: event }, undefined))
+  emitter.on(event, (...args) => send('[***] emitter', { type: event, args }, undefined))
 }

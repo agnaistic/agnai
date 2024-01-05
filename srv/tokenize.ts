@@ -35,8 +35,16 @@ let llama: Encoder
 let claude: Encoder
 let davinci: Encoder
 let turbo: Encoder
+let mistral: Encoder
 
-export type EncoderType = 'novel' | 'novel-modern' | 'llama' | 'claude' | 'davinci' | 'turbo'
+export type EncoderType =
+  | 'novel'
+  | 'novel-modern'
+  | 'llama'
+  | 'claude'
+  | 'davinci'
+  | 'turbo'
+  | 'mistral'
 
 const TURBO_MODELS = new Set<string>([
   OPENAI_MODELS.Turbo,
@@ -62,6 +70,9 @@ export function getTokenCounter(
 
 export function getEncoderByName(type: EncoderType) {
   switch (type) {
+    case 'mistral':
+      return mistral
+
     case 'claude':
       return claude
 
@@ -147,6 +158,7 @@ export function getEncoder(adapter: AIAdapter | 'main', model?: string): Encoder
 
 export async function prepareTokenizers() {
   try {
+    novel = createEncoder('mistral.model')
     novel = createEncoder('novelai.model')
     novelModern = createEncoder('novelai_v2.model')
     llama = createEncoder('llama.model')

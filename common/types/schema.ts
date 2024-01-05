@@ -270,6 +270,7 @@ export namespace AppSchema {
       subscriptionId: string
       lastChecked?: string
     }
+    stripeSessions?: string[]
   }
 
   export interface ApiKey {

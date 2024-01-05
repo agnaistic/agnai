@@ -134,11 +134,7 @@ export const HOLDERS = {
  * @param opts
  * @returns
  */
-export async function createPromptParts(
-  opts: PromptOpts,
-  encoder: TokenCounter,
-  maxContext?: number
-) {
+export async function createPromptParts(opts: PromptOpts, encoder: TokenCounter) {
   if (opts.trimSentences) {
     const nextMsgs = opts.messages.slice()
     for (let i = 0; i < nextMsgs.length; i++) {
@@ -163,9 +159,20 @@ export async function createPromptParts(
   /**
    * The lines from `getLinesForPrompt` are returned in time-descending order
    */
+  const template = getTemplate(opts)
+  const templateSize = await encoder(template)
+  /**
+   * It's important for us to pass in a max context that is _realistic-ish_ as the embeddings
+   * are retrieved based on the number of history messages we return here.
+   *
+   * If we ambitiously include the entire history then embeddings will never be included.
+   * The queryable embeddings are messages that are _NOT_ included in the context
+   */
+  const maxContext = opts.settings
+    ? opts.settings.maxContextLength! - templateSize - opts.settings.maxTokens!
+    : undefined
   const lines = await getLinesForPrompt(opts, encoder, maxContext)
   const parts = await buildPromptParts(opts, lines, encoder)
-  const template = getTemplate(opts, parts)
 
   const prompt = await injectPlaceholders(template, {
     opts,
@@ -194,7 +201,7 @@ export async function assemblePrompt(
   encoder: TokenCounter
 ) {
   const post = createPostPrompt(opts)
-  const template = getTemplate(opts, parts)
+  const template = getTemplate(opts)
 
   const history = { lines, order: 'asc' } as const
   let { parsed, inserts, length } = await injectPlaceholders(template, {
@@ -213,10 +220,7 @@ export async function assemblePrompt(
   return { lines: history.lines, prompt: parsed, inserts, parts, post, length }
 }
 
-export function getTemplate(
-  opts: Pick<GenerateRequestV2, 'settings' | 'chat'>,
-  parts: PromptParts
-) {
+export function getTemplate(opts: Pick<GenerateRequestV2, 'settings' | 'chat'>) {
   const fallback = getFallbackPreset(opts.settings?.service!)
   if (
     opts.settings?.useAdvancedPrompt === 'basic' &&
@@ -227,7 +231,8 @@ export function getTemplate(
       opts.settings.promptOrderFormat,
       opts.settings.promptOrder
     )
-    return ensureValidTemplate(template, parts)
+    return template
+    // return ensureValidTemplate(template)
   }
 
   const template = opts.settings?.gaslight || fallback?.gaslight || defaultTemplate
@@ -243,7 +248,7 @@ export function getTemplate(
     return template
   }
 
-  return ensureValidTemplate(template, parts)
+  return ensureValidTemplate(template)
 }
 
 type InjectOpts = {
@@ -257,25 +262,26 @@ type InjectOpts = {
 
 export async function injectPlaceholders(template: string, inject: InjectOpts) {
   const { opts, parts, history: hist, encoder, ...rest } = inject
-  const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
 
   // Automatically inject example conversation if not included in the prompt
-  const sampleChat = parts.sampleChat?.join('\n')
-  if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
-    const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
+  /** @todo assess whether or not this should be here -- it ignores 'unvalidated' prompt rules */
+  // const sender = opts.impersonate?.name || inject.opts.sender?.handle || 'You'
+  // const sampleChat = parts.sampleChat?.join('\n')
+  // if (!template.match(HOLDERS.sampleChat) && sampleChat && hist) {
+  //   const next = hist.lines.filter((line) => !line.includes(SAMPLE_CHAT_MARKER))
 
-    const svc = opts.settings?.service
-    const postSample =
-      svc === 'openai' || svc === 'openrouter' || svc === 'scale' ? SAMPLE_CHAT_MARKER : '<START>'
+  //   const svc = opts.settings?.service
+  //   const postSample =
+  //     svc === 'openai' || svc === 'openrouter' || svc === 'scale' ? SAMPLE_CHAT_MARKER : '<START>'
 
-    const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
-      .replace(BOT_REPLACE, opts.replyAs.name)
-      .replace(SELF_REPLACE, sender)
-    if (hist.order === 'asc') next.unshift(msg)
-    else next.push(msg)
+  //   const msg = `${SAMPLE_CHAT_PREAMBLE}\n${sampleChat}\n${postSample}`
+  //     .replace(BOT_REPLACE, opts.replyAs.name)
+  //     .replace(SELF_REPLACE, sender)
+  //   if (hist.order === 'asc') next.unshift(msg)
+  //   else next.push(msg)
 
-    hist.lines = next
-  }
+  //   hist.lines = next
+  // }
 
   const { adapter, model } = getAdapter(opts.chat, opts.user, opts.settings)
 
@@ -305,7 +311,6 @@ export async function injectPlaceholders(template: string, inject: InjectOpts) {
  */
 export function ensureValidTemplate(
   template: string,
-  _parts: PromptParts,
   skip?: Array<'history' | 'post' | 'persona' | 'scenario' | 'userEmbed' | 'chatEmbed'>
 ) {
   const skips = new Set(skip || [])
@@ -432,23 +437,23 @@ export async function buildPromptParts(
 
   if (opts.userEmbeds) {
     const embeds = opts.userEmbeds.map((line) => line.text)
-    const { adding: fit } = await fillPromptWithLines(
+    const { adding: fit } = await fillPromptWithLines({
       encoder,
-      opts.settings?.memoryUserEmbedLimit || 500,
-      '',
-      embeds
-    )
+      tokenLimit: opts.settings?.memoryUserEmbedLimit || 500,
+      context: '',
+      lines: embeds,
+    })
     parts.userEmbeds = fit
   }
 
   if (opts.chatEmbeds) {
     const embeds = opts.chatEmbeds.map((line) => `${line.name}: ${line.text}`)
-    const { adding: fit } = await fillPromptWithLines(
+    const { adding: fit } = await fillPromptWithLines({
       encoder,
-      opts.settings?.memoryChatEmbedLimit || 500,
-      '',
-      embeds
-    )
+      tokenLimit: opts.settings?.memoryChatEmbedLimit || 500,
+      context: '',
+      lines: embeds,
+    })
     parts.chatEmbeds = fit
   }
 
@@ -562,7 +567,12 @@ export async function getLinesForPrompt(
 
   const history = messages.slice().sort(sortMessagesDesc).map(formatMsg)
 
-  const { adding: lines } = await fillPromptWithLines(encoder, maxContext, '', history)
+  const { adding: lines } = await fillPromptWithLines({
+    encoder,
+    tokenLimit: maxContext,
+    context: '',
+    lines: history,
+  })
 
   if (opts.trimSentences) {
     return lines.map(trimSentence)
@@ -585,21 +595,26 @@ export function formatInsert(insert: string): string {
  * - srv/adapter/chat-completion.ts toChatCompletionPayload
  * - srv/adapter/claude.ts createClaudePrompt
  */
-export async function fillPromptWithLines(
-  encoder: TokenCounter,
-  tokenLimit: number,
-  amble: string,
-  lines: string[],
-  inserts: Map<number, string> = new Map(),
-  lowpriority: { idToReplace: string; content: string }[] = []
-) {
-  const insertsCost = await encoder([...inserts.values()].join(' '))
+export async function fillPromptWithLines(opts: {
+  encoder: TokenCounter
+  tokenLimit: number
+  context: string
+  lines: string[]
+
+  /** Nodes to be inserted at a particular depth in the `lines` */
+  inserts?: Map<number, string>
+  optional?: Array<{ id: string; content: string }>
+}) {
+  const { encoder, tokenLimit, context, lines, inserts = new Map(), optional = [] } = opts
+  const insertsCost = await encoder(Array.from(inserts.values()).join(' '))
   const tokenLimitMinusInserts = tokenLimit - insertsCost
-  const ambleWithoutLowPriorityPlaceholders = lowpriority.reduce(
-    (amble, { idToReplace }) => amble.replace(idToReplace, ''),
-    amble
-  )
-  let count = await encoder(ambleWithoutLowPriorityPlaceholders)
+
+  /**
+   * Optional placeholders do not count towards token counts.
+   * They are optional after everything else has been inserted therefore we remove them from the prompt
+   */
+  const cleanContext = optional.reduce((amble, { id }) => amble.replace(id, ''), context)
+  let count = await encoder(cleanContext)
   const adding: string[] = []
 
   let linesAddedCount = 0
